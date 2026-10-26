@@ -13,7 +13,7 @@ C.SUBNAV.decks=()=>{const r=C.route(),p=r.params,list=r.view==='decks'&&!p.get('
     {label:'Create',hash:'#new',current:location.hash==='#new'},{label:'Shared',hash:'#decks?stage=shared',current:shared},
     {label:'About Deck Building',hash:'#about-deck-building',current:r.view==='about-deck-building'||r.view==='how'}];};
 C.HELP.decks={title:'Decks',body:`<p>Every deck you have, by its stage. <strong>Building</strong>: fewer than 100 seats on the list. <strong>Defined</strong>: all 100 seats on the list, To buy and Ordered cards included. <strong>Boxed</strong>: the box holds the hundred, its Final cards and Substitutes. <strong>Playable</strong>: Defined, and the table knows every card. Boxed and Playable decks are Defined too, so they show under each chip they meet; each tile's badge is its furthest stage.</p><p><strong>Shared</strong> is the decks other people share with you. Star a deck to keep it under <strong>Favorites</strong>. Tick decks to compare, box, group, favorite or remove them together under <strong>Bulk actions</strong>. More in <a href="#about-deck-building">About Deck Building</a>.</p>`};
-C.HELP.deck={title:'A deck page',body:`<p>The header is the summary: commander, stage, bracket, mechanics and the latest measured score; the row beside it is the work — add what you own, buy what you do not, log the game, measure — and the rest is under More.</p><p><strong>Overview</strong> is where the deck stands: Progress counts the physical deck, ready to add, ordered and to buy; Cost is what finishing costs, against the deck's own budget if it has one; the Next line says what to do first. The hundred at a glance, game record, simulation history, commander guide, strategy and SWOT all live here. <strong>The hundred</strong> is the full 100-card list by type with where each copy stands (actions on a card are in Cards). <strong>Upgrades</strong> is the working list and the Upgrade Path. <strong>Explore</strong> is deck-scoped explore and relationships (Role lens, Trace). <strong>Acquire</strong> is the buy list, orders, and acquisition tracking.</p><p>A <strong>locked</strong> deck's reservations track what its list needs: Ready to add walks the cards you own into the physical deck, and the buy list is what is left. A <strong>draft</strong> holds the copies you put in it; Lock list checks the list is a legal hundred and puts what is missing on the buy list. An <strong>archived</strong> deck keeps its history; its copies were released, and where each one physically is stays recorded.</p>`};
+C.HELP.deck={title:'A deck page',body:`<p>The header is the summary: commander, stage, bracket, mechanics and the latest measured score; the row beside it is the work — add what you own, buy what you do not, log the game, measure — and the rest is under More.</p><p><strong>Overview</strong> is where the deck stands: Progress counts the physical deck, ready to add, ordered and to buy; Cost is what finishing costs, against the deck's own budget if it has one; the Next line says what to do first. The hundred at a glance, game record, simulation history, commander guide, strategy and SWOT all live here. <strong>The hundred</strong> is the full 100-card list by type with where each copy stands (actions on a card are in Cards). <strong>Upgrades</strong> is the working list and the Upgrade Path. <strong>Explore</strong> is deck-scoped explore and relationships (Role lens, Trace). <strong>Acquire</strong> is the buy list, orders, and acquisition tracking.</p><p>A <strong>locked</strong> deck's reservations track what its list needs: Planned Changes walks the cards you own into the physical deck, and the buy list is what is left. A <strong>draft</strong> holds the copies you put in it; Lock list checks the list is a legal hundred and puts what is missing on the buy list. An <strong>archived</strong> deck keeps its history; its copies were released, and where each one physically is stays recorded.</p>`};
 const commander=d=>d.commanders.map(id=>C.card(id)?.name||'Unknown').join(' + ');
 /* A PRECON'S OWN PATH (Rob, 2026-10-01: "When it's a precon deck that's been selected, it should have a very different
    acquisition path"). A deck made from a precon carries the precon's id and name (createDeck's `precon`); one made
@@ -301,10 +301,10 @@ const precon=preconOf(d);
    thumb reaches them; the hero keeps Measure, More and the ?. */
 const work=(w=>M.isLobbyDeck(d)&&!d.archived?[b('Save to Decks','promote-lobby-deck',{deck:d.id},true),...w]:w)(d.archived?[b('Restore as draft','restore-deck',{deck:d.id},true),b('Delete permanently','delete-deck',{deck:d.id})]
   /* THE PRIMARY IS THE STATE'S, NOT A FIXED SLOT (UAT B-20). Copies waiting to go into the box
-     make Ready to add the primary; failing that, an open shopping list makes it Buy list; a deck
+     make Planned Changes the primary; failing that, an open shopping list makes it Buy list; a deck
      with neither is there to be played. The primary also goes first, where a thumb lands. */
   :d.status==='final'?(()=>{const readyN=pullCount(ready)+ready.remove+M.benchFree(C.state,d).copies,primary=readyN>0?'pull':ready.toBuy>0?'buy':'log';
-    const row=[['pull',b(readyN>0?`Ready to add (${readyN})`:'Ready to add','deck-pull',{deck:d.id},primary==='pull')],['buy',precon?buyPrecon(precon,primary==='buy'):b(`Buy list (${ready.toBuy})`,'deck-buy-list',{deck:d.id},primary==='buy')],['log',b('Log a game','log-game',{deck:d.id},primary==='log')]];
+    const row=[['pull',b(readyN>0?`Planned Changes (${readyN})`:'Planned Changes','deck-pull',{deck:d.id},primary==='pull')],['buy',precon?buyPrecon(precon,primary==='buy'):b(`Buy list (${ready.toBuy})`,'deck-buy-list',{deck:d.id},primary==='buy')],['log',b('Log a game','log-game',{deck:d.id},primary==='log')]];
     return row.sort((x,y)=>(x[0]===primary?-1:0)-(y[0]===primary?-1:0)).map(x=>x[1]);})()
   :[b('Edit card list','edit-list',{deck:d.id},true),precon?b('Save','precon-save',{deck:d.id}):b('Lock list','finalize',{deck:d.id}),b('Log a game','log-game',{deck:d.id})]);
 const measure=d.archived||!cards.length?'':`<button type="button" class="v-button" data-action="measure-deck" data-deck="${e(d.id)}" title="Compare lists under the browser simulation model — not a full rules-engine game.">${latest?'Measure again':'Measure'}</button>`;
@@ -362,10 +362,10 @@ function nextLine(d,r){
   if(d.status==='draft'&&preconOf(d))return 'save it to your decks, and buy the precon to own every card in it (Buy the Precon).';
   if(d.status==='draft')return n<100?`finish the list (${n} of 100); the copies you own are already reserved for it, and the rest are on the buy list.`:'Lock the list when it is settled — it marks the deck locked; its copies are already reserved and the rest are on the buy list.';
   const steps=[],pull=pullCount(r),subs=r.remove||r.standIns;
-  if(pull)steps.push(`add the ${pull} card${pull===1?'':'s'} you already own (Ready to add)`);
+  if(pull)steps.push(`add the ${pull} card${pull===1?'':'s'} you already own (Planned Changes)`);
   if(r.toBuy)steps.push(preconOf(d)?'buy the precon for the rest (Buy the Precon)':`buy ${r.toBuy} card${r.toBuy===1?'':'s'}${r.costToFinish?` (${C.money(r.costToFinish)})`:''}`);
   if(r.ordered)steps.push(`${r.ordered} ordered cop${r.ordered===1?'y is':'ies are'} on the way`);
-  if(subs)steps.push(`swap out the ${subs} substitute${subs===1?'':'s'} from Ready to add`);
+  if(subs)steps.push(`swap out the ${subs} substitute${subs===1?'':'s'} from Planned Changes`);
   if(!steps.length)return 'nothing — every card is in the physical deck. Log a game.';
   return steps.length===1?steps[0]+'.':`${steps[0]}, then ${steps[1]}${steps.length>2?`, and ${steps.length-2} more step${steps.length>3?'s':''}`:''}.`;
 }
@@ -414,7 +414,7 @@ function bento(d,cards,curve,max,types,ready,tint=''){
     <circle cx="56" cy="56" r="44" fill="none" stroke="var(--st-inbox)" stroke-width="12" stroke-linecap="butt" stroke-dasharray="${(circ*pctIn/100).toFixed(1)} ${circ.toFixed(1)}" transform="rotate(-90 56 56)"></circle>
     ${pctSub?`<circle cx="56" cy="56" r="44" fill="none" stroke="var(--st-standin)" stroke-width="12" stroke-linecap="butt" stroke-dasharray="${(circ*pctSub/100).toFixed(1)} ${circ.toFixed(1)}" stroke-dashoffset="${(-circ*(pctIn-pctSub)/100).toFixed(1)}" transform="rotate(-90 56 56)" opacity=".85"></circle>`:''}
   </svg><span class="cm-ring-center"><b>${r.sleeved}</b><small>in the box</small></span></div>`;
-  const progress=card('progress','Progress',ring+`<div class="cm-bento-figures">${key('inbox','Real copies',r.sleeved-r.standIns)}${key('standin','Substitutes',r.standIns)}${key('ordered','Ordered',r.ordered)}${key('buy','To buy',r.toBuy)}</div>`);
+  const progress=card('progress','Progress',ring+`<div class="cm-bento-figures">${key('inbox','Real copies',r.sleeved-r.standIns)}${key('standin','Substitutes',r.standIns)}${key('ordered','To Buy · Ordered',r.ordered)}${key('buy','To buy',r.toBuy)}</div>`);
 
   /* COST. What finishing costs, against the deck's budget, with the three facts that qualify it. */
   const paidWord=(estimated.length?'≈ ':'')+C.money(Math.round(paidOrList*100)/100);
@@ -1057,7 +1057,7 @@ actions['bulk-archive']=async()=>{const ids=picked().filter(k=>!k.startsWith('sh
 actions['bulk-delete']=async()=>{const ids=picked().filter(k=>!k.startsWith('share:'));clearPicks();C.actions.close();if(ids.length)await commit({type:'batch',summary:`Deleted ${ids.length} deck${ids.length===1?'':'s'} permanently`,commands:ids.map(id=>({type:'deleteDeck',deckId:id,confirmed:true}))});};
 /* BOX DECKS (BOX-1 to BOX-9). One dialog for every selected deck, and it works with one. Three choices, each including
    the one before; each shows its count for every deck before Box is pressed, and choice 3 names every deck that gives a
-   card up and what it becomes. The model plans it (M.boxPlan); every move is the `place` Ready to add uses. */
+   card up and what it becomes. The model plans it (M.boxPlan); every move is the `place` Planned Changes uses. */
 actions['bulk-box']=()=>{const ids=picked().filter(k=>!k.startsWith('share:'));C.boxDialog(ids);};
 const BOX_CHOICES=['The deck’s own cards','Own cards and substitutes','Own cards, substitutes and cards from other decks'];
 C.boxDialog=ids=>{const order=C.deckGridOrder||[],at=id=>{const i=order.indexOf(id);return i<0?order.length:i;};ids=[...ids].sort((a,b)=>at(a)-at(b));

@@ -28,7 +28,7 @@ import {openBrowser, loadLiveState} from "./uat/browser-runner.mjs";
 
 const REPORT = process.env.PAGE_BUDGET_REPORT === "1";
 
-/* The live library's first deck is the deck page and the Ready to add page the budget reads. */
+/* The live library's first deck is the deck page and the Planned Changes page the budget reads. */
 const DECK = "deck:live:D1";
 /* Explore scopes itself before it draws anything (Explore A). A bare #discover is the chooser,
    and the graph lives behind a scope, so the graph page needs a scoped URL to be reached at all. */
@@ -103,7 +103,7 @@ const PAGES = [
   /* Read 275/15/7 at both widths on 18 September -- lighter than the 330/40/14 this line
      carried before, because the facet bar now sits behind a scope rather than above everything. */
   [`discover?commander=${EXPLORE_COMMANDER}`, "Explore · graph", "#cm-graph", [310, 24, 12], [310, 24, 12]],
-  [`pull?deck=${DECK}`, "Ready to add", ".cm-pull-group", [48, 8, 4], [48, 8, 4]],
+  [`pull?deck=${DECK}`, "Planned Changes", ".cm-plan-table", [48, 8, 4], [48, 8, 4]],
   ["about-deck-building", "About Deck Building", ".cm-how-flow", [14, 3, 2], [14, 3, 2]],
   ["cards?tab=orders", "Cards · Orders", ".cm-orders, .cm-table", [35, 11, 4], [35, 11, 4]],
   /* Cards · Table (15 September, play space PR 6). Everything above the mat is the page head,

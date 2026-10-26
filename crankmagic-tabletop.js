@@ -39,11 +39,11 @@
   /* The card status's place words (docs/card-states.md, placeLabel) join the old labels, which the table still reads
      when a caller passes them: Watch, To buy and Ordered are not held, and Loading is an owned copy of a deck's own
      card waiting outside its box. */
-  const GHOST = new Set(["Ordered", "Watched", "Wanted", "To buy", "Draft list", "Suggestion", "Planned", "Watching", "Watch", SENT]);
+  const GHOST = new Set(["To Buy · Ordered", "Watched", "Wanted", "To buy", "Draft list", "Suggestion", "Planned", "Watching", "Watch", SENT]);
   /* The status piles a card can be dropped on — accepts() below has a case for each. The rest
      (Draft list, Suggestion, Planned, Unassigned) are readings of a deck's plan, not places a
      card can be put; the mat shows those as chips to lay out, not as piles (Rob, 14 September). */
-  const TARGET = new Set(["Physical deck", "Substitute", "Reserved", "Ordered", "Watched", "Wanted", "To buy", "Target", "To add", "Watching", "Final", "Loading", "Watch"]);
+  const TARGET = new Set(["Physical deck", "Substitute", "Reserved", "To Buy · Ordered", "Watched", "Wanted", "To buy", "Target", "To add", "Watching", "Final", "Loading", "Watch"]);
   /* The Card type piles are the eight primary types, a reader's order: an Artifact Creature
      is on the Creature pile, a Legendary Land on the Land pile. The list groups by the whole
      type line (thirty bands on the live library); a table has room for eight piles. */
@@ -360,7 +360,7 @@
     const rows = ((pile && pile.rows) || []).slice();
     if (!pile) return rows;
     if (pile.kind === "bench") return rows.sort((a, b) => nameOf(a).localeCompare(nameOf(b)));
-    if (pile.label === "Ordered") return rows.sort((a, b) => orderedAt(a).localeCompare(orderedAt(b)) || nameOf(a).localeCompare(nameOf(b)));
+    if (pile.label === "To Buy · Ordered") return rows.sort((a, b) => orderedAt(a).localeCompare(orderedAt(b)) || nameOf(a).localeCompare(nameOf(b)));
     return rows.sort((a, b) => mvOf(a) - mvOf(b) || nameOf(a).localeCompare(nameOf(b)));
   }
   /* One page of a laid-out pile: as many columns as the width holds at the card size, `rowsFit`
@@ -460,15 +460,15 @@
           return yes("place", "Put in a physical deck", "Asks which deck; a copy the list does not call for is refused unless substitutes are allowed.");
         case "Substitute":
           if (others || plans.length || lots.some((r) => r.source !== "owned")) return no("Only an owned copy can stand in for another card.");
-          return yes("standin", "Put in a physical deck as a substitute", "Asks which deck; goes in without a reservation, and Ready to add asks for it back when the real card is ready.");
+          return yes("standin", "Put in a physical deck as a substitute", "Asks which deck; goes in without a reservation, and Planned Changes asks for it back when the real card is ready.");
         case "Loading":
         case "To add":
         case "Reserved":
           if (others || plans.length || lots.some((r) => r.source === "watching")) return no("Only an owned or ordered copy can be reserved for a deck.");
           return yes("reserve", "Reserve for a deck", "Asks which deck; only a deck whose list calls for the card and still lacks it.");
-        case "Ordered":
+        case "To Buy · Ordered":
           if (others) return no(NOT_COPY);
-          return yes("source:ordered", "Mark as Ordered", lots.some((r) => r.source === "owned" && (r.allocation || inBox(r))) ? "An owned copy in a box or reserved loses that; asks first." : "A To buy requirement or a draft-list row becomes an ordered copy filed with its deck.");
+          return yes("source:ordered", "Mark as To Buy · Ordered", lots.some((r) => r.source === "owned" && (r.allocation || inBox(r))) ? "An owned copy in a box or reserved loses that; asks first." : "A To buy requirement or a draft-list row becomes an ordered copy filed with its deck.");
         case "Watch":
         case "Watching":
         case "Watched":

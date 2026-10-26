@@ -46,7 +46,7 @@ const moveFor = (r, extra) => Object.assign({
   eq(JSON.stringify(live), frozen, "staging did not touch the library");
   sb.stage(moveFor(benched[0], {action: "source", arg: "watching", to: "Watched", toStatus: "Watched"}));
   eq(sb.size, 1, "the same move twice is still one move");
-  sb.stage(moveFor(benched[0], {action: "source", arg: "ordered", to: "Ordered", toStatus: "Ordered"}));
+  sb.stage(moveFor(benched[0], {action: "source", arg: "ordered", to: "To Buy · Ordered", toStatus: "To Buy · Ordered"}));
   eq(sb.size, 1, "a different destination for the same row replaces it rather than queueing a second");
   eq(sb.moves[0].action + ":" + sb.moves[0].arg, "source:ordered", "and the replacement is what is held");
   sb.stage(moveFor(benched[1], {action: "source", arg: "watching", to: "Watched", toStatus: "Watched"}));

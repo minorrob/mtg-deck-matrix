@@ -117,5 +117,5 @@ const example=()=>{let s=M.empty();
 }
 /* The vocabulary About Deck Building reads. */
 eq(M.STAGES.map(x=>x.label),['Building','Defined','Boxed','Playable']);
-eq(M.LADDER.map(x=>x.label),['Watch','To buy','Ordered','Own','Upgrade','Reserved','Loading','Substitute','Final']);
+eq(M.LADDER.map(x=>x.label),['Watch','To buy','To Buy · Ordered','Own','Upgrade','Reserved','Loading','Substitute','Final']);
 console.log(`deck-stages: ${checks} checks passed; Building at 99, Defined at 100, Boxed at a full box, and Rob's example boxing 55, 65 and 70.`);

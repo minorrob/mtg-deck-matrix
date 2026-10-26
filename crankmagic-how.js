@@ -10,7 +10,7 @@ const STEPS=[
   {n:2,title:'Building',href:'#decks?stage=building',text:'Fill the seats. Test it in the Lab and swap what underperforms.'},
   {n:3,title:'Defined',href:'#decks?stage=defined',text:'All 100 seats are on the list. Lock list when it’s right; that puts what’s missing on the buy list.'},
   {n:4,title:'Acquire',href:'#cards?tab=buy',text:'Buy or order what’s Reserved · To buy, inside the budget.'},
-  {n:5,title:'Box',href:'#decks',text:'Put owned cards in the physical box, one by one in Ready to add or a whole deck at once with Box deck. Substitutes hold seats until the real cards arrive.'},
+  {n:5,title:'Box',href:'#decks',text:'Put owned cards in the physical box, one by one in Planned Changes or a whole deck at once with Box deck. Substitutes hold seats until the real cards arrive.'},
   {n:6,title:'Boxed and Playable',href:'#decks?stage=boxed',text:'Boxed when 100 are in the box. Playable when the table knows every card. Log your games.'}];
 views['about-deck-building']=async()=>{
   C.main.innerHTML=C.pageHead(TITLE,`<a class="v-button" href="#decks">Back to Decks</a>`)

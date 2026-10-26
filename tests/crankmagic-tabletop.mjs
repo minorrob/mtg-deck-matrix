@@ -42,10 +42,10 @@ ok(t.bench.count > 100, `the live library has a bench (${t.bench.count} copies)`
 for (const p of t.statusPiles) eq(p.count, sum(rows.filter((r) => r.status === p.label)), `${p.label}: the placard is the status column's tally`);
 eq(t.statusPiles.reduce((n, p) => n + p.count, 0) + t.bench.count, t.total, "no copy is on two piles and none is missing");
 ok(t.statusPiles.find((p) => p.label === "Physical deck").count > 400, "the six decks' boxes are on the Physical deck pile");
-ok(t.statusPiles.find((p) => p.label === "To buy").ghost && t.statusPiles.find((p) => p.label === "Ordered").ghost && !t.statusPiles.find((p) => p.label === "Physical deck").ghost, "to-buy and ordered piles are ghosts; a box is not");
+ok(t.statusPiles.find((p) => p.label === "To buy").ghost && t.statusPiles.find((p) => p.label === "To Buy · Ordered").ghost && !t.statusPiles.find((p) => p.label === "Physical deck").ghost, "to-buy and ordered piles are ghosts; a box is not");
 eq(t.ghosts, rows.filter((r) => T.isGhost(r)).length, "ghost rows are counted once");
 /* TB5: the piles a card can be dropped on are marked; the rest are readings of a plan. */
-eq(t.statusPiles.filter((p) => p.target).map((p) => p.label).join(","), "Physical deck,Substitute,Reserved,Ordered,Watched,Wanted,To buy", "seven status piles take a drop, in workflow order");
+eq(t.statusPiles.filter((p) => p.target).map((p) => p.label).join(","), "Physical deck,Substitute,Reserved,To Buy · Ordered,Watched,Wanted,To buy", "seven status piles take a drop, in workflow order");
 ok(t.statusPiles.filter((p) => p.target === false).every((p) => /^(Draft list|Suggestion|Planned|Unassigned)$/.test(p.label)), "the readings are Draft list, Suggestion, Planned and Unassigned");
 eq(T.TARGET.size, 13, "the seven old status piles, the card states' Target, To add and Watching, and the card status's Final, Loading and Watch (docs/card-states.md) take a drop"); 
 ok(t.statusPiles.every((p) => !p.count || (p.top && p.top.card)), "a pile with cards has a top card to show");
@@ -100,7 +100,7 @@ for (const n of [1, 9, 16, 25, 40]) { const s = T.arcsOf(n, 11); eq(s.reduce((a,
 const mk = (name, mv, extra = {}) => ({recordId: "r:" + name, quantity: 1, card: {name, manaValue: mv, typeLine: "Creature"}, ...extra});
 eq(T.pileOrder({kind: "group", label: "Creature", rows: [mk("Zed", 3), mk("Abe", 3), mk("Cat", 1), mk("Nix", null)]}).map((r) => r.card.name), ["Cat", "Abe", "Zed", "Nix"], "mana value then name, no cost last");
 eq(T.pileOrder({kind: "bench", label: "Bench", rows: [mk("Zed", 1), mk("Abe", 5)]}).map((r) => r.card.name), ["Abe", "Zed"], "the Bench by name");
-eq(T.pileOrder({kind: "status", label: "Ordered", rows: [mk("Late", 1, {order: {placed: "2026-09-10"}}), mk("Early", 9, {order: {placed: "2026-08-01"}})]}).map((r) => r.card.name), ["Early", "Late"], "Ordered by order date");
+eq(T.pileOrder({kind: "status", label: "To Buy · Ordered", rows: [mk("Late", 1, {order: {placed: "2026-09-10"}}), mk("Early", 9, {order: {placed: "2026-08-01"}})]}).map((r) => r.card.name), ["Early", "Late"], "Ordered by order date");
 const hundred = {kind: "status", label: "Physical deck", rows: Array.from({length: 100}, (_, i) => mk("Card " + String(i).padStart(3, "0"), i % 8))};
 let l = T.layout(hundred, {width: 960, scale: 1, page: 0, rowsFit: 3});
 eq([l.cols, l.perPage, l.pages, l.from, l.to, l.cards.length, l.label], [6, 18, 6, 0, 18, 18, "1\u201318 of 100"], "six across at 100% on 960, three rows to a page");
@@ -155,15 +155,15 @@ eq(T.accepts(pileBy("Physical deck"), needs.slice(0, 1)).ok, false, "a To buy re
 eq(T.accepts(t.bench, boxed.slice(0, 1)), {ok: true, action: "bench", label: "Move physically to the Bench", why: "Takes a copy out of its physical deck; asks first."}, "a boxed copy to the Bench asks");
 eq(T.accepts(t.bench, needs.slice(0, 2)).action, "source:owned", "a ghost on the Bench becomes an owned copy");
 eq(T.accepts(t.bench, ordered.slice(0, 1)).action, "source:owned");
-eq(T.accepts(pileBy("Ordered"), needs.slice(0, 1)).action, "source:ordered", "a ghost on Ordered becomes an ordered copy");
-ok(/asks first/.test(T.accepts(pileBy("Ordered"), boxed.slice(0, 1)).why), "an owned boxed copy marked Ordered says it loses its place");
+eq(T.accepts(pileBy("To Buy · Ordered"), needs.slice(0, 1)).action, "source:ordered", "a ghost on Ordered becomes an ordered copy");
+ok(/asks first/.test(T.accepts(pileBy("To Buy · Ordered"), boxed.slice(0, 1)).why), "an owned boxed copy marked Ordered says it loses its place");
 eq(T.accepts(pileBy("Watched"), needs.slice(0, 1)).ok, false, "a requirement cannot be Watched");
 eq(T.accepts(pileBy("To buy"), ownedBench.slice(0, 1)).ok, false, "an unreserved copy has nothing to release");
 eq(T.accepts(pileBy("To buy"), boxed.filter((r) => r.allocation).slice(0, 1)).action, "release", "a reserved copy releases to To buy");
 eq(T.accepts(pileBy("Reserved"), ownedBench.slice(0, 1)).action, "reserve");
 eq(T.accepts(pileBy("Substitute"), ownedBench.slice(0, 1)).action, "standin");
 eq(T.accepts(pileBy("Suggestion"), ownedBench.slice(0, 1)).ok, false, "a plan pile is not a target");
-for (const label of ["Physical deck", "Ordered", "Bench"]) eq(T.accepts(label === "Bench" ? t.bench : pileBy(label), planned.slice(0, 1)).ok, false, `${label}: a planned card is not a copy`);
+for (const label of ["Physical deck", "To Buy · Ordered", "Bench"]) eq(T.accepts(label === "Bench" ? t.bench : pileBy(label), planned.slice(0, 1)).ok, false, `${label}: a planned card is not a copy`);
 eq(T.accepts(pileBy("Creature", "type"), ownedBench.slice(0, 1)).ok, false, "a type pile refuses"); ok(/reading of the card/.test(T.accepts(pileBy("Creature", "type"), ownedBench.slice(0, 1)).why));
 const groupPile = T.table(rows, {...opts, groupBy: "groups"}).groupPiles.find((p) => !/^No /.test(p.label) && !p.folded);
 if (groupPile) { eq(T.accepts(groupPile, ownedBench.slice(0, 1)).action, "group"); eq(T.accepts(groupPile, needs.slice(0, 1)).ok, false, "a plan is not filed in a group"); }
