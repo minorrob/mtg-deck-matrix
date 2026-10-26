@@ -8,17 +8,18 @@ const land=(id,tapped=false)=>({cardId:id,name:'Island',owner:0,controller:0,typ
 function fixture(){const v=structuredClone(sample);v.revision=8000;v.state.combat=null;v.state.phase='MAIN1';v.state.players[0].zones.Battlefield.cards=[land(9001)];v.decision={id:'priority:input',kind:'priority',mode:'one',min:1,max:1,title:'Your priority',options:[{index:0,act:'pass',label:'Pass priority'},{index:1,act:'activate-mana',label:'Island',cardId:9001,detail:'{U}'}]};return v;}
 async function open(mode,width=1440,touch=false,v=fixture(),available=true){
  const context=await browser.newContext({viewport:{width,height:width<500?844:900},reducedMotion:'reduce',serviceWorkers:'block',hasTouch:touch,isMobile:touch});await context.addInitScript(mode=>{localStorage.setItem('cm-board-view',mode);localStorage.setItem('crankmagic-audio-muted','true');(globalThis.CrankFeatures||=[]).push(C=>{globalThis.__r4Act=(name,data)=>C.actions[name]({dataset:data});});},mode);
- const page=await context.newPage();if(stub)await stub(page);const sent=[],errors=[];let socket,current=v,holdCoach=false,heldCoach=null,coachRequests=0;
+ const page=await context.newPage();if(stub)await stub(page);const sent=[],errors=[];let socket,current=v,holdCoach=false,heldCoach=null,coachRequests=0,heldGate=null,gateStarted;const gateRequested=new Promise(r=>gateStarted=r);
  page.on('pageerror',e=>errors.push(e.message));await page.route(`${base}/index.html*`,r=>r.fulfill({contentType:'text/html',body:html}));await page.route(`${base}/api/me`,r=>r.fulfill({json:{email:'input@example.com'}}));await page.route(`${base}/api/library**`,r=>r.fulfill({json:{head:null}}));
- await page.route(`${base}/api/ai-coach`,r=>r.fulfill({json:{open:available}}));await page.route(`${base}/api/ai/coach`,r=>{coachRequests++;if(holdCoach){heldCoach=r;return;}return r.fulfill({json:{answer:'Consider your next turn.'}});});
+ await page.route(`${base}/api/ai-coach`,r=>{if(available==='defer'){heldGate=r;gateStarted();return;}return r.fulfill({json:{open:available}});});await page.route(`${base}/api/ai/coach`,r=>{coachRequests++;if(holdCoach){heldCoach=r;return;}return r.fulfill({json:{answer:'Consider your next turn.'}});});
  const table={tableId:'r4input01',phase:'playing',matchId:v.matchId,away:[],blockers:[],rules:{},seats:v.state.players.map(p=>({seatId:p.playerId,name:p.name,kind:p.playerId===v.seat?'human':'ai',you:p.playerId===v.seat,occupied:true,ready:true,mat:'felt'}))};
  await page.route(`${base}/api/tables**`,r=>r.fulfill({json:{table,now:Date.now()}}));await page.routeWebSocket(/\/api\/tables\/r4input01\/connect$/,s=>{socket=s;s.onMessage(m=>sent.push(JSON.parse(m)));s.send(JSON.stringify({type:'view',view:v}));});
  await page.goto(`${base}/index.html#table?id=r4input01`);await page.locator('.cm-mat [data-card="9001"]').first().waitFor();
- return {page,context,sent,errors,get current(){return current;},get coachRequests(){return coachRequests;},holdCoach(){holdCoach=true;},async releaseCoach(){holdCoach=false;await heldCoach.fulfill({json:{answer:'First pending reply.'}});heldCoach=null;},feed:async change=>{const next=structuredClone(current);change(next);next.revision++;current=next;socket.send(JSON.stringify({type:'receipt',receipt:{}}));socket.send(JSON.stringify({type:'view',view:next}));await page.waitForTimeout(100);}};
+ return {page,context,sent,errors,gateRequested,releaseGate:()=>heldGate.fulfill({json:{open:true}}),get current(){return current;},get coachRequests(){return coachRequests;},holdCoach(){holdCoach=true;},async releaseCoach(){holdCoach=false;await heldCoach.fulfill({json:{answer:'First pending reply.'}});heldCoach=null;},feed:async change=>{const next=structuredClone(current);change(next);next.revision++;current=next;socket.send(JSON.stringify({type:'receipt',receipt:{}}));socket.send(JSON.stringify({type:'view',view:next}));await page.waitForTimeout(100);}};
 }
 const card=id=>`.cm-mat[data-seat="0"] .cm-bcard[data-action="board-card"][data-card="${id}"]`;
 try{
  for(const mode of ['table','focus','full']) {
+  if(process.env.VIEWS_CASE&&process.env.VIEWS_CASE!==mode)continue;
   const f=await open(mode),{page,context,errors}=f;
   await page.evaluate(choice=>__r4Act('set-theme',{themeChoice:choice}),mode==='focus'?'bronze-basalt-light':mode==='full'?'chalk-coal':'sapphire-obsidian');
   if(mode==='table') {eq(await tableClearance(page),[],'Table menus and dial text clear actual seat facts');
@@ -45,8 +46,15 @@ try{
   if(process.env.UAT_SHOTS){mkdirSync(process.env.UAT_SHOTS,{recursive:true});await page.screenshot({path:path.join(process.env.UAT_SHOTS,`r4-views-${mode}.png`)});}
   eq(errors,[],`${mode}: no browser errors`);await context.close();
  }
- {
+ if(!process.env.VIEWS_CASE||process.env.VIEWS_CASE==='phone'){
   const {page,context}=await open('focus',390,true,fixture(),false);await page.evaluate(()=>__r4Act('board-coach',{}));await page.locator('.cm-coach-unavailable').waitFor();eq(await page.locator('.cm-coach-input').count(),0,'unavailable Coach has no textarea');ok((await page.locator('.cm-coach-unavailable').textContent()).includes("isn't at this table yet"),'unavailable Coach says honest availability');await page.locator('.cm-coach-unavailable [data-action=page-help]').click();await page.locator('#cm-dialog[open]').waitFor();ok(await page.locator('#cm-dialog').isVisible(),'unavailable Coach Help opens actual table help');await context.close();
+ }
+ if(!process.env.VIEWS_CASE||process.env.VIEWS_CASE==='full')for(const moved of [false,true]){
+  const f=await open('full',1280,false,fixture(),'defer'),{page,context}=f;await page.locator('[data-action=board-stage-side]').click();await page.locator('.cm-stage-module[data-module=coach] [data-action=board-coach]').click();await f.gateRequested;
+  if(moved)await page.locator('[data-action=board-camera]').click();await f.releaseGate();const input=page.locator('#cm-board-coach .cm-coach-input');await input.waitFor();
+  if(moved)ok(await page.locator('[data-action=board-camera]').evaluate(el=>el===document.activeElement),'late capability preserves a deliberate focus move to Camera');
+  else{ok(await input.evaluate(el=>el===document.activeElement),'explicit Full Coach open focuses composer after asynchronous availability');ok(await input.evaluate(el=>{const r=el.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight&&[[.2,.2],[.5,.5],[.8,.8]].every(([x,y])=>el.contains(document.elementFromPoint(r.x+r.width*x,r.y+r.height*y)));}),'explicit Full Coach open scrolls actual enabled composer into native viewport/hit area');}
+  await context.close();
  }
 }finally{await close();}
 console.log(`board-r4-views: ${checks} checks passed`);
