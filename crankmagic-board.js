@@ -888,6 +888,7 @@ globalThis.CrankBoard = Object.seal({
      previews as it moves; Save keeps what is set, and Cancel, ✕, Escape, a press outside or any button that leaves it
      (Concede, Recommended actions, …) put back what was set when it opened. */
   const SETTINGS_LEAVE = new Set(["board-skip", "board-coach", "board-callout-demo", "board-concede", "board-vitals", "ai-settings", "board-modules-settings"]);
+  let settingsExit=null;
   const settingsKeys = () => [HOLD_KEY, SKIP_KEY, SCALE_KEY.board, SCALE_KEY.hand, "cm-card-scale:board", "cm-stage-resolution"];
   function settingsNow() {
     const a = sound();
@@ -925,6 +926,7 @@ globalThis.CrankBoard = Object.seal({
     const d = C.modal("Settings", `<div class="cm-play-settings">${toolsMenu()}<div class="cm-form-footer cm-play-settings-foot">${b("Cancel", "close")}${b("Save", "board-settings-save", {}, true)}</div></div>`);
     d.classList.add("cm-play-settings-dialog");
     tools = true;
+    const session=settingsExit={closed:false,afterClose:null};
     const leave = (event) => {
       const el = event.target.closest?.("#cm-board-tools [data-action]");
       if (el && (SETTINGS_LEAVE.has(el.dataset.action) || (el.dataset.action === "board-end" && el.dataset.confirm === "1"))) d.close();
@@ -934,10 +936,12 @@ globalThis.CrankBoard = Object.seal({
       d.removeEventListener("click", leave);
       tools = false; confirmEnd = false;
       if (!saved) restoreSettings(before);
-      if (d.open) return;   /* another window took its place */
+      session.closed=true;
+      if (d.open) {session.afterClose=null;if(settingsExit===session)settingsExit=null;return;}   /* another window took its place */
       d.querySelector(".cm-play-settings")?.remove();
       const a = document.activeElement;
       if (!a || a === document.body || d.contains(a)) document.querySelector("#cm-board [data-action=board-camera]")?.focus({preventScroll: true});
+      const after=session.afterClose;session.afterClose=null;if(settingsExit===session)settingsExit=null;after?.();
     }, {once: true});
     actions["board-settings-save"] = () => {saved = true; d.close();};
   }
@@ -3976,12 +3980,13 @@ globalThis.CrankBoard = Object.seal({
     }
   });
   actions["board-tools"] = () => openSettings();
-  actions["board-coach"] = () => {
+  actions["board-coach"] = el => {
+    const leaving=el?.closest?.('#cm-board-tools')?settingsExit:null;
     profileOpen=false;coach.open=!coach.open;tools=false;historyOpen=false;
-    coachFocusRequest=coach.open?{key:coachKey(),matchId:view?.matchId,armed:false,from:null}:null;
+    const request=coachFocusRequest=coach.open?{key:coachKey(),matchId:view?.matchId,armed:false,from:null}:null;
     if(coach.open){if(!moduleSide("coach"))inspection=null;panelOpen=false;openModuleDrawer("coach");if(phone()){stageSide=true;stageRail=false;}}
     draw();drawCoach();
-    if(coachFocusRequest){coachFocusRequest.from=C.focusKey(document.activeElement);coachFocusRequest.armed=true;focusRequestedCoach(document.getElementById('cm-board-coach'));}
+    if(request){const arm=()=>{if(coachFocusRequest!==request)return;const a=document.activeElement;if(leaving&&a&&a!==document.body&&!a.matches('#cm-board [data-action=board-camera]')){coachFocusRequest=null;return;}request.from=C.focusKey(a);request.armed=true;focusRequestedCoach(document.getElementById('cm-board-coach'));};if(leaving&&!leaving.closed)leaving.afterClose=arm;else arm();}
   };
   actions["board-recommend"] = () => {coach.open=true;if (!moduleSide("coach")) inspection = null;openModuleDrawer("coach");if(phone()){stageSide=true;stageRail=false;}draw();drawCoach();ask_("What are my best actions right now?");};
   actions["board-coach-ask"] = (el) => ask_(el.dataset.q);
