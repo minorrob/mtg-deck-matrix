@@ -9,14 +9,14 @@
  *   Hidden    Maya's frames never carry a card of Rob's hand or library, only its count; nor his hers.
  *   Decide    the opening hand's Keep; turn 1's empty upkeep and draw passing by themselves, and saying so; a land
  *             played from the hand by tapping it (bright = you can use it); Next step landing on the next step with
- *             something to do; the draw by itself, no click; a cast passing for its caster, the other board's
+ *             something to do; the draw by itself, no click; a cast's bounded Undo window, then an explicit pass and the other board's
  *             Resolve naming the spell on the stack, its strip saying they may respond; Hold priority after I cast, the
  *             caster asked again first; Pass on another's turn; whose turn it is marked in the side pane; both boards
  *             following, the step ribbon with them; the card shown large put away by a press, Escape or a redraw.
  *   Views     the game fills the window. Table (identical 16:9 boards sized to the window, you at the foot, the
  *             Library pile drawn, the logo between them opening Table vitals), Focus (the mat the largest 16:9
  *             beside the pane, the hand docked over its foot), Full screen (the whole window; the other seat across
- *             the top; a picked card large at the side; ⟳ walks the big board round the table); ⎋ leaves; the view
+ *             the top; a card inspected through its Read menu; ⟳ walks the big board round the table); ⎋ leaves; the view
  *             is remembered on the device. Skip to end passes the rest of a turn by itself.
  *   Hand      the card-size slider and Ctrl −; a card shown large under the pointer, and in Card zoom on a right
  *             click; Show hand: Space fans it, a number holds a card up, Escape puts it back, Enter plays it.
@@ -151,8 +151,18 @@ const coachAsked = [];
 async function person(email, viewport, {fullscreen = true} = {}) {
   const context = await browser.newContext({viewport, serviceWorkers: "block"});
   const page = await context.newPage();
+  let coachReplyGate = null;
   // This suite exercises a returning Focus player; R2 separately verifies new-device 3D.
   await page.addInitScript(() => {if (!localStorage.getItem("cm-board-view")) localStorage.setItem("cm-board-view", "focus");});proofPages.push(page);
+  await page.addInitScript(() => {
+    globalThis.__uatBoardGestures = [];
+    for (const type of ['pointerdown', 'pointerup', 'click']) document.addEventListener(type, event => {
+      const el = event.target.closest?.('#cm-board [data-action]');
+      if (!event.isTrusted || !el) return;
+      globalThis.__uatBoardGestures.push({type, action: el.dataset.action, tag: event.target.tagName});
+      globalThis.__uatBoardGestures = globalThis.__uatBoardGestures.slice(-8);
+    }, true);
+  });
   /* A browser that will not give a page the whole screen (a phone's, or one set so): the view must fill the window by itself. */
   if (!fullscreen) await page.addInitScript(() => Object.defineProperty(Document.prototype, "fullscreenEnabled", {get: () => false}));
   if (stub) await stub(page);
@@ -161,15 +171,16 @@ async function person(email, viewport, {fullscreen = true} = {}) {
   await loadLiveState(page, base);
   await page.route(`${base}/index.html*`, (r) => r.fulfill({contentType: "text/html; charset=utf-8", body: html}));
   await page.route(`${base}/api/me`, (r) => r.fulfill({json: {email}}));
-  /* The Coach's door, shut as it is until the privacy page names what it sends (cloud/worker.mjs, AI_COACH): the board
-     says so in the Coach's own words. A moment's wait, as the network has, so its typing shows. */
-  await page.route(`${base}/api/ai/coach`, async (r) => {coachAsked.push(JSON.parse(r.request().postData() || "{}")); await new Promise((go) => setTimeout(go, 300)); r.fulfill({status: 503, json: {error: "The Coach is not switched on here yet."}});});
+  /* Explicitly enable the Coach shell. Its question transport then refuses without calling a provider;
+     a small delay exposes typing and preserves the existing refusal/payload checks. */
+  await page.route(`${base}/api/ai-coach`, (r) => r.fulfill({json: {open: true}}));
+  await page.route(`${base}/api/ai/coach`, async (r) => {coachAsked.push(JSON.parse(r.request().postData() || "{}")); if (coachReplyGate) await coachReplyGate; await new Promise((go) => setTimeout(go, 300)); r.fulfill({status: 503, json: {error: "The Coach is not switched on here yet."}});});
   await page.route(`${base}/api/library**`, (r) => r.request().method() === "GET" ? r.fulfill({json: {head: null}})
     : r.fulfill({json: {head: {id: "00000000-0000-4000-8000-000000000000", revision: 1, checksum: "x", device: "test", createdAt: new Date().toISOString()}}}));
   await page.route(`${base}/api/tables**`, (r) => answer(r, email));
   await page.routeWebSocket(/\/api\/tables\/[a-z0-9]+\/connect$/, carry(email));
   await page.goto("about:blank");
-  return {context, page};
+  return {context, page, holdCoachReply() {let release; coachReplyGate = new Promise(go => {release = go;}); return () => {coachReplyGate = null; release();};}};
 }
 /* The words as written (A1): Moss & Iron sets headings in capitals, so a read turns text-transform off for its own
    instant and reads innerText, line breaks and all. */
@@ -205,24 +216,24 @@ try {
   await maya.page.locator("#cm-board .cm-stage-top").waitFor({timeout: 30000});
   ok(routes[ROB].length === 1 && routes[MAYA].length === 1, "the lobby hands each page to the board, and each opens one socket to the table");
   eq([heardBy[ROB].length, heardBy[MAYA].length], [0, 0], "and nothing of the sound is fetched before the first press on the board (a browser would refuse to play it)");
-  eq(await rob.page.locator(".cm-board-tile .cm-board-tile-name").allInnerTexts(), ["You · Rob", "Maya"], "the pane holds every seat, yours first here");
+  eq(await rob.page.locator(".cm-board-tile .cm-seat-header .cm-mat-name").allInnerTexts(), ["You · Rob", "Maya"], "the pane holds every seat, yours first here");
   /* Found rendering B1's fixture: the library holds only your own cards, so everyone else's were fetched from Scryfall one
      request each, and a full board is refused faster than it is answered. The shipped card records draw them. */
   const pic = await rob.page.evaluate(() => {const C = globalThis.__cm, mine = new Set(C.cards().map((c) => c.name)), other = C.catalog.all().map((c) => C.catalog.exact(c.name)).find((c) => c && c.image && c.image.startsWith("https://cards.scryfall.io/") && !mine.has(c.name)); return other ? {name: other.name, image: other.image, drawn: C.board.pictureOf(other.name)} : null;});
   ok(pic && pic.drawn === pic.image && !/api.scryfall.com/.test(pic.drawn), `a card no library holds (${pic && pic.name}) is drawn from the shipped card records, not a request to Scryfall per card`);
 
   /* DECIDE: the opening hands. Whoever is asked keeps, until nobody is. */
-  await waitText(rob.page, "#cm-board-decision", /Keep this hand\?/);
+  await waitText(rob.page, "#cm-board-decision", /Your opening hand/);
   const robHand = await rob.page.locator(".cm-board-hand .cm-bcard").count();
   eq(robHand, 7, "Rob's hand is seven cards, drawn face up for him");
   ok(/Maya.*waiting|Waiting on Rob/i.test(await text(maya.page, ".cm-board-waiting")), `Maya is told who the table waits on: "${await text(maya.page, ".cm-board-waiting")}"`);
   for (let round = 0; round < 6; round += 1) {
     let kept = false;
     for (const who of [rob, maya]) {
-      const keep = who.page.locator("#cm-board-decision [data-action=board-option]", {hasText: "Keep"});
-      if (await keep.count()) {await keep.click(); await who.page.locator("#cm-board-decision [data-action=board-confirm]").click(); if(await who.page.locator("[data-action=board-inspect-close]").count()) await who.page.locator("[data-action=board-inspect-close]").click(); kept = true; await who.page.waitForTimeout(300);}
+      const keep = who.page.locator("#cm-board-decision [data-action=board-opening-hand]", {hasText: "Keep"});
+      if (await keep.count()) {await keep.click(); kept = true; await who.page.waitForTimeout(300);}
     }
-    if (!kept && !(await rob.page.locator("#cm-board-decision", {hasText: "Keep this hand"}).count()) && !(await maya.page.locator("#cm-board-decision", {hasText: "Keep this hand"}).count())) break;
+    if (!kept && !(await rob.page.locator("#cm-board-decision", {hasText: "Your opening hand"}).count()) && !(await maya.page.locator("#cm-board-decision", {hasText: "Your opening hand"}).count())) break;
   }
   await rob.page.waitForFunction(() => /Turn 1/.test(document.querySelector(".cm-board-turn")?.innerText || ""), null, {timeout: 20000});
   ok(true, "both keep, and turn 1 begins on both boards");
@@ -234,7 +245,7 @@ try {
   const leaks = (email, owner, open = []) => frames[email].filter((f) => (f.match(new RegExp(`${owner} Secret [0-9]+`, "g")) || []).some((n) => !open.includes(n))).length;
   eq([leaks(MAYA, "Rob"), leaks(ROB, "Maya")], [0, 0], `no frame to either player named a card of the other's hand or library (${frames[MAYA].length + frames[ROB].length} frames read)`);
   await maya.page.click(".cm-board-tile[data-seat='0'] [data-action=board-focus]");
-  ok(/Rob's hand · 7/.test(await text(maya.page, ".cm-board-mat")), "Maya can look at Rob's board, and sees his hand as a count");
+  ok((await text(maya.page, ".cm-board-mat .cm-seat-header .cm-mat-name")).trim() === "Rob" && (await text(maya.page, ".cm-board-mat .cm-seat-hand")).trim() === "7 in hand", "Maya can look at Rob's board, and sees his hand as a count");
   const mats = await maya.page.evaluate(() => {const m = document.querySelector(".cm-board-mat"); return [m.dataset.mat, getComputedStyle(m).backgroundImage.includes("radial-gradient")];});
   ok(mats[0] === "forge" && mats[1], "and it is drawn on Rob's mat, the forge");
   await maya.page.click(".cm-board-tile[data-seat='1'] [data-action=board-focus]");
@@ -292,7 +303,7 @@ try {
   const ink = await active.page.evaluate(() => {const el = document.querySelector(".cm-board-hand .cm-bcard .cm-bcard-name"); return getComputedStyle(el).color;});
   eq(ink, "rgb(31, 28, 24)", "a card's name is printed in the card's own dark ink, not the mat's light one");
   await shot(active.page, "board-priority-" + (active === rob ? "1400" : "1280"));
-  await brightLand.click(); await active.page.locator("#cm-board-decision [data-action=board-confirm]").click(); if(await active.page.locator("[data-action=board-inspect-close]").count()) await active.page.locator("[data-action=board-inspect-close]").click();
+  await useCardOffer(active.page, brightLand, "play-land");
   await waitText(active.page, ".cm-board-lands", /Lands · 1/);
   ok(/land drop used/i.test(await text(active.page, ".cm-board-mat .cm-board-chip")), "tapping it plays it: Lands · 1, the land drop used (the reminder under the Lands says so)");
   ok(await heard(active === rob ? ROB : MAYA, "sfx/sfx_play_land.mp3"), "and it sounds as a land played (the pack's land voice)");
@@ -307,12 +318,12 @@ try {
      click the card to untap it again"): a click on the land taps it; the room offers it back (game/room/room.mjs,
      `untapMana`), so it stays lit, says Untap, and a second click puts it upright, its mana gone from the pool. */
   const matLand = active.page.locator(".cm-board-lands .cm-bcard", {hasText: land}).first();
-  await matLand.click(); await active.page.locator("#cm-board-decision [data-action=board-confirm]").click(); if(await active.page.locator("[data-action=board-inspect-close]").count()) await active.page.locator("[data-action=board-inspect-close]").click();
+  await useCardOffer(active.page, matLand, "activate-mana");
   await active.page.locator(".cm-board-lands .cm-bcard.is-tapped.is-bright").first().waitFor({timeout: 10000});
   const tappedView = views(active === rob ? ROB : MAYA).at(-1), untap = tappedView.decision.options.find((o) => o.act === "undo-mana");
   ok(untap && untap.label === `Untap ${land}` && (tappedView.state.players[activeSeat].mana || []).length === 1 && /Untap/.test(await matLand.getAttribute("aria-label")),
     `a click on the land taps it for mana, and it stays lit, offered back: "${untap?.label}", its mana in the pool`);
-  await matLand.click(); await active.page.locator("#cm-board-decision [data-action=board-confirm]").click(); if(await active.page.locator("[data-action=board-inspect-close]").count()) await active.page.locator("[data-action=board-inspect-close]").click();
+  await useCardOffer(active.page, matLand, "undo-mana");
   await active.page.waitForFunction(() => !document.querySelector(".cm-board-lands .cm-bcard.is-tapped"), null, {timeout: 10000});
   const untapped = views(active === rob ? ROB : MAYA).at(-1);
   ok((untapped.state.players[activeSeat].mana || []).length === 0 && !untapped.decision.options.some((o) => o.act === "undo-mana") && untapped.state.phase === "MAIN1",
@@ -391,7 +402,7 @@ try {
   await rob.page.getByRole('button',{name:'Resume your table',exact:true}).click();
   await rob.page.locator("#cm-board .cm-stage-top").waitFor({timeout: 30000});
   ok(/^#table\?id=/.test(await rob.page.evaluate(() => location.hash)) && routes[ROB].length === robSockets, "Resume from Play returns to the game, on the same socket");
-  ok(awayFrames() === awayBefore && !/Dropped/.test(await text(maya.page, ".cm-board-tile[data-seat='0'] .cm-board-tile-flag")), "and through all of it the room never marked Rob's seat away");
+  ok(awayFrames() === awayBefore && !/Dropped/.test(await text(maya.page, ".cm-board-tile[data-seat='0'] .cm-seat-state")), "and through all of it the room never marked Rob's seat away");
 
   /* THE THREE VIEWS. Table: both boards at once, side by side -- each a landscape 16:9 on its half of the screen, yours on
      the right (Rob, 2026-10-09: "In 2-player, the screen should split down the middle vertically") -- the logo between
@@ -505,12 +516,12 @@ try {
     const mid = r.top + r.height / 2, bg = getComputedStyle(el).backgroundImage;
     const life = (seat) => document.querySelector(`.cm-board-table .cm-seatboard[data-seat='${seat}'] .cm-vitals b`).textContent;
     const center = r.left + r.width / 2;
-    const totals = [...el.querySelectorAll(".cm-board-pie-life")].map((b) => {const q = b.getBoundingClientRect(); return {seat: b.dataset.seat, n: b.textContent, left: q.left + q.width / 2 < center, pill: life(b.dataset.seat)};});
+    const totals = [...el.querySelectorAll(".cm-board-pie-life")].map((b) => {const q = b.getBoundingClientRect(); return {seat: b.dataset.seat, n: b.querySelector("b").textContent, identity: b.querySelector("small").textContent, left: q.left + q.width / 2 < center, pill: life(b.dataset.seat)};});
     return {dx: center - (theirs.right + mine.left) / 2, dy: mid - (mine.top + mine.bottom) / 2, conic: /conic-gradient/.test(bg), colors: new Set(bg.match(/(rgba?|color|oklab|oklch|lab)\([^)]*\)/g) || []).size,
       totals, logo: !!el.querySelector(".cm-board-center img"), round: Math.abs(r.width - r.height) < 1};
   });
   ok(Math.abs(pie.dx) < 2 && Math.abs(pie.dy) < 2 && pie.round && pie.logo, `the life counter sits at the true center, between the boards and halfway down them, the logo in it (${pie.dx.toFixed(1)}, ${pie.dy.toFixed(1)})`);
-  ok(pie.conic && pie.colors >= 2 && pie.totals.length === 2 && pie.totals.every((t) => t.n === t.pill) && pie.totals.find((t) => t.seat === "1").left && !pie.totals.find((t) => t.seat === "0").left,
+  ok(pie.conic && pie.colors >= 2 && pie.totals.length === 2 && pie.totals.every((t) => t.n === t.pill && t.identity === (t.seat === "0" ? "You" : "Maya")) && pie.totals.find((t) => t.seat === "1").left && !pie.totals.find((t) => t.seat === "0").left,
     `a slice per seat, each its own color, its life on it: Maya's on the left half beside her board, Rob's on the right (${pie.totals.map((t) => `${t.seat}:${t.n}`).join(", ")}; ${pie.colors} colors)`);
   /* The pile cards on top of their frames, over the frame's lines; the reminder below the Lands. */
   const pileOver = (page, q) => page.evaluate((sel) => {
@@ -589,7 +600,7 @@ try {
   await utility(rob.page,"board-tools");
   await rob.page.locator("#cm-board-tools [data-card-scale]").fill("120");
   const sTools = await sizes();
-  /* Camera closed when the Profile menu was pressed (Rob, Oct 25: a press outside it closes it), so Board cards is read after. */
+  /* Opening Play settings closes Camera, so Board cards is read after reopening Camera. */
   ok(sTools.scopes.join() === "1.2,1.2" && sTools.outs[1] === "120%" && Math.abs(sTools.board / s100.board - 1.2) < 0.03 && Math.abs(sTools.hand / s100.hand - 1.2) < 0.02,
     `Tools is the table's card size, and moving it sets Board cards and Hand cards to its value (${sTools.outs.join(", ")})`);
   await rob.page.locator("#cm-board-tools [data-card-scale]").fill("100");
@@ -599,7 +610,7 @@ try {
   await rob.page.locator('[data-action=board-camera]').click();
   await rob.page.locator(".cm-seatboard:not(.is-you) [data-action=board-focus]").click();
   await rob.page.locator(".cm-board-mat").waitFor();
-  ok(/Maya's hand/.test(await text(rob.page, ".cm-board-mat")) && await rob.page.getAttribute("#cm-board", "data-view") === "focus", "⤢ Focus on Maya's board puts it on the mat, in the Focus view");
+  ok((await text(rob.page, ".cm-board-mat .cm-seat-header .cm-mat-name")).trim() === "Maya" && /^\d+ in hand$/.test((await text(rob.page, ".cm-board-mat .cm-seat-hand")).trim()) && await rob.page.getAttribute("#cm-board", "data-view") === "focus", "⤢ Focus on Maya's board puts it on the mat, in the Focus view");
   await rob.page.click(".cm-board-tile[data-seat='0'] [data-action=board-focus]");
 
   /* B7, item 15: THE PANE'S DIVIDER. Dragged wider, the tiles grow with it, and past 400px each is a miniature of that
@@ -609,7 +620,7 @@ try {
     const tile = document.querySelector(".cm-board-tile[data-seat='1']"), mine = document.querySelector(".cm-board-tile[data-seat='0']");
     return {pane: Math.round(pane.width), tile: Math.round(tile.getBoundingClientRect().width), mini: document.querySelectorAll(".cm-board-tile.is-mini .cm-board-mini .cm-mat[data-fit=mini]").length,
       robLands: mine.querySelectorAll(".cm-board-mini [data-zone=lands] .cm-bcard").length, inert: !!tile.querySelector(".cm-board-mini[inert]"),
-      matW: mat.width, largest: Math.min(main.width - 16, (main.height - 8 - 8 - tray.height) * 16 / 9) - mat.width < 2, ratio: Math.round(mat.width / mat.height * 100) / 100};
+      matBox: [mat.x, mat.y, mat.width, mat.height], matW: mat.width, largest: Math.min(main.width - 16, (main.height - 8 - 8 - tray.height) * 16 / 9) - mat.width < 2, ratio: Math.round(mat.width / mat.height * 100) / 100};
   });
   const pane0 = await paneGeo();
   const paneGrip = await rob.page.locator(".cm-board-panegrip [data-drag=pane]").boundingBox();
@@ -620,11 +631,11 @@ try {
   await rob.page.mouse.up();
   const pane1 = await paneGeo();
   ok(pane0.pane === 330 && Math.abs(pane1.pane - 530) <= 2 && pane1.tile > pane0.tile + 150 && pane1.matW < pane0.matW && pane1.largest && Math.abs(pane1.ratio - 1.78) < 0.02,
-    `the divider between the pane and the mat drags: 200px right, the pane ${pane0.pane} → ${pane1.pane}px, the tiles growing with it, the mat still the largest 16:9 beside it`);
+    `the divider between the pane and the mat drags: 200px right, the pane ${pane0.pane} → ${pane1.pane}px, the tiles growing with it, the mat still the largest 16:9 beside the reserved pane`);
   ok(pane0.mini === 0 && pane1.mini === 2 && pane1.robLands >= 1 && pane1.inert, `and past 400px each tile is a miniature of that seat's board, cards and all (the Forest on Rob's: ${pane1.robLands}), only to look at`);
   await shot(rob.page, "pane-miniatures-1400");
   await rob.page.locator(".cm-board-tile[data-seat='1'] .cm-board-tile-main").click();
-  await rob.page.waitForFunction(() => /Maya's hand/.test(document.querySelector(".cm-board-mat")?.innerText || ""), null, {timeout: 5000});
+  await rob.page.waitForFunction(() => document.querySelector(".cm-board-mat .cm-seat-header .cm-mat-name")?.textContent === "Maya", null, {timeout: 5000});
   ok(true, "a miniature is still the tile: a click on it puts that seat's board on the mat");
   await rob.page.locator(".cm-board-tile[data-seat='0'] .cm-board-tile-main").click();
   await chooseView(rob.page,"table");
@@ -639,11 +650,11 @@ try {
 
   const fullTools = async page => {
     await page.locator('.cm-stage-region[data-renderer="webgl"]').waitFor();
-    if(!await page.locator('.cm-stage-rail').isVisible()) await page.getByRole('button',{name:'Toggle board tools',exact:true}).click();
-    if(!await page.locator('.cm-stage-side').isVisible()) await page.getByRole('button',{name:'Toggle table panel',exact:true}).click();
+    if(!await page.locator('.cm-stage-rail').isVisible()) await page.locator('.cm-stage-left[data-action=board-stage-rail]').click();
+    if(!await page.locator('.cm-stage-side').isVisible()) await page.locator('.cm-stage-right[data-action=board-stage-side]').click();
   };
   /* Full screen: the page is the game's; a card picked shows large at the side with what it can do; ⎋ leaves. */
-  await chooseView(maya.page,"full"); await fullTools(maya.page);
+  await chooseView(maya.page,"full"); await placeModule(maya.page, "Table Vitals", "Right"); await fullTools(maya.page);
   await maya.page.locator(".cm-stage-rail").waitFor();
   const fullGeo = await maya.page.evaluate(() => {const r = document.getElementById("cm-board").getBoundingClientRect(); return [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height), innerWidth, innerHeight, document.documentElement.scrollWidth - document.documentElement.clientWidth];});
   ok(fullGeo[0] === 0 && fullGeo[1] === 0 && fullGeo[2] === fullGeo[4] && fullGeo[3] === fullGeo[5] && fullGeo[6] === 0, `Full screen takes the whole window by itself where the browser gives no full screen (${fullGeo.slice(0, 4).join(",")} of ${fullGeo[4]}×${fullGeo[5]})`);
@@ -658,16 +669,20 @@ try {
   await maya.page.getByRole('slider',{name:'Table tilt',exact:true}).fill('40');
   await maya.page.getByRole('button',{name:'Camera',exact:false}).click();
   await shot(maya.page,"board-full-3d-1280");
-  ok(/played (Forest|Island)/.test(await text(maya.page, ".cm-full-side .cm-board-band")), "and the history in the side column");
+  ok(/played (Forest|Island)/.test(await text(maya.page, ".cm-stage-side .cm-stage-module[data-module=history] .cm-board-band")), "and the history in the side column");
   const firstHand = maya.page.locator(".cm-stage-fan .cm-bcard").first(), firstName = (await firstHand.getAttribute("aria-label")).split(/[,:]/)[0];
+  const firstReadRevision = views(MAYA).at(-1).revision, firstReadSends = sent[MAYA].length;
   await firstHand.click();
-  await maya.page.locator(".cm-full-pick").waitFor();
-  ok((await maya.page.getAttribute(".cm-full-pick", "aria-label")) === firstName, `a card picked shows large at the side (${firstName}), and picking it does nothing else`);
+  await maya.page.locator('#cm-card-menu [data-action=board-card-menu-view]').click();
+  await maya.page.locator('#cm-card-inspector .cm-bcard').waitFor();
+  eq((await text(maya.page, '#cm-card-inspector h3')).trim(), firstName, `Read shows the chosen card large (${firstName})`);
+  eq([views(MAYA).at(-1).revision, sent[MAYA].length], [firstReadRevision, firstReadSends], 'reading the hand card neither sends an action nor changes the game');
   await shot(maya.page, "board-full-1280");
-  /* Full screen uses independently ordered modules rather than one card/log split. */
-  const sideRatio=await maya.page.locator('#cm-full-pick .cm-bcard').evaluate(el=>{const r=el.getBoundingClientRect();return r.width/r.height;});
+  /* The independent History module stays present while the shared read-only inspector is open. */
+  const sideRatio=await maya.page.locator('#cm-card-inspector .cm-bcard').evaluate(el=>{const r=el.getBoundingClientRect();return r.width/r.height;});
   ok(Math.abs(sideRatio-5/7)<.01 && await maya.page.locator('.cm-stage-module[data-module="history"]').count()===1,
-    "the real-game inspector keeps its card aspect beside an independently arranged History module");
+    "the real-game inspector keeps its card aspect while the independently arranged History module remains present");
+  await maya.page.locator('#cm-card-inspector [data-action=board-inspect-close]').click();
   await chooseView(maya.page,"focus");
   await maya.page.locator(".cm-stage-top").waitFor();
   ok(await maya.page.getAttribute("#cm-board", "data-view") === "focus", "⎋ leaves Full screen for Focus");
@@ -690,8 +705,8 @@ try {
   await maya.page.waitForFunction(() => !document.querySelector("#cm-board-callouts .cm-callout"), null, {timeout: 20000});
   await chooseView(maya.page,"full"); await fullTools(maya.page);
   await maya.page.locator(".cm-stage-rail").waitFor();
-  const pillClear = await maya.page.evaluate(() => {const pill = document.querySelector(".cm-full-pill").getBoundingClientRect(), first = document.querySelector(".cm-full-mine .cm-seatboard-body").getBoundingClientRect(); return first.top >= pill.bottom;});
-  ok(pillClear, "the step and Pass pill sits over her board without covering its first row");
+  const pillClear = await maya.page.evaluate(() => {const controls = document.querySelector(".cm-stage-actions") || document.querySelector(".cm-stage-top"), pill = controls.getBoundingClientRect(), first = document.querySelector(".cm-full-mine .cm-seatboard-body").getBoundingClientRect(); return pill.height > 0 && first.top >= pill.bottom;});
+  ok(pillClear, "the rendered turn controls stay above her board without covering its first row");
   await maya.page.getByRole("button",{name:"Camera",exact:false}).click();
   await maya.page.getByRole("button",{name:"Next seat",exact:true}).click();
   await maya.page.getByRole("button",{name:"Camera",exact:false}).click();
@@ -722,14 +737,14 @@ try {
   /* Where the browser will, Full screen asks it for the whole screen, and gives it back on the way out. B1, item 22: it
      asks for the whole DOCUMENT -- a browser shows only the fullscreen element's own subtree, and the Coach and the
      app's dialogs live beside the board -- so Table vitals and the Coach are seen in it. */
-  await chooseView(rob.page,"full"); await fullTools(rob.page);
+  await chooseView(rob.page,"full"); await placeModule(rob.page, "Table Vitals", "Right"); await fullTools(rob.page);
   eq(await rob.page.evaluate(() => document.fullscreenElement), null, "3D does not commandeer browser full-screen");
   /* Whose turn it is, on that seat's line of the side column's vitals (Rob, 2026-10-09). */
   const fullTurn = await rob.page.evaluate(() => [...document.querySelectorAll(".cm-full-vitals .cm-board-turn-mark")].map((m) => ({seat: m.closest("[data-seat]").dataset.seat, said: m.getAttribute("aria-label"), ringed: m.closest(".is-turn") !== null})));
   const turnNow = views(ROB).at(-1).state.turnPlayerId;
   eq(fullTurn, [{seat: String(turnNow), said: turnNow === 0 ? "Your turn" : "Maya's turn", ringed: true}], `in Full screen the side column marks whose turn it is, on that seat's vitals alone (${JSON.stringify(fullTurn)})`);
   const seenAt = (page, sel) => page.evaluate((q) => {const el = document.querySelector(q); if (!el) return false; const r = el.getBoundingClientRect(); const hit = document.elementFromPoint(r.left + r.width / 2, r.top + Math.min(60, r.height / 2)); return r.width > 0 && !!hit && !!hit.closest(q);}, sel);
-  await rob.page.click(".cm-full-side .cm-full-vitals [data-action=board-vitals]");
+  await rob.page.click(".cm-stage-side .cm-full-vitals [data-action=board-vitals]");
   await rob.page.locator("#cm-dialog[open] .cm-table-vitals").waitFor();
   ok(await seenAt(rob.page, "#cm-dialog[open]"), "in 3D, Table vitals is seen over the game");
   await rob.page.click("#cm-dialog[open] .cm-form-footer [data-action=close]");
@@ -737,14 +752,13 @@ try {
   await rob.page.locator("#cm-board-coach:not([hidden]) .cm-coach-input").waitFor();
   const docked = await rob.page.evaluate(() => {
     const c = document.getElementById("cm-board-coach").getBoundingClientRect(), board = document.querySelector(".cm-stage-region").getBoundingClientRect(), header = document.querySelector(".cm-stage-top").getBoundingClientRect(), host = document.getElementById("cm-board").getBoundingClientRect();
-    return {reserved: board.right <= c.left + 1, aligned: Math.abs(c.right - host.right) < 1 && Math.abs(c.top - header.bottom) < 1, contained: c.width >= 240 && c.bottom <= host.bottom + 0.5, width: Math.round(c.width)};
+    return {reserved: board.right <= c.left + 1, aligned: c.left >= host.left && c.right <= host.right + 1 && c.top >= header.bottom - 1, contained: c.width >= 240 && c.bottom <= host.bottom + 0.5, width: Math.round(c.width)};
   });
-  ok(await seenAt(rob.page, "#cm-board-coach") && docked.reserved && docked.aligned && docked.contained, `the Coach is visible in its reserved ${docked.width}px column beside the board and below the header`);
+  ok(await seenAt(rob.page, "#cm-board-coach") && docked.reserved && docked.aligned && docked.contained, `the Coach is visible in its reserved ${docked.width}px drawer below the header, clear of the board`);
   await shot(rob.page, "coach-full-1400");
   await rob.page.click("#cm-board-coach [aria-label='Close the Coach']");
   /* B1, item 23: the rail squares its own buttons, not the ones in the menus it opens. */
-  await rob.page.getByRole("button",{name:"Profile menu",exact:true}).click();
-  await rob.page.getByRole("button",{name:"Settings",exact:true}).click();
+  await utility(rob.page,"board-tools");
   await rob.page.locator("#cm-board-tools").waitFor();
   const toolsMenu = await rob.page.evaluate(() => {
     const bs = [...document.querySelectorAll("#cm-board-tools .v-button")].map((el) => ({r: el.getBoundingClientRect(), clipped: el.scrollWidth > el.clientWidth + 1}));
@@ -970,7 +984,7 @@ try {
   await second.page.keyboard.press(key);
   await second.page.keyboard.press("Enter");
   await second.page.locator(".cm-hand-show").waitFor({state: "detached"});
-  await second.page.locator("#cm-board-decision [data-action=board-confirm]").click(); if(await second.page.locator("[data-action=board-inspect-close]").count()) await second.page.locator("[data-action=board-inspect-close]").click();
+  await bindSelection(second.page);
   await second.page.click(`.cm-board-tile[data-seat='${secondSeat}'] [data-action=board-focus]`);
   await waitText(second.page, ".cm-board-lands", /Lands · 1/);
   ok(await second.page.locator('.cm-board-lands').getByRole('button',{name:new RegExp(`^${secondLand}(?:,|:|$)`)}).count()>0, "Enter plays it: the hand is put away and the land is down");
@@ -978,7 +992,7 @@ try {
   /* B1, item 17: the Panel reads a tapped card upright, with a small Tapped mark, and no "Card" heading over it. */
   await second.page.click("[data-action=board-actions-open]");
   await second.page.locator(".cm-stage-rail [data-action=board-option]", {hasText: "Tap for mana"}).first().click();
-  await second.page.locator("#cm-board-decision [data-action=board-confirm]").click(); if(await second.page.locator("[data-action=board-inspect-close]").count()) await second.page.locator("[data-action=board-inspect-close]").click();
+  await bindSelection(second.page);
   await second.page.locator(".cm-board-mat .cm-board-lands .cm-bcard.is-tapped").first().waitFor({timeout: 10000});
   /* The accessibility pass: a tapped card says so. */
   const tappedSaid = await second.page.locator(".cm-board-mat .cm-board-lands .cm-bcard.is-tapped").first().getAttribute("aria-label");
@@ -989,16 +1003,19 @@ try {
   ok(/^([1-9])\/\1$/.test(tray2.shown.Creature) && /^0\//.test(tray2.shown.Land) && JSON.stringify(tray2.shown) === JSON.stringify(tray2.want),
     `with mana in the pool the tray reads Creature ${tray2.shown.Creature}, the land drop spent reads Land ${tray2.shown.Land}, and it agrees with the lit cards`);
 
-  /* B5, items 10 and 12, and Rob's of 2026-10-09 ("When I play a card to the board from my hand, I don't want to have to
-     click a pop-up to resolve it"): A SPELL ON THE STACK. With the mana, the creature in hand is bright; cast, it passes
-     for its caster (game/room/room.mjs, passAfterCast) -- nothing more to press -- and the other board's button names
-     what passing will do, Resolve and the spell's name, its strip saying whose step it is and that they may respond. */
+  /* A spell on the stack: the room first preserves its bounded Undo window. Explicitly passing it
+     ends that window and gives the other board its actual response opportunity and named Resolve. */
   const toCast = second.page.locator(".cm-board-hand .cm-bcard.is-bright").first(), castName = (await toCast.getAttribute("aria-label")).split(/[,:]/)[0];
   const secondEmail = second === rob ? ROB : MAYA, casterSeen = views(secondEmail).length;
-  await toCast.click(); await second.page.locator("#cm-board-decision [data-action=board-confirm]").click(); if(await second.page.locator("[data-action=board-inspect-close]").count()) await second.page.locator("[data-action=board-inspect-close]").click();
+  await useCardOffer(second.page, toCast, "cast");
   const firstBoard = second === rob ? maya : rob;
+  for (let i = 0; i < 100 && !views(secondEmail).at(-1).decision?.options.some(o => o.act === 'undo-play'); i += 1) await second.page.waitForTimeout(50);
+  const afterCast = views(secondEmail).at(-1);
+  ok(afterCast.state.stack.length === 1 && afterCast.decision?.options.some(o => o.act === 'undo-play'), 'the caster receives the server-authorized Undo window while the spell is on the stack');
+  await second.page.locator('.cm-stage-top [data-action=board-pass]:not([disabled])').click();
   await waitText(firstBoard.page, ".cm-stage-top [data-action=board-pass]", new RegExp(`Resolve ${castName}`));
   const secondName = second === rob ? "Rob" : "Maya", firstName_ = second === rob ? "Maya" : "Rob";
+  await waitText(second.page, ".cm-board-waiting", new RegExp(`Waiting on ${firstName_}`), 10000);
   ok(!views(secondEmail).slice(casterSeen).some((v) => v.decision && v.decision.kind === "priority" && v.state.stack.length),
     `cast, ${castName} goes on the stack and the caster is not asked again with it there: the cast passed for them`);
   eq((await text(firstBoard.page, ".cm-board-waiting")).trim(), `${secondName}'s first main phase · you may respond`, `on the other board the button reads Resolve ${castName}, and the strip says whose step it is and that they may respond`);
@@ -1015,9 +1032,7 @@ try {
   const picture=await stackCard.boundingBox();ok(picture.width>=150&&picture.height>picture.width,'the stack picture remains readable and upright');
   await firstBoard.page.keyboard.press('Escape');
   eq(await firstBoard.page.locator('.cm-stage-side.is-open').count(),0,'Escape puts the stack drawer away');
-  /* The caster's own view comes on the caster's socket, and may come after the other board's: until it does, the strip
-     says "Sent…". So it is waited for. */
-  await waitText(second.page, ".cm-board-waiting", new RegExp(`Waiting on ${firstName_}`), 10000);
+  /* The caster view has also acknowledged the pass before its Undo offer is inspected above. */
   ok(true, "and the caster's strip says who the table waits on");
   await shot(firstBoard.page, "resolve-" + (firstBoard === rob ? "1400" : "1280"));
   await chooseView(firstBoard.page,"full");
@@ -1038,8 +1053,10 @@ try {
   await second.page.getByRole('radio',{name:'Resources: Right',exact:true}).check();
   await second.page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
   if(!await second.page.locator('.cm-stage-side.is-open').count()) await second.page.locator('.cm-stage-right').click();
+  const inspectedRevision = views(secondEmail).at(-1).revision, inspectedSends = sent[secondEmail].length;
   await second.page.locator('.cm-board-mat .cm-board-lands .cm-bcard.is-tapped').first().click();
-  await second.page.locator('.cm-stage-side .cm-full-pick .cm-bcard').waitFor();
+  await second.page.locator('#cm-card-menu [data-action=board-card-menu-view]').click();
+  await second.page.locator('#cm-card-inspector .cm-bcard').waitFor();
   eq(await second.page.locator('.cm-board-mat').boundingBox(),beforeDrawer,'the shared drawer overlays without changing the mat');
   const resources = await second.page.evaluate(() => {
     const lands = [...document.querySelectorAll(".cm-board-mat .cm-board-lands .cm-bcard[data-card]")], up = lands.filter((c) => !c.classList.contains("is-tapped")).length;
@@ -1049,13 +1066,15 @@ try {
   ok(resources.row === `${secondLand} ${resources.up}/${resources.all}` && resources.inHand === resources.hand && resources.types[0].startsWith("Land"),
     `Turn Resources lists the lands by name as the mat has them (${resources.row}) and the hand by type adding up to the hand (${resources.inHand} of ${resources.hand}: ${resources.types.join(", ")})`);
   const panelCard = await second.page.evaluate(() => {
-    const el = document.querySelector(".cm-stage-side .cm-full-pick .cm-bcard"), r = el.getBoundingClientRect(), onMat = document.querySelector(".cm-board-mat .cm-board-lands .cm-bcard.is-tapped");
+    const el = document.querySelector("#cm-card-inspector .cm-bcard"), r = el.getBoundingClientRect(), onMat = document.querySelector(".cm-board-mat .cm-board-lands .cm-bcard.is-tapped");
     return {transform: getComputedStyle(el).transform, tall: r.height > r.width, mark: ((el.querySelector(".cm-bcard-mark.is-state") || {}).textContent || "").trim(), label: el.getAttribute("aria-label"),
-      heading: [...document.querySelectorAll(".cm-stage-side h3")].map((h) => h.textContent.trim()), matTurned: getComputedStyle(onMat).transform !== "none"};
+      heading: [...document.querySelectorAll("#cm-card-inspector h3")].map((h) => h.textContent.trim()), matTurned: getComputedStyle(onMat).transform !== "none"};
   });
-  ok(panelCard.tall && panelCard.transform === "none" && panelCard.mark === "Tapped" && /tapped/.test(panelCard.label) && panelCard.matTurned, `the Panel shows the tapped ${secondLand} upright with a small Tapped mark, while it lies turned on the mat`);
+  ok(panelCard.tall && panelCard.transform === "none" && panelCard.mark === "Tapped" && /tapped/.test(panelCard.label) && panelCard.matTurned, `Read shows the tapped ${secondLand} upright with a small Tapped mark, while it lies turned on the mat`);
   ok(!panelCard.heading.includes("Card"), `and no "Card" heading over it (${panelCard.heading.join(", ")})`);
+  eq([views(secondEmail).at(-1).revision, sent[secondEmail].length], [inspectedRevision, inspectedSends], 'reading the spent tapped land neither sends an action nor changes the game');
   await shot(second.page, "panel-tapped-" + (second === rob ? "1400" : "1280"));
+  await second.page.locator('#cm-card-inspector [data-action=board-inspect-close]').click();
   await second.page.locator('.cm-stage-right').click();
   await second.page.locator('.cm-stage-side').waitFor({state:'hidden'});
   /* B5, items 10 and 12: ANOTHER PLAYER'S TURN. Rob plays a land on turn 3, which gives him the two mana for an instant;
@@ -1066,7 +1085,7 @@ try {
       const draw = who.page.locator(".cm-stage-top [data-action=board-draw]:not([disabled])");
       if (await draw.count()) {await draw.click(); await who.page.waitForTimeout(250); acted = true; continue;}
       const forest = who.page.locator(".cm-board-hand .cm-bcard.is-bright", {hasText: "Forest"}).first();
-      if (who === rob && await forest.count()) {await forest.click(); await who.page.locator("#cm-board-decision [data-action=board-confirm]").click(); if(await who.page.locator("[data-action=board-inspect-close]").count()) await who.page.locator("[data-action=board-inspect-close]").click(); await who.page.waitForTimeout(250); acted = true; continue;}
+      if (who === rob && await forest.count()) {await useCardOffer(who.page, forest, "play-land"); await who.page.waitForTimeout(250); acted = true; continue;}
       const pass = who.page.locator(".cm-stage-top [data-action=board-pass]:not([disabled])");
       if (await pass.count()) {await pass.click(); await who.page.waitForTimeout(200); acted = true;}
     }
@@ -1080,7 +1099,7 @@ try {
   ok(await heard(ROB, "sfx/sfx_event_your_turn.mp3"), "and Rob's own turn 3 was announced to him as his turn");
   /* WHOSE TURN IT IS, on that seat's card in Focus's side pane (Rob, 2026-10-09: "Icon on the Card in the left or right
      side pane"): Maya's tile ringed and marked, and only hers. */
-  const tileTurn = await rob.page.evaluate(() => [...document.querySelectorAll(".cm-board-pane .cm-board-turn-mark")].map((m) => ({seat: m.closest(".cm-board-tile").dataset.seat, said: m.getAttribute("aria-label"), ringed: m.closest(".cm-board-tile").classList.contains("is-turn")})));
+  const tileTurn = await rob.page.evaluate(() => [...document.querySelectorAll(".cm-board-pane .cm-board-tile.is-turn .cm-seat-header.is-turn")].map((m) => ({seat: m.closest(".cm-board-tile").dataset.seat, said: m.querySelector(".cm-seat-state").textContent, ringed: getComputedStyle(m.querySelector(".cm-seat-portrait")).boxShadow !== "none"})));
   eq(tileTurn, [{seat: "1", said: "Maya's turn", ringed: true}], `in Focus, Maya's tile in the side pane is marked as hers to play, and no other (${JSON.stringify(tileTurn)})`);
   /* STOP AT EVERY STEP OF MY TURN (Settings; Rob, 2026-10-11): kept with the preferences, and told to the room by the board.
      A room that does not take it (here, made to refuse: the AI seats playing on would) is not a notice, and the board does
@@ -1115,7 +1134,7 @@ try {
   await maya.page.click("#cm-dialog [data-action=board-settings-save]");
   eq(await maya.page.evaluate(() => localStorage.getItem("cm-board-hold")), "on", "Tools' Hold priority after I cast is kept on the device once saved");
   const sentBefore = sent[MAYA].length;
-  await maya.page.locator(".cm-board-hand .cm-bcard.is-bright[aria-label*='Cast']").first().click(); await maya.page.locator("#cm-board-decision [data-action=board-confirm]").click(); if(await maya.page.locator("[data-action=board-inspect-close]").count()) await maya.page.locator("[data-action=board-inspect-close]").click();
+  await useCardOffer(maya.page, maya.page.locator(".cm-board-hand .cm-bcard.is-bright[aria-label*='Cast']").first(), "cast");
   await waitText(maya.page, ".cm-stage-top [data-action=board-pass]", new RegExp(`Resolve ${heldName}`));
   const castFrame = sent[MAYA].slice(sentBefore).map((m) => JSON.parse(m)).find((f) => f.type === "act");
   ok(castFrame && castFrame.hold === true, `with it on, Maya's cast of ${heldName} says hold, and she is asked again before anyone: Resolve ${heldName}`);
@@ -1300,19 +1319,18 @@ try {
   }
   /* KEYS AND HELP, from the board's menu: the table's help, the keys among it. Escape then steps back out of the menu. */
   await rob.page.evaluate(() => document.activeElement && document.activeElement.blur());
-  await utility(rob.page,"board-menu");
-  await rob.page.click("#cm-board-nav [data-action=page-help]");
+  await utility(rob.page,"board-help");
   await rob.page.locator("#cm-dialog[open] .cm-help-keys").waitFor();
   const keys = await rob.page.locator("#cm-dialog[open] .cm-help-keys kbd").allTextContents();
   ok((await rob.page.locator("#cm-dialog-title").textContent()) === "Help — Play: the table and the board" && ["Tab", "Space", "Enter", "Escape", "1", "9", "+", "↑", "←"].every((k) => keys.includes(k)),
-    `☰ › Keys and help opens the table's help with the keys (${[...new Set(keys)].join(" ")})`);
+    `Table › Help opens the table's help with the keys (${[...new Set(keys)].join(" ")})`);
   await rob.page.click("#cm-dialog [data-action=close]");
   await rob.page.locator("#cm-dialog[open]").waitFor({state: "detached"}).catch(() => {});
   await rob.page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"), null, {timeout: 5000});
-  ok(await rob.page.locator("#cm-board-nav").count() === 1, "closing Help leaves the board where it was, the menu still open");
+  ok(await rob.page.locator("#cm-table-menu").count() === 1, "closing Help leaves the board where it was, the Table menu still open");
   await rob.page.keyboard.press("Escape");
-  await rob.page.locator("#cm-board-nav").waitFor({state: "detached", timeout: 5000});
-  ok(true, "and Escape closes the menu");
+  await rob.page.locator("#cm-table-menu").waitFor({state: "detached", timeout: 5000});
+  ok(true, "and Escape closes the Table menu");
 
   /* B1, item 25: THE HAND IS WHOLE in every view -- Table, Focus, Full screen, and Full screen once the browser's own
      full screen is left -- at 1400 (Rob, whose browser gives the whole screen) and at 1280 (Maya, whose does not). */
@@ -1338,10 +1356,9 @@ try {
 
   /* B1, items 21 and 24: the history opens from a clock wherever it is offered, never ☰ (the menu's) or ⌕; the Coach is
      its own glyph, the same wherever it is named, and ✦ is nowhere. */
-  /* The profile menu open, for its History; then Settings, a window of its own (Rob, Oct 25), for its Recommended actions. */
-  await rob.page.locator(".cm-stage-top [data-action=board-profile]").click();
+  /* History keeps its glyph on the board; Play settings supplies Recommended actions. */
   const histGlyphs = await rob.page.evaluate(() => [...document.querySelectorAll("#cm-board [data-action=board-history]")].map((el) => [(el.querySelector("svg.cm-icon") || {}).outerHTML || "", el.textContent]));
-  await rob.page.locator(".cm-stage-top [data-action=board-tools]").click();
+  await utility(rob.page,"board-tools");
   const glyphs = await rob.page.evaluate((histGlyphs) => {
     const svg = (el) => (el.querySelector("svg.cm-icon") || {}).outerHTML || "";
     const hist = histGlyphs.map(([g]) => g), coachEls = [...document.querySelectorAll("#cm-board [data-action=board-coach], #cm-board-tools [data-action=board-coach]")];
@@ -1363,9 +1380,10 @@ try {
   const matBefore = await matWidth();
   await rob.page.click(".cm-board-coach-open");
   await rob.page.locator("#cm-board-coach:not([hidden]) .cm-coach-input").waitFor();
-  const coachBox = await rob.page.evaluate(() => {const r = document.getElementById("cm-board-coach").getBoundingClientRect(), mat = document.querySelector(".cm-board-mat").getBoundingClientRect(); return {width:r.width,right:r.right,edge:innerWidth,clear:mat.right<=r.left+1,visible:r.bottom<=innerHeight+1};});
-  ok(coachBox.width >= 240 && coachBox.right === coachBox.edge && coachBox.clear && coachBox.visible && await matWidth() <= matBefore, `the Coach reserves ${Math.round(coachBox.width)}px at the right edge while the full mat fits beside it`);
+  const coachBox = await rob.page.evaluate(() => {const r = document.getElementById("cm-board-coach").getBoundingClientRect(), mat = document.querySelector(".cm-board-mat").getBoundingClientRect(), drawer = document.querySelector(".cm-stage-side").getBoundingClientRect(); return {width:r.width,right:r.right,edge:innerWidth,drawerContained:r.left>=drawer.left && r.right<=drawer.right+1,clear:mat.right<=r.left+1,mat: {x:mat.x,y:mat.y,width:mat.width,height:mat.height},visible:r.bottom<=innerHeight+1};});
+  ok(coachBox.width >= 240 && coachBox.drawerContained && coachBox.right <= coachBox.edge && coachBox.clear && coachBox.visible && await matWidth() <= matBefore, `the Coach uses its ${Math.round(coachBox.width)}px reserved drawer while the full mat fits clear beside it`);
   ok(/Sees your board, hand and the table · turn \d+/.test(await text(rob.page, "#cm-coach-context")), "it says what it sees, and the turn");
+  await openCoachQuestions(rob.page);
   await rob.page.click("[data-action=board-coach-ask][data-q=\"What's my best play?\"]");
   ok(await rob.page.locator(".cm-coach-msg.is-typing").count() === 1, "a suggested prompt is asked, and the Coach shows it is typing");
   await rob.page.locator(".cm-coach-msg.is-coach:not(.is-typing)").waitFor({timeout: 5000});
@@ -1402,28 +1420,25 @@ try {
   ok(await rob.page.locator(".cm-coach-msg").count() === 0, "⋯ › Clear chat empties the thread");
   const moreOpen = () => rob.page.evaluate(() => document.querySelector("#cm-board-coach .cm-coach-more").open);
   ok(!await moreOpen(), "and closes ⋯");
-  /* ⋯ STAYS OPEN THROUGH THE COACH'S REPLY. The reply lands on its own 700ms timer and redraws the panel, and a rebuilt
-     <details> is shut, so ⋯ snapped closed under the reader (under load the reply to "Who's the threat?" landed between
-     the two clicks above, and Clear chat was gone). The question is asked and ⋯ opened in one task, so the reply cannot
-     land first however busy the machine is. The focus stays where it was too: a reader at the keyboard whose focus fell
-     to the page would have Space fan the hand. */
+  /* Hold only the injected transport reply, so real native disclosure and prompt clicks can establish
+     focus deterministically before it arrives. The actual board redraw must keep that focus. */
   const focusOn = (q) => rob.page.evaluate((q) => document.activeElement.matches(`#cm-board-coach .cm-coach-more ${q}`), q);
-  const staged = await rob.page.evaluate(() => {
-    document.querySelector("#cm-board-coach [data-action=board-coach-ask]").click();
-    const summary = document.querySelector("#cm-board-coach .cm-coach-more summary");
-    summary.focus(); summary.click();
-    return {typing: document.querySelectorAll(".cm-coach-msg.is-typing").length, open: document.querySelector("#cm-board-coach .cm-coach-more").open, focus: document.activeElement === summary};
-  });
+  await openCoachQuestions(rob.page);
+  let releaseReply = rob.holdCoachReply();
+  await rob.page.locator('#cm-board-coach [data-action=board-coach-ask]').first().click();
+  await rob.page.locator('#cm-board-coach .cm-coach-more summary').click();
+  const staged = await rob.page.evaluate(() => ({typing: document.querySelectorAll('.cm-coach-msg.is-typing').length, open: document.querySelector('#cm-board-coach .cm-coach-more').open, focus: document.activeElement.matches('#cm-board-coach .cm-coach-more summary')}));
   ok(staged.typing === 1 && staged.open && staged.focus, "⋯ opened, and focused, while the Coach is typing");
+  releaseReply();
   await rob.page.locator(".cm-coach-msg.is-coach:not(.is-typing)").waitFor({timeout: 5000});
   ok(await moreOpen() && await rob.page.locator("[data-action=board-coach-clear]").isVisible(), "the reply lands and ⋯ stays open, Clear chat still in it");
   ok(await focusOn("summary"), "and the focus stays on ⋯");
-  const staged2 = await rob.page.evaluate(() => {
-    document.querySelector("#cm-board-coach [data-action=board-coach-ask]").click();
-    document.querySelector("#cm-board-coach [data-action=board-coach-clear]").focus();
-    return {typing: document.querySelectorAll(".cm-coach-msg.is-typing").length, focus: document.activeElement.matches("#cm-board-coach [data-action=board-coach-clear]")};
-  });
+  releaseReply = rob.holdCoachReply();
+  await rob.page.locator('#cm-board-coach [data-action=board-coach-ask]').first().click();
+  await rob.page.locator('#cm-board-coach [data-action=board-coach-clear]').focus();
+  const staged2 = await rob.page.evaluate(() => ({typing: document.querySelectorAll('.cm-coach-msg.is-typing').length, focus: document.activeElement.matches('#cm-board-coach [data-action=board-coach-clear]')}));
   ok(staged2.typing === 1 && staged2.focus, "Clear chat has the focus while the Coach is typing again");
+  releaseReply();
   await rob.page.locator(".cm-coach-msg.is-typing").waitFor({state: "detached", timeout: 5000});
   ok(await moreOpen() && await focusOn("[data-action=board-coach-clear]"), "the reply lands and the focus stays on Clear chat");
   await rob.page.keyboard.press("Enter");
@@ -1448,7 +1463,7 @@ try {
   await chooseView(maya.page,"focus");
 
   /* DROPPED: the room ends Rob's socket; his board reconnects; Maya is told, then the table says he is back. */
-  const socketsBefore = routes[ROB].length, robFlag = ".cm-board-tile[data-seat='0'] .cm-board-tile-flag";
+  const socketsBefore = routes[ROB].length, robFlag = ".cm-board-tile[data-seat='0'] .cm-seat-state";
   /* One of Maya's reads (her table is read every two seconds) is answered by the room before Rob drops, and kept on
      the way back until the room has told her he dropped. Her board counts the reads it is handed, so the check below
      knows that one has landed. */
@@ -1471,7 +1486,7 @@ try {
   delete held[MAYA]; release();
   await rob.page.waitForFunction(() => document.querySelector(".cm-stage-top") && !document.querySelector(".cm-board-conn"), null, {timeout: 20000});
   ok(routes[ROB].length === socketsBefore + 1, "Rob's board opens a new socket by itself, and the room sends his view again");
-  await maya.page.waitForFunction(() => !/Dropped/.test(document.querySelector(".cm-board-tile[data-seat='0'] .cm-board-tile-flag")?.innerText || ""), null, {timeout: 20000});
+  await maya.page.waitForFunction(() => !/Dropped/.test(document.querySelector(".cm-board-tile[data-seat='0'] .cm-seat-state")?.innerText || ""), null, {timeout: 20000});
   ok(true, "and once he is back, Maya's board stops saying so");
 
   /* PHONES (Linear ROB-18; Rob, Oct 18: "the upright Focused phone layout"): Maya's screen becomes a phone held sideways.
@@ -1674,27 +1689,75 @@ try {
   ok(!away.includes("Game:") && /Where I was: /.test(away), "and with no game on the board, the mail names none");
   await rob.context.close(); await maya.context.close();
 } catch(error) {
-  mkdirSync("work",{recursive:true});
-  for(let i=0;i<proofPages.length;i++){const p=proofPages[i];if(!p.isClosed()){await p.screenshot({path:`work/table-board-failure-${i}.png`});console.error(await p.locator("#cm-board").evaluate(el=>({view:el.dataset,rect:el.getBoundingClientRect().toJSON(),hand:el.querySelector(".cm-board-hand")?.getBoundingClientRect().toJSON()})).catch(()=>null));}}
+  console.error(`table-board stopped after ${checks} checks`);
+  mkdirSync(SHOTS || "work",{recursive:true});
+  for(let i=0;i<proofPages.length;i++){const p=proofPages[i];if(!p.isClosed()){await p.screenshot({path:path.join(SHOTS || "work", `table-board-failure-${i}.png`)});console.error(await p.locator("#cm-board").evaluate(el=>({view:el.dataset,rect:el.getBoundingClientRect().toJSON(),hand:el.querySelector(".cm-board-hand")?.getBoundingClientRect().toJSON(),gestures:globalThis.__uatBoardGestures,historyCalls:globalThis.__uatHistoryCalls,historyAfterClick:globalThis.__uatHistoryAfterClick,history:[...el.querySelectorAll("#cm-board-history")].map(h=>({rect:h.getBoundingClientRect().toJSON(),display:getComputedStyle(h).display,visibility:getComputedStyle(h).visibility}))})).catch(()=>null));}}
   throw error;
 } finally {
   await close();
 }
-console.log(`table-board: ${checks} checks passed — a real game between two browsers over the table's socket: hidden hands, Keep, empty steps passing by themselves, a land tapped from the hand, Next step, Draw card from the button or the library, a cast that passes and one that holds, Resolve and Pass, a refusal in words, a dropped socket reopened, End game's second tap.`);
+console.log(`table-board: ${checks} checks passed — a real game between two browsers over the table's socket: hidden hands, Keep, empty steps passing by themselves, a land tapped from the hand, Next step, Draw card from the button or the library, a cast's Undo window and one that holds, Resolve and Pass, a refusal in words, a dropped socket reopened, End game's second tap.`);
 
 
+async function dismissAccount(page) {
+  if (await page.locator('#cm-user-menu:popover-open').count()) await page.keyboard.press('Escape');
+}
 async function chooseView(page, view) {
-  if(await page.locator('.cm-profile-menu').count()) await page.locator('.cm-stage-top [data-action=board-profile]').click();
-  if(!await page.locator('.cm-stage-camera [data-action=board-view]').count()) await page.locator('[data-action=board-camera]').click();
+  await dismissAccount(page);
+  if (!await page.locator('.cm-stage-camera [data-action=board-view]').count()) await page.locator('[data-action=board-camera]').click();
   await page.locator('.cm-stage-camera [data-action=board-view][data-view="'+view+'"]').click();
 }
 async function utility(page, action) {
-  const q='.cm-stage-top [data-action="'+action+'"]';
-  if(!await page.locator(q).count()) await page.locator('.cm-stage-top [data-action=board-profile]').click();
-  await page.locator(q).click();
+  await dismissAccount(page);
+  if (action === 'board-tools') {
+    if (await page.locator('#cm-board-tools').isVisible()) return;
+    if (!await page.locator('.cm-stage-camera [data-action=board-tools]').count()) await page.locator('[data-action=board-camera]').click();
+    await page.locator('.cm-stage-camera [data-action=board-tools]').click();
+  } else if (action === 'board-help') {
+    if (!await page.locator('#cm-table-menu').count()) await page.locator('[data-action=board-table-menu]').click();
+    await page.locator('#cm-table-menu [data-action=page-help][data-help=table]').click();
+  } else if (action === 'board-menu') {
+    if (!await page.locator('#cm-table-menu [data-action=board-menu]').count()) await page.locator('[data-action=board-table-menu]').click();
+    await page.locator('#cm-table-menu [data-action=board-menu]').click();
+  } else {
+    if (action === 'board-history') await page.evaluate(() => {
+      if (globalThis.__uatHistoryHooked) return;
+      globalThis.__uatHistoryHooked = true; globalThis.__uatHistoryCalls = 0;
+      const run = __cm.actions['board-history'];
+      __cm.actions['board-history'] = (...args) => {globalThis.__uatHistoryCalls++; return run(...args);};
+    });
+    await page.locator('#cm-board [data-action="'+action+'"]:visible').first().click();
+    if (action === 'board-history') await page.evaluate(() => {
+      const h = document.getElementById('cm-board-history');
+      globalThis.__uatHistoryAfterClick = {calls: globalThis.__uatHistoryCalls, count: document.querySelectorAll('#cm-board-history').length, rect: h?.getBoundingClientRect().toJSON(), display: h && getComputedStyle(h).display};
+    });
+  }
+}
+async function placeModule(page, label, side) {
+  await utility(page, 'board-tools');
+  await page.locator('[data-action=board-modules-settings]').click();
+  await page.getByRole('radio', {name: label+': '+side, exact: true}).check();
+  await page.getByRole('button', {name: 'Save drawer modules', exact: true}).click();
 }
 async function fullCoach(page) {
-  await page.getByRole('button',{name:'Profile menu',exact:true}).click();
-  await page.getByRole('button',{name:'Settings',exact:true}).click();
+  await utility(page, 'board-tools');
   await page.locator('#cm-board-tools [data-action="board-coach"]').click();
+}
+async function bindSelection(page) {
+  const binding = page.locator('#cm-board-decision [data-action=board-direct]:visible:not([disabled]), #cm-board-decision [data-action=board-confirm]:visible:not([disabled])');
+  await binding.first().waitFor();
+  eq(await binding.count(), 1, 'the reviewed choice has one enabled binding control');
+  await binding.click();
+  if (await page.locator('[data-action=board-inspect-close]').count()) await page.locator('[data-action=board-inspect-close]').click();
+}
+async function useCardOffer(page, card, act) {
+  await card.click();
+  const offered = page.locator('#cm-card-menu [data-action=board-card-menu-do][data-act="'+act+'"]');
+  eq(await offered.count(), 1, 'the selected card offers exactly one '+act+' action');
+  await offered.click();
+  if (!['undo-mana', 'undo-land', 'undo-play'].includes(act)) await bindSelection(page);
+}
+async function openCoachQuestions(page) {
+  const questions = page.locator('#cm-board-coach .cm-coach-questions');
+  if (!await questions.evaluate(el => el.open)) await questions.locator('summary').click();
 }
