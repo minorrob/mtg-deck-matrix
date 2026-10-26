@@ -119,6 +119,7 @@ try {
   await page.goto(`${address}/index.html#table?id=tablepreview01`);
   await page.locator('.cm-stage-region[data-renderer="webgl"]').waitFor();
   assert.equal(await page.locator('[data-action="board-3d"], [data-action="board-stage"]').count(),0,'Full screen has no 3D switch');
+  if(await page.locator('.cm-stage-rail.is-open').count()) await page.locator('.cm-stage-left').click();
   const fanIndices=()=>page.locator('.cm-stage-fan-slot').evaluateAll(els=>els.map(el=>Number(el.dataset.handIndex)));
   await page.waitForFunction(()=>document.querySelectorAll('.cm-stage-fan-slot').length>=9);
   const shown=(await fanIndices()).length;
@@ -128,7 +129,6 @@ try {
   assert.deepEqual(await fanIndices(),[23,...Array.from({length:shown-1},(_,i)=>i)],'previous wraps to the final own card at current fitted capacity');
   await page.getByRole('button',{name:'Next hand card',exact:true}).click();
   assert.deepEqual(await fanIndices(),Array.from({length:shown},(_,i)=>i),'next wraps back through the start');
-  if(await page.locator('.cm-stage-rail.is-open').count()) await page.locator('.cm-stage-left').click();
   assert.equal(await page.locator('.cm-stage-rear').count(),3,"all other seats sit across the back");
   /* ROB-98 (Rob, Oct 18: "Go with the 48px land spacing"): every land on the front mat is reached by a pointer at its upper
      half -- 10%, 25% and 45% down its middle -- at rest and with each card of the fan hovered, at 1400x900, 1024x768 and
@@ -143,7 +143,8 @@ try {
   }));
   for(const [width,height] of [[1400,900],[1024,768],[1280,720]]) {
     await page.setViewportSize({width,height});await page.waitForTimeout(200);await away();
-    assert.ok(await page.locator('.cm-stage-front .cm-board-lands .cm-bcard').count()>=5,`${width}x${height}: the front mat shows its lands`);
+    const lands=await page.locator('.cm-stage-front .cm-board-lands .cm-bcard').evaluateAll(cards=>cards.flatMap(c=>(c.dataset.landMembers||c.dataset.card).split(',')).sort());
+    assert.deepEqual(lands,['459','469','483','502','527'],`${width}x${height}: all five physical lands remain represented by singleton faces or canonical grouped members`);
     assert.deepEqual(await landsBlocked(),[],`${width}x${height}: every land's upper half is reached at rest`);
     for(const hand of await page.locator('.cm-stage-fan-slot .cm-bcard').all()) {
       await away();
