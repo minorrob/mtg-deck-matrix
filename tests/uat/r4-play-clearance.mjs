@@ -42,3 +42,5 @@ export async function zoneCaptionBounds(page){return page.evaluate(()=>{
  for(let i=0;i<texts.length;i++)for(let j=i+1;j<texts.length;j++){const a=texts[i],b=texts[j];if(a.frame===b.frame||a.el.closest('.cm-mat')!==b.el.closest('.cm-mat'))continue;if(Math.min(a.r.right,b.r.right)-Math.max(a.r.left,b.r.left)>1&&Math.min(a.r.bottom,b.r.bottom)-Math.max(a.r.top,b.r.top)>1)problems.push({overlap:[a.el.textContent.trim(),b.el.textContent.trim()]});}
  return problems;
 });}
+
+export async function firstCardHorizontalBounds(page){return page.locator('.cm-board-table .cm-board-field').evaluateAll(fields=>fields.flatMap(field=>{const card=field.querySelector('.cm-bcard');if(!card)return [];const f=field.getBoundingClientRect(),r=card.getBoundingClientRect(),slot=card.parentElement,section=card.closest('[data-card-section]');return r.left<f.left-.5||r.right>f.right+.5?[{card:card.dataset.card,field:{left:f.left,right:f.right},cardRect:{left:r.left,right:r.right},width:card.offsetWidth,transform:getComputedStyle(card).transform,slot:{width:slot.offsetWidth,left:getComputedStyle(slot).left,rect:slot.getBoundingClientRect().toJSON()},cell:section?.style.cssText}]:[];}));}
