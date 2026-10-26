@@ -4,6 +4,24 @@ Integration: integration/r4, baseline origin/main c567c581. Updated October 26, 
 PR: https://github.com/minorrob/mtg-deck-matrix/pull/890 (draft).
 Tracking: https://linear.app/robs-build/issue/ROB-197/implement-r4-design-foundation-and-reconciled-playworkshop-ux .
 
+## Latest acceptance checkpoint
+
+Current integrated Coach source is 9ce2148d (root integration d1ebc7db before later docs commits).
+All five legacy Play suites now pass: Camera layout, shell111, hand109, 3D camera106 and Babylon90.
+Native Focus42 covers the three reproduced Coach focus repairs; the last real-table run reached277,
+and its Clear-to-summary failure is repaired locally but still awaits the next full real-table pass.
+Engine is prepared for Run33 on d1ebc7db and holds no browser until Foundation releases its window.
+
+Foundation currently owns the serial browser for the finite four-gate batch: full folded matrix224
+passes; caption17 scenarios found one real large-HUD Focus caption/Actions-spine overlap, with a bounded
+gutter repair underway; Settings-window and fullscreen-notes follow. Workshop's migrated tabletop and
+the coordinator's shared-shell native baselines are queued. No additional design polish is in scope.
+The required CI, main merge and staging remain pending; production awaits Rob's separate go.
+
+Pins at 93d4bfbe are board114, stage21, SW577, app594 with Git/working/manifest byte parity. The later
+9ce2148d board repair and any current gutter repair require a fresh final pin/manifest update before
+the exact-head scan and push. The preexisting untracked design renders must be preserved.
+
 ## Coordinator resumed after PR #894
 
 Incoming ownership returned explicitly at pushed integration/r4

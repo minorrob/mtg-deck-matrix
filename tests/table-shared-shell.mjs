@@ -25,6 +25,7 @@ try {
     if(!await page.locator('.cm-stage-camera [data-action=board-view]').count()) await page.locator('[data-action=board-camera]').click();
     await page.locator(`.cm-stage-camera [data-action=board-view][data-view=${view}]`).focus();
     await page.keyboard.press('Enter');
+    await page.evaluate(async()=>{await document.fonts.ready;await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));});
     assert.ok(await page.locator('[data-action=board-camera]').evaluate(el=>el===document.activeElement),'switching view returns keyboard focus to Camera');
     assert.equal(await page.locator('#cm-board > header').count(),1,'one shared header');
     assert.equal(await page.locator('.cm-stage-top [data-action=board-profile]').count(),1,'one profile control');
