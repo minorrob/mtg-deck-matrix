@@ -74,13 +74,14 @@ try {
     for(const action of ['board-menu','board-history','board-tools']) {
       const settings=action==='board-tools';
       if(settings){
-        await page.locator('[data-action=board-profile]').click();
-        await page.locator('#cm-user-menu:popover-open').getByRole('button',{name:'Settings',exact:true}).click();
+        await page.locator('[data-action=board-camera]').click();
+        await page.locator('.cm-stage-camera [data-action=board-tools]').click();
       }else{
         await page.locator('[data-action=board-table-menu]').click();
         await page.locator(`#cm-table-menu [data-action=${action}]`).click();
       }
-      /* r4 places Pages and History under Table; the shared account popover opens Settings. */
+      /* r4 places Pages/History under Table and the game settings window under Camera.
+         The shared account Settings action navigates to the app Settings page. */
       const menu=page.locator(settings?'#cm-dialog[open]':action==='board-menu'?'#cm-board-nav':'#cm-board-history');
       await menu.waitFor({state:'visible'});const box=await menu.boundingBox();
       assert.ok(box.x>=0&&box.x+box.width<=width+1,'utility pop-ups fit without sideways scrolling');
@@ -110,7 +111,7 @@ try {
   assert.deepEqual(errors,[],'no page errors');
   console.log('table-shared-shell: shared headers, Camera, Tilt, overlay drawers and phone boundary passed');
 } catch(error) {
-  if(page){mkdirSync('work',{recursive:true});await page.screenshot({path:'work/shared-shell-failure.png'});console.error(await page.locator('#cm-board').evaluate(el=>({rect:el.getBoundingClientRect().toJSON(),html:el.innerHTML.slice(0,500)})));}
+  if(page){mkdirSync('work',{recursive:true});await page.screenshot({path:'work/shared-shell-failure.png'});console.error({url:page.url(),board:await page.locator('#cm-board').count()?await page.locator('#cm-board').evaluate(el=>({rect:el.getBoundingClientRect().toJSON(),html:el.innerHTML.slice(0,500)})):null});}
   throw error;
 } finally {server.kill();await close();}
 async function screenshot(page,name) {
