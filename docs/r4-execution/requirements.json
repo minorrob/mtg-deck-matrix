@@ -184,55 +184,79 @@
       "id": "CH-20",
       "tier": "C",
       "owner": "B",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "Strip \"Combat · blocks\": attacker tiles with three rows (Attacking · → · defender name), defender thumbs, state word top-right; states unsettled / ready / refused by border + glow + word; whole-set status line in the strip",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "board-r4-combat: 89 on worker branch, Table/Focus/3D/phone and representative themes",
+        "Independent actual-helper review: private settlement, serial/stale checks, exclusivity and exact Send guards",
+        "Current canonical retry regression, seven mutations and legacy display/direct-blocking/real-game helper acceptance remain pending"
+      ],
+      "commit": "80e5ee93"
     },
     {
       "id": "CH-21",
       "tier": "C",
       "owner": "B",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "One row, never wrap: thin arrows the height of a tile scroll the row; \"+N more\" accent subtext above Send aligned to the tiles' top; left arrow once scrolled",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "board-r4-combat: 89 on worker branch, Table/Focus/3D/phone and representative themes",
+        "Independent actual-helper review: private settlement, serial/stale checks, exclusivity and exact Send guards",
+        "Current canonical retry regression, seven mutations and legacy display/direct-blocking/real-game helper acceptance remain pending"
+      ],
+      "commit": "80e5ee93"
     },
     {
       "id": "CH-22",
       "tier": "C",
       "owner": "B",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "Send blockers at the far right, sapphire primary, disabled until every attacker is settled, tooltip says why; no lock glyph; private until sent",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "board-r4-combat: 89 on worker branch, Table/Focus/3D/phone and representative themes",
+        "Independent actual-helper review: private settlement, serial/stale checks, exclusivity and exact Send guards",
+        "Current canonical retry regression, seven mutations and legacy display/direct-blocking/real-game helper acceptance remain pending"
+      ],
+      "commit": "80e5ee93"
     },
     {
       "id": "CH-23",
       "tier": "C",
       "owner": "B",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "Desk per attacker (W08–W10): attacker already chosen; legal blocker tiles with thumb, name, effective P/T, hover pop-up, `aria-pressed` inverts to ink, second click clears; Don't block + Confirm (secondary, \"this attacker only\"); several blockers per attacker; a moved blocker unsettles its old attacker; removed text per RQ-05.4b/d/e/f",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "board-r4-combat: 89 on worker branch, Table/Focus/3D/phone and representative themes",
+        "Independent actual-helper review: private settlement, serial/stale checks, exclusivity and exact Send guards",
+        "Current canonical retry regression, seven mutations and legacy display/direct-blocking/real-game helper acceptance remain pending"
+      ],
+      "commit": "80e5ee93"
     },
     {
       "id": "CH-24",
       "tier": "I",
       "owner": "B",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "Twins told apart by a corner mark (a, b, c) on the thumb and hover-light on the table; no visible \"#486\"; engine ids stay underneath",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "board-r4-combat: 89 on worker branch, Table/Focus/3D/phone and representative themes",
+        "Independent actual-helper review: private settlement, serial/stale checks, exclusivity and exact Send guards",
+        "Current canonical retry regression, seven mutations and legacy display/direct-blocking/real-game helper acceptance remain pending"
+      ],
+      "commit": "80e5ee93"
     },
     {
       "id": "CH-25",
       "tier": "I",
       "owner": "B",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "Attack declarations: \"All at <player>\" / None stay; attack-risk hints stay; RQ-12 way back = None / unpick; the declared set is a private draft until Confirm",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "board-r4-combat: 89 on worker branch, Table/Focus/3D/phone and representative themes",
+        "Independent actual-helper review: private settlement, serial/stale checks, exclusivity and exact Send guards",
+        "Current canonical retry regression, seven mutations and legacy display/direct-blocking/real-game helper acceptance remain pending"
+      ],
+      "commit": "80e5ee93"
     },
     {
       "id": "CH-30",
