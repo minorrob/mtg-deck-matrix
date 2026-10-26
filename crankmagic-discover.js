@@ -455,9 +455,12 @@
     const reportAxis=reportParts.find(p=>(p.key||p.label)===params.get('axis'));
     const reportScore=fromReport?.metrics?.score?.value;
     const reportContext=fromReport?`<section class="cm-measure-context" aria-label="Measurement to refine" data-measure-report="${e(fromReport.id)}"><strong>Measured ${Number.isFinite(reportScore)?e(String(reportScore)):'—'} of 100</strong>${reportAxis?`<span> · Refine ${e(reportAxis.label)} · ${e(String(reportAxis.points))} of ${e(String(reportAxis.max))}</span>`:''}<a class="v-button compact" href="#decks?${e(new URLSearchParams({deck:fromDeck.id,report:fromReport.id}).toString())}">Back to report</a></section>`:'';
+    const replaceSlot=fromDeck?.slots.find(r=>r.purpose==='main'&&r.cardId===params.get('replace'));
+    const replaceCard=replaceSlot?C.card(replaceSlot.cardId):null;
+    const replaceContext=replaceCard?`<section class="cm-measure-context" aria-label="Card to replace"><strong>Replace ${e(replaceCard.name)}</strong><a class="v-button compact" href="#decks?${e(new URLSearchParams({deck:fromDeck.id,tab:'upgrades'}).toString())}">Review marked cards</a></section>`:'';
     C.main.innerHTML = (fromDeck ? `<div class="cm-crumbs"><a class="cm-crumb" href="#discover">Explore</a><a class="cm-crumb" href="#decks?deck=${encodeURIComponent(fromDeck.id)}">${e(fromDeck.name)}</a></div>` : '')
       + C.pageHead('Explore', advancedToolsButton() + (fromDeck ? `<a class="v-button" href="#decks?deck=${encodeURIComponent(fromDeck.id)}">Back to deck</a>` : '') + toolsButton(), 'discover')
-      + reportContext
+      + reportContext + replaceContext
       + `<div class="cm-toolbar"><label class="cm-search">Find a card<input id="cm-graph-query" placeholder="Card name" list="cm-graph-names"><datalist id="cm-graph-names"></datalist></label>${C.select('Connections', 'edgeType', [['mechanic', 'Shared mechanics / roles'], ['played', 'EDHREC co-play']], 'mechanic')}${b('Search catalog / link', 'graph-lookup')}${b('Back', 'graph-back')}${b('Reset view', 'graph-reset')}</div>
 
 
@@ -1156,7 +1159,8 @@
     function optionDialog(deck, card, why, firstSlots = new Set()) {
       const mains = deck.slots.filter((x) => x.purpose === 'main');
       const slots = mains.map((x) => [x.id, `${C.card(x.cardId)?.name || x.cardId}${firstSlots.has(x.id) ? ' — in the role' : ''}`]).sort((a, b) => (firstSlots.has(a[0]) ? 0 : 1) - (firstSlots.has(b[0]) ? 0 : 1) || a[1].localeCompare(b[1]));
-      const firstSlot = slots[0] && slots[0][0];
+      const requested=deck.slots.find(x=>x.purpose==='main'&&x.cardId===params.get('replace'));
+      const firstSlot = requested?.id || (slots[0] && slots[0][0]);
       /* THE TWO CARDS, THE WAY PROMOTE SHOWS THEM (Rob, 16 September). The deck page's Promote
          dialog puts the outgoing and incoming cards side by side before the swap is agreed to;
          a swap decided from a name in a dropdown is decided blind. The difference here is that

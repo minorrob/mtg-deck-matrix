@@ -193,7 +193,7 @@
     const line = away ? `Dropped · back by ${new Date(away.until).toLocaleTimeString("en-US", {hour: "numeric", minute: "2-digit"})}`
       /* The table sends a card count for your own seat only; nobody sees another seat's cards. */
       : s.deck ? `${s.deck.name}${s.cards !== undefined ? ` · ${s.cards + (s.deck.commander || []).length} cards` : ""}`
-      : s.occupied ? (s.you ? "Choose a deck." : "Choosing a deck")
+      : s.occupied ? (s.you ? "Choose a deck." : s.kind === "ai" ? "Choose an AI deck" : "Choosing a deck")
       : s.invited ? "Invitation sent · waiting on them" : s.kind === "ai" ? "No deck yet" : "Invite someone";
     const controls = [];
     if (t.phase === "selecting" || t.phase === "countdown") {
@@ -202,9 +202,9 @@
         controls.push(b("Choose mat", "table-mat", {}, false, {cls: "compact"}));
         if (s.deck) controls.push(b(s.ready ? "Not ready" : "Ready", "table-ready", {ready: s.ready ? "" : "1"}, !s.ready, {cls: "compact"}));
       } else if (t.youAreHost && s.kind === "ai") {
-        controls.push(b(s.deck ? "Change deck" : "Choose its deck", "table-deck", {seat: String(s.seatId)}, !s.deck, {cls: "compact"}));
+        controls.push(b(s.deck ? "Change deck" : "Choose its deck", "table-deck", {seat: String(s.seatId)}, false, {cls: "compact"}));
       } else if (t.youAreHost && s.kind === "human" && !s.occupied) {
-        controls.push(b(s.invited ? "New link" : "Invite", "table-invite", {seat: String(s.seatId)}, !s.invited, {cls: "compact"}));
+        controls.push(b(s.invited ? "New link" : "Invite", "table-invite", {seat: String(s.seatId)}, false, {cls: "compact"}));
         if (s.invited) controls.push(b("Withdraw", "table-uninvite", {seat: String(s.seatId)}, false, {cls: "compact"}));
       }
     }
@@ -348,6 +348,7 @@
       const seconds = document.getElementById("cm-table-seconds"), left = current && current.countdownAt ? String(Math.max(0, Math.ceil((current.countdownAt - tableNow()) / 1000))) : null;
       /* written only when it changes: the count is a live region, said each time it is written */
       if (seconds && left !== null && seconds.textContent !== left) seconds.textContent = left;
+      const host=document.querySelector('.cm-cloud-table');if(host&&globalThis.CrankBoard?.countdown){const value=current?.phase==='countdown'?Number(left):null;if(host.dataset.countdownValue!==String(value)){globalThis.CrankBoard.countdown(host,value);host.dataset.countdownValue=String(value);}}
     };
     const loop = async () => {
       if (stop) return;
@@ -431,11 +432,12 @@
       <input name="name${n}" maxlength="60" placeholder="${n === 2 ? "Their name" : "Name (optional)"}" aria-label="Seat ${n} name"></div>`;
     C.main.innerHTML = C.pageHead("Play", "", "table") + `<section class="v-panel cm-table-new"><h2>New table</h2>
       <p class="cm-muted">You sit in seat 1 as the host. Each other seat is a person you invite, an AI, or nobody; a table seats two to four.</p>
-      <form id="cm-table-new"><div class="cm-table-new-deck" id="cm-table-new-deck" hidden></div><div class="cm-new-table-square"><div class="cm-table-new-seat cm-new-host" data-seat-position="1"><strong>You · Host</strong><label>Your name at the table<input name="hostName" maxlength="60" required></label></div>${row(2)}${row(3)}${row(4)}<span class="cm-new-table-center" aria-hidden="true">COMMANDER</span></div><div class="cm-new-table-rules"><span>Commander</span><span>Invitation-only</span><span>2–4 seats</span><span>Review rules at the table</span></div><label>Your deck<select name="deck" id="cm-new-table-deck"><option value="">Choose at the table</option>${libraryDecks().map(d=>`<option value="${e(d.id)}"${d.id===deckId?' selected':''}>${e(d.name)}</option>`).join('')}</select></label>
-      <div class="cm-actions">${b("Set the table", "table-create", {}, true)}</div></form></section>`;
+      <form id="cm-table-new"><div class="cm-table-new-deck" id="cm-table-new-deck" aria-live="polite"></div><div class="cm-new-table-square"><div class="cm-table-new-seat cm-new-host" data-seat-position="1"><strong>You · Host</strong><label>Your name at the table <span aria-hidden="true">*</span><input name="hostName" maxlength="60" required aria-describedby="cm-table-host-error"><span class="cm-error cm-table-field-error" id="cm-table-host-error" role="alert"></span></label></div>${row(2)}${row(3)}${row(4)}<span class="cm-new-table-center" aria-hidden="true">COMMANDER</span></div><div class="cm-new-table-rules"><span>Commander</span><span>Invitation-only</span><span>2–4 seats</span><span>Review rules at the table</span></div><label>Your deck<select name="deck" id="cm-new-table-deck"><option value="">Choose at the table</option>${libraryDecks().map(d=>`<option value="${e(d.id)}"${d.id===deckId?' selected':''}>${e(d.name)}</option>`).join('')}</select></label>
+      <p class="cm-error" id="cm-table-new-error" role="alert"></p><div class="cm-actions">${b("Set the table", "table-create", {}, true)}</div></form></section>`;
     try {const last=JSON.parse(localStorage.getItem("cm-table-setup")||"null");if(last && last.owner === (C.signedInAs?.() || null)){const form=document.getElementById("cm-table-new");for(const key of ["hostName","kind2","name2","kind3","name3","kind4","name4"]){if(typeof last[key]==="string" && form.elements[key] && (!key.startsWith("kind") || ["human","ai","ai-easy","none"].includes(last[key])))form.elements[key].value=last[key];}}}catch{}
+    document.querySelector('[name=hostName]').addEventListener('input',event=>{event.target.removeAttribute('aria-invalid');document.getElementById('cm-table-host-error').textContent='';});
     if(ai){const f=document.getElementById("cm-table-new");f.elements.kind2.value="ai";f.elements.name2.value="AI";f.elements.kind3.value="none";f.elements.kind4.value="none";}
-    document.getElementById("cm-new-table-deck").addEventListener("change",event=>{const deck=libraryDecks().find(d=>d.id===event.target.value);if(deck)bringing(deck);else document.getElementById("cm-table-new-deck").hidden=true;});
+    document.getElementById("cm-new-table-deck").addEventListener("change",event=>{const deck=libraryDecks().find(d=>d.id===event.target.value);if(deck)bringing(deck);else document.getElementById("cm-table-new-deck").replaceChildren();});
     recentGames();
     const bring = deckId ? libraryDecks().find((d) => d.id === deckId) : null;
     if (bring) bringing(bring);
@@ -511,13 +513,14 @@
   actions["table-create"] = async () => {
     const form = document.getElementById("cm-table-new");
     const v = Object.fromEntries(new FormData(form));
-    if (!v.hostName.trim()) throw Error("Give your name at the table.");
+    if (!v.hostName.trim()){const input=form.elements.hostName;input.setAttribute('aria-invalid','true');document.getElementById('cm-table-host-error').textContent='Give your name at the table.';input.focus();return;}
     /* An AI at Normal or Easy (AI-2): Normal scores its choices; Easy, now and then, takes the second best; Claude asks a
        model at its close calls. */
     const seats = [2, 3, 4].filter((n) => v[`kind${n}`] !== "none").map((n) => (v[`kind${n}`].startsWith("ai")
       ? {kind: "ai", level: ({"ai-easy": "easy", "ai-llm": "llm"})[v[`kind${n}`]] || "normal", name: v[`name${n}`]}
       : {kind: v[`kind${n}`], name: v[`name${n}`]}));
-    if (!seats.length) throw Error("A table needs at least one other seat: a person or an AI.");
+    if (!seats.length){document.getElementById('cm-table-new-error').textContent='Choose at least one other seat: a person or an AI.';form.elements.kind2.focus();return;}
+    document.getElementById('cm-table-new-error').textContent='';
     const {table} = await api("POST", "/api/tables", {hostName: v.hostName, seats});
     try {localStorage.setItem("cm-table-setup",JSON.stringify({owner:C.signedInAs?.() || null,...Object.fromEntries(["hostName","kind2","name2","kind3","name3","kind4","name4"].map(k=>[k,v[k]]))}));}catch{}
     /* The deck you came with (Play this deck, AI-5) takes your seat now; if the table refuses it, its lobby says why. */

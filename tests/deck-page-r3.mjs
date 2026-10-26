@@ -181,6 +181,18 @@ try {
   await page.getByRole("link", {name: "Back to deck"}).click();
   await page.locator(".cm-deck-hero h1").waitFor();
   ok(!/report=/.test(page.url()), "Back to deck returns to the deck");
+  await openDeck(page);
+  await page.locator(`.cm-deck-hero [data-action=log-game][data-deck="${DECK}"]`).click();
+  eq(await page.$$eval('#cm-dialog .cm-form-grid>label', xs=>xs.slice(0,2).map(x=>x.childNodes[0].textContent)), ['Outcome','Card that won it'], 'a game log starts with outcome and the winning card');
+  const dead = await page.locator('#cm-dialog [name=deadCardId] option').nth(1).getAttribute('value');
+  await page.selectOption('#cm-dialog [name=deadCardId]', dead);
+  await page.getByRole('button', {name:'Save game record',exact:true}).click();
+  await page.locator('#cm-dialog [data-action=game-mark-replacement]').waitFor();
+  await page.locator('#cm-dialog [data-action=game-mark-replacement]').click();
+  await page.waitForFunction(()=>location.hash.startsWith('#discover?'));
+  const marked = await page.evaluate(([deckId,cardId])=>globalThis.__cm.state.decks.find(d=>d.id===deckId).slots.find(r=>r.cardId===cardId&&r.purpose==='main').option,[DECK,dead]);
+  ok(marked, 'marking a dead card records the existing swap-out flag without changing the hundred');
+  eq(new URLSearchParams(page.url().split('#discover?')[1]).get('replace'),dead,'Explore keeps the card to replace in its route');
   await context.close();
 
   /* 4. A phone: one row, sideways, every label whole. */

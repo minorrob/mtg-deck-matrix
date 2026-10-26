@@ -3,7 +3,7 @@
  * In a real page:
  *
  *   1. Who sees it. `/` is the landing page, standing alone (no rail), for everyone: with nothing in this browser,
- *      with a library (its header then says Open your decks), and signed in (Rob, 2026-09-29: "when I go to
+ *      with a library (its header then says Open my decks), and signed in (Rob, 2026-09-29: "when I go to
  *      crankmagic.com that should go to the landing page"). The rail's CrankMagic name and logo go back to it
  *      (#welcome). Any other #route is the app.
  *   2. What it promises. Invite-only: Sign in (only where accounts are on) and "Start without an account",
@@ -76,6 +76,9 @@ try {
     eq(await page.$$eval(".cm-landing-door", (ds) => ds.map((d) => d.querySelector(".cm-landing-door-top").innerText.replace(/\s+/g, " ").trim())),
       ["DECKS", "LIBRARY", "EXPLORE", "PLAY Coming soon"], "four doors, and Play is Coming soon (M1·5)");
 
+    eq(await page.locator('.cm-landing-hero .v-button.primary').count(), 1, 'the hero has one primary action');
+    eq(await page.locator('.cm-landing-account .v-button.primary').count(), 0, 'the header does not compete with the hero');
+    eq(await page.locator('.cm-landing-or button').allTextContents(), ['Other ways to start'], 'one quiet door holds the alternate starts');
     /* 4. Step one. */
     await page.locator("[data-action=landing-start]").first().click();
     ok(await page.$eval("#cm-landing-query", (i) => i === document.activeElement), "Start without an account puts the cursor in Step one's box");
@@ -97,11 +100,15 @@ try {
     ok((await page.$$eval("#cm-dialog textarea", (ts) => ts.map((t) => t.value))).some((v) => v.trim() === list), "with the list in it, every line");
     await closeDialog(page);
 
-    await page.locator(".cm-landing [data-action=landing-list]").click();
+    await page.locator(".cm-landing [data-action=new-deck]").click();
+    await page.locator("#cm-dialog [data-action=wizard-import]").click();
     eq(await dialogTitle(page), "Import cards or a deck list", "Upload a CSV opens the import, which takes a file");
     ok(await page.locator("#cm-dialog input[type=file]").count() > 0, "and it has a file input");
+    await page.keyboard.press("Escape");
+    eq(await dialogTitle(page), "New deck", "Back from an alternate import returns to the chooser");
     await closeDialog(page);
-    await page.locator(".cm-landing [data-action=restore]").click();
+    await page.locator(".cm-landing [data-action=new-deck]").click();
+    await page.locator("#cm-dialog [data-action=restore]").click();
     eq(await dialogTitle(page), "Restore a full backup", "Restore a backup opens Restore");
     await closeDialog(page);
 
@@ -183,14 +190,14 @@ try {
     await page.goto(`${base}/index.html`);
     await landing(page);
     eq([await page.locator(".cm-landing-account .v-button").innerText(), await page.locator(".cm-landing-account .v-button").getAttribute("href"), await page.locator(".cm-landing [data-action=landing-start]").count()],
-      ["Open your decks", "#decks", 1], "with a library in this browser, / is the landing page too, and its header says Open your decks");
+      ["Open my decks", "#decks", 1], "with a library in this browser, / is the landing page too, and its header says Open my decks");
     eq(await page.locator(".cm-landing-step strong").textContent(), "Start a new deck", "and Step one reads Start a new deck, not your first");
     await page.waitForTimeout(1500);
     ok(!/Offline app caching is unavailable/.test(await page.locator("#cm-notice").textContent()), "a browser that blocks service workers is not shown an error about it");
     await shot(page, "landing-with-library-1440");
     await page.locator(".cm-landing-account .v-button").click();
     await page.getByRole("heading", {name: "Decks", level: 1}).waitFor({timeout: 60000});
-    ok(true, "Open your decks opens Decks");
+    ok(true, "Open my decks opens Decks");
     for (const [which, sel] of [["logo", ".v-brand-home"], ["name", "a.v-brand"]]) {
       await page.locator(sel).click();
       await landing(page);
@@ -213,11 +220,11 @@ try {
     const openMenu = async () => {await page.locator(".cm-landing-chip").click(); await page.locator("#cm-user-menu:popover-open").waitFor({timeout: 10000}); return (await page.locator("#cm-account").innerText()).replace(/\s+/g, " ").trim();};
     if (who === "signed in") {
       await landing(page);
-      await page.waitForFunction(() => document.querySelector(".cm-landing-account .v-button")?.textContent === "Open your decks", null, {timeout: 30000});
-      eq(await page.locator(".cm-landing-account [data-action=account-sign-in]").count(), 0, "signed in, / is the landing page too (Rob, 2026-09-29): no Sign in, and Open your decks");
-      /* 8. Signed in, the chip shows who, left of Open your decks, and opens the menu with Sync now at its head. */
+      await page.waitForFunction(() => document.querySelector(".cm-landing-account .v-button")?.textContent === "Open my decks", null, {timeout: 30000});
+      eq(await page.locator(".cm-landing-account [data-action=account-sign-in]").count(), 0, "signed in, / is the landing page too (Rob, 2026-09-29): no Sign in, and Open my decks");
+      /* 8. Signed in, the chip shows who, left of Open my decks, and opens the menu with Sync now at its head. */
       eq((await page.locator(".cm-landing-chip .cm-landing-chip-name").innerText()).trim(), "reader@example.test", "signed in, the header's chip shows who is signed in");
-      ok(await leftOfWayIn(), "to the left of Open your decks, on its line");
+      ok(await leftOfWayIn(), "to the left of Open my decks, on its line");
       const account = await openMenu();
       ok(/^Account Signed in as reader@example\.test/.test(account) && await page.locator("#cm-account [data-action=account-sync]").isVisible(), `and opens the menu: Account, who, and Sync now (${account.slice(0, 60)})`);
       await shot(page, "landing-chip-signed-in-1400");
