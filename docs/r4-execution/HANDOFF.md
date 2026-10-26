@@ -35,18 +35,27 @@ Tracking: https://linear.app/robs-build/issue/ROB-197/implement-r4-design-founda
 
 ## Source integrated, final proof pending
 
-- C/D2 source through 1c65e917 is integrated, including the measured combat header and returned-picker
-  flow repair. Source7931e2a1 passed71 assertions across14 caption/geometry scenarios; phone light-theme
-  turn/icon ink passed its focused7 on777b0a60. Coordinator inspected Table100/200 and phone200 captures.
-  The Table now preserves full battlefield/lands rows and scrolls vertically when required (EX15).
-  Native input62 and views78 passed earlier bounded source checkpoints; final layout, folded16,
-  actual card-badge bounds, affected legacy suites and browser mutations remain pending.
-- Pure offer12, land9, Coach-context20, seat lifecycle10 and account-menu keyboard17 pass. Coordinator
-  caught all three meaningful pending-draft/old-capability-response Coach regressions and restored source.
-- The preserved real-table suite reached119 checks on66916e95. Its old DOM assertions are being
+- C/D2 source through60d058cd is integrated. Source7931e2a1 passed71 assertions across14 earlier
+  caption scenarios; the final matrix now has16 including three-seat Table. Phone light-theme ink
+  passed its focused7 on777b0a60. Native max-size50 on d18c7463 covers public badge bounds, wrapped zone
+  labels, count-only narrow piles, 5:7 raster, whole first tapped card, useful60–160 range and no sideways
+  overflow. Coordinator inspected those endpoint images. EX15 now covers Table and Focus row minima;
+  exact Focus1280×800 Library draw10 passed, with real hand clearance and truthful null-priority display.
+- Coach delayed/cached entry10 on9d828ff1 covers both the module and Play settings paths, actual composer
+  access, draft retention and deliberate moved-focus protection. Returned folded target picker14 passed
+  its focused Table200 case; full folded16, final layout/views/endpoint matrix, affected legacy suites,
+  final combat geometry and browser mutations remain pending.
+- Pure offer12, land9, Coach-context32, seat lifecycle10 and account-menu keyboard17 pass. Coordinator
+  caught three meaningful pending-draft/old-capability Coach regressions; owner subsequently caught all
+  five including account/moved-focus protection. Source was restored cleanly.
+- The preserved real-table suite reached192 checks on e7c1c1ad. Its old DOM assertions are being
   migrated without dropping identity, privacy, legality, geometry or reconnect coverage. The whole
-  suite is not green yet. Browser proofs remain serial; Engine currently owns the slot, with Foundation
-  queued for the returned-picker repro and the remaining finite native/mutation gates.
+  suite is not green yet. Actual Table down-scroll/whole Lands hit/return-to-top is proven, as are cast
+  Undo offer, closure on acknowledged pass, opponent response/Resolve, stack inspection and resolution.
+  Browser proofs remain serial. Foundation owns the bounded current window: the combined Full1400
+  inspector+Stack fix makes Camera reachable but its screenshot shows Next step/Skip covered, so peer
+  control clearance remains a source blocker. Engine resumes on the reviewed fix, then Foundation
+  completes its remaining finite native/mutation list. No full real-table pass has been claimed.
 - Global AccountMenu source begins at 6b70a600; opening/focus refinements are 6f2b1e83/17e599c4,
   required danger ink 69edbf73, and scoped Invite/Admin alignment 8da62a87. Global acceptance is
   green; Foundation owns the real board-avatar adoption and game-draft/hotkey boundary. Shared
