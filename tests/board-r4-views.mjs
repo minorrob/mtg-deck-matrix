@@ -22,6 +22,7 @@ try{
   const f=await open(mode),{page,context,errors}=f;
   await page.evaluate(choice=>__r4Act('set-theme',{themeChoice:choice}),mode==='focus'?'bronze-basalt-light':mode==='full'?'chalk-coal':'sapphire-obsidian');
   if(mode==='table') {eq(await tableClearance(page),[],'Table menus and dial text clear actual seat facts');
+   eq(await page.locator('.cm-board-pie-turn').getAttribute('data-seat'),String(f.current.state.turnPlayerId),'life dial glows on the authoritative active seat slice');await f.feed(v=>v.state.turnPlayerId=1);eq(await page.locator('.cm-board-pie-turn').getAttribute('data-seat'),'1','life dial active slice follows a real room view update');ok(await page.locator('.cm-board-pie-turn').evaluate(el=>getComputedStyle(el).backgroundImage.includes('conic-gradient')&&getComputedStyle(el).maskImage.includes('radial-gradient')),'active-seat glow paints its own annular slice');
    ok(await page.locator('.cm-board-hand .cm-bcard').first().evaluate(el=>el.getBoundingClientRect().height>=110),'Table hand thumbnails at least 110px');
    eq(await page.locator('.cm-hand-legend').count(),1,'hand legend appears once');eq(await page.locator('.cm-board-pie-life small').count(),f.current.state.players.length,'life dial names every seat');ok(await page.locator('.cm-board-pie-priority').textContent(),'life dial says who holds priority');
   }
@@ -35,7 +36,7 @@ try{
   await summary.click();await page.locator('#cm-coach-question-list button').first().click();await page.locator('.cm-coach-msg.is-coach').waitFor();ok(await input.evaluate(el=>el===__coachInput),`${mode}: async reply keeps actual textarea`);eq(await input.inputValue(),'a draft that stays',`${mode}: prompt reply never clears typed draft`);eq(await page.locator('#cm-board-coach .cm-coach-head').evaluate(el=>el.getBoundingClientRect().height),36,`${mode}: one Coach header at 36px`);
   eq(await page.locator('.cm-stage-module button button,.cm-stage-module [role=button] button').count(),0,`${mode}: drawer disclosures have no nested buttons`);
   if(mode==='focus'){
-   f.holdCoach();const beforeRequests=f.coachRequests;await input.fill('First pending question');await input.press('Enter');await page.waitForFunction(()=>document.querySelector('.cm-coach-typing'));
+   f.holdCoach();const beforeRequests=f.coachRequests;await input.fill('First pending question');await input.press('Enter');await page.waitForFunction(()=>document.querySelector('.cm-coach-msg.is-typing'));
    await input.fill('Follow-up draft while pending');await page.locator('#cm-board-coach button[type=submit]').click();await input.press('Enter');eq(f.coachRequests,beforeRequests+1,'pending native click and Enter do not send another request');eq(await input.inputValue(),'Follow-up draft while pending','pending native submit retains editable follow-up');await f.releaseCoach();await page.getByText('First pending reply.',{exact:true}).waitFor();eq(await input.inputValue(),'Follow-up draft while pending','first reply retains follow-up draft');ok(await input.evaluate(el=>el===__coachInput),'pending reply retains actual textarea node');
   }
   await page.locator('#cm-board-coach [data-action=board-coach]').click();
@@ -49,3 +50,4 @@ try{
  }
 }finally{await close();}
 console.log(`board-r4-views: ${checks} checks passed`);
+

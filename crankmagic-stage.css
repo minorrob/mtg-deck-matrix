@@ -1052,3 +1052,23 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-board-table[data-seats="2"] .cm-board-slot,#matrix-v2 .cm-board[data-hud-large] .cm-board-table[data-seats="2"] .cm-board-slot{height:var(--table-top-h)}
 #matrix-v2 .cm-board .cm-mat .cm-board-chip{grid-row:4;align-self:start}
 #matrix-v2 .cm-board .cm-phone-battlefield .cm-board-pile{grid-row:5}
+
+/* A larger information scale wraps real HUD groups, never phase text over priority. */
+#matrix-v2 .cm-board .cm-stage-top{height:auto;min-height:calc(28px + 30px*var(--hud-scale,1));align-self:start}
+#matrix-v2 .cm-board[data-hud-large] .cm-stage-top{flex-wrap:wrap;align-content:center}
+#matrix-v2 .cm-board[data-hud-large] .cm-stage-top>.cm-board-turnsteps{flex:1 0 360px}
+#matrix-v2 .cm-board[data-hud-large] .cm-stage-priority{flex:1 0 280px;white-space:normal}
+#matrix-v2 .cm-board .cm-board-chip{white-space:normal;max-width:100%;box-sizing:border-box}
+#matrix-v2 .cm-board .cm-board-tabletop{padding-left:calc(42px*var(--hud-scale,1) + 14px);padding-right:calc(42px*var(--hud-scale,1) + 14px)}
+@media(min-width:1400px){
+ #matrix-v2 .cm-board[data-hud-large] .cm-stage-top{flex-wrap:nowrap;gap:8px}
+ #matrix-v2 .cm-board[data-hud-large] .cm-stage-top>.cm-board-turnsteps{flex:1 1 300px;min-width:300px}
+ #matrix-v2 .cm-board[data-hud-large] .cm-stage-priority{flex:0 1 220px;min-width:170px;white-space:nowrap}
+ #matrix-v2 .cm-board[data-hud-large] .cm-stage-self .cm-seat-portrait{width:48px;height:48px}
+ #matrix-v2 .cm-board[data-hud-large] .cm-stage-self .cm-vitals>b{font-size:calc(15px*var(--hud-scale,1))}
+ #matrix-v2 .cm-board[data-hud-large] .cm-stage-self .cm-seat-identity{max-width:112px}
+ #matrix-v2 .cm-board[data-hud-large] .cm-stage-self .cm-mat-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ #matrix-v2 .cm-board[data-hud-large] .cm-stage-top .cm-board-ribbon{gap:2px}
+ #matrix-v2 .cm-board[data-hud-large] .cm-stage-top .cm-board-ribbon li{padding-left:3px;padding-right:3px}
+}
+#matrix-v2 .cm-board .cm-board-pie-turn{position:absolute;inset:-3px;border-radius:50%;mask:radial-gradient(circle,transparent 64%,#000 66%);filter:drop-shadow(0 0 4px var(--color-aether));pointer-events:none}
