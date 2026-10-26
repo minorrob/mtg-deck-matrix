@@ -50,6 +50,7 @@ try{
     ok(fit.left>=0&&fit.top>=0&&fit.right<=fit.width&&fit.bottom<=fit.height,'menu fits the viewport from a right-edge anchor');
     await page.evaluate(()=>__menuC.closeAccountMenu());
     eq(await page.evaluate(()=>document.activeElement.id),'fixture-board-avatar','explicit shared close restores the captured alternate anchor');
+    await page.locator('#fixture-board-avatar').evaluate(n=>n.remove());
     await trigger.click();await page.locator('#cm-user-menu:popover-open').waitFor();
     await page.mouse.click(test.width-5,895);await page.waitForFunction(()=>!__menuC.accountMenuOpen());
     eq(await trigger.getAttribute('aria-expanded'),'false','native light-dismiss updates the actual trigger state');
