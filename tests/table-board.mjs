@@ -402,7 +402,7 @@ try {
   await rob.page.getByRole('button',{name:'Resume your table',exact:true}).click();
   await rob.page.locator("#cm-board .cm-stage-top").waitFor({timeout: 30000});
   ok(/^#table\?id=/.test(await rob.page.evaluate(() => location.hash)) && routes[ROB].length === robSockets, "Resume from Play returns to the game, on the same socket");
-  ok(awayFrames() === awayBefore && !/Dropped/.test(await text(maya.page, ".cm-board-tile[data-seat='0'] .cm-board-tile-flag")), "and through all of it the room never marked Rob's seat away");
+  ok(awayFrames() === awayBefore && !/Dropped/.test(await text(maya.page, ".cm-board-tile[data-seat='0'] .cm-seat-state")), "and through all of it the room never marked Rob's seat away");
 
   /* THE THREE VIEWS. Table: both boards at once, side by side -- each a landscape 16:9 on its half of the screen, yours on
      the right (Rob, 2026-10-09: "In 2-player, the screen should split down the middle vertically") -- the logo between
@@ -669,16 +669,20 @@ try {
   await maya.page.getByRole('slider',{name:'Table tilt',exact:true}).fill('40');
   await maya.page.getByRole('button',{name:'Camera',exact:false}).click();
   await shot(maya.page,"board-full-3d-1280");
-  ok(/played (Forest|Island)/.test(await text(maya.page, ".cm-full-side .cm-board-band")), "and the history in the side column");
+  ok(/played (Forest|Island)/.test(await text(maya.page, ".cm-stage-side .cm-stage-module[data-module=history] .cm-board-band")), "and the history in the side column");
   const firstHand = maya.page.locator(".cm-stage-fan .cm-bcard").first(), firstName = (await firstHand.getAttribute("aria-label")).split(/[,:]/)[0];
+  const firstReadRevision = views(MAYA).at(-1).revision, firstReadSends = sent[MAYA].length;
   await firstHand.click();
-  await maya.page.locator(".cm-full-pick").waitFor();
-  ok((await maya.page.getAttribute(".cm-full-pick", "aria-label")) === firstName, `a card picked shows large at the side (${firstName}), and picking it does nothing else`);
+  await maya.page.locator('#cm-card-menu [data-action=board-card-menu-view]').click();
+  await maya.page.locator('#cm-card-inspector .cm-bcard').waitFor();
+  eq((await text(maya.page, '#cm-card-inspector h3')).trim(), firstName, `Read shows the chosen card large (${firstName})`);
+  eq([views(MAYA).at(-1).revision, sent[MAYA].length], [firstReadRevision, firstReadSends], 'reading the hand card neither sends an action nor changes the game');
   await shot(maya.page, "board-full-1280");
-  /* Full screen uses independently ordered modules rather than one card/log split. */
-  const sideRatio=await maya.page.locator('#cm-full-pick .cm-bcard').evaluate(el=>{const r=el.getBoundingClientRect();return r.width/r.height;});
+  /* The independent History module stays present while the shared read-only inspector is open. */
+  const sideRatio=await maya.page.locator('#cm-card-inspector .cm-bcard').evaluate(el=>{const r=el.getBoundingClientRect();return r.width/r.height;});
   ok(Math.abs(sideRatio-5/7)<.01 && await maya.page.locator('.cm-stage-module[data-module="history"]').count()===1,
-    "the real-game inspector keeps its card aspect beside an independently arranged History module");
+    "the real-game inspector keeps its card aspect while the independently arranged History module remains present");
+  await maya.page.locator('#cm-card-inspector [data-action=board-inspect-close]').click();
   await chooseView(maya.page,"focus");
   await maya.page.locator(".cm-stage-top").waitFor();
   ok(await maya.page.getAttribute("#cm-board", "data-view") === "focus", "⎋ leaves Full screen for Focus");
@@ -740,7 +744,7 @@ try {
   const turnNow = views(ROB).at(-1).state.turnPlayerId;
   eq(fullTurn, [{seat: String(turnNow), said: turnNow === 0 ? "Your turn" : "Maya's turn", ringed: true}], `in Full screen the side column marks whose turn it is, on that seat's vitals alone (${JSON.stringify(fullTurn)})`);
   const seenAt = (page, sel) => page.evaluate((q) => {const el = document.querySelector(q); if (!el) return false; const r = el.getBoundingClientRect(); const hit = document.elementFromPoint(r.left + r.width / 2, r.top + Math.min(60, r.height / 2)); return r.width > 0 && !!hit && !!hit.closest(q);}, sel);
-  await rob.page.click(".cm-full-side .cm-full-vitals [data-action=board-vitals]");
+  await rob.page.click(".cm-stage-side .cm-full-vitals [data-action=board-vitals]");
   await rob.page.locator("#cm-dialog[open] .cm-table-vitals").waitFor();
   ok(await seenAt(rob.page, "#cm-dialog[open]"), "in 3D, Table vitals is seen over the game");
   await rob.page.click("#cm-dialog[open] .cm-form-footer [data-action=close]");
@@ -1460,7 +1464,7 @@ try {
   await chooseView(maya.page,"focus");
 
   /* DROPPED: the room ends Rob's socket; his board reconnects; Maya is told, then the table says he is back. */
-  const socketsBefore = routes[ROB].length, robFlag = ".cm-board-tile[data-seat='0'] .cm-board-tile-flag";
+  const socketsBefore = routes[ROB].length, robFlag = ".cm-board-tile[data-seat='0'] .cm-seat-state";
   /* One of Maya's reads (her table is read every two seconds) is answered by the room before Rob drops, and kept on
      the way back until the room has told her he dropped. Her board counts the reads it is handed, so the check below
      knows that one has landed. */
@@ -1483,7 +1487,7 @@ try {
   delete held[MAYA]; release();
   await rob.page.waitForFunction(() => document.querySelector(".cm-stage-top") && !document.querySelector(".cm-board-conn"), null, {timeout: 20000});
   ok(routes[ROB].length === socketsBefore + 1, "Rob's board opens a new socket by itself, and the room sends his view again");
-  await maya.page.waitForFunction(() => !/Dropped/.test(document.querySelector(".cm-board-tile[data-seat='0'] .cm-board-tile-flag")?.innerText || ""), null, {timeout: 20000});
+  await maya.page.waitForFunction(() => !/Dropped/.test(document.querySelector(".cm-board-tile[data-seat='0'] .cm-seat-state")?.innerText || ""), null, {timeout: 20000});
   ok(true, "and once he is back, Maya's board stops saying so");
 
   /* PHONES (Linear ROB-18; Rob, Oct 18: "the upright Focused phone layout"): Maya's screen becomes a phone held sideways.
