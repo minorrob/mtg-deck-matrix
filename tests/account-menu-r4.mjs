@@ -76,6 +76,8 @@ try{
     await trigger.click();await page.locator('#cm-user-menu:popover-open').waitFor();
     const contrast=await menu.locator('[data-action=reset-all]').evaluate(n=>{const c=document.createElement('canvas').getContext('2d'),rgb=css=>{c.clearRect(0,0,1,1);c.fillStyle=css;c.fillRect(0,0,1,1);return [...c.getImageData(0,0,1,1).data];},lum=a=>a.slice(0,3).map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;}).reduce((s,v,i)=>s+v*[.2126,.7152,.0722][i],0),group=n.closest('.cm-menu-group'),ground=lum(rgb(getComputedStyle(group).backgroundColor));return Math.min(...[n,group.querySelector('.cm-menu-label')].map(node=>{const L=[lum(rgb(getComputedStyle(node).color)),ground].sort((a,b)=>b-a);return (L[0]+.05)/(L[1]+.05);}));});
     ok(contrast>=4.5,'Careful text has 4.5:1 contrast on its actual group background');
+    const dangerColors=await menu.locator('[data-action=reset-all]').evaluate(n=>{const c=document.createElement('canvas').getContext('2d'),normal=value=>{c.clearRect(0,0,1,1);c.fillStyle=value;c.fillRect(0,0,1,1);return [...c.getImageData(0,0,1,1).data];};return {actual:normal(getComputedStyle(n).color),required:normal(getComputedStyle(n).getPropertyValue('--color-required'))};});
+    eq(dangerColors.actual,dangerColors.required,'Careful action uses actual required ink rather than the historical global danger mix');
     if(shots){await page.screenshot({path:path.join(shots,'account-menu-'+test.name+'.png')});await menu.evaluate(n=>{n.scrollTop=n.scrollHeight;});await page.screenshot({path:path.join(shots,'account-menu-'+test.name+'-foot.png')});}
     await context.close();
   }

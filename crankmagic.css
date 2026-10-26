@@ -4262,6 +4262,10 @@ button.cm-vitals{cursor:pointer}
 #cm-user-menu .cm-theme-choices button[aria-pressed=true],#cm-user-menu .cm-theme-modes button[aria-pressed=true]{background:var(--color-ink);color:var(--color-bg);font-weight:700}
 #cm-user-menu .cm-theme-modes{display:flex;padding:4px 8px;gap:4px}
 #cm-user-menu .cm-theme-modes button{min-width:0;padding:6px;min-height:32px;text-align:center}
-#cm-user-menu .cm-menu-group-danger .cm-menu-label,#cm-user-menu .cm-menu-group .cm-danger{color:var(--color-required)}
+#cm-user-menu .cm-menu-group-danger .cm-menu-label{color:var(--color-required)}
+/* Override the historical global danger ink mix for this r4 surface only. */
+#cm-user-menu .cm-menu-group .cm-danger{color:var(--color-required)!important}
 #cm-user-menu .cm-menu-group-danger,#cm-user-menu #cm-account-out{background:var(--color-panel);border-radius:8px}
+#cm-user-menu .cm-btn-icon{display:inline-block;min-width:16px;margin-inline-end:8px;text-align:center}
+#cm-user-menu [data-profile-menu] .v-button,#cm-user-menu [data-admin-menu] .v-button{display:block;justify-content:flex-start;text-align:left}
 @media(max-width:760px){#cm-user-menu .cm-menu-group button,#cm-user-menu .cm-menu-group a{min-height:44px}}

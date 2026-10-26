@@ -1100,10 +1100,9 @@ actions['change-commander']=el=>{const d=M.deck(C.state,el.dataset.deck);
   return form('Change commander',s('Commander to replace','previous',d.commanders.map(id=>[id,C.card(id).name]),d.commanders[0]),v=>choose(v.previous),'Choose replacement');};
 actions['delete-deck']=el=>{const d=M.deck(C.state,el.dataset.deck);
   const games=C.state.games.filter(g=>g.deckId===d.id).length,reports=C.state.reports.filter(r=>r.deckId===d.id).length;
-  const remove=async()=>{const result=await commit({type:'deleteDeck',deckId:d.id,confirmed:true},{renderView:false});
-    // Navigation clears ordinary notices. Show this receipt afterward so Undo remains reachable.
-    if(location.hash!=='#decks'){addEventListener('hashchange',()=>C.notice(result.summary),{once:true});go('decks');}
-    else{await C.render();C.notice(result.summary);}};
+  const remove=async()=>{await commit({type:'deleteDeck',deckId:d.id,confirmed:true},{renderView:false});
+    // The commit's transaction-bound Undo survives navigation; do not replace it with a second receipt.
+    if(location.hash!=='#decks')go('decks');else await C.render();};
   /* The deck's own name is what is typed (r3, 74-confirm-delete): it proves the reader is deleting
      the deck they think they are, which a fixed word did not. The typing goes with the message: a reader who has turned the warning off has
      said they know what this does, and asking them to type it anyway is theater. Owned copies survive even when the plan is deleted. */

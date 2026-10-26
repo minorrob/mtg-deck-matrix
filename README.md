@@ -1249,6 +1249,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `board-r4-views` — `tests/board-r4-views.mjs` (Table/Focus public summaries, Coach availability, node/draft/caret continuity and actual Help)
 - `board-coach-context` — `tests/board-coach-context.mjs` (async replies bound to account/table/match, stale answer never displayed or announced)
 - `board-r4-caption-fit` — `tests/board-r4-caption-fit.mjs` (actual game-state text and card reach at 100/200%, every view and desktop/phone)
+- `board-r4-folded-slot` — `tests/board-r4-folded-slot.mjs` (actual target binding and way-back hit targets after drawer/module fold, 100/200% desktop/phone)
 - `board-settings-window` — `tests/board-settings-window.mjs` (Camera ▾ closed by a press outside it; Settings a window sized to the browser, ✕ at its top right, Cancel and Save at its bottom right, Save keeps and Cancel puts back)
 - `board-babylon` — `tests/board-babylon.mjs` (live Babylon/DOM projection alignment, scene resource disposal, graphics fallback, re-entry, and the Play lounge)
 - `board-3d-camera` — `tests/board-3d-camera.mjs` (the 3D camera by hand: the wheel zooms toward the pointer except over a row that scrolls, a mat dragged moves the view while the bare table still tilts, a held right button looks at the place and back on the motion's own clock with the DOM cards on the Babylon table every frame; a card's right-click menu of the room's offers in shorthand, from the keyboard too, in every view)
