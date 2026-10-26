@@ -75,7 +75,13 @@ the migration number this work took; 0007 and 0008 stay reserved (docs/ACTIVE.md
   `tools/feedback-breaks.py` (10 breaks; the five on the board's half run here: FEEDBACK_BREAKS_RESULT). Also green:
   `feature-wiring`, `menu-help`, `settings-r3`, `data-integrity`, `service-worker`, `asset-versions` (re-recorded: two
   new files, five bumps), `release-pages` 228, `page-budget` 80 (six control budgets raised by one for the glyph, the word budgets unmoved),
-  TABLE_BOARD_RESULT. A11Y_RESULT
+  `table-board` 294 (the whole game between two browsers, the Send feedback checks among them).
+- **`a11y-board` fails here, and identically on main c567c581:** one contrast reading in the steel-cobalt theme, a mat
+  card's power and toughness ("2/2", `.cm-bcard-pt`) read at 1.93 of 4.5 against the card's own picture at one pixel. Run
+  on a clean checkout of main in the same container it fails the same way, so it is not this PR's; Actions is the gate
+  for it, and it passed there on #895's run of 74f8c228 at 22:44 UTC, before that runner was shut down at 23:05: the
+  reading is this container's software rendering of the card picture. Not fixed here: the mat card's label is
+  the Play lane's, and a contrast fix is a design change, not a line in this PR.
 - **Assumed:** the sheet's place: one ✉ glyph on every page head (`pageHead`), beside More on a deck's page, in the
   board's profile strip and its menu, and the Menu's Send Feedback (the plan said "a glyph in the header" and "the
   board's rail"); the kinds as two glyph tiles, 🐞 Bug and ✦ Idea; the build from `version.json`.
