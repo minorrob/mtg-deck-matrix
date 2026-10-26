@@ -679,6 +679,10 @@ globalThis.CrankBoard = Object.seal({
       ${c.name && !c.faceDown ? `<img src="${e(pictureOf(c.name))}" alt="${e(combatName(c))}" loading="lazy">` : `<i class="cm-combat-back" aria-label="Face-down creature"></i>`}
       ${twinMark(id)?`<small class="cm-twin-mark">${e(twinMark(id))}</small>`:""}${c.power!=null?`<b class="cm-combat-pt">${e(c.power)}/${e(c.toughness)}</b>`:""}</span>`;
   }
+  function inspectCombatThumb(id,role,{draft=false}={}) {
+    const c=combatCard(id);if(!c)return combatThumb(id,role,{draft});
+    return `<button type="button" class="cm-combat-thumb-inspect" data-action="board-combat-inspect" data-card="${id}" data-combat-light="${id}" aria-label="Inspect ${e(combatName(c))}${twinMark(id)?' '+e(twinMark(id)):''}">${combatThumb(id,role,{draft})}</button>`;
+  }
   function attackerIssues(id) {
     const checked=blockResult?.key===blockKey()?blockResult:null;
     const fromCheck=checked?.byAttacker?.find(x=>x.attackerId===id)?.reasons || [];
@@ -693,13 +697,13 @@ globalThis.CrankBoard = Object.seal({
     const status=draft ? result?.ok && result.open && blocksSettled() ? "The table accepts this draft" : `${settled} of ${own.length} settled` : "Confirmed assignments";
     const tiles=attacks.map(a=>{
       const mine=draft && a.defender===view.seat,issues=mine?attackerIssues(a.attacker):[],ready=mine?blockSettled.has(a.attacker):a.blocked;
-      const selected=mine?picked.map(i=>view.decision.options.find(o=>o.index===i)).filter(o=>o?.attackerId===a.attacker).map(o=>o.cardId):(a.blockers || []);
+      const selected=mine?picked.map(i=>view.decision.options.find(o=>o.index===i)).filter(o=>o?.attackerId===a.attacker).map(o=>o.cardId):(a.blockers || []).filter(id=>combatCard(id));
       const state=issues.length?"refused":ready?"ready":mine?"unsettled":"public";
-      const word=issues.length?"✗ Refused":ready?"✓ Ready":mine?"Needs a choice":"Unblocked";
-      return `<li class="cm-combat-row is-${state}" data-combat-attacker="${a.attacker}" data-combat-defender="${a.defender}" data-combat-target="${a.planeswalker ?? `seat:${a.defender}`}"><button type="button" class="cm-combat-tile" data-action="${mine?'board-block-attacker':'board-combat-inspect'}" data-attacker="${a.attacker}" data-card="${a.attacker}" data-combat-light="${a.attacker}" aria-label="${e(`${combatName(combatCard(a.attacker))}: ${word}${issues.length?'. '+issues.join('; '):''}`)}"${sending && mine?' disabled':''}>
-        <strong class="cm-combat-state">${e(word)}</strong><span class="cm-combat-pair">${combatThumb(a.attacker,'Attacker')}<span class="cm-combat-relation"><span>Attacking</span><span aria-hidden="true">→</span><span>${e(a.planeswalker!==undefined?combatName(combatCard(a.planeswalker)):(players().find(p=>p.playerId===a.defender)?.name || 'Player'))}</span></span>
-        <span class="cm-combat-blocks">${selected.length?selected.map(id=>combatThumb(id,'Blocker',{draft:mine})).join(''):`<span class="cm-combat-empty" aria-label="${ready?'No blocks chosen':'No blocks yet'}">${ready?'No blocks':'—'}</span>`}</span></span>
-        ${issues.length?`<small class="cm-combat-reason">${e(issues[0])}</small>`:''}</button></li>`;
+      const word=issues.length?"✗ Refused":ready?"✓ Ready":mine?"Needs a choice":a.blocked?"Blocked":"No blocks confirmed";
+      return `<li class="cm-combat-row is-${state}" data-combat-attacker="${a.attacker}" data-combat-defender="${a.defender}" data-combat-target="${a.planeswalker ?? `seat:${a.defender}`}"><div class="cm-combat-tile" data-attacker="${a.attacker}"><button type="button" class="cm-combat-open" data-action="${mine?'board-block-attacker':'board-combat-inspect'}" data-attacker="${a.attacker}" data-card="${a.attacker}" data-combat-light="${a.attacker}" aria-label="${e(`${combatName(combatCard(a.attacker))}: ${word}${issues.length?'. '+issues.join('; '):''}`)}"${sending && mine?' disabled':''}></button>
+        <strong class="cm-combat-state">${e(word)}</strong><span class="cm-combat-pair">${inspectCombatThumb(a.attacker,'Attacker')}<span class="cm-combat-relation"><span>Attacking</span><span aria-hidden="true">→</span><span>${e(a.planeswalker!==undefined?(combatCard(a.planeswalker)?combatName(combatCard(a.planeswalker)):'Attacked permanent left the battlefield'):nameOf(a.defender))}</span></span>
+        <span class="cm-combat-blocks">${selected.length?selected.map(id=>inspectCombatThumb(id,'Blocker',{draft:mine})).join(''):`<span class="cm-combat-empty" aria-label="${ready?'No blocks chosen':'No blocks yet'}">${!mine && a.blocked?'Blocked · no blockers remain':!mine?'No blocks confirmed':ready?'No blocks':'—'}</span>`}</span></span>
+        ${a.planeswalker!==undefined?`<span class="cm-combat-permanent">${inspectCombatThumb(a.planeswalker,'Attacked permanent')}</span>`:''}${issues.length?`<small class="cm-combat-reason">${e(issues[0])}</small>`:''}</div></li>`;
     }).join('');
     const missing=own.length-settled,why=missing?`${missing} attacker${missing===1?'':'s'} still need${missing===1?'s':''} a choice`:!blockValid()?'Waiting for a current valid table check':'Stays private until sent';
     const key=`${view.matchId}:${view.state.turnId || view.state.turn}:${attacks.map(a=>a.attacker).join(',')}`;
@@ -1389,7 +1393,7 @@ globalThis.CrankBoard = Object.seal({
     const c=combatCard(a.attacker),options=d.options.filter(o=>o.attackerId===a.attacker && d.legalBlocks.some(b=>b.blocker===o.cardId && b.attackers.includes(o.attackerId)));
     const issues=attackerIssues(a.attacker),restrictions=d.blockReasons?.find(x=>x.attackerId===a.attacker)?.reasons || [];
     const result=blockResult?.key===blockKey()?blockResult:null,globalReasons=result && !result.ok ? result.reasons : [];
-    const facts=[c?.power!=null?`${c.power}/${c.toughness}`:'','Attacking you',...(c?.keywords || [])].filter(Boolean).join(' · ');
+    const facts=[c?.power!=null?`${c.power}/${c.toughness}`:'',a.planeswalker!==undefined?`Attacking ${combatName(combatCard(a.planeswalker))}`:'Attacking you',...(c?.keywords || [])].filter(Boolean).join(' · ');
     return `<div class="cm-block-draft" data-wf="W08" data-active-attacker="${a.attacker}"><h2>Block ${e(combatName(c))}</h2><div class="cm-block-attacker">${combatThumb(a.attacker,'Attacker')}<p>${e(facts)}</p></div>
       <div class="cm-block-tiles" data-block-key="${e(`${blockEpoch}:attacker:${a.attacker}`)}" aria-label="Legal blockers">${options.map(o=>{const b=combatCard(o.cardId);return `<button type="button" class="cm-block-tile" data-action="board-block-pair" data-index="${o.index}" data-block-object="${o.cardId}" data-combat-light="${o.cardId}" data-peek-card="${o.cardId}" aria-pressed="${picked.includes(o.index)}"${sending?' disabled':''}>${combatThumb(o.cardId,'Candidate')}<span>${e(combatName(b))}</span><b>${b?.power!=null?`${e(b.power)}/${e(b.toughness)}`:''}</b></button>`;}).join('') || '<p>No legal blockers.</p>'}</div>
       ${restrictions.length?`<p class="cm-block-restrictions">${restrictions.map(e).join(' · ')}</p>`:''}<div class="cm-block-status" role="status">${issues.map(r=>`<p>${e(r)}</p>`).join('')}${globalReasons.length?`<div class="cm-block-global"><strong>Draft check</strong>${globalReasons.map(r=>`<p>${e(r)}</p>`).join('')}</div>`:''}</div>

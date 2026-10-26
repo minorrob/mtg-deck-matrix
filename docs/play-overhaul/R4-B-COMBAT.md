@@ -14,10 +14,20 @@ The per-attacker desk shows legal blocker tiles, current derived P/T and twin le
 again unpicks; selected tiles invert to ink. Hover/focus highlights the exact current object on
 the mat. Visible object numbers, the old blocker-first selection and All block options are removed.
 
-Initial implementation checkpoint: browser acceptance and mutation proof pending. Syntax checks
-passed. The coordinator's phone inset fix is merged before browser proof; the general 15px/HUD
+Browser baseline: `node tests/board-r4-combat.mjs` passes 89 checks in the full matrix.
+It also verifies one-press native planeswalker inspection, pointer hit-testing for Send and
+sibling participant inspection buttons rather than nested interactive controls. Phone Camera/Table
+remain in their top row during combat and no longer cover Send. Mutation proof remains pending. The coordinator's phone inset fix is merged before browser proof; the general 15px/HUD
 caption audit remains with the final C/D2 pass.
 
 Browser fixture: tests/board-r4-combat.mjs covers two attackers, movement, independent settlement,
 exact indexes once, no early act, stale send revision, server refusals/global attribution, multiple
 blockers and nine-attacker scrolling across Table/Focus/3D/phone and representative skins.
+
+Coordinator owns completion of three legacy migrations and canonical mutation proof. The current
+board-combat-display and board-person adaptations are handed over with syntax checks only; they
+are not claimed green. board-direct-blocking is still the old fixture at this checkpoint. Existing
+serial-check, stale-response, privacy, capacity and real pointer assertions must be retained.
+
+Mutation runner: `python game/tools/batch/breaks.py game/tools/batch/breaks-r4-combat.py`.
+Screenshots: r4-combat-<view>-<width>.png in the same task evidence directory as A/D1.

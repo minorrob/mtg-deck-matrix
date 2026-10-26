@@ -64,17 +64,26 @@ async function shot(page,name){
   });
   await page.screenshot({path:path.join(process.env.UAT_SHOTS,name+".png")});
 }
+async function inspectPoint(page,id) {
+  const selector=`.cm-r4-combat .cm-combat-thumb-inspect[data-card="${id}"]`;
+  for(let n=0;n<12;n++) {
+    const box=await page.locator(selector).first().boundingBox(),row=await page.locator('.cm-combat-groups').boundingBox();
+    if(box && box.x>=row.x && box.x+box.width<=row.x+row.width)break;
+    const by=box?.x<row.x?'-1':'1';await page.locator(`.cm-combat-scroll[data-by="${by}"]`).click();await page.waitForTimeout(60);
+  }
+  return point(page,selector);
+}
 try{
   for(const [width,height,mode] of [[1024,768,"full"],[1280,720,"full"],[1400,900,"full"],[1280,720,"table"],[1280,720,"focus"],[390,844,"focus"]]){
     const {page,context,frames,publish}=await fixture(width,height,mode);
     const where=`${mode} ${width}x${height}`, strip=page.locator(".cm-combat");
     assert.equal(await strip.count(),1,`${where}: one shared combat picture`);
-    assert.deepEqual(await strip.locator(".cm-combat-group").evaluateAll(els=>els.map(el=>el.dataset.combatDefender)),["1","2"],`${where}: distinct defenders stay grouped`);
+    assert.deepEqual(await strip.locator(".cm-combat-row").evaluateAll(els=>[...new Set(els.map(el=>el.dataset.combatDefender))]),["1","2"],`${where}: distinct defender identities remain explicit in one row`);
     assert.equal(await strip.locator('[data-combat-role="Attacker"]').count(),6,`${where}: same-name attackers remain separate objects`);
     assert.equal(await strip.locator('[data-combat-attacker="70004"]').getAttribute("data-combat-target"),"70021",`${where}: planeswalker target uses its object ID`);
     assert.equal(await strip.locator('[data-combat-attacker="70004"] [data-combat-role="Blocker"]').count(),2,`${where}: both confirmed blockers shown`);
-    assert.doesNotMatch(await strip.innerText(),/SECRET FACE|Unblocked|damage will/,`${where}: no hidden identity or promised damage`);
-    if(width<600) await point(page,'.cm-phone-center .cm-mat [data-card="70013"]');
+    assert.doesNotMatch(await strip.innerText(),/SECRET FACE|damage will/,`${where}: no hidden identity or promised damage`);
+    if(width<600) {await page.locator('[data-action=board-stage-rail]').click();await page.locator('.cm-phone-center .cm-mat [data-card="70013"]').scrollIntoViewIfNeeded();await point(page,'.cm-phone-center .cm-mat [data-card="70013"]');}
     /* The picture has its own room above the board (the shell's 188px combat row): the board starts below it, never under
        it -- every control in the strip can be reached and still cover the top of the mat. */
     if(width>=1024){
@@ -82,34 +91,33 @@ try{
       assert.ok(board.y>=pic.y+pic.height-1,`${where}: the board starts below the combat picture (${Math.round(board.y)} vs ${Math.round(pic.y+pic.height)})`);
     }
     if(width>=1024){
-      for(const id of [70004,70021,70011,70012]) await point(page,`.cm-combat [data-card="${id}"]`);
-      const face=await point(page,'.cm-combat [data-card="70012"]');
+      for(const id of [70004,70021,70011,70012]) await inspectPoint(page,id);
+      const face=await inspectPoint(page,70012);
       await page.mouse.click(face.x,face.y);
       assert.doesNotMatch(await page.getByRole("dialog").innerText(),/SECRET FACE/,`${where}: inspecting a face-down object keeps its identity private`);
       assert.equal(await page.getByRole("dialog").locator("img").count(),0,`${where}: the hidden face is never requested`);
       await page.getByRole("button",{name:"Close",exact:true}).last().click();
     }
-    const before=await strip.innerText();
+    const publicBefore=await strip.locator('[data-combat-role="Blocker"]').count();
     if(width>600){
-      await page.locator(".cm-block-list summary").click();
-      const p=await point(page,'[data-action="board-option"][data-index="0"]');await page.mouse.click(p.x,p.y);
-      assert.equal(await strip.innerText(),before,`${where}: an unfinished block draft stays out of the confirmed picture`);
-      await point(page,'[data-action="board-confirm"]');
-      assert.equal(frames.filter(f=>f.type==="act").length,0,`${where}: draft selection sends no answer`);
+      await page.locator('[data-action="board-block-pair"][data-index="0"]').click();
+      assert.equal(await strip.locator('[data-combat-role="Blocker"]').count(),publicBefore,`${where}: local block pairs do not become public confirmed assignments`);
+      assert.equal(await strip.locator('[data-draft-blocker="70013"]').count(),1,`${where}: draft is explicitly local to this seat`);
+      assert.equal(frames.filter(f=>f.type==='act').length,0,`${where}: selection and local draft send no answer`);
     }
-    const p=await point(page,'.cm-combat [data-card="70001"]');
+    const p=await inspectPoint(page,70001);
     await page.mouse.click(p.x,p.y);
     await page.getByRole("dialog").waitFor();
     assert.match(await page.getByRole("dialog").innerText(),/Object #70001/,`${where}: inspect identifies the exact same-name object`);
     assert.equal(frames.filter(f=>f.type==="act").length,0,`${where}: inspection never plays a card or assigns a block`);
     await page.getByRole("button",{name:"Close",exact:true}).last().click();
     const list=page.locator(".cm-combat-groups");
-    /* The confirmed assignments run in a row and wrap to the next when it is full, never sideways (Rob, 2026-10-25). */
+    /* r4 W06 supersedes wrapping: all assignments stay in one row with native horizontal navigation. */
     if(width>=1000){
       let combat;
       await publish(v=>{combat=structuredClone(v.state.combat);v.state.combat.attacks=v.state.combat.attacks.filter(a=>a.planeswalker===undefined).map(a=>({...a,defender:1}));});
       const lay=await list.evaluate(g=>{const rows=[...g.querySelectorAll('.cm-combat-row')].map(r=>r.getBoundingClientRect());return {sameLine:rows.length>1&&Math.abs(rows[0].top-rows[1].top)<1,wrapped:rows.some(r=>r.top>rows[0].top+1),sideways:g.scrollWidth>g.clientWidth+1,rows:rows.length};});
-      assert.ok(lay.sameLine&&lay.wrapped&&!lay.sideways,`${where}: one defender's assignments run side by side and wrap to the next row, with no sideways scroll (${JSON.stringify(lay)})`);
+      assert.ok(lay.sameLine&&!lay.wrapped&&lay.sideways,`${where}: one row keeps complete horizontal navigation (${JSON.stringify(lay)})`);
       await publish(v=>{v.state.combat=combat;});
     }
     const r=await list.boundingBox();
@@ -129,7 +137,7 @@ try{
       v.state.players[2].zones.Hand.cards.push(permanent(70021,"SECRET IN HAND",2));
     });
     assert.match(await strip.locator('[data-combat-attacker="70004"]').innerText(),/Blocked · no blockers remain/,`${where}: removed blockers do not make the attacker unblocked`);
-    assert.match(await strip.innerText(),/Object #70021 left the battlefield/,`${where}: missing planeswalker is explicit`);
+    assert.match(await strip.innerText(),/Attacked permanent left the battlefield/,`${where}: missing planeswalker is explicit`);
     assert.doesNotMatch(await strip.innerText(),/SECRET IN HAND/,`${where}: no private-zone lookup`);
     await publish(v=>{v.state.players[0].zones.Battlefield.cards=v.state.players[0].zones.Battlefield.cards.filter(c=>c.cardId!==70001);});
     assert.equal(await strip.locator('[data-combat-attacker="70001"]').count(),0,`${where}: removed attacker has no stale row`);

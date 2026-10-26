@@ -41,6 +41,12 @@ async function pickOptions(page, indices) {
   }
 }
 
+async function bindSelected(page) {
+  const next=await visible(page,'[data-action=board-target-next]:not([disabled])');
+  if(next)await next.click();
+  return click(page,'[data-action=board-direct]:not([disabled]), [data-action=board-confirm]:not([disabled])');
+}
+
 /* The option the pilot picked at priority, found where the board shows it: in the decision panel, behind Also, in
    the card's own chooser, or grouped under one button with others of its kind. */
 async function priority(page, d, chosen) {
@@ -50,12 +56,12 @@ async function priority(page, d, chosen) {
     if (also) await also.click();
   }
   const exact = await visible(page, `[data-action=board-option][data-index="${chosen.index}"]`);
-  if (exact) {await exact.click();return click(page,"[data-action=board-confirm]:not([disabled])");}
+  if (exact) {await exact.click();return bindSelected(page);}
   const chooser = await visible(page, `[data-action=board-choose][data-card="${chosen.cardId}"]`);
-  if (chooser) {await chooser.click(); await click(page, `#cm-board-decision [data-action=board-option][data-index="${chosen.index}"]`);return click(page,"[data-action=board-confirm]:not([disabled])");}
+  if (chooser) {await chooser.click(); await click(page, `#cm-board-decision [data-action=board-option][data-index="${chosen.index}"]`);return bindSelected(page);}
   const grouped = d.options.find((o) => o.act === chosen.act && o.label === chosen.label);
   await click(page, `[data-action=board-option][data-index="${grouped.index}"]`);
-  return click(page,"[data-action=board-confirm]:not([disabled])");
+  return bindSelected(page);
 }
 
 export function boardPerson({page, seat, cards, current, timeout = 15000}) {
@@ -81,7 +87,12 @@ export function boardPerson({page, seat, cards, current, timeout = 15000}) {
       await priority(page, d, pilot.choose(v.state, options).option);
     } else {
       const picked = pilot.answer(v.state, d);
-      if (picked.amounts) {
+      let bound=false;
+      if(/^mulligan:/.test(d.id) && d.options.some(o=>o.label==='Keep')) {
+        await click(page,`[data-action=board-opening-hand][data-index="${picked.indices[0]}"]`);bound=true;
+      } else if(picked.indices?.length===1 && d.options.find(o=>o.index===picked.indices[0])?.decline && await visible(page,`[data-action=board-decline][data-index="${picked.indices[0]}"]`)) {
+        await click(page,`[data-action=board-decline][data-index="${picked.indices[0]}"]`);bound=true;
+      } else if (picked.amounts) {
         for (let i = 0; i < picked.amounts.length; i++) {
           const field = await visible(page, `[data-board-amount="${i}"]`);
           assert.ok(field, `amount input ${i}`);
@@ -89,14 +100,19 @@ export function boardPerson({page, seat, cards, current, timeout = 15000}) {
           await field.press("Tab");
         }
       } else if (d.mode === "many" && Array.isArray(d.legalBlocks)) {
-        for (const i of picked.indices ?? []) {
-          const o = d.options.find(o => o.index === i);
-          await click(page, `[data-action=board-block-select][data-block-object="${o.cardId}"]`);
-          await click(page, `[data-action=board-block-pair][data-index="${i}"]`);
+        const attacks=(v.state.combat?.attacks || []).filter(a=>a.defender===v.seat);
+        for(const attack of attacks) {
+          const currentAttacker=await page.locator('.cm-block-draft').getAttribute('data-active-attacker');
+          const confirms=await visible(page,`[data-action=board-block-attacker-confirm][data-attacker="${attack.attacker}"]`);
+          if(Number(currentAttacker)!==attack.attacker || !confirms)await click(page,`[data-action=board-block-attacker][data-attacker="${attack.attacker}"]`);
+          const indices=(picked.indices || []).filter(i=>d.options.find(o=>o.index===i)?.attackerId===attack.attacker);
+          for(const i of indices)await click(page,`[data-action=board-block-pair][data-index="${i}"]`);
+          await click(page,`[data-action=${indices.length?'board-block-attacker-confirm':'board-block-attacker-none'}][data-attacker="${attack.attacker}"]`);
         }
-        await page.locator("[data-action=board-confirm]:not([disabled])").waitFor({timeout});
+        await page.locator('[data-action=board-send-blockers]:not([disabled])').waitFor({timeout});
+        await click(page,'[data-action=board-send-blockers]:not([disabled])');bound=true;
       } else await pickOptions(page, picked.indices ?? []);
-      if (["one", "boolean", "index", "many", "order", "ack", "damage", "amount"].includes(d.mode)) await click(page, "[data-action=board-confirm]:not([disabled])");
+      if (!bound && ["one", "boolean", "index", "many", "order", "ack", "damage", "amount"].includes(d.mode)) await bindSelected(page);
     }
     while (current()?.revision === v.revision && Date.now() - at < timeout) await page.waitForTimeout(20);
     assert.notEqual(current()?.revision, v.revision, `action advances ${d.title}`);

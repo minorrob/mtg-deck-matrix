@@ -904,3 +904,12 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-target-stack>img{animation:non
 #matrix-v2 .cm-board .cm-combat-tile{padding-top:calc(12px + 18px*var(--hud-scale,1))}
 #matrix-v2 .cm-board .cm-combat-pt,#matrix-v2 .cm-board .cm-combat-empty,#matrix-v2 .cm-board .cm-combat-reason{font-size:calc(15px*var(--hud-scale,1))}
 #matrix-v2 .cm-board .cm-twin-mark{font-size:calc(15px*var(--hud-scale,1));width:calc(18px*var(--hud-scale,1));height:calc(18px*var(--hud-scale,1))}
+
+#matrix-v2 .cm-board[data-phone][data-combat] .cm-stage-camera,#matrix-v2 .cm-board[data-phone][data-combat] .cm-table-menu{top:calc(env(safe-area-inset-top) + 4px)}
+#matrix-v2 .cm-board .cm-combat-open{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;border-radius:inherit;cursor:pointer;z-index:0}
+#matrix-v2 .cm-board .cm-combat-state,#matrix-v2 .cm-board .cm-combat-relation,#matrix-v2 .cm-board .cm-combat-reason{pointer-events:none}
+#matrix-v2 .cm-board .cm-combat-pair{position:relative;z-index:1;pointer-events:none}
+#matrix-v2 .cm-board .cm-combat-thumb-inspect{position:relative;z-index:2;display:inline-flex;padding:0;border:0;background:transparent;border-radius:var(--radius-control);cursor:zoom-in;pointer-events:auto}
+#matrix-v2 .cm-board .cm-combat-thumb-inspect:focus-visible{outline:2px solid var(--color-aether);outline-offset:2px}
+#matrix-v2 .cm-board .cm-combat-permanent{position:relative;z-index:2;display:flex;justify-content:center}
+#matrix-v2 .cm-board .cm-combat-permanent .cm-combat-thumb{width:24px;height:34px;flex-basis:24px}

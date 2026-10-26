@@ -7,8 +7,8 @@ let checks=0;const eq=(a,b,m)=>{assert.deepEqual(a,b,m);checks++;};const ok=(c,m
 const creature=(id,name,owner,extra={})=>({cardId:id,name,owner,controller:owner,types:['Creature'],faceDown:false,tapped:false,counters:{},power:3,toughness:3,keywords:[],damage:0,...extra});
 function fixture(n=2,{exclusive=true}={}){const v=structuredClone(sample);v.revision=7000;v.state.phase='COMBAT_DECLARE_BLOCKERS';v.state.turnId='r4turn';v.state.players[1].name='Keith';
  for(const p of v.state.players)p.zones.Battlefield.cards=[];
- v.state.players[1].zones.Battlefield.cards=Array.from({length:n},(_,i)=>creature(1000+i,i<2?'Twin Lion':`Attacker ${i+1}`,1,{power:4,toughness:1,keywords:['Haste']}));
- v.state.players[0].zones.Battlefield.cards=[creature(2000,'Bear',0),creature(2001,'Bear',0),creature(2002,'Sky Guard',0,{power:2,toughness:4,keywords:['Flying']}),creature(2003,'Tapped blocker',0,{tapped:true})];
+ v.state.players[1].zones.Battlefield.cards=Array.from({length:n},(_,i)=>creature(1000+i,i<2?'Savannah Lions':`Attacker ${i+1}`,1,{power:4,toughness:1,keywords:['Haste']}));
+ v.state.players[0].zones.Battlefield.cards=[creature(2000,'Grizzly Bears',0),creature(2001,'Grizzly Bears',0),creature(2002,'Wind Drake',0,{power:2,toughness:4,keywords:['Flying']}),creature(2003,'Tapped blocker',0,{tapped:true})];
  v.state.combat={attackingPlayerId:1,defenders:[0],attacks:Array.from({length:n},(_,i)=>({attacker:1000+i,defender:0,blocked:false,blockers:[]}))};
  v.decision={id:'declare-blockers:r4',title:'Declare blockers',mode:'many',min:0,max:3,...(exclusive?{exclusiveBy:'cardId'}:{}),legalBlocks:[{blocker:2000,attackers:[1000,1001]},{blocker:2001,attackers:[1000,1001]},{blocker:2002,attackers:[1001]}],options:[[2000,1000],[2000,1001],[2001,1000],[2001,1001],[2002,1001]].map(([cardId,attackerId],index)=>({index,cardId,attackerId,label:`Block #${attackerId} with #${cardId}`})),blockReasons:[]};return v;}
 async function open(mode,width,skin='sapphire-obsidian',v=fixture()){
@@ -26,9 +26,11 @@ const tile=id=>`.cm-combat-tile[data-attacker="${id}"]`,pair=i=>`[data-action=bo
 const pause=p=>p.waitForTimeout(80);
 async function attacker(p,id){const active=await p.locator('.cm-block-draft').getAttribute('data-active-attacker');if(Number(active)!==id || !await p.locator(confirm).isVisible())await p.locator(tile(id)).click();}
 async function settle(p,id,index){await attacker(p,id);if(index!==null)await p.locator(pair(index)).click();await p.locator(index===null?'[data-action=board-block-attacker-none]':confirm).click();await pause(p);}
-async function hit(p,selector){const e=p.locator(selector);await e.scrollIntoViewIfNeeded();const good=await e.evaluate(el=>{const r=el.getBoundingClientRect();return [[.5,.5],[.2,.2],[.8,.8]].every(([x,y])=>el.contains(document.elementFromPoint(r.x+r.width*x,r.y+r.height*y)));});ok(good,`${selector} receives actual pointer`);}
+async function hit(p,selector){const e=p.locator(selector);await e.scrollIntoViewIfNeeded();const good=await e.evaluate(el=>{const r=el.getBoundingClientRect();return [[.5,.5],[.2,.2],[.8,.8]].every(([x,y])=>el.contains(document.elementFromPoint(r.x+r.width*x,r.y+r.height*y)));});if(!good){console.log(await e.evaluate(el=>{const r=el.getBoundingClientRect();return {box:r.toJSON(),hit:[[.5,.5],[.2,.2],[.8,.8]].map(([x,y])=>document.elementFromPoint(r.x+r.width*x,r.y+r.height*y)?.outerHTML.slice(0,350)),drawer:document.getElementById('cm-actions-drawer')?.getBoundingClientRect().toJSON()};}));if(process.env.UAT_SHOTS)await p.screenshot({path:path.join(process.env.UAT_SHOTS,'r4-combat-hit-failure.png')});}ok(good,`${selector} receives actual pointer`);}
 try{
  for(const [mode,width,skin] of [['table',1440,'sapphire-obsidian'],['focus',1440,'sapphire-obsidian-light'],['full',1440,'bronze-basalt'],['focus',390,'sapphire-obsidian']]){
+  if(process.env.COMBAT_CASE && process.env.COMBAT_CASE!==`${mode}-${width}`)continue;
+  console.log(`combat ${mode}/${width}`);
   const {page,context,frames,errors,emit,publish}=await open(mode,width,skin);await pause(page);
   ok(await page.locator(send).isDisabled(),`${mode}: Send disabled until each attacker settled`);ok((await page.locator(send).getAttribute('title')).includes('2 attackers'),`${mode}: disabled reason names unsettled count`);
   eq(await page.locator('.cm-r4-combat [data-combat-role=Attacker] .cm-twin-mark').allTextContents(),['a','b'],`${mode}: twin attacker marks`);
@@ -54,6 +56,12 @@ try{
  }
  {
   const {page,context}=await open('table',1024,'sapphire-obsidian',fixture(9));const tops=await page.locator('.cm-combat-row').evaluateAll(es=>es.map(e=>Math.round(e.getBoundingClientRect().top)));eq(new Set(tops).size,1,'nine attacker tiles never wrap');ok(await page.locator('[data-combat-more]').isVisible(),'overflow count visible');const count=await page.locator('[data-combat-more]').textContent();ok(/\+\d+ more/.test(count),'overflow count names actual hidden tiles');await page.locator('.cm-combat-scroll[data-by="1"]').click();await pause(page);ok(await page.locator('.cm-combat-scroll[data-by="-1"]').isVisible(),'left arrow appears once scrolled');await page.locator('.cm-combat-groups').focus();const before=await page.locator('.cm-combat-groups').evaluate(e=>e.scrollLeft);await page.keyboard.press('ArrowRight');await pause(page);ok(await page.locator('.cm-combat-groups').evaluate(e=>e.scrollLeft)>before,'keyboard arrow moves strip by tile');await context.close();
+ }
+
+ {
+  const v=fixture();v.state.players[0].zones.Battlefield.cards.push(creature(3000,'Garruk Wildspeaker',0,{types:['Planeswalker'],power:null,toughness:null,counters:{loyalty:3}}));v.state.combat.attacks[0].planeswalker=3000;
+  const {page,context,frames}=await open('table',1440,'sapphire-obsidian',v);const pw=page.locator('.cm-r4-combat [data-action=board-combat-inspect][data-card="3000"]');
+  await pw.focus();await page.keyboard.press('Enter');await page.locator('#cm-dialog[open]').waitFor();ok((await page.locator('#cm-dialog').textContent()).includes('Garruk Wildspeaker'),'attacked permanent has a one-press keyboard inspection path');eq(frames.filter(f=>f.type==='act').length,0,'permanent inspection sends no game action');await context.close();
  }
 }finally{await close();}
 console.log(`board-r4-combat: ${checks} checks passed`);
