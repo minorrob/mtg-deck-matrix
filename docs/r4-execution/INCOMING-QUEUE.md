@@ -63,7 +63,22 @@ no canonical/index changes, run no duplicate full gate and do not activate the w
   Restrict the actual tool set and deny unauthorized operations, constrain the credential environment,
   and prove malicious feedback cannot invoke write/shell/network actions before any live workflow.
   A system instruction saying not to edit is not the enforcement boundary.
+- The #897 create-then-PATCH sequence can duplicate a Linear issue when creation succeeds but recording
+  its key fails. A stubbed, side-effect-free review reproduction created two issues on retry. Establish
+  durable idempotency/reconciliation rather than trusting a later status write.
+- #896's hovered-card context survives route/account changes. An actual-source VM reproduction carried
+  account A's private card into a later Settings report after state/account replacement. Bind/reset that
+  context to its current owner and route/deck; held() itself showed no direct opponent-hand leak.
+- #897's output validation accepts a model replacement body containing the UUID while deleting original
+  facts, and accepts paths such as ../../outside-secret. Preserve reporter facts deterministically and
+  constrain source references to the reviewed repository boundary. Timestamp-only pagination also needs
+  a stable tie-breaker so equal-createdAt rows are not skipped at a page boundary.
 
 These findings are from exact-head source review, not executed exploit tests. They block acceptance of
 the incoming feedback/triage candidate, not the independent r4 candidate. Migration/configuration and
 first-live workflow claims remain unverified until their explicit gates are completed.
+
+The duplicate-write, stale-context and weak output-validation cases above have isolated in-memory/stub
+reproductions; no live issue, provider, browser or store write occurred. Names-only repository checks
+found none of the four reported workflow secrets, and no FEEDBACK_API variable. FEEDBACK_AGENT_AUD and
+the dedicated Access application/live round trip remain outstanding; no secret values were read/printed.
