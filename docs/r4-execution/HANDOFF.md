@@ -4,6 +4,46 @@ Integration: integration/r4, baseline origin/main c567c581. Updated October 26, 
 PR: https://github.com/minorrob/mtg-deck-matrix/pull/890 (draft).
 Tracking: https://linear.app/robs-build/issue/ROB-197/implement-r4-design-foundation-and-reconciled-playworkshop-ux .
 
+## October 26 follow-up integration handoff
+
+Rob authorized the separate chat **Integrate October 26 r4 follow-ups** to integrate the supplied Claude
+patch as its own PR into integration/r4, and explicitly approved coordinating this handoff. Its direct
+instructions are in the attached pasted text and work/claude-r4-rob-1026/. It owns the canonical
+branch/index and serial browser slot once the coordinator sends the scanned, pushed checkpoint SHA.
+The source/tests parent of this handoff note is036c321b73047a4ba5a213ae2cf0ab566305a176.
+
+All coordinator source work is committed; both worker browser processes are closed. Preserve the
+preexisting untracked docs/design/2026-10-25-redesign-r4/renders/. Incoming work must preserve newer
+functional fixes, EX17 (stable30-degree tapped slots), and renumber its decisions toEX18–EX26.
+The incoming patch's wordmark and other explicit new user requests must be reconciled with the earlier
+source rulings under that chat's conflict instructions; do not silently drop either side.
+
+**Main, full CI readiness and staging are held until that separate integration returns.** This is an
+in-progress draft checkpoint, not an assertion of a full green gate. After the incoming PR is locally
+merged/pushed to integration/r4, return canonical/browser ownership at its exact commit to this coordinator
+so the combined acceptance, required CI, main merge and staging can resume. Production still requires
+Rob's separate release instruction. The follow-up chat itself is explicitly forbidden to touch main or
+release staging/production.
+
+Latest frozen production isfdc4fc65; pins board111, stage69, app591, SW574,133 assets matching working/Git
+LF bytes. Current completed browser baselines: input62, layout90, views97; focused draw/Hand independence12;
+focused phone folded14 after allowing the actual preference-setup toast to expire. Seven pure suites116
+and existing guard mutations pass. The full folded16, caption16 plus existing Focus-draw, settings-window
+and fullscreen-notes baselines remain pending; remaining native mutations are listed by the Foundation
+worker in workbench/r4-play-evidence-20261026/foundation-frozen-gates-4f3694df.json. Do not duplicate already
+recorded real red-before-fix/green-after-fix paths.
+
+Real-table latest test head ed7165f3 is integrated (original diagnosticd53d26a5 retained in ancestry).
+Run26 reached258 checks on b7a64cf8 and stopped at Focus Coach module/standalone geometry. The composer is
+visible/focused; source vs oracle is unclassified. The next run prints exact mat/drawer rectangles and
+main.scrollTop before/after; do not weaken the assertion without those facts. Evidence is outside Git:
+workbench/r4-table-board-proof-20261026-r26 and workbench/r4-table-board-20261026-r26.log. Remaining sections
+are Coach prompt/thread/keyboard/draft/Questions, dropped socket/newest-wins, phone, End/private records,
+idempotent filing and deck Record. No full real-table pass is claimed.
+
+This checkpoint is pushed at Rob's explicit incoming-integration instruction despite those documented
+pending baselines. PR890 stays draft. Required secret/merge scan must pass before the checkpoint push.
+
 ## Integrated and proven locally
 
 - S0 foundation; E engine and public projection contracts; D1 shell/Study; A decision desk;

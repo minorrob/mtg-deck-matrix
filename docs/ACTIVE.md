@@ -2,6 +2,13 @@
 
 ## r4 coordinated execution, October 26, 2026 (Codex; Rob: "go")
 
+**Coordinated incoming handoff:** Rob authorized **Integrate October 26 r4 follow-ups** and approved
+cross-chat coordination. After the coordinator's scanned checkpoint push/notification, that chat owns
+the canonical integration/r4 index and serial browser slot for its separate incoming PR. Coordinator
+workers have released their browsers and keep isolated worktrees intact. Hold main/CI readiness/staging
+until the follow-up is merged/pushed back and ownership returned at a named commit. Its own scope never
+touches main, staging or production. Exact proof/pending gates and return protocol: docs/r4-execution/HANDOFF.md.
+
 The revised plan is authorized: `integration/r4` from main `c567c581`, with isolated worktrees for this effort,
 one Play writer, and no history rewrite. Foundation (`codex/r4-foundation`), Engine (`codex/r4-engine`) and
 Workshop (`codex/r4-workshop`) have exclusive workspaces under `workbench/r4-*-20261026`. Source packets,
