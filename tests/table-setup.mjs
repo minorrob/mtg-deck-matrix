@@ -80,7 +80,7 @@ function setup({failRules=false,unknown=[],failDeck=false,cloud=false}={}){
 }
 {
   const x=setup(),saved=[];let release;const gate=new Promise(resolve=>{release=resolve;});x.C.state.decks.push({id:'own',version:3});
-  const r={schema:'CrankMagicTableResult@1',id:'game:table:table123456g2:0',tableId:'table123456',matchId:'table123456g2',seatId:0,source:{deckId:'own',deckVersion:2},playedAt:'2026-10-26T12:00:00Z',outcome:'loss',turns:5,pod:2,seat:1,opponents:[{commanders:['Public opponent'],privateHand:['Hidden card']}],privateZones:{library:['Hidden library']}};
+  const r={schema:'CrankMagicTableResult@1',id:'game:table:table123456g2:0',tableId:'table123456',matchId:'table123456g2',seatId:0,source:{deckId:'own',deckVersion:2},playedAt:'2026-10-26T12:00:00Z',outcome:'loss',turns:5,pod:2,seat:1,ai:false,finishRank:null,bracket:null,finishReason:'Conceded',opponents:[{commanders:['Public opponent'],privateHand:['Hidden card']}],privateZones:{library:['Hidden library']}};
   const context={account:'rob@example.test',tableId:r.tableId,matchId:r.matchId,seatId:r.seatId};
   x.C.commit=async command=>{saved.push(command);await gate;x.C.state.games.push({id:command.gameId,deckId:command.deckId});};
   const board=x.C.tableApi.fileResult(r,context),lobby=x.C.tableApi.fileResult(r,context);ok(saved.length===1,'concurrent board and lobby observations share a single in-flight commit');release();
