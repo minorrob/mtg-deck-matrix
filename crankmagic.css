@@ -4206,3 +4206,17 @@ button.cm-vitals{cursor:pointer}
 #matrix-v2 .cm-confirmation-rules dd{margin:0 0 8px;color:var(--color-muted)}
 
 #matrix-v2 .cm-share-options [role=tab][aria-selected=true]{border-color:var(--color-ink);color:var(--color-ink);background:transparent}
+
+#matrix-v2 .cm-table-setup-rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(180px,100%),1fr));gap:12px;border:1px solid var(--color-line);border-radius:var(--radius-card);padding:12px;margin:16px 0}
+#matrix-v2 .cm-table-setup-rules legend{font-size:var(--text-body-size);font-weight:700;padding:0 6px}
+#matrix-v2 [data-game-record]:focus{outline:2px solid var(--color-aether);outline-offset:2px}
+
+/* Control edges use the field token; decorative dividers keep color-line. */
+#matrix-v2 .v-button{min-height:var(--control-height);border-radius:var(--radius-control);font-family:var(--font-body);font-size:var(--text-body-size);font-weight:700}
+#matrix-v2 .v-button:where(:not(.primary):not(.cm-danger)){border:1px solid var(--color-field-line);background:var(--color-raised);color:var(--color-ink)}
+#matrix-v2 .v-button.compact{min-height:var(--control-height-compact)}
+#matrix-v2 :is(input:where(:not([type=checkbox]):not([type=radio]):not([type=range])),select,textarea){min-height:var(--field-height);border:1px solid var(--color-field-line);border-radius:var(--radius-control);background:var(--color-raised);color:var(--color-ink);font-family:var(--font-body);font-size:var(--text-body-size)}
+#matrix-v2 :is(input[type=checkbox],input[type=radio]){width:var(--check-size);height:var(--check-size);accent-color:var(--color-ink)}
+#matrix-v2 :is(.v-button,input,select,textarea):focus-visible{outline:var(--focus-width) solid var(--color-aether);outline-offset:var(--focus-offset)}
+#matrix-v2 [aria-invalid=true]:is(input,select,textarea){border-color:var(--color-required)}
+@media(pointer:coarse){#matrix-v2 .v-button.primary{min-height:var(--control-height-lg)}}

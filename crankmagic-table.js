@@ -267,10 +267,21 @@
      seats, decks and rules, each person's answer shown, Yes or Leave the table; the answers close two minutes after the
      game's end (said in the reader's own time), and silence is leaving. The AI seats always stay. Closed, it says why,
      with New table. */
+  function resultReview(t){const record=t.gameRecord,deck=record?.source?.deckId&&C.state.decks.find(d=>d.id===record.source.deckId);
+    if(!record)return '';
+    const outcome={win:'Won',loss:'Lost',draw:'Draw',unfinished:'Unfinished'}[record.outcome]||'Finished';
+    return `<section class="v-panel cm-game-result" aria-label="Game result"><h2>${e(outcome)}</h2><p>Turn ${e(String(record.turns))} · ${e(String(record.pod))} seats${record.bracket?' · Bracket '+e(String(record.bracket)):''}</p><p>${e(record.finishReason||'')}</p><div class="cm-actions"><a class="v-button" href="#game">Back to lobby</a>${deck?`<a class="v-button" href="#decks?${e(new URLSearchParams({deck:deck.id,tab:'overview',game:record.id}).toString())}">Review this game</a>`:'<span class="cm-muted">The result stays at this table; its original deck is not in this library.</span>'}</div></section>`;}
+  const filing=new Set();
+  async function fileTableResult(t){const r=t.gameRecord,d=r?.source?.deckId&&C.state.decks.find(x=>x.id===r.source.deckId);
+    if(!r||r.schema!=='CrankMagicTableResult@1'||!d||filing.has(r.id)||C.state.games.some(g=>g.id===r.id))return;
+    filing.add(r.id);try{await C.commit({type:'game',deckId:d.id,gameId:r.id,outcome:r.outcome,playedAt:r.playedAt,finish:r.finishRank??null,pod:r.pod,bracket:r.bracket??null,turns:r.turns,seat:r.seat,opponents:(r.opponents||[]).map(x=>x.commanders.join(' + ')).join(' · '),notes:r.finishReason||'',table:{schema:r.schema,tableId:r.tableId,matchId:r.matchId,seatId:r.seatId,ai:!!r.ai,reason:r.finishReason||'',deckVersion:r.source.deckVersion}},{renderView:false});}
+    catch(error){if(!C.state.games.some(g=>g.id===r.id))C.notice('The game result has not been saved to this library. '+error.message,true,{action:{label:'Retry',run:()=>refresh(t.tableId)}});}
+    finally{filing.delete(r.id);}}
   function gamePanel(t) {
+    const review=resultReview(t);
     const r = t && t.rematch;
-    if (!r) return `<section class="v-panel cm-table-game" id="cm-table-game"><h2>The game is over</h2><p class="cm-muted">Its record is kept.</p></section>`;
-    if (r.outcome === "closed") return `<section class="v-panel cm-table-game" id="cm-table-game"><h2>The game is over</h2><p>${e(r.reason || "This table's games are over. Start a new table to play again.")}</p>
+    if (!r) return review+`<section class="v-panel cm-table-game" id="cm-table-game"><h2>The game is over</h2><p class="cm-muted">Its record is kept.</p></section>`;
+    if (r.outcome === "closed") return review+`<section class="v-panel cm-table-game" id="cm-table-game"><h2>The game is over</h2><p>${e(r.reason || "This table's games are over. Start a new table to play again.")}</p>
       <div class="cm-actions">${b("New table", "table-new-after", {}, true)}</div></section>`;
     const seatOf = (id) => t.seats[id] || {};
     const said = {yes: "playing again", no: "leaving", pending: "deciding"};
@@ -278,7 +289,7 @@
     const closes = new Date(r.deadline + (Date.now() - tableNow())).toLocaleTimeString("en-US", {hour: "numeric", minute: "2-digit"});
     const votes = `<ul class="cm-table-votes" aria-label="Who is playing again">${(r.votes || []).map((v) => `<li data-vote="${e(v.vote)}"><strong>${e(seatOf(v.seatId).you ? "You" : seatOf(v.seatId).name || `Seat ${v.seatId + 1}`)}</strong> · ${e(said[v.vote] || v.vote)}</li>`).join("")}</ul>`;
     const buttons = mine ? `${mine.vote !== "yes" ? b("Play again", "table-rematch", {accept: "yes"}, true) : ""}${b("Leave the table", "table-rematch", {accept: "no"}, false)}` : "";
-    return `<section class="v-panel cm-table-game" id="cm-table-game"><h2>Play again?</h2>
+    return review+`<section class="v-panel cm-table-game" id="cm-table-game"><h2>Play again?</h2>
       <p class="cm-muted">The same seats, decks and rules; the last game's record is kept. ${mine && mine.vote === "yes" ? "You are staying. " : ""}Answers close at ${e(closes)}; no answer is leaving the table.</p>
       ${votes}<div class="cm-actions">${buttons}</div></section>`;
   }
@@ -329,6 +340,8 @@
     const {table, now} = await api("GET", tableUrl(id));
     if (!live()) return table;
     if (Number.isFinite(now)) skew = now - Date.now();
+    await fileTableResult(table);
+    if(!live())return table;
     draw(table, asked);
     return table;
   }
@@ -406,10 +419,14 @@
         if(!active||!slot.isConnected)return;
         if(!t.seats.some(s=>s?.you)){slot.textContent='Your previous seat is no longer held.';return;}
         const phase=t.phase==='playing'?'Game in progress':t.phase==='rematch'?'Play again':t.phase==='countdown'?'Starting soon':'Preparing the table';
-        slot.innerHTML=`<div class="cm-play-return"><strong>${e(phase)}</strong><span>${e(t.seats.filter(Boolean).map(s=>s.name).join(' · '))}</span>${b('Resume your table','table-back',{table:t.tableId},true)}</div>`;
+        const live=C.board?.live?.(),summary=live?.tableId===t.tableId?live:null;
+        slot.closest('.cm-play-welcome')?.querySelector('[data-action=play-new-table]')?.classList.remove('primary');
+        slot.innerHTML=`<div class="cm-play-return"><strong>${e(phase)}${summary?.turn?' · Turn '+e(String(summary.turn)):''}</strong><span>${e(t.seats.filter(Boolean).map(s=>s.deck?.commander?.join(' + ')||s.name).join(' · '))}</span>${summary?.seats?.length?`<span>${summary.seats.map(s=>`${e(s.name)}: ${e(String(s.life))} life`).join(' · ')}</span>`:''}<div class="cm-actions">${b('Resume your table','table-back',{table:t.tableId},true)}${b('Leave table','play-leave-seat',{table:t.tableId})}</div></div>`;
       }).catch(()=>{if(active&&slot.isConnected)slot.innerHTML=`<p>Your table could not be checked. ${b('Try your table','table-back',{table:id})}</p>`;});}
     return ()=>{active=false;};
   };
+  actions['play-leave-seat']=el=>C.modal('Leave this table?',`<p>Your seat at this table will be released.</p><div class="cm-form-footer">${b('Cancel','close')}${b('Leave table','play-leave-confirm',{table:el.dataset.table},true)}</div>`);
+  actions['play-leave-confirm']=async el=>{await api('POST',`${tableUrl(el.dataset.table)}/leave`,{});keepSeat(null);actions.close();C.render();};
   actions['play-new-table']=()=>C.go('table?new=1');
   actions['play-ai-table']=()=>C.go('table?new=1&ai=1');
   actions['play-join']=()=>{
@@ -433,7 +450,8 @@
     C.main.innerHTML = C.pageHead("Play", "", "table") + `<section class="v-panel cm-table-new"><h2>New table</h2>
       <p class="cm-muted">You sit in seat 1 as the host. Each other seat is a person you invite, an AI, or nobody; a table seats two to four.</p>
       <form id="cm-table-new"><div class="cm-table-new-deck" id="cm-table-new-deck" aria-live="polite"></div><div class="cm-new-table-square"><div class="cm-table-new-seat cm-new-host" data-seat-position="1"><strong>You · Host</strong><label>Your name at the table <span aria-hidden="true">*</span><input name="hostName" maxlength="60" required aria-describedby="cm-table-host-error"><span class="cm-error cm-table-field-error" id="cm-table-host-error" role="alert"></span></label></div>${row(2)}${row(3)}${row(4)}<span class="cm-new-table-center" aria-hidden="true">COMMANDER</span></div><div class="cm-new-table-rules"><span>Commander</span><span>Invitation-only</span><span>2–4 seats</span><span>Review rules at the table</span></div><label>Your deck<select name="deck" id="cm-new-table-deck"><option value="">Choose at the table</option>${libraryDecks().map(d=>`<option value="${e(d.id)}"${d.id===deckId?' selected':''}>${e(d.name)}</option>`).join('')}</select></label>
-      <p class="cm-error" id="cm-table-new-error" role="alert"></p><div class="cm-actions">${b("Set the table", "table-create", {}, true)}</div></form></section>`;
+      <p class="cm-error" id="cm-table-new-error" role="alert"></p><fieldset class="cm-table-setup-rules"><legend>Table rules</legend><label>Starting life<input name="startingLife" type="number" min="1" max="999" value="40" required aria-describedby="cm-table-rules-error"><span class="cm-error cm-table-field-error" id="cm-table-rules-error" role="alert"></span></label><label>Bracket limit<select name="bracketLimit"><option value="">Any</option>${[1,2,3,4,5].map(n=>`<option value="${n}"${libraryDecks().find(d=>d.id===deckId)?.definition.baseBracket===n?' selected':''}>${n} or lower</option>`).join('')}</select></label></fieldset>
+      <div class="cm-actions">${b("Set the table", "table-create", {}, true)}</div></form></section>`;
     try {const last=JSON.parse(localStorage.getItem("cm-table-setup")||"null");if(last && last.owner === (C.signedInAs?.() || null)){const form=document.getElementById("cm-table-new");for(const key of ["hostName","kind2","name2","kind3","name3","kind4","name4"]){if(typeof last[key]==="string" && form.elements[key] && (!key.startsWith("kind") || ["human","ai","ai-easy","none"].includes(last[key])))form.elements[key].value=last[key];}}}catch{}
     document.querySelector('[name=hostName]').addEventListener('input',event=>{event.target.removeAttribute('aria-invalid');document.getElementById('cm-table-host-error').textContent='';});
     if(ai){const f=document.getElementById("cm-table-new");f.elements.kind2.value="ai";f.elements.name2.value="AI";f.elements.kind3.value="none";f.elements.kind4.value="none";}
@@ -514,6 +532,7 @@
     const form = document.getElementById("cm-table-new");
     const v = Object.fromEntries(new FormData(form));
     if (!v.hostName.trim()){const input=form.elements.hostName;input.setAttribute('aria-invalid','true');document.getElementById('cm-table-host-error').textContent='Give your name at the table.';input.focus();return;}
+    const life=Number(v.startingLife);if(!Number.isInteger(life)||life<1||life>999){const input=form.elements.startingLife;input.setAttribute('aria-invalid','true');document.getElementById('cm-table-rules-error').textContent='Choose starting life from 1 to 999.';input.focus();return;}
     /* An AI at Normal or Easy (AI-2): Normal scores its choices; Easy, now and then, takes the second best; Claude asks a
        model at its close calls. */
     const seats = [2, 3, 4].filter((n) => v[`kind${n}`] !== "none").map((n) => (v[`kind${n}`].startsWith("ai")
@@ -523,14 +542,19 @@
     document.getElementById('cm-table-new-error').textContent='';
     const {table} = await api("POST", "/api/tables", {hostName: v.hostName, seats});
     try {localStorage.setItem("cm-table-setup",JSON.stringify({owner:C.signedInAs?.() || null,...Object.fromEntries(["hostName","kind2","name2","kind3","name3","kind4","name4"].map(k=>[k,v[k]]))}));}catch{}
-    /* The deck you came with (Play this deck, AI-5) takes your seat now; if the table refuses it, its lobby says why. */
-    const bring = v.deck ? libraryDecks().find((d) => d.id === v.deck) : null;
-    if (bring) {
-      try {await api("POST", `${tableUrl(table.tableId)}/deck`, {seatId: 0, deck: deckForTable(bring)});}
-      catch (error) {C.notice(`${bring.name} did not take your seat: ${error.message}`, true);}
-    }
-    C.go("table", {id: table.tableId});
+    keepSeat(table.tableId);
+    await finishTableSetup(table,v);
   };
+  const settingUp=new Set();
+  async function finishTableSetup(table,v){if(settingUp.has(table.tableId))return;settingUp.add(table.tableId);
+    try{await api('POST',`${tableUrl(table.tableId)}/rules`,{startingLife:Number(v.startingLife),bracketLimit:v.bracketLimit?Number(v.bracketLimit):null});}
+    catch(error){C.go('table',{id:table.tableId});C.notice('Your table was created, but its rules were not saved. '+error.message,true,{action:{label:'Retry rules',run:()=>finishTableSetup(table,v)}});settingUp.delete(table.tableId);return;}
+    try{const bring=v.deck?libraryDecks().find(d=>d.id===v.deck):null;
+      if(bring){try{await api('POST',`${tableUrl(table.tableId)}/deck`,{seatId:0,deck:deckForTable(bring)});}catch(error){C.notice(`${bring.name} did not take your seat: ${error.message}`,true);}}
+      const autoFailures=await autoDeckAI(table);C.go('table',{id:table.tableId});
+      if(autoFailures.length)C.notice(autoFailures.join(' '),true,{undo:false});else C.notice('Table setup saved.',false,{undo:false});
+    }finally{settingUp.delete(table.tableId);}
+  }
 
   /* ---- invitations ---- */
   actions["table-invite"] = async (el) => {
@@ -580,6 +604,25 @@
         cards: d.cards.filter(([n]) => !commander.includes(n)).flatMap(([n, q]) => Array(q).fill(n))};
     });
   })().catch((error) => {preconsOnce = null; throw error;});
+  /* AI seats start with an engine-known public precon. This is the same host-authorized deck
+     assignment the chooser uses; a failed or unsupported list never becomes a pretend choice. */
+  async function autoDeckAI(table){const seats=(table.seats||[]).filter(s=>s.kind==='ai'&&s.occupied&&!s.deck);
+    if(!table.youAreHost||table.phase!=='selecting'||!seats.length)return [];
+    const failures=[];let candidates;
+    try{const lists=(await tablePrecons()).filter(d=>d.commander.length+d.cards.length===100);
+      const names=[...new Set(lists.flatMap(d=>[...d.commander,...d.cards]))];
+      const unknown=new Set((await api('POST',`${tableUrl(table.tableId)}/known`,{names})).unknown||[]);
+      candidates=lists.filter(d=>[...d.commander,...d.cards].every(name=>!unknown.has(name)));
+    }catch(error){return seats.map(s=>`${s.name||'AI'} needs a deck: ${error.message}`);}
+    for(const seat of seats){if(!candidates.length){failures.push(`${seat.name||'AI'} needs a deck: no public precon is fully known by this table. Choose its deck.`);continue;}
+      let assigned=false,last='No eligible precon.';
+      for(let i=0;i<candidates.length;i++){const deck=candidates[(Math.max(0,seat.seatId-1)+i)%candidates.length];
+        try{await api('POST',`${tableUrl(table.tableId)}/deck`,{seatId:seat.seatId,deck:{name:deck.name,commander:[...deck.commander],cards:[...deck.cards]}});assigned=true;break;}
+        catch(error){last=error.message;if(error.signedOut||error.status>=500)break;}}
+      if(!assigned)failures.push(`${seat.name||'AI'} needs a deck: ${last} Choose its deck.`);
+    }
+    return failures;
+  }
   let availablePrecons = [];
   const sharedReady = new Set();
   let availableSharedDecks = [];
