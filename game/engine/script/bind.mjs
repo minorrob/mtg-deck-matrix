@@ -56,6 +56,7 @@ import {valueCostOf, shownName, xOnStack} from "../state/index.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {amountOf, AMOUNT_PARAMS} from "./amount.mjs";
 import {conditionHolds} from "./condition.mjs";
+import {targetFacts, effectForTarget} from "./decision.mjs";
 
 /** More than this many ways to choose a spell's targets, and the card is refused at prepare rather than offered. */
 export const TARGET_CHOICES_MAX = 4096;
@@ -250,7 +251,7 @@ export function targetChoices(state, specs, context) {
  * as it allows or there are. Each option is one candidate (`targets: [it]`, `hostile` for a pilot's aim), a permanent said
  * with whose it is when it is not the chooser's, and two that would read alike numbered.
  */
-export function countedChoice(state, spec, context, {id, name, hostile = false, placeholder = null}) {
+export function countedChoice(state, spec, context, {id, name, hostile = false, placeholder = null, effects = [], targetIndex = 0}) {
   const count = countOf(spec, context) ?? {min: 1, max: 1};
   /* Within the group it was offered with (`share`): one graveyard's cards, or those with the creature type. */
   const candidates = groupCandidates(state, spec, context, placeholder);
@@ -259,7 +260,7 @@ export function countedChoice(state, spec, context, {id, name, hostile = false, 
     /* "For each opponent ... that player controls" (`forEach`): the opponent each is chosen for, kept with it (stillLegal). */
     const target = forEachOpponent(spec) ? {...c, forPlayer: controllerOf(state, c.id)} : c;
     return {index, ...(Number.isFinite(spec.totalPowerAtMost) ? {power: powerOf(state, c.id)} : {}), label: `${targetName(state, c)}${whose}`, ...(c.kind === "object" ? {cardId: c.id} : {playerId: c.id}), targets: [target], hostile,
-      ...(oneOfEach(spec) && c.kind === "object" && state.objects[c.id] ? {controllerId: controllerOf(state, c.id)} : {})};
+      ...targetFacts(state, c, effectForTarget(effects, targetIndex))};
   });
   for (const option of options) {
     const alike = options.filter((o) => o.label === option.label);

@@ -1131,7 +1131,8 @@ function askCounted(state, entry) {
 export function triggerCountedChoice(state, awaiting) {
   const {entry, context} = targeting(state, awaiting.stackId);
   return countedChoice(state, entry.script.targets[awaiting.index], context, {id: `choose-targets:${entry.stackId}:${awaiting.index}`,
-    name: entry.name ?? "A triggered ability", hostile: isHostile(entry.script.effects), placeholder: entry.targets[awaiting.index]});
+    name: entry.name ?? "A triggered ability", hostile: isHostile(entry.script.effects), placeholder: entry.targets[awaiting.index],
+    effects: entry.script.effects, targetIndex: awaiting.index});
 }
 
 /** The counted target picked; then the next, or the next trigger's targets. */
