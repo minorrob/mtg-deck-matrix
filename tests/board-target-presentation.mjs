@@ -13,6 +13,7 @@ eq(ctx.read.targetName(t),'Pinger ability','ability wording remains explicit');
 eq(ctx.read.targetCard({kind:'object',id:1}).cardId,1,'ordinary object identity remains unchanged');
 const d={id:'trigger-targets:9',title:'Counter target activated ability?',options:[]},o={effect:'Counter',targetGroups:[{index:0,effect:'Counter',targets:[t]}]};
 assert.match(ctx.read.targetHeading(d,o),/Counter Keith's Pinger ability/);checks++;
+assert.match(ctx.read.targetHeading({...d,sourceId:1},o),/Counter Keith's Pinger ability/);checks++;
 cards.pop();eq(ctx.read.targetCard(t),null,'departed source has no substitute art or new-zone lookup');
 view.state.stack=[];eq(ctx.read.targetCard(t),null,'missing ability does not fall through to object namespace');assert.match(ctx.read.targetHeading(d,o),/Counter target activated ability/);checks++;
 console.log(`board-target-presentation: ${checks} checks passed`);
