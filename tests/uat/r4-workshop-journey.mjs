@@ -14,6 +14,7 @@ const dismiss=async page=>{for(const b of await page.locator('#cm-notice .cm-toa
 const theme=async(page,skin,mode)=>{await page.evaluate(async({skin,mode})=>{await __cm.actions['set-theme-skin']({dataset:{themeSkin:skin}});await __cm.actions['set-theme-mode']({dataset:{themeMode:mode}});},{skin,mode});await page.waitForFunction(({skin,mode})=>document.documentElement.dataset.palette===skin&&document.documentElement.dataset.theme===mode,{skin,mode});};
 async function graphColors(page,label){
   await page.locator('#cm-graph').waitFor();await page.waitForFunction(()=>globalThis.__journeyCanvas===document.getElementById('cm-graph')&&globalThis.__journeyGraph?.positions().length>0);
+  await dismiss(page);const toast=page.locator('#cm-notice');if(await toast.isVisible()&&!await toast.locator('.cm-toast-dismiss').count())await toast.waitFor({state:'hidden',timeout:9000});
   await page.locator('[data-action=graph-mode][data-mode=select]').click();
   await page.evaluate(()=>{globalThis.__graphChecks=[];});
   const position=await page.evaluate(()=>__journeyGraph.positions().find(n=>n.depth===0));
