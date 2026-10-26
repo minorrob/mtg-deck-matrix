@@ -1203,12 +1203,12 @@ try {
     const copies=[];for(let i=0;i<29;i++){const c=first.cloneNode(true);c.classList.add('is-copy');c.classList.remove('is-tapped');c.style.setProperty('transition','none','important');source.append(c);copies.push(c);}
     dispatchEvent(new Event('resize'));
     const row=document.querySelector('.cm-board-mat .cm-board-lands .cm-board-cards'),kids=[...row.children],slots=()=>kids.map(c=>[c.offsetLeft,c.offsetTop,c.offsetWidth,c.offsetHeight]),before=slots();
-    copies.forEach((c,i)=>{if(i%2===0)c.classList.add('is-tapped');});dispatchEvent(new Event('resize'));
+    copies.forEach((c,i)=>{if(i%2===1)c.classList.add('is-tapped');});dispatchEvent(new Event('resize'));
     const stable=JSON.stringify(before)===JSON.stringify(slots());row.scrollTop=row.scrollHeight;
     const raster=el=>{const parent=el.offsetParent,p=parent.getBoundingClientRect(),top=p.top+parent.clientTop+el.offsetTop-parent.scrollTop,left=p.left+parent.clientLeft+el.offsetLeft-parent.scrollLeft;return {top,left,bottom:top+el.offsetHeight,right:left+el.offsetWidth};};
-    const r=row.getBoundingClientRect(),last=raster(kids.at(-1)),tap=copies.find(c=>c.classList.contains('is-tapped'));
+    const r=row.getBoundingClientRect(),last=kids.at(-1).getBoundingClientRect(),tap=copies.find(c=>c.classList.contains('is-tapped'));
     const matrix=new DOMMatrixReadOnly(getComputedStyle(tap).transform);
-    return {rows:new Set(kids.map(c=>c.offsetTop)).size,overflow:getComputedStyle(row).overflowY,scrolls:row.scrollHeight>row.clientHeight+1,
+    return {rowTop:r.top,rowBottom:r.bottom,lastTop:last.top,lastBottom:last.bottom,scrollTop:row.scrollTop,rows:new Set(kids.map(c=>c.offsetTop)).size,overflow:getComputedStyle(row).overflowY,scrolls:row.scrollHeight>row.clientHeight+1,
       lastSeen:last.bottom<=r.bottom+1&&last.top>=r.top-1,
       stable,cut:kids.some(c=>{const b=raster(c);return b.left<r.left-1||b.right>r.right+1;}),angle:Math.atan2(matrix.b,matrix.a)*180/Math.PI};
   });
