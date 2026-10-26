@@ -1427,13 +1427,22 @@ globalThis.CrankBoard = Object.seal({
     const region = host.querySelector(".cm-stage-region");
     if (!region || !globalThis.CrankStage) {globalThis.CrankStage?.unmount(); return;}
     const big = players()[focus] || players()[view.seat];
-    const opts = {tilt: cameraTilt(), zoom: camera.zoom, pan: camera.pan, reach: camera.reach, live: !!stretch, rotation: 0, cards: camera.cards, reduced: globalThis.CrankMotion?.reduced() ?? false,
+    const opts = {tilt: cameraTilt(), zoom: camera.zoom, pan: camera.pan, reach: camera.reach, rearMin:0, live: !!stretch, rotation: 0, cards: camera.cards, reduced: globalThis.CrankMotion?.reduced() ?? false,
       background: table?.appearance?.background || appearance.background, table: tableDesignId(table?.appearance?.table || appearance.table),
       mats: [big, ...players().filter((p) => p.playerId !== big.playerId)].map((p) => matOf(p.playerId)),
       combat: view.state.phase?.startsWith("COMBAT_") ?? false, instant: view.state.stack.some((s) => /Instant/i.test(typeLineOf(s))),
       onReady() {stageError = ""; const el = document.querySelector(".cm-stage-error"); if (el) el.textContent = "";},
       onError(message) {stageError = message; const el = document.querySelector(".cm-stage-error"); if (el) el.textContent = `${message} Use Focus view in Camera if graphics are unavailable.`;}};
     CrankStage.mount(region, opts); stageGeom = CrankStage.layout(region.getBoundingClientRect(), opts) || null;
+    // A scaled seat label must leave a complete card row on its rear mat. Keep the original
+    // projection unless the measured label and raster cannot fit their allocated rear surface.
+    const rearMin=Math.max(0,...[...region.querySelectorAll('.cm-stage-rear')].map(rear=>{
+      const grid=rear.querySelector('.cm-mat-grid'),label=rear.querySelector('.cm-stage-seat-label');if(!grid)return 0;
+      const css=getComputedStyle(grid),gap=parseFloat(getComputedStyle(rear).rowGap)||0;
+      const raster=Math.max(0,...[...grid.querySelectorAll('.cm-bcard')].map(card=>card.offsetHeight));
+      return (label?.offsetHeight||0)+gap+raster+(parseFloat(css.paddingTop)||0)+(parseFloat(css.paddingBottom)||0)+4;
+    }));
+    if(stageGeom?.rear.some(rear=>rear.height<rearMin)){opts.rearMin=rearMin;stageGeom=CrankStage.layout(region.getBoundingClientRect(),opts)||stageGeom;}
     for (const h of region.querySelectorAll(".cm-stage-corner")) {const i = Number(h.dataset.corner), q = stageGeom?.quad; h.hidden = !q; if (q) {h.style.left = `${q[i * 2].toFixed(1)}px`; h.style.top = `${q[i * 2 + 1].toFixed(1)}px`;}}
     const length = host.querySelector("[data-stage-length]");
     if (stageGeom && length) {const most = 100 + Math.floor(stageGeom.reachMost / stageGeom.base * 100), v = 100 + Math.round(stageGeom.reach / stageGeom.base * 100); length.max = String(most); length.value = String(v); length.setAttribute("aria-valuetext", `${v}%`); length.parentElement.querySelector("output").textContent = `${v}%`;}
@@ -2641,6 +2650,8 @@ globalThis.CrankBoard = Object.seal({
   function draw() {
     gameChip();
     const active = document.activeElement;
+    const coachActive=active?.closest?.('#cm-board-coach')?active:null;
+    const coachSelection=coachActive&&typeof coachActive.selectionStart==='number'?[coachActive.selectionStart,coachActive.selectionEnd,coachActive.selectionDirection]:null;
     const caret = active && active.matches && active.matches("[data-board-history-filter]") ? active.selectionStart : null;
     const focusData = active?.closest?.("#cm-board") ? {...active.dataset} : null;
     render();
@@ -2650,6 +2661,8 @@ globalThis.CrankBoard = Object.seal({
       next?.focus({preventScroll: true});
     }
     if(coach.open && coachGate.key!==coachKey())drawCoach();
+    // Reparenting the connected Coach during paint can blur it without replacing its live controls.
+    if(coachActive?.isConnected && !coachActive.closest('[inert]') && document.activeElement===document.body){coachActive.focus({preventScroll:true});if(coachSelection)coachActive.setSelectionRange(...coachSelection);}
     const context = document.getElementById("cm-coach-context");
     if (context && view) context.textContent = coachContext();
     if (caret === null) return;
@@ -2693,10 +2706,12 @@ globalThis.CrankBoard = Object.seal({
     const fight = host.querySelector(".cm-combat-groups"), fightPosition = fight && {key: fight.dataset.combatKey, x: fight.scrollLeft, y: fight.scrollTop};
     const blockPositions = new Map([...host.querySelectorAll("[data-block-key]")].map(el => [el.dataset.blockKey, el.scrollLeft]));
     const rowKey = `${view?.matchId}:${view?.seat}`;
+    const drawerPositions=host.dataset.rowScrollMatch===rowKey?[...host.querySelectorAll(':scope>.cm-stage-rail,:scope>.cm-stage-side')].map(el=>({id:el.id,view:host.dataset.view,top:el.scrollTop})):[];
     const main=host.querySelector('.cm-board-main'),focusPosition=main&&host.dataset.rowScrollMatch===rowKey?{seat:main.querySelector('.cm-board-stage>.cm-mat')?.dataset.seat,y:main.scrollTop}:null;
     if (host.dataset.rowScrollMatch !== rowKey) zonePositions.clear();
     else for (const el of host.querySelectorAll('[data-zone-scroll]')) zonePositions.set(`${host.dataset.view}:${el.dataset.zoneScroll}`, [el.scrollLeft,el.scrollTop]);
     C.keepFocus(host, () => paint(host));
+    for(const saved of drawerPositions)if(saved.view===host.dataset.view){const drawer=document.getElementById(saved.id);if(drawer&&host.contains(drawer))drawer.scrollTop=saved.top;}
     const nextMain=host.querySelector('.cm-board-main');if(focusPosition&&nextMain?.querySelector('.cm-board-stage>.cm-mat')?.dataset.seat===focusPosition.seat)nextMain.scrollTop=focusPosition.y;
     host.dataset.rowScrollMatch = rowKey;
     for (const el of host.querySelectorAll('[data-zone-scroll]')) {const pos=zonePositions.get(`${host.dataset.view}:${el.dataset.zoneScroll}`);if(pos){el.scrollLeft=pos[0];el.scrollTop=pos[1];}}
@@ -2938,7 +2953,7 @@ globalThis.CrankBoard = Object.seal({
     const slot=host?.querySelector(".cm-module-coach-host");
     el.classList.toggle("is-module", !!slot && coach.open);
     el.classList.toggle("is-docked", !!host?.dataset.shell && !slot && coach.open);
-    if(slot && coach.open) {slot.append(el); for(const k of ["--dock-x","--dock-y","--dock-w","--dock-h"]) el.style.removeProperty(k); return;}
+    if(slot && coach.open) {if(el.parentElement!==slot)slot.append(el); for(const k of ["--dock-x","--dock-y","--dock-w","--dock-h"]) el.style.removeProperty(k); return;}
     if (host?.dataset.shell === "shared" && el.classList.contains("is-docked")) {
       const h = host.getBoundingClientRect(), top = host.querySelector(".cm-stage-top").getBoundingClientRect().bottom;
       const width = Math.min(320, Math.max(240, innerWidth * .24));
@@ -2955,8 +2970,8 @@ globalThis.CrankBoard = Object.seal({
     el.style.setProperty("--dock-w", `${Math.round(s.width)}px`);
     el.style.setProperty("--dock-h", `${Math.max(120, Math.round(h.bottom - 8 - top))}px`);
   }
-  /* A ROW TOO FULL FOR ITS CARDS OVERLAPS THEM, each over the one before -- by their layout widths, a tapped card's turn
-     and the margins that make room for it included (Rob, 2026-10-11: five lands, "cards cutting off on the right side").
+  /* A ROW TOO FULL FOR ITS CARDS OVERLAPS THEM, each over the one before, using their unchanged slot widths and margins
+     (EX17: tapping rotates in the same slot; Rob, 2026-10-11: five lands, "cards cutting off on the right side").
      No card is covered past a readable strip of it (READABLE of its width); past that the row scrolls, with a bar to
      scroll it by, rather than cutting its last cards off. */
   const READABLE = .3;

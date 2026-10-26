@@ -21,7 +21,7 @@
      lies REACH_PAD px above the bottom of the screen (`reachMost`): zooming or moving the view never shortens the table.
      The shortest is the length it always had, where the front mat's captions are already at 10px. */
   const REACH_PAD=8;
-  function geometry(width, height, {tilt = 40, zoom = 100, seats = 3, rotation = 0, pan = null, look = null, reach = 0} = {}) {
+  function geometry(width, height, {tilt = 40, zoom = 100, seats = 3, rotation = 0, pan = null, look = null, reach = 0, rearMin = 0} = {}) {
     const w=Math.max(1,width), h=Math.max(1,height), angle=clamp(tilt,0,60)*Math.PI/180;
     const yaw=clamp(rotation,-180,180)*Math.PI/180, c=Math.cos(yaw), q=Math.sin(yaw);
     const base=h*.88, sx=.902*clamp(zoom,60,200)/100, sy=sx*Math.cos(angle);
@@ -56,7 +56,7 @@
       return {x:c*X+q*Y+cx,y:-q*X+c*Y+cy,world:[X,0,Z]};
     }
     const quad=[...project(0,0),...project(w,0),...project(w,planeHeight),...project(0,planeHeight)], [ox,oy]=quad;
-    const margin=22,gap=20,count = clamp(seats,1,3),rearY=18,rearH=base*.24,rearW=(w-margin*2-gap*(count-1))/count;
+    const margin=22,gap=20,count = clamp(seats,1,3),rearY=18,rearH=Math.min(Math.max(base*.24,Number(rearMin)||0),Math.max(base*.24,planeHeight-90)),rearW=(w-margin*2-gap*(count-1))/count;
     const rear=Array.from({length:seats},(_,i)=>surface({x:margin+i*(rearW+gap),y:rearY,width:rearW,height:rearH}));
     const frontY=rearY+rearH+22,front=surface({x:margin,y:frontY,width:w-margin*2,height:planeHeight-frontY-18});
     return {width:w,height:h,planeHeight,base,cy,reach:reachPx,reachMost,sx,sy,ox,oy,angle,yaw,distance,focal,screenY,pan:at,
