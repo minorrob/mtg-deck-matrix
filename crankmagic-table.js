@@ -170,13 +170,16 @@
       if (!el || !cloudPlay() || !playable(d)) return;
       let r;
       try {r = await readiness(d);} catch {return;}
+      const playPrimary=!r.count&&C.M?.readiness(C.state,d).complete===true;
       el.innerHTML = `<span class="cm-deck-play-line">${e(readinessText(r))}</span>`
         + (r.count ? ` <span class="cm-muted">The table cannot play ${r.unknown.length === 1 ? "this one" : "these"} yet: ${e(r.unknown.slice(0, 6).join(", "))}${r.unknown.length > 6 ? ", …" : ""}.</span>`
-          : ` ${b("Play this deck", "deck-play", {deck: d.id}, true, {cls: "compact"})}`);
+          : ` ${b("Play this deck", "deck-play", {deck: d.id}, playPrimary, {cls: "compact"})}`);
+      if(playPrimary)for(const button of document.querySelectorAll('.cm-deck-work .primary,.cm-action-bar .primary')){button.classList.remove('primary');button.dataset.playDemoted='true';}
+      else for(const button of document.querySelectorAll('[data-play-demoted]')){button.classList.add('primary');delete button.dataset.playDemoted;}
       const blocked=r.count?`${r.count} card${r.count===1?'':'s'} unplayable at the table. Fix the list before playing.`:'';
       el.dataset.blockedState=blocked;
       if(blocked)el.insertAdjacentHTML('beforeend',` <strong class="cm-deck-blocked">${e(blocked)}</strong>`);
-      const next=document.querySelector('#cm-deck-next .cm-bento-next-line');if(next)next.textContent=blocked||next.dataset.nextDefault;
+      const next=document.querySelector('#cm-deck-next .cm-bento-next-line');if(next)next.textContent=blocked||(playPrimary?'The box is ready. Play this deck or log a game.':next.dataset.nextDefault);
       el.classList.toggle("is-playable", !r.count);
       el.hidden = false;
     },
@@ -472,7 +475,7 @@
       <input name="name${n}" maxlength="60" placeholder="${n === 2 ? "Their name" : "Name (optional)"}" aria-label="Seat ${n} name"></div>`;
     C.main.innerHTML = C.pageHead("Play", "", "table") + `<section class="v-panel cm-table-new"><h2>New table</h2>
       <p class="cm-muted">You sit in seat 1 as the host. Each other seat is a person you invite, an AI, or nobody; a table seats two to four.</p>
-      <form id="cm-table-new"><div class="cm-table-new-deck" id="cm-table-new-deck" aria-live="polite"></div><div class="cm-new-table-square"><div class="cm-table-new-seat cm-new-host" data-seat-position="1"><strong>You · Host</strong><label>Your name at the table <span aria-hidden="true">*</span><input name="hostName" maxlength="60" required aria-describedby="cm-table-host-error"><span class="cm-error cm-table-field-error" id="cm-table-host-error" role="alert"></span></label></div>${row(2)}${row(3)}${row(4)}<span class="cm-new-table-center" aria-hidden="true">COMMANDER</span></div><div class="cm-new-table-rules"><span>Commander</span><span>Invitation-only</span><span>2–4 seats</span><span>Review rules at the table</span></div><label>Your deck<select name="deck" id="cm-new-table-deck"><option value="">Choose at the table</option>${libraryDecks().map(d=>`<option value="${e(d.id)}"${d.id===deckId?' selected':''}>${e(d.name)}</option>`).join('')}</select></label>
+      <form id="cm-table-new"><div class="cm-table-new-deck" id="cm-table-new-deck" aria-live="polite"></div><div class="cm-new-table-square"><div class="cm-table-new-seat cm-new-host" data-seat-position="1"><strong>You · Host</strong><label><span>Your name at the table&nbsp;<span aria-hidden="true">*</span></span><input name="hostName" maxlength="60" required aria-describedby="cm-table-host-error"><span class="cm-error cm-table-field-error" id="cm-table-host-error" role="alert"></span></label></div>${row(2)}${row(3)}${row(4)}<span class="cm-new-table-center" aria-hidden="true">COMMANDER</span></div><div class="cm-new-table-rules"><span>Commander</span><span>Invitation-only</span><span>2–4 seats</span><span>Review rules at the table</span></div><label>Your deck<select name="deck" id="cm-new-table-deck"><option value="">Choose at the table</option>${libraryDecks().map(d=>`<option value="${e(d.id)}"${d.id===deckId?' selected':''}>${e(d.name)}</option>`).join('')}</select></label>
       <p class="cm-error" id="cm-table-new-error" role="alert"></p><fieldset class="cm-table-setup-rules"><legend>Table rules</legend><label>Starting life<input name="startingLife" type="number" min="1" max="999" value="40" required aria-describedby="cm-table-rules-error"><span class="cm-error cm-table-field-error" id="cm-table-rules-error" role="alert"></span></label><label>Bracket limit<select name="bracketLimit"><option value="">Any</option>${[1,2,3,4,5].map(n=>`<option value="${n}"${libraryDecks().find(d=>d.id===deckId)?.definition.baseBracket===n?' selected':''}>${n} or lower</option>`).join('')}</select></label></fieldset>
       <div class="cm-actions">${b("Set the table", "table-create", {}, true)}</div></form></section>`;
     try {const last=JSON.parse(localStorage.getItem("cm-table-setup")||"null");if(last && last.owner === (C.signedInAs?.() || null)){const form=document.getElementById("cm-table-new");for(const key of ["hostName","kind2","name2","kind3","name3","kind4","name4"]){if(typeof last[key]==="string" && form.elements[key] && (!key.startsWith("kind") || ["human","ai","ai-easy","none"].includes(last[key])))form.elements[key].value=last[key];}}}catch{}
