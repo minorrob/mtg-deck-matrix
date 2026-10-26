@@ -457,7 +457,7 @@
 .cm-table-deck-choose.is-playable-only li:has(>.cm-table-deck[data-precon]:disabled){display:none}
 .cm-play-home{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,1fr);gap:18px;max-width:1400px;margin:auto}
 .cm-play-home .v-panel{margin:0;padding:clamp(20px,3vw,38px)}
-.cm-play-home h2{font-family:CrankOxanium,Satoshi,sans-serif;line-height:1.2}
+.cm-play-home h2{font-family:var(--font-body);line-height:1.2}
 .cm-play-welcome{background:radial-gradient(ellipse at 90% 0,#376b4933,transparent 65%),var(--panel);min-height:260px}
 .cm-play-eyebrow{font-size:12px;letter-spacing:.16em;font-weight:700;color:var(--accent)}
 .cm-play-welcome h2{font-size:clamp(28px,3.2vw,46px);margin:12px 0}
@@ -480,7 +480,7 @@
 .cm-stage-rail .cm-board-pane{position:static;display:block;width:100%;height:auto;max-height:none;padding:12px 0 0;margin:14px 0 0;border:0;border-top:1px solid #43564d;background:none;overflow:visible}
 .cm-stage-rail .cm-board-pane.is-shut{width:100%}
 .cm-stage-rail .cm-board-pane-head{display:flex;align-items:center;justify-content:space-between}
-.cm-stage-rail .cm-board-pane h3,.cm-stage-module h3,#cm-card-inspector h3{font-family:CrankOxanium,Satoshi,sans-serif;letter-spacing:.03em}
+.cm-stage-rail .cm-board-pane h3,.cm-stage-module h3,#cm-card-inspector h3{font-family:var(--font-body);letter-spacing:.03em}
 .cm-stage-rail .cm-board-tile{width:100%;margin:8px 0;aspect-ratio:auto;min-height:86px}
 .cm-stage-rail .cm-stage-module[data-module="actions"]{background:none;border:0;border-bottom:1px solid #43564d;border-radius:0;box-shadow:none}
 .cm-stage-module[data-module="actions"]>.cm-module-body{max-height:none;overflow:visible;padding:10px 0}
@@ -490,7 +490,7 @@
 .cm-board{--rail-top:58px}.cm-board[data-combat]{--rail-top:188px}
 .cm-stage-module[data-module="actions"] .cm-board-decision{display:flex;flex-direction:column;max-height:calc(100dvh - var(--rail-top) - 112px);gap:10px;min-height:0;overflow-y:auto;scrollbar-width:thin}
 .cm-stage-module[data-module="actions"] .cm-board-decision>h3,.cm-stage-module[data-module="actions"] .cm-board-decision-foot{flex:none}
-#matrix-v2 .cm-stage-module h3,#matrix-v2 .cm-stage-rail .cm-board-pane h3,#matrix-v2 #cm-card-inspector h3{font-family:CrankOxanium,Satoshi,sans-serif;font-size:14px;font-weight:600;text-transform:none;color:inherit}
+#matrix-v2 .cm-stage-module h3,#matrix-v2 .cm-stage-rail .cm-board-pane h3,#matrix-v2 #cm-card-inspector h3{font-family:var(--font-body);font-size:14px;font-weight:600;text-transform:none;color:inherit}
 .cm-stage-module[data-module="actions"] .cm-board-options{display:flex;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:8px;min-height:0;max-height:none;overflow:auto;padding:3px;margin:-3px;scrollbar-width:thin}
 .cm-stage-module[data-module="actions"] .cm-board-options>*{flex:none}
 /* A stack of the same card (crankmagic-board.js, sameStacks): one button, ×N, and how many of it beside it where the
@@ -599,7 +599,7 @@
 .cm-new-table-square .cm-table-new-seat{display:flex;flex-direction:column;gap:10px;padding:16px;min-width:0;background:#142a26;color:#edf6ef;border:1px solid #829b7d;border-radius:10px}
 .cm-new-table-square input,.cm-new-table-square select{width:100%;min-width:0}.cm-new-table-square [data-seat-position="1"]{grid-column:2;grid-row:2}.cm-new-table-square [data-seat-position="2"]{grid-column:1;grid-row:2}.cm-new-table-square [data-seat-position="3"]{grid-column:2;grid-row:1}.cm-new-table-square [data-seat-position="4"]{grid-column:1;grid-row:1}
 .cm-new-table-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:10px;color:#ead5ad;letter-spacing:.15em}.cm-new-table-rules{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}.cm-new-table-rules span{border:1px solid #8d7856;border-radius:20px;padding:5px 12px;font-size:12px}
-.cm-table-new{max-width:900px;margin:auto}.cm-table-new h2{font-family:CrankOxanium,Satoshi,sans-serif}
+.cm-table-new{max-width:900px;margin:auto}.cm-table-new h2{font-family:var(--font-body)}
 @media(max-width:1000px){.cm-play-home{grid-template-columns:1fr 1fr}.cm-play-talk{grid-column:1/-1}.cm-play-records{grid-column:auto}}
 @media(max-width:700px){.cm-play-home{grid-template-columns:minmax(0,1fr)}.cm-play-home .v-panel{grid-column:1;padding:20px}.cm-new-table-square{padding:10px;gap:24px 10px}.cm-new-table-square .cm-table-new-seat{padding:10px}.cm-new-table-square input,.cm-new-table-square select{font-size:13px}}
 /* R3: the same discoverable zone navigation in every board view. */

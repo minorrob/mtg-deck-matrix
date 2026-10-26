@@ -1,0 +1,69 @@
+{
+  "sourceCommit": "c567c5814b880e3bd4b5cba4862c81c37907745f",
+  "sources": [
+    {
+      "file": "source/00-task-list.md",
+      "sha256": "3834184ee5cff499cc1f13fa8ea363690ad50e3caf9a84254384c12eca639746"
+    },
+    {
+      "file": "source/01-unified-change-set.md",
+      "sha256": "b581101d32a6b45a163723ac7e6a62a1a2a58cf75e79d69ad98f623e57ca98e0"
+    },
+    {
+      "file": "source/A-play-desk.md",
+      "sha256": "cd9aeb74c890a8745adc40c7e9870733d5e6e77970bfe4663feae588f78d3fa4"
+    },
+    {
+      "file": "source/B-play-combat.md",
+      "sha256": "3528449da8966a4c933ed018f50d87a0731d7feeb2600876371cb6078253d659"
+    },
+    {
+      "file": "source/C-play-board.md",
+      "sha256": "eda0eb7f12408d2df60e9c7aa7a48b91b0295c02529ef2d7a582e656ad4ccbac"
+    },
+    {
+      "file": "source/D1-play-shell.md",
+      "sha256": "41c5b6e71a7048f53dac07494315a45188069058d1c1713d66db2ace6b97dc15"
+    },
+    {
+      "file": "source/D2-play-views-coach.md",
+      "sha256": "04ddee8b4dd21d1fdc85db5f49c1b25ced8f823d3fc45d915c89cd7bd9646290"
+    },
+    {
+      "file": "source/E-engine.md",
+      "sha256": "99ef9ff44764d7a708ba72b81485de8006aeb6117410969a37e9b698e5104b4b"
+    },
+    {
+      "file": "source/F1-workshop-deck-journey.md",
+      "sha256": "a7c7bca799c84e9ade3c2b8eb20d887c8eb69dede4314349ce4625c5b8b869b9"
+    },
+    {
+      "file": "source/F2-workshop-own-playhome-settings.md",
+      "sha256": "2adf614a286af228e4b082a6a177c7458559df03fe81685cf948fa0096bc5507"
+    },
+    {
+      "file": "source/M-merge-and-staging.md",
+      "sha256": "de01c2379d20d7c08a16f3a8e68e9dc4ba77c3b63bdd502605acb73a1abd4ee4"
+    },
+    {
+      "file": "source/S0-tokens-type-skins.md",
+      "sha256": "db3b559bc3137fd9a46eb02933a6677e67f0f35f7ebde4a745ee0ef2d1bde00b"
+    },
+    {
+      "file": "source/play-ux-requests-2026-10-26-reconciliation.md",
+      "sha256": "a609e825948d2a4c9ea413b0d5e28cccdeba719fcbcd691283a26c986ec0e8b5"
+    },
+    {
+      "reference": "crankmagic-ux-walkthrough.html",
+      "sourcePath": "C:\\Users\\robmi\\Documents\\My Games\\Magic the Gathering\\crankmagic-ux-walkthrough.html",
+      "sha256": "2e7bf0e813b3ee3337fbd49fb1026870372476d9577e510898a0ae75baabe10c",
+      "note": "Original local reference; embedded screenshot HTML is not shipped."
+    },
+    {
+      "reference": "crankmagic-ux-guidebook.html",
+      "sourcePath": "C:\\Users\\robmi\\Documents\\My Games\\Magic the Gathering\\crankmagic-ux-guidebook.html",
+      "sha256": "60de5a6311b3370b22a89f60aeaf190b268de19f433930f6a062714566a5aea3",
+      "note": "Original local reference; embedded screenshot HTML is not shipped."
+    }
+  ]
+}

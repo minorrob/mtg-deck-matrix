@@ -1,0 +1,19 @@
+diff --git a/tests/a11y-app.mjs b/tests/a11y-app.mjs
+index 4a946dc..1301d44 100644
+--- a/tests/a11y-app.mjs
++++ b/tests/a11y-app.mjs
+@@ -28,7 +28,7 @@ const PROBES = [
+   ["the landing's closing panel", `<div class="cm-landing-close">Start building</div>`, ".cm-landing-close"],
+   ["the build's current step", `<ol class="cm-build-steps"><li aria-current="step">Commander</li></ol>`, "li"],
+ ];
+-const THEMES = ["moss-iron", "brass-slate", "felt-cream", "steel-cobalt"];
++const THEMES = ["sapphire-obsidian", "sapphire-obsidian-light", "bronze-basalt", "bronze-basalt-light", "chalk-coal", "chalk-coal-light"];
+ 
+ const {browser, base, stub, close} = await openBrowser({name: "a11y-app", flag: "GEOMETRY_REQUIRED"});
+ try {
+@@ -96,4 +96,4 @@ function contrast(a, b) {
+ }
+ 
+ assert.deepEqual(failures, [], `words on the accent fall short at ${failures.length} place(s):\n  ` + failures.join("\n  "));
+-console.log(`a11y-app: ${checks} checks passed — every rule that sets words on the accent, and the Decks page's primary buttons, at 4.5:1 in all four themes.`);
++console.log(`a11y-app: ${checks} checks passed — every rule that sets words on the accent, and the Decks page's primary buttons, at 4.5:1 in every skin and register.`);
