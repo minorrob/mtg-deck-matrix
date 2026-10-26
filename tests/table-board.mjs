@@ -600,7 +600,7 @@ try {
   await utility(rob.page,"board-tools");
   await rob.page.locator("#cm-board-tools [data-card-scale]").fill("120");
   const sTools = await sizes();
-  /* Camera closed when the Profile menu was pressed (Rob, Oct 25: a press outside it closes it), so Board cards is read after. */
+  /* Opening Play settings closes Camera, so Board cards is read after reopening Camera. */
   ok(sTools.scopes.join() === "1.2,1.2" && sTools.outs[1] === "120%" && Math.abs(sTools.board / s100.board - 1.2) < 0.03 && Math.abs(sTools.hand / s100.hand - 1.2) < 0.02,
     `Tools is the table's card size, and moving it sets Board cards and Hand cards to its value (${sTools.outs.join(", ")})`);
   await rob.page.locator("#cm-board-tools [data-card-scale]").fill("100");
@@ -705,8 +705,8 @@ try {
   await maya.page.waitForFunction(() => !document.querySelector("#cm-board-callouts .cm-callout"), null, {timeout: 20000});
   await chooseView(maya.page,"full"); await fullTools(maya.page);
   await maya.page.locator(".cm-stage-rail").waitFor();
-  const pillClear = await maya.page.evaluate(() => {const pill = document.querySelector(".cm-full-pill").getBoundingClientRect(), first = document.querySelector(".cm-full-mine .cm-seatboard-body").getBoundingClientRect(); return first.top >= pill.bottom;});
-  ok(pillClear, "the step and Pass pill sits over her board without covering its first row");
+  const pillClear = await maya.page.evaluate(() => {const controls = document.querySelector(".cm-stage-actions") || document.querySelector(".cm-stage-top"), pill = controls.getBoundingClientRect(), first = document.querySelector(".cm-full-mine .cm-seatboard-body").getBoundingClientRect(); return pill.height > 0 && first.top >= pill.bottom;});
+  ok(pillClear, "the rendered turn controls stay above her board without covering its first row");
   await maya.page.getByRole("button",{name:"Camera",exact:false}).click();
   await maya.page.getByRole("button",{name:"Next seat",exact:true}).click();
   await maya.page.getByRole("button",{name:"Camera",exact:false}).click();
@@ -1099,7 +1099,7 @@ try {
   ok(await heard(ROB, "sfx/sfx_event_your_turn.mp3"), "and Rob's own turn 3 was announced to him as his turn");
   /* WHOSE TURN IT IS, on that seat's card in Focus's side pane (Rob, 2026-10-09: "Icon on the Card in the left or right
      side pane"): Maya's tile ringed and marked, and only hers. */
-  const tileTurn = await rob.page.evaluate(() => [...document.querySelectorAll(".cm-board-pane .cm-board-turn-mark")].map((m) => ({seat: m.closest(".cm-board-tile").dataset.seat, said: m.getAttribute("aria-label"), ringed: m.closest(".cm-board-tile").classList.contains("is-turn")})));
+  const tileTurn = await rob.page.evaluate(() => [...document.querySelectorAll(".cm-board-pane .cm-board-tile.is-turn .cm-seat-header.is-turn")].map((m) => ({seat: m.closest(".cm-board-tile").dataset.seat, said: m.querySelector(".cm-seat-state").textContent, ringed: getComputedStyle(m.querySelector(".cm-seat-portrait")).boxShadow !== "none"})));
   eq(tileTurn, [{seat: "1", said: "Maya's turn", ringed: true}], `in Focus, Maya's tile in the side pane is marked as hers to play, and no other (${JSON.stringify(tileTurn)})`);
   /* STOP AT EVERY STEP OF MY TURN (Settings; Rob, 2026-10-11): kept with the preferences, and told to the room by the board.
      A room that does not take it (here, made to refuse: the AI seats playing on would) is not a notice, and the board does
@@ -1377,7 +1377,7 @@ try {
 
   /* THE COACH: a reserved column beside the board; the shell, with a stub reply that says so. */
   const matWidth = () => rob.page.evaluate(() => Math.round(document.querySelector(".cm-board-mat").getBoundingClientRect().width));
-  const matBefore = await matWidth(), coachMatBefore = await rob.page.locator(".cm-board-mat").boundingBox();
+  const matBefore = await matWidth();
   await rob.page.click(".cm-board-coach-open");
   await rob.page.locator("#cm-board-coach:not([hidden]) .cm-coach-input").waitFor();
   const coachBox = await rob.page.evaluate(() => {const r = document.getElementById("cm-board-coach").getBoundingClientRect(), mat = document.querySelector(".cm-board-mat").getBoundingClientRect(), drawer = document.querySelector(".cm-stage-side").getBoundingClientRect(); return {width:r.width,right:r.right,edge:innerWidth,drawerContained:r.left>=drawer.left && r.right<=drawer.right+1,clear:mat.right<=r.left+1,mat: {x:mat.x,y:mat.y,width:mat.width,height:mat.height},visible:r.bottom<=innerHeight+1};});
