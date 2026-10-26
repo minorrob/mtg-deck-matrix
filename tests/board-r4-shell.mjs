@@ -41,7 +41,7 @@ async function wholeRows(page,label) {
     const fails=[];
     const areas=[...document.querySelectorAll('#cm-board .cm-mat-grid,.cm-phone-battlefield,.cm-board-field,[data-card-section]')];
     const saved=areas.map(el=>[el,el.scrollTop,el.scrollLeft]);
-    for(const card of document.querySelectorAll('#cm-board [data-card-section]>.cm-bcard')) {
+    for(const card of document.querySelectorAll('#cm-board [data-card-section] .cm-bcard')) {
       if(!card.getClientRects().length)continue;
       card.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'});
       const r=card.getBoundingClientRect();
@@ -114,7 +114,7 @@ try {
     await page.locator('.cm-stage-camera [data-play-hud]').evaluate(el => {el.value="100";el.dispatchEvent(new Event("input",{bubbles:true}));el.dispatchEvent(new Event("change",{bubbles:true}));});
     await page.keyboard.press("Escape");
     await page.evaluate(() => document.querySelector('[data-action="board-stage-side"]').click());
-    const header = page.locator('.cm-stage-module[data-module="history"]>header');
+    const header = page.locator('.cm-stage-module[data-module="history"]>header .cm-module-toggle');
     await header.focus(); await page.keyboard.press("Enter");
     eq(await header.getAttribute("aria-expanded"),"false", `${mode}: Enter folds a module`);
     await page.keyboard.press("Space");
