@@ -39,17 +39,15 @@ if (browser) try {
     : r.fulfill({json: {head: {id: "00000000-0000-4000-8000-000000000000", revision: 1, checksum: "x", device: "test", createdAt: new Date().toISOString()}}}));
   await page.goto("about:blank");   /* so the next address loads the page afresh, with the stubs above */
   await page.goto(`${base}/index.html#decks`);
-  await page.locator("#cm-account [data-action=account-sync]").waitFor({state: "attached", timeout: 60000});
+  await page.locator("#cm-account-device [data-action=account-sync]:not([disabled])").waitFor({state: "attached", timeout: 60000});
 
   /* ORDER. */
   const openMenu = async () => {await page.getByRole("button", {name: "Menu", exact: true}).click(); await page.locator("#cm-user-menu:popover-open").waitFor();};
   await openMenu();
-  const items = await page.$$eval("#cm-user-menu > p, #cm-user-menu button, #cm-user-menu a", (els) => els.map((el) => el.textContent.replace(/^[^\p{L}]+/u, "").trim()).filter((t) => !t.startsWith("Signed in")));
-  eq(await page.locator("#cm-account > p").first().textContent(), "Account", "the Menu opens on Account");
-  eq(items, ["Sync now", "Refresh", "Settings", "Save a backup file", "Restore from a backup file", "Reset All",
-    "Help", "Help & glossary", "Term definitions on hover: Off", "Take a Tour", "Send Feedback", "Show a QR code",
-    "Switch theme", "Moss & Iron", "Brass & Slate", "Felt & Cream", "Steel & Cobalt", "Sign out"],
-  "the Menu: Account with Sync now and Refresh under it, Settings, the backups and Reset All, Help with the glossary switch, then Switch theme, then Sign out");
+  const items = await page.$$eval("#cm-user-menu button, #cm-user-menu a", (els) => els.map((el) => el.textContent.replace(/^[^\p{L}]+/u, "").trim()));
+  eq(await page.locator('#cm-user-menu > .cm-menu-group').evaluateAll(groups=>groups.filter(g=>!g.hidden).map(g=>g.getAttribute('aria-label'))), ['You','This device','Your data','Skin','Help','Careful','Sign out'], 'the shared account menu has the approved r4 group order');
+  ok(/Signed in as rob@example.com/.test(await page.locator('#cm-account').innerText()), 'You identifies the signed-in account');
+  eq(items, ["Settings", "Sync now", "Reload with newest files", "Save a backup file", "Restore from a backup file", "Sapphire & Obsidian", "Bronze & Basalt", "Chalk & Coal", "Dark", "Light", "System", "Help & glossary", "Term definitions on hover: Off", "Take a Tour", "Send Feedback", "Show a QR code", "Reset All", "Sign out"], 'r4 groups retain every supported action, one Settings label and standalone final Sign out');
   ok(!items.includes("Share CrankMagic by email") && !(await page.locator("#cm-share-mail").count()), "Share CrankMagic by email is gone");
   await shot(page, "menu-1400");
 
@@ -80,7 +78,7 @@ if (browser) try {
   ok(true, "and the box goes when the cursor moves off the term");
   await page.keyboard.press("Escape");
   await page.reload();
-  await page.locator("#cm-account [data-action=account-sync]").waitFor({state: "attached", timeout: 60000});
+  await page.locator("#cm-account-device [data-action=account-sync]:not([disabled])").waitFor({state: "attached", timeout: 60000});
   await openMenu();
   eq(await page.locator("#cm-menu-terms .cm-menu-state").textContent(), "On", "the choice is kept after a reload");
   await page.locator("#cm-menu-terms").click();
@@ -94,9 +92,9 @@ if (browser) try {
   await page.evaluate(async () => {await (await caches.open("crankmagic-public:/:shell:test")).put("probe.txt", new Response("old"));});
   const decksBefore = await page.evaluate(() => globalThis.__cm.state.decks.length);
   await openMenu();
-  const [nav] = await Promise.all([page.waitForEvent("framenavigated", {timeout: 15000}), page.locator("#cm-account [data-action=app-refresh]").click()]);
+  const [nav] = await Promise.all([page.waitForEvent("framenavigated", {timeout: 15000}), page.locator("#cm-user-menu [data-action=app-refresh]").click()]);
   ok(nav === page.mainFrame(), "Refresh reloads the page");
-  await page.locator("#cm-account [data-action=account-sync]").waitFor({state: "attached", timeout: 60000});
+  await page.locator("#cm-account-device [data-action=account-sync]:not([disabled])").waitFor({state: "attached", timeout: 60000});
   eq(await page.evaluate(async () => (await caches.keys()).filter((k) => k.startsWith("crankmagic-public:"))), [], "after emptying this browser's copies of the app's files");
   eq(await page.evaluate(() => globalThis.__cm.state.decks.length), decksBefore, "and the library is untouched");
   await context.close();

@@ -9,7 +9,7 @@
     const value=await r.json().catch(()=>({}));if(!r.ok)throw Error(value.error||'Admin is unavailable. Try again.');return value;}
   const menu=()=>person?.admin===true?'<a class="v-button" href="#admin" data-action="open-admin" data-admin-link>Admin</a>':'';
   function drawMenu(){const target=document.getElementById('cm-user-menu');if(!target)return;
-    target.querySelector('[data-admin-menu]')?.remove();if(person?.admin===true){const slot=document.createElement('div');slot.dataset.adminMenu='';slot.innerHTML=menu();target.append(slot);}}
+    let slot=target.querySelector('[data-admin-menu]');if(!slot&&person?.admin!==true)return;if(!slot){slot=document.createElement('div');slot.dataset.adminMenu='';(target.querySelector('[aria-label="You"]')||target).append(slot);}slot.innerHTML=menu();}
   async function identity(force=false){if(!enabled)return false;if(checking)return checking;if(person&&!force)return person.admin===true;
     checking=read('/api/me').then(value=>{person={admin:value.admin===true};drawMenu();return person.admin;}).catch(error=>{person={admin:false,error:error.message};drawMenu();return false;}).finally(()=>{checking=null;});return checking;}
   C.adminMenu=menu;C.adminReady=identity();
