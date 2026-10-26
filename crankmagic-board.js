@@ -605,9 +605,15 @@ globalThis.CrankBoard = Object.seal({
     return button ? `<button type="button" class="${cls}" data-action="board-vitals" aria-label="${e(label)}; open Table vitals">${inner}</button>`
       : `<span class="${cls}" aria-label="${e(label)}">${inner}</span>`;
   }
+  function seatState(p) {
+    const flag=seatFlag(p),i=p.playerId;
+    if(departed(i) || p.health.status==='lost' || away.get(i))return flag;
+    if(flag==='Deciding' || (view.decision && i===view.seat))return 'Deciding';
+    return view.state.turnPlayerId===i?(i===view.seat?'Your turn':`${p.name}'s turn`):'Waiting';
+  }
   function seatHeader(p, {interactive = true,resources=false} = {}) {
     const commander = commanderOf(p), label = seatLabel(p), active = view.state.turnPlayerId === p.playerId;
-    const state = view.decision && p.playerId === view.seat ? 'Deciding' : active ? (p.playerId === view.seat ? 'Your turn' : `${p.name}'s turn`) : 'Waiting';
+    const state=seatState(p);
     const initial = (p.name || 'Player').trim()[0] || '?';
     return `<div class="cm-seat-header${active ? ' is-turn' : ''}${p.health.life <= 10 ? ' is-danger' : ''}" data-seat-header="${p.playerId}">
       <span class="cm-seat-portrait" aria-hidden="true"><span class="cm-seat-initial">${e(initial)}</span>${commander?.name ? `<img src="${e(pictureOf(commander.name))}" alt="" referrerpolicy="no-referrer">` : ""}</span>
@@ -1195,7 +1201,7 @@ globalThis.CrankBoard = Object.seal({
       <button type="button" class="cm-stage-handle cm-stage-right cm-drawer-tab" data-action="board-stage-side" aria-expanded="${stageSide}" aria-controls="cm-stack-drawer" aria-label="${stageSide ? 'Collapse' : 'Expand'} Stack"><span>Stack · ${count}</span><b aria-hidden="true">${stageSide ? '▸' : '◂'}</b></button>${!phone()&&historyOpen?historyMenu():''}`;
   }
   function tableMenu() {
-    return `<div class="cm-table-menu"><button type="button" data-action="board-table-menu" aria-expanded="${tableMenuOpen}" aria-controls="cm-table-menu">Table ▾</button>${tableMenuOpen ? `<div id="cm-table-menu" role="group" aria-label="Table">${b('Pages','board-menu')}${menuOpen?menu():''}${b('Concede', 'board-concede')}${b('Leave table', 'board-leave-page')}${table?.youAreHost ? (confirmEnd ? `<p>End the game for everyone? The record is kept.</p>${b('Cancel', 'board-end-cancel')}${b('End game for everyone', 'board-end', {confirm:'1'}, true)}` : b('End game for everyone', 'board-end')) : ''}${b('Table rules', 'board-table-rules')}${b('Help', 'page-help', {help:'table'})}</div>` : ''}</div>`;
+    return `<div class="cm-table-menu"><button type="button" data-action="board-table-menu" aria-expanded="${tableMenuOpen}" aria-controls="cm-table-menu">Table ▾</button>${tableMenuOpen ? `<div id="cm-table-menu" role="group" aria-label="Table">${b('Pages','board-menu')}${menuOpen?menu():''}${b('History','board-history')}${b('Concede', 'board-concede')}${b('Leave table', 'board-leave-page')}${table?.youAreHost ? (confirmEnd ? `<p>End the game for everyone? The record is kept.</p>${b('Cancel', 'board-end-cancel')}${b('End game for everyone', 'board-end', {confirm:'1'}, true)}` : b('End game for everyone', 'board-end')) : ''}${b('Table rules', 'board-table-rules')}${b('Help', 'page-help', {help:'table'})}</div>` : ''}</div>`;
   }
   function cameraMenu() { return `${tableMenu()}<div class="cm-stage-camera"><button type="button" data-action="board-camera" aria-expanded="${cameraOpen}">Camera ▾</button>${cameraOpen ? `<div>${phone() ? "" : switcher()}${hudSlider()}<span>View seats</span>${ib("◀", "board-rotate", "Previous seat", {by: "-1"})}${ib("▶", "board-rotate", "Next seat", {by: "1"})}
         ${stageEnabled() ? `<label>Tilt <input type="range" min="0" max="60" value="${camera.tilt}" data-stage-camera="tilt" aria-label="Table tilt"><output>${camera.tilt}°</output></label>` : ""}
@@ -3951,7 +3957,7 @@ globalThis.CrankBoard = Object.seal({
     historyOpen = false;
     document.getElementById("cm-board-history")?.remove();
   });
-  actions["board-history"] = (el) => {historyOpen = !historyOpen; profileOpen=false; tools = false; menuOpen = false; stepsOpen = false; opened(el, historyOpen); draw(); if (historyOpen) document.querySelector("#cm-board-history .cm-history-filter")?.focus();};
+  actions["board-history"] = (el) => {const from=el?.closest?.('#cm-table-menu')?document.querySelector('[data-action=board-table-menu]'):el;historyOpen = !historyOpen; tableMenuOpen=false;profileOpen=false; tools = false; menuOpen = false; stepsOpen = false; opened(from, historyOpen); draw(); if (historyOpen) document.querySelector("#cm-board-history .cm-history-filter")?.focus();};
   actions["board-end"] = async (el) => {
     if (el.dataset.confirm !== "1") {confirmEnd = true; draw(); refreshSettings(); return;}
     confirmEnd = false; tools = false; tableMenuOpen = false;
