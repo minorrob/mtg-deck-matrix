@@ -20,4 +20,6 @@ BREAKS = [
      "if(filing.has(key))return filing.get(key);", ""),
     ('wrong seat context files result', 'crankmagic-table.js',
      "||!contextMatches||r?.schema", "||r?.schema"),
+    ('known one-card list called playable', 'crankmagic-table.js',
+     "return list.commander.length+list.cards.length===100;", "return true;"),
 ]

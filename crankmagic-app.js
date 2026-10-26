@@ -123,13 +123,15 @@ function pageHead(name,controls='',help='',summary=''){const title=name?`<h1>${e
    markup. A save's own notice offers Undo, and so does any notice its flow raises straight after it,
    while that save is still the last change: the undo it offers is the one History would give. */
 let undoRevision=null,undoAt=0;
-function notice(message,error=false,{action=null,stay=false,undo=true}={}){const el=$('#cm-notice');if(!action&&!error&&undo&&undoRevision===state.revision&&Date.now()-undoAt<3000){const expectedRevision=undoRevision;action={label:'Undo',run:()=>actions.undo({expectedRevision})};}
+function notice(message,error=false,{action=null,stay=false,undo=true,dismiss=null}={}){const el=$('#cm-notice');if(!action&&!error&&undo&&undoRevision===state.revision&&Date.now()-undoAt<3000){const expectedRevision=undoRevision;action={label:'Undo',run:()=>actions.undo({expectedRevision})};}
   const text=document.createElement('span');text.className='cm-toast-text';text.textContent=message;el.replaceChildren(text);
   if(action){const b=document.createElement('button');b.type='button';b.className='cm-toast-action';b.textContent=action.label;b.addEventListener('click',async()=>{el.hidden=true;clearTimeout(noticeTimer);try{await action.run();}catch(error){if(error.name!=='AbortError')notice(error.message,true);}});el.append(b);}
+  if(dismiss){const b=document.createElement('button');b.type='button';b.className='cm-toast-dismiss';b.textContent='Dismiss';b.setAttribute('aria-label','Dismiss update notice');b.addEventListener('click',()=>{el.hidden=true;clearTimeout(noticeTimer);dismiss();});el.append(b);}
   el.classList.toggle('error',error);el.hidden=false;clearTimeout(noticeTimer);if(!stay)noticeTimer=setTimeout(()=>el.hidden=true,error?18000:7000);}
 /* A NEW VERSION, OFFERED (M-18): the service worker installs a new version and waits; this says so, and stays until
    answered. Reload asks the waiting worker to take over, and the page reloads once it has -- never before the click. */
-function offerUpdate(reg){if(!reg)return;/* a browser that answers the registration with nothing (service workers blocked) has no update to offer, and is told nothing */let asked=false;const offer=()=>{if(!reg.waiting||!navigator.serviceWorker.controller)return;notice('A new version of CrankMagic is ready.',false,{stay:true,action:{label:'Reload',run:()=>{asked=true;reg.waiting?.postMessage({type:'skip-waiting'});}}});};
+function offerUpdate(reg){if(!reg)return;/* A worker waits without interrupting a form or a game. Offer it at the next navigation. */let asked=false,pending=false,dismissed=false;const offer=()=>{if(reg.waiting&&navigator.serviceWorker.controller)pending=true;};
+  addEventListener('hashchange',()=>{offer();if(!pending||asked||dismissed||!reg.waiting)return;notice('A new version of CrankMagic is ready.',false,{stay:true,undo:false,dismiss:()=>{dismissed=true;},action:{label:'Reload',run:()=>{asked=true;reg.waiting?.postMessage({type:'skip-waiting'});}}});});
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(asked)location.reload();});
   offer();reg.addEventListener('updatefound',()=>{const w=reg.installing;w?.addEventListener('statechange',()=>{if(w.state==='installed')offer();});});}
 /* CLOSING A SUB-DIALOG GOES BACK, IT DOES NOT THROW THE WHOLE THING AWAY.
