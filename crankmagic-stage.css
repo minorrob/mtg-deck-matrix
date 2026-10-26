@@ -1080,7 +1080,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 
 /* Keep the existing art scale, with only the minimum needed to contain the actual scaled
    public badge. The same --bc drives pile columns and measured usable zone rows. */
-#matrix-v2 .cm-board .cm-mat[data-fit=table]{--bc:max(calc(clamp(30px,var(--row-w,var(--board-w,620px))*.074,60px)*var(--board-scale,1)),var(--caption-card-min,0px))}
+#matrix-v2 .cm-board .cm-mat[data-fit=table]{--table-card-base:clamp(30px,var(--row-w,var(--board-w,620px))*.074,60px);--bc:max(calc(var(--table-card-base)*var(--board-scale,1)),calc(var(--caption-card-min,0px) + var(--table-card-base)*(var(--board-scale,1) - var(--board-scale-min,.6))))}
 #matrix-v2 .cm-board .cm-mat[data-fit=focus]{--bc:max(calc(clamp(92px,var(--mat-w,1060px)*.078,136px)*var(--board-scale,1)),var(--caption-card-min,0px))}
 #matrix-v2 .cm-board .cm-mat[data-fit=full]{--bc:max(calc(clamp(64px,var(--full-w,1200px)*.075,112px)*var(--board-scale,1)),var(--caption-card-min,0px))}
 #matrix-v2 .cm-board .cm-mat[data-fit=opp]{--bc:max(min(calc(clamp(28px,var(--opp-w,400px)*.11,48px)*var(--board-scale,1)),var(--opp-bc-max,48px)),var(--caption-card-min,0px))}
@@ -1092,3 +1092,14 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-stage-front .cm-board-pile{--bc:max(calc(var(--stage-card,80px)*.78),var(--caption-card-min,0px))}
 #matrix-v2 .cm-board .cm-full-mine>.cm-mat[data-fit=full]{--bc:max(min(calc(clamp(64px,var(--full-w,1200px)*.075,112px)*var(--board-scale,1)),var(--full-bc-max,112px)),var(--caption-card-min,0px))}
 #matrix-v2 .cm-board .cm-phone-battlefield .cm-board-pile{--bc:max(54px,var(--caption-card-min,0px))}
+#matrix-v2 .cm-board[data-view=focus] .cm-board-main{overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;overflow-anchor:none}
+#matrix-v2 .cm-board[data-view=focus] .cm-board-stage{height:var(--mat-h);aspect-ratio:auto}
+#matrix-v2 .cm-board .cm-mat[data-fit=focus]>.cm-mat-grid{grid-template-rows:var(--field-px) 8px var(--lands-px) auto calc(160px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-board-main>.cm-decision-slot{position:sticky;top:0;left:auto;transform:none;margin:0 auto}
+@media(max-width:1399px){
+ #matrix-v2 .cm-board .cm-stage-top .cm-step-long{display:none}
+ #matrix-v2 .cm-board .cm-stage-top .cm-step-short{display:inline}
+ #matrix-v2 .cm-board .cm-stage-top .cm-board-ribbon{gap:2px}
+ #matrix-v2 .cm-board .cm-stage-top .cm-board-ribbon li{padding-left:3px;padding-right:3px}
+ #matrix-v2 .cm-board .cm-stage-top>.cm-board-turnsteps{flex:1 1 230px;min-width:210px}
+}

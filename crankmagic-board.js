@@ -1014,8 +1014,9 @@ globalThis.CrankBoard = Object.seal({
     const bc=mat.querySelector('.cm-bcard')?.offsetWidth || 60,row=Math.ceil(bc*1.72+4);
     const fieldMin=Math.ceil(row+outer(field.querySelector(':scope>.cm-mat-label'))+outer(field.querySelector('.cm-board-group>h3'))+padding(field));
     const landMin=Math.ceil(row+outer(lands.querySelector(':scope>.cm-mat-label'))+padding(lands));
-    const chip=grid.querySelector(':scope>.cm-board-chip'),gap=number(grid,'rowGap');
-    const extra=padding(grid)+8+outer(chip)+gap*(chip?3:2);
+    const chip=grid.querySelector(':scope>.cm-board-chip'),history=grid.querySelector(':scope>.cm-board-band'),gap=number(grid,'rowGap');
+    const historyMin=history?number(history,'minHeight'):0,rows=history||mat.dataset.fit==='phone'?5:4;
+    const extra=padding(grid)+8+outer(chip)+historyMin+gap*(rows-1);
     return {fieldMin,landMin,extra,header:outer(mat.querySelector('.cm-mat-head'))};
   }
   function fitBoardZones(host) {
@@ -1148,7 +1149,7 @@ globalThis.CrankBoard = Object.seal({
     const said = ps.map((p) => `${p.playerId === view.seat ? "You" : p.name} ${p.health.life}`).join(", ");
     const active=parts.find(({p})=>p.playerId===view.state.turnPlayerId),glow=active?`<i class="cm-board-pie-turn" data-seat="${active.p.playerId}" aria-hidden="true" style="background:conic-gradient(from ${active.at[0]}deg,var(--color-aether) 0deg ${active.at[1]-active.at[0]}deg,transparent ${active.at[1]-active.at[0]}deg 360deg)"></i>`:'';
     return `<div class="cm-board-pie" role="group" aria-label="Life: ${e(said)}" style="background:conic-gradient(${stops.join(",")})">${glow}${totals}
-      <button type="button" class="cm-board-center" data-action="board-vitals" aria-label="Table vitals"><img src="${LOGO}" alt=""></button><span class="cm-board-pie-priority">Priority: ${e(view.state.priorityPlayerId===view.seat?'you':nameOf(view.state.priorityPlayerId))}</span></div>`;
+      <button type="button" class="cm-board-center" data-action="board-vitals" aria-label="Table vitals"><img src="${LOGO}" alt=""></button><span class="cm-board-pie-priority">Priority: ${e(view.state.priorityPlayerId==null?'—':view.state.priorityPlayerId===view.seat?'you':nameOf(view.state.priorityPlayerId))}</span></div>`;
   }
   /* THE FOCUS VIEW: the seat pane, then the board on the mat, the largest 16:9 that fits; the hand docked over its
      bottom edge. */
@@ -1214,7 +1215,7 @@ globalThis.CrankBoard = Object.seal({
     const pill=`<div class="cm-full-pill">${stageEnabled() ? "" : `${passButton()}${resolveAllButton()}${skipControl(true)}`}</div>`;
     const conn=status === "open" ? "" : `<span class="cm-board-conn">${status === "reconnecting" ? "Reconnecting…" : "Connecting…"}</span>`;
     return `<header class="cm-stage-top"><span class="cm-stage-self" role="group" aria-label="${e(seatLabel(me))}, your seat" title="${e(seatLabel(me))}">${seatHeader(me)}</span><span class="cm-board-tools cm-board-turnsteps">${turnRibbon()}${stepsOpen ? stepsMenu() : ""}</span>
-      <span class="cm-stage-priority"><span class="cm-board-turn" title="Turn ${s.turn} of the game, counting every player's${view.yourTurn ? `; your ${ordinal(view.yourTurn)} turn` : ''}">${s.turn ? `Turn ${s.turn} · ${e(turnName)}` : "Before turn 1"}</span><br>Priority: ${e(nameOf(view.state.priorityPlayerId))}<span class="cm-board-waiting" title="${e(waitingText())}">${e(waitingText())}</span>${conn}</span>${alsoButton()}${opens(ib(stageRail && !actionsShut ? "◂" : "▸", "board-actions-open", "Open decision drawer", {}, {cls:"compact"}), stageRail && !actionsShut)}${pill}${stageProfile(me)}${combatStrip()}</header>`;
+      <span class="cm-stage-priority"><span class="cm-board-turn" title="Turn ${s.turn} of the game, counting every player's${view.yourTurn ? `; your ${ordinal(view.yourTurn)} turn` : ''}">${s.turn ? `Turn ${s.turn} · ${e(turnName)}` : "Before turn 1"}</span><br>Priority: ${e(s.priorityPlayerId==null?'—':nameOf(s.priorityPlayerId))}<span class="cm-board-waiting" title="${e(waitingText())}">${e(waitingText())}</span>${conn}</span>${alsoButton()}${opens(ib(stageRail && !actionsShut ? "◂" : "▸", "board-actions-open", "Open decision drawer", {}, {cls:"compact"}), stageRail && !actionsShut)}${pill}${stageProfile(me)}${combatStrip()}</header>`;
   }
   function boardDrawers() {
     const pending = view.decision && view.decision.kind !== 'draw' ? 1 : 0, count = view.state.stack.length;
@@ -2546,9 +2547,11 @@ globalThis.CrankBoard = Object.seal({
     const fight = host.querySelector(".cm-combat-groups"), fightPosition = fight && {key: fight.dataset.combatKey, x: fight.scrollLeft, y: fight.scrollTop};
     const blockPositions = new Map([...host.querySelectorAll("[data-block-key]")].map(el => [el.dataset.blockKey, el.scrollLeft]));
     const rowKey = `${view?.matchId}:${view?.seat}`;
+    const main=host.querySelector('.cm-board-main'),focusPosition=main&&host.dataset.rowScrollMatch===rowKey?{seat:main.querySelector('.cm-board-stage>.cm-mat')?.dataset.seat,y:main.scrollTop}:null;
     if (host.dataset.rowScrollMatch !== rowKey) zonePositions.clear();
     else for (const el of host.querySelectorAll('[data-zone-scroll]')) zonePositions.set(`${host.dataset.view}:${el.dataset.zoneScroll}`, [el.scrollLeft,el.scrollTop]);
     C.keepFocus(host, () => paint(host));
+    const nextMain=host.querySelector('.cm-board-main');if(focusPosition&&nextMain?.querySelector('.cm-board-stage>.cm-mat')?.dataset.seat===focusPosition.seat)nextMain.scrollTop=focusPosition.y;
     host.dataset.rowScrollMatch = rowKey;
     for (const el of host.querySelectorAll('[data-zone-scroll]')) {const pos=zonePositions.get(`${host.dataset.view}:${el.dataset.zoneScroll}`);if(pos){el.scrollLeft=pos[0];el.scrollTop=pos[1];}}
     for (const el of host.querySelectorAll("[data-block-key]")) el.scrollLeft = blockPositions.get(el.dataset.blockKey) || 0;
@@ -2718,10 +2721,14 @@ globalThis.CrankBoard = Object.seal({
         
         const trayH = trayAt(matW);
         if (8 + stripH + matW * 9 / 16 + GAP + trayH > box.height) {matW = widest(trayH); trayAt(matW);}
+        const mat=stage.querySelector(':scope>.cm-mat'),minimum=()=>{const m=zoneMetrics(mat);return Math.ceil(m.header+(m.fieldMin+m.landMin)*1.2+m.extra+4);};
+        let matH=Math.max(matW*9/16,minimum());
+        if(matH>matW*9/16+1){matW=Math.max(320,Math.floor(box.width-16));trayAt(matW);matH=Math.max(matW*9/16,minimum());}
+        main.style.setProperty('--mat-h',`${Math.ceil(matH)}px`);
         main.style.setProperty("--mat-reserve", "0px");
-        main.style.setProperty("--tray-top", `${Math.round(8 + stripH + matW * 9 / 16 + GAP)}px`);
+        main.style.setProperty("--tray-top", `${Math.round(8 + stripH + matH + GAP)}px`);
         /* The card shown large under the pointer is never taller than the mat (Rob, 2026-10-11). */
-        host.style.setProperty("--peek-max", `${Math.round(matW * 9 / 16)}px`);
+        host.style.setProperty("--peek-max", `${Math.round(matH)}px`);
       }
       /* The 3D ground's horizon: a third of the way down the window (Rob: the mat bends two thirds to three quarters up). */
       const ground = host.querySelector(".cm-full-ground");
@@ -2844,6 +2851,7 @@ globalThis.CrankBoard = Object.seal({
   function applyScales(host = document.getElementById("cm-board")) {
     if (!host) return;
     host.style.setProperty("--board-scale", String(scaleOf("board") / 100));
+    host.style.setProperty('--board-scale-min',String(C.cardScaleRange()[0]/100));
     host.style.setProperty("--hand-scale", String(scaleOf("hand") / 100));
   }
   function setScale(scope, v, {live = false} = {}) {
