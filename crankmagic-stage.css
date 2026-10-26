@@ -1094,6 +1094,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-full-mine>.cm-mat[data-fit=full]{--bc:max(min(calc(clamp(64px,var(--full-w,1200px)*.075,112px)*var(--board-scale,1)),var(--full-bc-max,112px)),var(--caption-card-min,0px))}
 #matrix-v2 .cm-board .cm-phone-battlefield .cm-board-pile{--bc:max(54px,var(--caption-card-min,0px))}
 #matrix-v2 .cm-board[data-view=focus] .cm-board-main{overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;overflow-anchor:none}
+#matrix-v2 .cm-board[data-view=focus][data-hud-large]>.cm-board-body{padding-inline:calc(42px*var(--hud-scale,1) + 14px);box-sizing:border-box}
 #matrix-v2 .cm-board[data-view=focus] .cm-board-stage{height:var(--mat-h);aspect-ratio:auto}
 #matrix-v2 .cm-board .cm-mat[data-fit=focus]>.cm-mat-grid{grid-template-rows:var(--field-px) 8px var(--lands-px) auto calc(160px*var(--hud-scale,1))}
 #matrix-v2 .cm-board .cm-board-main>.cm-decision-slot{position:sticky;top:0;left:auto;transform:none;margin:0 auto}
