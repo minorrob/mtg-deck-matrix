@@ -54,7 +54,7 @@ async function wholeRows(page,label) {
       for(let a=card.parentElement;a && !a.matches('#cm-board');a=a.parentElement) {
         const css=getComputedStyle(a);if(!/(auto|scroll|hidden|clip)/.test(css.overflowY))continue;
         const b=a.getBoundingClientRect();
-        if(r.top < b.top-2 || r.bottom > b.bottom+2) {fails.push({card:card.dataset.card,ancestor:a.className,cardH:Math.round(r.height),viewportH:Math.round(b.height),top:Math.round(r.top-b.top),bottom:Math.round(r.bottom-b.bottom)});break;}
+        if(r.top < b.top-2 || r.bottom > b.bottom+2) {const edgeHits=[.05,.5,.95].map(y=>{const marker=document.createElement('i');marker.style.cssText=`position:absolute;left:50%;top:${y*100}%;width:0;height:0;pointer-events:none`;card.append(marker);const point=marker.getBoundingClientRect(),hit=document.elementFromPoint(point.x,point.y);marker.remove();return {at:y,inside:!!hit&&card.contains(hit),hit:hit?.className};});fails.push({edgeHits,card:card.dataset.card,fit:card.closest('.cm-mat')?.dataset.fit,mini:!!card.closest('.cm-stage-mini'),ancestor:a.className,cardH:Math.round(r.height),viewportH:Math.round(b.height),localCard:card.offsetHeight,localViewport:a.clientHeight,top:Math.round(r.top-b.top),bottom:Math.round(r.bottom-b.bottom)});break;}
       }
     }
     for(const [el,y,x] of saved){el.scrollTop=y;el.scrollLeft=x;}
@@ -65,6 +65,7 @@ async function wholeRows(page,label) {
 
 try {
   for (const [mode,width,skin] of [["table",1440,"sapphire-obsidian"],["focus",1440,"sapphire-obsidian-light"],["full",1440,"bronze-basalt"],["focus",390,"sapphire-obsidian"]]) {
+    if(process.env.SHELL_CASE&&process.env.SHELL_CASE!==mode)continue;
     const {page,context,errors} = await open(mode,width,skin);
     if (shotRoot) await page.screenshot({path:path.join(shotRoot,`r4-shell-${mode}-${width}-100.png`)});
     eq(await page.locator(".cm-sidebar").evaluate(el => [el.inert,el.getAttribute("aria-hidden")]), [true,"true"], `${mode}/${width}: covered navigation is inaccessible`);
