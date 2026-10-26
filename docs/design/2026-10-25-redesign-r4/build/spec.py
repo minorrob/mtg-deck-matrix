@@ -79,17 +79,19 @@ SKINS = {
       'L': {'bg': .12, 'panel': .20, 'raised': .30, 'line': .42, 'line_strong': .55, 'field_line': .70,
             'ink': 1.0, 'muted': .87, 'faint': .76},
       'accent': (0.695, 0.160, 258), 'on_accent_L': .12,
-      'aether': (0.880, 0.090, 210),
+      'aether': (0.880, 0.090, 210), 'brand': (0.850, 0.075, 76),
     },
     'light': {
       'neutral': (262, 0.004),
       'L': {'bg': .955, 'panel': 1.0, 'raised': 1.0, 'line': .62, 'line_strong': .45, 'field_line': .40,
             'ink': .12, 'muted': .32, 'faint': .45},
       'accent': (0.400, 0.170, 262), 'on_accent_L': 1.0,
-      'aether': (0.420, 0.120, 235),
+      'aether': (0.420, 0.120, 235), 'brand': (0.400, 0.060, 58),
     },
   },
 }
+# The wordmark's antique gilt (Rob, 2026-10-26: the Cinzel name from the mock-up). Brand, never a value: money is the brighter gold.
+BRAND = {'dark': (0.760, 0.085, 74), 'light': (0.470, 0.060, 58)}
 # Chalk & Coal pushes the semantic hues to 7:1 too.
 SEM_HC = {
   'dark': {k: (min(.93, v[0] + (.16 if k == 'coming' else .10)), v[1], v[2]) for k, v in SEM['dark'].items()},
@@ -108,6 +110,7 @@ def build(skin, reg):
     out['accent'] = H(*s['accent'])
     out['on_accent'] = H(s['on_accent_L'], nc if s['on_accent_L'] < .999 else 0, nh)
     out['aether'] = H(*s['aether'])
+    out['brand'] = H(*s.get('brand', BRAND[reg]))
     sem = (SEM_HC if skin == 'chalk-coal' else SEM)[reg]
     for k, v in sem.items(): out[k] = H(*v)
     # neutral status steps: watch = muted, draft = faint

@@ -16,7 +16,7 @@ The template is built to feel like sitting down at a table, from Rob's reference
 
 1. A place, not a page: Play sits on the Study, walnut under a lamp, each seat on charcoal felt.
 2. Warm light, neutral chrome: warmth comes from wood, brass, parchment and light. No mana color owns the frame; color arrives with the cards.
-3. The name stays ours: the CrankMagic wordmark and gear logo, unchanged. Brass is the table's metal, never a value.
+3. The name in gilt capitals: CrankMagic in Cinzel beside the gear logo, in antique gilt. Brass is the table's metal. Neither ever marks a value.
 4. Two voices of type: Cinzel names things, Lato does the work.
 5. People at the table: a portrait in a brass ring, a name, a big life total.
 6. The cards carry the color: show art wherever a card is named.
@@ -59,7 +59,7 @@ Every text pair in every theme meets 4.5:1 (7:1 in the Chalk & Coal themes); edg
 - Set UI text in `body` (14px), reading surfaces in `reading` (16px), captions in `small` (13px, `color-muted`), eyebrows in `label` (12px uppercase, .12em). Nothing goes under 12px.
 - Set big figures in `figure` (Lato 700, tabular), in `color-money` when they are money.
 - On the board use `hud-vital`, `hud` and `hud-caption`, each times `--hud-scale` (1, 1.25, 1.5, 2). The `callout` face (Barlow Condensed 800 italic) is for the neon callout word only.
-- The CrankMagic wordmark is the app's own mark, unchanged: the Oxanium subset (`wordmark`) in `color-aether` with a light sheen (`cm-wordmark`), beside the gear logo. Do not set other words in it, and never set the app name in Cinzel.
+- The CrankMagic wordmark (`cm-wordmark`, the `wordmark` style) is Cinzel 600 in capitals at .08em, in `color-brand` (antique gilt), beside the gear logo. Gilt sets the app name and nothing else; money keeps the brighter `color-money`.
 
 ## Shape, space and motion
 

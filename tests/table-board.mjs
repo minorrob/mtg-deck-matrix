@@ -687,10 +687,10 @@ try {
   ok(Math.abs(backRow.rear - backRow.front) < 1, `the one other seat spans the whole back row, as wide as her own mat (${Math.round(backRow.rear)} of ${Math.round(backRow.front)}px), not a third of it`);
   ok(await maya.page.locator('[data-action=board-3d], [data-action=board-stage]').count()===0, "Full screen always uses the tabletop; there is no 3D toggle");
   await maya.page.getByRole('button',{name:'Camera',exact:false}).click();
-  await maya.page.getByRole('slider',{name:'Table tilt',exact:true}).fill('0');
+  await maya.page.getByRole('slider',{name:'Table tilt',exact:true}).fill('90');
   const flatPlane=await maya.page.locator('.cm-stage-front').evaluate(el=>{const m=new DOMMatrix(getComputedStyle(el).transform);return Math.abs(m.m11-m.m22)<.001;});
-  ok(flatPlane,"zero degrees gives a flat, undistorted table");
-  await maya.page.getByRole('slider',{name:'Table tilt',exact:true}).fill('40');
+  ok(flatPlane,"90 degrees, perpendicular to the floor, gives a flat, undistorted table");
+  await maya.page.getByRole('slider',{name:'Table tilt',exact:true}).fill('10');
   await maya.page.getByRole('button',{name:'Camera',exact:false}).click();
   await shot(maya.page,"board-full-3d-1280");
   ok(/played (Forest|Island)/.test(await text(maya.page, ".cm-stage-side .cm-stage-module[data-module=history] .cm-board-band")), "and the history in the side column");

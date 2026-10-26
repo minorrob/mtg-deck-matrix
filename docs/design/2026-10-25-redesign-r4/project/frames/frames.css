@@ -4,7 +4,7 @@ html,body{margin:0;background:var(--color-bg)}
 .rail{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:4px;padding:18px 14px;background:transparent}
 .brand{display:flex;align-items:center;gap:10px;padding:2px 6px 18px;color:var(--color-ink);text-decoration:none}
 .brand img{width:34px;height:34px}
-.brand b{font-size:22px}
+.brand b{font-size:17px}
 .nav{display:grid;gap:2px}
 .nav a{display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;border-radius:var(--radius-control);color:var(--color-ink);text-decoration:none;font-weight:700}
 .nav a:hover{background:var(--color-hover)}

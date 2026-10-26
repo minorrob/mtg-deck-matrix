@@ -27,9 +27,10 @@ COLOR_TOKENS = [
   ('--color-accent-hover', 'accent_hover', 'The primary button under the pointer.'),
   ('--color-accent-soft', 'accent_soft', 'Tint behind the row or tile the primary acts on. Ink reads on it.'),
   ('--color-on-accent', 'on_accent', 'Words and icons on the accent.'),
-  ('--color-aether', 'aether', 'The focus ring, the Explore graph, the wordmark mist, whose turn it is.'),
+  ('--color-aether', 'aether', 'The focus ring, the Explore graph, whose turn it is.'),
   ('--color-money', 'money', 'Answer this, and money: prices, budgets, a choice the app is waiting on.'),
   ('--color-required', 'required', 'You missed this: required fields, destructive actions, errors.'),
+  ('--color-brand', 'brand', 'Antique gilt for the CrankMagic wordmark only. Brand, never a value: money is the brighter gold.'),
   ('--color-on-required', 'on_required', 'Words and icons on the required fill: the danger button and the error toast.'),
   ('--color-decision-bg', 'decision_bg', 'Ground of a panel that is waiting on your answer.'),
   ('--color-decision-line', 'decision_line', 'Edge of that panel.'),
@@ -66,7 +67,7 @@ def color_decls(skin, reg, aliases=True):
     return lines
 
 TYPE = [
-  ('--font-display', "Cinzel,'Trajan Pro',Georgia,serif", 'Roman capitals that name places and things: page titles, the deck title, the landing hero. Weight 600. Sentence-case text sets as capitals and small capitals. The app name keeps its own CrankMagic mark.'),
+  ('--font-display', "Cinzel,'Trajan Pro',Georgia,serif", 'Roman capitals that name places and things: page titles, the deck title, the landing hero. Weight 600. Sentence-case text sets as capitals and small capitals. It also sets the CrankMagic wordmark, in capitals at .08em, in --color-brand.'),
   ('--font-hero', 'var(--font-display)', 'The hero is the display face at hero size: the deck title and the landing headline.'),
   ('--font-body', "Lato,system-ui,sans-serif", 'Everything that is read, chosen or counted: body, h2 and h3, labels, controls, figures, the HUD. 400 and 700.'),
   ('--display-weight', '600', ''), ('--display-tracking', '.04em', ''), ('--display-case', 'none', ''),
@@ -128,8 +129,7 @@ def font_faces(prefix):
         out += f"@font-face{{font-family:{fam};font-weight:{w};font-style:normal;font-display:swap;src:url(\"{prefix}{stem}.woff2\") format(\"woff2\");unicode-range:{UR_LATIN}}}\n"
         out += f"@font-face{{font-family:{fam};font-weight:{w};font-style:normal;font-display:swap;src:url(\"{prefix}{stem}-ext.woff2\") format(\"woff2\");unicode-range:{UR_EXT}}}\n"
     return out
-write('project/tokens/fonts.css', HEAD + "/* Self-hosted only (CSP): no font CDN at runtime. Four text weights, every one SIL OFL 1.1: Cinzel 600 for roman-capital names (page titles, the deck title); Lato 400 and 700 for everything read, chosen or counted; Barlow Condensed 800 for the table's neon callout word only. The CrankMagic wordmark keeps its own Oxanium subset (SIL OFL 1.1), as live; it sets the app name and nothing else. */\n" + font_faces('../assets/fonts/')
-      + "@font-face{font-family:CrankOxanium;font-weight:700;font-style:normal;font-display:swap;src:url(\"../assets/fonts/crank-oxanium-wordmark.ttf\") format(\"truetype\")}\n")
+write('project/tokens/fonts.css', HEAD + "/* Self-hosted only (CSP): no font CDN at runtime. Four text weights, every one SIL OFL 1.1: Cinzel 600 for roman-capital names (page titles, the deck title); Lato 400 and 700 for everything read, chosen or counted; Barlow Condensed 800 for the table's neon callout word only. Cinzel also sets the CrankMagic wordmark. */\n" + font_faces('../assets/fonts/'))
 write('project/styles.css', '@import url("tokens/fonts.css");\n@import url("tokens/colors.css");\n@import url("tokens/typography.css");\n@import url("tokens/shape.css");\n')
 
 # palette data for pages (json)

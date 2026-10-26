@@ -16,6 +16,7 @@
     "accent": "#3066d1",
     "on_accent": "#ffffff",
     "aether": "#69d6ef",
+    "brand": "#d2a973",
     "money": "#f2bb3b",
     "required": "#ed4546",
     "owned": "#4ed275",
@@ -48,6 +49,7 @@
     "accent": "#1043a8",
     "on_accent": "#ffffff",
     "aether": "#006c97",
+    "brand": "#745238",
     "money": "#905c00",
     "required": "#8b000b",
     "owned": "#007f38",
@@ -84,6 +86,7 @@
     "accent": "#3066d1",
     "on_accent": "#ffffff",
     "aether": "#69d6ef",
+    "brand": "#d2a973",
     "money": "#f2bb3b",
     "required": "#ed4546",
     "owned": "#4ed275",
@@ -116,6 +119,7 @@
     "accent": "#1043a8",
     "on_accent": "#ffffff",
     "aether": "#006c97",
+    "brand": "#745238",
     "money": "#905c00",
     "required": "#8b000b",
     "owned": "#007f38",
@@ -152,6 +156,7 @@
     "accent": "#5a9cfe",
     "on_accent": "#050608",
     "aether": "#8de8f8",
+    "brand": "#eac897",
     "money": "#ffe1a5",
     "required": "#ff7b74",
     "owned": "#72f495",
@@ -184,6 +189,7 @@
     "accent": "#093da1",
     "on_accent": "#ffffff",
     "aether": "#005476",
+    "brand": "#603f26",
     "money": "#6e4600",
     "required": "#5d0004",
     "owned": "#006129",
@@ -284,7 +290,7 @@
   [
    "--color-aether",
    "aether",
-   "The focus ring, the Explore graph, the wordmark mist, whose turn it is."
+   "The focus ring, the Explore graph, whose turn it is."
   ],
   [
    "--color-money",
@@ -295,6 +301,11 @@
    "--color-required",
    "required",
    "You missed this: required fields, destructive actions, errors."
+  ],
+  [
+   "--color-brand",
+   "brand",
+   "Antique gilt for the CrankMagic wordmark only. Brand, never a value: money is the brighter gold."
   ],
   [
    "--color-on-required",
@@ -414,7 +425,7 @@
   [
    "--font-display",
    "Cinzel,'Trajan Pro',Georgia,serif",
-   "Roman capitals that name places and things: page titles, the deck title, the landing hero. Weight 600. Sentence-case text sets as capitals and small capitals. The app name keeps its own CrankMagic mark."
+   "Roman capitals that name places and things: page titles, the deck title, the landing hero. Weight 600. Sentence-case text sets as capitals and small capitals. It also sets the CrankMagic wordmark, in capitals at .08em, in --color-brand."
   ],
   [
    "--font-hero",

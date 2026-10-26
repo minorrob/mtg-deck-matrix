@@ -41,7 +41,7 @@ try{
   const afterHorizontal=await page.evaluate(()=>CrankStage.diagnostics());
   ok(afterHorizontal.quad.every((v,i)=>Math.abs(v-beforeDrag.quad[i])<.03),'horizontal ground dragging does not rotate the table');
   await page.mouse.move(ground.x,ground.y);await page.mouse.down();await page.mouse.move(ground.x,ground.y+20,{steps:5});await page.mouse.up();
-  ok(Number(await page.evaluate(()=>localStorage.getItem('cm-board-tilt-v2')))===44,'vertical ground dragging adjusts and saves tilt');
+  ok(Number(await page.evaluate(()=>localStorage.getItem('cm-board-tilt-v3')))===2,'vertical ground dragging adjusts and saves tilt (10 to 2 from the floor: the camera 40 to 44 degrees)');
   await align('ground drag');
   ok(await page.locator('.cm-stage-canvas').getAttribute('tabindex')==='-1','pointer movement does not reintroduce a canvas tab stop');
   await page.getByRole('button',{name:'Camera',exact:false}).click();
@@ -51,7 +51,7 @@ try{
   await slide('Table tilt',0);
   const flat=await page.evaluate(()=>CrankStage.diagnostics());
   ok(Math.abs(flat.quad[1]-flat.quad[3])<.03&&Math.abs(flat.quad[5]-flat.quad[7])<.03,'a stored rotation from an older session cannot cant the table');
-  await slide('Table tilt',40);
+  await slide('Table tilt',10);
   const initial=await align('reset');
   for(let n=0;n<4;n++)for(const design of ['obsidian-glass','medieval-banded']){
     await page.getByLabel('Table design',{exact:true}).selectOption(design);

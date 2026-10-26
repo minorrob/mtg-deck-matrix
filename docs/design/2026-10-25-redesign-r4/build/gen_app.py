@@ -11,7 +11,7 @@ A = []
 A.append("""/* THE r4 TYPE (docs/design/2026-10-25-redesign-r4, Rob 2026-10-25). One display face and one body face for every skin,
    both from Rob's reference (Concept B, Table Companion): Cinzel 600 for page titles and the deck title; Lato
    400/700 for everything read, chosen or counted, h2 and h3 and figures included. Barlow Condensed 800 is the callout word
-   only. The CrankMagic wordmark keeps its own Oxanium subset. No skin changes the face, the case or the scale. Page
+   only. Cinzel also sets the CrankMagic wordmark, in capitals and --color-brand (Rob, 2026-10-26). No skin changes the face, the case or the scale. Page
    headings read --text-h1, --text-h2, --text-h3 and --text-hero; the floor is --text-label, 12px. */
 
 /* THE r4 TOKENS. The values are the designer's, from docs/design/2026-10-25-redesign-r4/project/tokens/*.css, generated

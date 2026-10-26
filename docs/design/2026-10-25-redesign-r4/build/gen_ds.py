@@ -44,13 +44,12 @@ for t, v, u in TABLE:
     colors.append({'name': t[2:], 'value': v, 'usage': (u or 'The table: fixed in every skin and register.') + ('' if 'fixed' in (u or '') else ' Fixed in every skin.')})
 shadow_pop = {tid: f"0 0 0 1px {PAL[tid]['line']}, 0 18px 48px -20px rgba(0,0,0,0.55)" for tid, *_ in THEMES}
 fonts = [{'family': 'Cinzel', 'file': 'fonts/cinzel-600.woff2', 'weight': '600'}, {'family': 'Lato', 'file': 'fonts/lato-400.woff2', 'weight': '400'},
-         {'family': 'Lato', 'file': 'fonts/lato-700.woff2', 'weight': '700'}, {'family': 'Barlow Condensed', 'file': 'fonts/barlowcondensed-800.woff2', 'weight': '800'},
-         {'family': 'CrankOxanium', 'file': 'fonts/crank-oxanium-wordmark.ttf', 'weight': '700'}]
+         {'family': 'Lato', 'file': 'fonts/lato-700.woff2', 'weight': '700'}, {'family': 'Barlow Condensed', 'file': 'fonts/barlowcondensed-800.woff2', 'weight': '800'}]
 type_ = {'fonts': fonts,
-  'families': {'display': 'Cinzel, "Trajan Pro", Georgia, serif', 'body': 'Lato, system-ui, sans-serif', 'hero': 'Cinzel, "Trajan Pro", Georgia, serif', 'callout': '"Barlow Condensed", Lato, sans-serif', 'wordmark': 'CrankOxanium, Lato, sans-serif'},
+  'families': {'display': 'Cinzel, "Trajan Pro", Georgia, serif', 'body': 'Lato, system-ui, sans-serif', 'hero': 'Cinzel, "Trajan Pro", Georgia, serif', 'callout': '"Barlow Condensed", Lato, sans-serif', 'wordmark': 'Cinzel, "Trajan Pro", Georgia, serif'},
   'groups': [
     {'name': 'Display', 'family': 'display', 'styles': [
-      {'name': 'wordmark', 'family': 'wordmark', 'fontSize': '22px', 'lineHeight': 1.02, 'fontWeight': 700, 'letterSpacing': '-0.5px', 'sample': 'CrankMagic', 'usage': 'The app name only, unchanged: the CrankMagic wordmark, the app\'s own Oxanium subset in color-aether with a light sheen (cm-wordmark). Never set in Cinzel.'},
+      {'name': 'wordmark', 'family': 'wordmark', 'fontSize': '16px', 'lineHeight': 1.02, 'fontWeight': 600, 'letterSpacing': '0.08em', 'sample': 'CRANKMAGIC', 'usage': 'The app name only (Rob, 2026-10-26): CrankMagic in Cinzel 600 capitals at .08em, in color-brand gilt, beside the gear logo (cm-wordmark).'},
       {'name': 'hero', 'family': 'hero', 'fontSize': '56px', 'lineHeight': 1.08, 'fontWeight': 600, 'letterSpacing': '0.02em', 'sample': 'Krenko, Mob Boss', 'usage': 'Cinzel: the deck title and the landing headline. Token --text-hero clamps it to 36px at 390. Sentence case sets as capitals and small capitals.'},
       {'name': 'h1', 'fontSize': '40px', 'lineHeight': 1.05, 'fontWeight': 600, 'letterSpacing': '0.04em', 'sample': 'Decks', 'usage': 'Every page title, in Cinzel. Token --text-h1 clamps it from 30px at 390 to 40px at 1440; no rule restates the size.'}]},
     {'name': 'Text', 'family': 'body', 'styles': [
@@ -85,7 +84,7 @@ w('tokens.json', json.dumps(tokens, indent=1))
 
 # ---------- fonts ----------
 os.makedirs(OUT + 'fonts', exist_ok=True)
-for f in ['cinzel-600.woff2', 'lato-400.woff2', 'lato-700.woff2', 'barlowcondensed-800.woff2', 'crank-oxanium-wordmark.ttf']:
+for f in ['cinzel-600.woff2', 'lato-400.woff2', 'lato-700.woff2', 'barlowcondensed-800.woff2']:
     shutil.copy(S + 'project/assets/fonts/' + f, OUT + 'fonts/' + f)
 
 # ---------- bundle.css ----------
@@ -165,7 +164,7 @@ def T(**k):
     base = dict(name='Krenko, Mob Boss', eyebrow='D6 · Krenko', tags='Goblin tribal · Tokens · Sacrifice', art='krenko', st='inbox', st_word='Boxed', parts=[('inbox', 100)], meta_l='100 in the box', meta_r='B3', colors=['R'], root='ROOT')
     base.update(k); return U.tile(**base)
 body = '<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px">' + \
-    f'<div style="display:grid;gap:6px"><span class="lab">Rest</span>{T()}</div>' + \
+    f'<div style="display:grid;gap:6px"><span class="lab">Rest · favorite</span>{T(fav=True)}</div>' + \
     f'<div style="display:grid;gap:6px"><span class="lab">Hover</span>{T(state="hover",name="Chulane, Teller of Tales",eyebrow="D2 · Chulane",art="chulane",colors=["G","W","U"],tags="Landfall · Ramp · Blink")}</div>' + \
     f'<div style="display:grid;gap:6px"><span class="lab">Focus</span>{T(state="focus",name="Shadrix Silverquill",eyebrow="D5 · Shadrix",art="shadrix",colors=["W","B"],tags="Counters · Drain and burn")}</div>' + \
     f'<div style="display:grid;gap:6px"><span class="lab">Selected</span>{T(state="selected",name="Tymna + Kraum",eyebrow="D1 · Tymna + Kraum",art="tymna",colors=["W","B","U","R"],st="buy",st_word="12 to buy",parts=[("inbox",41),("pull",47),("buy",12)],meta_l="41 in · 47 to pull",ready="Stand-ins in",tags="Draw · Lifegain")}</div></div>'
@@ -175,6 +174,8 @@ A deck on the Decks hub: the commander's art full bleed, the deck's name, where 
 
 - **Provide** the commander art (Scryfall art crop), the deck number and short name for the eyebrow, the deck name, up to three strategy tags, the rung counts for the bar, the bracket, the stage, and the identity colors for the pips.
 - 3:4, `radius-tile`, the art under a gradient that ends at `poster-ground`. Every word and chip on it uses the fixed poster pair (`poster-ink`, the on-art chips and bar), because the art does not change with the skin.
+- The top row is the stage pill, then the favorite star beside it (Rob, 2026-10-26), then the pips at the right. A favorite's filled star always shows, in ink; an outline star shows on hover or focus. In the app it is a toggle button (`aria-pressed`).
+- The tick and the deck menu wait at the right, under the pips, and show on hover, focus or when ticked. Nothing on the tile moves to make room.
 - Hover lifts 3px with a shadow; focus visible is the aether ring 3px out; selected for bulk rings it in `color-ink` and ticks its checkbox.
 - The New deck tile is the same size, dashed `color-line-strong`, no art.
 - On phones two tiles a row; the tags, the meta line and Play it drop, the name, stage and bar stay.
@@ -398,7 +399,7 @@ cover = f'''<!-- @dsCard height=288 -->
   .card{{rx:var(--radius-control);stroke:var(--color-bg);stroke-width:2}}
   .card.soft{{fill:var(--color-accent-soft)}} .card.panel{{fill:var(--color-panel)}} .card.top{{fill:var(--color-accent)}}
   .words{{position:absolute;left:var(--space-6);bottom:var(--space-6);max-width:440px}}
-  .name{{margin:0;font:700 66px/1 var(--font-wordmark);letter-spacing:-1.5px;color:var(--color-aether);background:linear-gradient(110deg,var(--color-aether) 12%,color-mix(in oklab,var(--color-aether) 55%,white) 60%,var(--color-aether) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}}
+  .name{{margin:0;font:600 54px/1 var(--font-wordmark);letter-spacing:.08em;text-transform:uppercase;color:var(--color-brand)}}
   .tag{{margin:var(--space-2) 0 0 2px;font-size:14px;line-height:20px;color:var(--color-muted)}}
 </style></head>
 <body><div class="cover">

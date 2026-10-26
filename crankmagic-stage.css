@@ -277,13 +277,14 @@
 .cm-stack-pile .cm-stack-card{position:absolute;left:0;top:0;margin:0;transform:translate(calc(var(--depth)*3px),calc(var(--depth)*5px));pointer-events:none;box-shadow:0 2px 5px #0008}
 .cm-stack-ghost{pointer-events:none}
 .cm-stage-environment{position:absolute;inset:58px 0 0;z-index:-1;overflow:hidden;pointer-events:none}
-/* The backdrop whole (crankmagic-stage.js, environment): the video at its own 16:9, as large as the stage allows without
-   cropping, centered; its poster, blurred, behind it; its edges feathered into that. */
+/* The backdrop (crankmagic-stage.js, environment): the video at its own 16:9 and always the stage's full width (Rob,
+   2026-10-26: the blurred poster beside it read as a blur on the right with the drawer closed), so nothing at either side
+   is blurred; on a stage wider than 16:9 its top and bottom run past the stage instead. The poster, blurred, is behind it
+   only where a stage taller than 16:9 leaves room above and below, and those edges are feathered into it. */
 .cm-stage-environment{container-type:size;display:grid;place-items:center;background:#140806}
 .cm-stage-environment::before{content:"";position:absolute;inset:-48px;background:var(--env-poster,none) center/cover no-repeat;filter:blur(32px) saturate(1.15) brightness(.72)}
-.cm-stage-environment video{position:relative;display:block;width:min(100cqw,calc(100cqh * 16 / 9));height:auto;aspect-ratio:16/9;object-fit:cover;
-  -webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent),linear-gradient(transparent,#000 4%,#000 96%,transparent);-webkit-mask-composite:source-in;
-  mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent),linear-gradient(transparent,#000 4%,#000 96%,transparent);mask-composite:intersect}
+.cm-stage-environment video{position:relative;display:block;width:100cqw;height:auto;aspect-ratio:16/9;object-fit:cover;
+  -webkit-mask-image:linear-gradient(transparent,#000 4%,#000 96%,transparent);mask-image:linear-gradient(transparent,#000 4%,#000 96%,transparent)}
 .cm-stage-region.has-video{background:transparent}
 
 .cm-bcard[data-arrange-card]{cursor:grab}.cm-bcard[data-arrange-card]:active{cursor:grabbing}.cm-bcard.cm-card-drop{outline:3px solid #a8dfbf;outline-offset:2px}
@@ -429,9 +430,9 @@
 @media(max-width:1100px){#matrix-v2 .cm-stage-actions .v-button{min-height:44px;padding:0 16px;font-size:16px}.cm-stage-actions{gap:9px;padding:7px 9px}}
 /* WHAT THE OTHER PLAYERS PLAY: each card held up at the table's left, under the life list, its player's name over it, for
    ten seconds. */
-.cm-board-plays{position:fixed;left:var(--plays-left,56px);top:176px;z-index:57;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.cm-board-plays{position:fixed;left:var(--plays-left,56px);top:var(--plays-top,176px);z-index:57;display:flex;flex-direction:column;gap:10px;pointer-events:none}
 /* three at most, each as large as a third of the window below the caption leaves: a header and a 5:7 card */
-.cm-play-pop{--pw:max(96px,min(13vw,210px,calc(((100vh - 196px) / 3 - 46px) * 5 / 7)));width:var(--pw);padding:6px;border-radius:12px;background:rgb(6 20 22 / .9);border:2px solid var(--seat,#6f9c88);box-shadow:0 18px 40px -16px #000;color:#f3fff7;pointer-events:auto;animation:cm-play-in .3s cubic-bezier(.2,.8,.2,1);transition:opacity .6s,transform .6s}
+.cm-play-pop{--pw:max(96px,min(13vw,210px,calc(((100vh - var(--plays-top,176px) - 20px) / 3 - 46px) * 5 / 7)));width:var(--pw);padding:6px;border-radius:12px;background:rgb(6 20 22 / .9);border:2px solid var(--seat,#6f9c88);box-shadow:0 18px 40px -16px #000;color:#f3fff7;pointer-events:auto;animation:cm-play-in .3s cubic-bezier(.2,.8,.2,1);transition:opacity .6s,transform .6s}
 .cm-play-pop.is-leaving{opacity:0;transform:translateX(-24px)}
 .cm-play-pop header{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:0 2px 5px;font-size:13px}
 .cm-play-pop header b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1128,3 +1129,43 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-stage-life{display:flex;gap:6px;min-width:0;white-space:nowrap}
 #matrix-v2 .cm-board .cm-stage-life>span{min-width:0;overflow:hidden;text-overflow:ellipsis}
 #matrix-v2 .cm-board .cm-stage-life>b{flex:none}
+
+/* CAMERA (Rob, 2026-10-26). The sliders are bare ranges, not fields: the general input rule's 10px 12px padding and 42px
+   height kept each thumb short of both ends. Each slider row is 25% closer to the next than it was (49px to 37px). */
+#matrix-v2 .cm-stage-camera>div>label:not(.cm-stage-style):not(.cm-settings-slider):not(.cm-board-scale)>input[type=range]{padding:0;margin:0;border:0;border-radius:0;background:transparent;min-height:0;height:20px}
+#matrix-v2 .cm-stage-camera .cm-settings-slider input[type=range]{padding:0;border:0;border-radius:0;background:transparent}
+#matrix-v2 .cm-board[data-phone] .cm-stage-camera input[type=range]{min-height:44px}
+#matrix-v2 .cm-stage-camera>div>label:not(.cm-stage-style):not(.cm-settings-slider):not(.cm-board-scale){min-height:34px}
+/* Reset: plain text, a link's look, beside View seats. */
+#matrix-v2 .cm-stage-camera .cm-stage-camera-reset{margin-left:auto;padding:2px 0;min-height:0;border:0;background:none;color:var(--color-ink);font-size:12px;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+#matrix-v2 .cm-stage-camera .cm-stage-camera-reset:hover{color:var(--color-aether)}
+/* Background and Table keep their places with the note gone, in shorter boxes (white space between them now). */
+#matrix-v2 .cm-stage-camera .cm-stage-style{min-height:42px}
+#matrix-v2 .cm-stage-camera label:not(.cm-stage-style)+.cm-stage-style{margin-top:26px}
+#matrix-v2 .cm-stage-camera .cm-stage-style select{min-height:0;height:30px;padding:2px 8px;font-size:12px}
+/* THE TABLE'S CORNERS: drag one to size the table, its proportions kept. Quiet until the pointer is over the table. */
+#matrix-v2 .cm-board .cm-stage-corner{position:absolute;z-index:4;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:color-mix(in srgb,var(--color-ink) 16%,transparent);box-shadow:0 0 0 2px color-mix(in srgb,var(--color-ink) 72%,transparent);opacity:0;transition:opacity .16s ease;touch-action:none}
+#matrix-v2 .cm-board .cm-stage-region:hover>.cm-stage-corner,#matrix-v2 .cm-board .cm-stage-region.is-resizing>.cm-stage-corner{opacity:.9}
+#matrix-v2 .cm-board .cm-stage-corner:is([data-corner="0"],[data-corner="2"]){cursor:nwse-resize}
+#matrix-v2 .cm-board .cm-stage-corner:is([data-corner="1"],[data-corner="3"]){cursor:nesw-resize}
+@media(prefers-reduced-motion:reduce){#matrix-v2 .cm-board .cm-stage-corner{transition:none}}
+/* THE HOVER CARD IS FOR READING (Rob, 2026-10-26): no power/toughness badge over its text; the card on the table keeps it. */
+#cm-board .cm-board-peek .cm-bcard-pt{display:none}
+/* The life list: the turn's seat in bold after a small turn symbol, in aether (whose turn it is, as on the portraits). */
+#matrix-v2 .cm-board .cm-stage-life.is-turn{font-weight:700}
+#matrix-v2 .cm-board .cm-stage-life-turn{display:inline-flex;align-items:center;margin-right:4px;vertical-align:-.04em;color:var(--color-aether)}
+#matrix-v2 .cm-board .cm-stage-life-turn svg{width:.78em;height:.78em}
+/* THE MANA POOL module: the two sums over the six counts, two to a row, each number under its symbol. */
+#matrix-v2 .cm-mana-pool{display:grid;gap:8px}
+#matrix-v2 .cm-mana-sums,#matrix-v2 .cm-mana-colors{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+#matrix-v2 .cm-mana-sums>div,#matrix-v2 .cm-mana-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 4px;border:1px solid var(--color-line);border-radius:10px;background:color-mix(in srgb,var(--color-raised) 70%,transparent)}
+#matrix-v2 .cm-mana-sums span{font-size:calc(15px * var(--hud-scale,1));color:var(--color-muted)}
+#matrix-v2 .cm-mana-sums b{font-size:calc(22px * var(--hud-scale,1));line-height:1.1;font-variant-numeric:tabular-nums}
+#matrix-v2 .cm-mana-cell .cm-mana{display:inline-flex}
+#matrix-v2 .cm-mana-cell .cm-mana :is(img,svg){width:26px;height:26px}
+#matrix-v2 .cm-mana-cell b{font-size:calc(18px * var(--hud-scale,1));line-height:1.1;font-variant-numeric:tabular-nums}
+#matrix-v2 .cm-mana-cell.is-none{opacity:.45}
+/* A card of yours an opponent's spell or ability targets: a red outline with a red glow, past any other state's ring,
+   thick enough to read on a far mat of the 3D table. */
+#matrix-v2 .cm-board .cm-bcard.is-targeted{outline:5px solid var(--color-required,#ed4546);outline-offset:2px;filter:drop-shadow(0 0 7px color-mix(in srgb,var(--color-required,#ed4546) 85%,transparent))}
+#matrix-v2 .cm-board .cm-bcard.is-targeted:focus-visible{outline-offset:5px}

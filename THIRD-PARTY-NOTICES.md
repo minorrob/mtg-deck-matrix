@@ -83,8 +83,7 @@ CrankMagic is not affiliated with any of them.
 
 | Face | Files | Terms |
 | --- | --- | --- |
-| **Oxanium** | subset embedded in the wordmark CSS | SIL Open Font License 1.1 — full text in `assets/crankmagic/oxanium-OFL.txt`. Copyright 2019 The Oxanium Project Authors. |
-| **Cinzel** | `assets/crankmagic/cinzel-600.woff2`, `cinzel-600-ext.woff2` | SIL Open Font License 1.1, full text in `assets/crankmagic/cinzel-OFL.txt`; Copyright 2020 The Cinzel Project Authors. The display face since r4 (2026-10-25): page titles and the deck title. Self-hosted from the `@fontsource/cinzel` 5.3.0 files, unmodified. |
+| **Cinzel** | `assets/crankmagic/cinzel-600.woff2`, `cinzel-600-ext.woff2` | SIL Open Font License 1.1, full text in `assets/crankmagic/cinzel-OFL.txt`; Copyright 2020 The Cinzel Project Authors. The display face since r4 (2026-10-25): the CrankMagic wordmark, page titles and the deck title. Self-hosted from the `@fontsource/cinzel` 5.3.0 files, unmodified. |
 | **Lato** | `assets/crankmagic/lato-{400,700}.woff2` and `-ext` | SIL Open Font License 1.1, full text in `assets/crankmagic/lato-OFL.txt`; Copyright (c) 2010-2011 by tyPoland Lukasz Dziedzic, Reserved Font Name "Lato". The body face since r4. Self-hosted from the `@fontsource/lato` 5.3.0 files, unmodified. |
 | **Barlow Condensed** | `assets/crankmagic/barlowcondensed-800.woff2` and `-ext` | SIL Open Font License 1.1, full text in `assets/crankmagic/barlowcondensed-OFL.txt`; Copyright 2017 The Barlow Project Authors. Since r4 only the 800 face, for the table's neon callout word. Self-hosted from the `@fontsource/barlow-condensed` 5.3.0 files, unmodified. |
 | System stacks | — | No embedded files. |

@@ -9,7 +9,8 @@ Land ../pr as one PR (apply-r4.mjs, then the token test). After it: the page-lay
 - Palette rule (Rob, 2026-10-25): high fantasy, the five mana colors, saturated jewels not pastels, clean enough that nothing is confused. Five colors, five jobs: sapphire button, gold money and decisions, crimson missed or remove, emerald owned, obsidian ground. Ordered is aether teal.
 - Rejected: Heather & Granite (purple and pastel, rejected by Rob), Gilt & Iron (gold button collides with to-buy and prices; moving money to blue breaks gold = treasure), Copper & Soot (accent and required merge for deuteranopes).
 - Status, money and required keep one hue family each in every skin; status shows four families plus gray, with a glyph per rung.
-- Name (Rob, 2026-10-26): the app stays CrankMagic with its own wordmark (Oxanium subset in aether, gear logo), unchanged. Cinzel never sets the app name.
+- Name (Rob, 2026-10-26): the app stays CrankMagic; its wordmark is Cinzel 600 capitals at .08em in --color-brand gilt, beside the gear logo (the mock-up's mark). Oxanium is retired.
+- Deck tile (Rob, 2026-10-26): the favorite star sits beside the stage pill; the tick and the deck menu appear on hover at the right, under the mana pips.
 - Faces (Rob, 2026-10-25, from his reference Concept B): Cinzel 600 for page titles and the deck title; Lato 400/700 for everything else. Barlow Condensed 800 only for the neon callout word. Satoshi and Young Serif retired.
 - Warmth (Rob, 2026-10-25): capture the reference's principles in the template, not its palette. No green palette and no single mana color owning the chrome, because players associate with their commander's colors. guidelines/warmth.html holds the ten principles.
 - Drawer with a collapse tab (Rob likes the reference's format): left holds the decision, right the stack and history; bottom sheet on a phone. The live Play screen does not have it yet.

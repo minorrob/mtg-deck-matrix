@@ -33,12 +33,13 @@ def bar(parts, on_art=False):
 def pips(colors, root='..'):
     return ''.join(f'<img src="{root}/assets/mana/{c}.svg" alt="{c}">' for c in colors)
 
-def tile(name, eyebrow, tags, art, st, st_word, parts, meta_l, meta_r, colors, root='..', state='rest', ready='Playable', checked=False, play=True):
+def tile(name, eyebrow, tags, art, st, st_word, parts, meta_l, meta_r, colors, root='..', state='rest', ready='Playable', checked=False, play=True, fav=False):
     cls = 'cm-tile' + (f' is-{state}' if state in ('hover', 'focus', 'selected') else '')
     chk = f'<label class="cm-check" style="min-height:0"><input type="checkbox" aria-label="Select {name}"{" checked" if checked or state=="selected" else ""}></label>'
     play_btn = btn('Play it', 'on-art', icon='play', size='compact') if play else ''
     return f'''<a class="{cls}" href="#" style="background-image:url({root}/assets/art/{art}.webp)" aria-label="{name}">
-  <div class="cm-tile__top">{chk}{status(st, st_word, on_art=True)}<span class="cm-tile__pips">{pips(colors, root)}</span></div>
+  <div class="cm-tile__top">{status(st, st_word, on_art=True)}<span class="cm-tile__fav{' is-on' if fav else ''}" role="img" aria-label="{'Favorite' if fav else 'Not a favorite'}">{svg('star-on' if fav else 'star')}</span><span class="cm-tile__pips">{pips(colors, root)}</span></div>
+  <div class="cm-tile__tools">{chk}<span class="cm-tile__menu" aria-hidden="true">{svg('more')}</span></div>
   <div class="cm-tile__body"><span class="cm-tile__eyebrow">{eyebrow}</span><h3 class="cm-tile__name">{name}</h3><span class="cm-tile__tags">{tags}</span>
     {bar(parts, on_art=True)}<div class="cm-tile__meta"><span>{meta_l}</span><b>{meta_r}</b></div>
     <div class="cm-tile__foot"><span class="cm-tile__ready">{svg("check")}{ready}</span>{play_btn}</div></div></a>'''

@@ -297,33 +297,52 @@
      motion (CrankMotion) jumps to either end.
      SOFTER, A GLANCE (Rob, 2026-10-25: "softer, about half"): every part of the motion -- the turn, the lean, the pitch and
      the read -- is `LOOK.strength` (one half) of what would center P exactly, so P ends halfway to the center of the view.
-     The timing is unchanged. The admin panel is to carry this and its kin as settings. */
-  const LOOK={turn:[0,.6],lean:[.2,.8],pitch:[.4,1],read:[.6,1],strength:.5};
+     The timing is unchanged. The admin panel is to carry this and its kin as settings.
+     UP, THEN OVER, THEN CLOSER (Rob, 2026-10-26: "the camera should move (not look) up slightly as a head would when getting
+     ready to lean over, then the zoom that occurs when looking down at the end should be a bit more, maybe 25-35% more"):
+       - the eye rises first, straight up, without turning to look: 2% of its height over the table at r = 1 (1% at the
+         centerline), in by 35% of the time and given back by 90% as the shoulders carry it over and down;
+       - the read goes 30% farther toward P (`readBy`), so the place held is drawn about a third larger at the end.
+     THE HEAD TURNS WITH THE POINTER (Rob, 2026-10-26: "if I move the mouse while still holding ... it should 'turn the
+     head', the camera with the direction and distance of the mouse from the original place clicked"): while the look is
+     held, the pointer's offset from the place pressed turns the head by the angle that offset spans in the view (atan of
+     the offset over the focal length), across for yaw and down for pitch, so what was under the pointer comes toward where
+     it was pressed. It follows with a head's lag (`steerMs`, 80 ms), never past 34 degrees aside or the near horizon above,
+     nor past straight down; letting go takes it home with the rest of the motion. */
+  const LOOK={turn:[0,.6],rise:[0,.35,.9],lean:[.2,.8],pitch:[.4,1],read:[.6,1],strength:.5,riseBy:.02,readBy:1.3,steerMs:80,steerYaw:.6,steerLow:.17};
   const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
   const phase=(t,[a,b])=>ease(clamp((t-a)/(b-a),0,1));
   function aim(g,P) {
     const eye=g.camera.eye, u=clamp((P[0]-g.pan.x)/(g.width/2),-1,1), v=clamp((-P[2]-g.pan.y)/(g.base/2),-1,1), r=Math.min(1,Math.hypot(u,v));
     const lean=[.3*(P[0]-eye[0]),-.06*eye[1]*r,.25*(P[2]+g.pan.y)], leaned=eye.map((n,i)=>n+lean[i]);
-    const k=.06+.1*r, read=leaned.map((n,i)=>k*(P[i]-n)), d=P.map((n,i)=>n-leaned[i]-read[i]);
+    const k=(.06+.1*r)*LOOK.readBy, read=leaned.map((n,i)=>k*(P[i]-n)), d=P.map((n,i)=>n-leaned[i]-read[i]);
     const f=LOOK.strength;
-    return {lean:lean.map(n=>n*f),read:read.map(n=>n*f),yaw:f*Math.atan2(d[0],d[2]),pitch:f*(Math.atan2(-d[1],Math.hypot(d[0],d[2]))-g.camera.pitch),r,ms:250+400*r,point:P};
+    return {lean:lean.map(n=>n*f),read:read.map(n=>n*f),yaw:f*Math.atan2(d[0],d[2]),pitch:f*(Math.atan2(-d[1],Math.hypot(d[0],d[2]))-g.camera.pitch),rise:LOOK.riseBy*eye[1]*(.5+.5*r),r,ms:250+400*r,point:P};
   }
-  const mix=(a,b,k)=>({...b,lean:a.lean.map((n,i)=>n+(b.lean[i]-n)*k),read:a.read.map((n,i)=>n+(b.read[i]-n)*k),yaw:a.yaw+(b.yaw-a.yaw)*k,pitch:a.pitch+(b.pitch-a.pitch)*k,ms:a.ms+(b.ms-a.ms)*k});
+  const mix=(a,b,k)=>({...b,lean:a.lean.map((n,i)=>n+(b.lean[i]-n)*k),read:a.read.map((n,i)=>n+(b.read[i]-n)*k),yaw:a.yaw+(b.yaw-a.yaw)*k,pitch:a.pitch+(b.pitch-a.pitch)*k,rise:a.rise+(b.rise-a.rise)*k,ms:a.ms+(b.ms-a.ms)*k});
   // A new hold while the last one is still easing back turns toward the new place over 150 ms, rather than jumping.
   const aimNow=(L,now)=>L.from&&now-L.since<150?mix(L.from,L.aim,ease(clamp((now-L.since)/150,0,1))):L.aim;
-  function pose(a,t) {
-    const l=phase(t,LOOK.lean),k=phase(t,LOOK.read);
-    return {x:a.lean[0]*l+a.read[0]*k,y:a.lean[1]*l+a.read[1]*k,z:a.lean[2]*l+a.read[2]*k,yaw:a.yaw*phase(t,LOOK.turn),pitch:a.pitch*phase(t,LOOK.pitch)};
+  // The rise: up by 35% of the time, back by 90%.
+  const lift=t=>phase(t,[LOOK.rise[0],LOOK.rise[1]])-phase(t,[LOOK.rise[1],LOOK.rise[2]]);
+  function pose(a,t,turned=null) {
+    const l=phase(t,LOOK.lean),k=phase(t,LOOK.read),h=ease(clamp(t,0,1));
+    return {x:a.lean[0]*l+a.read[0]*k,y:a.lean[1]*l+a.read[1]*k+(a.rise||0)*lift(t),z:a.lean[2]*l+a.read[2]*k,
+      yaw:a.yaw*phase(t,LOOK.turn)+(turned?.yaw||0)*h,pitch:a.pitch*phase(t,LOOK.pitch)+(turned?.pitch||0)*h};
   }
+  /** The head look's pose at progress t toward a table point (world), for a geometry at rest: what the motion draws. */
+  const headPose=(g,world,t,turned=null)=>pose(aim(g,world),t,turned);
   function tick(s,now) {
     const L=s.look;if(!L||current!==s)return;
     L.raf=null;
     const dt=Math.max(0,now-L.last),a=aimNow(L,now);L.last=Math.max(L.last,now);
     L.t=s.opts.reduced?(L.dir>0?1:0):clamp(L.t+L.dir*dt/a.ms,0,1);
-    s.pose=L.t>0?pose(a,L.t):null;
+    /* The turn the pointer asks for, followed with a head's lag. */
+    if(L.steer){const q=s.opts.reduced?1:1-Math.exp(-dt/LOOK.steerMs),w=L.turned;L.turned={yaw:w.yaw+(L.steer.yaw-w.yaw)*q,pitch:w.pitch+(L.steer.pitch-w.pitch)*q};}
+    s.pose=L.t>0?pose(a,L.t,L.turned):null;
     if(s.box)place(s);
     if(L.t===0&&L.dir<0){s.look=null;return;}
-    if(L.t===1&&L.dir>0&&!(L.from&&now-L.since<150))return;
+    const turning=L.steer&&(Math.abs(L.steer.yaw-L.turned.yaw)>1e-6||Math.abs(L.steer.pitch-L.turned.pitch)>1e-6);
+    if(L.t===1&&L.dir>0&&!(L.from&&now-L.since<150)&&!turning)return;
     L.raf=requestAnimationFrame(n=>tick(s,n));
   }
   /** Start the head look at a viewport point. Returns the motion's length and reach, or null off the table's plane. */
@@ -336,6 +355,15 @@
     s.look=L?{...L,from:aimNow(L,now),since:now,aim:target,dir:1,last:now,started:now,back:null}:{aim:target,t:0,dir:1,from:null,since:now,last:now,started:now,back:null};
     if(s.opts.reduced)tick(s,now);else if(!s.look.raf)s.look.raf=requestAnimationFrame(n=>tick(s,n));
     return {ms:target.ms,r:target.r,point:hit};
+  }
+  /** While held: turn the head by the pointer's offset (px) from the place pressed. */
+  function steer(dx,dy) {
+    const s=current,L=s?.look;if(!L||L.dir<0||!s.box)return;
+    const g=geometry(s.box.width,s.box.height,{...s.opts,look:null}),down=g.camera.pitch+L.aim.pitch;
+    L.steer={yaw:clamp(Math.atan2(dx,g.focal),-LOOK.steerYaw,LOOK.steerYaw),pitch:clamp(Math.atan2(dy,g.focal),LOOK.steerLow-down,Math.PI/2-down)};
+    L.turned??={yaw:0,pitch:0};
+    const now=performance.now();
+    if(s.opts.reduced)tick(s,now);else if(!L.raf){L.last=Math.max(L.last,now);L.raf=requestAnimationFrame(n=>tick(s,n));}
   }
   /** Let go: the same motion backward, from wherever it has reached. */
   function unlook() {
@@ -363,7 +391,8 @@
     const front=s.host.querySelector('.cm-stage-front'),k=Number(front?.dataset.sharp||1),shown=front?Array.from(new DOMMatrix(getComputedStyle(front).transform).toFloat64Array()).map((v,i)=>i<8?v*k:v):null;
     return {renderer:'babylon',meshes:s.scene.meshes.length,parts:[...new Set(s.table.parts.map(p=>p.metadata.part))],materials:s.scene.materials.length,textures:s.scene.textures.length,quad:corners,domQuad:g.quad,
       camera:{position:s.camera.position.asArray(),rotation:s.camera.rotation.asArray()},pan:{...g.pan},
-      look:s.look?{t:s.look.t,dir:s.look.dir,ms:s.look.aim.ms,r:s.look.aim.r,clock:s.look.last,started:s.look.started,back:s.look.back,at:g.project(...planeOf(g,s.look.aim.point))}:null,
+      look:s.look?{t:s.look.t,dir:s.look.dir,ms:s.look.aim.ms,r:s.look.aim.r,clock:s.look.last,started:s.look.started,back:s.look.back,at:g.project(...planeOf(g,s.look.aim.point)),
+        rise:s.look.aim.rise,steer:s.look.steer?{...s.look.steer}:null,turned:s.look.turned?{...s.look.turned}:null}:null,
       center:[g.width/2,g.screenY],front:{shown,matrix:g.front.matrix,height:g.front.height,quad:g.front.quad},rear:g.rear.map(r=>({height:r.height,width:r.width})),
       length:{base:g.base,reach:g.reach,most:g.reachMost,plane:g.planeHeight,built:s.tableDepth*50,scale:s.table.root.scaling.z,builds:s.builds},
       backdrop:{id:s.backdrop??null,lines:s.environment?.dataset.lines?Number(s.environment.dataset.lines):null,src:s.video?.getAttribute('src')??null},
@@ -379,6 +408,6 @@
     if(s.canvas){s.canvas.removeEventListener('webglcontextlost',s.lost);s.canvas.remove();}
     s.scene?.dispose();s.engine?.dispose();
   }
-  root.CrankStage=Object.freeze({geometry,carousel,appearances,backdropLines,tableDesign,DEFAULT_TABLE,mount,layout,unmount,diagnostics,look,unlook,pick,
+  root.CrankStage=Object.freeze({geometry,carousel,appearances,backdropLines,tableDesign,DEFAULT_TABLE,mount,layout,unmount,diagnostics,look,steer,unlook,headPose,pick,
     resolution,previewResolution,setResolution,RESOLUTION:Object.freeze({key:RES_KEY,min:RES_MIN,max:RES_MAX,default:RES_DEFAULT})});
 })(globalThis);

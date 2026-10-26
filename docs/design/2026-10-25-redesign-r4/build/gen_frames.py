@@ -20,7 +20,7 @@ LEGAL = '<footer class="foot"><p><b>CrankMagic</b> is unofficial Fan Content per
 
 # ---------- decks-hub ----------
 DECKS = [
-  dict(name='Chulane, Teller of Tales', eyebrow='D2 · Chulane', tags='Landfall · Ramp · Draw · Blink', art='chulane', st='inbox', st_word='Boxed', parts=[('inbox',100)], meta_l='100 in the box', meta_r='B3 · 60 pts', colors=['G','W','U']),
+  dict(fav=True, name='Chulane, Teller of Tales', eyebrow='D2 · Chulane', tags='Landfall · Ramp · Draw · Blink', art='chulane', st='inbox', st_word='Boxed', parts=[('inbox',100)], meta_l='100 in the box', meta_r='B3 · 60 pts', colors=['G','W','U']),
   dict(name='Kasmina, Enigma Sage', eyebrow='D3 · Kasmina · house rule', tags='Counters · Superfriends · Tokens', art='kasmina', st='inbox', st_word='Boxed', parts=[('inbox',100)], meta_l='100 in the box', meta_r='B3', colors=['G','U']),
   dict(name='Felothar the Steadfast', eyebrow='D4 · Felothar', tags='Defender · Tap ability · Combat', art='felothar', st='inbox', st_word='Boxed', parts=[('inbox',100)], meta_l='100 in the box', meta_r='B3', colors=['W','B','G']),
   dict(name='Shadrix Silverquill', eyebrow='D5 · Shadrix', tags='Counters · ETB triggers · Drain and burn', art='shadrix', st='inbox', st_word='Boxed', parts=[('inbox',100)], meta_l='100 in the box', meta_r='B3', colors=['W','B']),
