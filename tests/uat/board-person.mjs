@@ -100,7 +100,8 @@ export function boardPerson({page, seat, cards, current, timeout = 15000}) {
           await field.press("Tab");
         }
       } else if (d.mode === "many" && Array.isArray(d.legalBlocks)) {
-        const attacks=(v.state.combat?.attacks || []).filter(a=>a.defender===v.seat);
+        const publicIds=new Set(v.state.players.flatMap(p=>p.zones.Battlefield.cards).map(c=>c.cardId));
+        const attacks=(v.state.combat?.attacks || []).filter(a=>a.defender===v.seat && publicIds.has(a.attacker));
         for(const attack of attacks) {
           const currentAttacker=await page.locator('.cm-block-draft').getAttribute('data-active-attacker');
           const confirms=await visible(page,`[data-action=board-block-attacker-confirm][data-attacker="${attack.attacker}"]`);

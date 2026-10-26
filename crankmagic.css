@@ -4184,10 +4184,26 @@ button.cm-vitals{cursor:pointer}
 #matrix-v2 .cm-deck-tile h3{font-family:var(--font-body);font-weight:700}
 #matrix-v2 .cm-deck-tile>.cm-tile-play{position:absolute;right:14px;top:48px;z-index:3;min-height:var(--control-height-compact);padding:0 10px}
 #matrix-v2 .cm-table>tbody>tr:not(.cm-group-row)>:is(td,th){height:48px;vertical-align:middle}
+#matrix-v2 .cm-deck-list>li{min-height:48px;align-items:center}
 #matrix-v2 .cm-table :is(.cm-price,.cm-band-dollars){color:var(--color-money);font-variant-numeric:tabular-nums}
 #matrix-v2 .cm-row-group-heading{margin:0;font:inherit}
 #matrix-v2 .cm-flow-field .cm-error:not(:empty):before{content:'⚠ ';font-family:var(--font-body)}
 #matrix-v2 .cm-deck-blocked{display:block;color:var(--color-required);font-weight:700}
+#matrix-v2 :is(.cm-graph-modes,.cm-facet-mode,.cm-graph-pop,.cm-pick-actions) .v-button.is-on,#matrix-v2 .cm-term-chips .cm-chip.is-on,#matrix-v2 .cm-pane-tab[aria-selected=true]{background:var(--color-ink);color:var(--color-bg);border-color:var(--color-ink)}
+#matrix-v2 .cm-graph-box .cm-graph-modes .v-button.is-on{background:var(--color-ink);color:var(--color-bg);border-color:var(--color-ink)}
+#matrix-v2 .cm-term-chips .cm-chip.is-on small{color:inherit}
+#matrix-v2 .cm-list-row.is-on>td{background:var(--color-ink);color:var(--color-bg)}
+#matrix-v2 .cm-list-row.is-on :is(button,a,.cm-price){color:inherit}
+#matrix-v2 .cm-graph:focus-visible{outline:var(--focus-width) solid var(--color-aether);outline-offset:var(--focus-offset)}
+#matrix-v2 .cm-graph-box{background:radial-gradient(ellipse at 50% 40%,color-mix(in oklab,var(--color-aether) 9%,var(--color-panel)),var(--color-panel) 70%)}
+#matrix-v2 .cm-graph-reach input[type=range]{accent-color:var(--color-ink)}
+#matrix-v2 .cm-graph-box .cm-graph-reach input[type=range]{accent-color:var(--color-ink)}
+#matrix-v2 .cm-graph-pop h4{color:var(--color-ink)}
+#matrix-v2 .cm-pick-actions{background:color-mix(in srgb,var(--color-ink) 8%,var(--color-bg));border-color:var(--color-field-line)}
+#matrix-v2 .cm-graph-legend .is-loop{background:var(--color-money)}
+#matrix-v2 .cm-chip.is-on{background:var(--color-ink);color:var(--color-bg);border-color:var(--color-ink)}
+#matrix-v2 .cm-chip.is-on small{color:inherit}
+.cm-toast .cm-toast-dismiss{font:inherit;min-height:32px;padding:6px 10px;border:1px solid var(--color-field-line);border-radius:var(--radius-control);background:var(--color-raised);color:var(--color-ink);cursor:pointer}
 #matrix-v2 .cm-flow-field [aria-invalid=true]{border-color:var(--color-required)}
 #matrix-v2 .cm-flow-field .cm-error{margin-top:4px;color:var(--color-required);font-size:var(--text-small)}
 #matrix-v2 .cm-flow-foot>span.cm-error{margin-right:auto;font-size:var(--text-small)}
@@ -4206,6 +4222,9 @@ button.cm-vitals{cursor:pointer}
 
 #matrix-v2 .cm-table-new-deck{height:64px;min-height:64px;overflow:auto;margin-bottom:8px}
 #matrix-v2 .cm-table-field-error{display:block;min-height:20px;font-size:var(--text-small);color:var(--color-required)}
+#matrix-v2 :is(.cm-table-field-error,#cm-table-new-error):empty{background:transparent;padding:0;border:0;box-shadow:none}
+#matrix-v2 .cm-table-field-error,#matrix-v2 .cm-flow-field .cm-error{background:var(--color-panel);color:var(--color-required);padding:0;border:0;box-shadow:none}
+@media(max-width:560px){#matrix-v2 .cm-new-table-center{display:none}}
 #matrix-v2 .cm-table-new [aria-invalid=true]{border-color:var(--color-required)}
 #matrix-v2 .cm-table-field-error:not(:empty):before{content:'⚠ ';font-family:var(--font-body)}
 #matrix-v2 .cm-cloud-table>.cm-countdown-cancel{position:absolute;left:50%;top:calc(50% + 60px);transform:translateX(-50%);z-index:42;min-height:var(--control-height)}
@@ -4228,3 +4247,21 @@ button.cm-vitals{cursor:pointer}
 #matrix-v2 :is(.v-button,input,select,textarea):focus-visible{outline:var(--focus-width) solid var(--color-aether);outline-offset:var(--focus-offset)}
 #matrix-v2 [aria-invalid=true]:is(input,select,textarea){border-color:var(--color-required)}
 @media(pointer:coarse){#matrix-v2 .v-button.primary{min-height:var(--control-height-lg)}}
+
+/* r4 AccountMenu: one native popover shared by rail, landing and board. */
+#cm-user-menu.cm-account-menu{width:min(320px,calc(100vw - 16px));min-width:0;box-sizing:border-box;padding:8px;border:1px solid var(--color-field-line);border-radius:12px;background:var(--color-raised);color:var(--color-ink);max-height:calc(100dvh - 24px);overscroll-behavior:contain}
+#cm-user-menu .cm-menu-group{padding:6px 0;border-bottom:1px solid var(--color-line)}
+#cm-user-menu .cm-menu-group:last-child{border-bottom:0}
+#cm-user-menu .cm-menu-group[hidden]{display:none}
+#cm-user-menu .cm-menu-label{margin:0;padding:5px 10px;font:700 12px/1.4 var(--font-body);color:var(--color-muted);text-transform:none;letter-spacing:0}
+#cm-user-menu .cm-account p{margin:4px 0;padding:0 10px;overflow-wrap:anywhere;font-size:13px}
+#cm-user-menu .cm-account-status{color:var(--color-muted)}
+#cm-user-menu .cm-menu-group button,#cm-user-menu .cm-menu-group a{min-height:40px;padding:8px 10px;font:400 13px/1.4 var(--font-body);border:0;border-radius:8px;color:var(--color-ink);background:transparent;box-shadow:none;text-transform:none;white-space:normal;overflow-wrap:anywhere}
+#cm-user-menu .cm-menu-group button:hover,#cm-user-menu .cm-menu-group a:hover{background:var(--color-panel)}
+#cm-user-menu .cm-menu-group button:focus-visible,#cm-user-menu .cm-menu-group a:focus-visible{outline:2px solid var(--color-aether);outline-offset:-2px}
+#cm-user-menu .cm-theme-choices button[aria-pressed=true],#cm-user-menu .cm-theme-modes button[aria-pressed=true]{background:var(--color-ink);color:var(--color-bg);font-weight:700}
+#cm-user-menu .cm-theme-modes{display:flex;padding:4px 8px;gap:4px}
+#cm-user-menu .cm-theme-modes button{min-width:0;padding:6px;min-height:32px;text-align:center}
+#cm-user-menu .cm-menu-group-danger .cm-menu-label,#cm-user-menu .cm-menu-group .cm-danger{color:var(--color-required)}
+#cm-user-menu .cm-menu-group-danger,#cm-user-menu #cm-account-out{background:var(--color-panel);border-radius:8px}
+@media(max-width:760px){#cm-user-menu .cm-menu-group button,#cm-user-menu .cm-menu-group a{min-height:44px}}

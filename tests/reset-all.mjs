@@ -86,18 +86,18 @@ try {
   const {context, page} = await fresh();
   await loadLiveState(page, base);
   await openMenu(page);
-  await page.locator("#cm-user-menu [data-theme-choice=brass-slate]").click();
-  await page.waitForFunction(() => document.querySelector("[data-theme-choice=brass-slate]")?.getAttribute("aria-pressed") === "true");
+  await page.locator("#cm-user-menu [data-theme-skin=bronze-basalt]").click();
+  await page.waitForFunction(() => document.querySelector("[data-theme-skin=bronze-basalt]")?.getAttribute("aria-pressed") === "true");
   await seed(page);
   const before = await library(page);
   ok(before.decks > 0 && before.lots > 1000, `the committed library is in: ${before.decks} decks, ${before.lots} card records`);
-  ok(before.preferences.theme === "brass-slate", "and a theme of the reader's own is chosen, saved with the library");
+  ok(before.preferences.theme === "bronze-basalt", "and a theme of the reader's own is chosen, saved with the library");
 
   /* 1. The Menu entry and its dialog. */
   await openMenu(page);
   const items = await entries(page);
-  eq(items.slice(0, 4), ["Settings", "Save a backup file", "Restore from a backup file", "Reset All"], "the Menu offers Reset All beside the backups");
-  ok(await page.locator("#cm-user-menu [data-action=reset-all]").evaluate((b) => b.classList.contains("cm-danger") && getComputedStyle(b).color !== getComputedStyle(b.previousElementSibling).color), "in red, unlike the entries beside it");
+  eq(await page.locator('#cm-user-menu [data-action=reset-all]').evaluate(b=>b.closest('.cm-menu-group').getAttribute('aria-label')), "Careful", "Reset All is in the labeled Careful group, retaining its existing confirmation");
+  ok(await page.locator("#cm-user-menu [data-action=reset-all]").evaluate((b) => b.classList.contains("cm-danger") && getComputedStyle(b).color !== getComputedStyle(document.querySelector('#cm-user-menu [data-action=backup]')).color), "in red, unlike the entries beside it");
   await shot(page, "reset-all-menu");
   await page.keyboard.press("Escape");
   await resetDialog(page);

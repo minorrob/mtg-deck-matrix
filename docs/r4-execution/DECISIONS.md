@@ -17,6 +17,7 @@ These decisions implement the revised plan Rob approved. Source rulings remain v
 | EX-11 | Extend existing untap, land take-back, sharing and game-record paths before creating replacements. | Several packet requests already have tested foundations. |
 | EX-12 | Preserve meaningful existing assertions when migrating supplied tests. | Replacing tests wholesale must not remove behavioral coverage. |
 | EX-13 | Stage source commits from the integration branch only after combined acceptance. No production release. | Preserve one release owner and a reviewable rollback target. |
+| EX-14 | Apply the 15px scaled HUD floor to game-state captions and facts; preserve explicit component typography for Coach and Camera forms, with the general 12px floor. | M's blanket board-DOM sentence conflicts with the specified 36px Coach header, 22px Questions row with 13px text, and 13px Camera labels. Concrete component metrics take precedence over that blanket sweep; game-state text does not inherit those exceptions. |
 
 The general undo house rule follows the packet's intended capability, but its availability and window are
 defined by the room contract and server checks. UI visibility is not evidence an undo is legal. A default

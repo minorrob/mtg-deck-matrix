@@ -226,7 +226,7 @@ try {
       eq((await page.locator(".cm-landing-chip .cm-landing-chip-name").innerText()).trim(), "reader@example.test", "signed in, the header's chip shows who is signed in");
       ok(await leftOfWayIn(), "to the left of Open my decks, on its line");
       const account = await openMenu();
-      ok(/^Account Signed in as reader@example\.test/.test(account) && await page.locator("#cm-account [data-action=account-sync]").isVisible(), `and opens the menu: Account, who, and Sync now (${account.slice(0, 60)})`);
+      ok(/^Signed in as reader@example\.test/.test(account) && await page.locator("#cm-account-device [data-action=account-sync]").isVisible(), `and opens the shared menu: You identifies the account, This device has Sync now (${account.slice(0, 60)})`);
       await shot(page, "landing-chip-signed-in-1400");
     } else {
       await landing(page);
@@ -236,7 +236,7 @@ try {
       ok(await leftOfWayIn(), "to the left of the way in, on its line");
       ok(/Sign in to keep it in the cloud/.test(await page.locator(".cm-landing-fine").innerText()), "and says what signing in adds");
       const account = await openMenu();
-      ok(/^Account Sign In \(Save to Cloud\)/.test(account) && await page.locator("#cm-account [data-action=account-sign-in]").isVisible(), `and it opens the menu, Account at its head with Sign in (${account.slice(0, 60)})`);
+      ok(/^Signed out .*Sign In \(Save to Cloud\)/.test(account) && await page.locator("#cm-account [data-action=account-sign-in]").isVisible(), `and it opens the shared menu with signed-out identity and Sign in (${account.slice(0, 60)})`);
       await shot(page, "landing-chip-signed-out-1400");
     }
     await context.close();

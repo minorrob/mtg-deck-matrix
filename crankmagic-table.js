@@ -168,15 +168,22 @@
     async deck(d) {
       const el = document.getElementById("cm-deck-play");
       if (!el || !cloudPlay() || !playable(d)) return;
+      const route=C.route(),routeKey=route.view+'?'+route.params.toString(),version=d.version;
       let r;
       try {r = await readiness(d);} catch {return;}
+      const currentRoute=C.route(),currentDeck=C.state.decks.find(x=>x.id===d.id);
+      const currentView=el.isConnected&&document.getElementById('cm-deck-play')===el&&el.dataset.deck===d.id&&currentRoute.view==='decks'&&currentRoute.params.get('deck')===d.id&&currentRoute.view+'?'+currentRoute.params.toString()===routeKey&&currentDeck&&!currentDeck.archived&&currentDeck.version===version;
+      if(!currentView)return;
+      const playPrimary=!r.count&&C.M?.readiness(C.state,d).complete===true&&(!C.route().params.get('tab')||C.route().params.get('tab')==='overview');
       el.innerHTML = `<span class="cm-deck-play-line">${e(readinessText(r))}</span>`
         + (r.count ? ` <span class="cm-muted">The table cannot play ${r.unknown.length === 1 ? "this one" : "these"} yet: ${e(r.unknown.slice(0, 6).join(", "))}${r.unknown.length > 6 ? ", …" : ""}.</span>`
-          : ` ${b("Play this deck", "deck-play", {deck: d.id}, true, {cls: "compact"})}`);
+          : ` ${b("Play this deck", "deck-play", {deck: d.id}, playPrimary, {cls: "compact"})}`);
+      if(playPrimary)for(const button of document.querySelectorAll('.cm-deck-work .primary,.cm-action-bar .primary')){button.classList.remove('primary');button.dataset.playDemoted='true';}
+      else for(const button of document.querySelectorAll('[data-play-demoted]')){button.classList.add('primary');delete button.dataset.playDemoted;}
       const blocked=r.count?`${r.count} card${r.count===1?'':'s'} unplayable at the table. Fix the list before playing.`:'';
       el.dataset.blockedState=blocked;
       if(blocked)el.insertAdjacentHTML('beforeend',` <strong class="cm-deck-blocked">${e(blocked)}</strong>`);
-      const next=document.querySelector('#cm-deck-next .cm-bento-next-line');if(next)next.textContent=blocked||next.dataset.nextDefault;
+      const next=document.querySelector('#cm-deck-next .cm-bento-next-line');if(next)next.textContent=blocked||(playPrimary?'The box is ready. Play this deck or log a game.':next.dataset.nextDefault);
       el.classList.toggle("is-playable", !r.count);
       el.hidden = false;
     },
@@ -472,7 +479,7 @@
       <input name="name${n}" maxlength="60" placeholder="${n === 2 ? "Their name" : "Name (optional)"}" aria-label="Seat ${n} name"></div>`;
     C.main.innerHTML = C.pageHead("Play", "", "table") + `<section class="v-panel cm-table-new"><h2>New table</h2>
       <p class="cm-muted">You sit in seat 1 as the host. Each other seat is a person you invite, an AI, or nobody; a table seats two to four.</p>
-      <form id="cm-table-new"><div class="cm-table-new-deck" id="cm-table-new-deck" aria-live="polite"></div><div class="cm-new-table-square"><div class="cm-table-new-seat cm-new-host" data-seat-position="1"><strong>You · Host</strong><label>Your name at the table <span aria-hidden="true">*</span><input name="hostName" maxlength="60" required aria-describedby="cm-table-host-error"><span class="cm-error cm-table-field-error" id="cm-table-host-error" role="alert"></span></label></div>${row(2)}${row(3)}${row(4)}<span class="cm-new-table-center" aria-hidden="true">COMMANDER</span></div><div class="cm-new-table-rules"><span>Commander</span><span>Invitation-only</span><span>2–4 seats</span><span>Review rules at the table</span></div><label>Your deck<select name="deck" id="cm-new-table-deck"><option value="">Choose at the table</option>${libraryDecks().map(d=>`<option value="${e(d.id)}"${d.id===deckId?' selected':''}>${e(d.name)}</option>`).join('')}</select></label>
+      <form id="cm-table-new"><div class="cm-table-new-deck" id="cm-table-new-deck" aria-live="polite"></div><div class="cm-new-table-square"><div class="cm-table-new-seat cm-new-host" data-seat-position="1"><strong>You · Host</strong><label><span>Your name at the table&nbsp;<span aria-hidden="true">*</span></span><input name="hostName" maxlength="60" required aria-describedby="cm-table-host-error"><span class="cm-error cm-table-field-error" id="cm-table-host-error" role="alert"></span></label></div>${row(2)}${row(3)}${row(4)}<span class="cm-new-table-center" aria-hidden="true">COMMANDER</span></div><div class="cm-new-table-rules"><span>Commander</span><span>Invitation-only</span><span>2–4 seats</span><span>Review rules at the table</span></div><label>Your deck<select name="deck" id="cm-new-table-deck"><option value="">Choose at the table</option>${libraryDecks().map(d=>`<option value="${e(d.id)}"${d.id===deckId?' selected':''}>${e(d.name)}</option>`).join('')}</select></label>
       <p class="cm-error" id="cm-table-new-error" role="alert"></p><fieldset class="cm-table-setup-rules"><legend>Table rules</legend><label>Starting life<input name="startingLife" type="number" min="1" max="999" value="40" required aria-describedby="cm-table-rules-error"><span class="cm-error cm-table-field-error" id="cm-table-rules-error" role="alert"></span></label><label>Bracket limit<select name="bracketLimit"><option value="">Any</option>${[1,2,3,4,5].map(n=>`<option value="${n}"${libraryDecks().find(d=>d.id===deckId)?.definition.baseBracket===n?' selected':''}>${n} or lower</option>`).join('')}</select></label></fieldset>
       <div class="cm-actions">${b("Set the table", "table-create", {}, true)}</div></form></section>`;
     try {const last=JSON.parse(localStorage.getItem("cm-table-setup")||"null");if(last && last.owner === (C.signedInAs?.() || null)){const form=document.getElementById("cm-table-new");for(const key of ["hostName","kind2","name2","kind3","name3","kind4","name4"]){if(typeof last[key]==="string" && form.elements[key] && (!key.startsWith("kind") || ["human","ai","ai-easy","none"].includes(last[key])))form.elements[key].value=last[key];}}}catch{}
@@ -689,10 +696,22 @@
       if (texts.length && el.isConnected) {el.textContent = cut(texts.join(" · ")); el.removeAttribute("data-about-for");}
     }
   }
-  /* PLAYABLE ONLY (Rob: "include a toggle check box to filter for Playable"): the decks the table can play every card of,
-     the rest put away once it has said so -- off until it is ticked, and then remembered on this device. */
+  /* Compare the same expanded commander/card list submitted to the table, never a display name.
+     Shared snapshots expose no canonical library source ID. Exact contents can identify an already
+     available local list without conflating a different shared revision or two distinct local decks. */
+  const deckContents = (d) => {
+    if (!Array.isArray(d?.commander) || !d.commander.length || !Array.isArray(d.cards)
+        || [...d.commander, ...d.cards].some(n => typeof n !== 'string' || !n.trim())) return null;
+    const names = a => a.map(n => n.normalize('NFC').trim()).sort();
+    return JSON.stringify([names(d.commander), names(d.cards)]);
+  };
+  function tableOnlyShared(shared, decks) {
+    const local = new Set(decks.map(d => deckContents(deckForTable(d))).filter(Boolean));
+    return shared.filter(d => {const contents=deckContents(d);return !contents || !local.has(contents);});
+  }
+  /* Default to the server-supported complete lists; an explicit device choice is remembered. */
   const ONLY_KEY = "cm-table-deck-playable";
-  const onlyPlayable = () => {try {return localStorage.getItem(ONLY_KEY) === "on";} catch {return false;}};
+  const onlyPlayable = () => {try {return localStorage.getItem(ONLY_KEY) !== "off";} catch {return true;}};
   document.addEventListener("change", (event) => {
     const el = event.target.closest?.("[data-table-deck-playable]");
     if (!el) return;
@@ -701,24 +720,25 @@
   });
   actions["table-deck"] = async (el) => {
     await C.sharingReady;
-    availableSharedDecks = C.sharingAvailable?.() && C.sharedDecks ? await C.sharedDecks() : [];
+    const sharedDecks = C.sharingAvailable?.() && C.sharedDecks ? await C.sharedDecks() : [];
     let preconError = "";
     try {availablePrecons = await tablePrecons();} catch (error) {availablePrecons = []; preconError = error.message;}
     const seatId = Number(el.dataset.seat), decks = libraryDecks();
+    availableSharedDecks = tableOnlyShared(sharedDecks, decks);
     const test = current && current.playtest
       ? `<li><button type="button" class="cm-table-deck" data-action="table-use-test-deck" data-seat="${seatId}"><strong>${e(TEST_DECK.name)}</strong><span class="cm-muted">Wastes and 99 basic lands · for trying a game through quickly on this playtest table</span></button></li>`
       : "";
     const list = decks.length || test
-      ? `<ul class="cm-table-decks">${test}${decks.map((d) => `<li><button type="button" class="cm-table-deck" data-action="table-use-deck" data-seat="${seatId}" data-deck="${e(d.id)}">${deckLines(d.name, (d.commanders || []).map((c) => (C.card(c) || {}).name).filter(Boolean), d.notes)}<span class="cm-muted cm-table-deck-known" data-known-for="${e(d.id)}"></span></button></li>`).join("")}</ul>`
+      ? `<ul class="cm-table-decks">${test}${decks.map((d) => `<li><button type="button" class="cm-table-deck is-unknown" data-action="table-use-deck" data-seat="${seatId}" data-deck="${e(d.id)}">${deckLines(d.name, (d.commanders || []).map((c) => (C.card(c) || {}).name).filter(Boolean), d.notes)}<span class="cm-muted cm-table-deck-known" data-known-for="${e(d.id)}">Checking this server…</span></button></li>`).join("")}</ul>`
       : "";
     /* AN EMPTY LIBRARY says how to fill it (the readiness checks of 2026-10-04: a friend new to CrankMagic, invited
        before restoring the host's backup, saw only the test deck). A restore keeps this page, so the seat is still
        theirs when it is done. */
-    const empty = decks.length ? "" : `<div class="cm-table-deck-empty"><p>You can play a precon above without adding anything to your library.</p><p class="cm-muted">To use your own deck later, build or import one in Decks.</p></div>`;
-    const precons = `<section aria-label="Precons"><h3>Precons</h3><p>Wizards' newest Commander decks, open to everyone. Choose one and play; nothing is added to your library.</p>${preconError ? `<p class="cm-note cm-warning">${e(preconError)}</p>` : `<ul class="cm-table-decks">${availablePrecons.map(d => `<li><button type="button" class="cm-table-deck" data-action="table-use-precon" data-precon="${d.id}" data-seat="${seatId}" disabled>${deckLines(d.name, d.commander, d.notes)}<span class="cm-muted" data-precon-status="${d.id}">Checking this server…</span></button></li>`).join("")}</ul>`}</section>`;
-    const shared = availableSharedDecks.length ? `<section aria-label="Shared with you"><h3>Shared with you</h3><p>Decks other players shared with you or made public. No import or library setup needed.</p><ul class="cm-table-decks">${availableSharedDecks.map(d => `<li><button type="button" class="cm-table-deck" data-action="table-use-shared-deck" data-shared-deck="${d.id}" data-seat="${seatId}" disabled>${deckLines(d.name, d.commander, d.notes)}<span class="cm-muted" data-shared-status="${d.id}">Checking this server…</span></button></li>`).join("")}</ul></section>` : "";
-    const only = `<label class="cm-checkbox cm-table-deck-only"><input type="checkbox" data-table-deck-playable${onlyPlayable() ? " checked" : ""}>Playable</label>`;
-    C.modal(`Choose a deck · Seat ${seatId + 1}`, `<div class="cm-table-deck-choose${onlyPlayable() ? " is-playable-only" : ""}">${only}${precons}${shared}${decks.length ? '<h3>Your library decks</h3>' : ''}${list}${empty}</div><div id="cm-table-deck-error" class="cm-note cm-warning" hidden></div><div class="cm-form-footer">${b("Cancel", "close")}</div>`);
+    const empty = decks.length ? "" : `<div class="cm-table-deck-empty"><p>You can play a public precon without adding anything to your library.</p><p class="cm-muted">To use your own deck later, build or import one in Decks.</p></div>`;
+    const precons = `<details class="cm-table-precon-catalog" open><summary>Public precons</summary><p>Wizards' newest Commander decks, open to everyone. Choose one and play; nothing is added to your library.</p>${preconError ? `<p class="cm-note cm-warning">${e(preconError)}</p>` : `<ul class="cm-table-decks">${availablePrecons.map(d => `<li><button type="button" class="cm-table-deck" data-action="table-use-precon" data-precon="${d.id}" data-seat="${seatId}" disabled>${deckLines(d.name, d.commander, d.notes)}<span class="cm-muted" data-precon-status="${d.id}">Checking this server…</span></button></li>`).join("")}</ul>`}</details>`;
+    const shared = availableSharedDecks.length ? `<section aria-label="Shared with the table"><h3>Shared with the table</h3><p>Other shared lists available to your account. Choosing one does not import it or change its access.</p><ul class="cm-table-decks">${availableSharedDecks.map(d => `<li><button type="button" class="cm-table-deck" data-action="table-use-shared-deck" data-shared-deck="${d.id}" data-seat="${seatId}" disabled>${deckLines(d.name, d.commander, d.notes)}<span class="cm-muted" data-shared-status="${d.id}">Checking this server…</span></button></li>`).join("")}</ul></section>` : "";
+    const only = `<label class="cm-checkbox cm-table-deck-only"><input type="checkbox" data-table-deck-playable${onlyPlayable() ? " checked" : ""}>Only table-legal decks</label><p class="cm-muted">Complete lists supported by this server and within this table's bracket limit. The server checks your choice before seating it.</p>`;
+    C.modal(`Choose a deck · Seat ${seatId + 1}`, `<div class="cm-table-deck-choose${onlyPlayable() ? " is-playable-only" : ""}">${only}<section aria-label="Your decks"><h3>Your decks</h3>${list}${empty}</section>${shared}${precons}</div><div id="cm-table-deck-error" class="cm-note cm-warning" hidden></div><div class="cm-form-footer">${b("Cancel", "close")}</div>`);
     knownCounts(decks);
     checkSharedDecks(current.tableId);
     fillAbout();
@@ -734,10 +754,12 @@
       for (const [d, attr] of [...availablePrecons.map((d) => [d, "data-precon-status"]), ...availableSharedDecks.map((d) => [d, "data-shared-status"])]) {
         const status = document.querySelector(`[${attr}="${d.id}"]`);
         if (!status) continue;
-        const missing = [...d.commander, ...d.cards].filter(n => unknown.has(n));
-        status.textContent = missing.length ? "Not available on this server yet" : "Ready to play";
-        status.closest("button").disabled = missing.length > 0;
-        if (!missing.length) sharedReady.add(d.id);
+        const all = [...d.commander, ...d.cards], missing = all.filter(n => unknown.has(n));
+        const bracket = rulesOf(current).bracketLimit, above = bracket && Number(d.bracket) > bracket;
+        const reason = all.length !== 100 ? `Needs 100 cards · ${all.length} listed` : above ? `Above this table's bracket limit (${bracket})` : missing.length ? "Not available on this server yet" : "";
+        status.textContent = reason || "Ready to play";
+        status.closest("button").disabled = !!reason;
+        if (!reason) sharedReady.add(d.id);
       }
     } catch (error) {
       for (const status of document.querySelectorAll('[data-shared-status], [data-precon-status]')) status.textContent = "Could not check this deck. Close and reopen to retry.";
@@ -787,8 +809,9 @@
       const el = document.querySelector(`[data-known-for="${CSS.escape(r.id)}"]`);
       if (!el) continue;
       const all = [...r.deck.commander, ...r.deck.cards], missing = all.filter((n) => unknown.has(n)).length;
-      el.textContent = missing ? `${all.length - missing} of ${all.length} known · ${missing} to learn` : `All ${all.length} cards known`;
-      el.closest(".cm-table-deck")?.classList.toggle("is-unknown", missing > 0);
+      const bracket = rulesOf(current).bracketLimit, above = bracket && Number(r.deck.bracket) > bracket;
+      el.textContent = all.length !== 100 ? `Needs 100 cards · ${all.length} listed` : above ? `Above this table's bracket limit (${bracket})` : missing ? `${all.length - missing} of ${all.length} known · ${missing} to learn` : `All ${all.length} cards known`;
+      el.closest(".cm-table-deck")?.classList.toggle("is-unknown", missing > 0 || all.length !== 100 || !!above);
     }
   }
   actions["table-use-test-deck"] = async (el) => {

@@ -169,6 +169,7 @@ const {browser, base, stub, close} = await openBrowser({name: "table-lobby", fla
 async function person(email, viewport, {play = true, library = true} = {}) {
   const context = await browser.newContext({viewport, serviceWorkers: "block"});
   const page = await context.newPage();
+  await page.addInitScript(() => (globalThis.CrankFeatures ||= []).push(C => {globalThis.__tableC=C;}));
   if (stub) await stub(page);
   if (library) await loadLiveState(page, base);   /* a real library to bring decks from, restored before the account is on */
   await page.route(`${base}/index.html*`, (r) => r.fulfill({contentType: "text/html; charset=utf-8", body: html(play)}));
@@ -285,6 +286,8 @@ try {
   await waitText(rob.page, ".cm-table-rules", /Starting life\s*30/);
   ok(/Bracket limit\s*2 or lower/.test(await pageText(rob.page, ".cm-table-rules")), "Save puts 30 life and a bracket limit of 2 on the table's rules");
   await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-deck]");
+  ok(await rob.page.getByLabel('Only table-legal decks',{exact:true}).isChecked(), 'Only table-legal decks defaults on in a fresh profile');
+  await rob.page.uncheck('[data-table-deck-playable]'); // Explicitly show the rejected row to exercise the server guard.
   await rob.page.locator("[data-action=table-use-deck]").first().waitFor();
   await rob.page.locator("[data-action=table-use-deck]").first().click();
   await rob.page.locator("#cm-table-deck-error").waitFor({state: "visible", timeout: 10000});
@@ -304,7 +307,7 @@ try {
   ok(deckCount >= 5, `Choose a deck lists the decks in your own library (${deckCount})`);
   /* M5 (the plan review's C4): each deck says how much of it the table can play before it is chosen -- here every card
      but Sol Ring. */
-  await rob.page.waitForFunction(() => [...document.querySelectorAll(".cm-table-deck-known")].every((el) => el.textContent));
+  await rob.page.waitForFunction(() => [...document.querySelectorAll(".cm-table-deck-known")].every((el) => el.textContent && !el.textContent.includes('Checking')));
   const counts = await rob.page.locator(".cm-table-deck-known").allInnerTexts();
   /* PUBLIC PRECONS, AND NOTHING SHARED THAT WAS NOT (Rob, 2026-10-25): the six New from Wizards decks are offered to
      everyone; Rob's own decks were bundled into this list for every player until then, and are gone from it. */
@@ -314,8 +317,8 @@ try {
   ok(counts.some((t) => /^\d+ of \d+ known · \d+ to learn$/.test(t)) && counts.some((t) => /^All \d+ cards known$/.test(t)),
     `each deck says how much of it the table can play: "${counts.find((t) => /to learn/.test(t))}", "${counts.find((t) => /^All/.test(t))}"`);
   eq(await rob.page.locator("[data-action=table-use-test-deck]").count(), 0, "this table is not a playtest table, so the basic lands test deck is not offered (staging's are: tests/uat/play-e2e.mjs)");
-  /* Each row its commanders' colors and what the deck does (Rob, 2026-10-22), and Playable, off until ticked, puts away the
-     decks the table cannot play every card of, remembered on the device. */
+  /* Each row keeps commander details; R24 defaults the labeled server/legal filter on,
+     with an explicit opt-out remembered on the device. */
   const rows = await rob.page.$$eval("[data-action=table-use-deck]", (bs) => bs.map((b) => ({pips: b.querySelectorAll(".cm-table-deck-cmdr .cm-pip, .cm-table-deck-cmdr .cm-color").length, about: (b.querySelector(".cm-table-deck-about")?.textContent || "").trim()})));
   ok(rows.every((r) => r.pips > 0 && r.about.length > 20), `each library deck's row shows its commanders' colors and a line on what it does (${rows.length} rows; "${rows[0] && rows[0].about.slice(0, 60)}…")`);
   const preconRows = await rob.page.$$eval("[data-action=table-use-precon]", (bs) => bs.map((b) => ({name: b.querySelector("strong").textContent, pips: b.querySelectorAll(".cm-table-deck-cmdr .cm-pip, .cm-table-deck-cmdr .cm-color").length, about: (b.querySelector(".cm-table-deck-about")?.textContent || "").trim()})));
@@ -328,8 +331,9 @@ try {
   ok(preconRows.every((r) => r.pips > 0) && shippable.length >= 1 && told.length === shippable.length && told.every((r) => r.about.length > 20),
     `and each precon's colors, and what its commander does wherever its text is to be had (${told.map((r) => r.name).join(", ")}; waiting: ${preconRows.filter((r) => !r.about).map((r) => r.name).join(", ")})`);
   const visible = () => rob.page.$$eval(".cm-table-deck", (bs) => bs.filter((b) => b.offsetParent !== null).length);
+  ok(!await rob.page.getByLabel('Only table-legal decks',{exact:true}).isChecked(), 'reopening preserves the explicit filter opt-out');
   const allRows = await visible();
-  ok(!(await rob.page.isChecked("[data-table-deck-playable]")), "Playable is off until it is ticked");
+  ok(!(await rob.page.isChecked("[data-table-deck-playable]")), "the filter can be explicitly turned off");
   await rob.page.check("[data-table-deck-playable]");
   const playableRows = await visible(), unplayable = await rob.page.locator(".cm-table-deck.is-unknown, .cm-table-deck[data-precon]:disabled").count();
   ok(unplayable > 0 && playableRows === allRows - unplayable && await rob.page.$$eval(".cm-table-deck.is-unknown, .cm-table-deck[data-precon]:disabled", (bs) => bs.every((b) => b.offsetParent === null)),
@@ -337,6 +341,35 @@ try {
   eq(await rob.page.evaluate(() => localStorage.getItem("cm-table-deck-playable")), "on", "and it is remembered on the device");
   await rob.page.uncheck("[data-table-deck-playable]");
   eq(await visible(), allRows, "unticked, every deck is back");
+  /* Exact shared contents use the canonical local Decks name; different revisions stay shared.
+     These injected already-authorized list responses never write a share or import a deck. */
+  const chooserFixture=await rob.page.evaluate(()=>{
+    const C=__tableC,d=C.state.decks.find(d=>!d.archived&&d.commanders.length),commanders=new Set(d.commanders),names=ids=>ids.map(id=>C.card(id).name);
+    const commander=names([...commanders]),cards=d.slots.filter(s=>s.purpose==='main'&&!commanders.has(s.cardId)).flatMap(s=>Array(s.quantity||1).fill(C.card(s.cardId).name));
+    const changed=[...cards];changed[0]=changed[0]==='Plains'?'Mountain':'Plains';
+    globalThis.__chooserRestore={available:C.sharingAvailable,decks:C.sharedDecks};
+    C.sharingAvailable=()=>true;C.sharedDecks=async()=>[
+      {id:'fixture-stale-name',name:'Stale snapshot name',commander:[...commander].reverse(),cards:[...cards].reverse()},
+      {id:'fixture-different-contents',name:d.name,commander,cards:changed}
+    ];
+    return {id:d.id,name:d.name};
+  });
+  await rob.page.locator('#cm-dialog [data-action=close]').first().click();
+  await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-deck]");
+  await rob.page.locator('[data-shared-deck="fixture-different-contents"]').waitFor();
+  eq(await rob.page.locator('[data-action=table-use-deck]').count(),deckCount,'canonical library rows are retained without name-based merging');
+  eq(await rob.page.locator(`[data-action=table-use-deck][data-deck="${chooserFixture.id}"] strong`).textContent(),chooserFixture.name,'Your decks uses the current Decks-page name');
+  eq(await rob.page.locator('[data-shared-deck="fixture-stale-name"]').count(),0,'same serialized shared contents with a stale name produce no duplicate row');
+  eq(await rob.page.locator('[data-shared-deck="fixture-different-contents"]').count(),1,'a genuinely different shared version remains even when its name matches the local deck');
+  eq(await rob.page.locator('section[aria-label="Shared with the table"] h3').textContent(),'Shared with the table','shared-only versions have the required separate heading');
+  eq(await rob.page.locator('.cm-table-precon-catalog summary').textContent(),'Public precons','public precons remain a distinct catalog disclosure');
+  eq(await rob.page.locator('[data-action=table-use-precon]').count(),6,'deduplicating account lists does not remove public precons');
+  ok(!await rob.page.getByLabel('Only table-legal decks',{exact:true}).isChecked(),'reopening remembers the explicit filter opt-out');
+  if(SHOTS)await shot(rob.page,'chooser-canonical-shared-1400');
+  await rob.page.evaluate(()=>{__tableC.sharingAvailable=__chooserRestore.available;__tableC.sharedDecks=__chooserRestore.decks;delete globalThis.__chooserRestore;});
+  await rob.page.locator('#cm-dialog [data-action=close]').first().click();
+  await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-deck]");
+  await rob.page.waitForFunction(()=>[...document.querySelectorAll('.cm-table-deck-known')].every(el=>el.textContent&&!el.textContent.includes('Checking')));
   /* Find a deck with the refused card by trying them in turn until one is refused, then one that is not. */
   let refusedSeen = false, chosen = null;
   for (let i = 0; i < deckCount && (!refusedSeen || !chosen); i += 1) {
@@ -469,6 +502,7 @@ try {
   const sideways = await maya.page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   eq(sideways, 0, "at 390 the lobby does not scroll sideways");
   await maya.page.click(".cm-lobby-seat[data-seat='1'] [data-action=table-deck]");
+  await maya.page.uncheck('[data-table-deck-playable]'); // Keep existing explicit refused-choice coverage.
   await maya.page.locator("[data-action=table-use-deck]").first().waitFor();
   eq([await maya.page.locator(".cm-table-rules-edit").count(), /Starting life\s*30/.test(await pageText(maya.page, ".cm-table-rules"))], [0, true], "a guest sees the host's rules, 30 life, and no Edit");
   for (let i = 0; i < 40; i += 1) {

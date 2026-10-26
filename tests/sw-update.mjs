@@ -48,6 +48,7 @@ try {
   await Promise.all([page.waitForEvent("load", {timeout: 60000}), toast.locator("button", {hasText: "Reload"}).click()]);
   ok(await page.evaluate(() => globalThis.__before === undefined), "Reload lets the new worker take over, and the page reloads");
   ok(await page.evaluate(async () => { const reg = await navigator.serviceWorker.getRegistration(); return !reg.waiting && Boolean(reg.active); }), "and nothing is left waiting");
+  await page.locator('.cm-settings').waitFor({timeout:30000});
   await page.evaluate(async()=>{globalThis.__beforeDismiss=true;await navigator.serviceWorker.register('crankmagic-sw.js?v=another-release',{scope:'./'});});
   await waitingWorker(page);
   await page.evaluate(()=>{location.hash='#decks';});await toast.waitFor();

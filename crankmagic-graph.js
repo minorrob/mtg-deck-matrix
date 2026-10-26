@@ -749,12 +749,13 @@
           ghostLine: mix(V('v-muted'), 55, 'transparent'),
           clear: mix(V('v-bg'), 0, 'transparent'),
           ink: read(V('v-ink')),
+          background: read(V('v-bg')),
           muted: read(V('v-muted')),
           on: read(V('v-on')),
-          /* the focus and its two rings: the focus carries the accent, the rings step back */
-          focus: mix(V('v-accent'), 42, V('v-panel')),
-          ring1: mix(V('v-accent'), 22, V('v-panel')),
-          ring2: mix(V('v-accent'), 12, V('v-panel')),
+          /* The focus and its two rings use Aether; the rings step back. */
+          focus: mix(V('v-aether'), 42, V('v-panel')),
+          ring1: mix(V('v-aether'), 22, V('v-panel')),
+          ring2: mix(V('v-aether'), 12, V('v-panel')),
           /* structural edges: shared mechanics and roles */
           edge: mix(V('v-line-strong'), 55, 'transparent'),
           edgeFaint: mix(V('v-line-strong'), 22, 'transparent'),
@@ -767,13 +768,13 @@
           playEdgeOwn: mix(V('v-money'), 62, 'transparent'),
           playInk: mix(V('v-money'), 75, V('v-ink')),
           /* a loop is gold and says so in both themes */
-          loop: read(V('v-accent')),
-          loopDim: mix(V('v-accent'), 80, V('v-bg')),
-          loopSoft: mix(V('v-accent'), 68, 'transparent'),
-          loopInk: mix(V('v-accent'), 70, V('v-ink')),
+          loop: read(V('v-money')),
+          loopDim: mix(V('v-money'), 80, V('v-bg')),
+          loopSoft: mix(V('v-money'), 68, 'transparent'),
+          loopInk: mix(V('v-money'), 70, V('v-ink')),
           /* the trace beam, and the aether -- the graph focus is one of the four places blue means something */
-          beam: read(V('st-remove')),
-          beamDim: mix(V('st-remove'), 60, 'transparent'),
+          beam: read(V('v-aether')),
+          beamDim: mix(V('v-aether'), 60, 'transparent'),
           aether: read(V('v-aether')),
           aetherInk: mix(V('v-aether'), 55, V('v-ink')),
         };
@@ -908,13 +909,13 @@
               ctx.beginPath(); ctx.arc(n.x, n.y, n.r + band / 2 + 1, 0, Math.PI * 2); ctx.stroke();
             }
             const isSel = selected.has(n.card.id);
-            ctx.strokeStyle = isSel ? P.loop : n.pinned ? P.loopDim : focus ? P.aetherInk : n.depth === 1 ? P.aether : P.line;
+            ctx.strokeStyle = isSel || n.pinned ? P.ink : focus ? P.aetherInk : n.depth === 1 ? P.aether : P.line;
             ctx.lineWidth = isSel ? 3 : n.pinned ? 2 : focus ? 1.5 : 1;
             ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.stroke();
             if (isSel) {
               // a small check badge, so a selected card reads as selected at any zoom
-              ctx.fillStyle = P.loop; ctx.beginPath(); ctx.arc(n.x + n.r * .7, n.y - n.r * .7, Math.max(6, n.r * .32), 0, Math.PI * 2); ctx.fill();
-              ctx.fillStyle = P.on; ctx.font = 'bold ' + Math.max(8, n.r * .4) + 'px Lato, sans-serif'; ctx.textAlign = 'center';
+              ctx.fillStyle = P.ink; ctx.beginPath(); ctx.arc(n.x + n.r * .7, n.y - n.r * .7, Math.max(6, n.r * .32), 0, Math.PI * 2); ctx.fill();
+              ctx.fillStyle = P.background; ctx.font = 'bold ' + Math.max(8, n.r * .4) + 'px Lato, sans-serif'; ctx.textAlign = 'center';
               ctx.fillText('✓', n.x + n.r * .7, n.y - n.r * .7 + Math.max(3, n.r * .14));
             }
             /* Names per ring, gated on zoom: ring 1 always, ring 2 from 0.8, ring 3 from
