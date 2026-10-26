@@ -84,6 +84,45 @@
     return Array.from({length:Math.min(n,limit)},(_,i)=>((start+i)%n+n)%n);
   }
   let library=null, current=null;
+  /* THE GRAPHICS RESOLUTION (Rob, 2026-10-25: "I also want to increase the game's resolution dramatically. I'd like this
+     to be an option in settings"). The table is drawn at `resolution` percent of the screen's own pixels: 150% by default
+     (each CSS pixel drawn 1.5 times over on each axis on an ordinary screen, then smoothed down), from 50% for a weak
+     graphics card to 200%, never past 4 drawn pixels per CSS pixel. A fact about this device, kept in localStorage like a
+     size; set in Settings › Play and in the table's Settings window, where it previews as it is dragged and Cancel puts it
+     back. At 175% and over the table's skins are painted at 4096 pixels (crankmagic-stage-tables.js, quality). Until
+     2026-10-25 every frame was sized to the stage's CSS pixels, whatever the scaling said: a 1x drawing on every screen. */
+  const RES_KEY='cm-stage-resolution', RES_DEFAULT=150, RES_MIN=50, RES_MAX=200;
+  const resStep=n=>clamp(Math.round(Number(n)/10)*10,RES_MIN,RES_MAX);
+  /* Where the browser draws WebGL in software (no graphics card in use: SwiftShader, llvmpipe), 150% would cost the table
+     its frames, so the default there is 100%; a value chosen in Settings is always kept. Asked once a page. */
+  let soft=null;
+  function softwareGL(){
+    if(soft!==null)return soft;soft=false;
+    try{const c=document.createElement('canvas'),gl=c.getContext('webgl2')||c.getContext('webgl'),x=gl&&gl.getExtension('WEBGL_debug_renderer_info');
+      soft=!!gl&&/swiftshader|llvmpipe|softpipe|software|basic render/i.test(String(gl.getParameter(x?x.UNMASKED_RENDERER_WEBGL:gl.RENDERER)));gl?.getExtension('WEBGL_lose_context')?.loseContext();}catch{/* unknown: a graphics card */}
+    return soft;
+  }
+  const resDefault=()=>softwareGL()?100:RES_DEFAULT;
+  function resolution(){let v=null;try{v=localStorage.getItem(RES_KEY);}catch{/* no storage: the default */}return v===null||!Number.isFinite(Number(v))?resDefault():resStep(v);}
+  let previewRes=null;
+  const resNow=()=>previewRes??resolution();
+  const pixelRatio=()=>Math.min(4,(root.devicePixelRatio||1)*resNow()/100);
+  /* The skins' size follows the kept setting, not a preview: a drag across 175% does not set the painter going. */
+  /* Where the browser draws in software, the machine's processor does everything: by default its skins are painted at
+     1024. A resolution chosen in Settings gets the skins it calls for, on any machine. */
+  const chosen=()=>{try{return localStorage.getItem(RES_KEY)!==null;}catch{return false;}};
+  const quality=()=>!chosen()&&softwareGL()?1:resolution()>=175?3:2;
+  function applyResolution(){const s=current;if(s?.engine&&!s.lostContext){s.engine.setHardwareScalingLevel(1/pixelRatio());if(s.box)paint(s);}return resNow();}
+  /** Preview a resolution without keeping it (a slider being dragged); null goes back to the one kept. */
+  function previewResolution(pct){previewRes=pct===null||pct===undefined?null:resStep(pct);return applyResolution();}
+  /** Keep a resolution on this device and draw at it. */
+  function setResolution(pct){const n=resStep(pct);previewRes=null;try{localStorage.setItem(RES_KEY,String(n));}catch{/* drawn, not remembered */}applyResolution();return n;}
+  /* Its slider, wherever it is drawn (Settings › Play, the table's Settings window): one handler, here. */
+  const resWords=(el,n)=>{el.value=String(n);el.setAttribute('aria-valuetext',`${n}%`);const out=el.parentElement?.querySelector('output');if(out)out.textContent=`${n}%`;};
+  if(root.document){
+    document.addEventListener('input',ev=>{const el=ev.target.closest?.('[data-stage-resolution]');if(el)resWords(el,previewResolution(el.value));});
+    document.addEventListener('change',ev=>{const el=ev.target.closest?.('[data-stage-resolution]');if(el)resWords(el,setResolution(el.value));});
+  }
   function script(src, ready) {
     if (ready()) return Promise.resolve();
     return new Promise((resolve,reject)=>{
@@ -94,19 +133,22 @@
   }
   function load() {
     if (!library) library=script('vendor/babylon.js?v=9.30.0',()=>root.BABYLON)
-      .then(()=>script('crankmagic-stage-tables.js?v=2',()=>root.CrankTables)).catch(error=>{library=null;throw error;});
+      .then(()=>script('crankmagic-stage-tables.js?v=3',()=>root.CrankTables)).catch(error=>{library=null;throw error;});
     return library;
   }
   function environment(s) {
     const scene=appearances.backgrounds.find(x=>x.id===(s.opts.background || 'volcano')), board=s.host.closest('.cm-board');
     s.host.classList.toggle('has-video',!!scene?.video);
+    /* THE BACKDROP WHOLE (Rob, 2026-10-25: "The lava background shouldn't be so zoomed in by default ... use much more of
+       it"): the video is shown whole (crankmagic-stage.css), not cropped to cover a wide stage, and what is left at the
+       sides is its own poster, blurred, so the frame's edges melt into it rather than stopping at a bar. */
     if(!board || !scene?.video){s.environment?.remove();s.video?.pause();return;}
     if(!s.environment){
       s.environment=document.createElement('div');s.environment.className='cm-stage-environment';s.environment.setAttribute('aria-hidden','true');
       s.video=document.createElement('video');s.video.muted=true;s.video.defaultMuted=true;s.video.loop=true;s.video.playsInline=true;s.video.preload='metadata';s.video.setAttribute('tabindex','-1');s.environment.append(s.video);
       s.visibility=()=>environment(s);document.addEventListener('visibilitychange',s.visibility);
     }
-    if(s.video.getAttribute('src')!==scene.video){s.video.poster=scene.poster;s.video.src=scene.video;}
+    if(s.video.getAttribute('src')!==scene.video){s.video.poster=scene.poster;s.video.src=scene.video;s.environment.style.setProperty('--env-poster',`url("${scene.poster}")`);}
     if(s.environment.parentElement!==board)board.prepend(s.environment);
     if(s.opts.reduced || document.hidden)s.video.pause();else if(s.video.paused)s.video.play().catch(()=>{});
   }
@@ -126,8 +168,11 @@
       s.engine=new B.Engine(canvas,true,{preserveDrawingBuffer:true,stencil:true,alpha:true},true);
       s.engine.canvasTabIndex=-1;
       canvas.tabIndex=-1; // Babylon defaults to a tab stop; keyboard controls live in the DOM Camera menu.
-      s.engine.setHardwareScalingLevel(1/Math.min(root.devicePixelRatio||1,1.5));
+      s.engine.setHardwareScalingLevel(1/pixelRatio());
       s.scene=new B.Scene(s.engine);s.scene.detachControl();s.scene.clearColor=new B.Color4(0,0,0,0);
+      /* Full color, no banding: the painted skins are 32-bit, and a dither of one step hides the bands a smooth gradient of
+         light leaves in an 8-bit-per-channel frame. */
+      s.scene.imageProcessingConfiguration.ditheringEnabled=true;s.scene.imageProcessingConfiguration.ditheringIntensity=1/255;
       s.camera=new B.FreeCamera('table camera',new B.Vector3(0,40,-30),s.scene);
       s.camera.minZ=.1;s.camera.maxZ=200;s.scene.activeCamera=s.camera;
       const fill=new B.HemisphericLight('sky',new B.Vector3(0,1,0),s.scene);fill.intensity=.95;fill.groundColor=new B.Color3(.12,.09,.07);
@@ -141,9 +186,29 @@
     }).catch(error=>{s.scene?.dispose();s.engine?.dispose();s.engine=null;fail(s,error.message);});
     return s.ready;
   }
+  /* SHARP CARDS ON THE MATS (Rob, 2026-10-25: "Note how blurry the cards on the mat are as compared to cards in the hand.
+     When I zoom in, the resolution should be sharp and high enough that the text can become easily readable on the
+     board."). A mat is DOM, laid out flat and set on the table by a perspective matrix, and the browser paints such a
+     layer at its own CSS size and then magnifies that picture: a card near the camera, or with the camera zoomed in, was a
+     blown-up thumbnail (tests/board-card-sharpness.mjs measured 15% of its picture's fine detail, the hand 53%). Each mat
+     is now laid out `k` times larger -- its content zoomed by k (crankmagic-stage.css, --mat-zoom) -- and its matrix
+     shrinks it back by k, so it is painted with k times the pixels a side. k is the most the camera magnifies the mat
+     (the longest edge of its drawn quad over its own length) times the Graphics resolution (150% by default), rounded
+     up, from 2 to 4; the browser already paints for the screen's own pixel density. A mat drawn no larger than itself
+     (the opponents' at rest) stays at 1: painting it larger only to shrink it would lose detail. */
+  function sharpness(r){
+    const q=r.quad,edge=(a,b)=>Math.hypot(q[b]-q[a],q[b+1]-q[a+1]);
+    const mag=Math.max(edge(0,2)/r.width,edge(6,4)/r.width,edge(0,6)/r.height,edge(2,4)/r.height);
+    return mag<=1.05?1:clamp(Math.ceil(mag*resNow()/100-.05),2,4);
+  }
+  /* k changes only once the camera has settled: laying a mat out again mid-motion would cost the motion its frames. */
   function position(el,r) {
     if(!el||!r)return;
-    Object.assign(el.style,{left:'0px',top:'0px',width:`${r.width}px`,height:`${r.height}px`,transformOrigin:'0 0',transform:`matrix3d(${r.matrix.join(',')})`});
+    const want=sharpness(r),k=Number(el.dataset.sharp)||want,m=r.matrix.map((v,i)=>i<8?v/k:v);
+    clearTimeout(el.sharpLater);
+    if(want!==k)el.sharpLater=setTimeout(()=>{if(!el.isConnected||!current?.box)return;el.dataset.sharp=String(want);place(current);},250);
+    Object.assign(el.style,{left:'0px',top:'0px',width:`${r.width*k}px`,height:`${r.height*k}px`,transformOrigin:'0 0',transform:`matrix3d(${m.join(',')})`});
+    el.style.setProperty('--mat-zoom',String(k));el.dataset.sharp=String(k);
   }
   function layout(box,opts={}) {
     if(!current)return;
@@ -152,6 +217,7 @@
   }
   /* The DOM surfaces and the Babylon camera, from one geometry: at every layout, and at every frame of a camera motion. */
   function place(s) {
+    root.CrankTables?.hold?.();
     const g=geometry(s.box.width,s.box.height,{...s.opts,look:s.pose,seats:Math.max(0,(s.opts.mats||[]).length-1)});
     s.view=g;
     for(const [i,el] of [...s.host.querySelectorAll('.cm-stage-rear')].entries()) {position(el,g.rear[i]);if(g.rear[i])el.style.setProperty('--rear-card',`${Math.max(18,(g.rear[i].height-28)/4.8)}px`);}
@@ -162,13 +228,16 @@
   function paint(s,given) {
     if(current!==s||!s.engine||!s.box)return;
     const B=root.BABYLON,g=given||geometry(s.box.width,s.box.height,{...s.opts,look:s.pose}),unit=50;
-    s.engine.setSize(g.width,g.height);
-    const design=tableDesign(s.opts.table).id,key=[design,g.width,g.planeHeight].join(':');
+    /* Drawn at the resolution's pixels, shown at the stage's CSS size (crankmagic-stage.css sizes the canvas). */
+    const ratio=pixelRatio();s.engine.setSize(Math.round(g.width*ratio),Math.round(g.height*ratio));
+    const q=quality(),design=tableDesign(s.opts.table).id,key=[design,g.width,g.planeHeight,q].join(':');
     /* While the person's side is being stretched (opts.live) the table already built is stretched to the new length,
        not built again at every move; it is built at its length when the stretch is let go. */
     if(s.tableKey!==key&&!(s.opts.live&&s.table&&s.tableKey.startsWith(`${design}:${g.width}:`))){
       s.table?.dispose();
-      s.table=root.CrankTables.build(B,s.scene,design,{width:g.width/unit,depth:g.planeHeight/unit});
+      /* Its skins are painted off the page and arrive after it stands (crankmagic-stage-paint.js): drawn again as each does. */
+      s.table=root.CrankTables.build(B,s.scene,design,{width:g.width/unit,depth:g.planeHeight/unit,quality:q,
+        onPainted:()=>{if(current===s&&s.engine&&!s.lostContext)s.scene.executeWhenReady(()=>{if(current===s&&!s.lostContext)s.scene.render();});}});
       s.table.root.position.y=.225;s.tableKey=key;s.tableDepth=g.planeHeight/unit;s.builds=(s.builds||0)+1;
     }
     // Its center is the plane's: half the added length nearer the viewer than the resting center.
@@ -261,12 +330,17 @@
     const corners=[[-W,D],[W,D],[W,-D],[-W,-D]].flatMap(([x,z])=>{
       const p=B.Vector3.Project(new B.Vector3(x,-.225,z),world,s.scene.getTransformMatrix(),new B.Viewport(0,0,g.width,g.height));return [p.x,p.y];
     });
-    const front=s.host.querySelector('.cm-stage-front'),shown=front?Array.from(new DOMMatrix(getComputedStyle(front).transform).toFloat64Array()):null;
+    /* The projection the DOM draws: its transform after the scale(k) of a mat laid out k times larger (sharpness). */
+    const front=s.host.querySelector('.cm-stage-front'),k=Number(front?.dataset.sharp||1),shown=front?Array.from(new DOMMatrix(getComputedStyle(front).transform).toFloat64Array()).map((v,i)=>i<8?v*k:v):null;
     return {renderer:'babylon',meshes:s.scene.meshes.length,parts:[...new Set(s.table.parts.map(p=>p.metadata.part))],materials:s.scene.materials.length,textures:s.scene.textures.length,quad:corners,domQuad:g.quad,
       camera:{position:s.camera.position.asArray(),rotation:s.camera.rotation.asArray()},pan:{...g.pan},
       look:s.look?{t:s.look.t,dir:s.look.dir,ms:s.look.aim.ms,r:s.look.aim.r,clock:s.look.last,started:s.look.started,back:s.look.back,at:g.project(...planeOf(g,s.look.aim.point))}:null,
       center:[g.width/2,g.screenY],front:{shown,matrix:g.front.matrix,height:g.front.height,quad:g.front.quad},rear:g.rear.map(r=>({height:r.height,width:r.width})),
-      length:{base:g.base,reach:g.reach,most:g.reachMost,plane:g.planeHeight,built:s.tableDepth*50,scale:s.table.root.scaling.z,builds:s.builds}};
+      length:{base:g.base,reach:g.reach,most:g.reachMost,plane:g.planeHeight,built:s.tableDepth*50,scale:s.table.root.scaling.z,builds:s.builds},
+      graphics:{resolution:resNow(),software:softwareGL(),ratio:pixelRatio(),canvas:[s.canvas.width,s.canvas.height],css:[s.canvas.clientWidth,s.canvas.clientHeight],dither:s.scene.imageProcessingConfiguration.ditheringEnabled,
+        design:s.table.design.id,size:s.table.size,painted:s.table.painted,inked:s.table.parts.filter(p=>p.edgesRenderer).length,
+        textures:s.table.textures.map(t=>({name:t.name,width:t.metadata.width,height:t.metadata.height,colors:t.metadata.colors,bits:t.format===B.Engine.TEXTUREFORMAT_RGBA&&t.textureType===B.Engine.TEXTURETYPE_UNSIGNED_BYTE?32:0,mips:!t.noMipmap,aniso:t.anisotropicFilteringLevel})),
+        bumps:s.table.parts.filter(p=>p.material?.bumpTexture).length,parts:s.table.parts.length}};
   }
   function unmount() {
     const s=current;current=null;if(!s)return;
@@ -275,5 +349,6 @@
     if(s.canvas){s.canvas.removeEventListener('webglcontextlost',s.lost);s.canvas.remove();}
     s.scene?.dispose();s.engine?.dispose();
   }
-  root.CrankStage=Object.freeze({geometry,carousel,appearances,tableDesign,DEFAULT_TABLE,mount,layout,unmount,diagnostics,look,unlook,pick});
+  root.CrankStage=Object.freeze({geometry,carousel,appearances,tableDesign,DEFAULT_TABLE,mount,layout,unmount,diagnostics,look,unlook,pick,
+    resolution,previewResolution,setResolution,RESOLUTION:Object.freeze({key:RES_KEY,min:RES_MIN,max:RES_MAX,default:RES_DEFAULT})});
 })(globalThis);

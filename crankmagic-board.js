@@ -129,7 +129,7 @@ globalThis.CrankBoard = Object.seal({
   let mode = (() => {try {const v = localStorage.getItem(VIEW_KEY); return VIEWS.some(([k]) => k === v) ? v : "full";} catch {return "full";}})();
   let inspection = null, inspectionFrom = null, actionsShut = false;
   let actionCard = null, draftRevision = null;
-  let stackSelected = null, stackFor = null;
+  let stackSelected = null, stackFor = null, landsOpen = null;
   let selected = null, hover = null;   /* Full screen: the card shown large in the side column (picked, and under the pointer) */
   let showing = null, held = null;     /* Show hand: null, "fan" or "held"; the card held up */
   /* Turns that went by while you waited: said for a few seconds, then put away by itself -- nothing to acknowledge (Rob,
@@ -732,12 +732,21 @@ globalThis.CrankBoard = Object.seal({
       <div class="cm-actions cm-board-menu-row">${gb(COACH, "Recommended actions", "board-coach", {}, {cls: ""})}${b("Table vitals", "board-vitals", {})}${b("AI Coach settings…", "ai-settings", {})}</div>
       ${priority}
       <div class="cm-board-size">${C.cardScaleSlider()}<p class="cm-muted">${lo}% – ${hi}% · the table's size: it sets Board cards and Hand cards too · remembered on this device · ⌘/Ctrl + / − also work</p></div>
+      ${resolutionSlider()}
       ${soundMenu()}
       <div class="cm-actions cm-board-menu-row">${b("Try the callouts", "board-callout-demo", {}, false, {cls: "compact"})}<span class="cm-muted">Overlay ${overlay()}% · set in Settings › Play</span></div>
       <p class="cm-muted">End game stops it for everyone and keeps its record. Concede leaves it to the others.</p>
       <div class="cm-actions">${end}${b("Concede", "board-concede", {}, false, {disabled: over || left})}</div></div>`;
   }
 
+  /* Graphics resolution (crankmagic-stage.js, which handles the slider wherever it is): previewed as it moves, Cancel
+     puts it back with the rest. */
+  function resolutionSlider() {
+    const S = globalThis.CrankStage;
+    if (!S?.resolution) return "";
+    const v = S.resolution(), R = S.RESOLUTION;
+    return `<div class="cm-board-size"><label class="cm-settings-slider">Graphics resolution <input type="range" min="${R.min}" max="${R.max}" step="10" value="${v}" data-stage-resolution aria-label="Graphics resolution" aria-valuetext="${v}%"><output>${v}%</output></label><p class="cm-muted">${R.min}% – ${R.max}% of the screen's pixels · this device</p></div>`;
+  }
   /* SETTINGS IS A WINDOW (Rob, 2026-10-25: "when I press "Settings" in the dropdown, the settings screen should be a
      pop-up window with close in the top right, and save and cancel in the bottom right. The window should be reactive to
      the browser size."). Opened inside the Profile menu it ran past the bottom of the screen, and nothing scrolled it.
@@ -745,7 +754,7 @@ globalThis.CrankBoard = Object.seal({
      previews as it moves; Save keeps what is set, and Cancel, ✕, Escape, a press outside or any button that leaves it
      (Concede, Recommended actions, …) put back what was set when it opened. */
   const SETTINGS_LEAVE = new Set(["board-skip", "board-coach", "board-callout-demo", "board-concede", "board-vitals", "ai-settings", "board-modules-settings"]);
-  const settingsKeys = () => [HOLD_KEY, SKIP_KEY, SCALE_KEY.board, SCALE_KEY.hand, "cm-card-scale:board"];
+  const settingsKeys = () => [HOLD_KEY, SKIP_KEY, SCALE_KEY.board, SCALE_KEY.hand, "cm-card-scale:board", "cm-stage-resolution"];
   function settingsNow() {
     const a = sound();
     return {kept: Object.fromEntries(settingsKeys().map((k) => [k, stored(k)])), sound: a ? a.volumes() : null};
@@ -756,6 +765,7 @@ globalThis.CrankBoard = Object.seal({
     for (const [k, v] of Object.entries(before.kept)) try {if (v === null) localStorage.removeItem(k); else localStorage.setItem(k, v);} catch {/* applied, not remembered */}
     if (skipEmpty() !== skipWas) prefer();
     C.setCardScale(C.cardScale(), {save: false});
+    globalThis.CrankStage?.previewResolution?.(null);
     document.dispatchEvent(new CustomEvent("cm-card-scale", {detail: {live: false}}));
     const a = sound(), v = before.sound;
     if (a && v) {
@@ -1345,6 +1355,19 @@ globalThis.CrankBoard = Object.seal({
       return `<span class="cm-board-same"><button type="button" class="v-button compact${k ? " is-picked" : ""}${riskCls(r)}" data-action="board-option-same" data-same="${ids.join(",")}" aria-pressed="${k > 0}"${peekOf(s[0])}${sending ? " disabled" : ""}>${riskMark(r)}${e(s[0].label)} <span class="cm-board-same-n">×${s.length}</span></button>${many
         ? `<input type="number" class="cm-board-same-count" min="0" max="${room}" step="1" value="${k}" data-board-same="${ids.join(",")}" aria-label="How many ${e(s[0].label)}"${sending ? " disabled" : ""}>` : ""}</span>`;
     };
+    /* LANDS LAST, FOLDED (Rob, 2026-10-25: "When being given action options that target cards, if the rules allow lands
+       (e.g. permanents), always show lands after every other option under a subheader, "lands" and by default have it
+       collapsed."): in a question of targets that offers lands beside other things, the lands come after everything
+       else, in a "Lands" group shut until opened -- open while a land is picked, and as the player left it for this
+       question. Only targets: a cost's question (what to tap) is about lands and keeps them in view. */
+    const targeting = /^(?:choose|trigger)-targets?:/.test(String(d.id)) || d.options.some((o) => o.target);
+    const isLand = (s) => targeting && s.every((o) => o.cardId !== undefined && findCard(o.cardId)?.types?.includes("Land"));
+    const grouped = (stacks) => {
+      const lands = stacks.filter(isLand), rest = stacks.filter((s) => !isLand(s));
+      if (!lands.length || !rest.length) return stacks.map(stackOpt).join("");
+      const open = landsOpen === d.id || lands.some((s) => s.some((o) => picked.includes(o.index)));
+      return rest.map(stackOpt).join("") + `<details class="cm-board-lands-group" data-lands-for="${e(d.id)}"${open ? " open" : ""}><summary>Lands <span class="cm-board-lands-n">${lands.reduce((n, s) => n + s.length, 0)}</span></summary><div class="cm-board-lands-options">${lands.map(stackOpt).join("")}</div></details>`;
+    };
     let body = "", foot = "";
     if (d.kind === "priority") {
       /* Pass is the strip's; this is what else you can do, one button per kind of thing, the same land four
@@ -1368,7 +1391,7 @@ globalThis.CrankBoard = Object.seal({
       body = actionCard === null ? rows.map(each).join("") : withManaRow(rows.map((r) => r.o), (o) => each({o, n: count.get(o)}), true);
       return `<section class="cm-board-decision is-also" id="cm-board-decision" aria-label="What you can do">${actionCard === null ? "" : `<button type="button" class="cm-board-back" data-action="board-action-all">${CHEV_LEFT}<span>All actions</span></button>`}<h3>${actionCard === null ? "Choose an action" : e(findCard(actionCard)?.name || "Choose an action")}</h3>${deskCard()}<div class="cm-board-options">${body}</div>${commitReview(d)}</section>`;
     }
-    if (["one", "boolean", "index"].includes(d.mode)) {body = (d.mode === "one" ? sameStacks(d) : d.options.map((o) => [o])).map(stackOpt).join(""); foot = commitReview(d);}
+    if (["one", "boolean", "index"].includes(d.mode)) {body = d.mode === "one" ? grouped(sameStacks(d)) : d.options.map((o) => [o]).map(stackOpt).join(""); foot = commitReview(d);}
     else if (blocking()) {
       body = blockDraft();
       foot = `${b("No blocks", "board-block-none", {}, false, {disabled:sending})}${b(picked.length ? "Confirm blocks" : "Confirm no blocks", "board-confirm", {}, true, {disabled:!blockValid() || sending})}`;
@@ -1390,7 +1413,7 @@ globalThis.CrankBoard = Object.seal({
       const allAt = atPlayers.length ? `<div class="cm-board-attack-all" role="group" aria-label="Attack with every creature that can">${atPlayers.map((id) =>
         b(`All at ${players().find((p) => p.playerId === id)?.name ?? `Seat ${id + 1}`}`, "board-attack-all", {defender: String(id)}, false, {cls: "compact", disabled: sending})).join("")}${picked.length
         ? b("None", "board-attack-none", {}, false, {cls: "compact", disabled: sending}) : ""}</div>` : "";
-      body = allAt + sameStacks(d).map(stackOpt).join("");
+      body = allAt + grouped(sameStacks(d));
       const ok = picked.length >= d.min && picked.length <= d.max;
       foot = `<span class="cm-muted">${picked.length} chosen · ${d.min === d.max ? d.min : `${d.min} to ${d.max}`}</span>${b("Confirm", "board-confirm", {}, true, {disabled: !ok || sending})}`;
     } else if (d.mode === "order") {
@@ -3372,6 +3395,8 @@ globalThis.CrankBoard = Object.seal({
     if (el && !showing && !el.closest("#cm-card-inspector, .cm-board-peek")) peek(el);
   });
   document.addEventListener("focusout", event => {if (event.target.closest?.("#cm-board .cm-bcard[data-card], #cm-board [data-peek-card]")) peek(null);});
+  /* The Lands group's open or shut, kept for its question as the board redraws (toggle does not bubble: caught going down). */
+  document.addEventListener("toggle", (event) => {const el = event.target; if (el.matches?.(".cm-board-lands-group")) landsOpen = el.open ? el.dataset.landsFor : null;}, true);
   document.addEventListener("pointerout", (event) => {
     const named = event.target.closest?.("#cm-board [data-peek-card]");
     if (named && !named.contains(event.relatedTarget)) {peek(null); return;}

@@ -327,8 +327,10 @@ try {
         const geometry=CrankStage.geometry(r.width,r.height,{tilt,zoom,seats:3});
         const regions=[document.querySelector('.cm-stage-front'),...document.querySelectorAll('.cm-stage-rear')];
         const matrices=regions.map((el,i)=> {
-          const actual=new DOMMatrix(getComputedStyle(el).transform).toFloat64Array();
-          return Array.from(actual).every((v,j)=>Math.abs(v-[geometry.front,...geometry.rear][i].matrix[j])<.01);
+          /* A mat laid out k times larger for sharpness (crankmagic-stage.js, sharpness) carries the matrix shrunk by k:
+             its transform after the scale(k) of its layout is the geometry's. */
+          const actual=new DOMMatrix(getComputedStyle(el).transform).toFloat64Array(),k=Number(el.dataset.sharp||1);
+          return Array.from(actual).every((v,j)=>Math.abs((j<8?v*k:v)-[geometry.front,...geometry.rear][i].matrix[j])<.01);
         });
         const front=regions[0], card=front.querySelector('.cm-bcard:not(.is-tapped)'), inverse=new DOMMatrix(getComputedStyle(front).transform).inverse();
         const corners=[[0,0],[card.offsetWidth,0],[card.offsetWidth,card.offsetHeight],[0,card.offsetHeight]].map(([x,y])=>{
