@@ -1,14 +1,21 @@
 {
   "auditFindingCount": 129,
-  "note": "Mapping is source traceability, not a claim of resolution. Unmapped findings remain open unless explicitly superseded.",
+  "note": "Mappings are source traceability. verified_local and baseline_reconciled_local are bounded local evidence, not full release or live-service acceptance; partial/open/unmapped findings remain visible.",
   "findings": [
     {
       "id": "F-001",
       "changes": [
         "CH-70"
       ],
-      "status": "pending_verification",
-      "summary": "Two competing 'start' doors above the fold plus four more below"
+      "status": "verified_local",
+      "summary": "Two competing 'start' doors above the fold plus four more below",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Verified",
+        "detail": "L + J; `01-landing-desktop.png`, `01-landing-phone.png`. One rendered primary; other-start methods share the chooser. This is hierarchy evidence, not removal of every secondary navigation door.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-002",
@@ -21,16 +28,30 @@
       "changes": [
         "CH-70"
       ],
-      "status": "pending_verification",
-      "summary": "'A new version of CrankMagic is ready. Reload' appears over the hero within seconds"
+      "status": "verified_local",
+      "summary": "'A new version of CrankMagic is ready. Reload' appears over the hero within seconds",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Verified",
+        "detail": "U installs a real waiting worker and proves deferred notice/takeover, explicit Reload and session Dismiss. `work/r4-shots/new-version-ready-1280.png`. No automatic refresh of a live game.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-004",
       "changes": [
         "CH-70"
       ],
-      "status": "pending_verification",
-      "summary": "The signed-in header says 'Open your decks' while the nav says 'Decks' and the door says 'DECKS · I have a commander in mind'"
+      "status": "verified_local",
+      "summary": "The signed-in header says 'Open your decks' while the nav says 'Decks' and the door says 'DECKS · I have a commander in mind'",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Verified",
+        "detail": "L + J; final landing screenshots use the agreed Decks/Open my decks vocabulary and quiet verb-based doors.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-005",
@@ -61,8 +82,15 @@
       "changes": [
         "CH-71"
       ],
-      "status": "pending_verification",
-      "summary": "'Six decks, all playable' was stale after creating a deck: the grid did not refresh until a filter was clicked"
+      "status": "verified_local",
+      "summary": "'Six decks, all playable' was stale after creating a deck: the grid did not refresh until a filter was clicked",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Verified",
+        "detail": "H + J; J creates its deck then immediately reads the live count of 1 without reload/filter changes; `02-decks-live-count.png`.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-010",
@@ -129,16 +157,30 @@
       "changes": [
         "CH-71"
       ],
-      "status": "pending_verification",
-      "summary": "'Next' closes the wizard and drops the player on an unchanged Decks grid"
+      "status": "verified_local",
+      "summary": "'Next' closes the wizard and drops the player on an unchanged Decks grid",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Verified",
+        "detail": "N asserts the actual saved commander-only deck; handoff opens the Lab/deck and names the deck. J follows the same saved deck; `02-created-commander-only.png`.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-021",
       "changes": [
         "CH-72"
       ],
-      "status": "pending_verification",
-      "summary": "A one-card deck shows 'Playable at the table' and 'B2'"
+      "status": "partially_verified_local",
+      "summary": "A one-card deck shows 'Playable at the table' and 'B2'",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Partially verified",
+        "detail": "P rejects one-card online play eligibility and tests serialized single/partner 100-card decks; J captures the one-card Building state. Bracket remains an independently declared deck setting; this work does not reinterpret a B2 label as a legality certificate.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-022",
@@ -151,8 +193,15 @@
       "changes": [
         "CH-72"
       ],
-      "status": "pending_verification",
-      "summary": "'Playable at the table · all 1 cards known' and a 'Play this deck' button on a one-card deck"
+      "status": "verified_local",
+      "summary": "'Playable at the table · all 1 cards known' and a 'Play this deck' button on a one-card deck",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Verified",
+        "detail": "P + J; exact serialized count gates online Play, including commander quantity conventions. Engine support and physical Boxed readiness remain separate facts. Late `/known` reads cannot mutate another deck/rerender.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-024",
@@ -195,8 +244,15 @@
       "changes": [
         "CH-73"
       ],
-      "status": "pending_verification",
-      "summary": "Primary composition is required but shows 'Choose…' with no required marker; failure is a dot on the tab"
+      "status": "partially_verified_local",
+      "summary": "Primary composition is required but shows 'Choose…' with no required marker; failure is a dot on the tab",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Partially verified",
+        "detail": "N tests composition failure routing; field-level required feedback replaces the dot presentation. J proves blank-name feedback/focus/contrast. The final joined test does not separately assert composition's computed required marker and every composition failure permutation.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-031",
@@ -221,8 +277,15 @@
       "changes": [
         "CH-73"
       ],
-      "status": "pending_verification",
-      "summary": "Validation failure is a 6 px dot after 'Gameplay' and focus on the wrong field"
+      "status": "verified_local",
+      "summary": "Validation failure is a 6 px dot after 'Gameplay' and focus on the wrong field",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Verified",
+        "detail": "N + J; empty name produces its own required field feedback and receives focus; composition validation remains covered in N. `02-create-invalid.png`; J error contrast measured in three modes.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-035",
@@ -253,8 +316,15 @@
       "changes": [
         "CH-74"
       ],
-      "status": "pending_verification",
-      "summary": "The 'NEXT' band says 'Lock the list when it is settled' while the header says 'The table cannot play these yet: Bruna, Triplicate Titan, …'"
+      "status": "verified_local",
+      "summary": "The 'NEXT' band says 'Lock the list when it is settled' while the header says 'The table cannot play these yet: Bruna, Triplicate Titan, …'",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Verified",
+        "detail": "D + T + P: blocked engine readiness wins in header/Next; stale readiness cannot overwrite another screen. `work/r4-shots/deck-to-learn-1400.png`. J sweeps all deck tabs for competing primaries; `03-build-hundred.png`.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-040",
@@ -285,8 +355,15 @@
       "changes": [
         "CH-75"
       ],
-      "status": "pending_verification",
-      "summary": "The report scores (73 of 100) but offers no path from a weak check to a change"
+      "status": "verified_local",
+      "summary": "The report scores (73 of 100) but offers no path from a weak check to a change",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Verified",
+        "detail": "D asserts weakest normalized report component; J follows Fix in Explore with deck/report/axis and score context; `04-measure-fixture.png`, `06-graph-sapphire-light-phone.png`. Report is deliberately a saved fixture: no simulation quality or provider outcome is inferred.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-045",
@@ -365,8 +442,15 @@
       "changes": [
         "CH-80"
       ],
-      "status": "pending_verification",
-      "summary": "The deck says 46 to buy / $69.99; the To buy tab says 66; the review said $57.11; the row group says '47 records · 47 copies · $69.99'"
+      "status": "partially_verified_local",
+      "summary": "The deck says 46 to buy / $69.99; the To buy tab says 66; the review said $57.11; the row group says '47 records · 47 copies · $69.99'",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Partially verified",
+        "detail": "D tests common rung counts for header/Acquire/scoped To buy on a mixed fixture. J sees the same 100 missing copies through Acquire and Library; `07-acquire.png`. Historical price snapshots/review estimates can legitimately differ; this does not certify a global, live, single price quote across all review modes.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-058",
@@ -409,8 +493,15 @@
       "changes": [
         "CH-81"
       ],
-      "status": "pending_verification",
-      "summary": "Sharing is a dead end: a menu item that produces a red toast"
+      "status": "verified_local",
+      "summary": "Sharing is a dead end: a menu item that produces a red toast",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Verified",
+        "detail": "S + J: immediate dialog, privacy/visibility/copy, failed fetch stays actionable, retry succeeds; `09-share-failure.png`, `10-share-phone.png`. No real recipient or external share permission was changed by these fixture runs.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-065",
@@ -423,8 +514,15 @@
       "changes": [
         "CH-82"
       ],
-      "status": "pending_verification",
-      "summary": "First click on 'Lock list' gave no response for several seconds; the dialog appeared only after a Scryfall check failed"
+      "status": "verified_local",
+      "summary": "First click on 'Lock list' gave no response for several seconds; the dialog appeared only after a Scryfall check failed",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Verified",
+        "detail": "K disables the button and sets busy feedback before the pending read resolves; repeated activation commits once; receipt/Undo is transaction-bound. J locks the same test deck. The bounded DOM test proves execution order, not an independently timed 100ms paint measurement.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-067",
@@ -437,104 +535,195 @@
       "changes": [
         "CH-83"
       ],
-      "status": "pending_verification",
-      "summary": "The action row changed to six buttons and the Next band reads 'add the 53 cards you already own (Ready to add), then buy 46 cards ($69.99), and 1 more step.'"
+      "status": "baseline_reconciled_local",
+      "summary": "The action row changed to six buttons and the Next band reads 'add the 53 cards you already own (Ready to add), then buy 46 cards ($69.99), and 1 more step.'",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Preserved baseline reconciliation",
+        "detail": "EX-10 and newer main Planned Changes C1–C8 supersede Ready to add/Do all. B + J use its selected add/remove plan and confirmed batch; stage-aware primary normalization prevents a second dominant deck action. No obsolete six-button row was reintroduced.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-069",
       "changes": [
         "CH-83"
       ],
-      "status": "pending_verification",
-      "summary": "Four stat cards of 10 numbers each sit above the 100-row sheet; the formula sentence sits between title and cards"
+      "status": "baseline_reconciled_local",
+      "summary": "Four stat cards of 10 numbers each sit above the 100-row sheet; the formula sentence sits between title and cards",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Preserved baseline reconciliation",
+        "detail": "New Planned Changes displays the compact removed/added/total counter tested in B. The old four-card sheet is not restored just to add a collapse control. This does not settle density of every other statistics panel.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-070",
       "changes": [
         "CH-83"
       ],
-      "status": "pending_verification",
-      "summary": "'Do all available (53)' is the primary button and it mutates 53 ownership rows with no confirm"
+      "status": "baseline_reconciled_local",
+      "summary": "'Do all available (53)' is the primary button and it mutates 53 ownership rows with no confirm",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Preserved baseline reconciliation",
+        "detail": "B proves ticks do not mutate; Swap opens confirmation and one batch/Undo. J confirms the isolated 100-card plan. This supersedes the old Do-all verb; it is not a claim that the obsolete button still exists.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-071",
       "changes": [
         "CH-83"
       ],
-      "status": "pending_verification",
-      "summary": "Rows read '— nothing comes out → PUT IN <card> · Bench · on the list, not yet in the box'"
+      "status": "baseline_reconciled_local",
+      "summary": "Rows read '— nothing comes out → PUT IN <card> · Bench · on the list, not yet in the box'",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Preserved baseline reconciliation",
+        "detail": "B verifies the newer two-column thumbnail/name/color/role rows and planned pairing. Old arrow sentences are not preserved. No claim of a complete prose review of every uncommon slot role.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-072",
       "changes": [
         "CH-83"
       ],
-      "status": "pending_verification",
-      "summary": "No 'box done' moment: after Do all available, nothing marks the deck Boxed or sends the player to Play"
+      "status": "verified_local",
+      "summary": "No 'box done' moment: after Do all available, nothing marks the deck Boxed or sends the player to Play",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Verified",
+        "detail": "J completes the same fixture plan and sees Boxed plus Take it to the table; `08-box-complete.png`. Physical inventory completion is independent of the online engine support check.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-073",
       "changes": [
         "CH-84"
       ],
-      "status": "pending_verification",
-      "summary": "Three doors (New table, Choose a deck, Set up an AI game) plus an invitation field; 'Choose a deck' is a link that leaves Play"
+      "status": "partially_verified_local",
+      "summary": "Three doors (New table, Choose a deck, Set up an AI game) plus an invitation field; 'Choose a deck' is a link that leaves Play",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Partially verified",
+        "detail": "T + J prove the main New table door and inline deck selection inside Play; `11-play-home-phone.png`, `12-new-table-phone.png`. A secondary AI setup shortcut and join invitation field intentionally remain; there is not literally one entry control on Play home.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-074",
       "changes": [
         "CH-84"
       ],
-      "status": "pending_verification",
-      "summary": "Three 'not connected yet' notices on one page (lounge chat, public discovery, leaderboard)"
+      "status": "open",
+      "summary": "Three 'not connected yet' notices on one page (lounge chat, public discovery, leaderboard)",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Open",
+        "detail": "Source still renders separate truthful availability statements for public discovery, lounge chat and cross-player leaderboard. Their truthfulness does not resolve the repeated empty-service density complaint.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-075",
       "changes": [
         "CH-84"
       ],
-      "status": "pending_verification",
-      "summary": "Seats are laid out 4-3 / 2-You, deck select and 'Set the table' are below the fold; name is required but unmarked"
+      "status": "partially_verified_local",
+      "summary": "Seats are laid out 4-3 / 2-You, deck select and 'Set the table' are below the fold; name is required but unmarked",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Partially verified",
+        "detail": "T + J verify required name marking/focus, inline setup and reachable controls; `12-new-table-phone.png`. The table arrangement remains 4-3/2-You, and phone setup necessarily scrolls. No claim that the submit is above the fold at every viewport.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-076",
       "changes": [
         "CH-84"
       ],
-      "status": "pending_verification",
-      "summary": "Validation toast 'Give your name at the table.' appears at the bottom, away from the empty field, with no field marking"
+      "status": "verified_local",
+      "summary": "Validation toast 'Give your name at the table.' appears at the bottom, away from the empty field, with no field marking",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Verified",
+        "detail": "T + J assert inline error, invalid field/focus and no distant validation toast; `12-new-table-phone.png`. J measures nonempty feedback contrast in three modes.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-077",
       "changes": [
         "CH-84"
       ],
-      "status": "pending_verification",
-      "summary": "Selecting a deck inserts a line 'You bring D6 Krenko to seat 1' above the seats, shifting the layout and moving the button under the pointer"
+      "status": "verified_local",
+      "summary": "Selecting a deck inserts a line 'You bring D6 Krenko to seat 1' above the seats, shifting the layout and moving the button under the pointer",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Verified",
+        "detail": "T records Set the table Y before/after deck selection and asserts equality. Reserved preview area prevents the shift; `work/r4-shots/table-bring-1400.png`, `table-bring-there-1400.png`.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-078",
       "changes": [
         "CH-85"
       ],
-      "status": "pending_verification",
-      "summary": "'Ready' is a small 12 px button among Change deck / Choose mat; the Table rules card with Start sits in the middle of the mats"
+      "status": "partially_verified_local",
+      "summary": "'Ready' is a small 12 px button among Change deck / Choose mat; the Table rules card with Start sits in the middle of the mats",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Partially verified",
+        "detail": "T proves host/guest Ready and other controls reachable at desktop/intermediate/phone sizes and Start/countdown/Cancel flow. The source chooses Ready or unblocked Start as primary. No exhaustive three-theme visual census of every lobby readiness combination was executed.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-079",
       "changes": [
         "CH-85"
       ],
-      "status": "pending_verification",
-      "summary": "AI seat says 'Pending · Choosing a deck' with a green 'Choose its deck' button: the host must choose for the AI"
+      "status": "verified_local",
+      "summary": "AI seat says 'Pending · Choosing a deck' with a green 'Choose its deck' button: the host must choose for the AI",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Verified",
+        "detail": "P exercises host-authorized deterministic auto-assignment through real existing known/deck command shapes, validates a public precon before assignment, skips assigned seats and preserves manual override. No private deck list or model call. With no eligible deck/server failure, the UI reports a recoverable failure rather than falsely claiming selection. No later seat-kind endpoint exists.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-080",
       "changes": [
         "CH-85"
       ],
-      "status": "pending_verification",
-      "summary": "The chooser lists 'Shared decks' and 'Your library decks' with the same decks appearing in both under different names (D3 Kiora vs D3 Kasmina, D5 Teysa Karlov vs D5 Shadrix)"
+      "status": "verified_local",
+      "summary": "The chooser lists 'Shared decks' and 'Your library decks' with the same decks appearing in both under different names (D3 Kiora vs D3 Kasmina, D5 Teysa Karlov vs D5 Shadrix)",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Verified",
+        "detail": "Follow-up `f81ae7ca`; P + T155 prove one Your decks list using current library names, exact expanded commander/card-multiset matching removes stale-name shared duplicates, differing quantities/contents remain Shared with the table, and distinct local deck IDs are never merged by name. The shared projection exposes no source ID, so contents are compared rather than inventing identity. The labeled Only table-legal decks filter defaults on and remembers explicit opt-out; final server admission remains authoritative. Six public precons remain separately available in their catalog disclosure. `work/r4-shots/chooser-canonical-shared-1400.png` inspected; its same-name shared row is deliberately a different-content fixture, not the stale duplicate. Existing permission recheck and no-import submission path retained.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-081",
@@ -653,8 +842,15 @@
       "changes": [
         "CH-86"
       ],
-      "status": "pending_verification",
-      "summary": "'Game in progress · Rob · AI · Resume your table' is a small line inside the hero; the sidebar shows 'Game on · Turn 1 · Return'"
+      "status": "partially_verified_local",
+      "summary": "'Game in progress · Rob · AI · Resume your table' is a small line inside the hero; the sidebar shows 'Game on · Turn 1 · Return'",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Partially verified",
+        "detail": "Home now promotes the retained table hero with Resume/Leave and available public commanders/turn/life. P proves Leave only disconnects, preserves the saved table shortcut and returns to the same table. Live summary comes from Play's public `C.board.live()` contract; a joined real mid-game cross-screen hero screenshot was not captured here.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-095",
@@ -662,24 +858,45 @@
         "CH-59",
         "CH-86"
       ],
-      "status": "pending_verification",
-      "summary": "'Your record 0 0 0' and 'Recent games: Your completed games will appear here' are the only results surfaces; the game-over screen was not reachable in this walk"
+      "status": "partially_verified_local",
+      "summary": "'Your record 0 0 0' and 'Recent games: Your completed games will appear here' are the only results surfaces; the game-over screen was not reachable in this walk",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Partially verified",
+        "detail": "P proves stable account-bound owner result filing and concurrent board/lobby deduplication; T covers rematch/result surfaces; `work/r4-shots/over-390.png`. Review appears only after a local record exists. Engine settlement and Play's result bridge have separately owned evidence. Workshop did not play a fresh real Forge/online match to finish and validate the entire live account/sync loop.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-096",
       "changes": [
         "CH-86"
       ],
-      "status": "pending_verification",
-      "summary": "Eleven fields with one required marker (Date); 'Finish', 'Your seat' default to 'Not recorded'; Bracket defaults to 2 regardless of the deck's bracket"
+      "status": "partially_verified_local",
+      "summary": "Eleven fields with one required marker (Date); 'Finish', 'Your seat' default to 'Not recorded'; Bracket defaults to 2 regardless of the deck's bracket",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Partially verified",
+        "detail": "D verifies Outcome/Card that won it first, deck bracket and last-game pod/seat prefill; no false fixed B2 assumption. This is a bounded form-behavior proof, not a six-theme audit of all eleven controls and required semantics.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-097",
       "changes": [
         "CH-86"
       ],
-      "status": "pending_verification",
-      "summary": "Nothing in the form or after saving leads to a change: no 'dead card in hand → consider replacing' handoff"
+      "status": "verified_local",
+      "summary": "Nothing in the form or after saving leads to a change: no 'dead card in hand → consider replacing' handoff",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Verified",
+        "detail": "D saves a dead-card game, exercises Mark for replacement, and verifies its persisted upgrade-path context and Explore replacement route. Normal library command/Undo behavior is reused.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-098",
@@ -746,16 +963,30 @@
       "changes": [
         "CH-88"
       ],
-      "status": "pending_verification",
-      "summary": "There is no Admin panel. Production and staging both answer 404 to /api/admin/*, /api/me carries no admin flag, and no route or control named Admin exists; the only owner-gated control is 'Invite to CrankMagic' on staging"
+      "status": "partially_verified_local",
+      "summary": "There is no Admin panel. Production and staging both answer 404 to /api/admin/*, /api/me carries no admin flag, and no route or control named Admin exists; the only owner-gated control is 'Invite to CrankMagic' on staging",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Partially verified",
+        "detail": "A proves UI gating/reads and read-only rendering against the coordinator's `ADMIN-CONTRACT.md`; `work/r4-shots/admin-features-1440.png`, `admin-health-390.png`. Backend verified-human authorization has coordinator-owned tests. Neither live staging nor production deployment/access configuration is certified by this local UI evidence.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-106",
       "changes": [
         "CH-88"
       ],
-      "status": "pending_verification",
-      "summary": "'Profile' opens the Settings page, not a profile"
+      "status": "verified_local",
+      "summary": "'Profile' opens the Settings page, not a profile",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Verified",
+        "detail": "Redundant Profile menu row removed in `1b71c29f`; S checks one Settings entry in the Workshop menu. The Profile card inside Settings remains actual profile information. Full shared board AccountMenu adaptation is separately owned by Play.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-107",
@@ -770,32 +1001,60 @@
       "changes": [
         "CH-88"
       ],
-      "status": "pending_verification",
-      "summary": "Invite is a two-field form (Name, Email, Send) with no list of who has been invited, no state after Send, and no statement of what the invitee receives"
+      "status": "partially_verified_local",
+      "summary": "Invite is a two-field form (Name, Email, Send) with no list of who has been invited, no state after Send, and no statement of what the invitee receives",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Partially verified",
+        "detail": "A displays bounded invite rows and distinct admission/delivery states using the existing invitation mutation contract. No invented resend/revoke or feature-switch writes. It does not send real mail, prove provider delivery, or cover every post-Send wording state.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-109",
       "changes": [
         "CH-87"
       ],
-      "status": "pending_verification",
-      "summary": "The Budget card lists 30+ deck rows with Budget / Cost / Counts and dominates the right column above AI Coach, Data and the Danger zone"
+      "status": "open",
+      "summary": "The Budget card lists 30+ deck rows with Budget / Cost / Counts and dominates the right column above AI Coach, Data and the Danger zone",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Open",
+        "detail": "C intentionally preserves the existing per-deck budget table and asserts that every live deck is listed. No collapse/filter or density redesign was implemented. Responsive stacking alone does not resolve the original 30-deck dominance complaint.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-110",
       "changes": [
         "CH-87"
       ],
-      "status": "pending_verification",
-      "summary": "'Clear all data' is a one-click button with a caption ('Save a backup first.'); 'Delete account' asks for the typed address"
+      "status": "verified_local",
+      "summary": "'Clear all data' is a one-click button with a caption ('Save a backup first.'); 'Delete account' asks for the typed address",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Verified",
+        "detail": "C opens the danger-fill confirmation and requires typed CLEAR; existing Delete account typed-address semantics retained. No one-click destructive clear.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-111",
       "changes": [
         "CH-87"
       ],
-      "status": "pending_verification",
-      "summary": "'Reduce motion' and 'Stop at every step of my turn' are buttons whose on/off state is not visible"
+      "status": "verified_local",
+      "summary": "'Reduce motion' and 'Stop at every step of my turn' are buttons whose on/off state is not visible",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Verified",
+        "detail": "C exercises persisted visible On/Off plus role=switch/aria-checked for both controls. Play owns the step-toggle markup; Workshop acceptance ran with that dependency integrated.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-112",
@@ -803,40 +1062,75 @@
         "CH-53",
         "CH-87"
       ],
-      "status": "pending_verification",
-      "summary": "Settings is reached from three places with three labels: 'Settings' (menu), 'Profile' (pill), 'Account & app settings' (board avatar menu)"
+      "status": "partially_verified_local",
+      "summary": "Settings is reached from three places with three labels: 'Settings' (menu), 'Profile' (pill), 'Account & app settings' (board avatar menu)",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Partially verified",
+        "detail": "S/C verify the single Workshop Settings entry; redundant Profile row removed. Parent assigned the final global/board AccountMenu adaptation to Play after this source checkpoint, so that combined surface needs its own evidence before closing the whole finding.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-113",
       "changes": [
         "CH-87"
       ],
-      "status": "pending_verification",
-      "summary": "The Confirmations dialog has no controls: 'Every step still asks before it acts.' plus a note"
+      "status": "baseline_reconciled_local",
+      "summary": "The Confirmations dialog has no controls: 'Every step still asks before it acts.' plus a note",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Preserved baseline reconciliation",
+        "detail": "C verifies four explanatory RQ-12 way-back rows. Packet and EX-08 explicitly require read-only capability classes until actually switchable; no fake preference controls were added. Existing restore-confirmation controls remain only where a supported saved skip exists.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-114",
       "changes": [
         "CH-87"
       ],
-      "status": "pending_verification",
-      "summary": "The 'Actions' row is disabled with no reason, and the drag handles promised by the caption are not visible in the matrix"
+      "status": "open",
+      "summary": "The 'Actions' row is disabled with no reason, and the drag handles promised by the caption are not visible in the matrix",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Open",
+        "detail": "The Side Drawer Modules implementation belongs to Play. Workshop's Settings run verifies its entry, not a complete matrix interaction/handle/disabled-reason audit. No resolution is inferred from CH-87 or the retained entry.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-115",
       "changes": [
         "CH-87"
       ],
-      "status": "pending_verification",
-      "summary": "'Saved view preferences' fills the history (11 of the first 13 rows) and 'Undo last change' would undo a view preference rather than a library change"
+      "status": "partially_verified_local",
+      "summary": "'Saved view preferences' fills the history (11 of the first 13 rows) and 'Undo last change' would undo a view preference rather than a library change",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Partially verified",
+        "detail": "History filters preference noise; K proves preferences create no persistent Undo receipt and any intervening revision invalidates a prior receipt. The generic existing Settings Undo-last-change command still addresses repository transaction order; this work does not establish that it skips all preference transactions.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-116",
       "changes": [
         "CH-89"
       ],
-      "status": "pending_verification",
-      "summary": "The seven tours are the best onboarding surface in the app and the only door to them is a menu row 17 rows deep"
+      "status": "verified_local",
+      "summary": "The seven tours are the best onboarding surface in the app and the only door to them is a menu row 17 rows deep",
+      "localEvidence": {
+        "owner": "Workshop",
+        "disposition": "Verified",
+        "detail": "Take a tour is exposed in page Help and quietly on Landing; L/J exercise the landing surface. Existing tour definitions and action path are reused; no assertion that every tour's entire content was replayed in this pass.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "8829bd06"
+      }
     },
     {
       "id": "F-117",
