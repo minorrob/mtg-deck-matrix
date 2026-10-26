@@ -1,19 +1,25 @@
 # CrankMagic
 
-**An Intelligent MtG: Commander Deck Creator & Card Libary**
+**An Intelligent MtG: Commander Deck Creator & Card Library**
 
 A private Commander deck workshop and card library. Plan a deck, review its composition
 and commander, track exactly which prints you own, reserve copies, receive orders,
 assemble physical decks, explore card relationships, and manage Sell / Trade records.
 
-Dark blue/graphite, Satoshi, a local wand/gear logo and animated aether mist. Semantic
-left-aligned tables support sorting, filtering, grouping, chosen columns and compact
-Actions menus. Navigation remains reachable while scrolling and on a phone.
+The r4 system uses Sapphire & Obsidian, Bronze & Basalt and Chalk & Coal, each with dark
+and light registers. Cinzel names decks, Lato carries the interface, and the CrankMagic
+wordmark stays unchanged. Semantic tables support sorting, filtering, grouping, chosen
+columns and compact Actions menus. Navigation remains reachable on a phone.
 
-Plain HTML, CSS and JavaScript. No package.json, build step, runtime framework,
-application server or account. User records live in transactional browser IndexedDB;
-full JSON backups, reviewed CSV/text/XLSX imports and enriched Excel exports give the
-user control of their data. Loading a plan never asserts ownership.
+The interface is plain HTML, CSS and JavaScript, without a runtime framework or build
+step. User records live in transactional browser IndexedDB. Cloud release profiles add
+account sync and the authoritative online rules host through Workers. JSON backups,
+reviewed CSV/text/XLSX imports and enriched Excel exports give the user control of their
+data. Loading a plan never asserts ownership.
+
+The current [r4 execution record](docs/r4-execution/README.md) links the approved decisions,
+requirements, source packets and evidence. Read [docs/ACTIVE.md](docs/ACTIVE.md) before
+working in a lane; the execution handoff distinguishes integrated work from release proof.
 
 ## Run
 
