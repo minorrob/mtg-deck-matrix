@@ -1064,10 +1064,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
  #matrix-v2 .cm-board[data-hud-large] .cm-stage-top{flex-wrap:nowrap;gap:8px}
  #matrix-v2 .cm-board[data-hud-large] .cm-stage-top>.cm-board-turnsteps{flex:1 1 300px;min-width:300px}
  #matrix-v2 .cm-board[data-hud-large] .cm-stage-priority{flex:0 1 220px;min-width:170px;white-space:nowrap}
- #matrix-v2 .cm-board[data-hud-large] .cm-stage-self .cm-seat-portrait{width:48px;height:48px}
- #matrix-v2 .cm-board[data-hud-large] .cm-stage-self .cm-vitals>b{font-size:calc(15px*var(--hud-scale,1))}
- #matrix-v2 .cm-board[data-hud-large] .cm-stage-self .cm-seat-identity{max-width:112px}
- #matrix-v2 .cm-board[data-hud-large] .cm-stage-self .cm-mat-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ #matrix-v2 .cm-board[data-hud-large] .cm-stage-self .cm-seat-portrait,#matrix-v2 .cm-board[data-hud-large] .cm-stage-self .cm-seat-identity{display:none}
  #matrix-v2 .cm-board[data-hud-large] .cm-stage-top .cm-board-ribbon{gap:2px}
  #matrix-v2 .cm-board[data-hud-large] .cm-stage-top .cm-board-ribbon li{padding-left:3px;padding-right:3px}
 }

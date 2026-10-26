@@ -1199,7 +1199,7 @@ globalThis.CrankBoard = Object.seal({
     const me=players()[view.seat],s=view.state,turnName=s.turnPlayerId===null ? "" : nameOf(s.turnPlayerId);
     const pill=`<div class="cm-full-pill">${stageEnabled() ? "" : `${passButton()}${resolveAllButton()}${skipControl(true)}`}</div>`;
     const conn=status === "open" ? "" : `<span class="cm-board-conn">${status === "reconnecting" ? "Reconnecting…" : "Connecting…"}</span>`;
-    return `<header class="cm-stage-top"><span class="cm-stage-self">${seatHeader(me)}</span><span class="cm-board-tools cm-board-turnsteps">${turnRibbon()}${stepsOpen ? stepsMenu() : ""}</span>
+    return `<header class="cm-stage-top"><span class="cm-stage-self" role="group" aria-label="${e(seatLabel(me))}, your seat" title="${e(seatLabel(me))}">${seatHeader(me)}</span><span class="cm-board-tools cm-board-turnsteps">${turnRibbon()}${stepsOpen ? stepsMenu() : ""}</span>
       <span class="cm-stage-priority"><span class="cm-board-turn" title="Turn ${s.turn} of the game, counting every player's${view.yourTurn ? `; your ${ordinal(view.yourTurn)} turn` : ''}">${s.turn ? `Turn ${s.turn} · ${e(turnName)}` : "Before turn 1"}</span><br>Priority: ${e(nameOf(view.state.priorityPlayerId))}<span class="cm-board-waiting" title="${e(waitingText())}">${e(waitingText())}</span>${conn}</span>${alsoButton()}${opens(ib(stageRail && !actionsShut ? "◂" : "▸", "board-actions-open", "Open decision drawer", {}, {cls:"compact"}), stageRail && !actionsShut)}${pill}${stageProfile(me)}${combatStrip()}</header>`;
   }
   function boardDrawers() {
@@ -2662,6 +2662,16 @@ globalThis.CrankBoard = Object.seal({
         const topBase=parseFloat(tbl.style.getPropertyValue('--top-w'))*9/16,botBase=parseFloat(tbl.style.getPropertyValue('--bot-w'))*9/16;
         let top=Math.max(topBase,...slots.filter(s=>n===2||['a','b'].includes(s.dataset.area)).map(minimum));
         let bot=n===2?0:Math.max(botBase,...slots.filter(s=>['c','d'].includes(s.dataset.area)).map(minimum));
+        if(top>topBase+1 || bot>botBase+1){
+          /* Once zone minima force vertical scrolling, a height cap must not leave unused horizontal
+             room and make readable seat headers unnecessarily tall. Keep the chosen column shares. */
+          const gx=parseFloat(css.columnGap)||14,room=box.width-gx,share=rowShare();
+          const left=Math.floor(n===2?room*share:room/2),right=Math.floor(n===2?room*(1-share):room/2);
+          tbl.style.setProperty('--top-w',`${left}px`);tbl.style.setProperty('--bot-w',`${right}px`);tbl.style.setProperty('--board-w',`${Math.max(left,right)}px`);
+          tbl.style.setProperty('--grid-w',`${left+right+gx}px`);tbl.style.setProperty('--mid-x',`${n===2?left+gx/2:box.width/2}px`);
+          top=Math.max(left*9/16,...slots.filter(s=>n===2||['a','b'].includes(s.dataset.area)).map(minimum));
+          bot=n===2?0:Math.max(right*9/16,...slots.filter(s=>['c','d'].includes(s.dataset.area)).map(minimum));
+        }
         const height=top+bot+(n===2?0:gy),offset=Math.max(0,(box.height-height)/2);
         tbl.style.setProperty('--table-top-h',`${Math.ceil(top)}px`);tbl.style.setProperty('--table-bot-h',`${Math.ceil(bot)}px`);
         tbl.style.setProperty('--grid-h',`${Math.ceil(height)}px`);tbl.style.setProperty('--mid-y',`${offset+(n===2?top/2:top+gy/2)}px`);
