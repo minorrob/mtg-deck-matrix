@@ -225,6 +225,9 @@ try {
     const forward = await frames();
     await page.mouse.up({button: "right"});
     await page.waitForFunction(() => CrankStage.diagnostics().look === null, null, {timeout: 4000, polling: "raf"});
+    /* And until the recorder has a frame drawn after the look ended: on a slow runner frames come 250 ms and more apart,
+       and a fixed wait could stop on a frame from before the last step home. */
+    await page.waitForFunction(() => __frames.length && __frames.at(-1).t === null, null, {timeout: 4000, polling: "raf"});
     await page.waitForTimeout(150);
     const back = await frames();
     const moving = forward.f.filter((x) => x.t > 0), turned = back.f.filter((x) => x.dir === -1);

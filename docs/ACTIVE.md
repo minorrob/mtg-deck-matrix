@@ -63,6 +63,10 @@ Buy - Ordered ... > (leaving the To Buy chain) Owned - Upgrade, Owned - Bench, O
   under a break (re-pairing off; the counter's 100). `card-states-screens`, `drafts-reserve`, `page-budget` and the UAT
   `crankmagic-journeys` walk drive the new page. The journeys walk stops here, and on main, at its Play step (no Play
   host in this container); its Planned Changes steps pass.
+- **`board-3d-camera`, made robust:** it failed on Actions on #885's re-run (`1ac252f5`, "ends exactly at the resting
+  camera") and three runs in three here. Frames on a slow runner come 250 ms and more apart, and the test stopped on a
+  fixed 150 ms after the look ended, so its last recorded frame was from before the camera's last step home (t 0.2–0.3).
+  It now waits for a frame recorded after the look ended; three runs in three pass here. Test-only; the camera is unchanged.
 - **Not done, to confirm with Rob:** the app-wide relabel of *Ordered* as *To Buy · Ordered* outside this page (the
   Library's status ladder, filters, the hundred's pills).
 
