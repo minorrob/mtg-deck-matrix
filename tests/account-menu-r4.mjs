@@ -19,7 +19,7 @@ try{
       if(p==='/api/social/me')return r.fulfill({status:test.signed?200:401,json:test.signed?{name:'Reader',email:'reader@example.test',canInvite:test.admin}:{error:'Signed out'}});
       return r.fulfill({status:503,json:{error:'External/account changes are blocked in this isolated menu test.'}});
     });
-    await page.goto(base+'/index.html#decks');await page.locator('#cm-main h1').waitFor();
+    await page.goto(base+'/index.html#decks');await page.waitForFunction(()=>globalThis.__menuC?.accountMenuOpen&&document.querySelector('.cm-decks-stages'));
     await page.evaluate(async()=>{await Promise.all([__menuC.adminReady,__menuC.sharingReady]);});
     await page.waitForFunction(signed=>document.querySelector('#cm-account').textContent.includes(signed?'Signed in as':'Signed out'),test.signed);
     const trigger=page.locator('#cm-user-functions'),menu=page.locator('#cm-user-menu');
