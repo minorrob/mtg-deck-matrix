@@ -1623,11 +1623,18 @@ try {
   await waitText(rob.page, "#cm-notice", /Your record is downloaded/, 10000);
   eq(await rob.page.locator("#cm-notice .cm-toast-action").count(), 0, "and the board says what was downloaded, with no Undo: the download changed nothing");
   await shot(rob.page, "board-record-1400");
-  /* SEND FEEDBACK NAMES THE GAME (G-E): a person's report says which game and which release, so it can be replayed. */
+  /* SEND FEEDBACK NAMES THE GAME (G-E; the feedback loop, CrankFeedback@1): a person's report says which game, where in it
+     and which release, so it can be replayed from the record -- and never a card of anyone's hand. */
+  const heldGame = await rob.page.evaluate(() => globalThis.__cm.board.held());
+  eq([heldGame.matchId, heldGame.over, typeof heldGame.turn, typeof heldGame.step, heldGame.seat, typeof heldGame.lastLine, heldGame.view], [matchId, true, "number", "string", "Rob", "string", "Table"],
+    `the board says what it holds for a report: the match, that it is over, the turn and step, the seat's name, the last history line and the view (${heldGame.step}; "${heldGame.lastLine}")`);
+  const report = await rob.page.evaluate(() => globalThis.__cm.feedback.draft({text: "x"}));
+  eq([report.game.matchId, report.game.tableId, report.page.view, report.build.commit], [matchId, heldGame.tableId, "Table", "unreleased"], "the report carries the game and the view, and this page is no release");
+  ok(!JSON.stringify(report).includes("Maya Secret") && !/hand|library/i.test(JSON.stringify(Object.keys(report.game))), "and nothing of anyone's hand, by construction: the report has no field for one");
+  ok(await rob.page.locator("#cm-board .cm-stage-profile [data-action=send-feedback][aria-label='Send feedback']").count() === 1, "the board's profile strip carries the feedback glyph");
   const mail = async (page) => decodeURIComponent((await page.evaluate(() => globalThis.__cm.feedbackLink())).split("body=")[1]);
   const said = await mail(rob.page);
-  ok(said.includes(`Game: ${matchId}, turn `) && said.includes(", over\n") && /\nVersion: not a release\n/.test(said) && /attach its record: Download, on the game-over panel/.test(said),
-    "Send feedback's mail names the game the board holds, that it is over, the release (this page is none), and asks for the record");
+  ok(said.includes(`Game: ${matchId}, turn `) && said.includes(", over\n") && /\nVersion: not a release\n/.test(said), "and the mailto a local copy falls back to still names the game and the release");
 
   /* Views of the ended game keep arriving while the board is open (anyone's End, an away frame, a mat): each is
      read again, and the result is still filed once. */
@@ -1670,8 +1677,8 @@ try {
 
   eq([leaks(MAYA, "Rob"), leaks(ROB, "Maya", [castName, heldName])], [0, 0], `across the whole game, no frame to either named a card of the other's hand or library, history included (${frames[MAYA].length + frames[ROB].length} frames; ${castName} was cast in the open)`);
   eq(writes.filter((w) => w.header !== "play" || !/^application\/json/.test(w.type || "")), [], `every one of the board's ${writes.length} writes carried Play's header and JSON`);
-  const away = await maya.page.evaluate(() => {globalThis.__cm.board.close(); return decodeURIComponent(globalThis.__cm.feedbackLink().split("body=")[1]);});
-  ok(!away.includes("Game:") && /Where I was: /.test(away), "and with no game on the board, the mail names none");
+  const away = await maya.page.evaluate(() => {globalThis.__cm.board.close(); return [globalThis.__cm.board.held(), globalThis.__cm.feedback.draft({text: "x"}).game, decodeURIComponent(globalThis.__cm.feedbackLink().split("body=")[1])];});
+  ok(away[0] === null && away[1] === undefined && !away[2].includes("Game:") && /Where I was: /.test(away[2]), "and with no game on the board, neither the report nor the mail names one");
   await rob.context.close(); await maya.context.close();
 } catch(error) {
   mkdirSync("work",{recursive:true});

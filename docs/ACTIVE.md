@@ -1,5 +1,32 @@
 # Who holds the work
 
+## The feedback loop, PR 2: the control and the sheet, 2026-10-26 (the same Claude cloud session; `claude/workshop-feedback-sheet`, from PR 1's head; the Workshop shell and the Play rail at Rob's word)
+
+Rob, 2026-10-26, through the plan's kick-off brief: PR 2 after PR 1, in order. At his word this changes the Codex · Workshop
+lane's `crankmagic-app.js`, `crankmagic-decks.js`, `crankmagic.css`, the pages and the service worker, and the Codex · Play
+lane's `crankmagic-board.js` and `crankmagic-stage.css`.
+
+- **Built:** `crankmagic-feedback.js`, a feature module: one glyph (✉, named "Send feedback" for a reader) on every page's
+  head (`pageHead`), beside More on a deck's page, and in the board's profile strip during a game (`stageProfile`, and a
+  line in its menu); the Menu's Send Feedback opens the same sheet. The sheet: two glyph tiles for the kind (🐞 bug, ✦
+  idea), the text, a picture (the browser's own capture where it offers one, else a picture chosen; encoded to WebP under
+  1 MiB), a glyph line saying what goes with the report, Send. Gathered, never typed: the route and screen, the board's
+  view, the build from `version.json`, the game the board holds (`C.board.held()` now carries the step, the seat's name,
+  the decision id, the last public history line and the view), the deck page's deck and the card under the pointer, the
+  device, the last 20 console errors (a ring kept from the moment the script loads). Bounded by `CrankFeedback.boundReport`
+  and posted to `POST /api/feedback` with `x-crankmagic: feedback`; the person is never named in it. Signed out, the sheet
+  refuses with Sign in and Email instead; a copy with no account cloud keeps the Menu's mailto. `C.feedback.draft()` gives
+  a suite, or another module, the report as it would go.
+- **Proven here:** `feedback-sheet` (38, a real browser against stubbed routes: three pages and the Menu, the report's
+  every field, the Worker's 429 shown with the text kept, a picture as WebP, signed out), red under each of 18 breaks
+  (`tools/feedback-sheet-breaks.py`); `table-board`'s Send feedback checks rewritten to the richer `held()` and the
+  report's game context (`tools/feedback-breaks.py`, 10 breaks); `feature-wiring`, `menu-help`, `settings-r3`,
+  `data-integrity`, `service-worker`, `asset-versions` (re-recorded: two new files, five bumps).
+- **Not proven:** the browser's own screen capture (`getDisplayMedia` needs a person to pick the tab; the picture-chosen
+  path is the one proved); a phone's layout of the sheet; the round trip against the Worker (PR 1's suite proves the
+  Worker's side of the same contract).
+- **Merge order:** after PR 1 (#895): this branch starts from PR 1's head.
+
 ## The feedback loop, PR 1: the schema, the table and the routes, 2026-10-26 (a Claude cloud session, for Rob; `claude/engine-feedback-store`, the Claude · Engine lane)
 
 Rob, 2026-10-26 (through the planning session's kick-off brief; the plan is `docs/feedback-loop/PLAN-2026-10-26.html`, PR
@@ -902,7 +929,7 @@ other lane answers in the last column.
 
 | # | From | Asks for | What for | Answer |
 | --- | --- | --- | --- | --- |
-| 14 | Engine → Workshop, Play | The feedback sheet (the plan's PR 2) to build against `docs/feedback-loop/CrankFeedback.md`: load `feedback-schema.js` (a classic script; `?v=` bumped), bound the draft with `CrankFeedback.boundReport`, `POST /api/feedback` with `x-crankmagic: feedback` and a JSON body, and never send who the person is (the Worker takes it from the token). The board rail's glyph reads the game context from the view it already holds (table id, match id, turn, step, seat, decision id, the last history line), never another seat's cards. This session builds it at Rob's word unless a Workshop or Play session has it in hand first: say so here | The feedback loop, PR 2; the routes are on `claude/engine-feedback-store` | `feedback-schema.js`, `cloud/feedback.mjs` | |
+| 14 | Engine → Workshop, Play | The feedback sheet (the plan's PR 2) to build against `docs/feedback-loop/CrankFeedback.md`: load `feedback-schema.js` (a classic script; `?v=` bumped), bound the draft with `CrankFeedback.boundReport`, `POST /api/feedback` with `x-crankmagic: feedback` and a JSON body, and never send who the person is (the Worker takes it from the token). The board rail's glyph reads the game context from the view it already holds (table id, match id, turn, step, seat, decision id, the last history line), never another seat's cards. This session builds it at Rob's word unless a Workshop or Play session has it in hand first: say so here | The feedback loop, PR 2; the routes are on `claude/engine-feedback-store` | `feedback-schema.js`, `cloud/feedback.mjs` | Built by the same session on `claude/workshop-feedback-sheet` (PR 2), from PR 1's head |
 | 13 | Workshop (Decks) → Play | An intermittent failure in `tests/table-board.mjs` (Codex · Play's suite), seen once in CI and never locally: "the real-game inspector keeps its card aspect beside an independently arranged History module" (lines 667-669) failed on Oct 25 in Actions run 40157906338 (PR #769's head `33c6749e`, `main` `71929eb` merged in, a branch that changes no Play file). The next run passed it (run 40161187064), and on `main` `afe58d5` it passes 3 of 3 locally (290 checks). The check measures `#cm-full-pick .cm-bcard`'s ratio (within 0.01 of 5/7) and counts the History module straight after the click, with no wait for the layout to settle, so a slow runner may read a mid-layout card. Please make it wait for the settled size, or fix the layout if the card really drifts from 5:7. (The other Play failure seen alongside it, `tests/board-control.mjs` "Escape dismisses hover", is fixed on `main` by #854: it now passes there.) | A Play suite that fails at random turns any lane's PR red, and the next run passing it hides the cause | `tests/table-board.mjs` | |
 | 11 | Codex · Play → Engine | ROB-172 for ROB-171: project public control provenance, displaced controller(s), source object identity/name and exact Oracle effect text/duration; define chained steals, return destinations, entering under another controller and face-down sources | Rob requests the actual card on its controller's board and a ghost where control was lost, with who took it and how it returns. Current owner/controller fields cannot establish prior control or a return condition. Document and merge the additive contract before Play consumes it | Requested Oct 20 in ROB-11; Play builds existing-contract placement and ownership marker meanwhile |
 | 12 | Codex · Play → Engine | ROB-167: expose `POST /api/tables/:id/rematch {accept}` and public votes/deadline; launch the next round with retained seats/decks using the existing lifecycle | Board/lobby Play again, visible votes and Leave need a deployed route and documented table state. Prove one person/three AIs, a declined human seat, deadline expiry, and a fresh match ID | Requested Oct 20 on ROB-167 and ROB-11; Engine half must merge before Play consumes it **Built:** `POST /api/tables/:id/rematch {accept}` (#806): votes, deadline (2 minutes, `REMATCH_WINDOW`) and the next round with the same seats, decks and rules as `<tableId>g<n>`; the view's `table.rematch` `{lastMatchId, deadline, outcome, reason, votes}`; the host must stay for a next game; documented in `docs/ui-lane/gameplay-anchor.md` ("After the game: Play again"). Play wires the buttons next. |

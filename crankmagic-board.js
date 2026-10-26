@@ -1046,7 +1046,7 @@ globalThis.CrankBoard = Object.seal({
   }
   function stageProfile(me) {
     const initials = (me.name || "Player").trim().split(/\s+/).slice(0,2).map(s=>s[0]).join("").toUpperCase();
-    return `<div class="cm-stage-profile"><button type="button" class="cm-profile-avatar" data-action="board-profile" aria-label="Profile menu" aria-expanded="${profileOpen}" title="${e(me.name)} · Profile menu"><span aria-hidden="true">${e(initials)}</span></button>${profileOpen ? `<div class="cm-profile-menu" role="group" aria-label="Profile"><strong>${e(me.name)}</strong><span class="cm-board-tools">${opens(b("Pages", "board-menu"),menuOpen)}${menuOpen ? menu() : ""}</span><span class="cm-board-tools">${gb(CLOCK, "History", "board-history", {}, {expanded:historyOpen})}${historyOpen ? historyMenu() : ""}</span>${b("Settings", "board-tools").replace("<button ", '<button aria-haspopup="dialog" ')}${b("Arrange drawer order", "board-modules-edit")}${b("Account & app settings", "open-settings")}${b("Help", "page-help", {help:"table"})}</div>` : ""}</div>`;
+    return `<div class="cm-stage-profile">${ib("✉", "send-feedback", "Send feedback", {}, {cls: "compact cm-feedback-glyph"})}<button type="button" class="cm-profile-avatar" data-action="board-profile" aria-label="Profile menu" aria-expanded="${profileOpen}" title="${e(me.name)} · Profile menu"><span aria-hidden="true">${e(initials)}</span></button>${profileOpen ? `<div class="cm-profile-menu" role="group" aria-label="Profile"><strong>${e(me.name)}</strong><span class="cm-board-tools">${opens(b("Pages", "board-menu"),menuOpen)}${menuOpen ? menu() : ""}</span><span class="cm-board-tools">${gb(CLOCK, "History", "board-history", {}, {expanded:historyOpen})}${historyOpen ? historyMenu() : ""}</span>${b("Settings", "board-tools").replace("<button ", '<button aria-haspopup="dialog" ')}${b("Arrange drawer order", "board-modules-edit")}${b("Account & app settings", "open-settings")}${b("Help", "page-help", {help:"table"})}${b("Send feedback", "send-feedback")}</div>` : ""}</div>`;
   }
   function moduleSettings() {
     tools = false; profileOpen = false; draw();
@@ -2669,8 +2669,15 @@ globalThis.CrankBoard = Object.seal({
     },
     /** A game of yours that is on: {tableId, turn}, or null. Play opens it. */
     live() {return tableId && view && view.status !== "finished" ? {tableId, turn: view.state.turn} : null;},
-    /** The game the board holds, on or just over, for a report to name (Send feedback): {tableId, matchId, turn, over}, or null. */
-    held() {return tableId && view && view.matchId ? {tableId, matchId: view.matchId, turn: view.state.turn, over: view.status === "finished"} : null;},
+    /** The game the board holds, on or just over, for a report to name (Send feedback, CrankFeedback@1): the table, the match,
+        the turn and step, your seat's name, the decision being asked, the last public history line and the board's view --
+        never a card of anyone's hand -- or null. */
+    held() {
+      if (!(tableId && view && view.matchId)) return null;
+      const stepName = (STEPS[stepAt(view.state.phase)] || [])[0], me = players()[view.seat] || {};
+      return {tableId, matchId: view.matchId, turn: view.state.turn, over: view.status === "finished", step: stepName, seat: me.name,
+        decisionId: view.decision ? view.decision.id : undefined, lastLine: ((view.history || []).at(-1) || {}).text, view: phone() ? "Phone" : (VIEWS.find(([k]) => k === mode) || [])[2]};
+    },
     /** What a room view means for your record: {outcome, reason}, or null while the game goes on for you. */
     outcomeOf,
     /** The picture the board draws for a card by its name: the library's record, else the shipped card records'. */

@@ -143,7 +143,7 @@ ok(broken((m) => m.set("crankmagic-app.js", Buffer.from(m.get("crankmagic-app.js
    own database and its own Access application; STAGING KEEPS ITS OWN of both. */
 for (const f of ["cloud-sync.js", "crankmagic-account.js", "cloud/worker.mjs", "cloud/access.mjs", "cloud/library.mjs", "cloud/feedback.mjs", "feedback-schema.js", "cloud/migrations/0009_feedback.sql"]) ok(built.has(f), `${f} is in the production release`);
 /* The feedback loop's schema is a module outside cloud/ that the Worker imports: the release carries what the Worker bundles. */
-eq(verify(new Map([...built].filter(([f]) => f !== "feedback-schema.js")), profile).filter((p) => /feedback-schema\.js/.test(p)), ["feedback-schema.js is imported by the Worker and is not in the commit"], "a release missing a module the Worker imports is refused, naming it");
+ok(verify(new Map([...built].filter(([f]) => f !== "feedback-schema.js")), profile).includes("feedback-schema.js is imported by the Worker and is not in the commit"), "a release missing a module the Worker imports is refused, naming it");
 ok(PAGES.every((p) => built.get(p).toString("utf8").includes('<meta name="crankmagic-accounts" content="on">')), "and both production pages are marked accounts-on");
 const pw = JSON.parse(built.get("wrangler.jsonc").toString("utf8"));
 eq([pw.name, pw.main, pw.assets, pw.routes], ["crankmagic", "cloud/worker.mjs", {directory: "./", binding: "ASSETS", run_worker_first: ["/api/*"]}, [{pattern: "crankmagic.com", custom_domain: true}]],
