@@ -226,7 +226,7 @@
 .cm-stage-rail:has(.cm-stage-module) .cm-board-views{display:flex;flex-direction:row}
 .cm-stage-rail:has(.cm-stage-module) .cm-board-spacer{display:none}
 .cm-stage-rail .cm-stage-modules:empty{display:none}
-.cm-stage-profile{position:relative;flex-shrink:0;z-index:25}
+.cm-stage-profile{position:relative;flex-shrink:0;z-index:25;display:flex;align-items:center;gap:6px}#matrix-v2 .cm-stage-profile .cm-feedback-glyph{min-height:34px;padding:0 9px;font-size:15px}
 #matrix-v2 .cm-profile-avatar{display:grid;place-items:center;width:34px;height:34px;min-width:34px;padding:0;border-radius:50%;background:linear-gradient(135deg,#517966,#1b3f42);border:1px solid #b4d9bc;color:#fff;font-size:12px;font-weight:700;cursor:pointer}
 .cm-profile-menu{position:absolute;top:42px;right:0;display:grid;gap:6px;padding:12px;width:220px;border:1px solid #698477;border-radius:8px;background:#112526;color:#edf6ef;box-shadow:0 12px 28px #0008}
 .cm-stage-profile>.cm-board-menu{position:absolute;top:42px;right:0;left:auto;max-height:calc(100vh - 90px);overflow:auto;width:min(430px,90vw)}

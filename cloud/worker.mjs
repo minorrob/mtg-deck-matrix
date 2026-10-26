@@ -27,6 +27,12 @@
  *   GET  /api/ai-advise            whether this person may ask the advisor (AI-4): {open}
  *   GET  /api/ai-meter             this person's AI spending over the last 24 hours against their cap (AI-6)
  *   GET  /api/ai/login?to=#...     back to the app once signed in to the AI door
+ *   POST  /api/feedback            a report from any page or mid-game (CrankFeedback@1, feedback-schema.js), from any
+ *                                  signed-in person, 10 an hour each -> 201 {feedback} (cloud/feedback.mjs)
+ *   GET   /api/admin/feedback      the reports, oldest first (?since=&state=&limit=): the owner, and the triage agent's
+ *                                  service token for its own Access application (FEEDBACK_AGENT_AUD)
+ *   PATCH /api/admin/feedback/:id  the same two move a report along new -> triaged -> approved -> in-progress ->
+ *                                  released -> notified, with the issue, PR, release commit and message id
  */
 import {verifyAccess, Unauthorized} from "./access.mjs";
 import {createLibrary, Conflict, Invalid, LIMITS} from "./library.mjs";
@@ -35,6 +41,7 @@ import {createAi, everyone, settings, explain, coach, advise, readQuestion, Clos
 import {readAsk, openVersion, adviseBrief} from "./advise.mjs";
 import {tables} from "./tables.mjs";
 import {social, ShareError, sharedIdentity} from "./sharing.mjs";
+import {createFeedback, FeedbackInvalid, FeedbackRefused, isOwner, groupOf} from "./feedback.mjs";
 
 /** Whether this person may seat an AI on Claude: the same gates as the table's object checks when it seats one. */
 /* AI COACH SETTINGS (AI-6): the person's own spending over the last 24 hours against their cap, from the call log, for
@@ -118,6 +125,7 @@ export async function handle(request, env, deps = {}) {
     catch (error) {if (error instanceof ImportError) return reply(error.status, {error: error.message}); throw error;}
   }
   if (path.startsWith("/api/ai/")) return aiDoor(request, env, deps, url, ms);
+  if (path === "/api/admin/feedback" || path.startsWith("/api/admin/feedback/")) return feedbackAdmin(request, env, deps, url, ms);
   let who;
   try {who = await verifyAccess(request, env, {fetchImpl: deps.fetchImpl, now: ms()});}
   catch (error) {
@@ -143,6 +151,16 @@ export async function handle(request, env, deps = {}) {
     if (method !== "GET" && !fromTheApp(request, url, "play")) return reply(403, {error: "That request did not come from CrankMagic."});
     if (request.headers.get("upgrade") === "websocket" && origin !== url.origin) return reply(403, {error: "That request did not come from CrankMagic."});
     return tables(request, env, who);
+  }
+  /* FEEDBACK (the feedback loop, PR 1; cloud/feedback.mjs): any signed-in person, from the app's own sheet. The reporter
+     is who Access named, never a name in the report; a screenshot is not kept until R2 is on. */
+  if (path === "/api/feedback") {
+    if (method !== "POST") return reply(405, {error: "Feedback is a POST."});
+    if (!fromTheApp(request, url, "feedback")) return reply(403, {error: "That request did not come from CrankMagic."});
+    if (!env.DB) return reply(503, {error: "Feedback is not switched on here yet."});
+    const library = createLibrary(env.DB, {now: () => new Date(ms()).toISOString()});
+    const person = await library.user(who.email);
+    return fileFeedback(request, env, deps, ms, {email: person.email, group: groupOf(env, person)});
   }
   if (method !== "GET" && !fromTheApp(request, url)) return reply(403, {error: "That request did not come from CrankMagic."});
 
@@ -199,6 +217,74 @@ export async function handle(request, env, deps = {}) {
     if (error instanceof Conflict) return reply(409, {error: "Your library changed on another device since this one last saved.", head: error.head});
     if (error instanceof Invalid) return reply(400, {error: `The cloud refused that: ${error.message}.`});
     throw error;
+  }
+}
+
+/* THE FEEDBACK LOOP'S STORE (PR 1; cloud/feedback.mjs, migration 0009). A report is bounded by its schema before it is
+   read in full: the sheet bounds it (feedback-schema.js boundReport), and a body past what a bounded report can be -- the
+   text, a 1 MiB screenshot as base64, the console -- is refused before it is parsed. */
+const FEEDBACK_BODY = 1_500_000;
+async function fileFeedback(request, env, deps, ms, person) {
+  const text = await request.text();
+  if (text.length > FEEDBACK_BODY) return reply(413, {error: "That report is larger than CrankMagic takes (a screenshot is 1 MB at most). Nothing was saved."});
+  let input;
+  try {input = JSON.parse(text);} catch {return reply(400, {error: "That request is not JSON."});}
+  const store = createFeedback(env.DB, {now: () => new Date(ms()).toISOString(), ...(deps.newId ? {newId: deps.newId} : {})});
+  try {return reply(201, {feedback: await store.file(person, input)});}
+  catch (error) {return feedbackRefusal(error);}
+}
+function feedbackRefusal(error) {
+  if (error instanceof FeedbackInvalid) return reply(400, {error: `CrankMagic refused that report: ${error.message}. Nothing was saved.`});
+  if (error instanceof FeedbackRefused) return new Response(JSON.stringify({error: error.message, ...(error.retryAfterSeconds ? {retryAfterSeconds: error.retryAfterSeconds} : {}), ...(error.state ? {state: error.state} : {})}),
+    {status: error.status, headers: {...HEADERS, ...(error.retryAfterSeconds ? {"retry-after": String(error.retryAfterSeconds)} : {})}});
+  throw error;
+}
+/* THE ADMIN ROUTES: the owner (INVITE_ADMIN_ID, the administrator the release names), and the triage agent as the service
+   token of its own Access application (FEEDBACK_AGENT_AUD, a dashboard step of Rob's: an application for the agent with a
+   Service Auth policy, never a person's session). A person's token is checked against the app's own application as
+   everywhere else; the agent's audience admits a service token and nothing more. Unset, no agent is admitted. */
+async function feedbackAdmin(request, env, deps, url, ms) {
+  const path = url.pathname, method = request.method;
+  if (method !== "GET" && method !== "PATCH") return reply(405, {error: "Feedback is read with GET and moved with PATCH."});
+  let who = null;
+  if (env.FEEDBACK_AGENT_AUD) {
+    try {who = await verifyAccess(request, env, {fetchImpl: deps.fetchImpl, now: ms(), audience: env.FEEDBACK_AGENT_AUD, service: true});}
+    catch (error) {if (!(error instanceof Unauthorized)) throw error;}
+  }
+  if (!who) {
+    try {who = await verifyAccess(request, env, {fetchImpl: deps.fetchImpl, now: ms()});}
+    catch (error) {
+      if (error instanceof Unauthorized) return reply(401, {error: "Sign in as CrankMagic's owner to read feedback.", why: error.message});
+      throw error;
+    }
+  }
+  if (await overLimit(env.LIMIT_PERSON, who.email)) return tooMany("your account");
+  if (!env.DB) return reply(503, {error: "Feedback is not switched on here yet."});
+  if (!who.service) {
+    let email = who.email;
+    if (env.SHARING_ENABLED === "on") {
+      email = await sharedIdentity(env.DB, email);
+      if (!email) return reply(401, {error: "Your email address changed. Sign out and sign in with your verified new address."});
+    }
+    const person = await createLibrary(env.DB, {now: () => new Date(ms()).toISOString()}).user(email);
+    if (!isOwner(env, person)) return reply(403, {error: "Only CrankMagic's owner reads feedback here. Your own reports are sent from the feedback sheet."});
+  }
+  if (method !== "GET" && !fromTheApp(request, url, "feedback-admin")) return reply(403, {error: "That request did not come from CrankMagic."});
+  const store = createFeedback(env.DB, {now: () => new Date(ms()).toISOString()});
+  const one = /^\/api\/admin\/feedback\/([0-9a-f-]{36})$/.exec(path);
+  try {
+    if (method === "GET" && path === "/api/admin/feedback") return reply(200, {feedback: await store.list({since: url.searchParams.get("since"), state: url.searchParams.get("state"), limit: url.searchParams.get("limit")})});
+    if (method === "PATCH" && one) {
+      const text = await request.text();
+      if (text.length > 8192) return reply(413, {error: "That change is larger than a feedback change can be."});
+      let input;
+      try {input = JSON.parse(text);} catch {return reply(400, {error: "That request is not JSON."});}
+      return reply(200, {feedback: await store.patch(one[1], input)});
+    }
+    return reply(404, {error: "No such endpoint."});
+  } catch (error) {
+    if (error instanceof FeedbackInvalid) return reply(400, {error: `CrankMagic refused that change: ${error.message}. Nothing was changed.`});
+    return feedbackRefusal(error);
   }
 }
 

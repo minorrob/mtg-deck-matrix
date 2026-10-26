@@ -322,6 +322,8 @@ export function referencesOf(file, text, files) {
    imports through the same commit. A bare or node: import, or a module the commit lacks, is named: the Worker
    could not be bundled from the release. */
 export const PLAY_WORKER = "cloud/play-worker.mjs";
+/* The account cloud's Worker (cloud/worker.mjs), whose imports a release without Play carries the same way. */
+export const API_WORKER = "cloud/worker.mjs";
 const IMPORT = /\b(?:import|export)\s+(?:[^;]*?\sfrom\s+)?["']([^"']+)["']|\bimport\s*\(\s*["']([^"']+)["']\s*\)/g;
 export function workerModules(source, entry = PLAY_WORKER) {
   const seen = new Set(), queue = [entry], problems = [];
@@ -394,6 +396,8 @@ export function verify(built, profile) {
   const problems = [], files = new Set(built.keys());
   const engine = profile.cloud && profile.tables ? workerModules(builtSource(built)) : {files: [], problems: []};
   for (const f of files) if (NEVER.test(f) && !(/^game\/.+\.mjs$/.test(f) && engine.files.includes(f))) problems.push(`${f} is in a folder that never ships`);
+  /* The API Worker bundles from the release tree: a module it imports that the tree lacks is a Worker wrangler cannot build. */
+  if (profile.cloud) for (const p of workerModules(builtSource(built), API_WORKER).problems) problems.push(p.replace("Play's Worker", "the Worker"));
   for (const f of profile.leaveOut) if (files.has(f)) problems.push(PLAY.includes(f) ? `${f} is Play, and Play is not in this release` : `${f} is left out of this release, and is in it`);
   for (const [f, body] of built) {
     if (!TEXT.test(f)) continue;
@@ -522,9 +526,11 @@ export function build({source, profileName = "pages", origin = "", domain = ""})
   built.set("version.json", Buffer.from(JSON.stringify({commit: source.commit, date: source.date, profile: profileName, source: source.ref, origin: origin || FIRST_PUBLIC}, null, 2) + "\n"));
   if (domain) built.set("CNAME", Buffer.from(domain + "\n"));
   if (profile.host) for (const [f, text] of Object.entries(HOST_FILES[profile.host]({date: source.date, origin: origin || FIRST_PUBLIC, profile}))) built.set(f, Buffer.from(text));
-  /* The Worker and its migrations, from the same commit as the pages (never walked: nothing links to them). */
+  /* The Worker and its migrations, from the same commit as the pages (never walked: nothing links to them), and every
+     module the Worker imports from outside cloud/ (feedback-schema.js, the report's schema the pages load too). */
   if (profile.cloud) {
     const worker = [...source.files].filter((f) => /^cloud\/[\w.-]+\.mjs$|^cloud\/migrations\/[\w.-]+\.sql$/.test(f));
+    for (const f of workerModules(source, API_WORKER).files) if (!worker.includes(f)) worker.push(f);
     source.readMany(worker);
     for (const f of worker) built.set(f, source.read(f));
     if (profile.tables) for (const f of workerModules(source).files) if (!built.has(f)) built.set(f, source.read(f));

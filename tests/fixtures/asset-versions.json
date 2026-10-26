@@ -162,8 +162,8 @@
       "sha": "5dd742bd996b24a6"
     },
     "crankmagic-app.js": {
-      "version": 581,
-      "sha": "99a6fa80437fac65"
+      "version": 583,
+      "sha": "4bb659b742068dea"
     },
     "crankmagic-assets.js": {
       "version": 36,
@@ -174,8 +174,8 @@
       "sha": "ddab072cfc45df40"
     },
     "crankmagic-board.js": {
-      "version": 106,
-      "sha": "b5df5a81876e23b0"
+      "version": 107,
+      "sha": "4e9fd9d6fff35ae8"
     },
     "crankmagic-brand.js": {
       "version": 6,
@@ -198,8 +198,8 @@
       "sha": "3f5449f914bd7b86"
     },
     "crankmagic-decks.js": {
-      "version": 116,
-      "sha": "520edba12bff2d96"
+      "version": 117,
+      "sha": "b9597a8e7b0333a2"
     },
     "crankmagic-design.css": {
       "version": 26,
@@ -220,6 +220,10 @@
     "crankmagic-facets.js": {
       "version": 15,
       "sha": "7acbff56e4c98939"
+    },
+    "crankmagic-feedback.js": {
+      "version": 1,
+      "sha": "aa87d2d19680f234"
     },
     "crankmagic-game.js": {
       "version": 80,
@@ -342,8 +346,8 @@
       "sha": "fd7accd751b01d3e"
     },
     "crankmagic-stage.css": {
-      "version": 63,
-      "sha": "bb28a01e810b89f5"
+      "version": 64,
+      "sha": "88c641fe7a441c34"
     },
     "crankmagic-stage.js": {
       "version": 18,
@@ -354,8 +358,8 @@
       "sha": "07440b83396bb9e2"
     },
     "crankmagic-sw.js": {
-      "version": 564,
-      "sha": "19b041f6df71ad53"
+      "version": 566,
+      "sha": "8449e24f56ada53f"
     },
     "crankmagic-table.js": {
       "version": 42,
@@ -378,8 +382,8 @@
       "sha": "ca657a27caa9093d"
     },
     "crankmagic.css": {
-      "version": 302,
-      "sha": "d35a313af53b0754"
+      "version": 303,
+      "sha": "d6a65ab73b6ed260"
     },
     "custom-model.js": {
       "version": 3,
@@ -476,6 +480,10 @@
     "draft-builder.js": {
       "version": 9,
       "sha": "2ea37a108afaeb50"
+    },
+    "feedback-schema.js": {
+      "version": 1,
+      "sha": "c554cfa172dfc4cd"
     },
     "game-record.js": {
       "version": 3,
