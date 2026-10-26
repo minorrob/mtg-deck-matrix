@@ -79,9 +79,23 @@ one chosen, encoded to WebP under 1 MiB. `C.feedback.draft({kind, text, screensh
 already bounded; a suite reads it. Signed out, the sheet refuses with Sign in and Email instead; with no account cloud,
 the Menu's Send Feedback is the mailto it always was.
 
+## The triage agent (PR 3, `tools/feedback-triage.mjs`, `.github/workflows/feedback-triage.yml`)
+
+Hourly and on demand. It reads `GET /api/admin/feedback?state=new` with the agent's service token
+(`CF-Access-Client-Id` and `CF-Access-Client-Secret` headers, the Access application `FEEDBACK_AGENT_AUD` names), groups
+duplicates (the same screen and build, the words they share), picks the lane from the charter's file table by the route
+and the files the console names, sets a severity (1 blocks play, 2 wrong result, 3 friction, 4 wish), files one Linear
+issue per group (team ROB, the Lane label, `feedback`, the severity as the priority, the outcome project the route maps
+to), and moves every row of the group with `PATCH {state: "triaged", issue}`. The issue's body lists every row id under
+"Feedback rows", which PR 5 reads to move them on. The digest (fix now, batch, decline with the standing rule) is the
+job summary and an artifact until PR 4 mails it. `node tools/feedback-triage.mjs --dry-run --fixtures
+tests/fixtures/feedback-rows.json --out work/triage` runs the rules on the fixtures with nothing read or written
+elsewhere.
+
 ## Proof
 
 `node tests/feedback-store.mjs` (132 checks) and `python3 game/tools/batch/breaks.py tools/feedback-store-breaks.py`
 (29 breaks, each caught). `tests/release-pages.mjs` proves the schema module and the migration ship with the Worker in
 every cloud profile. The sheet: `GEOMETRY_REQUIRED=1 node tests/feedback-sheet.mjs` (38 checks) and
-`tools/feedback-sheet-breaks.py` (18 breaks); the board's game context: `tests/table-board.mjs` and `tools/feedback-breaks.py`.
+`tools/feedback-sheet-breaks.py` (18 breaks); the board's game context: `tests/table-board.mjs` and `tools/feedback-breaks.py`. The agent:
+`node tests/feedback-triage.mjs` (75 checks) and `tools/feedback-triage-breaks.py` (24 breaks).

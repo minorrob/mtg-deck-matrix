@@ -1,5 +1,37 @@
 # Who holds the work
 
+## The feedback loop, PR 3: the triage agent, 2026-10-26 (the same Claude cloud session; `claude/deck-feedback-triage`, from PR 2's head; the Deck intelligence lane's tool, the engine lane's workflow)
+
+Rob, 2026-10-26, through the plan's kick-off brief: PR 3 after PR 2. Rob, later the same day: his other Claude session and
+OpenAI hold the merges, so nothing here was merged; the handoff for the merging session is
+`docs/handoff-feedback-loop-2026-10-26.md` (the three branches stacked in merge order, what each proves and assumes, the
+commands, Rob's steps).
+
+- **Built:** `tools/feedback-triage.mjs`: reads the `new` rows from the Worker's admin route with the agent's own Access
+  service token; groups duplicates (the same screen and build, the words they share); picks the lane from the charter's
+  file table by the route and the files the console names, and the outcome project the route maps to (Rob's call D3 on
+  the default); a severity (1 blocks play, 2 wrong result, 3 friction, 4 wish); a title and a body with every fact (the
+  reports' words, where, the game context pointing at the admin game log, the console, the files believed involved, every
+  row id, never a reporter's address); one Linear issue per group in team ROB with the Lane label and `feedback` (made on
+  the first live run) and the severity as the priority; every row of the group moved to `triaged` with the issue key; the
+  digest, fix-now lines first, each with its recommendation (fix now, batch, or decline naming the standing rule: another
+  format is held, anything from outside the United States is refused, sizes are sliders). The rules decide, so a run is
+  the same on the same rows; the model (Claude Haiku 5.5 through the Claude Agent SDK, the repository checked out to read
+  with Read, Grep and Glob) sharpens the title, the body and the files, and its answer is taken only where it keeps the
+  draft's facts. The agent never executes a fix. `.github/workflows/feedback-triage.yml` runs it at :17 every hour and on
+  demand, the secrets by name, the SDK installed for the run and never committed, the digest on the job summary and as an
+  artifact.
+- **Proven here:** `feedback-triage` (75, on `tests/fixtures/feedback-rows.json`, Linear, the Worker and the model stood
+  in), red under each of 24 breaks (`tools/feedback-triage-breaks.py`); `--dry-run` writes `digest.md` and `issues.json`;
+  `data-integrity`, `feature-wiring`.
+- **Not proven, and why:** a live run: no Linear key, model key or agent service token is in this container, by design;
+  the Linear GraphQL shapes and the Agent SDK's `query()` are written from their documented shapes. The plan's first live
+  run on staging, one issue Rob reviews, waits on his steps.
+- **Rob's steps:** repository secrets `ANTHROPIC_API_KEY`, `LINEAR_API_KEY`, `FEEDBACK_AGENT_CLIENT_ID`,
+  `FEEDBACK_AGENT_CLIENT_SECRET`; the variable `FEEDBACK_API` (staging by default); the agent's Access application with a
+  Service Auth policy and its audience as `FEEDBACK_AGENT_AUD` in the staging profile; then one `workflow_dispatch` run.
+- **Next, not built:** PR 4 (approval channels), PR 5 (release notification), PR 6 (the admin view), as the handoff lists.
+
 ## The feedback loop, PR 2: the control and the sheet, 2026-10-26 (the same Claude cloud session; `claude/workshop-feedback-sheet`, from PR 1's head; the Workshop shell and the Play rail at Rob's word)
 
 Rob, 2026-10-26, through the plan's kick-off brief: PR 2 after PR 1, in order. At his word this changes the Codex · Workshop
