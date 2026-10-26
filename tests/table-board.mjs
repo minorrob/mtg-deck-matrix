@@ -596,14 +596,24 @@ try {
   await rob.page.locator('[data-action=board-camera]').click();
   const sizes = () => rob.page.evaluate(() => {
     const land = document.querySelector(".cm-board-table [data-zone=lands] .cm-bcard"), board = land.closest(".cm-seatboard"), host = getComputedStyle(document.getElementById("cm-board"));
-    return {board: parseFloat(getComputedStyle(land).width) / board.getBoundingClientRect().width, hand: parseFloat(getComputedStyle(document.querySelector(".cm-board-hand .cm-board-hand-cards .cm-bcard")).width),
+    const badges=[...board.querySelectorAll('.cm-bcard-pt,.cm-bcard-count,.cm-bcard-tax')].filter(b=>b.getClientRects().length&&getComputedStyle(b).visibility!=='hidden');
+    const fits=badges.every(b=>{const r=b.getBoundingClientRect(),c=b.closest('.cm-bcard').getBoundingClientRect();return r.left>=c.left-1&&r.right<=c.right+1&&b.scrollWidth<=b.clientWidth+1;});
+    const tight=badges.some(b=>{const css=getComputedStyle(b),card=b.closest('.cm-bcard'),edges=(parseFloat(css.paddingLeft)||0)+(parseFloat(css.paddingRight)||0)+(parseFloat(css.right)||0)+(parseFloat(css.left)||0);return card.offsetWidth-b.offsetWidth<=edges*2+2;});
+    return {badgeFits:badges.length>0&&fits,floorWitness:fits&&tight,board: parseFloat(getComputedStyle(land).width) / board.getBoundingClientRect().width, hand: parseFloat(getComputedStyle(document.querySelector(".cm-board-hand .cm-board-hand-cards .cm-bcard")).width),
       scopes: [host.getPropertyValue("--board-scale").trim(), host.getPropertyValue("--hand-scale").trim()], outs: ["board", "hand"].map(scope => document.querySelector(`#cm-board [data-board-scale="${scope}"]`)?.closest('label').querySelector('output').textContent ?? null)};
   });
   await rob.page.locator(".cm-board-traybar [data-board-scale=hand]").fill("100");
+  const boardSlider=rob.page.locator('.cm-stage-camera [data-board-scale=board]'),upper=Number(await boardSlider.getAttribute('max')),below=Math.round(upper*.9);
+  await boardSlider.fill(String(upper));const naturalUpper=await sizes();
+  await boardSlider.fill(String(below));const naturalBelow=await sizes();
+  ok(naturalUpper.badgeFits&&naturalBelow.badgeFits&&Math.abs(naturalBelow.board/naturalUpper.board-below/upper)<.03&&Math.abs(naturalBelow.hand-naturalUpper.hand)<.5,
+    'above its public badge floor the native Board slider scales raster proportionally and leaves Hand cards unchanged');
+  await boardSlider.fill('100');
   const s100 = await sizes();
   await rob.page.locator(".cm-stage-camera [data-board-scale=board]").fill("80");
   const sBoard = await sizes();
-  ok(Math.abs(sBoard.board / s100.board - 0.8) < 0.03 && Math.abs(sBoard.hand - s100.hand) < 0.5 && sBoard.scopes[0] === "0.8" && sBoard.outs[0] === "80%",
+  const boardFactor=sBoard.board/s100.board,boardScaleFits=Math.abs(boardFactor-.8)<.03||(sBoard.floorWitness&&boardFactor>=.8&&boardFactor<=1.01);
+  ok(sBoard.badgeFits&&boardScaleFits && Math.abs(sBoard.hand - s100.hand) < 0.5 && sBoard.scopes[0] === "0.8" && sBoard.outs[0] === "80%",
     `Board cards, in Camera, sizes the boards' cards alone (to ${(sBoard.board / s100.board * 100).toFixed(0)}%; the hand stays ${sBoard.hand.toFixed(0)}px)`);
   await rob.page.locator(".cm-board-traybar [data-board-scale=hand]").fill("130");
   const sHand = await sizes();
@@ -613,7 +623,8 @@ try {
   await rob.page.locator("#cm-board-tools [data-card-scale]").fill("120");
   const sTools = await sizes();
   /* Opening Play settings closes Camera, so Board cards is read after reopening Camera. */
-  ok(sTools.scopes.join() === "1.2,1.2" && sTools.outs[1] === "120%" && Math.abs(sTools.board / s100.board - 1.2) < 0.03 && Math.abs(sTools.hand / s100.hand - 1.2) < 0.02,
+  const toolsFactor=sTools.board/s100.board,toolsScaleFits=Math.abs(toolsFactor-1.2)<.03||(sTools.floorWitness&&toolsFactor>=.99&&toolsFactor<=1.21);
+  ok(sTools.badgeFits&&sTools.scopes.join() === "1.2,1.2" && sTools.outs[1] === "120%" && toolsScaleFits && Math.abs(sTools.hand / s100.hand - 1.2) < 0.02,
     `Tools is the table's card size, and moving it sets Board cards and Hand cards to its value (${sTools.outs.join(", ")})`);
   await rob.page.locator("#cm-board-tools [data-card-scale]").fill("100");
   await rob.page.click("#cm-dialog [data-action=board-settings-save]");
