@@ -56,73 +56,129 @@
       "id": "CH-10",
       "tier": "C",
       "owner": "A",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "DS decision block in the Actions drawer: `cm-pick` spell (art, name, type, controller chip), `h2` sentence, step chips only for multi-step decisions, `cm-pick` target as the large affected card, `cm-consequence`, `cm-decide-actions`",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "board-r4-decisions: 118 in installed Chrome on canonical integration, Table/Full/Focus and phone390, HUD100/200",
+        "board-target-presentation: 8; separate ability/object identities and source collision",
+        "board-result-bridge: 28; failed shared writer remains retryable",
+        "Seven decision regressions caught across worker/coordinator runs; two new phone/Next regressions caught on canonical",
+        "Screenshot review removed empty option spacer and reserved phone drawer-tab clearance",
+        "Final combined combat/input/views acceptance remains open"
+      ],
+      "commit": "0d23f48a"
     },
     {
       "id": "CH-11",
       "tier": "C",
       "owner": "A",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "One target (W01 r2): compact source → verb → target's controller row at ¼–⅓ desk card; large affected card; \"[Verb] [Player]'s [Card]?\" (\"your\", \"this\", 's after s); verb primary carries commitReview's revision guard and sr-only live region; Change target; Cancel / Don't [verb] for \"may\"",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "board-r4-decisions: 118 in installed Chrome on canonical integration, Table/Full/Focus and phone390, HUD100/200",
+        "board-target-presentation: 8; separate ability/object identities and source collision",
+        "board-result-bridge: 28; failed shared writer remains retryable",
+        "Seven decision regressions caught across worker/coordinator runs; two new phone/Next regressions caught on canonical",
+        "Screenshot review removed empty option spacer and reserved phone drawer-tab clearance",
+        "Final combined combat/input/views acceptance remains open"
+      ],
+      "commit": "0d23f48a"
     },
     {
       "id": "CH-12",
       "tier": "C",
       "owner": "A",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Many targets (W02–W04): quadrants, source top-left for 1–2 groups, centered at 3, pager past 3; stacks with ×N, four visible layers, click/Enter/Space cycles with 250ms slide (crossfade under reduced motion); summary question",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "board-r4-decisions: 118 in installed Chrome on canonical integration, Table/Full/Focus and phone390, HUD100/200",
+        "board-target-presentation: 8; separate ability/object identities and source collision",
+        "board-result-bridge: 28; failed shared writer remains retryable",
+        "Seven decision regressions caught across worker/coordinator runs; two new phone/Next regressions caught on canonical",
+        "Screenshot review removed empty option spacer and reserved phone drawer-tab clearance",
+        "Final combined combat/input/views acceptance remains open"
+      ],
+      "commit": "0d23f48a"
     },
     {
       "id": "CH-13",
       "tier": "I",
       "owner": "A",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Targets grouped by controller, You last, Lands folded inside each player; grouping replaces the \"(Keith's)\" suffix (sr label keeps it); hover pops the card; same for bounce, tap, gain control; Next / Cancel as compact text-style buttons",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "board-r4-decisions: 118 in installed Chrome on canonical integration, Table/Full/Focus and phone390, HUD100/200",
+        "board-target-presentation: 8; separate ability/object identities and source collision",
+        "board-result-bridge: 28; failed shared writer remains retryable",
+        "Seven decision regressions caught across worker/coordinator runs; two new phone/Next regressions caught on canonical",
+        "Screenshot review removed empty option spacer and reserved phone drawer-tab clearance",
+        "Final combined combat/input/views acceptance remains open"
+      ],
+      "commit": "0d23f48a"
     },
     {
       "id": "CH-14",
       "tier": "I",
       "owner": "A",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Single-action cards: no option row; the primary is named for the action (Play Card / Cast Spell / Activate); no \"Select an option to review it\" sentence",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "board-r4-decisions: 118 in installed Chrome on canonical integration, Table/Full/Focus and phone390, HUD100/200",
+        "board-target-presentation: 8; separate ability/object identities and source collision",
+        "board-result-bridge: 28; failed shared writer remains retryable",
+        "Seven decision regressions caught across worker/coordinator runs; two new phone/Next regressions caught on canonical",
+        "Screenshot review removed empty option spacer and reserved phone drawer-tab clearance",
+        "Final combined combat/input/views acceptance remains open"
+      ],
+      "commit": "0d23f48a"
     },
     {
       "id": "CH-15",
       "tier": "C",
       "owner": "A",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "RQ-12 on every desk screen: Cancel on ways/modes/may, Cancel + Back on targets and costs, Change target + Cancel on the question, Don't [verb] for may; Escape = the way back",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "board-r4-decisions: 118 in installed Chrome on canonical integration, Table/Full/Focus and phone390, HUD100/200",
+        "board-target-presentation: 8; separate ability/object identities and source collision",
+        "board-result-bridge: 28; failed shared writer remains retryable",
+        "Seven decision regressions caught across worker/coordinator runs; two new phone/Next regressions caught on canonical",
+        "Screenshot review removed empty option spacer and reserved phone drawer-tab clearance",
+        "Final combined combat/input/views acceptance remains open"
+      ],
+      "commit": "0d23f48a"
     },
     {
       "id": "CH-16",
       "tier": "I",
       "owner": "A",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Drawer copy rules: sentence case, verbs with counts, no instructional paragraphs; \"Actions\" appears once (the drawer tab); the top-right toggle is the drawer's chevron",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "board-r4-decisions: 118 in installed Chrome on canonical integration, Table/Full/Focus and phone390, HUD100/200",
+        "board-target-presentation: 8; separate ability/object identities and source collision",
+        "board-result-bridge: 28; failed shared writer remains retryable",
+        "Seven decision regressions caught across worker/coordinator runs; two new phone/Next regressions caught on canonical",
+        "Screenshot review removed empty option spacer and reserved phone drawer-tab clearance",
+        "Final combined combat/input/views acceptance remains open"
+      ],
+      "commit": "0d23f48a"
     },
     {
       "id": "CH-17",
       "tier": "M",
       "owner": "A",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Option buttons at `control` 14/700, 40px; the inspector opens from the card's 🔍 row or right-click, never the primary click (D5: single click = inspect/menu)",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "board-r4-decisions: 118 in installed Chrome on canonical integration, Table/Full/Focus and phone390, HUD100/200",
+        "board-target-presentation: 8; separate ability/object identities and source collision",
+        "board-result-bridge: 28; failed shared writer remains retryable",
+        "Seven decision regressions caught across worker/coordinator runs; two new phone/Next regressions caught on canonical",
+        "Screenshot review removed empty option spacer and reserved phone drawer-tab clearance",
+        "Final combined combat/input/views acceptance remains open"
+      ],
+      "commit": "0d23f48a"
     },
     {
       "id": "CH-20",
