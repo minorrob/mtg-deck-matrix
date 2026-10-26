@@ -1,0 +1,554 @@
+{
+  "baseline": "c567c581",
+  "changes": [
+    {
+      "id": "CH-01",
+      "tier": "C",
+      "owner": "S0",
+      "status": "in_progress",
+      "summary": "Land r4 on `main`: `pr/apply-r4.mjs` (tokens for six themes, three skins, aliases for old names, type scale, self-hosted Cinzel/Lato/Barlow/Oxanium, service worker, notices); remove the four old palettes and Satoshi/Young Serif; `tests/design-tokens.mjs` (194 checks) and `tests/type-final.mjs` (Cinzel/Lato) green in the repo's browser runner",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-02",
+      "tier": "C",
+      "owner": "S0",
+      "status": "in_progress",
+      "summary": "Theme switch exposes the six themes (skin × register) in the Account menu's Skin group with Dark/Light/System segmented control; `data-theme` carries `dark",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-03",
+      "tier": "C",
+      "owner": "S0",
+      "status": "in_progress",
+      "summary": "Wordmark untouched; gear logo at 28–52px beside it; Cinzel never on the app name (assert in `type-final`)",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-04",
+      "tier": "C",
+      "owner": "S0",
+      "status": "in_progress",
+      "summary": "Create `integration/r4` from `main` after CH-01 merges; every program branch forks from it",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-10",
+      "tier": "C",
+      "owner": "A",
+      "status": "pending",
+      "summary": "DS decision block in the Actions drawer: `cm-pick` spell (art, name, type, controller chip), `h2` sentence, step chips only for multi-step decisions, `cm-pick` target as the large affected card, `cm-consequence`, `cm-decide-actions`",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-11",
+      "tier": "C",
+      "owner": "A",
+      "status": "pending",
+      "summary": "One target (W01 r2): compact source → verb → target's controller row at ¼–⅓ desk card; large affected card; \"[Verb] [Player]'s [Card]?\" (\"your\", \"this\", 's after s); verb primary carries commitReview's revision guard and sr-only live region; Change target; Cancel / Don't [verb] for \"may\"",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-12",
+      "tier": "C",
+      "owner": "A",
+      "status": "pending",
+      "summary": "Many targets (W02–W04): quadrants, source top-left for 1–2 groups, centered at 3, pager past 3; stacks with ×N, four visible layers, click/Enter/Space cycles with 250ms slide (crossfade under reduced motion); summary question",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-13",
+      "tier": "I",
+      "owner": "A",
+      "status": "pending",
+      "summary": "Targets grouped by controller, You last, Lands folded inside each player; grouping replaces the \"(Keith's)\" suffix (sr label keeps it); hover pops the card; same for bounce, tap, gain control; Next / Cancel as compact text-style buttons",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-14",
+      "tier": "I",
+      "owner": "A",
+      "status": "pending",
+      "summary": "Single-action cards: no option row; the primary is named for the action (Play Card / Cast Spell / Activate); no \"Select an option to review it\" sentence",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-15",
+      "tier": "C",
+      "owner": "A",
+      "status": "pending",
+      "summary": "RQ-12 on every desk screen: Cancel on ways/modes/may, Cancel + Back on targets and costs, Change target + Cancel on the question, Don't [verb] for may; Escape = the way back",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-16",
+      "tier": "I",
+      "owner": "A",
+      "status": "pending",
+      "summary": "Drawer copy rules: sentence case, verbs with counts, no instructional paragraphs; \"Actions\" appears once (the drawer tab); the top-right toggle is the drawer's chevron",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-17",
+      "tier": "M",
+      "owner": "A",
+      "status": "pending",
+      "summary": "Option buttons at `control` 14/700, 40px; the inspector opens from the card's 🔍 row or right-click, never the primary click (D5: single click = inspect/menu)",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-20",
+      "tier": "C",
+      "owner": "B",
+      "status": "pending",
+      "summary": "Strip \"Combat · blocks\": attacker tiles with three rows (Attacking · → · defender name), defender thumbs, state word top-right; states unsettled / ready / refused by border + glow + word; whole-set status line in the strip",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-21",
+      "tier": "C",
+      "owner": "B",
+      "status": "pending",
+      "summary": "One row, never wrap: thin arrows the height of a tile scroll the row; \"+N more\" accent subtext above Send aligned to the tiles' top; left arrow once scrolled",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-22",
+      "tier": "C",
+      "owner": "B",
+      "status": "pending",
+      "summary": "Send blockers at the far right, sapphire primary, disabled until every attacker is settled, tooltip says why; no lock glyph; private until sent",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-23",
+      "tier": "C",
+      "owner": "B",
+      "status": "pending",
+      "summary": "Desk per attacker (W08–W10): attacker already chosen; legal blocker tiles with thumb, name, effective P/T, hover pop-up, `aria-pressed` inverts to ink, second click clears; Don't block + Confirm (secondary, \"this attacker only\"); several blockers per attacker; a moved blocker unsettles its old attacker; removed text per RQ-05.4b/d/e/f",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-24",
+      "tier": "I",
+      "owner": "B",
+      "status": "pending",
+      "summary": "Twins told apart by a corner mark (a, b, c) on the thumb and hover-light on the table; no visible \"#486\"; engine ids stay underneath",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-25",
+      "tier": "I",
+      "owner": "B",
+      "status": "pending",
+      "summary": "Attack declarations: \"All at <player>\" / None stay; attack-risk hints stay; RQ-12 way back = None / unpick; the declared set is a private draft until Confirm",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-30",
+      "tier": "C",
+      "owner": "C",
+      "status": "pending",
+      "summary": "Click map (D5): single click = inspect / card menu; double click on a card or stack = activate (tap for mana, tap ability → Actions lists it, cast); double click on the just-tapped card = untap until the mana is spent or the tap is undone; undoing a card untaps the lands it used; double click on empty board area = focus that board (RQ-02); no 300ms single-click wait; the card menu row stays the single-tap path on touch",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-31",
+      "tier": "C",
+      "owner": "C",
+      "status": "pending",
+      "summary": "Undo hover drawer (W14 right): a 65% black band one 11–12px line tall slides up from the card's bottom edge on hover for a card played this step; \"↶ Undo\" rewinds and untaps; hidden once locked in; same on a stack entry; \"undone\" in every seat's log",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-32",
+      "tier": "C",
+      "owner": "C",
+      "status": "pending",
+      "summary": "Identical lands as one stack (W16 r2): `sameKey` identity; count drawer \"×N · n untapped\" flush to the top card's bottom edge (`hud-caption` × scale); a double click taps the next untapped copy; a tapped copy tilts 30° (≤160ms, none under reduced motion), never 90°; never splits; a differing copy sits beside the stack; whole stack untaps in the untap step",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-33",
+      "tier": "I",
+      "owner": "C",
+      "status": "pending",
+      "summary": "Lands / battlefield divider (W17): a 1px line with an invisible 8px hit area, a `grip()` call; keys; double-click reset; per device, per view; 3D maps the drag; applies to a focused opponent's board",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-34",
+      "tier": "I",
+      "owner": "C",
+      "status": "pending",
+      "summary": "Camera menu per DS: View segmented (Table, Focus, 3D), HUD text segmented (100/125/150/200), sliders with values beside labels at 13px, Spacing slider (gaps → flush → overlap, default flush, one value for rows and columns, per device, opponents' boards too)",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-35",
+      "tier": "I",
+      "owner": "C",
+      "status": "pending",
+      "summary": "Opponent focus affordances: 'View AI's board' link (14px tall) and ⤢ Focus (59×24 at 11px) become 32px+ controls in `hud-caption`; the Boards list row focuses on single click",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-36",
+      "tier": "M",
+      "owner": "C",
+      "status": "pending",
+      "summary": "Play surfaces fixed colors: `mat-scrim`, `mat-ink`, `callout-*`, card face/back tokens; the Study replaces the green `mat-felt` default",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-40",
+      "tier": "C",
+      "owner": "D1",
+      "status": "pending",
+      "summary": "Study table: `cm-study` on the board root (wood, grain, lamp light, shade), `cm-mat` per seat (charcoal felt, inset edge); a chosen playmat replaces it; selection on the table = white ring + check",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-41",
+      "tier": "C",
+      "owner": "D1",
+      "status": "pending",
+      "summary": "Drawers: left Actions (decision, then Boards `cm-disclosure`), right Stack + History (+ Coach as a disclosure); 32px spine tab with chevron (`aria-expanded`, `aria-controls`), folded = labeled tab with count at the screen edge; bottom sheet on phone; #886 grips kept; module headers toggle (RQ-03.5, W13 r2: 28px headers, 22px buttons); no six-dot handle",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-42",
+      "tier": "C",
+      "owner": "D1",
+      "status": "pending",
+      "summary": "DecisionSlot top center in every view: when the Actions drawer is folded the decision renders there (question, help line, choices as secondary, chosen inverts, one accent primary, the way back); phase strip above it; × `--hud-scale`",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-43",
+      "tier": "C",
+      "owner": "D1",
+      "status": "pending",
+      "summary": "SeatHeader shared by 3D, Table, Focus: portrait in brass ring, name, commander, life at `hud-vital`, poison, hand count, state word; turn = aether ring on the portrait, priority = aether dot; low life turns harm red; `cm-seat--stack` for corners; DOM order identical across views",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-44",
+      "tier": "C",
+      "owner": "D1",
+      "status": "pending",
+      "summary": "HudScale: `--hud-scale` on the board root from Camera and Settings, stored with the account; every HUD size = token × scale; 200% keeps the top bar on one line at 1440",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-45",
+      "tier": "C",
+      "owner": "D1",
+      "status": "pending",
+      "summary": "Table menu (R-25): Concede (two-step), Leave table, End game for everyone (host, two-step, keeps the record), Table rules, Help; Escape order per C-A7 (menu/dialog → focus back → Table menu); app shell inert under the board; no footer link in the tab sequence",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-46",
+      "tier": "I",
+      "owner": "D1",
+      "status": "pending",
+      "summary": "Opening hand and center decisions through DecisionSlot: Keep primary / Mulligan way back; Pass never rendered disabled in the center",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-47",
+      "tier": "I",
+      "owner": "D1",
+      "status": "pending",
+      "summary": "Neon callouts (your turn, an attack on you, a big swing) in Barlow Condensed via `callout-*`; one at a time; reduced motion without the glow; lobby countdown: table dims, 72px figure, sound",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-48",
+      "tier": "M",
+      "owner": "D1",
+      "status": "pending",
+      "summary": "Top bar: turn number and priority at `hud`, phase strip at `hud-caption` with the current step inverted to ink; \"Actions · choice pending\" label retired (DecisionSlot carries it)",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-50",
+      "tier": "I",
+      "owner": "D2",
+      "status": "pending",
+      "summary": "Table view: panel open on a pending choice or DecisionSlot carries it; hand thumbnails ≥110px at 1440; legend labeled once (\"castable now / in hand\") with tooltips; life dial gains seat labels, active-seat glow and priority text",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-51",
+      "tier": "I",
+      "owner": "D2",
+      "status": "pending",
+      "summary": "Focus view: \"Other seats\" strip (SeatHeader stack form, counts only, never hands) with Focus buttons and double-click focus; All seats + prev/next in the header; \"n mana open · land drop used\" into the seat header at `hud-caption`",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-52",
+      "tier": "I",
+      "owner": "D2",
+      "status": "pending",
+      "summary": "Coach section in the right drawer: one 36px line \"CrankMagic Coach\" (`cm-section-title` style), no subtext, shrinks on a narrow pane; \"Questions to Ask\" 22px line opening upward over the conversation, `aria-expanded`; 13px minimum, 30px rows; when the Coach backend is off the section says so and links Help, no textarea",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-53",
+      "tier": "M",
+      "owner": "D2",
+      "status": "pending",
+      "summary": "Avatar menu becomes the DS AccountMenu on the board too: You / This device / Your data / Skin / Help / Careful / Sign out; 'Play settings' vs 'Account & app settings' resolved to Settings",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-55",
+      "tier": "C",
+      "owner": "E",
+      "status": "in_progress",
+      "summary": "Prepared: after the creature half resolves prepared, offer the copy as its spell half per Oracle text (timing, cost, how often); the copy is a spell, never a permanent; tests per step + breaks script",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-56",
+      "tier": "C",
+      "owner": "E",
+      "status": "in_progress",
+      "summary": "Per-option fields the desk needs: `effect` verb per target (W01/W02 captions), `controllerId` on every target option (already on counted targets; add to the rest), `affected` card id for the question screen, `optional` flag for \"may\" effects (Cancel = Don't [verb])",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-57",
+      "tier": "C",
+      "owner": "E",
+      "status": "in_progress",
+      "summary": "Undo window (house rule, key `houseRules.undoLastPlay`, on by default until the house-rules screen arrives): a play this step is undoable while no other player has had priority, nothing else went on the stack (own triggers included), nothing was drawn or revealed, no random outcome; a land restores the land drop; mana tapped for it untaps; the log carries \"undone\" to every seat; built on `takeBackLand` and `untapMana` (restore from a copy, checked by hash); untap-on-undo of a card untaps the lands it used (D5)",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-58",
+      "tier": "I",
+      "owner": "E",
+      "status": "in_progress",
+      "summary": "Untap a just-tapped land on a second activation while its mana is unspent (D5), as a room action, with the privacy checks",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-59",
+      "tier": "I",
+      "owner": "E",
+      "status": "in_progress",
+      "summary": "Game over files a record under each human seat's deck (date, outcome, finish turn, pod, bracket, opponents' commanders, seat) and exposes it to the results panel",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-60",
+      "tier": "M",
+      "owner": "E",
+      "status": "in_progress",
+      "summary": "Blocks: `legalBlocks` already carries menace and limits; add `reason` strings for a refused tile (W07)",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-70",
+      "tier": "I",
+      "owner": "F1",
+      "status": "in_progress",
+      "summary": "Landing: one sapphire primary in the hero; \"Other ways to start\" opens the New deck chooser; doors keep verbs only; labels \"Decks\" / \"Open my decks\" everywhere; update toast per DS Toast (dismiss, deferred)",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-71",
+      "tier": "I",
+      "owner": "F1",
+      "status": "in_progress",
+      "summary": "Decks hub: DeckTile (art, eyebrow \"D6 · Krenko\", stage chip in the family of what the deck needs, bar, Play it compact), StageChips row (ink selection), live grid count; \"Next\" from Start-from hands off to the Lab with a toast",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-72",
+      "tier": "I",
+      "owner": "F1",
+      "status": "in_progress",
+      "summary": "Stage truth: a one-card deck is never \"Playable at the table\"; stage chip follows the rung counts",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-73",
+      "tier": "C",
+      "owner": "F1",
+      "status": "in_progress",
+      "summary": "Define the Deck validation per DS FormControls: errors under the field with the alert glyph, field edge `color-required`, never a dot on a tab; Next band says why it is disabled",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-74",
+      "tier": "I",
+      "owner": "F1",
+      "status": "in_progress",
+      "summary": "Deck page: Cinzel deck title, Tabs (ink bar, counts), one primary per tab; Next band and header agree (\"24 cards unplayable\" wins over \"Lock\")",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-75",
+      "tier": "I",
+      "owner": "F1",
+      "status": "in_progress",
+      "summary": "Measure report: a door back into refinement (\"Fix in Explore\" with the weakest axis preselected)",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-76",
+      "tier": "M",
+      "owner": "F1",
+      "status": "in_progress",
+      "summary": "Explore / graph: focus ring, aether for the graph only, no accent as selection",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-80",
+      "tier": "I",
+      "owner": "F2",
+      "status": "pending",
+      "summary": "One to-buy number: Acquire, Library To buy and the deck header read the same rung counts; TableRow (48px, price in `color-money`, trailing verb, overflow)",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-81",
+      "tier": "C",
+      "owner": "F2",
+      "status": "pending",
+      "summary": "Share Deck: the menu item opens the share dialog (link, visibility, copy) instead of an error toast; DS Dialog shell",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-82",
+      "tier": "I",
+      "owner": "F2",
+      "status": "pending",
+      "summary": "Lock list: immediate busy state + DS toast \"Locked · 46 to buy\" with Undo",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-83",
+      "tier": "I",
+      "owner": "F2",
+      "status": "pending",
+      "summary": "Pull sheet: \"Do all available (53)\" confirms in a DS dialog, stats collapse, box-done moment leads to Play",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-84",
+      "tier": "I",
+      "owner": "F2",
+      "status": "pending",
+      "summary": "New table: inline validation at the field, stable layout, one door from Play home",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-85",
+      "tier": "I",
+      "owner": "F2",
+      "status": "pending",
+      "summary": "Lobby: Ready / Start hierarchy (one primary), AI seat auto-deck, one deck list; countdown callout (CH-47 shares)",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-86",
+      "tier": "I",
+      "owner": "F2",
+      "status": "pending",
+      "summary": "Results: in-progress hero with Resume / Leave table; results panel from the engine record (CH-59) with Rematch / Back to lobby / Review this game; Log a game reordered and prefilled; \"Mark <card> for replacement\" handoff into Explore",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-87",
+      "tier": "I",
+      "owner": "F2",
+      "status": "pending",
+      "summary": "Settings page per DS: switches with visible state, Danger zone parity (Clear all data confirms with the danger-fill dialog), history noise filtered, one label \"Settings\"; Confirmations dialog lists the RQ-12 way-back classes",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-88",
+      "tier": "M",
+      "owner": "F2",
+      "status": "pending",
+      "summary": "Admin panel v1 (gate, home, People and invites, Feature switches) per the brainstorm; Invite gets a list and a sent state",
+      "evidence": [],
+      "commit": null
+    },
+    {
+      "id": "CH-89",
+      "tier": "M",
+      "owner": "F2",
+      "status": "pending",
+      "summary": "Tours get a door on the Help ? panel and the landing page",
+      "evidence": [],
+      "commit": null
+    }
+  ]
+}

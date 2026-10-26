@@ -1,5 +1,16 @@
 # Who holds the work
 
+## r4 coordinated execution, October 26, 2026 (Codex; Rob: "go")
+
+The revised plan is authorized: `integration/r4` from main `c567c581`, with isolated worktrees for this effort,
+one Play writer, and no history rewrite. Foundation (`codex/r4-foundation`), Engine (`codex/r4-engine`) and
+Workshop (`codex/r4-workshop`) have exclusive workspaces under `workbench/r4-*-20261026`. Source packets,
+61 requirement IDs, decisions and evidence live in `docs/r4-execution/`. Foundation owns global type/theme
+files until handed off; Workshop works in its feature modules; the coordinator owns integration and asset
+pins. Engine work is independent of the visual foundation. Browser suites run one at a time. The existing
+design handoff is preserved. Staging follows combined acceptance through the engine release executor;
+production awaits Rob's separate go. No code change or deployment is claimed by this initial record.
+
 ## 2026-10-25: main 9ca99e5 in production (Rob: "release main 9ca99e5 to production")
 
 Released by the Decks cloud session (`claude/vibrant-turing-50yl3r`), with the Camera and Settings session told before
