@@ -1,0 +1,33 @@
+/* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
+import assert from 'node:assert/strict';import {readFileSync,mkdirSync} from 'node:fs';import path from 'node:path';import {openBrowser,ROOT} from './uat/browser-runner.mjs';
+const {browser,base,stub,close}=await openBrowser({name:'board-r4-caption-fit',flag:'GEOMETRY_REQUIRED'});
+const sample=JSON.parse(readFileSync(path.join(ROOT,'docs/reference/replit-sample-views.json'),'utf8')).views[13];
+const html=readFileSync(path.join(ROOT,'index.html'),'utf8').replace('</head>','<meta name="crankmagic-accounts" content="on"><meta name="crankmagic-play" content="cloud"></head>');
+let checks=0;const eq=(a,b,m)=>{assert.deepEqual(a,b,m);checks++;};const ok=(c,m)=>{assert.ok(c,m);checks++;};
+const land=(id,tapped=false)=>({cardId:id,name:'Island',owner:0,controller:0,types:['Land'],keywords:[],faceDown:false,tapped,counters:{},power:null,toughness:null,damage:0,attachments:[]});
+function fixture(){const v=structuredClone(sample);v.revision=8000;v.state.combat=null;v.state.phase='MAIN1';v.state.players[0].zones.Battlefield.cards=[land(9001)];v.decision={id:'priority:input',kind:'priority',mode:'one',min:1,max:1,title:'Your priority',options:[{index:0,act:'pass',label:'Pass priority'},{index:1,act:'activate-mana',label:'Island',cardId:9001,detail:'{U}'}]};return v;}
+async function open(mode,width=1440,touch=false,v=fixture(),hud=100){
+ const context=await browser.newContext({viewport:{width,height:width<500?844:900},reducedMotion:'reduce',serviceWorkers:'block',hasTouch:touch,isMobile:touch});await context.addInitScript(({mode,hud})=>{localStorage.setItem('cm-play-hud-scale',String(hud));localStorage.setItem('cm-board-view',mode);localStorage.setItem('crankmagic-audio-muted','true');(globalThis.CrankFeatures||=[]).push(C=>{globalThis.__r4Act=(name,data)=>C.actions[name]({dataset:data});});},{mode,hud});
+ const page=await context.newPage();if(stub)await stub(page);const sent=[],errors=[];let socket,current=v;
+ page.on('pageerror',e=>errors.push(e.message));await page.route(`${base}/index.html*`,r=>r.fulfill({contentType:'text/html',body:html}));await page.route(`${base}/api/me`,r=>r.fulfill({json:{email:'input@example.com'}}));await page.route(`${base}/api/library**`,r=>r.fulfill({json:{head:null}}));
+ const table={tableId:'r4input01',phase:'playing',matchId:v.matchId,away:[],blockers:[],rules:{},seats:v.state.players.map(p=>({seatId:p.playerId,name:p.name,kind:p.playerId===v.seat?'human':'ai',you:p.playerId===v.seat,occupied:true,ready:true,mat:'felt'}))};
+ await page.route(`${base}/api/tables**`,r=>r.fulfill({json:{table,now:Date.now()}}));await page.routeWebSocket(/\/api\/tables\/r4input01\/connect$/,s=>{socket=s;s.onMessage(m=>sent.push(JSON.parse(m)));s.send(JSON.stringify({type:'view',view:v}));});
+ await page.goto(`${base}/index.html#table?id=r4input01`);await page.locator('.cm-mat [data-card="9001"]').first().waitFor();
+ return {page,context,sent,errors,get current(){return current;},feed:async change=>{const next=structuredClone(current);change(next);next.revision++;current=next;socket.send(JSON.stringify({type:'receipt',receipt:{}}));socket.send(JSON.stringify({type:'view',view:next}));await page.waitForTimeout(100);}};
+}
+const card=id=>`.cm-mat[data-seat="0"] .cm-bcard[data-action="board-card"][data-card="${id}"]`;
+const roots='.cm-stage-top,.cm-mat-head,.cm-seat-header,.cm-mat-label,.cm-board-group>h3,.cm-board-chip,.cm-board-decision,.cm-board-hand-side,.cm-r4-combat,.cm-other-seats,.cm-stage-handle';
+const failures=[];
+try{
+ for(const mode of ['table','focus','full'])for(const hud of [100,200])for(const width of [1440,390]) {
+  const f=await open(mode,width,false,fixture(),hud),{page,context,errors}=f;
+  if(width<500)await page.locator('[data-action=board-stage-rail]').click();
+  const problems=await page.evaluate(({roots,floor})=>[...document.querySelectorAll(`#cm-board ${roots.split(',').join(',#cm-board ')}`)].flatMap(root=>[root,...root.querySelectorAll('*')]).filter((el,i,all)=>all.indexOf(el)===i&&[...el.childNodes].some(n=>n.nodeType===3&&n.textContent.trim())&&!el.closest('[hidden],[inert],.cm-sr-only,.cm-board-peek,.cm-bcard-name,.cm-coach-head,.cm-coach-questions,.cm-stage-camera,.cm-profile-avatar,.cm-seat-portrait')&&!(el.parentElement?.matches('.cm-stage-handle')&&el.tagName==='B')&&el.getClientRects().length&&getComputedStyle(el).visibility==='visible').map(el=>({text:el.textContent.trim().slice(0,70),size:parseFloat(getComputedStyle(el).fontSize),cls:el.className})).filter(x=>x.size<floor-.1),{roots,floor:15*hud/100});
+  if(process.env.UAT_SHOTS){mkdirSync(process.env.UAT_SHOTS,{recursive:true});await page.screenshot({path:path.join(process.env.UAT_SHOTS,`r4-caption-${mode}-${width}-${hud}.png`)});}
+  if(problems.length)failures.push({case:`${mode}/${width}/${hud}`,text:problems});else checks++;
+  const own=page.locator('.cm-mat[data-seat="0"] .cm-bcard[data-card="9001"]').first();await own.scrollIntoViewIfNeeded();const reachable=await own.evaluate(el=>{const r=el.getBoundingClientRect(),at=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return el===at||el.contains(at);});if(!reachable)failures.push({case:`${mode}/${width}/${hud}`,geometry:'card unreachable after scrolling'});else checks++;
+  eq(errors,[],`${mode}/${width}/${hud}: no browser errors`);await context.close();
+ }
+ eq(failures,[],'actual endpoint typography and geometry audit');
+}finally{await close();}
+console.log(`board-r4-caption-fit: ${checks} checks passed`);

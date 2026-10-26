@@ -984,3 +984,37 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board :is(.cm-pick small,.cm-steps,.cm-consequence,.cm-board-waiting,.cm-stage-priority small,.cm-stage-priority .cm-board-waiting,.cm-board-pie-priority,.cm-board-next,.cm-board-conn,.cm-bcard-pt,.cm-bcard-count,.cm-bcard-tax,.cm-bcard-mark,.cm-board-chip,.cm-board-hand-types,.cm-board-hand-types li,.cm-board-hand-count,.cm-board-turn small,.cm-board-tile-flag,.cm-seat-hand,.cm-control-label){font-size:calc(15px*var(--hud-scale,1))}
 #matrix-v2 .cm-board[data-phone] .cm-phone-ask{overflow:auto;overscroll-behavior:contain}
 #matrix-v2 .cm-board[data-phone] .cm-phone-ask .cm-decision-slot{width:100%;min-width:0;box-sizing:border-box}
+
+/* The dial's center and labels each retain their own clear area and contrast. */
+#matrix-v2 .cm-board .cm-board-pie .cm-board-center{width:calc(32px*var(--hud-scale,1));height:calc(32px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-board-pie-life small{color:var(--mat-ink);background:var(--mat-scrim);padding:2px 4px;border-radius:3px}
+#matrix-v2 .cm-board .cm-board-pie-priority{top:calc(50% + 20px*var(--hud-scale,1));font-size:calc(15px*var(--hud-scale,1));line-height:1.1}
+
+#matrix-v2 .cm-board .cm-vitals-poison,#matrix-v2 .cm-board .cm-vitals>b:after{font-size:calc(15px*var(--hud-scale,1))}
+
+#matrix-v2 .cm-board .cm-mat .cm-mat-name,#matrix-v2 .cm-board .cm-pick>div,#matrix-v2 .cm-board .cm-pick>div>*{font-size:calc(15px*var(--hud-scale,1))}
+
+/* Scale game facts in every seat-header location, including the drawer's board list. */
+#matrix-v2 .cm-board .cm-seat-header :is(.cm-mat-name,.cm-seat-commander,.cm-seat-state),#matrix-v2 .cm-board .cm-board-pane .cm-seat-header .cm-seat-commander,#matrix-v2 .cm-board .cm-stage-rear .cm-seat-header .cm-seat-state{font-size:calc(15px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-stage-top .v-button{font-size:calc(15px*var(--hud-scale,1))!important;height:auto;white-space:normal}
+#matrix-v2 .cm-board .cm-other-seats>header,#matrix-v2 .cm-board .cm-other-seats>header :is(b,.v-button),#matrix-v2 .cm-board .cm-stage-handle>span{font-size:calc(15px*var(--hud-scale,1))}
+/* The dial is in the row gap; it never covers a card's pixels or pointer target. */
+#matrix-v2 .cm-board .cm-board-table{row-gap:calc(var(--pie) + 16px);overflow:auto;overscroll-behavior:contain}
+#matrix-v2 .cm-board .cm-board-table[data-seats="2"]{column-gap:calc(var(--pie) + 16px)}
+#matrix-v2 .cm-board .cm-board-pie{pointer-events:none}
+#matrix-v2 .cm-board .cm-board-pie .cm-board-center{pointer-events:auto}
+#matrix-v2 .cm-board[data-hud-large] .cm-board-table{grid-template-rows:repeat(2,var(--hud-row-h));align-content:start}
+#matrix-v2 .cm-board[data-hud-large] .cm-board-table[data-seats="2"]{grid-template-rows:var(--hud-row-h)}
+#matrix-v2 .cm-board[data-hud-large] .cm-board-table[data-seats="2"] .cm-board-slot{height:var(--hud-row-h)}
+
+/* A compact center retains the original Table allocation; large HUD rows scroll as a whole. */
+#matrix-v2 .cm-board .cm-board-table{--pie:calc(130px*var(--hud-scale,1));row-gap:22px}
+#matrix-v2 .cm-board .cm-board-table[data-seats="2"]{column-gap:22px}
+#matrix-v2 .cm-board .cm-board-pie .cm-board-center{width:calc(24px*var(--hud-scale,1));height:calc(24px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-board-pie-priority{top:calc(50% + 18px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-board-table[data-seats="2"] .cm-board-pie-priority{top:105%}
+#matrix-v2 .cm-board .cm-zone-divider{z-index:10;pointer-events:auto}
+
+#matrix-v2 .cm-board .cm-mat-grid{overflow-anchor:none}
+
+#matrix-v2 .cm-board .cm-mat[data-fit]>.cm-mat-grid{grid-template-rows:var(--field-px,minmax(180px,1fr)) 8px var(--lands-px,minmax(140px,1fr)) auto}

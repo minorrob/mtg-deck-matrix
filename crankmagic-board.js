@@ -222,14 +222,14 @@ globalThis.CrankBoard = Object.seal({
     const el = event.target.closest?.('[data-play-hud]'); if (!el) return;
     hudPreview = Math.max(100, Math.min(200, Number(el.value) || 100));
     el.setAttribute('aria-valuetext', `${hudPreview}%`); el.parentElement.querySelector('output').textContent = `${hudPreview}%`;
-    applyHud(document.getElementById('cm-board'));
+    applyHud(document.getElementById('cm-board'));fit();
   });
   document.addEventListener('input',event=>{const el=event.target.closest?.('[data-board-spacing]');if(!el)return;spacingPreview=Math.max(-70,Math.min(20,Number(el.value)||0));el.setAttribute('aria-valuetext',`${spacingPreview}%`);el.parentElement.querySelector('output').textContent=`${spacingPreview}%`;applySpacing(document.getElementById('cm-board'));fit();});
   document.addEventListener('change',event=>{const el=event.target.closest?.('[data-board-spacing]');if(!el)return;keep('cm-board-spacing',spacingPreview ?? Number(el.value));spacingPreview=null;});
   document.addEventListener('change', event => {
     const el = event.target.closest?.('[data-play-hud]'); if (!el) return;
     keep(HUD_KEY, Math.max(100, Math.min(200, Number(el.value) || 100))); hudPreview = null;
-    applyHud(document.getElementById('cm-board'));
+    applyHud(document.getElementById('cm-board'));fit();
   });
   let paneEditing = false, paneSaving = false, profileOpen = false;
   const PANE_MODULES = [["history", "History"], ["coach", "AI Coach"], ["counter", "Counter-Intel"], ["resources", "Resources"], ["stack", "On the Stack"], ["inspect", "Card Preview"], ["table", "Table Vitals"], ["recommended", "Recommended Actions"], ["chat", "Chat"], ["actions", "Actions"]];
@@ -605,14 +605,14 @@ globalThis.CrankBoard = Object.seal({
     return button ? `<button type="button" class="${cls}" data-action="board-vitals" aria-label="${e(label)}; open Table vitals">${inner}</button>`
       : `<span class="${cls}" aria-label="${e(label)}">${inner}</span>`;
   }
-  function seatHeader(p, {interactive = true} = {}) {
+  function seatHeader(p, {interactive = true,resources=false} = {}) {
     const commander = commanderOf(p), label = seatLabel(p), active = view.state.turnPlayerId === p.playerId;
     const state = view.decision && p.playerId === view.seat ? 'Deciding' : active ? (p.playerId === view.seat ? 'Your turn' : `${p.name}'s turn`) : 'Waiting';
     const initial = (p.name || 'Player').trim()[0] || '?';
     return `<div class="cm-seat-header${active ? ' is-turn' : ''}${p.health.life <= 10 ? ' is-danger' : ''}" data-seat-header="${p.playerId}">
       <span class="cm-seat-portrait" aria-hidden="true"><span class="cm-seat-initial">${e(initial)}</span>${commander?.name ? `<img src="${e(pictureOf(commander.name))}" alt="" referrerpolicy="no-referrer">` : ""}</span>
       <span class="cm-seat-identity"><strong class="cm-mat-name">${e(label)}</strong><span class="cm-seat-commander">${e(commander?.name || 'Command zone')}</span></span>
-      ${vitals(p, {button:interactive})}${mode==='focus' && p.playerId===focus?`<span class="cm-seat-resources">${p.mana.reduce((n,m)=>n+m.amount,0)} mana open · land drop ${p.landsPlayed?'used':'available'}</span>`:''}<span class="cm-seat-hand">${p.zones.Hand.count} in hand</span>
+      ${vitals(p, {button:interactive})}${resources?`<span class="cm-seat-resources">${p.mana.reduce((n,m)=>n+m.amount,0)} mana open · land drop ${p.landsPlayed?'used':'available'}</span>`:''}<span class="cm-seat-hand">${p.zones.Hand.count} in hand</span>
       <span class="cm-seat-state${view.state.priorityPlayerId === p.playerId ? ' has-priority' : ''}">${e(state)}</span></div>`;
   }
   document.addEventListener('error', event => {if (event.target.matches?.('.cm-seat-portrait img')) event.target.remove();}, true);
@@ -912,7 +912,7 @@ globalThis.CrankBoard = Object.seal({
     (C.focusFind(key) || next.querySelector("[data-action=board-end]"))?.focus({preventScroll: true});
   }
   function openSettings() {
-    profileOpen = false; menuOpen = false; historyOpen = false; stepsOpen = false; alsoOpen = false; confirmEnd = false;
+    profileOpen = false; cameraOpen=false;tableMenuOpen=false;menuOpen = false; historyOpen = false; stepsOpen = false; alsoOpen = false; confirmEnd = false;
     draw();
     const before = settingsNow();
     let saved = false;
@@ -931,7 +931,7 @@ globalThis.CrankBoard = Object.seal({
       if (d.open) return;   /* another window took its place */
       d.querySelector(".cm-play-settings")?.remove();
       const a = document.activeElement;
-      if (!a || a === document.body || d.contains(a)) document.querySelector("#cm-board [data-action=board-profile]")?.focus({preventScroll: true});
+      if (!a || a === document.body || d.contains(a)) document.querySelector("#cm-board [data-action=board-camera]")?.focus({preventScroll: true});
     }, {once: true});
     actions["board-settings-save"] = () => {saved = true; d.close();};
   }
@@ -989,8 +989,8 @@ globalThis.CrankBoard = Object.seal({
   function fitBoardZones(host) {
     for(const grid of host.querySelectorAll('.cm-mat-grid')) {
       const mat=grid.closest('.cm-mat'),bc=parseFloat(getComputedStyle(mat).getPropertyValue('--bc')) || mat.querySelector('.cm-bcard')?.offsetWidth || 60;
-      const fieldMin=Math.ceil(bc*1.4+100*hudScale()/100),landMin=Math.ceil(bc*1.72+48*hudScale()/100),header=mat.querySelector('.cm-mat-head')?.offsetHeight || 0;
-      const total=Math.max(fieldMin+landMin,mat.dataset.fit==='phone'?innerHeight*.65:mat.clientHeight-header-16),share=zoneShare(Number(mat.dataset.seat));
+      const fieldMin=Math.ceil(bc*1.4+64*hudScale()/100),landMin=Math.ceil(bc*1.72+32*hudScale()/100),header=mat.querySelector('.cm-mat-head')?.offsetHeight || 0;
+      const total=Math.max((fieldMin+landMin)*1.2,mat.dataset.fit==='phone'?innerHeight*.65:mat.clientHeight-header-16),share=zoneShare(Number(mat.dataset.seat));
       const field=Math.max(fieldMin,Math.min(total-landMin,total*share));
       grid.style.setProperty('--field-px',`${field}px`);grid.style.setProperty('--lands-px',`${total-field}px`);
       grid.dataset.zoneTotal=String(total);grid.dataset.fieldMin=String(fieldMin);grid.dataset.landMin=String(landMin);
@@ -1056,7 +1056,7 @@ globalThis.CrankBoard = Object.seal({
     const mana = p.mana.reduce((n, m) => n + m.amount, 0);
     const bare = size === "full" || size === "opp" || size === "side" || size === "phone";
     const active = view.state.turnPlayerId === i;
-    const header = head === "none" ? "" : `<header class="cm-mat-head cm-seatboard-head">${seatHeader(p)}${focusButton ? b("⤢ Focus", "board-focus", {seat: String(i)}, false, {cls: "compact"}) : ""}</header>`;
+    const header = head === "none" ? "" : `<header class="cm-mat-head cm-seatboard-head">${seatHeader(p,{resources:size==='focus'})}${focusButton ? b("⤢ Focus", "board-focus", {seat: String(i)}, false, {cls: "compact"}) : ""}</header>`;
     const body = `<div class="cm-mat-grid cm-seatboard-body"><i class="cm-zone-origin" data-zone-probe="o" aria-hidden="true"></i><i class="cm-zone-origin" data-zone-probe="x" aria-hidden="true"></i><i class="cm-zone-origin" data-zone-probe="y" aria-hidden="true"></i>
         <div class="cm-mat-zone cm-board-field" data-zone="battlefield">${group("Creatures", creatures)}${group("Artifacts & enchantments", other)}${!field.length && !ghosts.length ? `<p class="cm-board-empty">${p.health.status === "lost" || departed(i) ? "Out of the game." : "No permanents yet."}</p>` : ""}<i class="cm-mat-label">Battlefield</i></div>
         <span class="cm-zone-divider" data-wf="W17">${grip('zones','Battlefield and lands divider: drag, arrows, or double click to reset',Math.round(zoneShare(i)*100),[20,80],'horizontal',` data-zone-seat="${i}"`)}</span>
@@ -1111,7 +1111,7 @@ globalThis.CrankBoard = Object.seal({
     const over = parts.find(({at}) => at[1] > 360);
     if (over) stops.unshift(`${tint(over.p)} 0% ${pct(over.at[1] - 360)}`);
     const totals = parts.map(({p, at}) => {
-      const mid = ((at[0] + at[1]) / 2) * Math.PI / 180, x = 50 + 30 * Math.sin(mid), y = 50 - 30 * Math.cos(mid);
+      const mid = ((at[0] + at[1]) / 2) * Math.PI / 180, x = 50 + 42 * Math.sin(mid), y = ps.length===2?50:Math.cos(mid)>0?20:100;
       return `<span class="cm-board-pie-life${p.playerId===view.state.turnPlayerId?' is-active':''}" data-seat="${p.playerId}" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%"><b>${p.health.life}</b><small>${e(p.playerId===view.seat?'You':p.name)}</small></span>`;
     }).join("");
     const said = ps.map((p) => `${p.playerId === view.seat ? "You" : p.name} ${p.health.life}`).join(", ");
@@ -1195,7 +1195,7 @@ globalThis.CrankBoard = Object.seal({
       <button type="button" class="cm-stage-handle cm-stage-right cm-drawer-tab" data-action="board-stage-side" aria-expanded="${stageSide}" aria-controls="cm-stack-drawer" aria-label="${stageSide ? 'Collapse' : 'Expand'} Stack"><span>Stack · ${count}</span><b aria-hidden="true">${stageSide ? '▸' : '◂'}</b></button>`;
   }
   function tableMenu() {
-    return `<div class="cm-table-menu"><button type="button" data-action="board-table-menu" aria-expanded="${tableMenuOpen}" aria-controls="cm-table-menu">Table ▾</button>${tableMenuOpen ? `<div id="cm-table-menu" role="group" aria-label="Table">${b('Concede', 'board-concede')}${b('Leave table', 'board-leave-page')}${table?.youAreHost ? (confirmEnd ? `<p>End the game for everyone? The record is kept.</p>${b('Cancel', 'board-end-cancel')}${b('End game for everyone', 'board-end', {confirm:'1'}, true)}` : b('End game for everyone', 'board-end')) : ''}${b('Table rules', 'board-table-rules')}${b('Help', 'page-help', {help:'table'})}</div>` : ''}</div>`;
+    return `<div class="cm-table-menu"><button type="button" data-action="board-table-menu" aria-expanded="${tableMenuOpen}" aria-controls="cm-table-menu">Table ▾</button>${tableMenuOpen ? `<div id="cm-table-menu" role="group" aria-label="Table">${b('Pages','board-menu')}${menuOpen?menu():''}${b('Concede', 'board-concede')}${b('Leave table', 'board-leave-page')}${table?.youAreHost ? (confirmEnd ? `<p>End the game for everyone? The record is kept.</p>${b('Cancel', 'board-end-cancel')}${b('End game for everyone', 'board-end', {confirm:'1'}, true)}` : b('End game for everyone', 'board-end')) : ''}${b('Table rules', 'board-table-rules')}${b('Help', 'page-help', {help:'table'})}</div>` : ''}</div>`;
   }
   function cameraMenu() { return `${tableMenu()}<div class="cm-stage-camera"><button type="button" data-action="board-camera" aria-expanded="${cameraOpen}">Camera ▾</button>${cameraOpen ? `<div>${phone() ? "" : switcher()}${hudSlider()}<span>View seats</span>${ib("◀", "board-rotate", "Previous seat", {by: "-1"})}${ib("▶", "board-rotate", "Next seat", {by: "1"})}
         ${stageEnabled() ? `<label>Tilt <input type="range" min="0" max="60" value="${camera.tilt}" data-stage-camera="tilt" aria-label="Table tilt"><output>${camera.tilt}°</output></label>` : ""}
@@ -1987,6 +1987,7 @@ globalThis.CrankBoard = Object.seal({
   async function ask_(text) {
     const q = String(text || "").trim();
     if (!q || !view || coach.typing || coachGate.key!==coachKey() || coachGate.available!==true) return;
+    const requestKey=JSON.stringify([coachKey(),view.matchId]);
     const here = stepNow(), last = [...coach.thread].reverse().find((m) => m.divider);
     if (!last || last.divider !== here) coach.thread.push({divider: here});
     coach.thread.push({from: "you", text: q});
@@ -2007,6 +2008,7 @@ globalThis.CrankBoard = Object.seal({
       }
     } catch {said = {text: "The Coach could not be reached. Try again in a moment."};}
     if (coach.asked !== turn) return;
+    if(JSON.stringify([coachKey(),view?.matchId])!==requestKey){coach.typing=false;coach.thread=[];coach.asked++;drawCoach();return;}
     coach.typing = false;
     coach.thread.push({from: "coach", ...said});
     drawCoach();
@@ -2628,6 +2630,12 @@ globalThis.CrankBoard = Object.seal({
           tbl.style.setProperty("--mid-x", `${Math.round(box.width / 2)}px`);
           tbl.style.setProperty("--mid-y", `${Math.round((box.height - used) / 2 + top * 9 / 16 + gy / 2)}px`);
         }
+      }
+      if(tbl && hudScale()>=150) {
+        const n=Number(tbl.dataset.seats),box=tbl.getBoundingClientRect(),css=getComputedStyle(tbl),gx=parseFloat(css.columnGap)||14,gy=parseFloat(css.rowGap)||22;
+        const width=Math.max(280,Math.floor((box.width-gx)/2)),height=Math.max(165*hudScale()/100,width*9/16);
+        for(const key of ['--top-w','--bot-w','--board-w'])tbl.style.setProperty(key,`${width}px`);
+        tbl.style.setProperty('--hud-row-h',`${height}px`);tbl.style.setProperty('--mid-x',`${box.width/2}px`);tbl.style.setProperty('--mid-y',`${n===2?height/2:height+gy/2}px`);
       }
       const stage = host.querySelector(".cm-board-stage");
       if (stage) {
@@ -3907,8 +3915,8 @@ globalThis.CrankBoard = Object.seal({
     }
   });
   actions["board-tools"] = () => openSettings();
-  actions["board-coach"] = () => {profileOpen=false; coach.open = !coach.open; tools = false; historyOpen = false; if (coach.open) {if (!moduleSide("coach")) inspection = null; panelOpen = false;openModuleDrawer("coach");} draw(); drawCoach(); if (coach.open) document.querySelector("#cm-board-coach .cm-coach-input")?.focus();};
-  actions["board-recommend"] = () => {coach.open=true;if (!moduleSide("coach")) inspection = null;openModuleDrawer("coach");draw();drawCoach();ask_("What are my best actions right now?");};
+  actions["board-coach"] = () => {profileOpen=false; coach.open = !coach.open; tools = false; historyOpen = false; if (coach.open) {if (!moduleSide("coach")) inspection = null; panelOpen = false;openModuleDrawer("coach");if(phone()){stageSide=true;stageRail=false;}} draw(); drawCoach(); if (coach.open) document.querySelector("#cm-board-coach .cm-coach-input")?.focus();};
+  actions["board-recommend"] = () => {coach.open=true;if (!moduleSide("coach")) inspection = null;openModuleDrawer("coach");if(phone()){stageSide=true;stageRail=false;}draw();drawCoach();ask_("What are my best actions right now?");};
   actions["board-coach-ask"] = (el) => ask_(el.dataset.q);
   /* Show me: the cards an answer names, lit on the board for four seconds. Why?: each play's reason, one sentence. */
   actions["board-coach-show"] = (el) => {
