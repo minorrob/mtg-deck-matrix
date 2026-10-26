@@ -72,7 +72,7 @@ the migration number this work took; 0007 and 0008 stay reserved (docs/ACTIVE.md
   sheet's header and never the person, the Worker's 429 shown with the text kept, a picture chosen sent as WebP under
   1 MiB, signed out refused with Sign in and Email instead). `tools/feedback-sheet-breaks.py`: 17 breaks, each caught.
   `tests/table-board.mjs`'s Send feedback checks rewritten to the board's richer `held()` and the report's game context;
-  `tools/feedback-breaks.py` (10 breaks; the five on the board's half run here: FEEDBACK_BREAKS_RESULT). Also green:
+  `tools/feedback-breaks.py` (10 breaks; the five on the board's half run here against `table-board`, each caught; the five on the mailto's half are the file's older breaks, unchanged). Also green:
   `feature-wiring`, `menu-help`, `settings-r3`, `data-integrity`, `service-worker`, `asset-versions` (re-recorded: two
   new files, five bumps), `release-pages` 228, `page-budget` 80 (six control budgets raised by one for the glyph, the word budgets unmoved),
   `table-board` 294 (the whole game between two browsers, the Send feedback checks among them).
