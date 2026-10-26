@@ -1054,7 +1054,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-phone-battlefield .cm-board-pile{grid-row:5}
 
 /* A larger information scale wraps real HUD groups, never phase text over priority. */
-#matrix-v2 .cm-board .cm-stage-top{height:auto;min-height:calc(28px + 30px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-stage-top{height:auto;min-height:calc(28px + 30px*var(--hud-scale,1));align-self:start}
 #matrix-v2 .cm-board[data-hud-large] .cm-stage-top{flex-wrap:wrap;align-content:center}
 #matrix-v2 .cm-board[data-hud-large] .cm-stage-top>.cm-board-turnsteps{flex:1 0 360px}
 #matrix-v2 .cm-board[data-hud-large] .cm-stage-priority{flex:1 0 280px;white-space:normal}
