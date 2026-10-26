@@ -16,7 +16,7 @@ async function open(mode,width=1440,touch=false,v=fixture(),hud=100){
  return {page,context,sent,errors,get current(){return current;},feed:async change=>{const next=structuredClone(current);change(next);next.revision++;current=next;socket.send(JSON.stringify({type:'receipt',receipt:{}}));socket.send(JSON.stringify({type:'view',view:next}));await page.waitForTimeout(100);}};
 }
 const card=id=>`.cm-mat[data-seat="0"] .cm-bcard[data-action="board-card"][data-card="${id}"]`;
-const roots='.cm-stage-top,.cm-mat-head,.cm-seat-header,.cm-mat-label,.cm-board-group>h3,.cm-board-chip,.cm-board-decision,.cm-board-hand-side,.cm-r4-combat,.cm-other-seats,.cm-stage-handle';
+const roots='.cm-stage-top,.cm-mat-head,.cm-seat-header,.cm-mat-label,.cm-board-group>h3,.cm-board-chip,.cm-board-decision,.cm-board-hand-side,.cm-r4-combat,.cm-other-seats,.cm-stage-handle,.cm-bcard-pt,.cm-bcard-count,.cm-bcard-tax,.cm-land-count,.cm-undo-drawer,.cm-vitals-poison';
 const failures=[];let scenarios=0;
 try{
  for(const mode of ['table','focus','full'])for(const hud of [100,200])for(const width of [1440,390])for(const seats of mode==='table'&&width===1440?[2,4]:[4]) {

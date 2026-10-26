@@ -207,4 +207,4 @@ try {
 } finally {
   await close();
 }
-console.log(`board-fullscreen-notes: ${checks} checks passed -- card actions reviewed and confirmed in every view, a land just played taken back by its double-click, the actions large over the table in Full screen, the others' plays held up for ten seconds, the two priority choices, the tabletop to 200%, the commander tax below the title bar.`);
+console.log(`board-fullscreen-notes: ${checks} checks passed -- card actions reviewed and confirmed in every view, a land just played taken back by its offered Undo drawer, the actions large over the table in Full screen, the others' plays held up for ten seconds, the two priority choices, the tabletop to 200%, the commander tax below the title bar.`);
