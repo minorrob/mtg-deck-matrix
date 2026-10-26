@@ -88,7 +88,7 @@ try {
   /* A1: four swatch cards, each drawn in its own theme's colors and face. */
   /* PLAY › OVERLAY (2026-10-12): the callouts' loudness is a slider, 60% until moved, saved with the Play preferences. */
   const overlay = page.locator(".cm-settings [data-settings-overlay]");
-  eq([await overlay.getAttribute("type"), await overlay.inputValue(), (await page.locator(".cm-settings-slider output").innerText()).trim()], ["range", "60", "60%"], "Play has the Overlay slider, at 60% until moved");
+  eq([await overlay.getAttribute("type"), await overlay.inputValue(), (await page.locator(".cm-settings-slider:has([data-settings-overlay]) output").innerText()).trim()], ["range", "60", "60%"], "Play has the Overlay slider, at 60% until moved");
   await overlay.fill("0");
   await page.waitForFunction(() => document.querySelector(".cm-settings [data-settings-overlay]").getAttribute("aria-valuetext") === "off");
   await page.waitForTimeout(400);

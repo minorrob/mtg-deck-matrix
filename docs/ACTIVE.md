@@ -33,7 +33,63 @@ back with `tools/staging-check.mjs --expect 9ca99e53`.
   Worker setting was added since 1fcfc3d. Sharing stays off in `cloud-production` (it is on in the staging profile
   only), so the `cloud/sharing.mjs` changes do not run there.
 
+## Play's graphics: resolution in Settings, the volcano whole, painted table skins, sharp mat cards; target lands folded, 2026-10-26 (a Claude cloud session, for Rob; `claude/vigilant-dijkstra-bzs1wf`, restarted from main after #884)
+
+Rob, 2026-10-25: *"I also want to increase the game's resolution dramatically. I'd like this to be an option in settings.
+The lava background shouldn't be so zoomed in by default either ... the table material/skin looks like an 8-bit graphic.
+I want 32-bit graphics in this game as a minimum. We'll look to enable 64-bit later."* And: *"the skin on the tables should
+have much more detail to them; look like a more realistic cartoon."* At his word this changes the Codex · Play lane's
+`crankmagic-stage.js`, `crankmagic-stage-tables.js`, `crankmagic-stage.css`, `crankmagic-board.js` (the Settings window's
+slider) and `crankmagic-settings-play.js`.
+
+- **Resolution:** the 3D table is drawn at **150%** of the screen's pixels by default (was: every frame sized to the
+  stage's CSS pixels, 1x, whatever the scaling said), **50% – 200%** in Settings › Play and the table's Settings window,
+  previewed as dragged, put back by Cancel, kept per device (`cm-stage-resolution`). Dithered against banding.
+- **The volcano whole:** the 1280×720 video is shown at its own 16:9, as large as the stage allows, its blurred poster
+  filling the rest, the edges feathered. It is drawn near its native size now; a sharper backdrop needs a larger source.
+- **Table skins:** painted pixel by pixel in 32-bit RGBA in a Web Worker (`crankmagic-stage-paint.js`, a file of its own:
+  the page admits workers from its origin only): wood rings, fibers, knots, plank seams and bevels; granite, felt, leather,
+  iron, brushed steel, frosted glass, obsidian with glowing veins; softly stepped tones, a normal map from the paint, inked
+  box edges, mipmaps and 16x anisotropic filtering; 2048 px, 4096 at 175% and over. The table stands in its colors and
+  takes its skins when painted (about 1–2.5 s in the cloud container's software WebGL).
+- **Sharp cards on the mats** (Rob, same day: *"Note how blurry the cards on the mat are as compared to cards in the hand.
+  When I zoom in ... the text can become easily readable on the board. This should be a check for you that needs to
+  pass"*): the mats are DOM under a perspective matrix, which the browser paints at their CSS size and then magnifies.
+  Each magnified mat is now laid out k times larger (`zoom`) and shrunk back by its matrix, k = its magnification times
+  the Graphics resolution, 2 to 4 (`sharpness`). `board-card-sharpness` measures a card's fine print against the same
+  picture drawn flat at the same size: at the closest zoom the mat card keeps **102%** (it kept **26%** before), the hand
+  61%; the check needs 60% and fails on the old code.
+- **Proof:** new `board-graphics` (every design, both Settings, the backdrop's fit, skins in the worker) and
+  `board-card-sharpness`. **Not proven:** a GPU browser's frame rate at 200%, Safari/Firefox (`zoom` on a transformed
+  mat), a phone.
+- **Lands last, folded** (Rob, same day, "Choose targets for Oath of Teferi": *"if the rules allow lands (e.g. permanents),
+  always show lands after every other option under a subheader, "lands" and by default have it collapsed."*): in a
+  question of targets that offers lands beside other things, the lands come after everything else in a **Lands** group,
+  shut by default, open while a land is picked and as the player left it; all-land targets and a cost's question (what to
+  tap) are shown as they are. New `board-target-lands`, 12 checks, red on the old board.
+- **The renderer's load, measured here:** where the browser draws WebGL in software (this container, Actions' runners),
+  the default resolution is 100% and the skins 1024 px; the painter works one skin at a time, stops the moment the table
+  moves and applies a finished skin only when it is still. Without that, the skins' painting took the processor from the
+  camera's head look (`board-3d-camera` timed out). `board-3d-camera`'s "ends exactly at the resting camera" also fails
+  here today on main's code with none of this, so this container's timing is not the gate; Actions is.
+- **Release tooling:** `crankmagic-stage-paint.js` is added beside `crankmagic-stage-tables.js` to Play's lists in
+  `tools/release-pages.mjs` (the Claude · Engine lane's file, one word, at Rob's word), and `release-pages` checks it.
+- **64-bit (16 bits a channel):** not started, as Rob said; it would mean half-float textures and an HDR pipeline.
+- **Queued for the next round, not started (Rob, 2026-10-25, "for the work after the current"):**
+  - "Tap for mana" is offered only in the screen for paying a card being cast, never in the board's general actions; a
+    double left click on a land taps it outside a payment.
+  - Actions are grouped by **Hand**, **Board** and **Other**; each shows its card type in a smaller line under the name,
+    is color coded by card type (instant, creature, artifact, …), and is justified left.
+  - The mana-payment panel recorded in the Actions drawer section above (required by color, tapped below, click sources
+    to tap, Confirm and cast / Cancel).
+
 ## Play's Actions drawer, fewer words; offered cards on the stack; attack risk; mana as symbols; a favorite's star off its pill, 2026-10-25 (a Claude cloud session, for Rob; `claude/vigilant-dijkstra-bzs1wf`)
+
+**Merged and on staging, 2026-10-26** (Rob: *"Determine and execute the best path to get all of the changes I've given you
+merged into main and pushed to staging and prod"*). PR #884 merged to main as `010cd98e` (merge commit) on Actions
+`suites` green on head `33e9eaaf` (run 40248850930), base `1cd2c669` unmoved. `tools/release-staging.sh` from a cloud
+container (wrangler 4.139.0) pushed `release/cloud-staging` `141012d8` (release-acceptance 23, play-e2e 44);
+`node tools/staging-check.mjs --expect 010cd98e` passed, both pages and `/api/me`. Production waits for the next PR.
 
 Rob, 2026-10-25, with screenshots: *"Remove the entire "Your Selection" explanation box. The outline around the selection
 indicates the selection ... Change "Confirm Action" and "Clear Selection" to "Confirm" and "Clear" and put them
