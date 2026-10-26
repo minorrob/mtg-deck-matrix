@@ -16,6 +16,7 @@ const {browser,base,stub,close}=await openBrowser({name:'sharing-ui',flag:'GEOME
 const shotDir=process.env.UAT_SHOTS||path.join(ROOT,'work/sharing-shots');mkdirSync(shotDir,{recursive:true});
 try{
   const context=await browser.newContext({viewport:{width:1400,height:950},serviceWorkers:'block'}),page=await context.newPage();if(stub)await stub(page);
+  await page.addInitScript(()=>(globalThis.CrankFeatures||=[]).push(C=>{const notice=C.notice;C.notice=(message,error,options)=>{globalThis.__lastNotice={message,error,stay:!!options?.stay,action:options?.action?.label};return notice(message,error,options);};}));
   await page.route('**/index.html*',async route=>{await route.fulfill({contentType:'text/html',body:readFileSync(path.join(ROOT,'index.html'),'utf8').replace('<head>','<head><meta name="crankmagic-accounts" content="on">')});});
   await page.route('**/api/social/**',async route=>{try{const r=route.request();if(failSettings&&r.method()==='GET'&&new URL(r.url()).pathname.endsWith('/settings'))return route.fulfill({status:503,json:{error:'Sharing is temporarily unavailable.'}});const result=await social(new Request(r.url(),{method:r.method(),...(r.postData()?{body:r.postData(),headers:{'content-type':'application/json'}}:{})}),env,owner,{fetchImpl:async(url,args)=>{mail.push(JSON.parse(args.body));return Response.json({id:"test-"+mail.length});}});await route.fulfill({status:200,json:result});}catch(e){await route.fulfill({status:e.status||500,json:{error:e.message}});}});
   await page.route('**/api/me',r=>r.fulfill({status:200,json:{email:owner.email,head:null}}));
@@ -55,6 +56,8 @@ try{
   await page.locator('[data-action=deck-more-menu]').click();await page.getByRole('button',{name:'Share Deck',exact:true}).click();
   await dialog.locator('[role=alert]').waitFor();
   ok(/Sharing is temporarily unavailable/.test(await dialog.innerText()),'a sharing load failure stays in the dialog');
+  const failedNotice=await page.evaluate(()=>globalThis.__lastNotice);
+  ok(failedNotice.error&&failedNotice.stay&&failedNotice.action==='Retry','Share failures also provide a persistent error toast with the relevant retry');
   failSettings=false;await dialog.getByRole('button',{name:'Retry',exact:true}).click();
   await dialog.locator('#cm-share-form').waitFor();
   ok(await dialog.getByRole('button',{name:'Copy link',exact:true}).isEnabled(),'Retry restores the share dialog');
