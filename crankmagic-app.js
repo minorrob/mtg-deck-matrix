@@ -24,7 +24,7 @@ const MANA_FILL={W:'#F8F6D8',U:'#C1D7E9',B:'#CAC5C0',R:'#E49977',G:'#A3C095',C:'
 function manaSymbol(x){
   const s=x.slice(1,-1).toUpperCase();
   if(/^[WUBRG23]$/.test(s))return `<img src="assets/mana/${s}.svg?v=1" alt="${esc(x)}" width="19" height="19">`;
-  const fill=k=>MANA_FILL[k]||MANA_FILL.C,glyph=(t,size=58)=>`<text x="50" y="52" text-anchor="middle" dominant-baseline="central" font-size="${size}" font-weight="700" font-family="Satoshi,system-ui,sans-serif" fill="${MANA_INK}">${esc(t)}</text>`;
+  const fill=k=>MANA_FILL[k]||MANA_FILL.C,glyph=(t,size=58)=>`<text x="50" y="52" text-anchor="middle" dominant-baseline="central" font-size="${size}" font-weight="700" font-family="Lato,system-ui,sans-serif" fill="${MANA_INK}">${esc(t)}</text>`;
   const [a,b]=s.split('/');let body;
   if(s==='C')body=`<circle cx="50" cy="50" r="50" fill="${fill('C')}"/><path d="M50 16 78 50 50 84 22 50Z" fill="none" stroke="${MANA_INK}" stroke-width="8" stroke-linejoin="round"/>`;
   else if(b==='P')body=`<circle cx="50" cy="50" r="50" fill="${fill(a)}"/>${glyph('\u03A6',60)}`;
@@ -232,20 +232,25 @@ function rescueBrand(){
   const block=document.querySelector('.v-brand-block'),home=document.querySelector('.cm-sidebar');
   if(block&&home&&block.parentElement!==home)home.prepend(block);
 }
-/* THE THEME IS ONE OF FOUR (Rob, 2026-09-28; docs/plan-appearance.md A1). No modes and no Match system: Moss & Iron,
-   Brass & Slate, Felt & Cream or Steel & Cobalt, saved with the library's preferences so it follows the account. Each is
-   a palette and a face on the tokens (crankmagic-design.css): Felt & Cream is Brass & Slate's light face. The values saved
-   before A1 are read, never rewritten: dark was Brass & Slate, light Felt & Cream, and Match system or nothing at all is
-   the new default, Moss & Iron (decision A1). */
-const THEMES=[['moss-iron','Moss & Iron','The armory · default'],['brass-slate','Brass & Slate','Warm graphite, a brass accent'],['felt-cream','Felt & Cream','Card-table felt and cream'],['steel-cobalt','Steel & Cobalt','The forge: cobalt and cyan']];
-const THEME_FACE={'moss-iron':['moss-iron','dark'],'brass-slate':['brass-slate','dark'],'felt-cream':['brass-slate','light'],'steel-cobalt':['steel-cobalt','dark']};
-function themeChoice(){const t=state.preferences&&state.preferences.theme;return THEME_FACE[t]?t:t==='dark'?'brass-slate':t==='light'?'felt-cream':'moss-iron';}
+/* r4 has three color-only skins in dark and light registers. Library preferences keep the choice;
+   old palette names are read through the migration map without rewriting a backup. System follows this device. */
+const themeQuery=matchMedia('(prefers-color-scheme: dark)');
+const THEMES=[['sapphire-obsidian','Sapphire & Obsidian','Obsidian black, a sapphire button · default'],['sapphire-obsidian-light','Sapphire & Obsidian, light','Parchment by day'],['bronze-basalt','Bronze & Basalt','Warm basalt, bronze edges'],['bronze-basalt-light','Bronze & Basalt, light','Vellum by day'],['chalk-coal','Chalk & Coal','High contrast: for a TV across the room'],['chalk-coal-light','Chalk & Coal, light','High contrast by day']];
+const THEME_FACE={'sapphire-obsidian':['sapphire-obsidian','dark'],'sapphire-obsidian-light':['sapphire-obsidian','light'],'bronze-basalt':['bronze-basalt','dark'],'bronze-basalt-light':['bronze-basalt','light'],'chalk-coal':['chalk-coal','dark'],'chalk-coal-light':['chalk-coal','light']};
+/* r4: the four r3 themes are read, never rewritten, and land on the nearest skin. */
+const THEME_LEGACY={'moss-iron':'sapphire-obsidian','brass-slate':'bronze-basalt','felt-cream':'sapphire-obsidian-light','steel-cobalt':'sapphire-obsidian'};
+function themeChoice(){const p=state.preferences||{},t=p.theme,choice=THEME_FACE[t]?t:THEME_LEGACY[t]?THEME_LEGACY[t]:t==='light'?'sapphire-obsidian-light':'sapphire-obsidian';
+  return p.themeMode==='system'?THEME_FACE[choice][0]+(themeQuery.matches?'':'-light'):choice;}
+function themeMode(){return state.preferences?.themeMode==='system'?'system':THEME_FACE[themeChoice()][1];}
+themeQuery.addEventListener('change',()=>{if(state.preferences?.themeMode==='system')applyTheme();});
 function applyTheme(){const choice=themeChoice(),[palette,face]=THEME_FACE[choice],root=document.documentElement,app=document.getElementById('matrix-v2');
   for(const el of [root,app]){if(el.dataset.palette!==palette)el.dataset.palette=palette;if(el.dataset.theme!==face)el.dataset.theme=face;}
   root.style.colorScheme=face;
   /* The browser's own chrome takes the theme's ground. */
   const meta=document.querySelector('meta[name="theme-color"]'),bg=getComputedStyle(app).getPropertyValue('--color-bg').trim();if(meta&&bg&&meta.content!==bg)meta.content=bg;
-  document.querySelectorAll('[data-theme-choice]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.themeChoice===choice)));}
+  document.querySelectorAll('[data-theme-choice]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.themeChoice===choice)));
+  document.querySelectorAll('[data-theme-skin]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.themeSkin===palette)));
+  document.querySelectorAll('[data-theme-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.themeMode===themeMode())));}
 /* REDUCE MOTION IS A SAVED PREFERENCE TOO (r3, 70-settings), on top of the device's own setting, never
    instead of it: either one stills the page. It is written on <html> so the stylesheet can stop every
    transition and animation at once, and CrankMotion answers the pieces that animate from script (the
@@ -534,9 +539,15 @@ dialog.addEventListener('close',()=>{if(dialog.open)return;const key=modalOpener
 /* Esc closes the dialog natively, which would skip the journey. Cancel it and go back instead. */
 dialog.addEventListener('cancel',event=>{if(modalBack||modalGuard){event.preventDefault();actions.close();}});actions.home=()=>go('decks');actions.card=el=>inspector(el.dataset.card);actions['library-card']=el=>{dialog.close();go('cards',{card:el.dataset.card});};actions['discover-card']=el=>{dialog.close();go('discover',{card:el.dataset.card});};actions['reset-picks']=()=>commit({type:'preferences',values:{comparisonPicks:[]}});
 /* Choosing a theme applies at once, before the save, so the page never waits on the library to recolor. */
-actions['set-theme']=async el=>{const choice=el.dataset.themeChoice,t=THEMES.find(x=>x[0]===choice);if(!t||choice===themeChoice())return;
+actions['set-theme']=async el=>{const choice=el.dataset.themeChoice,t=THEMES.find(x=>x[0]===choice);if(!t||(choice===themeChoice()&&themeMode()!=='system'))return;
   document.getElementById('matrix-v2').animate?.([{opacity:.85},{opacity:1}],{duration:200});
-  await commit({type:'preferences',values:{theme:choice}},{renderView:false});applyTheme();notice(`${t[1]} theme.`);render();};
+  await commit({type:'preferences',values:{theme:choice,themeMode:THEME_FACE[choice][1]}},{renderView:false});applyTheme();notice(`${t[1]} theme.`);render();};
+actions['set-theme-skin']=async el=>{const skin=el.dataset.themeSkin;if(!THEME_FACE[skin]||skin===THEME_FACE[themeChoice()][0])return;
+  const mode=themeMode(),face=THEME_FACE[themeChoice()][1],choice=skin+(face==='light'?'-light':'');
+  await commit({type:'preferences',values:{theme:choice,themeMode:mode}},{renderView:false});applyTheme();notice(`${THEMES.find(t=>t[0]===choice)[1]} theme.`);render();};
+actions['set-theme-mode']=async el=>{const mode=el.dataset.themeMode;if(!['dark','light','system'].includes(mode)||mode===themeMode())return;
+  const skin=THEME_FACE[themeChoice()][0],face=mode==='system'?(themeQuery.matches?'dark':'light'):mode,choice=skin+(face==='light'?'-light':'');
+  await commit({type:'preferences',values:{theme:choice,themeMode:mode}},{renderView:false});applyTheme();notice(`${mode==='system'?'System':mode==='dark'?'Dark':'Light'} appearance.`);render();};
 actions.backup=async()=>{download('CrankMagic-backup-'+M.today()+'.json',JSON.stringify(await E.backup(await backupData()),null,2));notice('Full backup exported. Keep it outside browser storage.');};
 /* EMAIL THE EXPORT. The use case is a phone at a convention: cards marked owned as they
    are bought, then the library sent home. No browser can attach a file to a mailto: draft,
