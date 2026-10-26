@@ -448,8 +448,16 @@
     /* A graph opened from a deck says which deck (wireframe 50: "Explore › D6 Krenko Goblins") and has the
        way back to it in the head, beside Filters · lens. */
     const fromDeck = params.get('deck') ? (C.state.decks || []).find((d) => d.id === params.get('deck') && !d.archived) : null;
+    /* A Measure handoff carries a filed report, never query-supplied score facts. Its score components
+       are model outcomes, not graph roles: retain that context without inventing a role filter. */
+    const fromReport=fromDeck?(C.state.reports||[]).find(r=>r.id===params.get('report')&&r.deckId===fromDeck.id):null;
+    const reportParts=(fromReport?.scoreParts||[]).filter(p=>Number.isFinite(p.points)&&Number.isFinite(p.max)&&p.max>0);
+    const reportAxis=reportParts.find(p=>(p.key||p.label)===params.get('axis'));
+    const reportScore=fromReport?.metrics?.score?.value;
+    const reportContext=fromReport?`<section class="cm-measure-context" aria-label="Measurement to refine" data-measure-report="${e(fromReport.id)}"><strong>Measured ${Number.isFinite(reportScore)?e(String(reportScore)):'—'} of 100</strong>${reportAxis?`<span> · Refine ${e(reportAxis.label)} · ${e(String(reportAxis.points))} of ${e(String(reportAxis.max))}</span>`:''}<a class="v-button compact" href="#decks?${e(new URLSearchParams({deck:fromDeck.id,report:fromReport.id}).toString())}">Back to report</a></section>`:'';
     C.main.innerHTML = (fromDeck ? `<div class="cm-crumbs"><a class="cm-crumb" href="#discover">Explore</a><a class="cm-crumb" href="#decks?deck=${encodeURIComponent(fromDeck.id)}">${e(fromDeck.name)}</a></div>` : '')
       + C.pageHead('Explore', advancedToolsButton() + (fromDeck ? `<a class="v-button" href="#decks?deck=${encodeURIComponent(fromDeck.id)}">Back to deck</a>` : '') + toolsButton(), 'discover')
+      + reportContext
       + `<div class="cm-toolbar"><label class="cm-search">Find a card<input id="cm-graph-query" placeholder="Card name" list="cm-graph-names"><datalist id="cm-graph-names"></datalist></label>${C.select('Connections', 'edgeType', [['mechanic', 'Shared mechanics / roles'], ['played', 'EDHREC co-play']], 'mechanic')}${b('Search catalog / link', 'graph-lookup')}${b('Back', 'graph-back')}${b('Reset view', 'graph-reset')}</div>
 
 
