@@ -666,6 +666,7 @@ try {
     const whole = await deckLine(playableIds[0]);
     await shot(olu.page, "deck-playable-1400");
     const part = await deckLine(learning.id);
+    eq(await olu.page.locator('.cm-deck-blocked').textContent(),await olu.page.locator('#cm-deck-next .cm-bento-next-line').textContent(),'the header and Next band prioritize the same unplayable-card state');
     await shot(olu.page, "deck-to-learn-1400");
     const total = (d) => {const i = listed.indexOf(d); return named[i].commander.length + named[i].cards.length;};
     const first = listed.find((d) => d.id === playableIds[0]);

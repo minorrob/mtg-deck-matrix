@@ -135,7 +135,7 @@
     return {total: all.length, unknown: missing, count: all.filter((n) => missing.includes(n)).length};
   }
   const readinessText = (r) => r.count ? `${r.total - r.count} of ${r.total} known · ${r.count} to learn` : `Playable at the table · all ${r.total} cards known`;
-  const playable = (deck) => !deck.archived && (deck.commanders || []).length > 0;
+  const playable = (deck) => {if(deck.archived||!(deck.commanders||[]).length)return false;const list=deckForTable(deck);return list.commander.length+list.cards.length===100;};
   C.play = {
     open: cloudPlay,
     /* The decks hub: each tile's slot says "Playable at the table", or how many of its cards are still to learn. */
@@ -150,6 +150,8 @@
         el.textContent = r.count ? `${r.count} card${r.count === 1 ? "" : "s"} to learn for the table` : "Playable at the table";
         el.classList.toggle("is-playable", !r.count);
         el.hidden = false;
+        const tile=el.closest('[data-deck-tile]');let door=tile?.querySelector('[data-tile-play]');
+        if(r.count)door?.remove();else if(tile&&!door){door=document.createElement('a');door.className='v-button compact cm-tile-play';door.dataset.tilePlay=d.id;door.href='#table?'+new URLSearchParams({deck:d.id});door.textContent='Play it';door.setAttribute('aria-label','Play '+d.name);tile.append(door);}
       }
     },
     /* The decks hub's summary: how many of `decks` the table can play every card of -- each tile's "Playable at the table",
@@ -171,6 +173,10 @@
       el.innerHTML = `<span class="cm-deck-play-line">${e(readinessText(r))}</span>`
         + (r.count ? ` <span class="cm-muted">The table cannot play ${r.unknown.length === 1 ? "this one" : "these"} yet: ${e(r.unknown.slice(0, 6).join(", "))}${r.unknown.length > 6 ? ", …" : ""}.</span>`
           : ` ${b("Play this deck", "deck-play", {deck: d.id}, true, {cls: "compact"})}`);
+      const blocked=r.count?`${r.count} card${r.count===1?'':'s'} unplayable at the table. Fix the list before playing.`:'';
+      el.dataset.blockedState=blocked;
+      if(blocked)el.insertAdjacentHTML('beforeend',` <strong class="cm-deck-blocked">${e(blocked)}</strong>`);
+      const next=document.querySelector('#cm-deck-next .cm-bento-next-line');if(next)next.textContent=blocked||next.dataset.nextDefault;
       el.classList.toggle("is-playable", !r.count);
       el.hidden = false;
     },
