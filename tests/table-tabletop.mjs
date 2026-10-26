@@ -427,10 +427,10 @@ try {
   for(const title of ['AI Coach','Chat']) await page.getByRole('radio',{name:`${title}: Left`,exact:true}).check();
   await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
-  assert.equal(await page.locator('.cm-stage-rail.is-open').count(),1,'assigning Actions opens its drawer for the current decision');
+  assert.equal(await page.locator('.cm-stage-rail.is-open').count(),1,'saving optional modules leaves Actions open for the current decision');
   assert.equal(await page.locator('.cm-stage-rail #cm-board-decision').count(),1,'Actions contains the actual decision');
   assert.equal(await page.locator('#cm-board-decision').count(),1,'Actions has no duplicate floating decision');
-  assert.equal(await page.locator('[data-action="board-also"]').count(),0,'assigned Actions suppresses the optional-actions popup');
+  assert.equal(await page.locator('[data-action="board-also"]').count(),0,'the fixed Actions module suppresses the optional-actions popup');
   assert.equal(await page.locator('.cm-stage-rail [data-action="board-rotate"], .cm-stage-rail [data-action="board-view"]').count(),0,'legacy seat and view buttons are removed from the drawer');
   if(!await page.locator('.cm-stage-camera [data-action=board-view]').count()) await page.locator('[data-action=board-camera]').click();
   assert.deepEqual(await page.locator('.cm-stage-camera [data-action=board-view]').evaluateAll(es=>es.map(e=>e.dataset.view)),['table','focus','full']);
