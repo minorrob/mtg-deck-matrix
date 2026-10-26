@@ -274,12 +274,16 @@ globalThis.CrankBoard = Object.seal({
   const appearance = {background: stored("cm-stage-background") || "", table: stored("cm-stage-table") || ""};
   /* The table design: a saved id, an older one (wooden, stone, obsidian) or none, resolved through the catalog (ROB-100). */
   const tableDesignId = (id) => (globalThis.CrankStage ? CrankStage.tableDesign(id).id : id);
-  let blockSelected = null, blockPending = null, blockResult = null, blockListOpen = false, blockEpoch = 0;
+  let blockSelected = null, blockAttacker = null, blockPending = null, blockResult = null, blockListOpen = false, blockEpoch = 0;
+  const blockSettled = new Set();
   // One check in flight: checked echoes the choice ID, but not a draft/request ID.
   const blocking = () => view?.status !== "finished" && view?.decision?.mode === "many" && Array.isArray(view.decision.legalBlocks);
-  const blockContext = () => blocking() ? JSON.stringify([view.matchId, view.revision, view.decision.id, view.decision.options, view.decision.legalBlocks]) : null;
+  const blockContext = () => blocking() ? JSON.stringify([view.matchId, view.revision, view.decision.id, view.decision.options, view.decision.legalBlocks,view.decision.blockReasons]) : null;
   const blockKey = () => JSON.stringify([blockContext(), picked]);
   const blockValid = () => blocking() && blockResult?.key === blockKey() && blockResult.ok && blockResult.open && socket?.readyState === 1;
+  const ownBlockAttacks = () => view ? combatAttacks().filter(a=>a.defender===view.seat) : [];
+  const blocksSettled = () => ownBlockAttacks().every(a=>blockSettled.has(a.attacker));
+  const canSendBlocks = () => blockValid() && blocksSettled() && !sending;
   function checkBlocks() {
     if (!blocking() || blockPending || blockResult?.key === blockKey() || socket?.readyState !== 1) return;
     blockPending = {key: blockKey(), choiceId: view.decision.id};
@@ -289,14 +293,21 @@ globalThis.CrankBoard = Object.seal({
     if (!blockPending || (frame.choiceId !== undefined && frame.choiceId !== blockPending.choiceId)) return;
     const pending = blockPending; blockPending = null;
     if (pending.key === blockKey()) blockResult = {key: pending.key, ok: frame.ok === true, open: frame.open === true,
-      reasons: frame.reasons || [frame.error || "The table could not check these blocks. Try again."]};
+      reasons: frame.reasons || [frame.error || "The table could not check these blocks. Try again."], byAttacker:Array.isArray(frame.byAttacker)?frame.byAttacker:[]};
     checkBlocks(); draw();
   }
   function draftBlock(index) {
     if (!blocking() || sending) return;
     const o = view.decision.options.find(o => o.index === index);
     if (!o || !view.decision.legalBlocks.some(b => b.blocker === o.cardId && b.attackers.includes(o.attackerId))) return;
-    picked = picked.includes(index) ? picked.filter(i => i !== index) : [...picked, index];
+    const old=[...picked],removing=picked.includes(index);
+    if(removing)picked=picked.filter(i=>i!==index);
+    else {
+      if(view.decision.exclusiveBy === "cardId")picked=picked.filter(i=>view.decision.options.find(x=>x.index===i)?.cardId!==o.cardId);
+      picked=[...picked,index];
+    }
+    for(const i of old.filter(i=>!picked.includes(i)))blockSettled.delete(view.decision.options.find(x=>x.index===i)?.attackerId);
+    blockSettled.delete(o.attackerId);
     blockResult = null; checkBlocks(); draw();
   }
   let drag = null;          /* a bar being dragged: {kind: "rows"|"hand"|"pane"|"panel"|"side", x, y, from, per} */
@@ -367,7 +378,7 @@ globalThis.CrankBoard = Object.seal({
     /* On a phone the board you are looking at is the only one on screen: when you are asked, it is yours. */
     if (phone() && view.decision && view.decision.id !== before) focus = view.seat;
     if ((view.decision && view.decision.id) !== before) {picked = []; amounts = []; sending = false; alsoOpen = false; if(view.decision && view.decision.kind !== "priority") {actionsShut = false; openModuleDrawer("actions");}}
-    if (priorBlocks !== blockContext()) {blockEpoch++; picked = []; blockSelected = null; blockResult = null; blockListOpen = false;}
+    if (priorBlocks !== blockContext()) {blockEpoch++; blockSettled.clear();blockAttacker=null;picked = []; blockSelected = null; blockResult = null; blockListOpen = false;}
     const source = /^choose-(?:cost|targets?):(\d+)/.exec(view.decision?.id || "");
     if (!phone() && source && findCard(Number(source[1]))?.name && view.decision?.id !== before) inspection = {id:source[1],kind:"card",matchId:view.matchId,automatic:true};
     checkBlocks();
@@ -653,34 +664,50 @@ globalThis.CrankBoard = Object.seal({
   // Public combat only: never read picked/options here or borrow a name from a private zone.
   const combatCard = id => players().flatMap(p => p.zones.Battlefield.cards).find(c => c.cardId === id);
   const combatAttacks = () => view.status === "finished" ? [] : (view.state.combat?.attacks || []).filter(a => combatCard(a.attacker));
-  const combatName = c => c.faceDown ? "Face-down creature" : c.name || "Unnamed permanent";
+  const combatName = c => c?.faceDown ? "Face-down creature" : c?.name || "Unnamed permanent";
+  function twinMark(id) {
+    const c=combatCard(id);if(!c?.types?.includes("Creature"))return "";
+    const twins=battlefieldCards().filter(x=>x.types?.includes("Creature") && combatName(x)===combatName(c)).sort((a,b)=>a.cardId-b.cardId);
+    if(twins.length<2)return "";
+    let n=twins.findIndex(x=>x.cardId===id)+1,mark="";
+    while(n>0){n--;mark=String.fromCharCode(97+n%26)+mark;n=Math.floor(n/26);}
+    return mark;
+  }
+  function combatThumb(id,role,{draft=false}={}) {
+    const c=combatCard(id);if(!c)return `<span class="cm-combat-missing">Left the battlefield</span>`;
+    return `<span class="cm-combat-thumb" data-combat-light="${id}" data-peek-card="${id}" ${draft?`data-draft-blocker="${id}"`:`data-combat-role="${role}"`}>
+      ${c.name && !c.faceDown ? `<img src="${e(pictureOf(c.name))}" alt="${e(combatName(c))}" loading="lazy">` : `<i class="cm-combat-back" aria-label="Face-down creature"></i>`}
+      ${twinMark(id)?`<small class="cm-twin-mark">${e(twinMark(id))}</small>`:""}${c.power!=null?`<b class="cm-combat-pt">${e(c.power)}/${e(c.toughness)}</b>`:""}</span>`;
+  }
+  function inspectCombatThumb(id,role,{draft=false}={}) {
+    const c=combatCard(id);if(!c)return combatThumb(id,role,{draft});
+    return `<button type="button" class="cm-combat-thumb-inspect" data-action="board-combat-inspect" data-card="${id}" data-combat-light="${id}" aria-label="Inspect ${e(combatName(c))}${twinMark(id)?' '+e(twinMark(id)):''}">${combatThumb(id,role,{draft})}</button>`;
+  }
+  function attackerIssues(id) {
+    const checked=blockResult?.key===blockKey()?blockResult:null;
+    const fromCheck=checked?.byAttacker?.find(x=>x.attackerId===id)?.reasons || [];
+    const facts=view.decision?.blockReasons?.find(x=>x.attackerId===id);
+    const chosen=picked.map(i=>view.decision?.options.find(o=>o.index===i)).filter(o=>o?.attackerId===id).map(o=>o.cardId);
+    return [...fromCheck,...(facts?.refused || []).filter(x=>chosen.includes(x.blockerId)).flatMap(x=>x.reasons || [])];
+  }
   function combatStrip() {
-    const attacks = combatAttacks();
-    if (!attacks.length) return "";
-    const thumb = (id, role) => {
-      const c = combatCard(id);
-      if (!c) return `<span class="cm-combat-missing" data-combat-object="${id}">Object #${id} left the battlefield</span>`;
-      const name = combatName(c);
-      return `<button type="button" class="cm-combat-card" data-action="board-combat-inspect" data-card="${id}" data-combat-role="${role}" aria-label="${e(`${role}: ${name}, object #${id}; inspect`)}">
-        <span class="cm-combat-back" aria-hidden="true">${c.name && !c.faceDown ? `<img src="${e(pictureOf(c.name))}" alt="" loading="lazy" referrerpolicy="no-referrer">` : ""}</span>
-        <span><strong>${e(name)}</strong><small>#${id}${c.power !== null && c.power !== undefined ? ` · ${e(c.power)}/${e(c.toughness)}` : ""}</small></span></button>`;
-    };
-    const groups = [...new Set(attacks.map(a => a.defender))].map(defender => {
-      const name = players().find(p => p.playerId === defender)?.name || `Seat ${defender + 1}`;
-      const rows = attacks.filter(a => a.defender === defender).map(a => {
-        const blockers = (a.blockers || []).filter(id => combatCard(id));
-        const blocked = a.blocked
-          ? blockers.length ? blockers.map(id => thumb(id, "Blocker")).join("") : `<span class="cm-combat-missing">Blocked · no blockers remain</span>`
-          : `<span class="cm-combat-missing">No blocks confirmed</span>`;
-        return `<li class="cm-combat-row" data-combat-attacker="${a.attacker}" data-combat-target="${a.planeswalker ?? `seat:${defender}`}">
-          ${thumb(a.attacker, "Attacker")}<span class="cm-combat-arrow" aria-hidden="true">→</span>
-          <span class="cm-combat-target">${a.planeswalker !== undefined ? thumb(a.planeswalker, "Attacked permanent") : `<span>Attacking ${e(name)}</span>`}</span>
-          <span class="cm-combat-blocks"><small>${a.blocked ? "Confirmed blocks" : "Blocks"}</small><span>${blocked}</span></span></li>`;
-      }).join("");
-      return `<section class="cm-combat-group" data-combat-defender="${defender}" aria-label="${e(`Defending: ${name}`)}"><h3>${e(name)} defends</h3><ul>${rows}</ul></section>`;
-    }).join("");
-    const key = `${view.matchId}:${view.state.turnId || view.state.turn}:${attacks.map(a => a.attacker).join(",")}`;
-    return `<section class="cm-combat" aria-label="Combat assignments"><span class="cm-combat-heading">Combat · confirmed assignments</span><div class="cm-combat-groups" data-combat-key="${e(key)}" tabindex="0" aria-label="Combat groups; scroll for more">${groups}</div></section>`;
+    const attacks=combatAttacks();if(!attacks.length)return "";
+    const draft=blocking(),own=ownBlockAttacks(),settled=own.filter(a=>blockSettled.has(a.attacker)).length;
+    const result=blockResult?.key===blockKey()?blockResult:null;
+    const status=draft ? result?.ok && result.open && blocksSettled() ? "The table accepts this draft" : `${settled} of ${own.length} settled` : "Confirmed assignments";
+    const tiles=attacks.map(a=>{
+      const mine=draft && a.defender===view.seat,issues=mine?attackerIssues(a.attacker):[],ready=mine?blockSettled.has(a.attacker):a.blocked;
+      const selected=mine?picked.map(i=>view.decision.options.find(o=>o.index===i)).filter(o=>o?.attackerId===a.attacker).map(o=>o.cardId):(a.blockers || []).filter(id=>combatCard(id));
+      const state=issues.length?"refused":ready?"ready":mine?"unsettled":"public";
+      const word=issues.length?"✗ Refused":ready?"✓ Ready":mine?"Needs a choice":a.blocked?"Blocked":"No blocks confirmed";
+      return `<li class="cm-combat-row is-${state}" data-combat-attacker="${a.attacker}" data-combat-defender="${a.defender}" data-combat-target="${a.planeswalker ?? `seat:${a.defender}`}"><div class="cm-combat-tile" data-attacker="${a.attacker}"><button type="button" class="cm-combat-open" data-action="${mine?'board-block-attacker':'board-combat-inspect'}" data-attacker="${a.attacker}" data-card="${a.attacker}" data-combat-light="${a.attacker}" aria-label="${e(`${combatName(combatCard(a.attacker))}: ${word}${issues.length?'. '+issues.join('; '):''}`)}"${sending && mine?' disabled':''}></button>
+        <strong class="cm-combat-state">${e(word)}</strong><span class="cm-combat-pair">${inspectCombatThumb(a.attacker,'Attacker')}<span class="cm-combat-relation"><span>Attacking</span><span aria-hidden="true">→</span><span>${e(a.planeswalker!==undefined?(combatCard(a.planeswalker)?combatName(combatCard(a.planeswalker)):'Attacked permanent left the battlefield'):nameOf(a.defender))}</span></span>
+        <span class="cm-combat-blocks">${selected.length?selected.map(id=>inspectCombatThumb(id,'Blocker',{draft:mine})).join(''):`<span class="cm-combat-empty" aria-label="${ready?'No blocks chosen':'No blocks yet'}">${!mine && a.blocked?'Blocked · no blockers remain':!mine?'No blocks confirmed':ready?'No blocks':'—'}</span>`}</span></span>
+        ${a.planeswalker!==undefined?`<span class="cm-combat-permanent">${inspectCombatThumb(a.planeswalker,'Attacked permanent')}</span>`:''}${issues.length?`<small class="cm-combat-reason">${e(issues[0])}</small>`:''}</div></li>`;
+    }).join('');
+    const missing=own.length-settled,why=missing?`${missing} attacker${missing===1?'':'s'} still need${missing===1?'s':''} a choice`:!blockValid()?'Waiting for a current valid table check':'Stays private until sent';
+    const key=`${view.matchId}:${view.state.turnId || view.state.turn}:${attacks.map(a=>a.attacker).join(',')}`;
+    return `<section class="cm-combat cm-r4-combat" aria-label="Combat assignments" data-wf="W05"><header><strong>Combat · blocks</strong><span role="status">${e(status)}</span></header><div class="cm-combat-body"><button type="button" class="cm-combat-scroll" data-action="board-combat-scroll" data-by="-1" aria-label="Previous attackers" hidden>‹</button><ul class="cm-combat-groups" data-combat-key="${e(key)}" tabindex="0" aria-label="Attackers; use left and right arrows to scroll" data-wf="W06">${tiles}</ul><button type="button" class="cm-combat-scroll" data-action="board-combat-scroll" data-by="1" aria-label="More attackers">›</button>${draft?`<div class="cm-combat-send"><small data-combat-more hidden></small>${b('Send blockers','board-send-blockers',{revision:String(view.revision),choice:view.decision.id,match:view.matchId},true,{disabled:!canSendBlocks()}).replace('<button ',`<button title="${e(why)}" `)}</div>`:''}</div></section>`;
   }
   function card(c, {where = "mat", action = "board-card", arrange = false} = {}) {
     const opts = optionsFor(c.cardId), mine = view.decision && !sending;
@@ -1361,22 +1388,16 @@ globalThis.CrankBoard = Object.seal({
     return opts.map((o) => (manaOf(o) ? (placed ? "" : ((placed = true), row)) : one(o))).join("");
   }
   function blockDraft() {
-    const d = view.decision, label = id => {const c = combatCard(id); return `${c ? combatName(c) : "Object"} #${id}`;};
-    const tile = (id, action, selected, index) => {
-      const c = combatCard(id);
-      return `<button type="button" class="cm-block-tile" data-action="${action}" data-block-object="${id}"${index === undefined ? "" : ` data-index="${index}"`} aria-pressed="${selected}"${sending ? " disabled" : ""}>
-        ${c?.name && !c.faceDown ? `<img src="${e(pictureOf(c.name))}" alt="" loading="lazy">` : ""}<span>${e(label(id))}</span></button>`;
-    };
-    const options = d.options.filter(o => d.legalBlocks.some(b => b.blocker === o.cardId && b.attackers.includes(o.attackerId)));
-    const selected = options.filter(o => o.cardId === blockSelected);
-    const result = blockResult?.key === blockKey() ? blockResult : null;
-    return `<div class="cm-block-draft"><p>Choose a blocker, then its attackers. Draft stays private until confirmed.</p>
-      <div class="cm-block-tiles" data-block-key="${e(`${blockEpoch}:blockers`)}" aria-label="Choose a blocker">${d.legalBlocks.map(b => tile(b.blocker, "board-block-select", blockSelected === b.blocker)).join("") || "No legal blockers."}</div>
-      ${blockSelected !== null ? `<p>Attackers for ${e(label(blockSelected))} · select again to remove</p><div class="cm-block-tiles" data-block-key="${e(`${blockEpoch}:attackers:${blockSelected}`)}" aria-label="Legal attackers">${selected.map(o => tile(o.attackerId, "board-block-pair", picked.includes(o.index), o.index)).join("")}</div>${b("Clear this blocker", "board-block-clear", {}, false, {disabled:sending})}` : ""}
-      <ul class="cm-block-pairs" aria-label="Your private block draft">${options.filter(o => picked.includes(o.index)).map(o => `<li data-draft-blocker="${o.cardId}" data-draft-attacker="${o.attackerId}">${e(label(o.cardId))} → ${e(label(o.attackerId))} ${b("Remove", "board-block-pair", {index:o.index}, false, {disabled:sending})}</li>`).join("") || "<li>No blocks selected</li>"}</ul>
-      <div class="cm-block-status" role="status">${result ? result.ok && result.open ? "The table accepts this draft." : result.reasons.map(r => `<p>${e(r)}</p>`).join("") : "Checking blocks with the table…"}</div>
-      ${result && !result.open ? b("Check again", "board-block-retry") : ""}
-      <details class="cm-block-list"${blockListOpen ? " open" : ""}><summary>All block options</summary>${options.map(o => `<button type="button" class="v-button compact" data-action="board-option" data-index="${o.index}" aria-pressed="${picked.includes(o.index)}"${sending ? " disabled" : ""}>${e(o.label)} · #${o.cardId} → #${o.attackerId}</button>`).join("")}</details></div>`;
+    const d=view.decision,attacks=ownBlockAttacks(),a=attacks.find(a=>a.attacker===blockAttacker) || attacks[0];
+    if(!a)return '<p>No attacks at your seat.</p>';
+    const c=combatCard(a.attacker),options=d.options.filter(o=>o.attackerId===a.attacker && d.legalBlocks.some(b=>b.blocker===o.cardId && b.attackers.includes(o.attackerId)));
+    const issues=attackerIssues(a.attacker),restrictions=d.blockReasons?.find(x=>x.attackerId===a.attacker)?.reasons || [];
+    const result=blockResult?.key===blockKey()?blockResult:null,globalReasons=result && !result.ok ? result.reasons : [];
+    const facts=[c?.power!=null?`${c.power}/${c.toughness}`:'',a.planeswalker!==undefined?`Attacking ${combatName(combatCard(a.planeswalker))}`:'Attacking you',...(c?.keywords || [])].filter(Boolean).join(' · ');
+    return `<div class="cm-block-draft" data-wf="W08" data-active-attacker="${a.attacker}"><h2>Block ${e(combatName(c))}</h2><div class="cm-block-attacker">${combatThumb(a.attacker,'Attacker')}<p>${e(facts)}</p></div>
+      <div class="cm-block-tiles" data-block-key="${e(`${blockEpoch}:attacker:${a.attacker}`)}" aria-label="Legal blockers">${options.map(o=>{const b=combatCard(o.cardId);return `<button type="button" class="cm-block-tile" data-action="board-block-pair" data-index="${o.index}" data-block-object="${o.cardId}" data-combat-light="${o.cardId}" data-peek-card="${o.cardId}" aria-pressed="${picked.includes(o.index)}"${sending?' disabled':''}>${combatThumb(o.cardId,'Candidate')}<span>${e(combatName(b))}</span><b>${b?.power!=null?`${e(b.power)}/${e(b.toughness)}`:''}</b></button>`;}).join('') || '<p>No legal blockers.</p>'}</div>
+      ${restrictions.length?`<p class="cm-block-restrictions">${restrictions.map(e).join(' · ')}</p>`:''}<div class="cm-block-status" role="status">${issues.map(r=>`<p>${e(r)}</p>`).join('')}${globalReasons.length?`<div class="cm-block-global"><strong>Draft check</strong>${globalReasons.map(r=>`<p>${e(r)}</p>`).join('')}</div>`:''}</div>
+      <div class="cm-decide-actions" data-wf="W10">${b("Don't block","board-block-attacker-none",{attacker:String(a.attacker)},false,{disabled:sending})}${b('Confirm','board-block-attacker-confirm',{attacker:String(a.attacker)},false,{disabled:sending}).replace('<button ','<button title="This attacker only" ')}</div></div>`;
   }
   /* Review uses only the current seat's offered words. No target, payment or outcome is inferred. The outlined option is
      the selection on screen (Rob, 2026-10-25: "The outline around the selection indicates the selection. We don't need to
@@ -1554,7 +1575,7 @@ globalThis.CrankBoard = Object.seal({
     if (["one", "boolean", "index"].includes(d.mode)) {body = reviewReady(d) && targeting ? "" : d.mode === "one" ? grouped(sameStacks(d)) : d.options.map((o) => [o]).map(stackOpt).join(""); foot = commitReview(d);}
     else if (blocking()) {
       body = blockDraft();
-      foot = `${b("No blocks", "board-block-none", {}, false, {disabled:sending})}${b(picked.length ? "Confirm blocks" : "Confirm no blocks", "board-confirm", {}, true, {disabled:!blockValid() || sending})}`;
+      foot = "";
     }
     /* WHAT YOU WERE SHOWN (ROB-169): an acknowledgment about cards ("Peek: you look at Maya's hand") draws them, each one
        to read (Card zoom on a click); this seat alone is sent them, in its own decision. OK answers it. */
@@ -1594,7 +1615,7 @@ globalThis.CrankBoard = Object.seal({
     /* Asked in a run you chose Resolve all for: this answer goes for the same question each time the run asks it (Rob,
        2026-10-09: "Yes to all"; game/room/room.mjs). */
     const forRun = d.forRun ? `<p class="cm-muted cm-board-for-run">Resolve all: your answer goes for this same question each time the run asks it.</p>` : "";
-    return `<section class="cm-board-decision${blocking() ? " is-blocking" : ""}" id="cm-board-decision" data-choice-id="${e(d.id)}" data-match-id="${e(view.matchId)}" aria-label="${e(d.title)}">${decisionPick(d,d.options.find(o=>o.index===picked[0]))}${reviewReady(d) && targeting && choiceTargets(d.options.find(o=>o.index===picked[0])).length ? targetHeading(d,d.options.find(o=>o.index===picked[0])) : `<h2>${e(d.title)}</h2>`}${forRun}${targeting ? `<ol class="cm-steps"><li class="${reviewReady(d) ? '' : 'is-now'}">Pick</li><li class="${reviewReady(d) ? 'is-now' : ''}">Review</li></ol>` : ""}${reviewReady(d) && targeting ? "" : deskCard()}
+    return `<section class="cm-board-decision${blocking() ? " is-blocking" : ""}" id="cm-board-decision" data-choice-id="${e(d.id)}" data-match-id="${e(view.matchId)}" aria-label="${e(d.title)}">${decisionPick(d,d.options.find(o=>o.index===picked[0]))}${reviewReady(d) && targeting && choiceTargets(d.options.find(o=>o.index===picked[0])).length ? targetHeading(d,d.options.find(o=>o.index===picked[0])) : blocking() ? "" : `<h2>${e(d.title)}</h2>`}${forRun}${targeting ? `<ol class="cm-steps"><li class="${reviewReady(d) ? '' : 'is-now'}">Pick</li><li class="${reviewReady(d) ? 'is-now' : ''}">Review</li></ol>` : ""}${reviewReady(d) && targeting ? "" : deskCard()}
       <div class="cm-board-options">${body}</div>${foot ? `<div class="cm-board-decision-foot">${foot}</div>` : ""}</section>`;
   }
   /* What the room asks, and what is on the stack, floated over the surface under the strip. Priority is not
@@ -2605,6 +2626,7 @@ globalThis.CrankBoard = Object.seal({
       overlap(host);
       fitCardRows(host);
       fitZoneNavigation(host);
+      fitCombatStrip(host);
       dock();
       if (tbl) sea(tbl); else stopSea();
       /* THE QUESTION HELD TO THE WINDOW in Table and Focus (ROB-26's blocking, Oct 20): it floats into a board that
@@ -3011,9 +3033,17 @@ globalThis.CrankBoard = Object.seal({
     if (skipping !== null) skip();
     draw();
   };
+  actions["board-block-attacker"] = el => {const id=Number(el.dataset.attacker);if(!blocking() || !ownBlockAttacks().some(a=>a.attacker===id))return;blockAttacker=id;actionsShut=false;openModuleDrawer('actions');draw();};
+  actions["board-block-attacker-none"] = el => {
+    const id=Number(el.dataset.attacker);if(!blocking() || sending || !ownBlockAttacks().some(a=>a.attacker===id))return;
+    picked=picked.filter(i=>view.decision.options.find(o=>o.index===i)?.attackerId!==id);blockSettled.add(id);blockResult=null;if(phone())stageRail=false;checkBlocks();draw();
+  };
+  actions["board-block-attacker-confirm"] = el => {const id=Number(el.dataset.attacker);if(!blocking() || sending || !ownBlockAttacks().some(a=>a.attacker===id))return;blockSettled.add(id);if(phone())stageRail=false;checkBlocks();draw();};
+  actions["board-send-blockers"] = el => {if(Number(el?.dataset?.revision)===view?.revision && el.dataset.choice===view?.decision?.id && el.dataset.match===view?.matchId && canSendBlocks())actions["board-confirm"]();};
+  actions["board-combat-scroll"] = el => {const row=document.querySelector('.cm-r4-combat .cm-combat-groups'),tile=row?.querySelector('.cm-combat-row');if(row&&tile)row.scrollBy({left:Number(el.dataset.by)*(tile.getBoundingClientRect().width+8),behavior:reduced()?'instant':'smooth'});};
   actions["board-block-select"] = el => {if (!blocking() || sending) return; blockSelected = Number(el.dataset.blockObject); draw();};
   actions["board-block-pair"] = el => draftBlock(Number(el.dataset.index));
-  actions["board-block-none"] = () => {if (!blocking() || sending) return; picked = []; blockResult = null; checkBlocks(); draw();};
+  actions["board-block-none"] = () => {if (!blocking() || sending) return; picked = [];blockSettled.clear(); blockResult = null; checkBlocks(); draw();};
   actions["board-block-clear"] = () => {
     if (!blocking() || sending) return;
     picked = picked.filter(i => view.decision.options.find(o => o.index === i)?.cardId !== blockSelected);
@@ -3030,7 +3060,7 @@ globalThis.CrankBoard = Object.seal({
       return send({indices:[...picked]});
     }
     if (blocking()) {
-      if (!blockValid()) return;
+      if (!canSendBlocks()) return;
       blockResult = null; // A receipt alone must not reopen this already submitted draft.
       return send({indices: [...picked]});
     }
@@ -3168,6 +3198,22 @@ globalThis.CrankBoard = Object.seal({
       if(rows>=1 && cards.length>rows*columns && (!section.closest('.cm-board-field') || section.parentElement===viewport.firstElementChild)) viewport.style.height=`${inset+rows*(cellHeight+gap)+peek}px`;
     }
   }
+  function fitCombatStrip(host=document) {
+    const strip=host.querySelector('.cm-r4-combat'),row=strip?.querySelector('.cm-combat-groups');if(!row)return;
+    const left=row.scrollLeft>1,right=row.scrollLeft+row.clientWidth<row.scrollWidth-2;
+    strip.querySelector('[data-by="-1"]').hidden=!left;strip.querySelector('[data-by="1"]').hidden=!right;
+    const r=row.getBoundingClientRect(),hidden=[...row.children].filter(el=>el.getBoundingClientRect().right>r.right+1).length,more=strip.querySelector('[data-combat-more]');
+    if(more){more.hidden=!hidden;more.textContent=`+${hidden} more`;}
+  }
+  document.addEventListener('scroll',event=>{if(event.target.matches?.('.cm-r4-combat .cm-combat-groups'))fitCombatStrip(document);},true);
+  document.addEventListener('keydown',event=>{
+    if(!event.target.matches?.('.cm-r4-combat .cm-combat-groups') || !['ArrowLeft','ArrowRight'].includes(event.key))return;
+    event.preventDefault();actions['board-combat-scroll']({dataset:{by:event.key==='ArrowRight'?'1':'-1'}});
+  });
+  function lightCombat(id,on) {for(const el of document.querySelectorAll(`#cm-board .cm-mat .cm-bcard[data-card="${id}"]`))el.classList.toggle('is-lit',on);}
+  for(const [kind,on] of [['pointerover',true],['pointerout',false],['focusin',true],['focusout',false]])document.addEventListener(kind,event=>{
+    const el=event.target.closest?.('[data-combat-light]');if(!el || el.contains(event.relatedTarget))return;lightCombat(el.dataset.combatLight,on);
+  });
   function fitZoneNavigation(host) {
     for(const el of host.querySelectorAll('[data-zone-scroll]')) {delete el.dataset.zoneScroll;el.removeAttribute('tabindex');el.removeAttribute('role');el.removeAttribute('aria-label');}
     for(const section of host.querySelectorAll('[data-card-section]')) {
