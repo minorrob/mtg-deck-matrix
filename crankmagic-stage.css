@@ -693,6 +693,7 @@
 #matrix-v2 .cm-board[data-phone] .cm-drawer.is-open{transform:none}
 #matrix-v2 .cm-board[data-phone] .cm-drawer-tab{position:absolute;top:auto;bottom:0;left:0;right:auto;writing-mode:horizontal-tb;z-index:33;transform:none}
 #matrix-v2 .cm-board[data-phone] .cm-drawer-tab.cm-stage-right{left:auto;right:0}
+#matrix-v2 .cm-board[data-phone]>.cm-stage-camera{z-index:36}
 #matrix-v2 .cm-board[data-phone] .cm-decision-slot{position:relative;inset:auto;transform:none;max-width:100%;width:100%}
 #matrix-v2 .cm-board[data-phone] .cm-phone-seat .cm-seat-header{display:grid;grid-template-columns:32px 1fr;gap:4px}
 #matrix-v2 .cm-board[data-phone] .cm-phone-seat .cm-seat-commander,#matrix-v2 .cm-board[data-phone] .cm-phone-seat .cm-seat-hand{display:none}

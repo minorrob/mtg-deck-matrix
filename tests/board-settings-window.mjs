@@ -158,7 +158,7 @@ try {
     await page.locator("#cm-dialog .cm-dialog-close").click();
     await page.waitForTimeout(150);
     eq(await page.evaluate(() => document.activeElement?.dataset?.action), "board-camera", "closed, the focus goes back to Camera");
-    if(width===1440) {
+    if(page.viewportSize().width===1440) {
       await openSettings(page);await page.locator('#cm-board-tools [data-action=board-modules-settings]').click();await page.locator('#cm-drawer-settings').waitFor();
       const actions=page.locator('#cm-drawer-settings tr').filter({has:page.locator('th', {hasText:/^Actions$/})});
       eq(await actions.locator('input').count(),0,'fixed Actions location is honest text rather than unexplained disabled choices');ok((await actions.textContent()).includes('Always in the left drawer'),'fixed Actions row explains why the decision stays available');
