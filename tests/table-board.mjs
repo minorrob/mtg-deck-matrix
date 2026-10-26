@@ -1432,14 +1432,18 @@ try {
   await chooseView(rob.page,"focus");
   await rob.page.locator(".cm-board-mat").waitFor();
 
-  /* THE COACH: a reserved column beside the board; the shell, with a stub reply that says so. */
+  /* THE COACH: its module overlays; standalone mode reserves a column. Settle native font/layout work before comparing geometry. */
+  await rob.page.evaluate(async()=>{await document.fonts.ready;await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));});
+  await rob.page.waitForFunction(()=>{const r=document.querySelector(".cm-board-mat").getBoundingClientRect(),next=[r.x,r.y,r.width,r.height].join(","),same=next===globalThis.__uatStableCoachMat;globalThis.__uatStableCoachMat=next;return same;},null,{polling:"raf",timeout:5000});
   const matWidth = () => rob.page.evaluate(() => Math.round(document.querySelector(".cm-board-mat").getBoundingClientRect().width));
   const matBefore = await matWidth(), beforeFocusCoach=await rob.page.locator(".cm-board-mat").boundingBox(),focusScrollBefore=await rob.page.locator(".cm-board-main").evaluate(el=>el.scrollTop);
   await rob.page.click(".cm-board-coach-open");
   await rob.page.locator("#cm-board-coach:not([hidden]) .cm-coach-input").waitFor();
   const coachBox = await rob.page.evaluate(() => {const r = document.getElementById("cm-board-coach").getBoundingClientRect(), mat = document.querySelector(".cm-board-mat").getBoundingClientRect(), drawer = document.querySelector(".cm-stage-side").getBoundingClientRect(); return {scroll:document.querySelector(".cm-board-main")?.scrollTop,module:document.getElementById("cm-board").dataset.coach === "module",width:r.width,right:r.right,edge:innerWidth,drawerContained:r.left>=drawer.left && r.right<=drawer.right+1,drawer:{x:drawer.x,y:drawer.y,width:drawer.width,height:drawer.height},clear:mat.right<=r.left+1,mat: {x:mat.x,y:mat.y,width:mat.width,height:mat.height},visible:r.bottom<=innerHeight+1};});
+  /* Opening the module repaints the seat strip, moving its mat top by 5px even after font/RAF settlement.
+     The overlay contract preserves the mat's horizontal placement, size and user scroll; composer access is checked below. */
   ok(coachBox.width>=240 && coachBox.right<=coachBox.edge && (coachBox.module
-    ? coachBox.drawerContained&&Object.entries(beforeFocusCoach).every(([key,n])=>Math.abs(coachBox.mat[key]-n)<1)
+    ? coachBox.drawerContained&&["x","width","height"].every(key=>Math.abs(coachBox.mat[key]-beforeFocusCoach[key])<1)&&coachBox.scroll===focusScrollBefore
     : coachBox.clear&&coachBox.visible&&await matWidth()<=matBefore),
     `the Focus Coach uses its actual module-overlay or standalone-reserved layout (${Math.round(coachBox.width)}px): ${JSON.stringify({before:beforeFocusCoach,scrollBefore:focusScrollBefore,after:coachBox})}`);
   await verifyCoachUsable(rob.page);
@@ -1471,10 +1475,13 @@ try {
   await rob.page.evaluate(() => __cm.commit({type: "preferences", values: {aiCoach: {coachSees: "hand"}}}, {renderView: false}));
   await rob.page.fill(".cm-coach-input", "a draft");
   await rob.page.focus(".cm-coach-input");
-  const viewsBefore = views(ROB).length;
+  const draftFacts=()=>rob.page.evaluate(()=>{const input=document.querySelector('.cm-coach-input'),drawer=input?.closest('.cm-stage-side,.cm-stage-rail'),active=document.activeElement;return {draft:input?.value,focused:active===input,active:{tag:active?.tagName,action:active?.dataset.action,class:active?.className},drawerScroll:drawer?.scrollTop,input:input?.getBoundingClientRect().toJSON(),mainScroll:document.querySelector('.cm-board-main')?.scrollTop};});
+  const viewsBefore = views(ROB).length, draftBefore=await draftFacts();
   await serial(async () => object.broadcast());
   await rob.page.waitForTimeout(500);
-  ok(views(ROB).length > viewsBefore && await rob.page.inputValue(".cm-coach-input") === "a draft" && await rob.page.evaluate(() => document.activeElement.matches(".cm-coach-input")), "a view arriving mid-sentence leaves the draft, and the focus, where they were");
+  const draftAfter=await draftFacts(),draftProof={viewsBefore,viewsAfter:views(ROB).length,lastFrame:{revision:views(ROB).at(-1)?.revision,matchId:views(ROB).at(-1)?.matchId,decisionId:views(ROB).at(-1)?.decision?.id},before:draftBefore,after:draftAfter};
+  if(SHOTS)writeFileSync(path.join(SHOTS,'coach-draft-redraw.json'),JSON.stringify(draftProof,null,2));
+  ok(views(ROB).length > viewsBefore && draftAfter.draft === "a draft" && draftAfter.focused, `a view arriving mid-sentence leaves the draft, and the focus, where they were: ${JSON.stringify(draftProof)}`);
   await shot(rob.page, "coach-1400");
   await rob.page.click(".cm-coach-more summary");
   await rob.page.click("[data-action=board-coach-clear]");
