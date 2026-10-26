@@ -41,7 +41,7 @@ async function wholeRows(page,label) {
     const fails=[];
     const areas=[...document.querySelectorAll('#cm-board .cm-mat-grid,.cm-phone-battlefield,.cm-board-field,[data-card-section]')];
     const saved=areas.map(el=>[el,el.scrollTop,el.scrollLeft]);
-    for(const card of document.querySelectorAll('#cm-board [data-card-section]>.cm-bcard')) {
+    for(const card of document.querySelectorAll('#cm-board [data-card-section] .cm-bcard')) {
       if(!card.getClientRects().length)continue;
       card.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'});
       const r=card.getBoundingClientRect();

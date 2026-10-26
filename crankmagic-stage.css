@@ -914,6 +914,19 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-target-stack>img{animation:non
 #matrix-v2 .cm-board .cm-combat-permanent{position:relative;z-index:2;display:flex;justify-content:center}
 #matrix-v2 .cm-board .cm-combat-permanent .cm-combat-thumb{width:24px;height:34px;flex-basis:24px}
 
+/* C1: a sibling button overlays the bottom edge without changing any row's spacing. */
+#matrix-v2 .cm-board .cm-card-slot{position:relative;display:inline-grid;flex:none;vertical-align:bottom;line-height:0;overflow:visible}
+#matrix-v2 .cm-board .cm-card-slot>.cm-bcard{margin:0}
+#matrix-v2 .cm-board .cm-card-slot>.cm-bcard.is-tapped{transform:rotate(30deg)}
+#matrix-v2 .cm-board .cm-undo-drawer{position:absolute;left:0;bottom:0;z-index:6;width:max-content;min-width:100%;min-height:24px;padding:3px 6px;border:0;background:rgb(0 0 0 / .65);color:var(--mat-ink);font:700 calc(15px*var(--hud-scale,1))/1.1 var(--font-body);white-space:nowrap;opacity:0;clip-path:inset(100% 0 0);transition:clip-path var(--motion-fast) var(--motion-ease),opacity var(--motion-fast) var(--motion-ease);pointer-events:none}
+#matrix-v2 .cm-board .cm-card-slot:hover>.cm-undo-drawer,#matrix-v2 .cm-board .cm-card-slot:focus-within>.cm-undo-drawer,#matrix-v2 .cm-board .cm-stack-image:hover>.cm-undo-drawer,#matrix-v2 .cm-board .cm-stack-image:focus-within>.cm-undo-drawer,#matrix-v2 .cm-board .cm-board-stack:hover>.cm-undo-drawer,#matrix-v2 .cm-board .cm-board-stack:focus-within>.cm-undo-drawer{opacity:1;clip-path:inset(0);pointer-events:auto}
+#matrix-v2 .cm-board .cm-stack-image,#matrix-v2 .cm-board .cm-board-stack{position:relative}
+@media(prefers-reduced-motion:reduce){#matrix-v2 .cm-board .cm-undo-drawer{transition:none}}
+html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
+
+#matrix-v2 .cm-board .cm-card-menu-art{width:26px;height:36px;object-fit:contain;flex:none;border-radius:var(--radius-control)}
+#matrix-v2 .cm-board .cm-card-menu-card,#matrix-v2 .cm-board .cm-card-menu-do{font-size:calc(15px*var(--hud-scale,1));white-space:normal}
+
 /* The attacked permanent shares the relation row; it cannot add a clipped fourth row. */
 #matrix-v2 .cm-board .cm-combat-thumb-inspect.is-target{display:flex;align-items:center;gap:3px;width:100%;max-width:104px;height:34px;overflow:hidden;text-align:left;font:400 15px/1.1 var(--font-body)}
 #matrix-v2 .cm-board .cm-combat-thumb-inspect.is-target>.cm-combat-thumb{width:24px;height:34px;flex-basis:24px}
