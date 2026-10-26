@@ -1,9 +1,9 @@
 {
   "workstream": "codex-play",
-  "updated": "2026-10-26T17:23:35.062Z",
+  "updated": "2026-10-26T19:32:36.588Z",
   "updated_by": "Codex r4 coordinator, Personal-HP",
   "branch": "integration/r4",
-  "now": "r4 foundation, engine contracts, Study/shell and decision desk integrated in draft PR #890 (ROB-197). Decision browser proof: 118 checks; combat, board input, Table/Focus and combined staging acceptance remain in progress. Evidence: docs/r4-execution/.",
+  "now": "r4 shell, decision desk, combat, engine contracts and C/D2 source are integrated in draft PR #890 (ROB-197). Final native Play/layout/visual acceptance remains open; exact evidence and limits: docs/r4-execution/HANDOFF.md. No r4 deployment yet.",
   "items": [
     {
       "id": "ROB-171",

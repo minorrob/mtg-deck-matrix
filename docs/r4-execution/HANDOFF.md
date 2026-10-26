@@ -35,14 +35,20 @@ Tracking: https://linear.app/robs-build/issue/ROB-197/implement-r4-design-founda
 
 ## Source integrated, final proof pending
 
-- C and D2 combined checkpoint b3008cb4 is integrated. Worker baseline input44 and layout69 passed;
-  D2 pixel/caption/endpoint/native-drag acceptance and affected regressions remain in progress.
+- C/D2 source through cf015b12 is integrated: native History in all views, authoritative seat lifecycle,
+  fixed Actions-row explanation, and real optional module controls. Pure seat lifecycle10 and actual
+  board account-menu keyboard17 pass. Input/layout/views/folded-slot/caption and legacy browser
+  acceptance remain in progress. Current Table screenshot review found menu/seat-header and central
+  dial/board-label overlap; final visual acceptance requires those placement issues to be resolved.
+- The preserved real-table suite reached91 checks on ff4b04dd. Its old DOM assertions are being
+  migrated without dropping identity, privacy, legality, geometry or reconnect coverage. The whole
+  suite is not green yet. Browser proofs remain serial; Foundation currently owns the slot.
 - Global AccountMenu source begins at 6b70a600; opening/focus refinements are 6f2b1e83/17e599c4,
   required danger ink 69edbf73, and scoped Invite/Admin alignment 8da62a87. Global acceptance is
   green; Foundation owns the real board-avatar adoption and game-draft/hotkey boundary. Shared
   alternate-anchor proof does not replace that real board test. Final row-alignment capture is
   optional; the inspected earlier captures and functional proof are identified in the Workshop audit.
-- ROOT README now lists620 root suites. Root owns shared pins and the fixture; versions were
+- ROOT README now lists625 root suites. Root owns shared pins and the fixture; versions were
   refreshed for this local checkpoint, but any subsequent served change must move them again.
 - Last remote push was scanned5c3d7ecb. Later source is local until current changed-suite browser
   baselines pass, then the exact-head secret/merge scan and push. PR stays draft until all gates pass.
@@ -53,6 +59,9 @@ No r4 full CI, main merge, staging release or production release has occurred. F
 combined visual/behavior/privacy acceptance, exact-head scan and required Actions run before main.
 Engine is the staging release executor after root's gate; supported checker authenticated against
 staging c567c581 in readiness review. Production requires Rob's separate release instruction.
+Dedicated clean release checkout: workbench/r4-release-checkout-20261026; release output/log workspace:
+workbench/r4-release-staging-20261026. Build/commit delete targets were checked within that workspace;
+recheck paths, ports and the gated main revision immediately before running the documented script.
 
 Use Node22.23.3 under workbench/node22/node_modules/node-win-x64/bin for release. Targeted local
 checks used Node24.19.0 and installed Chrome. Browser/temporary-Git tests need external execution

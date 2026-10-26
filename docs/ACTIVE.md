@@ -9,7 +9,7 @@ Workshop (`codex/r4-workshop`) have exclusive workspaces under `workbench/r4-*-2
 files until handed off; Workshop works in its feature modules; the coordinator owns integration and asset
 pins. Engine work is independent of the visual foundation. Browser suites run one at a time. The existing
 design handoff is preserved. Staging follows combined acceptance through the engine release executor;
-production awaits Rob's separate go. Foundation, engine, Workshop/Admin, D1 and the decision desk are integrated in draft PR #890; B/C/D2 and combined acceptance remain open. No r4 deployment has occurred. Current proof and outstanding work: docs/r4-execution/HANDOFF.md.
+production awaits Rob's separate go. Foundation, engine, Workshop/Admin, shell, decision desk and combat are integrated with bounded local proof in draft PR #890. C/D2 source is integrated; final native Play, visual/layout and combined release acceptance remain open. No r4 deployment has occurred. Current proof and outstanding work: docs/r4-execution/HANDOFF.md.
 
 ## 2026-10-25: main 9ca99e5 in production (Rob: "release main 9ca99e5 to production")
 

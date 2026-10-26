@@ -76,6 +76,6 @@ Targeted checks use the installed Node 24.19.0 and Chrome on this machine. CI's 
 and Playwright Chromium. The sandbox blocks browser localhost navigation and temporary Git initialization,
 so those checks require the approved external execution context. A skipped test is not a pass.
 
-The release-builder suite passed 224 checks after its sandbox-only failure was retried outside the sandbox.
+The release-builder suite passed 226 checks after its sandbox-only failure was retried outside the sandbox.
 Service worker passed 9, cloud sync 18 and readout feeds 1121. These do not replace full combined CI,
 release acceptance or a real staging play journey.
