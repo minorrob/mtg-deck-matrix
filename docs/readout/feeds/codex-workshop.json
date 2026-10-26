@@ -1,9 +1,9 @@
 {
   "workstream": "codex-workshop",
-  "updated": "2026-10-26T15:51:47Z",
+  "updated": "2026-10-26T17:23:35.064Z",
   "updated_by": "Codex r4 coordinator, Personal-HP",
   "branch": "integration/r4",
-  "now": "Executing the approved r4 program: foundation and engine contracts, followed by the Play shell and deck journey; evidence in docs/r4-execution/.",
+  "now": "r4 deck journeys, acquisition, sharing, table setup/results, Settings and read-only Admin integrated in draft PR #890 (ROB-197). Final joined desktop/phone journey and Explore audit in progress; no r4 deployment yet. Evidence: docs/r4-execution/.",
   "items": [
     {
       "id": "ROB-36",
