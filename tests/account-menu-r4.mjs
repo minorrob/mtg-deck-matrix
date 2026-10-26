@@ -64,7 +64,7 @@ try{
     ok(await page.getByLabel('Type RESET to confirm').count()===1,'Careful invokes the existing typed RESET confirmation');
     eq(writes.filter(p=>p!=='/api/library'),[],'opening/canceling menu controls writes no account, mail, Admin or AI state');
     await page.locator('#cm-dialog [data-action=close]').first().click();
-    await page.evaluate(theme=>{document.getElementById('matrix-v2').dataset.theme=theme;},test.theme);
+    await page.evaluate(async theme=>{await __menuC.actions['set-theme']({dataset:{themeChoice:theme}});},test.theme==='dark'?'sapphire-obsidian':test.theme==='light'?'sapphire-obsidian-light':'bronze-basalt');
     await trigger.click();await page.locator('#cm-user-menu:popover-open').waitFor();
     const contrast=await menu.locator('[data-action=reset-all]').evaluate(n=>{const c=document.createElement('canvas').getContext('2d'),rgb=css=>{c.clearRect(0,0,1,1);c.fillStyle=css;c.fillRect(0,0,1,1);return [...c.getImageData(0,0,1,1).data];},lum=a=>a.slice(0,3).map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;}).reduce((s,v,i)=>s+v*[.2126,.7152,.0722][i],0),L=[lum(rgb(getComputedStyle(n).color)),lum(rgb(getComputedStyle(n.closest('.cm-menu-group')).backgroundColor))].sort((a,b)=>b-a);return (L[0]+.05)/(L[1]+.05);});
     ok(contrast>=4.5,'Careful text has 4.5:1 contrast on its actual group background');
