@@ -1008,9 +1008,8 @@ globalThis.CrankBoard = Object.seal({
   }
   function fitTableCardRange(mat) {
     const base=Math.min(60,Math.max(30,mat.parentElement.clientWidth*.074)),minimum=parseFloat(mat.style.getPropertyValue('--caption-card-min'))||0,[lo,hi]=C.cardScaleRange();
-    const turned=!!mat.querySelector('[data-card-section] .cm-bcard.is-tapped,[data-card-section] .cm-land-tilted'),footprint=turned ? .866+1.4*.5 : 1;
     // Grid/field padding, two pile columns, two gaps and the row's 4px inset must all fit.
-    const limit=Math.floor((mat.clientWidth-18)/(footprint+2.48)),delta=base*(hi-lo)/100;
+    const limit=Math.floor((mat.clientWidth-18)/3.48),delta=base*(hi-lo)/100;
     mat.style.setProperty('--table-card-growth',String(Math.min(1,Math.max(0,(limit-minimum)/delta))));
   }
   function fitPileCaptions(host) {
@@ -1204,10 +1203,9 @@ globalThis.CrankBoard = Object.seal({
       <div class="cm-stage-mini">${mat(p, {size: "opp", head: "none"})}</div></section>`).join("");
     return `${boardHeader()}
       <div class="cm-full-mine cm-stage-region" aria-label="Tabletop">
-        <div class="cm-stage-caption"><span>TURN ${view.state.turn}</span><div class="cm-stage-life-list" role="group" aria-label="Player life totals">${others.map(p=>`<span class="cm-stage-life">${e(p.name)} · <b>${p.health.life}</b></span>`).join("")}</div></div>
+        <div class="cm-stage-caption"><span title="Turn ${view.state.turn}">TURN ${view.state.turn}</span><div class="cm-stage-life-list" role="group" aria-label="Player life totals">${others.map(p=>`<span class="cm-stage-life" title="${e(p.name)}, ${p.health.life} life"><span>${e(p.name)}</span><b>${p.health.life}</b></span>`).join("")}</div></div>
         ${rear}<div class="cm-stage-front">${mat(big, {size: "full", head: "none"})}${corner}</div>
         ${actionBar()}
-        ${cameraMenu()}
         <span class="cm-stage-error" role="status">${e(stageError)}</span>${ask()}
       </div>
       ${stageHand(big)}
@@ -1230,7 +1228,7 @@ globalThis.CrankBoard = Object.seal({
     const pill=`<div class="cm-full-pill">${stageEnabled() ? "" : `${passButton()}${resolveAllButton()}${skipControl(true)}`}</div>`;
     const conn=status === "open" ? "" : `<span class="cm-board-conn">${status === "reconnecting" ? "Reconnecting…" : "Connecting…"}</span>`;
     return `<header class="cm-stage-top"><span class="cm-stage-self" role="group" aria-label="${e(seatLabel(me))}, your seat" title="${e(seatLabel(me))}">${seatHeader(me)}</span><span class="cm-board-tools cm-board-turnsteps">${turnRibbon()}${stepsOpen ? stepsMenu() : ""}</span>
-      <span class="cm-stage-priority"><span class="cm-board-turn" title="Turn ${s.turn} of the game, counting every player's${view.yourTurn ? `; your ${ordinal(view.yourTurn)} turn` : ''}">${s.turn ? `Turn ${s.turn} · ${e(turnName)}` : "Before turn 1"}</span><br>Priority: ${e(s.priorityPlayerId==null?'—':nameOf(s.priorityPlayerId))}<span class="cm-board-waiting" title="${e(waitingText())}">${e(waitingText())}</span>${conn}</span>${alsoButton()}${opens(ib(stageRail && !actionsShut ? "◂" : "▸", "board-actions-open", "Open decision drawer", {}, {cls:"compact"}), stageRail && !actionsShut)}${pill}${stageProfile(me)}${combatStrip()}</header>`;
+      <span class="cm-stage-priority"><span class="cm-board-turn" title="Turn ${s.turn} of the game, counting every player's${view.yourTurn ? `; your ${ordinal(view.yourTurn)} turn` : ''}">${s.turn ? `Turn ${s.turn} · ${e(turnName)}` : "Before turn 1"}</span><br>Priority: ${e(s.priorityPlayerId==null?'—':nameOf(s.priorityPlayerId))}<span class="cm-board-waiting" title="${e(waitingText())}">${e(waitingText())}</span>${conn}</span>${alsoButton()}${opens(ib(stageRail && !actionsShut ? "◂" : "▸", "board-actions-open", "Open decision drawer", {}, {cls:"compact"}), stageRail && !actionsShut)}${pill}${stageEnabled()?cameraMenu():""}${stageProfile(me)}${combatStrip()}</header>`;
   }
   function boardDrawers() {
     const pending = view.decision && view.decision.kind !== 'draw' ? 1 : 0, count = view.state.stack.length;
@@ -2654,6 +2652,8 @@ globalThis.CrankBoard = Object.seal({
       if (!host || !view) return;
       const header=host.querySelector(':scope>.cm-stage-top');
       if(header){const combat=header.querySelector('.cm-r4-combat')?.offsetHeight || 0;host.style.setProperty('--hud-top',`${Math.ceil(Math.max(28+30*hudScale()/100,header.offsetHeight-combat))}px`);}
+      host.style.setProperty('--full-action-h',`${host.querySelector('.cm-stage-actions')?.offsetHeight || 0}px`);
+      host.style.setProperty('--full-action-w',`${host.querySelector('.cm-stage-actions')?.offsetWidth || 0}px`);
       fitCardCaptions(host);
       /* The hand's tray as it would be at the table's card size (Tools): the room the boards leave it, whatever size the
          hand is now (Rob, 2026-10-09). A larger hand runs on below; a smaller one leaves the boards where they are. */
@@ -3348,10 +3348,8 @@ globalThis.CrankBoard = Object.seal({
       section.style.removeProperty('height');
       const cards=[...section.children];if(!cards.length)continue;
       const width=Math.max(...cards.map(c=>c.offsetWidth)), height=Math.max(...cards.map(c=>c.offsetHeight));
-      // Tapped cards reserve their rotated footprint; their full image stays in the cell.
-      const tapped=cards.some(c=>c.classList.contains('is-tapped')||c.querySelector(':scope>.cm-bcard.is-tapped,:scope>.cm-land-tilted'));
-      const cellWidth=Math.ceil(tapped ? width*.866+height*.5 : width);
-      const cellHeight=Math.ceil(tapped ? height*.866+width*.5 : height);
+      // Tapping rotates within the same slot; corners may tuck under adjacent cards.
+      const cellWidth=Math.ceil(width),cellHeight=Math.ceil(height);
       section.style.setProperty('--zone-cell-width',`${cellWidth}px`);
       section.style.setProperty('--zone-pitch',`${Math.max(cellWidth*.3,cellWidth+width*Math.min(0,spacing())/100)}px`);
       section.style.setProperty('--zone-cell-height',`${cellHeight}px`);

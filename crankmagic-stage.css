@@ -1105,10 +1105,24 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 }
 #matrix-v2 .cm-board .cm-mat :is(.cm-board-field,.cm-board-lands)>.cm-mat-label{max-width:100%;box-sizing:border-box;white-space:normal;overflow-wrap:anywhere}
 #matrix-v2 .cm-board .cm-mat:not(.is-bare) .cm-board-pile figcaption em{display:block}
-#matrix-v2 .cm-board .cm-mat .cm-board-pile[data-caption-compact] figcaption em{display:none}
+#matrix-v2 .cm-board .cm-mat .cm-board-pile[data-caption-compact] figcaption em{display:none!important}
 #matrix-v2 .cm-board .cm-board-pile[data-caption-compact] figcaption{justify-content:center}
 #matrix-v2 .cm-board .cm-board-pile{grid-template-columns:minmax(0,1fr)}
 #matrix-v2 .cm-board .cm-board-pile figcaption{min-width:0;max-width:100%}
-#matrix-v2 .cm-board [data-card-section]>.cm-bcard.is-tapped,#matrix-v2 .cm-board [data-card-section]>.cm-card-slot:has(>.cm-bcard.is-tapped),#matrix-v2 .cm-board [data-card-section]>.cm-land-stack:is(.is-tapped,:has(.cm-land-tilted)){position:relative;left:calc((var(--zone-cell-width) - var(--bc))/2);top:calc((var(--zone-cell-height) - var(--bc)*1.4)/2)}
 #matrix-v2 .cm-board[data-shell=shared] .cm-stage-camera{right:calc(var(--play-inspector,0px) + var(--stage-side-offset,0px) + 16px)}
 #matrix-v2 .cm-board[data-shell=shared] .cm-table-menu{right:calc(var(--play-inspector,0px) + var(--stage-side-offset,0px) + 126px)}
+#matrix-v2 .cm-board[data-view=full] .cm-stage-top{flex-wrap:wrap}
+#matrix-v2 .cm-board[data-view=full] .cm-stage-top>.cm-stage-camera,#matrix-v2 .cm-board[data-view=full] .cm-stage-top>.cm-table-menu{position:relative;top:auto;right:auto;bottom:auto;flex:none}
+#matrix-v2 .cm-board[data-view=full] .cm-stage-top .cm-stage-camera>div,#matrix-v2 .cm-board[data-view=full] .cm-stage-top .cm-table-menu>div{top:calc(100% + 6px);bottom:auto}
+#matrix-v2 .cm-board[data-view=full]{--full-pane-top:calc(var(--hud-top,58px) + var(--combat-h,0px) + var(--full-action-h,0px) + 24px)}
+#matrix-v2 .cm-board[data-view=full]>.cm-stage-rail,#matrix-v2 .cm-board[data-view=full]>.cm-stage-side,#matrix-v2 .cm-board[data-view=full]>#cm-card-inspector{top:var(--full-pane-top)}
+#matrix-v2 .cm-board[data-view=full]>.cm-stage-side{height:calc(100% - var(--full-pane-top))!important}
+#matrix-v2 .cm-board[data-view=full]>.cm-board-panegrip{top:var(--full-pane-top);height:calc(100% - var(--full-pane-top))}
+#matrix-v2 .cm-board .cm-stage-actions .v-button{font-size:calc(17px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-stage-actions small,#matrix-v2 .cm-board :is(.cm-stage-caption,.cm-stage-life-list,.cm-stage-life){font-size:calc(15px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-stage-caption{max-width:max(72px,calc((100% - var(--full-action-w,0px))/2 - 30px));box-sizing:border-box;line-height:1.15}
+#matrix-v2 .cm-board .cm-stage-caption>span{max-width:100%;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#matrix-v2 .cm-board .cm-stage-life-list{min-width:0;box-sizing:border-box}
+#matrix-v2 .cm-board .cm-stage-life{display:flex;gap:6px;min-width:0;white-space:nowrap}
+#matrix-v2 .cm-board .cm-stage-life>span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+#matrix-v2 .cm-board .cm-stage-life>b{flex:none}
