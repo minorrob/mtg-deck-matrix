@@ -25,6 +25,7 @@
  *   POST /api/ai/advise            the deck advisor (AI-4): the same door, the brief built here from the person's own
  *                                  library in the cloud (cloud/advise.mjs); its own switch, AI_ADVISE
  *   GET  /api/ai-advise            whether this person may ask the advisor (AI-4): {open}
+ *   GET  /api/ai-coach             whether this person may ask the table Coach: {open}
  *   GET  /api/ai-meter             this person's AI spending over the last 24 hours against their cap (AI-6)
  *   GET  /api/ai/login?to=#...     back to the app once signed in to the AI door
  */
@@ -241,6 +242,8 @@ export async function handle(request, env, deps = {}) {
     if (method === "GET" && path === "/api/ai-seat") return reply(200, {open: await aiSeatOpen(env, person.email)});
     /* THE DECK ADVISOR (AI-4): a deck's page offers Ask the advisor only where the door would answer this person. */
     if (method === "GET" && path === "/api/ai-advise") return reply(200, {open: await aiSeatOpen(env, person.email, "AI_ADVISE")});
+    /* The table shows a composer only where the existing Coach switch and this person's AI gates are open. */
+    if (method === "GET" && path === "/api/ai-coach") return reply(200, {open: await aiSeatOpen(env, person.email, "AI_COACH")});
     if (method === "GET" && path === "/api/ai-meter") return reply(200, await aiMeter(env, person.email, () => new Date(ms()).toISOString()));
     if (method === "GET" && path === "/api/library") return reply(200, {head: await library.head(person.id)});
     if (method === "PUT" && path === "/api/library") {

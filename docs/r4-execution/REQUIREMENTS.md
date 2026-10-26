@@ -1,21 +1,21 @@
 # r4 requirements and evidence
 
-There are 61 CH entries. Integrated means code is present on integration/r4; remaining cross-cutting acceptance is still required. See requirements.json for commands, commit references and scope limits.
+61 changes. Integrated means present on integration/r4; it does not replace final combined acceptance. Detailed commands, scope limits and source commits are in requirements.json.
 
-| Change | Owner | State | Code commit |
+| Change | Owner | State | Source commit |
 | --- | --- | --- | --- |
 | CH-01 | S0 | integrated | fe65eb65 |
 | CH-02 | S0 | integrated | fe65eb65 |
 | CH-03 | S0 | integrated | fe65eb65 |
 | CH-04 | S0 | integrated | 15e50e41 |
-| CH-10 | A | pending | Pending |
-| CH-11 | A | pending | Pending |
-| CH-12 | A | pending | Pending |
-| CH-13 | A | pending | Pending |
-| CH-14 | A | pending | Pending |
-| CH-15 | A | pending | Pending |
-| CH-16 | A | pending | Pending |
-| CH-17 | A | pending | Pending |
+| CH-10 | A | in_progress | Pending |
+| CH-11 | A | in_progress | Pending |
+| CH-12 | A | in_progress | Pending |
+| CH-13 | A | in_progress | Pending |
+| CH-14 | A | in_progress | Pending |
+| CH-15 | A | in_progress | Pending |
+| CH-16 | A | in_progress | Pending |
+| CH-17 | A | in_progress | Pending |
 | CH-20 | B | pending | Pending |
 | CH-21 | B | pending | Pending |
 | CH-22 | B | pending | Pending |
@@ -29,39 +29,39 @@ There are 61 CH entries. Integrated means code is present on integration/r4; rem
 | CH-34 | C | pending | Pending |
 | CH-35 | C | pending | Pending |
 | CH-36 | C | pending | Pending |
-| CH-40 | D1 | in_progress | Pending |
-| CH-41 | D1 | in_progress | Pending |
-| CH-42 | D1 | in_progress | Pending |
-| CH-43 | D1 | in_progress | Pending |
-| CH-44 | D1 | in_progress | Pending |
-| CH-45 | D1 | in_progress | Pending |
-| CH-46 | D1 | in_progress | Pending |
-| CH-47 | D1 | in_progress | Pending |
-| CH-48 | D1 | in_progress | Pending |
+| CH-40 | D1 | integrated | ba66e0d3 |
+| CH-41 | D1 | integrated | 113c4283 |
+| CH-42 | D1 | integrated | 113c4283 |
+| CH-43 | D1 | integrated | 113c4283 |
+| CH-44 | D1 | integrated | 113c4283 |
+| CH-45 | D1 | integrated | 113c4283 |
+| CH-46 | D1 | integrated | 113c4283 |
+| CH-47 | D1 | integrated | 113c4283 |
+| CH-48 | D1 | integrated | 113c4283 |
 | CH-50 | D2 | pending | Pending |
 | CH-51 | D2 | pending | Pending |
 | CH-52 | D2 | pending | Pending |
 | CH-53 | D2 | pending | Pending |
-| CH-55 | E | in_progress | Pending |
+| CH-55 | E | integrated | 8679027a |
 | CH-56 | E | integrated | a7f0fa5f |
-| CH-57 | E | in_progress | Pending |
-| CH-58 | E | in_progress | Pending |
-| CH-59 | E | in_progress | Pending |
-| CH-60 | E | in_progress | Pending |
-| CH-70 | F1 | in_progress | Pending |
+| CH-57 | E | integrated | bc097107 |
+| CH-58 | E | integrated | bc097107 |
+| CH-59 | E | integrated | 8679027a |
+| CH-60 | E | integrated | 8679027a |
+| CH-70 | F1 | integrated | 6a5c2883 |
 | CH-71 | F1 | integrated | d9eed16f |
 | CH-72 | F1 | in_progress | Pending |
 | CH-73 | F1 | integrated | d9eed16f |
-| CH-74 | F1 | in_progress | Pending |
+| CH-74 | F1 | integrated | 6a5c2883 |
 | CH-75 | F1 | integrated | d9eed16f |
 | CH-76 | F1 | in_progress | Pending |
-| CH-80 | F2 | pending | Pending |
-| CH-81 | F2 | pending | Pending |
-| CH-82 | F2 | pending | Pending |
-| CH-83 | F2 | pending | Pending |
-| CH-84 | F2 | pending | Pending |
-| CH-85 | F2 | pending | Pending |
-| CH-86 | F2 | pending | Pending |
-| CH-87 | F2 | pending | Pending |
-| CH-88 | F2 | integrated | c15a94b4 |
-| CH-89 | F2 | pending | Pending |
+| CH-80 | F2 | integrated | 70dfdacf |
+| CH-81 | F2 | integrated | 6a5c2883 |
+| CH-82 | F2 | integrated | 70dfdacf |
+| CH-83 | F2 | integrated | 70dfdacf |
+| CH-84 | F2 | integrated | 70dfdacf |
+| CH-85 | F2 | integrated | 70dfdacf |
+| CH-86 | F2 | integrated | 70dfdacf |
+| CH-87 | F2 | integrated | 6a5c2883 |
+| CH-88 | F2 | integrated | 39a22629 |
+| CH-89 | F2 | integrated | 6a5c2883 |

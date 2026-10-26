@@ -243,6 +243,16 @@ try {
   await page.evaluate(() => { globalThis.__cm.play = globalThis.__realPlay; delete globalThis.__realPlay; });
   await hash(page, "#decks");
 
+  /* Shared's count resolves on the ordinary stage and is reused across stage navigation. */
+  await page.evaluate(()=>{const C=globalThis.__cm;globalThis.__shareRestore={items:C.sharedItems,available:C.sharingAvailable,ready:C.sharingReady};globalThis.__shareReads=0;C.sharingReady=Promise.resolve();C.sharingAvailable=()=>true;C.sharedItems=async()=>{globalThis.__shareReads++;return [{id:'private',via:'grant'},{id:'public',via:'public'}];};});
+  await hash(page,'#decks?stage=building');
+  await page.waitForFunction(()=>document.querySelector('[data-stage-count=shared]')?.textContent==='1');
+  eq(await page.locator('[data-stage-count=shared]').textContent(),'1','the Shared badge resolves private shares before opening Shared');
+  await hash(page,'#decks?stage=defined');
+  await page.waitForFunction(()=>document.querySelector('[data-stage-count=shared]')?.textContent==='1');
+  eq(await page.evaluate(()=>globalThis.__shareReads),1,'stage navigation reuses the bounded shared count read');
+  await page.evaluate(()=>{const C=globalThis.__cm,r=globalThis.__shareRestore;C.sharedItems=r.items;C.sharingAvailable=r.available;C.sharingReady=r.ready;});
+
   /* 8. Shared, without an account. */
   await go(page, () => page.locator(".cm-subnav a", {hasText: "Shared"}).click());
   ok(/stage=shared/.test(page.url()), "Shared is a chip of the Decks page");

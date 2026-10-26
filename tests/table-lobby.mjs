@@ -229,6 +229,10 @@ try {
   ok((await rob.page.locator("#cm-dialog-title").textContent()) === "Help — Play: the table and the board" && /Space/.test(await pageText(rob.page, "#cm-dialog .cm-help-keys")), "New table's ? opens Play's help, the board's keys among it");
   await rob.page.click("#cm-dialog [data-action=close]");
   await rob.page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"), null, {timeout: 5000});
+  await rob.page.fill('#cm-table-new [name=hostName]', '   ');
+  await rob.page.click('[data-action=table-create]');
+  eq(await rob.page.locator('#cm-table-host-error').textContent(), 'Give your name at the table.', 'a missing host name is explained at the field');
+  ok(await rob.page.locator('[name=hostName][aria-invalid=true]').evaluate(x=>x===document.activeElement), 'the invalid host field receives focus');
   await rob.page.fill("#cm-table-new [name=hostName]", "Rob");
   await rob.page.fill("#cm-table-new [name=name2]", "Maya");
   eq(await rob.page.locator("#cm-table-new [name=kind3] option").allTextContents(), ["A person I will invite", "An AI · Normal", "An AI · Easy", "Nobody"],
@@ -645,7 +649,7 @@ try {
     eq(asked, ["POST"], "and the hub asked the table once, for every deck at once (POST /api/tables/known)");
     /* The Playable chip, with Boxed (the Decks requirements' FLT-1, 2026-10-23: All · Boxed · Defined · Building · Playable ·
        Shared): the Defined decks the table plays whole, the rest put away once it has answered. Every deck here is 100. */
-    eq(await olu.page.$$eval(".cm-decks-stages a", (as) => as.map((a) => a.textContent)).then((t) => t.filter((x) => /Playable|Boxed/.test(x))), ["Boxed", "Playable"],
+    eq(await olu.page.$$eval(".cm-decks-stages a", (as) => as.map((a) => a.getAttribute("aria-label"))).then((t) => t.filter((x) => /Playable|Boxed/.test(x))), ["Boxed", "Playable"],
       "the hub offers Boxed (the box) and Playable (in the app)");
     await olu.page.locator(".cm-decks-stages a", {hasText: "Playable"}).click();
     await olu.page.waitForFunction((n) => document.querySelectorAll("[data-deck-tile]:not([hidden])").length === n && [...document.querySelectorAll("[data-deck-tile]")].some((t) => t.hidden), playableIds.length, {timeout: 15000});
@@ -662,6 +666,7 @@ try {
     const whole = await deckLine(playableIds[0]);
     await shot(olu.page, "deck-playable-1400");
     const part = await deckLine(learning.id);
+    eq(await olu.page.locator('.cm-deck-blocked').textContent(),await olu.page.locator('#cm-deck-next .cm-bento-next-line').textContent(),'the header and Next band prioritize the same unplayable-card state');
     await shot(olu.page, "deck-to-learn-1400");
     const total = (d) => {const i = listed.indexOf(d); return named[i].commander.length + named[i].cards.length;};
     const first = listed.find((d) => d.id === playableIds[0]);
@@ -674,6 +679,12 @@ try {
     await olu.page.locator("#cm-table-new-deck:not([hidden])").waitFor({timeout: 30000});
     eq(await olu.page.evaluate(() => location.hash), `#table?deck=${encodeURIComponent(first.id)}`, "Play this deck opens a new table, carrying the deck");
     eq((await olu.page.locator("#cm-table-new-deck").innerText()).trim(), `You bring ${first.name} to seat 1.`, "which says the deck comes with you to seat 1");
+    const createY=await olu.page.locator('[data-action=table-create]').evaluate(x=>x.getBoundingClientRect().y);
+    await olu.page.selectOption('#cm-new-table-deck','');
+    eq(await olu.page.locator('[data-action=table-create]').evaluate(x=>x.getBoundingClientRect().y),createY,'clearing the deck keeps Set the table in place');
+    await olu.page.selectOption('#cm-new-table-deck',first.id);
+    await olu.page.waitForFunction(name=>document.getElementById('cm-table-new-deck').textContent.includes(name),first.name);
+    eq(await olu.page.locator('[data-action=table-create]').evaluate(x=>x.getBoundingClientRect().y),createY,'choosing the deck keeps Set the table in place');
     await shot(olu.page, "table-bring-1400");
     await olu.page.fill("#cm-table-new [name=hostName]", "Olu");
     await olu.page.selectOption("#cm-table-new [name=kind2]", "ai");

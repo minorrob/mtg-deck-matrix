@@ -11,16 +11,29 @@ function scriptFor(state, action) {
   return offerScript(state, action);
 }
 
-export function describeDecision(state, choice, actions = null) {
-  if (!choice) return choice;
-  return deriving(state, () => description(state, choice, actions));
+/* Source identity is a reference into the exact view already being sent. Never recover it from a title, a last-known
+   snapshot, or an ability stack entry whose old card id may now belong to a hidden zone. */
+function visibleSource(state, awaiting, trigger, projected) {
+  const id = awaiting?.action?.objectId ?? trigger?.cardId ?? (awaiting?.resolution === true ? state.resolving?.context?.source : null);
+  const object = state.objects[id];
+  if (!object || object.faceDown === true || !projected) return null;
+  const named = card => card.cardId === id && typeof card.name === "string" && card.name.length > 0 && card.faceDown !== true;
+  const visible = projected.players.some(player => Object.values(player.zones).some(zone => zone.cards.some(named)))
+    || (object.zone === "stack" && projected.stack.some(entry => entry.kind === "spell" && named(entry)));
+  return visible ? id : null;
 }
-function description(state, choice, actions) {
+
+export function describeDecision(state, choice, actions = null, projected = null) {
+  if (!choice) return choice;
+  return deriving(state, () => description(state, choice, actions, projected));
+}
+function description(state, choice, actions, projected) {
   const awaiting = state.awaiting;
   const trigger = awaiting?.stackId !== undefined ? state.stack.find(e => e.stackId === awaiting.stackId) : null;
+  const sourceId = visibleSource(state, awaiting, trigger, projected);
   const base = awaiting?.action ? scriptFor(state, awaiting.action) : trigger?.script;
   const may = awaiting?.optional === true || (awaiting?.effect === "modal" && awaiting.choose === 1 && awaiting.modes.some(m => !(m.effects ?? []).length));
-  return {...choice, ...(may ? {optional: true} : {}), options: (choice.options ?? []).map((option, index) => {
+  return {...choice, ...(sourceId !== null ? {sourceId} : {}), ...(may ? {optional: true} : {}), options: (choice.options ?? []).map((option, index) => {
     const action = actions?.[index];
     const script = action ? scriptFor(state, action) : trigger?.script?.modal && Array.isArray(option.modes)
       ? {...trigger.script, ...modalScript(trigger.script.modal, option.modes)} : base;

@@ -3,6 +3,11 @@
 CH-56 adds descriptions to existing decision options. It changes neither the legal answer nor the option index.
 Only the answering seat receives its decision; observers continue to receive `decision: null`.
 
+- Decision-level `sourceId`: the current source object of a target/cost question, trigger, or paused resolving effect,
+  only when its named face is already in that same seat's projection. It is distinct from a target option's `cardId`.
+  Resolve it through `state.players[*].zones[*].cards` or an actual face-up spell in `state.stack`; it adds no name,
+  permission, or hidden identity. Face-down, unseen, absent, and last-known-only sources omit the field. Never infer a
+  replacement from a title, a choice id, a new-zone descendant, or an ability's old stack card reference.
 - `controllerId`: numeric engine seat id, including zero. For a player target it is that player. For an object it is
   its current controller (or its stored controller outside the battlefield).
 - `effect`: a display verb taken from the engine script, such as `Destroy`, `Exile`, `Tap`, or `Deal damage to`.

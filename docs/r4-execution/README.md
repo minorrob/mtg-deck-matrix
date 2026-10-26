@@ -4,6 +4,9 @@ Rob authorized the revised execution plan on October 26, 2026 ("go"). The baseli
 The supplied packets are preserved under `source/`; they are source material, not independent permission to
 change scope, rewrite shared history, send messages, or deploy production.
 
+Tracking: [ROB-197](https://linear.app/robs-build/issue/ROB-197/implement-r4-design-foundation-and-reconciled-playworkshop-ux)
+and [draft PR #890](https://github.com/minorrob/mtg-deck-matrix/pull/890).
+
 ## Working agreement
 
 - `integration/r4` holds the complete program before it reaches main. S0 lands here first, not on main.

@@ -83,6 +83,14 @@ try {
   ok(await page.getByRole("button", {name: "Publish your To Trade list"}).isVisible(), "Publish your To Trade list is in the Library's More menu");
   await page.keyboard.press("Escape");
 
+  await toSettings(page);
+  await page.getByRole('button', {name:'Clear all data', exact:true}).click();
+  ok(await page.locator('#cm-dialog form.cm-destructive').count() === 1, 'Clear all data has the same danger-fill confirmation as deletion');
+  ok(await page.getByLabel('Type CLEAR to confirm').count() === 1, 'clearing still requires typed confirmation');
+  await page.locator('#cm-dialog [data-action=close]').first().click();
+  await page.getByRole('button', {name:'Confirmations…', exact:true}).click();
+  eq(await page.locator('.cm-confirmation-rules dt').count(), 4, 'the confirmation classes explain the available way back without fake switches');
+  await page.locator('#cm-dialog [data-action=close]').first().click();
   /* 3. The theme, from Settings. */
   await toSettings(page);
   /* A1: four swatch cards, each drawn in its own theme's colors and face. */
@@ -109,15 +117,16 @@ try {
   await page.waitForFunction(() => document.getElementById("matrix-v2").dataset.theme === "dark");
 
   /* 4. Reduce motion. */
+  eq(await page.getByRole("switch", {name: "Reduce motion: Off", exact: true}).count(), 1, "the motion switch says its state in words");
   const motion = () => page.evaluate(() => ({attr: document.documentElement.dataset.motion || null, reduced: globalThis.CrankMotion.reduced(),
-    pressed: document.querySelector('[data-action="set-motion"]').getAttribute("aria-pressed"), aether: document.querySelector(".v-aether")?.dataset.motion,
+    pressed: document.querySelector('[data-action="set-motion"]').getAttribute("aria-checked"), aether: document.querySelector(".v-aether")?.dataset.motion,
     transition: document.querySelector("[data-motion-probe]") ? getComputedStyle(document.querySelector("[data-motion-probe]")).transitionDuration : "no probe after a reload"}));
   /* The probe is an element that really transitions before the switch; one that never did would read
      0s either way and prove nothing. */
   ok(await page.evaluate(() => { const el = [...document.querySelectorAll("#matrix-v2 *")].find((n) => getComputedStyle(n).transitionDuration.split(",").some((d) => parseFloat(d) > 0)); if (el) el.dataset.motionProbe = ""; return Boolean(el); }), "the page has an element that transitions, to measure");
   const before = await motion();
   ok(before.attr === null && !before.reduced && before.pressed === "false" && before.aether === "running" && before.transition.split(",").some((d) => parseFloat(d) > 0), `motion is on by default: ${JSON.stringify(before)}`);
-  await page.getByRole("button", {name: "Reduce motion"}).click();
+  await page.getByRole("switch", {name: /Reduce motion/}).click();
   await page.waitForFunction(() => document.documentElement.dataset.motion === "reduce");
   const still = await motion();
   ok(still.reduced && still.pressed === "true" && still.aether === "still" && still.transition.split(",").every((d) => parseFloat(d) === 0),
@@ -126,22 +135,22 @@ try {
   await page.locator(".cm-settings").waitFor({timeout: 60000});
   await page.waitForFunction(() => document.documentElement.dataset.motion === "reduce", null, {timeout: 15000});
   ok((await motion()).pressed === "true", "it is saved: after a reload the page is still and the switch still pressed");
-  await page.getByRole("button", {name: "Reduce motion"}).click();
+  await page.getByRole("switch", {name: /Reduce motion/}).click();
   await page.waitForFunction(() => !document.documentElement.dataset.motion);
   ok((await motion()).aether === "running", "and turning it off sets the rail moving again");
   /* Play's Stop at every step of my turn: off by default, saved with the preferences, kept through a reload. */
-  const steps = () => page.evaluate(async () => ({pressed: document.querySelector('[data-action="set-step-by-step"]').getAttribute("aria-pressed"),
+  const steps = () => page.evaluate(async () => ({pressed: document.querySelector('[data-action="set-step-by-step"]').getAttribute("aria-checked"),
     saved: await (async () => {const r = await CrankRepository.open(); try {return ((await r.getState()).preferences.play || {}).stepByStep ?? null;} finally {r.close();}})()}));
   eq(await steps(), {pressed: "false", saved: null}, "Stop at every step of my turn is off by default");
   ok(/never ends by itself/.test(await page.locator(".cm-settings-card", {hasText: "Stop at every step"}).innerText()), "and Play says your turn never ends by itself, either way");
-  await page.getByRole("button", {name: "Stop at every step of my turn"}).click();
-  await page.waitForFunction(() => document.querySelector('[data-action="set-step-by-step"]')?.getAttribute("aria-pressed") === "true");
+  await page.getByRole("switch", {name: /Stop at every step of my turn/}).click();
+  await page.waitForFunction(() => document.querySelector('[data-action="set-step-by-step"]')?.getAttribute("aria-checked") === "true");
   eq(await steps(), {pressed: "true", saved: true}, "pressed, it is saved with the preferences (play.stepByStep), which the board tells the room");
   await page.reload();
   await page.locator(".cm-settings").waitFor({timeout: 60000});
   eq(await steps(), {pressed: "true", saved: true}, "and kept through a reload");
-  await page.getByRole("button", {name: "Stop at every step of my turn"}).click();
-  await page.waitForFunction(() => document.querySelector('[data-action="set-step-by-step"]')?.getAttribute("aria-pressed") === "false");
+  await page.getByRole("switch", {name: /Stop at every step of my turn/}).click();
+  await page.waitForFunction(() => document.querySelector('[data-action="set-step-by-step"]')?.getAttribute("aria-checked") === "false");
   eq(await steps(), {pressed: "false", saved: false}, "and off again");
 
   /* 5. Budgets (Rob, 2026-10-18; docs/budgets.md). A deck's budget is its own and inherits nothing; the account's is

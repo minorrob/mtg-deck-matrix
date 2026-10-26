@@ -32,6 +32,9 @@ try {
   await page.evaluate(() => { globalThis.__before = true; });
   await page.evaluate(async () => { await navigator.serviceWorker.register("crankmagic-sw.js?v=next-release", {scope: "./"}); });
   const toast = page.locator("#cm-notice", {hasText: "A new version of CrankMagic is ready."});
+  await page.waitForFunction(async()=>Boolean((await navigator.serviceWorker.getRegistration())?.waiting),null,{timeout:60000});
+  ok(!await toast.isVisible(),'a newly installed version waits without interrupting the current screen');
+  await page.evaluate(()=>{location.hash='#settings';});
   await toast.waitFor({timeout: 60000});
   ok(await page.evaluate(async () => { const reg = await navigator.serviceWorker.getRegistration(); return Boolean(reg.waiting) && globalThis.__before === true; }), "the new version installs and waits, and the page is not reloaded under you");
   await page.waitForTimeout(8000);
@@ -41,6 +44,13 @@ try {
   await Promise.all([page.waitForEvent("load", {timeout: 60000}), toast.locator("button", {hasText: "Reload"}).click()]);
   ok(await page.evaluate(() => globalThis.__before === undefined), "Reload lets the new worker take over, and the page reloads");
   ok(await page.evaluate(async () => { const reg = await navigator.serviceWorker.getRegistration(); return !reg.waiting && Boolean(reg.active); }), "and nothing is left waiting");
+  await page.evaluate(async()=>{globalThis.__beforeDismiss=true;await navigator.serviceWorker.register('crankmagic-sw.js?v=another-release',{scope:'./'});});
+  await page.waitForFunction(async()=>Boolean((await navigator.serviceWorker.getRegistration())?.waiting),null,{timeout:60000});
+  await page.evaluate(()=>{location.hash='#decks';});await toast.waitFor();
+  await toast.getByRole('button',{name:'Dismiss update notice'}).click();
+  ok(!await toast.isVisible()&&await page.evaluate(async()=>Boolean((await navigator.serviceWorker.getRegistration())?.waiting)&&globalThis.__beforeDismiss===true),'Dismiss closes the notice while the current version and open page remain');
+  await page.evaluate(()=>{location.hash='#settings';});await page.waitForTimeout(200);
+  ok(!await toast.isVisible(),'a dismissed update stays quiet for this session');
   await context.close();
 } finally {
   await close();

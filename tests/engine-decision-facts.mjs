@@ -6,6 +6,9 @@ import {createState, addObject} from "../game/engine/state/index.mjs";
 import {countedChoice} from "../game/engine/script/bind.mjs";
 import {describeDecision} from "../game/room/decision.mjs";
 import {effectForTarget, targetFacts} from "../game/engine/script/decision.mjs";
+import {pushSpell} from "../game/engine/rules/stack.mjs";
+import {projectFor} from "../game/engine/projection.mjs";
+import {beginResolution} from "../game/engine/script/resolution.mjs";
 import {memoryStorage} from "../game/engine/storage.mjs";
 import {startRoom, basicCards} from "../game/room/room.mjs";
 let checks = 0;
@@ -69,5 +72,59 @@ eq(effectForTarget([{effect: "newUnknownEffect", targets: {target: 0}}], 0), nul
     await room.act(view.seatId, {kind: "answer", actionId: randomUUID(), revision: view.revision, choiceId: view.decision.id, indices: [index]});
   }
   ok(cast, "a real cast was offered through the room");
+}
+{
+  const s = createState({matchId: "source-facts", seed: "source-facts", players: [{name: "Rob"}, {name: "Maya"}]});
+  const publicSource = addObject(s, {card: "Public source", owner: 0, controller: 0, types: ["Creature"]}, "battlefield");
+  const target = addObject(s, {card: "Target", owner: 1, controller: 1, types: ["Creature"]}, "battlefield");
+  const hiddenSource = addObject(s, {card: "Secret source", owner: 1, controller: 1, types: ["Instant"]}, "hand", 1);
+  s.stack.push({stackId: 1, cardId: publicSource, kind: "triggered", playerId: 0, name: "Public source", script: {effects: [{effect: "tap", targets: {target: 0}}]}});
+  s.awaiting = {kind: "trigger-targets", player: 0, stackId: 1};
+  const q = {id: "trigger-targets:1", options: [{index: 0, cardId: target, targets: [{kind: "object", id: target}]}]};
+  const describe = viewer => describeDecision(s, q, null, projectFor(s, viewer));
+  eq(describe(0).sourceId, publicSource, "trigger source is the actual public source, never the target option card");
+  s.awaiting = {kind: "choose-targets", player: 0, stackId: 1, index: 0};
+  eq(describe(0).sourceId, publicSource, "counted trigger targeting retains its authoritative source");
+  s.stack[0].cardId = hiddenSource;
+  ok(!Object.hasOwn(describe(0), "sourceId"), "a trigger from an opponent's hidden hand gains no source identity");
+  s.objects[publicSource].faceDown = true;
+  s.stack[0].cardId = publicSource;
+  ok(!Object.hasOwn(describe(0), "sourceId"), "a face-down source gains no source face even for its controller");
+  s.objects[publicSource].faceDown = false;
+  s.stack[0].cardId = 99999;
+  s.stack[0].lastKnown = {cardId: publicSource, name: "Public source"};
+  ok(!Object.hasOwn(describe(0), "sourceId"), "a departed source is not replaced by a last-known or new-zone card");
+  s.awaiting = {kind: "choose-targets", player: 1, action: {kind: "cast", objectId: hiddenSource}, index: 0};
+  eq(describe(1).sourceId, hiddenSource, "a pre-cast source already visible in the answering seat's hand is usable");
+  ok(!Object.hasOwn(describe(0), "sourceId"), "the same source is absent from another viewer's projection");
+  s.awaiting = null;
+  beginResolution(s, [{effect: "chooseColor"}], {controller: 0, source: publicSource});
+  eq([s.awaiting.kind, describe(0).sourceId], ["effect-choice", publicSource], "a real paused resolution carries its context's visible source");
+  ok(!Object.hasOwn(describeDecision(s, q), "sourceId"), "without a visibility projection the descriptor fails closed");
+  const spell = pushSpell(s, hiddenSource, {controller: 1});
+  s.resolving.context.source = spell.objectId;
+  eq(describe(0).sourceId, spell.objectId, "a face-up resolving spell is already public through its own stack entry");
+  spell.faceDown = true;
+  ok(!Object.hasOwn(describe(0), "sourceId"), "a hidden stack face cannot become a named source reference");
+}
+{
+  const cards = name => name === "Watcher" ? {types: ["Creature"], manaCost: "{0}", power: 1, toughness: 1,
+    abilities: [{id: "t0", kind: "triggered", text: "When this creature enters, tap target creature.",
+      trigger: {on: "GameEventCardChangeZone", to: "Battlefield", who: "self"}, targets: [{what: "permanent", types: ["Creature"]}], effects: [{effect: "tap", targets: {target: 0}}]}]}
+    : name === "Commander" ? {types: ["Creature"], manaCost: "{9}", power: 1, toughness: 1} : basicCards(name);
+  const room = await startRoom({storage: memoryStorage(), matchId: "source-room", cards, seed: "source-room", pod: {seats: ["rob", "maya"].map(seatId => ({seatId, name: seatId, pilot: "human", commander: ["Commander"], cards: Array(99).fill("Watcher")}))}});
+  let found = false;
+  for (let n = 0; n < 80; n++) {
+    const view = room.view(room.waitingOn);
+    if (view.decision.id.startsWith("trigger-targets:")) {
+      const source = view.state.players.flatMap(p => Object.values(p.zones).flatMap(z => z.cards)).find(c => c.cardId === view.decision.sourceId);
+      ok(source?.name === "Watcher", "the actual room trigger question points to its already-projected source");
+      eq(room.view(view.seatId === "rob" ? "maya" : "rob").decision, null, "a non-answering seat receives neither trigger question nor source reference");
+      found = true; break;
+    }
+    const index = view.decision.options.find(o => o.act === "cast")?.index ?? view.decision.options.find(o => o.act === "pass")?.index ?? 0;
+    await room.act(view.seatId, {kind: "answer", actionId: randomUUID(), revision: view.revision, choiceId: view.decision.id, indices: [index]});
+  }
+  ok(found, "a real enter trigger reached the room decision boundary");
 }
 console.log(`engine-decision-facts: ${checks} checks passed`);
