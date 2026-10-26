@@ -26,8 +26,10 @@ BREAKS = [
     ('the reporter read from the report', STORE, '.bind(id, person.email, group, kept.kind,', '.bind(id, (input.person && input.person.email) || person.email, group, kept.kind,'),
     ('the state filter ignored', STORE, 'where.push(`state = ?${args.push(state)}`);', 'args.push(state);'),
     ('a move that is not the next taken', STORE, 'if (change.state !== undefined && !mayMove(row.state, change.state)) {', 'if (false) {'),
-    ('the owner is anyone', STORE, 'export const isOwner = (env, person) => !!person && String(env.INVITE_ADMIN_ID || "") !== "" && String(person.id) === String(env.INVITE_ADMIN_ID);', 'export const isOwner = (env, person) => !!person;'),
-    ('the owner is anyone where no administrator is named', STORE, 'String(env.INVITE_ADMIN_ID || "") !== "" && String(person.id) === String(env.INVITE_ADMIN_ID);', 'String(person.id) === String(env.INVITE_ADMIN_ID || person.id);'),
+    ('the owner is anyone', STORE, 'export const isOwner = (env, person) => !!person && (', 'export const isOwner = (env, person) => !!person || ('),
+    ('the owner is anyone where no administrator is named', STORE, '(String(env.INVITE_ADMIN_ID || "") !== "" && String(person.id) === String(env.INVITE_ADMIN_ID)));', '(String(person.id) === String(env.INVITE_ADMIN_ID || person.id)));'),
+    ('OWNER_EMAIL read in one letter case only', STORE, 'String(person.email || "").toLowerCase() === String(env.OWNER_EMAIL).trim().toLowerCase())', 'String(person.email || "") === String(env.OWNER_EMAIL).trim())'),
+    ('OWNER_EMAIL ignored', STORE, '(String(env.OWNER_EMAIL || "").trim() !== "" && String(person.email || "").toLowerCase() === String(env.OWNER_EMAIL).trim().toLowerCase()) ||', ''),
     # The routes.
     ('the sheet\'s header not required', WORKER, 'if (!fromTheApp(request, url, "feedback")) return reply(403,', 'if (false) return reply(403,'),
     ('the admin header not required', WORKER, 'if (method !== "GET" && !fromTheApp(request, url, "feedback-admin")) return reply(403,', 'if (false) return reply(403,'),

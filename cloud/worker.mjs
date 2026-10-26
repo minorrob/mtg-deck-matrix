@@ -41,7 +41,7 @@ import {createAi, everyone, settings, explain, coach, advise, readQuestion, Clos
 import {readAsk, openVersion, adviseBrief} from "./advise.mjs";
 import {tables} from "./tables.mjs";
 import {social, ShareError, sharedIdentity} from "./sharing.mjs";
-import {createFeedback, FeedbackInvalid, FeedbackRefused, isOwner, groupOf} from "./feedback.mjs";
+import {createFeedback, FeedbackInvalid, FeedbackRefused, isOwner, feedbackGroup} from "./feedback.mjs";
 
 /** Whether this person may seat an AI on Claude: the same gates as the table's object checks when it seats one. */
 /* AI COACH SETTINGS (AI-6): the person's own spending over the last 24 hours against their cap, from the call log, for
@@ -160,7 +160,7 @@ export async function handle(request, env, deps = {}) {
     if (!env.DB) return reply(503, {error: "Feedback is not switched on here yet."});
     const library = createLibrary(env.DB, {now: () => new Date(ms()).toISOString()});
     const person = await library.user(who.email);
-    return fileFeedback(request, env, deps, ms, {email: person.email, group: groupOf(env, person)});
+    return fileFeedback(request, env, deps, ms, {email: person.email, group: feedbackGroup(env, person)});
   }
   if (method !== "GET" && !fromTheApp(request, url)) return reply(403, {error: "That request did not come from CrankMagic."});
 
@@ -239,7 +239,7 @@ function feedbackRefusal(error) {
     {status: error.status, headers: {...HEADERS, ...(error.retryAfterSeconds ? {"retry-after": String(error.retryAfterSeconds)} : {})}});
   throw error;
 }
-/* THE ADMIN ROUTES: the owner (INVITE_ADMIN_ID, the administrator the release names), and the triage agent as the service
+/* THE ADMIN ROUTES: the owner (OWNER_EMAIL, else INVITE_ADMIN_ID, the administrator the release names), and the triage agent as the service
    token of its own Access application (FEEDBACK_AGENT_AUD, a dashboard step of Rob's: an application for the agent with a
    Service Auth policy, never a person's session). A person's token is checked against the app's own application as
    everywhere else; the agent's audience admits a service token and nothing more. Unset, no agent is admitted. */

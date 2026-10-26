@@ -32,11 +32,14 @@ export class FeedbackRefused extends Error {
   constructor(status, message, extra = {}) {super(message); this.name = "FeedbackRefused"; this.status = status; Object.assign(this, extra);}
 }
 
-/** The CrankMagic owner: the administrator the release names (INVITE_ADMIN_ID, cloud/sharing.mjs's "Only the CrankMagic
-    administrator can invite new accounts"). The access groups of the AI players plan (Owner, Insiders, General) replace
-    this test when they are built; until then everyone else is General. */
-export const isOwner = (env, person) => !!person && String(env.INVITE_ADMIN_ID || "") !== "" && String(person.id) === String(env.INVITE_ADMIN_ID);
-export const groupOf = (env, person) => (isOwner(env, person) ? "owner" : "general");
+/** The CrankMagic owner: the address OWNER_EMAIL names (the access groups of the AI players plan, cloud/access.mjs's
+    groupOf once it is on main), in any letter case; until Rob sets it, the administrator the release names
+    (INVITE_ADMIN_ID, cloud/sharing.mjs's "Only the CrankMagic administrator can invite new accounts") stands in. */
+export const isOwner = (env, person) => !!person && (
+  (String(env.OWNER_EMAIL || "").trim() !== "" && String(person.email || "").toLowerCase() === String(env.OWNER_EMAIL).trim().toLowerCase()) ||
+  (String(env.INVITE_ADMIN_ID || "") !== "" && String(person.id) === String(env.INVITE_ADMIN_ID)));
+/** The reporter's group as this store writes it: owner, else general (insiders come with the access groups). */
+export const feedbackGroup = (env, person) => (isOwner(env, person) ? "owner" : "general");
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const COLUMNS = "id, reporter, reporter_group, kind, state, route, build_commit, build_profile, report, screenshot, issue, pr, release_commit, message_id, created_at, updated_at";
