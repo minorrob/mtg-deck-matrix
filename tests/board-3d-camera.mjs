@@ -364,9 +364,9 @@ try {
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("Enter");
   ok(await menu.count() === 0, "choosing an offer closes the menu");
-  await page.locator("#cm-board-decision [data-action=board-confirm]").waitFor({timeout: 3000});
+  const binding=page.locator("#cm-board-decision [data-action=board-confirm]:visible:not([disabled]),#cm-board-decision [data-action=board-direct]:visible:not([disabled])");await binding.waitFor({timeout: 3000});
   eq(acts(), [], "and stages it, as a click on the card does: nothing is sent yet");
-  await page.locator("#cm-board-decision [data-action=board-confirm]").click();
+  await binding.click();
   for (let i = 0; i < 100 && !acts().length; i += 1) await page.waitForTimeout(20);
   eq(acts(), [[1]], "Confirm plays it, once");
   /* The view a played land leaves is not this test's business: the offers come back as they were. */
