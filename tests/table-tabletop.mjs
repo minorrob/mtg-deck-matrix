@@ -138,7 +138,7 @@ try {
   const away=async()=>{await page.mouse.move(3,65);await page.evaluate(()=>{window.scrollTo(0,0);document.querySelector('#cm-board').scrollTop=0;});await page.waitForTimeout(100);};
   const landsBlocked=()=>page.evaluate(()=>[...document.querySelectorAll('.cm-stage-front .cm-board-lands .cm-bcard')].flatMap(card=>{
     const r=card.getBoundingClientRect();
-    return [.1,.25,.45].flatMap(f=>{const x=r.x+r.width/2,y=r.y+r.height*f,hit=document.elementFromPoint(x,y);return hit===card||card.contains(hit)?[]:[{land:(card.getAttribute('aria-label')||'a land').split(/[,:]/)[0],fraction:f,x,y,hit:hit?.outerHTML.slice(0,280)||null}];});
+    return [.1,.25,.45].flatMap(f=>{const x=r.x+r.width/2,y=r.y+r.height*f,hit=document.elementFromPoint(x,y);return hit===card||card.contains(hit)?[]:[{land:(card.getAttribute('aria-label')||'a land').split(/[,:]/)[0],fraction:f,x,y,cardRect:r.toJSON(),hitRect:hit?.getBoundingClientRect().toJSON()||null,hit:hit?.outerHTML.slice(0,280)||null}];});
   }));
   const assertLandsClear=async message=>{
     const blocked=await landsBlocked();
