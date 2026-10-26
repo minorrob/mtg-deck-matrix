@@ -2270,7 +2270,12 @@ globalThis.CrankBoard = Object.seal({
     for (const el of host.querySelectorAll('[data-zone-scroll]')) {const pos=zonePositions.get(`${host.dataset.view}:${el.dataset.zoneScroll}`);if(pos){el.scrollLeft=pos[0];el.scrollTop=pos[1];}}
     for (const el of host.querySelectorAll("[data-block-key]")) el.scrollLeft = blockPositions.get(el.dataset.blockKey) || 0;
     const options = host.querySelector("#cm-board-decision .cm-board-options");
-    if (choiceScroll !== null && options) options.scrollTop = choiceScroll;
+    if (choiceScroll !== null && options) {
+      options.scrollTop = choiceScroll;
+      /* ...and the choice in hand stays whole in it, should the list come back shorter (a pick's Confirm row appearing). */
+      const held = options.contains(document.activeElement) ? document.activeElement : null;
+      if (held) {const r = held.getBoundingClientRect(), b = options.getBoundingClientRect(); if (r.bottom > b.bottom) options.scrollTop += r.bottom - b.bottom + 4; else if (r.top < b.top) options.scrollTop -= b.top - r.top + 4;}
+    }
     const nextFight = host.querySelector(".cm-combat-groups");
     if (nextFight && nextFight.dataset.combatKey === fightPosition?.key) {nextFight.scrollLeft = fightPosition.x; nextFight.scrollTop = fightPosition.y;}
     if (before) motionPlay(host, before);

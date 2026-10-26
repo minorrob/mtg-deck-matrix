@@ -84,6 +84,9 @@ Buy - Ordered ... > (leaving the To Buy chain) Owned - Upgrade, Owned - Bench, O
     height), kept on the device (`cm-board-module-h`);
   - the right drawer's width drags at its left edge in 3D as in the other views (240–560 px, kept as `cm-board-panel-w`).
   New `board-drawer-sizes` (27), red on the old board ("the options keep room ... (6px)").
+  On Actions the first cut held the question to 100dvh − 170px, which ran Confirm off a 1024x768 window while combat's
+  band pushes the drawer down to 188px (`board-direct-blocking`); it now counts from where the drawer starts
+  (`--rail-top`, 58px or 188px), and after a redraw the choice in hand is kept whole in the list.
 - `decks-hub`'s "a line the table's answer does not write again ends hidden" (a 600 ms wait) fails about half the time in
   this container, with or without these changes; it passed on Actions.
 

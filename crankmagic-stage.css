@@ -485,8 +485,10 @@
 .cm-stage-rail .cm-stage-module[data-module="actions"]{background:none;border:0;border-bottom:1px solid #43564d;border-radius:0;box-shadow:none}
 .cm-stage-module[data-module="actions"]>.cm-module-body{max-height:none;overflow:visible;padding:10px 0}
 .cm-stage-module[data-module="actions"] .cm-board-decision{background:none;box-shadow:none;border:0;padding:0;color:#edf6ef}
-/* As tall as the drawer below its top bar and the Actions header, not 70% of the window: the drawer scrolls under it. */
-.cm-stage-module[data-module="actions"] .cm-board-decision{display:flex;flex-direction:column;max-height:calc(100dvh - 170px);gap:10px;min-height:0;overflow-y:auto;scrollbar-width:thin}
+/* As tall as the drawer below where it starts and the Actions header, not 70% of the window, so Confirm is always on
+   screen: the drawer starts at 58px, at 188px while combat's band is up (--rail-top). */
+.cm-board{--rail-top:58px}.cm-board[data-combat]{--rail-top:188px}
+.cm-stage-module[data-module="actions"] .cm-board-decision{display:flex;flex-direction:column;max-height:calc(100dvh - var(--rail-top) - 112px);gap:10px;min-height:0;overflow-y:auto;scrollbar-width:thin}
 .cm-stage-module[data-module="actions"] .cm-board-decision>h3,.cm-stage-module[data-module="actions"] .cm-board-decision-foot{flex:none}
 #matrix-v2 .cm-stage-module h3,#matrix-v2 .cm-stage-rail .cm-board-pane h3,#matrix-v2 #cm-card-inspector h3{font-family:CrankOxanium,Satoshi,sans-serif;font-size:14px;font-weight:600;text-transform:none;color:inherit}
 .cm-stage-module[data-module="actions"] .cm-board-options{display:flex;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:8px;min-height:0;max-height:none;overflow:auto;padding:3px;margin:-3px;scrollbar-width:thin}
