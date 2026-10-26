@@ -224,6 +224,8 @@ globalThis.CrankBoard = Object.seal({
     el.setAttribute('aria-valuetext', `${hudPreview}%`); el.parentElement.querySelector('output').textContent = `${hudPreview}%`;
     applyHud(document.getElementById('cm-board'));
   });
+  document.addEventListener('input',event=>{const el=event.target.closest?.('[data-board-spacing]');if(!el)return;spacingPreview=Math.max(-70,Math.min(20,Number(el.value)||0));el.setAttribute('aria-valuetext',`${spacingPreview}%`);el.parentElement.querySelector('output').textContent=`${spacingPreview}%`;applySpacing(document.getElementById('cm-board'));fit();});
+  document.addEventListener('change',event=>{const el=event.target.closest?.('[data-board-spacing]');if(!el)return;keep('cm-board-spacing',spacingPreview ?? Number(el.value));spacingPreview=null;});
   document.addEventListener('change', event => {
     const el = event.target.closest?.('[data-play-hud]'); if (!el) return;
     keep(HUD_KEY, Math.max(100, Math.min(200, Number(el.value) || 100))); hudPreview = null;
@@ -258,6 +260,9 @@ globalThis.CrankBoard = Object.seal({
   /* The tabletop's cards and zoom go to 200% (Rob, 2026-10-21: "I should be able to increase card size more. It's ok if
      there's overlap. Increase the zoom to 200%"): past the fit, cards overlap and the table runs past the window's edges. */
   const CAMERA_MAX = 200;
+  let spacingPreview=null;
+  const spacing = () => spacingPreview ?? Math.max(-70,Math.min(20,Number(stored('cm-board-spacing')) || 0));
+  function applySpacing(host) {if(host)host.style.setProperty('--card-space',String(spacing()/100));}
   const camera = {cards: Math.max(70, Math.min(CAMERA_MAX, Number(stored("cm-stage-card-size-v2")) || 100)), tilt: stored("cm-board-tilt-v2") === null ? 40 : Math.max(0, Math.min(60, Number(stored("cm-board-tilt-v2")) || 0)), zoom: Math.max(60, Math.min(CAMERA_MAX, Number(stored("cm-board-zoom-v2")) || 100))};
   /* Where the 3D camera looks across the table, moved by dragging a mat (plane pixels from the table's center, y toward
      you). Kept for the visit only: ⌖ Center in Camera puts it back. */
@@ -979,6 +984,33 @@ globalThis.CrankBoard = Object.seal({
     return `<figure class="cm-mat-zone cm-board-pile" data-zone="${e(label.toLowerCase())}" aria-label="${e(label)}, ${zone.count}" title="${e(label)}, ${zone.count}">${face}<figcaption><em>${e(label)}</em><b>${zone.count}</b></figcaption></figure>`;
   }
   const cardOrders=new Map(), zonePositions=new Map();
+  const zoneKey=seat=>`cm-board-zone-split:${mode}:${seat}`;
+  function zoneShare(seat) {const value=Number(stored(zoneKey(seat)));return value>=.2&&value<=.8?value:.6;}
+  function fitBoardZones(host) {
+    for(const grid of host.querySelectorAll('.cm-mat-grid')) {
+      const mat=grid.closest('.cm-mat'),bc=parseFloat(getComputedStyle(mat).getPropertyValue('--bc')) || mat.querySelector('.cm-bcard')?.offsetWidth || 60;
+      const fieldMin=Math.ceil(bc*1.4+100*hudScale()/100),landMin=Math.ceil(bc*1.72+48*hudScale()/100),header=mat.querySelector('.cm-mat-head')?.offsetHeight || 0;
+      const total=Math.max(fieldMin+landMin,mat.dataset.fit==='phone'?innerHeight*.65:mat.clientHeight-header-16),share=zoneShare(Number(mat.dataset.seat));
+      const field=Math.max(fieldMin,Math.min(total-landMin,total*share));
+      grid.style.setProperty('--field-px',`${field}px`);grid.style.setProperty('--lands-px',`${total-field}px`);
+      grid.dataset.zoneTotal=String(total);grid.dataset.fieldMin=String(fieldMin);grid.dataset.landMin=String(landMin);
+      grid.querySelector('[data-drag="zones"]')?.setAttribute('aria-valuenow',String(Math.round(field/total*100)));
+    }
+  }
+  function zonePoint(grid,x,y) {
+    const point=el=>{const r=el.getBoundingClientRect();return stageEnabled()?CrankStage.pick(r.x,r.y):{x:r.x,y:r.y};};
+    const [o,a,b]=['o','x','y'].map(id=>point(grid.querySelector(`[data-zone-probe="${id}"]`))),p=stageEnabled()?CrankStage.pick(x,y):{x,y};
+    if(!o||!a||!b||!p)return null;
+    const ax=a.x-o.x,ay=a.y-o.y,bx=b.x-o.x,by=b.y-o.y,det=ax*by-ay*bx;
+    return Math.abs(det)>.0001?((p.y-o.y)*ax-(p.x-o.x)*ay)/det*100:null;
+  }
+  function setZones(seat,field,total,{save=true}={}) {
+    const grid=document.querySelector(`#cm-board .cm-mat[data-seat="${seat}"] .cm-mat-grid`);if(!grid)return;
+    const bounded=Math.max(Number(grid.dataset.fieldMin),Math.min(total-Number(grid.dataset.landMin),field));
+    grid.style.setProperty('--field-px',`${bounded}px`);grid.style.setProperty('--lands-px',`${total-bounded}px`);
+    grid.querySelector('[data-drag="zones"]')?.setAttribute('aria-valuenow',String(Math.round(bounded/total*100)));
+    if(save)keep(zoneKey(seat),bounded/total);fitCardRows(document.getElementById('cm-board'));
+  }
   const cardOrderKey=section=>`cm-card-order:${C.signedInAs?.() || 'local'}:${view?.matchId || tableId}:${view?.seat}:${section}`;
   function arrangedCards(cards,section) {
     const key=cardOrderKey(section);let order=cardOrders.get(key);
@@ -986,7 +1018,22 @@ globalThis.CrankBoard = Object.seal({
     const ranked=new Map(order.map((id,i)=>[id,i]));
     return [...cards].sort((a,b)=>(ranked.get(String(a.cardId))??Infinity)-(ranked.get(String(b.cardId))??Infinity));
   }
-  function cardSection(cards,section,ghosts=[]) {return `<div class="cm-board-cards" data-card-section="${section}">${arrangedCards(cards,section).map(c=>card(c,{arrange:true})).join('')}${ghosts.map(controlGhost).join("")}</div>`;}
+  /* Only public state joins lands; tapped state changes a physical member, never the stack identity. */
+  function landKey(c) {
+    if(c.faceDown || !c.name || c.attachments?.length)return `object:${c.cardId}`;
+    const ordered=value=>Array.isArray(value)?value.map(ordered):value && typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(k=>[k,ordered(value[k])])):value;
+    const omitted=new Set(['cardId','tapped','printing','printingId','set','collectorNumber','image','imageUrl','why','undoable']);
+    return JSON.stringify(ordered(Object.fromEntries(Object.entries(c).filter(([k])=>!omitted.has(k)))));
+  }
+  function landGroups(cards) {const groups=new Map();for(const c of cards){const key=landKey(c);if(groups.has(key))groups.get(key).push(c);else groups.set(key,[c]);}return [...groups.values()];}
+  function landStack(cards) {
+    if(cards.length===1)return card(cards[0],{arrange:true});
+    const top=cards[0],untapped=cards.filter(c=>!c.tapped).length,ids=cards.map(c=>c.cardId).join(','),undo=cards.map(c=>undoOffer(c.cardId)).find(Boolean);
+    const face=card({...top,tapped:untapped===0},{where:'land-stack',arrange:true}).replace('<button ',`<button data-land-members="${ids}" title="${untapped?`${untapped} untapped; double click taps the next copy`:'All tapped'}" `).replace(/aria-label="[^"]*"/,`aria-label="${e(top.name)}, ${cards.length} copies, ${untapped} untapped${untapped?'':' · All tapped'}"`);
+    return `<span class="cm-land-stack${untapped===0?' is-tapped':''}" data-land-stack="${ids}" data-wf="W16">${cards.some(c=>c.tapped)&&untapped?'<span class="cm-land-tilted" aria-hidden="true"></span>':''}${face}<span class="cm-land-count" aria-hidden="true">×${cards.length} · ${untapped} untapped</span>${undo?undoButton(undo):''}</span>`;
+  }
+  function cardSection(cards,section,ghosts=[]) {const ordered=arrangedCards(cards,section);return `<div class="cm-board-cards" data-card-section="${section}">${section.endsWith(':lands')?landGroups(ordered).map(landStack).join(''):ordered.map(c=>card(c,{arrange:true})).join('')}${ghosts.map(controlGhost).join("")}</div>`;}
+
   function reorderCard(section,id,targetId,after=false) {
     const cards=[...section.querySelectorAll('[data-arrange-card]')],from=cards.find(el=>el.dataset.card===id),to=cards.find(el=>el.dataset.card===targetId);
     if(!from || from===to)return;
@@ -1010,8 +1057,9 @@ globalThis.CrankBoard = Object.seal({
     const bare = size === "full" || size === "opp" || size === "side" || size === "phone";
     const active = view.state.turnPlayerId === i;
     const header = head === "none" ? "" : `<header class="cm-mat-head cm-seatboard-head">${seatHeader(p)}${focusButton ? b("⤢ Focus", "board-focus", {seat: String(i)}, false, {cls: "compact"}) : ""}</header>`;
-    const body = `<div class="cm-mat-grid cm-seatboard-body">
+    const body = `<div class="cm-mat-grid cm-seatboard-body"><i class="cm-zone-origin" data-zone-probe="o" aria-hidden="true"></i><i class="cm-zone-origin" data-zone-probe="x" aria-hidden="true"></i><i class="cm-zone-origin" data-zone-probe="y" aria-hidden="true"></i>
         <div class="cm-mat-zone cm-board-field" data-zone="battlefield">${group("Creatures", creatures)}${group("Artifacts & enchantments", other)}${!field.length && !ghosts.length ? `<p class="cm-board-empty">${p.health.status === "lost" || departed(i) ? "Out of the game." : "No permanents yet."}</p>` : ""}<i class="cm-mat-label">Battlefield</i></div>
+        <span class="cm-zone-divider" data-wf="W17">${grip('zones','Battlefield and lands divider: drag, arrows, or double click to reset',Math.round(zoneShare(i)*100),[20,80],'horizontal',` data-zone-seat="${i}"`)}</span>
         <div class="cm-mat-zone cm-board-lands" data-zone="lands">${cardSection(lands,`${i}:lands`,ghosts.filter(c => c.types.includes("Land")))}<i class="cm-mat-label">Lands · ${lands.length}</i></div>
         ${you ? `<span class="cm-board-chip">${mana} mana open · land drop ${p.landsPlayed ? "used" : "1 left"}</span>` : ""}
         ${pile("Command", z.Command, z.Command.cards[0])}${pile("Exile", z.Exile, z.Exile.cards.at(-1))}
@@ -1152,7 +1200,9 @@ globalThis.CrankBoard = Object.seal({
         ${stageEnabled() ? `<label>Zoom <input type="range" min="60" max="${CAMERA_MAX}" value="${camera.zoom}" data-stage-camera="zoom" aria-label="Table zoom"><output>${Math.round(camera.zoom)}%</output></label>${ib("⌖", "board-camera-center", "Center the table")}
         <label>Cards <input type="range" min="70" max="${CAMERA_MAX}" value="${camera.cards}" data-stage-camera="cards" aria-label="Tabletop card size"><output>${camera.cards}%</output></label>
         ${stageSliders()}` : `${scaleSlider("board", "Board cards")}${scaleSlider("hand", "Hand cards")}`}
-        ${stageEnabled() ? `<p class="cm-stage-style-note">Appearance preview · this device</p>
+        <label>Spacing <input type="range" min="-70" max="20" step="1" value="${spacing()}" data-board-spacing aria-label="Card spacing" aria-valuetext="${spacing()}%"><output>${spacing()}%</output></label>
+        ${b('Play settings','board-tools')}
+        ${stageEnabled() ? `<p class="cm-stage-style-note">Looks: only on this device</p>
         <label class="cm-stage-style">Background <select data-stage-style="background" aria-label="Background">${(CrankStage.appearances.backgrounds).map(x=>`<option value="${x.id}"${appearance.background===x.id?" selected":""}>${x.name}</option>`).join("")}</select></label>
         <label class="cm-stage-style">Table <select data-stage-style="table" aria-label="Table design">${(CrankStage.appearances.tables).map(x=>`<option value="${x.id}"${tableDesignId(appearance.table)===x.id?" selected":""}>${x.name}</option>`).join("")}</select></label>` : ""}</div>` : ""}</div>`; }
   /* 3D's two sizes beside Cards: ✋ the hand's cards (the wheel over the hand moves it too), ↕ the table's length on your
@@ -2643,7 +2693,9 @@ globalThis.CrankBoard = Object.seal({
         sec.style.setProperty("--pick-w", `${Math.max(56, Math.floor(Math.min(box.width - 20, room * 5 / 7)))}px`);
       }
       fitStage(host);
+      applySpacing(host);
       overlap(host);
+      fitBoardZones(host);
       fitCardRows(host);
       fitZoneNavigation(host);
       fitCombatStrip(host);
@@ -2978,15 +3030,18 @@ globalThis.CrankBoard = Object.seal({
     if(event?.detail>=2) {
       cardDoubleHandled=true;closeCardMenu(false);
       if(!firstCardClick || Object.keys(origin).some(k=>origin[k]!==firstCardClick[k]))return;
-      const c=findCard(id),opts=optionsFor(id);
+      const members=String(el.dataset.landMembers || '').split(',').filter(Boolean).map(Number);
+      const next=members.length?members.map(findCard).find(c=>c && !c.tapped):null;
+      if(members.length && !next)return;
+      const activeId=next?.cardId ?? id,c=findCard(activeId),opts=optionsFor(activeId);
       if(!c || sending)return;
       if(c.tapped) {const untap=opts.find(o=>o.act==='undo-mana');if(untap)return bindOffer(offerData(untap));}
       const mana=opts.filter(o=>o.act==='activate-mana');
       if(!c.tapped && mana.length===1)return bindOffer(offerData(mana[0]));
-      return useCard(id);
+      return useCard(activeId);
     }
     firstCardClick=origin;
-    openCardMenu(id,el);
+    openCardMenu(id,el,el,String(el.dataset.landMembers || '').split(',').filter(Boolean).map(Number));
   };
   actions["board-offered-undo"] = el => {
     if(!el?.dataset || !['undo-play','undo-land'].includes(el.dataset.act))return;
@@ -3210,10 +3265,11 @@ globalThis.CrankBoard = Object.seal({
       const cellWidth=Math.ceil(tapped ? width*.866+height*.5 : width);
       const cellHeight=Math.ceil(tapped ? height*.866+width*.5 : height);
       section.style.setProperty('--zone-cell-width',`${cellWidth}px`);
+      section.style.setProperty('--zone-pitch',`${Math.max(cellWidth*.3,cellWidth+width*Math.min(0,spacing())/100)}px`);
       section.style.setProperty('--zone-cell-height',`${cellHeight}px`);
       const viewport=section.closest('.cm-board-field') || section;
       const inset=viewport===section ? 4 : section.offsetTop+4;
-      const available=viewport.clientHeight, gap=8, peek=Math.max(10,Math.round(cellHeight*.16));
+      const available=viewport.clientHeight, gap=Math.max(0,width*spacing()/100), peek=Math.max(10,Math.round(cellHeight*.16));
       const rows=Math.floor((available-inset-peek)/(cellHeight+gap));
       const columns=Math.max(1,Math.floor((section.clientWidth-8+gap)/(cellWidth+gap)));
       if(rows>=1 && cards.length>rows*columns && (!section.closest('.cm-board-field') || section.parentElement===viewport.firstElementChild)) viewport.style.height=`${inset+rows*(cellHeight+gap)+peek}px`;
@@ -3475,10 +3531,12 @@ globalThis.CrankBoard = Object.seal({
     if (!cardMenu || !view) return "";
     const c = findCard(cardMenu.id) || shownCard(cardMenu.id), opts = optionsFor(cardMenu.id);
     if (!c || (!c.name && !opts.length)) {cardMenu = null; return "";}
-    const named = c.name || "A face-down card", n = opts.length;
+    const members=(cardMenu.members || []).map(id=>findCard(id)).filter(Boolean),entries=members.length>1?members:[c];
+    const named = c.name || "A face-down card", n = entries.reduce((n,c)=>n+optionsFor(c.cardId).length,0);
+    const rows=entries.map((member,i)=>`${entries.length>1?`<p class="cm-card-menu-copy">Copy ${i+1}${member.tapped?' · tapped':''}</p>`:''}${optionsFor(member.cardId).map(o=>menuRow(o,member)).join('')}`).join('');
     return `<div id="cm-card-menu" class="cm-card-menu" role="menu" aria-label="${e(named)}: ${n ? `${n} ${n === 1 ? "action" : "actions"}` : "no actions now"}" style="left:${cardMenu.x}px;top:${cardMenu.y}px">
       ${c.name ? `<button type="button" role="menuitem" class="cm-card-menu-card" data-action="board-card-menu-view" data-card="${c.cardId}" aria-label="Read ${e(c.name)}" title="Read ${e(c.name)}"><img class="cm-card-menu-art" src="${e(pictureOf(c.name))}" alt=""><i aria-hidden="true">🔍</i><span>${e(c.name)}</span></button>` : `<span class="cm-card-menu-card" role="none"><i aria-hidden="true">◐</i><span>${e(named)}</span></span>`}
-      ${n ? opts.map((o) => menuRow(o, c)).join("") : `<p class="cm-card-menu-none" role="none"><i aria-hidden="true">∅</i> ${e(c.why || "No actions now")}</p>`}</div>`;
+      ${n ? rows : `<p class="cm-card-menu-none" role="none"><i aria-hidden="true">∅</i> ${e(c.why || "No actions now")}</p>`}</div>`;
   }
   /* Kept inside the window, measured once it is drawn. */
   function placeCardMenu() {
@@ -3495,10 +3553,10 @@ globalThis.CrankBoard = Object.seal({
   }
   /* Opened at the pointer, or beside the card (the keyboard's way), with the focus on its first offer; closed, the focus
      goes back to the card. */
-  function openCardMenu(id, at, el = at instanceof Element ? at : null) {
+  function openCardMenu(id, at, el = at instanceof Element ? at : null,members=[]) {
     if (!view || !document.getElementById("cm-board")) return;
     const box = at instanceof Element ? at.getBoundingClientRect() : null;
-    cardMenu = {id, x: Math.round(box ? box.right + 4 : at.x), y: Math.round(box ? box.top : at.y), from: el?.isConnected ? C.focusKey(el) : null,anchor:box?{left:box.left,right:box.right,top:box.top,bottom:box.bottom}:null};
+    cardMenu = {id,members, x: Math.round(box ? box.right + 4 : at.x), y: Math.round(box ? box.top : at.y), from: el?.isConnected ? C.focusKey(el) : null,anchor:box?{left:box.left,right:box.right,top:box.top,bottom:box.bottom}:null};
     peek(null);document.getElementById('cm-card-menu')?.remove();
     document.getElementById('cm-board').insertAdjacentHTML('beforeend',cardMenuHtml());placeCardMenu();
     const m = document.getElementById("cm-card-menu");
@@ -3795,6 +3853,7 @@ globalThis.CrankBoard = Object.seal({
      (back a step: held, fanned, a menu, the panel, full screen), ⌘/Ctrl + and − (card size). */
   document.addEventListener("keydown", (event) => {
     if(document.getElementById('cm-card-menu'))return;
+    if(C.accountMenuOpen?.() || document.querySelector('#cm-user-menu:popover-open'))return;
     if (event.key === "Escape" && peekId !== null && !showing) {peek(null); return;}
     if (event.key === "Escape" && stackShown !== null) stackPeek(null);
     /* ⌘/Ctrl + and − still size the cards with the Settings window open, as its card-size line says. */
@@ -3984,7 +4043,8 @@ globalThis.CrankBoard = Object.seal({
     if (!el || !view || event.button > 0) return;
     event.preventDefault();
     const kind = el.dataset.drag, tbl = document.querySelector("#cm-board .cm-board-table");
-    if (kind === "pane") drag = {kind, x: event.clientX, from: paneWidth()};
+    if(kind==='zones') {const grid=el.closest('.cm-mat-grid');drag={kind,seat:Number(el.dataset.zoneSeat),grid,y:zonePoint(grid,event.clientX,event.clientY),from:parseFloat(grid.style.getPropertyValue('--field-px')),total:Number(grid.dataset.zoneTotal)};}
+    else if (kind === "pane") drag = {kind, x: event.clientX, from: paneWidth()};
     else if (kind === "panelw") drag = {kind, x: event.clientX, from: panelWidth()};
     /* A module's height from the height it shows now; the card's size by the height dragged (a card is 7 tall for 5 wide). */
     else if (kind === "modh") {const body = el.closest(".cm-stage-module")?.querySelector(":scope>.cm-module-body"); drag = {kind, y: event.clientY, id: el.dataset.moduleId, from: body ? body.getBoundingClientRect().height : moduleH(el.dataset.moduleId) || 200};}
@@ -4006,6 +4066,7 @@ globalThis.CrankBoard = Object.seal({
   });
   document.addEventListener("pointermove", (event) => {
     if (!drag) return;
+    if(drag.kind==='zones'){const at=zonePoint(drag.grid,event.clientX,event.clientY);if(at!==null&&drag.y!==null)setZones(drag.seat,drag.from+at-drag.y,drag.total,{save:false});return;}
     if (drag.kind === "pane") {setPane(drag.from + event.clientX - drag.x); return;}
     if (drag.kind === "panelw") {setPanelW(drag.from - (event.clientX - drag.x)); return;}
     const dy = event.clientY - drag.y;
@@ -4015,7 +4076,8 @@ globalThis.CrankBoard = Object.seal({
     else if (drag.kind === "rows") setRows(drag.from + (drag.side ? event.clientX - drag.x : dy) / drag.per);
     else setScale("hand", drag.from - dy / drag.per * 100);
   });
-  const endDrag = () => {if (drag) {drag = null; document.documentElement.classList.remove("cm-dragging");}};
+  const endDrag = () => {if (drag) {if(drag.kind==='zones'){const grid=drag.grid;keep(zoneKey(drag.seat),parseFloat(grid.style.getPropertyValue('--field-px'))/drag.total);}drag = null; document.documentElement.classList.remove("cm-dragging");}};
+  document.addEventListener('dblclick',event=>{const el=event.target.closest?.('#cm-board [data-drag="zones"]');if(!el)return;keep(zoneKey(Number(el.dataset.zoneSeat)),.6);fitBoardZones(document.getElementById('cm-board'));});
   /* A double click on a module's bar gives it back its own height. */
   document.addEventListener("dblclick", (event) => {const el = event.target.closest && event.target.closest('#cm-board [data-drag="modh"]'); if (el) clearModuleH(el.dataset.moduleId);});
   document.addEventListener("pointerup", endDrag);
@@ -4023,6 +4085,7 @@ globalThis.CrankBoard = Object.seal({
   document.addEventListener("keydown", (event) => {
     const el = event.target.closest && event.target.closest("#cm-board [data-drag]");
     if (!el) return;
+    if(el.dataset.drag==='zones'){if(!['ArrowUp','ArrowDown','Home'].includes(event.key))return;event.preventDefault();const grid=el.closest('.cm-mat-grid'),seat=Number(el.dataset.zoneSeat),total=Number(grid.dataset.zoneTotal);setZones(seat,event.key==='Home'?total*.6:parseFloat(grid.style.getPropertyValue('--field-px'))+(event.key==='ArrowDown'?16:-16),total);return;}
     if (el.dataset.drag === "pane") {
       if (!["ArrowLeft", "ArrowRight"].includes(event.key)) return;
       event.preventDefault(); setPane(paneWidth() + (event.key === "ArrowRight" ? 20 : -20)); return;
