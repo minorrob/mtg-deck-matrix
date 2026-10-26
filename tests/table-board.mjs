@@ -1706,8 +1706,6 @@ try {
   eq(mayaGames.map(({id, deckId, outcome}) => ({id, deckId, outcome})), [{id: `game:table:${matchId}:s1`, deckId: "deck:live:D2", outcome: "unfinished"}],
     "Maya's is filed in her own library, under her D2, for her seat alone");
   ok(!robGames.some((g) => g.deckId === "deck:live:D2") && /ended early/.test(robGames[0].notes), "nothing of Maya's game reached the host's library, and the record says why it ended");
-  await waitText(rob.page, "#cm-notice", /unfinished game is filed under D1 Quintorius Spirits's record/, 10000);
-  ok(true, "and the board says where it went: filed under D1's record");
 
   /* THE RECORD (M8b): not a playtest table, so each person downloads their own seat's. */
   const [download] = await Promise.all([rob.page.waitForEvent("download", {timeout: 15000}), rob.page.click(".cm-board-over [data-action=board-record]")]);
@@ -1746,8 +1744,14 @@ try {
   await waitText(rob.page, "#cm-table-game", /Play again\?|The game is over/);
   ok(!(await rob.page.locator("#cm-board").count()), "Back to the table puts the board away, and the lobby says the game is over");
 
+  /* CH-86 exposes the authoritative result persistently in the lobby, replacing the legacy board-only toast.
+     Follow its native Review link to the exact deck/game rather than navigating around the handoff. */
+  const reviewGame=rob.page.getByRole('link',{name:'Review this game',exact:true});
+  await reviewGame.waitFor();
+  const reviewQuery=new URLSearchParams((await reviewGame.getAttribute('href')).split('?')[1]);
+  eq([reviewQuery.get('deck'),reviewQuery.get('game')],['deck:live:D1',`game:table:${matchId}:s0`],"the persistent result names the source deck and exact game to review");
   /* THE RECORD READS IT BACK, on the deck's page: one game, unfinished, marked as played at a table. */
-  await rob.page.goto(`${base}/index.html#decks?deck=${encodeURIComponent("deck:live:D1")}`);
+  await reviewGame.click();
   await rob.page.locator("#cm-sec-record .cm-record-table").waitFor({timeout: 30000});
   const row = (await rob.page.locator("#cm-sec-record .cm-record-table tbody tr").allInnerTexts());
   ok(row.length === 1 && /unfinished/.test(row[0]) && /Table/.test(row[0]) && !/\bAI\b/.test(row[0]), `D1's Record reads the game back: unfinished, played at a table, no AI (${row[0].replace(/\s+/g, " ").trim()})`);
