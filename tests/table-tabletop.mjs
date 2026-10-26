@@ -189,28 +189,53 @@ try {
       await look.close();
     } finally {drawn.kill();}
   }
+  // Full Camera now lives in the shared header. Drawers begin below the measured
+  // header/actions row; their opening must preserve access, not move Camera sideways.
+  const reachable=async(selector,label)=>{
+    const result=await page.locator(selector).evaluate(el=>{
+      const r=el.getBoundingClientRect();
+      return {inside:r.width>0&&r.height>0&&r.left>=0&&r.top>=0&&r.right<=innerWidth&&r.bottom<=innerHeight,
+        hits:[.2,.5,.8].map(f=>{const hit=document.elementFromPoint(r.left+r.width*f,r.top+r.height/2);return hit===el||el.contains(hit);})};
+    });
+    assert.ok(result.inside&&result.hits.every(Boolean),`${label} fits and takes the pointer at three points: ${JSON.stringify(result)}`);
+  };
   for(const width of [1400,1024]) {
     await page.setViewportSize({width,height:800});
-    await page.locator(".cm-stage-side.is-open").waitFor();
-    for(const expanded of [false,true]) {
-      if(expanded) await page.getByRole('button',{name:'Camera',exact:false}).click();
-      const {side,camera}=await (await page.waitForFunction(()=>{
-        const s=document.querySelector('.cm-stage-side.is-open'), c=document.querySelector('.cm-stage-camera');
-        if(!s||!c)return false;const side=s.getBoundingClientRect().toJSON(),camera=c.getBoundingClientRect().toJSON();
-        return side.height>0&&camera.width>0?{side,camera}:false;
-      })).jsonValue();
-      assert.equal(Math.round(side.y+side.height),800,'right pane reaches the bottom through the hand area');
-      assert.ok(camera.x+camera.width<=side.x-8,'both camera states stay beside the expanded pane');
-      await page.locator('.cm-stage-right[data-action=board-stage-side]').click();
-      const shut=await page.locator('.cm-stage-camera').boundingBox();
-      assert.ok(shut.x>camera.x+side.width-2,'camera follows the pane back to the window edge');
-      await page.locator('.cm-stage-right[data-action=board-stage-side]').click();
+    for(const opened of [true,false]) {
+      if(Boolean(await page.locator('.cm-stage-side.is-open').count())!==opened)await page.locator('.cm-stage-right[data-action=board-stage-side]').click();
+      for(const expanded of [false,true]) {
+        if(Boolean(await page.locator('.cm-stage-camera>div').count())!==expanded)await page.locator('[data-action=board-camera]').click();
+        await reachable('[data-action=board-camera]',`${width}: Camera with Stack ${opened?'open':'closed'} and popup ${expanded?'open':'closed'}`);
+        if(opened) {
+          const edges=await page.evaluate(()=>{
+            const r=s=>document.querySelector(s).getBoundingClientRect();
+            return {bottom:r('.cm-stage-side').bottom,top:r('.cm-stage-side').top,header:r('.cm-stage-top').bottom,actions:r('.cm-stage-actions').bottom};
+          });
+          assert.equal(Math.round(edges.bottom),800,'right pane reaches the bottom through the hand area');
+          assert.ok(edges.top>=Math.max(edges.header,edges.actions),`right pane starts below the actual shared header and action row: ${JSON.stringify(edges)}`);
+        }
+        if(expanded) {
+          const popup=await page.locator('.cm-stage-camera>div').boundingBox();
+          assert.ok(popup.x>=0&&popup.y>=0&&popup.x+popup.width<=width&&popup.y+popup.height<=800,'Camera popup fits the viewport beside either drawer state');
+          await page.locator('[data-action=board-camera-reset]').scrollIntoViewIfNeeded();
+          await reachable('[data-action=board-camera-reset]','Camera Reset');
+          await reachable('[data-stage-camera=tilt]','Camera Tilt');
+          await page.locator('[data-action=board-tools]').scrollIntoViewIfNeeded();
+          await reachable('[data-action=board-tools]','Play settings after native popup scrolling');
+        } else {
+          for(const button of await page.locator('.cm-stage-actions button:enabled').all()) {
+            const action=await button.getAttribute('data-action');
+            await reachable(`.cm-stage-actions [data-action="${action}"]`,`enabled ${action} with Stack ${opened?'open':'closed'}`);
+          }
+        }
+      }
     }
-    await page.getByRole('button',{name:'Camera',exact:false}).click();
+    await page.locator('[data-action=board-camera]').click();
     await page.locator('[data-action=board-stage-rail]').first().click();
     const rail=await page.locator('.cm-stage-rail').boundingBox();
     assert.equal(Math.round(rail.y+rail.height),800,'left pane also reaches the bottom');
     await page.locator('[data-action=board-stage-rail]').first().click();
+    await page.locator('.cm-stage-right[data-action=board-stage-side]').click();
   }
   await page.setViewportSize({width:1400,height:900});
   await page.waitForFunction(()=>globalThis.__preview?.signedInAs?.());
