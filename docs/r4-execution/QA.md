@@ -28,6 +28,8 @@ The main PR remains draft until these checks and the required CI gate are satisf
 Capture desktop and phone states, all Play views, and both ends of size sliders. All six skin/register
 combinations need contrast checks; representative dark, light and alternate-skin journey screenshots are
 compared with the supplied reference and W01-W18. Card-art raster text is not measured as DOM UI type.
+Game-state HUD captions use the 15px scaled floor; Coach and Camera form text retain their explicit
+component sizes above the general 12px minimum (EX-14). Measure actual descendants, not only parent tokens.
 
 Reject clipping, overlapping headings, inaccessible scroll content, missing focus, lost input drafts,
 duplicate primary actions, broken portrait placeholders, or a tap-only/double-click-only action without
