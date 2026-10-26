@@ -1194,24 +1194,26 @@ try {
   await rob.page.waitForTimeout(300);
   eq([prefersSent().slice(prefers0).map((f) => f.stepByStep), views(ROB).at(-1).stepByStep ?? false], [[true, true, false], false], "turned off, the same: told once, and the view says it is off");
 
-  /* R3: crowded lands wrap whole cards and scroll independently, including rotated tapped cards. */
+  /* Crowded lands keep base slots and neighbor positions unchanged when cards tap 30 degrees; corners may overlap. */
   await rob.page.click(".cm-board-tile[data-seat='0'] [data-action=board-focus]");
   const crowded=await rob.page.evaluate(()=>{
     // Settle the responsive mode before adding layout-only copies, then measure in one task.
     dispatchEvent(new Event('resize'));
     const source=document.querySelector('.cm-board-mat .cm-board-lands .cm-board-cards'),first=source.querySelector('.cm-bcard');
-    for(let i=0;i<29;i++){const c=first.cloneNode(true);c.classList.add('is-copy');if(i%2===0)c.classList.add('is-tapped');source.append(c);}
+    const copies=[];for(let i=0;i<29;i++){const c=first.cloneNode(true);c.classList.add('is-copy');c.classList.remove('is-tapped');c.style.setProperty('transition','none','important');source.append(c);copies.push(c);}
     dispatchEvent(new Event('resize'));
-    const row=document.querySelector('.cm-board-mat .cm-board-lands .cm-board-cards'),kids=[...row.children];
-    row.scrollTop=row.scrollHeight;
-    const r=row.getBoundingClientRect(),last=kids.at(-1).getBoundingClientRect(),tap=kids.find(c=>c.classList.contains('is-tapped'));
+    const row=document.querySelector('.cm-board-mat .cm-board-lands .cm-board-cards'),kids=[...row.children],slots=()=>kids.map(c=>[c.offsetLeft,c.offsetTop,c.offsetWidth,c.offsetHeight]),before=slots();
+    copies.forEach((c,i)=>{if(i%2===0)c.classList.add('is-tapped');});dispatchEvent(new Event('resize'));
+    const stable=JSON.stringify(before)===JSON.stringify(slots());row.scrollTop=row.scrollHeight;
+    const raster=el=>{const parent=el.offsetParent,p=parent.getBoundingClientRect(),top=p.top+parent.clientTop+el.offsetTop-parent.scrollTop,left=p.left+parent.clientLeft+el.offsetLeft-parent.scrollLeft;return {top,left,bottom:top+el.offsetHeight,right:left+el.offsetWidth};};
+    const r=row.getBoundingClientRect(),last=raster(kids.at(-1)),tap=copies.find(c=>c.classList.contains('is-tapped'));
     const matrix=new DOMMatrixReadOnly(getComputedStyle(tap).transform);
     return {rows:new Set(kids.map(c=>c.offsetTop)).size,overflow:getComputedStyle(row).overflowY,scrolls:row.scrollHeight>row.clientHeight+1,
       lastSeen:last.bottom<=r.bottom+1&&last.top>=r.top-1,
-      cut:kids.some(c=>{const b=c.getBoundingClientRect();return b.left<r.left-1||b.right>r.right+1;}),angle:Math.atan2(matrix.b,matrix.a)*180/Math.PI};
+      stable,cut:kids.some(c=>{const b=raster(c);return b.left<r.left-1||b.right>r.right+1;}),angle:Math.atan2(matrix.b,matrix.a)*180/Math.PI};
   });
   ok(crowded.rows>1,'crowded lands form multiple whole-card rows');
-  ok(!crowded.cut,'tapped cards reserve their rotated width within the land zone');
+  ok(crowded.stable&&!crowded.cut,'tapping preserves exact slots, neighbor positions and unrotated raster fit; rotated corners may overlap');
   ok(Math.abs(crowded.angle-30)<.1,'tapped cards rotate 30 degrees');
   ok(crowded.overflow==='auto'&&crowded.scrolls&&crowded.lastSeen,`the final crowded land is fully reachable: ${JSON.stringify(crowded)}`);
   await serial(async () => object.broadcast());
@@ -1816,8 +1818,8 @@ async function openCoachQuestions(page) {
   if (!await questions.evaluate(el => el.open)) await questions.locator('summary').click();
 }
 
-/* Geometry oracle from rendered content, independent of the renderer's row-minimum formula.
-   A hidden copy measures the actual 30-degree resting footprint; no private fit values or multipliers are read. */
+/* Geometry oracle from unrotated card layout, independent of the renderer's row-minimum formula.
+   Tapping may overlap corners; it never increases a slot or moves neighboring cards. */
 function tableRowFacts() {
   const focus=document.getElementById('cm-board').dataset.view==='focus';
   const table = document.querySelector(focus?'.cm-board-main':'.cm-board-table'), style = getComputedStyle(table);
@@ -1827,14 +1829,12 @@ function tableRowFacts() {
   const mats = [...table.querySelectorAll(focus?'.cm-board-stage>.cm-mat':'.cm-board-slot>.cm-mat')].sort((a,b)=>a.getBoundingClientRect().left-b.getBoundingClientRect().left);
   const rows = mats.map(mat => {
     const r=mat.getBoundingClientRect(), field=mat.querySelector('.cm-board-field'), lands=mat.querySelector('.cm-board-lands');
-    const source=mat.querySelector('.cm-bcard'), copy=source.cloneNode(true);
-    copy.querySelectorAll('img').forEach(img=>img.remove());
-    copy.style.cssText+=`;position:absolute;visibility:hidden;pointer-events:none;width:${source.offsetWidth}px;height:${source.offsetHeight}px;transform:rotate(30deg);margin:0;`;
-    mat.append(copy); const footprint=Math.max(source.offsetHeight,copy.getBoundingClientRect().height);copy.remove();
+    const source=mat.querySelector('.cm-bcard'),footprint=source.offsetHeight;
+    const layout=el=>{const parent=el.offsetParent,p=parent?.getBoundingClientRect()||{x:0,y:0};const top=p.y+(parent?.clientTop||0)+el.offsetTop-(parent?.scrollTop||0),left=p.x+(parent?.clientLeft||0)+el.offsetLeft-(parent?.scrollLeft||0);return {top,left,bottom:top+el.offsetHeight,right:left+el.offsetWidth};};
     const zoneFacts=zone=>{
       const z=zone.getBoundingClientRect(), css=getComputedStyle(zone), label=zone.querySelector(':scope>.cm-mat-label'), heading=zone.querySelector('.cm-board-group>h3');
       const floor=footprint+outer(label)+outer(heading)+['paddingTop','paddingBottom','borderTopWidth','borderBottomWidth'].reduce((n,k)=>n+(parseFloat(css[k])||0),0);
-      const card=zone.querySelector('.cm-bcard'), c=card?.getBoundingClientRect();
+      const card=zone.querySelector('.cm-bcard'), c=card?layout(card):null;
       return {floor,whole:z.height+2>=floor&&z.top>=r.top-1&&z.bottom<=r.bottom+1&&(!c||(c.top>=Math.max(label?.getBoundingClientRect().bottom||z.top,heading?.getBoundingClientRect().bottom||z.top)-1&&c.bottom<=z.bottom+1))};
     };
     const f=zoneFacts(field), l=zoneFacts(lands);
