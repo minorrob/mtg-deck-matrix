@@ -16,7 +16,7 @@
   document.getElementById('cm-user-menu')?.addEventListener('beforetoggle',drawMenu);
   const number=n=>Number(n||0).toLocaleString('en-US');
   const dollars=cents=>(Number(cents||0)/100).toLocaleString('en-US',{style:'currency',currency:'USD'});
-  const date=value=>{const d=new Date(value);return value&&!Number.isNaN(d.getTime())?d.toLocaleString('en-US'):'Unavailable';};
+  const date=value=>{if(/^\d{4}-\d{2}-\d{2}$/.test(String(value||''))){const [year,month,day]=value.split('-').map(Number),d=new Date(year,month-1,day);return d.getFullYear()===year&&d.getMonth()===month-1&&d.getDate()===day?d.toLocaleDateString('en-US'):'Unavailable';}const d=new Date(value);return value&&!Number.isNaN(d.getTime())?d.toLocaleString('en-US'):'Unavailable';};
   const link=(section,label)=>`<a class="v-button" href="#admin?section=${section}">${e(label)}</a>`;
   const sections=[['home','Overview'],['people','People and invites'],['features','Feature switches'],['spend','AI spend'],['health','Release and health']];
   const heading=section=>C.pageHead('Admin','<a class="v-button" href="#settings">Settings</a>')+`<nav class="cm-tabs cm-admin-nav" aria-label="Admin">${sections.map(([key,label])=>`<a class="v-button" href="#admin${key==='home'?'':'?section='+key}"${key===section?' aria-current="page"':''}>${e(label)}</a>`).join('')}</nav>`;
@@ -24,7 +24,8 @@
   views.admin=async()=>{
     const params=C.route().params,routeKey=params.toString(),active=()=>C.route().view==='admin'&&C.route().params.toString()===routeKey,section=sections.some(([key])=>key===params.get('section'))?params.get('section'):'home';
     C.main.innerHTML=heading(section)+'<p role="status">Checking administrator access…</p>';
-    if(!await identity(true)){if(active())C.main.innerHTML=C.pageHead('Admin')+'<section class="v-panel"><h2>Administrator access required</h2><p>This account cannot open Admin.</p><a class="v-button" href="#settings">Settings</a></section>';return;}
+    const allowed=await identity(true);if(!active())return;
+    if(!allowed){C.main.innerHTML=C.pageHead('Admin')+'<section class="v-panel"><h2>Administrator access required</h2><p>This account cannot open Admin.</p><a class="v-button" href="#settings">Settings</a></section>';return;}
     C.main.innerHTML=heading(section)+'<p role="status">Loading…</p>';
     try{
       let body='';
