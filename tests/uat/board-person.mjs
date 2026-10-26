@@ -41,6 +41,13 @@ async function pickOptions(page, indices) {
   }
 }
 
+/* Review steps stay local; only the board's final offered control commits. */
+async function commitChoice(page) {
+  const next = await visible(page, '[data-action=board-target-next]:not([disabled])');
+  if (next) await next.click();
+  return click(page, '[data-action=board-direct]:not([disabled]), [data-action=board-confirm]:not([disabled])');
+}
+
 /* The option the pilot picked at priority, found where the board shows it: in the decision panel, behind Also, in
    the card's own chooser, or grouped under one button with others of its kind. */
 async function priority(page, d, chosen) {
@@ -50,12 +57,12 @@ async function priority(page, d, chosen) {
     if (also) await also.click();
   }
   const exact = await visible(page, `[data-action=board-option][data-index="${chosen.index}"]`);
-  if (exact) {await exact.click();return click(page,"[data-action=board-confirm]:not([disabled])");}
+  if (exact) {await exact.click();return commitChoice(page);}
   const chooser = await visible(page, `[data-action=board-choose][data-card="${chosen.cardId}"]`);
-  if (chooser) {await chooser.click(); await click(page, `#cm-board-decision [data-action=board-option][data-index="${chosen.index}"]`);return click(page,"[data-action=board-confirm]:not([disabled])");}
+  if (chooser) {await chooser.click(); await click(page, `#cm-board-decision [data-action=board-option][data-index="${chosen.index}"]`);return commitChoice(page);}
   const grouped = d.options.find((o) => o.act === chosen.act && o.label === chosen.label);
   await click(page, `[data-action=board-option][data-index="${grouped.index}"]`);
-  return click(page,"[data-action=board-confirm]:not([disabled])");
+  return commitChoice(page);
 }
 
 export function boardPerson({page, seat, cards, current, timeout = 15000}) {
@@ -89,14 +96,18 @@ export function boardPerson({page, seat, cards, current, timeout = 15000}) {
           await field.press("Tab");
         }
       } else if (d.mode === "many" && Array.isArray(d.legalBlocks)) {
-        for (const i of picked.indices ?? []) {
-          const o = d.options.find(o => o.index === i);
-          await click(page, `[data-action=board-block-select][data-block-object="${o.cardId}"]`);
-          await click(page, `[data-action=board-block-pair][data-index="${i}"]`);
+        const publicIds = new Set(v.state.players.flatMap(p => p.zones.Battlefield.cards).map(c => c.cardId));
+        const attacks = (v.state.combat?.attacks || []).filter(a => a.defender === v.seat && publicIds.has(a.attacker));
+        for (const attack of attacks) {
+          await click(page, `[data-action=board-block-attacker][data-attacker="${attack.attacker}"]`);
+          const choices = (picked.indices || []).filter(i => d.options.find(o => o.index === i)?.attackerId === attack.attacker);
+          for (const i of choices) await click(page, `[data-action=board-block-pair][data-index="${i}"]`);
+          await click(page, `[data-action=${choices.length ? 'board-block-attacker-confirm' : 'board-block-attacker-none'}][data-attacker="${attack.attacker}"]`);
         }
-        await page.locator("[data-action=board-confirm]:not([disabled])").waitFor({timeout});
+        await page.locator('[data-action=board-send-blockers]:not([disabled])').waitFor({timeout});
+        await click(page, '[data-action=board-send-blockers]:not([disabled])');
       } else await pickOptions(page, picked.indices ?? []);
-      if (["one", "boolean", "index", "many", "order", "ack", "damage", "amount"].includes(d.mode)) await click(page, "[data-action=board-confirm]:not([disabled])");
+      if (!(d.mode === 'many' && Array.isArray(d.legalBlocks)) && ["one", "boolean", "index", "many", "order", "ack", "damage", "amount"].includes(d.mode)) await commitChoice(page);
     }
     while (current()?.revision === v.revision && Date.now() - at < timeout) await page.waitForTimeout(20);
     assert.notEqual(current()?.revision, v.revision, `action advances ${d.title}`);
