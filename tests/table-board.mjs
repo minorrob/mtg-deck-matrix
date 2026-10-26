@@ -413,20 +413,22 @@ try {
     const box = (q) => document.querySelector(q).getBoundingClientRect();
     const mine = box(".cm-seatboard.is-you"), theirs = box(".cm-seatboard:not(.is-you)"), center = box(".cm-board-center"), host = box("#cm-board");
     const ring = getComputedStyle(document.querySelector(".cm-seatboard.is-you")).boxShadow;
-    const table = document.querySelector(".cm-board-table").getBoundingClientRect(), tray = box(".cm-board-hand");
+    const tableEl = document.querySelector(".cm-board-table"), table = tableEl.getBoundingClientRect(), tray = box(".cm-board-hand");
     return {mineRight: mine.left >= theirs.right && Math.abs(mine.top - theirs.top) < 1, ring: /2px/.test(ring), same: Math.abs(mine.width - theirs.width) < 1 && Math.abs(mine.height - theirs.height) < 1,
-      ratio: Math.round(mine.width / mine.height * 100) / 100, fits: mine.right <= table.right + 1 && theirs.left >= table.left - 1 && mine.top >= table.top - 1 && mine.bottom <= table.bottom + 1,
-      largest: Math.min((table.width - parseFloat(getComputedStyle(document.querySelector(".cm-board-table")).columnGap)) / 2, table.height * 16 / 9) - mine.width < 2,
+      ratio: Math.round(mine.width / mine.height * 100) / 100, fits: mine.right <= table.right + 1 && theirs.left >= table.left - 1 && mine.top >= table.top - 1 && mine.bottom <= table.top + tableEl.scrollHeight + 1,
+      largest: Math.min((tableEl.clientWidth - parseFloat(getComputedStyle(tableEl).columnGap)) / 2, table.height * 16 / 9) - mine.width < 2,
       whole: host.left === 0 && host.top === 0 && host.width === innerWidth && host.height === innerHeight,
-      library: document.querySelectorAll(".cm-seatboard [data-zone=library]").length, trayBelow: tray.top >= mine.bottom,
+      library: document.querySelectorAll(".cm-seatboard [data-zone=library]").length, trayBelow: tray.top >= Math.min(mine.bottom, table.bottom),
       logo: (document.querySelector(".cm-board-center img") || {}).src || "",
       centerBetween: center.left < mine.left && center.right > theirs.right, sideways: document.documentElement.scrollWidth - document.documentElement.clientWidth};
   });
+  const initialRows = await rob.page.evaluate(tableRowFacts);
   ok(tableGeo.whole, "the game fills the window: the board is the whole viewport, the rail under it");
   ok(tableGeo.mineRight && tableGeo.ring, "Table view: two boards side by side, Rob's on the right in a brass ring, Maya's on the left");
-  ok(tableGeo.same && Math.abs(tableGeo.ratio - 1.78) < 0.02 && tableGeo.fits && tableGeo.largest, `the boards are identical landscape 16:9 (${tableGeo.ratio}), the largest that fit each half of the tabletop`);
+  ok(tableGeo.same && tableGeo.fits && tableGeo.largest && initialRows.valid && initialRows.widths, `the equal boards retain 16:9 when measured rows fit; otherwise complete rows govern height, with each chosen column filled (${JSON.stringify(initialRows)})`);
   ok(tableGeo.library === 2 && tableGeo.trayBelow, "each board draws its Library pile, and the hand sits along the foot below the boards");
   ok(tableGeo.centerBetween && tableGeo.sideways === 0 && /logo-wand/.test(tableGeo.logo), "the wand logo sits in the gap between the boards, and nothing scrolls sideways");
+  await verifyTableRowAccess(rob.page, initialRows);
   /* R12 (the plan review, X8): AT 1280x720 THE CAPTIONS ARE WORDS, NOT A PILE-UP. With Board cards at its smallest the
      Table view's piles are narrowest, and their captions ran into each other ("CommandExile 0", "Library 9Grave...")
      under AGENTS.md's 10px floor. Every pile caption, zone name and heading is 10px or larger, whole and clear of its
@@ -543,16 +545,16 @@ try {
       scrolls: document.getElementById("cm-board").scrollHeight - document.getElementById("cm-board").clientHeight};
   });
   const rowsKept = () => rob.page.evaluate(() => localStorage.getItem("cm-board-rows"));
-  const even = await geoT();
+  const even = await geoT(), evenRows = await rob.page.evaluate(tableRowFacts);
   const rowGrip = await rob.page.locator(".cm-board-rowbar [data-drag=rows]").boundingBox();
   await rob.page.mouse.move(rowGrip.x + rowGrip.width / 2, rowGrip.y + 40);
   await rob.page.mouse.down();
   await rob.page.mouse.move(rowGrip.x + rowGrip.width / 2 + 40, rowGrip.y + 40, {steps: 4});
   await rob.page.mouse.move(rowGrip.x + rowGrip.width / 2 + 80, rowGrip.y + 40, {steps: 4});
   await rob.page.mouse.up();
-  const dragged = await geoT(), share = Number(await rowsKept());
-  ok(dragged.tw > even.tw + 20 && dragged.mw < even.mw - 20 && Math.abs(dragged.tw / dragged.th - 16 / 9) < 0.02 && Math.abs(dragged.mw / dragged.mh - 16 / 9) < 0.02 && share > 0.55 && dragged.centered,
-    `the bar between the boards drags: 80px right, Maya's board grows and Rob's gives way, both still 16:9, the bar and the life counter kept between them (${even.tw.toFixed(0)} → ${dragged.tw.toFixed(0)}px over ${even.mw.toFixed(0)} → ${dragged.mw.toFixed(0)}px; share ${share})`);
+  const dragged = await geoT(), share = Number(await rowsKept()), draggedRows = await rob.page.evaluate(tableRowFacts);
+  ok(dragged.tw > even.tw + 20 && dragged.mw < even.mw - 20 && draggedRows.valid && draggedRows.widths && share > 0.55 && dragged.centered,
+    `the bar between the boards drags: 80px right, Maya's board grows and Rob's gives way, 16:9 where row minima fit and complete rows otherwise, the bar and life counter kept between them (${even.tw.toFixed(0)} → ${dragged.tw.toFixed(0)}px over ${even.mw.toFixed(0)} → ${dragged.mw.toFixed(0)}px; share ${share})`);
   await chooseView(rob.page,"focus");
   await rob.page.locator(".cm-board-mat").waitFor();
   const libF = await pileOver(rob.page, ".cm-board-mat [data-zone=library]");
@@ -560,13 +562,15 @@ try {
   await chooseView(rob.page,"table");
   await rob.page.locator(".cm-board-table .cm-seatboard").nth(1).waitFor();
   const redrawn = await geoT();
+  ok((await rob.page.evaluate(tableRowFacts)).valid, "redrawing Table preserves complete rows and conditional aspect");
   ok(Math.abs(redrawn.tw - dragged.tw) < 1 && Math.abs(redrawn.mw - dragged.mw) < 1 && Number(await rowsKept()) === share, "and the share is remembered on the device: the Table view drawn again keeps the boards as they were left");
   await rob.page.focus(".cm-board-rowbar [data-drag=rows]");
   for (let i = 0; i < 20; i += 1) await rob.page.keyboard.press("ArrowLeft");
-  const keyed = await geoT(), low = Number(await rowsKept());
-  ok(low === 0.3 && keyed.tw < keyed.mw && (await rob.page.getAttribute(".cm-board-rowbar [data-drag=rows]", "aria-valuenow")) === "30", `the arrow keys move it too, ← and → as it stands, and it stops at 30% of the width (${low})`);
+  const keyed = await geoT(), low = Number(await rowsKept()), keyedRows = await rob.page.evaluate(tableRowFacts);
+  ok(keyedRows.valid && keyedRows.widths && low === 0.3 && keyed.tw < keyed.mw && (await rob.page.getAttribute(".cm-board-rowbar [data-drag=rows]", "aria-valuenow")) === "30", `the arrow keys move it too, ← and → as it stands, and it stops at 30% of the width (${low})`);
   for (let i = 0; i < 10; i += 1) await rob.page.keyboard.press("ArrowRight");
   const back = await geoT();
+  await verifyTableRowAccess(rob.page, await rob.page.evaluate(tableRowFacts));
   ok(Number(await rowsKept()) === 0.5 && Math.abs(back.tw - back.mw) < 1 && Math.abs(back.tw - even.tw) < 1, "and back at half, the boards are identical again");
   /* The bar atop the hand tray: dragged up, the hand's cards grow, and the boards keep their size (Rob, 2026-10-09: "Card
      hand size should never decrease the board size. The user would just scroll down on the window to see the full card
@@ -578,7 +582,7 @@ try {
   await rob.page.mouse.move(trayGrip.x + 40, trayGrip.y + trayGrip.height / 2 - 40, {steps: 3});
   await rob.page.mouse.up();
   const grown = await geoT(), handOut = (await text(rob.page, ".cm-board-traybar output")).trim();
-  ok(grown.hand > even.hand * 1.2 && Math.abs(grown.tw - even.tw) < 1 && Math.abs(grown.mw - even.mw) < 1 && Math.abs(grown.trayTop - even.trayTop) < 1 && even.scrolls <= 0 && grown.scrolls > 0 && /^1[2-9]\d%$/.test(handOut),
+  ok(grown.hand > even.hand * 1.2 && Math.abs(grown.tw - even.tw) < 1 && Math.abs(grown.mw - even.mw) < 1 && Math.abs(grown.trayTop - even.trayTop) < 1 && grown.scrolls > even.scrolls && evenRows.valid && /^1[2-9]\d%$/.test(handOut),
     `the bar atop the hand tray drags: 40px up, the hand's cards grow (${even.hand.toFixed(0)} → ${grown.hand.toFixed(0)}px, ${handOut}), every board keeps its size (${even.tw.toFixed(0)} → ${grown.tw.toFixed(0)}px) and the tray its place, and the hand runs on ${grown.scrolls}px below the window, to scroll down to`);
   /* The three card sizes: the board's and the hand's each their own; Tools sets both to its value. */
   await rob.page.locator('[data-action=board-camera]').click();
@@ -1760,4 +1764,50 @@ async function useCardOffer(page, card, act) {
 async function openCoachQuestions(page) {
   const questions = page.locator('#cm-board-coach .cm-coach-questions');
   if (!await questions.evaluate(el => el.open)) await questions.locator('summary').click();
+}
+
+/* Geometry oracle from rendered content, independent of the renderer's row-minimum formula.
+   A hidden copy measures the actual 30-degree resting footprint; no private fit values or multipliers are read. */
+function tableRowFacts() {
+  const table = document.querySelector('.cm-board-table'), style = getComputedStyle(table);
+  const gap = parseFloat(style.columnGap) || 0, room = table.clientWidth-gap;
+  const share = Number(localStorage.getItem('cm-board-rows')) || .5;
+  const outer = el => {if(!el)return 0;const s=getComputedStyle(el);return el.getBoundingClientRect().height+(parseFloat(s.marginTop)||0)+(parseFloat(s.marginBottom)||0);};
+  const mats = [...table.querySelectorAll('.cm-board-slot>.cm-mat')].sort((a,b)=>a.getBoundingClientRect().left-b.getBoundingClientRect().left);
+  const rows = mats.map(mat => {
+    const r=mat.getBoundingClientRect(), field=mat.querySelector('.cm-board-field'), lands=mat.querySelector('.cm-board-lands');
+    const source=mat.querySelector('.cm-bcard'), copy=source.cloneNode(true);
+    copy.querySelectorAll('img').forEach(img=>img.remove());
+    copy.style.cssText+=`;position:absolute;visibility:hidden;pointer-events:none;width:${source.offsetWidth}px;height:${source.offsetHeight}px;transform:rotate(30deg);margin:0;`;
+    mat.append(copy); const footprint=Math.max(source.offsetHeight,copy.getBoundingClientRect().height);copy.remove();
+    const zoneFacts=zone=>{
+      const z=zone.getBoundingClientRect(), css=getComputedStyle(zone), label=zone.querySelector(':scope>.cm-mat-label'), heading=zone.querySelector('.cm-board-group>h3');
+      const floor=footprint+outer(label)+outer(heading)+['paddingTop','paddingBottom','borderTopWidth','borderBottomWidth'].reduce((n,k)=>n+(parseFloat(css[k])||0),0);
+      const card=zone.querySelector('.cm-bcard'), c=card?.getBoundingClientRect();
+      return {floor,whole:z.height+2>=floor&&z.top>=r.top-1&&z.bottom<=r.bottom+1&&(!c||(c.top>=Math.max(label?.getBoundingClientRect().bottom||z.top,heading?.getBoundingClientRect().bottom||z.top)-1&&c.bottom<=z.bottom+1))};
+    };
+    const f=zoneFacts(field), l=zoneFacts(lands);
+    const minimum=Math.max(0,mat.offsetHeight-field.offsetHeight-lands.offsetHeight)+f.floor+l.floor;
+    const aspectFits=r.width*9/16>=minimum-2;
+    const aspect=aspectFits?Math.abs(r.width/r.height-16/9)<.02:r.height+2>=minimum&&r.height>r.width*9/16;
+    const cards=[...mat.querySelectorAll('.cm-bcard')];
+    return {seat:mat.dataset.seat,width:r.width,height:r.height,minimum:Math.round(minimum),aspectFits,valid:aspect&&f.whole&&l.whole&&cards.length>0&&cards.every(c=>Math.abs(c.offsetWidth/c.offsetHeight-5/7)<.02)};
+  });
+  const grown=rows.some(r=>!r.aspectFits);
+  return {rows,valid:rows.length===2&&rows.every(r=>r.valid),widths:rows.every((r,i)=>Math.abs(r.width-(grown?Math.floor(room*(i===0?share:1-share)):Math.min(room*(i===0?share:1-share),table.clientHeight*16/9)))<2),scrolls:table.scrollHeight>table.clientHeight+1,horizontal:table.scrollWidth<=table.clientWidth+1};
+}
+async function verifyTableRowAccess(page, facts) {
+  ok(facts.horizontal, 'complete Table rows never introduce horizontal overflow');
+  if(!facts.scrolls)return;
+  const viewport=await page.locator('.cm-board-table').boundingBox();
+  await page.mouse.move(viewport.x+2,viewport.y+Math.min(40,viewport.height/2));
+  await page.mouse.wheel(0,2000);
+  await page.waitForFunction(()=>document.querySelector('.cm-board-table').scrollTop>0,null,{timeout:5000});
+  const reachable=await page.evaluate(()=>{
+    const table=document.querySelector('.cm-board-table'),t=table.getBoundingClientRect();
+    return [...table.querySelectorAll('.cm-board-lands')].every(zone=>{const r=zone.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2,hit=document.elementFromPoint(x,y);return r.top>=t.top-1&&r.bottom<=t.bottom+1&&!!hit&&zone.contains(hit);});
+  });
+  ok(reachable,'native Table scrolling exposes each complete Lands row to the pointer');
+  await page.mouse.wheel(0,-2000);
+  await page.waitForFunction(()=>document.querySelector('.cm-board-table').scrollTop===0,null,{timeout:5000});
 }
