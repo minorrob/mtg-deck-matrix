@@ -989,8 +989,8 @@ globalThis.CrankBoard = Object.seal({
   function fitBoardZones(host) {
     for(const grid of host.querySelectorAll('.cm-mat-grid')) {
       const mat=grid.closest('.cm-mat'),bc=parseFloat(getComputedStyle(mat).getPropertyValue('--bc')) || mat.querySelector('.cm-bcard')?.offsetWidth || 60;
-      const fieldMin=Math.ceil(bc*1.4+100*hudScale()/100),landMin=Math.ceil(bc*1.72+48*hudScale()/100),header=mat.querySelector('.cm-mat-head')?.offsetHeight || 0;
-      const total=Math.max(fieldMin+landMin,mat.dataset.fit==='phone'?innerHeight*.65:mat.clientHeight-header-16),share=zoneShare(Number(mat.dataset.seat));
+      const fieldMin=Math.ceil(bc*1.4+64*hudScale()/100),landMin=Math.ceil(bc*1.72+32*hudScale()/100),header=mat.querySelector('.cm-mat-head')?.offsetHeight || 0;
+      const total=Math.max((fieldMin+landMin)*1.2,mat.dataset.fit==='phone'?innerHeight*.65:mat.clientHeight-header-16),share=zoneShare(Number(mat.dataset.seat));
       const field=Math.max(fieldMin,Math.min(total-landMin,total*share));
       grid.style.setProperty('--field-px',`${field}px`);grid.style.setProperty('--lands-px',`${total-field}px`);
       grid.dataset.zoneTotal=String(total);grid.dataset.fieldMin=String(fieldMin);grid.dataset.landMin=String(landMin);
