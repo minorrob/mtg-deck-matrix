@@ -1031,3 +1031,14 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-mat[data-fit=focus]>.cm-mat-grid>.cm-board-band{grid-column:1/-1;grid-row:5;min-height:calc(160px*var(--hud-scale,1));overflow:auto}
 #matrix-v2 .cm-board :is(.cm-board-band h3,.cm-board-band ol,.cm-board-history li){font-size:calc(15px*var(--hud-scale,1));line-height:1.2}
 #matrix-v2 .cm-board .cm-board-band h3 .v-button{min-height:32px;height:32px;font-size:15px}
+
+/* The center dial uses a column gutter, retaining the normal board rows. */
+#matrix-v2 .cm-board .cm-board-table{--pie:calc(144px*var(--hud-scale,1));column-gap:calc(var(--pie) + 8px)}
+#matrix-v2 .cm-board .cm-board-table[data-seats="2"]{column-gap:calc(var(--pie) + 8px)}
+#matrix-v2 .cm-board .cm-board-pie-life{width:42%;gap:calc(2px*var(--hud-scale,1));line-height:1}
+#matrix-v2 .cm-board .cm-board-pie-life>b,#matrix-v2 .cm-board .cm-board-pie-life small{line-height:1;padding:0 calc(3px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-board-pie .cm-board-center{top:41.5%;width:calc(32px*var(--hud-scale,1));height:calc(32px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-board-pie-priority,#matrix-v2 .cm-board .cm-board-table[data-seats="2"] .cm-board-pie-priority{top:54%;padding:0 4px;line-height:1.1}
+#matrix-v2 .cm-board .cm-board-tabletop{padding-top:60px}
+#matrix-v2 .cm-board .cm-other-seats>header{min-height:48px;padding-right:216px;box-sizing:border-box}
+#matrix-v2 .cm-board .cm-board-table[data-seats="3"] .cm-board-slot[data-area="c"] .cm-board-field>:is(.cm-mat-label,.cm-board-group:first-of-type>h3){max-width:calc(50% - var(--pie)/2 - 8px);white-space:normal;overflow-wrap:anywhere}

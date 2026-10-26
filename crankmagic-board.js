@@ -1117,7 +1117,7 @@ globalThis.CrankBoard = Object.seal({
     const over = parts.find(({at}) => at[1] > 360);
     if (over) stops.unshift(`${tint(over.p)} 0% ${pct(over.at[1] - 360)}`);
     const totals = parts.map(({p, at}) => {
-      const mid = ((at[0] + at[1]) / 2) * Math.PI / 180, x = 50 + 42 * Math.sin(mid), y = ps.length===2?50:Math.cos(mid)>0?20:100;
+      const mid = ((at[0] + at[1]) / 2) * Math.PI / 180, x = 50 + (ps.length===2?25:40) * Math.sin(mid), y = ps.length===2?15:Math.cos(mid)>0?15:85;
       return `<span class="cm-board-pie-life${p.playerId===view.state.turnPlayerId?' is-active':''}" data-seat="${p.playerId}" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%"><b>${p.health.life}</b><small>${e(p.playerId===view.seat?'You':p.name)}</small></span>`;
     }).join("");
     const said = ps.map((p) => `${p.playerId === view.seat ? "You" : p.name} ${p.health.life}`).join(", ");
