@@ -688,7 +688,7 @@
 #matrix-v2 .cm-board .cm-table-menu>div{position:absolute;right:0;bottom:46px;display:grid;gap:6px;min-width:240px;max-height:70dvh;overflow:auto;padding:12px;background:var(--color-panel);border:1px solid var(--color-line-strong);border-radius:var(--radius-card);box-shadow:var(--shadow-pop)}
 #matrix-v2 .cm-board .cm-hud-slider{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;font-size:15px}
 .cm-countdown-active{position:relative;isolation:isolate}.cm-countdown-active:after{content:'';position:absolute;inset:0;background:rgb(0 0 0 / .65);z-index:40}.cm-countdown-callout{position:absolute;inset:50% auto auto 50%;transform:translate(-50%,-50%);z-index:41;font:800 72px/1 var(--font-callout);color:var(--callout-value)}
-#matrix-v2 .cm-board[data-phone] .cm-drawer{position:absolute;inset:auto 0 0;width:100%;height:auto;max-height:55dvh;overflow:auto;z-index:31;transform:translateY(110%);padding-bottom:50px}
+#matrix-v2 .cm-board[data-phone] .cm-drawer{position:absolute;inset:auto 0 50px;width:100%;height:auto;max-height:55dvh;overflow:auto;z-index:31;transform:translateY(110%);padding-bottom:0}
 #matrix-v2 .cm-board[data-phone] .cm-drawer.is-open{transform:none}
 #matrix-v2 .cm-board[data-phone] .cm-drawer-tab{position:absolute;top:auto;bottom:0;left:0;right:auto;writing-mode:horizontal-tb;z-index:33;transform:none}
 #matrix-v2 .cm-board[data-phone] .cm-drawer-tab.cm-stage-right{left:auto;right:0}

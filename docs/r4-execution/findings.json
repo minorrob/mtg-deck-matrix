@@ -7,475 +7,558 @@
       "changes": [
         "CH-70"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Two competing 'start' doors above the fold plus four more below"
     },
     {
       "id": "F-002",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "33 text nodes under 13 px on the landing page"
     },
     {
       "id": "F-003",
       "changes": [
         "CH-70"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "'A new version of CrankMagic is ready. Reload' appears over the hero within seconds"
     },
     {
       "id": "F-004",
       "changes": [
         "CH-70"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "The signed-in header says 'Open your decks' while the nav says 'Decks' and the door says 'DECKS · I have a commander in mind'"
     },
     {
       "id": "F-005",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Sign in is one item in a 17-row menu that also holds Reset All"
     },
     {
       "id": "F-006",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Sign-in gives no feedback: the page silently reloaded into Decks"
     },
     {
       "id": "F-007",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "'Term definitions on hover: On' is a toggle disguised as a menu row"
     },
     {
       "id": "F-008",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Two 'New deck' entry points and a 'Bulk actions' button that is disabled with no explanation"
     },
     {
       "id": "F-009",
       "changes": [
         "CH-71"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "'Six decks, all playable' was stale after creating a deck: the grid did not refresh until a filter was clicked"
     },
     {
       "id": "F-010",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "'New from Wizards' precon rail competes with the deck grid for the first column"
     },
     {
       "id": "F-011",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Deck-select checkboxes are 18 px and only visible on hover; favorites star appears on hover only"
     },
     {
       "id": "F-012",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Help '?' next to the page title opens prose"
     },
     {
       "id": "F-013",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Five equal doors with no default or recommendation"
     },
     {
       "id": "F-014",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Choosing a door silently creates a deck shell before anything is chosen"
     },
     {
       "id": "F-015",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Four left-rail steps (Pick a commander, Choose colors, play style, mechanics) read as a wizard but are optional and never required"
     },
     {
       "id": "F-016",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Next is disabled with no reason shown"
     },
     {
       "id": "F-017",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Deck name field pre-fills 'New deck' and is above the commander field, so the name is asked before anything to name"
     },
     {
       "id": "F-018",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Search shows one result row with no loading or no-results state"
     },
     {
       "id": "F-019",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Selection is shown twice: the highlighted row and a repeated name line below it"
     },
     {
       "id": "F-020",
       "changes": [
         "CH-71"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "'Next' closes the wizard and drops the player on an unchanged Decks grid"
     },
     {
       "id": "F-021",
       "changes": [
         "CH-72"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "A one-card deck shows 'Playable at the table' and 'B2'"
     },
     {
       "id": "F-022",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "The action row offers Edit card list, Lock list, Log a game, Measure, More for a deck with one card"
     },
     {
       "id": "F-023",
       "changes": [
         "CH-72"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "'Playable at the table · all 1 cards known' and a 'Play this deck' button on a one-card deck"
     },
     {
       "id": "F-024",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Tabs carry counts as bare numbers ('The hundred 1', 'Acquire 1')"
     },
     {
       "id": "F-025",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "'Define the deck / Leave undefined' is a radio pair repeated at the top of all four sections"
     },
     {
       "id": "F-026",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Radio and checkbox inputs are 13 to 16 px with a 42 px tall hit area on the label only"
     },
     {
       "id": "F-027",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Budget ($) and 'Other restrictions' fields have no placeholder, format hint or default"
     },
     {
       "id": "F-028",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "The dialog re-centers vertically when a section changes height, so the left-rail items move under the pointer"
     },
     {
       "id": "F-029",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Saltiness / Speed / Competitiveness are 1 to 5 selects with no anchor words"
     },
     {
       "id": "F-030",
       "changes": [
         "CH-73"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Primary composition is required but shows 'Choose…' with no required marker; failure is a dot on the tab"
     },
     {
       "id": "F-031",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Sixty-five mechanic chips in an unordered wall, two pre-tagged 'commander'"
     },
     {
       "id": "F-032",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Three radios (Auto-create, Merge in a Group, Define later) with no description of what each does"
     },
     {
       "id": "F-033",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Weighting radios (Balanced, Offense, Defense, Response, Value, Combo) wrap to two rows with one orphan"
     },
     {
       "id": "F-034",
       "changes": [
         "CH-73"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Validation failure is a 6 px dot after 'Gameplay' and focus on the wrong field"
     },
     {
       "id": "F-035",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "'Remove' is the only action and it is disconnected from what it acts on"
     },
     {
       "id": "F-036",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Card buttons carry 11 px labels; status words ('To buy', 'Bench') are 12 px under each tile"
     },
     {
       "id": "F-037",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Summary bar mixes units: '63 of 63 seats filled · 36 lands · To buy $57.11 · Bench 17 · To buy 46 · Other decks 0'"
     },
     {
       "id": "F-038",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "No loading state while the 99 is generated; the dialog appeared after a pause with no spinner"
     },
     {
       "id": "F-039",
       "changes": [
         "CH-74"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "The 'NEXT' band says 'Lock the list when it is settled' while the header says 'The table cannot play these yet: Bruna, Triplicate Titan, …'"
     },
     {
       "id": "F-040",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Overview is five stacked panels (Next, Progress, Cost, Mana curve, Card type, Spells, How it plays, Upgrade path, About the commander, Simulation history, Record); the only two actions are at the bottom"
     },
     {
       "id": "F-041",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "The action-row Measure button's accessible name is 'Compare lists under the browser simulation' while its label is 'Measure'"
     },
     {
       "id": "F-042",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "54 text nodes under 13 px (chip row, stat captions, definition buttons at 12 px)"
     },
     {
       "id": "F-043",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Progress is a small inline pill 'Measuring… seed 2 of 6 · 73 points so far' at the bottom of the page, and the page auto-navigated to the report when done"
     },
     {
       "id": "F-044",
       "changes": [
         "CH-75"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "The report scores (73 of 100) but offers no path from a weak check to a change"
     },
     {
       "id": "F-045",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "'FIDELITY: MEDIUM · 2 cards the engine could not read played as blanks' does not name the cards"
     },
     {
       "id": "F-046",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "'Back to deck' is a link styled as a button at the far right, far from the breadcrumb; the first click at a scrolled position hit the fidelity box"
     },
     {
       "id": "F-047",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Groups are named 'LOADING 53 · owned, not in the box yet' and 'RESERVED 47 · committed to take a seat'"
     },
     {
       "id": "F-048",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Row actions are text pills ('put it in the box', 'To buy · empty seat') that look like status, and the primary per-row action (open the card) is the whole 1,258 px row"
     },
     {
       "id": "F-049",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "172 text nodes under 13 px and 79 targets under 24 px on this screen"
     },
     {
       "id": "F-050",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Type-count row uses words as buttons ('Land: definition') that open glossary entries"
     },
     {
       "id": "F-051",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Empty state is a sentence of instructions with no action"
     },
     {
       "id": "F-052",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "A tab whose only content is a paragraph and a button to another page"
     },
     {
       "id": "F-053",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Three mode buttons (Navigate / Inspect / Select) plus a toolbar of Search catalog / Back / Reset view / Filters · lens, and a right pane with three tabs: the stage's one job (find a swap) is not the first thing on screen"
     },
     {
       "id": "F-054",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Four 17 px '?' disclosures ('What is this universe of cards?', 'How the graph works', 'How these work')"
     },
     {
       "id": "F-055",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "No way back into the deck with a chosen swap: 'Add and/or buy…' adds, it does not replace a seat"
     },
     {
       "id": "F-056",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "Acquire is three numbers and two buttons that leave the deck page"
     },
     {
       "id": "F-057",
       "changes": [
         "CH-80"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "The deck says 46 to buy / $69.99; the To buy tab says 66; the review said $57.11; the row group says '47 records · 47 copies · $69.99'"
     },
     {
       "id": "F-058",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "'Bought' is a green primary button on every row with no confirmation and a '…' menu beside it"
     },
     {
       "id": "F-059",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "'Back to Play Space' is a primary-sized button in the filter row and leads to a tabletop sorting view unrelated to buying"
     },
     {
       "id": "F-060",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "232 text nodes under 13 px and 96 targets under 24 px"
     },
     {
       "id": "F-061",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "A 'drawer' and 'sorting space' metaphor on the Library page, labeled 'Play Space'"
     },
     {
       "id": "F-062",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "More holds 23 items in four groups, including Measure and Share Deck which are stage actions"
     },
     {
       "id": "F-063",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "'Delete deck…' and 'Archive' sit in the same group as 'Rename' and 'Share'"
     },
     {
       "id": "F-064",
       "changes": [
         "CH-81"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Sharing is a dead end: a menu item that produces a red toast"
     },
     {
       "id": "F-065",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "The toast persists for minutes and overlaps the Progress card"
     },
     {
       "id": "F-066",
       "changes": [
         "CH-82"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "First click on 'Lock list' gave no response for several seconds; the dialog appeared only after a Scryfall check failed"
     },
     {
       "id": "F-067",
       "changes": [],
-      "status": "unmapped_open"
+      "status": "unmapped_open",
+      "summary": "The dialog states 'Locked the list of Giada deck' in the past tense before Confirm is pressed"
     },
     {
       "id": "F-068",
       "changes": [
         "CH-83"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "The action row changed to six buttons and the Next band reads 'add the 53 cards you already own (Ready to add), then buy 46 cards ($69.99), and 1 more step.'"
     },
     {
       "id": "F-069",
       "changes": [
         "CH-83"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Four stat cards of 10 numbers each sit above the 100-row sheet; the formula sentence sits between title and cards"
     },
     {
       "id": "F-070",
       "changes": [
         "CH-83"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "'Do all available (53)' is the primary button and it mutates 53 ownership rows with no confirm"
     },
     {
       "id": "F-071",
       "changes": [
         "CH-83"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Rows read '— nothing comes out → PUT IN <card> · Bench · on the list, not yet in the box'"
     },
     {
       "id": "F-072",
       "changes": [
         "CH-83"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "No 'box done' moment: after Do all available, nothing marks the deck Boxed or sends the player to Play"
     },
     {
       "id": "F-073",
       "changes": [
         "CH-84"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Three doors (New table, Choose a deck, Set up an AI game) plus an invitation field; 'Choose a deck' is a link that leaves Play"
     },
     {
       "id": "F-074",
       "changes": [
         "CH-84"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Three 'not connected yet' notices on one page (lounge chat, public discovery, leaderboard)"
     },
     {
       "id": "F-075",
       "changes": [
         "CH-84"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Seats are laid out 4-3 / 2-You, deck select and 'Set the table' are below the fold; name is required but unmarked"
     },
     {
       "id": "F-076",
       "changes": [
         "CH-84"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Validation toast 'Give your name at the table.' appears at the bottom, away from the empty field, with no field marking"
     },
     {
       "id": "F-077",
       "changes": [
         "CH-84"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Selecting a deck inserts a line 'You bring D6 Krenko to seat 1' above the seats, shifting the layout and moving the button under the pointer"
     },
     {
       "id": "F-078",
       "changes": [
         "CH-85"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "'Ready' is a small 12 px button among Change deck / Choose mat; the Table rules card with Start sits in the middle of the mats"
     },
     {
       "id": "F-079",
       "changes": [
         "CH-85"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "AI seat says 'Pending · Choosing a deck' with a green 'Choose its deck' button: the host must choose for the AI"
     },
     {
       "id": "F-080",
       "changes": [
         "CH-85"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "The chooser lists 'Shared decks' and 'Your library decks' with the same decks appearing in both under different names (D3 Kiora vs D3 Kasmina, D5 Teysa Karlov vs D5 Shadrix)"
     },
     {
       "id": "F-081",
       "changes": [
         "CH-47"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "The countdown is a 24 px number inside the rules card; the seats do not change"
     },
     {
       "id": "F-082",
       "changes": [
         "CH-45"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "There is no way to concede, leave the table, or end the game from the board"
     },
     {
       "id": "F-083",
       "changes": [
         "CH-45"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "The app sidebar (Decks, Library, Explore, Play, Menu) and the legal footer remain in the DOM under the board, focusable but hidden"
     },
     {
       "id": "F-084",
@@ -484,7 +567,8 @@
         "CH-44",
         "CH-48"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Vital numbers are 12 px: life '40 ☠0' in the top bar (P41-C03, 60×19 px), turn/priority at 12 px, 'Opening hands' pill"
     },
     {
       "id": "F-085",
@@ -492,7 +576,8 @@
         "CH-16",
         "CH-48"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "'Actions' appears three times with three meanings: the left panel title, the top-right 'Actions' button (which toggles that panel), and 'All actions' inside it"
     },
     {
       "id": "F-086",
@@ -500,7 +585,8 @@
         "CH-42",
         "CH-46"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "'Pass' is the big center control but disabled during the opening hand; Keep/Mulligan are 12 px rows in the side panel"
     },
     {
       "id": "F-087",
@@ -508,7 +594,8 @@
         "CH-41",
         "CH-45"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Two icon-only edge toggles ('Toggle board tools', 'Toggle table panel') render at font-size 0 with no visible label"
     },
     {
       "id": "F-088",
@@ -517,21 +604,24 @@
         "CH-14",
         "CH-31"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Every action is a two-step (select, then Confirm) with an explanatory sentence each time"
     },
     {
       "id": "F-089",
       "changes": [
         "CH-17"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Playable cards in hand get a green outline, but the side-panel option list is the only place the action is named ('Play Mountain ×2')"
     },
     {
       "id": "F-090",
       "changes": [
         "CH-53"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "'Settings' and 'Account & app settings' are two rows in the same menu"
     },
     {
       "id": "F-091",
@@ -539,28 +629,32 @@
         "CH-41",
         "CH-42"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Collapsing the choices panel hides a pending decision behind a one-line note"
     },
     {
       "id": "F-092",
       "changes": [
         "CH-34"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Sliders have 11 px labels and no value readout for Tilt/Zoom/Cards beyond the number; 'Appearance preview · this device' is unexplained"
     },
     {
       "id": "F-093",
       "changes": [
         "CH-52"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Coach opens an empty chat with four prompt chips and a send box, but the Coach is a stub per AGENTS.md"
     },
     {
       "id": "F-094",
       "changes": [
         "CH-86"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "'Game in progress · Rob · AI · Resume your table' is a small line inside the hero; the sidebar shows 'Game on · Turn 1 · Return'"
     },
     {
       "id": "F-095",
@@ -568,21 +662,24 @@
         "CH-59",
         "CH-86"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "'Your record 0 0 0' and 'Recent games: Your completed games will appear here' are the only results surfaces; the game-over screen was not reachable in this walk"
     },
     {
       "id": "F-096",
       "changes": [
         "CH-86"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Eleven fields with one required marker (Date); 'Finish', 'Your seat' default to 'Not recorded'; Bracket defaults to 2 regardless of the deck's bracket"
     },
     {
       "id": "F-097",
       "changes": [
         "CH-86"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Nothing in the form or after saving leads to a change: no 'dead card in hand → consider replacing' handoff"
     },
     {
       "id": "F-098",
@@ -591,14 +688,16 @@
         "CH-42",
         "CH-50"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Table view opens with the choices panel collapsed; the pending decision survives only as 'Actions · choice pending' in the top bar"
     },
     {
       "id": "F-099",
       "changes": [
         "CH-50"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Hand strip legend 'Land 0/2 · Creature 0/2 · Instant 0/0 · Other 0/2' has no key, and the hand cards render at about 60 px"
     },
     {
       "id": "F-100",
@@ -606,14 +705,16 @@
         "CH-42",
         "CH-50"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "The central life dial (40 | 40) is the most prominent element but reads as decoration: no labels, no turn or priority indicator attached"
     },
     {
       "id": "F-101",
       "changes": [
         "CH-43"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Seat panels say 'AI · 40 ☠0 · Chulane, Teller of Tales · AI's hand · 7' and 'You · Rob · 40 ☠0 · Krenko, Mob Boss · Deciding'; the 3D view's seat headers use a different order and wording"
     },
     {
       "id": "F-102",
@@ -621,70 +722,80 @@
         "CH-43",
         "CH-51"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Focus view hides the opponent entirely: no life, no board, no hand count for the AI seat"
     },
     {
       "id": "F-103",
       "changes": [
         "CH-51"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "No visible way to switch seats or leave Focus; the seat 'Focus' buttons from Table view are gone and the only exit is the Camera menu"
     },
     {
       "id": "F-104",
       "changes": [
         "CH-51"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "'0 mana open · land drop used' is the most useful status line on the board and it is 11 px in the corner"
     },
     {
       "id": "F-105",
       "changes": [
         "CH-88"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "There is no Admin panel. Production and staging both answer 404 to /api/admin/*, /api/me carries no admin flag, and no route or control named Admin exists; the only owner-gated control is 'Invite to CrankMagic' on staging"
     },
     {
       "id": "F-106",
       "changes": [
         "CH-88"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "'Profile' opens the Settings page, not a profile"
     },
     {
       "id": "F-107",
       "changes": [
         "CH-02"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Two pill buttons above a 17-row menu: the menu now has three visual grammars (pills, grouped rows, theme list)"
     },
     {
       "id": "F-108",
       "changes": [
         "CH-88"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Invite is a two-field form (Name, Email, Send) with no list of who has been invited, no state after Send, and no statement of what the invitee receives"
     },
     {
       "id": "F-109",
       "changes": [
         "CH-87"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "The Budget card lists 30+ deck rows with Budget / Cost / Counts and dominates the right column above AI Coach, Data and the Danger zone"
     },
     {
       "id": "F-110",
       "changes": [
         "CH-87"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "'Clear all data' is a one-click button with a caption ('Save a backup first.'); 'Delete account' asks for the typed address"
     },
     {
       "id": "F-111",
       "changes": [
         "CH-87"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "'Reduce motion' and 'Stop at every step of my turn' are buttons whose on/off state is not visible"
     },
     {
       "id": "F-112",
@@ -692,35 +803,40 @@
         "CH-53",
         "CH-87"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Settings is reached from three places with three labels: 'Settings' (menu), 'Profile' (pill), 'Account & app settings' (board avatar menu)"
     },
     {
       "id": "F-113",
       "changes": [
         "CH-87"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "The Confirmations dialog has no controls: 'Every step still asks before it acts.' plus a note"
     },
     {
       "id": "F-114",
       "changes": [
         "CH-87"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "The 'Actions' row is disabled with no reason, and the drag handles promised by the caption are not visible in the matrix"
     },
     {
       "id": "F-115",
       "changes": [
         "CH-87"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "'Saved view preferences' fills the history (11 of the first 13 rows) and 'Undo last change' would undo a view preference rather than a library change"
     },
     {
       "id": "F-116",
       "changes": [
         "CH-89"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "The seven tours are the best onboarding surface in the app and the only door to them is a menu row 17 rows deep"
     },
     {
       "id": "F-117",
@@ -728,7 +844,8 @@
         "CH-10",
         "CH-12"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "A targets question shows no source → effect → target relationship: the desk draws the acting card and lists the targets as text buttons"
     },
     {
       "id": "F-118",
@@ -736,49 +853,56 @@
         "CH-30",
         "CH-35"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Focusing an opponent's board is a 14 px-tall link ('View AI's board, 40 life', 1345×14) in Full view and 59×24 '⤢ Focus' buttons at 11 px in Table view; no pointer gesture on the board itself"
     },
     {
       "id": "F-119",
       "changes": [
         "CH-41"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Side-pane modules have fixed heights; the only drag handle is the pane's width ('Actions and boards width: drag, or use the arrow keys', 12×797)"
     },
     {
       "id": "F-120",
       "changes": [
         "CH-52"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "The Coach header on main is about four times the height it needs ('CrankMagic Coach · Sees your board, hand and the table · turn 1'); production's is one 49 px line"
     },
     {
       "id": "F-121",
       "changes": [
         "CH-52"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "The four prompt chips are 11 px text in 26 px-tall targets; on main they are hidden altogether"
     },
     {
       "id": "F-122",
       "changes": [
         "CH-41"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Module reorder in edit mode relies on a six-dot drag handle that is small and does not work well; the ↑ ↓ buttons already do the job"
     },
     {
       "id": "F-123",
       "changes": [
         "CH-41"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Module headers are not toggles: collapsing a side-pane module is a separate 33×40 button at 12 px, and a collapsed module cannot be resized"
     },
     {
       "id": "F-124",
       "changes": [
         "CH-55"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Prepared: after the creature half resolves prepared, the option to cast the copy as its spell half is not offered (Studious First-Year)"
     },
     {
       "id": "F-125",
@@ -789,14 +913,16 @@
         "CH-23",
         "CH-24"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "The block draft is blocker-first with text pairs ('Goblin #486 → Dream Stalker #475 · Remove'), a 'Clear this blocker' button, 'All block options' and one Confirm for the whole draft"
     },
     {
       "id": "F-126",
       "changes": [
         "CH-13"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Target options name the card and append the controller as a suffix only for permanents that are not yours ('Smuggler's Copter (Keith's)'); nothing groups targets by player"
     },
     {
       "id": "F-127",
@@ -804,21 +930,24 @@
         "CH-10",
         "CH-11"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "During a targets question the desk's large image is the source card and the title repeats its name ('Reclamation Sage: choose one target …'); the affected card is only a text button, and a second Confirm / Clear step follows"
     },
     {
       "id": "F-128",
       "changes": [
         "CH-32"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "Identical lands render as separate cards on the battlefield; #878 stacks identical options only inside a question"
     },
     {
       "id": "F-129",
       "changes": [
         "CH-33"
       ],
-      "status": "pending_verification"
+      "status": "pending_verification",
+      "summary": "The lands / battlefield split within a board is fixed, while three other dimensions already drag (pane width, boards' widths, hand size)"
     }
   ]
 }

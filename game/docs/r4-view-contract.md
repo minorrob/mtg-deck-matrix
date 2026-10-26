@@ -90,3 +90,14 @@ adds `byAttacker: [{attackerId, reasons: string[]}]`, mapping actual draft error
 `{ok: true, open: true, reasons: []}` shape stays unchanged. Only an answer publishes the selected blockers.
 
 Proof: `node tests/room-block-check.mjs` and `python game/tools/batch/breaks.py game/tools/batch/breaks-block-reasons.py`.
+
+## Public physical facts for land grouping (CH-32)
+
+A projected battlefield card adds `token: true` only for a token, and `attachments: [cardId, ...]` (empty when none).
+Each attachment ID must still name a current battlefield object with `attachedTo` equal to this current host ID.
+No name, ability or hidden-zone identity is added; face-down cards expose the public relationship and token status
+without exposing their face. Stale, departed and moved-to-another-host IDs are omitted, never mapped to a new object.
+These fields are absent outside the battlefield. Current derived types, power/toughness and keywords already describe
+an animated land; callers must not infer additional rules from these display facts.
+
+Proof: `node tests/engine-projection.mjs`; `python game/tools/batch/breaks.py game/tools/batch/breaks-public-attachments.py`.

@@ -41,7 +41,8 @@ try{
     ok(r.y>=drawer.y-1 && r.y+r.height<=drawer.y+drawer.height+1,'phone question remains fully scroll-reachable');
     if(process.env.UAT_SHOTS)await page.screenshot({path:path.join(process.env.UAT_SHOTS,'r4-desk-W01-phone-question.png')});
   }
-  const button=page.locator('[data-wf=C02]');await button.scrollIntoViewIfNeeded();const box=await button.boundingBox();ok(box.y>=0&&box.y+box.height<=(width<500?794:900),`${mode}: binding press reachable`);
+  const button=page.locator('[data-wf=C02]');await button.scrollIntoViewIfNeeded();const box=await button.boundingBox();ok(box.y>=0&&box.y+box.height<=(width<500?794:900),`${mode}/${width}: binding press reachable (${JSON.stringify(box)})`);
+  if(width<500)ok(await button.evaluate(el=>{const r=el.getBoundingClientRect();return [r.y+r.height/2,r.bottom-2].every(y=>el.contains(document.elementFromPoint(r.x+r.width/2,y)));}), 'phone binding action is not covered by the drawer tabs');
   if(process.env.UAT_SHOTS){mkdirSync(process.env.UAT_SHOTS,{recursive:true});await page.mouse.move(3,3);await page.waitForTimeout(360);await page.screenshot({path:path.join(process.env.UAT_SHOTS,`r4-desk-W01-${mode}-${width}.png`)});}
   await button.click();eq(sent.filter(s=>s.type==='act').map(s=>s.indices),[[0]],`${mode}: one verb press sends exact legal index once`);
   eq(errors,[],`${mode}: no page errors`);await context.close();

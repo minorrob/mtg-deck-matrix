@@ -8,14 +8,14 @@
 | CH-02 | S0 | integrated | fe65eb65 |
 | CH-03 | S0 | integrated | fe65eb65 |
 | CH-04 | S0 | integrated | 15e50e41 |
-| CH-10 | A | in_progress | Pending |
-| CH-11 | A | in_progress | Pending |
-| CH-12 | A | in_progress | Pending |
-| CH-13 | A | in_progress | Pending |
-| CH-14 | A | in_progress | Pending |
-| CH-15 | A | in_progress | Pending |
-| CH-16 | A | in_progress | Pending |
-| CH-17 | A | in_progress | Pending |
+| CH-10 | A | integrated | 0d23f48a |
+| CH-11 | A | integrated | 0d23f48a |
+| CH-12 | A | integrated | 0d23f48a |
+| CH-13 | A | integrated | 0d23f48a |
+| CH-14 | A | integrated | 0d23f48a |
+| CH-15 | A | integrated | 0d23f48a |
+| CH-16 | A | integrated | 0d23f48a |
+| CH-17 | A | integrated | 0d23f48a |
 | CH-20 | B | pending | Pending |
 | CH-21 | B | pending | Pending |
 | CH-22 | B | pending | Pending |
@@ -40,7 +40,7 @@
 | CH-48 | D1 | integrated | 113c4283 |
 | CH-50 | D2 | pending | Pending |
 | CH-51 | D2 | pending | Pending |
-| CH-52 | D2 | pending | Pending |
+| CH-52 | D2 | in_progress | c81805fc (board adoption pending) |
 | CH-53 | D2 | pending | Pending |
 | CH-55 | E | integrated | 8679027a |
 | CH-56 | E | integrated | a7f0fa5f |
@@ -50,7 +50,7 @@
 | CH-60 | E | integrated | 8679027a |
 | CH-70 | F1 | integrated | 6a5c2883 |
 | CH-71 | F1 | integrated | d9eed16f |
-| CH-72 | F1 | in_progress | Pending |
+| CH-72 | F1 | integrated | 7619743f |
 | CH-73 | F1 | integrated | d9eed16f |
 | CH-74 | F1 | integrated | 6a5c2883 |
 | CH-75 | F1 | integrated | d9eed16f |

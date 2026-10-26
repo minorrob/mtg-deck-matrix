@@ -30,11 +30,11 @@ question/action images document scrolling where both cannot fit at once, includi
 
 Proof (commands use installed Chrome and local fixture server):
 
-- `node tests/board-r4-decisions.mjs`: final count recorded with commit handoff; grouping, exact
+- `node tests/board-r4-decisions.mjs`: 118 checks on canonical integration; grouping, exact
   legal action, no preview sends, legal decline, Prepared inset, real primary/text contrast,
   keyboard cycling, revision guard and phone question/action reach.
 - `node tests/board-r2-actions-inspection.mjs`: 115 checks, private draft/payment/reveal and inspection.
-- `node tests/board-result-bridge.mjs`: 25 checks after canonical writes delegate to the shared
+- `node tests/board-result-bridge.mjs`: 28 checks after canonical writes delegate to the shared
   account-bound table writer. Board retains context/read/retry guards and legacy-only fallback.
 - Mutation specifications: `breaks-r4-decisions.py` and `breaks-board-result-bridge.py` under
   `game/tools/batch/`.
@@ -47,6 +47,5 @@ Independent engine review found two presentation seams, now guarded: ability sta
 own namespace (never object lookup by the same number), and a multi-target trigger combination
 retains its offered label rather than substituting the acting source card. `board-target-presentation`
 executes the actual helper against object/ability ID collision, current/departed source and missing
-ability cases (7 checks). The browser fixture includes two distinct trigger target combinations.
-Latest local refinements after the first A proof require coordinator browser/mutation execution;
-they are deliberately marked pending until the canonical run completes.
+ability cases (8 checks). The browser fixture includes two distinct trigger target combinations.
+Canonical browser proof passed 118 checks. The coordinator caught both the new premature-Next and phone-tab overlap regressions; the worker had caught the previous five. The phone sheet now reserves the drawer tab strip instead of hiding its binding button beneath it. Two pure target-identity mutations are also caught. Final combined B/C/D2 acceptance remains open.

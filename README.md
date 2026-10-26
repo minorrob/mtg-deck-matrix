@@ -1,19 +1,25 @@
 # CrankMagic
 
-**An Intelligent MtG: Commander Deck Creator & Card Libary**
+**An Intelligent MtG: Commander Deck Creator & Card Library**
 
 A private Commander deck workshop and card library. Plan a deck, review its composition
 and commander, track exactly which prints you own, reserve copies, receive orders,
 assemble physical decks, explore card relationships, and manage Sell / Trade records.
 
-Dark blue/graphite, Satoshi, a local wand/gear logo and animated aether mist. Semantic
-left-aligned tables support sorting, filtering, grouping, chosen columns and compact
-Actions menus. Navigation remains reachable while scrolling and on a phone.
+The r4 system uses Sapphire & Obsidian, Bronze & Basalt and Chalk & Coal, each with dark
+and light registers. Cinzel names decks, Lato carries the interface, and the CrankMagic
+wordmark stays unchanged. Semantic tables support sorting, filtering, grouping, chosen
+columns and compact Actions menus. Navigation remains reachable on a phone.
 
-Plain HTML, CSS and JavaScript. No package.json, build step, runtime framework,
-application server or account. User records live in transactional browser IndexedDB;
-full JSON backups, reviewed CSV/text/XLSX imports and enriched Excel exports give the
-user control of their data. Loading a plan never asserts ownership.
+The interface is plain HTML, CSS and JavaScript, without a runtime framework or build
+step. User records live in transactional browser IndexedDB. Cloud release profiles add
+account sync and the authoritative online rules host through Workers. JSON backups,
+reviewed CSV/text/XLSX imports and enriched Excel exports give the user control of their
+data. Loading a plan never asserts ownership.
+
+The current [r4 execution record](docs/r4-execution/README.md) links the approved decisions,
+requirements, source packets and evidence. Read [docs/ACTIVE.md](docs/ACTIVE.md) before
+working in a lane; the execution handoff distinguishes integrated work from release proof.
 
 ## Run
 
@@ -949,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 608 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 612 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1235,9 +1241,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `board-r2-actions-inspection` — `tests/board-r2-actions-inspection.mjs` (shared Actions/Boards, read-only card inspection, 3D defaults and saved preferences, draft continuity and expired private reveals)
 - `board-fullscreen-notes` — `tests/board-fullscreen-notes.mjs` (a card played by its click in every view, a land just played taken back by its double-click, the actions large over the table in Full screen, the others' plays held up for ten seconds, the two priority choices, the tabletop to 200%, the commander tax below the title bar)
 - `board-choice-stacks` — `tests/board-choice-stacks.mjs` (Rob, 2026-10-25: in a question for one or many, the same card is one stack, ×N, a click taking one and taking it back, with how many beside it where more than one may be chosen, never past the stack or the question's most; a tapped Goblin no twin of an untapped one; and the cards another seat plays held up beside the question, never over its controls, in Focus, Full screen and Table at three window sizes; `breaks-choice-stacks.py`)
-- `board-r4-decisions` — `tests/board-r4-decisions.mjs`
 - `board-r4-combat` — `tests/board-r4-combat.mjs`
-- `board-target-presentation` — `tests/board-target-presentation.mjs`
 - `board-settings-window` — `tests/board-settings-window.mjs` (Camera ▾ closed by a press outside it; Settings a window sized to the browser, ✕ at its top right, Cancel and Save at its bottom right, Save keeps and Cancel puts back)
 - `board-babylon` — `tests/board-babylon.mjs` (live Babylon/DOM projection alignment, scene resource disposal, graphics fallback, re-entry, and the Play lounge)
 - `board-3d-camera` — `tests/board-3d-camera.mjs` (the 3D camera by hand: the wheel zooms toward the pointer except over a row that scrolls, a mat dragged moves the view while the bare table still tilts, a held right button looks at the place and back on the motion's own clock with the DOM cards on the Babylon table every frame; a card's right-click menu of the room's offers in shorthand, from the keyboard too, in every view)
@@ -1617,3 +1621,14 @@ The `table-tabletop` suite checks the preview geometry and its browser interacti
 - `table-setup` — `tests/table-setup.mjs`
 
 - `board-result-bridge` — `tests/board-result-bridge.mjs`
+
+
+- `coach-layout` — `tests/coach-layout.mjs`: Coach keyboard, geometry, contrast and unchanged composer layout across all themes.
+
+- `crankmagic-coach` — `tests/crankmagic-coach.mjs`: Escaped Coach rendering and honest capability states.
+
+- `table-tabletop` — `tests/table-tabletop.mjs`: Play tabletop interaction and rendering contract.
+
+- `board-r4-decisions` — `tests/board-r4-decisions.mjs`: r4 behavior regression coverage.
+
+- `board-target-presentation` — `tests/board-target-presentation.mjs`: r4 behavior regression coverage.

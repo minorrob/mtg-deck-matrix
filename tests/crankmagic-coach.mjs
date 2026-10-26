@@ -11,7 +11,7 @@ const eq = (actual, expected, message) => {assert.deepEqual(actual, expected, me
 eq(render({open:false, available:true}), '', 'the caller can close the presenter without moving its state');
 for (const available of [false, undefined, 'true']) {
   const html = render({available});
-  ok(html.includes("The Coach isn't at this table yet.") && html.includes('href="#help"'), 'an unavailable service has an honest Help state');
+  ok(html.includes("The Coach isn't at this table yet.") && html.includes('data-action="page-help" data-help="table"'), 'an unavailable service has an honest Help state');
   ok(!html.includes('<textarea') && !html.includes('data-coach-form'), 'no composer is manufactured without explicit backend availability');
 }
 const html = render({available:true, context:'Sees your board (hand withheld) <script>', tableId:'"<&', prompts:['Explain the stack', '<img onerror="bad">'],
@@ -40,4 +40,14 @@ listeners.find(l=>l.type==='keydown').callback({key:'Escape',target:{closest:()=
 eq([details.open, focused, prevented, stopped, attrs['aria-expanded']], [false,1,1,1,'false'], 'Escape closes the active disclosure, restores summary focus and preserves the containing Coach');
 details.open = true; listeners.find(l=>l.type==='click').callback({target:{closest:()=>({closest:()=>details})}});
 eq([details.open,inputFocused], [false,1], 'choosing a question folds the overlay and returns focus to the composer while retaining the delegated action');
+/* Execute the real app's Help dispatcher with the real table Help entry; there is no #help route. */
+const opened = [], tableSource = readFileSync(new URL('../crankmagic-table.js',import.meta.url),'utf8'), appSource = readFileSync(new URL('../crankmagic-app.js',import.meta.url),'utf8');
+const helpScope = vm.createContext({C:{HELP:{}},actions:{},modal:(...args)=>opened.push(args),button:label=>label,esc:value=>value,dialog:{classList:{add:()=>{}}}});
+vm.runInContext(tableSource.slice(tableSource.indexOf('C.HELP.table ='),tableSource.indexOf('  const cloudPlay')),helpScope);
+helpScope.HELP=helpScope.C.HELP;
+vm.runInContext(appSource.slice(appSource.indexOf("actions['page-help']="),appSource.indexOf('/* THE GLOSSARY')),helpScope);
+const helpHook=/data-action="([^"]+)" data-help="([^"]+)"/.exec(render({available:false}));
+ok(helpHook && typeof helpScope.actions[helpHook[1]]==='function','unavailable Coach uses a registered Help action');
+helpScope.actions[helpHook[1]]({dataset:{help:helpHook[2]}});
+ok(opened[0]?.[0].includes('Play: the table and the board')&&opened[0]?.[1].includes('<h3>Keys</h3>'),'Coach Help opens actual table rules and bound keys');
 console.log(`crankmagic-coach: ${checks} checks passed`);
