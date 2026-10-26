@@ -1573,6 +1573,9 @@ try {
   });
   ok(phoneGeo.rail === 52 && phoneGeo.seats === 110 && phoneGeo.board[0] === 844 && phoneGeo.board[1] === 390 && phoneGeo.sideways === 0, `on a phone held sideways: the 52px rail along the top, the seats a 110px column, the board the whole screen (${phoneGeo.board.join("×")})`);
   ok(phoneGeo.views === 0 && phoneGeo.seatCount === 2, "Focus is the only view, and the strip holds every seat");
+  /* A drawer opened on the desktop stays open across resize. Close it through its native spine before
+     exercising the phone battlefield beneath it; an overlaid drawer correctly receives its own wheel. */
+  for(const action of ['board-stage-rail','board-stage-side']){const tab=maya.page.locator(`.cm-drawer-tab[data-action="${action}"]`);if(await tab.count()&&await tab.getAttribute('aria-expanded')==='true')await tab.click();}
   /* The battlefield and its lands at full width, scrolling within their own frame down to the piles, the pill and what
      she is asked staying where they are. */
   /* scrolled as a person scrolls it, by the wheel over it: a script's scrollTop moves even a frame that can't scroll */
