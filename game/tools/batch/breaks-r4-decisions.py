@@ -1,6 +1,7 @@
 # Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE.
 SUITES = ['tests/board-r4-decisions.mjs']
 BREAKS = [
+ ('phone drawer covers binding action', 'crankmagic-stage.css', 'inset:auto 0 50px;width:100%;height:auto;max-height:55dvh', 'inset:auto 0 0;width:100%;height:auto;max-height:55dvh'),
  ('Next commits before C02', 'crankmagic-board.js', 'targetReviewing=true;draw();', 'targetReviewing=true;send({indices:[...picked]});draw();'),
 
  ('controller zero treated as absent', 'crankmagic-board.js', 'stack[0].controllerId ?? stack[0].targetGroups', 'stack[0].controllerId || stack[0].targetGroups'),
