@@ -15,7 +15,7 @@
   function render({open = true, available = false, thread = [], typing = false, prompts = [], moreOpen = false, questionsOpen = false, tableId = '', context = ''} = {}) {
     if (!open) return '';
     const header = `<header class="cm-coach-head"><h2 class="cm-section-title">CrankMagic Coach</h2><details class="cm-coach-more"${moreOpen ? ' open' : ''}><summary aria-label="More Coach options" aria-expanded="${!!moreOpen}">⋯</summary><div>${button('Clear chat', 'board-coach-clear')}</div></details><button type="button" class="v-button compact" data-action="board-coach" aria-label="Close the Coach">✕</button></header>`;
-    if (available !== true) return header + `<section class="cm-coach-unavailable"><p>The Coach isn't at this table yet. Rules help and bound keys are under Help.</p><a class="v-button compact" href="#help">Help</a></section>`;
+    if (available !== true) return header + `<section class="cm-coach-unavailable"><p>The Coach isn't at this table yet. Rules help and bound keys are under Help.</p><button type="button" class="cm-link" data-action="page-help" data-help="table">Help</button></section>`;
     const bubbles = list(thread).map((message, index) => message.divider ? `<li class="cm-coach-divider"><span>${esc(message.divider)}</span></li>`
       : message.from === 'coach' ? `<li class="cm-coach-msg is-coach"><span class="cm-coach-avatar" aria-hidden="true">✦</span><div class="cm-coach-said"><p>${said(message.text)}</p>${extras(message, index, tableId)}</div></li>`
       : `<li class="cm-coach-msg is-${message.from === 'you' ? 'you' : 'system'}"><p>${esc(message.text)}</p></li>`).join('');

@@ -57,7 +57,7 @@ try {
   }
   await page.evaluate(() => {const host=document.getElementById('cm-board-coach');host.innerHTML=CrankCoach.render({available:false});CrankCoach.bind(host);});
   eq(await page.locator('textarea').count(),0,'unavailable backend has no composer in the real DOM');
-  eq(await page.getByRole('link',{name:'Help',exact:true}).getAttribute('href'),'#help','unavailable backend exposes the real Help path');
+  eq(await page.getByRole('button',{name:'Help',exact:true}).getAttribute('data-help'),'table','unavailable backend dispatches the registered table Help action');
   eq(errors,[],'the presenter fixture has no browser exceptions');
   console.log(`coach-layout: ${checks} checks passed`);
 } finally {await context.close();await close();}
