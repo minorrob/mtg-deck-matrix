@@ -1060,3 +1060,12 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board[data-hud-large] .cm-stage-priority{flex:1 0 280px;white-space:normal}
 #matrix-v2 .cm-board .cm-board-chip{white-space:normal;max-width:100%;box-sizing:border-box}
 #matrix-v2 .cm-board .cm-board-tabletop{padding-left:calc(42px*var(--hud-scale,1) + 14px);padding-right:calc(42px*var(--hud-scale,1) + 14px)}
+@media(min-width:1400px){
+ #matrix-v2 .cm-board[data-hud-large] .cm-stage-top{flex-wrap:nowrap;gap:8px}
+ #matrix-v2 .cm-board[data-hud-large] .cm-stage-top>.cm-board-turnsteps{flex:1 1 300px;min-width:300px}
+ #matrix-v2 .cm-board[data-hud-large] .cm-stage-priority{flex:0 1 220px;min-width:170px;white-space:nowrap}
+ #matrix-v2 .cm-board[data-hud-large] .cm-stage-self .cm-seat-portrait{width:48px;height:48px}
+ #matrix-v2 .cm-board[data-hud-large] .cm-stage-self .cm-vitals>b{font-size:calc(15px*var(--hud-scale,1))}
+ #matrix-v2 .cm-board[data-hud-large] .cm-stage-self .cm-seat-identity{max-width:112px}
+ #matrix-v2 .cm-board[data-hud-large] .cm-stage-self .cm-mat-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+}
