@@ -1125,7 +1125,8 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board[data-view=full]>.cm-board-panegrip{top:var(--full-pane-top);height:calc(100% - var(--full-pane-top))}
 #matrix-v2 .cm-board[data-view=full] .cm-stage-region>.cm-decision-slot{top:calc(var(--full-action-h,0px) + 24px);max-height:calc(100% - var(--full-action-h,0px) - 36px)}
 #matrix-v2 .cm-board[data-view=full] .cm-stage-region>.cm-decision-slot>#cm-board-decision{max-height:min(65dvh,650px,calc(100dvh - var(--full-pane-top) - 20px))}
-#matrix-v2 .cm-board .cm-stage-actions .v-button{font-size:calc(17px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-stage-actions .v-button{font-size:calc(17px*var(--hud-scale,1));min-height:49px}
+@media(max-width:1100px){#matrix-v2 .cm-board .cm-stage-actions .v-button{min-height:44px}}
 #matrix-v2 .cm-board .cm-stage-actions small,#matrix-v2 .cm-board :is(.cm-stage-caption,.cm-stage-life-list,.cm-stage-life){font-size:calc(15px*var(--hud-scale,1))}
 #matrix-v2 .cm-board .cm-stage-caption{max-width:max(72px,calc((100% - var(--full-action-w,0px))/2 - 30px));box-sizing:border-box;line-height:1.15}
 #matrix-v2 .cm-board .cm-stage-caption>span{max-width:100%;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
