@@ -850,3 +850,6 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-target-stack>img{animation:non
 #matrix-v2 .cm-board .cm-text-action{background:transparent;color:var(--color-ink);border-color:transparent;font-weight:700;text-decoration:underline;text-underline-offset:3px;padding-inline:6px}
 #matrix-v2 .cm-board .cm-text-action:hover{background:var(--color-raised)}
 #matrix-v2 .cm-board .cm-text-action:focus-visible{outline:2px solid var(--color-aether);outline-offset:2px}
+
+/* A reviewed choice has no option list; an empty legacy list must not reserve 120px. */
+#matrix-v2 .cm-board .cm-board-options:empty{display:none!important;min-height:0}
