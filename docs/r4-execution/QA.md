@@ -44,7 +44,24 @@ composer viewport/hit access, retained draft/caret/node and delayed capability e
 continuation and final CI remain separate gates; this targeted result does not claim either passed.
 
 Initial D1 review found phone battlefield labels overlapping at 200%, small desktop chrome, broken-image
-portrait glyphs and a misplaced Table menu. Corrected D1 screenshots and assertions now cover those cases (111 shell checks). The first 67 passing interaction checks did not establish visual acceptance. The actual Study Babylon table was inspected, and the actionBar primary contrast was subsequently corrected in A. Final combined screenshots remain required.
+portrait glyphs and a misplaced Table menu. Corrected D1 screenshots and assertions cover those cases.
+The combined board-r4-shell suite now passes 111 checks, with genuine rear-row clipping repaired and
+EX-17's approved tapped corners preserved. The coordinator inspected its Full, Table and Focus HUD200
+captures and phone390 lands/HUD200 capture under workbench/r4-play-evidence-20261026/combined-rear-coach/.
+Those are bounded fixture captures with placeholder card art; final CI and staging are separate gates.
+
+The five migrated legacy baselines pass: table-camera-layout (three widths, phone and persistence),
+board-r4-shell111, board-hand-table109, board-3d-camera106 and board-babylon90. The wheel tests now point
+at an actual unobstructed table plane rather than a card row reserved for scrolling. Menu assertions
+retain zero pre-binding sends and one exact binding send. Current r4 Account/Table/Camera routes, native
+Questions dismissal and the approved readable sizing offset replace older setup assumptions. No failed
+native input is replaced with a forced click.
+
+Later Coach repairs 991ccc29 and 9ce2148d preserve async disclosure focus and return Clear's keyboard
+focus to More after clearing. The final Focus component run passes 42 native checks, including pending
+replies with More/Clear/Questions focused, the Clear-to-summary handoff, draft/caret and drawer scroll.
+The browser's Menu-key event is suppressed within the custom card menu (0fff1f12), with editing menus
+elsewhere preserved; the existing native 3D regression failed before that repair and passed afterward.
 
 ## Workshop and shared-menu local evidence
 
