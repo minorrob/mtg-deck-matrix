@@ -43,7 +43,7 @@ const prefs={preferences:{play:{overlay:37,sidePane:{version:2,owner:'another@ex
 const prefScope={C:{state:prefs,signedInAs:()=> 'player@example.com',notice(){},async commit(command){prefs.preferences={...prefs.preferences,...command.values};}},draw(){}};
 vm.createContext(prefScope);vm.runInContext(preferenceCode,prefScope);
 const layout=()=>JSON.parse(JSON.stringify(vm.runInContext('paneLayout()',prefScope)));
-assert.deepEqual(layout(),{left:['actions'],right:['table','inspect','stack','history','counter']},'another account never inherits the saved owner layout');
+assert.deepEqual(layout(),{left:['actions'],right:['stack','history','coach']},'another account gets the r4 default without inheriting the saved owner layout');
 await vm.runInContext('savePaneModules({left:["history"],right:["stack","table"]})',prefScope);
 assert.deepEqual(layout(),{left:['actions','history'],right:['stack','table']},'saving preserves drawer placement and ordering');
 assert.equal(prefs.preferences.play.overlay,37,'saving modules does not replace unrelated Play settings');
@@ -56,7 +56,7 @@ if(process.env.TABLETOP_PURE_ONLY==='1')process.exit(0);
 import {spawn} from "node:child_process";
 import {openBrowser} from "./uat/browser-runner.mjs";
 const {browser, close} = await openBrowser({name:"table-tabletop", flag:"GEOMETRY_REQUIRED"});
-const server = spawn(process.execPath, ["tools/play-tabletop-preview.mjs"], {env:{...process.env,PREVIEW_PORT:"0",PREVIEW_HAND_SIZE:"9"}, stdio:["ignore","pipe","pipe"]});
+const server = spawn(process.execPath, ["tools/play-tabletop-preview.mjs"], {env:{...process.env,PREVIEW_PORT:"0",PREVIEW_HAND_SIZE:"24"}, stdio:["ignore","pipe","pipe"]});
 try {
   const address = await Promise.race([
     new Promise((resolve,reject)=>{server.stdout.on("data",d=>{const m=String(d).match(/http:\/\/localhost:(\d+)/);if(m)resolve(`http://127.0.0.1:${m[1]}`);});server.once("error",reject);server.stderr.on("data",d=>reject(new Error(String(d))));}),
@@ -67,6 +67,9 @@ try {
   const libraries = new Map(); let version=0;
   async function accountRoutes(p,email='preview@example.com') {
     await p.route('**/api/me',r=>r.fulfill({json:{email}}));
+    // Explicit enabled Coach fixture: no provider or live account request is made.
+    await p.route('**/api/ai-coach',r=>r.fulfill({json:{open:true}}));
+    await p.route('**/api/ai/coach',r=>r.fulfill({json:{answer:'Isolated recorded-view fixture.'}}));
     await p.route('**/api/library**',async r=>{
       const stored=libraries.get(email), req=r.request();
       if(req.method()==='PUT') {
@@ -77,6 +80,20 @@ try {
     });
   }
   await accountRoutes(page);
+  const MODULE_IDS=['history','coach','counter','resources','mana','stack','inspect','table','recommended','chat'];
+  const MODULE_TITLES=['History','AI Coach','Counter-Intel','Resources','Mana Pool','On the Stack','Card Preview','Table Vitals','Recommended Actions','Chat','Actions'];
+  const openDrawerSettings=async(p=page)=>{
+    if(!await p.locator('#cm-board .cm-stage-camera>div').count())await p.locator('#cm-board [data-action=board-camera]').first().click();
+    await p.locator('#cm-board [data-action=board-tools]').click();
+    await p.getByRole('button',{name:'Set Side Drawer Modules',exact:true}).click();
+    await p.locator('#cm-drawer-settings').waitFor();
+  };
+  const setModules=async({left=[],right=[]})=>{
+    await openDrawerSettings();
+    for(const id of MODULE_IDS)await page.locator(`input[name="module-${id}"][value="${left.includes(id)?'left':right.includes(id)?'right':'none'}"]`).check();
+    await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
+    await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
+  };
   page.on("pageerror",e=>errors.push(e.message));
   /* Rob's art mats, one to a seat, the viewed seat's in front: each seat's mat draws that seat's own picture, cropped to
      the mat (cover), never stretched, and at full strength, with nothing tinted over it (Rob, 2026-10-18). The preview
@@ -102,13 +119,15 @@ try {
   await page.goto(`${address}/index.html#table?id=tablepreview01`);
   await page.locator('.cm-stage-region[data-renderer="webgl"]').waitFor();
   assert.equal(await page.locator('[data-action="board-3d"], [data-action="board-stage"]').count(),0,'Full screen has no 3D switch');
-  assert.equal(await page.locator('.cm-stage-fan [data-card]').count(),7,'only seven own cards enter the fan');
   const fanIndices=()=>page.locator('.cm-stage-fan-slot').evaluateAll(els=>els.map(el=>Number(el.dataset.handIndex)));
-  assert.deepEqual(await fanIndices(),[0,1,2,3,4,5,6]);
+  await page.waitForFunction(()=>document.querySelectorAll('.cm-stage-fan-slot').length>=9);
+  const shown=(await fanIndices()).length;
+  assert.ok(shown>=9&&shown<24,'the wide responsive hand shows at least nine and this crowded fixture needs paging');
+  assert.deepEqual(await fanIndices(),Array.from({length:shown},(_,i)=>i),'the fitted hand begins at its first own card');
   await page.getByRole('button',{name:'Previous hand card',exact:true}).click();
-  assert.deepEqual(await fanIndices(),[8,0,1,2,3,4,5],'previous wraps to the end');
+  assert.deepEqual(await fanIndices(),[23,...Array.from({length:shown-1},(_,i)=>i)],'previous wraps to the final own card at current fitted capacity');
   await page.getByRole('button',{name:'Next hand card',exact:true}).click();
-  assert.deepEqual(await fanIndices(),[0,1,2,3,4,5,6],'next wraps back through the start');
+  assert.deepEqual(await fanIndices(),Array.from({length:shown},(_,i)=>i),'next wraps back through the start');
   if(await page.locator('.cm-stage-rail.is-open').count()) await page.locator('.cm-stage-left').click();
   assert.equal(await page.locator('.cm-stage-rear').count(),3,"all other seats sit across the back");
   /* ROB-98 (Rob, Oct 18: "Go with the 48px land spacing"): every land on the front mat is reached by a pointer at its upper
@@ -139,7 +158,7 @@ try {
   await page.setViewportSize({width:1400,height:900});await page.waitForTimeout(200);
   await page.evaluate(()=>{globalThis.__canvas = document.querySelector('.cm-stage-canvas');});
   const before = await page.locator('.cm-stage-region').boundingBox();
-  await page.getByRole('button',{name:'Toggle table panel',exact:true}).click();
+  await page.locator('.cm-stage-right[data-action=board-stage-side]').click();
   assert.deepEqual(await page.locator('.cm-stage-region').boundingBox(),before,"the panel overlays rather than resizing the board");
   const own=await matArt();
   assert.deepEqual(own.map(s=>s.seat).toSorted(),[0,1,2,3],"all four seats' mats are on the table");
@@ -182,16 +201,16 @@ try {
       })).jsonValue();
       assert.equal(Math.round(side.y+side.height),800,'right pane reaches the bottom through the hand area');
       assert.ok(camera.x+camera.width<=side.x-8,'both camera states stay beside the expanded pane');
-      await page.getByRole('button',{name:'Toggle table panel',exact:true}).click();
+      await page.locator('.cm-stage-right[data-action=board-stage-side]').click();
       const shut=await page.locator('.cm-stage-camera').boundingBox();
       assert.ok(shut.x>camera.x+side.width-2,'camera follows the pane back to the window edge');
-      await page.getByRole('button',{name:'Toggle table panel',exact:true}).click();
+      await page.locator('.cm-stage-right[data-action=board-stage-side]').click();
     }
     await page.getByRole('button',{name:'Camera',exact:false}).click();
-    await page.getByRole('button',{name:'Toggle board tools',exact:true}).click();
+    await page.locator('[data-action=board-stage-rail]').first().click();
     const rail=await page.locator('.cm-stage-rail').boundingBox();
     assert.equal(Math.round(rail.y+rail.height),800,'left pane also reaches the bottom');
-    await page.getByRole('button',{name:'Toggle board tools',exact:true}).click();
+    await page.locator('[data-action=board-stage-rail]').first().click();
   }
   await page.setViewportSize({width:1400,height:900});
   await page.waitForFunction(()=>globalThis.__preview?.signedInAs?.());
@@ -200,16 +219,22 @@ try {
     await __preview.commit({type:'preferences',values:{play:{overlay:37,stepByStep:true}}},{renderView:false});
   });
   const moduleOrder=()=>page.locator('.cm-stage-side .cm-stage-module').evaluateAll(els=>els.map(el=>el.dataset.module));
-  await page.getByRole('button',{name:'Arrange modules',exact:true}).click();
+  await setModules({right:['history','counter','stack','inspect','table']});
+  if(!await page.locator('.cm-stage-side.is-open').count())await page.locator('.cm-stage-right[data-action=board-stage-side]').click();
+  assert.deepEqual(await moduleOrder(),['stack','history','counter','inspect','table'],'Settings preserves existing module order and appends newly enabled modules');
   await page.getByRole('button',{name:'Remove Card Preview',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('[data-module="inspect"]'));
   await page.getByRole('button',{name:'Remove Counter-Intel',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('[data-module="counter"]'));
-  await page.getByRole('button',{name:'Move On the Stack up',exact:true}).click();
-  await page.waitForFunction(()=>document.querySelector('.cm-stage-side .cm-stage-module').dataset.module==='stack');
+  await page.getByRole('button',{name:'Move Table Vitals up',exact:true}).click();
+  await page.waitForFunction(()=>document.querySelectorAll('.cm-stage-side .cm-stage-module')[1]?.dataset.module==='table');
   assert.deepEqual(await moduleOrder(),['stack','table','history']);
-  await page.locator('[data-module-drag="history"]').dragTo(page.locator('.cm-stage-module[data-module="stack"]'),{targetPosition:{x:20,y:5}});
-  await page.waitForFunction(()=>document.querySelector('.cm-stage-side .cm-stage-module').dataset.module==='history');
+  // Current Settings explicitly promises native arrow controls, not an invisible drag handle.
+  for(let i=0;i<2;i++){
+    const up=page.getByRole('button',{name:'Move History up',exact:true});await up.focus();await up.press('Enter');
+    await page.waitForFunction(n=>Array.from(document.querySelectorAll('.cm-stage-side .cm-stage-module')).findIndex(el=>el.dataset.module==='history')===n,1-i);
+  }
+  assert.deepEqual(await moduleOrder(),['history','stack','table'],'native keyboard order controls can bring History to the front');
   for(let i=0;i<2;i++) {
     await page.getByRole('button',{name:'Move History down',exact:true}).click();
     await page.waitForFunction(n=>Array.from(document.querySelectorAll('.cm-stage-side .cm-stage-module')).findIndex(el=>el.dataset.module==='history')===n,i+1);
@@ -219,37 +244,31 @@ try {
   await page.evaluate(()=>__preview.actions['account-sync']());
   assert.ok(libraries.get('preview@example.com')?.version.body,'account sync sends the saved preferences in its actual backup');
   await page.reload();await page.locator('.cm-stage-canvas').waitFor();
-  await page.getByRole('button',{name:'Toggle table panel',exact:true}).click();
+  await page.locator('.cm-stage-right[data-action=board-stage-side]').click();
   assert.deepEqual(await moduleOrder(),['stack','table','history'],'layout survives reloading the game');
   const second=await browser.newPage({viewport:{width:1400,height:900}});await accountRoutes(second);
   await second.goto(`${address}/index.html#table?id=tablepreview01`);
   await second.waitForFunction(()=>globalThis.__preview?.state.preferences?.play?.sidePane?.right?.[0]==='stack');
   await second.locator('.cm-stage-canvas').waitFor();
-  await second.getByRole('button',{name:'Toggle table panel',exact:true}).click();
+  await second.locator('.cm-stage-right[data-action=board-stage-side]').click();
   assert.deepEqual(await second.locator('.cm-stage-side .cm-stage-module').evaluateAll(els=>els.map(el=>el.dataset.module)),['stack','table','history'],'a fresh browser restores the account layout through cloud sync');
   await second.close();
   // Another player using this browser must not inherit this account's pane.
   await accountRoutes(page,'other@example.com');await page.reload();await page.locator('.cm-stage-canvas').waitFor();
-  await page.getByRole('button',{name:'Toggle table panel',exact:true}).click();
-  assert.deepEqual(await moduleOrder(),['table','inspect','stack','history','counter'],'a different profile gets its own layout');
+  await page.locator('.cm-stage-right[data-action=board-stage-side]').click();
+  assert.deepEqual(await moduleOrder(),['stack','history','coach'],'a different profile gets the r4 default without another owner layout');
   await accountRoutes(page);await page.reload();await page.locator('.cm-stage-canvas').waitFor();
   await page.locator('[data-action=account-keep-cloud]').click();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
-  await page.getByRole('button',{name:'Toggle table panel',exact:true}).click();
-  await page.getByRole('button',{name:'Arrange modules',exact:true}).click();
-  const openDrawerSettings=async()=>{
-    await page.getByRole('button',{name:'Profile menu',exact:true}).click();
-    await page.getByRole('button',{name:'Settings',exact:true}).click();
-    await page.getByRole('button',{name:'Set Side Drawer Modules',exact:true}).click();
-  };
+  await page.locator('.cm-stage-right[data-action=board-stage-side]').click();
   await openDrawerSettings();
-  for(const id of ['history','coach','counter','resources','stack','inspect','table','recommended','chat']) await page.locator(`input[name="module-${id}"][value="${['table','inspect','stack','history','counter'].includes(id)?'right':'none'}"]`).check();
+  for(const id of MODULE_IDS) await page.locator(`input[name="module-${id}"][value="${['table','inspect','stack','history','counter'].includes(id)?'right':'none'}"]`).check();
   await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
   assert.equal(await page.locator('.cm-module-add, [data-action=board-module-add], [data-action=board-module-reset]').count(),0,'drawer configuration uses Settings without taking module space');
   assert.equal(await page.locator('.cm-stage-rail [data-action="board-tools"]').count(),0,'Settings is no longer in the left drawer');
   /* Skip to end stands over the table in Full screen (Rob's fullscreen notes, Oct 21), the profile at the strip's right. */
-  const profile=await page.getByRole('button',{name:'Profile menu',exact:true}).boundingBox(), skip=await page.locator('.cm-stage-actions [data-action="board-skip"]').boundingBox();
+  const profile=await page.locator('#cm-board [data-action=board-profile]').first().boundingBox(), skip=await page.locator('.cm-stage-actions [data-action="board-skip"]').boundingBox();
   assert.ok(profile.x>skip.x && profile.y<58 && skip.y>=58,'profile control sits at the right of the top strip, Skip to end over the table below it');
   await openDrawerSettings();
   await page.getByRole('radio',{name:'History: Left',exact:true}).check();
@@ -260,7 +279,7 @@ try {
   await page.getByRole('radio',{name:'Counter-Intel: None',exact:true}).check();
   await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
-  if(!await page.locator('.cm-stage-rail.is-open').count()) await page.getByRole('button',{name:'Toggle board tools',exact:true}).click();
+  if(!await page.locator('.cm-stage-rail.is-open').count()) await page.locator('[data-action=board-stage-rail]').first().click();
   assert.equal(await page.locator('.cm-stage-rail .cm-stage-module[data-module="history"]').count(),1,'radio moves History into the left drawer');
   assert.equal(await page.locator('.cm-stage-module[data-module="counter"]').count(),0,'None hides Counter-Intel');
   for(const open of [true,false]) {
@@ -269,16 +288,16 @@ try {
       return {left:open?r('.cm-stage-rail').right:r('#cm-board').left,leftArrow:r('.cm-stage-left').left,right:open?r('.cm-stage-side').left:r('#cm-board').right,rightArrow:r('.cm-stage-right').right};
     },open);
     assert.ok(Math.abs(edges.left-edges.leftArrow)<1 && Math.abs(edges.right-edges.rightArrow)<1,`handles stay attached to drawer edges when ${open?'open':'collapsed'}`);
-    if(open){await page.getByRole('button',{name:'Toggle board tools',exact:true}).click();await page.getByRole('button',{name:'Toggle table panel',exact:true}).click();}
+    if(open){await page.locator('[data-action=board-stage-rail]').first().click();await page.locator('.cm-stage-right[data-action=board-stage-side]').click();}
   }
-  await page.getByRole('button',{name:'Toggle table panel',exact:true}).click();
+  await page.locator('.cm-stage-right[data-action=board-stage-side]').click();
   await openDrawerSettings();
-  for(const id of ['history','coach','counter','resources','stack','inspect','table','recommended','chat']) await page.locator(`input[name="module-${id}"][value="${['table','inspect','stack','history','counter'].includes(id)?'right':'none'}"]`).check();
+  for(const id of MODULE_IDS) await page.locator(`input[name="module-${id}"][value="${['table','inspect','stack','history','counter'].includes(id)?'right':'none'}"]`).check();
   await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
   await page.waitForFunction(()=>document.querySelectorAll('.cm-stage-rail .cm-stage-module').length===1);
   await page.evaluate(()=>{globalThis.__canvas=document.querySelector('.cm-stage-canvas');});
-  await page.getByRole('button',{name:'Close table panel',exact:true}).click();
+  await page.locator('#cm-stack-drawer > header [data-action=board-stage-side]').click();
   await page.locator('.cm-stage-seat-label').first().click();
   assert.match(await page.locator('.cm-stage-fan').getAttribute('aria-label'),/Friend's hand, 7 cards/);
   const turned=await matArt();
@@ -379,7 +398,7 @@ try {
   assert.ok(handEdges.top<handEdges.board,'the hand overlaps the table front at the default camera');
   await openDrawerSettings();
   const titles=await page.locator('#cm-drawer-settings tbody th').allTextContents();
-  assert.deepEqual(titles,['History','AI Coach','Counter-Intel','Resources','On the Stack','Card Preview','Table Vitals','Recommended Actions','Chat','Actions']);
+  assert.deepEqual(titles,MODULE_TITLES);
   for(const title of ['AI Coach','Chat']) await page.getByRole('radio',{name:`${title}: Left`,exact:true}).check();
   await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
@@ -415,7 +434,7 @@ try {
   await page.locator('.cm-stage-region[data-renderer="webgl"]').waitFor();
   assert.equal(await page.locator('canvas.cm-stage-canvas').count(),1,"returning to desktop mounts one surface");
   await page.setViewportSize({width:1400,height:900});
-  for(const [selector,label] of [['.cm-stage-rail','Toggle board tools'],['.cm-stage-side','Toggle table panel']]) if(await page.locator(`${selector}.is-open`).count()) await page.getByRole('button',{name:label,exact:true}).click();
+  for(const [selector,action] of [['.cm-stage-rail','board-stage-rail'],['.cm-stage-side','board-stage-side']]) if(await page.locator(`${selector}.is-open`).count()) await page.locator(`.cm-stage-handle[data-action=${action}]`).click();
   if(!await page.getByRole('combobox',{name:'Background',exact:true}).count()) await page.getByRole('button',{name:'Camera',exact:false}).click();
   await page.getByRole('combobox',{name:'Background',exact:true}).selectOption({index:0});
   await page.getByRole('button',{name:'Camera',exact:false}).click();
@@ -439,7 +458,7 @@ try {
   await page.emulateMedia({reducedMotion:'no-preference'});
   await page.waitForFunction(()=>document.querySelector('.cm-stage-environment video')?.currentTime>0);
   await page.evaluate(()=>globalThis.__backgroundVideo=document.querySelector('.cm-stage-environment video'));
-  await page.getByRole('button',{name:'Toggle table panel',exact:true}).click();
+  await page.locator('.cm-stage-right[data-action=board-stage-side]').click();
   assert.ok(await page.evaluate(()=>__backgroundVideo===document.querySelector('.cm-stage-environment video')),'redrawing drawers preserves the video element');
   await page.emulateMedia({reducedMotion:'reduce'});
   await page.waitForFunction(()=>document.querySelector('.cm-stage-environment video')?.paused);
@@ -447,10 +466,10 @@ try {
   // An actual recorded two-entry stack: newest resolves first, every entry gets a readable image.
   for(let i=0;i<20;i++) await page.request.post(`${address}/preview/frame`,{data:'1'});
   await openDrawerSettings();
-  for(const id of ['history','coach','counter','resources','stack','inspect','table','recommended','chat']) await page.locator(`input[name="module-${id}"][value="${id==='stack'?'left':id==='inspect'?'right':'none'}"]`).check();
+  for(const id of MODULE_IDS) await page.locator(`input[name="module-${id}"][value="${id==='stack'?'left':id==='inspect'?'right':'none'}"]`).check();
   await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
-  for(const [selector,label] of [['.cm-stage-rail','Toggle board tools'],['.cm-stage-side','Toggle table panel']]) if(!await page.locator(`${selector}.is-open`).count()) await page.getByRole('button',{name:label,exact:true}).click();
+  for(const [selector,action] of [['.cm-stage-rail','board-stage-rail'],['.cm-stage-side','board-stage-side']]) if(!await page.locator(`${selector}.is-open`).count()) await page.locator(`.cm-stage-handle[data-action=${action}]`).click();
   await page.locator('.cm-stage-hand .cm-bcard').first().focus();await page.locator('.cm-stage-hand .cm-bcard').first().press('Enter');await page.mouse.move(700,20);
   assert.deepEqual(await page.locator('.cm-stack-summary strong').allTextContents(),['Intruder Alarm','Dundoolin Weaver'],'stack entries are in resolution order');
   assert.deepEqual(await page.locator('.cm-stack-position').allTextContents(),['#1','#2'],'each entry has its own stack position');
@@ -534,9 +553,9 @@ try {
         p.on("websocket",ws=>ws.on("framesent",f=>sent.push(String(f.payload))));
         await p.goto(`${at}/index.html#table?id=tablepreview01`);
         await p.waitForFunction(n=>document.querySelectorAll('.cm-stage-rail #cm-board-decision .cm-board-options>button').length===n,count);
-        const title='#cm-board-decision>h3', tally='#cm-board-decision .cm-board-decision-foot>.cm-muted', confirm='#cm-board-decision [data-action="board-confirm"]';
+        const title='#cm-board-decision>h2', tally='#cm-board-decision .cm-board-decision-foot>.cm-muted', confirm='#cm-board-decision [data-action="board-confirm"]';
         for(const s of [title,tally,confirm]) assert.ok((await reach(p,s)).reached,`${where}: ${s} is on screen and takes the pointer`);
-        const list=await p.evaluate(()=>{const o=document.querySelector('#cm-board-decision .cm-board-options'),r=o.getBoundingClientRect(),first=o.firstElementChild.getBoundingClientRect(),h=document.querySelector('#cm-board-decision>h3').getBoundingClientRect();
+        const list=await p.evaluate(()=>{const o=document.querySelector('#cm-board-decision .cm-board-options'),r=o.getBoundingClientRect(),first=o.firstElementChild.getBoundingClientRect(),h=document.querySelector('#cm-board-decision>h2').getBoundingClientRect();
           return {x:r.left+r.width/2,y:r.top+Math.min(r.height/2,60),over:o.scrollHeight-o.clientHeight,top:first.top-r.top,left:first.left-r.left,under:first.left-h.left};});
         if(count===150) assert.ok(list.over>40,`${where}: the stress list is longer than the table, so its scroll is exercised (${list.over}px)`);
         assert.ok(list.top>=2.5&&list.left>=2.5,`${where}: a chosen option's outline is whole at the list's edges (${list.top}, ${list.left})`);
