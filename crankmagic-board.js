@@ -2611,7 +2611,7 @@ globalThis.CrankBoard = Object.seal({
       const host = document.getElementById("cm-board");
       if (!host || !view) return;
       const header=host.querySelector(':scope>.cm-stage-top');
-      if(header){const combat=host.hasAttribute('data-combat')?parseFloat(getComputedStyle(host).getPropertyValue('--combat-h'))||0:0;host.style.setProperty('--hud-top',`${Math.ceil(header.offsetHeight-combat)}px`);}
+      if(header){const combat=header.querySelector('.cm-r4-combat')?.offsetHeight || 0;host.style.setProperty('--hud-top',`${Math.ceil(Math.max(28+30*hudScale()/100,header.offsetHeight-combat))}px`);}
       /* The hand's tray as it would be at the table's card size (Tools): the room the boards leave it, whatever size the
          hand is now (Rob, 2026-10-09). A larger hand runs on below; a smaller one leaves the boards where they are. */
       const atTableSize = (el, measure) => {
