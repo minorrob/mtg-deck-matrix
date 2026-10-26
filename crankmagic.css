@@ -4195,13 +4195,13 @@ button.cm-vitals{cursor:pointer}
 #cm-dialog .cm-admin-steps [data-state]::before{content:"○";width:1.2em;text-align:center;font-weight:700;color:var(--v-muted)}
 #cm-dialog .cm-admin-steps [data-state=busy]::before{content:"…";color:var(--v-accent)}
 #cm-dialog .cm-admin-steps [data-state=done]::before{content:"✓";color:var(--v-money)}
-#cm-dialog .cm-admin-steps [data-state=fail]::before{content:"✕";color:var(--vital-danger,#b3261e)}
+#cm-dialog .cm-admin-steps [data-state=fail]::before{content:"✕";color:var(--vital-danger)}
 #cm-dialog .cm-admin-status{display:grid;grid-template-columns:minmax(0,auto) minmax(0,1fr);gap:8px 18px;margin:0}
 #cm-dialog .cm-admin-status dt{color:var(--v-muted)}
 #cm-dialog .cm-admin-status dd{margin:0;font-weight:600}
 @media(max-width:640px){#cm-dialog .cm-admin-form{grid-template-columns:minmax(0,1fr)}}
 #cm-dialog .cm-admin{display:flex;flex-direction:column;flex:1 1 auto;min-height:0}
 #cm-dialog .cm-admin>.cm-tabbed{flex:1 1 auto}
-#cm-dialog .cm-admin-status dd[data-ok=no]{color:var(--vital-danger,#b3261e)}
+#cm-dialog .cm-admin-status dd[data-ok=no]{color:var(--vital-danger)}
 #cm-dialog .cm-admin-form .cm-form-footer{margin-top:4px}
 #cm-dialog .cm-admin-status+h3{margin-top:10px}
