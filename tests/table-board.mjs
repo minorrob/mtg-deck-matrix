@@ -610,7 +610,7 @@ try {
   await rob.page.locator('[data-action=board-camera]').click();
   await rob.page.locator(".cm-seatboard:not(.is-you) [data-action=board-focus]").click();
   await rob.page.locator(".cm-board-mat").waitFor();
-  ok(/Maya's hand/.test(await text(rob.page, ".cm-board-mat")) && await rob.page.getAttribute("#cm-board", "data-view") === "focus", "⤢ Focus on Maya's board puts it on the mat, in the Focus view");
+  ok((await text(rob.page, ".cm-board-mat .cm-seat-header .cm-mat-name")).trim() === "Maya" && /^\d+ in hand$/.test((await text(rob.page, ".cm-board-mat .cm-seat-hand")).trim()) && await rob.page.getAttribute("#cm-board", "data-view") === "focus", "⤢ Focus on Maya's board puts it on the mat, in the Focus view");
   await rob.page.click(".cm-board-tile[data-seat='0'] [data-action=board-focus]");
 
   /* B7, item 15: THE PANE'S DIVIDER. Dragged wider, the tiles grow with it, and past 400px each is a miniature of that
@@ -620,7 +620,7 @@ try {
     const tile = document.querySelector(".cm-board-tile[data-seat='1']"), mine = document.querySelector(".cm-board-tile[data-seat='0']");
     return {pane: Math.round(pane.width), tile: Math.round(tile.getBoundingClientRect().width), mini: document.querySelectorAll(".cm-board-tile.is-mini .cm-board-mini .cm-mat[data-fit=mini]").length,
       robLands: mine.querySelectorAll(".cm-board-mini [data-zone=lands] .cm-bcard").length, inert: !!tile.querySelector(".cm-board-mini[inert]"),
-      matW: mat.width, largest: Math.min(main.width - 16, (main.height - 8 - 8 - tray.height) * 16 / 9) - mat.width < 2, ratio: Math.round(mat.width / mat.height * 100) / 100};
+      matBox: [mat.x, mat.y, mat.width, mat.height], matW: mat.width, largest: Math.min(main.width - 16, (main.height - 8 - 8 - tray.height) * 16 / 9) - mat.width < 2, ratio: Math.round(mat.width / mat.height * 100) / 100};
   });
   const pane0 = await paneGeo();
   const paneGrip = await rob.page.locator(".cm-board-panegrip [data-drag=pane]").boundingBox();
@@ -630,12 +630,12 @@ try {
   await rob.page.mouse.move(paneGrip.x + paneGrip.width / 2 + 200, paneGrip.y + 200, {steps: 4});
   await rob.page.mouse.up();
   const pane1 = await paneGeo();
-  ok(pane0.pane === 330 && Math.abs(pane1.pane - 530) <= 2 && pane1.tile > pane0.tile + 150 && pane1.matW < pane0.matW && pane1.largest && Math.abs(pane1.ratio - 1.78) < 0.02,
-    `the divider between the pane and the mat drags: 200px right, the pane ${pane0.pane} → ${pane1.pane}px, the tiles growing with it, the mat still the largest 16:9 beside it`);
+  ok(pane0.pane === 330 && Math.abs(pane1.pane - 530) <= 2 && pane1.tile > pane0.tile + 150 && pane1.matBox.every((n,i) => Math.abs(n-pane0.matBox[i])<1) && Math.abs(pane1.ratio - 1.78) < 0.02,
+    `the divider between the pane and the mat drags: 200px right, the pane ${pane0.pane} → ${pane1.pane}px, the tiles growing with it, the overlay leaving the 16:9 mat in exactly the same place and size`);
   ok(pane0.mini === 0 && pane1.mini === 2 && pane1.robLands >= 1 && pane1.inert, `and past 400px each tile is a miniature of that seat's board, cards and all (the Forest on Rob's: ${pane1.robLands}), only to look at`);
   await shot(rob.page, "pane-miniatures-1400");
   await rob.page.locator(".cm-board-tile[data-seat='1'] .cm-board-tile-main").click();
-  await rob.page.waitForFunction(() => /Maya's hand/.test(document.querySelector(".cm-board-mat")?.innerText || ""), null, {timeout: 5000});
+  await rob.page.waitForFunction(() => document.querySelector(".cm-board-mat .cm-seat-header .cm-mat-name")?.textContent === "Maya", null, {timeout: 5000});
   ok(true, "a miniature is still the tile: a click on it puts that seat's board on the mat");
   await rob.page.locator(".cm-board-tile[data-seat='0'] .cm-board-tile-main").click();
   await chooseView(rob.page,"table");
@@ -654,7 +654,7 @@ try {
     if(!await page.locator('.cm-stage-side').isVisible()) await page.locator('.cm-stage-right[data-action=board-stage-side]').click();
   };
   /* Full screen: the page is the game's; a card picked shows large at the side with what it can do; ⎋ leaves. */
-  await chooseView(maya.page,"full"); await fullTools(maya.page);
+  await chooseView(maya.page,"full"); await placeModule(maya.page, "Table Vitals", "Right"); await fullTools(maya.page);
   await maya.page.locator(".cm-stage-rail").waitFor();
   const fullGeo = await maya.page.evaluate(() => {const r = document.getElementById("cm-board").getBoundingClientRect(); return [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height), innerWidth, innerHeight, document.documentElement.scrollWidth - document.documentElement.clientWidth];});
   ok(fullGeo[0] === 0 && fullGeo[1] === 0 && fullGeo[2] === fullGeo[4] && fullGeo[3] === fullGeo[5] && fullGeo[6] === 0, `Full screen takes the whole window by itself where the browser gives no full screen (${fullGeo.slice(0, 4).join(",")} of ${fullGeo[4]}×${fullGeo[5]})`);
@@ -737,7 +737,7 @@ try {
   /* Where the browser will, Full screen asks it for the whole screen, and gives it back on the way out. B1, item 22: it
      asks for the whole DOCUMENT -- a browser shows only the fullscreen element's own subtree, and the Coach and the
      app's dialogs live beside the board -- so Table vitals and the Coach are seen in it. */
-  await chooseView(rob.page,"full"); await fullTools(rob.page);
+  await chooseView(rob.page,"full"); await placeModule(rob.page, "Table Vitals", "Right"); await fullTools(rob.page);
   eq(await rob.page.evaluate(() => document.fullscreenElement), null, "3D does not commandeer browser full-screen");
   /* Whose turn it is, on that seat's line of the side column's vitals (Rob, 2026-10-09). */
   const fullTurn = await rob.page.evaluate(() => [...document.querySelectorAll(".cm-full-vitals .cm-board-turn-mark")].map((m) => ({seat: m.closest("[data-seat]").dataset.seat, said: m.getAttribute("aria-label"), ringed: m.closest(".is-turn") !== null})));
@@ -748,13 +748,14 @@ try {
   await rob.page.locator("#cm-dialog[open] .cm-table-vitals").waitFor();
   ok(await seenAt(rob.page, "#cm-dialog[open]"), "in 3D, Table vitals is seen over the game");
   await rob.page.click("#cm-dialog[open] .cm-form-footer [data-action=close]");
+  const coachBoardBefore = await rob.page.locator(".cm-stage-region").boundingBox();
   await fullCoach(rob.page);
   await rob.page.locator("#cm-board-coach:not([hidden]) .cm-coach-input").waitFor();
   const docked = await rob.page.evaluate(() => {
     const c = document.getElementById("cm-board-coach").getBoundingClientRect(), board = document.querySelector(".cm-stage-region").getBoundingClientRect(), header = document.querySelector(".cm-stage-top").getBoundingClientRect(), host = document.getElementById("cm-board").getBoundingClientRect();
-    return {reserved: board.right <= c.left + 1, aligned: Math.abs(c.right - host.right) < 1 && Math.abs(c.top - header.bottom) < 1, contained: c.width >= 240 && c.bottom <= host.bottom + 0.5, width: Math.round(c.width)};
+    return {board: {x:board.x,y:board.y,width:board.width,height:board.height}, aligned: c.left >= host.left && c.right <= host.right + 1 && c.top >= header.bottom - 1, contained: c.width >= 240 && c.bottom <= host.bottom + 0.5, width: Math.round(c.width)};
   });
-  ok(await seenAt(rob.page, "#cm-board-coach") && docked.reserved && docked.aligned && docked.contained, `the Coach is visible in its reserved ${docked.width}px column beside the board and below the header`);
+  ok(await seenAt(rob.page, "#cm-board-coach") && Object.entries(coachBoardBefore).every(([k,n]) => Math.abs(docked.board[k]-n)<1) && docked.aligned && docked.contained, `the Coach is visible in its ${docked.width}px overlay below the header, with unchanged board geometry`);
   await shot(rob.page, "coach-full-1400");
   await rob.page.click("#cm-board-coach [aria-label='Close the Coach']");
   /* B1, item 23: the rail squares its own buttons, not the ones in the menus it opens. */
@@ -1319,19 +1320,18 @@ try {
   }
   /* KEYS AND HELP, from the board's menu: the table's help, the keys among it. Escape then steps back out of the menu. */
   await rob.page.evaluate(() => document.activeElement && document.activeElement.blur());
-  await utility(rob.page,"board-menu");
-  await rob.page.click("#cm-board-nav [data-action=page-help]");
+  await utility(rob.page,"board-help");
   await rob.page.locator("#cm-dialog[open] .cm-help-keys").waitFor();
   const keys = await rob.page.locator("#cm-dialog[open] .cm-help-keys kbd").allTextContents();
   ok((await rob.page.locator("#cm-dialog-title").textContent()) === "Help — Play: the table and the board" && ["Tab", "Space", "Enter", "Escape", "1", "9", "+", "↑", "←"].every((k) => keys.includes(k)),
-    `☰ › Keys and help opens the table's help with the keys (${[...new Set(keys)].join(" ")})`);
+    `Table › Help opens the table's help with the keys (${[...new Set(keys)].join(" ")})`);
   await rob.page.click("#cm-dialog [data-action=close]");
   await rob.page.locator("#cm-dialog[open]").waitFor({state: "detached"}).catch(() => {});
   await rob.page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"), null, {timeout: 5000});
-  ok(await rob.page.locator("#cm-board-nav").count() === 1, "closing Help leaves the board where it was, the menu still open");
+  ok(await rob.page.locator("#cm-table-menu").count() === 1, "closing Help leaves the board where it was, the Table menu still open");
   await rob.page.keyboard.press("Escape");
-  await rob.page.locator("#cm-board-nav").waitFor({state: "detached", timeout: 5000});
-  ok(true, "and Escape closes the menu");
+  await rob.page.locator("#cm-table-menu").waitFor({state: "detached", timeout: 5000});
+  ok(true, "and Escape closes the Table menu");
 
   /* B1, item 25: THE HAND IS WHOLE in every view -- Table, Focus, Full screen, and Full screen once the browser's own
      full screen is left -- at 1400 (Rob, whose browser gives the whole screen) and at 1280 (Maya, whose does not). */
@@ -1378,11 +1378,11 @@ try {
 
   /* THE COACH: a reserved column beside the board; the shell, with a stub reply that says so. */
   const matWidth = () => rob.page.evaluate(() => Math.round(document.querySelector(".cm-board-mat").getBoundingClientRect().width));
-  const matBefore = await matWidth();
+  const matBefore = await matWidth(), coachMatBefore = await rob.page.locator(".cm-board-mat").boundingBox();
   await rob.page.click(".cm-board-coach-open");
   await rob.page.locator("#cm-board-coach:not([hidden]) .cm-coach-input").waitFor();
-  const coachBox = await rob.page.evaluate(() => {const r = document.getElementById("cm-board-coach").getBoundingClientRect(), mat = document.querySelector(".cm-board-mat").getBoundingClientRect(); return {width:r.width,right:r.right,edge:innerWidth,clear:mat.right<=r.left+1,visible:r.bottom<=innerHeight+1};});
-  ok(coachBox.width >= 240 && coachBox.right === coachBox.edge && coachBox.clear && coachBox.visible && await matWidth() <= matBefore, `the Coach reserves ${Math.round(coachBox.width)}px at the right edge while the full mat fits beside it`);
+  const coachBox = await rob.page.evaluate(() => {const r = document.getElementById("cm-board-coach").getBoundingClientRect(), mat = document.querySelector(".cm-board-mat").getBoundingClientRect(), drawer = document.querySelector(".cm-stage-side").getBoundingClientRect(); return {width:r.width,right:r.right,edge:innerWidth,drawerContained:r.left>=drawer.left && r.right<=drawer.right+1,mat: {x:mat.x,y:mat.y,width:mat.width,height:mat.height},visible:r.bottom<=innerHeight+1};});
+  ok(coachBox.width >= 240 && coachBox.drawerContained && coachBox.right <= coachBox.edge && Object.entries(coachMatBefore).every(([k,n]) => Math.abs(coachBox.mat[k]-n)<1) && coachBox.visible && await matWidth() === matBefore, `the Coach uses its ${Math.round(coachBox.width)}px overlay at the right edge without moving or resizing the mat`);
   ok(/Sees your board, hand and the table · turn \d+/.test(await text(rob.page, "#cm-coach-context")), "it says what it sees, and the turn");
   await openCoachQuestions(rob.page);
   await rob.page.click("[data-action=board-coach-ask][data-q=\"What's my best play?\"]");
@@ -1714,6 +1714,9 @@ async function utility(page, action) {
     if (await page.locator('#cm-board-tools').isVisible()) return;
     if (!await page.locator('.cm-stage-camera [data-action=board-tools]').count()) await page.locator('[data-action=board-camera]').click();
     await page.locator('.cm-stage-camera [data-action=board-tools]').click();
+  } else if (action === 'board-help') {
+    if (!await page.locator('#cm-table-menu').count()) await page.locator('[data-action=board-table-menu]').click();
+    await page.locator('#cm-table-menu [data-action=page-help][data-help=table]').click();
   } else if (action === 'board-menu') {
     if (!await page.locator('#cm-table-menu [data-action=board-menu]').count()) await page.locator('[data-action=board-table-menu]').click();
     await page.locator('#cm-table-menu [data-action=board-menu]').click();
@@ -1730,6 +1733,12 @@ async function utility(page, action) {
       globalThis.__uatHistoryAfterClick = {calls: globalThis.__uatHistoryCalls, count: document.querySelectorAll('#cm-board-history').length, rect: h?.getBoundingClientRect().toJSON(), display: h && getComputedStyle(h).display};
     });
   }
+}
+async function placeModule(page, label, side) {
+  await utility(page, 'board-tools');
+  await page.locator('[data-action=board-modules-settings]').click();
+  await page.getByRole('radio', {name: label+': '+side, exact: true}).check();
+  await page.getByRole('button', {name: 'Save drawer modules', exact: true}).click();
 }
 async function fullCoach(page) {
   await utility(page, 'board-tools');
