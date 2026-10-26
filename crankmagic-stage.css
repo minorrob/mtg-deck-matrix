@@ -1109,6 +1109,6 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-board-pile[data-caption-compact] figcaption{justify-content:center}
 #matrix-v2 .cm-board .cm-board-pile{grid-template-columns:minmax(0,1fr)}
 #matrix-v2 .cm-board .cm-board-pile figcaption{min-width:0;max-width:100%}
-#matrix-v2 .cm-board [data-card-section]>.cm-card-slot:has(>.cm-bcard.is-tapped),#matrix-v2 .cm-board [data-card-section]>.cm-land-stack:is(.is-tapped,:has(.cm-land-tilted)){position:relative;left:calc((var(--zone-cell-width) - var(--bc))/2);top:calc((var(--zone-cell-height) - var(--bc)*1.4)/2)}
+#matrix-v2 .cm-board [data-card-section]>.cm-bcard.is-tapped,#matrix-v2 .cm-board [data-card-section]>.cm-card-slot:has(>.cm-bcard.is-tapped),#matrix-v2 .cm-board [data-card-section]>.cm-land-stack:is(.is-tapped,:has(.cm-land-tilted)){position:relative;left:calc((var(--zone-cell-width) - var(--bc))/2);top:calc((var(--zone-cell-height) - var(--bc)*1.4)/2)}
 #matrix-v2 .cm-board[data-shell=shared]>.cm-stage-camera{right:calc(var(--play-inspector,0px) + var(--stage-side-offset,0px) + 16px)}
 #matrix-v2 .cm-board[data-shell=shared]>.cm-table-menu{right:calc(var(--play-inspector,0px) + var(--stage-side-offset,0px) + 126px)}
