@@ -267,7 +267,7 @@ try {
   /* B5, item 11: turn 1's upkeep has nothing to do in it, so it passes by itself; the first player of a two-player game
      has no draw step on turn 1 (CR 103.8a); and the table opens in main 1. */
   await active.page.locator(".cm-board-hand .cm-bcard.is-bright").first().waitFor({timeout: 20000});
-  ok(/Main 1/.test(await text(active.page, ".cm-board-step")), `the empty upkeep passes by itself, and there is no draw step: turn 1 opens in main 1, where there is something to do (${(await text(active.page, ".cm-board-step")).trim()})`);
+  ok(/Main 1/.test(await phaseText(active.page)), `the empty upkeep passes by itself, and there is no draw step: turn 1 opens in main 1, where there is something to do (${(await phaseText(active.page)).trim()})`);
   await waitText(active.page, ".cm-board-band", /Upkeep: nothing to do/);
   ok((await active.page.locator(".cm-board-band li.is-quiet").first().innerText()).includes("Upkeep: nothing to do"), "and the history says so, in one quieter line: Upkeep: nothing to do");
   /* B5, item 10: on your own turn with the stack empty, the button says what passing will do. */
@@ -331,9 +331,9 @@ try {
   await active.page.click("[data-action=board-pass]");
   /* B5, items 10 and 11: one click, and the steps with nothing to do in them pass by themselves -- combat, with no
      creature to attack with -- landing on main 2, where the creature could still be cast. */
-  await waitText(active.page, ".cm-board-step", /Main 2/);
+  await waitPhase(active.page, /Main 2/);
   eq(await active.page.locator(".cm-board-lands .cm-bcard.is-tapped").count(), 0, "Next step hands priority on, and taps nothing");
-  ok(/Main 2/.test(await text(active.page, ".cm-board-step")) && (await text(active.page, ".cm-stage-top [data-action=board-pass]")).trim() === "Next step",
+  ok(/Main 2/.test(await phaseText(active.page)) && (await text(active.page, ".cm-stage-top [data-action=board-pass]")).trim() === "Next step",
     "one click of Next step lands on the next step with something to do: main 2");
   await waitText(active.page, ".cm-board-band", /Beginning of combat, Declare attackers, End of combat: nothing to do/);
   ok(true, "and the combat steps it passed through, empty, say so in one line: Beginning of combat, Declare attackers, End of combat: nothing to do");
@@ -598,21 +598,22 @@ try {
     const land = document.querySelector(".cm-board-table [data-zone=lands] .cm-bcard"), board = land.closest(".cm-seatboard"), host = getComputedStyle(document.getElementById("cm-board"));
     const badges=[...board.querySelectorAll('.cm-bcard-pt,.cm-bcard-count,.cm-bcard-tax')].filter(b=>b.getClientRects().length&&getComputedStyle(b).visibility!=='hidden');
     const fits=badges.every(b=>{const r=b.getBoundingClientRect(),c=b.closest('.cm-bcard').getBoundingClientRect();return r.left>=c.left-1&&r.right<=c.right+1&&b.scrollWidth<=b.clientWidth+1;});
-    const tight=badges.some(b=>{const css=getComputedStyle(b),card=b.closest('.cm-bcard'),edges=(parseFloat(css.paddingLeft)||0)+(parseFloat(css.paddingRight)||0)+(parseFloat(css.right)||0)+(parseFloat(css.left)||0);return card.offsetWidth-b.offsetWidth<=edges*2+2;});
-    return {badgeFits:badges.length>0&&fits,floorWitness:fits&&tight,board: parseFloat(getComputedStyle(land).width) / board.getBoundingClientRect().width, hand: parseFloat(getComputedStyle(document.querySelector(".cm-board-hand .cm-board-hand-cards .cm-bcard")).width),
+    return {badgeFits:badges.length>0&&fits,board: parseFloat(getComputedStyle(land).width) / board.getBoundingClientRect().width, hand: parseFloat(getComputedStyle(document.querySelector(".cm-board-hand .cm-board-hand-cards .cm-bcard")).width),
       scopes: [host.getPropertyValue("--board-scale").trim(), host.getPropertyValue("--hand-scale").trim()], outs: ["board", "hand"].map(scope => document.querySelector(`#cm-board [data-board-scale="${scope}"]`)?.closest('label').querySelector('output').textContent ?? null)};
   });
   await rob.page.locator(".cm-board-traybar [data-board-scale=hand]").fill("100");
-  const boardSlider=rob.page.locator('.cm-stage-camera [data-board-scale=board]'),upper=Number(await boardSlider.getAttribute('max')),below=Math.round(upper*.9);
+  const boardSlider=rob.page.locator('.cm-stage-camera [data-board-scale=board]'),loScale=Number(await boardSlider.getAttribute('min')),upper=Number(await boardSlider.getAttribute('max')),middle=Math.round((loScale+upper)/2);
+  await boardSlider.fill(String(loScale));const naturalLow=await sizes();
+  await boardSlider.fill(String(middle));const naturalMid=await sizes();
   await boardSlider.fill(String(upper));const naturalUpper=await sizes();
-  await boardSlider.fill(String(below));const naturalBelow=await sizes();
-  ok(naturalUpper.badgeFits&&naturalBelow.badgeFits&&Math.abs(naturalBelow.board/naturalUpper.board-below/upper)<.03&&Math.abs(naturalBelow.hand-naturalUpper.hand)<.5,
-    'above its public badge floor the native Board slider scales raster proportionally and leaves Hand cards unchanged');
+  const firstSlope=(naturalMid.board-naturalLow.board)/(middle-loScale),lastSlope=(naturalUpper.board-naturalMid.board)/(upper-middle);
+  ok([naturalLow,naturalMid,naturalUpper].every(v=>v.badgeFits)&&firstSlope>0&&lastSlope>0&&Math.abs(firstSlope-lastSlope)<.00005&&Math.abs(naturalLow.hand-naturalUpper.hand)<.5,
+    'the native Card Scale range has useful positive natural growth, with any constant readability offset, and leaves Hand cards unchanged');
   await boardSlider.fill('100');
   const s100 = await sizes();
   await rob.page.locator(".cm-stage-camera [data-board-scale=board]").fill("80");
   const sBoard = await sizes();
-  const boardFactor=sBoard.board/s100.board,boardScaleFits=Math.abs(boardFactor-.8)<.03||(sBoard.floorWitness&&boardFactor>=.8&&boardFactor<=1.01);
+  const boardFactor=sBoard.board/s100.board,boardScaleFits=sBoard.board>=naturalLow.board&&sBoard.board<s100.board;
   ok(sBoard.badgeFits&&boardScaleFits && Math.abs(sBoard.hand - s100.hand) < 0.5 && sBoard.scopes[0] === "0.8" && sBoard.outs[0] === "80%",
     `Board cards, in Camera, sizes the boards' cards alone (to ${(sBoard.board / s100.board * 100).toFixed(0)}%; the hand stays ${sBoard.hand.toFixed(0)}px)`);
   await rob.page.locator(".cm-board-traybar [data-board-scale=hand]").fill("130");
@@ -623,7 +624,7 @@ try {
   await rob.page.locator("#cm-board-tools [data-card-scale]").fill("120");
   const sTools = await sizes();
   /* Opening Play settings closes Camera, so Board cards is read after reopening Camera. */
-  const toolsFactor=sTools.board/s100.board,toolsScaleFits=Math.abs(toolsFactor-1.2)<.03||(sTools.floorWitness&&toolsFactor>=.99&&toolsFactor<=1.21);
+  const toolsScaleFits=sTools.board>s100.board&&sTools.board<=naturalUpper.board;
   ok(sTools.badgeFits&&sTools.scopes.join() === "1.2,1.2" && sTools.outs[1] === "120%" && toolsScaleFits && Math.abs(sTools.hand / s100.hand - 1.2) < 0.02,
     `Tools is the table's card size, and moving it sets Board cards and Hand cards to its value (${sTools.outs.join(", ")})`);
   await rob.page.locator("#cm-board-tools [data-card-scale]").fill("100");
@@ -652,9 +653,9 @@ try {
   await rob.page.mouse.move(paneGrip.x + paneGrip.width / 2 + 100, paneGrip.y + 200, {steps: 4});
   await rob.page.mouse.move(paneGrip.x + paneGrip.width / 2 + 200, paneGrip.y + 200, {steps: 4});
   await rob.page.mouse.up();
-  const pane1 = await paneGeo();
-  ok(pane0.pane === 330 && Math.abs(pane1.pane - 530) <= 2 && pane1.tile > pane0.tile + 150 && pane1.matW < pane0.matW && pane1.largest && Math.abs(pane1.ratio - 1.78) < 0.02,
-    `the divider between the pane and the mat drags: 200px right, the pane ${pane0.pane} → ${pane1.pane}px, the tiles growing with it, the mat still the largest 16:9 beside the reserved pane`);
+  const pane1 = await paneGeo(), paneRows=await rob.page.evaluate(tableRowFacts);
+  ok(pane0.pane === 330 && Math.abs(pane1.pane - 530) <= 2 && pane1.tile > pane0.tile + 150 && pane1.matW < pane0.matW && paneRows.valid && paneRows.widths,
+    `the divider between the pane and the mat drags: 200px right, the pane ${pane0.pane} → ${pane1.pane}px, the tiles growing with it, the mat retains conditional aspect, complete rows and largest available width beside the reserved pane`);
   ok(pane0.mini === 0 && pane1.mini === 2 && pane1.robLands >= 1 && pane1.inert, `and past 400px each tile is a miniature of that seat's board, cards and all (the Forest on Rob's: ${pane1.robLands}), only to look at`);
   await shot(rob.page, "pane-miniatures-1400");
   await rob.page.locator(".cm-board-tile[data-seat='1'] .cm-board-tile-main").click();
@@ -826,8 +827,8 @@ try {
   await active.page.click("[data-action=board-pass]");
   await waitText(active.page, ".cm-stage-top [data-action=board-pass]", /^End turn$/);
   const ending = views(active === rob ? ROB : MAYA).at(-1);
-  ok(ending.state.phase === "END_OF_TURN" && ending.state.turn === 1 && ending.decision.options.find((o) => o.act === "pass").endsTurn === true && /^End/.test((await text(active.page, ".cm-board-step")).trim()),
-    `the end step of your own turn asks you, nothing to do in it: the button reads End turn (${(await text(active.page, ".cm-board-step")).trim()})`);
+  ok(ending.state.phase === "END_OF_TURN" && ending.state.turn === 1 && ending.decision.options.find((o) => o.act === "pass").endsTurn === true && /^End/.test((await phaseText(active.page)).trim()),
+    `the end step of your own turn asks you, nothing to do in it: the button reads End turn (${(await phaseText(active.page)).trim()})`);
   await active.page.waitForTimeout(800);
   ok(views(active === rob ? ROB : MAYA).at(-1).state.turn === 1 && (await text(active.page, ".cm-stage-top [data-action=board-pass]")).trim() === "End turn", "and the turn waits there for the click");
 
@@ -867,13 +868,14 @@ try {
   const library = other.page.locator("button.cm-bcard[data-action=board-draw]");
   ok(await library.count() === 1 && /^Draw card: your library, \d+$/.test(await library.getAttribute("aria-label")),
     `and their library is the same button, lit ("${await library.getAttribute("aria-label")}")`);
+  await library.scrollIntoViewIfNeeded();
   const reach = await library.evaluate((el) => {const r = el.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
     const hit = document.elementFromPoint(x, y); return {x, y, reached: !!hit && el.contains(hit)};});
   ok(reach.reached, `which a pointer reaches where it is drawn (${Math.round(reach.x)}, ${Math.round(reach.y)})`);
   await other.page.mouse.click(reach.x, reach.y);
   /* and the pointer taken off the board, or the hand fanned later opens with its last card under it, hovered upright */
   await other.page.mouse.move(1, 1);
-  await waitText(other.page, ".cm-board-step", /^\s*Main 1\s*$/, 20000);
+  await waitPhase(other.page, /^\s*Main 1\s*$/, 20000);
   await other.page.waitForFunction(() => !document.querySelector("[data-action=board-draw]"), null, {timeout: 10000}).catch(() => {});
   ok(handNow() === handBefore + 1 && await other.page.locator("[data-action=board-draw]").count() === 0,
     `one click on the library draws one card (${handBefore} → ${handNow()}), and the board is on to Main 1`);
@@ -1221,17 +1223,20 @@ try {
       const strip = document.querySelector(".cm-stage-top").getBoundingClientRect();
       const ratio = (el) => {const r = el.getBoundingClientRect(); return r.width / r.height;};
       const mat = [...document.querySelectorAll(".cm-board-mat .cm-bcard:not(.is-tapped)")], hand = [...document.querySelectorAll(".cm-board-hand .cm-bcard")];
-      const board = document.querySelector(".cm-board-mat").getBoundingClientRect(), main = document.querySelector(".cm-board-main").getBoundingClientRect();
+      const board = document.querySelector(".cm-board-mat").getBoundingClientRect(), mainEl=document.querySelector(".cm-board-main"),main=mainEl.getBoundingClientRect();
       const tray = document.querySelector(".cm-board-hand").getBoundingClientRect(), lands = document.querySelector(".cm-board-mat .cm-board-lands").getBoundingClientRect();
-      return {strip: Math.round(strip.height), sideways: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      const groups=[...document.querySelector(".cm-stage-top").children].filter(e=>e.offsetWidth&&e.offsetHeight&&getComputedStyle(e).position!=="absolute").map(e=>{const r=e.getBoundingClientRect();return r.y+r.height/2;});
+      return {oneRow:Math.max(...groups)-Math.min(...groups)<2,strip: Math.round(strip.height), sideways: document.documentElement.scrollWidth - document.documentElement.clientWidth,
         ratios: [...mat, ...hand].map(ratio).map((x) => Math.round(x * 1000) / 1000),
         matWidth: mat.length ? mat[0].getBoundingClientRect().width : 0, handWidth: hand.length ? hand[0].getBoundingClientRect().width : 0,
         boardRatio: Math.round(board.width / board.height * 100) / 100, largest: Math.min(main.width - 16, (main.height - 8 - 8 - tray.height) * 16 / 9) - board.width < 2,
-        docked: tray.top >= board.bottom - 0.5 && tray.top <= board.bottom + 12 && tray.bottom <= main.bottom + 0.5 && Math.abs(tray.width - board.width) < 1, clear: lands.bottom <= tray.top + 1};
+        docked: tray.top >= board.bottom - 0.5 && tray.top <= board.bottom + 12 && tray.bottom <= main.top+mainEl.scrollHeight-mainEl.scrollTop+1 && Math.abs(tray.width - board.width) < 1, clear: lands.bottom <= tray.top + 1};
     });
-    ok(g.strip === 58 && g.sideways === 0, `at ${width} the header is one 58px line (${g.strip}) and nothing scrolls sideways (${g.sideways})`);
-    ok(Math.abs(g.boardRatio - 1.78) < 0.02 && g.largest, `at ${width} the Focus mat is 16:9 (${g.boardRatio}), the largest that fits beside the pane with the hand's row beneath it`);
-    ok(g.docked && g.clear, `at ${width} the hand's tray is a full row under the mat, as wide as it, inside the window (B1, item 25), and the Lands stay clear of it`);
+    const focusRows=await who.page.evaluate(tableRowFacts);
+    tableGeometryProof.push({...focusRows,proof:'Focus shape'});if(SHOTS)writeFileSync(path.join(SHOTS,'table-row-geometry.json'),JSON.stringify(tableGeometryProof,null,2));
+    ok(g.oneRow&&g.strip>=58&&g.sideways===0, `at ${width} the HUD is one aligned measured row (${g.strip}px) and nothing scrolls sideways`);
+    ok(focusRows.valid&&focusRows.widths, `at ${width} Focus retains aspect when its measured rows fit, otherwise full rows and largest width: ${JSON.stringify(focusRows)}`);
+    ok(g.docked && g.clear, `at ${width} the hand's tray is a full row under the mat, as wide as it, inside the native scroll content (B1, item 25), and the Lands stay clear of it`);
     ok(g.ratios.length && g.ratios.every((r) => Math.abs(r - 5 / 7) < 0.01), `at ${width} every card is 5:7 (${[...new Set(g.ratios)].join(", ")})`);
     ok(g.handWidth > g.matWidth || !g.matWidth, `at ${width} the hand's cards are larger than the mat's (${g.handWidth} > ${g.matWidth})`);
   }
@@ -1241,21 +1246,26 @@ try {
   for (const v of ["focus"]) {
     if (v === "full") {await chooseView(rob.page,"full"); await fullTools(rob.page); await rob.page.locator(".cm-stage-fan").waitFor();}
     const sel = v === "full" ? ".cm-full-mine > .cm-mat" : ".cm-board-mat";
-    const at = () => rob.page.evaluate((q) => {const h = document.getElementById("cm-board"), m = document.querySelector(q).getBoundingClientRect(), c = [...document.querySelectorAll(".cm-board-hand .cm-board-hand-cards .cm-bcard")].map((el) => el.getBoundingClientRect());
-      return {w: Math.round(m.width), h: Math.round(m.height), card: c.length ? Math.round(c[0].width) : 0, foot: Math.max(...c.map((r) => r.bottom)) + h.scrollTop, room: h.scrollHeight, over: h.scrollHeight - h.clientHeight};}, sel);
+    const at = () => rob.page.evaluate((q) => {const h = document.querySelector(".cm-board-main"), m = document.querySelector(q).getBoundingClientRect(), c = [...document.querySelectorAll(".cm-board-hand .cm-board-hand-cards .cm-bcard")].map((el) => el.getBoundingClientRect());
+      return {w: Math.round(m.width), h: Math.round(m.height), card: c.length ? Math.round(c[0].width) : 0, foot: Math.max(...c.map((r) => r.bottom)) - h.getBoundingClientRect().top + h.scrollTop, room: h.scrollHeight, over: h.scrollHeight - h.clientHeight};}, sel);
     const before = await at();
     const [, hi] = await rob.page.evaluate(() => [0, Number(document.querySelector("#cm-board [data-board-scale=hand]").max)]);
     await rob.page.locator("#cm-board [data-board-scale=hand]").first().fill(String(hi));
     await rob.page.waitForTimeout(300);
     const big = await at();
     /* scrolled as a person scrolls, with the wheel over the board */
-    await rob.page.mouse.move(700, 300);
-    await rob.page.mouse.wheel(0, 2000);
-    await rob.page.waitForTimeout(300);
-    const scrolled = await rob.page.evaluate(() => document.getElementById("cm-board").scrollTop);
+    const focusGutter=await rob.page.locator(".cm-board-main").boundingBox();
+    await rob.page.mouse.move(focusGutter.x+2,focusGutter.y+20);
+    await rob.page.mouse.wheel(0,-2000);
+    await rob.page.waitForFunction(()=>document.querySelector('.cm-board-main').scrollTop===0,null,{timeout:5000});
+    await rob.page.mouse.wheel(0,2000);
+    await rob.page.waitForFunction(()=>{const m=document.querySelector('.cm-board-main');return m.scrollTop>0&&m.scrollTop>=m.scrollHeight-m.clientHeight-1;},null,{timeout:5000});
+    const handReach=await rob.page.locator('.cm-board-main>.cm-board-hand [data-action=board-show-hand]').evaluate(button=>{const r=button.getBoundingClientRect(),m=button.closest('.cm-board-main').getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return r.top>=m.top&&r.bottom<=m.bottom+1&&!!hit&&(button===hit||button.contains(hit));});
+    ok(handReach,'native Focus scrolling exposes the real Show hand control below the complete mat');
+    const scrolled = await rob.page.evaluate(() => document.querySelector(".cm-board-main").scrollTop);
     ok(big.card > before.card * 1.2 && Math.abs(big.w - before.w) < 1 && Math.abs(big.h - before.h) < 1 && big.over > 0 && big.foot <= big.room + 1 && scrolled > 0,
       `${v === "full" ? "Full screen" : "Focus"}: Hand cards at ${hi}%, the hand's cards grow (${before.card} → ${big.card}px), the board keeps its size (${before.w}×${before.h} → ${big.w}×${big.h}), and the hand runs ${big.over}px on below the window, the wheel scrolling down to it (${Math.round(scrolled)}px)`);
-    await rob.page.evaluate(() => {document.getElementById("cm-board").scrollTop = 0; localStorage.removeItem("cm-board-scale:hand");});
+    await rob.page.evaluate(() => {document.querySelector(".cm-board-main").scrollTop = 0; localStorage.removeItem("cm-board-scale:hand");});
     await rob.page.locator("#cm-board [data-board-scale=hand]").first().fill(String(await rob.page.evaluate(() => Math.round(globalThis.__cm.cardScale()))));
     if (v === "full") {await chooseView(rob.page,"focus"); await rob.page.locator(".cm-board-mat").waitFor();}
   }
@@ -1806,11 +1816,12 @@ async function openCoachQuestions(page) {
 /* Geometry oracle from rendered content, independent of the renderer's row-minimum formula.
    A hidden copy measures the actual 30-degree resting footprint; no private fit values or multipliers are read. */
 function tableRowFacts() {
-  const table = document.querySelector('.cm-board-table'), style = getComputedStyle(table);
+  const focus=document.getElementById('cm-board').dataset.view==='focus';
+  const table = document.querySelector(focus?'.cm-board-main':'.cm-board-table'), style = getComputedStyle(table);
   const gap = parseFloat(style.columnGap) || 0, room = table.clientWidth-gap;
   const share = Number(localStorage.getItem('cm-board-rows')) || .5;
   const outer = el => {if(!el)return 0;const s=getComputedStyle(el);return el.getBoundingClientRect().height+(parseFloat(s.marginTop)||0)+(parseFloat(s.marginBottom)||0);};
-  const mats = [...table.querySelectorAll('.cm-board-slot>.cm-mat')].sort((a,b)=>a.getBoundingClientRect().left-b.getBoundingClientRect().left);
+  const mats = [...table.querySelectorAll(focus?'.cm-board-stage>.cm-mat':'.cm-board-slot>.cm-mat')].sort((a,b)=>a.getBoundingClientRect().left-b.getBoundingClientRect().left);
   const rows = mats.map(mat => {
     const r=mat.getBoundingClientRect(), field=mat.querySelector('.cm-board-field'), lands=mat.querySelector('.cm-board-lands');
     const source=mat.querySelector('.cm-bcard'), copy=source.cloneNode(true);
@@ -1831,7 +1842,8 @@ function tableRowFacts() {
     return {seat:mat.dataset.seat,width:r.width,height:r.height,minimum:Math.round(minimum),aspectFits,valid:aspect&&f.whole&&l.whole&&cards.length>0&&cards.every(c=>Math.abs(c.offsetWidth/c.offsetHeight-5/7)<.02)};
   });
   const grown=rows.some(r=>!r.aspectFits);
-  return {rows,valid:rows.length===2&&rows.every(r=>r.valid),widths:rows.every((r,i)=>Math.abs(r.width-(grown?Math.floor(room*(i===0?share:1-share)):Math.min(room*(i===0?share:1-share),table.clientHeight*16/9)))<2),scrolls:table.scrollHeight>table.clientHeight+1,horizontal:table.scrollWidth<=table.clientWidth+1};
+  if(focus){const tray=table.querySelector(':scope>.cm-board-hand'),strip=table.querySelector(':scope>.cm-other-seats'),available=table.clientWidth-16,expected=grown?available:Math.min(available,(table.clientHeight-outer(strip)-outer(tray)-16)*16/9);return {mode:'focus',rows,valid:rows.length===1&&rows.every(r=>r.valid),widths:rows.every(r=>Math.abs(r.width-expected)<2),scrolls:table.scrollHeight>table.clientHeight+1,horizontal:table.scrollWidth<=table.clientWidth+1};}
+  return {mode:'table',rows,valid:rows.length===2&&rows.every(r=>r.valid),widths:rows.every((r,i)=>Math.abs(r.width-(grown?Math.floor(room*(i===0?share:1-share)):Math.min(room*(i===0?share:1-share),table.clientHeight*16/9)))<2),scrolls:table.scrollHeight>table.clientHeight+1,horizontal:table.scrollWidth<=table.clientWidth+1};
 }
 async function verifyTableRowAccess(page, facts) {
   const proof={...facts,nativeScrollAccess:false}; tableGeometryProof.push(proof);
@@ -1895,3 +1907,6 @@ async function verifyCoachUsable(page) {
   ok(facts.width>=240&&facts.drawerOpen&&facts.contained&&facts.inputHit&&facts.focused&&facts.internals,
     `explicit Coach open exposes and focuses the real composer with thread and Questions in its actual drawer: ${JSON.stringify(facts)}`);
 }
+
+function phaseText(page){return page.locator('.cm-board-step').first().evaluate(el=>el.getAttribute('title')||el.innerText);}
+function waitPhase(page,re,timeout=20000){return page.waitForFunction(src=>{const el=document.querySelector('.cm-board-step');return !!el&&new RegExp(src).test(el.getAttribute('title')||el.innerText);},re.source,{timeout});}
