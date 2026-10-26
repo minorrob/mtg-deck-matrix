@@ -31,6 +31,7 @@ const ISLAND = 524, PLAYED = 600;
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1;};
 const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1;};
+const binding = page => page.locator('#cm-board-decision [data-action=board-confirm]:visible:not([disabled]),#cm-board-decision [data-action=board-direct]:visible:not([disabled])');
 
 async function board(mode, {width = 1440, height = 900} = {}) {
   const context = await browser.newContext({viewport: {width, height}, reducedMotion: "reduce", serviceWorkers: "block"});
@@ -73,7 +74,7 @@ try {
     await page.locator(hand).dblclick();
     await page.waitForTimeout(500);
     eq(acts(), [], `${mode}: a double-click stages the land without playing it`);
-    await page.locator("#cm-board-decision [data-action=board-confirm]").click();
+    await binding(page).click();
     await page.waitForTimeout(100);
     eq(acts(), [[1]], `${mode}: confirming plays the staged Island once`);
     /* ---- 2. r4: the authoritative legacy take-back is the card's Undo drawer. */
@@ -85,7 +86,7 @@ try {
     const after=await page.evaluate(id=>{const start=performance.now();document.querySelector(`#cm-board .cm-bcard[data-card='${id}'][data-action=board-card]`).dispatchEvent(new MouseEvent('click',{bubbles:true,detail:1}));return document.getElementById('cm-card-menu')?performance.now()-start:null;},PLAYED);
     ok(after!==null && after<280,`${mode}: single click opens the read-only menu without a 300ms wait (${after}ms)`);eq(acts(),[],`${mode}: reading the card menu sends nothing`);
     await page.locator(`#cm-card-menu [data-act=activate-mana][data-card='${PLAYED}']`).click();eq(acts(),[],`${mode}: selecting a mana row stages its binding action`);
-    await page.locator('#cm-board-decision [data-action=board-confirm]').click();
+    await binding(page).click();
     for(let i=0;i<125&&!acts().length;i++)await page.waitForTimeout(20);
     eq(acts(),[[1]],`${mode}: the binding press taps it for mana once`);
     if (mode === "full") {

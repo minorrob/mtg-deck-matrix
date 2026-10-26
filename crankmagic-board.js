@@ -1228,9 +1228,10 @@ globalThis.CrankBoard = Object.seal({
   function moduleSettings() {
     tools = false; profileOpen = false; draw();
     const layout = paneLayout();
-    C.modal("Set Side Drawer Modules", `<div id="cm-drawer-settings"><p>Choose where each module appears. Drag its handle inside a drawer to change the order; arrow buttons work with a keyboard too.</p><table class="cm-drawer-settings"><thead><tr><th scope="col">Module</th><th scope="col">Left</th><th scope="col">Right</th><th scope="col">None</th></tr></thead><tbody>${PANE_MODULES.map(([id,title]) => {
+    C.modal("Set Side Drawer Modules", `<div id="cm-drawer-settings"><p>Choose where each module appears. After saving, use the arrow buttons in the drawers to change the order.</p><table class="cm-drawer-settings"><thead><tr><th scope="col">Module</th><th scope="col">Left</th><th scope="col">Right</th><th scope="col">None</th></tr></thead><tbody>${PANE_MODULES.map(([id,title]) => {
       const current = layout.left.includes(id) ? "left" : layout.right.includes(id) ? "right" : "none";
-      return `<tr><th scope="row">${title}</th>${["left","right","none"].map(side => `<td><input type="radio" name="module-${id}" value="${side}" aria-label="${title}: ${side[0].toUpperCase()+side.slice(1)}"${side===current?" checked":""}${id === "actions" ? " disabled" : ""}></td>`).join("")}</tr>`;
+      if(id==='actions')return `<tr><th scope="row">${title}</th><td colspan="3">Always in the left drawer; your decision stays available.</td></tr>`;
+      return `<tr><th scope="row">${title}</th>${["left","right","none"].map(side => `<td><input type="radio" name="module-${id}" value="${side}" aria-label="${title}: ${side[0].toUpperCase()+side.slice(1)}"${side===current?" checked":""}></td>`).join("")}</tr>`;
     }).join("")}</tbody></table><p class="cm-muted">Saved with your player profile through cloud library sync. Actions stays on the left and can be collapsed. Hiding an optional module keeps its game data.</p><div class="cm-form-footer">${b("Cancel", "close")}${b("Save drawer modules", "board-modules-save", {}, true)}</div></div>`);
   }
   function stageModules(side="right") {
@@ -3244,7 +3245,7 @@ globalThis.CrankBoard = Object.seal({
   C.sideDrawerSettings = moduleSettings;
   actions["board-modules-save"] = async () => {
     const dialog=document.getElementById("cm-drawer-settings");if(!dialog)return;
-    const chosen=new Map(PANE_MODULES.map(([id])=>[id,dialog.querySelector(`input[name="module-${id}"]:checked`)?.value || "none"]));
+    const chosen=new Map(PANE_MODULES.map(([id])=>[id,id==='actions'?'left':dialog.querySelector(`input[name="module-${id}"]:checked`)?.value || "none"]));
     const old=paneLayout(), next={left:[],right:[]};
     for(const side of ["left","right"]) next[side]=[...old[side],...PANE_MODULES.map(([id])=>id)].filter((id,i,all)=>all.indexOf(id)===i&&chosen.get(id)===side);
     if(await savePaneModules(next)){paneEditing=true;if(view?.decision) openModuleDrawer("actions");if(coach.open)openModuleDrawer("coach");actions.close();draw();}
