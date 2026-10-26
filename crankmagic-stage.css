@@ -693,6 +693,7 @@
 #matrix-v2 .cm-board[data-phone] .cm-drawer.is-open{transform:none}
 #matrix-v2 .cm-board[data-phone] .cm-drawer-tab{position:absolute;top:auto;bottom:0;left:0;right:auto;writing-mode:horizontal-tb;z-index:33;transform:none}
 #matrix-v2 .cm-board[data-phone] .cm-drawer-tab.cm-stage-right{left:auto;right:0}
+#matrix-v2 .cm-board[data-phone]>.cm-stage-camera{z-index:36}
 #matrix-v2 .cm-board[data-phone] .cm-decision-slot{position:relative;inset:auto;transform:none;max-width:100%;width:100%}
 #matrix-v2 .cm-board[data-phone] .cm-phone-seat .cm-seat-header{display:grid;grid-template-columns:32px 1fr;gap:4px}
 #matrix-v2 .cm-board[data-phone] .cm-phone-seat .cm-seat-commander,#matrix-v2 .cm-board[data-phone] .cm-phone-seat .cm-seat-hand{display:none}
@@ -828,6 +829,8 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-target-stack>img{animation:non
 
 /* Chrome follows the chosen register; only words on the mat use the fixed poster pair. */
 #matrix-v2 .cm-board :is(.cm-stage-rail,.cm-stage-side,.cm-stage-module,.cm-board-decision,.cm-action-review){background:var(--color-panel);color:var(--color-ink)}
+#matrix-v2 .cm-board .cm-stage-rail .cm-board-pane,#matrix-v2 .cm-board .cm-stage-rail .cm-board-pane h3,#matrix-v2 .cm-board .cm-stage-rail .cm-board-tile:not(.is-mini) .cm-seat-header{color:var(--color-ink)}
+#matrix-v2 .cm-board .cm-stage-rail .cm-board-tile:not(.is-mini) .cm-seat-initial{color:var(--mat-ink)}
 #matrix-v2 .cm-board .cm-stage-module[data-module=actions] .cm-board-decision,#matrix-v2 .cm-board .cm-stage-module>header h3{color:var(--color-ink)}
 #matrix-v2 .cm-board .cm-stage-top,#matrix-v2 .cm-board .cm-stage-top .cm-board-ribbon li{color:var(--color-ink)}
 #matrix-v2 .cm-board .cm-stage-top .cm-board-ribbon .is-now{background:var(--color-ink);color:var(--color-bg)}
@@ -920,7 +923,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-target-stack>img{animation:non
 #matrix-v2 .cm-board .cm-card-slot>.cm-bcard{margin:0}
 #matrix-v2 .cm-board .cm-card-slot>.cm-bcard.is-tapped{transform:rotate(30deg)}
 #matrix-v2 .cm-board .cm-undo-drawer{position:absolute;left:0;bottom:0;z-index:6;width:max-content;min-width:100%;min-height:24px;padding:3px 6px;border:0;background:rgb(0 0 0 / .65);color:var(--mat-ink);font:700 calc(15px*var(--hud-scale,1))/1.1 var(--font-body);white-space:nowrap;opacity:0;clip-path:inset(100% 0 0);transition:clip-path var(--motion-fast) var(--motion-ease),opacity var(--motion-fast) var(--motion-ease);pointer-events:none}
-#matrix-v2 .cm-board .cm-card-slot:hover>.cm-undo-drawer,#matrix-v2 .cm-board .cm-card-slot:focus-within>.cm-undo-drawer,#matrix-v2 .cm-board .cm-stack-image:hover>.cm-undo-drawer,#matrix-v2 .cm-board .cm-stack-image:focus-within>.cm-undo-drawer,#matrix-v2 .cm-board .cm-board-stack:hover>.cm-undo-drawer,#matrix-v2 .cm-board .cm-board-stack:focus-within>.cm-undo-drawer{opacity:1;clip-path:inset(0);pointer-events:auto}
+#matrix-v2 .cm-board .cm-card-slot:hover>.cm-undo-drawer,#matrix-v2 .cm-board .cm-card-slot:focus-within>.cm-undo-drawer,#matrix-v2 .cm-board .cm-land-stack:is(:hover,:focus-within)>.cm-undo-drawer,#matrix-v2 .cm-board .cm-stack-image:hover>.cm-undo-drawer,#matrix-v2 .cm-board .cm-stack-image:focus-within>.cm-undo-drawer,#matrix-v2 .cm-board .cm-board-stack:hover>.cm-undo-drawer,#matrix-v2 .cm-board .cm-board-stack:focus-within>.cm-undo-drawer{opacity:1;clip-path:inset(0);pointer-events:auto}
 #matrix-v2 .cm-board .cm-stack-image,#matrix-v2 .cm-board .cm-board-stack{position:relative}
 @media(prefers-reduced-motion:reduce){#matrix-v2 .cm-board .cm-undo-drawer{transition:none}}
 html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
@@ -1122,7 +1125,8 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board[data-view=full]>.cm-board-panegrip{top:var(--full-pane-top);height:calc(100% - var(--full-pane-top))}
 #matrix-v2 .cm-board[data-view=full] .cm-stage-region>.cm-decision-slot{top:calc(var(--full-action-h,0px) + 24px);max-height:calc(100% - var(--full-action-h,0px) - 36px)}
 #matrix-v2 .cm-board[data-view=full] .cm-stage-region>.cm-decision-slot>#cm-board-decision{max-height:min(65dvh,650px,calc(100dvh - var(--full-pane-top) - 20px))}
-#matrix-v2 .cm-board .cm-stage-actions .v-button{font-size:calc(17px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-stage-actions .v-button{font-size:calc(17px*var(--hud-scale,1));min-height:49px}
+@media(max-width:1100px){#matrix-v2 .cm-board .cm-stage-actions .v-button{min-height:44px}}
 #matrix-v2 .cm-board .cm-stage-actions small,#matrix-v2 .cm-board :is(.cm-stage-caption,.cm-stage-life-list,.cm-stage-life){font-size:calc(15px*var(--hud-scale,1))}
 #matrix-v2 .cm-board .cm-stage-caption{max-width:max(72px,calc((100% - var(--full-action-w,0px))/2 - 30px));box-sizing:border-box;line-height:1.15}
 #matrix-v2 .cm-board .cm-stage-caption>span{max-width:100%;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

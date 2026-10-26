@@ -2555,16 +2555,16 @@ globalThis.CrankBoard = Object.seal({
     if (!pop) return;
     if (!phone() && mat) {
       const edge = mat.getBoundingClientRect().left, width = pop.getBoundingClientRect().width;
-      const leftPanes = [...host.querySelectorAll(".cm-board-pane, .cm-stage-rail.is-open")];
-      const start = Math.max(host.getBoundingClientRect().left, ...leftPanes.map(pane => pane.getBoundingClientRect().right));
+      const leftPanes = [...host.querySelectorAll(".cm-board-pane, .cm-stage-rail.is-open, .cm-stage-left")];
+      const start = Math.max(host.getBoundingClientRect().left, ...leftPanes.map(pane => pane.getBoundingClientRect()).filter(r=>r.width>0&&r.left<innerWidth/2).map(r=>r.right));
       const gap = edge - start;
-      const left = gap >= width ? start + (gap - width) / 2 : edge - width - 12;
+      const left = gap >= width ? start + (gap - width) / 2 : start + 12;
       layer.style.setProperty("--plays-left", `${Math.max(8, Math.round(left))}px`);
     } else if (!phone()) {
       /* No mat in 3D to stand beside (Rob, 2026-10-26: "the pop-up card images for cards opponents played should never
          overlap the left drawer when its out"): with the drawer out they stand just past it, over the table; folded, they
          keep their place at the edge. */
-      const out = [...host.querySelectorAll(".cm-stage-rail.is-open, .cm-board-pane")].map((x) => x.getBoundingClientRect()).filter((r) => r.width > 0 && r.left < innerWidth / 2);
+      const out = [...host.querySelectorAll(".cm-stage-rail.is-open, .cm-board-pane, .cm-stage-left")].map((x) => x.getBoundingClientRect()).filter((r) => r.width > 0 && r.left < innerWidth / 2);
       if (out.length) layer.style.setProperty("--plays-left", `${Math.round(Math.max(...out.map((r) => r.right)) + 12)}px`);
     }
     /* UNDER THE WHOLE LIFE LIST (you are in it now, Rob 2026-10-26): where the cards stand under the caption, they start
