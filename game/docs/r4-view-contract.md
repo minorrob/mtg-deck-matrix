@@ -21,3 +21,23 @@ projection. The browser must never treat these display fields as permission to a
 
 Proof: `node tests/engine-decision-facts.mjs`; deliberate breaks:
 `python game/tools/batch/breaks.py game/tools/batch/breaks-decision-facts.py`.
+
+## The undo house rule (CH-57 and CH-58)
+
+New tables launch with `houseRules.undoLastPlay: true`, kept in the match pod. Older matches without it retain their
+original choices and replays. The room offers a priority option `{act: "undo-play", cardId, index}` only while a private
+snapshot is still valid. The answering seat's view then has `canUndo: true` and
+`undoablePlay: {cardId, name, kind}`; its played card or stack entry has `undoable: true`. Other seats receive neither
+the snapshot nor the permission. Submit the existing answer envelope with that option's index and current revision.
+
+A land's undo restores the land drop; a cast's undo restores the spell and its automatic mana payment. If manual mana
+taps immediately preceded the cast, their validated reversible run is restored together as a unit. A new action, a pass
+of priority, a step change, a trigger, information exposure, or randomness closes the window. While the window is offered,
+the room holds the caster instead of automatically passing for them; their Pass closes it. A saved snapshot is verified
+against both its before hash and the current after hash. Each seat's public history says the play was `undone`.
+
+Untapping unspent mana (CH-58) continues to use the existing `{act: "undo-mana", cardId, index}` option and its checks.
+There is no second untap command and no browser-side permission to reverse a spent source.
+
+Proof: `node tests/room-undo-play.mjs`, `node tests/room-untap-mana.mjs`; deliberate breaks:
+`python game/tools/batch/breaks.py game/tools/batch/breaks-undo-play.py`.

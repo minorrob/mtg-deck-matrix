@@ -24,7 +24,7 @@ BREAKS = [
      '(s.pilot === "house" ? [] : [seat])',
      '[seat]'),
     ('the take-back not offered', R,
-     'const backs = landBack && landBack.player === seat && hashState(state) === landBack.after ?',
+     'const backs = !undo.length && landBack && landBack.player === seat && hashState(state) === landBack.after ?',
      'const backs = false ?'),
     ('the take-back not asked for', R,
      'untaps.length > 0 || backs.length > 0 ||',
