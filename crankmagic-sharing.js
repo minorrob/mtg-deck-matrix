@@ -65,9 +65,10 @@
   actions['profile-email']=()=>C.form('Change email address',C.field('New email address','email','','type="email" required')+'<p class="cm-full">We will send a verification link. Your current sign-in remains active until you verify the new address.</p>',async v=>{await api('POST','/profile/email',v);C.notice('Verification sent to the new address.');},'Send verification');
   views['verify-email']=()=>{const token=C.route().params.get('token')||'';C.main.innerHTML=C.pageHead('Verify email address')+'<p>Confirm this address change for your signed-in account. Your decks, library, sharing permissions and game identity will stay with your account.</p>'+b('Confirm email address','profile-email-confirm',{token});};
   actions['profile-email-confirm']=async el=>{const result=await api('POST','/profile/email/confirm',{token:el.dataset.token});C.modal('Email verified',`<p>Your sign-in is now ${e(result.email)}. Sign out, then sign in with this address.</p><a class="v-button primary" href="/cdn-cgi/access/logout">Sign out</a>`);};
-  C.profileMenu=()=>me?b('Profile','open-profile')+(me.canInvite?b('Invite to CrankMagic','invite-crankmagic'):''):'';
+  C.profileMenu=()=>me?.canInvite?b('Invite to CrankMagic','invite-crankmagic'):'';
   actions['open-profile']=()=>C.go('settings');
   C.sharingAvailable=()=>!!me;
+  C.sharingOwner=()=>me?.email||null;
   C.canInvite=()=>me?.canInvite===true;
   C.sharingReady=document.querySelector('meta[name="crankmagic-accounts"]')?.content==='on'?api('GET','/me').then(v=>{me=v;C.drawProfile();const menu=document.getElementById('cm-user-menu');if(menu&&!menu.querySelector('[data-profile-menu]')){const div=document.createElement('div');div.dataset.profileMenu='';div.innerHTML=C.profileMenu();menu.prepend(div);}}).catch(()=>null):Promise.resolve(null);
 });
