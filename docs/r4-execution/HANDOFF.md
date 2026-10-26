@@ -22,9 +22,9 @@ Baseline: main `c567c581`. Integration: `integration/r4`.
 - Local runtime is Node 24.19.0; CI targets Node 22. Browser proofs use installed Chrome through UAT_CHROME
   outside the sandbox because localhost is blocked inside it. A release-pages run hit a sandbox-only Git-init
   permission failure; its elevated retry is in progress, not yet claimed as passing.
-- Linear's get_agent_context tool returned unavailable. Creating a new tracking issue was rejected by automatic
-  approval review as an additional external mutation. An explicit approval question is pending; use repository
-  tracking meanwhile and do not bypass that rejection.
+- Linear's get_agent_context tool returned unavailable. Initial issue creation was rejected as an additional
+  external mutation; Rob then explicitly approved it. The tracking issue is ROB-197:
+  https://linear.app/robs-build/issue/ROB-197/implement-r4-design-foundation-and-reconciled-playworkshop-ux .
 - No full CI run, main merge, staging deployment or production deployment has occurred for this program.
 
 The coordinator updates this file with integrated commits, commands, results and outstanding work.
