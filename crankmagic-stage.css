@@ -1090,3 +1090,5 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-stage-front>.cm-mat{--bc:max(var(--stage-card,96px),var(--caption-card-min,0px))}
 #matrix-v2 .cm-board .cm-stage-mini>.cm-mat{--bc:max(var(--rear-card,24px),var(--caption-card-min,0px))}
 #matrix-v2 .cm-board .cm-stage-front .cm-board-pile{--bc:max(calc(var(--stage-card,80px)*.78),var(--caption-card-min,0px))}
+#matrix-v2 .cm-board .cm-full-mine>.cm-mat[data-fit=full]{--bc:max(min(calc(clamp(64px,var(--full-w,1200px)*.075,112px)*var(--board-scale,1)),var(--full-bc-max,112px)),var(--caption-card-min,0px))}
+#matrix-v2 .cm-board .cm-phone-battlefield .cm-board-pile{--bc:max(54px,var(--caption-card-min,0px))}
