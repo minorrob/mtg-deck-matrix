@@ -27,6 +27,7 @@ async function hit(page,el,label,width){await el.scrollIntoViewIfNeeded();const 
 async function fold(page,kind){if(kind==='module'){const button=page.locator('.cm-stage-module[data-module=actions] [data-action=board-actions-toggle]');if(await button.getAttribute('aria-expanded')==='true')await button.click();}else{const button=page.locator('[data-action=board-stage-rail]');if(await button.getAttribute('aria-expanded')==='true')await button.click();}}
 try{
  for(const [mode,width] of [['table',1440],['focus',1440],['full',1440],['focus',390]])for(const hud of [100,200])for(const kind of ['drawer','module']){
+  if(process.env.SLOT_CASE && process.env.SLOT_CASE!==`${mode}-${width}-${hud}-${kind}`)continue;
   const {page,context,sent,errors}=await open(mode,width);const label=`${mode}/${width}/${hud}/${kind}`;
   if(hud===200){await page.locator('[data-action=board-camera]').click();await page.locator('[data-play-hud]').evaluate(el=>{el.value='200';el.dispatchEvent(new Event('input',{bubbles:true}));el.dispatchEvent(new Event('change',{bubbles:true}));});await page.locator('[data-action=board-camera]').click();}
   await page.locator('[data-action=board-option][data-index="0"]').click();await page.locator('[data-action=board-target-next]').click();await fold(page,kind);
