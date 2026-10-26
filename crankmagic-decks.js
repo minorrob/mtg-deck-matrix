@@ -854,7 +854,7 @@ const preconText=p=>p.commander.map(c=>`1 ${c.name}`).concat(p.cards.map(([n,q])
 let latestOnce=null;
 const playSeen={lines:new Map(),count:null,of:null,deck:new Map()};
 const seenOf=(map,id)=>C.play?.open()?map.get(id):null;
-const deckPlayLine=id=>{const s=seenOf(playSeen.deck,id);return `<p class="cm-deck-play${s&&s.ok?' is-playable':''}" id="cm-deck-play" data-deck="${e(id)}"${s?' data-play-seen':' hidden'}>${s?s.html:''}</p>`;};
+const deckPlayLine=id=>{const s=seenOf(playSeen.deck,id);return `<p class="cm-deck-play${s&&s.ok?' is-playable':''}" id="cm-deck-play" data-deck="${e(id)}"${s?' data-play-seen':' hidden'}>${s?s.html.replace('v-button primary','v-button'):''}</p>`;};
 const playLine=id=>{const s=seenOf(playSeen.lines,id);return `<span class="cm-tile-play${s&&s.ok?' is-playable':''}" data-play-for="${e(id)}"${s?' data-play-seen':' hidden'}>${s?e(s.text):''}</span>`;};
 /* A line drawn as it last read waits for the table's answer to write it again. The answer writes only the decks it can
    check, and none if it fails, so a line it did not write by the time it finishes is put away and forgotten: a deck
