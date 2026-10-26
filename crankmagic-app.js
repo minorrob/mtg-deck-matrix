@@ -131,7 +131,7 @@ function notice(message,error=false,{action=null,stay=false,undo=true,dismiss=nu
 /* A NEW VERSION, OFFERED (M-18): the service worker installs a new version and waits; this says so, and stays until
    answered. Reload asks the waiting worker to take over, and the page reloads once it has -- never before the click. */
 function offerUpdate(reg){if(!reg)return;/* A worker waits without interrupting a form or a game. Offer it at the next navigation. */let asked=false,pending=false,dismissed=false;const offer=()=>{if(reg.waiting&&navigator.serviceWorker.controller)pending=true;};
-  addEventListener('hashchange',()=>{offer();if(!pending||asked||dismissed||!reg.waiting)return;notice('A new version of CrankMagic is ready.',false,{stay:true,undo:false,dismiss:()=>{dismissed=true;},action:{label:'Reload',run:()=>{asked=true;reg.waiting?.postMessage({type:'skip-waiting'});}}});});
+  addEventListener('hashchange',async()=>{try{reg=await navigator.serviceWorker.getRegistration()||reg;}catch{return;}offer();if(!pending||asked||dismissed||!reg.waiting)return;notice('A new version of CrankMagic is ready.',false,{stay:true,undo:false,dismiss:()=>{dismissed=true;},action:{label:'Reload',run:()=>{asked=true;reg.waiting?.postMessage({type:'skip-waiting'});}}});});
   navigator.serviceWorker.addEventListener('controllerchange',()=>{if(asked)location.reload();});
   offer();reg.addEventListener('updatefound',()=>{const w=reg.installing;w?.addEventListener('statechange',()=>{if(w.state==='installed')offer();});});}
 /* CLOSING A SUB-DIALOG GOES BACK, IT DOES NOT THROW THE WHOLE THING AWAY.
@@ -645,6 +645,9 @@ actions['share-copy']=async()=>{try{await navigator.clipboard.writeText(APP_URL)
    chip was pressed. */
 {const m=$('#cm-user-menu');if(m&&m.closest('.cm-sidebar'))$('#matrix-v2').append(m);}
 let menuChip=null;document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[popovertarget="cm-user-menu"]');if(b)menuChip=b;},true);
+/* Board and Workshop open the same menu node, so verified Admin/account entries and Skin stay in one place. */
+C.openAccountMenu=anchor=>{menuChip=anchor||$('#cm-user-functions');$('#cm-user-menu').togglePopover();};
+C.closeAccountMenu=()=>{const menu=$('#cm-user-menu');if(menu.matches(':popover-open'))menu.hidePopover();};
 $('#cm-user-menu').addEventListener('beforetoggle',e=>{if(e.newState==='open'){describeData();const chip=menuChip&&menuChip.isConnected&&menuChip.getClientRects().length?menuChip:$('#cm-user-functions'),r=chip.getBoundingClientRect(),m=$('#cm-user-menu');
   const below=window.innerHeight-r.bottom;
   m.style.left=Math.max(8,Math.min(r.left,window.innerWidth-226))+'px';m.style.right='auto';

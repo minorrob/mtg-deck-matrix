@@ -275,8 +275,9 @@
      with New table. */
   function resultReview(t){const record=t.gameRecord,deck=record?.source?.deckId&&C.state.decks.find(d=>d.id===record.source.deckId);
     if(!record)return '';
+    const filed=deck&&C.state.games.some(g=>g.id===record.id&&g.deckId===deck.id);
     const outcome={win:'Won',loss:'Lost',draw:'Draw',unfinished:'Unfinished'}[record.outcome]||'Finished';
-    return `<section class="v-panel cm-game-result" aria-label="Game result"><h2>${e(outcome)}</h2><p>Turn ${e(String(record.turns))} · ${e(String(record.pod))} seats${record.bracket?' · Bracket '+e(String(record.bracket)):''}</p><p>${e(record.finishReason||'')}</p><div class="cm-actions"><a class="v-button" href="#game">Back to lobby</a>${deck?`<a class="v-button" href="#decks?${e(new URLSearchParams({deck:deck.id,tab:'overview',game:record.id}).toString())}">Review this game</a>`:'<span class="cm-muted">The result stays at this table; its original deck is not in this library.</span>'}</div></section>`;}
+    return `<section class="v-panel cm-game-result" aria-label="Game result"><h2>${e(outcome)}</h2><p>Turn ${e(String(record.turns))} · ${e(String(record.pod))} seats${record.bracket?' · Bracket '+e(String(record.bracket)):''}</p><p>${e(record.finishReason||'')}</p><div class="cm-actions"><a class="v-button" href="#game">Back to lobby</a>${filed?`<a class="v-button" href="#decks?${e(new URLSearchParams({deck:deck.id,tab:'overview',game:record.id}).toString())}">Review this game</a>`:`<span class="cm-muted">${deck?'This result has not been filed in this library yet.':'The result stays at this table; its original deck is not in this library.'}</span>`}</div></section>`;}
   const filing=new Map();
   /* The board's verified record read and the lobby's owner-only result share one writer. No
      snapshot, cards or hidden zones are copied into the account's library. */

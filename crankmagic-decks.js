@@ -4,10 +4,11 @@
 const R=globalThis.CrankRules;   // the house rules and the deck-page literals live there
 const DECK_TABS=[['overview','Overview'],['hundred','The hundred'],['upgrades','Upgrades'],['explore','Explore'],['acquire','Acquire']];
 let sharedSnapshot=null,sharedRead=null;
-function readShared(force=false){const owner=C.signedInAs?.()||null;
+const sharingOwner=()=>C.signedInAs?.()||C.sharingOwner?.()||null;
+function readShared(force=false){const owner=sharingOwner();
   if(!force&&sharedSnapshot?.owner===owner&&Date.now()-sharedSnapshot.at<30000)return Promise.resolve(sharedSnapshot.items);
   if(sharedRead?.owner===owner)return sharedRead.promise;
-  const pending={owner,promise:C.sharedItems().then(items=>{if((C.signedInAs?.()||null)===owner)sharedSnapshot={owner,items,at:Date.now()};return items;}).finally(()=>{if(sharedRead===pending)sharedRead=null;})};sharedRead=pending;return pending.promise;}
+  const pending={owner,promise:C.sharedItems().then(items=>{if(sharingOwner()===owner)sharedSnapshot={owner,items,at:Date.now()};return items;}).finally(()=>{if(sharedRead===pending)sharedRead=null;})};sharedRead=pending;return pending.promise;}
 /* Tab hash redirects for backward compatibility */
 const TAB_REDIRECTS={cards:'hundred',guide:'overview',history:'overview'};
 /* THE DECKS NAV (Rob, 2026-10-23: the Decks requirements' NAV-1 to NAV-8). Five entries and no deck names: My Decks,
@@ -259,14 +260,13 @@ $('#cm-show-archived')?.addEventListener('change',ev=>{showArchived=ev.target.ch
 /* INCLUDE PUBLIC DECKS (FLT-6, Q8): off by default, private shares only; the choice is remembered with the person. */
 $('#cm-include-public')?.addEventListener('change',async ev=>{const on=ev.target.checked;history.replaceState(null,'',hashFor('public',null));await commit({type:'preferences',values:{includePublicShares:on}},{renderView:false});C.render();});
 if(stage==='shared'){const box=document.getElementById('cm-shared-grid');
-  if(!C.sharedItems||!C.sharingAvailable?.()){box.innerHTML='<p class="cm-muted cm-decks-none">Sign in to see the decks other people share with you.</p>';box.removeAttribute('aria-busy');}
-  else readShared(true).then(items=>{if(!box.isConnected)return;const count=document.querySelector('[data-stage-count=shared]');if(count)count.textContent=items.filter(x=>(pub||x.via!=='public')&&(!fav||favs.has('share:'+x.id))).length.toLocaleString('en-US');const list=items.filter(x=>(pub||x.via!=='public')&&(!fav||favs.has('share:'+x.id)));C.sharedShown=list;
+  let owner=null;Promise.resolve(C.sharingReady).then(()=>{owner=sharingOwner();if(!box.isConnected)return null;if(!C.sharedItems||!C.sharingAvailable?.()){box.innerHTML='<p class="cm-muted cm-decks-none">Sign in to see the decks other people share with you.</p>';box.removeAttribute('aria-busy');return null;}return readShared(true);}).then(items=>{if(!items||!box.isConnected||owner!==sharingOwner())return;const count=document.querySelector('[data-stage-count=shared]');if(count)count.textContent=items.filter(x=>(pub||x.via!=='public')&&(!fav||favs.has('share:'+x.id))).length.toLocaleString('en-US');const list=items.filter(x=>(pub||x.via!=='public')&&(!fav||favs.has('share:'+x.id)));C.sharedShown=list;
     box.innerHTML=list.length?list.map(C.sharedTile).join(''):`<p class="cm-muted cm-decks-none">${fav?'No favorites yet. Star a deck to see it here.':pub?'Nobody has shared a deck with you yet.':'Nobody has shared a deck with you privately yet. Tick Include public decks to see public ones.'}</p>`;box.removeAttribute('aria-busy');})
     .catch(err=>{if(box.isConnected){box.innerHTML=`<p class="cm-muted cm-decks-none" role="alert">${e(err.message)}</p>`;box.removeAttribute('aria-busy');}});
   return;}
 /* Shared is a count on every stage. Bound background reads to this account and refresh on entry to Shared. */
-const sharedChip=document.querySelector('[data-stage-count=shared]'),sharedOwner=C.signedInAs?.()||null;
-Promise.resolve(C.sharingReady).then(()=>C.sharingAvailable?.()&&C.sharedItems?readShared():[]).then(items=>{if(sharedChip?.isConnected&&(C.signedInAs?.()||null)===sharedOwner)sharedChip.textContent=items.filter(x=>(pub||x.via!=='public')&&(!fav||favs.has('share:'+x.id))).length.toLocaleString('en-US');}).catch(error=>{if(sharedChip?.isConnected){sharedChip.textContent='—';sharedChip.title=error.message;}});
+const sharedChip=document.querySelector('[data-stage-count=shared]');let sharedOwner=null;
+Promise.resolve(C.sharingReady).then(()=>{sharedOwner=sharingOwner();return C.sharingAvailable?.()&&C.sharedItems?readShared():[];}).then(items=>{if(sharedChip?.isConnected&&sharingOwner()===sharedOwner)sharedChip.textContent=items.filter(x=>(pub||x.via!=='public')&&(!fav||favs.has('share:'+x.id))).length.toLocaleString('en-US');}).catch(error=>{if(sharedChip?.isConnected){sharedChip.textContent='—';sharedChip.title=error.message;}});
 /* AI-5: each tile says whether the table can play its deck, where Play is in the cloud (crankmagic-table.js, C.play);
    and the summary, how many of them it can. Playable (FLT-4) puts away the tiles the table can't play every card of --
    the chip already shows only Defined decks, so a 92-seat deck the table knows is never Playable. */

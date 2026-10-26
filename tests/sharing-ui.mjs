@@ -16,6 +16,7 @@ const {browser,base,stub,close}=await openBrowser({name:'sharing-ui',flag:'GEOME
 const shotDir=process.env.UAT_SHOTS||path.join(ROOT,'work/sharing-shots');mkdirSync(shotDir,{recursive:true});
 try{
   const context=await browser.newContext({viewport:{width:1400,height:950},serviceWorkers:'block'}),page=await context.newPage();if(stub)await stub(page);
+  await page.addInitScript(()=>(globalThis.CrankFeatures||=[]).push(C=>{const notice=C.notice;C.notice=(message,error,options)=>{globalThis.__lastNotice={message,error,stay:!!options?.stay,action:options?.action?.label};return notice(message,error,options);};}));
   await page.route('**/index.html*',async route=>{await route.fulfill({contentType:'text/html',body:readFileSync(path.join(ROOT,'index.html'),'utf8').replace('<head>','<head><meta name="crankmagic-accounts" content="on">')});});
   await page.route('**/api/social/**',async route=>{try{const r=route.request();if(failSettings&&r.method()==='GET'&&new URL(r.url()).pathname.endsWith('/settings'))return route.fulfill({status:503,json:{error:'Sharing is temporarily unavailable.'}});const result=await social(new Request(r.url(),{method:r.method(),...(r.postData()?{body:r.postData(),headers:{'content-type':'application/json'}}:{})}),env,owner,{fetchImpl:async(url,args)=>{mail.push(JSON.parse(args.body));return Response.json({id:"test-"+mail.length});}});await route.fulfill({status:200,json:result});}catch(e){await route.fulfill({status:e.status||500,json:{error:e.message}});}});
   await page.route('**/api/me',r=>r.fulfill({status:200,json:{email:owner.email,head:null}}));
@@ -37,6 +38,9 @@ try{
   settings=await sharing(D,env).settings(owner,'deck',deck.id);ok(settings.publicRole==='reviewer','public defaults Reviewer');
   await page.locator('[data-action="deck-more-menu"]').click();await page.getByRole('button',{name:'Share Deck',exact:true}).click();ok(await dialog.getByRole('button',{name:'Send',exact:true}).isHidden(),'email Send hidden outside email tab');await dialog.getByRole('tab',{name:'Email Deck'}).click();const send=dialog.getByRole('button',{name:'Send',exact:true});ok(await send.isDisabled(),'empty email disables Send');await dialog.locator('[name=email]').fill('alex@example.com');ok(await send.isEnabled(),'valid email enables Send');await send.click();await dialog.getByText('Deck email sent.',{exact:true}).waitFor();ok(mail.length===2,'email deck list sent');await dialog.getByRole('button',{name:'Cancel',exact:true}).click();
   await page.goto(base+'/index.html#settings');await page.locator('#cm-settings-profile').getByText('Deck Owner',{exact:true}).waitFor();
+  await page.locator('#cm-user-functions').click();
+  ok(await page.locator('#cm-user-menu [data-action=open-settings]').count()===1&&await page.locator('#cm-user-menu [data-action=open-profile]').count()===0,'the shared account menu has one Settings door and no competing Profile label');
+  await page.keyboard.press('Escape');
   await overlay([['[aria-labelledby=cm-settings-h-account]','P01'],['[aria-labelledby=cm-settings-h-profile]','P02'],['[aria-labelledby=cm-settings-h-appearance]','P03'],['[aria-labelledby=cm-settings-h-play]','P04']]);await page.screenshot({path:path.join(shotDir,'settings-desktop.png'),fullPage:true});
   await page.locator('[data-action=profile-edit]').click();await dialog.locator('[name=name]').fill('Updated Player');await dialog.getByRole('button',{name:'Save',exact:true}).click();await page.locator('#cm-settings-profile').getByText('Updated Player',{exact:true}).waitFor();ok((await sharing(D,env).profile(owner)).name==='Updated Player','profile saved to authenticated identity');
   await page.setViewportSize({width:390,height:844});await page.goto(base+'/index.html#settings');await page.locator('#cm-settings-profile').getByText('Updated Player',{exact:true}).waitFor();ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'mobile Settings has no horizontal overflow');await overlay([['[aria-labelledby=cm-settings-h-profile]','P02']]);await page.screenshot({path:path.join(shotDir,'settings-mobile.png'),fullPage:true});
@@ -52,6 +56,8 @@ try{
   await page.locator('[data-action=deck-more-menu]').click();await page.getByRole('button',{name:'Share Deck',exact:true}).click();
   await dialog.locator('[role=alert]').waitFor();
   ok(/Sharing is temporarily unavailable/.test(await dialog.innerText()),'a sharing load failure stays in the dialog');
+  const failedNotice=await page.evaluate(()=>globalThis.__lastNotice);
+  ok(failedNotice.error&&failedNotice.stay&&failedNotice.action==='Retry','Share failures also provide a persistent error toast with the relevant retry');
   failSettings=false;await dialog.getByRole('button',{name:'Retry',exact:true}).click();
   await dialog.locator('#cm-share-form').waitFor();
   ok(await dialog.getByRole('button',{name:'Copy link',exact:true}).isEnabled(),'Retry restores the share dialog');
