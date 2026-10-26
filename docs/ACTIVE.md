@@ -66,6 +66,16 @@ covered the tile's stage pill. At his word this changes the Codex · Play lane's
   card clicked for its actions, an option staged, a cost or target asked for a card) is drawn at the top of the Actions
   desk, and no pane opens on the right; nor does a hover preview of that same card. One a person asks for (🔍, Inspect
   card) still opens the inspector (`deskCard`).
+- **The hover never locks** (Rob, same day, Sol Ring's "what to tap for it": *"I want to go and hover over [Interplanar
+  Beacon] to pop-up the card. I can't. I'm locked into Sol Ring."*): an open inspection had silenced every hover. Now the
+  hover pops up any card while a question is open, and an option that names a card (an "Island" to tap) pops that card up
+  on a hover or the keyboard's focus (`data-peek-card`). Only the card pinned by 🔍 is not shown twice.
+- **Queued, not started (Rob, same day: "Save this feature, will do it after those in progress"): paying a cost as a
+  mana panel.** When every source must be tapped there should be one choice, not one per ordering. Instead of an option
+  per combination: a row of the cost's mana symbols with the amount required under each; a row below of the mana tapped;
+  a left click on a mana source on the table taps it toward the cost (in a "pay for card" state); a clear mark once the
+  cost is covered; then **Confirm and cast** and **Cancel**. Rob's screenshot: Way of the Mind Sculptor offered five
+  orderings of Island, Sol Ring, Interplanar Beacon and Command Tower.
 - **Proof:** `board-r2-actions-inspection` 109 (no visible summary or paragraph, Confirm/Clear words and row, the toggle's
   size and fill, All actions at the left edge, the rail's scrollbar color) and `decks-hub` 70 (star clear of the pill);
   new `board-stack-choices` 16, `board-attack-risk` 11 and `board-mana-symbols` 13; every new check red on the old source. **Not proven:** how Windows/macOS draw the scrollbar colors (headless shows none).

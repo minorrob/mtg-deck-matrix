@@ -1330,17 +1330,19 @@ globalThis.CrankBoard = Object.seal({
   }
   const riskCls = (r) => (r ? `${r.die.length ? " is-risk-die" : ""}${r.weak ? " is-risk-weak" : ""}` : "");
   const riskMark = (r) => (r ? `${r.die.length ? `<span class="cm-risk is-die" title="Could die: ${e(r.die.map((c) => `${c.name} ${c.power}/${c.toughness}`).join(", "))}">☠<span class="cm-sr-only"> could die to ${e(r.die.map((c) => c.name).join(", "))};</span></span>` : ""}${r.weak ? `<span class="cm-risk is-weak" title="Kills no blocker alone">⊘<span class="cm-sr-only"> kills no blocker alone;</span></span>` : ""}` : "");
+  /* An option that names a card the seat can read carries it for the hover (peek). */
+  const peekOf = (o) => (o.cardId !== undefined && (findCard(o.cardId)?.name || shownCard(o.cardId)) ? ` data-peek-card="${o.cardId}"` : "");
   function decision() {
     const d = view.decision;
     if (!d || view.status === "finished" || d.kind === "draw") return "";
-    const opt = (o, extra = "", r = attackRisk(o)) => `<button type="button" class="v-button compact${picked.includes(o.index) ? " is-picked" : ""}${riskCls(r)}" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}${extra}>${riskMark(r)}${e(o.label)}</button>`;
+    const opt = (o, extra = "", r = attackRisk(o)) => `<button type="button" class="v-button compact${picked.includes(o.index) ? " is-picked" : ""}${riskCls(r)}" data-action="board-option" data-index="${o.index}"${peekOf(o)}${sending ? " disabled" : ""}${extra}>${riskMark(r)}${e(o.label)}</button>`;
     /* One option as ever; a stack as one button, ×N, and -- where the question takes more than one -- how many of it. */
     const stackOpt = (s) => {
       if (s.length === 1) return opt(s[0], ` aria-pressed="${picked.includes(s[0].index)}"`);
       const ids = s.map((o) => o.index), k = ids.filter((i) => picked.includes(i)).length;
       const many = d.mode === "many" && d.max > 1, room = Math.min(s.length, d.max - (picked.length - k));
       const r = attackRisk(s[0]);
-      return `<span class="cm-board-same"><button type="button" class="v-button compact${k ? " is-picked" : ""}${riskCls(r)}" data-action="board-option-same" data-same="${ids.join(",")}" aria-pressed="${k > 0}"${sending ? " disabled" : ""}>${riskMark(r)}${e(s[0].label)} <span class="cm-board-same-n">×${s.length}</span></button>${many
+      return `<span class="cm-board-same"><button type="button" class="v-button compact${k ? " is-picked" : ""}${riskCls(r)}" data-action="board-option-same" data-same="${ids.join(",")}" aria-pressed="${k > 0}"${peekOf(s[0])}${sending ? " disabled" : ""}>${riskMark(r)}${e(s[0].label)} <span class="cm-board-same-n">×${s.length}</span></button>${many
         ? `<input type="number" class="cm-board-same-count" min="0" max="${room}" step="1" value="${k}" data-board-same="${ids.join(",")}" aria-label="How many ${e(s[0].label)}"${sending ? " disabled" : ""}>` : ""}</span>`;
     };
     let body = "", foot = "";
@@ -1597,13 +1599,15 @@ globalThis.CrankBoard = Object.seal({
     peekTimer = null;
     const old = document.getElementById("cm-board-peek");
     if (!el) {peekId = null; if (old) old.remove(); return;}
-    /* A pinned inspection stands for the hover; so does the card already read in the Actions desk, for that card. */
-    if (inspection && (!deskInspection() || inspection.id === String(el.dataset.card))) return;
-    peekId = Number(el.dataset.card);
+    /* The hover always shows the card (Rob, 2026-10-25: "Even when an action to decide on a selected card, my on-hover for
+       any card should still work to pop-up the card"), but for the very card pinned in the inspector, already shown. */
+    const id = el.dataset.card ?? el.dataset.peekCard;
+    if (inspection && !deskInspection() && inspection.kind === "card" && inspection.id === String(id)) return;
+    peekId = Number(id);
     peekTimer = setTimeout(() => {
       peekTimer = null;
       if (!el.isConnected && !stillUnder(peekId)) {peekId = null; return;}
-      const c = findCard(Number(el.dataset.card));
+      const c = findCard(Number(id)) || shownCard(Number(id));
       if (!c || !c.name || !document.getElementById("cm-board")) return;
       const div = old || Object.assign(document.createElement("div"), {id: "cm-board-peek", className: "cm-board-peek"});
       /* Said as well as shown, by the board's status region; the picture itself is not read twice. */
@@ -3356,17 +3360,21 @@ globalThis.CrankBoard = Object.seal({
     else if (stackShown !== null && event.pointerType === "mouse" && !(event.target.closest && event.target.closest("#cm-stack-peek"))) stackPeek(null);
     pointerAt = {x: event.clientX, y: event.clientY};
     if (event.pointerType !== "mouse" || !document.getElementById("cm-board") || !view) return;
-    const el = event.target.closest && event.target.closest(".cm-board .cm-bcard[data-card]");
+    /* A card, or an option that names one (data-peek-card: "Interplanar Beacon" in a cost's question), pops it up. */
+    const el = event.target.closest && event.target.closest(".cm-board .cm-bcard[data-card], #cm-board [data-peek-card]");
     if (!el || el.closest(".cm-board-peek, .cm-full-pick, .cm-panel-card, #cm-card-inspector")) return;
+    if (el.dataset.peekCard !== undefined) {if (!showing && peekId !== Number(el.dataset.peekCard)) peek(el); return;}
     const id = Number(el.dataset.card); if (id !== hover) {hover = id; drawPick();}
     if (!showing) peek(el);
   });
   document.addEventListener("focusin", event => {
-    const el = event.target.closest?.("#cm-board .cm-bcard[data-card]");
+    const el = event.target.closest?.("#cm-board .cm-bcard[data-card], #cm-board [data-peek-card]");
     if (el && !showing && !el.closest("#cm-card-inspector, .cm-board-peek")) peek(el);
   });
-  document.addEventListener("focusout", event => {if (event.target.closest?.("#cm-board .cm-bcard[data-card]")) peek(null);});
+  document.addEventListener("focusout", event => {if (event.target.closest?.("#cm-board .cm-bcard[data-card], #cm-board [data-peek-card]")) peek(null);});
   document.addEventListener("pointerout", (event) => {
+    const named = event.target.closest?.("#cm-board [data-peek-card]");
+    if (named && !named.contains(event.relatedTarget)) {peek(null); return;}
     const el = event.target.closest && event.target.closest(".cm-board .cm-bcard[data-card]");
     if (!el) return;
     if (hover !== null) {hover = null; drawPick();}

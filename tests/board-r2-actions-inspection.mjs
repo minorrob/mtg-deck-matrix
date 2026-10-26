@@ -117,8 +117,11 @@ try{
   /* Rob, 2026-10-25: "Don't need both. Inspection pane should be within the left drawer." */
   ok(await page.locator('.cm-stage-rail #cm-board-decision .cm-action-card img').count()===1,'the source card is read in the Actions desk during review');
   eq(await page.locator('#cm-card-inspector').count(),0,'and no second inspection pane opens on the right');
-  await page.locator(`.cm-board-hand .cm-bcard[data-card="${id}"], .cm-stage-fan .cm-bcard[data-card="${id}"]`).first().hover();await page.waitForTimeout(450);
-  eq(await page.locator('#cm-board-peek').count(),0,'nor a hover preview of the card the desk already shows');
+  /* Rob, 2026-10-25: "Even when an action to decide on a selected card, my on-hover for any card should still work". */
+  await page.mouse.move(2,2);await page.locator(`.cm-board-hand .cm-bcard[data-card="${id}"], .cm-stage-fan .cm-bcard[data-card="${id}"]`).first().hover();
+  await page.locator('#cm-board-peek').waitFor({timeout:3000});
+  ok(true,'while an action is being decided, the hover still pops the card up');
+  await page.mouse.move(2,2);
   await page.locator('[data-action="board-reset"]').click();
   eq(sent.filter(x=>x.type==='act').length,before,'clearing draft sends nothing');
   await page.locator('#cm-board-decision [data-index="0"]').click();
