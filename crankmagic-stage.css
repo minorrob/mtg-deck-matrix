@@ -23,6 +23,8 @@
 .cm-stage-fan-slot:not(:last-child) .cm-bcard-name{right:max(5%,calc(100% - var(--fan-step,106px) + 16px))}
 .cm-stage-front,.cm-stage-rear{position:absolute;z-index:1;min-width:0;min-height:0}
 .cm-stage-front>.cm-mat,.cm-stage-mini>.cm-mat{height:100%;width:100%;border:0;box-shadow:none!important;--pad:4px;--mat-reserve:0px}
+/* A mat laid out k times larger and shrunk back by its matrix, so its cards are painted sharp (crankmagic-stage.js, sharpness). */
+.cm-stage-front>*,.cm-stage-rear>*{zoom:var(--mat-zoom,1)}
 /* Every mat is drawn here as in every other view: a drawn mat's pattern (Rob, 2026-10-17), and Rob's art cropped to its
    seat, never stretched; in Full screen the art is at full strength, with no wash over it (Rob, 2026-10-18) */
 .cm-stage-region{--mat-art-wash:linear-gradient(transparent,transparent)}
@@ -166,7 +168,7 @@
 .cm-stage-style-note{margin:5px 0 1px;font-size:10px;color:#b1c6bb}
 @media(prefers-reduced-motion:reduce){.cm-stage-fan-slot .cm-bcard{transition:none}}
 
-.cm-board[data-shell="shared"]{--stage-side-width:min(330px,34vw);--stage-side-offset:0px}
+.cm-board[data-shell="shared"]{--stage-side-width:min(var(--panel-w,330px),45vw);--stage-side-offset:0px}
 .cm-board[data-shell="shared"]:has(>.cm-stage-side.is-open){--stage-side-offset:var(--stage-side-width)}
 .cm-board[data-shell="shared"] .cm-stage-camera{right:calc(var(--stage-side-offset) + 16px);z-index:14}
 .cm-board[data-shell="shared"]>.cm-stage-right{right:var(--stage-side-offset)}
@@ -267,11 +269,21 @@
 #matrix-v2 .cm-stack-summary{width:100%;padding:7px 3px;margin:0 0 5px;background:transparent;color:inherit;border:1px solid transparent;border-radius:5px;text-align:left;cursor:pointer}
 #matrix-v2 .cm-stack-summary[aria-pressed="true"]{background:#286c534d;border-color:#75b895}
 #matrix-v2 .cm-stack-summary:focus-visible,#matrix-v2 .cm-stack-pile:focus-visible{outline:2px solid #a8dfbf;outline-offset:2px}
+/* A card the question offers from out of sight (crankmagic-board.js, offeredCards): ◇ and a gold edge, ahead of the stack. */
+.cm-stack-summary.is-choice .cm-stack-position{color:#e2c98f}
+#matrix-v2 .cm-stack-summary.is-choice[aria-pressed="true"]{background:#8d78564d;border-color:#d9c39a}
+.cm-stack-card.is-choice{box-shadow:0 0 0 2px #d9c39a,0 8px 18px #0006}
 #matrix-v2 .cm-stack-pile{position:relative;display:block;width:var(--module-card-w);height:calc(var(--module-card-w)*1.4 + var(--pile-depth)*5px);padding:0;margin:0 12px 0 0;border:0;background:transparent;cursor:pointer;flex-shrink:0;isolation:isolate}
 .cm-stack-pile .cm-stack-card{position:absolute;left:0;top:0;margin:0;transform:translate(calc(var(--depth)*3px),calc(var(--depth)*5px));pointer-events:none;box-shadow:0 2px 5px #0008}
 .cm-stack-ghost{pointer-events:none}
 .cm-stage-environment{position:absolute;inset:58px 0 0;z-index:-1;overflow:hidden;pointer-events:none}
-.cm-stage-environment video{width:100%;height:100%;object-fit:cover;display:block}
+/* The backdrop whole (crankmagic-stage.js, environment): the video at its own 16:9, as large as the stage allows without
+   cropping, centered; its poster, blurred, behind it; its edges feathered into that. */
+.cm-stage-environment{container-type:size;display:grid;place-items:center;background:#140806}
+.cm-stage-environment::before{content:"";position:absolute;inset:-48px;background:var(--env-poster,none) center/cover no-repeat;filter:blur(32px) saturate(1.15) brightness(.72)}
+.cm-stage-environment video{position:relative;display:block;width:min(100cqw,calc(100cqh * 16 / 9));height:auto;aspect-ratio:16/9;object-fit:cover;
+  -webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent),linear-gradient(transparent,#000 4%,#000 96%,transparent);-webkit-mask-composite:source-in;
+  mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent),linear-gradient(transparent,#000 4%,#000 96%,transparent);mask-composite:intersect}
 .cm-stage-region.has-video{background:transparent}
 
 .cm-bcard[data-arrange-card]{cursor:grab}.cm-bcard[data-arrange-card]:active{cursor:grabbing}.cm-bcard.cm-card-drop{outline:3px solid #a8dfbf;outline-offset:2px}
@@ -473,7 +485,10 @@
 .cm-stage-rail .cm-stage-module[data-module="actions"]{background:none;border:0;border-bottom:1px solid #43564d;border-radius:0;box-shadow:none}
 .cm-stage-module[data-module="actions"]>.cm-module-body{max-height:none;overflow:visible;padding:10px 0}
 .cm-stage-module[data-module="actions"] .cm-board-decision{background:none;box-shadow:none;border:0;padding:0;color:#edf6ef}
-.cm-stage-module[data-module="actions"] .cm-board-decision{display:flex;flex-direction:column;max-height:calc(70vh - 130px);gap:10px;min-height:0}
+/* As tall as the drawer below where it starts and the Actions header, not 70% of the window, so Confirm is always on
+   screen: the drawer starts at 58px, at 188px while combat's band is up (--rail-top). */
+.cm-board{--rail-top:58px}.cm-board[data-combat]{--rail-top:188px}
+.cm-stage-module[data-module="actions"] .cm-board-decision{display:flex;flex-direction:column;max-height:calc(100dvh - var(--rail-top) - 112px);gap:10px;min-height:0;overflow-y:auto;scrollbar-width:thin}
 .cm-stage-module[data-module="actions"] .cm-board-decision>h3,.cm-stage-module[data-module="actions"] .cm-board-decision-foot{flex:none}
 #matrix-v2 .cm-stage-module h3,#matrix-v2 .cm-stage-rail .cm-board-pane h3,#matrix-v2 #cm-card-inspector h3{font-family:CrankOxanium,Satoshi,sans-serif;font-size:14px;font-weight:600;text-transform:none;color:inherit}
 .cm-stage-module[data-module="actions"] .cm-board-options{display:flex;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:8px;min-height:0;max-height:none;overflow:auto;padding:3px;margin:-3px;scrollbar-width:thin}
@@ -483,6 +498,25 @@
 .cm-board-same{display:flex;align-items:stretch;gap:6px;min-width:0}
 #matrix-v2 .cm-board-same>.v-button{flex:1 1 auto;min-width:0}
 .cm-board-same-n{margin-left:6px;font-weight:800;color:var(--v-accent)}
+/* A card's mana abilities, one row of symbol buttons (crankmagic-board.js, withManaRow). */
+.cm-mana-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+#matrix-v2 .cm-board .v-button.cm-mana-tap{flex:none;display:inline-grid;place-items:center;min-width:44px;width:auto;min-height:40px;height:40px;padding:0 8px;white-space:nowrap}
+.cm-mana-tap .cm-mana{display:inline-flex;gap:2px}.cm-mana-tap .cm-mana :is(img,svg){width:24px;height:24px}
+/* Lands last, folded, in a question of targets (crankmagic-board.js, grouped). */
+.cm-board-lands-group{flex:none;border-top:1px solid #6c918355;padding-top:6px}
+.cm-board-lands-group>summary{display:flex;align-items:center;gap:6px;cursor:pointer;list-style:none;font:600 12px/1.4 system-ui,sans-serif;color:#b6cbbf;padding:4px 2px;text-transform:uppercase;letter-spacing:.06em}
+.cm-board-lands-group>summary::-webkit-details-marker{display:none}
+.cm-board-lands-group>summary::before{content:"";width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(-45deg);transition:transform .15s ease}
+.cm-board-lands-group[open]>summary::before{transform:rotate(45deg)}
+.cm-board-lands-group>summary:hover,.cm-board-lands-group>summary:focus-visible{color:#fff}
+.cm-board-lands-n{font-weight:500;color:#8fa79b}
+.cm-board-lands-options{display:flex;flex-direction:column;gap:8px;padding-top:6px}
+@media(prefers-reduced-motion:reduce){.cm-board-lands-group>summary::before{transition:none}}
+/* What an attack risks (crankmagic-board.js, attackRisk): red, ☠, a blocker could kill it; yellow, ⊘, it kills no blocker alone. */
+.cm-risk{display:inline-block;margin-right:6px;font-weight:800}.cm-risk.is-die{color:#ff8a7a}.cm-risk.is-weak{color:#f2d06b}
+#matrix-v2 .cm-board-decision .v-button.is-risk-weak{box-shadow:inset 4px 0 #e0b938}
+#matrix-v2 .cm-board-decision .v-button.is-risk-die{box-shadow:inset 4px 0 #e0533f;border-color:#e0533f99}
+#matrix-v2 .cm-board-decision .v-button.is-risk-die.is-risk-weak{box-shadow:inset 4px 0 #e0533f,inset 8px 0 #e0b938}
 #matrix-v2 .cm-board-same-count{flex:none;width:60px;padding:0 6px;border:1px solid var(--v-line-strong);border-radius:var(--v-radius);background:var(--v-raised);color:var(--v-ink);font:inherit;font-weight:700;text-align:center}
 .cm-stage-rail .cm-block-tiles{flex-wrap:wrap;overflow:visible}
 #matrix-v2 .cm-stage-module[data-module="actions"] .v-button{white-space:normal;text-align:left;line-height:1.4;min-height:40px;overflow-wrap:anywhere}
@@ -512,11 +546,43 @@
 
 #matrix-v2 .cm-stage-rail .cm-board-pane h3{color:#edf6ef}
 
-/* Decision desk: a local selection and its consequence stay beside the board. */
-.cm-action-summary{width:100%;padding:12px;border:1px solid #8d7856;border-radius:8px;background:#1c2c2c;color:#edf6ef;font-size:13px;line-height:1.5;max-height:180px;overflow:auto}
-.cm-action-summary ul{margin:6px 0 0;padding-left:18px}.cm-action-summary li{margin:4px 0;overflow-wrap:anywhere}
-.cm-action-review{flex:none;border-top:1px solid #8d785666;padding-top:10px}.cm-action-review p,.cm-action-hint{font-size:12px;line-height:1.5;color:inherit;margin:8px 0}
-.cm-action-review .cm-actions{display:flex;flex-wrap:wrap;gap:8px}.cm-action-review button{min-height:40px}
+/* Decision desk: the outlined option is the selection; Confirm and Clear sit side by side under it, with no words to
+   restate it (Rob, 2026-10-25). */
+.cm-action-review{flex:none;align-self:stretch;border-top:1px solid #8d785666;padding-top:10px}
+.cm-action-review .cm-actions{display:flex;flex-wrap:nowrap;gap:8px}.cm-action-review button{min-height:40px}
+#matrix-v2 .cm-action-review .cm-actions>.v-button{flex:1 1 0;min-width:0;justify-content:center;text-align:center;white-space:nowrap}
+/* The card being acted on, read at the top of the Actions desk (crankmagic-board.js, deskCard): its size dragged by the bar
+   under it (--desk-card-w), and it gives way before the options do -- the options keep room for two or three choices,
+   however small the drawer (Rob, 2026-10-26: "the bottom selection options I can't see to select"). */
+.cm-action-card{align-self:stretch;display:flex;justify-content:center;min-width:0;flex:none;height:calc(var(--desk-card-w,150px)*7/5)}
+.cm-action-card .cm-bcard{--bc:auto;height:100%;width:auto;max-width:100%;aspect-ratio:5/7;transform:none;display:block;margin:0}
+.cm-action-card .cm-bcard img{object-fit:contain;width:100%;height:100%}
+.cm-stage-module[data-module="actions"] .cm-board-decision>.cm-board-options{flex:1 1 auto;min-height:120px}
+/* THE BARS THAT SIZE THE DRAWERS' PARTS: under each module (its height) and under the card at the top of Actions (its
+   size); drag up or down, arrow keys, a double click gives a module back its own height. */
+.cm-desk-grip,.cm-module-grip{flex:none;display:flex;height:12px}
+.cm-desk-grip{margin:-6px 0 -4px}
+.cm-module-grip{margin:0 8px}
+.cm-desk-grip>.cm-board-grip,.cm-module-grip>.cm-board-grip{cursor:ns-resize}
+.cm-stage-module.has-height>.cm-module-body{height:var(--module-h);max-height:none;overflow:auto;scrollbar-width:thin}
+.cm-stage-module.has-height>.cm-module-body #cm-full-pick,.cm-stage-module.has-height>.cm-module-body .cm-board-stack,.cm-stage-module.has-height>.cm-module-body .cm-board-band{max-height:none}
+.cm-stage-module[data-module="actions"].has-height>.cm-module-body{display:flex;flex-direction:column;overflow:hidden}
+.cm-stage-module[data-module="actions"].has-height .cm-board-decision{max-height:none;flex:1 1 auto;min-height:0}
+/* The right drawer's width, dragged at its left edge as the left drawer's is at its right (Rob, 2026-10-26). */
+.cm-board[data-view="full"] .cm-stage-side>.cm-board-panelgrip{display:flex;z-index:4}
+.cm-stage-side>.cm-board-panelgrip [data-drag]{width:12px;height:100%;cursor:col-resize}
+/* The way back from one card's actions: a small chevron link at the left, not a button the width of a word. */
+.cm-board-back{align-self:flex-start;display:inline-flex;align-items:center;gap:2px;margin:0 0 -4px;padding:2px 6px 2px 0;border:0;background:none;color:#b6cbbf;font:600 12px/1.3 system-ui,sans-serif;cursor:pointer}
+.cm-board-back:hover,.cm-board-back:focus-visible{color:#fff}.cm-board-back:focus-visible{outline:2px solid #a8dfbf;outline-offset:1px;border-radius:4px}
+.cm-board-back .cm-chev{width:14px;height:14px}
+/* A drawer's open/shut: a thin chevron with no fill, pointing right when shut. */
+#matrix-v2 .cm-board .v-button.cm-chev-toggle{display:inline-grid;place-items:center;width:24px;min-width:24px;height:24px;min-height:24px;padding:0;border:0;border-radius:6px;background:transparent;box-shadow:none;color:#b6cbbf}
+#matrix-v2 .cm-board .v-button.cm-chev-toggle:hover,#matrix-v2 .cm-board .v-button.cm-chev-toggle:focus-visible{background:#ffffff14;color:#fff}
+.cm-chev-toggle .cm-chev{width:14px;height:14px;transition:transform .15s ease}.cm-chev-toggle.is-shut .cm-chev{transform:rotate(-90deg)}
+@media(prefers-reduced-motion:reduce){.cm-chev-toggle .cm-chev{transition:none}}
+/* Scrollbars on the board are quiet: a faint track and a translucent gray thumb, never a white bar (Rob, 2026-10-25). */
+#matrix-v2 .cm-board{scrollbar-color:#9aa3a066 #ffffff1a}
+.cm-board[data-shell="shared"] .cm-stage-rail{scrollbar-width:thin}
 .cm-board-options [aria-pressed=true]{outline:2px solid #a9d9b0;outline-offset:-2px;background:#29463a!important;color:#fff!important}
 .cm-board-decision-foot>.cm-action-review{width:100%}.cm-stage-rail .cm-board-decision.is-also{max-height:calc(100dvh - 155px)}
 

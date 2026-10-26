@@ -420,6 +420,8 @@ width:min(100%,max(900px,calc(var(--cm-table-h,68vh) * 1.9)));aspect-ratio:19/10
 .cm-deck-tile .cm-tile-pick:hover{border-color:var(--v-accent)}
 /* The stage pill steps aside when the tools appear, so the two never share the corner. */
 .cm-deck-tile:hover .cm-pill,.cm-deck-tile:focus-within .cm-pill,.cm-deck-tile.is-picked .cm-pill{transform:translateY(42px)}
+/* A favorite's star stays in the corner, so its stage pill stays stepped aside too (Rob, 2026-10-25: the star covered it). */
+.cm-deck-tile:has(.cm-tile-star.is-on) .cm-pill{transform:translateY(42px)}
 .cm-deck-tile .cm-pill{transition:transform .2s ease}
 .cm-deck-tile .cm-tile-bracket{position:absolute;right:20px;bottom:20px;z-index:2;font-size:12px;font-weight:600;color:color-mix(in srgb,var(--poster-ink) 85%,transparent);pointer-events:none}
 /* The last cell offers the one thing the grid does not already hold. */
@@ -1378,6 +1380,37 @@ button.cm-pill:hover{filter:brightness(1.15)}
 /* ================================== THE PULL SHEET ==================================
    Rows read color · name · where it is · the one verb. A done row stays put, greyed. */
 .cm-pull-head{align-items:flex-start}
+/* PLANNED CHANGES (crankmagic-pull.js, Rob's C1–C8): two column groups, a pair a row, each side a tick, a thumbnail,
+   the name, and its colors and role under it; the counter above, green at exactly 100. */
+.cm-plan-counter{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:baseline;margin:0 0 16px;padding:10px 14px;border:1px solid var(--v-line);border-radius:var(--v-radius);background:var(--v-panel);font-size:14px;color:var(--v-muted)}
+.cm-plan-counter b{font-size:18px;color:var(--v-ink);margin-right:4px}
+.cm-plan-counter .cm-plan-total{margin-left:auto;font-weight:600}
+.cm-plan-counter.is-right .cm-plan-total,.cm-plan-counter.is-right .cm-plan-total b{color:var(--st-inbox)}
+.cm-plan-counter.is-off .cm-plan-total,.cm-plan-counter.is-off .cm-plan-total b{color:var(--st-remove)}
+.cm-plan-table{display:grid;gap:0;border-top:1px solid var(--v-line)}
+.cm-plan-head,.cm-plan-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 18px}
+.cm-plan-head{position:sticky;top:0;z-index:1;background:var(--v-bg);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--v-muted);padding:8px 0;border-bottom:1px solid var(--v-line)}
+.cm-plan-row{border-bottom:1px solid var(--v-line)}
+.cm-plan-side{display:grid;grid-template-columns:22px 10px 44px minmax(0,1fr);align-items:center;gap:8px;min-height:72px;padding:6px 4px;text-align:left}
+.cm-plan-side.is-empty{min-height:0}
+.cm-plan-side.is-picked{background:color-mix(in srgb,var(--v-accent) 10%,transparent);border-radius:var(--v-radius)}
+.cm-plan-side.is-fixed{opacity:.7}
+#matrix-v2 .cm-plan-tick{width:18px;height:18px;min-height:0;margin:0;padding:0;accent-color:var(--v-accent);cursor:pointer}
+.cm-plan-mark{width:10px;height:10px;border-radius:50%;background:var(--mark,transparent)}
+#matrix-v2 .cm-plan-thumb{width:44px;height:61px;padding:0;border:0;border-radius:4px;overflow:hidden;background:var(--v-raised);cursor:zoom-in}
+.cm-plan-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.cm-plan-text{display:flex;flex-direction:column;gap:3px;min-width:0}
+#matrix-v2 .cm-plan-name{background:none;border:0;padding:0;font:inherit;font-weight:700;color:var(--color-ink);text-align:left;cursor:pointer;overflow-wrap:anywhere}
+.cm-plan-sub{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:12px;color:var(--v-muted)}
+.cm-plan-sub .cm-pip,.cm-plan-sub img{width:14px;height:14px}
+.cm-plan-role{font-weight:600;color:var(--v-ink)}
+.cm-plan-peek{position:fixed;z-index:80;width:244px;pointer-events:none;border-radius:12px;overflow:hidden;box-shadow:var(--shadow-card)}
+.cm-plan-peek img{width:100%;display:block}
+.cm-plan-confirm{list-style:none;margin:8px 0;padding:0;display:grid;gap:4px;max-height:50vh;overflow:auto}
+.cm-plan-confirm-mark{color:var(--v-accent)}
+.cm-plan-confirm-warn{color:var(--st-remove);font-weight:600}
+@media(max-width:760px){.cm-plan-head,.cm-plan-row{grid-template-columns:1fr;gap:0}.cm-plan-head div+div{display:none}.cm-plan-side.is-in{border-top:1px dashed var(--v-line)}}
+@media print{.cm-plan-tick,.cm-plan-thumb,.cm-plan-head{color:black}.cm-plan-peek{display:none!important}}
 .cm-pull-counts{display:flex;flex-wrap:wrap;gap:4px 6px;font-size:13px;color:var(--v-muted)}
 .cm-pull-counts span{white-space:nowrap}
 .cm-pull-group{margin:0 0 22px}
@@ -1818,7 +1851,7 @@ button.cm-pill:hover{filter:brightness(1.15)}
    -25px margin puts it, over the first 5px of every dialog's first line (seen in R3.6's Filters and Add copies). */
 #matrix-v2 .cm-dialog-head{position:sticky;top:-25px;z-index:3;background:var(--color-panel);margin:-25px -25px 20px;padding:25px 25px 12px}
 /* THE PAGE NAME IS THE HEADING: one row, the name and its "?" on the left, the actions on the
-   right; a crumb above a page that belongs to another (a deck, its Ready to add list). */
+   right; a crumb above a page that belongs to another (a deck, its Planned Changes list). */
 .cm-page-title{display:grid;gap:0;min-width:0}
 .cm-page-name{display:flex;align-items:center;gap:12px;min-width:0}
 .cm-page-title h1{margin:0}
@@ -1862,7 +1895,7 @@ button.cm-pill:hover{filter:brightness(1.15)}
 #matrix-v2 .cm-sidebar .cm-subnav a.is-current{color:var(--color-ink);background:var(--v-raised)}
 #matrix-v2 .cm-sidebar .cm-subnav a:hover{background:var(--color-raised);color:#fff}
 @media(max-width:760px){.cm-subnav{display:none}}
-/* Ready to add: the Select all link sits beside a group's count, in the heading's row. */
+/* Planned Changes: the Select all link sits beside a group's count, in the heading's row. */
 .cm-pull-group h2 .cm-pull-select-all{font-size:13px;font-weight:500;padding:0 4px;min-height:32px;text-underline-offset:3px}
 /* The Sheet's cell editor keeps the cell's width; the column must not jump while a number is typed. */
 #matrix-v2 .cm-sheet .cm-sheet-input{display:block;box-sizing:border-box;min-width:0;max-width:100%;height:36px;min-height:36px;margin:0;padding:0 8px;border:0;border-radius:0;box-shadow:inset 0 0 0 2px var(--color-accent);background:var(--v-bg);color:var(--color-ink);font:inherit;font-variant-numeric:tabular-nums;text-align:right;outline:none}
@@ -2946,7 +2979,7 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
    Filters · lens pressed while open. */
 #matrix-v2 .cm-crumbs{margin:0 0 4px}
 #matrix-v2 .cm-advanced-tools-toggle[aria-pressed=true]{background:var(--v-ink);color:var(--v-bg);border-color:var(--v-ink)}
-/* CARD STATES (docs/card-states.md): the "To add" fact beside a Target pill, in the Bench-to-box color Ready to add uses. */
+/* CARD STATES (docs/card-states.md): the "To add" fact beside a Target pill, in the Bench-to-box color Planned Changes uses. */
 #matrix-v2 .cm-badge-toadd{background:color-mix(in oklab,var(--st-pull) 22%,transparent);color:var(--v-ink)}
 /* CARD STATES, THE TWO ROLES OUTSIDE THE BOX (docs/card-states.md): an upgrade replaces a card in the box; a reserved card fills an empty seat, which keeps the deck from being playable. */
 #matrix-v2 .cm-badge-upgrade{background:color-mix(in oklab,var(--st-reserved) 22%,transparent);color:var(--v-ink)}
