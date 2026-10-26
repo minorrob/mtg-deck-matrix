@@ -466,6 +466,11 @@ try {
     const smallerRows = await rob.page.evaluate(tableRowFacts);
     ok(smallerRows.valid && smallerRows.widths, "at 1280x720 complete rows retain conditional aspect and chosen column widths");
     await verifyTableRowAccess(rob.page, smallerRows);
+    await rob.page.setViewportSize({width:1280,height:600});
+    await rob.page.waitForFunction(()=>{const t=document.querySelector('.cm-board-table');return t.scrollHeight>t.clientHeight+1;},null,{timeout:5000});
+    const shortRows=await rob.page.evaluate(tableRowFacts);
+    ok(shortRows.valid&&shortRows.widths&&shortRows.scrolls,'at 1280x600 complete real rows force native Table scrolling without changing chosen widths');
+    await verifyTableRowAccess(rob.page,shortRows);
     await rob.page.setViewportSize(was);
   }
   ok(await rob.page.locator(`.cm-seatboard[data-seat='${activeSeat}']`).getByRole('button',{name:new RegExp(`^${land}(?:,|:|$)`)}).count()>0, "the land played is on its owner's board in the Table view too");
@@ -764,13 +769,18 @@ try {
   await rob.page.locator("#cm-dialog[open] .cm-table-vitals").waitFor();
   ok(await seenAt(rob.page, "#cm-dialog[open]"), "in 3D, Table vitals is seen over the game");
   await rob.page.click("#cm-dialog[open] .cm-form-footer [data-action=close]");
+  const beforeFullCoach=await rob.page.locator(".cm-stage-region").boundingBox();
   await fullCoach(rob.page);
   await rob.page.locator("#cm-board-coach:not([hidden]) .cm-coach-input").waitFor();
   const docked = await rob.page.evaluate(() => {
     const c = document.getElementById("cm-board-coach").getBoundingClientRect(), board = document.querySelector(".cm-stage-region").getBoundingClientRect(), header = document.querySelector(".cm-stage-top").getBoundingClientRect(), host = document.getElementById("cm-board").getBoundingClientRect();
-    return {reserved: board.right <= c.left + 1, aligned: c.left >= host.left && c.right <= host.right + 1 && c.top >= header.bottom - 1, contained: c.width >= 240 && c.bottom <= host.bottom + 0.5, width: Math.round(c.width)};
+    return {module:document.getElementById("cm-board").dataset.coach === "module",board:{x:board.x,y:board.y,width:board.width,height:board.height},reserved: board.right <= c.left + 1, aligned: c.left >= host.left && c.right <= host.right + 1 && c.top >= header.bottom - 1, contained: c.width >= 240 && c.bottom <= host.bottom + 0.5, width: Math.round(c.width)};
   });
-  ok(await seenAt(rob.page, "#cm-board-coach") && docked.reserved && docked.aligned && docked.contained, `the Coach is visible in its reserved ${docked.width}px drawer below the header, clear of the board`);
+  ok(docked.module
+    ? Object.entries(beforeFullCoach).every(([key,n])=>Math.abs(docked.board[key]-n)<1)
+    : await seenAt(rob.page,"#cm-board-coach")&&docked.reserved&&docked.aligned&&docked.contained,
+    `the Coach preserves board geometry as a module overlay, or reserves a separate standalone area (${docked.width}px)`);
+  await verifyCoachUsable(rob.page);
   await shot(rob.page, "coach-full-1400");
   await rob.page.click("#cm-board-coach [aria-label='Close the Coach']");
   /* B1, item 23: the rail squares its own buttons, not the ones in the menus it opens. */
@@ -1393,11 +1403,15 @@ try {
 
   /* THE COACH: a reserved column beside the board; the shell, with a stub reply that says so. */
   const matWidth = () => rob.page.evaluate(() => Math.round(document.querySelector(".cm-board-mat").getBoundingClientRect().width));
-  const matBefore = await matWidth();
+  const matBefore = await matWidth(), beforeFocusCoach=await rob.page.locator(".cm-board-mat").boundingBox();
   await rob.page.click(".cm-board-coach-open");
   await rob.page.locator("#cm-board-coach:not([hidden]) .cm-coach-input").waitFor();
-  const coachBox = await rob.page.evaluate(() => {const r = document.getElementById("cm-board-coach").getBoundingClientRect(), mat = document.querySelector(".cm-board-mat").getBoundingClientRect(), drawer = document.querySelector(".cm-stage-side").getBoundingClientRect(); return {width:r.width,right:r.right,edge:innerWidth,drawerContained:r.left>=drawer.left && r.right<=drawer.right+1,clear:mat.right<=r.left+1,mat: {x:mat.x,y:mat.y,width:mat.width,height:mat.height},visible:r.bottom<=innerHeight+1};});
-  ok(coachBox.width >= 240 && coachBox.drawerContained && coachBox.right <= coachBox.edge && coachBox.clear && coachBox.visible && await matWidth() <= matBefore, `the Coach uses its ${Math.round(coachBox.width)}px reserved drawer while the full mat fits clear beside it`);
+  const coachBox = await rob.page.evaluate(() => {const r = document.getElementById("cm-board-coach").getBoundingClientRect(), mat = document.querySelector(".cm-board-mat").getBoundingClientRect(), drawer = document.querySelector(".cm-stage-side").getBoundingClientRect(); return {module:document.getElementById("cm-board").dataset.coach === "module",width:r.width,right:r.right,edge:innerWidth,drawerContained:r.left>=drawer.left && r.right<=drawer.right+1,clear:mat.right<=r.left+1,mat: {x:mat.x,y:mat.y,width:mat.width,height:mat.height},visible:r.bottom<=innerHeight+1};});
+  ok(coachBox.width>=240 && coachBox.right<=coachBox.edge && (coachBox.module
+    ? coachBox.drawerContained&&Object.entries(beforeFocusCoach).every(([key,n])=>Math.abs(coachBox.mat[key]-n)<1)
+    : coachBox.clear&&coachBox.visible&&await matWidth()<=matBefore),
+    `the Focus Coach uses its actual module-overlay or standalone-reserved layout (${Math.round(coachBox.width)}px)`);
+  await verifyCoachUsable(rob.page);
   ok(/Sees your board, hand and the table · turn \d+/.test(await text(rob.page, "#cm-coach-context")), "it says what it sees, and the turn");
   await openCoachQuestions(rob.page);
   await rob.page.click("[data-action=board-coach-ask][data-q=\"What's my best play?\"]");
@@ -1826,4 +1840,23 @@ async function verifyTableRowAccess(page, facts) {
   proof.nativeScrollAccess=true;save();
   await page.mouse.wheel(0,-2000);
   await page.waitForFunction(()=>document.querySelector('.cm-board-table').scrollTop===0,null,{timeout:5000});
+}
+
+async function verifyCoachUsable(page) {
+  await page.waitForFunction(()=>{
+    const input=document.querySelector('#cm-board-coach .cm-coach-input');if(!input||document.activeElement!==input)return false;
+    const r=input.getBoundingClientRect();return r.left>=0&&r.right<=innerWidth+1&&r.top>=0&&r.bottom<=innerHeight+1;
+  },null,{timeout:5000});
+  const facts=await page.locator('#cm-board-coach').evaluate(panel=>{
+    const input=panel.querySelector('.cm-coach-input'),thread=panel.querySelector('.cm-coach-thread'),questions=panel.querySelector('.cm-coach-questions>summary'),head=panel.querySelector('.cm-coach-head');
+    const root=document.getElementById('cm-board'),module=root.dataset.coach==='module',drawer=panel.closest('.cm-stage-side,.cm-stage-rail');
+    const inputRect=input.getBoundingClientRect(),p=panel.getBoundingClientRect(),t=thread.getBoundingClientRect(),q=questions.getBoundingClientRect(),h=head.getBoundingClientRect(),d=drawer?.getBoundingClientRect();
+    const at=document.elementFromPoint(inputRect.x+inputRect.width/2,inputRect.y+inputRect.height/2);
+    return {module,drawerOpen:!module||!!drawer?.classList.contains('is-open'),width:p.width,
+      contained:inputRect.left>=0&&inputRect.right<=innerWidth+1&&inputRect.top>=0&&inputRect.bottom<=innerHeight+1&&(!module||(inputRect.left>=d.left&&inputRect.right<=d.right+1&&inputRect.top>=d.top&&inputRect.bottom<=d.bottom+1)),
+      inputHit:!!at&&(input===at||input.contains(at)),focused:document.activeElement===input,
+      internals:t.top>=h.bottom-1&&t.bottom<=inputRect.top+1&&q.top>=t.top-1&&q.bottom<=inputRect.top+1&&t.width>0&&t.height>0};
+  });
+  ok(facts.width>=240&&facts.drawerOpen&&facts.contained&&facts.inputHit&&facts.focused&&facts.internals,
+    `explicit Coach open exposes and focuses the real composer with thread and Questions in its actual drawer: ${JSON.stringify(facts)}`);
 }
