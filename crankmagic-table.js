@@ -168,8 +168,12 @@
     async deck(d) {
       const el = document.getElementById("cm-deck-play");
       if (!el || !cloudPlay() || !playable(d)) return;
+      const route=C.route(),routeKey=route.view+'?'+route.params.toString(),version=d.version;
       let r;
       try {r = await readiness(d);} catch {return;}
+      const currentRoute=C.route(),currentDeck=C.state.decks.find(x=>x.id===d.id);
+      const currentView=el.isConnected&&document.getElementById('cm-deck-play')===el&&el.dataset.deck===d.id&&currentRoute.view==='decks'&&currentRoute.params.get('deck')===d.id&&currentRoute.view+'?'+currentRoute.params.toString()===routeKey&&currentDeck&&!currentDeck.archived&&currentDeck.version===version;
+      if(!currentView)return;
       const playPrimary=!r.count&&C.M?.readiness(C.state,d).complete===true&&(!C.route().params.get('tab')||C.route().params.get('tab')==='overview');
       el.innerHTML = `<span class="cm-deck-play-line">${e(readinessText(r))}</span>`
         + (r.count ? ` <span class="cm-muted">The table cannot play ${r.unknown.length === 1 ? "this one" : "these"} yet: ${e(r.unknown.slice(0, 6).join(", "))}${r.unknown.length > 6 ? ", …" : ""}.</span>`
