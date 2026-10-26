@@ -1965,11 +1965,11 @@ globalThis.CrankBoard = Object.seal({
   const coachKey=()=>`${C.signedInAs?.() || ''}|${tableId || ''}`;
   function probeCoach() {
     const key=coachKey();if(coachGate.key===key)return;
-    coachGate={key,available:false};coachInput=null;coach.thread=[];coach.typing=false;coach.asked++;
+    const gate=coachGate={key,available:false};coachInput=null;coach.thread=[];coach.typing=false;coach.asked++;
     fetch('/api/ai-coach',{credentials:'same-origin',redirect:'manual'}).then(async response=>response.ok?response.json():null).then(result=>{
-      if(coachGate.key!==key || coachKey()!==key)return;
-      coachGate.available=result?.open===true;drawCoach();
-    }).catch(()=>{if(coachGate.key===key)coachGate.available=false;});
+      if(coachGate!==gate || coachKey()!==key)return;
+      gate.available=result?.open===true;drawCoach();
+    }).catch(()=>{if(coachGate===gate && coachKey()===key)gate.available=false;});
   }
   function drawCoach() {
     const panelEl=document.getElementById('cm-board-coach');if(!panelEl)return;
@@ -1991,9 +1991,10 @@ globalThis.CrankBoard = Object.seal({
   /* A question to the Coach: POST /api/ai/coach with the table and the question, nothing more -- the table says what is
      on it (cloud/worker.mjs). Signed in to the library only, the AI door's sign-in answers with a redirect, which a
      fetch cannot follow: the reply is then a link to sign in, which comes back here. Any refusal reads as the door said it. */
+  const canAsk = text => !!String(text || '').trim() && !!view && !coach.typing && coachGate.key===coachKey() && coachGate.available===true;
   async function ask_(text) {
     const q = String(text || "").trim();
-    if (!q || !view || coach.typing || coachGate.key!==coachKey() || coachGate.available!==true) return;
+    if (!canAsk(q)) return;
     const requestKey=JSON.stringify([coachKey(),view.matchId]);
     const here = stepNow(), last = [...coach.thread].reverse().find((m) => m.divider);
     if (!last || last.divider !== here) coach.thread.push({divider: here});
@@ -3939,7 +3940,8 @@ globalThis.CrankBoard = Object.seal({
   document.addEventListener("submit", (event) => {
     if (!event.target.matches || !event.target.matches("[data-coach-form]")) return;
     event.preventDefault();
-    const input = event.target.querySelector(".cm-coach-input"), q = input.value;
+    const input = event.target.querySelector(".cm-coach-input"), q = input?.value;
+    if(!canAsk(q))return;
     input.value = ""; ask_(q);
   });
   /* HISTORY ▾ CLOSES ON A PRESS ANYWHERE OUTSIDE IT, as the app's popover menus do (item 16). The menu is taken out

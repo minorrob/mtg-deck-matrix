@@ -1,5 +1,5 @@
 /* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
-import assert from 'node:assert/strict';import {readFileSync,mkdirSync} from 'node:fs';import path from 'node:path';import {openBrowser,ROOT} from './uat/browser-runner.mjs';
+import assert from 'node:assert/strict';import {readFileSync,mkdirSync} from 'node:fs';import path from 'node:path';import {openBrowser,ROOT} from './uat/browser-runner.mjs';import {tableClearance} from './uat/r4-play-clearance.mjs';
 const {browser,base,stub,close}=await openBrowser({name:'board-r4-views',flag:'GEOMETRY_REQUIRED'});
 const sample=JSON.parse(readFileSync(path.join(ROOT,'docs/reference/replit-sample-views.json'),'utf8')).views[13];
 const html=readFileSync(path.join(ROOT,'index.html'),'utf8').replace('</head>','<meta name="crankmagic-accounts" content="on"><meta name="crankmagic-play" content="cloud"></head>');
@@ -20,7 +20,7 @@ const card=id=>`.cm-mat[data-seat="0"] .cm-bcard[data-action="board-card"][data-
 try{
  for(const mode of ['table','focus','full']) {
   const f=await open(mode),{page,context,errors}=f;
-  if(mode==='table') {
+  if(mode==='table') {eq(await tableClearance(page),[],'Table menus and dial text clear actual seat facts');
    ok(await page.locator('.cm-board-hand .cm-bcard').first().evaluate(el=>el.getBoundingClientRect().height>=110),'Table hand thumbnails at least 110px');
    eq(await page.locator('.cm-hand-legend').count(),1,'hand legend appears once');eq(await page.locator('.cm-board-pie-life small').count(),f.current.state.players.length,'life dial names every seat');ok(await page.locator('.cm-board-pie-priority').textContent(),'life dial says who holds priority');
   }

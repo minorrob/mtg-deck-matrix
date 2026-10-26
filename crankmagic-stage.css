@@ -1042,3 +1042,5 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-board-tabletop{padding-top:60px}
 #matrix-v2 .cm-board .cm-other-seats>header{min-height:48px;padding-right:216px;box-sizing:border-box}
 #matrix-v2 .cm-board .cm-board-table[data-seats="3"] .cm-board-slot[data-area="c"] .cm-board-field>:is(.cm-mat-label,.cm-board-group:first-of-type>h3){max-width:calc(50% - var(--pie)/2 - 8px);white-space:normal;overflow-wrap:anywhere}
+
+#matrix-v2 .cm-board .cm-board-tabletop{padding-left:56px;padding-right:56px}
