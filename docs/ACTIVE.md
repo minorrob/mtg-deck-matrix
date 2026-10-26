@@ -1,5 +1,19 @@
 # Who holds the work
 
+## 2026-10-26: main c567c581 on staging (Rob: "Release it to staging"; a Claude cloud session, after #888)
+
+- **Staging:** `tools/release-staging.sh` from a detached `origin/main` `c567c581` pushed `release/cloud-staging`
+  `94598ee7` (from `a272bf9b`): the build 401 files, 124.3 MB; release-acceptance 23 and play-e2e 44 before the push
+  (Wrangler 4.139.0 installed in the session's scratchpad, Playwright from `/opt/node-tools`).
+- **Deployed:** Workers Builds started 15:47:27 UTC (about 25 minutes after the push, queued) and succeeded at
+  15:48:08 (build `4f4e7397`); `crankmagic-staging` serves version **4fd4def6** at 100% since 15:47:59, read from
+  Cloudflare's deployments API. The rollback target is **b788202c** (main f2e00ba4).
+- **Not read back from the site:** this container's `CF_ACCESS_CLIENT_SECRET` is not in its environment (the network
+  proxy is said to inject it for staging.crankmagic.com, but Access redirected every request to its sign-in), so
+  `tools/staging-check.mjs --expect c567c581` could not run here.
+- **Carries since f2e00ba4:** #888 only (Play 3D's backdrops: Rob's six clips at 720/1080/1440 lines, 2K at most).
+  **Production is unchanged** (main f2e00ba4).
+
 ## 2026-10-25: main 9ca99e5 in production (Rob: "release main 9ca99e5 to production")
 
 Released by the Decks cloud session (`claude/vibrant-turing-50yl3r`), with the Camera and Settings session told before
