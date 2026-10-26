@@ -413,7 +413,7 @@ try {
   await page.setViewportSize({width:1400,height:900});
   for(const [selector,label] of [['.cm-stage-rail','Toggle board tools'],['.cm-stage-side','Toggle table panel']]) if(await page.locator(`${selector}.is-open`).count()) await page.getByRole('button',{name:label,exact:true}).click();
   if(!await page.getByRole('combobox',{name:'Background',exact:true}).count()) await page.getByRole('button',{name:'Camera',exact:false}).click();
-  await page.getByRole('combobox',{name:'Background',exact:true}).selectOption('volcano');
+  await page.getByRole('combobox',{name:'Background',exact:true}).selectOption({index:0});
   await page.getByRole('button',{name:'Camera',exact:false}).click();
   const row=page.locator('.cm-stage-front [data-card-section$=":others"]');
   const order=()=>row.locator('[data-arrange-card]').evaluateAll(els=>els.map(el=>el.dataset.card));

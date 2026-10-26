@@ -33,6 +33,38 @@ back with `tools/staging-check.mjs --expect 9ca99e53`.
   Worker setting was added since 1fcfc3d. Sharing stays off in `cloud-production` (it is on in the staging profile
   only), so the `cloud/sharing.mjs` changes do not run there.
 
+## Play 3D's backdrop videos: Rob's folder, at the Graphics resolution, 2K at most, 2026-10-26 (a Claude cloud session, for Rob; `claude/crankmagic-background-videos-8nm59v`): waiting on the videos
+
+Rob, 2026-10-26: *"Replace the current background videos in the CrankMagic Play 3D with those in this folder. Adjust as
+required. Maintain resolution in line with settings selection with 2k at max resolution.
+"C:\Users\robmi\Documents\My Games\Magic the Gathering\Backdrop videos""* At his word this changes the Codex · Play
+lane's `crankmagic-stage.js` and two Play suites.
+
+- **The folder is on Personal-HP**, out of a cloud container's reach (it is not in Google Drive either). So the videos
+  are **not replaced yet**; what is built is everything that does not need them, so the swap is one command:
+  - `tools/stage-backdrops.mjs [<folder>]` (default `design/art-source/backdrops/`): each clip framed at 16:9, looped
+    without a seam (its last second cross-faded into its first), kept at **720, 1080 and 1440 lines** (never above its
+    source), VP9 WebM without sound, at most 30 fps, at most 24 MiB a file (Cloudflare's limit is 25), a poster from its
+    first frame; the old backdrops under `assets/environments/` deleted (`--keep` keeps them); the list in
+    `crankmagic-stage.js` between `backdrops:begin` and `backdrops:end` written again, the first file the default. Needs
+    ffmpeg (on Windows: `winget install Gyan.FFmpeg`).
+  - **The stage plays the height the setting calls for:** the smallest kept that fills the backdrop's height at 16:9 in
+    drawn pixels (stage height × the screen's pixel ratio × the kept Graphics resolution), **1440 (2K) at most**;
+    changed when the setting is kept (not while the slider previews), the clip keeping its place. A saved choice of a
+    backdrop that is gone falls back to the first.
+- **Proven here:** `board-graphics` 76 checks (the heights at 50/70/100/110/150/200%, the 2K cap with a 2160 file
+  offered, a 720-only backdrop, the swap on a kept setting and not on a preview, the clip's place kept, the tool's
+  markers), each new check seen red by breaking the code (cap at 4320; no re-pick on a kept setting; no place kept);
+  `feature-wiring`, `release-pages`, `asset-versions`. The tool run in the container on synthetic clips (a 4K 60 fps
+  clip: 720/1080/1440 at 30 fps, 0.4/1.3/3.5 MiB for 5 s; a 4:3 1080 clip: 720 only; a 360 clip: 360 only); the loop's
+  seam measured as an ordinary frame step (PSNR 24.18 against 24.15 for two adjacent frames).
+- **Not proven:** `table-tabletop` (one word changed: it picks the first background rather than naming `volcano`) did
+  not finish in this container on main either; Actions is its gate. Rob's own clips, their sizes and their look.
+- **Outstanding:** the videos. Either Claude Code on Personal-HP runs `node tools/stage-backdrops.mjs "C:\Users\robmi\Documents\My Games\Magic the Gathering\Backdrop videos"`
+  on this branch, runs `board-graphics` and pushes; or the clips are committed to `design/art-source/backdrops/` on this
+  branch (each under 100 MB, GitHub's limit) and a cloud session runs the tool. `ui-prototypes/babylon` still names
+  `volcano.webm` (a prototype; its backdrop goes when the volcano does).
+
 ## Play's graphics: resolution in Settings, the volcano whole, painted table skins, sharp mat cards; target lands folded, 2026-10-26 (a Claude cloud session, for Rob; `claude/vigilant-dijkstra-bzs1wf`, restarted from main after #884)
 
 Rob, 2026-10-25: *"I also want to increase the game's resolution dramatically. I'd like this to be an option in settings.

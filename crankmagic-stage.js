@@ -62,7 +62,12 @@
     return {width:w,height:h,planeHeight,base,cy,reach:reachPx,reachMost,sx,sy,ox,oy,angle,yaw,distance,focal,screenY,pan:at,
       camera:{eye,yaw:turn,pitch,right,up,ahead},project,unproject,quad,rear,front};
   }
-  const appearances = Object.freeze({backgrounds: [{id:"volcano",name:"Volcano",video:"assets/environments/volcano.webm?v=1",poster:"assets/environments/volcano-poster.jpg?v=1"},{id:"forest",name:"Forest"},{id:"clouds",name:"Cloud sea"}],
+  /* The backdrops: each video at up to three heights, 720, 1080 and 1440 lines, never more than its source (environment,
+     backdropLines). The list between the markers is written by tools/stage-backdrops.mjs from a folder of videos. */
+  /* backdrops:begin */
+  const BACKDROPS=[{id:"volcano",name:"Volcano",poster:"assets/environments/volcano-poster.jpg?v=1",video:{720:"assets/environments/volcano.webm?v=1"}},{id:"forest",name:"Forest"},{id:"clouds",name:"Cloud sea"}];
+  /* backdrops:end */
+  const appearances = Object.freeze({backgrounds: BACKDROPS,
     /* The table designs (Rob, 2026-10-17; ROB-100): the same catalog the Babylon lab builds as 3D objects
        (ui-prototypes/babylon/tables.js). The live Babylon stage uses the prototype's procedural geometry. Older saved choices map on. */
     tables: [
@@ -116,7 +121,7 @@
   /** Preview a resolution without keeping it (a slider being dragged); null goes back to the one kept. */
   function previewResolution(pct){previewRes=pct===null||pct===undefined?null:resStep(pct);return applyResolution();}
   /** Keep a resolution on this device and draw at it. */
-  function setResolution(pct){const n=resStep(pct);previewRes=null;try{localStorage.setItem(RES_KEY,String(n));}catch{/* drawn, not remembered */}applyResolution();return n;}
+  function setResolution(pct){const n=resStep(pct);previewRes=null;try{localStorage.setItem(RES_KEY,String(n));}catch{/* drawn, not remembered */}applyResolution();if(current)environment(current);return n;}
   /* Its slider, wherever it is drawn (Settings › Play, the table's Settings window): one handler, here. */
   const resWords=(el,n)=>{el.value=String(n);el.setAttribute('aria-valuetext',`${n}%`);const out=el.parentElement?.querySelector('output');if(out)out.textContent=`${n}%`;};
   if(root.document){
@@ -136,8 +141,20 @@
       .then(()=>script('crankmagic-stage-tables.js?v=3',()=>root.CrankTables)).catch(error=>{library=null;throw error;});
     return library;
   }
+  /* THE BACKDROP'S RESOLUTION (Rob, 2026-10-26: "Maintain resolution in line with settings selection with 2k at max
+     resolution"): the video played is the smallest kept that fills the height it is shown at in drawn pixels -- the
+     stage's height at 16:9, times the screen's pixel ratio, times the kept Graphics resolution -- and never more than 1440
+     lines (2K). A slider being dragged previews the table only; the video follows the setting when it is kept. */
+  const BACKDROP_MAX=1440;
+  function backdropLines(scene,box,pct=resolution()){
+    const lines=Object.keys(scene?.video||{}).map(Number).filter(n=>n<=BACKDROP_MAX).sort((a,b)=>a-b);
+    if(!lines.length)return null;
+    const w=box?.width||root.innerWidth||1280,h=box?.height||root.innerHeight||720;
+    const need=Math.min(h,w*9/16)*(root.devicePixelRatio||1)*pct/100;
+    return lines.find(n=>n>=need)??lines.at(-1);
+  }
   function environment(s) {
-    const scene=appearances.backgrounds.find(x=>x.id===(s.opts.background || 'volcano')), board=s.host.closest('.cm-board');
+    const list=appearances.backgrounds,scene=list.find(x=>x.id===s.opts.background)||list[0], board=s.host.closest('.cm-board');
     s.host.classList.toggle('has-video',!!scene?.video);
     /* THE BACKDROP WHOLE (Rob, 2026-10-25: "The lava background shouldn't be so zoomed in by default ... use much more of
        it"): the video is shown whole (crankmagic-stage.css), not cropped to cover a wide stage, and what is left at the
@@ -148,7 +165,14 @@
       s.video=document.createElement('video');s.video.muted=true;s.video.defaultMuted=true;s.video.loop=true;s.video.playsInline=true;s.video.preload='metadata';s.video.setAttribute('tabindex','-1');s.environment.append(s.video);
       s.visibility=()=>environment(s);document.addEventListener('visibilitychange',s.visibility);
     }
-    if(s.video.getAttribute('src')!==scene.video){s.video.poster=scene.poster;s.video.src=scene.video;s.environment.style.setProperty('--env-poster',`url("${scene.poster}")`);}
+    const lines=backdropLines(scene,s.box),src=scene.video[lines];
+    if(s.video.getAttribute('src')!==src){
+      /* A change of height alone keeps the clip's place, so a kept setting or a larger window does not restart it. */
+      const at=s.backdrop===scene.id?s.video.currentTime:0;
+      s.video.poster=scene.poster;s.video.src=src;s.backdrop=scene.id;s.environment.dataset.lines=String(lines);
+      if(at)s.video.addEventListener('loadedmetadata',()=>{s.video.currentTime=at;},{once:true});
+      s.environment.style.setProperty('--env-poster',`url("${scene.poster}")`);
+    }
     if(s.environment.parentElement!==board)board.prepend(s.environment);
     if(s.opts.reduced || document.hidden)s.video.pause();else if(s.video.paused)s.video.play().catch(()=>{});
   }
@@ -337,6 +361,7 @@
       look:s.look?{t:s.look.t,dir:s.look.dir,ms:s.look.aim.ms,r:s.look.aim.r,clock:s.look.last,started:s.look.started,back:s.look.back,at:g.project(...planeOf(g,s.look.aim.point))}:null,
       center:[g.width/2,g.screenY],front:{shown,matrix:g.front.matrix,height:g.front.height,quad:g.front.quad},rear:g.rear.map(r=>({height:r.height,width:r.width})),
       length:{base:g.base,reach:g.reach,most:g.reachMost,plane:g.planeHeight,built:s.tableDepth*50,scale:s.table.root.scaling.z,builds:s.builds},
+      backdrop:{id:s.backdrop??null,lines:s.environment?.dataset.lines?Number(s.environment.dataset.lines):null,src:s.video?.getAttribute('src')??null},
       graphics:{resolution:resNow(),software:softwareGL(),ratio:pixelRatio(),canvas:[s.canvas.width,s.canvas.height],css:[s.canvas.clientWidth,s.canvas.clientHeight],dither:s.scene.imageProcessingConfiguration.ditheringEnabled,
         design:s.table.design.id,size:s.table.size,painted:s.table.painted,inked:s.table.parts.filter(p=>p.edgesRenderer).length,
         textures:s.table.textures.map(t=>({name:t.name,width:t.metadata.width,height:t.metadata.height,colors:t.metadata.colors,bits:t.format===B.Engine.TEXTUREFORMAT_RGBA&&t.textureType===B.Engine.TEXTURETYPE_UNSIGNED_BYTE?32:0,mips:!t.noMipmap,aniso:t.anisotropicFilteringLevel})),
@@ -349,6 +374,6 @@
     if(s.canvas){s.canvas.removeEventListener('webglcontextlost',s.lost);s.canvas.remove();}
     s.scene?.dispose();s.engine?.dispose();
   }
-  root.CrankStage=Object.freeze({geometry,carousel,appearances,tableDesign,DEFAULT_TABLE,mount,layout,unmount,diagnostics,look,unlook,pick,
+  root.CrankStage=Object.freeze({geometry,carousel,appearances,backdropLines,tableDesign,DEFAULT_TABLE,mount,layout,unmount,diagnostics,look,unlook,pick,
     resolution,previewResolution,setResolution,RESOLUTION:Object.freeze({key:RES_KEY,min:RES_MIN,max:RES_MAX,default:RES_DEFAULT})});
 })(globalThis);
