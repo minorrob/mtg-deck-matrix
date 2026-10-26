@@ -56,4 +56,12 @@ function toast(){
   const t=toast();let dismissed=0;t.x.notice('A new version is ready.',false,{stay:true,dismiss:()=>{dismissed++;},dismissLabel:'Dismiss update notice'});
   const buttons=t.el.childNodes.filter(n=>n.tagName==='button');ok(buttons.length===1,'an explicit caller dismissal is not duplicated');await buttons[0].handlers.click();ok(dismissed===1,'the update caller retains its own session-suppression callback');
 }
+{
+  const notices=[],x={state:{revision:0,cards:{}},repo:{commit:async(command,revision)=>({state:{revision:revision+1,cards:{}},summary:command.type})},committing:false,$:()=>null,uid:()=> 'test',catalog:{overlay(){}},restage(){},notice:(message,error,options)=>notices.push({message,options}),render:async()=>{},status(){}};
+  vm.runInNewContext(app.slice(app.indexOf('async function commit('),app.indexOf('function download(')),x);
+  await x.commit({type:'preferences',values:{theme:'sapphire-obsidian'}},{renderView:false});
+  ok(notices.at(-1).options.undo===false,'a preference save does not expose a persistent transaction Undo receipt');
+  await x.commit({type:'finalize',deckId:'d1'},{renderView:false});
+  ok(notices.at(-1).options.undo===true,'a substantive saved operation explicitly owns its Undo receipt');
+}
 console.log(`lock-feedback: ${checks} checks passed; asynchronous busy feedback and transaction-bound Undo.`);

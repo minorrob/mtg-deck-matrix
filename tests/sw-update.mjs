@@ -18,6 +18,10 @@ if (SHOTS) mkdirSync(SHOTS, {recursive: true});
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1;};
 
+/* This Playwright build treats an async waitForFunction predicate as a truthy Promise.
+   Poll an awaited browser value instead, proving the update is installed before navigation. */
+async function waitingWorker(page){const until=Date.now()+60000;while(Date.now()<until){const ready=await page.evaluate(async()=>{const r=await navigator.serviceWorker.getRegistration();return r?.waiting?.state==='installed'&&!r.installing;});if(ready)return;await page.waitForTimeout(50);}throw Error('No installed waiting worker within 60 seconds.');}
+
 const {browser, base, stub, close} = await openBrowser({name: "sw-update", flag: "GEOMETRY_REQUIRED"});
 try {
   const context = await browser.newContext({viewport: {width: 1280, height: 900}, serviceWorkers: "allow"});
@@ -32,7 +36,7 @@ try {
   await page.evaluate(() => { globalThis.__before = true; });
   await page.evaluate(async () => { await navigator.serviceWorker.register("crankmagic-sw.js?v=next-release", {scope: "./"}); });
   const toast = page.locator("#cm-notice", {hasText: "A new version of CrankMagic is ready."});
-  await page.waitForFunction(async()=>Boolean((await navigator.serviceWorker.getRegistration())?.waiting),null,{timeout:60000});
+  await waitingWorker(page);
   ok(!await toast.isVisible(),'a newly installed version waits without interrupting the current screen');
   await page.evaluate(()=>{location.hash='#settings';});
   await toast.waitFor({timeout: 60000});
@@ -45,7 +49,7 @@ try {
   ok(await page.evaluate(() => globalThis.__before === undefined), "Reload lets the new worker take over, and the page reloads");
   ok(await page.evaluate(async () => { const reg = await navigator.serviceWorker.getRegistration(); return !reg.waiting && Boolean(reg.active); }), "and nothing is left waiting");
   await page.evaluate(async()=>{globalThis.__beforeDismiss=true;await navigator.serviceWorker.register('crankmagic-sw.js?v=another-release',{scope:'./'});});
-  await page.waitForFunction(async()=>Boolean((await navigator.serviceWorker.getRegistration())?.waiting),null,{timeout:60000});
+  await waitingWorker(page);
   await page.evaluate(()=>{location.hash='#decks';});await toast.waitFor();
   await toast.getByRole('button',{name:'Dismiss update notice'}).click();
   ok(!await toast.isVisible()&&await page.evaluate(async()=>Boolean((await navigator.serviceWorker.getRegistration())?.waiting)&&globalThis.__beforeDismiss===true),'Dismiss closes the notice while the current version and open page remain');
