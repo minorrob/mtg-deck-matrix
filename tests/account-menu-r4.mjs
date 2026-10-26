@@ -24,6 +24,7 @@ try{
     await page.waitForFunction(signed=>document.querySelector('#cm-account').textContent.includes(signed?'Signed in as':'Signed out'),test.signed);
     const trigger=page.locator('#cm-user-functions'),menu=page.locator('#cm-user-menu');
     await trigger.click();await page.locator('#cm-user-menu:popover-open').waitFor();
+    await page.waitForFunction(()=>document.getElementById('cm-user-menu').scrollTop===0&&document.getElementById('cm-user-menu').contains(document.activeElement));
     eq(await menu.locator(':scope > .cm-menu-group').evaluateAll(groups=>groups.filter(g=>!g.hidden).map(g=>g.getAttribute('aria-label'))),test.signed?['You','This device','Your data','Skin','Help','Careful','Sign out']:['You','This device','Your data','Skin','Help','Careful'],test.name+' has ordered visible groups');
     eq(await menu.getAttribute('role'),null,'native account controls do not claim an unimplemented ARIA menu role');
     eq(await menu.locator('[role=menuitem]').count(),0,'buttons retain native keyboard semantics');

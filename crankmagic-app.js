@@ -661,13 +661,13 @@ document.addEventListener('keydown',event=>{if(C.accountMenuOpen()&&event.key===
 $('#cm-user-menu').addEventListener('beforetoggle',e=>{if(e.newState==='open'){describeData();const chip=menuChip&&menuChip.isConnected&&menuChip.getClientRects().length?menuChip:$('#cm-user-functions'),r=chip.getBoundingClientRect(),m=$('#cm-user-menu');
   const below=window.innerHeight-r.bottom;
   m.style.left=Math.max(8,Math.min(r.left,window.innerWidth-Math.min(320,window.innerWidth-16)-8))+'px';m.style.right='auto';
-  if(below>=320){m.style.top=(r.bottom+8)+'px';m.style.bottom='auto';m.style.maxHeight=(below-24)+'px';}
+  if(below>=r.top){m.style.top=(r.bottom+8)+'px';m.style.bottom='auto';m.style.maxHeight=(below-24)+'px';}
   else{m.style.top='auto';m.style.bottom=(window.innerHeight-r.top+8)+'px';m.style.maxHeight=(r.top-24)+'px';}
   if(repo)exportFile().then(f=>{shareFile=f;}).catch(()=>{shareFile=null;});}
   for(const button of document.querySelectorAll('[popovertarget="cm-user-menu"],[aria-controls="cm-user-menu"]'))button.setAttribute('aria-expanded',String(e.newState==='open'&&button===menuChip));
   if(menuChip)menuChip.setAttribute('aria-expanded',String(e.newState==='open'));
 });
-$('#cm-user-menu').addEventListener('toggle',event=>{if(event.newState==='open'&&!$('#cm-user-menu').contains(document.activeElement))$('#cm-user-menu').querySelector('button:not([disabled]),a[href]')?.focus({preventScroll:true});});
+$('#cm-user-menu').addEventListener('toggle',event=>{if(event.newState==='open'){const menu=$('#cm-user-menu');menu.scrollTop=0;menu.querySelector('button:not([disabled]),a[href]')?.focus({preventScroll:true});}});
 $('#cm-user-menu').addEventListener('click',e=>{if(e.target.closest('[data-action]'))C.closeAccountMenu({restoreFocus:false});});
 /* A NEW VIEW STARTS AT THE TOP. The hash changed and render() replaced the page, but the
    scroll offset stayed where the last page left it -- open a deck from the bottom of the
