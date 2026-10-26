@@ -172,11 +172,12 @@ try {
   await page.waitForFunction(() => !document.getElementById("cm-dialog").open);
   const gone = await toast(page);
   ok(gone.action === "Undo", `the deletion's toast offers Undo: ${JSON.stringify(gone)}`);
+  eq(await page.locator('.cm-toast:not([hidden]) .cm-toast-text').allTextContents(),[gone.text], 'deletion has one transaction receipt rather than a duplicate ordinary success');
   await press(page, "delete-deck", {deck: live});
   await page.waitForFunction(() => document.getElementById("cm-notice").classList.contains("error"));
   ok(!(await page.evaluate(() => document.getElementById("cm-dialog").open)), "the deck is gone: deleting it again finds nothing to delete");
-  await page.evaluate(() => { document.getElementById("cm-notice").hidden = true; });
-  await press(page, "undo");
+  await page.getByRole('button',{name:'Dismiss error notice',exact:true}).click();
+  await page.locator('#cm-undo-notice [data-undo-revision]').click();
   await page.waitForFunction(() => /Last change undone/.test(document.getElementById("cm-notice").textContent));
   await press(page, "delete-deck", {deck: live});
   await field.waitFor();
