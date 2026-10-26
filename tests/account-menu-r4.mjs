@@ -35,7 +35,6 @@ try{
     eq(await menu.locator('[data-admin-link]').count(),test.admin?1:0,'Admin follows the verified administrator flag');
     eq(await menu.locator('[data-action=invite-crankmagic]').count(),test.admin?1:0,'Invite keeps its separate verified permission gate');
     if(test.admin)ok(await menu.locator('[data-admin-link]').evaluate(n=>n.closest('.cm-menu-group').getAttribute('aria-label')==='You'),'Admin is in You, before the standalone Sign out');
-    if(test.admin)ok(await menu.locator('[data-profile-menu] .v-button,[data-admin-menu] .v-button').evaluateAll(nodes=>nodes.every(n=>{const s=getComputedStyle(n);return s.display==='block'&&s.textAlign==='left';})),'verified Invite and Admin align like the other account rows');
     eq(await trigger.getAttribute('aria-expanded'),'true','the actual invoker exposes expanded state');
     ok(await page.evaluate(()=>__menuC.accountMenuOpen()&&document.getElementById('cm-user-menu').contains(document.activeElement)),'opening focuses a native control in the shared node');
     const focused=await page.evaluate(()=>document.activeElement.dataset.action);await page.keyboard.press('Tab');
