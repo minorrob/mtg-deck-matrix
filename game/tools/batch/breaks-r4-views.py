@@ -8,4 +8,5 @@ BREAKS = [
  ('Coach rebuilds actual textarea', 'crankmagic-board.js', 'replacement.replaceWith(input);', 'replacement.value=input.value;'),
  ('Other seats renders full mats instead of compact counts', 'crankmagic-board.js', '${controlledCards(x.playerId).length} permanents', '${mat(x)}${controlledCards(x.playerId).length} permanents'),
  ('Settings Coach handoff runs before dialog restoration', 'crankmagic-board.js', 'if(leaving&&!leaving.closed)leaving.afterClose=arm;else arm();', 'arm();'),
+ ('same-control pointer intent leaves late Coach focus armed', 'crankmagic-board.js', "if(coachFocusRequest?.armed&&!event.target.closest?.('#cm-board-coach'))coachFocusRequest=null;", ''),
 ]
