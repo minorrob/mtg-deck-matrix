@@ -1031,7 +1031,11 @@ globalThis.CrankBoard = Object.seal({
     const chip=grid.querySelector(':scope>.cm-board-chip'),history=grid.querySelector(':scope>.cm-board-band'),gap=number(grid,'rowGap');
     const historyMin=history?number(history,'minHeight'):0,rows=history||mat.dataset.fit==='phone'?5:4;
     const extra=padding(grid)+8+outer(chip)+historyMin+gap*(rows-1);
-    return {fieldMin,landMin,extra,header:outer(mat.querySelector('.cm-mat-head'))};
+    const head=mat.querySelector('.cm-mat-head');
+    // A constrained grid can squeeze the header to its padding before its first fit. Its actual
+    // seat facts still need their intrinsic height; a later Hand-size fit must not discover it anew.
+    const header=head?Math.max(outer(head),Math.max(0,...[...head.children].map(outer))+padding(head)+number(head,'marginTop')+number(head,'marginBottom')):0;
+    return {fieldMin,landMin,extra,header};
   }
   function fitBoardZones(host) {
     for(const grid of host.querySelectorAll('.cm-mat-grid')) {
