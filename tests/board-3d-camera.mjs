@@ -105,7 +105,7 @@ try {
   const zoomSlider = () => page.getByRole("slider", {name: "Table zoom", exact: true});
   await page.getByRole("button", {name: "Camera", exact: false}).click();
   eq(await zoomSlider().inputValue(), "100", "the zoom starts at 100%");
-  const point = {x: region.x + region.width * .7, y: region.y + region.height * .55};
+  const point = await page.evaluate(({fx,fy})=>{const region=document.querySelector('.cm-stage-region'),r=region.getBoundingClientRect(),want={x:r.left+r.width*fx,y:r.top+r.height*fy};let best=null,distance=Infinity;for(let y=r.top+20;y<r.bottom-20;y+=9)for(let x=r.left+20;x<r.right-20;x+=9){const el=document.elementFromPoint(x,y),d=(x-want.x)**2+(y-want.y)**2;if(el?.matches('.cm-stage-canvas,.cm-stage-region')&&CrankStage.pick(x,y)&&d<distance){best={x,y};distance=d;}}if(!best)throw new Error('no native bare table point for wheel zoom');return best;},{fx:.7,fy:.55});
   const beforePick = await page.evaluate(({x, y}) => CrankStage.pick(x, y).world, point);
   const wheelHit=await page.evaluate(({x,y})=>{const el=document.elementFromPoint(x,y);return {hit:el?.outerHTML.slice(0,180),row:!!el?.closest('[data-zone-scroll]'),overlay:!!el?.closest('.cm-stage-camera,.cm-stage-actions,#cm-card-inspector,.cm-stage-side,.cm-stage-rail')};},point);
   await page.mouse.move(point.x, point.y);

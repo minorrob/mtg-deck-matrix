@@ -71,8 +71,9 @@ try{
   // The camera moved by hand keeps the one projection (tests/board-3d-camera.mjs): the wheel's zoom toward the pointer, a
   // held right button's head look, and back.
   const stageBox=await page.locator('.cm-stage-region').boundingBox();
-  const wheelHit=await page.evaluate(({x,y})=>{const el=document.elementFromPoint(x,y);return {hit:el?.outerHTML.slice(0,180),row:!!el?.closest('[data-zone-scroll]'),overlay:!!el?.closest('.cm-stage-camera,.cm-stage-actions,#cm-card-inspector,.cm-stage-side,.cm-stage-rail')};},{x:stageBox.x+stageBox.width*.35,y:stageBox.y+stageBox.height*.6});
-  await page.mouse.move(stageBox.x+stageBox.width*.35,stageBox.y+stageBox.height*.6);await page.mouse.wheel(0,-200);await page.waitForTimeout(300);
+  const wheelPoint=await page.evaluate(({fx,fy})=>{const region=document.querySelector('.cm-stage-region'),r=region.getBoundingClientRect(),want={x:r.left+r.width*fx,y:r.top+r.height*fy};let best=null,distance=Infinity;for(let y=r.top+20;y<r.bottom-20;y+=9)for(let x=r.left+20;x<r.right-20;x+=9){const el=document.elementFromPoint(x,y),d=(x-want.x)**2+(y-want.y)**2;if(el?.matches('.cm-stage-canvas,.cm-stage-region')&&CrankStage.pick(x,y)&&d<distance){best={x,y};distance=d;}}if(!best)throw new Error('no native bare table point for wheel zoom');return best;},{fx:.35,fy:.6});
+  const wheelHit=await page.evaluate(({x,y})=>{const el=document.elementFromPoint(x,y);return {hit:el?.outerHTML.slice(0,180),row:!!el?.closest('[data-zone-scroll]'),overlay:!!el?.closest('.cm-stage-camera,.cm-stage-actions,#cm-card-inspector,.cm-stage-side,.cm-stage-rail')};},wheelPoint);
+  await page.mouse.move(wheelPoint.x,wheelPoint.y);await page.mouse.wheel(0,-200);await page.waitForTimeout(300);
   ok((await align('wheel zoom')).pan.x!==0,`the wheel zooms toward the pointer (native hit ${JSON.stringify(wheelHit)})`);
   await page.mouse.down({button:'right'});await page.waitForFunction(()=>CrankStage.diagnostics().look?.t===1,null,{polling:'raf',timeout:5000});
   await align('head look, held');
