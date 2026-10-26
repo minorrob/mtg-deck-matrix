@@ -6,7 +6,7 @@ BREAKS = [
     ('redrawn account invoker loses focus return', 'crankmagic-app.js',
      'menuChip=C.focusFind(menuChipKey)', 'menuChip=null'),
     ('account invoker aria state stays collapsed', 'crankmagic-app.js',
-     "String(e.newState==='open'", "String(false"),
+     "if(invoker)invoker.setAttribute('aria-expanded',String(e.newState==='open'));", "if(invoker)invoker.setAttribute('aria-expanded','false');"),
     ('Careful group loses its required label', 'index.html',
      'role="group" aria-label="Careful"', 'role="group" aria-label="Other"'),
     ('danger text uses low-contrast raised backdrop', 'crankmagic.css',
