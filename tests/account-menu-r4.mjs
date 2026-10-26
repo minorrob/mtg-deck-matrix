@@ -19,7 +19,7 @@ try{
       if(p==='/api/social/me')return r.fulfill({status:test.signed?200:401,json:test.signed?{name:'Reader',email:'reader@example.test',canInvite:test.admin}:{error:'Signed out'}});
       return r.fulfill({status:503,json:{error:'External/account changes are blocked in this isolated menu test.'}});
     });
-    await page.goto(base+'/index.html#decks');await page.waitForFunction(()=>globalThis.__menuC?.accountMenuOpen&&document.querySelector('.cm-decks-stages'));
+    await page.goto(base+'/index.html#decks');await page.waitForFunction(()=>globalThis.__menuC?.accountMenuOpen&&document.querySelector('.cm-decks-stages,.cm-decks-empty'));
     await page.evaluate(async()=>{await Promise.all([__menuC.adminReady,__menuC.sharingReady]);});
     await page.waitForFunction(signed=>document.querySelector('#cm-account').textContent.includes(signed?'Signed in as':'Signed out'),test.signed);
     const trigger=page.locator('#cm-user-functions'),menu=page.locator('#cm-user-menu');
@@ -56,7 +56,7 @@ try{
     await trigger.click();await menu.locator('[data-theme-skin=bronze-basalt]').click();
     await page.waitForFunction(()=>document.getElementById('matrix-v2').dataset.palette==='bronze-basalt');
     await trigger.click();await menu.locator('[data-theme-mode=light]').click();
-    await page.waitForFunction(()=>document.getElementById('matrix-v2').dataset.theme==='bronze-light');
+    await page.waitForFunction(()=>document.getElementById('matrix-v2').dataset.palette==='bronze-basalt'&&document.getElementById('matrix-v2').dataset.theme==='light');
     await trigger.click();
     eq(await menu.locator('[data-theme-skin=bronze-basalt]').getAttribute('aria-pressed'),'true','Skin selection remains accessible and functional');
     eq(await menu.locator('[data-theme-mode=light]').getAttribute('aria-pressed'),'true','register selection remains accessible and functional');
