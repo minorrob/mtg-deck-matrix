@@ -71,23 +71,33 @@ try {
     }
     const header=await page.locator('.cm-stage-top').boundingBox();assert.ok(header.x>=0&&header.x+header.width<=width+1,'header fits');
     for(const action of ['board-menu','board-history','board-tools']) {
-      await page.locator('[data-action=board-profile]').click();
-      await page.locator(`.cm-profile-menu [data-action=${action}]`).click();
-      /* Settings is a window of its own (Rob, Oct 25), sized to the browser; the others pop up from the profile menu. */
-      const settings=action==='board-tools',menu=page.locator(settings?'#cm-dialog[open]':'.cm-profile-menu .cm-board-menu'),box=await menu.boundingBox();
-      assert.ok(box.x>=0&&box.x+box.width<=width+1,'profile pop-ups fit without sideways scrolling');
+      const settings=action==='board-tools';
+      if(settings){
+        await page.locator('[data-action=board-profile]').click();
+        await page.locator('#cm-user-menu:popover-open').getByRole('button',{name:'Settings',exact:true}).click();
+      }else{
+        await page.locator('[data-action=board-table-menu]').click();
+        await page.locator(`#cm-table-menu [data-action=${action}]`).click();
+      }
+      /* r4 places Pages and History under Table; the shared account popover opens Settings. */
+      const menu=page.locator(settings?'#cm-dialog[open]':action==='board-menu'?'#cm-board-nav':'#cm-board-history');
+      await menu.waitFor({state:'visible'});const box=await menu.boundingBox();
+      assert.ok(box.x>=0&&box.x+box.width<=width+1,'utility pop-ups fit without sideways scrolling');
       if(settings) assert.ok(box.y>=0&&box.y+box.height<=721,'the Settings window fits the browser top to bottom');
-      await page.keyboard.press('Escape');if(!settings) await page.keyboard.press('Escape');
+      await page.keyboard.press('Escape');
+      await menu.waitFor({state:'hidden'});
     }
     assert.equal(await page.locator('#cm-board').evaluate(el=>el.scrollLeft),0,'opening utilities never scrolls the shell sideways');
     if(view==='focus') {
       await page.locator('[data-action=board-profile]').click();
+      await page.locator('#cm-user-menu:popover-open').waitFor();
+      await page.keyboard.press('Escape');
+      assert.ok(await page.locator('[data-action=board-profile]').evaluate(el=>el===document.activeElement),'account Escape restores the actual board invoker');
       await page.locator('.cm-board-showhand').focus();await page.keyboard.press('Enter');
       await page.locator('.cm-hand-show').waitFor();
       await page.keyboard.press('Escape');
       await page.locator('.cm-hand-show').waitFor({state:'detached',timeout:2000});
-      assert.ok(await page.locator('.cm-board-showhand').evaluate(el=>el===document.activeElement),'hand closes before the profile behind it and returns focus');
-      await page.keyboard.press('Escape');
+      assert.ok(await page.locator('.cm-board-showhand').evaluate(el=>el===document.activeElement),'hand Escape closes the drawer and returns focus');
     }
     await screenshot(page,view+(width===1280?'':`-${width}`));
   }

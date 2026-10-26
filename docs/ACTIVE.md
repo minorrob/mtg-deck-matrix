@@ -2,6 +2,14 @@
 
 ## r4 coordinated execution, October 26, 2026 (Codex; Rob: "go")
 
+**Coordinator ownership restored:** PR #894 is merged into integration/r4 and pushed at
+`9198910040383cb9907304bcea9acaaa1b7d89e5`. The incoming chat explicitly returned the canonical index,
+branch and serial browser slot. All 14 incoming gates passed again on that merge; both exact-head scans
+passed. Codex resumes combined acceptance for PR #890, then required CI, main and staging. Engine has
+the first serial browser slot for the real-table continuation; Foundation owns Play production fixes;
+the coordinator and Workshop migrate disjoint older test contracts. Production still awaits Rob's go.
+The incoming handoff paragraphs below record the completed transfer, rather than an active hold.
+
 **Incoming integration evidence:** `claude/r4-rob-1026` builds on pushed427ada65. Its14 requested gates pass;
 all12 report-only suites ran (five pass/seven fail, with the extra table-tabletop failure reproduced on
 the unchanged checkpoint). Three conflicts preserve the newer Play fixes and EX-17 tapping; incoming

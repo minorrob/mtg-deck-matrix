@@ -33,11 +33,11 @@
       "id": "CH-03",
       "tier": "C",
       "owner": "S0",
-      "status": "integrated",
+      "status": "superseded",
       "summary": "Wordmark untouched; gear logo at 28–52px beside it; Cinzel never on the app name (assert in `type-final`)",
       "evidence": [
-        "type-final: 34; Oxanium wordmark preserved",
-        "breaks-r4-foundation: 4/4"
+        "Originally integrated and tested as Oxanium; later explicit user request supersedes this source row under EX-18",
+        "PR #894 / 91989100: Cinzel 600 capitals with antique gilt; type-final: 37 and design-tokens: 200 on source and merge"
       ],
       "commit": "fe65eb65"
     },

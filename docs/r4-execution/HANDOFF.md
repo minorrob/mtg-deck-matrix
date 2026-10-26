@@ -4,6 +4,20 @@ Integration: integration/r4, baseline origin/main c567c581. Updated October 26, 
 PR: https://github.com/minorrob/mtg-deck-matrix/pull/890 (draft).
 Tracking: https://linear.app/robs-build/issue/ROB-197/implement-r4-design-foundation-and-reconciled-playworkshop-ux .
 
+## Coordinator resumed after PR #894
+
+Incoming ownership returned explicitly at pushed integration/r4
+`9198910040383cb9907304bcea9acaaa1b7d89e5`, equal to origin and clean except the preserved untracked
+design renders. PR #894 is merged. Its source commit is `87953f81`; all 14 requested gates passed on
+both that source and the merge, with exact-head secret/clean-merge scans. No incoming browser remains.
+The transfer and hold described in the historical handoff below are complete.
+
+The original combined acceptance resumes: Engine continues the real-table pass from the unclassified
+Focus Coach geometry stop; Foundation completes the finite remaining Play gates. Older report-only
+tests must follow EX-15–EX-26 while retaining their functional assertions. In particular EX-17 permits
+rotated card corners across unchanged slots, EX-16 permits a readable sizing offset, and EX-18 supersedes
+the earlier unchanged-wordmark requirement. The required CI, main merge and staging are still pending.
+
 ## Incoming follow-ups: integration evidence
 
 `claude/r4-rob-1026` applies the incoming patch to pushed checkpoint `427ada65`. All14 requested gates
