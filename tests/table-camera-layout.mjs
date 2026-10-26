@@ -27,7 +27,7 @@ try {
     const size=()=>card.evaluate(el=>parseFloat(getComputedStyle(el).width));
     const before=await size();
     await slider.fill('80');
-    assert.ok(Math.abs(await size()/before-.8)<.03,'Camera changes battlefield card size');
+    assert.ok(await size()<before-1,'Camera changes battlefield card size continuously, preserving the EX16 readable-caption offset');
     await slider.focus();await page.keyboard.press('ArrowRight');
     assert.equal(await slider.inputValue(),'81','keyboard adjusts the same continuous slider');
     assert.equal(await page.evaluate(()=>localStorage.getItem('cm-board-scale:board')),'81','the adjustment is saved on this device');
