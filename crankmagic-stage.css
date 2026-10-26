@@ -989,3 +989,5 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-board-pie .cm-board-center{width:calc(32px*var(--hud-scale,1));height:calc(32px*var(--hud-scale,1))}
 #matrix-v2 .cm-board .cm-board-pie-life small{color:var(--mat-ink);background:var(--mat-scrim);padding:2px 4px;border-radius:3px}
 #matrix-v2 .cm-board .cm-board-pie-priority{top:calc(50% + 20px*var(--hud-scale,1));font-size:calc(15px*var(--hud-scale,1));line-height:1.1}
+
+#matrix-v2 .cm-board .cm-vitals-poison,#matrix-v2 .cm-board .cm-vitals>b:after{font-size:calc(15px*var(--hud-scale,1))}

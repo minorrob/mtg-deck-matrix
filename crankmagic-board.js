@@ -222,14 +222,14 @@ globalThis.CrankBoard = Object.seal({
     const el = event.target.closest?.('[data-play-hud]'); if (!el) return;
     hudPreview = Math.max(100, Math.min(200, Number(el.value) || 100));
     el.setAttribute('aria-valuetext', `${hudPreview}%`); el.parentElement.querySelector('output').textContent = `${hudPreview}%`;
-    applyHud(document.getElementById('cm-board'));
+    applyHud(document.getElementById('cm-board'));fit();
   });
   document.addEventListener('input',event=>{const el=event.target.closest?.('[data-board-spacing]');if(!el)return;spacingPreview=Math.max(-70,Math.min(20,Number(el.value)||0));el.setAttribute('aria-valuetext',`${spacingPreview}%`);el.parentElement.querySelector('output').textContent=`${spacingPreview}%`;applySpacing(document.getElementById('cm-board'));fit();});
   document.addEventListener('change',event=>{const el=event.target.closest?.('[data-board-spacing]');if(!el)return;keep('cm-board-spacing',spacingPreview ?? Number(el.value));spacingPreview=null;});
   document.addEventListener('change', event => {
     const el = event.target.closest?.('[data-play-hud]'); if (!el) return;
     keep(HUD_KEY, Math.max(100, Math.min(200, Number(el.value) || 100))); hudPreview = null;
-    applyHud(document.getElementById('cm-board'));
+    applyHud(document.getElementById('cm-board'));fit();
   });
   let paneEditing = false, paneSaving = false, profileOpen = false;
   const PANE_MODULES = [["history", "History"], ["coach", "AI Coach"], ["counter", "Counter-Intel"], ["resources", "Resources"], ["stack", "On the Stack"], ["inspect", "Card Preview"], ["table", "Table Vitals"], ["recommended", "Recommended Actions"], ["chat", "Chat"], ["actions", "Actions"]];
@@ -3907,8 +3907,8 @@ globalThis.CrankBoard = Object.seal({
     }
   });
   actions["board-tools"] = () => openSettings();
-  actions["board-coach"] = () => {profileOpen=false; coach.open = !coach.open; tools = false; historyOpen = false; if (coach.open) {if (!moduleSide("coach")) inspection = null; panelOpen = false;openModuleDrawer("coach");} draw(); drawCoach(); if (coach.open) document.querySelector("#cm-board-coach .cm-coach-input")?.focus();};
-  actions["board-recommend"] = () => {coach.open=true;if (!moduleSide("coach")) inspection = null;openModuleDrawer("coach");draw();drawCoach();ask_("What are my best actions right now?");};
+  actions["board-coach"] = () => {profileOpen=false; coach.open = !coach.open; tools = false; historyOpen = false; if (coach.open) {if (!moduleSide("coach")) inspection = null; panelOpen = false;openModuleDrawer("coach");if(phone()){stageSide=true;stageRail=false;}} draw(); drawCoach(); if (coach.open) document.querySelector("#cm-board-coach .cm-coach-input")?.focus();};
+  actions["board-recommend"] = () => {coach.open=true;if (!moduleSide("coach")) inspection = null;openModuleDrawer("coach");if(phone()){stageSide=true;stageRail=false;}draw();drawCoach();ask_("What are my best actions right now?");};
   actions["board-coach-ask"] = (el) => ask_(el.dataset.q);
   /* Show me: the cards an answer names, lit on the board for four seconds. Why?: each play's reason, one sentence. */
   actions["board-coach-show"] = (el) => {
