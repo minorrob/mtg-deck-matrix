@@ -674,7 +674,7 @@ globalThis.CrankBoard = Object.seal({
     return mark;
   }
   function combatThumb(id,role,{draft=false}={}) {
-    const c=combatCard(id);if(!c)return `<span class="cm-combat-missing">Left the battlefield</span>`;
+    const c=combatCard(id);if(!c)return `<span class="cm-combat-missing">${role==='Attacked permanent'?'Attacked permanent left the battlefield':'Left the battlefield'}</span>`;
     return `<span class="cm-combat-thumb" data-combat-light="${id}" data-peek-card="${id}" ${draft?`data-draft-blocker="${id}"`:`data-combat-role="${role}"`}>
       ${c.name && !c.faceDown ? `<img src="${e(pictureOf(c.name))}" alt="${e(combatName(c))}" loading="lazy">` : `<i class="cm-combat-back" aria-label="Face-down creature"></i>`}
       ${twinMark(id)?`<small class="cm-twin-mark">${e(twinMark(id))}</small>`:""}${c.power!=null?`<b class="cm-combat-pt">${e(c.power)}/${e(c.toughness)}</b>`:""}</span>`;
