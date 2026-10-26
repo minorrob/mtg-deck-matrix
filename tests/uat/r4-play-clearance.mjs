@@ -25,3 +25,10 @@ export async function phoneChromeContrast(page){return page.evaluate(()=>{
   return {element:icon?el.closest('button').dataset.action:el.textContent.trim(),ratio,minimum:icon?3:4.5,foreground:painted,background:bg};
  });
 });}
+
+export async function cardBadgeBounds(page){return page.evaluate(()=>[...document.querySelectorAll('.cm-mat .cm-bcard-pt,.cm-mat .cm-bcard-count,.cm-mat .cm-bcard-tax')].flatMap(el=>{
+ const card=el.closest('.cm-bcard'),style=getComputedStyle(el);if(!card||!el.getClientRects().length||style.visibility==='hidden')return [];
+ const clip=getComputedStyle(card);if(!/hidden|clip/.test(clip.overflowX))return [];
+ const left=el.offsetLeft+(el.matches('.cm-bcard-count')?-el.offsetWidth/2:0)+parseFloat(style.paddingLeft),width=el.scrollWidth-parseFloat(style.paddingLeft)-parseFloat(style.paddingRight);
+ return left<-.5||left+width>card.clientWidth+.5?[{seat:card.closest('.cm-mat').dataset.seat,card:card.dataset.card||card.getAttribute('aria-label'),text:el.textContent.trim(),textLeft:left,textRight:left+width,cardWidth:card.clientWidth}]:[];
+}));}
