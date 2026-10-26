@@ -1092,11 +1092,11 @@ try {
   await second.page.getByRole('radio',{name:'Resources: Right',exact:true}).check();
   await second.page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
   if(!await second.page.locator('.cm-stage-side.is-open').count()) await second.page.locator('.cm-stage-right').click();
+  eq(await second.page.locator('.cm-board-mat').boundingBox(),beforeDrawer,'the Stack drawer overlays without changing the mat before standalone inspection opens');
   const inspectedRevision = views(secondEmail).at(-1).revision, inspectedSends = sent[secondEmail].length;
   await second.page.locator('.cm-board-mat .cm-board-lands .cm-bcard.is-tapped').first().click();
   await second.page.locator('#cm-card-menu [data-action=board-card-menu-view]').click();
   await second.page.locator('#cm-card-inspector .cm-bcard').waitFor();
-  eq(await second.page.locator('.cm-board-mat').boundingBox(),beforeDrawer,'the shared drawer overlays without changing the mat');
   const resources = await second.page.evaluate(() => {
     const lands = [...document.querySelectorAll(".cm-board-mat .cm-board-lands .cm-bcard[data-card]")], up = lands.filter((c) => !c.classList.contains("is-tapped")).length;
     const row = document.querySelector(".cm-stage-module[data-module=resources] .cm-res-list[aria-label='Your lands by name'] li"), types = [...document.querySelectorAll(".cm-stage-module[data-module=resources] .cm-res-list[aria-label='Your hand by type'] li")].map((li) => li.textContent.replace(/\s+/g, " ").trim());
