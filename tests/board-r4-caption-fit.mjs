@@ -22,12 +22,19 @@ try{
  for(const mode of ['table','focus','full'])for(const hud of [100,200])for(const width of [1440,390])for(const seats of mode==='table'&&width===1440?[2,4]:[4]) {
   if(process.env.CAPTION_CASE && process.env.CAPTION_CASE!==`${mode}-${width}-${hud}`)continue;
   const f=await open(mode,width,false,fixture(seats),hud),{page,context,errors}=f;
+  await page.evaluate(choice=>__r4Act('set-theme',{themeChoice:choice}),mode==='focus'?'bronze-basalt-light':mode==='full'?'chalk-coal':'sapphire-obsidian');
   if(width<500)await page.locator('[data-action=board-stage-rail]').click();
   const problems=await page.evaluate(({roots,floor})=>[...document.querySelectorAll(`#cm-board ${roots.split(',').join(',#cm-board ')}`)].flatMap(root=>[root,...root.querySelectorAll('*')]).filter((el,i,all)=>all.indexOf(el)===i&&[...el.childNodes].some(n=>n.nodeType===3&&n.textContent.trim())&&!el.closest('[hidden],[inert],.cm-sr-only,.cm-board-peek,.cm-bcard-name,.cm-coach-head,.cm-coach-questions,.cm-stage-camera,.cm-profile-avatar,.cm-seat-portrait')&&!(el.parentElement?.matches('.cm-stage-handle')&&el.tagName==='B')&&el.getClientRects().length&&getComputedStyle(el).visibility==='visible').map(el=>({text:el.textContent.trim().slice(0,70),size:parseFloat(getComputedStyle(el).fontSize),cls:el.className})).filter(x=>x.size<floor-.1),{roots,floor:15*hud/100});
   if(process.env.UAT_SHOTS){mkdirSync(process.env.UAT_SHOTS,{recursive:true});await page.screenshot({path:path.join(process.env.UAT_SHOTS,`r4-caption-${mode}-${width}-${hud}-s${seats}.png`)});}
   const clearance=await tableClearance(page);if(clearance.length)failures.push({case:`${mode}/${width}/${hud}/${seats}seats`,clearance});else checks++;
+  if(mode==='table'&&width===1440){
+   const rows=await page.locator('.cm-board-table .cm-mat').evaluateAll(mats=>mats.flatMap(mat=>[...mat.querySelectorAll('.cm-board-field,.cm-board-lands')].flatMap(zone=>{const card=zone.querySelector('.cm-bcard'),label=zone.querySelector(':scope>.cm-mat-label');if(!card)return [];const z=zone.getBoundingClientRect(),r=card.getBoundingClientRect(),l=label.getBoundingClientRect();return r.bottom>z.bottom-2||r.top<l.bottom-1?[{seat:mat.dataset.seat,zone:zone.dataset.zone,card:{top:r.top,bottom:r.bottom},viewport:{top:z.top,bottom:z.bottom},labelBottom:l.bottom}]:[];})));
+   eq(rows,[],`${hud}/${seats}: default battlefield and lands each contain a whole first card row`);
+   eq(await page.locator('.cm-board-table').evaluate(el=>el.scrollWidth<=el.clientWidth+1),true,`${hud}/${seats}: Table does not overflow horizontally`);
+  }
   if(problems.length)failures.push({case:`${mode}/${width}/${hud}/${seats}seats`,text:problems});else checks++;
   const own=page.locator('.cm-mat[data-seat="0"] .cm-bcard[data-card="9001"]').first();await own.scrollIntoViewIfNeeded();const reachable=await own.evaluate(el=>{const r=el.getBoundingClientRect(),at=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return el===at||el.contains(at);});if(!reachable)failures.push({case:`${mode}/${width}/${hud}/${seats}seats`,geometry:'card unreachable after scrolling'});else checks++;
+  if(process.env.UAT_SHOTS&&mode==='table'&&width===1440)await page.screenshot({path:path.join(process.env.UAT_SHOTS,`r4-caption-${mode}-${width}-${hud}-s${seats}-own-row.png`)});
   eq(errors,[],`${mode}/${width}/${hud}/${seats}seats: no browser errors`);await context.close();
  }
  eq(failures,[],'actual endpoint typography and geometry audit');
