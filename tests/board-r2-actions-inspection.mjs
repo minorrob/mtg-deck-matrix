@@ -38,7 +38,7 @@ try{
   console.log(`Checking ${mode}`);
   await change(page,mode);
   eq(await page.evaluate(()=>localStorage.getItem("cm-board-view")),mode,"explicit view selection is remembered");
-  eq(await page.locator('.cm-stage-rail [data-module="actions"]').count(),1,"one left Actions module in each view");
+  eq(await page.locator('.cm-stage-rail .cm-stage-module[data-module="actions"]').count(),1,"one left Actions module in each view");
   eq(await page.locator('.cm-stage-rail nav[aria-label="Boards"]').count(),1,"Boards lives beside Actions");
   eq(await page.locator('#cm-board-decision').count(),1,"no duplicate decision prompt");
   await page.locator('[data-action="board-camera"]').click();
@@ -63,10 +63,10 @@ try{
   await page.keyboard.press("Escape");eq(await page.locator('#cm-card-inspector').count(),0,"Escape closes inspection only");
   eq(await page.locator('#cm-board').getAttribute('data-view'),mode,"Escape does not change view preference");
   await page.locator('[data-action="board-actions-toggle"]').click();
-  ok((await page.locator('.cm-stage-rail').innerText()).includes('Your choice is waiting'),"collapsed Actions retains pending state");
+  ok(await page.locator('#cm-decision-slot #cm-board-decision').isVisible(),"collapsed Actions retains an actionable pending decision");
   await page.locator('[data-action="board-actions-open"]').click();
   await page.locator('.cm-stage-left').click();
-  ok((await page.locator('[data-action="board-actions-open"]').innerText()).includes('pending'),"closed drawer retains a reachable choice handle");
+  ok(await page.locator('#cm-decision-slot #cm-board-decision').isVisible(),"closed drawer keeps the pending choice reachable");
   await page.locator('[data-action="board-actions-open"]').click();
  }
  // A draft remains the same question while inspecting and switching views.
@@ -105,10 +105,10 @@ try{
   ok((await page.locator('.cm-action-summary').textContent()).includes('Rook · tapping Island'),'a screen reader is told the selection');
   /* Symbols first (Rob, 2026-10-25): no box restating the selection, no paragraph about what Confirm does; Confirm and
      Clear side by side. */
-  const desk=await page.evaluate(()=>{const r=document.querySelector('.cm-action-review'),s=r.querySelector('.cm-action-summary').getBoundingClientRect(),[c,x]=[...r.querySelectorAll('.cm-actions>button')];const a=c.getBoundingClientRect(),z=x.getBoundingClientRect();return {p:r.querySelectorAll('p').length,seen:s.width>1||s.height>1,words:[c.innerText.trim(),x.innerText.trim()],row:Math.abs(a.top-z.top)<2&&z.left>=a.right};});
+  const desk=await page.evaluate(()=>{const r=document.querySelector('.cm-action-review'),s=r.querySelector('.cm-action-summary').getBoundingClientRect(),[c,x]=[...r.querySelectorAll('.cm-decide-actions>button')];const a=c.getBoundingClientRect(),z=x.getBoundingClientRect();return {p:r.querySelectorAll('p').length,seen:s.width>1||s.height>1,words:[...r.querySelectorAll('.cm-decide-actions>button')].map(b=>b.innerText.trim()),row:Math.abs(a.top-z.top)<2&&z.left>=a.right};});
   ok(desk.p===0&&!desk.seen,`no visible summary or explanation under the options (${desk.p} paragraphs, summary seen ${desk.seen})`);
-  eq(desk.words,['Confirm','Clear'],'the two buttons say Confirm and Clear');
-  ok(desk.row,'Confirm and Clear sit side by side');
+  eq(desk.words,['✦ Cast Spell','Back','Cancel'],'r4 names the binding action and both draft exits');
+  ok(desk.row,'binding action and Back sit side by side');
   /* The drawer's open/shut is a thin chevron with no fill, and the drawer's scrollbar a faint track, never white. */
   const quiet=await page.evaluate(()=>{const t=document.querySelector('[data-action="board-actions-toggle"]'),r=t.getBoundingClientRect(),cs=getComputedStyle(t),back=document.querySelector('.cm-board-back'),d=document.querySelector('#cm-board-decision').getBoundingClientRect();return {w:r.width,h:r.height,bg:cs.backgroundColor,svg:!!t.querySelector('svg.cm-chev'),back:back?Math.round(back.getBoundingClientRect().left-d.left):null,bar:getComputedStyle(document.querySelector('.cm-stage-rail')).scrollbarColor};});
   ok(quiet.w<=24&&quiet.h<=24&&quiet.svg&&/rgba\(0, 0, 0, 0\)|transparent/.test(quiet.bg),`the Actions toggle is a small unfilled chevron (${quiet.w}×${quiet.h}, ${quiet.bg})`);

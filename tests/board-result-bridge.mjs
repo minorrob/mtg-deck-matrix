@@ -7,22 +7,23 @@ const implementation=source.slice(source.indexOf('  async function fileResult(')
 let checks=0; const eq=(a,b,m)=>{assert.deepEqual(a,b,m);checks++;};
 const record={schema:'CrankMagicTableResult@1',id:'game:table:m1:s0',tableId:'t1',matchId:'m1',seatId:'s0',source:{deckId:'d1',deckVersion:4},playedAt:'2026-10-26T12:00:00.000Z',outcome:'win',finishReason:'last standing',finishRank:1,turns:8,pod:2,seat:1,ai:true,opponents:[{seatId:'s1',name:'Maya',commanders:['Meren'],ai:true}]};
 function setup({records=[record],expected=true,failOnce=false}={}) {
-  const commands=[],timers=[],notices=[],reads=[];
+  const commands=[],timers=[],notices=[],reads=[],forwarded=[];
   const view={matchId:'m1',seatId:'s0',seat:0,status:'finished',state:{turn:8},seats:[{pilot:'human'},{pilot:'house'}],...(expected?{resultRecordExpected:true}:{})};
   let account='rob@example.com';
   const C={signedInAs:()=>account,state:{decks:[{id:'d1',name:'Test deck'}],games:[]},notice:(...a)=>notices.push(a),commit:async c=>{commands.push(c);if(failOnce){failOnce=false;throw {retryable:true,message:'offline'};}C.state.games.push({id:c.gameId});}};
   const table={tableId:'t1',seats:[{you:true,source:{deckId:'d1',deckVersion:4}},{name:'Maya',kind:'ai',deck:{commander:['Meren']}}]};
-  const context=vm.createContext({C,table,tableId:table.tableId,view,resultEpoch:0,filed:new Set(),outcomeOf:()=>({outcome:'win',reason:'last standing'}),tableApi:()=>({tableUrl:id=>'/api/tables/'+id,api:async(method,url)=>{reads.push([method,url]);return {table:{gameRecord:records.shift()}};}}),setTimeout:fn=>timers.push(fn)});
+  const context=vm.createContext({C,table,tableId:table.tableId,view,resultEpoch:0,filed:new Set(),outcomeOf:()=>({outcome:'win',reason:'last standing'}),tableApi:()=>({fileResult:async(r,c)=>{forwarded.push({record:r,context:c});await C.commit({gameId:r.id,playedAt:r.playedAt,outcome:r.outcome,finish:r.finishRank,turns:r.turns,pod:r.pod,seat:r.seat,table:{deckVersion:r.source.deckVersion}});return true;},tableUrl:id=>'/api/tables/'+id,api:async(method,url)=>{reads.push([method,url]);return {table:{gameRecord:records.shift()}};}}),setTimeout:fn=>timers.push(fn)});
   vm.runInContext(implementation+';globalThis.run=fileResult',context);
-  return {run:()=>context.run(view),commands,timers,notices,reads,C,context,setAccount:v=>account=v};
+  return {run:()=>context.run(view),commands,timers,notices,reads,forwarded,C,context,setAccount:v=>account=v};
 }
 {
   const t=setup();await t.run();eq(t.reads.length,1,'refresh before first write');eq(t.commands.length,1,'one result written');
+  eq(t.forwarded[0].record,record,'verified record forwarded intact to shared writer');eq(JSON.parse(JSON.stringify(t.forwarded[0].context)),{account:'rob@example.com',tableId:'t1',matchId:'m1',seatId:'s0'},'shared writer receives captured owner and context');
   const c=t.commands[0];eq([c.gameId,c.playedAt,c.outcome,c.finish,c.turns,c.pod,c.seat],['game:table:m1:s0',record.playedAt,'win',1,8,2,1],'stable identity and server values');
   eq(c.table.deckVersion,4,'deck provenance preserved');await t.run();eq(t.commands.length,1,'duplicate view cannot write twice');
 }
 {
-  const t=setup({records:[undefined,record]});await t.run();eq(t.commands.length,0,'pending new summary never uses client date');eq(t.timers.length,1,'pending summary schedules retry');await t.timers.shift()();eq(t.commands[0].playedAt,record.playedAt,'retry uses dated summary');
+  const t=setup({records:[undefined,record]});await t.run();eq(t.commands.length,0,'pending new summary never uses client date');eq(t.timers.length,1,'pending summary schedules retry');await t.timers.shift()();eq(t.commands[0].playedAt,record.playedAt,'retry forwards dated summary to writer');
 }
 {
   const t=setup({records:[{...record,seatId:'s1'},record]});await t.run();eq(t.commands.length,0,'another seat summary is rejected');await t.timers.shift()();eq(t.commands.length,1,'correct seat can subsequently file');
