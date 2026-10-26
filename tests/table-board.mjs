@@ -275,7 +275,7 @@ try {
   eq((await text(active.page, ".cm-board-waiting")).trim(), "", "and the strip does not say Your priority beside it: the button carries it");
   /* Rob, 2026-10-11 ("It says we are on turn 3, but I only played one land"): the game's turn counts every player's, and
      on your own the strip says which of yours it is. */
-  ok(/^Turn 1 · You \(your 1st\)$/.test((await text(active.page, ".cm-board-turn")).trim()) && !/your/.test(await text(other.page, ".cm-board-turn")),
+  ok((await text(active.page, ".cm-board-turn")).trim() === "Turn 1 · You" && /; your 1st turn$/.test(await active.page.locator(".cm-board-turn").getAttribute("title")) && !/your/.test(await text(other.page, ".cm-board-turn")) && !/; your/.test(await other.page.locator(".cm-board-turn").getAttribute("title")),
     `on your own turn the strip says which of yours it is: "${(await text(active.page, ".cm-board-turn")).trim()}"; on another's, only whose (${(await text(other.page, ".cm-board-turn")).trim()})`);
   /* B6, item 14: THE HAND TRAY. The count beside the ✋, and the hand by type, castable now over in hand -- the same
      fact that lights a card. */
@@ -463,6 +463,9 @@ try {
     ok(m.named, "and each pile still names its zone and count, to a screen reader and on hover");
     await slider.fill(before);
     await rob.page.locator('[data-action=board-camera]').click();
+    const smallerRows = await rob.page.evaluate(tableRowFacts);
+    ok(smallerRows.valid && smallerRows.widths, "at1280x720 complete rows retain conditional aspect and chosen column widths");
+    await verifyTableRowAccess(rob.page, smallerRows);
     await rob.page.setViewportSize(was);
   }
   ok(await rob.page.locator(`.cm-seatboard[data-seat='${activeSeat}']`).getByRole('button',{name:new RegExp(`^${land}(?:,|:|$)`)}).count()>0, "the land played is on its owner's board in the Table view too");
@@ -844,7 +847,7 @@ try {
   await other.page.waitForFunction(() => !document.querySelector("[data-action=board-draw]"), null, {timeout: 10000}).catch(() => {});
   ok(handNow() === handBefore + 1 && await other.page.locator("[data-action=board-draw]").count() === 0,
     `one click on the library draws one card (${handBefore} → ${handNow()}), and the board is on to Main 1`);
-  ok(/^Turn 2 · You \(your 1st\)$/.test((await text(other.page, ".cm-board-turn")).trim()), `the game's turn 2 is the other player's first: "${(await text(other.page, ".cm-board-turn")).trim()}"`);
+  ok((await text(other.page, ".cm-board-turn")).trim() === "Turn 2 · You" && /; your 1st turn$/.test(await other.page.locator(".cm-board-turn").getAttribute("title")), `the game's turn 2 is the other player's first: "${(await text(other.page, ".cm-board-turn")).trim()}"`);
   ok(await heard(other === rob ? ROB : MAYA, "sfx/sfx_event_draw.mp3"), "and the draw is heard");
   /* Both boards follow into turn 2, and the room asked only where there was something to do (items 10 and 11). */
   await waitText(rob.page, ".cm-board-turn", /Turn 2/);
