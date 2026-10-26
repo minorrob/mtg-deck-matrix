@@ -29,7 +29,7 @@ async function fixture(width,height,mode="full",tall=false){
   let current=structuredClone(original), socket, hold=false;
   const reply = (f, overrides={}) => socket.send(JSON.stringify({type:"checked", choiceId:f.choiceId, ok:true, open:true, reasons:[], ...overrides}));
   const frames=[], context=await browser.newContext({viewport:{width,height},reducedMotion:"reduce",serviceWorkers:"block"});
-  await context.addInitScript(mode=>{localStorage.setItem("cm-board-view",mode);localStorage.setItem("crankmagic-audio-muted","true");},mode);
+  await context.addInitScript(mode=>{localStorage.setItem("cm-board-view",mode);localStorage.setItem("crankmagic-audio-muted","true");globalThis.__blockClicks=[];document.addEventListener('click',event=>{const el=event.target.closest?.('[data-action]');if(el)__blockClicks.push({...el.dataset});},true);},mode);
   const page=await context.newPage();
   /* TALL TEXT (Oct 20): CI's Linux fonts set lines taller than a Windows desktop's, and at 1280x720 that alone pushed No
      blocks and Confirm below the window in Focus (run 39468706080). The tall cases set every line twice its height, so
@@ -56,7 +56,7 @@ async function point(page,selector){
       return x>=0&&y>=0&&x<innerWidth&&y<innerHeight&&el.contains(document.elementFromPoint(x,y));
     });
   });
-  if(!reached){await page.screenshot({path:path.join(ROOT,"work/blocking-failure.png")});console.log(selector,await el.evaluate(el=>{const r=el.getBoundingClientRect(),parents=[];for(let p=el.parentElement;p&&parents.length<10;p=p.parentElement){const s=getComputedStyle(p);parents.push({node:p.className,y:p.getBoundingClientRect().top,h:p.getBoundingClientRect().height,scroll:p.scrollTop,overflow:s.overflow,position:s.position,top:s.top});}return {rect:r.toJSON(),hit:document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.outerHTML.slice(0,600),parents}}));}
+  if(!reached){mkdirSync(path.join(ROOT,'work'),{recursive:true});await page.screenshot({path:path.join(ROOT,"work/blocking-failure.png")});console.log(selector,await el.evaluate(el=>{const r=el.getBoundingClientRect(),parents=[];for(let p=el.parentElement;p&&parents.length<10;p=p.parentElement){const s=getComputedStyle(p);parents.push({node:p.className,y:p.getBoundingClientRect().top,h:p.getBoundingClientRect().height,scroll:p.scrollTop,overflow:s.overflow,position:s.position,top:s.top});}return {rect:r.toJSON(),hit:document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.outerHTML.slice(0,600),clicks:globalThis.__blockClicks.slice(-12),parents}}));}
   assert.ok(reached,`${selector} receives the pointer without scrolling hidden overflow`);
   const r=await el.boundingBox();
   return {x:r.x+r.width/2,y:r.y+r.height/2};
@@ -90,6 +90,13 @@ async function press(page,sel){
 }
 function innerWidthSafe(page){return page.viewportSize().width-5;}
 async function show(page,id){
+  const active=page.locator('.cm-block-draft');
+  const drawer=page.locator('#cm-actions-drawer');
+  const open=await drawer.evaluate(el=>el.classList.contains('is-open'));
+  if(open && Number(await active.getAttribute('data-active-attacker'))===id)return;
+  if(open && await page.locator('#cm-board[data-phone]').count()) {
+    await page.locator('[data-action="board-stage-rail"]').click();await pause(page);
+  }
   const control=page.locator(`[data-action="board-block-attacker"][data-attacker="${id}"]`);
   const row=page.locator('.cm-combat-groups');
   for(let n=0;n<20;n++){
@@ -102,13 +109,14 @@ async function show(page,id){
 async function settle(page,id,none=false){await press(page,`[data-action="${none?'board-block-attacker-none':'board-block-attacker-confirm'}"][data-attacker="${id}"]`);}
 async function noBlocks(page){for(const id of [72001,72002]){await show(page,id);await settle(page,id,true);}}
 async function enabled(page){await page.locator(send+':not([disabled])').waitFor();}
-async function checked(page){await pause(page);}
+let cases=0;
 try {
  for(const [width,height,mode,tall=false] of [[1024,768,"full"],[1280,720,"full"],[1400,900,"full"],[1280,720,"table"],[1280,720,"focus"],[390,844,"focus"],[1280,720,"table",true],[1280,720,"focus",true]]){
   if(process.env.BLOCK_CASE&&process.env.BLOCK_CASE!==`${mode}-${width}${tall?'-tall':''}`)continue;
+  cases++;
   const {page,context,frames,publish,reply,hold,release,drop,emit}=await fixture(width,height,mode,tall);
   const where=`${mode} ${width}x${height}${tall?' tall text':''}`;console.log(where);
-  await checked(page);
+  await pause(page);
   assert.deepEqual(frames.filter(f=>f.type==='check').map(f=>f.indices),[[]],where+': initial no-block draft checked');
   assert.equal(await page.locator(send).isDisabled(),true,'a valid empty check does not settle attackers for the person');
   await show(page,72001);
@@ -183,5 +191,5 @@ try {
   }
   await context.close();
  }
- assert.deepEqual(errors,[],'no browser errors');console.log('board-direct-blocking: PASS (private settlements, authoritative checks, serial/stale responses, capacities, retry, keyboard and real pointer reach, eight layouts and crowded choices)');
+ assert.ok(cases>0,'BLOCK_CASE must name an exercised layout');assert.deepEqual(errors,[],'no browser errors');console.log('board-direct-blocking: PASS ('+cases+' layouts; private settlements, authoritative checks, serial/stale responses, capacities, retry, keyboard and real pointer reach; crowded choices in full1280)');
 }finally{await close();}

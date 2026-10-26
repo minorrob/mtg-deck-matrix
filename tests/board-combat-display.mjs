@@ -44,13 +44,15 @@ async function fixture(width,height,mode="full"){
 }
 async function point(page,selector){
   const el=page.locator(selector).first();
-  assert.ok(await el.evaluate(el=>{
+  const reached=await el.evaluate(el=>{
     const r=el.getBoundingClientRect();
     return [[.5,.5],[.2,.2],[.8,.8]].every(([fx,fy])=>{
       const x=r.x+r.width*fx,y=r.y+r.height*fy;
       return x>=0&&y>=0&&x<innerWidth&&y<innerHeight&&el.contains(document.elementFromPoint(x,y));
     });
-  }),`${selector} receives the pointer without scrolling hidden overflow`);
+  });
+  if(!reached)console.log(selector,JSON.stringify(await el.evaluate(el=>{const r=el.getBoundingClientRect(),parents=[];for(let p=el.parentElement;p&&parents.length<6;p=p.parentElement)parents.push({node:p.className,rect:p.getBoundingClientRect().toJSON(),overflow:getComputedStyle(p).overflow});return {rect:r.toJSON(),hits:[[.5,.5],[.2,.2],[.8,.8]].map(([x,y])=>document.elementFromPoint(r.x+r.width*x,r.y+r.height*y)?.outerHTML.slice(0,300)),parents};}),null,2));
+  assert.ok(reached,`${selector} receives the pointer without scrolling hidden overflow`);
   const r=await el.boundingBox();
   return {x:r.x+r.width/2,y:r.y+r.height/2};
 }
@@ -77,6 +79,7 @@ try{
   for(const [width,height,mode] of [[1024,768,"full"],[1280,720,"full"],[1400,900,"full"],[1280,720,"table"],[1280,720,"focus"],[390,844,"focus"]]){
     const {page,context,frames,publish}=await fixture(width,height,mode);
     const where=`${mode} ${width}x${height}`, strip=page.locator(".cm-combat");
+    console.log(where);
     assert.equal(await strip.count(),1,`${where}: one shared combat picture`);
     assert.deepEqual(await strip.locator(".cm-combat-row").evaluateAll(els=>[...new Set(els.map(el=>el.dataset.combatDefender))]),["1","2"],`${where}: distinct defender identities remain explicit in one row`);
     assert.equal(await strip.locator('[data-combat-role="Attacker"]').count(),6,`${where}: same-name attackers remain separate objects`);
