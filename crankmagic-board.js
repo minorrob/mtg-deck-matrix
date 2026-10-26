@@ -1396,7 +1396,7 @@ globalThis.CrankBoard = Object.seal({
   const targetCard = t => t.kind === "player" ? null : t.kind === "ability" ? namedFace(findCard(abilityTarget(t)?.cardId)) : namedFace(findCard(t.affected ?? t.id)) || visibleSpell(t.affected ?? t.id);
   const targetName = t => t.kind === "player" ? nameOf(t.controllerId ?? t.id) : t.kind === "ability" ? (abilityTarget(t)?.name && !abilityTarget(t).faceDown ? `${abilityTarget(t).name} ability` : "ability") : targetCard(t)?.name || "face-down creature";
   const controllerName = id => id === view.seat ? "You" : players().find(p=>p.playerId === id)?.name || "Unknown controller";
-  const possessive = (t,source) => t.kind === "player" ? targetName(t) : `${(t.affected ?? t.id) === source?.cardId ? "this" : targetController(t) === view.seat ? "your" : controllerName(targetController(t)) + "'s"} ${targetName(t)}`;
+  const possessive = (t,source) => t.kind === "player" ? targetName(t) : `${t.kind!=="ability" && (t.affected ?? t.id) === source?.cardId ? "this" : targetController(t) === view.seat ? "your" : controllerName(targetController(t)) + "'s"} ${targetName(t)}`;
   let targetPage = 0, targetReviewing = false;
   const reviewReady = d => picked.length && (d.kind === "priority" || targetReviewing);
   const targetCycles = new Map();
