@@ -134,7 +134,7 @@ try {
   await page.getByRole("button", {name: "Open the glossary →"}).click();
   await page.locator("#cm-dialog-title", {hasText: "Glossary"}).waitFor();
   const terms = await page.$$eval("#cm-dialog .cm-gloss-term", (ts) => ts.map((t) => t.textContent));
-  ok(["Physical deck", "Substitute", "Bench", "Reserved", "To buy", "Ordered"].every((t) => terms.includes(t)), `the glossary names the statuses: ${terms.join(", ")}`);
+  ok(["Physical deck", "Substitute", "Bench", "Reserved", "To buy", "To Buy · Ordered"].every((t) => terms.includes(t)), `the glossary names the statuses: ${terms.join(", ")}`);
   ok(await page.$eval("#cm-dialog .cm-gloss-term", (t) => getComputedStyle(t).backgroundColor !== "rgba(0, 0, 0, 0)"), "each status wears its color");
   await page.getByRole("button", {name: "Close", exact: true}).click();
   await page.locator("#cm-dialog-title", {hasText: "Help — Decks"}).waitFor();

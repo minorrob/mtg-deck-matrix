@@ -39,7 +39,7 @@ const waitDialog=()=>page.getByRole('dialog').waitFor({state:'hidden'});
    Loading (the deck's, not in its box yet), Substitute, Bench, Sell, Trade, or an Upgrade it owns -- an ordered copy
    for a deck is Reserved with "Ordered" beside it, and a card being looked at is Watch. The old words stay in the
    family for any screen still saying them. */
-const FAMILY={Owned:['Own','Owned','Final','Loading','Substitute','Bench','Sell','Trade','Upgrade Own','Target','To add','Physical deck'],Ordered:['Ordered','Reserved Ordered','Upgrade Ordered'],'To buy':['To buy','Reserved To buy','Upgrade To buy'],Watched:['Watch','Watching','Watched','Upgrade Watch']};
+const FAMILY={Owned:['Own','Owned','Final','Loading','Substitute','Bench','Sell','Trade','Upgrade Own','Target','To add','Physical deck'],Ordered:['To Buy · Ordered','Reserved Ordered','Upgrade Ordered'],'To buy':['To buy','Reserved To buy','Upgrade To buy'],Watched:['Watch','Watching','Watched','Upgrade Watch']};
 const row=(name,source)=>page.locator('tbody tr').filter({has:page.getByRole('button',{name,exact:true})}).filter({has:page.locator('td').filter({hasText:new RegExp('^\\s*('+(FAMILY[source]||[source]).map(s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')(\\s|$)')})});
 async function actionsFor(name,source){await row(name,source).getByRole('button',{name:'Actions',exact:true}).click();}
 /* Status is one column now: an owned copy reads as where it is, and the cell also carries the
@@ -88,15 +88,16 @@ try{
  await newDeck();let current=await state();eq(current.decks[0].status,'final');eq(current.lots.length,0);ok(current.decks[0].slots.reduce((n,r)=>n+r.quantity,0)===100);
  /* The deck page opens on Overview; the hundred is its Cards tab, and the full table with actions is one button from there. */
  await page.getByRole('tab',{name:/^The hundred/}).click();await page.locator('.cm-deck-list').first().waitFor();eq(await page.locator('.cm-deck-list li').count()>0,true,'The hundred tab lists the hundred');await click('View deck cards');await page.getByRole('table').waitFor();ok((await page.locator('.cm-chip').innerText()).startsWith('Deck: Journey Goblins'));
- await actionsFor('Mountain','To buy');await rung('Ordered',40);await page.waitForTimeout(700);current=await state();eq(current.lots[0].quantity,40);eq(current.lots[0].source,'ordered');
- await actionsFor('Mountain','Ordered');await rung('Own',10);await page.waitForTimeout(700);current=await state();eq(current.lots.filter(l=>l.source==='owned').reduce((n,l)=>n+l.quantity,0),10);eq(current.lots.filter(l=>l.source==='ordered').reduce((n,l)=>n+l.quantity,0),30);
- /* THE PULL SHEET. Ten owned Mountains sit on the bench, reserved: the sheet lists them under
-    Add from the Bench, one tick puts the lot in the box, the row stays, grayed, and the deck's
-    In box figure moves by the lot. Then back to the Collection where the journey was. */
- const rosterURL=page.url();await page.goto(BASE+'/'+ENTRY+'#pull?deck='+encodeURIComponent(current.decks[0].id));await page.locator('.cm-pull').waitFor({timeout:45000});
- eq(await page.locator('.cm-pull-group[data-group=bench] .cm-pull-row').count(),1);eq(await page.locator('.cm-pull-group[data-group=bench] .cm-pull-n').innerText(),'10');/* Select all sits beside the count while anything is left in the group, and goes when nothing is. */eq(await page.locator('.cm-pull-group[data-group=bench] .cm-pull-select-all').count(),1);
- await page.locator('[data-pull-tick]').first().check();await page.locator('.cm-pull-row.is-done').waitFor({timeout:8000});current=await state();eq(current.lots.find(l=>l.source==='owned').location.kind,'deck');eq(CrankReadiness(current).inBox,10);
- eq(await page.locator('.cm-pull-group[data-group=bench] .cm-pull-n').innerText(),'0');eq(await page.locator('.cm-pull-group[data-group=bench] .cm-pull-select-all').count(),0);
+ await actionsFor('Mountain','To buy');await rung('To Buy · Ordered',40);await page.waitForTimeout(700);current=await state();eq(current.lots[0].quantity,40);eq(current.lots[0].source,'ordered');
+ await actionsFor('Mountain','To Buy · Ordered');await rung('Own',10);await page.waitForTimeout(700);current=await state();eq(current.lots.filter(l=>l.source==='owned').reduce((n,l)=>n+l.quantity,0),10);eq(current.lots.filter(l=>l.source==='ordered').reduce((n,l)=>n+l.quantity,0),30);
+ /* PLANNED CHANGES (once the pull sheet; Rob, C1–C8). Ten owned Mountains sit on the bench, reserved: the page lists
+    each copy to add as Owned - Final (the thirty ordered as To Buy · Ordered - Final); a tick only selects, Swap asks and puts them in, one change, and the deck's In box
+    figure moves by the lot. Then back to the Collection where the journey was. */
+ const rosterURL=page.url();await page.goto(BASE+'/'+ENTRY+'#pull?deck='+encodeURIComponent(current.decks[0].id));await page.locator('.cm-plan').waitFor({timeout:45000});
+ {const mountains=page.locator('.cm-plan-side.is-in',{hasText:'Mountain'}).filter({hasText:'Owned - Final'});eq(await mountains.count(),10);eq(await page.locator('.cm-plan-side.is-in',{hasText:'Mountain'}).filter({hasText:'To Buy · Ordered - Final'}).count(),30);
+  const rev=(await state()).revision;for(let i=0;i<10;i++)await mountains.nth(i).locator('.cm-plan-tick').check();eq((await state()).revision,rev);
+  await page.locator('[data-action=plan-swap]').click();await page.getByRole('button',{name:'Confirm change'}).click();await page.waitForTimeout(900);current=await state();eq(current.revision,rev+1);
+  eq(current.lots.filter(l=>l.source==='owned'&&l.location.kind==='deck').reduce((n,l)=>n+l.quantity,0),10);eq(CrankReadiness(current).inBox,10);eq(await page.locator('.cm-plan-side.is-in',{hasText:'Mountain'}).filter({hasText:'Owned - Final'}).count(),0);}
  await page.goto(rosterURL);await page.getByRole('table').waitFor();
  /* The row's own verb: the owned, reserved, benched Mountains go into the box in one tap. */
  await page.reload();await page.getByRole('table').waitFor();await page.evaluate(async()=>{const r=await CrankRepository.open();try{const s=await r.getState();const l=s.lots.find(l=>l.source==='owned');await r.commit({id:crypto.randomUUID(),type:'place',lotId:l.id,quantity:l.quantity,confirmed:true},s.revision);}finally{r.close();}});await page.reload();await page.getByRole('table').waitFor();
@@ -109,7 +110,7 @@ try{
  await actionsFor('Mountain','Owned');await click('Flag as option (first to swap out)');await page.locator('#cm-dialog [name=why]').fill('Trim one');await click('Flag as option');await waitDialog();await page.waitForTimeout(500);current=await state();
  ok(current.decks[0].slots.some(r=>r.option&&r.optionWhy==='Trim one'));ok((await page.locator('.cm-badge-option').count())>0);
  await actionsFor('Mountain','Owned');await click('Clear option flag');await page.waitForTimeout(500);current=await state();ok(!current.decks[0].slots.some(r=>r.option));eq(await page.locator('.cm-badge-option').count(),0);
- await actionsFor('Mountain','Owned');await page.locator('#cm-status-submenu-toggle').hover();await page.locator('#cm-status-submenu').getByRole('button',{name:'Ordered',exact:true}).click();await page.getByLabel('Copies affected').fill('2');await click('Confirm change');await waitDialog();await page.waitForTimeout(700);current=await state();eq(current.lots.filter(l=>l.source==='owned').reduce((n,l)=>n+l.quantity,0),8);eq(current.lots.filter(l=>l.source==='ordered').reduce((n,l)=>n+l.quantity,0),32);
+ await actionsFor('Mountain','Owned');await page.locator('#cm-status-submenu-toggle').hover();await page.locator('#cm-status-submenu').getByRole('button',{name:'To Buy · Ordered',exact:true}).click();await page.getByLabel('Copies affected').fill('2');await click('Confirm change');await waitDialog();await page.waitForTimeout(700);current=await state();eq(current.lots.filter(l=>l.source==='owned').reduce((n,l)=>n+l.quantity,0),8);eq(current.lots.filter(l=>l.source==='ordered').reduce((n,l)=>n+l.quantity,0),32);
  await page.reload();await page.getByRole('table').waitFor();eq((await state()).lots.filter(l=>l.source==='owned')[0].quantity,8);
  /* Columns is one reorderable list now (R3.6), and its button says Done rather than Apply columns. */
  await click('Clear filters');await page.locator('.cm-chip').waitFor({state:'detached'});eq(await page.locator('.cm-chip').count(),0);await click('Columns');await page.getByLabel('Color',{exact:true}).check();await page.getByLabel('Source',{exact:true}).uncheck();await click('Done');await waitDialog();ok((await state()).preferences.columns.includes('color'));eq(await page.getByRole('columnheader',{name:'Source'}).count(),0);eq(await page.locator('th, td').evaluateAll(els=>els.every(el=>getComputedStyle(el).textAlign==='left')),true);
@@ -132,7 +133,7 @@ try{
   ok(await help.locator('li').count()>=12,'and reads as bullets rather than paragraphs');
   eq(await help.locator('.cm-def').count(),12,'every state the Status column can show is defined, and the sitting beside them');
   const named=await help.locator('.cm-def > b').allTextContents().then(t=>t.map(x=>x.trim()));
-  for(const term of ['Watched','Suggestion','Planned','Draft list','Reserved','Ordered','To buy','Physical deck','Substitute','Bench'])ok(named.includes(term),`${term} is defined`);
+  for(const term of ['Watched','Suggestion','Planned','Draft list','Reserved','To Buy · Ordered','To buy','Physical deck','Substitute','Bench'])ok(named.includes(term),`${term} is defined`);
   ok(await help.locator('.cm-def > span').first().innerText().then(t=>/filed in that deck/.test(t)),'the definition is the glossary\'s, not a second copy of it');
   const flow=help.locator('.cm-flow svg');await flow.waitFor();
   eq(await flow.locator('g text:nth-child(2)').allTextContents().then(t=>t.map(x=>x.trim())).then(t=>t.filter(x=>x==='Reserved').length),1,'Reserved is drawn once');
@@ -714,8 +715,8 @@ try{
  await actionsFor('Wastes','Bench');await moveToGroup('Journey Goblins');await page.waitForTimeout(900);current=await state();
  {const l=current.lots.find(l=>l.cardId===wastesKey);eq(l.location.deckId,journey.id);eq(l.allocation,null);eq(CrankReadiness(current).standIns,1);}
  await nav('Decks');/* The tile's caption shortens it to "1 sub". */{const tile=await page.locator('.cm-deck-tile').filter({hasText:'Journey Goblins'}).first().innerText();ok(/\b1 sub\b/.test(tile),tile);}
- await openDeck('Journey Goblins');await page.getByRole('button',{name:/^Ready to add/}).click();
- await page.locator('.cm-pull-group[data-group=standin]').waitFor();/* A substitute that "stays for now" (nothing real is ready for its seat) is left alone by Select all, as Mark all added leaves it; one that can come out (a real copy is ready, as the journey's deck has one now) is offered to it. Either way the row's own tick moves it. */{const out=/Substitute → Bench/.test(await page.locator('.cm-pull-group[data-group=standin] .cm-pull-row').first().innerText());eq(await page.locator('.cm-pull-group[data-group=standin] .cm-pull-select-all').count(),out?1:0,'Select all offers only a substitute that can come out');}await page.locator('.cm-pull-group[data-group=standin] [data-pull-tick]').first().check();await page.waitForTimeout(900);current=await state();
+ await openDeck('Journey Goblins');await page.getByRole('button',{name:/^Planned Changes/}).click();
+ /* The substitute is a take-out, "Substitute"; its tick and Swap send it to the Bench. */{const sub=page.locator('.cm-plan-side.is-out',{hasText:'Wastes'});await sub.waitFor();eq(await sub.locator('.cm-plan-role').textContent(),'Substitute');await sub.locator('.cm-plan-tick').check();}await page.locator('[data-action=plan-swap]').click();await page.getByRole('button',{name:'Confirm change'}).click();await page.waitForTimeout(900);current=await state();
  eq(current.lots.find(l=>l.cardId===wastesKey).location.kind,'bench');eq(CrankReadiness(current).standIns,0);
  /* MAKE THE CHANGE (Rob, 14 September). The deck page's hero offers the change list for a final
     deck: four readings held to the mana formula and the floors, one physical swap per row with

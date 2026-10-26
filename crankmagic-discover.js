@@ -913,7 +913,7 @@
        Both lists are the pure module's rows; nothing is computed here. */
     function drawLens(r) {
       const badge = `<span class="cm-badge ${r.under ? 'warn' : 'good'} cm-lens-count">${r.count}${r.min !== null ? ` / ${r.min}` : ''}</span>`;
-      const own = {owned: 'Owned', ordered: 'Ordered', none: 'Not owned'};
+      const own = {owned: 'Owned', ordered: 'To Buy · Ordered', none: 'Not owned'};
       const src = {bench: 'bench', ordered: 'on order', buy: 'buy list', upgrade: 'linked upgrade', played: 'co-play'};
       const haveRows = r.have.map((h) => `<li class="cm-lens-row"><button type="button" class="cm-card-name" data-action="card" data-card="${e(h.cardId)}">${e(h.name)}</button><span class="cm-muted">${h.quantity > 1 ? `×${h.quantity} · ` : ''}${e(h.roles.join(', '))}${h.option ? ' · Option' : ''}</span><span class="cm-lens-price">${h.price === null ? '' : C.money(h.price)}</span></li>`).join('');
       const candRows = r.candidates.slice(0, 40).map((c) => `<li class="cm-lens-row cm-lens-cand"><button type="button" class="cm-card-name" data-action="card" data-card="${e(c.cardId)}">${e(c.name)}</button><span class="cm-muted">${e(own[c.owned])} · ${e(c.sources.map((s) => src[s] || s).join(', '))}${c.coPlay ? ` · ${Math.round(c.coPlay.inclusion * 100)}% of ${e(r.commander ? r.commander.name : 'the commander')}'s decks` : ''}</span><span class="cm-lens-price">${c.price === null ? '' : C.money(c.price)}</span>${r.deck.status === 'final' || r.deck.status === 'draft' ? `<button type="button" class="v-button compact" data-action="lens-swap" data-card="${e(c.cardId)}">Swap for…</button>` : ''}</li>`).join('');
