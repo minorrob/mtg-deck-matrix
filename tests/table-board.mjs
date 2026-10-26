@@ -154,6 +154,15 @@ async function person(email, viewport, {fullscreen = true} = {}) {
   let coachReplyGate = null;
   // This suite exercises a returning Focus player; R2 separately verifies new-device 3D.
   await page.addInitScript(() => {if (!localStorage.getItem("cm-board-view")) localStorage.setItem("cm-board-view", "focus");});proofPages.push(page);
+  await page.addInitScript(() => {
+    globalThis.__uatBoardGestures = [];
+    for (const type of ['pointerdown', 'click']) document.addEventListener(type, event => {
+      const el = event.target.closest?.('#cm-board [data-action]');
+      if (!event.isTrusted || !el) return;
+      globalThis.__uatBoardGestures.push({type, action: el.dataset.action, tag: event.target.tagName});
+      globalThis.__uatBoardGestures = globalThis.__uatBoardGestures.slice(-8);
+    }, true);
+  });
   /* A browser that will not give a page the whole screen (a phone's, or one set so): the view must fill the window by itself. */
   if (!fullscreen) await page.addInitScript(() => Object.defineProperty(Document.prototype, "fullscreenEnabled", {get: () => false}));
   if (stub) await stub(page);
@@ -1679,7 +1688,7 @@ try {
 } catch(error) {
   console.error(`table-board stopped after ${checks} checks`);
   mkdirSync(SHOTS || "work",{recursive:true});
-  for(let i=0;i<proofPages.length;i++){const p=proofPages[i];if(!p.isClosed()){await p.screenshot({path:path.join(SHOTS || "work", `table-board-failure-${i}.png`)});console.error(await p.locator("#cm-board").evaluate(el=>({view:el.dataset,rect:el.getBoundingClientRect().toJSON(),hand:el.querySelector(".cm-board-hand")?.getBoundingClientRect().toJSON()})).catch(()=>null));}}
+  for(let i=0;i<proofPages.length;i++){const p=proofPages[i];if(!p.isClosed()){await p.screenshot({path:path.join(SHOTS || "work", `table-board-failure-${i}.png`)});console.error(await p.locator("#cm-board").evaluate(el=>({view:el.dataset,rect:el.getBoundingClientRect().toJSON(),hand:el.querySelector(".cm-board-hand")?.getBoundingClientRect().toJSON(),gestures:globalThis.__uatBoardGestures,history:[...el.querySelectorAll("#cm-board-history")].map(h=>({rect:h.getBoundingClientRect().toJSON(),display:getComputedStyle(h).display,visibility:getComputedStyle(h).visibility}))})).catch(()=>null));}}
   throw error;
 } finally {
   await close();
