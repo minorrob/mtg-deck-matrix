@@ -156,7 +156,7 @@ async function person(email, viewport, {fullscreen = true} = {}) {
   await page.addInitScript(() => {if (!localStorage.getItem("cm-board-view")) localStorage.setItem("cm-board-view", "focus");});proofPages.push(page);
   await page.addInitScript(() => {
     globalThis.__uatBoardGestures = [];
-    for (const type of ['pointerdown', 'click']) document.addEventListener(type, event => {
+    for (const type of ['pointerdown', 'pointerup', 'click']) document.addEventListener(type, event => {
       const el = event.target.closest?.('#cm-board [data-action]');
       if (!event.isTrusted || !el) return;
       globalThis.__uatBoardGestures.push({type, action: el.dataset.action, tag: event.target.tagName});
@@ -1688,7 +1688,7 @@ try {
 } catch(error) {
   console.error(`table-board stopped after ${checks} checks`);
   mkdirSync(SHOTS || "work",{recursive:true});
-  for(let i=0;i<proofPages.length;i++){const p=proofPages[i];if(!p.isClosed()){await p.screenshot({path:path.join(SHOTS || "work", `table-board-failure-${i}.png`)});console.error(await p.locator("#cm-board").evaluate(el=>({view:el.dataset,rect:el.getBoundingClientRect().toJSON(),hand:el.querySelector(".cm-board-hand")?.getBoundingClientRect().toJSON(),gestures:globalThis.__uatBoardGestures,history:[...el.querySelectorAll("#cm-board-history")].map(h=>({rect:h.getBoundingClientRect().toJSON(),display:getComputedStyle(h).display,visibility:getComputedStyle(h).visibility}))})).catch(()=>null));}}
+  for(let i=0;i<proofPages.length;i++){const p=proofPages[i];if(!p.isClosed()){await p.screenshot({path:path.join(SHOTS || "work", `table-board-failure-${i}.png`)});console.error(await p.locator("#cm-board").evaluate(el=>({view:el.dataset,rect:el.getBoundingClientRect().toJSON(),hand:el.querySelector(".cm-board-hand")?.getBoundingClientRect().toJSON(),gestures:globalThis.__uatBoardGestures,historyCalls:globalThis.__uatHistoryCalls,historyAfterClick:globalThis.__uatHistoryAfterClick,history:[...el.querySelectorAll("#cm-board-history")].map(h=>({rect:h.getBoundingClientRect().toJSON(),display:getComputedStyle(h).display,visibility:getComputedStyle(h).visibility}))})).catch(()=>null));}}
   throw error;
 } finally {
   await close();
@@ -1714,7 +1714,17 @@ async function utility(page, action) {
     if (!await page.locator('#cm-table-menu [data-action=board-menu]').count()) await page.locator('[data-action=board-table-menu]').click();
     await page.locator('#cm-table-menu [data-action=board-menu]').click();
   } else {
+    if (action === 'board-history') await page.evaluate(() => {
+      if (globalThis.__uatHistoryHooked) return;
+      globalThis.__uatHistoryHooked = true; globalThis.__uatHistoryCalls = 0;
+      const run = __cm.actions['board-history'];
+      __cm.actions['board-history'] = (...args) => {globalThis.__uatHistoryCalls++; return run(...args);};
+    });
     await page.locator('#cm-board [data-action="'+action+'"]:visible').first().click();
+    if (action === 'board-history') await page.evaluate(() => {
+      const h = document.getElementById('cm-board-history');
+      globalThis.__uatHistoryAfterClick = {calls: globalThis.__uatHistoryCalls, count: document.querySelectorAll('#cm-board-history').length, rect: h?.getBoundingClientRect().toJSON(), display: h && getComputedStyle(h).display};
+    });
   }
 }
 async function fullCoach(page) {
