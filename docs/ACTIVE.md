@@ -1,5 +1,33 @@
 # Who holds the work
 
+## AI players: the plan for Easy, Normal, Hard, the Veteran agent, personas, the deck matrix, access groups and the game-log admin panel, 2026-10-26 (a Claude cloud session, for Rob; `claude/sharp-hawking-8lbwy9`, planning only)
+
+Rob, 2026-10-26: *"Pick up the work on improving the AI player modes in CrankMagic ... Answer those questions and create the
+plan for it before we execute. I want to see the plan in easy-to-read HTML. On the second part, also create a plan for
+that ... Create a new session to kick off that work."* Two plans, no engine code changed:
+
+- **`docs/ai-players/PLAN-2026-10-26.html`** (published at https://claude.ai/artifact/Ge9uK8r41hNHbgZ9CPCiSh): the three
+  settings as the code has them (Easy and Normal are L1 at temperature 4 and 0; **Hard does not exist in the engine**;
+  "Claude" is L1 plus a Haiku 5.5 consult at close calls), the twelve variables every difficulty is defined on, the
+  definitions of Easy, Normal, Hard and the Veteran agent on them, a table-wide threat model (`threat.mjs`: life,
+  hitters, growth, ramp, engines, commander; `threat x effect` picks the target; a floor under absurd attacks), Hard's
+  per-attacker targets and counted blocker reserve, the Veteran as Hard reasoned over by the cheapest model, four seed
+  personas (`CrankPersona@1`, overrides on the variables, saltiness cap raised only by a persona), a default-deck matrix
+  built by the generator from the engine-playable catalog, three access groups (Owner, Game Theory Insiders, General
+  Access: General never spends), and the game-log admin panel (index, detail, NDJSON `CrankGameLog@1` export). Seven PRs,
+  engine lane, suggested order 6, 1, 2, 4, 3, 5, 7. Six calls for Rob are listed in its section 12 (the dial's sign,
+  the lobby's names, the personas, the insiders roster, the Veteran's budget, what "AI-8" names: no AI-8 is in the
+  repository; it is read as the LLM seat).
+- **`docs/feedback-loop/PLAN-2026-10-26.html`** (published at https://claude.ai/artifact/1gEvtSpNM5vpPAK45frwVV): feedback
+  from any page or mid-game (`CrankFeedback@1`, the metadata gathered by the sheet), stored in D1 by a Worker route
+  (not Supabase), triaged hourly by a GitHub Actions agent into Linear with a lane label and a digest, approved by a
+  Linear label set from email, a scheduled Claude session on the phone, or Codex, executed under AGENTS.md as it
+  stands, and a thank-you email to the reporter on the production release. Six PRs across the lanes. **Handed to a
+  new session** created by this one with the plan's kick-off brief.
+- **Not done here:** no pilot, room, Worker or migration change; nothing is proven beyond the plans reading true to the
+  code at main c567c581. The next engine session on this work starts at PR 6 (access groups) or PR 1 (threat model) on
+  `claude/engine-ai-players`, after Rob's six calls.
+
 ## 2026-10-25: main 9ca99e5 in production (Rob: "release main 9ca99e5 to production")
 
 Released by the Decks cloud session (`claude/vibrant-turing-50yl3r`), with the Camera and Settings session told before

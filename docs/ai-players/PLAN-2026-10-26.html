@@ -1,0 +1,308 @@
+<title>CrankMagic AI Players Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column (72ch) with full-width tables; the felt green of a card table is the accent, warm paper the ground. */
+:root {
+  --bg: #f7f5ef; --surface: #ffffff; --fg: #1f231f; --muted: #5e655c; --line: #d9d7cc;
+  --accent: #1f5f49; --accent-ink: #ffffff; --gold: #9a6b14; --soft: #e9f0ea; --warn: #8a2f1a; --warn-soft: #f6e6e1;
+  --display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+  --mono: "IBM Plex Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #15191a; --surface: #1d2224; --fg: #e8e6dd; --muted: #a7ad9f; --line: #333a38;
+  --accent: #6fbf9a; --accent-ink: #0f1a14; --gold: #d9ab4c; --soft: #1f2d27; --warn: #e3907a; --warn-soft: #3a2420; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #15191a; --surface: #1d2224; --fg: #e8e6dd; --muted: #a7ad9f; --line: #333a38;
+  --accent: #6fbf9a; --accent-ink: #0f1a14; --gold: #d9ab4c; --soft: #1f2d27; --warn: #e3907a; --warn-soft: #3a2420; color-scheme: dark; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 64px; }
+main { max-width: 980px; margin: 0 auto; }
+header.top { padding-block: 40px 20px; border-bottom: 2px solid var(--accent); margin-bottom: 28px; }
+.eyebrow { font-family: var(--display); text-transform: uppercase; letter-spacing: .08em; font-size: 12px; color: var(--muted); font-weight: 600; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(30px, 5vw, 46px); line-height: 1.05; margin: 6px 0 10px; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 700; font-size: 26px; margin: 48px 0 10px; text-wrap: balance; padding-top: 8px; border-top: 1px solid var(--line); }
+h3 { font-family: var(--display); font-weight: 600; font-size: 19px; margin: 26px 0 8px; text-wrap: balance; }
+p, li { max-width: 72ch; }
+.lede { font-size: 18px; color: var(--muted); max-width: 72ch; margin: 0; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 6px 14px; font-family: var(--display); font-size: 14px; margin: 18px 0 0; }
+nav.toc a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; }
+nav.toc a:hover, nav.toc a:focus-visible { border-bottom-color: var(--accent); outline: none; }
+a { color: var(--accent); }
+code, .mono { font-family: var(--mono); font-size: .9em; }
+code { background: var(--soft); padding: 1px 5px; border-radius: 3px; }
+pre { background: var(--surface); border: 1px solid var(--line); padding: 12px 14px; overflow-x: auto; font-family: var(--mono); font-size: 13px; line-height: 1.5; }
+pre code { background: none; padding: 0; }
+.wrap { overflow-x: auto; margin: 12px 0 18px; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; background: var(--surface); }
+th, td { text-align: left; vertical-align: top; padding: 9px 10px; border: 1px solid var(--line); }
+th { font-family: var(--display); font-weight: 600; background: var(--soft); font-size: 13.5px; letter-spacing: .02em; }
+td.k { font-family: var(--display); font-weight: 600; white-space: nowrap; }
+td ul, th ul { margin: 0; padding-left: 16px; }
+td li { margin: 2px 0; }
+.num { font-variant-numeric: tabular-nums; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; margin: 14px 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--accent); padding: 14px 16px; min-width: 0; }
+.card h3 { margin-top: 0; }
+.card.gold { border-top-color: var(--gold); }
+.pill { display: inline-block; font-family: var(--display); font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; background: var(--soft); color: var(--accent); margin-right: 4px; }
+.pill.today { background: var(--line); color: var(--fg); }
+.pill.new { background: var(--accent); color: var(--accent-ink); }
+.pill.rob { background: var(--warn-soft); color: var(--warn); }
+.callout { background: var(--soft); border-left: 4px solid var(--accent); padding: 10px 14px; margin: 14px 0; max-width: 78ch; }
+.callout.rob { background: var(--warn-soft); border-left-color: var(--warn); }
+.callout p { margin: 4px 0; }
+dl.facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 12px 0; font-size: 15px; }
+dl.facts dt { font-family: var(--display); font-weight: 600; color: var(--muted); }
+dl.facts dd { margin: 0; min-width: 0; }
+@media (max-width: 560px) { dl.facts { grid-template-columns: 1fr; } td.k { white-space: normal; } }
+footer { margin-top: 56px; color: var(--muted); font-size: 13.5px; border-top: 1px solid var(--line); padding-top: 14px; }
+</style>
+
+<main>
+<header class="top">
+  <div class="eyebrow">CrankMagic · Claude · Engine lane · Oct 26, 2026 · branch <span class="mono">claude/sharp-hawking-8lbwy9</span></div>
+  <h1>AI players: Easy, Normal, Hard, and the Veteran agent</h1>
+  <p class="lede">Rob's questions answered from the code as it stands, then the execution plan: a table-wide threat model for every difficulty, a deterministic Hard, a Veteran agent on the cheapest model, personas, a default-deck matrix, three access groups, and the game-log admin panel.</p>
+  <nav class="toc">
+    <a href="#today">What exists today</a><a href="#variables">The variables</a><a href="#definitions">The definitions</a><a href="#threat">Threat model</a><a href="#combat">Hard's combat</a><a href="#veteran">Veteran agent</a><a href="#personas">Personas</a><a href="#decks">Deck matrix</a><a href="#access">Access groups</a><a href="#logs">Game logs</a><a href="#plan">Execution plan</a><a href="#decisions">Rob's calls</a>
+  </nav>
+</header>
+
+<h2 id="today">1 · What exists today, read from the code</h2>
+<p>Everything below was read from <code>game/engine/pilots/</code>, <code>game/room/</code>, <code>cloud/game-room.mjs</code>, <code>cloud/ai.mjs</code> and the AI-2 section of <code>docs/plan-to-done-2026-09-30.md</code>. Where Rob's ask and the code disagree, the difference is named.</p>
+<dl class="facts">
+  <dt>Lobby settings</dt><dd>Three: <strong>Easy</strong>, <strong>Normal</strong>, <strong>Claude</strong> (<code>level: "llm"</code>). <strong>Hard does not exist in the engine yet.</strong> The 1 to 5 policy in <code>game/contracts/pilot-policy.mjs</code> (Learner to Expert) is the simulator's and the Forge-era API pilot's contract, not the table's.</dd>
+  <dt>Easy and Normal</dt><dd>Both are <strong>L1</strong>, the scored pilot (<code>scored-pilot.mjs</code>), with L0 (<code>house-pilot.mjs</code>) as the floor for every choice L1 does not score. Normal takes the best-scoring plan. Easy draws by softmax at temperature 4 among plans within 12 points of the best, so it is usually right, sometimes second-best, never absurd by design. The seed decides its draw, so replays agree.</dd>
+  <dt>What L1 scores</dt><dd>Which spells to cast (a knapsack over the mana), where a spell is aimed (the worthiest permanent on the right side), which creatures attack (damage, trades with exact combat math, the swing back it exposes), which block, and whether to keep the opening hand (hypergeometric odds of the third land).</dd>
+  <dt>Targeting today</dt><dd>L1 scores one attack plan <em>per opponent</em> and picks the best plan; the opponent is chosen by the plan's score, so the choice of target is a by-product of damage and trades, not a threat reading. L0 attacks the lowest life. Neither looks across the table at ramp, growth or engines. The simulator's <code>pilot-policy.js</code> already names four readings of "the leader" (weakest, biggest board, closest to winning, most dangerous engine) and shows they disagree; that is the seed of the threat model below.</dd>
+  <dt>The Claude seat</dt><dd>L1 Normal for every decision, and at a close call (two best plans within 1 point, in its own main phase or at declare-attackers) the room offers the decision to Claude Haiku 5.5 with L1's pick as the hint, thinking off, 25¢ a game, the house pilot answering whenever the model cannot. Every answer is on the tape, so replays never ask the model.</dd>
+  <dt>Saltiness</dt><dd>A deck dial, 1 to 5 (1 Extremely friendly, 2 Friendly, 3 Assertive, 4 Disruptive, 5 Any legal winning mechanic) in <code>crankmagic-game.js</code>. There is no AI-player saltiness, no persona, and no "-1" scale in this repository; the -1 convention is in the project files outside it. This plan adopts a signed dial for AI players (section 3) and maps it onto the deck dial where decks are built.</dd>
+  <dt>"AI-8"</dt><dd>No AI-8 appears in the repository (the AI series runs AI-1 to AI-6). It is read here as <strong>the LLM seat</strong>: the Haiku 5.5 seat through the AI door. If AI-8 names something else, say so and the Veteran section is re-based on it.</dd>
+  <dt>Information</dt><dd>Every pilot is handed the seat's projection, the engine's offers and the decision, and public card facts. The projection carries player names but never a seat's kind (person or AI) or its setting; the LLM brief replaces names with "Seat n". No pilot has ever been able to tell a person from an AI, and this plan adds the test that proves it stays so.</dd>
+  <dt>Game records</dt><dd>A finished game's record lives with its table in the Durable Object: seats, result, history, refusals; on a playtest table also the seed, pod, tape and journal. A seat reads its own; there is no list across tables and no admin view.</dd>
+  <dt>Access</dt><dd>Cloudflare Access (invite-only, Google sign-in) gates everything; <code>ai_allowlist</code> or <code>AI_EVERYONE=on</code> gates the AI door; spend caps per person and in total over 24 hours, and per game for the LLM seat. There are no user groups.</dd>
+  <dt>Cards playable</dt><dd>6,405 engine card definitions under <code>game/engine/cards/</code> (6,255 at the last production release); the deck generator (<code>deck-generator.js</code>) builds from the catalog by role quotas, bracket, budget and the Saltiness, Speed and Competitiveness dials.</dd>
+</dl>
+
+<h2 id="variables">2 · The variables: the categories every difficulty is defined on</h2>
+<p>Rob's framing: the categories are the variables, the bullets under each are the data. These twelve categories are the schema; every difficulty and every persona is a row of values on them. A thirteenth, <em>Information</em>, is a constant, never a variable.</p>
+<div class="wrap"><table>
+<tr><th style="width:18%">Variable</th><th>What it decides</th><th style="width:30%">Where it lives (today or planned)</th></tr>
+<tr><td class="k">A · Horizon</td><td>How far ahead the seat reasons: the turn at hand, the next turn cycle, or the game at large.</td><td><code>scored-pilot.mjs</code> (one turn) · planned <code>horizon.mjs</code></td></tr>
+<tr><td class="k">B · Threat reading</td><td>Which signals it reads off every opponent, and the weight of each: life, hitters, board growth, ramp, engines, commander.</td><td>planned <code>threat.mjs</code> (section 3)</td></tr>
+<tr><td class="k">C · Target choice</td><td>Who its attacks and its removal go at, given B.</td><td><code>attackPlan</code>, <code>aimOf</code> · planned <code>threat.mjs</code></td></tr>
+<tr><td class="k">D · Attackers</td><td>Which creatures go in, against which defender, and the floor under a bad attack.</td><td><code>attackPlan</code> · planned per-attacker assignment</td></tr>
+<tr><td class="k">E · Blockers held back</td><td>How many, and how big, stay home for the swing back.</td><td><code>swingBack</code>, <code>WEIGHTS.exposure</code> · planned <code>reserve.mjs</code></td></tr>
+<tr><td class="k">F · Own engine</td><td>Whether it knows its deck's chains and plays toward them.</td><td>planned <code>chains.mjs</code> (L2, "the deck's formulas")</td></tr>
+<tr><td class="k">G · Mana and casting</td><td>How it spends mana and orders spells.</td><td><code>castPlan</code>, <code>abilityPlan</code></td></tr>
+<tr><td class="k">H · Opening hand</td><td>The keep rule.</td><td><code>keepOrNot</code>, <code>odds.mjs</code></td></tr>
+<tr><td class="k">I · Choice quality</td><td>How often it takes a near-best plan instead of the best (temperature, band) and the floor under "absurd".</td><td><code>pick</code>, <code>TEMPERATURE</code>, <code>BAND</code></td></tr>
+<tr><td class="k">J · Saltiness ceiling</td><td>The signed dial's cap: how disruptive its play may get (stax, mass denial, targeting the same seat turn after turn).</td><td>planned <code>disposition.mjs</code></td></tr>
+<tr><td class="k">K · Person bias</td><td>Whether a person at the table is weighted differently from an AI. <strong>Always none, at every difficulty.</strong></td><td>invariant test, planned</td></tr>
+<tr><td class="k">L · Compute</td><td>Deterministic rules only, or a model consulted; and the budget.</td><td><code>agent-pilot.mjs</code>, <code>cloud/ai.mjs</code></td></tr>
+<tr><td class="k">M · Information (constant)</td><td>The seat's projection, the offers, public card facts, its own deck list. Never a hand, a library's order, another seat's setting or persona.</td><td><code>projectFor</code>, <code>agent-brief.mjs</code></td></tr>
+</table></div>
+
+<h2 id="definitions">3 · The definitions</h2>
+<p>Each card lists the value of every variable. <span class="pill today">today</span> marks what the code does now; <span class="pill new">change</span> marks what this plan adds. The saltiness dial is signed: -2 group hug, -1 friendly, 0 assertive, +1 disruptive, +2 cutthroat, +3 and +4 salty (stax and lock pieces, the same seat hit every turn). Easy and Normal are capped at -1; Hard at 0; only a persona can raise the cap (section 7).</p>
+
+<div class="grid">
+<div class="card">
+<h3>Easy</h3>
+<p class="eyebrow">The turn at hand. Usually right, sometimes second-best, never stupid.</p>
+<ul>
+<li><strong>A Horizon</strong> <span class="pill today">today</span> this turn and the swing back next turn, nothing further.</li>
+<li><strong>B Threat</strong> <span class="pill new">change</span> the four foundation signals only: total life, biggest hitters, cards reaching the board, ramp rate. Equal weights, rounded to a rank. No engine or commander reading.</li>
+<li><strong>C Target</strong> <span class="pill new">change</span> the top of that rank, held for the turn; ties go to the lowest life (L0's rule).</li>
+<li><strong>D Attackers</strong> <span class="pill today">today</span> L1's plans; <span class="pill new">change</span> the floor under absurd: a plan whose every attacker dies to a free block and deals nothing is removed before the draw, at every difficulty.</li>
+<li><strong>E Blockers</strong> <span class="pill today">today</span> L1's exposure and crackback terms; no counted reserve.</li>
+<li><strong>F Own engine</strong> none. It plays what fits the mana.</li>
+<li><strong>G Mana</strong> <span class="pill today">today</span> the knapsack, largest first.</li>
+<li><strong>H Hand</strong> <span class="pill today">today</span> keep at 60% odds of the third land.</li>
+<li><strong>I Quality</strong> <span class="pill today">today</span> softmax at temperature 4, band 3.</li>
+<li><strong>J Saltiness</strong> cap -1. Removal goes at the biggest thing, never at a land; no lock pieces held for a seat.</li>
+<li><strong>K Person bias</strong> none. <strong>L Compute</strong> rules only, no model.</li>
+</ul></div>
+
+<div class="card">
+<h3>Normal</h3>
+<p class="eyebrow">The game at large, weighted lightly. Friendly, but it breaks a chain it can see.</p>
+<ul>
+<li><strong>A Horizon</strong> <span class="pill new">change</span> this turn first; the game at large (its own engine, opponents' engines) at a low weight.</li>
+<li><strong>B Threat</strong> <span class="pill new">change</span> the four foundation signals, plus an engine score: cards on the board that compound (mana doublers, draw engines, token makers with payoffs, untappers, recursion). It sees a chain once two links are down, not at the first.</li>
+<li><strong>C Target</strong> <span class="pill new">change</span> balanced between the foundation rank and the engine score; removal prefers the live link of a chain over the biggest body.</li>
+<li><strong>D Attackers</strong> <span class="pill today">today</span> L1's plans with the absurd floor.</li>
+<li><strong>E Blockers</strong> <span class="pill today">today</span> L1's exposure terms; <span class="pill new">change</span> a light reserve: one blocker held when any opponent could present lethal next turn.</li>
+<li><strong>F Own engine</strong> <span class="pill new">change</span> knows its deck's chains (section 5, L2 lite) and scores a cast higher when it completes a link; weighted low.</li>
+<li><strong>G Mana</strong> <span class="pill today">today</span> the knapsack. <strong>H Hand</strong> <span class="pill today">today</span> as Easy.</li>
+<li><strong>I Quality</strong> <span class="pill today">today</span> the best plan, temperature 0.</li>
+<li><strong>J Saltiness</strong> cap -1, as Easy.</li>
+<li><strong>K Person bias</strong> none. <strong>L Compute</strong> rules only, no model.</li>
+</ul></div>
+
+<div class="card">
+<h3>Hard</h3>
+<p class="eyebrow">Comprehensive and balanced. Reads commanders early, assigns a target per attacker, counts the blockers it needs.</p>
+<ul>
+<li><strong>A Horizon</strong> <span class="pill new">change</span> the game at large: its own chains, every opponent's engine, and the next full turn cycle in combat.</li>
+<li><strong>B Threat</strong> <span class="pill new">change</span> every signal: life, hitters, growth, ramp, engines (seen at the first seed card), and the commander's own threat class from the catalog (commander strategies, EDHREC rank, bracket).</li>
+<li><strong>C Target</strong> <span class="pill new">change</span> a weighted threat score per opponent, re-read every decision; removal aimed at the permanent whose loss cuts the most from that score.</li>
+<li><strong>D Attackers</strong> <span class="pill new">change</span> a preferred defender computed per creature (where it does the most effect, least likely to die), then the set solved against the reserve.</li>
+<li><strong>E Blockers</strong> <span class="pill new">change</span> a counted reserve: the number and size of blockers held from a weighted probability of what comes at it before its next turn (section 4).</li>
+<li><strong>F Own engine</strong> <span class="pill new">change</span> plays toward the highest-compounding, fastest-resolving chain its hand and board allow; weighted high.</li>
+<li><strong>G Mana</strong> <span class="pill new">change</span> the knapsack, with mana held for an answer it holds when a threat score crosses a line.</li>
+<li><strong>H Hand</strong> <span class="pill new">change</span> keep odds plus a chain check: a hand with a link and its lands keeps at lower odds.</li>
+<li><strong>I Quality</strong> the best plan, temperature 0.</li>
+<li><strong>J Saltiness</strong> cap 0 (assertive). Never stax by default; a persona may raise it.</li>
+<li><strong>K Person bias</strong> none. <strong>L Compute</strong> rules only, no model.</li>
+</ul></div>
+
+<div class="card gold">
+<h3>Veteran (the agent)</h3>
+<p class="eyebrow">Hard's computation, reasoned over by the cheapest model. Replaces today's "Claude" seat.</p>
+<ul>
+<li><strong>A to J</strong> inherit Hard, and the chosen persona's overrides.</li>
+<li><strong>L Compute</strong> <span class="pill new">change</span> Hard runs first and produces the threat table, the per-attacker targets, the reserve and its top-k plans. Claude Haiku 5.5 is asked to choose among those plans, with Hard's pick as the hint, and to say why in one sentence. Its answer is validated (<code>pickOf</code>) and taped; Hard answers whenever the model cannot.</li>
+<li><strong>What it is never told</strong>: who is a person, any opponent's difficulty or persona, or how the deterministic difficulties are built. The brief carries no seat kinds and no settings; a test reads the brief for them.</li>
+<li><strong>Budget</strong> the existing 25¢ a game cap, the consult points widened from close calls to every declare-attackers, every removal aim, and the opening hand.</li>
+</ul></div>
+</div>
+
+<div class="callout rob"><p><strong>Rob's wording, interpreted.</strong> "Neither easy nor normal go beyond a -1 on saltiness" is read as a cap at -1 on the signed dial (friendly or kinder), never past it toward salty. If the project files define the dial the other way round, only the sign flips; the structure holds.</p></div>
+
+<h2 id="threat">4 · The threat model, shared by every difficulty</h2>
+<p>One module, <code>game/engine/pilots/threat.mjs</code>, pure over the seat's projection and public card facts, returns a threat table: one row per living opponent, the signals, and a weighted score. The difficulty supplies the weight vector; the module never knows which difficulty is asking. This is the deterministic answer to "who is the biggest threat, and where do I have the biggest effect on their ability to play".</p>
+
+<h3>The signals</h3>
+<div class="wrap"><table>
+<tr><th>Signal</th><th>Definition, from the projection</th><th>Easy</th><th>Normal</th><th>Hard</th></tr>
+<tr><td class="k">Life</td><td>Share of starting life gone: <span class="mono">(40 - life) / 40</span>, poison counted at 10 each; commander damage taken from me counted.</td><td class="num">1.0</td><td class="num">0.8</td><td class="num">0.6</td></tr>
+<tr><td class="k">Hitters</td><td>Power on the board, evasion weighted (flying, trample, menace, double strike as L1's keyword worth), as a share of my life: how fast they can kill me.</td><td class="num">1.0</td><td class="num">1.0</td><td class="num">1.0</td></tr>
+<tr><td class="k">Growth</td><td>Nonland permanents that entered their board over the last turn cycle, from the public history, against the table's median.</td><td class="num">1.0</td><td class="num">0.9</td><td class="num">0.8</td></tr>
+<tr><td class="k">Ramp</td><td>Mana sources on the board over the turn number, against the table's median; rocks and dorks count as sources (<code>manaColors</code>).</td><td class="num">1.0</td><td class="num">1.0</td><td class="num">1.0</td></tr>
+<tr><td class="k">Engine</td><td>Compounding permanents, from the card facts' roles and the graph corpus: doublers, draw engines, token makers with a payoff, untappers, recursion, extra combats. Normal needs two links on board; Hard scores one seed.</td><td class="num">0</td><td class="num">0.6</td><td class="num">1.2</td></tr>
+<tr><td class="k">Commander</td><td>The commander's threat class from <code>data/commander-strategies</code> and its EDHREC rank and bracket: a known engine or combo commander scores from turn one, on the board or in the command zone.</td><td class="num">0</td><td class="num">0.2</td><td class="num">1.0</td></tr>
+</table></div>
+<p>Easy ranks by the sum and keeps the rank for the turn. Normal and Hard take the weighted sum each decision. A second number, <strong>effect</strong>, scores an action against a seat: for an attack, the damage through as a share of their life; for removal, the drop in that seat's threat score if the target leaves. The target is where <span class="mono">threat × effect</span> is highest, so a huge threat behind a wall of blockers loses to a smaller one that can actually be hit. This is the "biggest damage or biggest effect on their ability to play" rule in one formula.</p>
+
+<h3>The floor under a stupid attack</h3>
+<p>Before any draw, at every difficulty, an attack plan is removed when every attacker in it dies to a block the defender can make for free and nothing gets through. Easy's softmax then draws only from plans a person would consider. The bench's blunder checklist gains this case so a regression shows as a count.</p>
+
+<h3>Person bias: the invariant</h3>
+<p>The threat table's inputs are the projection, public card facts and public history, none of which carries a seat's kind. A test (<code>tests/engine-threat.mjs</code>) builds the same board with a seat marked person and marked AI at the room and asserts byte-identical threat tables and identical pilot answers. The same test reads the Veteran brief and fails if any seat kind, level or persona name appears in it.</p>
+
+<h2 id="combat">5 · Hard's combat: targets per attacker and the blockers it keeps</h2>
+<h3>A preferred target per creature</h3>
+<p>For each untapped creature that may attack, and each opponent it may attack, Hard computes <span class="mono">effect × threat</span> for that single attacker against that defender's untapped blockers (exact combat from <code>fight</code> and <code>defend</code>), minus the worth lost if it dies. The best defender is its preferred target. Attackers are then solved as a set against the reserve: the greedy improvement L1 already uses, now over attacker-defender pairs instead of one defender for the whole plan, and still within <code>meetRequirements</code> and the attack budget.</p>
+
+<h3>The reserve</h3>
+<p>Before attacking, Hard counts what may come at it before its next turn:</p>
+<pre><code>for each opponent o still to act before my next turn:
+  attackers(o) = untapped creatures of o with power &gt; 0, less those that must block me
+  P(o swings)  = sigmoid(k · (their effect on me - their effect on the table's top threat))
+  need(o)      = blockers that stop lethal, from defend({attackers(o), my untapped, my life})
+reserve = smallest set of my creatures such that
+  Σ_o P(o swings) · [need(o) unmet by the reserve] ≤ risk(difficulty)
+sized so that the reserve holds a blocker that survives each trampler, and a flyer or reach for each flyer, when any</code></pre>
+<p><span class="mono">risk</span> is the difficulty's appetite: Hard 0.25, Normal 0.6 (one blocker when lethal is possible), Easy none (L1's exposure terms only). The reserve is removed from the attacking set before the per-attacker solve, so Hard never sends the creature it needs home. Vigilance creatures count in both.</p>
+
+<h3>Its own chains (L2 lite, Rob's "the deck's formulas")</h3>
+<p>At launch the room hands every AI seat its deck list. <code>chains.mjs</code> reads the deck's chains from the graph corpus (<code>data/graph.json</code>, the synergies the deck intelligence lane already scores) and the card facts: each chain is a set of cards, a completion condition and a payoff rate (cards, mana or damage per turn once complete). A cast that completes a link scores <span class="mono">+ payoff × weight(difficulty) / turns-to-complete</span>. Normal's weight is low and it only credits chains with a link already on board; Hard credits the fastest-resolving, highest-compounding chain its hand and mana allow from turn one. Easy never reads it.</p>
+
+<h2 id="veteran">6 · The Veteran agent</h2>
+<p>The Veteran is not a new pilot. It is Hard, run first, with the model reasoning over Hard's output. This keeps the engine's determinism (the answer is taped, never recomputed), keeps the model's job narrow (choose among plans Hard already judged legal and sensible), and keeps cost under the existing per-game cap.</p>
+<div class="wrap"><table>
+<tr><th style="width:22%">Step</th><th>What happens</th><th style="width:30%">File</th></tr>
+<tr><td class="k">1 · Decision offered</td><td>The room reaches a decision for the Veteran seat.</td><td><code>game/room/room.mjs</code></td></tr>
+<tr><td class="k">2 · Hard computes</td><td>Threat table, effect per action, per-attacker targets, reserve, chain credits; the top-k plans (k = 4) with scores and one-line reasons in words.</td><td><code>scored-pilot.mjs</code> at <code>setting: "hard"</code></td></tr>
+<tr><td class="k">3 · Consult or answer</td><td>Consult at declare-attackers, removal aim, the opening hand, and any close call; everything else is Hard's at once.</td><td><code>agent-pilot.mjs</code> (<code>consult</code>)</td></tr>
+<tr><td class="k">4 · Brief</td><td>The seat's view as today (no names, no kinds, no settings) plus Hard's plans, threat table and reasons; the persona's disposition line.</td><td><code>game/room/agent-brief.mjs</code></td></tr>
+<tr><td class="k">5 · Model</td><td>Claude Haiku 5.5, thinking off, effort low, JSON <code>{indices, why}</code>; the instructions say to prefer Hard's pick unless a listed reason outweighs it, and to play the persona.</td><td><code>cloud/ai.mjs</code> (<code>PILOT_SYSTEM</code>)</td></tr>
+<tr><td class="k">6 · Validate and tape</td><td><code>pickOf</code> keeps only an offered plan; Hard answers otherwise. Logged in <code>ai_calls</code> with the plan chosen and whether it matched Hard.</td><td><code>cloud/game-room.mjs</code></td></tr>
+</table></div>
+<p><strong>What it never learns.</strong> The brief has no seat kinds, no opponent settings, no persona names of others, and no description of how Easy, Normal or Hard are computed. The system prompt describes Magic and the persona, not CrankMagic's difficulty mechanics. The invariant test in section 4 reads every brief for these.</p>
+<p><strong>Why the cheapest model is enough.</strong> The model is choosing among four plans that already carry the numbers; its value is in weighing the reasons (a persona's grudge, a commander it recognizes, a line Hard scored close) rather than in computing. The eval in phase 4 measures the Veteran against Hard over seeded games; if it does not beat Hard at the cap, the consult points narrow until it does.</p>
+
+<h2 id="personas">7 · Personas</h2>
+<p>A persona is chosen after the difficulty and sits over it. It has a name, one sex (male or female), an avatar, a short description that carries its disposition, and overrides on the variables. The schema is data (<code>data/ai-players/personas.json</code>), validated by a suite, so new personas are rows, not code.</p>
+<pre><code>{
+  "schema": "CrankPersona@1",
+  "id": "sable", "name": "Sable", "sex": "female", "avatar": "assets/personas/sable.webp",
+  "blurb": "Plays the table like a grudge. Salty, relentless, remembers who hit her last.",
+  "disposition": {"saltiness": 3, "friendliness": -2, "hugginess": -2, "competitiveness": 2},
+  "overrides": {"J": {"cap": 4}, "C": {"grudge": 0.5}, "E": {"risk": 0.15}},
+  "deckCriteria": {"saltiness": 4, "competitiveness": 4, "speed": 3, "playStyle": "Control"}
+}</code></pre>
+<div class="wrap"><table>
+<tr><th>Persona</th><th>Disposition (saltiness · friendliness · hugginess · competitiveness)</th><th>What it overrides</th></tr>
+<tr><td class="k">Sable (f) · the salty one</td><td class="num">+3 · -2 · -2 · +2</td><td>Saltiness cap 4 at any difficulty; a grudge term in C (the seat that last hit her gains threat); stax and lock pieces allowed in her deck.</td></tr>
+<tr><td class="k">Benny (m) · the group hug</td><td class="num">-2 · +2 · +2 · -1</td><td>Cap -2; removal only at lethal threats; symmetrical draw and mana cards favored; attacks only the top threat, and only when effect is high.</td></tr>
+<tr><td class="k">Marcus (m) · the competitor</td><td class="num">+1 · 0 · -1 · +2</td><td>Cap +1; reserve risk tightened; chain weight raised one step; mulligans harder for a chain hand.</td></tr>
+<tr><td class="k">June (f) · the casual</td><td class="num">-1 · +1 · 0 · -1</td><td>Cap -1; temperature +1 at any difficulty (she takes the fun line sometimes); theme cards weighted up in her deck.</td></tr>
+</table></div>
+<p>Rules of the override: a persona can raise or lower the saltiness cap and the risk appetite, add a grudge or a hug term, and shift temperature by one; it cannot change information (M) or person bias (K), and it cannot make Easy compute like Hard. The Veteran's brief carries the persona's blurb as its disposition line. The lobby's seat picker becomes difficulty, then persona, with the avatar and blurb shown; the table shows the persona's name and avatar at the seat.</p>
+
+<h2 id="decks">8 · The default-deck matrix</h2>
+<p>Each difficulty and persona pair gets one default deck, built by the deck generator from the engine-playable catalog (the 6,405 definitions today, growing with each card load) so every default deck plays at the table without a refusal. The matrix is data (<code>data/ai-players/decks.json</code>), rebuilt by a tool whenever the catalog or a persona changes, and each cell records the criteria it was built from and the commander chosen.</p>
+<div class="wrap"><table>
+<tr><th>Difficulty \ Persona</th><th>Sable (salty)</th><th>Benny (hug)</th><th>Marcus (competitor)</th><th>June (casual)</th></tr>
+<tr><td class="k">Easy</td><td>Bracket 2 · salt 3 · aggro-stax lite</td><td>Bracket 2 · salt 1 · group draw</td><td>Bracket 2 · salt 2 · midrange</td><td>Bracket 2 · salt 1 · theme tribal</td></tr>
+<tr><td class="k">Normal</td><td>Bracket 3 · salt 4 · control</td><td>Bracket 2 · salt 1 · lifegain hug</td><td>Bracket 3 · salt 3 · value engine</td><td>Bracket 2 · salt 2 · tokens</td></tr>
+<tr><td class="k">Hard</td><td>Bracket 3 · salt 4 · stax-combo</td><td>Bracket 3 · salt 2 · politics + big finish</td><td>Bracket 4 · salt 3 · fast combo-value</td><td>Bracket 3 · salt 2 · spellslinger</td></tr>
+<tr><td class="k">Veteran</td><td>Bracket 4 · salt 5 · cEDH-adjacent stax</td><td>Bracket 3 · salt 2 · hug with a win condition</td><td>Bracket 4 · salt 4 · turbo</td><td>Bracket 3 · salt 2 · reanimator fun</td></tr>
+</table></div>
+<p>Cells show the generator criteria, not the lists; the lists come out of phase 5 with a simulator pass each (the <code>simulate-deck</code> loop) so a default deck is proven to function before it sits at a table. Saltiness here is the deck dial, 1 to 5, mapped from the persona's signed dial and the difficulty's cap. The difficulty adds speed and competitiveness; the persona adds play style and the salt. Commanders are chosen by the generator from the catalog's commander strategies, one per cell, no two cells sharing a commander.</p>
+
+<h2 id="access">9 · Three access groups</h2>
+<div class="wrap"><table>
+<tr><th>Group</th><th>Who</th><th>May</th><th>May not</th></tr>
+<tr><td class="k">Owner (Rob)</td><td>One address, set by a Worker variable <code>OWNER_EMAIL</code>, never in the repository.</td><td>Everything, and the admin panel: every game log, every AI call, feedback, groups.</td><td>Nothing withheld.</td></tr>
+<tr><td class="k">Game Theory Insiders</td><td>Rows in a new <code>user_groups</code> table (migration, next free number at build time) that Rob sets from the admin panel.</td><td>Everything in CrankHub: Play with every AI seat including Veteran, the Coach, the advisor, the deck page's AI button, sharing, invitations.</td><td>The admin panel.</td></tr>
+<tr><td class="k">General Access</td><td>Everyone else Access admits.</td><td>Play with Easy, Normal and Hard (rules only, no cost), the library, decks, the generator (client-side, free), Discover, Buy.</td><td>Anything that spends: the Veteran seat, the Coach, the advisor, the AI button, score explanations, email-sending flows (invitations by mail), and card-demand writes that queue paid loads.</td></tr>
+</table></div>
+<p>Implementation: one function, <code>groupOf(email, env, db)</code> in <code>cloud/access.mjs</code>, answers owner, insider or general; the AI door's <code>allowed</code> becomes "insider or owner" (replacing <code>ai_allowlist</code> and <code>AI_EVERYONE</code>, which are migrated into rows); each spending route checks the group before it reads the body; the browser gets the group in <code>/api/me</code> and hides the paid controls, but the Worker is the gate. The deck page's AI button (strategy, how to play, upgrades) checks the same group, so it is also the stopper Rob asked for.</p>
+
+<h2 id="logs">10 · The game-log admin panel</h2>
+<p>Today a record lives with its table. The panel needs an index across tables and an export built for a session to mine. Three parts:</p>
+<ul>
+<li><strong>Index.</strong> At game end the game room writes one row to a new <code>games</code> table in D1: match id, table id, started and ended, turns, seats (kind, level, persona id, deck name and commander), result, the AI spend, and the record's size. The owner's route <code>GET /api/admin/games</code> lists it with filters (date, difficulty, persona, result) and paging.</li>
+<li><strong>Detail.</strong> <code>GET /api/admin/games/:match</code> returns the full record as a playtest table's does today (seed, pod, tape, journal, history, refusals), plus the AI seats' decision records: for each decision, the threat table, the plans scored, the pick, and for the Veteran the model's answer and whether it matched Hard.</li>
+<li><strong>Download all.</strong> <code>GET /api/admin/games/export?since=</code> streams one <code>CrankGameLog@1</code> JSON object per line (NDJSON) with a header line that states the schema, the build and the field dictionary, so another session can read the first line and know how to extract wins by difficulty and persona, blunders by type, threat-choice accuracy (did the seat it hit lose next), consult agreement rates, and spend per game. Each line is self-contained; the file is bounded by date, and a manifest line closes it with counts.</li>
+</ul>
+<p>The admin panel itself is a page under Settings visible only to the owner (the Workshop lane builds the screen; the engine lane builds the routes and the writer). The brainstorm doc Rob named ("CrankMagic Admin Panel — Brainstorm") was not found in Drive under that title; the panel is scoped here to logs, AI calls, groups and feedback, and widens when the doc is at hand.</p>
+
+<h2 id="plan">11 · The execution plan</h2>
+<p>Seven PRs, each merged on one green run, each with a proof that goes red when the thing under test is broken. Engine lane files throughout, except the two screens named for the Workshop and Play lanes. The lane's branch for this work is <code>claude/engine-ai-players</code>; this planning branch opens the draft PR.</p>
+<div class="wrap"><table>
+<tr><th style="width:5%">#</th><th style="width:22%">PR</th><th>Builds</th><th style="width:28%">Proof</th><th style="width:9%">Size</th></tr>
+<tr><td class="num">1</td><td class="k">Threat model</td><td><code>threat.mjs</code>, the six signals, the effect score, difficulty weight vectors; L1's target choice reads it at Easy and Normal; the absurd floor; the bench's new blunder case.</td><td><code>tests/engine-threat.mjs</code> (signals from fixtures; person-bias invariant; the floor), <code>engine-scored-pilot</code>, <code>pilot-bench</code> 100 games with no loss in L1's win rate.</td><td>1 session</td></tr>
+<tr><td class="num">2</td><td class="k">Hard</td><td><code>setting: "hard"</code>: per-attacker targets, the reserve, mana held for answers, the chain-aware keep; <code>chains.mjs</code> over the graph corpus; the room and the table accept <code>hard</code>; the lobby offers it.</td><td><code>tests/engine-hard-pilot.mjs</code> (the reserve against trample and flyers; a target per attacker), the bench at Hard beating Normal with a 95% interval clear of 50%.</td><td>2 sessions</td></tr>
+<tr><td class="num">3</td><td class="k">Normal's engine reading and chain credit</td><td>Normal's two-link engine rule and low chain weight; weights tuned on the bench.</td><td>Bench: Normal beats Easy as before; blunders down, not up.</td><td>½ session</td></tr>
+<tr><td class="num">4</td><td class="k">Veteran</td><td><code>agent-pilot.mjs</code> over Hard; the brief carries plans, threat table, reasons, persona line; consult points; the prompt; logging of plan agreement; the lobby's "Claude" becomes "Veteran".</td><td><code>tests/room-agent-seat.mjs</code> and <code>agent-seat-table.mjs</code> extended; a stubbed-provider game; the brief read for kinds, settings and persona names; an eval of 60 seeded games Veteran against Hard on staging under the cap.</td><td>1 session + Rob's eval run</td></tr>
+<tr><td class="num">5</td><td class="k">Personas and the deck matrix</td><td><code>personas.json</code>, four seed personas with avatars; overrides applied in <code>disposition.mjs</code>; <code>tools/ai-players-decks.mjs</code> builds <code>decks.json</code> from the catalog with the generator and a simulator pass; the lobby's picker (Play lane) and the seat badge.</td><td><code>tests/ai-personas.mjs</code> (schema, override limits, every matrix cell playable at the room with no refusal), <code>simulate-deck</code> report per cell.</td><td>1 session engine + ½ Play</td></tr>
+<tr><td class="num">6</td><td class="k">Access groups</td><td>Migration for <code>user_groups</code>; <code>groupOf</code>; every spending route gated; <code>/api/me</code> carries the group; <code>ai_allowlist</code> migrated; the Settings card hides paid controls (Workshop lane).</td><td><code>tests/ai-door.mjs</code> and the cloud-worker suite: a general user is refused on every paid route with the named reason; an insider passes; the owner reaches admin routes.</td><td>1 session</td></tr>
+<tr><td class="num">7</td><td class="k">Game-log index, detail and export</td><td>The <code>games</code> table and the writer at game end; the three owner routes; the NDJSON export with its header and manifest; the admin page (Workshop lane) listing, opening and downloading.</td><td>Cloud-worker suite: a finished game appears in the index, its detail matches the table's record, the export parses line by line and its counts match the manifest; a non-owner is refused.</td><td>1 session + ½ Workshop</td></tr>
+</table></div>
+<h3>Order and dependencies</h3>
+<p>1 then 2 then 3 are sequential on the pilots (3 is a tuning pass after 2's reserve exists). 4 needs 2. 5 needs 2 and the catalog as it stands; its Play-lane picker needs nothing but the data file. 6 stands alone and should go early, since it changes who may spend. 7 needs 6 for the owner check. Suggested run: 6, 1, 2, 4, 3, 5, 7. Every PR runs <code>tools/local-ci.sh &lt;ref&gt; 0</code> before the push, as AGENTS.md requires, and the staging release stays with the engine lane's release owner.</p>
+<h3>Later, named here so nothing is lost</h3>
+<ul>
+<li>The Coach, the strategy and how-to-play generation, and the upgrade recommendations, behind the deck page's AI button (gated by group from PR 6).</li>
+<li>L2 in full (the deck's formulas with graveyard and alternate-zone plays) and L3 (opponents' likely plays from their board's direction), as Rob defined them on 2026-10-10.</li>
+<li>More personas, once the four prove the override schema.</li>
+</ul>
+
+<h2 id="decisions">12 · Rob's calls before PR 2</h2>
+<ul>
+<li><span class="pill rob">decision</span> <strong>The dial's sign.</strong> Confirm -1 is the friendly side and personas may raise the cap to +3 or +4 (section 3).</li>
+<li><span class="pill rob">decision</span> <strong>The lobby's names.</strong> "Claude" becomes "Veteran"; Easy, Normal, Hard, Veteran in that order, then the persona. Or keep "Claude" as the Veteran's label.</li>
+<li><span class="pill rob">decision</span> <strong>The four seed personas</strong> and their names, sexes and blurbs (section 7). Avatars: generated art in the house style, or Rob's own.</li>
+<li><span class="pill rob">decision</span> <strong>Insiders roster.</strong> Who is a Game Theory Insider on day one, set in the admin panel once PR 6 lands; until then, the current <code>ai_allowlist</code> rows.</li>
+<li><span class="pill rob">decision</span> <strong>The Veteran's budget.</strong> Keep 25¢ a game, or raise it for the wider consult points; the eval in PR 4 reports the spend per game either way.</li>
+<li><span class="pill rob">decision</span> <strong>AI-8.</strong> Confirm it is the LLM seat, or name what it is.</li>
+</ul>
+
+<footer>Written from the repository at main c567c581, 2026-10-26. The companion plan for the feedback loop is <span class="mono">docs/feedback-loop/PLAN-2026-10-26.html</span>. Nothing here is proven until a suite says so; each PR's proof column is the claim it will have to make.</footer>
+</main>
