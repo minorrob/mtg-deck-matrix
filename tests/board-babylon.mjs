@@ -70,8 +70,9 @@ try{
   // The camera moved by hand keeps the one projection (tests/board-3d-camera.mjs): the wheel's zoom toward the pointer, a
   // held right button's head look, and back.
   const stageBox=await page.locator('.cm-stage-region').boundingBox();
+  const wheelHit=await page.evaluate(({x,y})=>{const el=document.elementFromPoint(x,y);return {hit:el?.outerHTML.slice(0,180),row:!!el?.closest('[data-zone-scroll]'),overlay:!!el?.closest('.cm-stage-camera,.cm-stage-actions,#cm-card-inspector,.cm-stage-side,.cm-stage-rail')};},{x:stageBox.x+stageBox.width*.35,y:stageBox.y+stageBox.height*.6});
   await page.mouse.move(stageBox.x+stageBox.width*.35,stageBox.y+stageBox.height*.6);await page.mouse.wheel(0,-200);await page.waitForTimeout(300);
-  ok((await align('wheel zoom')).pan.x!==0,'the wheel zooms toward the pointer');
+  ok((await align('wheel zoom')).pan.x!==0,`the wheel zooms toward the pointer (native hit ${JSON.stringify(wheelHit)})`);
   await page.mouse.down({button:'right'});await page.waitForFunction(()=>CrankStage.diagnostics().look?.t===1,null,{polling:'raf',timeout:5000});
   await align('head look, held');
   await page.mouse.up({button:'right'});await page.waitForFunction(()=>CrankStage.diagnostics().look===null,null,{polling:'raf',timeout:5000});
