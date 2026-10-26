@@ -117,7 +117,7 @@ All129 original walkthrough findings, their supplied change mappings, and curren
 | F-111 | verified_local | CH-87 | 'Reduce motion' and 'Stop at every step of my turn' are buttons whose on/off state is not visible |
 | F-112 | partially_verified_local | CH-53, CH-87 | Settings is reached from three places with three labels: 'Settings' (menu), 'Profile' (pill), 'Account & app settings' (board avatar menu) |
 | F-113 | baseline_reconciled_local | CH-87 | The Confirmations dialog has no controls: 'Every step still asks before it acts.' plus a note |
-| F-114 | open | CH-87 | The 'Actions' row is disabled with no reason, and the drag handles promised by the caption are not visible in the matrix |
+| F-114 | verified_local | CH-87 | The 'Actions' row is disabled with no reason, and the drag handles promised by the caption are not visible in the matrix |
 | F-115 | partially_verified_local | CH-87 | 'Saved view preferences' fills the history (11 of the first 13 rows) and 'Undo last change' would undo a view preference rather than a library change |
 | F-116 | verified_local | CH-89 | The seven tours are the best onboarding surface in the app and the only door to them is a menu row 17 rows deep |
 | F-117 | pending_verification | CH-10, CH-12 | A targets question shows no source → effect → target relationship: the desk draws the acting card and lists the targets as text buttons |

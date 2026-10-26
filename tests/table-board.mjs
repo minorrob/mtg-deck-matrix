@@ -1573,21 +1573,31 @@ try {
   });
   ok(phoneGeo.rail === 52 && phoneGeo.seats === 110 && phoneGeo.board[0] === 844 && phoneGeo.board[1] === 390 && phoneGeo.sideways === 0, `on a phone held sideways: the 52px rail along the top, the seats a 110px column, the board the whole screen (${phoneGeo.board.join("×")})`);
   ok(phoneGeo.views === 0 && phoneGeo.seatCount === 2, "Focus is the only view, and the strip holds every seat");
+  /* A drawer opened on the desktop stays open across resize. Close it through its native spine before
+     exercising the phone battlefield beneath it; an overlaid drawer correctly receives its own wheel. */
+  for(const action of ['board-stage-rail','board-stage-side']){const tab=maya.page.locator(`.cm-drawer-tab[data-action="${action}"]`);if(await tab.count()&&await tab.getAttribute('aria-expanded')==='true')await tab.click();}
   /* The battlefield and its lands at full width, scrolling within their own frame down to the piles, the pill and what
      she is asked staying where they are. */
   /* scrolled as a person scrolls it, by the wheel over it: a script's scrollTop moves even a frame that can't scroll */
   const fieldBox = await maya.page.locator(".cm-phone-battlefield").boundingBox(), pillTop = (await maya.page.locator(".cm-phone-pill").boundingBox()).y;
+  const phoneWheelBefore=await maya.page.evaluate(point=>{
+    const field=document.querySelector('.cm-phone-battlefield'),center=document.querySelector('.cm-phone-center'),mat=field.querySelector('.cm-mat'),hit=document.elementFromPoint(point.x,point.y);
+    globalThis.__uatPhoneWheel=[];document.addEventListener('wheel',event=>{const facts={target:{tag:event.target.tagName,class:event.target.className},zone:event.target.closest('[data-zone-scroll]')?.dataset.zoneScroll,deltaY:event.deltaY,x:event.clientX,y:event.clientY};globalThis.__uatPhoneWheel.push(facts);setTimeout(()=>facts.prevented=event.defaultPrevented,0);},{capture:true});
+    return {point,hit:{tag:hit?.tagName,class:hit?.className,inField:!!hit&&field.contains(hit)},field:{rect:field.getBoundingClientRect().toJSON(),client:field.clientHeight,scroll:field.scrollHeight,overflow:getComputedStyle(field).overflowY},center:center.getBoundingClientRect().toJSON(),mat:mat.getBoundingClientRect().toJSON()};
+  },{x:fieldBox.x+fieldBox.width/2,y:fieldBox.y+fieldBox.height/2});
   await maya.page.mouse.move(fieldBox.x + fieldBox.width / 2, fieldBox.y + fieldBox.height / 2);
   for (let i = 0; i < 6; i += 1) {await maya.page.mouse.wheel(0, 400); await maya.page.waitForTimeout(80);}
   const scrolled = await maya.page.evaluate((pill) => {
     const field = document.querySelector(".cm-phone-battlefield"), lib = field.querySelector(".cm-board-pile[data-zone=library]").getBoundingClientRect(), box = field.getBoundingClientRect();
     const hit = document.elementFromPoint(lib.left + lib.width / 2, Math.min(lib.top + lib.height / 2, box.bottom - 4));
     return {scrolls: field.scrollTop > 0, reached: !!hit && !!hit.closest(".cm-board-pile[data-zone=library]"),
+      offset:field.scrollTop,library:lib.toJSON(),field:box.toJSON(),wheels:globalThis.__uatPhoneWheel,
       still: Math.round(document.querySelector(".cm-phone-pill").getBoundingClientRect().top) === Math.round(pill)};
   }, pillTop);
   await maya.page.evaluate(() => {document.querySelector(".cm-phone-battlefield").scrollTop = 0;});
   await maya.page.mouse.move(1, 1);
-  ok(scrolled.scrolls && scrolled.reached && scrolled.still, `her battlefield scrolls under the wheel within its frame, down to her library, the pill staying put (${JSON.stringify(scrolled)})`);
+  if(SHOTS)writeFileSync(path.join(SHOTS,'phone-wheel-access.json'),JSON.stringify({before:phoneWheelBefore,after:scrolled},null,2));
+  ok(scrolled.scrolls && scrolled.reached && scrolled.still, `her battlefield scrolls under the wheel within its frame, down to her library, the pill staying put (${JSON.stringify({before:phoneWheelBefore,after:scrolled})})`);
   const badge = Number(await text(maya.page, ".cm-phone-badge"));
   const mayaHand = views(MAYA).at(-1).state.players[1].zones.Hand.count;
   eq(badge, mayaHand, `✋ carries the hand's count (${badge})`);

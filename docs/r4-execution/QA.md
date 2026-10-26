@@ -90,7 +90,7 @@ Detailed source commits, screenshots and per-finding limits are in `WORKSHOP-AUD
 The final Invite/Admin left alignment is a scoped cosmetic refinement after the inspected capture;
 it does not change gates or actions and requires no separate browser slot. Final combined review
 should use the integrated source. Global alternate-anchor/menu proof does not establish the actual
-Play avatar's draft/hotkey boundary or Side Drawer Modules matrix; those remain Play-owned checks.
+Play avatar's draft/hotkey boundary or Side Drawer Modules matrix by itself. Subsequent Play Settings70 verifies F-114's honest Actions explanation and real None/save/arrow controls; exact limits are in findings.json.
 F-074 repeated unavailable notices and F-109 budget dominance remain follow-ups. Historical price
 snapshots, generic Settings Undo order, live Admin/mail delivery and a full fresh finished-match/account
 sync journey retain their documented partial limits. Do not convert a CH mapping into audit closure.
@@ -104,3 +104,8 @@ so those checks require the approved external execution context. A skipped test 
 The release-builder suite passed 226 checks after its sandbox-only failure was retried outside the sandbox.
 Service worker passed 9, cloud sync 18 and readout feeds 1121. These do not replace full combined CI,
 release acceptance or a real staging play journey.
+
+Final scoped acceptance repairs include phone Camera layering, physical stacked-land Undo hover/focus,
+Full49px action targets and EX-27 preview clearance from drawer bodies and their actual spine controls.
+Fullscreen49 passes; native preview/spine hits failed before repair and pass afterward. The same existing
+light Focus200 fixture measures drawer facts16.95:1 and avatar initial12.98:1 after the themed-ink repair.

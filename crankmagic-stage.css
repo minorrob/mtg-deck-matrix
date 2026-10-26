@@ -781,6 +781,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-drawer{transition:none}
 
 /* Whole rows include their captions. Short seats scroll their grid as a whole. */
 #matrix-v2 .cm-board .cm-mat-grid{overflow:auto;overscroll-behavior:contain}
+#matrix-v2 .cm-board[data-phone] .cm-phone-battlefield .cm-mat-grid{overflow:visible;overscroll-behavior:auto}
 #matrix-v2 .cm-board .cm-board-field{min-height:calc(var(--bc)*1.4 + 100px*var(--hud-scale,1))}
 #matrix-v2 .cm-board .cm-board-lands{min-height:calc(var(--bc)*1.72 + 48px*var(--hud-scale,1))}
 #matrix-v2 .cm-board .cm-mat:is([data-fit="table"],[data-fit="focus"]) .cm-mat-grid,
