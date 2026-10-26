@@ -1017,7 +1017,7 @@ globalThis.CrankBoard = Object.seal({
     for(const pile of host.querySelectorAll('.cm-board-pile')){
       pile.removeAttribute('data-caption-compact');
       const caption=pile.querySelector('figcaption'),name=caption?.querySelector('em'),count=caption?.querySelector('b');if(!name||!count)continue;
-      const css=getComputedStyle(caption),available=caption.clientWidth-parseFloat(css.paddingLeft)-parseFloat(css.paddingRight);
+      const css=getComputedStyle(caption),available=Math.min(caption.clientWidth,pile.clientWidth)-parseFloat(css.paddingLeft)-parseFloat(css.paddingRight);
       pile.toggleAttribute('data-caption-compact',!name.getClientRects().length || name.scrollWidth+count.offsetWidth+(parseFloat(css.columnGap)||4)>available);
     }
   }
