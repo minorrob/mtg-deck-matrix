@@ -3988,6 +3988,8 @@ globalThis.CrankBoard = Object.seal({
     draw();drawCoach();
     if(request){const arm=()=>{if(coachFocusRequest!==request)return;const a=document.activeElement;if(leaving&&a&&a!==document.body&&!a.matches('#cm-board [data-action=board-camera]')){coachFocusRequest=null;return;}request.from=C.focusKey(a);request.armed=true;focusRequestedCoach(document.getElementById('cm-board-coach'));};if(leaving&&!leaving.closed)leaving.afterClose=arm;else arm();}
   };
+  document.addEventListener('pointerdown',event=>{if(coachFocusRequest?.armed&&!event.target.closest?.('#cm-board-coach'))coachFocusRequest=null;},true);
+  document.addEventListener('keydown',event=>{if(coachFocusRequest?.armed&&!['Shift','Control','Alt','Meta'].includes(event.key))coachFocusRequest=null;},true);
   actions["board-recommend"] = () => {coach.open=true;if (!moduleSide("coach")) inspection = null;openModuleDrawer("coach");if(phone()){stageSide=true;stageRail=false;}draw();drawCoach();ask_("What are my best actions right now?");};
   actions["board-coach-ask"] = (el) => ask_(el.dataset.q);
   /* Show me: the cards an answer names, lit on the board for four seconds. Why?: each play's reason, one sentence. */
