@@ -715,7 +715,7 @@ try {
   await maya.page.hover(".cm-board-hand .cm-bcard[data-card]");
   await maya.page.locator("#cm-board-peek .cm-bcard").waitFor({timeout: 5000});
   const peekCap = await maya.page.evaluate(() => {const p = document.querySelector("#cm-board-peek .cm-bcard").getBoundingClientRect(), m = document.querySelector(".cm-board-mat").getBoundingClientRect(); return {peek: Math.round(p.height), mat: Math.round(m.height), w: Math.round(p.width)};});
-  ok(peekCap.mat < 560 && peekCap.peek <= peekCap.mat + 1 && peekCap.w < 400, `the card under the pointer is no taller than the mat (${peekCap.peek} of ${peekCap.mat}px; ${peekCap.w}px wide, under the 400 it would be)`);
+  ok(Math.abs(peekCap.peek-Math.min(560,peekCap.mat))<2&&Math.abs(peekCap.w-Math.min(400,peekCap.mat*5/7))<2, `the hover card respects both the actual mat height and its normal400px width cap (${peekCap.peek} of ${peekCap.mat}px; ${peekCap.w}px wide)`);
   await maya.page.mouse.move(2, 2);
   await maya.page.locator("#cm-board-peek").waitFor({state: "detached", timeout: 5000});
   /* THE CALLOUTS (the Replit brief's overlay): Tools › Try the callouts shows the grammar on demand, at most three at
