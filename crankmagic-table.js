@@ -696,10 +696,22 @@
       if (texts.length && el.isConnected) {el.textContent = cut(texts.join(" · ")); el.removeAttribute("data-about-for");}
     }
   }
-  /* PLAYABLE ONLY (Rob: "include a toggle check box to filter for Playable"): the decks the table can play every card of,
-     the rest put away once it has said so -- off until it is ticked, and then remembered on this device. */
+  /* Compare the same expanded commander/card list submitted to the table, never a display name.
+     Shared snapshots expose no canonical library source ID. Exact contents can identify an already
+     available local list without conflating a different shared revision or two distinct local decks. */
+  const deckContents = (d) => {
+    if (!Array.isArray(d?.commander) || !d.commander.length || !Array.isArray(d.cards)
+        || [...d.commander, ...d.cards].some(n => typeof n !== 'string' || !n.trim())) return null;
+    const names = a => a.map(n => n.normalize('NFC').trim()).sort();
+    return JSON.stringify([names(d.commander), names(d.cards)]);
+  };
+  function tableOnlyShared(shared, decks) {
+    const local = new Set(decks.map(d => deckContents(deckForTable(d))).filter(Boolean));
+    return shared.filter(d => {const contents=deckContents(d);return !contents || !local.has(contents);});
+  }
+  /* Default to the server-supported complete lists; an explicit device choice is remembered. */
   const ONLY_KEY = "cm-table-deck-playable";
-  const onlyPlayable = () => {try {return localStorage.getItem(ONLY_KEY) === "on";} catch {return false;}};
+  const onlyPlayable = () => {try {return localStorage.getItem(ONLY_KEY) !== "off";} catch {return true;}};
   document.addEventListener("change", (event) => {
     const el = event.target.closest?.("[data-table-deck-playable]");
     if (!el) return;
@@ -708,24 +720,25 @@
   });
   actions["table-deck"] = async (el) => {
     await C.sharingReady;
-    availableSharedDecks = C.sharingAvailable?.() && C.sharedDecks ? await C.sharedDecks() : [];
+    const sharedDecks = C.sharingAvailable?.() && C.sharedDecks ? await C.sharedDecks() : [];
     let preconError = "";
     try {availablePrecons = await tablePrecons();} catch (error) {availablePrecons = []; preconError = error.message;}
     const seatId = Number(el.dataset.seat), decks = libraryDecks();
+    availableSharedDecks = tableOnlyShared(sharedDecks, decks);
     const test = current && current.playtest
       ? `<li><button type="button" class="cm-table-deck" data-action="table-use-test-deck" data-seat="${seatId}"><strong>${e(TEST_DECK.name)}</strong><span class="cm-muted">Wastes and 99 basic lands · for trying a game through quickly on this playtest table</span></button></li>`
       : "";
     const list = decks.length || test
-      ? `<ul class="cm-table-decks">${test}${decks.map((d) => `<li><button type="button" class="cm-table-deck" data-action="table-use-deck" data-seat="${seatId}" data-deck="${e(d.id)}">${deckLines(d.name, (d.commanders || []).map((c) => (C.card(c) || {}).name).filter(Boolean), d.notes)}<span class="cm-muted cm-table-deck-known" data-known-for="${e(d.id)}"></span></button></li>`).join("")}</ul>`
+      ? `<ul class="cm-table-decks">${test}${decks.map((d) => `<li><button type="button" class="cm-table-deck is-unknown" data-action="table-use-deck" data-seat="${seatId}" data-deck="${e(d.id)}">${deckLines(d.name, (d.commanders || []).map((c) => (C.card(c) || {}).name).filter(Boolean), d.notes)}<span class="cm-muted cm-table-deck-known" data-known-for="${e(d.id)}">Checking this server…</span></button></li>`).join("")}</ul>`
       : "";
     /* AN EMPTY LIBRARY says how to fill it (the readiness checks of 2026-10-04: a friend new to CrankMagic, invited
        before restoring the host's backup, saw only the test deck). A restore keeps this page, so the seat is still
        theirs when it is done. */
-    const empty = decks.length ? "" : `<div class="cm-table-deck-empty"><p>You can play a precon above without adding anything to your library.</p><p class="cm-muted">To use your own deck later, build or import one in Decks.</p></div>`;
-    const precons = `<section aria-label="Precons"><h3>Precons</h3><p>Wizards' newest Commander decks, open to everyone. Choose one and play; nothing is added to your library.</p>${preconError ? `<p class="cm-note cm-warning">${e(preconError)}</p>` : `<ul class="cm-table-decks">${availablePrecons.map(d => `<li><button type="button" class="cm-table-deck" data-action="table-use-precon" data-precon="${d.id}" data-seat="${seatId}" disabled>${deckLines(d.name, d.commander, d.notes)}<span class="cm-muted" data-precon-status="${d.id}">Checking this server…</span></button></li>`).join("")}</ul>`}</section>`;
-    const shared = availableSharedDecks.length ? `<section aria-label="Shared with you"><h3>Shared with you</h3><p>Decks other players shared with you or made public. No import or library setup needed.</p><ul class="cm-table-decks">${availableSharedDecks.map(d => `<li><button type="button" class="cm-table-deck" data-action="table-use-shared-deck" data-shared-deck="${d.id}" data-seat="${seatId}" disabled>${deckLines(d.name, d.commander, d.notes)}<span class="cm-muted" data-shared-status="${d.id}">Checking this server…</span></button></li>`).join("")}</ul></section>` : "";
-    const only = `<label class="cm-checkbox cm-table-deck-only"><input type="checkbox" data-table-deck-playable${onlyPlayable() ? " checked" : ""}>Playable</label>`;
-    C.modal(`Choose a deck · Seat ${seatId + 1}`, `<div class="cm-table-deck-choose${onlyPlayable() ? " is-playable-only" : ""}">${only}${precons}${shared}${decks.length ? '<h3>Your library decks</h3>' : ''}${list}${empty}</div><div id="cm-table-deck-error" class="cm-note cm-warning" hidden></div><div class="cm-form-footer">${b("Cancel", "close")}</div>`);
+    const empty = decks.length ? "" : `<div class="cm-table-deck-empty"><p>You can play a public precon without adding anything to your library.</p><p class="cm-muted">To use your own deck later, build or import one in Decks.</p></div>`;
+    const precons = `<details class="cm-table-precon-catalog" open><summary>Public precons</summary><p>Wizards' newest Commander decks, open to everyone. Choose one and play; nothing is added to your library.</p>${preconError ? `<p class="cm-note cm-warning">${e(preconError)}</p>` : `<ul class="cm-table-decks">${availablePrecons.map(d => `<li><button type="button" class="cm-table-deck" data-action="table-use-precon" data-precon="${d.id}" data-seat="${seatId}" disabled>${deckLines(d.name, d.commander, d.notes)}<span class="cm-muted" data-precon-status="${d.id}">Checking this server…</span></button></li>`).join("")}</ul>`}</details>`;
+    const shared = availableSharedDecks.length ? `<section aria-label="Shared with the table"><h3>Shared with the table</h3><p>Other shared lists available to your account. Choosing one does not import it or change its access.</p><ul class="cm-table-decks">${availableSharedDecks.map(d => `<li><button type="button" class="cm-table-deck" data-action="table-use-shared-deck" data-shared-deck="${d.id}" data-seat="${seatId}" disabled>${deckLines(d.name, d.commander, d.notes)}<span class="cm-muted" data-shared-status="${d.id}">Checking this server…</span></button></li>`).join("")}</ul></section>` : "";
+    const only = `<label class="cm-checkbox cm-table-deck-only"><input type="checkbox" data-table-deck-playable${onlyPlayable() ? " checked" : ""}>Only table-legal decks</label><p class="cm-muted">Complete lists supported by this server and within this table's bracket limit. The server checks your choice before seating it.</p>`;
+    C.modal(`Choose a deck · Seat ${seatId + 1}`, `<div class="cm-table-deck-choose${onlyPlayable() ? " is-playable-only" : ""}">${only}<section aria-label="Your decks"><h3>Your decks</h3>${list}${empty}</section>${shared}${precons}</div><div id="cm-table-deck-error" class="cm-note cm-warning" hidden></div><div class="cm-form-footer">${b("Cancel", "close")}</div>`);
     knownCounts(decks);
     checkSharedDecks(current.tableId);
     fillAbout();
@@ -741,10 +754,12 @@
       for (const [d, attr] of [...availablePrecons.map((d) => [d, "data-precon-status"]), ...availableSharedDecks.map((d) => [d, "data-shared-status"])]) {
         const status = document.querySelector(`[${attr}="${d.id}"]`);
         if (!status) continue;
-        const missing = [...d.commander, ...d.cards].filter(n => unknown.has(n));
-        status.textContent = missing.length ? "Not available on this server yet" : "Ready to play";
-        status.closest("button").disabled = missing.length > 0;
-        if (!missing.length) sharedReady.add(d.id);
+        const all = [...d.commander, ...d.cards], missing = all.filter(n => unknown.has(n));
+        const bracket = rulesOf(current).bracketLimit, above = bracket && Number(d.bracket) > bracket;
+        const reason = all.length !== 100 ? `Needs 100 cards · ${all.length} listed` : above ? `Above this table's bracket limit (${bracket})` : missing.length ? "Not available on this server yet" : "";
+        status.textContent = reason || "Ready to play";
+        status.closest("button").disabled = !!reason;
+        if (!reason) sharedReady.add(d.id);
       }
     } catch (error) {
       for (const status of document.querySelectorAll('[data-shared-status], [data-precon-status]')) status.textContent = "Could not check this deck. Close and reopen to retry.";
@@ -794,8 +809,9 @@
       const el = document.querySelector(`[data-known-for="${CSS.escape(r.id)}"]`);
       if (!el) continue;
       const all = [...r.deck.commander, ...r.deck.cards], missing = all.filter((n) => unknown.has(n)).length;
-      el.textContent = missing ? `${all.length - missing} of ${all.length} known · ${missing} to learn` : `All ${all.length} cards known`;
-      el.closest(".cm-table-deck")?.classList.toggle("is-unknown", missing > 0);
+      const bracket = rulesOf(current).bracketLimit, above = bracket && Number(r.deck.bracket) > bracket;
+      el.textContent = all.length !== 100 ? `Needs 100 cards · ${all.length} listed` : above ? `Above this table's bracket limit (${bracket})` : missing ? `${all.length - missing} of ${all.length} known · ${missing} to learn` : `All ${all.length} cards known`;
+      el.closest(".cm-table-deck")?.classList.toggle("is-unknown", missing > 0 || all.length !== 100 || !!above);
     }
   }
   actions["table-use-test-deck"] = async (el) => {

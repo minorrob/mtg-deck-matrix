@@ -30,4 +30,10 @@ BREAKS = [
      "stay=false,undo=false,dismiss=null", "stay=false,undo=true,dismiss=null"),
     ('abandoned deck readiness restyles the current screen', 'crankmagic-table.js',
      "if(!currentView)return;", ""),
+    ('shared stale-name duplicate remains in chooser', 'crankmagic-table.js',
+     "return !contents || !local.has(contents);", "return true;"),
+    ('different shared version hidden by name', 'crankmagic-table.js',
+     "return !contents || !local.has(contents);", "return !decks.some(l=>l.name===d.name);"),
+    ('table-legal chooser filter defaults off', 'crankmagic-table.js',
+     'localStorage.getItem(ONLY_KEY) !== "off"', 'localStorage.getItem(ONLY_KEY) === "on"'),
 ]
