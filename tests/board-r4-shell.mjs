@@ -33,6 +33,7 @@ async function open(mode, width, skin = "sapphire-obsidian", opening = false) {
   await page.goto(`${base}/index.html#table?id=${tableId}`);
   await page.locator("#cm-board.cm-study .cm-seat-header").first().waitFor({timeout:20000});
   if (skin !== "sapphire-obsidian") await page.evaluate(async theme => {await globalThis.__r4Commit({type:"preferences",values:{theme}});}, skin);
+  await page.evaluate(async()=>{await document.fonts.ready;await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));});
   return {page,context,errors,posts,sample};
 }
 
@@ -43,6 +44,11 @@ async function wholeRows(page,label) {
     const saved=areas.map(el=>[el,el.scrollTop,el.scrollLeft]);
     for(const card of document.querySelectorAll('#cm-board [data-card-section] .cm-bcard')) {
       if(!card.getClientRects().length)continue;
+      if(card.classList.contains('is-tapped')){
+        const m=new DOMMatrix(getComputedStyle(card).transform),angle=Math.atan2(m.b,m.a)*180/Math.PI;
+        if(Math.abs(angle-30)>.2)fails.push({card:card.dataset.card,angle});
+        continue; // EX17 keeps the slot unchanged and explicitly permits rotated corners to tuck under neighbors.
+      }
       card.scrollIntoView({block:'center',inline:'nearest',behavior:'instant'});
       const r=card.getBoundingClientRect();
       for(let a=card.parentElement;a && !a.matches('#cm-board');a=a.parentElement) {

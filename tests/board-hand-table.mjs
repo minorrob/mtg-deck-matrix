@@ -71,12 +71,12 @@ async function board(mode, {width = 1440, height = 900, hand = 4, init = {}, rea
     await page.goto(`${base}/index.html#table?id=${TABLE}`);
     await page.locator(ready).first().waitFor({timeout: 20000});
     if (mode === "full") await page.locator("[data-engine=babylon][data-renderer=webgl]").waitFor({timeout: 20000});
-    await page.waitForTimeout(300);
+    await page.waitForTimeout(300); await page.evaluate(async()=>{await document.fonts.ready;await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));});
     await page.evaluate(() => {globalThis.__menus = []; addEventListener("contextmenu", (e) => __menus.push(!e.defaultPrevented));});
   };
   await open();
   const acts = () => sent.filter((x) => x.type === "act");
-  return {page, context, errors, acts, reload: async () => {await page.reload(); await page.locator(ready).first().waitFor({timeout: 20000}); if (mode === "full") await page.locator("[data-engine=babylon][data-renderer=webgl]").waitFor({timeout: 20000}); await page.waitForTimeout(300); await page.evaluate(() => {globalThis.__menus = []; addEventListener("contextmenu", (e) => __menus.push(!e.defaultPrevented));});}};
+  return {page, context, errors, acts, reload: async () => {await page.reload(); await page.locator(ready).first().waitFor({timeout: 20000}); if (mode === "full") await page.locator("[data-engine=babylon][data-renderer=webgl]").waitFor({timeout: 20000}); await page.waitForTimeout(300); await page.evaluate(async()=>{await document.fonts.ready;await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));}); await page.evaluate(() => {globalThis.__menus = []; addEventListener("contextmenu", (e) => __menus.push(!e.defaultPrevented));});}};
 }
 const diag = (page) => page.evaluate(() => CrankStage.diagnostics());
 const misalign = (d) => Math.max(...d.quad.map((n, i) => Math.abs(n - d.domQuad[i])));
@@ -92,10 +92,15 @@ const handNow = (page, cards) => page.evaluate((sel) => {
 }, cards);
 const slider = (page, sel) => page.evaluate((sel) => {const el = document.querySelector(sel); return el ? {value: Number(el.value), min: Number(el.min), max: Number(el.max), out: el.parentElement.querySelector("output")?.textContent, said: el.getAttribute("aria-valuetext")} : null;}, sel);
 /* A point in the middle of a card of the hand, as the pointer finds it. */
-const onHand = (page, sel) => page.evaluate((sel) => {
+const onHand = async (page, sel) => {
+  const scan = () => page.evaluate((sel) => {
   for (const el of [...document.querySelectorAll(sel)].reverse()) {const r = el.getBoundingClientRect(); for (const [fx, fy] of [[.5, .6], [.5, .3], [.3, .5]]) {const x = r.left + r.width * fx, y = r.top + r.height * fy; if (x > 0 && y > 0 && x < innerWidth && y < innerHeight && el.contains(document.elementFromPoint(x, y))) return {x, y};}}
   return null;
 }, sel);
+  let point=await scan();
+  if(!point && await page.locator(sel).count()){await page.locator(sel).last().scrollIntoViewIfNeeded();point=await scan();}
+  return point;
+};
 /* The wheel turned over a point, or over a card of a hand (a selector) found again at every notch, as the cards move. */
 async function wheel(page, at, dy, times = 1, {dx = 0} = {}) {
   for (let i = 0; i < times; i += 1) {

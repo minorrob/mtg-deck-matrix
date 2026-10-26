@@ -66,6 +66,7 @@ async function board(mode, {width = 1440, height = 900, reduced = false} = {}) {
   await page.locator(`#cm-board .cm-bcard[data-card='${ISLAND}']`).first().waitFor({timeout: 20000});
   if (mode === "full") await page.locator("[data-engine=babylon][data-renderer=webgl]").waitFor({timeout: 20000});
   await page.waitForTimeout(300);
+  await page.evaluate(async()=>{await document.fonts.ready;await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));});
   /* Every browser menu asked for, and whether the board kept it shut. */
   await page.evaluate(() => {globalThis.__menus = []; addEventListener("contextmenu", (e) => __menus.push({open: !e.defaultPrevented, table: !!e.target.closest?.(".cm-stage-region")}));});
   const acts = () => sent.filter((x) => x.type === "act").map((x) => x.indices);
@@ -106,11 +107,12 @@ try {
   eq(await zoomSlider().inputValue(), "100", "the zoom starts at 100%");
   const point = {x: region.x + region.width * .7, y: region.y + region.height * .55};
   const beforePick = await page.evaluate(({x, y}) => CrankStage.pick(x, y).world, point);
+  const wheelHit=await page.evaluate(({x,y})=>{const el=document.elementFromPoint(x,y);return {hit:el?.outerHTML.slice(0,180),row:!!el?.closest('[data-zone-scroll]'),overlay:!!el?.closest('.cm-stage-camera,.cm-stage-actions,#cm-card-inspector,.cm-stage-side,.cm-stage-rail')};},point);
   await page.mouse.move(point.x, point.y);
   await page.mouse.wheel(0, -240);
   await page.waitForTimeout(400);
   const zoomed = Number(await zoomSlider().inputValue());
-  ok(zoomed > 120 && zoomed <= 200, `the wheel up zooms in, the slider following (${zoomed}%)`);
+  ok(zoomed > 120 && zoomed <= 200, `the wheel up zooms in, the slider following (${zoomed}%; native hit ${JSON.stringify(wheelHit)})`);
   /* kept a moment after the wheel stops, as the slider keeps it when let go */
   ok(await page.waitForFunction((v) => localStorage.getItem("cm-board-zoom-v2") === v, String(zoomed), {timeout: 3000}).then(() => true, () => false), "and the zoom is kept on this device, as the slider keeps it");
   const afterPick = await page.evaluate(({x, y}) => CrankStage.pick(x, y).world, point);
