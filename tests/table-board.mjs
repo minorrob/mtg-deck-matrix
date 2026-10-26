@@ -305,7 +305,7 @@ try {
   await shot(active.page, "board-priority-" + (active === rob ? "1400" : "1280"));
   await useCardOffer(active.page, brightLand, "play-land");
   await waitText(active.page, ".cm-board-lands", /Lands · 1/);
-  ok(/land drop used/i.test(await text(active.page, ".cm-board-mat .cm-board-chip")), "tapping it plays it: Lands · 1, the land drop used (the reminder under the Lands says so)");
+  ok(/land drop used/i.test(await text(active.page, ".cm-board-mat .cm-seat-resources")), "tapping it plays it: Lands · 1, the land drop used (the SeatHeader resources say so)");
   ok(await heard(active === rob ? ROB : MAYA, "sfx/sfx_play_land.mp3"), "and it sounds as a land played (the pack's land voice)");
   await other.page.click(`.cm-board-tile[data-seat='${activeSeat}'] [data-action=board-focus]`);
   await waitText(other.page, ".cm-board-lands", /Lands · 1/);
@@ -464,7 +464,7 @@ try {
     await slider.fill(before);
     await rob.page.locator('[data-action=board-camera]').click();
     const smallerRows = await rob.page.evaluate(tableRowFacts);
-    ok(smallerRows.valid && smallerRows.widths, "at1280x720 complete rows retain conditional aspect and chosen column widths");
+    ok(smallerRows.valid && smallerRows.widths, "at 1280x720 complete rows retain conditional aspect and chosen column widths");
     await verifyTableRowAccess(rob.page, smallerRows);
     await rob.page.setViewportSize(was);
   }
