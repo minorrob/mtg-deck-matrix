@@ -715,7 +715,7 @@ try {
   await maya.page.hover(".cm-board-hand .cm-bcard[data-card]");
   await maya.page.locator("#cm-board-peek .cm-bcard").waitFor({timeout: 5000});
   const peekCap = await maya.page.evaluate(() => {const p = document.querySelector("#cm-board-peek .cm-bcard").getBoundingClientRect(), m = document.querySelector(".cm-board-mat").getBoundingClientRect(); return {peek: Math.round(p.height), mat: Math.round(m.height), w: Math.round(p.width)};});
-  ok(Math.abs(peekCap.peek-Math.min(560,peekCap.mat))<2&&Math.abs(peekCap.w-Math.min(400,peekCap.mat*5/7))<2, `the hover card respects both the actual mat height and its normal400px width cap (${peekCap.peek} of ${peekCap.mat}px; ${peekCap.w}px wide)`);
+  ok(Math.abs(peekCap.peek-Math.min(560,peekCap.mat))<2&&Math.abs(peekCap.w-Math.min(400,peekCap.mat*5/7))<2, `the hover card respects both the actual mat height and its normal 400px width cap (${peekCap.peek} of ${peekCap.mat}px; ${peekCap.w}px wide)`);
   await maya.page.mouse.move(2, 2);
   await maya.page.locator("#cm-board-peek").waitFor({state: "detached", timeout: 5000});
   /* THE CALLOUTS (the Replit brief's overlay): Tools › Try the callouts shows the grammar on demand, at most three at
@@ -1381,10 +1381,13 @@ try {
 
   /* B1, item 25: THE HAND IS WHOLE in every view -- Table, Focus, Full screen, and Full screen once the browser's own
      full screen is left -- at 1400 (Rob, whose browser gives the whole screen) and at 1280 (Maya, whose does not). */
-  const handWhole = (page) => page.evaluate(() => {
+  const handWhole = async (page) => {
+    const focusHand=page.locator('#cm-board[data-view=focus] .cm-board-main>.cm-board-hand');
+    if(await focusHand.count())await focusHand.scrollIntoViewIfNeeded();
+    return page.evaluate(() => {
     const cards = [...document.querySelectorAll(".cm-board-hand .cm-bcard, .cm-stage-fan .cm-bcard")], tray = document.querySelector(".cm-board-hand, .cm-stage-fan").getBoundingClientRect();
     return {n: cards.length, whole: cards.length > 0 && cards.every((c) => {const r = c.getBoundingClientRect(); return r.bottom <= innerHeight + (document.querySelector(".cm-stage-fan") ? 40 : .5) && r.bottom <= tray.bottom + (document.querySelector(".cm-stage-fan") ? 28 : .5) && r.top >= 0;}), last: Math.round(cards.at(-1).getBoundingClientRect().bottom), h: innerHeight, sideways: document.documentElement.scrollWidth - document.documentElement.clientWidth};
-  });
+  });};
   for (const [who, width] of [[rob, 1400], [maya, 1280]]) {
     await who.page.mouse.move(2, 2);
     const seen = [];
