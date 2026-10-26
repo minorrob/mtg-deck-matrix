@@ -1,9 +1,9 @@
 {
   "workstream": "codex-play",
-  "updated": "2026-10-26T19:32:36.588Z",
+  "updated": "2026-10-26T22:51:35.607Z",
   "updated_by": "Codex r4 coordinator, Personal-HP",
   "branch": "integration/r4",
-  "now": "r4 shell, decision desk, combat, engine contracts and C/D2 source are integrated in draft PR #890 (ROB-197). Final native Play/layout/visual acceptance remains open; exact evidence and limits: docs/r4-execution/HANDOFF.md. No r4 deployment yet.",
+  "now": "The r4 Play/engine source and October 26 follow-ups are integrated with bounded native regression proof. PR #890 (ROB-197) is the canonical combined CI, main and staging release record. Exact acceptance evidence, remaining limits and audit follow-ups: docs/r4-execution/. Production requires Rob's separate go.",
   "items": [
     {
       "id": "ROB-171",
