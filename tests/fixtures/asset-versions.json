@@ -1,22 +1,6 @@
 {
   "note": "Written by tests/asset-versions.mjs --update. Each entry records the content a ?v= was last bumped for; the test fails when content moves and the version does not.",
   "assets": {
-    "assets/crankmagic/barlowcondensed-600-ext.woff2": {
-      "version": 1,
-      "sha": "aef7edf54f79a532"
-    },
-    "assets/crankmagic/barlowcondensed-600.woff2": {
-      "version": 1,
-      "sha": "215a93c696f44203"
-    },
-    "assets/crankmagic/barlowcondensed-700-ext.woff2": {
-      "version": 1,
-      "sha": "9d351bd9222bfab9"
-    },
-    "assets/crankmagic/barlowcondensed-700.woff2": {
-      "version": 1,
-      "sha": "3787a5a419171630"
-    },
     "assets/crankmagic/barlowcondensed-800-ext.woff2": {
       "version": 1,
       "sha": "22539b785b3cbcee"
@@ -24,6 +8,14 @@
     "assets/crankmagic/barlowcondensed-800.woff2": {
       "version": 1,
       "sha": "2515494e8cc2ca07"
+    },
+    "assets/crankmagic/cinzel-600-ext.woff2": {
+      "version": 1,
+      "sha": "a5779eb98b504609"
+    },
+    "assets/crankmagic/cinzel-600.woff2": {
+      "version": 1,
+      "sha": "61efc27ceb7d08bb"
     },
     "assets/crankmagic/commander-atraxa.webp": {
       "version": 1,
@@ -53,29 +45,21 @@
       "version": 1,
       "sha": "3cc0812ddfe08cc9"
     },
-    "assets/crankmagic/satoshi-400.woff2": {
+    "assets/crankmagic/lato-400-ext.woff2": {
       "version": 1,
-      "sha": "50dca57f0b77918e"
+      "sha": "8b9fc9737043f88c"
     },
-    "assets/crankmagic/satoshi-500.woff2": {
+    "assets/crankmagic/lato-400.woff2": {
       "version": 1,
-      "sha": "af02a72246f53ad4"
+      "sha": "918b7dc3e2e2d015"
     },
-    "assets/crankmagic/satoshi-700.woff2": {
+    "assets/crankmagic/lato-700-ext.woff2": {
       "version": 1,
-      "sha": "353a7fbfb4475f0c"
+      "sha": "3a5797f440bc67b5"
     },
-    "assets/crankmagic/satoshi-900.woff2": {
+    "assets/crankmagic/lato-700.woff2": {
       "version": 1,
-      "sha": "a4f962f7f9c049b2"
-    },
-    "assets/crankmagic/youngserif-400-ext.woff2": {
-      "version": 1,
-      "sha": "9e6eb8e5e38f9dcb"
-    },
-    "assets/crankmagic/youngserif-400.woff2": {
-      "version": 1,
-      "sha": "6ba68b9927ad2a64"
+      "sha": "c447dd7677b419db"
     },
     "assets/mana/2.svg": {
       "version": 1,
@@ -162,8 +146,8 @@
       "sha": "5dd742bd996b24a6"
     },
     "crankmagic-app.js": {
-      "version": 581,
-      "sha": "99a6fa80437fac65"
+      "version": 582,
+      "sha": "0380e1f4ec3bf5db"
     },
     "crankmagic-assets.js": {
       "version": 36,
@@ -198,16 +182,16 @@
       "sha": "3f5449f914bd7b86"
     },
     "crankmagic-decks.js": {
-      "version": 116,
-      "sha": "520edba12bff2d96"
+      "version": 117,
+      "sha": "f66f0ed8bbe3accb"
     },
     "crankmagic-design.css": {
-      "version": 26,
-      "sha": "fddbf907399a047c"
+      "version": 27,
+      "sha": "a02693e69ecbb10a"
     },
     "crankmagic-discover.js": {
-      "version": 76,
-      "sha": "3244750d1b9b86c9"
+      "version": 77,
+      "sha": "8bac9c1eca6fd1a5"
     },
     "crankmagic-evidence.js": {
       "version": 4,
@@ -234,8 +218,8 @@
       "sha": "d77245bd485ce9b7"
     },
     "crankmagic-graph.js": {
-      "version": 23,
-      "sha": "a5306f26922493ca"
+      "version": 24,
+      "sha": "607a309a75652338"
     },
     "crankmagic-groupings.js": {
       "version": 2,
@@ -270,8 +254,8 @@
       "sha": "63072d792c0f337c"
     },
     "crankmagic-newdeck.js": {
-      "version": 1,
-      "sha": "1b0758d6246f9046"
+      "version": 2,
+      "sha": "9cfe208238974334"
     },
     "crankmagic-online.css": {
       "version": 5,
@@ -342,8 +326,8 @@
       "sha": "fd7accd751b01d3e"
     },
     "crankmagic-stage.css": {
-      "version": 63,
-      "sha": "bb28a01e810b89f5"
+      "version": 64,
+      "sha": "1d8bce2821facd92"
     },
     "crankmagic-stage.js": {
       "version": 18,
@@ -354,8 +338,8 @@
       "sha": "07440b83396bb9e2"
     },
     "crankmagic-sw.js": {
-      "version": 564,
-      "sha": "19b041f6df71ad53"
+      "version": 565,
+      "sha": "0601c066519073fa"
     },
     "crankmagic-table.js": {
       "version": 42,
@@ -378,8 +362,8 @@
       "sha": "ca657a27caa9093d"
     },
     "crankmagic.css": {
-      "version": 302,
-      "sha": "d35a313af53b0754"
+      "version": 303,
+      "sha": "405175fd5f2c169e"
     },
     "custom-model.js": {
       "version": 3,

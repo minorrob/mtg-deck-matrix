@@ -5,37 +5,52 @@
       "id": "CH-01",
       "tier": "C",
       "owner": "S0",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Land r4 on `main`: `pr/apply-r4.mjs` (tokens for six themes, three skins, aliases for old names, type scale, self-hosted Cinzel/Lato/Barlow/Oxanium, service worker, notices); remove the four old palettes and Satoshi/Young Serif; `tests/design-tokens.mjs` (194 checks) and `tests/type-final.mjs` (Cinzel/Lato) green in the repo's browser runner",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "design-tokens: 196",
+        "type-final: 34",
+        "a11y-app: 72",
+        "shell-r3: 44",
+        "settings-r3: 69",
+        "breaks-r4-foundation: 4/4"
+      ],
+      "commit": "fe65eb65"
     },
     {
       "id": "CH-02",
       "tier": "C",
       "owner": "S0",
-      "status": "in_progress",
-      "summary": "Theme switch exposes the six themes (skin × register) in the Account menu's Skin group with Dark/Light/System segmented control; `data-theme` carries `dark",
-      "evidence": [],
-      "commit": null
+      "status": "integrated",
+      "summary": "Theme switch exposes the six themes (skin × register) in the Account menu's Skin group with Dark/Light/System segmented control; `data-theme` carries `dark|light|bronze-dark|…`",
+      "evidence": [
+        "shell-r3: 44",
+        "settings-r3: 69; legacy theme migration and skin/register controls"
+      ],
+      "commit": "fe65eb65"
     },
     {
       "id": "CH-03",
       "tier": "C",
       "owner": "S0",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Wordmark untouched; gear logo at 28–52px beside it; Cinzel never on the app name (assert in `type-final`)",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "type-final: 34; Oxanium wordmark preserved",
+        "breaks-r4-foundation: 4/4"
+      ],
+      "commit": "fe65eb65"
     },
     {
       "id": "CH-04",
       "tier": "C",
       "owner": "S0",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Create `integration/r4` from `main` after CH-01 merges; every program branch forks from it",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "integration/r4 pushed; draft PR #890"
+      ],
+      "commit": "15e50e41"
     },
     {
       "id": "CH-10",
@@ -230,7 +245,7 @@
       "id": "CH-40",
       "tier": "C",
       "owner": "D1",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "Study table: `cm-study` on the board root (wood, grain, lamp light, shade), `cm-mat` per seat (charcoal felt, inset edge); a chosen playmat replaces it; selection on the table = white ring + check",
       "evidence": [],
       "commit": null
@@ -239,7 +254,7 @@
       "id": "CH-41",
       "tier": "C",
       "owner": "D1",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "Drawers: left Actions (decision, then Boards `cm-disclosure`), right Stack + History (+ Coach as a disclosure); 32px spine tab with chevron (`aria-expanded`, `aria-controls`), folded = labeled tab with count at the screen edge; bottom sheet on phone; #886 grips kept; module headers toggle (RQ-03.5, W13 r2: 28px headers, 22px buttons); no six-dot handle",
       "evidence": [],
       "commit": null
@@ -248,7 +263,7 @@
       "id": "CH-42",
       "tier": "C",
       "owner": "D1",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "DecisionSlot top center in every view: when the Actions drawer is folded the decision renders there (question, help line, choices as secondary, chosen inverts, one accent primary, the way back); phase strip above it; × `--hud-scale`",
       "evidence": [],
       "commit": null
@@ -257,7 +272,7 @@
       "id": "CH-43",
       "tier": "C",
       "owner": "D1",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "SeatHeader shared by 3D, Table, Focus: portrait in brass ring, name, commander, life at `hud-vital`, poison, hand count, state word; turn = aether ring on the portrait, priority = aether dot; low life turns harm red; `cm-seat--stack` for corners; DOM order identical across views",
       "evidence": [],
       "commit": null
@@ -266,7 +281,7 @@
       "id": "CH-44",
       "tier": "C",
       "owner": "D1",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "HudScale: `--hud-scale` on the board root from Camera and Settings, stored with the account; every HUD size = token × scale; 200% keeps the top bar on one line at 1440",
       "evidence": [],
       "commit": null
@@ -275,7 +290,7 @@
       "id": "CH-45",
       "tier": "C",
       "owner": "D1",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "Table menu (R-25): Concede (two-step), Leave table, End game for everyone (host, two-step, keeps the record), Table rules, Help; Escape order per C-A7 (menu/dialog → focus back → Table menu); app shell inert under the board; no footer link in the tab sequence",
       "evidence": [],
       "commit": null
@@ -284,7 +299,7 @@
       "id": "CH-46",
       "tier": "I",
       "owner": "D1",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "Opening hand and center decisions through DecisionSlot: Keep primary / Mulligan way back; Pass never rendered disabled in the center",
       "evidence": [],
       "commit": null
@@ -293,7 +308,7 @@
       "id": "CH-47",
       "tier": "I",
       "owner": "D1",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "Neon callouts (your turn, an attack on you, a big swing) in Barlow Condensed via `callout-*`; one at a time; reduced motion without the glow; lobby countdown: table dims, 72px figure, sound",
       "evidence": [],
       "commit": null
@@ -302,7 +317,7 @@
       "id": "CH-48",
       "tier": "M",
       "owner": "D1",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "Top bar: turn number and priority at `hud`, phase strip at `hud-caption` with the current step inverted to ink; \"Actions · choice pending\" label retired (DecisionSlot carries it)",
       "evidence": [],
       "commit": null
@@ -356,10 +371,14 @@
       "id": "CH-56",
       "tier": "C",
       "owner": "E",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Per-option fields the desk needs: `effect` verb per target (W01/W02 captions), `controllerId` on every target option (already on counted targets; add to the rest), `affected` card id for the question screen, `optional` flag for \"may\" effects (Cancel = Don't [verb])",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "engine-decision-facts: 20",
+        "breaks-decision-facts: 4/4",
+        "target/group/count/constraints and derive-once targeted suites"
+      ],
+      "commit": "a7f0fa5f"
     },
     {
       "id": "CH-57",
@@ -410,10 +429,12 @@
       "id": "CH-71",
       "tier": "I",
       "owner": "F1",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Decks hub: DeckTile (art, eyebrow \"D6 · Krenko\", stage chip in the family of what the deck needs, bar, Play it compact), StageChips row (ink selection), live grid count; \"Next\" from Start-from hands off to the Lab with a toast",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "decks-hub: 71; counts and navigation; visual work continues"
+      ],
+      "commit": "d9eed16f"
     },
     {
       "id": "CH-72",
@@ -428,10 +449,13 @@
       "id": "CH-73",
       "tier": "C",
       "owner": "F1",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Define the Deck validation per DS FormControls: errors under the field with the alert glyph, field edge `color-required`, never a dot on a tab; Next band says why it is disabled",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "new-deck-flow: 45; inline validation, focus, no tab dot",
+        "breaks-r4-workshop: caught blank-name and focus regressions"
+      ],
+      "commit": "d9eed16f"
     },
     {
       "id": "CH-74",
@@ -446,10 +470,13 @@
       "id": "CH-75",
       "tier": "I",
       "owner": "F1",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Measure report: a door back into refinement (\"Fix in Explore\" with the weakest axis preselected)",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "deck-page-r3: 43; saved report/axis context",
+        "breaks-r4-report: catches strongest/weakest regression"
+      ],
+      "commit": "d9eed16f"
     },
     {
       "id": "CH-76",
@@ -536,10 +563,13 @@
       "id": "CH-88",
       "tier": "M",
       "owner": "F2",
-      "status": "pending",
+      "status": "integrated",
       "summary": "Admin panel v1 (gate, home, People and invites, Feature switches) per the brainstorm; Invite gets a list and a sent state",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "cloud-worker: 151; backend only, UI pending",
+        "breaks-r4-admin: 4/4"
+      ],
+      "commit": "c15a94b4"
     },
     {
       "id": "CH-89",
