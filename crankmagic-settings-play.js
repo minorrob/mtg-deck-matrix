@@ -21,11 +21,12 @@ C.settingsPlayCard=card=>{
   const p=C.state.preferences||{},stepByStep=(p.play||{}).stepByStep===true;
   const overlay=Number.isFinite(Number((p.play||{}).overlay))?Math.min(100,Math.max(0,Number((p.play||{}).overlay))):60;
   return card('play','Play',
-      `<div class="cm-settings-row"><button type="button" class="v-button cm-chip-toggle" data-action="set-step-by-step" aria-pressed="${stepByStep}">Stop at every step of my turn</button></div>`
+      `<div class="cm-settings-row"><button type="button" class="v-button cm-chip-toggle" data-action="set-step-by-step" role="switch" aria-checked="${stepByStep}">Stop at every step of my turn: ${stepByStep?'On':'Off'}</button></div>`
       +`<div class="cm-settings-row">${C.sideDrawerSettings?b('Set Side Drawer Modules','board-modules-settings'):''}</div>`
       +(()=>{const S=globalThis.CrankStage;if(!S?.resolution)return '';const v=S.resolution(),R=S.RESOLUTION;
         /* Graphics resolution: this device's, handled by crankmagic-stage.js (Rob, 2026-10-25). */
         return `<p class="cm-settings-label">Graphics</p><div class="cm-settings-row"><label class="cm-settings-slider">Graphics resolution<input type="range" min="${R.min}" max="${R.max}" step="10" value="${v}" data-stage-resolution aria-label="Graphics resolution" aria-valuetext="${v}%"><output>${v}%</output></label></div><p class="cm-muted">${R.min}% – ${R.max}% of the screen's pixels for the 3D table · higher is sharper and works the graphics card harder · this device</p>`;})()
+      +(C.hudTextScaleSlider?`<p class="cm-settings-label">HUD</p><div class="cm-settings-row">${C.hudTextScaleSlider()}</div>`:'')
       +`<p class="cm-settings-label">Overlay</p><div class="cm-settings-row"><label class="cm-settings-slider">Callouts over the table<input type="range" min="0" max="100" step="1" value="${overlay}" data-settings-overlay aria-label="Callouts over the table" aria-valuetext="${overlay===0?'off':overlay+'%'}"><output>${overlay===0?'Off':overlay+'%'}</output></label></div>`
       +`<p class="cm-muted">What just happened at the table, called out in a word over the board: an attack coming in, a hit, a spell countered, your turn. Off at the left; louder and longer toward the right. Reduce motion shows each one without its entrance.</p>`
       +`<p class="cm-muted">Off, a step of your turn with nothing in it for you to do passes by itself, and the table stops where there is something: a land to play, a spell you can pay for, an attack. On, it stops at every step (upkeep, draw, main, combat, the end step), and you move on from each one yourself. Either way your turn never ends by itself: in your end step the button reads End turn. At a table, from its next step.</p>`);
