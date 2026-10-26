@@ -3,6 +3,8 @@ SUITES = ['tests/account-menu-r4.mjs']
 BREAKS = [
     ('account Escape leaks into board draft shortcuts', 'crankmagic-app.js',
      "if(C.accountMenuOpen()&&event.key==='Escape')", "if(false&&event.key==='Escape')"),
+    ('redrawn account invoker loses focus return', 'crankmagic-app.js',
+     'menuChip=C.focusFind(menuChipKey)', 'menuChip=null'),
     ('account invoker aria state stays collapsed', 'crankmagic-app.js',
      "String(e.newState==='open'", "String(false"),
     ('Careful group loses its required label', 'index.html',
