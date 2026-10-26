@@ -138,21 +138,25 @@ try {
   const away=async()=>{await page.mouse.move(3,65);await page.evaluate(()=>{window.scrollTo(0,0);document.querySelector('#cm-board').scrollTop=0;});await page.waitForTimeout(100);};
   const landsBlocked=()=>page.evaluate(()=>[...document.querySelectorAll('.cm-stage-front .cm-board-lands .cm-bcard')].flatMap(card=>{
     const r=card.getBoundingClientRect();
-    return [.1,.25,.45].filter(f=>{const hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height*f);return !(hit===card||card.contains(hit));})
-      .map(f=>`${(card.getAttribute('aria-label')||'a land').split(/[,:]/)[0]} at ${f*100}%`);
+    return [.1,.25,.45].flatMap(f=>{const x=r.x+r.width/2,y=r.y+r.height*f,hit=document.elementFromPoint(x,y);return hit===card||card.contains(hit)?[]:[{land:(card.getAttribute('aria-label')||'a land').split(/[,:]/)[0],fraction:f,x,y,hit:hit?.outerHTML.slice(0,280)||null}];});
   }));
+  const assertLandsClear=async message=>{
+    const blocked=await landsBlocked();
+    if(blocked.length&&process.env.UAT_SHOTS){mkdirSync(process.env.UAT_SHOTS,{recursive:true});await page.screenshot({path:`${process.env.UAT_SHOTS}/tabletop-land-access-failure.png`});}
+    assert.deepEqual(blocked,[],message);
+  };
   for(const [width,height] of [[1400,900],[1024,768],[1280,720]]) {
     await page.setViewportSize({width,height});await page.waitForTimeout(200);await away();
     const lands=await page.locator('.cm-stage-front .cm-board-lands .cm-bcard').evaluateAll(cards=>cards.flatMap(c=>(c.dataset.landMembers||c.dataset.card).split(',')).sort());
     assert.deepEqual(lands,['459','469','483','502','527'],`${width}x${height}: all five physical lands remain represented by singleton faces or canonical grouped members`);
-    assert.deepEqual(await landsBlocked(),[],`${width}x${height}: every land's upper half is reached at rest`);
+    await assertLandsClear(`${width}x${height}: every land's upper half is reached at rest`);
     for(const hand of await page.locator('.cm-stage-fan-slot .cm-bcard').all()) {
       await away();
       const name=(await hand.getAttribute('aria-label')||'a hand card').split(/[,:]/)[0];
       const point=await hand.evaluate(el=>{const r=el.getBoundingClientRect();for(const fy of [.15,.3,.5,.7])for(const fx of [.15,.3,.5,.7]){const x=r.x+r.width*fx,y=r.y+r.height*fy;if(y>=innerHeight-5)continue;const hit=document.elementFromPoint(x,y);if(hit===el||el.contains(hit))return{x,y};}return null;});
       assert.ok(point,`${width}x${height}: ${name} in the fan has a point a pointer reaches`);
       await page.mouse.move(point.x,point.y);await page.waitForTimeout(50);
-      assert.deepEqual(await landsBlocked(),[],`${width}x${height}: with ${name} hovered, every land's upper half is still reached`);
+      await assertLandsClear(`${width}x${height}: with ${name} hovered, every land's upper half is still reached`);
     }
   }
   await away();await page.emulateMedia({reducedMotion:null});
