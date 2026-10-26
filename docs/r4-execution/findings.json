@@ -1,0 +1,824 @@
+{
+  "auditFindingCount": 129,
+  "note": "Mapping is source traceability, not a claim of resolution. Unmapped findings remain open unless explicitly superseded.",
+  "findings": [
+    {
+      "id": "F-001",
+      "changes": [
+        "CH-70"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-002",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-003",
+      "changes": [
+        "CH-70"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-004",
+      "changes": [
+        "CH-70"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-005",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-006",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-007",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-008",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-009",
+      "changes": [
+        "CH-71"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-010",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-011",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-012",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-013",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-014",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-015",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-016",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-017",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-018",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-019",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-020",
+      "changes": [
+        "CH-71"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-021",
+      "changes": [
+        "CH-72"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-022",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-023",
+      "changes": [
+        "CH-72"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-024",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-025",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-026",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-027",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-028",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-029",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-030",
+      "changes": [
+        "CH-73"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-031",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-032",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-033",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-034",
+      "changes": [
+        "CH-73"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-035",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-036",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-037",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-038",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-039",
+      "changes": [
+        "CH-74"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-040",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-041",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-042",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-043",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-044",
+      "changes": [
+        "CH-75"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-045",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-046",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-047",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-048",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-049",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-050",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-051",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-052",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-053",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-054",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-055",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-056",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-057",
+      "changes": [
+        "CH-80"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-058",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-059",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-060",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-061",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-062",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-063",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-064",
+      "changes": [
+        "CH-81"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-065",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-066",
+      "changes": [
+        "CH-82"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-067",
+      "changes": [],
+      "status": "unmapped_open"
+    },
+    {
+      "id": "F-068",
+      "changes": [
+        "CH-83"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-069",
+      "changes": [
+        "CH-83"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-070",
+      "changes": [
+        "CH-83"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-071",
+      "changes": [
+        "CH-83"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-072",
+      "changes": [
+        "CH-83"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-073",
+      "changes": [
+        "CH-84"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-074",
+      "changes": [
+        "CH-84"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-075",
+      "changes": [
+        "CH-84"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-076",
+      "changes": [
+        "CH-84"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-077",
+      "changes": [
+        "CH-84"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-078",
+      "changes": [
+        "CH-85"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-079",
+      "changes": [
+        "CH-85"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-080",
+      "changes": [
+        "CH-85"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-081",
+      "changes": [
+        "CH-47"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-082",
+      "changes": [
+        "CH-45"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-083",
+      "changes": [
+        "CH-45"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-084",
+      "changes": [
+        "CH-43",
+        "CH-44",
+        "CH-48"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-085",
+      "changes": [
+        "CH-16",
+        "CH-48"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-086",
+      "changes": [
+        "CH-42",
+        "CH-46"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-087",
+      "changes": [
+        "CH-41",
+        "CH-45"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-088",
+      "changes": [
+        "CH-10",
+        "CH-14",
+        "CH-31"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-089",
+      "changes": [
+        "CH-17"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-090",
+      "changes": [
+        "CH-53"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-091",
+      "changes": [
+        "CH-41",
+        "CH-42"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-092",
+      "changes": [
+        "CH-34"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-093",
+      "changes": [
+        "CH-52"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-094",
+      "changes": [
+        "CH-86"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-095",
+      "changes": [
+        "CH-59",
+        "CH-86"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-096",
+      "changes": [
+        "CH-86"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-097",
+      "changes": [
+        "CH-86"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-098",
+      "changes": [
+        "CH-41",
+        "CH-42",
+        "CH-50"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-099",
+      "changes": [
+        "CH-50"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-100",
+      "changes": [
+        "CH-42",
+        "CH-50"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-101",
+      "changes": [
+        "CH-43"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-102",
+      "changes": [
+        "CH-43",
+        "CH-51"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-103",
+      "changes": [
+        "CH-51"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-104",
+      "changes": [
+        "CH-51"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-105",
+      "changes": [
+        "CH-88"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-106",
+      "changes": [
+        "CH-88"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-107",
+      "changes": [
+        "CH-02"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-108",
+      "changes": [
+        "CH-88"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-109",
+      "changes": [
+        "CH-87"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-110",
+      "changes": [
+        "CH-87"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-111",
+      "changes": [
+        "CH-87"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-112",
+      "changes": [
+        "CH-53",
+        "CH-87"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-113",
+      "changes": [
+        "CH-87"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-114",
+      "changes": [
+        "CH-87"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-115",
+      "changes": [
+        "CH-87"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-116",
+      "changes": [
+        "CH-89"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-117",
+      "changes": [
+        "CH-10",
+        "CH-12"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-118",
+      "changes": [
+        "CH-30",
+        "CH-35"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-119",
+      "changes": [
+        "CH-41"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-120",
+      "changes": [
+        "CH-52"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-121",
+      "changes": [
+        "CH-52"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-122",
+      "changes": [
+        "CH-41"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-123",
+      "changes": [
+        "CH-41"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-124",
+      "changes": [
+        "CH-55"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-125",
+      "changes": [
+        "CH-20",
+        "CH-21",
+        "CH-22",
+        "CH-23",
+        "CH-24"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-126",
+      "changes": [
+        "CH-13"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-127",
+      "changes": [
+        "CH-10",
+        "CH-11"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-128",
+      "changes": [
+        "CH-32"
+      ],
+      "status": "pending_verification"
+    },
+    {
+      "id": "F-129",
+      "changes": [
+        "CH-33"
+      ],
+      "status": "pending_verification"
+    }
+  ]
+}
