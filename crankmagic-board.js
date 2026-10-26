@@ -2953,7 +2953,7 @@ globalThis.CrankBoard = Object.seal({
     const slot=host?.querySelector(".cm-module-coach-host");
     el.classList.toggle("is-module", !!slot && coach.open);
     el.classList.toggle("is-docked", !!host?.dataset.shell && !slot && coach.open);
-    if(slot && coach.open) {slot.append(el); for(const k of ["--dock-x","--dock-y","--dock-w","--dock-h"]) el.style.removeProperty(k); return;}
+    if(slot && coach.open) {if(el.parentElement!==slot)slot.append(el); for(const k of ["--dock-x","--dock-y","--dock-w","--dock-h"]) el.style.removeProperty(k); return;}
     if (host?.dataset.shell === "shared" && el.classList.contains("is-docked")) {
       const h = host.getBoundingClientRect(), top = host.querySelector(".cm-stage-top").getBoundingClientRect().bottom;
       const width = Math.min(320, Math.max(240, innerWidth * .24));
@@ -2970,8 +2970,8 @@ globalThis.CrankBoard = Object.seal({
     el.style.setProperty("--dock-w", `${Math.round(s.width)}px`);
     el.style.setProperty("--dock-h", `${Math.max(120, Math.round(h.bottom - 8 - top))}px`);
   }
-  /* A ROW TOO FULL FOR ITS CARDS OVERLAPS THEM, each over the one before -- by their layout widths, a tapped card's turn
-     and the margins that make room for it included (Rob, 2026-10-11: five lands, "cards cutting off on the right side").
+  /* A ROW TOO FULL FOR ITS CARDS OVERLAPS THEM, each over the one before, using their unchanged slot widths and margins
+     (EX17: tapping rotates in the same slot; Rob, 2026-10-11: five lands, "cards cutting off on the right side").
      No card is covered past a readable strip of it (READABLE of its width); past that the row scrolls, with a bar to
      scroll it by, rather than cutting its last cards off. */
   const READABLE = .3;
