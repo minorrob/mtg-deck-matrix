@@ -2665,10 +2665,10 @@ globalThis.CrankBoard = Object.seal({
         if(top>topBase+1 || bot>botBase+1){
           /* Once zone minima force vertical scrolling, a height cap must not leave unused horizontal
              room and make readable seat headers unnecessarily tall. Keep the chosen column shares. */
-          const gx=parseFloat(css.columnGap)||14,room=box.width-gx,share=rowShare();
+          const gx=parseFloat(css.columnGap)||14,room=tbl.clientWidth-gx,share=rowShare();
           const left=Math.floor(n===2?room*share:room/2),right=Math.floor(n===2?room*(1-share):room/2);
           tbl.style.setProperty('--top-w',`${left}px`);tbl.style.setProperty('--bot-w',`${right}px`);tbl.style.setProperty('--board-w',`${Math.max(left,right)}px`);
-          tbl.style.setProperty('--grid-w',`${left+right+gx}px`);tbl.style.setProperty('--mid-x',`${n===2?left+gx/2:box.width/2}px`);
+          tbl.style.setProperty('--grid-w',`${left+right+gx}px`);tbl.style.setProperty('--mid-x',`${n===2?left+gx/2:tbl.clientWidth/2}px`);
           top=Math.max(left*9/16,...slots.filter(s=>n===2||['a','b'].includes(s.dataset.area)).map(minimum));
           bot=n===2?0:Math.max(right*9/16,...slots.filter(s=>['c','d'].includes(s.dataset.area)).map(minimum));
         }
