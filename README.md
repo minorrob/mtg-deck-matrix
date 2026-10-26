@@ -943,7 +943,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 588 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 592 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1232,6 +1232,10 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `board-settings-window` — `tests/board-settings-window.mjs` (Camera ▾ closed by a press outside it; Settings a window sized to the browser, ✕ at its top right, Cancel and Save at its bottom right, Save keeps and Cancel puts back)
 - `board-babylon` — `tests/board-babylon.mjs` (live Babylon/DOM projection alignment, scene resource disposal, graphics fallback, re-entry, and the Play lounge)
 - `board-3d-camera` — `tests/board-3d-camera.mjs` (the 3D camera by hand: the wheel zooms toward the pointer except over a row that scrolls, a mat dragged moves the view while the bare table still tilts, a held right button looks at the place and back on the motion's own clock with the DOM cards on the Babylon table every frame; a card's right-click menu of the room's offers in shorthand, from the keyboard too, in every view)
+- `board-stack-choices` — `tests/board-stack-choices.mjs` (Rob, 2026-10-25: a card a question offers from out of sight -- a scry, a library search, a graveyard target -- in front of On the Stack, ◇, ahead of the ability that asked, its pile carouseling through several; permanents and priority add nothing)
+- `board-attack-risk` — `tests/board-attack-risk.mjs` (Rob, 2026-10-25: on Declare attackers an option is red, ☠, when a creature that could block it could kill it, and yellow, ⊘, when it could kill none of them alone; flying, reach, deathtouch, indestructible and tapped blockers)
+- `board-mana-symbols` — `tests/board-mana-symbols.mjs` (Rob, 2026-10-25: a land's mana abilities one row of mana-symbol buttons, in Actions and in Card Preview, each named in full for a reader; a way that is more than mana alone stays words)
+- `board-hover-during-choice` — `tests/board-hover-during-choice.mjs` (Rob, 2026-10-25: with a card's question open -- what to tap for it -- the card asked about is read in Actions, and the hover still pops up any card, on the table or named in an option, by pointer or keyboard, in 3D, Focus and Table)
 - `board-hand-table` — `tests/board-hand-table.mjs` (the wheel over your own hand sizes its cards through Hand cards in 3D, Focus, Table and on the phone, its sliders following, kept on the device once the wheel stops and after a reload, held between the slider's ends with no word under 10px and the largest inside the window, while the wheel elsewhere still zooms and Shift + wheel still turns or scrolls a hand too wide; Ctrl/⌘ + drag lengthens your side of the 3D table down to 8px above the screen's foot and back to its old length, your mat with it and the far seats unchanged, the DOM table on the Babylon one every frame, kept after a reload and put back by Ctrl/⌘ + double-click or ↕ at 100%, with plain drags, the head look and the right-click menu as before)
 - `crankmagic-audio` — `tests/crankmagic-audio.mjs`
 - `advice-contract` — `tests/advice-contract.mjs` (preparation-only AI requests, evidence references and stale-result rejection)

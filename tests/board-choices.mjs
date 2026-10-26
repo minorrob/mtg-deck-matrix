@@ -335,7 +335,7 @@ try {
   eq(await page.locator("#cm-dialog[open]").count(),0,"choices leave the board unobstructed");
   await page.setViewportSize({width:1280,height:720});
   await zapCard.click();
-  ok(await page.locator("#cm-card-inspector").isVisible(),"source card remains visible beside choices");
+  ok(await page.locator(".cm-stage-rail #cm-board-decision .cm-action-card").isVisible() && await page.locator("#cm-card-inspector").count() === 0,"source card remains visible beside choices, in the Actions desk, with no second pane");
   if(SHOTS)await page.screenshot({path:path.join(SHOTS,"board-choices-1280x720.png")});
   /* The cast passes for Rob (game/room/room.mjs, passAfterCast) and the AI seat passes, so Zap resolves in the same turn of
      the room as it is cast: what it hit is read off the game, Maya one life down, rather than off the stack. */

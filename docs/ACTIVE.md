@@ -33,6 +33,53 @@ back with `tools/staging-check.mjs --expect 9ca99e53`.
   Worker setting was added since 1fcfc3d. Sharing stays off in `cloud-production` (it is on in the staging profile
   only), so the `cloud/sharing.mjs` changes do not run there.
 
+## Play's Actions drawer, fewer words; offered cards on the stack; attack risk; mana as symbols; a favorite's star off its pill, 2026-10-25 (a Claude cloud session, for Rob; `claude/vigilant-dijkstra-bzs1wf`)
+
+Rob, 2026-10-25, with screenshots: *"Remove the entire "Your Selection" explanation box. The outline around the selection
+indicates the selection ... Change "Confirm Action" and "Clear Selection" to "Confirm" and "Clear" and put them
+side-by-side. The arrow up next to Actions is way too big ... I don't like the big, obtrusive white line on the side. The
+"All Actions", if that's a button should be smaller and justified left."* And: on Decks and Favorites the favorite's star
+covered the tile's stage pill. At his word this changes the Codex · Play lane's `crankmagic-board.js`,
+`crankmagic-stage.css`, `crankmagic-table.js` (one help sentence) and the Workshop lane's `crankmagic.css` (one rule).
+
+- **Actions:** no "Your selection" box and no paragraph under it (the selection is said to a screen reader alone, in a
+  `cm-sr-only` live line); no "Select an option to review it" hint; **Confirm** and **Clear**, side by side, equal width.
+  "All actions" is a small chevron link at the left, above the card's name.
+- **Chevrons:** the Actions and Boards open/shut are a thin SVG chevron, 24px, no fill, turned right when shut.
+- **Scrollbars on the board:** a 10% white track and a 40% gray thumb (`scrollbar-color` on `.cm-board`), thin on the rail.
+- **Decks:** a favorite's stage pill stays stepped down below the star, as it already did on hover.
+- **A card a question offers from out of sight is on the stack** (Rob, same day: *"When I'm presented with a card I can't
+  see (e.g. a scry card), it should be on the stack ... graveyard, multiple cards in either stack, cards in a player's
+  graveyard or library"*): any question but priority whose options name cards off every battlefield and your own hand
+  (a scry, a search, a graveyard target, exile, a look at a hand) puts them in front of On the Stack, ◇ and edged in gold,
+  ahead of the spell or ability that asked; the pile's shuffle carousels through them; Inspect card opens each; the module
+  shows them with the stack empty too. A library card is named from the question's own words (`offeredCards`).
+- **What an attack risks** (Rob, same day): on Declare attackers each option is **red, ☠** when an untapped creature of
+  that defender that could block it (a flyer only by flying or reach) could kill it (power ≥ its toughness left, or
+  deathtouch; never an indestructible attacker), and **yellow, ⊘** when it could kill none of them alone. The ☠'s title
+  names the killers. A hint from the table as it stands: tricks and first strike are not read (`attackRisk`).
+- **A mana ability is its symbols** (Rob, same day, Command Tower's four "Tap for mana" buttons): a card's mana abilities
+  whose way is mana alone are one row of small mana-symbol buttons, in Actions and in Card Preview / the Panel; each
+  button's accessible name and tooltip is the whole sentence (`withManaRow`). Lands only for now, at Rob's word.
+- **The card acted on is read in Actions** (Rob, same day: *"I end up with both the inspection pane and the left side
+  pane. Don't need both. Inspection pane should be within the left drawer."*): an inspection the board opens by itself (a
+  card clicked for its actions, an option staged, a cost or target asked for a card) is drawn at the top of the Actions
+  desk, and no pane opens on the right; nor does a hover preview of that same card. One a person asks for (🔍, Inspect
+  card) still opens the inspector (`deskCard`).
+- **The hover never locks** (Rob, same day, Sol Ring's "what to tap for it": *"I want to go and hover over [Interplanar
+  Beacon] to pop-up the card. I can't. I'm locked into Sol Ring."*): an open inspection had silenced every hover. Now the
+  hover pops up any card while a question is open, and an option that names a card (an "Island" to tap) pops that card up
+  on a hover or the keyboard's focus (`data-peek-card`). Only the card pinned by 🔍 is not shown twice.
+- **Queued, not started (Rob, same day: "Save this feature, will do it after those in progress"): paying a cost as a
+  mana panel.** When every source must be tapped there should be one choice, not one per ordering. Instead of an option
+  per combination: a row of the cost's mana symbols with the amount required under each; a row below of the mana tapped;
+  a left click on a mana source on the table taps it toward the cost (in a "pay for card" state); a clear mark once the
+  cost is covered; then **Confirm and cast** and **Cancel**. Rob's screenshot: Way of the Mind Sculptor offered five
+  orderings of Island, Sol Ring, Interplanar Beacon and Command Tower.
+- **Proof:** `board-r2-actions-inspection` 109 (no visible summary or paragraph, Confirm/Clear words and row, the toggle's
+  size and fill, All actions at the left edge, the rail's scrollbar color) and `decks-hub` 70 (star clear of the pill);
+  new `board-stack-choices` 16, `board-attack-risk` 11 and `board-mana-symbols` 13; every new check red on the old source. **Not proven:** how Windows/macOS draw the scrollbar colors (headless shows none).
+
 ## The board: the same card one stack; the cards others play beside the question, 2026-10-25 (Claude Code on Personal-HP, for Rob; `claude/board-plays-clicks`)
 
 Rob, 2026-10-25, choosing option A from renders: the cards another seat plays, held up for ten seconds, stood over the

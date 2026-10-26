@@ -126,6 +126,9 @@ try {
   let r0 = await revision(page);await star.click();await committed(page, r0);await settle(page);
   eq(await tile(fav.id).locator(".cm-tile-star").getAttribute("aria-pressed"), "true", "one click favorites");
   await page.mouse.move(5, 5);await page.waitForTimeout(300);eq(await tools(fav.id), "1", "and a favorite's filled star stays without hover");
+  /* Rob, 2026-10-25: the star covered the stage pill. Without hover, the favorite's pill stays stepped aside, clear of it. */
+  const apart = await page.$eval(`[data-deck-tile="${fav.id}"]`, (t) => {const s = t.querySelector(".cm-tile-star").getBoundingClientRect(), p = t.querySelector(".cm-pill").getBoundingClientRect();return p.top >= s.bottom || p.left >= s.right || p.bottom <= s.top || p.right <= s.left;});
+  ok(apart, "and the favorite's star does not cover its stage pill");
   await go(page, () => page.locator(".cm-subnav a", {hasText: "Favorites"}).click());
   ok(/fav=1/.test(page.url()), "Favorites is in the address");
   eq(await tiles(page), [fav.id], "Favorites shows only the favorite");
