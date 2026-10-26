@@ -61,7 +61,7 @@ try{
  {
   const v=fixture();v.state.players[0].zones.Battlefield.cards.push(creature(3000,'Garruk Wildspeaker',0,{types:['Planeswalker'],power:null,toughness:null,counters:{loyalty:3}}));v.state.combat.attacks[0].planeswalker=3000;
   const {page,context,frames}=await open('table',1440,'sapphire-obsidian',v);const pw=page.locator('.cm-r4-combat [data-action=board-combat-inspect][data-card="3000"]');
-  await pw.focus();await page.keyboard.press('Enter');await page.locator('#cm-dialog[open]').waitFor();ok((await page.locator('#cm-dialog').textContent()).includes('Garruk Wildspeaker'),'attacked permanent has a one-press keyboard inspection path');eq(frames.filter(f=>f.type==='act').length,0,'permanent inspection sends no game action');await context.close();
+  await hit(page,'.cm-r4-combat [data-action=board-combat-inspect][data-card="3000"]');await pw.focus();await page.keyboard.press('Enter');await page.locator('#cm-dialog[open]').waitFor();ok((await page.locator('#cm-dialog').textContent()).includes('Garruk Wildspeaker'),'attacked permanent has a one-press keyboard inspection path');eq(frames.filter(f=>f.type==='act').length,0,'permanent inspection sends no game action');await context.close();
  }
 
  {

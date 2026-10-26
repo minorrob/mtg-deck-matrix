@@ -674,14 +674,14 @@ globalThis.CrankBoard = Object.seal({
     return mark;
   }
   function combatThumb(id,role,{draft=false}={}) {
-    const c=combatCard(id);if(!c)return `<span class="cm-combat-missing">Left the battlefield</span>`;
+    const c=combatCard(id);if(!c)return `<span class="cm-combat-missing">${role==='Attacked permanent'?'Attacked permanent left the battlefield':'Left the battlefield'}</span>`;
     return `<span class="cm-combat-thumb" data-combat-light="${id}" data-peek-card="${id}" ${draft?`data-draft-blocker="${id}"`:`data-combat-role="${role}"`}>
       ${c.name && !c.faceDown ? `<img src="${e(pictureOf(c.name))}" alt="${e(combatName(c))}" loading="lazy">` : `<i class="cm-combat-back" aria-label="Face-down creature"></i>`}
       ${twinMark(id)?`<small class="cm-twin-mark">${e(twinMark(id))}</small>`:""}${c.power!=null?`<b class="cm-combat-pt">${e(c.power)}/${e(c.toughness)}</b>`:""}</span>`;
   }
-  function inspectCombatThumb(id,role,{draft=false}={}) {
+  function inspectCombatThumb(id,role,{draft=false,label=false}={}) {
     const c=combatCard(id);if(!c)return combatThumb(id,role,{draft});
-    return `<button type="button" class="cm-combat-thumb-inspect" data-action="board-combat-inspect" data-card="${id}" data-combat-light="${id}" aria-label="Inspect ${e(combatName(c))}${twinMark(id)?' '+e(twinMark(id)):''}">${combatThumb(id,role,{draft})}</button>`;
+    return `<button type="button" class="cm-combat-thumb-inspect${label?' is-target':''}" data-action="board-combat-inspect" data-card="${id}" data-combat-light="${id}" aria-label="Inspect ${e(combatName(c))}${twinMark(id)?' '+e(twinMark(id)):''}">${combatThumb(id,role,{draft})}${label?`<span class="cm-combat-permanent-label">${e(combatName(c))}</span>`:''}</button>`;
   }
   function attackerIssues(id) {
     const checked=blockResult?.key===blockKey()?blockResult:null;
@@ -701,9 +701,9 @@ globalThis.CrankBoard = Object.seal({
       const state=issues.length?"refused":ready?"ready":mine?"unsettled":"public";
       const word=issues.length?"✗ Refused":ready?"✓ Ready":mine?"Needs a choice":a.blocked?"Blocked":"No blocks confirmed";
       return `<li class="cm-combat-row is-${state}" data-combat-attacker="${a.attacker}" data-combat-defender="${a.defender}" data-combat-target="${a.planeswalker ?? `seat:${a.defender}`}"><div class="cm-combat-tile" data-attacker="${a.attacker}"><button type="button" class="cm-combat-open" data-action="${mine?'board-block-attacker':'board-combat-inspect'}" data-attacker="${a.attacker}" data-card="${a.attacker}" data-combat-light="${a.attacker}" aria-label="${e(`${combatName(combatCard(a.attacker))}: ${word}${issues.length?'. '+issues.join('; '):''}`)}"${sending && mine?' disabled':''}></button>
-        <strong class="cm-combat-state">${e(word)}</strong><span class="cm-combat-pair">${inspectCombatThumb(a.attacker,'Attacker')}<span class="cm-combat-relation"><span>Attacking</span><span aria-hidden="true">→</span><span>${e(a.planeswalker!==undefined?(combatCard(a.planeswalker)?combatName(combatCard(a.planeswalker)):'Attacked permanent left the battlefield'):nameOf(a.defender))}</span></span>
+        <strong class="cm-combat-state">${e(word)}</strong><span class="cm-combat-pair">${inspectCombatThumb(a.attacker,'Attacker')}<span class="cm-combat-relation"><span>Attacking</span><span aria-hidden="true">→</span>${a.planeswalker!==undefined ? inspectCombatThumb(a.planeswalker,'Attacked permanent',{label:true}) : `<span>${e(nameOf(a.defender))}</span>`}</span>
         <span class="cm-combat-blocks">${selected.length?selected.map(id=>inspectCombatThumb(id,'Blocker',{draft:mine})).join(''):`<span class="cm-combat-empty" aria-label="${ready?'No blocks chosen':'No blocks yet'}">${!mine && a.blocked?'Blocked · no blockers remain':!mine?'No blocks confirmed':ready?'No blocks':'—'}</span>`}</span></span>
-        ${a.planeswalker!==undefined?`<span class="cm-combat-permanent">${inspectCombatThumb(a.planeswalker,'Attacked permanent')}</span>`:''}${issues.length?`<small class="cm-combat-reason">${e(issues[0])}</small>`:''}</div></li>`;
+        ${issues.length?`<small class="cm-combat-reason">${e(issues[0])}</small>`:''}</div></li>`;
     }).join('');
     const missing=own.length-settled,why=missing?`${missing} attacker${missing===1?'':'s'} still need${missing===1?'s':''} a choice`:!blockValid()?'Waiting for a current valid table check':'Stays private until sent';
     const key=`${view.matchId}:${view.state.turnId || view.state.turn}:${attacks.map(a=>a.attacker).join(',')}`;

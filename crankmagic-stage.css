@@ -913,3 +913,8 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-target-stack>img{animation:non
 #matrix-v2 .cm-board .cm-combat-thumb-inspect:focus-visible{outline:2px solid var(--color-aether);outline-offset:2px}
 #matrix-v2 .cm-board .cm-combat-permanent{position:relative;z-index:2;display:flex;justify-content:center}
 #matrix-v2 .cm-board .cm-combat-permanent .cm-combat-thumb{width:24px;height:34px;flex-basis:24px}
+
+/* The attacked permanent shares the relation row; it cannot add a clipped fourth row. */
+#matrix-v2 .cm-board .cm-combat-thumb-inspect.is-target{display:flex;align-items:center;gap:3px;width:100%;max-width:104px;height:34px;overflow:hidden;text-align:left;font:400 15px/1.1 var(--font-body)}
+#matrix-v2 .cm-board .cm-combat-thumb-inspect.is-target>.cm-combat-thumb{width:24px;height:34px;flex-basis:24px}
+#matrix-v2 .cm-board .cm-combat-permanent-label{min-width:0;max-height:34px;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
