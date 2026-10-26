@@ -362,10 +362,14 @@
       "id": "CH-52",
       "tier": "I",
       "owner": "D2",
-      "status": "pending",
+      "status": "in_progress",
       "summary": "Coach section in the right drawer: one 36px line \"CrankMagic Coach\" (`cm-section-title` style), no subtext, shrinks on a narrow pane; \"Questions to Ask\" 22px line opening upward over the conversation, `aria-expanded`; 13px minimum, 30px rows; when the Coach backend is off the section says so and links Help, no textarea",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "Standalone presenter: crankmagic-coach 30, coach-layout 135 across six themes; seven deliberate regressions caught",
+        "Capability gate: ai-door 73, cloud-worker 151",
+        "Board adoption and final Help route proof remain open"
+      ],
+      "commit": "c81805fc"
     },
     {
       "id": "CH-53",
@@ -471,10 +475,14 @@
       "id": "CH-72",
       "tier": "I",
       "owner": "F1",
-      "status": "in_progress",
+      "status": "integrated",
       "summary": "Stage truth: a one-card deck is never \"Playable at the table\"; stage chip follows the rung counts",
-      "evidence": [],
-      "commit": null
+      "evidence": [
+        "table-setup: 34; exactly 100 serialized slots, known one-card refusal, partner commanders counted once, archived refusal",
+        "decks-hub: 73; stage counts retain model truth",
+        "table-lobby: 145; distinct Boxed and Playable counts"
+      ],
+      "commit": "7619743f"
     },
     {
       "id": "CH-73",
