@@ -1014,3 +1014,5 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-board-pie-priority{top:calc(50% + 18px*var(--hud-scale,1))}
 #matrix-v2 .cm-board .cm-board-table[data-seats="2"] .cm-board-pie-priority{top:105%}
 #matrix-v2 .cm-board .cm-zone-divider{z-index:10;pointer-events:auto}
+
+#matrix-v2 .cm-board .cm-mat-grid{overflow-anchor:none}
