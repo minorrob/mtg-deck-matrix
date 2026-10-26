@@ -516,12 +516,12 @@ try {
     const mid = r.top + r.height / 2, bg = getComputedStyle(el).backgroundImage;
     const life = (seat) => document.querySelector(`.cm-board-table .cm-seatboard[data-seat='${seat}'] .cm-vitals b`).textContent;
     const center = r.left + r.width / 2;
-    const totals = [...el.querySelectorAll(".cm-board-pie-life")].map((b) => {const q = b.getBoundingClientRect(); return {seat: b.dataset.seat, n: b.textContent, left: q.left + q.width / 2 < center, pill: life(b.dataset.seat)};});
+    const totals = [...el.querySelectorAll(".cm-board-pie-life")].map((b) => {const q = b.getBoundingClientRect(); return {seat: b.dataset.seat, n: b.querySelector("b").textContent, identity: b.querySelector("small").textContent, left: q.left + q.width / 2 < center, pill: life(b.dataset.seat)};});
     return {dx: center - (theirs.right + mine.left) / 2, dy: mid - (mine.top + mine.bottom) / 2, conic: /conic-gradient/.test(bg), colors: new Set(bg.match(/(rgba?|color|oklab|oklch|lab)\([^)]*\)/g) || []).size,
       totals, logo: !!el.querySelector(".cm-board-center img"), round: Math.abs(r.width - r.height) < 1};
   });
   ok(Math.abs(pie.dx) < 2 && Math.abs(pie.dy) < 2 && pie.round && pie.logo, `the life counter sits at the true center, between the boards and halfway down them, the logo in it (${pie.dx.toFixed(1)}, ${pie.dy.toFixed(1)})`);
-  ok(pie.conic && pie.colors >= 2 && pie.totals.length === 2 && pie.totals.every((t) => t.n === t.pill) && pie.totals.find((t) => t.seat === "1").left && !pie.totals.find((t) => t.seat === "0").left,
+  ok(pie.conic && pie.colors >= 2 && pie.totals.length === 2 && pie.totals.every((t) => t.n === t.pill && t.identity === (t.seat === "0" ? "You" : "Maya")) && pie.totals.find((t) => t.seat === "1").left && !pie.totals.find((t) => t.seat === "0").left,
     `a slice per seat, each its own color, its life on it: Maya's on the left half beside her board, Rob's on the right (${pie.totals.map((t) => `${t.seat}:${t.n}`).join(", ")}; ${pie.colors} colors)`);
   /* The pile cards on top of their frames, over the frame's lines; the reminder below the Lands. */
   const pileOver = (page, q) => page.evaluate((sel) => {
