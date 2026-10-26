@@ -1052,3 +1052,11 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-board-table[data-seats="2"] .cm-board-slot,#matrix-v2 .cm-board[data-hud-large] .cm-board-table[data-seats="2"] .cm-board-slot{height:var(--table-top-h)}
 #matrix-v2 .cm-board .cm-mat .cm-board-chip{grid-row:4;align-self:start}
 #matrix-v2 .cm-board .cm-phone-battlefield .cm-board-pile{grid-row:5}
+
+/* A larger information scale wraps real HUD groups, never phase text over priority. */
+#matrix-v2 .cm-board .cm-stage-top{height:auto;min-height:calc(28px + 30px*var(--hud-scale,1))}
+#matrix-v2 .cm-board[data-hud-large] .cm-stage-top{flex-wrap:wrap;align-content:center}
+#matrix-v2 .cm-board[data-hud-large] .cm-stage-top>.cm-board-turnsteps{flex:1 0 360px}
+#matrix-v2 .cm-board[data-hud-large] .cm-stage-priority{flex:1 0 280px;white-space:normal}
+#matrix-v2 .cm-board .cm-board-chip{white-space:normal;max-width:100%;box-sizing:border-box}
+#matrix-v2 .cm-board .cm-board-tabletop{padding-left:calc(42px*var(--hud-scale,1) + 14px);padding-right:calc(42px*var(--hud-scale,1) + 14px)}

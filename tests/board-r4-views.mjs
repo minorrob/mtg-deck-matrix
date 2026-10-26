@@ -35,7 +35,7 @@ try{
   await summary.click();await page.locator('#cm-coach-question-list button').first().click();await page.locator('.cm-coach-msg.is-coach').waitFor();ok(await input.evaluate(el=>el===__coachInput),`${mode}: async reply keeps actual textarea`);eq(await input.inputValue(),'a draft that stays',`${mode}: prompt reply never clears typed draft`);eq(await page.locator('#cm-board-coach .cm-coach-head').evaluate(el=>el.getBoundingClientRect().height),36,`${mode}: one Coach header at 36px`);
   eq(await page.locator('.cm-stage-module button button,.cm-stage-module [role=button] button').count(),0,`${mode}: drawer disclosures have no nested buttons`);
   if(mode==='focus'){
-   f.holdCoach();const beforeRequests=f.coachRequests;await input.fill('First pending question');await input.press('Enter');await page.waitForFunction(()=>document.querySelector('.cm-coach-typing'));
+   f.holdCoach();const beforeRequests=f.coachRequests;await input.fill('First pending question');await input.press('Enter');await page.waitForFunction(()=>document.querySelector('.cm-coach-msg.is-typing'));
    await input.fill('Follow-up draft while pending');await page.locator('#cm-board-coach button[type=submit]').click();await input.press('Enter');eq(f.coachRequests,beforeRequests+1,'pending native click and Enter do not send another request');eq(await input.inputValue(),'Follow-up draft while pending','pending native submit retains editable follow-up');await f.releaseCoach();await page.getByText('First pending reply.',{exact:true}).waitFor();eq(await input.inputValue(),'Follow-up draft while pending','first reply retains follow-up draft');ok(await input.evaluate(el=>el===__coachInput),'pending reply retains actual textarea node');
   }
   await page.locator('#cm-board-coach [data-action=board-coach]').click();
@@ -49,3 +49,4 @@ try{
  }
 }finally{await close();}
 console.log(`board-r4-views: ${checks} checks passed`);
+
