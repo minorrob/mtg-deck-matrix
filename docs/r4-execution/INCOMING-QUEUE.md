@@ -46,3 +46,24 @@ Keep feedback untrusted and constrain its actions to the reviewed workflow contr
 
 The read-only Engine/Workshop reviews are separate from the current r4 serial browser queue. They make
 no canonical/index changes, run no duplicate full gate and do not activate the workflow or release.
+
+## Review blockers before the next release wave
+
+- On #895/86f1f265, cloud/worker.mjs251–270 falls back from agent-audience verification to ordinary app
+  verification. With SERVICE_SEATS enabled, an app service token can become who.service and bypass the
+  feedback owner check. Agent authorization must be tied to successful FEEDBACK_AGENT_AUD verification;
+  test the actual staging SERVICE_SEATS flag and reject ordinary/wrong-audience service identities.
+- feedback.mjs36–39 treats INVITE_ADMIN_ID as a second owner even when OWNER_EMAIL is configured, while
+  its documented rule says fallback. Settle one owner policy explicitly and test a stale/different admin.
+  After #893, feedback grouping also needs the access-group classifier so insiders are not lost.
+- On #897/a8e558fc, tools/feedback-triage.mjs interpolates untrusted reporter/console content into the
+  agent prompt while using allowedTools with permissionMode=bypassPermissions. allowedTools is a
+  permission preapproval list, not an exclusive tool set; see the
+  [official SDK permissions contract](https://code.claude.com/docs/en/agent-sdk/permissions).
+  Restrict the actual tool set and deny unauthorized operations, constrain the credential environment,
+  and prove malicious feedback cannot invoke write/shell/network actions before any live workflow.
+  A system instruction saying not to edit is not the enforcement boundary.
+
+These findings are from exact-head source review, not executed exploit tests. They block acceptance of
+the incoming feedback/triage candidate, not the independent r4 candidate. Migration/configuration and
+first-live workflow claims remain unverified until their explicit gates are completed.

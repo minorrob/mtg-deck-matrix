@@ -18,6 +18,11 @@ The61-row program uses integration/r4 from main c567c581 and Rob-authorized isol
 writer, serial browser checks and preserved Git history. All129 audit findings retain bounded evidence;
 source mapping alone does not close the53 unmapped findings or partial/open follow-ups.
 
+Rob's later direct instruction assigns OpenAI all review/merge and staging/production operations for
+Claude's incoming #893 and #895–#897. They form the next release wave after r4's main/staging gates;
+dependency order, exact submitted heads, unfinished author validation and security/configuration gates
+are tracked in docs/r4-execution/INCOMING-QUEUE.md. No incoming source or live workflow is accepted yet.
+
 ## 2026-10-25: main 9ca99e5 in production (Rob: "release main 9ca99e5 to production")
 
 Released by the Decks cloud session (`claude/vibrant-turing-50yl3r`), with the Camera and Settings session told before
