@@ -14,10 +14,17 @@ Tracking: https://linear.app/robs-build/issue/ROB-197/implement-r4-design-founda
 - Canonical B: combat96; direct-blocking8 layouts including tall text, phone and crowded choices;
   public combat6 layouts; all7 meaningful browser mutations caught. Preserved private check
   retry and stale/reconnect guards. Native participant references fit; phone tile opens its desk.
-- Workshop: joined journey77 with20 whole-page/dialog primary sweeps and six caught breaks;
-  lobby155, setup46, seventeen pure regressions caught. Chooser uses canonical local names,
+- Workshop: joined journey 77 with 20 whole-page/dialog primary sweeps and six caught breaks;
+  lobby 155, setup 46, seventeen pure regressions caught. Chooser uses canonical local names,
   content-based shared-snapshot deduplication, distinct shared versions and separate public precons.
-  Inline error contrast is measured from rendered colors (dark4.686/bronze4.687/light9.588).
+  Inline error contrast is measured from rendered colors (dark 4.686 / bronze 4.687 / light 9.588).
+  Measure uses a saved fixture report; these proofs make no provider calls or owner-library changes.
+- Shared AccountMenu: global source and hooks pass 85 checks plus five caught regressions;
+  Help 14, Settings 73, reset 43 and Landing 55 remain green. Native groups/gates, one Settings,
+  actual aria, Tab/light-dismiss, phone fit, required danger ink, and fresh-invoker focus after a
+  board-like redraw are covered. Actual board adoption/draft protection remains Play-owned.
+  The shell baseline also proves one native deletion Undo receipt through hub/detail navigation;
+  its duplicate-receipt regression was caught. Typed deletion and reset semantics are unchanged.
 - Native-restore density: exact source4f8c202a;67 checks,42 captures,0 findings, source unchanged,
   zero real write attempts/page errors. Output: workbench/r4-live-density-proof-20261026-r2.
   Limits: placeholder art/top viewports, no engine availability/account-sync/SW/live-table proof.
@@ -30,9 +37,11 @@ Tracking: https://linear.app/robs-build/issue/ROB-197/implement-r4-design-founda
 
 - C and D2 combined checkpoint b3008cb4 is integrated. Worker baseline input44 and layout69 passed;
   D2 pixel/caption/endpoint/native-drag acceptance and affected regressions remain in progress.
-- Global AccountMenu6b70a600 is integrated. Workshop owns its native groups/app hooks and tests;
-  Foundation owns board adoption and game-draft/hotkey boundary. New menu browser baseline is
-  being repaired for fixture readiness; old authorization/reset semantics remain required.
+- Global AccountMenu source begins at 6b70a600; opening/focus refinements are 6f2b1e83/17e599c4,
+  required danger ink 69edbf73, and scoped Invite/Admin alignment 8da62a87. Global acceptance is
+  green; Foundation owns the real board-avatar adoption and game-draft/hotkey boundary. Shared
+  alternate-anchor proof does not replace that real board test. Final row-alignment capture is
+  optional; the inspected earlier captures and functional proof are identified in the Workshop audit.
 - ROOT README now lists620 root suites. Root owns shared pins and the fixture; versions were
   refreshed for this local checkpoint, but any subsequent served change must move them again.
 - Last remote push was scanned5c3d7ecb. Later source is local until current changed-suite browser

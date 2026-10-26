@@ -8,12 +8,10 @@
       "status": "integrated",
       "summary": "Land r4 on `main`: `pr/apply-r4.mjs` (tokens for six themes, three skins, aliases for old names, type scale, self-hosted Cinzel/Lato/Barlow/Oxanium, service worker, notices); remove the four old palettes and Satoshi/Young Serif; `tests/design-tokens.mjs` (194 checks) and `tests/type-final.mjs` (Cinzel/Lato) green in the repo's browser runner",
       "evidence": [
-        "design-tokens: 196",
-        "type-final: 34",
-        "a11y-app: 72",
-        "shell-r3: 44",
-        "settings-r3: 69",
-        "breaks-r4-foundation: 4/4"
+        "design-tokens: 196; type-final: 34 (foundation/coordinator browser evidence)",
+        "a11y-app: 108; actual control edges against fill and surrounding panel across six skin/register modes",
+        "settings-r3: 73; final shared-menu-compatible controls; shell-r3 passing baseline after approved preference-Undo exclusion",
+        "breaks-r4-foundation: 4/4; later global menu behavior is separately scoped in CH-53"
       ],
       "commit": "fe65eb65"
     },
@@ -24,8 +22,10 @@
       "status": "integrated",
       "summary": "Theme switch exposes the six themes (skin × register) in the Account menu's Skin group with Dark/Light/System segmented control; `data-theme` carries `dark|light|bronze-dark|…`",
       "evidence": [
-        "shell-r3: 44",
-        "settings-r3: 69; legacy theme migration and skin/register controls"
+        "Final shell-r3 baseline: three skins, dark/light/system controls, legacy values, media changes and saved appearance",
+        "settings-r3: 73; six skin/register cards; account-menu-r4: 85 in signed-out desktop dark, signed-in phone Bronze dark and Admin desktop light",
+        "EX-07 compatibility: actual data-palette identifies the skin and data-theme is dark|light; do not infer a combined data-theme encoding from the original packet",
+        "Shared menu source 6b70a600, opening/focus 6f2b1e83/17e599c4; five meaningful menu regressions caught and restored"
       ],
       "commit": "fe65eb65"
     },
@@ -489,7 +489,12 @@
       "status": "in_progress",
       "summary": "Avatar menu becomes the DS AccountMenu on the board too: You / This device / Your data / Skin / Help / Careful / Sign out; 'Play settings' vs 'Account & app settings' resolved to Settings",
       "evidence": [
-        "Combined source integrated; C input 44 and layout 69 on worker baseline; D2 visual/caption and shared AccountMenu browser acceptance remain open"
+        "Shared AccountMenu source 6b70a600/6f2b1e83/17e599c4/69edbf73: one native auto-popover, You / This device / Your data / Skin / Help / Careful / final Sign out; no unimplemented ARIA menu role",
+        "account-menu-r4: 85; verified signed-out/signed-in/Admin/Invite gates, one Settings, native Tab/light-dismiss, phone 390×844, skin/register, actual required ink and contrast",
+        "Stable focusKey/focusFind restoration after a no-id data-action invoker is replaced; Escape restores fresh focus/aria without reaching the draft sentinel; outside click retains clicked-control focus",
+        "breaks-account-menu-r4: 5/5 caught, missed []; menu-help: 14; settings-r3: 73; reset-all: 43; landing-r3: 55",
+        "Source 8da62a87 only aligns Invite/Admin rows; no fresh capture was required for this reversible cosmetic refinement; final combined gate should use integrated source",
+        "Board avatar adoption, all game hotkeys and real target-draft boundary are Play-owned evidence; shared menu proof alone does not close the whole CH-53"
       ],
       "commit": "6b70a600"
     },
@@ -569,7 +574,10 @@
       "status": "integrated",
       "summary": "Landing: one sapphire primary in the hero; \"Other ways to start\" opens the New deck chooser; doors keep verbs only; labels \"Decks\" / \"Open my decks\" everywhere; update toast per DS Toast (dismiss, deferred)",
       "evidence": [
-        "landing-r3:55; import-link:15; precons:50; visual correction batch"
+        "landing-r3: 55; final account/chooser labels and one hero primary; import-flow: 15; precons: 50",
+        "r4-workshop-journey: 77; landing1440/390, 20 whole rendered page/dialog primary sweeps across joined path",
+        "sw-update: 8; real waiting worker, deferred next-navigation notice, explicit Reload, caller-owned session Dismiss; source 40084db6/a1299c4b",
+        "WORKSHOP-AUDIT-EVIDENCE.md L/U/J; representative screenshots are isolated fixtures, not live deployment acceptance"
       ],
       "commit": "6a5c2883"
     },
@@ -580,7 +588,9 @@
       "status": "integrated",
       "summary": "Decks hub: DeckTile (art, eyebrow \"D6 · Krenko\", stage chip in the family of what the deck needs, bar, Play it compact), StageChips row (ink selection), live grid count; \"Next\" from Start-from hands off to the Lab with a toast",
       "evidence": [
-        "decks-hub: 71; counts and navigation; visual work continues"
+        "decks-hub: 73; model stage counts, verified sharing readiness/cache and live hub behavior",
+        "new-deck-flow: 45; commander-only Next hands off to saved deck/Lab; joined journey 77 reads new grid count 1 immediately without reload",
+        "WORKSHOP-AUDIT-EVIDENCE.md H/N/J; 02-created-commander-only.png and 02-decks-live-count.png"
       ],
       "commit": "d9eed16f"
     },
@@ -591,9 +601,10 @@
       "status": "integrated",
       "summary": "Stage truth: a one-card deck is never \"Playable at the table\"; stage chip follows the rung counts",
       "evidence": [
-        "table-setup: 34; exactly 100 serialized slots, known one-card refusal, partner commanders counted once, archived refusal",
-        "decks-hub: 73; stage counts retain model truth",
-        "table-lobby: 145; distinct Boxed and Playable counts"
+        "table-setup: 46; one known commander card refused, exact100 serialized cards and quantities, single/partner commanders counted once, archived decks refused",
+        "decks-hub: 73; stage counts retain model truth; table-lobby: 155; Boxed remains distinct from online engine support",
+        "joined journey: 77; one-card Building state and complete same-deck path; source 7619743f plus stale navigation/rerender/version guard 9080ea71",
+        "Bracket is an independently declared setting, not a legality certificate; original F-021 remains bounded partial evidence"
       ],
       "commit": "7619743f"
     },
@@ -604,8 +615,9 @@
       "status": "integrated",
       "summary": "Define the Deck validation per DS FormControls: errors under the field with the alert glyph, field edge `color-required`, never a dot on a tab; Next band says why it is disabled",
       "evidence": [
-        "new-deck-flow: 45; inline validation, focus, no tab dot",
-        "breaks-r4-workshop: caught blank-name and focus regressions"
+        "new-deck-flow: 45; blank-name inline feedback/focus and composition failure routing; original blank-name/focus breaks caught",
+        "joined journey: 77; invalid Create changes no saved record; actual Define error contrast 4.686 Sapphire dark / 9.588 light / 4.687 Bronze dark",
+        "Native Canvas conversion handles browser mixed-color serialization and ancestor alpha; source f9a2d30f; F-030 retains untested composition-marker/permutation limits"
       ],
       "commit": "d9eed16f"
     },
@@ -616,7 +628,10 @@
       "status": "integrated",
       "summary": "Deck page: Cinzel deck title, Tabs (ink bar, counts), one primary per tab; Next band and header agree (\"24 cards unplayable\" wins over \"Lock\")",
       "evidence": [
-        "deck-page-r3:46; neutral tabs and current deck readiness retained"
+        "deck-page-r3: 50; saved deck/report behavior, header/Acquire/scoped To buy parity and current readiness",
+        "joined journey: 77;20 whole rendered page/dialog primary sweeps including below-fold Measure, all deck tabs and active dialogs; six deliberate joined regressions caught",
+        "table-setup: 46; delayed known result cannot restyle another route, same-deck rerender or newer deck version",
+        "Source 5dafddc5/9080ea71/22307d59; deck tabs/local stage primary and selected Explore bulk popup precedence are guarded"
       ],
       "commit": "6a5c2883"
     },
@@ -627,8 +642,9 @@
       "status": "integrated",
       "summary": "Measure report: a door back into refinement (\"Fix in Explore\" with the weakest axis preselected)",
       "evidence": [
-        "deck-page-r3: 43; saved report/axis context",
-        "breaks-r4-report: catches strongest/weakest regression"
+        "deck-page-r3: 50; weakest normalized component from the saved report, existing report/deck/axis context",
+        "joined journey: 77; Fix in Explore follows the same saved report and pins its score; 04-measure-fixture.png and graph screenshots",
+        "breaks-r4-report catches strongest/weakest regression; report is explicitly a precomputed fixture, not an executed simulation, provider call or inferred role recommendation"
       ],
       "commit": "d9eed16f"
     },
@@ -639,10 +655,10 @@
       "status": "integrated",
       "summary": "Explore / graph: focus ring, aether for the graph only, no accent as selection",
       "evidence": [
-        "crankmagic-graph: 30; existing graph relation semantics preserved",
-        "r4-workshop-journey: 40; actual computed selected ink/background and Aether focus, instrumented native canvas check badges, dark/light/bronze",
-        "Four joined-journey deliberate regressions caught; later whole-page primary/inline-error sweep remains open",
-        "Final screenshots in workbench/r4-workshop-20261026/work/r4-joined-shots, not a claim of real simulation or AI execution"
+        "crankmagic-graph: 30; existing relation mathematics preserved",
+        "r4-workshop-journey: 77; actual selected mode/range ink, focused canvas Aether and instrumented native Canvas badge fill/check colors in Sapphire dark/light and Bronze dark",
+        "Final joined sweep has 20 whole page/dialog states, six deliberate regressions caught/restored, missed []; proof.json stores 3 graph cases and actual inline-error color results",
+        "Source 900b881a/5dafddc5/22307d59; shots under workbench/r4-workshop-20261026/work/r4-joined-shots; no real simulation or AI execution claimed"
       ],
       "commit": "d166fa99"
     },
@@ -653,7 +669,9 @@
       "status": "integrated",
       "summary": "One to-buy number: Acquire, Library To buy and the deck header read the same rung counts; TableRow (48px, price in `color-money`, trailing verb, overflow)",
       "evidence": [
-        "one existing model count source retained; combined browser pending"
+        "deck-page-r3: 50; mixed owned/ordered/to-buy fixture uses common model rung count in header, Acquire and scoped To buy",
+        "joined journey: 77; same isolated deck has100 missing copies through Acquire and Library, then becomes physically complete through real collection commands",
+        "48px TableRows, grouped h3/counts, tabular money and secondary row verbs are implemented; historical price snapshots are not a promise of one live quote; F-057 remains partial"
       ],
       "commit": "70dfdacf"
     },
@@ -664,7 +682,9 @@
       "status": "integrated",
       "summary": "Share Deck: the menu item opens the share dialog (link, visibility, copy) instead of an error toast; DS Dialog shell",
       "evidence": [
-        "sharing-ui:15; sharing:119; loading/error/retry and no access broadening"
+        "sharing-ui: 17; actual dialog opens immediately, copy preserves access, loading/failure/retry stay actionable, stale modal response is guarded",
+        "joined journey: 77; immediate failure and retry, private copy path and phone dialog on the same deck; sharing backend: 119 earlier bounded evidence",
+        "Source c9b7ed0d/2bdeb504; API fixtures make no real recipient, grant or mail change"
       ],
       "commit": "6a5c2883"
     },
@@ -675,7 +695,10 @@
       "status": "integrated",
       "summary": "Lock list: immediate busy state + DS toast \"Locked · 46 to buy\" with Undo",
       "evidence": [
-        "lock-feedback:8; revision-bound Undo, busy feedback and duplicate suppression"
+        "lock-feedback: 18; immediate disabled busy state before awaits, repeat suppression, original-revision Undo, local/concurrent intervening-change refusal",
+        "Errors and applicable substantive Undo persist with explicit Dismiss; preference saves do not expose persistent Undo and still invalidate stale receipts",
+        "joined journey: 77 locks the same saved test deck; bounded DOM/timer proof establishes execution order, not a measured 100 ms paint benchmark",
+        "Final shell baseline plus breaks-r4-delete-receipt: 1/1; one deletion receipt and native revision-bound Undo survive hub/detail navigation; typed deletion/model semantics unchanged"
       ],
       "commit": "70dfdacf"
     },
@@ -686,7 +709,9 @@
       "status": "integrated",
       "summary": "Pull sheet: \"Do all available (53)\" confirms in a DS dialog, stats collapse, box-done moment leads to Play",
       "evidence": [
-        "newer paired Planned Changes preserved; boxed CTA from model; browser pending"
+        "planned-changes: 67; planned-changes-ui: 41; preserve newer accepted main C1-C8 per EX-10 instead of reintroducing obsolete Do all/Ready to add",
+        "Ticking selects only; native confirmation commits one paired batch/Undo; mismatched totals remain an explicit allowed warning",
+        "joined journey: 77 confirms the same isolated 100-card plan, observes Boxed and Take it to the table; 08-box-complete.png"
       ],
       "commit": "70dfdacf"
     },
@@ -697,7 +722,10 @@
       "status": "integrated",
       "summary": "New table: inline validation at the field, stable layout, one door from Play home",
       "evidence": [
-        "table-setup:19; actual setup order and recoverable rules failure"
+        "table-setup: 46; create -> rules -> verified AI assignment, recoverable rules failure retries the same table without duplicate creation",
+        "table-lobby: 155; inline required-name focus, no distant validation toast, unchanged Set the table Y after deck selection",
+        "joined journey: 77; phone inline feedback and actual three-mode contrast; 11-play-home-phone.png / 12-new-table-phone.png",
+        "Secondary AI/join entry and4-3/2-You setup remain; repeated unavailable-service notices F-074 remain follow-up, not a completed density redesign"
       ],
       "commit": "70dfdacf"
     },
@@ -708,7 +736,11 @@
       "status": "integrated",
       "summary": "Lobby: Ready / Start hierarchy (one primary), AI seat auto-deck, one deck list; countdown callout (CH-47 shares)",
       "evidence": [
-        "public known100-card AI auto-deck through existing endpoint; browser pending"
+        "table-setup: 46; host-authorized deterministic public 100-card known/deck auto-assignment, configured rules before auto-ready seats, no private list/model calls; honest no-eligible/server failure and host override",
+        "table-lobby: 155; existing multi-person permission/ready/start/countdown/cancel/rematch paths, actual reachable Cancel above shared countdown helper",
+        "Chooser source f81ae7ca: canonical Your decks names; exact commander/card multiset deduplication including quantities, distinct local IDs and differing shared versions preserved",
+        "Only table-legal decks defaults on with explicit opt-out remembered; server admission stays authoritative; six newer public precons retain separate catalog/disclosure, permission recheck and no-import behavior",
+        "breaks-r4-workshop-flows: 17/17 caught/restored; F-080 verified in 8829bd06 and chooser-canonical-shared-1400.png; F-078 retains representative-visual limits"
       ],
       "commit": "70dfdacf"
     },
@@ -719,7 +751,11 @@
       "status": "integrated",
       "summary": "Results: in-progress hero with Resume / Leave table; results panel from the engine record (CH-59) with Rematch / Back to lobby / Review this game; Log a game reordered and prefilled; \"Mark <card> for replacement\" handoff into Explore",
       "evidence": [
-        "deck-page-r3:46; results/refinement handoff; canonical shared writer in progress"
+        "table-setup: 46; canonical CrankMagicTableResult@1 writer validates owner/context/source/version, whitelists public fields and deduplicates concurrent board/lobby observations",
+        "Source cb14a697/e6e1ad35; same signed-in account checked around awaits; no missing/archived/foreign deck import or invented result fallback",
+        "deck-page-r3: 50; game-log ordering, bracket/pod/seat prefill and persisted dead-card upgrade/refinement handoff; table-lobby: 155 rematch/result surfaces",
+        "Leave closes the local board connection and preserves the same recent-table/rejoin shortcut; no unsupported seat-release endpoint or seat-removal claim",
+        "Live mid-game hero and full fresh finished-game/account-sync journey were not independently played by Workshop; F-094/F-095/F-096 remain partial"
       ],
       "commit": "70dfdacf"
     },
@@ -730,7 +766,11 @@
       "status": "integrated",
       "summary": "Settings page per DS: switches with visible state, Danger zone parity (Clear all data confirms with the danger-fill dialog), history noise filtered, one label \"Settings\"; Confirmations dialog lists the RQ-12 way-back classes",
       "evidence": [
-        "settings-r3:73; real switches and typed-clear parity; read-only confirmations"
+        "settings-r3: 73; visible persisted role=switch/aria-checked motion/step controls, typed CLEAR danger confirmation and four read-only RQ-12 way-back rows",
+        "lock-feedback: 18; persistent dismissible errors, substantive revision-bound Undo, ordinary preference receipts, intervening-change safety; final shell native Undo baseline passes",
+        "Shared-menu proof 85, menu-help 14, reset-all 43 and landing 55 retain exact authorization/reset/sign-out/backup semantics; one shared Settings label",
+        "F-114 actual Side Drawer Modules matrix is separately owned by Foundation and still needs its own proof; existing Settings entry is not that proof",
+        "Budget dominance F-109 remains follow-up; history hides preference noise, but generic Settings Undo-last-change still follows repository order (F-115 partial)"
       ],
       "commit": "6a5c2883"
     },
@@ -741,7 +781,10 @@
       "status": "integrated",
       "summary": "Admin panel v1 (gate, home, People and invites, Feature switches) per the brainstorm; Invite gets a list and a sent state",
       "evidence": [
-        "cloud-worker:151; Admin pure21; admin-ui-browser:9; source tests verified by owner"
+        "cloud-worker: 151 (coordinator backend evidence); admin-ui: 21; admin-ui-browser: 9; shared menu 85 proves verified Admin/Invite gating and placement",
+        "Actual generation guard rejects old same-route response/late identity; local date-only release stays on its US calendar date",
+        "V1 is read-only per EX-09/ADMIN-CONTRACT.md; no Access writes, editable flags, invented resend/revoke or provider/mail side effects",
+        "Local UI/server fixtures are not live staging/production admission or email-delivery acceptance; F-105/F-108 stay partial"
       ],
       "commit": "39a22629"
     },
@@ -752,7 +795,8 @@
       "status": "integrated",
       "summary": "Tours get a door on the Help ? panel and the landing page",
       "evidence": [
-        "Help/landing tour doors; existing tour reused"
+        "Help and quiet Landing Take a tour doors reuse the existing tour action; landing-r3: 55 and joined journey 77 cover their containing surfaces",
+        "No claim that all seven tours were replayed end-to-end; F-116 verifies discoverability within that boundary"
       ],
       "commit": "6a5c2883"
     }

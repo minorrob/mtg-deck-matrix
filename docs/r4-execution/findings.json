@@ -14,7 +14,7 @@
         "disposition": "Verified",
         "detail": "L + J; `01-landing-desktop.png`, `01-landing-phone.png`. One rendered primary; other-start methods share the chooser. This is hierarchy evidence, not removal of every secondary navigation door.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -35,7 +35,7 @@
         "disposition": "Verified",
         "detail": "U installs a real waiting worker and proves deferred notice/takeover, explicit Reload and session Dismiss. `work/r4-shots/new-version-ready-1280.png`. No automatic refresh of a live game.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -50,7 +50,7 @@
         "disposition": "Verified",
         "detail": "L + J; final landing screenshots use the agreed Decks/Open my decks vocabulary and quiet verb-based doors.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -89,7 +89,7 @@
         "disposition": "Verified",
         "detail": "H + J; J creates its deck then immediately reads the live count of 1 without reload/filter changes; `02-decks-live-count.png`.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -164,7 +164,7 @@
         "disposition": "Verified",
         "detail": "N asserts the actual saved commander-only deck; handoff opens the Lab/deck and names the deck. J follows the same saved deck; `02-created-commander-only.png`.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -179,7 +179,7 @@
         "disposition": "Partially verified",
         "detail": "P rejects one-card online play eligibility and tests serialized single/partner 100-card decks; J captures the one-card Building state. Bracket remains an independently declared deck setting; this work does not reinterpret a B2 label as a legality certificate.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -200,7 +200,7 @@
         "disposition": "Verified",
         "detail": "P + J; exact serialized count gates online Play, including commander quantity conventions. Engine support and physical Boxed readiness remain separate facts. Late `/known` reads cannot mutate another deck/rerender.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -251,7 +251,7 @@
         "disposition": "Partially verified",
         "detail": "N tests composition failure routing; field-level required feedback replaces the dot presentation. J proves blank-name feedback/focus/contrast. The final joined test does not separately assert composition's computed required marker and every composition failure permutation.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -284,7 +284,7 @@
         "disposition": "Verified",
         "detail": "N + J; empty name produces its own required field feedback and receives focus; composition validation remains covered in N. `02-create-invalid.png`; J error contrast measured in three modes.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -323,7 +323,7 @@
         "disposition": "Verified",
         "detail": "D + T + P: blocked engine readiness wins in header/Next; stale readiness cannot overwrite another screen. `work/r4-shots/deck-to-learn-1400.png`. J sweeps all deck tabs for competing primaries; `03-build-hundred.png`.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -362,7 +362,7 @@
         "disposition": "Verified",
         "detail": "D asserts weakest normalized report component; J follows Fix in Explore with deck/report/axis and score context; `04-measure-fixture.png`, `06-graph-sapphire-light-phone.png`. Report is deliberately a saved fixture: no simulation quality or provider outcome is inferred.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -449,7 +449,7 @@
         "disposition": "Partially verified",
         "detail": "D tests common rung counts for header/Acquire/scoped To buy on a mixed fixture. J sees the same 100 missing copies through Acquire and Library; `07-acquire.png`. Historical price snapshots/review estimates can legitimately differ; this does not certify a global, live, single price quote across all review modes.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -500,7 +500,7 @@
         "disposition": "Verified",
         "detail": "S + J: immediate dialog, privacy/visibility/copy, failed fetch stays actionable, retry succeeds; `09-share-failure.png`, `10-share-phone.png`. No real recipient or external share permission was changed by these fixture runs.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -521,7 +521,7 @@
         "disposition": "Verified",
         "detail": "K disables the button and sets busy feedback before the pending read resolves; repeated activation commits once; receipt/Undo is transaction-bound. J locks the same test deck. The bounded DOM test proves execution order, not an independently timed 100ms paint measurement.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -542,7 +542,7 @@
         "disposition": "Preserved baseline reconciliation",
         "detail": "EX-10 and newer main Planned Changes C1–C8 supersede Ready to add/Do all. B + J use its selected add/remove plan and confirmed batch; stage-aware primary normalization prevents a second dominant deck action. No obsolete six-button row was reintroduced.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -557,7 +557,7 @@
         "disposition": "Preserved baseline reconciliation",
         "detail": "New Planned Changes displays the compact removed/added/total counter tested in B. The old four-card sheet is not restored just to add a collapse control. This does not settle density of every other statistics panel.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -572,7 +572,7 @@
         "disposition": "Preserved baseline reconciliation",
         "detail": "B proves ticks do not mutate; Swap opens confirmation and one batch/Undo. J confirms the isolated 100-card plan. This supersedes the old Do-all verb; it is not a claim that the obsolete button still exists.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -587,7 +587,7 @@
         "disposition": "Preserved baseline reconciliation",
         "detail": "B verifies the newer two-column thumbnail/name/color/role rows and planned pairing. Old arrow sentences are not preserved. No claim of a complete prose review of every uncommon slot role.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -602,7 +602,7 @@
         "disposition": "Verified",
         "detail": "J completes the same fixture plan and sees Boxed plus Take it to the table; `08-box-complete.png`. Physical inventory completion is independent of the online engine support check.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -617,7 +617,7 @@
         "disposition": "Partially verified",
         "detail": "T + J prove the main New table door and inline deck selection inside Play; `11-play-home-phone.png`, `12-new-table-phone.png`. A secondary AI setup shortcut and join invitation field intentionally remain; there is not literally one entry control on Play home.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -632,7 +632,7 @@
         "disposition": "Open",
         "detail": "Source still renders separate truthful availability statements for public discovery, lounge chat and cross-player leaderboard. Their truthfulness does not resolve the repeated empty-service density complaint.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -647,7 +647,7 @@
         "disposition": "Partially verified",
         "detail": "T + J verify required name marking/focus, inline setup and reachable controls; `12-new-table-phone.png`. The table arrangement remains 4-3/2-You, and phone setup necessarily scrolls. No claim that the submit is above the fold at every viewport.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -662,7 +662,7 @@
         "disposition": "Verified",
         "detail": "T + J assert inline error, invalid field/focus and no distant validation toast; `12-new-table-phone.png`. J measures nonempty feedback contrast in three modes.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -677,7 +677,7 @@
         "disposition": "Verified",
         "detail": "T records Set the table Y before/after deck selection and asserts equality. Reserved preview area prevents the shift; `work/r4-shots/table-bring-1400.png`, `table-bring-there-1400.png`.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -692,7 +692,7 @@
         "disposition": "Partially verified",
         "detail": "T proves host/guest Ready and other controls reachable at desktop/intermediate/phone sizes and Start/countdown/Cancel flow. The source chooses Ready or unblocked Start as primary. No exhaustive three-theme visual census of every lobby readiness combination was executed.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -707,7 +707,7 @@
         "disposition": "Verified",
         "detail": "P exercises host-authorized deterministic auto-assignment through real existing known/deck command shapes, validates a public precon before assignment, skips assigned seats and preserves manual override. No private deck list or model call. With no eligible deck/server failure, the UI reports a recoverable failure rather than falsely claiming selection. No later seat-kind endpoint exists.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -722,7 +722,7 @@
         "disposition": "Verified",
         "detail": "Follow-up `f81ae7ca`; P + T155 prove one Your decks list using current library names, exact expanded commander/card-multiset matching removes stale-name shared duplicates, differing quantities/contents remain Shared with the table, and distinct local deck IDs are never merged by name. The shared projection exposes no source ID, so contents are compared rather than inventing identity. The labeled Only table-legal decks filter defaults on and remembers explicit opt-out; final server admission remains authoritative. Six public precons remain separately available in their catalog disclosure. `work/r4-shots/chooser-canonical-shared-1400.png` inspected; its same-name shared row is deliberately a different-content fixture, not the stale duplicate. Existing permission recheck and no-import submission path retained.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -810,7 +810,14 @@
         "CH-53"
       ],
       "status": "pending_verification",
-      "summary": "'Settings' and 'Account & app settings' are two rows in the same menu"
+      "summary": "'Settings' and 'Account & app settings' are two rows in the same menu",
+      "localEvidence": {
+        "owner": "Workshop / shared menu only",
+        "disposition": "Partially verified",
+        "detail": "AM: account-menu-r4: 85 plus five caught menu regressions proves one Settings control in the same shared native popover and identical entry markup; old Profile/Account & app settings rows are absent from that shared node. Real board-avatar adoption and game-draft/hotkey acceptance remain Play-owned, so this is shared-menu evidence only.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "35992d77"
+      }
     },
     {
       "id": "F-091",
@@ -849,7 +856,7 @@
         "disposition": "Partially verified",
         "detail": "Home now promotes the retained table hero with Resume/Leave and available public commanders/turn/life. P proves Leave only disconnects, preserves the saved table shortcut and returns to the same table. Live summary comes from Play's public `C.board.live()` contract; a joined real mid-game cross-screen hero screenshot was not captured here.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -865,7 +872,7 @@
         "disposition": "Partially verified",
         "detail": "P proves stable account-bound owner result filing and concurrent board/lobby deduplication; T covers rematch/result surfaces; `work/r4-shots/over-390.png`. Review appears only after a local record exists. Engine settlement and Play's result bridge have separately owned evidence. Workshop did not play a fresh real Forge/online match to finish and validate the entire live account/sync loop.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -880,7 +887,7 @@
         "disposition": "Partially verified",
         "detail": "D verifies Outcome/Card that won it first, deck bracket and last-game pod/seat prefill; no false fixed B2 assumption. This is a bounded form-behavior proof, not a six-theme audit of all eleven controls and required semantics.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -895,7 +902,7 @@
         "disposition": "Verified",
         "detail": "D saves a dead-card game, exercises Mark for replacement, and verifies its persisted upgrade-path context and Explore replacement route. Normal library command/Undo behavior is reused.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -970,7 +977,7 @@
         "disposition": "Partially verified",
         "detail": "A proves UI gating/reads and read-only rendering against the coordinator's `ADMIN-CONTRACT.md`; `work/r4-shots/admin-features-1440.png`, `admin-health-390.png`. Backend verified-human authorization has coordinator-owned tests. Neither live staging nor production deployment/access configuration is certified by this local UI evidence.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -983,9 +990,9 @@
       "localEvidence": {
         "owner": "Workshop",
         "disposition": "Verified",
-        "detail": "Redundant Profile menu row removed in `1b71c29f`; S checks one Settings entry in the Workshop menu. The Profile card inside Settings remains actual profile information. Full shared board AccountMenu adaptation is separately owned by Play.",
+        "detail": "Redundant Profile menu row removed in `1b71c29f`; S and AM check one Settings entry in the Workshop/shared menu. The Profile card inside Settings remains actual profile information. Play's adoption of the same node is separately owned.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -994,7 +1001,14 @@
         "CH-02"
       ],
       "status": "pending_verification",
-      "summary": "Two pill buttons above a 17-row menu: the menu now has three visual grammars (pills, grouped rows, theme list)"
+      "summary": "Two pill buttons above a 17-row menu: the menu now has three visual grammars (pills, grouped rows, theme list)",
+      "localEvidence": {
+        "owner": "Workshop / shared menu only",
+        "disposition": "Partially verified",
+        "detail": "AM (85) covers native You/This device/Your data/Skin/Help/Careful/final Sign out grouping, one Settings, three Skin choices and dark/light/system controls, with signed-out/signed-in/admin gates. Final Invite/Admin row alignment is a scoped cosmetic refinement; the full original visual-grammar finding is not closed by a group-count assertion or this representative three-mode proof.",
+        "source": "WORKSHOP-AUDIT-EVIDENCE.md",
+        "commit": "35992d77"
+      }
     },
     {
       "id": "F-108",
@@ -1008,7 +1022,7 @@
         "disposition": "Partially verified",
         "detail": "A displays bounded invite rows and distinct admission/delivery states using the existing invitation mutation contract. No invented resend/revoke or feature-switch writes. It does not send real mail, prove provider delivery, or cover every post-Send wording state.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -1023,7 +1037,7 @@
         "disposition": "Open",
         "detail": "C intentionally preserves the existing per-deck budget table and asserts that every live deck is listed. No collapse/filter or density redesign was implemented. Responsive stacking alone does not resolve the original 30-deck dominance complaint.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -1038,7 +1052,7 @@
         "disposition": "Verified",
         "detail": "C opens the danger-fill confirmation and requires typed CLEAR; existing Delete account typed-address semantics retained. No one-click destructive clear.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -1053,7 +1067,7 @@
         "disposition": "Verified",
         "detail": "C exercises persisted visible On/Off plus role=switch/aria-checked for both controls. Play owns the step-toggle markup; Workshop acceptance ran with that dependency integrated.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -1067,9 +1081,9 @@
       "localEvidence": {
         "owner": "Workshop",
         "disposition": "Partially verified",
-        "detail": "S/C verify the single Workshop Settings entry; redundant Profile row removed. Parent assigned the final global/board AccountMenu adaptation to Play after this source checkpoint, so that combined surface needs its own evidence before closing the whole finding.",
+        "detail": "S/C/AM verify the single shared Settings entry and identical native menu markup in both entry documents. The global menu has You / This device / Your data / Skin / Help / Careful / final Sign out, with verified Invite/Admin in You. The board must call the shared hooks and guard its own hotkeys; AM proves alternate/redrawn invoker behavior but does not substitute for the separately owned real board-avatar/target-draft acceptance. Explicit Play settings remains a distinct Camera control per EX-10.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -1084,7 +1098,7 @@
         "disposition": "Preserved baseline reconciliation",
         "detail": "C verifies four explanatory RQ-12 way-back rows. Packet and EX-08 explicitly require read-only capability classes until actually switchable; no fake preference controls were added. Existing restore-confirmation controls remain only where a supported saved skip exists.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -1099,7 +1113,7 @@
         "disposition": "Open",
         "detail": "The Side Drawer Modules implementation belongs to Play. Workshop's Settings run verifies its entry, not a complete matrix interaction/handle/disabled-reason audit. No resolution is inferred from CH-87 or the retained entry.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -1114,7 +1128,7 @@
         "disposition": "Partially verified",
         "detail": "History filters preference noise; K proves preferences create no persistent Undo receipt and any intervening revision invalidates a prior receipt. The generic existing Settings Undo-last-change command still addresses repository transaction order; this work does not establish that it skips all preference transactions.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
@@ -1129,7 +1143,7 @@
         "disposition": "Verified",
         "detail": "Take a tour is exposed in page Help and quietly on Landing; L/J exercise the landing surface. Existing tour definitions and action path are reused; no assertion that every tour's entire content was replayed in this pass.",
         "source": "WORKSHOP-AUDIT-EVIDENCE.md",
-        "commit": "8829bd06"
+        "commit": "35992d77"
       }
     },
     {
