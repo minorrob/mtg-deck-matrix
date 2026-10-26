@@ -652,20 +652,23 @@ actions['share-copy']=async()=>{try{await navigator.clipboard.writeText(APP_URL)
    the menu lives beside the rail rather than inside it (a hidden rail would hide it too), and opens under whichever
    chip was pressed. */
 {const m=$('#cm-user-menu');if(m&&m.closest('.cm-sidebar'))$('#matrix-v2').append(m);}
-let menuChip=null;document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[popovertarget="cm-user-menu"]');if(b)menuChip=b;},true);
+let menuChip=null,menuChipKey=null;
+const rememberMenuChip=anchor=>{menuChip=anchor;menuChipKey=C.focusKey(anchor);};
+const menuInvoker=()=>{if(!menuChip?.isConnected)menuChip=C.focusFind(menuChipKey);return menuChip;};
+document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('[popovertarget="cm-user-menu"]');if(b)rememberMenuChip(b);},true);
 /* Board and Workshop open the same menu node, so verified Admin/account entries and Skin stay in one place. */
 C.accountMenuOpen=()=>!!$('#cm-user-menu')?.matches(':popover-open');
-C.openAccountMenu=anchor=>{if(C.accountMenuOpen())return;menuChip=anchor||$('#cm-user-functions');$('#cm-user-menu').showPopover({source:menuChip});};
-C.closeAccountMenu=({restoreFocus=true}={})=>{const menu=$('#cm-user-menu');if(C.accountMenuOpen()){menu.hidePopover();if(restoreFocus&&menuChip?.isConnected)menuChip.focus({preventScroll:true});}};
+C.openAccountMenu=anchor=>{if(C.accountMenuOpen())return;rememberMenuChip(anchor||$('#cm-user-functions'));$('#cm-user-menu').showPopover({source:menuChip});};
+C.closeAccountMenu=({restoreFocus=true}={})=>{const menu=$('#cm-user-menu');if(C.accountMenuOpen()){const anchor=menuInvoker();menu.hidePopover();if(restoreFocus&&anchor?.isConnected)anchor.focus({preventScroll:true});}};
 document.addEventListener('keydown',event=>{if(C.accountMenuOpen()&&event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();C.closeAccountMenu();}},true);
-$('#cm-user-menu').addEventListener('beforetoggle',e=>{if(e.newState==='open'){describeData();const chip=menuChip&&menuChip.isConnected&&menuChip.getClientRects().length?menuChip:$('#cm-user-functions'),r=chip.getBoundingClientRect(),m=$('#cm-user-menu');
+$('#cm-user-menu').addEventListener('beforetoggle',e=>{const invoker=menuInvoker();if(e.newState==='open'){describeData();const chip=invoker&&invoker.getClientRects().length?invoker:$('#cm-user-functions'),r=chip.getBoundingClientRect(),m=$('#cm-user-menu');
   const below=window.innerHeight-r.bottom;
   m.style.left=Math.max(8,Math.min(r.left,window.innerWidth-Math.min(320,window.innerWidth-16)-8))+'px';m.style.right='auto';
   if(below>=r.top){m.style.top=(r.bottom+8)+'px';m.style.bottom='auto';m.style.maxHeight=(below-24)+'px';}
   else{m.style.top='auto';m.style.bottom=(window.innerHeight-r.top+8)+'px';m.style.maxHeight=(r.top-24)+'px';}
   if(repo)exportFile().then(f=>{shareFile=f;}).catch(()=>{shareFile=null;});}
-  for(const button of document.querySelectorAll('[popovertarget="cm-user-menu"],[aria-controls="cm-user-menu"]'))button.setAttribute('aria-expanded',String(e.newState==='open'&&button===menuChip));
-  if(menuChip)menuChip.setAttribute('aria-expanded',String(e.newState==='open'));
+  for(const button of document.querySelectorAll('[popovertarget="cm-user-menu"],[aria-controls="cm-user-menu"]'))button.setAttribute('aria-expanded',String(e.newState==='open'&&button===invoker));
+  if(invoker)invoker.setAttribute('aria-expanded',String(e.newState==='open'));
 });
 $('#cm-user-menu').addEventListener('toggle',event=>{if(event.newState==='open'){const menu=$('#cm-user-menu');menu.scrollTop=0;menu.querySelector('button:not([disabled]),a[href]')?.focus({preventScroll:true});}});
 $('#cm-user-menu').addEventListener('click',e=>{if(e.target.closest('[data-action]'))C.closeAccountMenu({restoreFocus:false});});

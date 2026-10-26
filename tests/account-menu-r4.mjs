@@ -51,10 +51,16 @@ try{
     ok(fit.left>=0&&fit.top>=0&&fit.right<=fit.width&&fit.bottom<=fit.height,'menu fits the viewport from a right-edge anchor');
     await page.evaluate(()=>__menuC.closeAccountMenu());
     eq(await page.evaluate(()=>document.activeElement.id),'fixture-board-avatar','explicit shared close restores the captured alternate anchor');
+    await page.evaluate(()=>{const old=document.getElementById('fixture-board-avatar');__menuC.openAccountMenu(old);const fresh=old.cloneNode(true);old.replaceWith(fresh);globalThis.__oldMenuInvoker=old;});
+    await page.locator('#cm-user-menu:popover-open').waitFor();await page.keyboard.press('Escape');
+    eq(await page.evaluate(()=>({open:__menuC.accountMenuOpen(),draft:__menuDraftChanges,focus:document.activeElement.id,fresh:document.activeElement!==__oldMenuInvoker,expanded:document.getElementById('fixture-board-avatar').getAttribute('aria-expanded')})),{open:false,draft:0,focus:'fixture-board-avatar',fresh:true,expanded:'false'},'Escape resolves a replaced invoker identity, restores the new node and leaves the draft untouched');
     await page.locator('#fixture-board-avatar').evaluate(n=>n.remove());
     await trigger.click();await page.locator('#cm-user-menu:popover-open').waitFor();
-    await page.mouse.click(test.width-5,height-5);await page.waitForFunction(()=>!__menuC.accountMenuOpen());
+    await page.evaluate(()=>{const button=document.createElement('button');button.id='fixture-outside-focus';button.textContent='Outside menu';button.style='position:fixed;right:0;bottom:0;z-index:100';document.body.append(button);});
+    await page.locator('#fixture-outside-focus').click();await page.waitForFunction(()=>!__menuC.accountMenuOpen());
     eq(await trigger.getAttribute('aria-expanded'),'false','native light-dismiss updates the actual trigger state');
+    eq(await page.evaluate(()=>document.activeElement.id),'fixture-outside-focus','native outside-click dismissal preserves the clicked control focus');
+    await page.locator('#fixture-outside-focus').evaluate(n=>n.remove());
     await trigger.click();await menu.locator('[data-theme-skin=bronze-basalt]').click();
     await page.waitForFunction(()=>document.getElementById('matrix-v2').dataset.palette==='bronze-basalt');
     await trigger.click();await menu.locator('[data-theme-mode=light]').click();
