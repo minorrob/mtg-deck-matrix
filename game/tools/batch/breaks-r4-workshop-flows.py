@@ -22,4 +22,10 @@ BREAKS = [
      "||!contextMatches||r?.schema", "||r?.schema"),
     ('known one-card list called playable', 'crankmagic-table.js',
      "return list.commander.length+list.cards.length===100;", "return true;"),
+    ('error and Undo notices time out', 'crankmagic-app.js',
+     "if(!stay&&!error&&expectedRevision===null)", "if(!stay)"),
+    ('stale pinned Undo remains active', 'crankmagic-app.js',
+     "Number(button.dataset.undoRevision)!==state.revision", "false"),
+    ('unrelated success acquires global Undo', 'crankmagic-app.js',
+     "stay=false,undo=false,dismiss=null", "stay=false,undo=true,dismiss=null"),
 ]
