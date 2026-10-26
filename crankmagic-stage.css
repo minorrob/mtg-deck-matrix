@@ -776,3 +776,10 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-drawer{transition:none}
 #matrix-v2 .cm-board .cm-board-pane .cm-seat-header .cm-seat-commander{font-size:15px}
 #matrix-v2 .cm-board .cm-board-pane .cm-board-tile-main{width:100%;padding:6px}
 #matrix-v2 .cm-board .cm-board-pane .cm-board-tile{height:auto;min-height:96px;background:var(--color-panel);color:var(--color-ink)}
+
+/* Whole rows include their captions. Short seats scroll their grid as a whole. */
+#matrix-v2 .cm-board .cm-mat-grid{overflow:auto;overscroll-behavior:contain}
+#matrix-v2 .cm-board .cm-board-field{min-height:calc(var(--bc)*1.4 + 100px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-board-lands{min-height:calc(var(--bc)*1.72 + 48px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-mat:is([data-fit="table"],[data-fit="focus"]) .cm-mat-grid,
+#matrix-v2 .cm-board .cm-stage-region .cm-mat-grid{grid-template-rows:minmax(calc(var(--bc)*1.4 + 100px*var(--hud-scale,1)),auto) 0px minmax(calc(var(--bc)*1.72 + 48px*var(--hud-scale,1)),auto) auto}

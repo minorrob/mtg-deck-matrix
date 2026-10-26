@@ -304,12 +304,12 @@ try {
   const background=page.getByRole('combobox',{name:'Background',exact:true}),other=await background.locator('option').nth(1).getAttribute('value');
   await background.selectOption(other);
   const designs=page.getByRole('combobox',{name:'Table design',exact:true});
-  assert.equal(await designs.locator('option').count(),7,'the Camera offers the seven table designs (ROB-100)');
+  assert.equal(await designs.locator('option').count(),8,'the Camera offers Study and the seven preserved table designs');
   await designs.selectOption('stone-dais');
   assert.equal(await background.inputValue(),other,'background is independent of the table design');
   assert.equal(await page.evaluate(()=>localStorage.getItem('cm-stage-table')),'stone-dais','the table design is remembered on this device');
   assert.equal(await page.evaluate(()=>CrankStage.tableDesign('stone').id),'stone-dais','an older saved choice (stone) maps onto its design');
-  assert.equal(await page.evaluate(()=>CrankStage.tableDesign(null).id),'medieval-banded','no saved choice means the default, medieval oak with iron bands');
+  assert.equal(await page.evaluate(()=>CrankStage.tableDesign(null).id),'study','no saved choice means the default walnut Study');
   for(const width of [1400,1280,1024]) {
     await page.setViewportSize({width,height:768});
     for(const [tilt,zoom] of [[0,60],[60,120]]) {

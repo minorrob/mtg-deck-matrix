@@ -71,6 +71,7 @@
     /* The table designs (Rob, 2026-10-17; ROB-100): the same catalog the Babylon lab builds as 3D objects
        (ui-prototypes/babylon/tables.js). The live Babylon stage uses the prototype's procedural geometry. Older saved choices map on. */
     tables: [
+      {id:"study",name:"Study - walnut",slab:0x26170e,top:0x3a2414,edge:0xa98b4a,look:"walnut"},
       {id:"medieval-banded",name:"Medieval oak, iron bands",slab:0x2a1a0f,top:0x5a3f28,edge:0x3a3d44,look:"bands"},
       {id:"colonial-inlay",name:"Colonial lacquered mahogany",slab:0x3a1410,top:0x6b2a1a,edge:0xe4c98a,look:"inlay"},
       {id:"glass-future",name:"Futuristic glass",slab:0x7c8a95,top:0x9fc8d8,edge:0x5fd8ff,look:"glass"},
@@ -78,7 +79,7 @@
       {id:"felt-card",name:"Card-room felt",slab:0x2b1a12,top:0x1f6b3a,edge:0x3a2418,look:"felt"},
       {id:"stone-dais",name:"Carved stone dais",slab:0x3e4240,top:0x727572,edge:0x9a9d98,look:"speckle",legacy:"stone"},
       {id:"obsidian-glass",name:"Volcanic obsidian",slab:0x0b0a0d,top:0x1a1720,edge:0xff7a2a,look:"ember",legacy:"obsidian"}]});
-  const DEFAULT_TABLE = "medieval-banded";
+  const DEFAULT_TABLE = "study";
   /** The design a saved or offered id names: a current id, an older id (wooden, stone, obsidian) or nothing at all. */
   function tableDesign(id) {
     const list = appearances.tables;

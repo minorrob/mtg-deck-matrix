@@ -441,6 +441,7 @@ globalThis.CrankBoard = Object.seal({
      nothing anyone else played ever reaches yours. A timeout or a game ended early is "unfinished" (Rob,
      2026-09-26); a concession is a loss. */
   const filed = new Set();
+  let resultEpoch = 0;
   const NO_PERSON = "every person had left the game, so it ended there";  /* game/room/room.mjs NO_PERSON_REASON */
   function outcomeOf(v) {
     const gone = (v.departures || {})[v.seatId];
@@ -461,33 +462,56 @@ globalThis.CrankBoard = Object.seal({
     if (r.winner === v.seatId) return {outcome: "win", reason: r.reason || ""};
     return r.winner ? {outcome: "loss", reason: r.reason || ""} : {outcome: "draw", reason: r.reason || ""};
   }
-  async function fileResult(v, tries = 0) {
-    const o = outcomeOf(v), t = table;
+  async function fileResult(v, tries = 0, context = null) {
+    context ||= {table,tableId:table?.tableId,matchId:v.matchId,seatId:v.seatId,account:C.signedInAs?.() || null,epoch:resultEpoch};
+    const current = () => context.epoch === resultEpoch && tableId === context.tableId && view?.matchId === context.matchId && view?.seatId === context.seatId
+      && (!table?.matchId || table.matchId === context.matchId) && (C.signedInAs?.() || null) === context.account;
+    const o = outcomeOf(v), t = context.table;
     if (!o || !t || !v.matchId) return;
     const gameId = `game:table:${v.matchId}:${v.seatId}`;
-    if (filed.has(gameId) && tries === 0) return;
+    if (!current()) {filed.delete(gameId);return;}
+    if ((filed.has(gameId) && tries === 0) || (C.state.games || []).some(g => g.id === gameId)) return;
+    // Reserve while fetching/committing too: duplicate socket views must not race the write.
     filed.add(gameId);
-    if ((C.state.games || []).some((g) => g.id === gameId)) return;
-    const mine = (t.seats || []).find((s) => s.you), source = mine && mine.source;
-    const deck = source && (C.state.decks || []).find((d) => d.id === source.deckId && !d.archived);
-    if (!deck) {
-      if (source) C.notice("This game's result was not filed: the deck you brought is no longer in your library.", true);
-      return;
-    }
-    const ai = v.seats.some((s) => s.pilot === "house");
-    const opponents = (t.seats || []).filter((s) => !s.you && s.occupied !== false && s.deck)
-      .map((s) => `${(s.deck.commander || []).join(" + ") || s.deck.name}${s.kind === "ai" ? " · AI" : ` · ${s.name}`}`).join("; ");
+    let record = t.gameRecord;
+    const matches = r => r?.schema === "CrankMagicTableResult@1" && r.matchId === v.matchId && r.seatId === v.seatId && r.id === gameId;
     try {
-      await C.commit({type: "game", gameId, deckId: deck.id, outcome: o.outcome, playedAt: new Date().toISOString(),
-        pod: v.seats.length, finish: o.outcome === "win" ? 1 : null, turns: v.state && v.state.turn ? v.state.turn : null, seat: v.seat + 1,
-        opponents, notes: `Played at a CrankMagic table${ai ? " with AI seats" : ""}${o.reason ? ` · ${o.reason}` : ""}.`,
-        table: {schema: "CrankMagicTableResult@1", tableId: t.tableId, matchId: v.matchId, seatId: v.seatId, ai, reason: o.reason, deckVersion: source.deckVersion}},
-      {renderView: false});
-      C.notice(`${o.outcome === "win" ? "Your win" : o.outcome === "loss" ? "Your loss" : o.outcome === "draw" ? "The draw" : "This unfinished game"} is filed under ${deck.name}'s record.`);
+      if (!matches(record)) {
+        const fresh = await tableApi().api("GET", tableApi().tableUrl(t.tableId));
+        if (!current()) {filed.delete(gameId);return;}
+        record = fresh.table?.gameRecord;
+      }
+      if (!matches(record) && v.resultRecordExpected) {
+        // A finished room can arrive before the table alarm settles it. Never date that
+        // game with the client clock: wait for the owner's stable server summary.
+        if (tries < 8) {setTimeout(() => fileResult(v, tries + 1, context), Math.min(8000, 800 * 2 ** tries)); return;}
+        filed.delete(gameId); return;
+      }
+      if (!matches(record)) record = null; // legacy tables alone retain the old fallback
+      const mine = (t.seats || []).find(s => s.you), source = record?.source || mine?.source;
+      const deck = source && (C.state.decks || []).find(d => d.id === source.deckId && !d.archived);
+      if (!deck) {
+        filed.delete(gameId);
+        if (source) C.notice("This game's result was not filed: the deck you brought is no longer in your library.", true);
+        return;
+      }
+      const ai = record ? record.ai : v.seats.some(s => s.pilot === "house"), outcome = record?.outcome || o.outcome;
+      const opponents = record ? record.opponents.map(s => `${s.commanders.join(" + ") || s.name} · ${s.ai ? "AI" : s.name}`).join("; ")
+        : (t.seats || []).filter(s => !s.you && s.occupied !== false && s.deck).map(s => `${(s.deck.commander || []).join(" + ") || s.deck.name}${s.kind === "ai" ? " · AI" : ` · ${s.name}`}`).join("; ");
+      const reason = record?.finishReason || o.reason;
+      if (!current()) {filed.delete(gameId);return;}
+      await C.commit({type:"game", gameId, deckId:deck.id, outcome, playedAt:record?.playedAt || new Date().toISOString(),
+        pod:record?.pod || v.seats.length, bracket:record?.bracket ?? null, finish:record ? record.finishRank : outcome === "win" ? 1 : null,
+        turns:record ? record.turns : v.state?.turn || null, seat:record?.seat || v.seat + 1, opponents,
+        notes:`Played at a CrankMagic table${ai ? " with AI seats" : ""}${reason ? ` · ${reason}` : ""}.`,
+        table:record ? {...record,reason:record.finishReason,deckVersion:source.deckVersion} : {schema:"CrankMagicTableResult@1",tableId:t.tableId,matchId:v.matchId,seatId:v.seatId,ai,reason,deckVersion:source.deckVersion}},
+      {renderView:false});
+      C.notice(`${outcome === "win" ? "Your win" : outcome === "loss" ? "Your loss" : outcome === "draw" ? "The draw" : "This unfinished game"} is filed under ${deck.name}'s record.`);
     } catch (error) {
-      if (error && error.retryable && tries < 5) {setTimeout(() => fileResult(v, tries + 1), 800); return;}
+      if (!current()) {filed.delete(gameId);return;}
+      if ((v.resultRecordExpected || error?.retryable) && tries < 8) {setTimeout(() => fileResult(v, tries + 1, context), Math.min(8000, 800 * 2 ** tries)); return;}
       filed.delete(gameId);
-      C.notice(`This game's result was not filed: ${error && error.message ? error.message : "the library did not take it"}.`, true);
+      C.notice(`This game's result was not filed: ${error?.message || "the library did not take it"}.`, true);
     }
   }
   function send(payload) {
@@ -573,7 +597,7 @@ globalThis.CrankBoard = Object.seal({
     const r = recordOf(name);
     return (r && r.image) || `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}&format=image&version=normal`;
   }
-  const optionsFor = (cardId) => (view.decision ? view.decision.options.filter((o) => o.cardId === cardId) : []);
+  const optionsFor = (cardId) => (view.decision ? view.decision.options.filter((o) => o.cardId === cardId || o.preparedFrom === cardId) : []);
   /* A card shown to be READ -- the Panel's and Full screen's column (pick), the pop-up (peek), Card zoom (zoom) -- is
      drawn upright, a tapped one with a small Tapped mark (Rob, 2026-09-30, item 17); on the mat it lies sideways. */
   const UPRIGHT = new Set(["pick", "peek", "zoom"]);
@@ -1435,7 +1459,7 @@ globalThis.CrankBoard = Object.seal({
       /* Pass is the strip's; this is what else you can do, one button per kind of thing, the same land four
          times over being one "Play Forest" (clicking a card in the hand selects that very one). */
       const seen = new Map();
-      for (const o of d.options.filter(o => actionCard === null || o.cardId === actionCard)) {
+      for (const o of d.options.filter(o => actionCard === null || o.cardId === actionCard || o.preparedFrom === actionCard)) {
         /* A land just played goes back to the hand as one would take it back at a table, by its double-click: no button. */
         if (o.act === "pass" || o.act === "resolve-all" || o.act === "undo-land") continue;
         const key = actionCard === null ? `${o.act}|${o.label}` : String(o.index);
@@ -2730,7 +2754,10 @@ globalThis.CrankBoard = Object.seal({
       gameChip();
     },
     /** A game of yours that is on: {tableId, turn}, or null. Play opens it. */
-    live() {return tableId && view && view.status !== "finished" ? {tableId, turn: view.state.turn} : null;},
+    live() {return tableId && view && view.status !== "finished" ? {tableId, turn: view.state.turn,
+      seats: players().map((p,i) => ({seatId: view.seats[i]?.seatId || p.playerId, name:p.name,
+        life:p.health?.life ?? null,
+        commanders:[...new Set(["Command","Battlefield","Graveyard","Exile"].flatMap(z => p.zones[z]?.cards || []).filter(c=>c.commander && c.name).map(c=>c.name))]}))} : null;},
     /** The game the board holds, on or just over, for a report to name (Send feedback): {tableId, matchId, turn, over}, or null. */
     held() {return tableId && view && view.matchId ? {tableId, matchId: view.matchId, turn: view.state.turn, over: view.status === "finished"} : null;},
     /** What a room view means for your record: {outcome, reason}, or null while the game goes on for you. */
@@ -2738,6 +2765,7 @@ globalThis.CrankBoard = Object.seal({
     /** The picture the board draws for a card by its name: the library's record, else the shipped card records'. */
     pictureOf,
     close() {
+      resultEpoch += 1;
       attached = false;
       shell(false);
       if (audio) audio.stopBgm(400);
