@@ -207,7 +207,7 @@ try {
   await maya.page.locator("#cm-board .cm-stage-top").waitFor({timeout: 30000});
   ok(routes[ROB].length === 1 && routes[MAYA].length === 1, "the lobby hands each page to the board, and each opens one socket to the table");
   eq([heardBy[ROB].length, heardBy[MAYA].length], [0, 0], "and nothing of the sound is fetched before the first press on the board (a browser would refuse to play it)");
-  eq(await rob.page.locator(".cm-board-tile .cm-board-tile-name").allInnerTexts(), ["You · Rob", "Maya"], "the pane holds every seat, yours first here");
+  eq(await rob.page.locator(".cm-board-tile .cm-seat-header .cm-mat-name").allInnerTexts(), ["You · Rob", "Maya"], "the pane holds every seat, yours first here");
   /* Found rendering B1's fixture: the library holds only your own cards, so everyone else's were fetched from Scryfall one
      request each, and a full board is refused faster than it is answered. The shipped card records draw them. */
   const pic = await rob.page.evaluate(() => {const C = globalThis.__cm, mine = new Set(C.cards().map((c) => c.name)), other = C.catalog.all().map((c) => C.catalog.exact(c.name)).find((c) => c && c.image && c.image.startsWith("https://cards.scryfall.io/") && !mine.has(c.name)); return other ? {name: other.name, image: other.image, drawn: C.board.pictureOf(other.name)} : null;});
@@ -236,7 +236,7 @@ try {
   const leaks = (email, owner, open = []) => frames[email].filter((f) => (f.match(new RegExp(`${owner} Secret [0-9]+`, "g")) || []).some((n) => !open.includes(n))).length;
   eq([leaks(MAYA, "Rob"), leaks(ROB, "Maya")], [0, 0], `no frame to either player named a card of the other's hand or library (${frames[MAYA].length + frames[ROB].length} frames read)`);
   await maya.page.click(".cm-board-tile[data-seat='0'] [data-action=board-focus]");
-  ok(/Rob's hand · 7/.test(await text(maya.page, ".cm-board-mat")), "Maya can look at Rob's board, and sees his hand as a count");
+  ok((await text(maya.page, ".cm-board-mat .cm-seat-header .cm-mat-name")).trim() === "Rob" && (await text(maya.page, ".cm-board-mat .cm-seat-hand")).trim() === "7 in hand", "Maya can look at Rob's board, and sees his hand as a count");
   const mats = await maya.page.evaluate(() => {const m = document.querySelector(".cm-board-mat"); return [m.dataset.mat, getComputedStyle(m).backgroundImage.includes("radial-gradient")];});
   ok(mats[0] === "forge" && mats[1], "and it is drawn on Rob's mat, the forge");
   await maya.page.click(".cm-board-tile[data-seat='1'] [data-action=board-focus]");
