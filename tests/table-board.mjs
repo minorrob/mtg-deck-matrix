@@ -1626,10 +1626,10 @@ try {
   /* SEND FEEDBACK NAMES THE GAME (G-E; the feedback loop, CrankFeedback@1): a person's report says which game, where in it
      and which release, so it can be replayed from the record -- and never a card of anyone's hand. */
   const heldGame = await rob.page.evaluate(() => globalThis.__cm.board.held());
-  eq([heldGame.matchId, heldGame.over, typeof heldGame.turn, typeof heldGame.step, heldGame.seat, typeof heldGame.lastLine, heldGame.view], [matchId, true, "number", "string", "Rob", "string", "Table"],
-    `the board says what it holds for a report: the match, that it is over, the turn and step, the seat's name, the last history line and the view (${heldGame.step}; "${heldGame.lastLine}")`);
+  eq([heldGame.matchId, heldGame.over, typeof heldGame.turn, typeof heldGame.step, heldGame.seat, typeof heldGame.lastLine, ["Table", "Focus", "3D"].includes(heldGame.view)], [matchId, true, "number", "string", "Rob", "string", true],
+    `the board says what it holds for a report: the match, that it is over, the turn and step, the seat's name, the last history line and the view (${heldGame.step}; "${heldGame.lastLine}"; ${heldGame.view})`);
   const report = await rob.page.evaluate(() => globalThis.__cm.feedback.draft({text: "x"}));
-  eq([report.game.matchId, report.game.tableId, report.page.view, report.build.commit], [matchId, heldGame.tableId, "Table", "unreleased"], "the report carries the game and the view, and this page is no release");
+  eq([report.game.matchId, report.game.tableId, report.page.view, report.build.commit], [matchId, heldGame.tableId, heldGame.view, "unreleased"], "the report carries the game and the view the board holds, and this page is no release");
   ok(!JSON.stringify(report).includes("Maya Secret") && !/hand|library/i.test(JSON.stringify(Object.keys(report.game))), "and nothing of anyone's hand, by construction: the report has no field for one");
   ok(await rob.page.locator("#cm-board .cm-stage-profile [data-action=send-feedback][aria-label='Send feedback']").count() === 1, "the board's profile strip carries the feedback glyph");
   const mail = async (page) => decodeURIComponent((await page.evaluate(() => globalThis.__cm.feedbackLink())).split("body=")[1]);
