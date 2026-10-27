@@ -2,19 +2,17 @@
 
 ## r4 coordinated execution, October26,2026 (Codex; Rob: "go")
 
-**Pre-CI source/local-proof snapshot:** combined source and cache pins are integrated at ad4afea1.
-The coordinator owns canonical Git/index/pins/docs; Engine holds the serial real-table browser and is
-staging release executor. Foundation finished its bounded source/acceptance lane, clean with no browser;
-Workshop tabletop and coordinator shared-shell gates are queued. Source snapshots, commands, proof and
+**Pre-CI source/local-proof snapshot:** current main b13607b2 is reconciled at 83aab1d2, with matching source/cache pins and the pre-merge rollback tag pushed.
+The coordinator owns canonical Git/index/pins/docs; Workshop holds the serial native browser; Engine remains staging release executor and its final real-table run is queued. Foundation's affected main-merge Settings/graphics checks and coordinator shared-shell gate are queued. Source snapshots, commands, proof and
 outstanding gates are in docs/r4-execution/HANDOFF.md. Preserve the untracked design renders.
 
 The current CI, main merge, staging deployment/readback and remaining release limits are maintained in
 [PR #890](https://github.com/minorrob/mtg-deck-matrix/pull/890), linked to ROB-197. This section is the
 pre-CI checkpoint rather than a claim about a later deployment. Production requires Rob's separate go.
-PR #894 is merged at91989100 and its canonical/browser hold is complete. EX-01–EX-27 record the source
+PR #894 is merged at91989100 and its canonical/browser hold is complete. EX-01–EX-28 record the source
 conflicts and later explicit requests; CH-03's unchanged wordmark is superseded by EX-18.
 
-The61-row program uses integration/r4 from main c567c581 and Rob-authorized isolated worktrees, one Play
+The61-row program uses integration/r4 from the original main c567c581, now reconciled with b13607b2 and Rob-authorized isolated worktrees, one Play
 writer, serial browser checks and preserved Git history. All129 audit findings retain bounded evidence;
 source mapping alone does not close the53 unmapped findings or partial/open follow-ups.
 

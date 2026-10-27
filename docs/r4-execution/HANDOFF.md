@@ -1,6 +1,6 @@
 # r4 acceptance snapshot
 
-Integration: integration/r4, main baseline c567c581. This is the pre-CI source and local-proof snapshot.
+Integration: integration/r4, main baseline b13607b2 (PR #891 reconciled). This is the pre-CI source and local-proof snapshot.
 The current CI, main merge, staging revision/deployment and live readback are recorded in
 [PR #890](https://github.com/minorrob/mtg-deck-matrix/pull/890), with tracking in
 [ROB-197](https://linear.app/robs-build/issue/ROB-197/implement-r4-design-foundation-and-reconciled-playworkshop-ux).
@@ -8,18 +8,14 @@ Production requires Rob's separate go.
 
 ## Source and ownership
 
-The coordinator owns canonical Git/index/pins/docs. Engine owns the current serial real-table browser
-window and later staging release; Workshop's tabletop and the coordinator's shared-shell native gates
-are queued. Foundation finished its bounded lane at757cf62b, clean with no browser. No further visual
+The coordinator owns canonical Git/index/pins/docs. Workshop currently owns the serial browser; Engine's final real-table run, the coordinator's shared-shell gate and Foundation's affected Settings/graphics gates are queued. Engine remains the staging release executor. No browser overlap is permitted. No further visual
 polish is in scope; an actual failed acceptance gate may require a bounded repair.
 
 All61 explicit CH rows are integrated, except CH-03, superseded by the later EX-18 Cinzel/gilt request.
 The source numbering ends at89 with gaps. The129 original audit findings remain individually tracked;
 53 unmapped findings and bounded partial/open evidence are not converted into closure by a CH mapping.
 
-Latest integrated production/pin snapshot: ad4afea1f36451731b3a478bb845c703bacc6a1e. Board115,
-stage.js21, stage.css71, SW578 and app595 have matching Git/working/manifest bytes;133 assets are recorded.
-Static gates pass: asset133, wiring131, data50 variants/50 buy profiles, readout1121.
+Current integrated source/pin snapshot: 83aab1d2cfb083bc3f44ce7b429f509112283427, including main b13607b2. Board117, stage.js22, stage.css73, table46, Admin4, sharing6, app599 and SW582 match Git/working/manifest bytes for all 133 assets. README registers all 628 root suites. Targeted gates pass: sharing149, cloud-worker154, design-tokens200, asset133, wiring131, data50 variants/50 buy profiles, readout1121, release-pages226 (sandbox-only temporary Git denial retried successfully outside the sandbox).
 Preserve the preexisting untracked docs/design/2026-10-25-redesign-r4/renders/ and all evidence worktrees.
 
 ## Incoming work and intent
@@ -52,15 +48,17 @@ foundation-final-gates-757cf62b.json; local artifacts are outside Git.
 
 These are precise tested snapshots. Later scoped repairs have their own affected-path native proof;
 not every earlier matrix was rerun after every CSS change. The final Actions run covers the combined tree.
-The coordinator inspected representative Full/Table/Focus/phone captures and the corrected light drawer.
+The coordinator inspected representative Full/Table/Focus/phone captures and the corrected light drawer. The reconciled Admin window51, shared menu85 and pure Admin21 pass on 83aab1d2, including separate read-admin/invite-owner roles and one Admin action.
 
 ## Remaining at this snapshot
 
-Engine Run33 is running on ad4afea1. Run32 reached277; the reproduced Coach focus failures are repaired,
-but the next full real-table pass must still complete Escape/reopen, reconnect/newest-wins, phone and
-End/private records/idempotent filing/deck Record. Workshop tabletop and coordinator shared-shell native
-baselines follow. Required full CI, main readiness/merge and staging release/readback remain open.
-No r4 release is claimed by this source snapshot; use PR #890 for subsequent completion records.
+The full real-table run reached 306 on 0c415091: Coach, reconnect/newest-wins, phone wheel/Library and owner-only canonical s0/s1 filing passed. The obsolete success-toast assertion was migrated to CH59/86's persistent Review link and native navigation at 87391788. The next full run must finish private download, idempotency, Review/deck Record and AI outcome badges on the reconciled main base.
+
+Shared-shell's actual folded-decision/spine collision is repaired at dc360e82 (8 native checks twice); its full baseline rerun is pending. EX-28 expressly allows hand overlap without zoom restrictions. Tabletop's 270 recorded land samples comprise 166 uncovered hits and 104 allowed native hand overlaps, with no other blockers. Its remaining projection comparison has diagnostics for the actual options/animation state; no camera source change or test waiver is claimed. Main's sectioned Settings/graphics tests and the complete tabletop/shared-shell/real-game gates remain pending before full CI.
+
+Rollback is already available remotely: rollback/pre-r4-2026-10-26-b13607b2. ROLLBACK.md records the exact source tag and Cloudflare staging deployment/version. Main must still be rechecked immediately before merge. OpenAI owns all release operations. New #893/#895–#897 are the next wave after r4 main/staging, with dependency/security/configuration gates in INCOMING-QUEUE.md. User explicitly said to push Cloudflare staging after the merge, then continue.
+
+This source snapshot does not claim full CI or an r4 release. Use PR #890 for subsequent completion records.
 
 ## Release execution
 
