@@ -34,6 +34,10 @@ rationalized into that hand-off. **Nothing here is merged; the hand-off is the d
 - **Not proven:** the fan on a GPU browser or a phone; `OWNER_EMAIL` set on staging and production (Rob's); the Actions
   run (the PR is a draft). **Not started:** PR 2, 3, 4, 5, 7 of the plan, and the Workshop half of PR 6.
 - **Gate:** `tools/local-ci.sh HEAD 0` before the push (its line is in the PR).
+- **Paused, 2026-10-27, on Rob's word** (*"We'll pause all other work here, and you'll create a plan of the remaining
+  work you have, which we'll store for tomorrow"*): the remaining work is `docs/ai-players/NEXT-2026-10-27.md` (the
+  merge's aftermath, then PR 2 Hard, PR 4 Veteran, PR 3, PR 5 personas and decks, PR 7 game logs; about seven engine
+  sessions and two of screens). The hand-off to OpenAI is `docs/handoff-ai-players-2026-10-26.md`.
 
 ## AI players: the plan for Easy, Normal, Hard, the Veteran agent, personas, the deck matrix, access groups and the game-log admin panel, 2026-10-26 (a Claude cloud session, for Rob; `claude/sharp-hawking-8lbwy9`, planning only)
 
