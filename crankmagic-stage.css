@@ -324,7 +324,7 @@
 .cm-stage-top .cm-board-ribbon.is-strip li.is-done{color:#b2c8bd}
 .cm-profile-menu .cm-board-menu{color:var(--v-ink)}
 .cm-stage-camera{background:#0b2023}
-#matrix-v2 .cm-stage-camera label,#matrix-v2 .cm-stage-camera output{color:#edf6ef}
+#matrix-v2 .cm-stage-camera label,#matrix-v2 .cm-stage-camera output{color:var(--color-ink)}
 #matrix-v2 .cm-stage-camera .cm-board-views .v-button{height:38px;color:#edf6ef;background:#1c302e}
 #matrix-v2 .cm-stage-camera .cm-board-views .v-button.is-on{color:#0d120c;background:#87c6a1}
 /* ROB-171: real objects remain actionable; ownership ghosts are inspection references only. */

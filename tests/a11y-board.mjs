@@ -722,14 +722,13 @@ try {
       const hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);
       return {point:null,logo:r.toJSON(),hit:hit?{tag:hit.tagName,cls:hit.className,data:{...hit.dataset},rect:hit.getBoundingClientRect().toJSON()}:null};
     });
-    ok(!!reach.point,`${t}: the life logo has an uncovered native point with Board cards focused (${JSON.stringify(reach)})`);
-    if(reach.point) {
-      await page.mouse.click(reach.point.x,reach.point.y);
-      await page.locator('#cm-dialog[open] .cm-table-vitals').waitFor();
-      const [vitalsAx]=await axOf(who,'#cm-dialog');
-      ok(vitalsAx?.role==='dialog'&&vitalsAx.modal&&/^Table vitals$/i.test(vitalsAx.name),`${t}: native life-logo click opens the named modal Table vitals (${JSON.stringify(vitalsAx)})`);
-      await page.keyboard.press('Escape');await page.waitForFunction(()=>!document.querySelector('#cm-dialog[open]'));
-    }
+    console.log(`life logo visibility (${t}; EX-28 permits hand occlusion): ${JSON.stringify(reach)}`);
+    // The shared SeatHeader is the persistent life control, including when the hand covers the duplicate dial.
+    await page.locator('.cm-stage-top .cm-vitals[data-action=board-vitals]').click();
+    await page.locator('#cm-dialog[open] .cm-table-vitals').waitFor();
+    const [vitalsAx]=await axOf(who,'#cm-dialog');
+    ok(vitalsAx?.role==='dialog'&&vitalsAx.modal&&/^Table vitals$/i.test(vitalsAx.name),`${t}: native persistent SeatHeader life control opens the named modal Table vitals (${JSON.stringify(vitalsAx)})`);
+    await page.keyboard.press('Escape');await page.waitForFunction(()=>!document.querySelector('#cm-dialog[open]'));
     await view(page, "focus");
   }
   /* A VIEW ARRIVING keeps the focus where it was: the board is drawn again, and the same card still has it. */
