@@ -101,6 +101,7 @@ import {createController} from "../engine/controller.mjs";
 import {createMatchStore} from "../engine/storage.mjs";
 import {housePilot, meetRequirements, manaColors} from "../engine/pilots/house-pilot.mjs";
 import {scoredPilot, SETTINGS} from "../engine/pilots/scored-pilot.mjs";
+import {personaOf} from "../engine/pilots/roster.mjs";
 import {agentPilot} from "../engine/pilots/agent-pilot.mjs";
 import {addToHistory} from "./history.mjs";
 import {tableEvent, eventsFor, keep, EVENTS_SCHEMA} from "./events.mjs";
@@ -174,7 +175,9 @@ function readPod(pod, cards) {
     const library = (Array.isArray(s.cards) ? s.cards : []).map(String);
     if (commander.length > 2 || commander.length + library.length > MAX_CARDS) throw new RoomError(400, `${seatId}'s deck is not one a table can hold.`);
     for (const name of [...commander, ...library]) if (!cards(name)) missing.add(name);
-    return {seatId, name: String(s.name || `Seat ${index + 1}`).slice(0, 60), pilot, ...(level ? {level} : {}), commander, cards: library};
+    /* An AI seat's persona (game/engine/pilots/roster.mjs): an id on the roster, or none; carried with the seat, replayed with it. */
+    const persona = level && personaOf(s.persona) ? s.persona : null;
+    return {seatId, name: String(s.name || `Seat ${index + 1}`).slice(0, 60), pilot, ...(level ? {level} : {}), ...(persona ? {persona} : {}), commander, cards: library};
   });
   if (missing.size) {
     const names = [...missing].sort();
@@ -615,7 +618,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
   let matchSeed = "";
   /* And whether they take what a choice they may answer with none is for (`pilotPicks`), as the match was launched. */
   let pilotPicks = false;
-  const pilotMade = (seat) => makePilot({seat, cards: facts, deck: seats[seat].cards, level: seats[seat].level ?? null, seed: matchSeed, picks: pilotPicks});
+  const pilotMade = (seat) => makePilot({seat, cards: facts, deck: seats[seat].cards, level: seats[seat].level ?? null, persona: seats[seat].persona ?? null, seed: matchSeed, picks: pilotPicks});
   const pilotFor = (seat) => pilots[seat] || (pilots[seat] = pilotMade(seat));
   /* Whether the LLM seat asks for this decision (agent-pilot.mjs `consult`): never a seat that has left. */
   const consults = (seat, view, offer) => seats[seat].level === LLM && !leaving.includes(seat) && pilotFor(seat).consult?.(view, offer) === true;
@@ -977,7 +980,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
 
   const api = {
     matchId,
-    get seats() {return seats.map(({seatId, name, pilot, level}) => ({seatId, name, pilot, ...(level ? {level} : {})}));},
+    get seats() {return seats.map(({seatId, name, pilot, level, persona}) => ({seatId, name, pilot, ...(level ? {level} : {}), ...(persona ? {persona} : {})}));},
     get status() {return finished() ? "finished" : "playing";},
     get revision() {return controller.revision;},
     get waitingOn() {return pendingSeat === null ? null : seats[pendingSeat].seatId;},
