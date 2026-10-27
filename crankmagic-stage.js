@@ -225,9 +225,19 @@
      (the longest edge of its drawn quad over its own length) times the Graphics resolution (150% by default), rounded
      up, from 2 to 4; the browser already paints for the screen's own pixel density. A mat drawn no larger than itself
      (the opponents' at rest) stays at 1: painting it larger only to shrink it would lose detail. */
-  function sharpness(r){
+  /* How much a mat is magnified on screen: above 1 it is nearer than its layout size, below 1 the perspective has shrunk it. */
+  function magnification(r){
     const q=r.quad,edge=(a,b)=>Math.hypot(q[b]-q[a],q[b+1]-q[a+1]);
-    const mag=Math.max(edge(0,2)/r.width,edge(6,4)/r.width,edge(0,6)/r.height,edge(2,4)/r.height);
+    return Math.max(edge(0,2)/r.width,edge(6,4)/r.width,edge(0,6)/r.height,edge(2,4)/r.height);
+  }
+  /* How much of its size text on a mat keeps: the smaller of how far the width and the height have been drawn down (the tilt squashes the
+     height, the perspective the width), never above 1. */
+  function legibility(r){
+    const q=r.quad,edge=(a,b)=>Math.hypot(q[b]-q[a],q[b+1]-q[a+1]);
+    return Math.min((edge(0,2)+edge(6,4))/2/r.width,(edge(0,6)+edge(2,4))/2/r.height);
+  }
+  function sharpness(r){
+    const mag=magnification(r);
     return mag<=1.05?1:clamp(Math.ceil(mag*resNow()/100-.05),2,4);
   }
   /* k changes only once the camera has settled: laying a mat out again mid-motion would cost the motion its frames. */
@@ -237,7 +247,7 @@
     clearTimeout(el.sharpLater);
     if(want!==k)el.sharpLater=setTimeout(()=>{if(!el.isConnected||!current?.box)return;el.dataset.sharp=String(want);place(current);},250);
     Object.assign(el.style,{left:'0px',top:'0px',width:`${r.width*k}px`,height:`${r.height*k}px`,transformOrigin:'0 0',transform:`matrix3d(${m.join(',')})`});
-    el.style.setProperty('--mat-zoom',String(k));el.dataset.sharp=String(k);
+    el.style.setProperty('--mat-zoom',String(k));el.style.setProperty('--mat-mag',String(Math.max(.4,Math.min(1,legibility(r)))));el.dataset.sharp=String(k);
   }
   function layout(box,opts={}) {
     if(!current)return;
