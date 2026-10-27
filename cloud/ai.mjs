@@ -36,7 +36,7 @@
    said plainly (422). */
 import * as Advise from "./advise-brief.mjs";
 import {groupOf} from "./access.mjs";
-import {VETERAN_SKILL} from "../game/engine/pilots/veteran-skill.mjs";
+import {VETERAN_SKILL} from "./veteran-skill.mjs";
 
 export const DEFAULT_MODEL = "claude-haiku-5-5";
 export const MODELS = ["claude-haiku-5-5", "claude-sonnet-5-5"];

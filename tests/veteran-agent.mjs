@@ -24,7 +24,7 @@ import {memoryStorage} from "../game/engine/storage.mjs";
 import {startRoom, LLM, RoomError} from "../game/room/room.mjs";
 import {agentPilot, CLOSE, CLOSE_HAND} from "../game/engine/pilots/agent-pilot.mjs";
 import {agentBrief, pickOf} from "../game/room/agent-brief.mjs";
-import {VETERAN_SKILL} from "../game/engine/pilots/veteran-skill.mjs";
+import {VETERAN_SKILL} from "../cloud/veteran-skill.mjs";
 import {moduleText} from "../tools/build-veteran-skill.mjs";
 import {PILOT_SYSTEM, pilotBody, pilotWorst, PILOT_MAX_TOKENS} from "../cloud/ai.mjs";
 import {decksFromBackup, person} from "../tools/fuzz-live.mjs";
@@ -38,7 +38,7 @@ const ROOT = new URL("../", import.meta.url);
 /* ---- 1. The instruction set ---- */
 {
   const md = readFileSync(new URL("game/engine/pilots/veteran-skill.md", ROOT), "utf8");
-  eq(readFileSync(new URL("game/engine/pilots/veteran-skill.mjs", ROOT), "utf8"), moduleText(md), "veteran-skill.mjs is what veteran-skill.md says (node tools/build-veteran-skill.mjs writes it)");
+  eq(readFileSync(new URL("cloud/veteran-skill.mjs", ROOT), "utf8"), moduleText(md), "veteran-skill.mjs is what veteran-skill.md says (node tools/build-veteran-skill.mjs writes it)");
   eq(PILOT_SYSTEM, VETERAN_SKILL, "and it is the system prompt the door sends");
   eq(VETERAN_SKILL, md.trim(), "the Markdown, whole");
   for (const word of ["threats", "urgency", "reserve", "alternatives", "immediate", "near", "long", "housePilotWouldChoose", "analysis", "persona", "indices"]) ok(VETERAN_SKILL.includes(word), `it explains ${word}`);
