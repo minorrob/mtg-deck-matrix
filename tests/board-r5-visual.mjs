@@ -15,7 +15,9 @@
     12. The Camera menu: View seats and Reset are its first row, HUD text under them; no slider runs under its word.
     13. The bar between a mat's land and battlefield resizes them and leaves the table where it is.
     14. Zero tilt is the floor's own slope in the backdrop: steeper than the seated 45 degrees it was.
-    15. A tall Actions module around a short list shows no scrollbar of either kind. */
+    15. A tall Actions module around a short list shows no scrollbar of either kind.
+    16. The ribbon's life stands on the player name's baseline, and the step now under way keeps the line of the other steps.
+    17. Alt + the left button dragged up over the battlefield grows the cards, down over the lands shrinks them (Camera's Cards follows); nothing is sent. */
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import path from "node:path";
@@ -143,6 +145,23 @@ ok(floor.length>=1&&floor.every(t=>t>=60&&t<=limit),`every backdrop's floor lies
 const tall=await page.evaluate(()=>{const body=document.querySelector('.cm-stage-module[data-module="actions"]>.cm-module-body');body.style.height="560px";body.style.maxHeight="560px";
   return [...body.querySelectorAll("*"),body].filter(e=>/auto|scroll/.test(getComputedStyle(e).overflowY+getComputedStyle(e).overflowX)).map(e=>({cls:e.className.toString().slice(0,30),ox:getComputedStyle(e).overflowX,oy:getComputedStyle(e).overflowY,y:e.scrollHeight>e.clientHeight+1,x:e.scrollWidth>e.clientWidth+1}));});
 ok(tall.every(e=>!e.y&&!e.x&&e.ox!=="scroll"&&e.oy!=="scroll"),`a tall Actions module with a short list has no scrollbar (${JSON.stringify(tall)})`);
+/* 16. */
+const al=await page.evaluate(()=>{const base=e=>{const p=document.createElement("span");p.style.cssText="display:inline-block;width:0;height:0;vertical-align:baseline";e.appendChild(p);const y=p.getBoundingClientRect().bottom;p.remove();return y;};
+  const q=s=>document.querySelector(s);return {name:base(q(".cm-stage-self .cm-mat-name")),life:base(q(".cm-stage-self .cm-vitals b")),steps:[...document.querySelectorAll(".cm-stage-top .cm-board-ribbon li")].map(li=>base(li.querySelector(".cm-step-long")))};});
+near(al.life,al.name,.6,"the ribbon's life stands on the player name's baseline");
+ok(al.steps.length>=5&&Math.max(...al.steps)-Math.min(...al.steps)<.6,`every step, the one under way too, stands on one line (${al.steps.map(x=>x.toFixed(1)).join(", ")})`);
+/* 17. */
+const sizeNow=()=>page.evaluate(()=>Number(document.querySelector("[data-stage-camera=cards]")?.value||document.querySelector("#cm-board").style.getPropertyValue("--stage-card")));
+await page.locator("[data-action=board-camera]").click();await page.waitForTimeout(200);
+const c0=Number(await page.locator("[data-stage-camera=cards]").inputValue());
+await page.locator("[data-action=board-camera]").click();
+const field=await page.locator(".cm-stage-front .cm-board-field").first().boundingBox(),landsBox=await page.locator(".cm-stage-front .cm-board-lands").first().boundingBox();
+const altDrag=async(box,dy)=>{const x=box.x+box.width*.6,y=box.y+box.height/2;await page.keyboard.down("Alt");await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x,y+dy,{steps:8});await page.mouse.up();await page.keyboard.up("Alt");await page.waitForTimeout(250);};
+const cardsValue=async()=>{await page.locator("[data-action=board-camera]").click();await page.waitForTimeout(150);const v=Number(await page.locator("[data-stage-camera=cards]").inputValue());await page.locator("[data-action=board-camera]").click();return v;};
+await altDrag(field,-80);const c1=await cardsValue();
+ok(c1>c0,`Alt + drag up on the battlefield grows the cards (${c0} to ${c1})`);
+await altDrag(landsBox,80);const c2=await cardsValue();
+ok(c2<c1,`Alt + drag down on the lands shrinks them (${c1} to ${c2})`);
 /* 8. */
 await page.evaluate(()=>document.querySelector('[data-action="send-feedback"]').click());
 await page.waitForTimeout(700);

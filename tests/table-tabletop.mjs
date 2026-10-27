@@ -526,9 +526,9 @@ try {
   const dropBox=await row.locator('[data-arrange-card]').first().boundingBox();
   await row.locator('[data-arrange-card]').nth(1).dragTo(row.locator('[data-arrange-card]').first(),{targetPosition:{x:dropBox.width/2-5,y:dropBox.height/2}});
   assert.deepEqual((await order()).slice(0,2),[originalOrder[1],originalOrder[0]],'dragging snaps cards into order within their section');
-  await row.locator('[data-arrange-card]').first().focus();await row.locator('[data-arrange-card]').first().press('Alt+ArrowRight');
+  await row.locator('[data-arrange-card]').first().focus();await row.locator('[data-arrange-card]').first().press('Shift+Alt+ArrowRight');
   assert.deepEqual(await order(),originalOrder,'keyboard ordering gives the same arrangement control');
-  await row.locator('[data-arrange-card]').nth(1).focus();await row.locator('[data-arrange-card]').nth(1).press('Alt+ArrowLeft');
+  await row.locator('[data-arrange-card]').nth(1).focus();await row.locator('[data-arrange-card]').nth(1).press('Shift+Alt+ArrowLeft');
   const arranged=await order();
   const lands=page.locator('.cm-stage-front [data-card-section$=":lands"] [data-arrange-card]');
   await row.locator('[data-arrange-card]').first().dragTo(lands.first());

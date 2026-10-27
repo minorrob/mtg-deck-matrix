@@ -1,5 +1,24 @@
 # Who holds the work
 
+## Play screen, batch 4 (a Claude cloud session, for Rob; `claude/gifted-ride-w6xoa3`, PR 902), 2026-10-27
+
+Rob's list after batch 3: dropdown verbs and direct rows, library-search stacks, scrollbars, tilt 0 at the floor's slope, the Camera menu, Turn and Priority out of the ribbon,
+the do-nothing arrow, the divider dragging the table, free battlefield rows; then: life on the name's baseline, the current step on the others' line, Alt+Left
+(the browser's Back) no longer a shortcut, and Alt + drag for card size.
+
+- **Card menu**: a row that asks nothing more is sent by the press (priority offers only: a many-of question's rows still toggle a pick). The card is also shown in Actions.
+- **Stacks**: `sameKey` ignores `affected` when it is only the card itself, so a search lists "Forest x5". `board-choices` passes (it failed on main).
+- **3D ribbon**: no turn, no priority, no arrow while the drawer is open; Priority is under the life totals. Table and Focus have no caption and keep their ribbon text.
+- **Camera menu**: View seats + Reset, then HUD text; every slider word has a 76px column.
+- **Divider**: the mat pan ignores `[data-drag]`. **Rows**: `rowMoves()` keeps a card's row per game on this device; lands never leave theirs.
+- **Tilt**: 0 = the backdrop's floor (`FLOOR_ELEVATION` in `crankmagic-stage.js`, **estimates** from each clip's first frame; correct by eye). Key v4, default 40; the geometry's limit 80 degrees.
+- **Keyboard**: card reordering is Shift + Alt + Left/Right (Alt + Left is Back); the tooltip says so. **Alt + drag** up/down over a mat sizes cards (Cards in 3D, Board cards in Table and Focus).
+- **Proven**: `board-r5-visual` 63, `board-battlefield-rows` 8 (new), `board-fullscreen-notes` 47, `board-choices` 47, `board-r4-decisions` 119, `board-r4-input` 62, `board-r4-layout` 90, `board-r4-shell` 111,
+  `board-r4-views` 129, `board-r4-combat` 99, `board-r4-caption-fit` 171, `board-drawer-sizes` 47, `board-settings-window` 114, `board-babylon` 90, `board-3d-camera` 105, `board-hand-table` 111,
+  `table-board` 320, `table-tabletop`, `board-card-sharpness` (it is sensitive to the exact camera angle: seeded at 40 degrees), `a11y-board` 71 places, the same set as before this batch.
+  `table-tabletop` once failed a cards-cycling animation check under load and passed on the rerun.
+- **Not done**: the Actions drawer narrower by default with wrap-then-scale (Rob's notes on wireframes A1/A2), and A3's one-screen target flow (a draft awaiting his call).
+
 ## The Play screen made consistent: drawers, tabs, seat cards, pop-ups, the land screen, 2026-10-27 (a Claude cloud session, for Rob; `claude/gifted-ride-w6xoa3`)
 
 Rob, 2026-10-27, from screenshots and a list added as the work went: drawers that do not reach the ribbon, a poison counter at the top left, text out of

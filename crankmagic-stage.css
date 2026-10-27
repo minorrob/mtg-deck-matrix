@@ -1283,3 +1283,8 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 /* Camera: each slider's word has a column of its own, wide enough for the longest ("Spacing", "HUD text"), so the bar never runs under it. */
 #matrix-v2 .cm-board .cm-stage-camera>div>label:not(.cm-stage-style){display:grid;grid-template-columns:76px minmax(0,1fr) 44px;gap:8px;align-items:center;width:100%;max-width:none;flex:none;font-size:13px}
 #matrix-v2 .cm-board .cm-stage-camera>div>label:not(.cm-stage-style)>output{text-align:right}
+/* The ribbon's life stands on the player name's baseline (it sat 1.4px below it), and the step now under way keeps the line of the others (its padding was 2px, theirs 5px). */
+#matrix-v2 .cm-board .cm-stage-self .cm-vitals b{position:relative;top:-1.4px}
+#matrix-v2 .cm-board .cm-stage-top .cm-board-ribbon .is-now{padding-top:5px;padding-bottom:5px}
+/* Card size by Alt + drag: the pointer is the size's while it is dragged. */
+.cm-board[data-cardsize] *{cursor:ns-resize!important}

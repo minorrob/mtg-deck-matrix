@@ -781,7 +781,7 @@ globalThis.CrankBoard = Object.seal({
     /* WHY NOT (ROB-24): a card of the person's own that nothing offered plays says why, from the room (`why`). */
     const label = `${named}${controlled ? `, ${controlSummary(c)}` : ""}${state.length ? ", " + state.join(", ") : ""}${bright ? `: ${can.join(" or ")}${opts.length > can.length ? `, ${opts.length} ways` : ""}` : c.why ? `. ${c.why}` : ""}`;
     if (!c.name && !c.faceDown) return `<div class="cm-bcard is-back" role="img" aria-label="${e(label)}"></div>`;
-    const html = `<button type="button" class="${cls}" data-action="${action}" data-card="${c.cardId}" data-card-revision="${view.revision}" data-card-choice="${e(view.decision?.id || '')}" data-card-match="${e(view.matchId)}"${aimed.length ? ` title="${e(`Targeted by ${aimed.join(" and ")}`)}"` : ""}${arrange ? ` draggable="true" data-arrange-card="true" title="Drag within this section to reorder; Alt + Left or Right works with a keyboard"` : ""} aria-label="${e(label)}">
+    const html = `<button type="button" class="${cls}" data-action="${action}" data-card="${c.cardId}" data-card-revision="${view.revision}" data-card-choice="${e(view.decision?.id || '')}" data-card-match="${e(view.matchId)}"${aimed.length ? ` title="${e(`Targeted by ${aimed.join(" and ")}`)}"` : ""}${arrange ? ` draggable="true" data-arrange-card="true" title="Drag within this section to reorder; Shift + Alt + Left or Right works with a keyboard"` : ""} aria-label="${e(label)}">
       ${c.name ? `<span class="cm-bcard-name">${e(c.name)}</span>` : ""}${creature ? `<span class="cm-bcard-pt">${c.power}/${c.toughness}</span>` : ""}${tax !== null ? `<span class="cm-bcard-tax" title="Commander tax: {${tax}} more to cast it from the command zone">+${tax}</span>` : ""}
       ${c.name ? `<img src="${e(pictureOf(c.name))}" alt="" draggable="false" loading="lazy" referrerpolicy="no-referrer">` : ""}${controlled ? `<span class="cm-control-label">Owner: ${e(nameOf(c.owner))}</span>` : ""}${marks ? `<span class="cm-bcard-marks">${marks}</span>` : ""}</button>`;
     return cardUndo(c,html,where);
@@ -3696,7 +3696,7 @@ globalThis.CrankBoard = Object.seal({
   });
   document.addEventListener('dragend',()=>{arranging=null;clearCardDrop();});
   document.addEventListener('keydown',event=>{
-    const card=event.target.closest?.('[data-arrange-card]');if(!card || !event.altKey || !['ArrowLeft','ArrowRight'].includes(event.key))return;
+    const card=event.target.closest?.('[data-arrange-card]');if(!card || !event.altKey || !event.shiftKey || event.ctrlKey || event.metaKey || !['ArrowLeft','ArrowRight'].includes(event.key))return;   /* Shift + Alt: Alt + Left alone is the browser's Back (Rob, 2026-10-27) */
     event.preventDefault();const section=card.closest('[data-card-section]'),cards=[...section.querySelectorAll('[data-arrange-card]')],i=cards.indexOf(card),right=event.key==='ArrowRight',target=cards[i+(right?1:-1)];
     if(target){reorderCard(section,card.dataset.card,target.dataset.card,right);card.focus({preventScroll:true});}
   });
@@ -4085,6 +4085,40 @@ globalThis.CrankBoard = Object.seal({
     event.preventDefault(); event.stopImmediatePropagation();
     camera.reach = 0; keep(REACH_KEY, "0"); fit();
   }, true);
+  /* CARD SIZE BY ALT + DRAG (Rob, 2026-10-27: "Alt+left-click+drag up/down to zoom card size in/out on the area that's clicked ... drag up on
+     the battlefield, the card size increases. I do the same down on Lands and the same occurs."). Held over a mat, anywhere on it -- the
+     battlefield, the lands, a card -- Alt + the left button dragged up grows the cards, down shrinks them, as Camera's Cards slider does in
+     3D and Board cards does in Table and Focus (the one size each view keeps; 3D draws it larger or smaller on every mat). Kept as the
+     sliders keep it; the press is the size's, so nothing is played, picked or dragged by it. */
+  let sizing = null;
+  document.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0 || !event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.pointerType === "touch" || !view) return;
+    if (!event.target.closest?.("#cm-board .cm-mat") || event.target.closest(OVERLAYS)) return;
+    event.preventDefault(); event.stopImmediatePropagation();
+    const flat = !stageEnabled(), host = document.getElementById("cm-board"), from = flat ? scaleOf("board") : camera.cards, y0 = event.clientY;
+    const s = sizing = {id: event.pointerId, moved: false};
+    const move = (next) => {
+      if (next.pointerId !== s.id) return;
+      if (!s.moved) {if (Math.abs(next.clientY - y0) < 3) return; s.moved = true; host.dataset.cardsize = "on"; peek(null);}
+      const to = from * Math.exp((y0 - next.clientY) / 250);
+      if (flat) {setScale("board", to); return;}
+      camera.cards = Math.round(Math.max(70, Math.min(CAMERA_MAX, to)));
+      const slider = host.querySelector('[data-stage-camera="cards"]');
+      if (slider) {slider.value = camera.cards; slider.parentElement.querySelector("output").textContent = `${camera.cards}%`;}
+      fit();
+    };
+    const end = (next) => {
+      if (next.pointerId !== s.id) return;
+      removeEventListener("pointermove", move, true); removeEventListener("pointerup", end, true); removeEventListener("pointercancel", end, true);
+      sizing = null; delete host.dataset.cardsize;
+      const swallow = (c) => {c.preventDefault(); c.stopImmediatePropagation();};
+      addEventListener("click", swallow, {capture: true, once: true}); setTimeout(() => removeEventListener("click", swallow, {capture: true}), 250);
+      if (!s.moved) return;
+      if (!flat) keep("cm-stage-card-size-v2", String(camera.cards));
+    };
+    addEventListener("pointermove", move, true); addEventListener("pointerup", end, true); addEventListener("pointercancel", end, true);
+  }, true);
+  document.addEventListener("dragstart", (event) => {if (sizing) event.preventDefault();}, true);
   /* ↕ in Camera: the same length, from the keyboard too; built again when it is let go. */
   document.addEventListener("input", (event) => {
     const el = event.target.closest?.("#cm-board [data-stage-length]"); if (!el) return;

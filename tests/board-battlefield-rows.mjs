@@ -45,6 +45,12 @@ ok(await rowOf("Thrummingbird")==="others"&&await rowOf("Everflowing Chalice")==
 const lands=await page.evaluate(()=>[...document.querySelectorAll("#cm-board .cm-board-mat.is-you [data-card-section$=':lands'] [data-arrange-card]")].length);
 await drag("Island","creatures");await page.waitForTimeout(250);
 ok(await page.evaluate(()=>[...document.querySelectorAll("#cm-board .cm-board-mat.is-you [data-card-section$=':lands'] [data-arrange-card]")].length)===lands,"a land dropped on a battlefield row does not leave the lands");
+/* Alt + drag sizes the cards in Focus too (Board cards) */
+const scaleOf=()=>page.evaluate(()=>Number(document.querySelector("#cm-board").style.getPropertyValue("--board-scale")));
+const fb=await page.locator(".cm-board-mat.is-you .cm-board-field").first().boundingBox(),s0=await scaleOf();
+await page.keyboard.down("Alt");await page.mouse.move(fb.x+fb.width*.7,fb.y+fb.height/2);await page.mouse.down();await page.mouse.move(fb.x+fb.width*.7,fb.y+fb.height/2-70,{steps:8});await page.mouse.up();await page.keyboard.up("Alt");await page.waitForTimeout(250);
+const s1=await scaleOf();
+ok(s1>s0,`Alt + drag up over the battlefield grows the cards in Focus (${s0} to ${s1})`);
 ok(errors.length===0,`no page errors (${errors.join("; ")})`);
 await close();
 console.log(`board-battlefield-rows: ${checks} checks passed — the rows are defaults: a creature and an artifact each dragged to the other row stay there through the next view and a reload; a land stays in its own.`);
