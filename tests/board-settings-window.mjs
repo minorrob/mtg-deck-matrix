@@ -49,7 +49,7 @@ async function board(mode, {width = 1440, height = 900} = {}) {
 const cameraOpen = (page) => page.locator("#cm-board .cm-stage-camera>div").count();
 const settingsOpen = (page) => page.evaluate(() => !!document.querySelector("#cm-dialog.cm-play-settings-dialog[open] #cm-board-tools"));
 async function openSettings(page) {
-  await page.locator("#cm-board [data-action=board-profile]").first().click();
+  await page.locator("#cm-board [data-action=board-camera]").first().click();
   await page.locator("#cm-board [data-action=board-tools]").first().click();
   await page.locator("#cm-dialog[open] #cm-board-tools").waitFor({timeout: 5000});
 }
@@ -102,7 +102,7 @@ try {
     const {page, context, errors} = await board("focus", {width, height});
     await openSettings(page);
     ok(await settingsOpen(page), `${at}: Settings opens as a window`);
-    eq(await page.locator("#cm-board .cm-profile-menu").count(), 0, `${at}: and the Profile menu closes behind it`);
+    eq(await page.locator("#cm-board .cm-stage-camera>div").count(), 0, `${at}: Camera closes behind the settings window`);
     const L = await layout(page);
     ok(L.dialog.l >= 0 && L.dialog.t >= 0 && L.dialog.r <= L.vw && L.dialog.b <= L.vh, `${at}: the window fits the browser (${JSON.stringify(L.dialog)})`);
     ok(!L.pageScroll, `${at}: no sideways scroll`);
@@ -187,7 +187,17 @@ try {
     eq(await page.locator("#cm-dialog [role=tab][aria-selected=true]").getAttribute("data-tab"), "gameplay", "drawn again, the window stays on Gameplay");
     await page.locator("#cm-dialog .cm-dialog-close").click();
     await page.waitForTimeout(150);
-    eq(await page.evaluate(() => document.activeElement?.dataset?.action), "board-profile", "closed, the focus goes back to the Profile menu's button");
+    eq(await page.evaluate(() => document.activeElement?.dataset?.action), "board-camera", "closed, the focus goes back to Camera");
+    if(page.viewportSize().width===1440) {
+      await openSettings(page);await tab(page,'general');await page.locator('#cm-board-tools [data-action=board-modules-settings]').click();await page.locator('#cm-drawer-settings').waitFor();
+      const actions=page.locator('#cm-drawer-settings tr').filter({has:page.locator('th', {hasText:/^Actions$/})});
+      eq(await actions.locator('input').count(),0,'fixed Actions location is honest text rather than unexplained disabled choices');ok((await actions.textContent()).includes('Always in the left drawer'),'fixed Actions row explains why the decision stays available');
+      ok(!/Drag its handle/.test(await page.locator('#cm-drawer-settings').textContent()),'drawer settings promise only the real arrow controls');
+      await page.locator('input[name=module-history][value=none]').check();await page.locator('[data-action=board-modules-save]').click();await page.locator('#cm-drawer-settings').waitFor({state:'hidden'});
+      eq(await page.locator('.cm-stage-module[data-module=history]').count(),0,'real None selection removes optional History module');eq(await page.locator('.cm-stage-module[data-module=actions]').count(),1,'saving preserves the fixed Actions module');
+      const stackToggle=page.locator('[data-action=board-stage-side][aria-controls=cm-stack-drawer]');if(await stackToggle.getAttribute('aria-expanded')!=='true')await stackToggle.click();
+      await page.locator('[data-action=board-module-move][data-module=coach][data-by="-1"]').click();await page.waitForFunction(()=>document.querySelector('.cm-stage-modules[data-module-side=right]>.cm-stage-module')?.dataset.module==='coach');ok(true,'real drawer arrow changes saved module order');
+    }
     eq(errors, [], `no page error (${errors.join(" | ")})`);
     await context.close();
   }

@@ -17,6 +17,7 @@
 (() => {
   'use strict';
   const designs = Object.freeze([
+    {id: 'study', name: 'Study - walnut', reads: 'walnut top, fine brass edge, tapered walnut legs', thickness: .45, base: 'tapered', edge: 'brass', side: 'walnut', legacy: null},
     {id: 'medieval-banded', name: 'Medieval oak, iron bands', reads: 'thick plank top, riveted iron straps over the edge, trestle legs', thickness: .8, base: 'trestle', edge: 'straight', side: 'bands', legacy: null},
     {id: 'colonial-inlay', name: 'Colonial lacquered mahogany', reads: 'glossy top, apron with a light inlay band, turned legs', thickness: .35, base: 'turned', edge: 'bullnose', side: 'inlay', legacy: null},
     {id: 'glass-future', name: 'Futuristic glass', reads: 'semi-transparent frosted top with a lit edge, brushed frame, pedestal', thickness: .18, base: 'pedestal', edge: 'lit', side: 'frame', legacy: null},
@@ -27,7 +28,7 @@
   ]);
   const byId = Object.fromEntries(designs.map(d => [d.id, d]));
   /* An older preference (wooden / stone / obsidian) maps to the design that replaced it. */
-  const resolve = id => byId[id] || designs.find(d => d.legacy === id) || byId['tavern-plank'];
+  const resolve = id => byId[id] || designs.find(d => d.legacy === id) || byId['study'];
 
   /* ---- The paint comes from crankmagic-stage-paint.js, in a worker. ---- */
   let worker = null, seq = 0, onPage = null;
@@ -133,7 +134,22 @@
     const t = design.thickness, topY = TOP - t / 2, under = TOP - t;    // the underside of the top
     const legH = reduced ? 2.2 : 6, floor = under - legH;              // phones see no floor; legs are short
 
-    if (design.id === 'medieval-banded') {
+    if (design.id === 'study') {
+      // r4 Study: actual walnut geometry and paint, independent of the backdrop or skin.
+      const walnut = mat('walnut', '#3a2414', {rough: .72, skin: paint('walnut', 'wood', S, S, {base: '#3a2414', light: '#67462c', dark: '#21140c', planks: 5, knots: 1, rings: 8, seed: 101}, '#3a2414')});
+      const legs = mat('walnut legs', '#302015', {rough: .8, skin: paint('walnut legs', 'wood', S4, S4, {base: '#302015', light: '#503821', dark: '#1c120b', rings: 6, seed: 102}, '#302015')});
+      const brass = mat('brass', '#a98b4a', {rough: .55, metal: true});
+      box('walnut top', width, t, depth, 0, topY, 0, 'top', walnut);
+      for (const [w,d,x,z] of [[width,.045,0,depth/2],[width,.045,0,-depth/2],[.045,depth,width/2,0],[.045,depth,-width/2,0]])
+        box('fine brass edge', w, .045, d, x, TOP-.075, z, 'edge', brass);
+      for (const [w,d,x,z] of [[width-1,.2,0,depth/2-.6],[width-1,.2,0,-depth/2+.6],[.2,depth-1,width/2-.6,0],[.2,depth-1,-width/2+.6,0]])
+        box('walnut apron', w, .65, d, x, under-.325, z, 'side', legs);
+      if (!reduced) for (const x of [-1,1]) for (const z of [-1,1]) {
+        const lx=x*(width/2-.75), lz=z*(depth/2-.75);
+        cyl('tapered walnut leg', .6, .35, legH, lx, under-legH/2, lz, 'leg', legs);
+        cyl('brass foot', .36, .36, .18, lx, floor+.09, lz, 'leg', brass);
+      }
+    } else if (design.id === 'medieval-banded') {
       const oak = mat('oak', '#ffffff', {rough: .85, skin: paint('oak', 'wood', S, S, {base: '#5a3d26', light: '#a07a4c', dark: '#24150b', planks: 5, knots: 2, rings: 6, seed: 21}, '#5a3d26')});
       const oakLeg = mat('oak leg', '#ffffff', {rough: .9, skin: paint('oak leg', 'wood', S4, S4, {base: '#523721', light: '#94704a', dark: '#1f120a', rings: 5, seed: 22}, '#523721')});
       const ironM = mat('iron', '#ffffff', {rough: .55, metal: true, skin: paint('iron', 'iron', S4, S4 / 4, {}, '#3a3c42'), bump: .8});

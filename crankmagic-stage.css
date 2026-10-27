@@ -277,13 +277,14 @@
 .cm-stack-pile .cm-stack-card{position:absolute;left:0;top:0;margin:0;transform:translate(calc(var(--depth)*3px),calc(var(--depth)*5px));pointer-events:none;box-shadow:0 2px 5px #0008}
 .cm-stack-ghost{pointer-events:none}
 .cm-stage-environment{position:absolute;inset:58px 0 0;z-index:-1;overflow:hidden;pointer-events:none}
-/* The backdrop whole (crankmagic-stage.js, environment): the video at its own 16:9, as large as the stage allows without
-   cropping, centered; its poster, blurred, behind it; its edges feathered into that. */
+/* The backdrop (crankmagic-stage.js, environment): the video at its own 16:9 and always the stage's full width (Rob,
+   2026-10-26: the blurred poster beside it read as a blur on the right with the drawer closed), so nothing at either side
+   is blurred; on a stage wider than 16:9 its top and bottom run past the stage instead. The poster, blurred, is behind it
+   only where a stage taller than 16:9 leaves room above and below, and those edges are feathered into it. */
 .cm-stage-environment{container-type:size;display:grid;place-items:center;background:#140806}
 .cm-stage-environment::before{content:"";position:absolute;inset:-48px;background:var(--env-poster,none) center/cover no-repeat;filter:blur(32px) saturate(1.15) brightness(.72)}
-.cm-stage-environment video{position:relative;display:block;width:min(100cqw,calc(100cqh * 16 / 9));height:auto;aspect-ratio:16/9;object-fit:cover;
-  -webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent),linear-gradient(transparent,#000 4%,#000 96%,transparent);-webkit-mask-composite:source-in;
-  mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent),linear-gradient(transparent,#000 4%,#000 96%,transparent);mask-composite:intersect}
+.cm-stage-environment video{position:relative;display:block;width:100cqw;height:auto;aspect-ratio:16/9;object-fit:cover;
+  -webkit-mask-image:linear-gradient(transparent,#000 4%,#000 96%,transparent);mask-image:linear-gradient(transparent,#000 4%,#000 96%,transparent)}
 .cm-stage-region.has-video{background:transparent}
 
 .cm-bcard[data-arrange-card]{cursor:grab}.cm-bcard[data-arrange-card]:active{cursor:grabbing}.cm-bcard.cm-card-drop{outline:3px solid #a8dfbf;outline-offset:2px}
@@ -323,7 +324,7 @@
 .cm-stage-top .cm-board-ribbon.is-strip li.is-done{color:#b2c8bd}
 .cm-profile-menu .cm-board-menu{color:var(--v-ink)}
 .cm-stage-camera{background:#0b2023}
-#matrix-v2 .cm-stage-camera label,#matrix-v2 .cm-stage-camera output{color:#edf6ef}
+#matrix-v2 .cm-stage-camera label,#matrix-v2 .cm-stage-camera output{color:var(--color-ink)}
 #matrix-v2 .cm-stage-camera .cm-board-views .v-button{height:38px;color:#edf6ef;background:#1c302e}
 #matrix-v2 .cm-stage-camera .cm-board-views .v-button.is-on{color:#0d120c;background:#87c6a1}
 /* ROB-171: real objects remain actionable; ownership ghosts are inspection references only. */
@@ -429,9 +430,9 @@
 @media(max-width:1100px){#matrix-v2 .cm-stage-actions .v-button{min-height:44px;padding:0 16px;font-size:16px}.cm-stage-actions{gap:9px;padding:7px 9px}}
 /* WHAT THE OTHER PLAYERS PLAY: each card held up at the table's left, under the life list, its player's name over it, for
    ten seconds. */
-.cm-board-plays{position:fixed;left:var(--plays-left,56px);top:176px;z-index:57;display:flex;flex-direction:column;gap:10px;pointer-events:none}
+.cm-board-plays{position:fixed;left:var(--plays-left,56px);top:var(--plays-top,176px);z-index:57;display:flex;flex-direction:column;gap:10px;pointer-events:none}
 /* three at most, each as large as a third of the window below the caption leaves: a header and a 5:7 card */
-.cm-play-pop{--pw:max(96px,min(13vw,210px,calc(((100vh - 196px) / 3 - 46px) * 5 / 7)));width:var(--pw);padding:6px;border-radius:12px;background:rgb(6 20 22 / .9);border:2px solid var(--seat,#6f9c88);box-shadow:0 18px 40px -16px #000;color:#f3fff7;pointer-events:auto;animation:cm-play-in .3s cubic-bezier(.2,.8,.2,1);transition:opacity .6s,transform .6s}
+.cm-play-pop{--pw:max(96px,min(13vw,210px,calc(((100vh - var(--plays-top,176px) - 20px) / 3 - 46px) * 5 / 7)));width:var(--pw);padding:6px;border-radius:12px;background:rgb(6 20 22 / .9);border:2px solid var(--seat,#6f9c88);box-shadow:0 18px 40px -16px #000;color:#f3fff7;pointer-events:auto;animation:cm-play-in .3s cubic-bezier(.2,.8,.2,1);transition:opacity .6s,transform .6s}
 .cm-play-pop.is-leaving{opacity:0;transform:translateX(-24px)}
 .cm-play-pop header{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:0 2px 5px;font-size:13px}
 .cm-play-pop header b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -457,7 +458,7 @@
 .cm-table-deck-choose.is-playable-only li:has(>.cm-table-deck[data-precon]:disabled){display:none}
 .cm-play-home{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(280px,1fr);gap:18px;max-width:1400px;margin:auto}
 .cm-play-home .v-panel{margin:0;padding:clamp(20px,3vw,38px)}
-.cm-play-home h2{font-family:CrankOxanium,Satoshi,sans-serif;line-height:1.2}
+.cm-play-home h2{font-family:var(--font-body);line-height:1.2}
 .cm-play-welcome{background:radial-gradient(ellipse at 90% 0,#376b4933,transparent 65%),var(--panel);min-height:260px}
 .cm-play-eyebrow{font-size:12px;letter-spacing:.16em;font-weight:700;color:var(--accent)}
 .cm-play-welcome h2{font-size:clamp(28px,3.2vw,46px);margin:12px 0}
@@ -480,7 +481,7 @@
 .cm-stage-rail .cm-board-pane{position:static;display:block;width:100%;height:auto;max-height:none;padding:12px 0 0;margin:14px 0 0;border:0;border-top:1px solid #43564d;background:none;overflow:visible}
 .cm-stage-rail .cm-board-pane.is-shut{width:100%}
 .cm-stage-rail .cm-board-pane-head{display:flex;align-items:center;justify-content:space-between}
-.cm-stage-rail .cm-board-pane h3,.cm-stage-module h3,#cm-card-inspector h3{font-family:CrankOxanium,Satoshi,sans-serif;letter-spacing:.03em}
+.cm-stage-rail .cm-board-pane h3,.cm-stage-module h3,#cm-card-inspector h3{font-family:var(--font-body);letter-spacing:.03em}
 .cm-stage-rail .cm-board-tile{width:100%;margin:8px 0;aspect-ratio:auto;min-height:86px}
 .cm-stage-rail .cm-stage-module[data-module="actions"]{background:none;border:0;border-bottom:1px solid #43564d;border-radius:0;box-shadow:none}
 .cm-stage-module[data-module="actions"]>.cm-module-body{max-height:none;overflow:visible;padding:10px 0}
@@ -490,7 +491,7 @@
 .cm-board{--rail-top:58px}.cm-board[data-combat]{--rail-top:188px}
 .cm-stage-module[data-module="actions"] .cm-board-decision{display:flex;flex-direction:column;max-height:calc(100dvh - var(--rail-top) - 112px);gap:10px;min-height:0;overflow-y:auto;scrollbar-width:thin}
 .cm-stage-module[data-module="actions"] .cm-board-decision>h3,.cm-stage-module[data-module="actions"] .cm-board-decision-foot{flex:none}
-#matrix-v2 .cm-stage-module h3,#matrix-v2 .cm-stage-rail .cm-board-pane h3,#matrix-v2 #cm-card-inspector h3{font-family:CrankOxanium,Satoshi,sans-serif;font-size:14px;font-weight:600;text-transform:none;color:inherit}
+#matrix-v2 .cm-stage-module h3,#matrix-v2 .cm-stage-rail .cm-board-pane h3,#matrix-v2 #cm-card-inspector h3{font-family:var(--font-body);font-size:14px;font-weight:600;text-transform:none;color:inherit}
 .cm-stage-module[data-module="actions"] .cm-board-options{display:flex;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:8px;min-height:0;max-height:none;overflow:auto;padding:3px;margin:-3px;scrollbar-width:thin}
 .cm-stage-module[data-module="actions"] .cm-board-options>*{flex:none}
 /* A stack of the same card (crankmagic-board.js, sameStacks): one button, ×N, and how many of it beside it where the
@@ -599,7 +600,7 @@
 .cm-new-table-square .cm-table-new-seat{display:flex;flex-direction:column;gap:10px;padding:16px;min-width:0;background:#142a26;color:#edf6ef;border:1px solid #829b7d;border-radius:10px}
 .cm-new-table-square input,.cm-new-table-square select{width:100%;min-width:0}.cm-new-table-square [data-seat-position="1"]{grid-column:2;grid-row:2}.cm-new-table-square [data-seat-position="2"]{grid-column:1;grid-row:2}.cm-new-table-square [data-seat-position="3"]{grid-column:2;grid-row:1}.cm-new-table-square [data-seat-position="4"]{grid-column:1;grid-row:1}
 .cm-new-table-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:10px;color:#ead5ad;letter-spacing:.15em}.cm-new-table-rules{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}.cm-new-table-rules span{border:1px solid #8d7856;border-radius:20px;padding:5px 12px;font-size:12px}
-.cm-table-new{max-width:900px;margin:auto}.cm-table-new h2{font-family:CrankOxanium,Satoshi,sans-serif}
+.cm-table-new{max-width:900px;margin:auto}.cm-table-new h2{font-family:var(--font-body)}
 @media(max-width:1000px){.cm-play-home{grid-template-columns:1fr 1fr}.cm-play-talk{grid-column:1/-1}.cm-play-records{grid-column:auto}}
 @media(max-width:700px){.cm-play-home{grid-template-columns:minmax(0,1fr)}.cm-play-home .v-panel{grid-column:1;padding:20px}.cm-new-table-square{padding:10px;gap:24px 10px}.cm-new-table-square .cm-table-new-seat{padding:10px}.cm-new-table-square input,.cm-new-table-square select{font-size:13px}}
 /* R3: the same discoverable zone navigation in every board view. */
@@ -652,3 +653,527 @@
 #cm-dialog .cm-play-settings-body .cm-board-sound{display:grid;grid-template-columns:minmax(80px,auto) minmax(0,1fr) 3.5em;align-items:center;gap:12px;width:100%}
 #cm-dialog .cm-play-settings-body .cm-board-sound input[type=range]{width:100%}
 #cm-dialog .cm-play-settings-body .cm-board-sounds>.v-button{align-self:flex-start}
+
+/* r4's shared Play shell: Study, labeled drawers, one seat header and a persistent decision slot. */
+#matrix-v2 .cm-board.cm-study{background-color:var(--table-wood);background-image:radial-gradient(ellipse 60% 55% at 50% 42%,var(--table-light),transparent),radial-gradient(ellipse 75% 80% at 50% 46%,transparent 40%,var(--table-shade)),var(--table-grain);background-size:auto,auto,1600px 1000px;color:var(--mat-ink)}
+#matrix-v2 .cm-board .cm-mat[data-mat=felt]{background-color:var(--table-felt);background-image:var(--table-felt-nap),linear-gradient(180deg,rgb(255 255 255 / .035),rgb(0 0 0 / .14));border-radius:var(--radius-tile)}
+#matrix-v2 .cm-board .cm-seat-header{display:flex;align-items:center;gap:8px;min-width:0;color:var(--mat-ink);font:700 calc(var(--text-hud-caption)*var(--hud-scale,1))/1.15 var(--font-body);text-align:left}
+#matrix-v2 .cm-board .cm-seat-portrait{display:grid;place-items:center;flex:0 0 auto;width:calc(32px*var(--hud-scale,1));height:calc(32px*var(--hud-scale,1));border-radius:50%;background:var(--table-felt);box-shadow:0 0 0 2px var(--table-brass);overflow:hidden}
+#matrix-v2 .cm-board .cm-seat-portrait img{width:100%;height:100%;object-fit:cover}
+#matrix-v2 .cm-board .cm-seat-header.is-turn .cm-seat-portrait{box-shadow:0 0 0 2px var(--table-brass),0 0 0 5px var(--color-aether)}
+#matrix-v2 .cm-board .cm-seat-identity{display:flex;flex-direction:column;gap:3px;min-width:0}
+#matrix-v2 .cm-board .cm-seat-commander{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#matrix-v2 .cm-board .cm-seat-state.has-priority:before{content:'●';color:var(--color-aether);margin-right:4px}
+#matrix-v2 .cm-board .cm-seat-header .cm-vitals{flex-shrink:0;background:var(--mat-scrim);color:var(--mat-ink)}
+#matrix-v2 .cm-board .cm-seat-header .cm-vitals>b{font-size:calc(var(--text-hud-vital)*var(--hud-scale,1));line-height:1}
+#matrix-v2 .cm-board .cm-seat-header.is-danger .cm-vitals>b{color:var(--callout-harm)}
+#matrix-v2 .cm-board .cm-seat-header .cm-vitals>b:after{content:' life';font-size:calc(var(--text-hud-caption)*var(--hud-scale,1));font-weight:400}
+#matrix-v2 .cm-board .cm-mat-head .cm-seat-header{flex:1;flex-wrap:wrap}
+#matrix-v2 .cm-board .cm-stage-self>.cm-seat-header{flex-wrap:nowrap}
+#matrix-v2 .cm-board .cm-stage-self .cm-seat-commander,#matrix-v2 .cm-board .cm-stage-self .cm-seat-hand,#matrix-v2 .cm-board .cm-stage-self .cm-seat-state{display:none}
+#matrix-v2 .cm-board .cm-stage-rear .cm-seat-header{flex-wrap:wrap;background:var(--mat-scrim);padding:6px;border-radius:var(--radius-control)}
+#matrix-v2 .cm-board .cm-stage-rear .cm-seat-commander{display:none}
+#matrix-v2 .cm-board .cm-stage-top{flex-wrap:nowrap;min-height:58px;height:auto}
+#matrix-v2 .cm-board .cm-stage-priority,#matrix-v2 .cm-board .cm-board-turn{font-size:calc(var(--text-hud-caption)*var(--hud-scale,1));line-height:1.15}
+#matrix-v2 .cm-board .cm-mat-label,#matrix-v2 .cm-board .cm-board-chip{font-size:calc(var(--text-hud-caption)*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-drawer{background:var(--color-panel);color:var(--color-ink);border-color:var(--color-line-strong);transition:transform var(--motion-fast) var(--motion-ease)}
+#matrix-v2 .cm-board .cm-drawer-tab{display:flex;align-items:center;gap:6px;width:auto;min-width:48px;min-height:48px;padding:6px 10px;background:var(--color-raised);color:var(--color-ink);border:1px solid var(--color-line-strong);font:700 13px/1 var(--font-body);writing-mode:vertical-rl}
+#matrix-v2 .cm-board .cm-drawer-tab b{font-size:18px}
+#matrix-v2 .cm-board .cm-stage-module>header{min-height:28px;height:auto;cursor:pointer;padding:3px 6px}
+#matrix-v2 .cm-board .cm-stage-module>header h3{font-size:calc(var(--text-hud-caption)*var(--hud-scale,1));margin:0}
+#matrix-v2 .cm-board .cm-stage-module>header button{min-height:22px;height:22px;padding:1px 6px}
+#matrix-v2 .cm-board .cm-stage-module>header:focus-visible{outline:2px solid var(--color-aether);outline-offset:2px}
+#matrix-v2 .cm-board .cm-module-body[hidden],#matrix-v2 .cm-board .cm-decision-slot[hidden]{display:none}
+#matrix-v2 .cm-board .cm-decision-slot{z-index:21;max-width:min(560px,calc(100% - 100px));font-size:calc(var(--text-hud-caption)*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-decision-slot .cm-board-decision{background:var(--color-panel);color:var(--color-ink);max-height:min(65dvh,650px);overflow:auto;border:1px solid var(--color-line-strong);border-radius:var(--radius-card)}
+#matrix-v2 .cm-board .cm-table-menu{position:absolute;right:110px;bottom:18px;z-index:32;color:var(--color-ink)}
+#matrix-v2 .cm-board .cm-table-menu>button{min-height:40px;padding:8px 12px;background:var(--color-panel);color:inherit;border:1px solid var(--color-line-strong);border-radius:var(--radius-control)}
+#matrix-v2 .cm-board .cm-table-menu>div{position:absolute;right:0;bottom:46px;display:grid;gap:6px;min-width:240px;max-height:70dvh;overflow:auto;padding:12px;background:var(--color-panel);border:1px solid var(--color-line-strong);border-radius:var(--radius-card);box-shadow:var(--shadow-pop)}
+#matrix-v2 .cm-board .cm-hud-slider{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;font-size:15px}
+.cm-countdown-active{position:relative;isolation:isolate}.cm-countdown-active:after{content:'';position:absolute;inset:0;background:rgb(0 0 0 / .65);z-index:40}.cm-countdown-callout{position:absolute;inset:50% auto auto 50%;transform:translate(-50%,-50%);z-index:41;font:800 72px/1 var(--font-callout);color:var(--callout-value)}
+#matrix-v2 .cm-board[data-phone] .cm-drawer{position:absolute;inset:auto 0 50px;width:100%;height:auto;max-height:55dvh;overflow:auto;z-index:31;transform:translateY(110%);padding-bottom:0}
+#matrix-v2 .cm-board[data-phone] .cm-drawer.is-open{transform:none}
+#matrix-v2 .cm-board[data-phone] .cm-drawer-tab{position:absolute;top:auto;bottom:0;left:0;right:auto;writing-mode:horizontal-tb;z-index:33;transform:none}
+#matrix-v2 .cm-board[data-phone] .cm-drawer-tab.cm-stage-right{left:auto;right:0}
+#matrix-v2 .cm-board[data-phone]>.cm-stage-camera{z-index:36}
+#matrix-v2 .cm-board[data-phone] .cm-decision-slot{position:relative;inset:auto;transform:none;max-width:100%;width:100%}
+#matrix-v2 .cm-board[data-phone] .cm-phone-seat .cm-seat-header{display:grid;grid-template-columns:32px 1fr;gap:4px}
+#matrix-v2 .cm-board[data-phone] .cm-phone-seat .cm-seat-commander,#matrix-v2 .cm-board[data-phone] .cm-phone-seat .cm-seat-hand{display:none}
+#matrix-v2 .cm-board[data-phone] .cm-table-menu{bottom:auto;top:58px;right:90px}
+#matrix-v2 .cm-board[data-phone] .cm-table-menu>div{bottom:auto;top:46px}
+@media(prefers-reduced-motion:reduce){#matrix-v2 .cm-board .cm-drawer{transition:none}}
+html[data-motion=reduce] #matrix-v2 .cm-board .cm-drawer{transition:none}
+
+/* Phone seat headers scroll as whole readable cards instead of clipping larger HUD text. */
+#matrix-v2 .cm-board[data-phone=portrait]{grid-template-rows:52px minmax(96px,calc(92px*var(--hud-scale,1))) minmax(0,1fr)}
+#matrix-v2 .cm-board[data-phone] .cm-phone-seat{display:block;flex:0 0 calc(180px*var(--hud-scale,1));min-width:180px;overflow:hidden;background:var(--mat-scrim)}
+#matrix-v2 .cm-board[data-phone] .cm-phone-seat .cm-seat-header{grid-template-columns:calc(32px*var(--hud-scale,1)) minmax(0,1fr);align-items:center}
+#matrix-v2 .cm-board[data-phone] .cm-phone-seat .cm-vitals{grid-column:1/-1;justify-self:start}
+#matrix-v2 .cm-board[data-phone] .cm-phone-seat .cm-seat-state{grid-column:1/-1;white-space:nowrap}
+#matrix-v2 .cm-board[data-phone=landscape] .cm-phone-seat{flex-basis:auto;min-width:0}
+#matrix-v2 .cm-board[data-phone=landscape] .cm-phone-seat .cm-seat-header{display:flex;flex-direction:column;align-items:flex-start}
+
+#matrix-v2 .cm-board.cm-study .cm-stage-module,#matrix-v2 .cm-board.cm-study .cm-board-pane,#matrix-v2 .cm-board.cm-study .cm-full-vitals>div{background:var(--color-panel);color:var(--color-ink);border-color:var(--color-line)}
+#matrix-v2 .cm-board.cm-study .cm-stage-module .cm-muted,#matrix-v2 .cm-board.cm-study .cm-board-pane .cm-muted{color:var(--color-muted)}
+
+/* The HUD reserves its measured row at both ends of the scale. The steps menu retains the full turn. */
+#matrix-v2 .cm-board[data-shell=shared]{--hud-top:calc(28px + 30px * var(--hud-scale,1));grid-template-rows:var(--hud-top) minmax(0,1fr)}
+#matrix-v2 .cm-board[data-shell=shared][data-view=table]{grid-template-rows:var(--hud-top) var(--tabletop-h,minmax(0,1fr)) auto}
+#matrix-v2 .cm-board[data-shell=shared][data-combat]{grid-template-rows:calc(var(--hud-top) + 130px) minmax(0,1fr)}
+#matrix-v2 .cm-board[data-shell=shared][data-view=table][data-combat]{grid-template-rows:calc(var(--hud-top) + 130px) var(--tabletop-h,minmax(0,1fr)) auto}
+#matrix-v2 .cm-board .cm-stage-top{height:var(--hud-top,58px);min-height:var(--hud-top,58px);background:var(--color-panel);color:var(--color-ink);border-color:var(--color-line-strong)}
+#matrix-v2 .cm-board .cm-stage-priority,#matrix-v2 .cm-board .cm-board-turn{color:var(--color-ink)}
+#matrix-v2 .cm-board .cm-stage-self .cm-seat-header{background:var(--mat-scrim);padding:5px;border-radius:var(--radius-control)}
+#matrix-v2 .cm-board[data-shell=shared] .cm-stage-rail,#matrix-v2 .cm-board[data-shell=shared] .cm-stage-side{top:var(--hud-top)}
+#matrix-v2 .cm-board[data-shell=shared] .cm-stage-camera{position:fixed;top:calc(var(--hud-top) + 10px)}
+#matrix-v2 .cm-board .cm-table-menu{position:fixed;top:calc(var(--hud-top,58px) + 10px);right:calc(var(--stage-side-offset,0px) + 116px);bottom:auto}
+#matrix-v2 .cm-board .cm-table-menu>div{top:46px;bottom:auto}
+#matrix-v2 .cm-board[data-phone] .cm-table-menu{top:4px;right:100px}
+#matrix-v2 .cm-board .cm-seat-portrait{position:relative}
+#matrix-v2 .cm-board .cm-seat-portrait img{position:absolute;inset:0}
+#matrix-v2 .cm-board .cm-stage-top .cm-board-ribbon,#matrix-v2 .cm-board .cm-stage-top .v-button,#matrix-v2 .cm-board .cm-stage-camera>button,#matrix-v2 .cm-board .cm-table-menu>button{font-size:calc(var(--text-hud-caption)*var(--hud-scale,1))}
+#matrix-v2 .cm-board[data-hud-large] .cm-stage-top .cm-step-long{display:none}#matrix-v2 .cm-board[data-hud-large] .cm-stage-top .cm-step-short{display:inline}
+#matrix-v2 .cm-board .cm-stage-top .cm-board-ribbon .is-now{background:var(--color-ink);color:var(--color-bg)}
+#matrix-v2 .cm-board .cm-board-hand-side{flex-basis:calc(130px*var(--hud-scale,1));font-size:calc(var(--text-hud-caption)*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-board-hand-side :is(span,dt,dd,small),#matrix-v2 .cm-board .cm-board-hand-types,#matrix-v2 .cm-board .cm-board-scale,#matrix-v2 .cm-board .cm-board-scale span,#matrix-v2 .cm-board .cm-board-scale output{font-size:calc(var(--text-hud-caption)*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-board-group>h3,#matrix-v2 .cm-board .cm-board-pile figcaption{font-size:calc(var(--text-hud-caption)*var(--hud-scale,1));line-height:1.25}
+#matrix-v2 .cm-board .cm-board-field>.cm-mat-label{position:static!important;order:-1;align-self:flex-start;flex:none;height:auto;width:auto;clip-path:none;margin:0 0 6px;padding:2px 5px}
+#matrix-v2 .cm-board .cm-board-lands{display:flex;flex-direction:column}
+#matrix-v2 .cm-board .cm-board-lands>.cm-mat-label{position:static;order:-1;align-self:flex-start;flex:none;margin:0 0 6px;padding:2px 5px}
+#matrix-v2 .cm-board .cm-board-lands>[data-card-section]{flex:none;width:100%}
+#matrix-v2 .cm-board[data-phone] .cm-phone-battlefield .cm-board-field,#matrix-v2 .cm-board[data-phone] .cm-phone-battlefield [data-card-section]{height:auto!important;max-height:none!important;overflow:visible!important}
+#matrix-v2 .cm-board[data-phone] .cm-phone-battlefield .cm-board-field{min-height:130px}
+
+#matrix-v2 .cm-board .cm-stage-top .v-button,#matrix-v2 .cm-board .cm-stage-top .cm-board-ribbon{font-size:calc(var(--text-hud-caption)*var(--hud-scale,1))!important}
+#matrix-v2 .cm-board .cm-board-hand-types :is(li,span,b){font-size:calc(var(--text-hud-caption)*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-board-decision :is(h3,p,span,.v-button,label,input,select,small){font-size:calc(var(--text-hud-caption)*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-board-options [aria-pressed=true]{background:var(--color-ink)!important;color:var(--color-bg)!important;outline-color:var(--color-ink)}
+#matrix-v2 .cm-board[data-shell=shared][data-combat] .cm-table-menu,#matrix-v2 .cm-board[data-shell=shared][data-combat] .cm-stage-camera{top:calc(var(--rail-top) + 10px)}
+#matrix-v2 .cm-board[data-shell=shared][data-combat] .cm-stage-rail,#matrix-v2 .cm-board[data-shell=shared][data-combat] .cm-stage-side{top:calc(var(--hud-top) + 130px)}
+
+/* Camera and Table are ordinary controls; the HUD scale changes information, not their hit targets. */
+#matrix-v2 .cm-board .cm-stage-camera>button,#matrix-v2 .cm-board .cm-table-menu>button{font-size:15px}
+#matrix-v2 .cm-board .cm-table-menu{right:calc(var(--stage-side-offset,0px) + 126px)}
+#matrix-v2 .cm-board[data-phone] .cm-table-menu{right:108px}
+
+#matrix-v2 .cm-board .cm-stage-top .cm-board-ribbon li{font-size:calc(var(--text-hud-caption)*var(--hud-scale,1))}
+
+#matrix-v2 .cm-board .cm-stage-priority{flex:1 1 220px;min-width:130px;max-width:300px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#matrix-v2 .cm-board .cm-stage-top .v-button{font-size:15px!important;min-height:32px}
+#matrix-v2 .cm-board .cm-stage-top .cm-board-ribbon{font-size:calc(var(--text-hud-caption)*var(--hud-scale,1))!important}
+
+/* An open camera panel is a popover; it must not widen its trigger over the adjacent Table button. */
+#matrix-v2 .cm-board .cm-stage-camera{width:100px;min-width:100px;background:var(--color-panel);color:var(--color-ink);border-color:var(--color-line-strong)}
+#matrix-v2 .cm-board .cm-stage-camera>div{position:absolute;right:0;top:calc(100% + 6px);width:min(320px,calc(100vw - 24px));max-height:65dvh;overflow:auto;box-sizing:border-box;background:var(--color-panel);border:1px solid var(--color-line-strong);border-radius:var(--radius-card);box-shadow:var(--shadow-pop)}
+
+#matrix-v2 .cm-board .cm-board-group>h3{max-width:100%;box-sizing:border-box;white-space:normal;overflow-wrap:anywhere}
+#matrix-v2 .cm-board .cm-board-decision .v-button{max-width:100%;height:auto;min-height:40px;white-space:normal;overflow-wrap:anywhere}
+#matrix-v2 .cm-board[data-phone] .cm-phone-center{padding-bottom:52px}
+#matrix-v2 .cm-board[data-phone] .cm-phone-pill{font-size:calc(var(--text-hud-caption)*var(--hud-scale,1))}
+#matrix-v2 .cm-board[data-phone] .cm-phone-pill .cm-board-step{font-size:calc(var(--text-hud-caption)*var(--hud-scale,1));background:var(--color-ink);color:var(--color-bg)}
+#matrix-v2 .cm-board[data-phone] .cm-phone-pill .v-button{font-size:15px!important}
+#matrix-v2 .cm-board[data-phone] .cm-phone-badge{font-size:15px;min-width:20px;height:20px;line-height:20px;background:var(--color-raised);color:var(--color-ink)}
+
+#matrix-v2 .cm-board .v-button{font-size:15px;min-height:32px}
+#matrix-v2 .cm-board .cm-drawer-tab{font-size:15px}
+#matrix-v2 .cm-board .cm-board-pane .cm-seat-header{flex-wrap:wrap}
+#matrix-v2 .cm-board .cm-board-pane .cm-seat-header .cm-seat-commander{font-size:15px}
+#matrix-v2 .cm-board .cm-board-pane .cm-board-tile-main{width:100%;padding:6px}
+#matrix-v2 .cm-board .cm-board-pane .cm-board-tile{height:auto;min-height:96px;background:var(--color-panel);color:var(--color-ink)}
+
+/* Whole rows include their captions. Short seats scroll their grid as a whole. */
+#matrix-v2 .cm-board .cm-mat-grid{overflow:auto;overscroll-behavior:contain}
+#matrix-v2 .cm-board[data-phone] .cm-phone-battlefield .cm-mat-grid{overflow:visible;overscroll-behavior:auto}
+#matrix-v2 .cm-board .cm-board-field{min-height:calc(var(--bc)*1.4 + 100px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-board-lands{min-height:calc(var(--bc)*1.72 + 48px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-mat:is([data-fit="table"],[data-fit="focus"]) .cm-mat-grid,
+#matrix-v2 .cm-board .cm-stage-region .cm-mat-grid{grid-template-rows:minmax(calc(var(--bc)*1.4 + 100px*var(--hud-scale,1)),auto) 0px minmax(calc(var(--bc)*1.72 + 48px*var(--hud-scale,1)),auto) auto}
+
+/* r4 decisions: the spell, task, pick, consequence and one binding action. */
+#matrix-v2 .cm-board .cm-pick{display:flex;align-items:center;gap:10px;margin:8px 0}
+#matrix-v2 .cm-board .cm-pick>.cm-bcard{--bc:42px;flex:none}
+#matrix-v2 .cm-board .cm-pick>div{display:grid;gap:4px;min-width:0}
+#matrix-v2 .cm-board .cm-pick small{font-size:12px}
+#matrix-v2 .cm-board .cm-board-decision h2{font:700 calc(20px*var(--hud-scale,1))/1.25 var(--font-body);margin:8px 0;overflow-wrap:anywhere}
+#matrix-v2 .cm-board .cm-steps{display:flex;list-style:none;padding:0;gap:6px;font-size:14px}
+#matrix-v2 .cm-board .cm-steps li{padding:4px 8px;border:1px solid var(--color-line-strong);border-radius:var(--radius-control)}
+#matrix-v2 .cm-board .cm-steps .is-now{background:var(--color-ink);color:var(--color-bg)}
+#matrix-v2 .cm-board .cm-consequence{font-size:15px;margin:10px 0;color:var(--color-muted)}
+#matrix-v2 .cm-board .cm-decide-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0}
+#matrix-v2 .cm-board .cm-decide-actions>.v-button{min-height:40px;font-weight:700}
+#matrix-v2 .cm-board .cm-target-options{display:grid;gap:12px;width:100%}
+#matrix-v2 .cm-board .cm-target-controller{display:flex;gap:6px;flex-wrap:wrap;min-width:0}
+#matrix-v2 .cm-board .cm-target-controller>h3{width:100%;margin:0;font-size:15px}
+#matrix-v2 .cm-board .cm-target-link{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#matrix-v2 .cm-board .cm-target-link .cm-bcard{--bc:64px}
+#matrix-v2 .cm-board .cm-target-arrow{display:grid;text-align:center;gap:0;min-width:70px}
+#matrix-v2 .cm-board .cm-target-arrow>span{font-size:24px;line-height:1}
+#matrix-v2 .cm-board .cm-target-arrow>b{font-size:15px}
+#matrix-v2 .cm-board .cm-target-arrow>small{font-size:15px}
+#matrix-v2 .cm-board .cm-target-affected{display:flex;justify-content:center;margin:12px 0}
+#matrix-v2 .cm-board .cm-target-affected .cm-bcard{--bc:min(180px,50vw)}
+#matrix-v2 .cm-board .cm-target-many{display:grid;gap:12px}
+#matrix-v2 .cm-board .cm-target-source>.cm-bcard{--bc:80px}
+#matrix-v2 .cm-board .cm-target-many.has-3>.cm-target-source{justify-self:center}
+#matrix-v2 .cm-board .cm-target-quadrants{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+#matrix-v2 .cm-board .cm-target-quadrant{min-width:0}
+#matrix-v2 .cm-board .cm-target-quadrant h3,#matrix-v2 .cm-board .cm-target-quadrant p{font-size:15px;margin:5px 0}
+#matrix-v2 .cm-board .cm-target-stack{position:relative;isolation:isolate;width:92px;height:128px;border:1px solid var(--color-line-strong);border-radius:var(--radius-card);background:var(--color-raised);color:var(--color-ink);padding:0;cursor:pointer}
+#matrix-v2 .cm-board .cm-target-stack>img{position:relative;width:100%;height:100%;object-fit:contain;border-radius:inherit;animation:cm-stack-cycle var(--motion-fast) var(--motion-ease)}
+#matrix-v2 .cm-board .cm-target-stack>b{position:absolute;right:0;bottom:0;background:var(--color-ink);color:var(--color-bg);padding:2px 5px;border-radius:var(--radius-control)}
+#matrix-v2 .cm-board .cm-target-layer{position:absolute;inset:0;z-index:-1;transform:translate(calc(var(--layer)*3px),calc(var(--layer)*-3px));border:1px solid var(--color-line-strong);background:var(--color-panel);border-radius:inherit}
+#matrix-v2 .cm-board .cm-target-pager{display:flex;gap:8px;align-items:center}
+#matrix-v2 .cm-board .cm-stage-actions .v-button.primary{color:var(--color-on-accent);background:var(--color-accent)}
+@keyframes cm-stack-cycle{from{opacity:.5;translate:8px 0}to{opacity:1;translate:0 0}}
+@media(prefers-reduced-motion:reduce){#matrix-v2 .cm-board .cm-target-stack>img{animation:none}}
+html[data-motion=reduce] #matrix-v2 .cm-board .cm-target-stack>img{animation:none}
+
+.cm-countdown-active:after,.cm-countdown-callout{pointer-events:none}
+
+/* Chrome follows the chosen register; only words on the mat use the fixed poster pair. */
+#matrix-v2 .cm-board :is(.cm-stage-rail,.cm-stage-side,.cm-stage-module,.cm-board-decision,.cm-action-review){background:var(--color-panel);color:var(--color-ink)}
+#matrix-v2 .cm-board .cm-stage-rail .cm-board-pane,#matrix-v2 .cm-board .cm-stage-rail .cm-board-pane h3,#matrix-v2 .cm-board .cm-stage-rail .cm-board-tile:not(.is-mini) .cm-seat-header{color:var(--color-ink)}
+#matrix-v2 .cm-board .cm-stage-rail .cm-board-tile:not(.is-mini) .cm-seat-initial{color:var(--mat-ink)}
+#matrix-v2 .cm-board .cm-stage-module[data-module=actions] .cm-board-decision,#matrix-v2 .cm-board .cm-stage-module>header h3{color:var(--color-ink)}
+#matrix-v2 .cm-board .cm-stage-top,#matrix-v2 .cm-board .cm-stage-top .cm-board-ribbon li{color:var(--color-ink)}
+#matrix-v2 .cm-board .cm-stage-top .cm-board-ribbon .is-now{background:var(--color-ink);color:var(--color-bg)}
+#matrix-v2 .cm-board .cm-stage-top .cm-board-ribbon .is-done{color:var(--color-muted)}
+#matrix-v2 .cm-board .cm-action-review :is(h2,h3,.cm-target-arrow,.cm-target-quadrant p){color:var(--color-ink)}
+#matrix-v2 .cm-board[data-phone] .cm-drawer:has(.cm-board-decision){max-height:75dvh}
+#matrix-v2 .cm-board[data-phone] .cm-target-affected .cm-bcard{--bc:110px}
+#matrix-v2 .cm-board[data-phone] .cm-target-link .cm-bcard{--bc:42px}
+#matrix-v2 .cm-board[data-phone] .cm-target-link{justify-content:space-around}
+#matrix-v2 .cm-board .cm-target-many.has-3{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:auto auto auto auto}
+#matrix-v2 .cm-board .cm-target-many.has-3>h2{grid-column:1/-1}
+#matrix-v2 .cm-board .cm-target-many.has-3>.cm-target-source{grid-column:2;grid-row:3;justify-self:center}
+#matrix-v2 .cm-board .cm-target-many.has-3>.cm-target-quadrants{display:contents}
+#matrix-v2 .cm-board .cm-target-many.has-3 .cm-target-quadrant:nth-child(1){grid-column:1;grid-row:2}
+#matrix-v2 .cm-board .cm-target-many.has-3 .cm-target-quadrant:nth-child(2){grid-column:3;grid-row:2}
+#matrix-v2 .cm-board .cm-target-many.has-3 .cm-target-quadrant:nth-child(3){grid-column:2;grid-row:4}
+
+#matrix-v2 .cm-board .cm-stage-module[data-module=actions] .cm-board-decision-foot:has(.cm-action-review){position:static;background:transparent;padding:0}
+#matrix-v2 .cm-board .cm-decide-actions{position:sticky;bottom:0;background:var(--color-panel);padding:6px 0}
+
+#matrix-v2 .cm-board .cm-text-action{background:transparent;color:var(--color-ink);border-color:transparent;font-weight:700;text-decoration:underline;text-underline-offset:3px;padding-inline:6px}
+#matrix-v2 .cm-board .cm-text-action:hover{background:var(--color-raised)}
+#matrix-v2 .cm-board .cm-text-action:focus-visible{outline:2px solid var(--color-aether);outline-offset:2px}
+
+/* A reviewed choice has no option list; an empty legacy list must not reserve 120px. */
+#matrix-v2 .cm-board .cm-board-options:empty{display:none!important;min-height:0}
+
+/* r4 B: one private attacker row, one binding Send, and a desk per attacker. */
+#matrix-v2 .cm-board[data-combat]{--combat-h:calc(72px + 104px*var(--hud-scale,1));--rail-top:calc(var(--hud-top,58px) + var(--combat-h))}
+#matrix-v2 .cm-board[data-shell=shared][data-combat]{grid-template-rows:var(--rail-top) minmax(0,1fr)}
+#matrix-v2 .cm-board[data-shell=shared][data-view=table][data-combat]{grid-template-rows:var(--rail-top) var(--tabletop-h,minmax(0,1fr)) auto}
+#matrix-v2 .cm-board[data-combat]>.cm-stage-top{padding-bottom:var(--combat-h)}
+#matrix-v2 .cm-board[data-combat]>.cm-stage-rail,#matrix-v2 .cm-board[data-combat]>.cm-stage-side,#matrix-v2 .cm-board[data-combat]>#cm-card-inspector{top:var(--rail-top)}
+#matrix-v2 .cm-board[data-combat]>.cm-stage-side{height:calc(100% - var(--rail-top))!important}
+#matrix-v2 .cm-board[data-combat] .cm-stage-camera,#matrix-v2 .cm-board[data-combat] .cm-table-menu{top:calc(var(--rail-top) + 10px)}
+#matrix-v2 .cm-board .cm-r4-combat{height:var(--combat-h);padding:6px 10px;background:var(--color-panel);color:var(--color-ink);border-color:var(--color-line-strong)}
+#matrix-v2 .cm-board .cm-r4-combat>header{display:flex;align-items:center;gap:16px;min-height:24px;font-size:calc(15px*var(--hud-scale,1));line-height:1.2}
+#matrix-v2 .cm-board .cm-r4-combat>header>span{color:var(--color-muted)}
+#matrix-v2 .cm-board .cm-combat-body{display:flex;align-items:stretch;gap:5px;min-width:0;height:calc(100% - 26px)}
+#matrix-v2 .cm-board .cm-r4-combat .cm-combat-groups{display:flex;flex-flow:row nowrap;flex:1 1 auto;min-width:0;height:100%;list-style:none;padding:2px;margin:0;gap:8px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;overscroll-behavior-x:contain}
+#matrix-v2 .cm-board .cm-r4-combat .cm-combat-row{display:block;flex:0 0 clamp(156px,20vw,260px);min-width:0;height:100%;box-sizing:border-box;padding:0;border:0;background:none}
+#matrix-v2 .cm-board .cm-combat-tile{position:relative;display:flex;flex-direction:column;justify-content:center;gap:3px;width:100%;height:100%;padding:26px 6px 5px;box-sizing:border-box;background:var(--color-raised);color:var(--color-ink);border:1px solid var(--color-line-strong);border-radius:var(--radius-tile);cursor:pointer;font:700 calc(15px*var(--hud-scale,1))/1.15 var(--font-body)}
+#matrix-v2 .cm-board .is-unsettled>.cm-combat-tile{border:1px dashed var(--color-money);box-shadow:inset 0 0 9px color-mix(in srgb,var(--color-money) 22%,transparent)}
+#matrix-v2 .cm-board .is-ready>.cm-combat-tile{border-color:var(--st-inbox);box-shadow:inset 0 0 7px color-mix(in srgb,var(--st-inbox) 18%,transparent)}
+#matrix-v2 .cm-board .is-refused>.cm-combat-tile{border-color:var(--color-required);box-shadow:inset 0 0 9px color-mix(in srgb,var(--color-required) 25%,transparent)}
+#matrix-v2 .cm-board .cm-combat-state{position:absolute;right:6px;top:6px;max-width:90%;text-align:right;font-size:calc(15px*var(--hud-scale,1));font-stretch:85%}
+#matrix-v2 .cm-board .cm-combat-pair{display:flex;align-items:center;justify-content:space-around;gap:4px;min-width:0;width:100%;flex:1 1 auto}
+#matrix-v2 .cm-board .cm-combat-relation{display:flex;flex-direction:column;align-items:center;text-align:center;min-width:0;max-width:104px;font-size:calc(15px*var(--hud-scale,1));font-weight:400;overflow-wrap:anywhere}
+#matrix-v2 .cm-board .cm-combat-thumb{position:relative;display:inline-block;flex:0 0 36px;width:36px;height:51px;border-radius:var(--radius-control);background:var(--card-back);vertical-align:middle}
+#matrix-v2 .cm-board .cm-combat-thumb>img,#matrix-v2 .cm-board .cm-combat-thumb>.cm-combat-back{display:block;width:100%;height:100%;object-fit:contain;border-radius:inherit}
+#matrix-v2 .cm-board .cm-combat-pt{position:absolute;right:0;bottom:0;background:var(--mat-scrim);color:var(--mat-ink);font:700 15px/1 var(--font-body);padding:2px}
+#matrix-v2 .cm-board .cm-twin-mark{position:absolute;left:0;top:0;display:grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--color-ink);color:var(--color-bg);font:700 15px/1 var(--font-body)}
+#matrix-v2 .cm-board .cm-combat-blocks{display:flex;flex-flow:row wrap;justify-content:center;gap:3px;min-width:0;max-width:50%}
+#matrix-v2 .cm-board .cm-combat-empty{display:grid;place-items:center;width:36px;min-height:49px;border:1px dashed var(--color-line-strong);border-radius:var(--radius-control);font:400 15px/1.1 var(--font-body)}
+#matrix-v2 .cm-board .cm-combat-reason{font:400 15px/1.1 var(--font-body);max-height:34px;overflow:auto;text-align:left;width:100%}
+#matrix-v2 .cm-board .cm-combat-scroll{display:block;flex:0 0 22px;width:22px;padding:0;background:var(--color-raised);color:var(--color-ink);border:1px solid var(--color-line-strong);border-radius:var(--radius-control);font-size:26px;cursor:pointer}
+#matrix-v2 .cm-board .cm-combat-scroll[hidden],#matrix-v2 .cm-board [data-combat-more][hidden]{display:none}
+#matrix-v2 .cm-board .cm-combat-send{display:flex;flex-direction:column;justify-content:flex-start;gap:8px;flex:0 0 136px;max-width:40%;padding-top:2px}
+#matrix-v2 .cm-board .cm-combat-send>small{color:var(--color-accent);font-size:15px}
+#matrix-v2 .cm-board .cm-combat-send>.v-button{min-height:40px;white-space:normal;font-size:15px}
+#matrix-v2 .cm-board .cm-block-draft{font:400 calc(15px*var(--hud-scale,1))/1.35 var(--font-body);color:var(--color-ink)}
+#matrix-v2 .cm-board .cm-block-attacker{display:flex;align-items:center;gap:10px;margin:8px 0}
+#matrix-v2 .cm-board .cm-block-attacker>.cm-combat-thumb{flex-basis:80px;width:80px;height:112px}
+#matrix-v2 .cm-board .cm-block-attacker>p{flex:1;min-width:0}
+#matrix-v2 .cm-board .cm-block-tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;overflow:visible;padding:3px}
+#matrix-v2 .cm-board .cm-block-tile{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:5px;min-width:0;min-height:130px;padding:8px;background:var(--color-raised);color:var(--color-ink);border:1px solid var(--color-line-strong);font:700 calc(15px*var(--hud-scale,1))/1.2 var(--font-body);text-align:center;cursor:pointer}
+#matrix-v2 .cm-board .cm-block-tile>.cm-combat-thumb{flex-basis:71px;width:51px;height:71px}
+#matrix-v2 .cm-board .cm-block-tile>span:not(.cm-combat-thumb){overflow-wrap:anywhere}
+#matrix-v2 .cm-board .cm-block-tile[aria-pressed=true]{background:var(--color-ink);color:var(--color-bg);outline:2px solid var(--color-line-strong);outline-offset:-2px}
+#matrix-v2 .cm-board .cm-block-status>p{color:var(--color-required)}
+#matrix-v2 .cm-board .cm-block-restrictions{color:var(--color-muted)}
+#matrix-v2 .cm-board .cm-bcard.is-lit{outline:3px solid var(--color-aether);outline-offset:2px;filter:brightness(1.12)}
+#matrix-v2 .cm-board[data-phone] .cm-r4-combat{height:var(--combat-h);min-height:var(--combat-h);max-height:none;overflow:visible}
+
+#matrix-v2 .cm-board .cm-combat-tile{padding-top:calc(12px + 18px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-combat-pt,#matrix-v2 .cm-board .cm-combat-empty,#matrix-v2 .cm-board .cm-combat-reason{font-size:calc(15px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-twin-mark{font-size:calc(15px*var(--hud-scale,1));width:calc(18px*var(--hud-scale,1));height:calc(18px*var(--hud-scale,1))}
+
+#matrix-v2 .cm-board[data-phone][data-combat] .cm-stage-camera,#matrix-v2 .cm-board[data-phone][data-combat] .cm-table-menu{top:calc(env(safe-area-inset-top) + 4px)}
+#matrix-v2 .cm-board .cm-combat-open{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;border-radius:inherit;cursor:pointer;z-index:0}
+#matrix-v2 .cm-board .cm-combat-state,#matrix-v2 .cm-board .cm-combat-relation,#matrix-v2 .cm-board .cm-combat-reason{pointer-events:none}
+#matrix-v2 .cm-board .cm-combat-pair{position:relative;z-index:1;pointer-events:none}
+#matrix-v2 .cm-board .cm-combat-thumb-inspect{position:relative;z-index:2;display:inline-flex;padding:0;border:0;background:transparent;border-radius:var(--radius-control);cursor:zoom-in;pointer-events:auto}
+#matrix-v2 .cm-board .cm-combat-thumb-inspect:focus-visible{outline:2px solid var(--color-aether);outline-offset:2px}
+#matrix-v2 .cm-board .cm-combat-permanent{position:relative;z-index:2;display:flex;justify-content:center}
+#matrix-v2 .cm-board .cm-combat-permanent .cm-combat-thumb{width:24px;height:34px;flex-basis:24px}
+
+/* C1: a sibling button overlays the bottom edge without changing any row's spacing. */
+#matrix-v2 .cm-board .cm-card-slot{position:relative;display:inline-grid;flex:none;vertical-align:bottom;line-height:0;overflow:visible}
+#matrix-v2 .cm-board .cm-card-slot>.cm-bcard{margin:0}
+#matrix-v2 .cm-board .cm-card-slot>.cm-bcard.is-tapped{transform:rotate(30deg)}
+#matrix-v2 .cm-board .cm-undo-drawer{position:absolute;left:0;bottom:0;z-index:6;width:max-content;min-width:100%;min-height:24px;padding:3px 6px;border:0;background:rgb(0 0 0 / .65);color:var(--mat-ink);font:700 calc(15px*var(--hud-scale,1))/1.1 var(--font-body);white-space:nowrap;opacity:0;clip-path:inset(100% 0 0);transition:clip-path var(--motion-fast) var(--motion-ease),opacity var(--motion-fast) var(--motion-ease);pointer-events:none}
+#matrix-v2 .cm-board .cm-card-slot:hover>.cm-undo-drawer,#matrix-v2 .cm-board .cm-card-slot:focus-within>.cm-undo-drawer,#matrix-v2 .cm-board .cm-land-stack:is(:hover,:focus-within)>.cm-undo-drawer,#matrix-v2 .cm-board .cm-stack-image:hover>.cm-undo-drawer,#matrix-v2 .cm-board .cm-stack-image:focus-within>.cm-undo-drawer,#matrix-v2 .cm-board .cm-board-stack:hover>.cm-undo-drawer,#matrix-v2 .cm-board .cm-board-stack:focus-within>.cm-undo-drawer{opacity:1;clip-path:inset(0);pointer-events:auto}
+#matrix-v2 .cm-board .cm-stack-image,#matrix-v2 .cm-board .cm-board-stack{position:relative}
+@media(prefers-reduced-motion:reduce){#matrix-v2 .cm-board .cm-undo-drawer{transition:none}}
+html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
+
+#matrix-v2 .cm-board .cm-card-menu-art{width:26px;height:36px;object-fit:contain;flex:none;border-radius:var(--radius-control)}
+#matrix-v2 .cm-board .cm-card-menu-card,#matrix-v2 .cm-board .cm-card-menu-do{font-size:calc(15px*var(--hud-scale,1));white-space:normal}
+
+/* The attacked permanent shares the relation row; it cannot add a clipped fourth row. */
+#matrix-v2 .cm-board .cm-combat-thumb-inspect.is-target{display:flex;align-items:center;gap:3px;width:100%;max-width:104px;height:34px;overflow:hidden;text-align:left;font:400 15px/1.1 var(--font-body)}
+#matrix-v2 .cm-board .cm-combat-thumb-inspect.is-target>.cm-combat-thumb{width:24px;height:34px;flex-basis:24px}
+#matrix-v2 .cm-board .cm-combat-permanent-label{min-width:0;max-height:34px;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+
+/* W16: one physical stack survives tap-state changes; its caption overlaps the card's foot. */
+#matrix-v2 .cm-board .cm-land-stack{position:relative;display:inline-grid;width:var(--bc);height:calc(var(--bc)*1.4);isolation:isolate;overflow:visible}
+#matrix-v2 .cm-board .cm-land-stack>.cm-bcard{position:relative;z-index:2;grid-area:1/1;margin:0!important;transform:rotate(0deg)}
+#matrix-v2 .cm-board .cm-land-stack.is-tapped>.cm-bcard{transform:rotate(30deg)}
+#matrix-v2 .cm-board .cm-land-tilted{position:absolute;inset:0;background:var(--color-panel);border:2px solid var(--mat-ink);border-radius:5px;transform:rotate(30deg);z-index:1}
+#matrix-v2 .cm-board .cm-land-count{position:absolute;bottom:0;left:0;z-index:4;pointer-events:none;background:rgb(0 0 0 / .65);color:var(--mat-ink);font:700 calc(15px*var(--hud-scale,1))/1.15 var(--font-body);padding:3px 5px;white-space:nowrap;min-width:100%;width:max-content;box-sizing:border-box}
+#matrix-v2 .cm-board .cm-land-stack:has(.cm-undo-drawer):is(:hover,:focus-within)>.cm-land-count{visibility:hidden}
+#matrix-v2 .cm-board .cm-card-menu-copy{font:700 13px/1.2 var(--font-body);padding:5px 8px;margin:0;color:var(--color-muted);border-top:1px solid var(--color-line)}
+#matrix-v2 .cm-board .cm-land-stack>.cm-bcard,#matrix-v2 .cm-board .cm-land-tilted{transition:transform var(--motion-fast) var(--motion-ease)}
+@media(prefers-reduced-motion:reduce){#matrix-v2 .cm-board .cm-land-stack>.cm-bcard,#matrix-v2 .cm-board .cm-land-tilted{transition:none}}
+
+/* W17: the stroke is 1px, while its native separator accepts an 8px gesture. */
+#matrix-v2 .cm-board .cm-mat-grid{position:relative}
+#matrix-v2 .cm-board .cm-mat .cm-mat-grid{grid-template-rows:var(--field-px,minmax(180px,1fr)) 8px var(--lands-px,minmax(140px,1fr)) auto}
+#matrix-v2 .cm-board .cm-mat .cm-board-field{grid-row:1;min-height:0;height:auto!important;max-height:100%}
+#matrix-v2 .cm-board .cm-mat .cm-board-lands{grid-row:3;min-height:0;height:auto;max-height:100%}
+#matrix-v2 .cm-board .cm-zone-divider{grid-column:1;grid-row:2;height:8px;z-index:5;position:relative;display:block}
+#matrix-v2 .cm-board .cm-zone-divider>.cm-board-grip{display:block;position:absolute;inset:0;width:100%;height:8px;cursor:row-resize;background:none;border:0;margin:0;padding:0}
+#matrix-v2 .cm-board .cm-zone-divider>.cm-board-grip:after{content:"";position:absolute;left:0;right:0;top:3px;height:1px;background:var(--color-line-strong)}
+#matrix-v2 .cm-board .cm-zone-origin{position:absolute;width:0;height:0;pointer-events:none;left:0;top:0}
+#matrix-v2 .cm-board [data-zone-probe=x]{left:100px}
+#matrix-v2 .cm-board [data-zone-probe=y]{top:100px}
+/* Spacing has a zero-gap default; negative values overlap rows and columns by the same fraction. */
+#matrix-v2 .cm-board [data-card-section]{grid-template-columns:repeat(auto-fill,minmax(var(--zone-pitch,var(--zone-cell-width,var(--bc))),var(--zone-pitch,var(--zone-cell-width,var(--bc)))));grid-auto-rows:calc(var(--zone-cell-height,calc(var(--bc)*1.4)) + var(--bc)*min(0,var(--card-space,0)));gap:calc(var(--bc)*max(0,var(--card-space,0)));justify-items:start;align-items:start;padding-bottom:calc(4px - var(--bc)*min(0,var(--card-space,0)))}
+#matrix-v2 .cm-board [data-card-section]>*:is(:hover,:focus-within){z-index:9;position:relative}
+#matrix-v2 .cm-board .cm-stage-camera>div{width:320px;max-width:calc(100vw - 16px);background:var(--color-panel);border-radius:var(--radius-card);box-shadow:var(--shadow-pop)}
+#matrix-v2 .cm-board .cm-stage-camera label{font-size:13px}
+#matrix-v2 .cm-board .cm-seatboard-head .v-button.compact,#matrix-v2 .cm-board .cm-board-tile-focus{min-height:32px;height:auto;font-size:calc(15px*var(--hud-scale,1))}
+
+/* D2 views share the same public seat facts; no other hand is rendered in this strip. */
+#matrix-v2 .cm-board .cm-other-seats{position:relative;z-index:2;margin:0 8px;padding:6px;background:var(--color-panel);color:var(--color-ink);border:1px solid var(--color-line);border-radius:var(--radius-card)}
+#matrix-v2 .cm-board .cm-other-seats>header{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+#matrix-v2 .cm-board .cm-other-seats>div{display:flex;gap:6px;overflow:auto}
+#matrix-v2 .cm-board .cm-seat--stack{display:flex;align-items:center;gap:10px;flex:1 0 auto;min-height:32px;padding:6px 8px;border:1px solid var(--color-line-strong);border-radius:var(--radius-control);background:var(--color-bg);color:var(--color-ink);font:400 calc(15px*var(--hud-scale,1))/1.3 var(--font-body)}
+#matrix-v2 .cm-board .cm-seat--stack.is-turn{box-shadow:inset 3px 0 var(--color-accent)}
+#matrix-v2 .cm-board .cm-board-stage{top:calc(8px + var(--seats-strip-h,0px))}
+#matrix-v2 .cm-board .cm-seat-resources{font-size:calc(15px*var(--hud-scale,1));white-space:normal}
+#matrix-v2 .cm-board .cm-board-table{--pie:calc(180px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-board-pie-life{display:grid;justify-items:center;gap:3px;font-size:calc(24px*var(--hud-scale,1));max-width:46%;text-align:center}
+#matrix-v2 .cm-board .cm-board-pie-life small{font-size:calc(15px*var(--hud-scale,1));font-weight:700;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#matrix-v2 .cm-board .cm-board-pie-life.is-active{filter:drop-shadow(0 0 5px var(--color-accent))}
+#matrix-v2 .cm-board .cm-board-pie-priority{position:absolute;top:58%;left:50%;transform:translateX(-50%);font-size:calc(15px*var(--hud-scale,1));white-space:nowrap;color:var(--mat-ink);background:var(--mat-scrim);padding:2px 4px;border-radius:3px;pointer-events:none}
+#matrix-v2 .cm-board .cm-hand-legend{font-size:calc(15px*var(--hud-scale,1));white-space:normal}
+#matrix-v2 .cm-board[data-view=table]>.cm-board-hand{--hc:max(79px,calc(112px*var(--hand-scale,1)))}
+#matrix-v2 .cm-board .cm-stage-module>header>h3{display:flex;flex:1;margin:0;min-width:0}
+#matrix-v2 .cm-board .cm-module-toggle{display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;min-height:28px;margin:0;padding:0 4px;border:0;background:transparent;color:inherit;font:700 15px/1.2 var(--font-body);text-align:left;cursor:pointer}
+#matrix-v2 .cm-board .cm-stage-module[data-module=coach]>.cm-module-body{overflow:visible}
+#matrix-v2 .cm-board .cm-stage-module[data-module=coach]>.cm-module-body:has(.cm-module-coach-host){padding:0}
+/* Game-state captions follow HUD scale; Coach and Camera retain their specified form metrics. */
+#matrix-v2 .cm-board :is(.cm-pick small,.cm-steps,.cm-consequence,.cm-board-waiting,.cm-stage-priority small,.cm-stage-priority .cm-board-waiting,.cm-board-pie-priority,.cm-board-next,.cm-board-conn,.cm-bcard-pt,.cm-bcard-count,.cm-bcard-tax,.cm-bcard-mark,.cm-board-chip,.cm-board-hand-types,.cm-board-hand-types li,.cm-board-hand-count,.cm-board-turn small,.cm-board-tile-flag,.cm-seat-hand,.cm-control-label){font-size:calc(15px*var(--hud-scale,1))}
+#matrix-v2 .cm-board[data-phone] .cm-phone-ask{overflow:auto;overscroll-behavior:contain}
+#matrix-v2 .cm-board[data-phone] .cm-phone-ask .cm-decision-slot{width:100%;min-width:0;box-sizing:border-box}
+
+/* The dial's center and labels each retain their own clear area and contrast. */
+#matrix-v2 .cm-board .cm-board-pie .cm-board-center{width:calc(32px*var(--hud-scale,1));height:calc(32px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-board-pie-life small{color:var(--mat-ink);background:var(--mat-scrim);padding:2px 4px;border-radius:3px}
+#matrix-v2 .cm-board .cm-board-pie-priority{top:calc(50% + 20px*var(--hud-scale,1));font-size:calc(15px*var(--hud-scale,1));line-height:1.1}
+
+#matrix-v2 .cm-board .cm-vitals-poison,#matrix-v2 .cm-board .cm-vitals>b:after{font-size:calc(15px*var(--hud-scale,1))}
+
+#matrix-v2 .cm-board .cm-mat .cm-mat-name,#matrix-v2 .cm-board .cm-pick>div,#matrix-v2 .cm-board .cm-pick>div>*{font-size:calc(15px*var(--hud-scale,1))}
+
+/* Scale game facts in every seat-header location, including the drawer's board list. */
+#matrix-v2 .cm-board .cm-seat-header :is(.cm-mat-name,.cm-seat-commander,.cm-seat-state),#matrix-v2 .cm-board .cm-board-pane .cm-seat-header .cm-seat-commander,#matrix-v2 .cm-board .cm-stage-rear .cm-seat-header .cm-seat-state{font-size:calc(15px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-stage-top .v-button{font-size:calc(15px*var(--hud-scale,1))!important;height:auto;white-space:normal}
+#matrix-v2 .cm-board .cm-other-seats>header,#matrix-v2 .cm-board .cm-other-seats>header :is(b,.v-button),#matrix-v2 .cm-board .cm-stage-handle>span{font-size:calc(15px*var(--hud-scale,1))}
+/* The dial is in the row gap; it never covers a card's pixels or pointer target. */
+#matrix-v2 .cm-board .cm-board-table{row-gap:calc(var(--pie) + 16px);overflow:auto;overscroll-behavior:contain}
+#matrix-v2 .cm-board .cm-board-table[data-seats="2"]{column-gap:calc(var(--pie) + 16px)}
+#matrix-v2 .cm-board .cm-board-pie{pointer-events:none}
+#matrix-v2 .cm-board .cm-board-pie .cm-board-center{pointer-events:auto}
+#matrix-v2 .cm-board[data-hud-large] .cm-board-table{grid-template-rows:repeat(2,var(--hud-row-h));align-content:start}
+#matrix-v2 .cm-board[data-hud-large] .cm-board-table[data-seats="2"]{grid-template-rows:var(--hud-row-h)}
+#matrix-v2 .cm-board[data-hud-large] .cm-board-table[data-seats="2"] .cm-board-slot{height:var(--hud-row-h)}
+
+/* A compact center retains the original Table allocation; large HUD rows scroll as a whole. */
+#matrix-v2 .cm-board .cm-board-table{--pie:calc(130px*var(--hud-scale,1));row-gap:22px}
+#matrix-v2 .cm-board .cm-board-table[data-seats="2"]{column-gap:22px}
+#matrix-v2 .cm-board .cm-board-pie .cm-board-center{width:calc(24px*var(--hud-scale,1));height:calc(24px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-board-pie-priority{top:calc(50% + 18px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-board-table[data-seats="2"] .cm-board-pie-priority{top:105%}
+#matrix-v2 .cm-board .cm-zone-divider{z-index:10;pointer-events:auto}
+
+#matrix-v2 .cm-board .cm-mat-grid{overflow-anchor:none}
+
+#matrix-v2 .cm-board .cm-mat[data-fit]>.cm-mat-grid{grid-template-rows:var(--field-px,minmax(180px,1fr)) 8px var(--lands-px,minmax(140px,1fr)) auto}
+
+#matrix-v2 .cm-board .cm-board-pie-life{width:46%;max-width:none}
+#matrix-v2 .cm-board .cm-board-pie-life>b{color:var(--mat-ink);background:var(--mat-scrim);padding:1px 4px;border-radius:3px}
+
+#matrix-v2 .cm-board>#cm-board-history{position:fixed;top:calc(var(--hud-top,58px) + 6px);right:12px;left:auto;width:min(420px,calc(100vw - 24px));max-height:calc(100dvh - var(--hud-top,58px) - 72px);z-index:45;overflow:auto;background:var(--color-panel);color:var(--color-ink);border:1px solid var(--color-line-strong);box-shadow:var(--shadow-pop)}
+
+/* A folded decision stays above the phone's still-open Boards sheet and below its 50px tabs. */
+#matrix-v2 .cm-board[data-phone] .cm-phone-ask:has(.cm-decision-slot:not([hidden])){position:relative;z-index:32}
+
+/* Focus History has its own row; the 8px divider cannot be its scroll viewport. */
+#matrix-v2 .cm-board .cm-mat[data-fit=focus]>.cm-mat-grid>.cm-board-band{grid-column:1/-1;grid-row:5;min-height:calc(160px*var(--hud-scale,1));overflow:auto}
+#matrix-v2 .cm-board :is(.cm-board-band h3,.cm-board-band ol,.cm-board-history li){font-size:calc(15px*var(--hud-scale,1));line-height:1.2}
+#matrix-v2 .cm-board .cm-board-band h3 .v-button{min-height:32px;height:32px;font-size:15px}
+
+/* The center dial uses a column gutter, retaining the normal board rows. */
+#matrix-v2 .cm-board .cm-board-table{--pie:calc(144px*var(--hud-scale,1));column-gap:calc(var(--pie) + 8px)}
+#matrix-v2 .cm-board .cm-board-table[data-seats="2"]{column-gap:calc(var(--pie) + 8px)}
+#matrix-v2 .cm-board .cm-board-pie-life{width:42%;gap:calc(2px*var(--hud-scale,1));line-height:1}
+#matrix-v2 .cm-board .cm-board-pie-life>b,#matrix-v2 .cm-board .cm-board-pie-life small{line-height:1;padding:0 calc(3px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-board-pie .cm-board-center{top:41.5%;width:calc(32px*var(--hud-scale,1));height:calc(32px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-board-pie-priority,#matrix-v2 .cm-board .cm-board-table[data-seats="2"] .cm-board-pie-priority{top:54%;padding:0 4px;line-height:1.1}
+#matrix-v2 .cm-board .cm-board-tabletop{padding-top:60px}
+#matrix-v2 .cm-board .cm-other-seats>header{min-height:48px;padding-right:216px;box-sizing:border-box}
+#matrix-v2 .cm-board .cm-board-table[data-seats="3"] .cm-board-slot[data-area="c"] .cm-board-field{padding-top:calc(var(--pie)/2 + 6px)}
+
+#matrix-v2 .cm-board .cm-board-tabletop{padding-left:56px;padding-right:56px}
+
+/* Captions are in flow: reserve real card rows instead of clipping Lands to a strip. */
+#matrix-v2 .cm-board .cm-board-field,#matrix-v2 .cm-board .cm-board-lands{padding-bottom:4px}
+#matrix-v2 .cm-board .cm-board-table,#matrix-v2 .cm-board[data-hud-large] .cm-board-table{grid-template-rows:var(--table-top-h) var(--table-bot-h)}
+#matrix-v2 .cm-board .cm-board-table[data-seats="2"],#matrix-v2 .cm-board[data-hud-large] .cm-board-table[data-seats="2"]{grid-template-rows:var(--table-top-h)}
+#matrix-v2 .cm-board .cm-board-table[data-seats="2"] .cm-board-slot,#matrix-v2 .cm-board[data-hud-large] .cm-board-table[data-seats="2"] .cm-board-slot{height:var(--table-top-h)}
+#matrix-v2 .cm-board .cm-mat .cm-board-chip{grid-row:4;align-self:start}
+#matrix-v2 .cm-board .cm-phone-battlefield .cm-board-pile{grid-row:5}
+
+/* A larger information scale wraps real HUD groups, never phase text over priority. */
+#matrix-v2 .cm-board .cm-stage-top{height:auto;min-height:calc(28px + 30px*var(--hud-scale,1));align-self:start}
+#matrix-v2 .cm-board[data-hud-large] .cm-stage-top{flex-wrap:wrap;align-content:center}
+#matrix-v2 .cm-board[data-hud-large] .cm-stage-top>.cm-board-turnsteps{flex:1 0 360px}
+#matrix-v2 .cm-board[data-hud-large] .cm-stage-priority{flex:1 0 280px;white-space:normal}
+#matrix-v2 .cm-board .cm-board-chip{white-space:normal;max-width:100%;box-sizing:border-box}
+#matrix-v2 .cm-board .cm-board-tabletop{padding-left:calc(42px*var(--hud-scale,1) + 14px);padding-right:calc(42px*var(--hud-scale,1) + 14px)}
+@media(min-width:1400px){
+ #matrix-v2 .cm-board[data-hud-large] .cm-stage-top{flex-wrap:nowrap;gap:8px}
+ #matrix-v2 .cm-board[data-hud-large] .cm-stage-top>.cm-board-turnsteps{flex:1 1 300px;min-width:300px}
+ #matrix-v2 .cm-board[data-hud-large] .cm-stage-priority{flex:0 1 220px;min-width:170px;white-space:nowrap}
+ #matrix-v2 .cm-board[data-hud-large] .cm-stage-self .cm-seat-portrait,#matrix-v2 .cm-board[data-hud-large] .cm-stage-self .cm-seat-identity{display:none}
+ #matrix-v2 .cm-board[data-hud-large] .cm-stage-top .cm-board-ribbon{gap:2px}
+ #matrix-v2 .cm-board[data-hud-large] .cm-stage-top .cm-board-ribbon li{padding-left:3px;padding-right:3px}
+}
+#matrix-v2 .cm-board .cm-board-pie-turn{position:absolute;inset:-3px;border-radius:50%;mask:radial-gradient(circle,transparent 64%,#000 66%);filter:drop-shadow(0 0 4px var(--color-aether));pointer-events:none}
+#matrix-v2 .cm-board[data-phone] .cm-phone-pill,#matrix-v2 .cm-board[data-phone] .cm-phone-icon{background:var(--color-panel);color:var(--color-ink);border-color:var(--color-line-strong)}
+#matrix-v2 .cm-board[data-phone] .cm-phone-icon .cm-icon{color:currentColor}
+
+/* The folded slot scrolls as one decision. Shrinking an inner options viewport below the
+   source/card blocks made the returned picker overlap its preceding card at large HUD sizes. */
+#matrix-v2 .cm-board .cm-decision-slot #cm-board-decision{display:flex;flex-flow:column nowrap;align-items:stretch}
+#matrix-v2 .cm-board .cm-decision-slot #cm-board-decision>*{flex:none}
+#matrix-v2 .cm-board .cm-decision-slot #cm-board-decision>.cm-board-options{flex:none;overflow:visible;margin:0;min-height:0}
+
+/* Keep the existing art scale, with only the minimum needed to contain the actual scaled
+   public badge. The same --bc drives pile columns and measured usable zone rows. */
+#matrix-v2 .cm-board .cm-mat[data-fit=table]{--table-card-base:clamp(30px,var(--row-w,var(--board-w,620px))*.074,60px);--bc:max(calc(var(--table-card-base)*var(--board-scale,1)),calc(var(--caption-card-min,0px) + var(--table-card-base)*(var(--board-scale,1) - var(--board-scale-min,.6))*var(--table-card-growth,1)))}
+#matrix-v2 .cm-board .cm-mat[data-fit=focus]{--bc:max(calc(clamp(92px,var(--mat-w,1060px)*.078,136px)*var(--board-scale,1)),var(--caption-card-min,0px))}
+#matrix-v2 .cm-board .cm-mat[data-fit=full]{--bc:max(calc(clamp(64px,var(--full-w,1200px)*.075,112px)*var(--board-scale,1)),var(--caption-card-min,0px))}
+#matrix-v2 .cm-board .cm-mat[data-fit=opp]{--bc:max(min(calc(clamp(28px,var(--opp-w,400px)*.11,48px)*var(--board-scale,1)),var(--opp-bc-max,48px)),var(--caption-card-min,0px))}
+#matrix-v2 .cm-board .cm-mat[data-fit=mini]{--bc:max(calc(var(--mini-w,300px)*.074*var(--board-scale,1)),var(--caption-card-min,0px))}
+#matrix-v2 .cm-board .cm-mat[data-fit=side]{--bc:max(calc(clamp(26px,var(--opp-w,300px)*.15,52px)*var(--board-scale,1)),var(--caption-card-min,0px))}
+#matrix-v2 .cm-board .cm-phone-battlefield>.cm-mat{--bc:max(calc(64px*var(--board-scale,1)),var(--caption-card-min,0px))}
+#matrix-v2 .cm-board .cm-stage-front>.cm-mat{--bc:max(var(--stage-card,96px),var(--caption-card-min,0px))}
+#matrix-v2 .cm-board .cm-stage-mini>.cm-mat{--bc:max(var(--rear-card,24px),var(--caption-card-min,0px))}
+#matrix-v2 .cm-board .cm-stage-front .cm-board-pile{--bc:max(calc(var(--stage-card,80px)*.78),var(--caption-card-min,0px))}
+#matrix-v2 .cm-board .cm-full-mine>.cm-mat[data-fit=full]{--bc:max(min(calc(clamp(64px,var(--full-w,1200px)*.075,112px)*var(--board-scale,1)),var(--full-bc-max,112px)),var(--caption-card-min,0px))}
+#matrix-v2 .cm-board .cm-phone-battlefield .cm-board-pile{--bc:max(54px,var(--caption-card-min,0px))}
+#matrix-v2 .cm-board[data-view=focus] .cm-board-main{overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;overflow-anchor:none}
+#matrix-v2 .cm-board[data-view=focus][data-hud-large]>.cm-board-body{padding-inline:calc(42px*var(--hud-scale,1) + 14px);box-sizing:border-box}
+#matrix-v2 .cm-board[data-view=focus] .cm-board-stage{height:var(--mat-h);aspect-ratio:auto}
+#matrix-v2 .cm-board .cm-mat[data-fit=focus]>.cm-mat-grid{grid-template-rows:var(--field-px) 8px var(--lands-px) auto calc(160px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-board-main>.cm-decision-slot{position:sticky;top:0;left:auto;transform:none;margin:0 auto}
+@media(max-width:1399px){
+ #matrix-v2 .cm-board .cm-stage-top .cm-step-long{display:none}
+ #matrix-v2 .cm-board .cm-stage-top .cm-step-short{display:inline}
+ #matrix-v2 .cm-board .cm-stage-top .cm-board-ribbon{gap:2px}
+ #matrix-v2 .cm-board .cm-stage-top .cm-board-ribbon li{padding-left:3px;padding-right:3px}
+ #matrix-v2 .cm-board .cm-stage-top>.cm-board-turnsteps{flex:1 1 230px;min-width:210px}
+}
+#matrix-v2 .cm-board .cm-mat :is(.cm-board-field,.cm-board-lands)>.cm-mat-label{max-width:100%;box-sizing:border-box;white-space:normal;overflow-wrap:anywhere}
+#matrix-v2 .cm-board .cm-mat:not(.is-bare) .cm-board-pile figcaption em{display:block}
+#matrix-v2 .cm-board .cm-mat .cm-board-pile[data-caption-compact] figcaption em{display:none!important}
+#matrix-v2 .cm-board .cm-board-pile[data-caption-compact] figcaption{justify-content:center}
+#matrix-v2 .cm-board .cm-board-pile{grid-template-columns:minmax(0,1fr)}
+#matrix-v2 .cm-board .cm-board-pile figcaption{min-width:0;max-width:100%}
+#matrix-v2 .cm-board[data-shell=shared] .cm-stage-camera{right:calc(var(--play-inspector,0px) + var(--stage-side-offset,0px) + 16px)}
+#matrix-v2 .cm-board[data-shell=shared] .cm-table-menu{right:calc(var(--play-inspector,0px) + var(--stage-side-offset,0px) + 126px)}
+#matrix-v2 .cm-board[data-view=full] .cm-stage-top{flex-wrap:wrap}
+#matrix-v2 .cm-board[data-view=full] .cm-stage-top>.cm-stage-camera,#matrix-v2 .cm-board[data-view=full] .cm-stage-top>.cm-table-menu{position:relative;top:auto;right:auto;bottom:auto;flex:none}
+#matrix-v2 .cm-board[data-view=full] .cm-stage-top .cm-stage-camera>div,#matrix-v2 .cm-board[data-view=full] .cm-stage-top .cm-table-menu>div{top:calc(100% + 6px);bottom:auto}
+#matrix-v2 .cm-board[data-view=full]{--full-pane-top:calc(var(--hud-top,58px) + var(--combat-h,0px) + var(--full-action-h,0px) + 24px)}
+#matrix-v2 .cm-board[data-view=full]>.cm-stage-rail,#matrix-v2 .cm-board[data-view=full]>.cm-stage-side,#matrix-v2 .cm-board[data-view=full]>#cm-card-inspector{top:var(--full-pane-top)}
+#matrix-v2 .cm-board[data-view=full]>.cm-stage-side{height:calc(100% - var(--full-pane-top))!important}
+#matrix-v2 .cm-board[data-view=full]>.cm-board-panegrip{top:var(--full-pane-top);height:calc(100% - var(--full-pane-top))}
+#matrix-v2 .cm-board[data-view=full] .cm-stage-region>.cm-decision-slot{top:calc(var(--full-action-h,0px) + 24px);max-height:calc(100% - var(--full-action-h,0px) - 36px)}
+#matrix-v2 .cm-board[data-view=full] .cm-stage-region>.cm-decision-slot>#cm-board-decision{max-height:min(65dvh,650px,calc(100dvh - var(--full-pane-top) - 20px))}
+#matrix-v2 .cm-board .cm-stage-actions .v-button{font-size:calc(17px*var(--hud-scale,1));min-height:49px}
+@media(max-width:1100px){#matrix-v2 .cm-board .cm-stage-actions .v-button{min-height:44px}}
+#matrix-v2 .cm-board .cm-stage-actions small,#matrix-v2 .cm-board :is(.cm-stage-caption,.cm-stage-life-list,.cm-stage-life){font-size:calc(15px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-stage-caption{max-width:max(72px,calc((100% - var(--full-action-w,0px))/2 - 30px));box-sizing:border-box;line-height:1.15}
+#matrix-v2 .cm-board .cm-stage-caption>span{max-width:100%;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#matrix-v2 .cm-board .cm-stage-life-list{min-width:0;box-sizing:border-box}
+#matrix-v2 .cm-board .cm-stage-life{display:flex;gap:6px;min-width:0;white-space:nowrap}
+#matrix-v2 .cm-board .cm-stage-life>span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+#matrix-v2 .cm-board .cm-stage-life>b{flex:none}
+
+/* CAMERA (Rob, 2026-10-26). The sliders are bare ranges, not fields: the general input rule's 10px 12px padding and 42px
+   height kept each thumb short of both ends. Each slider row is 25% closer to the next than it was (49px to 37px). */
+#matrix-v2 .cm-stage-camera>div>label:not(.cm-stage-style):not(.cm-settings-slider):not(.cm-board-scale)>input[type=range]{padding:0;margin:0;border:0;border-radius:0;background:transparent;min-height:0;height:20px}
+#matrix-v2 .cm-stage-camera .cm-settings-slider input[type=range]{padding:0;border:0;border-radius:0;background:transparent}
+#matrix-v2 .cm-board[data-phone] .cm-stage-camera input[type=range]{min-height:44px}
+#matrix-v2 .cm-stage-camera>div>label:not(.cm-stage-style):not(.cm-settings-slider):not(.cm-board-scale){min-height:34px}
+/* Reset: plain text, a link's look, beside View seats. */
+#matrix-v2 .cm-stage-camera .cm-stage-camera-reset{margin-left:auto;padding:2px 0;min-height:0;border:0;background:none;color:var(--color-ink);font-size:12px;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
+#matrix-v2 .cm-stage-camera .cm-stage-camera-reset:hover{color:var(--color-aether)}
+/* Background and Table keep their places with the note gone, in shorter boxes (white space between them now). */
+#matrix-v2 .cm-stage-camera .cm-stage-style{min-height:42px}
+#matrix-v2 .cm-stage-camera label:not(.cm-stage-style)+.cm-stage-style{margin-top:26px}
+#matrix-v2 .cm-stage-camera .cm-stage-style select{min-height:0;height:30px;padding:2px 8px;font-size:12px}
+/* THE TABLE'S CORNERS: drag one to size the table, its proportions kept. Quiet until the pointer is over the table. */
+#matrix-v2 .cm-board .cm-stage-corner{position:absolute;z-index:4;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:color-mix(in srgb,var(--color-ink) 16%,transparent);box-shadow:0 0 0 2px color-mix(in srgb,var(--color-ink) 72%,transparent);opacity:0;transition:opacity .16s ease;touch-action:none}
+#matrix-v2 .cm-board .cm-stage-region:hover>.cm-stage-corner,#matrix-v2 .cm-board .cm-stage-region.is-resizing>.cm-stage-corner{opacity:.9}
+#matrix-v2 .cm-board .cm-stage-corner:is([data-corner="0"],[data-corner="2"]){cursor:nwse-resize}
+#matrix-v2 .cm-board .cm-stage-corner:is([data-corner="1"],[data-corner="3"]){cursor:nesw-resize}
+@media(prefers-reduced-motion:reduce){#matrix-v2 .cm-board .cm-stage-corner{transition:none}}
+/* THE HOVER CARD IS FOR READING (Rob, 2026-10-26): no power/toughness badge over its text; the card on the table keeps it. */
+#cm-board .cm-board-peek .cm-bcard-pt{display:none}
+/* The life list: the turn's seat in bold after a small turn symbol, in aether (whose turn it is, as on the portraits). */
+#matrix-v2 .cm-board .cm-stage-life.is-turn{font-weight:700}
+#matrix-v2 .cm-board .cm-stage-life-turn{display:inline-flex;align-items:center;margin-right:4px;vertical-align:-.04em;color:var(--color-aether)}
+#matrix-v2 .cm-board .cm-stage-life-turn svg{width:.78em;height:.78em}
+/* THE MANA POOL module: the two sums over the six counts, two to a row, each number under its symbol. */
+#matrix-v2 .cm-mana-pool{display:grid;gap:8px}
+#matrix-v2 .cm-mana-sums,#matrix-v2 .cm-mana-colors{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+#matrix-v2 .cm-mana-sums>div,#matrix-v2 .cm-mana-cell{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 4px;border:1px solid var(--color-line);border-radius:10px;background:color-mix(in srgb,var(--color-raised) 70%,transparent)}
+#matrix-v2 .cm-mana-sums span{font-size:calc(15px * var(--hud-scale,1));color:var(--color-muted)}
+#matrix-v2 .cm-mana-sums b{font-size:calc(22px * var(--hud-scale,1));line-height:1.1;font-variant-numeric:tabular-nums}
+#matrix-v2 .cm-mana-cell .cm-mana{display:inline-flex}
+#matrix-v2 .cm-mana-cell .cm-mana :is(img,svg){width:26px;height:26px}
+#matrix-v2 .cm-mana-cell b{font-size:calc(18px * var(--hud-scale,1));line-height:1.1;font-variant-numeric:tabular-nums}
+#matrix-v2 .cm-mana-cell.is-none{opacity:.45}
+/* A card of yours an opponent's spell or ability targets: a red outline with a red glow, past any other state's ring,
+   thick enough to read on a far mat of the 3D table. */
+#matrix-v2 .cm-board .cm-bcard.is-targeted{outline:5px solid var(--color-required,#ed4546);outline-offset:2px;filter:drop-shadow(0 0 7px color-mix(in srgb,var(--color-required,#ed4546) 85%,transparent))}
+#matrix-v2 .cm-board .cm-bcard.is-targeted:focus-visible{outline-offset:5px}

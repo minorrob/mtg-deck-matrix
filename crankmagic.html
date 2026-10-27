@@ -1,9 +1,12 @@
 <!doctype html>
-<html lang="en" style="color-scheme:dark" data-palette="moss-iron" data-theme="dark">
+<html lang="en" style="color-scheme:dark" data-palette="sapphire-obsidian" data-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#121511">
+  <link rel="preload" href="assets/crankmagic/cinzel-600.woff2?v=1" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/crankmagic/lato-400.woff2?v=1" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/crankmagic/lato-700.woff2?v=1" as="font" type="font/woff2" crossorigin>
+  <meta name="theme-color" content="#090c12">
   <meta name="color-scheme" content="dark">
   <meta name="description" content="CrankMagic — a private Commander deck workshop and card library. Plan, collect, assemble and explore your cards with local persistence.">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://cards.scryfall.io https://api.scryfall.com https://svgs.scryfall.io; font-src 'self' data:; connect-src 'self' https://*.trycloudflare.com https://api.scryfall.com; object-src 'none'; base-uri 'self'; form-action 'self'">
@@ -37,8 +40,8 @@
   <meta name="twitter:title" content="CrankMagic">
   <meta name="twitter:description" content="An intelligent MtG: Commander deck creator and card library.">
   <meta name="twitter:image" content="https://crankmagic.com/assets/crankmagic/og-card.jpg">
-  <link rel="stylesheet" href="crankmagic-design.css?v=26">
-  <link rel="stylesheet" href="crankmagic.css?v=304">
+  <link rel="stylesheet" href="crankmagic-design.css?v=28">
+  <link rel="stylesheet" href="crankmagic.css?v=308">
   <link rel="stylesheet" href="crankmagic-mats.css?v=2">
   <script src="lineup-model.js?v=5" defer></script>
   <script src="scryfall-client.js?v=13" defer></script>
@@ -51,7 +54,7 @@
   <script src="user-state.js?v=5" defer></script>
   <script src="crankmagic-assets.js?v=36" defer></script>
   <script src="crankmagic-card-client.js?v=1" defer></script>
-  <script src="collection-model.js?v=63" defer></script>
+  <script src="collection-model.js?v=64" defer></script>
   <script src="collection-repository.js?v=4" defer></script>
   <script src="collection-exchange.js?v=10" defer></script>
   <script src="collection-lobby-draft.js?v=3" defer></script>
@@ -61,29 +64,31 @@
   <script src="draft-builder.js?v=9" defer></script>
   <script src="crankmagic-glossary.js?v=2" defer></script>
   <script src="guide-measured.js?v=1" defer></script>
-  <script src="crankmagic-graph.js?v=23" defer></script>
+  <script src="crankmagic-graph.js?v=25" defer></script>
   <script src="crankmagic-graph-scoped.js?v=1" defer></script>
   <script src="crankmagic-rules.js?v=3" defer></script>
   <script src="game-record.js?v=3" defer></script>
   <script src="shop-export.js?v=1" defer></script>
-  <script src="crankmagic-decks.js?v=116" defer></script>
-  <script src="crankmagic-pull.js?v=17" defer></script>
+  <script src="crankmagic-decks.js?v=122" defer></script>
+  <script src="crankmagic-pull.js?v=19" defer></script>
   <script src="crankmagic-sandbox.js?v=9" defer></script>
   <script src="crankmagic-lobby.js?v=6" defer></script>
   <script src="crankmagic-sea.js?v=5" defer></script>
-  <script src="crankmagic-change.js?v=4" defer></script>
+  <script src="crankmagic-change.js?v=5" defer></script>
   <script src="crankmagic-change-ui.js?v=3" defer></script>
   <script src="crankmagic-how.js?v=10" defer></script>
   <script src="crankmagic-qr.js?v=1" defer></script>
   <script src="crankmagic-groupings.js?v=2"></script>
-<script src="crankmagic-collection.js?v=109" defer></script>
+<script src="crankmagic-collection.js?v=111" defer></script>
 <script src="crankmagic-seat-art.js?v=2" defer></script>
 <script src="crankmagic-game.js?v=80" defer></script>
-<script src="crankmagic-table.js?v=42" defer></script>
+<script src="crankmagic-table.js?v=46" defer></script>
 <script src="crankmagic-audio.js?v=1" defer></script>
-<link rel="stylesheet" href="crankmagic-stage.css?v=64">
-<script src="crankmagic-stage.js?v=19" defer></script>
-<script src="crankmagic-board.js?v=107" defer></script>
+<link rel="stylesheet" href="crankmagic-stage.css?v=74">
+<script src="crankmagic-stage.js?v=22" defer></script>
+<link rel="stylesheet" href="crankmagic-coach.css?v=1">
+<script src="crankmagic-coach.js?v=2" defer></script>
+<script src="crankmagic-board.js?v=119" defer></script>
   <script src="crankmagic-exchange-ui.js?v=15" defer></script>
   <script src="crankmagic-orders.js?v=10" defer></script>
   <script src="crankmagic-sim.js?v=25" defer></script>
@@ -94,7 +99,7 @@
   <script src="deck-vocabulary.js?v=1" defer></script>
   <script src="deck-recommend.js?v=1" defer></script>
   <script src="deck-autocreate.js?v=1" defer></script>
-  <script src="crankmagic-newdeck.js?v=1" defer></script>
+  <script src="crankmagic-newdeck.js?v=2" defer></script>
   <script src="crankmagic-facets.js?v=15" defer></script>
   <script src="crankmagic-loops.js?v=4" defer></script>
   <script src="crankmagic-lens.js?v=2" defer></script>
@@ -102,7 +107,7 @@
   <script src="crankmagic-trace.js?v=4" defer></script>
   <script src="crankmagic-tabletop.js?v=33" defer></script>
   <script src="crankmagic-trade.js?v=5" defer></script>
-  <script src="crankmagic-discover.js?v=76" defer></script>
+  <script src="crankmagic-discover.js?v=79" defer></script>
   <script src="custom-model.js?v=3" defer></script>
   <script src="crankmagic-advisor.js?v=12" defer></script>
   <script src="collection-evidence.js?v=1" defer></script>
@@ -110,21 +115,30 @@
   <script src="crankmagic-plan-editor.js?v=3" defer></script>
   <script src="crankmagic-tour.js?v=24" defer></script>
   <script src="cloud-sync.js?v=1" defer></script>
-  <script src="crankmagic-account.js?v=12" defer></script>
-  <script src="crankmagic-sharing.js?v=4" defer></script>
-  <script src="crankmagic-settings-play.js?v=2" defer></script>
-  <script src="crankmagic-settings.js?v=17" defer></script>
-  <script src="crankmagic-landing.js?v=8" defer></script>
-<script src="crankmagic-app.js?v=583" defer></script>
+  <script src="crankmagic-account.js?v=13" defer></script>
+  <script src="crankmagic-sharing.js?v=6" defer></script>
+  <script src="crankmagic-admin.js?v=4" defer></script>
+  <script src="crankmagic-settings-play.js?v=3" defer></script>
+  <script src="crankmagic-settings.js?v=18" defer></script>
+  <script src="crankmagic-landing.js?v=10" defer></script>
+<script src="crankmagic-app.js?v=601" defer></script>
   <script src="crankmagic-brand.js?v=6" defer></script>
 </head>
 <body>
-<div id="matrix-v2" aria-label="CrankMagic" data-palette="moss-iron" data-theme="dark">
+<div id="matrix-v2" aria-label="CrankMagic" data-palette="sapphire-obsidian" data-theme="dark">
   <a class="cm-skip" href="#cm-main">Skip to content</a>
   <div class="cm-layout"><aside class="cm-sidebar">
     <div class="v-brand-block"><a class="v-brand-home" href="#welcome" aria-label="CrankMagic home" title="CrankMagic home"><img class="v-brand-logo" src="assets/crankmagic/crankmagic-logo-gear-v4-256.webp?v=2" alt="" width="36" height="36"></a><div class="v-brand-copy"><a class="v-brand" href="#welcome" title="CrankMagic home">CrankMagic</a><div class="v-aether-wrap"><canvas class="v-aether" width="190" height="56" aria-hidden="true"></canvas><canvas class="v-aether-front" width="190" height="56" aria-hidden="true"></canvas><button class="v-aether-toggle" type="button" aria-label="Pause aether animation" title="Pause aether animation">Ⅱ</button></div></div></div>
     <div class="v-nav-track"><nav class="v-nav-links" aria-label="Main pages"><a href="#decks" data-nav="decks">Decks</a><a href="#cards" data-nav="cards">Library</a><a href="#discover" data-nav="discover">Explore</a><a href="#game" data-nav="game">Play</a></nav></div>
-    <div class="cm-rail-foot"><button class="v-button cm-rail-menu" id="cm-user-functions" popovertarget="cm-user-menu" aria-haspopup="menu" aria-label="Menu" title="Menu and user functions"><span class="cm-chip-avatar" aria-hidden="true">☰</span><span class="cm-chip-text"><span class="cm-chip-name">Menu</span><span class="cm-chip-status">Settings &amp; backup</span></span><svg class="cm-caret cm-btn-chevron" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2 3.5 5 6.5 8 3.5"/></svg></button><div id="cm-user-menu" class="cm-menu" popover><button data-action="open-settings"><span class="cm-btn-icon" aria-hidden="true">⚙</span>Settings</button><button data-action="backup">Save a backup file</button><button data-action="restore">Restore from a backup file</button><button data-action="reset-all" class="cm-danger">Reset All</button><hr><p>Help</p><button data-action="menu-help"><span class="cm-btn-icon" aria-hidden="true">?</span>Help &amp; glossary</button><button type="button" data-action="toggle-terms" id="cm-menu-terms" aria-pressed="false" title="Underline game terms in rules text; hover one to see what it means"><span class="cm-btn-icon" aria-hidden="true">ⓘ</span>Term definitions on hover: <span class="cm-menu-state">Off</span></button><button data-action="tour"><span class="cm-btn-icon" aria-hidden="true">⚑</span>Take a Tour</button><button data-action="send-feedback"><span class="cm-btn-icon" aria-hidden="true">✉</span>Send Feedback</button><button type="button" data-action="share-qr">Show a QR code</button><hr><p>Switch theme</p><div class="cm-theme-choices" role="group" aria-label="Switch theme"><button type="button" data-action="set-theme" data-theme-choice="moss-iron" aria-pressed="true">Moss &amp; Iron</button><button type="button" data-action="set-theme" data-theme-choice="brass-slate" aria-pressed="false">Brass &amp; Slate</button><button type="button" data-action="set-theme" data-theme-choice="felt-cream" aria-pressed="false">Felt &amp; Cream</button><button type="button" data-action="set-theme" data-theme-choice="steel-cobalt" aria-pressed="false">Steel &amp; Cobalt</button></div></div></div>
+    <div class="cm-rail-foot"><button class="v-button cm-rail-menu" id="cm-user-functions" popovertarget="cm-user-menu" aria-controls="cm-user-menu" aria-expanded="false" aria-label="Menu" title="Menu and user functions"><span class="cm-chip-avatar" aria-hidden="true">☰</span><span class="cm-chip-text"><span class="cm-chip-name">Menu</span><span class="cm-chip-status">Settings &amp; backup</span></span><svg class="cm-caret cm-btn-chevron" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2 3.5 5 6.5 8 3.5"/></svg></button><div id="cm-user-menu" class="cm-menu cm-account-menu" popover="auto" aria-label="Account">
+      <section class="cm-menu-group" role="group" aria-label="You"><p class="cm-menu-label">You</p><div id="cm-account" class="cm-account"><p class="cm-account-who">Saved on this device</p></div><button type="button" data-action="open-settings"><span class="cm-btn-icon" aria-hidden="true">⚙</span>Settings</button><div data-profile-menu></div><div data-admin-menu></div></section>
+      <section class="cm-menu-group" role="group" aria-label="This device"><p class="cm-menu-label">This device</p><div id="cm-account-device"></div><button type="button" data-action="app-refresh" title="Reload CrankMagic with its newest files from the site. Your library is not touched.">Reload with newest files</button></section>
+      <section class="cm-menu-group" role="group" aria-label="Your data"><p class="cm-menu-label">Your data</p><button type="button" data-action="backup">Save a backup file</button><button type="button" data-action="restore">Restore from a backup file</button></section>
+      <section class="cm-menu-group" role="group" aria-label="Skin"><p class="cm-menu-label">Skin</p><div class="cm-theme-choices" role="group" aria-label="Skin"><button type="button" data-action="set-theme-skin" data-theme-skin="sapphire-obsidian" aria-pressed="true">Sapphire &amp; Obsidian</button><button type="button" data-action="set-theme-skin" data-theme-skin="bronze-basalt" aria-pressed="false">Bronze &amp; Basalt</button><button type="button" data-action="set-theme-skin" data-theme-skin="chalk-coal" aria-pressed="false">Chalk &amp; Coal</button></div><div class="cm-theme-modes" role="group" aria-label="Appearance"><button type="button" data-action="set-theme-mode" data-theme-mode="dark" aria-pressed="true">Dark</button><button type="button" data-action="set-theme-mode" data-theme-mode="light" aria-pressed="false">Light</button><button type="button" data-action="set-theme-mode" data-theme-mode="system" aria-pressed="false">System</button></div></section>
+      <section class="cm-menu-group" role="group" aria-label="Help"><p class="cm-menu-label">Help</p><button type="button" data-action="menu-help"><span class="cm-btn-icon" aria-hidden="true">?</span>Help &amp; glossary</button><button type="button" data-action="toggle-terms" id="cm-menu-terms" aria-pressed="false" title="Underline game terms in rules text; hover one to see what it means"><span class="cm-btn-icon" aria-hidden="true">ⓘ</span>Term definitions on hover: <span class="cm-menu-state">Off</span></button><button type="button" data-action="tour"><span class="cm-btn-icon" aria-hidden="true">⚑</span>Take a Tour</button><button type="button" data-action="send-feedback"><span class="cm-btn-icon" aria-hidden="true">✉</span>Send Feedback</button><button type="button" data-action="share-qr">Show a QR code</button></section>
+      <section class="cm-menu-group cm-menu-group-danger" role="group" aria-label="Careful"><p class="cm-menu-label">Careful</p><button type="button" data-action="reset-all" class="cm-danger">Reset All</button></section>
+      <section id="cm-account-out" class="cm-menu-group" role="group" aria-label="Sign out" hidden></section>
+    </div></div>
   </aside>
     <main id="cm-main" tabindex="-1"><div class="v-panel cm-starting" role="status"><div class="v-eyebrow">Your Commander workshop</div><h1>Opening your library</h1><p>Loading local records and the public card catalog…</p></div></main>
   </div>

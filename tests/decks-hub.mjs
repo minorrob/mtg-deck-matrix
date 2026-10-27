@@ -71,12 +71,12 @@ try {
 
   /* 2. The chips, and the badges. */
   const all = await facts(page);
-  eq(await page.$$eval(".cm-decks-stages a", (as) => as.map((a) => a.textContent)), ["All", "Boxed", "Defined", "Building", "Shared"], "the chips are the stages, then Shared");
-  eq(await page.$eval(".cm-decks-stages [aria-current=true]", (a) => a.textContent), "All", "All is the chip in force");
+  eq(await page.$$eval(".cm-decks-stages a", (as) => as.map((a) => a.getAttribute("aria-label"))), ["All", "Boxed", "Defined", "Building", "Shared"], "the chips are the stages, then Shared");
+  eq(await page.$eval(".cm-decks-stages [aria-current=true]", (a) => a.getAttribute("aria-label")), "All", "All is the chip in force");
   eq(await page.$$eval(".cm-deck-grid [data-deck-tile]", (ts) => Object.fromEntries(ts.map((t) => [t.dataset.deckTile, t.querySelector(".cm-pill").textContent]))),
     Object.fromEntries(all.map((d) => [d.id, d.word])), "each tile's badge is its furthest stage, from the model");
   for (const [chip, want] of [["Boxed", all.filter((d) => d.boxed)], ["Defined", all.filter((d) => d.stage === "defined")], ["Building", all.filter((d) => d.stage === "building")]]) {
-    await go(page, () => page.locator(".cm-decks-stages a", {hasText: new RegExp(`^${chip}$`)}).click());
+    await go(page, () => page.locator(".cm-decks-stages").getByRole("link", {name: chip, exact: true}).click());
     ok(new RegExp(`stage=${chip.toLowerCase()}`).test(page.url()), `${chip} is in the address`);
     if (want.length) eq((await tiles(page)).sort(), want.map((d) => d.id).sort(), `${chip} shows exactly its ${want.length} decks`);
     else ok(new RegExp(`No ${chip.toLowerCase()} decks right now`).test(await page.locator("#cm-main").innerText()), `${chip}, with none, says so`);
@@ -88,9 +88,12 @@ try {
   ok(/stage=defined/.test(page.url()), "Back undoes the last chip");
   for (const old of ["toload", "loading", "complete"]) {
     await hash(page, `#decks?stage=${old}`);
-    eq(await page.$eval(".cm-decks-stages [aria-current=true]", (a) => a.textContent), "All", `the old address stage=${old} opens All`);
+    eq(await page.$eval(".cm-decks-stages [aria-current=true]", (a) => a.getAttribute("aria-label")), "All", `the old address stage=${old} opens All`);
   }
 
+  await hash(page, '#decks');
+  const chips = await page.$$eval('[data-stage-chip]', (xs) => Object.fromEntries(xs.filter((x) => x.dataset.stageChip !== 'shared').map((x) => [x.dataset.stageChip, Number(x.querySelector('[data-stage-count]').textContent)])));
+  eq(chips, {all: all.length, boxed: all.filter((x) => x.boxed).length, defined: all.filter((x) => x.stage === 'defined').length, building: all.filter((x) => x.stage === 'building').length}, 'stage counts are drawn from the same deck facts as their filters');
   /* 3. The sorts. */
   await hash(page, "#decks");
   eq(await page.$eval("#cm-decks-sort", (s) => s.value), "closest", "the sort is Closest to finished");
@@ -126,9 +129,16 @@ try {
   let r0 = await revision(page);await star.click();await committed(page, r0);await settle(page);
   eq(await tile(fav.id).locator(".cm-tile-star").getAttribute("aria-pressed"), "true", "one click favorites");
   await page.mouse.move(5, 5);await page.waitForTimeout(300);eq(await tools(fav.id), "1", "and a favorite's filled star stays without hover");
-  /* Rob, 2026-10-25: the star covered the stage pill. Without hover, the favorite's pill stays stepped aside, clear of it. */
-  const apart = await page.$eval(`[data-deck-tile="${fav.id}"]`, (t) => {const s = t.querySelector(".cm-tile-star").getBoundingClientRect(), p = t.querySelector(".cm-pill").getBoundingClientRect();return p.top >= s.bottom || p.left >= s.right || p.bottom <= s.top || p.right <= s.left;});
-  ok(apart, "and the favorite's star does not cover its stage pill");
+  /* Rob, 2026-10-25: the star covered the stage pill; 2026-10-26: "moving the favorited icon to next to the status". */
+  const place = await page.$eval(`[data-deck-tile="${fav.id}"]`, (t) => {const s = t.querySelector(".cm-tile-star").getBoundingClientRect(), p = t.querySelector(".cm-pill").getBoundingClientRect();
+    return {apart: p.top >= s.bottom || p.left >= s.right || p.bottom <= s.top || p.right <= s.left, row: Math.abs((s.top + s.bottom) / 2 - (p.top + p.bottom) / 2), gap: s.left - p.right, at: [Math.round(s.left - t.getBoundingClientRect().left), Math.round(s.top - t.getBoundingClientRect().top)]};});
+  ok(place.apart, "and the favorite's star does not cover its stage pill");
+  ok(place.row <= 3 && place.gap >= 0 && place.gap <= 12, `it sits beside the pill, on its row (${JSON.stringify(place)})`);
+  await tile(fav.id).hover();await page.waitForTimeout(300);
+  const still = await page.$eval(`[data-deck-tile="${fav.id}"]`, (t) => {const s = t.querySelector(".cm-tile-star").getBoundingClientRect(), k = t.querySelector(".cm-tile-pick").getBoundingClientRect(), m = t.querySelector(".cm-tile-menu-btn").getBoundingClientRect();
+    const hit = (a, b) => !(a.right <= b.left || b.right <= a.left || a.bottom <= b.top || b.bottom <= a.top);return {at: [Math.round(s.left - t.getBoundingClientRect().left), Math.round(s.top - t.getBoundingClientRect().top)], overlap: hit(s, k) || hit(s, m)};});
+  ok(!still.overlap, `on hover the tick and the menu appear clear of the star (${JSON.stringify(still)})`);
+  ok(Math.abs(still.at[0] - place.at[0]) <= 1 && Math.abs(still.at[1] - place.at[1]) <= 1, `and the star does not move when they do (${still.at} vs ${place.at})`);
   await go(page, () => page.locator(".cm-subnav a", {hasText: "Favorites"}).click());
   ok(/fav=1/.test(page.url()), "Favorites is in the address");
   eq(await tiles(page), [fav.id], "Favorites shows only the favorite");
@@ -153,7 +163,7 @@ try {
   eq(items.map((x) => x[0]), ["Compare decks", "Box deck…", "Add to group…", "Favorite", "Remove deck…"], "the menu's items, in order, worded for one deck");
   eq(items[0].slice(1), [true, "Select at least two decks to compare."], "Compare decks is greyed below two, and says why");
   await page.keyboard.press("Escape");
-  await go(page, () => page.locator(".cm-decks-stages a", {hasText: /^Defined$/}).click());
+  await go(page, () => page.locator(".cm-decks-stages").getByRole("link", {name: "Defined", exact: true}).click());
   ok(await page.$eval("[data-action=bulk-menu]", (x) => x.disabled), "a chip change clears the selection");
   await hash(page, "#decks?sort=name");
   for (const d of [a, b]) {await tile(d.id).hover();await tile(d.id).locator("[data-action=select-deck]").check();await settle(page);}
@@ -239,6 +249,16 @@ try {
   ok(redraw.every((f) => f.deck === true), `a deck page's redraw never hides its line from the table: ${JSON.stringify([...new Set(redraw.map((f) => JSON.stringify(f)))])}`);
   await page.evaluate(() => { globalThis.__cm.play = globalThis.__realPlay; delete globalThis.__realPlay; });
   await hash(page, "#decks");
+
+  /* Shared's count resolves on the ordinary stage and is reused across stage navigation. */
+  await page.evaluate(()=>{const C=globalThis.__cm;globalThis.__shareRestore={items:C.sharedItems,available:C.sharingAvailable,ready:C.sharingReady};globalThis.__shareReads=0;C.sharingReady=Promise.resolve();C.sharingAvailable=()=>true;C.sharedItems=async()=>{globalThis.__shareReads++;return [{id:'private',via:'grant'},{id:'public',via:'public'}];};});
+  await hash(page,'#decks?stage=building');
+  await page.waitForFunction(()=>document.querySelector('[data-stage-count=shared]')?.textContent==='1');
+  eq(await page.locator('[data-stage-count=shared]').textContent(),'1','the Shared badge resolves private shares before opening Shared');
+  await hash(page,'#decks?stage=defined');
+  await page.waitForFunction(()=>document.querySelector('[data-stage-count=shared]')?.textContent==='1');
+  eq(await page.evaluate(()=>globalThis.__shareReads),1,'stage navigation reuses the bounded shared count read');
+  await page.evaluate(()=>{const C=globalThis.__cm,r=globalThis.__shareRestore;C.sharedItems=r.items;C.sharingAvailable=r.available;C.sharingReady=r.ready;});
 
   /* 8. Shared, without an account. */
   await go(page, () => page.locator(".cm-subnav a", {hasText: "Shared"}).click());

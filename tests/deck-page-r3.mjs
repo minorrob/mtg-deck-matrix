@@ -166,6 +166,10 @@ try {
   eq([await page.locator(".cm-report-number").textContent(), await page.locator(".cm-report-score").getByText("of 100").count()], ["78", 1], "the score reads 78 of 100");
   eq(await page.$$eval(".cm-report-checks tbody tr", (rows) => rows.map((r) => [r.querySelector("th").textContent, r.lastElementChild.textContent])),
     [["Wins games", "30.1 of 35"], ["Casts its spells", "14.2 of 20"], ["Has answers when it needs them", "14.3 of 15"]], "the checks are the score's own breakdown, points of the points possible");
+  const refine = new URL(await page.locator('.cm-report-refine a').getAttribute('href'), page.url());
+  const refineParams = new URLSearchParams(refine.hash.split('?')[1]);
+  eq([refineParams.get('deck'), refineParams.get('report'), refineParams.get('axis')], [OTHER, current, 'Casts its spells'], 'Fix in Explore carries this deck, this report and its weakest normalized score component');
+  eq(await page.locator('.cm-report-refine [data-action=measure-deck]').count(), 1, 'Measure again stays beside the refinement door');
   const download = page.waitForEvent("download");
   await page.getByRole("button", {name: "Export report"}).click();
   const saved = JSON.parse(readFileSync(await (await download).path(), "utf8"));
@@ -177,6 +181,27 @@ try {
   await page.getByRole("link", {name: "Back to deck"}).click();
   await page.locator(".cm-deck-hero h1").waitFor();
   ok(!/report=/.test(page.url()), "Back to deck returns to the deck");
+  await page.goto(`${base}/index.html#decks?deck=${encodeURIComponent(OTHER)}`);
+  await page.locator('.cm-deck-hero h1').waitFor();
+  const commonBuy=await page.evaluate(id=>{const C=globalThis.__cm,d=C.M.deck(C.state,id);return {ready:C.M.readiness(C.state,d).toBuy,projection:C.M.projection(C.state).filter(r=>r.kind==='need'&&r.deckId===id).reduce((n,r)=>n+r.quantity,0)};},OTHER);
+  eq(commonBuy.ready,commonBuy.projection,'readiness and the common ownership rung projection count the same missing copies');
+  eq(await page.locator(`.cm-deck-hero [data-action=deck-buy-list]`).textContent(),`Buy list (${commonBuy.ready})`,'the deck header uses that single to-buy count');
+  await page.getByRole('tab',{name:/^Acquire/}).click();
+  eq(await page.locator('#cm-sec-acquire .cm-budget-figures strong').first().textContent(),String(commonBuy.ready),'Acquire reads that same missing-copy count');
+  await page.locator('#cm-sec-acquire [data-action=deck-buy-list]').click();await page.locator('#cm-shop-count').waitFor();
+  eq(await page.locator('#cm-shop-count').textContent(),String(commonBuy.ready),'the deck-scoped Library To buy view reads the same count');
+  await page.goto(`${base}/index.html#decks?deck=${encodeURIComponent(OTHER)}`);
+  await page.locator(`.cm-deck-hero [data-action=log-game][data-deck="${OTHER}"]`).click();
+  eq(await page.$$eval('#cm-dialog .cm-form-grid>label', xs=>xs.slice(0,2).map(x=>x.childNodes[0].textContent)), ['Outcome','Card that won it'], 'a game log starts with outcome and the winning card');
+  const dead = await page.locator('#cm-dialog [name=deadCardId] option').nth(1).getAttribute('value');
+  await page.selectOption('#cm-dialog [name=deadCardId]', dead);
+  await page.getByRole('button', {name:'Save game record',exact:true}).click();
+  await page.locator('#cm-dialog [data-action=game-mark-replacement]').waitFor();
+  await page.locator('#cm-dialog [data-action=game-mark-replacement]').click();
+  await page.waitForFunction(()=>location.hash.startsWith('#discover?'));
+  const marked = await page.evaluate(([deckId,cardId])=>globalThis.__cm.state.decks.find(d=>d.id===deckId).slots.find(r=>r.cardId===cardId&&r.purpose==='main').option,[OTHER,dead]);
+  ok(marked, 'marking a dead card records the existing swap-out flag without changing the hundred');
+  eq(new URLSearchParams(page.url().split('#discover?')[1]).get('replace'),dead,'Explore keeps the card to replace in its route');
   await context.close();
 
   /* 4. A phone: one row, sideways, every label whole. */

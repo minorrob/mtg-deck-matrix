@@ -173,8 +173,12 @@
        - Owned · Substitute: a stand-in chosen for a seat, not in yet;
        - Owned · Bench: a free copy on the Bench that fills a seat this deck has not reserved;
        - Owned / To Buy / To Buy · Ordered · Upgrade: an Upgrade, by ownership;
-       - To Buy / To Buy · Ordered · Final: a Reserved card still to buy or on its way -- already planned, so shown with
-         the Substitute holding its seat, and not selectable.
+       - To Buy / To Buy · Ordered · Final: a Reserved card still to buy or on its way, shown with the Substitute holding
+         its seat.
+     EVERY ADD CAN BE TICKED (Rob, 2026-10-26: "I can't check the box in Planned Changes for 'Add to Box' cards. I should be
+     able to, and able to not remove any of them, just add them if I want"): ticked, a To Buy or Ordered Final is recorded
+     as in hand and goes in; an Upgrade that names nothing it replaces joins the list as one more card (Owned: in the box
+     too). Only a Bench row with no copy to move cannot be ticked.
      A row holds one pair, an add alone, or a take-out alone; rows with both come first. */
   function planned(state, deck, options = {}) {
     const M = options.M; if (!M || !deck) return null;
@@ -196,13 +200,13 @@
     for (const {r, st} of mine) {
       if (st.inBox) continue;
       let kind = "", chain = "", lotId = r.kind === "lot" ? r.id : null, seat = "";
-      if (st.use === "upgrade") {kind = "upgrade"; chain = chainOf(st.ownership); if (chain === "owned" && !lotId) {const l = free(r.cardId, takenFree); if (l) {lotId = l.id; takenFree.add(l.id);} else chain = "buy";}}
+      if (st.use === "upgrade") {kind = "upgrade"; chain = chainOf(st.ownership); if (chain === "owned" && (!lotId || r.source !== "owned")) {const l = free(r.cardId, takenFree); if (l) {lotId = l.id; takenFree.add(l.id);} else {chain = "buy"; lotId = null;}} if (chain !== "owned" && r.kind === "lot") lotId = null;}
       else if (st.use === "final" && st.play === "loading") {kind = "final"; chain = "owned";}
       else if (st.use === "reserved") {kind = "final"; chain = chainOf(st.ownership);}
       else if (st.use === "substitute" && r.kind === "lot") {kind = "substitute"; chain = "owned"; seat = (r.chosenFor && r.chosenFor.slotId) || "";}
       else continue;
       const use = kind === "upgrade" ? "Upgrade" : kind === "substitute" ? "Substitute" : "Final";
-      for (const k of units(r.quantity, (k) => k)) ins.push({id: `in:${r.id || r.recordId}#${k}`, kind, chain, label: `${CHAIN[chain]} - ${use}`, lotId, cardId: r.cardId, card: facts(r.cardId), name: facts(r.cardId).name, replaces: st.replaces || "", slotId: st.slotId || r.slotId || "", seat, where: st.from ? (options.deckName ? options.deckName(st.from) : "another deck") : "", selectable: kind === "upgrade" ? !!(st.slotId && st.replaces) : chain === "owned"});
+      for (const k of units(r.quantity, (k) => k)) ins.push({id: `in:${r.id || r.recordId}#${k}`, kind, chain, label: `${CHAIN[chain]} - ${use}`, lotId, cardId: r.cardId, card: facts(r.cardId), name: facts(r.cardId).name, replaces: st.replaces || "", slotId: st.slotId || r.slotId || "", seat, where: st.from ? (options.deckName ? options.deckName(st.from) : "another deck") : "", named: kind !== "upgrade" || !!(st.slotId && st.replaces), entry: r.kind === "entry" ? {groupId: r.groupId, entryId: r.id} : null, selectable: kind !== "final" || chain !== "ordered" || !!lotId});
     }
     const bench = M.benchFree ? M.benchFree(s, deck) : {rows: []};
     for (const x of bench.rows || []) for (const k of units(x.quantity, (k) => k)) ins.push({id: `in:bench:${x.lotId || x.cardId}#${k}`, kind: "bench", chain: "owned", label: "Owned - Bench", lotId: x.lotId || null, cardId: x.cardId, card: facts(x.cardId), name: facts(x.cardId).name, replaces: "", slotId: "", seat: "", where: x.box ? `Bench · ${x.box}` : "Bench", selectable: !!x.lotId});
@@ -239,23 +243,58 @@
      the box as its Substitute); re-paired with another Final, that Final's seat takes it instead. An owned card goes in
      (its seat found by the model, or a stand-in for the seat it was chosen for). A take-out goes to the Bench, except
      beside a To Buy Upgrade: that one stays in the box holding the seat until the Upgrade arrives (Rob: "Record the
-     plan"). */
-  function swapCommands(deck, pairs) {
-    const deckId = deck.id, into = [], out = [], plan = [];
+     plan").
+
+     ADDING WITHOUT TAKING OUT (Rob, 2026-10-26). A To Buy Final ticked is recorded as owned, in the box, on its seat; an
+     Ordered one is marked arrived and goes in. An Upgrade naming nothing joins the list as one more card, and an Owned
+     one goes in with it; the deck may pass 100 and reads Building until it is back. A Substitute whose card went in, or a
+     Final an Owned Upgrade replaced, stays in the box as a Substitute with no live card -- unless a Reserved card is left
+     with no one holding its seat (its Substitute taken out), when the two are paired; several Substitutes for fewer such
+     seats go by mana value, largest first. `rows` is the plan the pairs came from (planned().rows). */
+  function swapCommands(deck, pairs, rows = []) {
+    const deckId = deck.id, into = [], out = [], plan = [], grow = [], held = [];
+    const listed = (cardId) => deck.slots.filter((x) => x.purpose === "main" && x.cardId === cardId).reduce((n, x) => n + x.quantity, 0), more = new Map();
     for (const {in: a, out: o} of pairs) {
-      if (a && a.kind === "upgrade") {
+      if (a && a.kind === "upgrade" && !a.named) {
+        const n = (more.get(a.cardId) || listed(a.cardId)) + 1; more.set(a.cardId, n);
+        if (a.chain === "owned" && a.lotId) into.push({type: "place", lotId: a.lotId, deckId, quantity: 1, asStandIn: true, confirmed: true});
+        grow.push({type: "target", deckId, cardId: a.cardId, quantity: n, confirmed: true});
+        if (a.entry) grow.push({type: "removeGroupEntries", groupId: a.entry.groupId, entryIds: [a.entry.entryId]});
+        if (o) out.push(o);
+      } else if (a && a.kind === "upgrade") {
         if (o && o.role === "Final" && o.slotId && o.cardId !== a.replaces) plan.push({type: "swap", deckId, slotId: o.slotId, cardId: a.cardId, substitute: true, confirmed: true}, {type: "removeOption", deckId, slotId: a.slotId});
         else plan.push({type: "acceptOption", deckId, slotId: a.slotId, substitute: true});
         if (a.chain === "owned" && a.lotId) into.push({type: "place", lotId: a.lotId, deckId, quantity: 1, confirmed: true});
         if (o && a.chain === "owned") out.push(o);
+      } else if (a && a.kind === "final" && a.chain === "buy") {
+        const seat = deck.slots.find((x) => x.id === a.slotId);
+        into.push({type: "acquire", deckId, slotId: a.slotId, lot: {cardId: a.cardId, quantity: 1, source: "owned", printing: (seat && seat.printing) || {}, location: {kind: "deck", deckId, box: deck.name}}});
+        if (o) out.push(o);
+      } else if (a && a.kind === "final" && a.chain === "ordered") {
+        into.push({type: "source", lotId: a.lotId, source: "owned"}, {type: "place", lotId: a.lotId, deckId, quantity: 1, confirmed: true});
+        if (o) out.push(o);
       } else if (a) {
         into.push(a.kind === "substitute" ? {type: "place", lotId: a.lotId, deckId, quantity: 1, asStandIn: true, standInFor: a.seat, confirmed: true} : {type: "place", lotId: a.lotId, deckId, quantity: 1, confirmed: true});
         if (o) out.push(o);
       } else if (o) out.push(o);
     }
+    /* THE SEATS AFTER: who no longer holds a live card, and which Reserved seats are left with no one holding them. */
+    const outIds = new Set(pairs.filter((p) => p.out).map((p) => p.out.id)), inIds = new Set(pairs.filter((p) => p.in).map((p) => p.in.id));
+    const freed = [], needy = [];
+    for (const r of rows) {
+      if (!r.in) continue;
+      const added = inIds.has(r.in.id), holder = r.out && !outIds.has(r.out.id) ? r.out : null;
+      if (added && holder && (r.in.kind === "final" || (r.in.kind === "upgrade" && r.in.chain === "owned"))) freed.push(holder);
+      if (!added && r.in.kind === "final" && r.in.slotId && !holder) needy.push(r.in);
+    }
+    const byMana = (a, b) => mv(b.card) - mv(a.card) || String(a.name).localeCompare(String(b.name));
+    freed.sort(byMana); needy.sort(byMana);
+    freed.forEach((f, i) => held.push({type: "holdSeat", lotId: f.lotId, deckId, quantity: 1, slotId: needy[i] ? needy[i].slotId : ""}));
     /* Copies of one record moving the same way go as one place, so ten Mountains stay one record of ten. */
-    const merged = (list) => {const seen = new Map(); for (const c of list) {const k = [c.lotId, c.deckId || "", c.asStandIn ? 1 : 0, c.standInFor || ""].join("|"); if (seen.has(k)) seen.get(k).quantity += c.quantity; else seen.set(k, {...c});} return [...seen.values()];};
-    return [...plan, ...merged(into), ...merged(out.map((o) => ({type: "place", lotId: o.lotId, quantity: 1, confirmed: true})))];
+    const merged = (list) => {const seen = new Map(), keep = []; for (const c of list) {if (c.type !== "place") {keep.push(c); continue;} const k = [c.lotId, c.deckId || "", c.asStandIn ? 1 : 0, c.standInFor || ""].join("|"); if (seen.has(k)) seen.get(k).quantity += c.quantity; else {const x = {...c}; seen.set(k, x); keep.push(x);}} return keep;};
+    const once = (list) => {const seen = new Set(); return list.filter((c) => {const k = JSON.stringify(c); if (c.type !== "source" || !seen.has(k)) {seen.add(k); return true;} return false;});};
+    const targets = [...new Map(grow.filter((c) => c.type === "target").map((c) => [c.cardId, c])).values()], entries = grow.filter((c) => c.type !== "target");
+    return [...plan, ...once(merged(into)), ...targets, ...entries, ...merged(out.map((o) => ({type: "place", lotId: o.lotId, quantity: 1, confirmed: true}))), ...held];
   }
 
   /* The sheet a plan exports: rows for the checklist, rows for the readings. */

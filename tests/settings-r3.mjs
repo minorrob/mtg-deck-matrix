@@ -42,8 +42,8 @@ try {
   await openMenu(page);
   /* Rob, 2026-09-29: Switch theme under Help, a glossary switch in Help, no Share CrankMagic by email (tests/menu-help.mjs).
      Rob, 2026-10-03: Reset All beside the backups (tests/reset-all.mjs). */
-  eq(await entries(page), ["Settings", "Save a backup file", "Restore from a backup file", "Reset All",
-    "Help & glossary", "Term definitions on hover: Off", "Take a Tour", "Send Feedback", "Show a QR code", "Moss & Iron", "Brass & Slate", "Felt & Cream", "Steel & Cobalt"], "the Menu holds what INTAKE §4.7 lists, in the order Rob set on 2026-09-29");
+  eq(await entries(page), ["Settings", "Reload with newest files", "Save a backup file", "Restore from a backup file", "Sapphire & Obsidian", "Bronze & Basalt", "Chalk & Coal", "Dark", "Light", "System",
+    "Help & glossary", "Term definitions on hover: Off", "Take a Tour", "Send Feedback", "Show a QR code", "Reset All"], "the Menu retains its actions in the approved r4 AccountMenu groups");
   for (const moved of ["Share CrankMagic by email", "Export as Excel", "Email the export…", "See every change…", "Undo last change", "Confirmations…", "Clear all data", "Reset comparison picks", "Publish your To Trade list"])
     ok(!(await entries(page)).includes(moved), `${moved} has left the Menu`);
   ok(!(await page.$("#cm-user-menu #cm-data-dates")), "and so have the card data ages");
@@ -83,6 +83,14 @@ try {
   ok(await page.getByRole("button", {name: "Publish your To Trade list"}).isVisible(), "Publish your To Trade list is in the Library's More menu");
   await page.keyboard.press("Escape");
 
+  await toSettings(page);
+  await page.getByRole('button', {name:'Clear all data', exact:true}).click();
+  ok(await page.locator('#cm-dialog form.cm-destructive').count() === 1, 'Clear all data has the same danger-fill confirmation as deletion');
+  ok(await page.getByLabel('Type CLEAR to confirm').count() === 1, 'clearing still requires typed confirmation');
+  await page.locator('#cm-dialog [data-action=close]').first().click();
+  await page.getByRole('button', {name:'Confirmations…', exact:true}).click();
+  eq(await page.locator('.cm-confirmation-rules dt').count(), 4, 'the confirmation classes explain the available way back without fake switches');
+  await page.locator('#cm-dialog [data-action=close]').first().click();
   /* 3. The theme, from Settings. */
   await toSettings(page);
   /* A1: four swatch cards, each drawn in its own theme's colors and face. */
@@ -97,26 +105,28 @@ try {
   eq(await page.locator(".cm-settings [data-settings-overlay]").inputValue(), "0", "moved to the left it is off, and saved: Settings opened again shows it off");
   await page.locator(".cm-settings [data-settings-overlay]").fill("60");
   await page.waitForTimeout(400);
-  eq(await page.$$eval(".cm-settings .cm-theme-card", (bs) => bs.map((b) => b.getAttribute("aria-label"))), ["Moss & Iron", "Brass & Slate", "Felt & Cream", "Steel & Cobalt"], "Settings shows the four themes as swatch cards");
+  eq(await page.$$eval(".cm-settings .cm-theme-card", (bs) => bs.map((b) => b.getAttribute("aria-label"))), ["Sapphire & Obsidian", "Sapphire & Obsidian, light", "Bronze & Basalt", "Bronze & Basalt, light", "Chalk & Coal", "Chalk & Coal, light"], "Settings shows all six skin/register combinations as swatch cards");
   const swatchBg = await page.$$eval(".cm-settings .cm-theme-swatch", (ss) => ss.map((x) => getComputedStyle(x).backgroundColor));
-  eq(new Set(swatchBg).size, 4, `each swatch is drawn in its own theme's ground (${swatchBg.join(", ")})`);
-  eq(await page.$eval(".cm-settings .cm-theme-card[data-theme-choice='moss-iron'] strong", (el) => [getComputedStyle(el).fontFamily.includes("Barlow Condensed"), getComputedStyle(el).textTransform]), [true, "uppercase"], "and Moss & Iron's name is in its own face, Barlow Condensed capitals");
-  await page.locator(".cm-settings").getByRole("button", {name: "Felt & Cream", exact: true}).click();
+  eq(new Set(swatchBg).size, 6, `each swatch is drawn in its own theme's ground (${swatchBg.join(", ")})`);
+  eq(await page.$eval(".cm-settings .cm-theme-card[data-theme-choice='sapphire-obsidian'] strong", (el) => [getComputedStyle(el).fontFamily.includes("Lato"), getComputedStyle(el).textTransform]), [true, "none"], "skin names use the shared Lato component type");
+  await page.locator(".cm-settings").getByRole("button", {name: "Sapphire & Obsidian, light", exact: true}).click();
   await page.waitForFunction(() => document.getElementById("matrix-v2").dataset.theme === "light");
-  eq(await page.$$eval("[data-theme-choice][aria-pressed=true]", (bs) => bs.map((b) => b.dataset.themeChoice)), ["felt-cream", "felt-cream"], "Felt & Cream chosen in Settings is pressed in Settings and in the Menu alike");
-  await page.locator(".cm-settings").getByRole("button", {name: "Moss & Iron", exact: true}).click();
-  await page.waitForFunction(() => document.getElementById("matrix-v2").dataset.palette === "moss-iron");
+  eq(await page.$$eval("[data-theme-choice][aria-pressed=true]", (bs) => bs.map((b) => b.dataset.themeChoice)), ["sapphire-obsidian-light"], "Settings marks the chosen skin/register combination");
+  eq(await page.locator('[data-theme-mode="light"]').getAttribute("aria-pressed"), "true", "the menu register agrees with Settings");
+  await page.locator(".cm-settings").getByRole("button", {name: "Sapphire & Obsidian", exact: true}).click();
+  await page.waitForFunction(() => document.getElementById("matrix-v2").dataset.theme === "dark");
 
   /* 4. Reduce motion. */
+  eq(await page.getByRole("switch", {name: "Reduce motion: Off", exact: true}).count(), 1, "the motion switch says its state in words");
   const motion = () => page.evaluate(() => ({attr: document.documentElement.dataset.motion || null, reduced: globalThis.CrankMotion.reduced(),
-    pressed: document.querySelector('[data-action="set-motion"]').getAttribute("aria-pressed"), aether: document.querySelector(".v-aether")?.dataset.motion,
+    pressed: document.querySelector('[data-action="set-motion"]').getAttribute("aria-checked"), aether: document.querySelector(".v-aether")?.dataset.motion,
     transition: document.querySelector("[data-motion-probe]") ? getComputedStyle(document.querySelector("[data-motion-probe]")).transitionDuration : "no probe after a reload"}));
   /* The probe is an element that really transitions before the switch; one that never did would read
      0s either way and prove nothing. */
   ok(await page.evaluate(() => { const el = [...document.querySelectorAll("#matrix-v2 *")].find((n) => getComputedStyle(n).transitionDuration.split(",").some((d) => parseFloat(d) > 0)); if (el) el.dataset.motionProbe = ""; return Boolean(el); }), "the page has an element that transitions, to measure");
   const before = await motion();
   ok(before.attr === null && !before.reduced && before.pressed === "false" && before.aether === "running" && before.transition.split(",").some((d) => parseFloat(d) > 0), `motion is on by default: ${JSON.stringify(before)}`);
-  await page.getByRole("button", {name: "Reduce motion"}).click();
+  await page.getByRole("switch", {name: /Reduce motion/}).click();
   await page.waitForFunction(() => document.documentElement.dataset.motion === "reduce");
   const still = await motion();
   ok(still.reduced && still.pressed === "true" && still.aether === "still" && still.transition.split(",").every((d) => parseFloat(d) === 0),
@@ -125,22 +135,22 @@ try {
   await page.locator(".cm-settings").waitFor({timeout: 60000});
   await page.waitForFunction(() => document.documentElement.dataset.motion === "reduce", null, {timeout: 15000});
   ok((await motion()).pressed === "true", "it is saved: after a reload the page is still and the switch still pressed");
-  await page.getByRole("button", {name: "Reduce motion"}).click();
+  await page.getByRole("switch", {name: /Reduce motion/}).click();
   await page.waitForFunction(() => !document.documentElement.dataset.motion);
   ok((await motion()).aether === "running", "and turning it off sets the rail moving again");
   /* Play's Stop at every step of my turn: off by default, saved with the preferences, kept through a reload. */
-  const steps = () => page.evaluate(async () => ({pressed: document.querySelector('[data-action="set-step-by-step"]').getAttribute("aria-pressed"),
+  const steps = () => page.evaluate(async () => ({pressed: document.querySelector('[data-action="set-step-by-step"]').getAttribute("aria-checked"),
     saved: await (async () => {const r = await CrankRepository.open(); try {return ((await r.getState()).preferences.play || {}).stepByStep ?? null;} finally {r.close();}})()}));
   eq(await steps(), {pressed: "false", saved: null}, "Stop at every step of my turn is off by default");
   ok(/never ends by itself/.test(await page.locator(".cm-settings-card", {hasText: "Stop at every step"}).innerText()), "and Play says your turn never ends by itself, either way");
-  await page.getByRole("button", {name: "Stop at every step of my turn"}).click();
-  await page.waitForFunction(() => document.querySelector('[data-action="set-step-by-step"]')?.getAttribute("aria-pressed") === "true");
+  await page.getByRole("switch", {name: /Stop at every step of my turn/}).click();
+  await page.waitForFunction(() => document.querySelector('[data-action="set-step-by-step"]')?.getAttribute("aria-checked") === "true");
   eq(await steps(), {pressed: "true", saved: true}, "pressed, it is saved with the preferences (play.stepByStep), which the board tells the room");
   await page.reload();
   await page.locator(".cm-settings").waitFor({timeout: 60000});
   eq(await steps(), {pressed: "true", saved: true}, "and kept through a reload");
-  await page.getByRole("button", {name: "Stop at every step of my turn"}).click();
-  await page.waitForFunction(() => document.querySelector('[data-action="set-step-by-step"]')?.getAttribute("aria-pressed") === "false");
+  await page.getByRole("switch", {name: /Stop at every step of my turn/}).click();
+  await page.waitForFunction(() => document.querySelector('[data-action="set-step-by-step"]')?.getAttribute("aria-checked") === "false");
   eq(await steps(), {pressed: "false", saved: false}, "and off again");
 
   /* 5. Budgets (Rob, 2026-10-18; docs/budgets.md). A deck's budget is its own and inherits nothing; the account's is

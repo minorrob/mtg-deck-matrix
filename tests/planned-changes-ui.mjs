@@ -6,7 +6,7 @@
  *      plans, the counter at Removed 0, Added 0 and the box's total.
  *   2. C4: each side a tick, the card's thumbnail (the card large on a hover), its name, its colors and what it is.
  *   3. C5: a take-out says its role (Substitute, Final); an add its chain and use (Owned - Final, To Buy - Final ...);
- *      a To Buy Final, already planned, cannot be ticked.
+ *      every add can be ticked (Rob, 2026-10-26), a To Buy Final included.
  *   4. C1 and C6: a tick changes nothing in the library; it moves the counter, red off 100, green at 100.
  *   5. C7: an add whose partner is not ticked pairs with a ticked take-out from another row, both wearing one dot.
  *   6. C2: Swap asks "Confirm additions and removals?"; Cancel changes nothing; Confirm makes it one change: the add
@@ -84,7 +84,7 @@ try {
   const labels = sides.filter((x) => !x.out).map((x) => x.role);
   ok(labels.every((l) => /^(Owned|To Buy|To Buy · Ordered) - (Final|Substitute|Bench|Upgrade)$/.test(l)), `each add says its chain and use (${[...new Set(labels)].join(", ")})`);
   const buyFinal = plan.rows.find((r) => r.in?.label === "To Buy - Final");
-  if (buyFinal) ok(await page.locator(`[data-plan-pick="${buyFinal.in.id}"]`).isDisabled(), `a To Buy Final (${buyFinal.in.name}), already planned, cannot be ticked`);
+  if (buyFinal) ok(await page.locator(`[data-plan-pick="${buyFinal.in.id}"]`).isEnabled(), `a To Buy Final (${buyFinal.in.name}) can be ticked (Rob, 2026-10-26)`);
   else ok(true, "no To Buy Final here");
 
   /* 4. */
@@ -136,7 +136,7 @@ try {
   eq([c.removed, c.added, c.total], [0, 0, plan.boxTotal], "the ticks cleared with the change made");
 
   /* 7. */
-  const two = plan.rows.filter((r) => r.in?.selectable).slice(0, 2);
+  const two = plan.rows.filter((r) => r.in?.selectable && !(r.in.kind === "upgrade" && r.in.chain !== "owned")).slice(0, 2);
   ok(two.length === 2, "two more adds to tick");
   for (const r of two) await tick(r.in);
   c = await counter();

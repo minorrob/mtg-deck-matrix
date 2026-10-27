@@ -17,8 +17,11 @@
  *       ticked take-out left over (crankmagic-change.js `pairUp`), and both wear the same colored dot.
  *   C8  Counts that do not match still swap, after the confirmation; the counter says so.
  *
- * A To Buy Final is already planned (Reserved): it is listed beside the Substitute holding its seat, and cannot be
- * ticked. Ordered cards are To Buy · Ordered here, not a separate Waiting list (Rob, 2026-10-25). */
+ * Every Add can be ticked (Rob, 2026-10-26), and an add needs no take-out: a To Buy Final ticked is recorded as in hand and
+ * goes in, an Ordered one arrives and goes in, and an Upgrade naming nothing joins the list. A Substitute whose card went in
+ * stays as a Substitute with no live card, or takes a Reserved seat left without one (crankmagic-change.js swapCommands).
+ * The deck may pass 100: it reads Building, cannot be boxed and Play will not take it until it is back. Ordered cards are
+ * To Buy · Ordered here, not a separate Waiting list (Rob, 2026-10-25). */
 (globalThis.CrankFeatures ||= []).push(function(C){const {M,esc:e,button:b,note,commit,actions,views,$}=C;
 const CH=()=>globalThis.CrankChange;
 /* This sitting's ticks, per deck; leaving the page lets them go. */
@@ -32,23 +35,26 @@ const picture=(u,size)=>{const c=C.card(u.cardId)||u.card||{},src=String(c.image
 function cell(u,side){
   if(!u)return `<div class="cm-plan-side is-${side} is-empty" role="cell"></div>`;
   const c=C.card(u.cardId)||u.card||{},picked=sel[side].has(u.id),label=side==='out'?u.role:u.label,ordered=side==='in'&&u.chain==='ordered';
-  const why=!u.selectable?(u.kind==='upgrade'?'Choose what it replaces first, on the deck page':'Reserved: it goes in when it arrives'):'';
+  const why=!u.selectable?'No copy to move':'';
   return `<div class="cm-plan-side is-${side}${picked?' is-picked':''}${u.selectable?'':' is-fixed'}" role="cell" data-plan-unit="${e(u.id)}">
     <input type="checkbox" class="cm-plan-tick" data-plan-pick="${e(u.id)}" data-side="${side}"${picked?' checked':''}${u.selectable?'':' disabled'} aria-label="${e(side==='out'?'Take out':'Add')} ${e(u.name)}${why?` (${e(why)})`:''}"${why?` title="${e(why)}"`:''}>
     <span class="cm-plan-mark" aria-hidden="true"></span>
     <button type="button" class="cm-plan-thumb" data-action="card" data-card="${e(u.cardId)}" data-peek="${e(picture(u,'normal'))}" aria-label="Open ${e(u.name)}">${picture(u,'small')?`<img src="${e(picture(u,'small'))}" alt="" loading="lazy" referrerpolicy="no-referrer">`:''}</button>
     <span class="cm-plan-text"><button type="button" class="cm-card-name cm-plan-name" data-action="card" data-card="${e(u.cardId)}">${e(u.name)}</button>
-      <span class="cm-plan-sub">${C.colors(c.colorIdentity||[])}<span class="cm-plan-role">${e(label)}${ordered?'':''}</span>${u.where?`<span class="cm-plan-where">${e(u.where)}</span>`:''}${!u.selectable?'<span class="cm-plan-wait" aria-hidden="true">⏳</span>':''}</span></span></div>`;
+      <span class="cm-plan-sub">${C.colors(c.colorIdentity||[])}<span class="cm-plan-role">${e(label)}${ordered?'':''}</span>${u.where?`<span class="cm-plan-where">${e(u.where)}</span>`:''}${side==='in'&&u.chain!=='owned'?'<span class="cm-plan-wait" aria-hidden="true" title="Ticked, it is recorded as in hand">⏳</span>':''}</span></span></div>`;
 }
-/* C6: removed, added and the total after, from this sitting's ticks. */
-function counts(p){const removed=sel.out.size,added=sel.in.size,total=p.boxTotal-removed+added;return {removed,added,total};}
+/* C6: removed, added and the total after, from this sitting's ticks. A To Buy or Ordered Upgrade ticked records the plan
+   and puts nothing in the box yet, so it is not counted as added. */
+function counts(p){const ins=new Map(p.rows.filter(r=>r.in).map(r=>[r.in.id,r.in])),removed=sel.out.size,added=[...sel.in].filter(id=>{const u=ins.get(id);return !u||!(u.kind==='upgrade'&&u.chain!=='owned');}).length,total=p.boxTotal-removed+added;return {removed,added,total};}
 function counterHTML(p){const {removed,added,total}=counts(p);
   return `<div class="cm-plan-counter${total===100?' is-right':' is-off'}" role="status" aria-live="polite"><span><b data-plan-n="removed">${removed}</b> Removed</span><span><b data-plan-n="added">${added}</b> Added</span><span class="cm-plan-total"><b data-plan-n="total">${total}</b> Total Deck Cards</span></div>`;}
 views.pull=async params=>{const d=M.deck(C.state,params.get('deck')||'');if(!CH())throw Error('The Planned Changes module is not loaded.');
   if(sel.deckId!==d.id)sel={deckId:d.id,in:new Set(),out:new Set()};
   const p=planOf(d),ids=new Set(p.rows.flatMap(r=>[r.in&&r.in.id,r.out&&r.out.id].filter(Boolean)));
   for(const k of ['in','out'])for(const id of [...sel[k]])if(!ids.has(id))sel[k].delete(id);
-  C.main.innerHTML=`<div class="cm-pull cm-plan" data-deck="${e(d.id)}"><header class="cm-page-head cm-pull-head"><div><a class="cm-crumb" href="#decks">Decks</a><a class="cm-crumb" href="#decks?deck=${e(d.id)}">${e(d.name)}</a><h1>Planned Changes</h1></div><div class="cm-actions">${b('Open deck','deck',{deck:d.id})}${b('Print','pull-print')}${b('Export','pull-export',{deck:d.id})}${b('Swap','plan-swap',{deck:d.id},true)}</div></header>
+  const boxDone=!p.rows.length&&M.deckStatus(C.state,d).boxed;
+  C.main.innerHTML=`<div class="cm-pull cm-plan" data-deck="${e(d.id)}"><header class="cm-page-head cm-pull-head"><div><a class="cm-crumb" href="#decks">Decks</a><a class="cm-crumb" href="#decks?deck=${e(d.id)}">${e(d.name)}</a><h1>Planned Changes</h1></div><div class="cm-actions">${b('Open deck','deck',{deck:d.id})}${b('Print','pull-print')}${b('Export','pull-export',{deck:d.id})}${boxDone?'':b('Swap','plan-swap',{deck:d.id},true)}</div></header>
+    ${boxDone?`<section class="v-panel cm-box-done" aria-label="Box ready"><h2>The box is ready</h2><p>All 100 cards are in the physical deck. Nothing is waiting to go in.</p><div class="cm-actions">${C.play?.open()?`<a class="v-button primary" href="#table?deck=${e(encodeURIComponent(d.id))}">Take it to the table</a>`:b('Log a game','log-game',{deck:d.id},true)}</div></section>`:''}
     ${counterHTML(p)}
     ${p.rows.length?`<div class="cm-plan-table" role="table" aria-label="Planned changes for ${e(d.name)}"><div class="cm-plan-head" role="row"><div role="columnheader">Take out of Box</div><div role="columnheader">Add to Box</div></div>
       ${p.rows.map(r=>`<div class="cm-plan-row" role="row" data-plan-row="${r.row}">${cell(r.out,'out')}${cell(r.in,'in')}</div>`).join('')}</div>`:note('Nothing planned: the box holds the list, and nothing is waiting to go in.')}</div>`;
@@ -66,9 +72,12 @@ function paint(p){const root=$('.cm-plan');if(!root)return;
 /* C2: Swap asks first, with what goes where; the model previews the whole batch before it is made. */
 actions['plan-swap']=el=>{const d=M.deck(C.state,el.dataset.deck),p=planOf(d),pairs=CH().pairUp(p.rows,sel.in,sel.out);
   if(!pairs.length)throw Error('Tick what to take out and what to add, then Swap.');
-  const commands=CH().swapCommands(d,pairs),{removed,added,total}=counts(p);
+  const commands=CH().swapCommands(d,pairs,p.rows),{removed,added,total}=counts(p);
   const line=pr=>`<li>${pr.out?`<span class="cm-plan-confirm-out">${e(pr.out.name)}</span>`:'<span class="cm-muted">—</span>'} ⇄ ${pr.in?`<span class="cm-plan-confirm-in">${e(pr.in.name)}</span>`:'<span class="cm-muted">—</span>'}${pr.repaired?' <span class="cm-plan-confirm-mark" aria-label="re-paired">●</span>':''}</li>`;
-  const warn=total!==100?`<p class="cm-plan-confirm-warn">${total} cards in the deck after this; a Commander deck is 100.</p>`:'';
+  const bought=pairs.filter(pr=>pr.in&&pr.in.kind==='final'&&pr.in.chain!=='owned').map(pr=>pr.in.name),grows=pairs.filter(pr=>pr.in&&pr.in.kind==='upgrade'&&!pr.in.named).map(pr=>pr.in.name),holds=commands.filter(c=>c.type==='holdSeat');
+  const warn=(total>100?`<p class="cm-plan-confirm-warn">${total} cards in the deck after this: over 100 it reads Building, can't be boxed and can't be played until it is back to 100.</p>`:total!==100?`<p class="cm-plan-confirm-warn">${total} cards in the deck after this; a Commander deck is 100.</p>`:'')
+    +(bought.length?`<p>Recorded as in hand: ${e(bought.join(', '))}.</p>`:'')+(grows.length?`<p>Added to the list: ${e(grows.join(', '))}.</p>`:'')
+    +(holds.length?`<p>${holds.filter(h=>h.slotId).length?`${holds.filter(h=>h.slotId).length} Substitute${holds.filter(h=>h.slotId).length===1?' takes':'s take'} a Reserved seat left without one; `:''}${holds.filter(h=>!h.slotId).length?`${holds.filter(h=>!h.slotId).length} stay${holds.filter(h=>!h.slotId).length===1?'s':''} as Substitute${holds.filter(h=>!h.slotId).length===1?'':'s'} with no live card.`:''}</p>`:'');
   return C.review('Confirm additions and removals?',`<p>${removed} out · ${added} in</p><ul class="cm-plan-confirm">${pairs.map(line).join('')}</ul>${warn}`,commands.length===1?commands[0]:{type:'batch',commands,summary:`${d.name}: ${removed} out, ${added} in`});};
 /* THE PICTURE ON A HOVER (C4): the thumbnail's card, large, beside the pointer and inside the window. */
 let peekEl=null;

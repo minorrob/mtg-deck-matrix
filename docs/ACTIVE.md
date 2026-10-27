@@ -1,5 +1,32 @@
 # Who holds the work
 
+## r4 coordinated execution, October26,2026 (Codex; Rob: "go")
+
+**Later direct instruction:** "No more test runs. Merge it all now." Tests are stopped and the first
+Actions run40429396786 was canceled. OpenAI is merging the completed work and releasing staging under
+that explicit direction, preserving the rollback checkpoint. This is not a green-CI claim. The final
+repair commits, known Scry grouping and accessibility findings, and the no-test release procedure are
+recorded at the top of docs/r4-execution/HANDOFF.md; PR #890 holds the actual merge/deployment result.
+
+**Pre-CI source/local-proof snapshot:** main b13607b2 is reconciled. All targeted local gates are green; current production/pins are through 0ea8fba6 (board118, stage.js22, stage.css73, table46, app600, SW583). All browsers are released. Real-table321, full tabletop, shared-shell, sectioned Settings114, fullscreen49, graphics87, Admin51/menu85 and targeted backend/build/static checks have bounded evidence in docs/r4-execution/HANDOFF.md. The coordinator owns final scan/push/CI/main; Engine executes staging after green CI/main. Preserve the untracked design renders.
+
+The rollback tag rollback/pre-r4-2026-10-26-b13607b2 is pushed and verified; docs/r4-execution/ROLLBACK.md also records the current Cloudflare deployment/version. EX-28 permits hand overlap without restricting zoom. No further 3D behavior work is authorized for that concern.
+
+The current CI, main merge, staging deployment/readback and remaining release limits are maintained in
+[PR #890](https://github.com/minorrob/mtg-deck-matrix/pull/890), linked to ROB-197. This section is the
+pre-CI checkpoint rather than a claim about a later deployment. Production requires Rob's separate go.
+PR #894 is merged at91989100 and its canonical/browser hold is complete. EX-01–EX-28 record the source
+conflicts and later explicit requests; CH-03's unchanged wordmark is superseded by EX-18.
+
+The61-row program uses integration/r4 from the original main c567c581, now reconciled with b13607b2 and Rob-authorized isolated worktrees, one Play
+writer, serial browser checks and preserved Git history. All129 audit findings retain bounded evidence;
+source mapping alone does not close the53 unmapped findings or partial/open follow-ups.
+
+Rob's later direct instruction assigns OpenAI all review/merge and staging/production operations for
+Claude's incoming #893 and #895–#897. They form the next release wave after r4's main/staging gates;
+dependency order, exact submitted heads, unfinished author validation and security/configuration gates
+are tracked in docs/r4-execution/INCOMING-QUEUE.md. No incoming source or live workflow is accepted yet.
+
 ## 2026-10-25: main 9ca99e5 in production (Rob: "release main 9ca99e5 to production")
 
 Released by the Decks cloud session (`claude/vibrant-turing-50yl3r`), with the Camera and Settings session told before
@@ -32,6 +59,24 @@ back with `tools/staging-check.mjs --expect 9ca99e53`.
 - **Production's D1, bindings and secrets are unchanged** (migrations 0001 and 0002): no migration, binding or
   Worker setting was added since 1fcfc3d. Sharing stays off in `cloud-production` (it is on in the staging profile
   only), so the `cloud/sharing.mjs` changes do not run there.
+
+## Rob's October 26 follow-ups to r4: the wordmark to the Mana Pool, 2026-10-26 (a Claude cloud session, for Rob; `claude/r4-rob-1026`)
+
+Rob, 2026-10-26, asked for these together, in one PR merged to `integration/r4` (*"Include all of these changes in the
+same PR and merge."*). At his word this changes files of three lanes; each change is an EX row of
+`docs/r4-execution/DECISIONS.md`.
+
+- **Claude · Engine:** `game/engine/rules/actions.mjs` gains `manaSources(state, player)`, additive, and
+  `game/room/room.mjs` one view field, `manaSources`, the seat's own (`docs/ui-lane/gameplay-anchor.md`).
+  `tests/room-mana-pool.mjs` covers it, and that a Signet's floating mana is spent first when a spell is cast. No rule,
+  decision or journal changes.
+- **Codex · Play:** `crankmagic-board.js`, `crankmagic-stage.js`, `crankmagic-stage.css`, `crankmagic-table.js` and their
+  suites: Tilt as the angle to the floor (`cm-board-tilt-v3`) and Reset in place of ⌖ (the camera suites now use both),
+  the hand that shows what fits, you in the life list, opponents' play cards past the open drawer and below the life
+  list, the head look's rise, closer read and steer, the Mana Pool module, and your targeted cards outlined in red.
+- **Codex · Workshop:** the Cinzel gilt wordmark, the deck tile's star, Planned Changes' adds and decks past 100
+  (`crankmagic.css`, `crankmagic-design.css`, `crankmagic-decks.js`, `collection-model.js`, `crankmagic-change.js`,
+  `crankmagic-pull.js`, `docs/design/2026-10-25-redesign-r4/`).
 
 ## Admin, Play's Settings in sections, and the invitation to staging and production, 2026-10-26 (a Claude cloud session, for Rob; `claude/confident-cori-v447il`)
 

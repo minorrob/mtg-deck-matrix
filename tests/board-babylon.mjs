@@ -16,6 +16,7 @@ try{
   await page.goto(`${base}/index.html#table?id=tablepreview01`);
   await page.locator('[data-engine=babylon]').waitFor();
   const align=async(label)=>{
+    await page.evaluate(async()=>{await document.fonts.ready;await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));});
     const d=await page.evaluate(()=>CrankStage.diagnostics());
     ok(['top','side','leg'].every(part=>d.parts.includes(part)),`${label}: real table meshes, including sides and base`);
     ok(Math.max(...d.quad.map((n,i)=>Math.abs(n-d.domQuad[i])))<.03,`${label}: Babylon surface and DOM hit areas agree to .03px: ${JSON.stringify(d)}`);
@@ -41,7 +42,7 @@ try{
   const afterHorizontal=await page.evaluate(()=>CrankStage.diagnostics());
   ok(afterHorizontal.quad.every((v,i)=>Math.abs(v-beforeDrag.quad[i])<.03),'horizontal ground dragging does not rotate the table');
   await page.mouse.move(ground.x,ground.y);await page.mouse.down();await page.mouse.move(ground.x,ground.y+20,{steps:5});await page.mouse.up();
-  ok(Number(await page.evaluate(()=>localStorage.getItem('cm-board-tilt-v2')))===44,'vertical ground dragging adjusts and saves tilt');
+  ok(Number(await page.evaluate(()=>localStorage.getItem('cm-board-tilt-v3')))===2,'vertical ground dragging adjusts and saves tilt (10 to 2 from the floor: the camera 40 to 44 degrees)');
   await align('ground drag');
   ok(await page.locator('.cm-stage-canvas').getAttribute('tabindex')==='-1','pointer movement does not reintroduce a canvas tab stop');
   await page.getByRole('button',{name:'Camera',exact:false}).click();
@@ -51,7 +52,7 @@ try{
   await slide('Table tilt',0);
   const flat=await page.evaluate(()=>CrankStage.diagnostics());
   ok(Math.abs(flat.quad[1]-flat.quad[3])<.03&&Math.abs(flat.quad[5]-flat.quad[7])<.03,'a stored rotation from an older session cannot cant the table');
-  await slide('Table tilt',40);
+  await slide('Table tilt',10);
   const initial=await align('reset');
   for(let n=0;n<4;n++)for(const design of ['obsidian-glass','medieval-banded']){
     await page.getByLabel('Table design',{exact:true}).selectOption(design);
@@ -70,8 +71,10 @@ try{
   // The camera moved by hand keeps the one projection (tests/board-3d-camera.mjs): the wheel's zoom toward the pointer, a
   // held right button's head look, and back.
   const stageBox=await page.locator('.cm-stage-region').boundingBox();
-  await page.mouse.move(stageBox.x+stageBox.width*.35,stageBox.y+stageBox.height*.6);await page.mouse.wheel(0,-200);await page.waitForTimeout(300);
-  ok((await align('wheel zoom')).pan.x!==0,'the wheel zooms toward the pointer');
+  const wheelPoint=await page.evaluate(({fx,fy})=>{const region=document.querySelector('.cm-stage-region'),r=region.getBoundingClientRect(),want={x:r.left+r.width*fx,y:r.top+r.height*fy};let best=null,distance=Infinity;for(let y=r.top+20;y<r.bottom-20;y+=9)for(let x=r.left+20;x<r.right-20;x+=9){const el=document.elementFromPoint(x,y),d=(x-want.x)**2+(y-want.y)**2;if(el?.matches('.cm-stage-canvas,.cm-stage-region')&&CrankStage.pick(x,y)&&d<distance){best={x,y};distance=d;}}if(!best)throw new Error('no native bare table point for wheel zoom');return best;},{fx:.35,fy:.6});
+  const wheelHit=await page.evaluate(({x,y})=>{const el=document.elementFromPoint(x,y);return {hit:el?.outerHTML.slice(0,180),row:!!el?.closest('[data-zone-scroll]'),overlay:!!el?.closest('.cm-stage-camera,.cm-stage-actions,#cm-card-inspector,.cm-stage-side,.cm-stage-rail')};},wheelPoint);
+  await page.mouse.move(wheelPoint.x,wheelPoint.y);await page.mouse.wheel(0,-200);await page.waitForTimeout(300);
+  ok((await align('wheel zoom')).pan.x!==0,`the wheel zooms toward the pointer (native hit ${JSON.stringify(wheelHit)})`);
   await page.mouse.down({button:'right'});await page.waitForFunction(()=>CrankStage.diagnostics().look?.t===1,null,{polling:'raf',timeout:5000});
   await align('head look, held');
   await page.mouse.up({button:'right'});await page.waitForFunction(()=>CrankStage.diagnostics().look===null,null,{polling:'raf',timeout:5000});
