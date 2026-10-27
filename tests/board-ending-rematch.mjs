@@ -42,7 +42,7 @@ const rematchTable = (rematch, phase = "rematch") => ({tableId: "over0001", phas
 const waiting = (mine = "pending") => ({lastMatchId: sample.matchId, deadline: Date.now() + 90000, outcome: "waiting", reason: null,
   votes: sample.state.players.map((p) => ({seatId: p.playerId, vote: p.playerId === sample.seat ? mine : "yes"}))});
 async function fixture(view, {width = 1280, height = 720, mode = "full", table = rematchTable(waiting()), first409 = 0} = {}) {
-  const posts = [], context = await browser.newContext({viewport: {width, height}, reducedMotion: "reduce", serviceWorkers: "block"});
+  const posts = [], frames = [], context = await browser.newContext({viewport: {width, height}, reducedMotion: "reduce", serviceWorkers: "block"});
   await context.addInitScript((m) => {localStorage.setItem("cm-board-view", m); localStorage.setItem("crankmagic-audio-muted", "true");}, mode);
   const page = await context.newPage();
   if (stub) await stub(page);
@@ -64,12 +64,15 @@ async function fixture(view, {width = 1280, height = 720, mode = "full", table =
     }
     return r.fulfill({json: {table: current, now: Date.now()}});
   });
-  if (view) await page.routeWebSocket(/\/api\/tables\/over0001\/connect$/, (ws) => {ws.send(JSON.stringify({type: "view", view}));});
+  if (view) await page.routeWebSocket(/\/api\/tables\/over0001\/connect$/, (ws) => {
+    ws.onMessage(data => frames.push(JSON.parse(data)));
+    ws.send(JSON.stringify({type: "view", view}));
+  });
   await page.goto(`${base}/index.html#table?id=over0001`);
   if (view) {await page.locator(".cm-board-over").waitFor({timeout: 20000}); current = {...table};}
   else await page.locator("#cm-table-game").waitFor({timeout: 20000});
   await page.waitForTimeout(300);
-  return {page, context, posts, errors};
+  return {page, context, posts, frames, errors};
 }
 async function reach(page, selector) {
   return page.locator(selector).first().evaluate((el) => {const r = el.getBoundingClientRect(), x = r.x + r.width / 2, y = r.y + r.height / 2; return {ok: x >= 0 && y >= 0 && x < innerWidth && y < innerHeight && el.contains(document.elementFromPoint(x, y)), x, y};});
@@ -88,18 +91,32 @@ try {
     ok(!errors.length, `${name}: no page error (${errors.join(" | ")})`);
     await context.close();
   }
-  /* ---- at the end, nothing left to pass: the pass button says the game is over (it read "Resolve" and a spell left on the
-     stack), and a seat out of the game says so on its empty mat, not "No permanents yet" (the solo run, Oct 21) ---- */
+  /* ---- r4 removes the finished game's pass/resolve control. The persistent ending banner replaces it; native hand
+     browsing/Enter cannot submit a stale answer. The eliminated seat's empty mat still explains why it is empty. ---- */
   for (const mode of ["focus", "full"]) {
     const view = finished(ENDINGS[0][1]), me = view.state.players[view.seat];
     me.health = {...me.health, life: 0, status: "lost", lossReason: "life"};
     me.zones.Battlefield = {...me.zones.Battlefield, count: 0, cards: []};
     view.state.stack = [{stackId: 1, cardId: 99001, name: "Massacre Girl", playerId: 1, kind: "spell"}];
-    const {page, context, errors} = await fixture(view, {mode});
-    const pass = await page.locator('[data-action="board-pass"]').evaluateAll((els) => els.map((el) => ({text: el.textContent.trim(), disabled: el.disabled})));
-    ok(pass.length > 0 && pass.every((x) => x.text === "Game over" && x.disabled), `${mode}: the pass button reads Game over, and does nothing (${JSON.stringify(pass)})`);
+    const {page, context, frames, errors} = await fixture(view, {mode});
+    ok(await page.locator('#cm-board-over-title').innerText() === 'You lost', `${mode}: the persistent ending banner explains the terminal state`);
+    const gameplay = ['board-pass','board-draw','board-resolve-all','board-skip','board-confirm','board-direct','board-option','board-card-menu-do','board-hand-do','board-zoom-do','board-send-blockers','board-opening-hand','board-offered-undo'].map(action=>`[data-action="${action}"]`).join(',');
+    const enabledGameplay = () => page.locator(gameplay).evaluateAll(els => els.filter(el => !el.disabled).map(el => ({action:el.dataset.action,text:el.textContent.trim()})));
+    ok((await enabledGameplay()).length === 0, `${mode}: no enabled pass, draw, resolve, skip or answer remains after game over`);
     const empty = await page.locator(".cm-board-empty").allTextContents();
     ok(empty.includes("Out of the game.") && !empty.includes("No permanents yet."), `${mode}: your empty mat says you are out of the game (${JSON.stringify(empty)})`);
+    ok(me.zones.Hand.cards.length > 0, `${mode}: a real retained hand card exercises the terminal keyboard path`);
+    await page.locator('[data-action="board-show-hand"]').first().focus();
+    await page.keyboard.press('Space');
+    await page.locator('.cm-hand-show').waitFor();
+    await page.keyboard.press('1');
+    await page.locator('.cm-hand-held').waitFor();
+    await page.keyboard.press('Enter');
+    ok((await enabledGameplay()).length === 0, `${mode}: native hand browsing exposes no stale cast/answer`);
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Escape');
+    ok(await page.locator('.cm-board-over').isVisible(), `${mode}: the ending remains visible after browsing the retained hand`);
+    ok(frames.filter(f => f.type === 'act').length === 0, `${mode}: native Space, hand-number and Enter send no gameplay action after the game ends (${JSON.stringify(frames)})`);
     ok(!errors.length, `${mode}: no page error (${errors.join(" | ")})`);
     await context.close();
   }
