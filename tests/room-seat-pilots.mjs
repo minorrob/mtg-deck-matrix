@@ -39,7 +39,7 @@ const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1;};
   const room = await startRoom({storage: memoryStorage(), matchId: "levels", seed: "levels-seed", pilot: spy, pod: {seats: [
     {seatId: "rob", name: "Rob", pilot: "human", level: "easy", commander: [], cards: deck("Forest")},
     {seatId: "easy", name: "Easy", pilot: "house", level: "easy", commander: [], cards: deck("Island")},
-    {seatId: "odd", name: "Odd", pilot: "house", level: "hard", commander: [], cards: deck("Swamp")},
+    {seatId: "odd", name: "Odd", pilot: "house", level: "expert", commander: [], cards: deck("Swamp")},
     {seatId: "old", name: "Old", pilot: "house", commander: [], cards: deck("Plains")}]}});
   eq(room.seats.map((s) => [s.seatId, s.level ?? null]), [["rob", null], ["easy", "easy"], ["odd", null], ["old", null]],
     "a house seat keeps easy; a person's seat has no setting, and one the room does not know is none");

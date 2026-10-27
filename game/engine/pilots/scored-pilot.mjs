@@ -41,7 +41,7 @@ import {atLeast} from "./odds.mjs";
 import {createRng} from "../rng.mjs";
 
 export const SCORED_PILOT_ID = "house-pilot-l1";
-export const SETTINGS = ["easy", "normal"];
+export const SETTINGS = ["easy", "normal", "hard"];
 /* The setting the threat table reads for each (threat.mjs THREAT_WEIGHTS): Easy's rank, Normal's weighted mean. */
 
 /* WHAT THINGS ARE WORTH, in one table, so the weights are tuned in one place (the bench: tools/pilot-bench.mjs). A
@@ -75,7 +75,7 @@ export const WEIGHTS = {
   tokensUpTo: 60, handUpTo: 8, libraryLeast: 5, boardUpTo: 150,
   keep: 0.6,          // the least chance of its third land by turn three that it keeps a hand for
 };
-export const TEMPERATURE = {easy: 4, normal: 0};
+export const TEMPERATURE = {easy: 4, normal: 0, hard: 0};
 /* What it scores; the rest is L0's. The bench turns them off one at a time, to measure each. */
 export const PARTS = ["cast", "ability", "attack", "block", "keep"];
 export const BAND = 3;
@@ -193,7 +193,7 @@ export function pick(plans, setting, roll, temperature = TEMPERATURE) {
  *   for easy's chance; `picks`: its floor takes what a choice it may answer with none is for (house-pilot.mjs).
  */
 export function scoredPilot({seat, cards = () => null, deck = [], setting = "normal", seed = "", parts = PARTS, weights = WEIGHTS, temperature = TEMPERATURE, picks = false} = {}) {
-  if (!SETTINGS.includes(setting)) throw new Error(`The house pilot plays at ${SETTINGS.join(" or ")}, not ${setting}`);
+  if (!SETTINGS.includes(setting)) throw new Error(`The house pilot plays at ${SETTINGS.slice(0, -1).join(", ")} or ${SETTINGS.at(-1)}, not ${setting}`);
   const on = new Set(parts);
   const floor = housePilot({seat, cards, picks});
   const known = (name) => (name ? cards(name) : null) ?? null;
@@ -388,6 +388,8 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
     };
     const held = swingBack([], () => [], []);
     const threats = threatsOf(view);
+    /* Hard gives each creature its own defender (below); the creatures it holds home for the swing back are not in the attack. */
+    const assign = setting === "hard", keepHome = new Set();
     for (const p of foes) {
       const ready = choice.options.filter((o) => o.defenderId === p.playerId && o.planeswalkerId === undefined && power(mine.get(o.cardId)) > 0)
         .map((o) => ({o, c: mine.get(o.cardId)}));
@@ -433,6 +435,59 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
         const plan = score(set);
         /* THE FLOOR (threat.mjs `absurd`): a plan whose every attacker dies for nothing is not a plan, at any setting. */
         if (!plan.absurd) plans.push(plan);
+      }
+    }
+    /* HARD: A PREFERRED DEFENDER FOR EACH CREATURE (Rob, 2026-10-26: "they will compute a preferred target for each of the
+       creatures they are going to declare to attack"). Where the plans above send every attacker at one seat, this one lets
+       each creature choose the seat where it does the most (damage and the seat's threat, the trades it makes against that
+       seat's blockers), one creature at a time while the whole plan improves, the swing back counted once for all of it. */
+    if (assign && foes.length > 1) {
+      const byCard = new Map();
+      for (const o of choice.options) {
+        const c = mine.get(o.cardId);
+        if (o.planeswalkerId !== undefined || !c || power(c) <= 0 || !foes.some((f) => f.playerId === o.defenderId) || keepHome.has(o.cardId)) continue;
+        if (!byCard.has(o.cardId)) byCard.set(o.cardId, []);
+        byCard.get(o.cardId).push({o, c});
+      }
+      if (byCard.size > 0 && byCard.size <= 10) {
+        const wallsOf = new Map(foes.map((f) => [f.playerId, creaturesOf(view, f.playerId).filter((c) => !c.tapped)]));
+        const evaluate = (set) => {
+          const going = set.map((r) => r.c), lost = [], gone = new Map();
+          let value = 0, through = 0, lethal = false;
+          for (const f of foes) {
+            const at = set.filter((r) => r.o.defenderId === f.playerId).map((r) => r.c);
+            if (!at.length) continue;
+            const out = defend({attackers: at, blockers: wallsOf.get(f.playerId), life: f.life, worth});
+            const kills = out.through >= f.life, effect = Math.min(out.through, f.life) / Math.max(1, f.life);
+            value += W.damage * effect + W.threat * threats.over(f.playerId) * effect + (kills ? W.lethal : 0)
+              + W.trade * (out.blockersLost.reduce((n, c) => n + worth(c), 0) - out.attackersLost.reduce((n, c) => n + worth(c), 0));
+            lost.push(...out.attackersLost); gone.set(f.playerId, out.blockersLost); through += out.through; lethal ||= kills;
+          }
+          const back = swingBack(lost, (id) => gone.get(id) ?? [], going);
+          value -= W.exposure * Math.max(0, back - held) / Math.max(1, self.life);
+          if (back >= self.life && held < self.life) value -= W.crackback;
+          return {value, lethal, absurd: absurd(going, {through, attackersLost: lost})};
+        };
+        let set = [], now = evaluate(set).value;
+        for (;;) {
+          let best = null;
+          for (const [cardId, options] of byCard) {
+            if (set.some((r) => r.o.cardId === cardId)) continue;
+            for (const r of options) {
+              if (!withinBudget(choice, [...set, r].map((x) => x.o.index))) continue;
+              const v = evaluate([...set, r]).value;
+              if (!best || v > best.v) best = {r, v};
+            }
+          }
+          if (!best || best.v <= now) break;
+          set = [...set, best.r]; now = best.v;
+        }
+        const key = (list) => list.map((r) => r.o.index).sort((a, b) => a - b).join(",");
+        const joint = evaluate(set);
+        if (set.length && !joint.absurd && !plans.some((pl) => key(pl.set) === key(set))) {
+          const lead = set.reduce((top, r) => (power(r.c) > power(top.c) ? r : top));
+          plans.push({value: joint.value, set, p: foes.find((f) => f.playerId === lead.o.defenderId), lethal: joint.lethal, absurd: false});
+        }
       }
     }
     /* EASY'S RANK (threat.mjs): its attacks go at the top of the rank and nowhere else, while there is an attack to make at
