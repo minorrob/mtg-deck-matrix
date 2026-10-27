@@ -86,7 +86,9 @@ export async function verifyAccess(request, env, deps = {}) {
      -- the Worker keys a person by what it is handed here, and nothing else reads it as mail. Only a service token
      Access admits reaches here: staging's Service Auth policies. */
   const email = typeof claims.email === "string" ? claims.email.trim().toLowerCase() : "";
-  if (!email && env.SERVICE_SEATS === "on" && typeof claims.common_name === "string" && claims.common_name.trim()) return {email: await serviceIdentity(claims.common_name.trim()), service: true};
+  /* `deps.service` is a route that takes a service token as itself, for the one audience it named: the feedback loop's
+     admin routes, read and written by the triage agent's token for its own Access application (cloud/feedback.mjs). */
+  if (!email && (env.SERVICE_SEATS === "on" || deps.service === true) && typeof claims.common_name === "string" && claims.common_name.trim()) return {email: await serviceIdentity(claims.common_name.trim()), service: true};
   if (!/^[^\s@]+@[^\s@]+$/.test(email)) throw new Unauthorized("a token that names no person");
   return {email};
 }

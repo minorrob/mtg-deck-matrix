@@ -54,7 +54,7 @@ const quiet = {warn: () => {}};
 
 /* ---- 1. The schema ---- */
 {
-  eq(MIGRATIONS.slice(-1), ["0006_card_demand.sql"], "1. migration 0006 is card demand's, the last applied");
+  eq(MIGRATIONS.filter((f) => f.startsWith("0006")), ["0006_card_demand.sql"], "1. migration 0006 is card demand's (0009 is the feedback loop's; 0007 and 0008 are reserved, docs/ACTIVE.md)");
   const DB = d1();
   const columns = (t) => DB.raw.prepare(`PRAGMA table_info(${t})`).all().map((c) => c.name);
   const made = readFileSync(new URL("../cloud/migrations/0006_card_demand.sql", import.meta.url), "utf8").match(/CREATE TABLE (\w+)/g).map((m) => m.split(" ")[2]);
