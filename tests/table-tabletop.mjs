@@ -223,7 +223,10 @@ try {
   for(const width of [1400,1024]) {
     await page.setViewportSize({width,height:800});
     for(const opened of [true,false]) {
-      if(Boolean(await page.locator('.cm-stage-side.is-open').count())!==opened)await page.locator('.cm-stage-right[data-action=board-stage-side]').click();
+      if(Boolean(await page.locator('.cm-stage-side.is-open').count())!==opened){
+        if(await page.locator('.cm-stage-camera>div').count())await page.locator('[data-action=board-camera]').click();
+        await page.locator('.cm-stage-right[data-action=board-stage-side]').click();
+      }
       for(const expanded of [false,true]) {
         if(Boolean(await page.locator('.cm-stage-camera>div').count())!==expanded)await page.locator('[data-action=board-camera]').click();
         await reachable('[data-action=board-camera]',`${width}: Camera with Stack ${opened?'open':'closed'} and popup ${expanded?'open':'closed'}`);
