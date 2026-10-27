@@ -612,8 +612,10 @@ globalThis.CrankBoard = Object.seal({
     const h = p.health, from = Object.entries(h.commanderDamage || {}).map(([id, n]) => ({seat: commanderSeat(id), n}));
     const danger = h.life <= 10 || h.poison >= 7 || from.some((f) => f.n >= 15);
     const bars = from.map((f) => `<i class="cm-vitals-bar" style="--fill:${Math.min(1, f.n / 21)};--seat:${f.seat === null ? SEAT_COLORS[0] : seatColor(f.seat)}" title="${e(f.seat === null ? "A commander" : nameOf(f.seat))}: ${f.n} of 21"></i>`).join("");
-    const inner = `<b>${h.life}</b><span class="cm-vitals-poison">☠ ${h.poison}</span>${bars}`, cls = `cm-vitals${big ? " is-big" : ""}${danger ? " is-danger" : ""}`;
-    const label = `${p.playerId === view.seat ? "You" : p.name}: ${h.life} life, ${h.poison} poison`;
+    /* Poison is read in Table vitals (Rob, 2026-10-27: "Keep poisons in table vitals"), not on every pill; a reader of the
+       screen is still told when a seat has some. */
+    const inner = `<b>${h.life}</b>${bars}`, cls = `cm-vitals${big ? " is-big" : ""}${danger ? " is-danger" : ""}`;
+    const label = `${p.playerId === view.seat ? "You" : p.name}: ${h.life} life${h.poison > 0 ? `, ${h.poison} poison` : ""}`;
     return button ? `<button type="button" class="${cls}" data-action="board-vitals" aria-label="${e(label)}; open Table vitals">${inner}</button>`
       : `<span class="${cls}" aria-label="${e(label)}">${inner}</span>`;
   }
@@ -623,6 +625,9 @@ globalThis.CrankBoard = Object.seal({
     if(flag==='Deciding' || (view.decision && i===view.seat))return 'Deciding';
     return view.state.turnPlayerId===i?(i===view.seat?'Your turn':`${p.name}'s turn`):'Waiting';
   }
+  /* A seat's state is a colored dot with its word on hover (Rob, 2026-10-27: "Colored dot with the word on hover"): the key
+     picks the color, the word stays in the page for a screen reader and for the suites. */
+  const seatStateKey = (word) => word === "Deciding" ? "deciding" : /turn$|^● Active$/.test(word) ? "turn" : word === "Waiting" ? "waiting" : "out";
   function seatHeader(p, {interactive = true,resources=false} = {}) {
     const commander = commanderOf(p), label = seatLabel(p), active = view.state.turnPlayerId === p.playerId;
     const state=seatState(p);
@@ -631,7 +636,7 @@ globalThis.CrankBoard = Object.seal({
       <span class="cm-seat-portrait" aria-hidden="true"><span class="cm-seat-initial">${e(initial)}</span>${commander?.name ? `<img src="${e(pictureOf(commander.name))}" alt="" referrerpolicy="no-referrer">` : ""}</span>
       <span class="cm-seat-identity"><strong class="cm-mat-name">${e(label)}</strong><span class="cm-seat-commander">${e(commander?.name || 'Command zone')}</span></span>
       ${vitals(p, {button:interactive})}${resources?`<span class="cm-seat-resources">${p.mana.reduce((n,m)=>n+m.amount,0)} mana open · land drop ${p.landsPlayed?'used':'available'}</span>`:''}<span class="cm-seat-hand">${p.zones.Hand.count} in hand</span>
-      <span class="cm-seat-state${view.state.priorityPlayerId === p.playerId ? ' has-priority' : ''}">${e(state)}</span></div>`;
+      <span class="cm-seat-state${view.state.priorityPlayerId === p.playerId ? ' has-priority' : ''}" data-state="${seatStateKey(state)}"><span class="cm-state-word">${e(state)}</span></span></div>`;
   }
   document.addEventListener('error', event => {if (event.target.matches?.('.cm-seat-portrait img')) event.target.remove();}, true);
   function pictureOf(name) {
@@ -1244,7 +1249,7 @@ globalThis.CrankBoard = Object.seal({
       <div class="cm-full-mine cm-stage-region" aria-label="Tabletop">
         <div class="cm-stage-caption"><span title="Turn ${view.state.turn}">TURN ${view.state.turn}</span><div class="cm-stage-life-list" role="group" aria-label="Player life totals">${lifeList()}</div></div>
         ${rear}<div class="cm-stage-front">${mat(big, {size: "full", head: "none"})}${corner}</div>
-        ${stageEnabled() ? [0, 1, 2, 3].map((i) => `<span class="cm-stage-corner" data-corner="${i}" aria-hidden="true" title="Drag to size the table"></span>`).join("") : ""}
+        ${stageEnabled() ? [0, 1, 2, 3].map((i) => `<span class="cm-stage-corner" data-corner="${i}" aria-hidden="true"></span>`).join("") : ""}
         ${actionBar()}
         <span class="cm-stage-error" role="status">${e(stageError)}</span>${ask()}
       </div>
@@ -1274,11 +1279,11 @@ globalThis.CrankBoard = Object.seal({
     const pending = view.decision && view.decision.kind !== 'draw' ? 1 : 0, count = view.state.stack.length;
     return `<aside class="cm-stage-rail cm-drawer${stageRail ? ' is-open' : ''}" id="cm-actions-drawer" aria-label="Left drawer" ${stageRail ? '' : 'inert'}>${stageModules('left')}${boardsPane()}</aside>
       ${stageRail && !phone() ? `<span class="cm-board-panegrip">${grip('pane', 'Actions and boards width: drag, or use the arrow keys', paneWidth(), PANE, 'vertical')}</span>` : ''}
-      <button type="button" class="cm-stage-handle cm-stage-left cm-drawer-tab${pending ? ' has-decision' : ''}" data-action="board-stage-rail" aria-expanded="${stageRail}" aria-controls="cm-actions-drawer" aria-label="${stageRail ? 'Collapse' : 'Expand'} Actions"><span>Actions${pending ? ' · 1' : ''}</span><b aria-hidden="true">${stageRail ? '◂' : '▸'}</b></button>
+      <button type="button" class="cm-stage-handle cm-stage-left cm-drawer-tab${pending ? ' has-decision' : ''}" data-action="board-stage-rail" aria-expanded="${stageRail}" aria-controls="cm-actions-drawer" aria-label="${stageRail ? 'Collapse' : 'Expand'} Actions${pending ? ', a decision is waiting' : ''}"><span class="cm-tab-label">Actions</span>${pending ? '<i class="cm-tab-count" aria-hidden="true">1</i>' : ''}</button>
       <aside class="cm-full-side cm-stage-side cm-drawer${stageSide ? ' is-open' : ''}" id="cm-stack-drawer" aria-label="The table" ${stageSide ? '' : 'inert'} style="--split:${Math.round(splitOf('side') * 100)}%">
       ${stageSide && !phone() ? `<span class="cm-board-panelgrip">${grip('panelw', 'The drawer width: drag, or use the arrow keys', panelWidth(), PANELW, 'vertical')}</span>` : ''}
       <header><b>Stack & history</b>${ib('⚙', 'board-modules-edit', 'Arrange modules', {}, {pressed:paneEditing})}${ib('✕', 'board-stage-side', 'Close table panel')}</header>${stageModules('right')}</aside>
-      <button type="button" class="cm-stage-handle cm-stage-right cm-drawer-tab" data-action="board-stage-side" aria-expanded="${stageSide}" aria-controls="cm-stack-drawer" aria-label="${stageSide ? 'Collapse' : 'Expand'} Stack"><span>Stack · ${count}</span><b aria-hidden="true">${stageSide ? '▸' : '◂'}</b></button>${!phone()&&historyOpen?historyMenu():''}`;
+      <button type="button" class="cm-stage-handle cm-stage-right cm-drawer-tab" data-action="board-stage-side" aria-expanded="${stageSide}" aria-controls="cm-stack-drawer" aria-label="${stageSide ? 'Collapse' : 'Expand'} Stack${count ? `, ${count} on the stack` : ''}"><span class="cm-tab-label">Stack</span>${count ? `<i class="cm-tab-count" aria-hidden="true">${count}</i>` : ''}</button>${!phone()&&historyOpen?historyMenu():''}`;
   }
   function tableMenu() {
     return `<div class="cm-table-menu"><button type="button" data-action="board-table-menu" aria-expanded="${tableMenuOpen}" aria-controls="cm-table-menu">Table ▾</button>${tableMenuOpen ? `<div id="cm-table-menu" role="group" aria-label="Table">${b('Pages','board-menu')}${menuOpen?menu():''}${b('History','board-history')}${b('Concede', 'board-concede')}${b('Leave table', 'board-leave-page')}${table?.youAreHost ? (confirmEnd ? `<p>End the game for everyone? The record is kept.</p>${b('Cancel', 'board-end-cancel')}${b('End game for everyone', 'board-end', {confirm:'1'}, true)}` : b('End game for everyone', 'board-end')) : ''}${b('Table rules', 'board-table-rules')}${b('Help', 'page-help', {help:'table'})}</div>` : ''}</div>`;
@@ -1412,7 +1417,7 @@ globalThis.CrankBoard = Object.seal({
       const collapsed = id === 'actions' ? actionsShut : foldedModules.has(id);
       const h = moduleH(id), sized = !collapsed;
       return `<section class="cm-stage-module cm-disclosure${h && sized ? ' has-height' : ''}" data-module="${id}" aria-label="${title} module"${h && sized ? ` style="--module-h:${h}px"` : ''}>
-        ${id==='coach' && coach.open && !collapsed?'':`<header><h3><button type="button" class="cm-module-toggle" data-action="${id==='actions'?'board-actions-toggle':'board-module-toggle'}" data-module="${id}" aria-expanded="${!collapsed}" aria-controls="cm-module-${id}">${id==='actions'?'Your decision':title}<span aria-hidden="true">${collapsed?'▸':'▾'}</span></button></h3>
+        ${id==='coach' && coach.open && !collapsed?'':`<header><h3><button type="button" class="cm-module-toggle" data-action="${id==='actions'?'board-actions-toggle':'board-module-toggle'}" data-module="${id}" aria-expanded="${!collapsed}" aria-controls="cm-module-${id}">${id==='actions'?'Actions':title}<span aria-hidden="true">${collapsed?'▸':'▾'}</span></button></h3>
         ${paneEditing && id !== 'actions' ? `${ib('↑', 'board-module-move', `Move ${title} up`, {module:id, side, by:'-1'}, {disabled:i===0})}${ib('↓', 'board-module-move', `Move ${title} down`, {module:id, side, by:'1'}, {disabled:i===ids.length-1})}${ib('×', 'board-module-remove', `Remove ${title}`, {module:id, side})}` : ''}</header>`}
         <div class="cm-module-body" id="cm-module-${id}"${collapsed ? ' hidden' : ''}>${collapsed ? '' : bodies[id]()}</div>
         ${sized ? `<span class="cm-module-grip">${grip('modh', `${title} height: drag, or use the arrow keys; double-click for its own height`, h || MODH[0], MODH, 'horizontal', ` data-module-id="${id}"`)}</span>` : ''}</section>`;
@@ -1820,9 +1825,12 @@ globalThis.CrankBoard = Object.seal({
         : `<button type="button" class="v-button compact" data-action="board-option" data-index="${o.index}" aria-pressed="${picked.includes(o.index)}"${sending ? " disabled" : ""}>${sayHtml(o)}${n > 1 ? ` <span class="cm-muted">×${n}</span>` : ""}</button>`;
       /* One card's offers: its mana abilities one row of symbols. */
       const rows = [...seen.values()], count = new Map(rows.map((r) => [r.o, r.n]));
-      if(actionCard !== null && rows.length===1 && !choiceTargets(rows[0].o).length) {
+      /* A land is played without being aimed at anything, and any offer whose only "target" is its own card needs no question
+         (Rob, 2026-10-27: "I don't need to target myself ... It's implied"). */
+      const selfOnly = (o) => o.act === "play-land" || choiceTargets(o).every((g) => g.targets.every((t) => t.id === o.cardId));
+      if(actionCard !== null && rows.length===1 && selfOnly(rows[0].o)) {
         const o=rows[0].o;
-        return `<section class="cm-board-decision" id="cm-board-decision" data-wf="W14">${decisionPick(d,o)}<h2>${e(actionLabel(o))}</h2>${deskCard()}<div class="cm-decide-actions">${b(actionLabel(o),"board-direct",{index:String(o.index),revision:String(view.revision)},true,{disabled:sending || draftRevision !== view.revision})}${b("Cancel","board-action-all")}</div></section>`;
+        return `<section class="cm-board-decision" id="cm-board-decision" data-wf="W14"><h2>${e(sourceFor(d,o)?.name || o.label)}</h2>${deskCard()}<div class="cm-decide-actions">${b(verbFor(o),"board-direct",{index:String(o.index),revision:String(view.revision)},true,{disabled:sending || draftRevision !== view.revision})}${b("Cancel","board-action-all")}</div></section>`;
       }
       body = actionCard === null ? rows.map(each).join("") : withManaRow(rows.map((r) => r.o), (o) => each({o, n: count.get(o)}), true);
       return `<section class="cm-board-decision is-also" id="cm-board-decision" aria-label="What you can do">${actionCard === null ? "" : `<button type="button" class="cm-board-back" data-action="board-action-all">${CHEV_LEFT}<span>All actions</span></button>`}${picked.length && targetChoice(d) ? "" : `<h3>${actionCard === null ? "Choose an action" : e(findCard(actionCard)?.name || "Choose an action")}</h3>`}${decisionPick(d,d.options.find(o=>o.index===picked[0]) || rows[0]?.o)}${picked.length && targetChoice(d) ? targetHeading(d,d.options.find(o=>o.index===picked[0])) : ""}${picked.length && targetChoice(d) ? "" : deskCard()}<div class="cm-board-options">${picked.length && targetChoice(d) ? "" : body}</div>${commitReview(d)}</section>`;

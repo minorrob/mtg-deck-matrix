@@ -98,6 +98,9 @@ try{
   const g3='.cm-stage-rail [data-drag=modh][data-module-id="actions"]';
   ok(await page.locator(g3).count()===1,"a bar under the Actions module sizes its height");
   ok(await page.locator(".cm-stage-side [data-drag=modh]").count()>=3,"and one under every module in the right drawer");
+  /* The module's own height is its content's, up to its cap, so it is measured in the same state each time: a fresh page, no choice picked
+     (a picked choice adds the Confirm row, and the reload before the double click clears it). */
+  await open();
   const body0=await box('.cm-stage-rail .cm-stage-module[data-module="actions"]>.cm-module-body');
   await dragBy(g3,0,400);
   const body1=await box('.cm-stage-rail .cm-stage-module[data-module="actions"]>.cm-module-body');

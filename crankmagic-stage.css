@@ -414,8 +414,8 @@
 /* THE TURN'S ACTIONS over the table in Full screen, large, at the top where the callouts are; dimmed while not yours. */
 /* Solid behind its words, whatever the scene under it (a11y-board reads every word's contrast over every mat); while the
    question is not yours, its buttons are off, and the pass reads as off by itself. */
-.cm-stage-actions{position:absolute;left:50%;top:12px;z-index:12;display:flex;align-items:center;gap:12px;padding:9px 12px;border-radius:16px;background:#06161a;border:1px solid #3d5c55;box-shadow:0 16px 36px -14px rgb(0 0 0 / .9);transform:translateX(-50%);white-space:nowrap}
-#matrix-v2 .cm-stage-actions .v-button{min-height:49px;height:auto;padding:0 24px;border-radius:12px;font-size:17px;font-weight:800;letter-spacing:.01em;color:#f3fff7;background:#1c3432;border-color:#6f9c88}
+.cm-stage-actions{position:absolute;left:50%;top:12px;z-index:12;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:14px;background:#06161a;border:1px solid #3d5c55;box-shadow:0 16px 36px -14px rgb(0 0 0 / .9);transform:translateX(-50%);white-space:nowrap}
+#matrix-v2 .cm-stage-actions .v-button{min-height:42px;height:auto;padding:0 20px;border-radius:10px;font-size:15px;font-weight:800;letter-spacing:.01em;color:#f3fff7;background:#1c3432;border-color:#6f9c88}
 #matrix-v2 .cm-stage-actions .v-button.primary{color:#0d120c;background:var(--v-accent);border-color:var(--v-accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--v-accent) 35%,transparent),0 10px 24px -10px var(--v-accent)}
 #matrix-v2 .cm-stage-actions .v-button.is-on{background:#87c6a1;color:#0d120c}
 #matrix-v2 .cm-stage-actions .v-button:disabled{box-shadow:none}
@@ -425,7 +425,7 @@
 @keyframes cm-actions-rise{from{opacity:0;transform:translate(-50%,-14px) scale(.9)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
 /* the callouts below the actions, never over them */
 .cm-board[data-stage="on"]~.cm-board-callouts{top:calc(16% + 64px)}
-@media(max-width:1100px){#matrix-v2 .cm-stage-actions .v-button{min-height:44px;padding:0 16px;font-size:16px}.cm-stage-actions{gap:9px;padding:7px 9px}}
+@media(max-width:1100px){#matrix-v2 .cm-stage-actions .v-button{min-height:38px;padding:0 14px;font-size:15px}.cm-stage-actions{gap:8px;padding:6px 8px}}
 /* WHAT THE OTHER PLAYERS PLAY: each card held up at the table's left, under the life list, its player's name over it, for
    ten seconds. */
 .cm-board-plays{position:fixed;left:var(--plays-left,56px);top:var(--plays-top,176px);z-index:57;display:flex;flex-direction:column;gap:10px;pointer-events:none}
@@ -661,7 +661,6 @@
 #matrix-v2 .cm-board .cm-seat-header.is-turn .cm-seat-portrait{box-shadow:0 0 0 2px var(--table-brass),0 0 0 5px var(--color-aether)}
 #matrix-v2 .cm-board .cm-seat-identity{display:flex;flex-direction:column;gap:3px;min-width:0}
 #matrix-v2 .cm-board .cm-seat-commander{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#matrix-v2 .cm-board .cm-seat-state.has-priority:before{content:'●';color:var(--color-aether);margin-right:4px}
 #matrix-v2 .cm-board .cm-seat-header .cm-vitals{flex-shrink:0;background:var(--mat-scrim);color:var(--mat-ink)}
 #matrix-v2 .cm-board .cm-seat-header .cm-vitals>b{font-size:calc(var(--text-hud-vital)*var(--hud-scale,1));line-height:1}
 #matrix-v2 .cm-board .cm-seat-header.is-danger .cm-vitals>b{color:var(--callout-harm)}
@@ -995,7 +994,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-board-pie-life small{color:var(--mat-ink);background:var(--mat-scrim);padding:2px 4px;border-radius:3px}
 #matrix-v2 .cm-board .cm-board-pie-priority{top:calc(50% + 20px*var(--hud-scale,1));font-size:calc(15px*var(--hud-scale,1));line-height:1.1}
 
-#matrix-v2 .cm-board .cm-vitals-poison,#matrix-v2 .cm-board .cm-vitals>b:after{font-size:calc(15px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-vitals>b:after{font-size:calc(15px*var(--hud-scale,1))}
 
 #matrix-v2 .cm-board .cm-mat .cm-mat-name,#matrix-v2 .cm-board .cm-pick>div,#matrix-v2 .cm-board .cm-pick>div>*{font-size:calc(15px*var(--hud-scale,1))}
 
@@ -1120,14 +1119,14 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board[data-view=full] .cm-stage-top{flex-wrap:wrap}
 #matrix-v2 .cm-board[data-view=full] .cm-stage-top>.cm-stage-camera,#matrix-v2 .cm-board[data-view=full] .cm-stage-top>.cm-table-menu{position:relative;top:auto;right:auto;bottom:auto;flex:none}
 #matrix-v2 .cm-board[data-view=full] .cm-stage-top .cm-stage-camera>div,#matrix-v2 .cm-board[data-view=full] .cm-stage-top .cm-table-menu>div{top:calc(100% + 6px);bottom:auto}
-#matrix-v2 .cm-board[data-view=full]{--full-pane-top:calc(var(--hud-top,58px) + var(--combat-h,0px) + var(--full-action-h,0px) + 24px)}
+#matrix-v2 .cm-board[data-view=full]{--full-pane-top:calc(var(--hud-top,58px) + var(--combat-h,0px));--full-clear-top:calc(var(--full-pane-top) + var(--full-action-h,0px) + 24px)}
 #matrix-v2 .cm-board[data-view=full]>.cm-stage-rail,#matrix-v2 .cm-board[data-view=full]>.cm-stage-side,#matrix-v2 .cm-board[data-view=full]>#cm-card-inspector{top:var(--full-pane-top)}
 #matrix-v2 .cm-board[data-view=full]>.cm-stage-side{height:calc(100% - var(--full-pane-top))!important}
 #matrix-v2 .cm-board[data-view=full]>.cm-board-panegrip{top:var(--full-pane-top);height:calc(100% - var(--full-pane-top))}
 #matrix-v2 .cm-board[data-view=full] .cm-stage-region>.cm-decision-slot{top:calc(var(--full-action-h,0px) + 24px);max-height:calc(100% - var(--full-action-h,0px) - 36px)}
-#matrix-v2 .cm-board[data-view=full] .cm-stage-region>.cm-decision-slot>#cm-board-decision{max-height:min(65dvh,650px,calc(100dvh - var(--full-pane-top) - 20px))}
-#matrix-v2 .cm-board .cm-stage-actions .v-button{font-size:calc(17px*var(--hud-scale,1));min-height:49px}
-@media(max-width:1100px){#matrix-v2 .cm-board .cm-stage-actions .v-button{min-height:44px}}
+#matrix-v2 .cm-board[data-view=full] .cm-stage-region>.cm-decision-slot>#cm-board-decision{max-height:min(65dvh,650px,calc(100dvh - var(--full-clear-top) - 20px))}
+#matrix-v2 .cm-board .cm-stage-actions .v-button{font-size:calc(15px*var(--hud-scale,1));min-height:42px}
+@media(max-width:1100px){#matrix-v2 .cm-board .cm-stage-actions .v-button{min-height:38px}}
 #matrix-v2 .cm-board .cm-stage-actions small,#matrix-v2 .cm-board :is(.cm-stage-caption,.cm-stage-life-list,.cm-stage-life){font-size:calc(15px*var(--hud-scale,1))}
 #matrix-v2 .cm-board .cm-stage-caption{max-width:max(72px,calc((100% - var(--full-action-w,0px))/2 - 30px));box-sizing:border-box;line-height:1.15}
 #matrix-v2 .cm-board .cm-stage-caption>span{max-width:100%;box-sizing:border-box;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1150,11 +1149,11 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-stage-camera label:not(.cm-stage-style)+.cm-stage-style{margin-top:26px}
 #matrix-v2 .cm-stage-camera .cm-stage-style select{min-height:0;height:30px;padding:2px 8px;font-size:12px}
 /* THE TABLE'S CORNERS: drag one to size the table, its proportions kept. Quiet until the pointer is over the table. */
-#matrix-v2 .cm-board .cm-stage-corner{position:absolute;z-index:4;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:color-mix(in srgb,var(--color-ink) 16%,transparent);box-shadow:0 0 0 2px color-mix(in srgb,var(--color-ink) 72%,transparent);opacity:0;transition:opacity .16s ease;touch-action:none}
-#matrix-v2 .cm-board .cm-stage-region:hover>.cm-stage-corner,#matrix-v2 .cm-board .cm-stage-region.is-resizing>.cm-stage-corner{opacity:.9}
+/* No circle is drawn (Rob, 2026-10-27: "I don't want circles on the corners ... I just want the functionality there"): the handle is
+   still a 22px target at each corner, with its resize cursor, and the drag is unchanged. */
+#matrix-v2 .cm-board .cm-stage-corner{position:absolute;z-index:4;width:22px;height:22px;margin:-11px 0 0 -11px;background:none;border:0;box-shadow:none;touch-action:none}
 #matrix-v2 .cm-board .cm-stage-corner:is([data-corner="0"],[data-corner="2"]){cursor:nwse-resize}
 #matrix-v2 .cm-board .cm-stage-corner:is([data-corner="1"],[data-corner="3"]){cursor:nesw-resize}
-@media(prefers-reduced-motion:reduce){#matrix-v2 .cm-board .cm-stage-corner{transition:none}}
 /* THE HOVER CARD IS FOR READING (Rob, 2026-10-26): no power/toughness badge over its text; the card on the table keeps it. */
 #cm-board .cm-board-peek .cm-bcard-pt{display:none}
 /* The life list: the turn's seat in bold after a small turn symbol, in aether (whose turn it is, as on the portraits). */
@@ -1175,3 +1174,104 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
    thick enough to read on a far mat of the 3D table. */
 #matrix-v2 .cm-board .cm-bcard.is-targeted{outline:5px solid var(--color-required,#ed4546);outline-offset:2px;filter:drop-shadow(0 0 7px color-mix(in srgb,var(--color-required,#ed4546) 85%,transparent))}
 #matrix-v2 .cm-board .cm-bcard.is-targeted:focus-visible{outline-offset:5px}
+
+/* ---- THE PLAY SCREEN, MADE CONSISTENT (Rob, 2026-10-27) ----------------------------------------------------------------------
+   One pass over what drifted when the drawers, the ribbon and the seat cards were each restyled on top of the last. It sits last so
+   that it states the result in one place; the rules it supersedes above are the ones it names. Drawers: from the ribbon down, one
+   inset, one heading size, one body size and one helper size. Seat state: a dot, its word on hover. Life: large only in the ribbon.
+   The two sizes in the drawers are --text-hud-caption (the HUD's body, 15px) and --text-small (the helper, 13px). */
+#matrix-v2 .cm-board{--drawer-inset:12px}
+
+/* A seat's state: a colored dot, the word read on hover or focus and always for a screen reader. */
+#matrix-v2 .cm-board .cm-seat-state{--dot:var(--color-muted);position:relative;flex:none;display:block;width:10px;height:10px;margin:0;padding:0;font-size:0;line-height:0;cursor:default}
+#matrix-v2 .cm-board .cm-seat-state::before{content:"";position:absolute;inset:0;border-radius:50%;background:var(--dot)}
+#matrix-v2 .cm-board .cm-seat-state::after{content:"";position:absolute;inset:-7px}
+#matrix-v2 .cm-board .cm-seat-state[data-state=deciding]{--dot:var(--color-aether)}
+#matrix-v2 .cm-board .cm-seat-state[data-state=deciding]::before{box-shadow:0 0 0 3px color-mix(in srgb,var(--color-aether) 30%,transparent)}
+#matrix-v2 .cm-board .cm-seat-state[data-state=turn]{--dot:var(--table-brass)}
+#matrix-v2 .cm-board .cm-seat-state[data-state=waiting]{--dot:color-mix(in srgb,var(--color-muted) 65%,transparent)}
+#matrix-v2 .cm-board .cm-seat-state[data-state=out]{--dot:var(--callout-harm)}
+#matrix-v2 .cm-board .cm-state-word{font-size:calc(var(--text-hud-caption)*var(--hud-scale,1));position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+#matrix-v2 .cm-board .cm-seat-state:is(:hover,:focus-visible) .cm-state-word{right:calc(100% + 8px);top:50%;width:auto;height:auto;margin:0;overflow:visible;clip-path:none;transform:translateY(-50%);padding:3px 8px;border:1px solid var(--color-line-strong);border-radius:var(--radius-control);background:var(--color-panel);color:var(--color-ink);font:600 calc(var(--text-hud-caption)*var(--hud-scale,1))/1.2 var(--font-body);z-index:40;pointer-events:none}
+
+/* Life, plain: in a seat card and on a table label it reads as the words around it, the way "7 in hand" does. The ribbon keeps the
+   large number, the one place it is said big. */
+#matrix-v2 .cm-board :is(.cm-board-pane,.cm-stage-region) .cm-seat-header .cm-vitals{padding:0;min-height:0;height:auto;gap:0;border:0;border-radius:0;background:none;box-shadow:none;font:inherit;color:inherit}
+#matrix-v2 .cm-board :is(.cm-board-pane,.cm-stage-region) .cm-seat-header .cm-vitals>b{font:inherit}
+#matrix-v2 .cm-board :is(.cm-board-pane,.cm-stage-region) .cm-seat-header .cm-vitals>b:after{font:inherit}
+#matrix-v2 .cm-board :is(.cm-board-pane,.cm-stage-region) .cm-seat-header button.cm-vitals:is(:hover,:focus-visible){text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px}
+
+/* A seat card in Boards: two rows of one height every time. The portrait, the name over the commander, the dot at the end; then
+   the life and the hand, in the name's column. */
+#matrix-v2 .cm-board .cm-board-pane .cm-seat-header{--seat-portrait:calc(32px*var(--hud-scale,1));display:flex;flex-wrap:wrap;align-items:center;column-gap:8px;row-gap:3px;font:400 calc(var(--text-hud-caption)*var(--hud-scale,1))/1.25 var(--font-body)}
+#matrix-v2 .cm-board .cm-board-pane .cm-seat-portrait{order:0}
+#matrix-v2 .cm-board .cm-board-pane .cm-seat-identity{order:1;flex:1 1 calc(100% - var(--seat-portrait) - 26px);min-width:0}
+#matrix-v2 .cm-board .cm-board-pane .cm-seat-state{order:2}
+#matrix-v2 .cm-board .cm-board-pane .cm-vitals{order:3;margin-left:calc(var(--seat-portrait) + 8px)}
+#matrix-v2 .cm-board .cm-board-pane .cm-seat-hand{order:4;white-space:nowrap}
+#matrix-v2 .cm-board .cm-board-pane .cm-seat-hand::before{content:"·";margin-right:8px}
+#matrix-v2 .cm-board .cm-board-pane .cm-seat-commander{max-width:none;font-size:var(--text-small);font-weight:400;color:var(--color-muted)}
+#matrix-v2 .cm-board .cm-stage-region .cm-seat-state{margin-left:auto}
+
+/* The drawer tabs (Rob, 2026-10-27, from his sketch): a narrow flag hung from the top of the drawer's outer edge, the label running
+   down it, the outer corner at the foot cut on a slant. Sized by what is in it, so the label and a count are always inside. The
+   shape is drawn by two layers behind the label, a rim and a fill, so the slant keeps its outline. */
+#matrix-v2 .cm-board:not([data-phone]) .cm-drawer-tab{--tab-cut:12px;display:flex;flex-direction:row;align-items:center;justify-content:flex-start;gap:6px;width:auto;min-width:0;height:auto;min-height:0;margin:0;padding:10px 6px calc(10px + var(--tab-cut)) 6px;border:0;border-radius:0;background:none;box-shadow:none;color:var(--color-ink);font:700 calc(var(--text-hud-caption)*var(--hud-scale,1))/1 var(--font-body);writing-mode:vertical-rl;text-orientation:mixed;isolation:isolate}
+#matrix-v2 .cm-board:not([data-phone]) .cm-drawer-tab::before,#matrix-v2 .cm-board:not([data-phone]) .cm-drawer-tab::after{content:"";position:absolute;z-index:-1;clip-path:polygon(0 0,100% 0,100% calc(100% - var(--tab-cut)),0 100%);transform:none;width:auto;height:auto;border:0;rotate:none}
+#matrix-v2 .cm-board:not([data-phone]) .cm-drawer-tab::before{inset:-1px;background:var(--color-line-strong)}
+#matrix-v2 .cm-board:not([data-phone]) .cm-drawer-tab::after{inset:0;background:var(--color-raised)}
+#matrix-v2 .cm-board:not([data-phone]) .cm-stage-right::before,#matrix-v2 .cm-board:not([data-phone]) .cm-stage-right::after{clip-path:polygon(0 0,100% 0,100% 100%,0 calc(100% - var(--tab-cut)))}
+#matrix-v2 .cm-board:not([data-phone]) .cm-drawer-tab:is(:hover,:focus-visible)::after{background:var(--color-line)}
+#matrix-v2 .cm-board:not([data-phone]) .cm-drawer-tab.has-decision::after{background:color-mix(in srgb,var(--color-aether) 24%,var(--color-raised))}
+#matrix-v2 .cm-board .cm-tab-count{display:grid;place-items:center;flex:none;min-width:24px;height:24px;padding:0 4px;box-sizing:border-box;border-radius:999px;background:var(--color-aether);color:var(--color-bg);font:700 calc(var(--text-hud-caption)*var(--hud-scale,1))/1 var(--font-body);font-style:normal;writing-mode:horizontal-tb}
+
+/* The ribbon's controls: one height, one radius, one size. */
+#matrix-v2 .cm-board .cm-stage-top :is(.v-button,.cm-table-menu>button,.cm-stage-camera>button){box-sizing:border-box;height:36px;min-height:36px;display:inline-flex;align-items:center;justify-content:center;padding:0 12px;border-radius:var(--radius-control);font-size:calc(var(--text-hud-caption)*var(--hud-scale,1));line-height:1}
+#matrix-v2 .cm-board .cm-stage-top .v-button.compact{min-width:36px;padding:0}
+#matrix-v2 .cm-board .cm-stage-top .cm-profile-avatar{box-sizing:border-box;width:36px;height:36px;min-height:36px;padding:0;font-size:calc(var(--text-hud-caption)*var(--hud-scale,1))}
+/* The ribbon is one height in every state: the words about whose move it is join the priority line, never a third line. */
+#matrix-v2 .cm-board .cm-stage-priority>.cm-board-waiting{display:inline;max-width:none;font-size:inherit}
+#matrix-v2 .cm-board .cm-stage-priority>.cm-board-waiting:not(:empty)::before{content:" · "}
+
+/* The drawers: one inset, one heading size, one body size, one helper size. */
+#matrix-v2 .cm-board :is(.cm-stage-rail,.cm-stage-side){padding-left:var(--drawer-inset);padding-right:var(--drawer-inset)}
+#matrix-v2 .cm-board .cm-stage-side>header{padding-left:0;padding-right:0;font-size:calc(var(--text-hud-caption)*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-stage-side>header>b{font-size:calc(var(--text-hud-caption)*var(--hud-scale,1));font-weight:700}
+#matrix-v2 .cm-board .cm-stage-module>header{padding-left:0;padding-right:0}
+#matrix-v2 .cm-board :is(.cm-stage-module>header h3,.cm-board-pane-head h3){font:700 calc(var(--text-hud-caption)*var(--hud-scale,1))/1.3 var(--font-body);letter-spacing:0;text-transform:none;color:inherit}
+#matrix-v2 .cm-board :is(.cm-stage-rail,.cm-stage-side) :is(.cm-muted,.cm-stage-module p){font-size:var(--text-small);line-height:1.4}
+/* The turn caption stands clear of the left tab, which hangs at the same corner. */
+#matrix-v2 .cm-board:not([data-phone]) .cm-stage-caption{left:calc(var(--drawer-inset) + 34px)}
+
+/* SCROLLING (Rob, 2026-10-27: the bars "are seemingly always present, even when text isn't bleeding out"; "we already have text
+   wrapping in here, so the left-right should likely never be needed"). Neither drawer scrolls sideways, ever. Down the drawer there is
+   one scroller, and a bar shows only when there is more than fits. The decision's option list was a second scroller with a -3px
+   margin, which stood 3px outside its parent and made the parent scroll too; it is now part of the decision, which scrolls (up and
+   down only) when it is taller than the room it is given. */
+#matrix-v2 .cm-board :is(.cm-stage-rail,.cm-stage-side){overflow-x:hidden;overflow-y:auto}
+#matrix-v2 .cm-board .cm-stage-module[data-module=actions] .cm-board-decision{overflow-x:hidden;overflow-y:auto}
+#matrix-v2 .cm-board .cm-stage-module[data-module=actions] .cm-board-options{overflow:visible;flex:0 0 auto;min-height:0;margin:0 -3px;padding:3px}
+#matrix-v2 .cm-board .cm-stage-module.has-height>.cm-module-body{overflow-x:hidden}
+#matrix-v2 .cm-board :is(.cm-stage-rail,.cm-stage-side) :is(p,li,span,button,h3,strong,b){overflow-wrap:anywhere}
+#matrix-v2 .cm-board :is(.cm-stage-rail,.cm-stage-side) :is(.cm-board-band,#cm-full-pick,.cm-board-stack){overflow-x:hidden}
+
+/* TEXT ON THE TABLE (Rob, 2026-10-27, on text "out of alignment and wrong sizes (CSS vs. rendered styles)"). A mat far from the camera is drawn smaller
+   by perspective, and its "No permanents yet." came out near 6px; the stage now publishes each mat's magnification (--mat-mag, 1 at most) and that
+   message is given the size that reads at about 12px, never over 15px. The seat labels keep their declared size: raising them wrapped the labels of
+   the far mats at 1366px and pushed the message out of its strip. The name, the commander and the hand inherit the label's one size. */
+#matrix-v2 .cm-board .cm-stage-region .cm-seat-header :is(.cm-seat-identity,.cm-mat-name,.cm-seat-hand,.cm-vitals){font-size:inherit}
+#matrix-v2 .cm-board :is(.cm-board-pane,.cm-stage-region) .cm-seat-header .cm-vitals-bar{margin-left:6px;vertical-align:-2px}
+#matrix-v2 .cm-board :is(.cm-stage-rail,.cm-stage-side) .cm-stage-module>header .cm-module-toggle{padding-left:0}
+#matrix-v2 .cm-board .cm-stage-region .cm-board-empty{font-size:min(15px,max(12px,calc(12px/var(--mat-mag,1))))}
+/* Scrolling something into view in a drawer (a focused box, a card) leaves a margin instead of landing flush on the edge. */
+#matrix-v2 .cm-board :is(.cm-stage-rail,.cm-stage-side){scroll-padding:var(--drawer-inset)}
+/* In the 3D view the tabs hang from the top of the drawers; in the flat views the seat labels run along the top, so there they stay where they were, at the middle. */
+#matrix-v2 .cm-board[data-view=full]:not([data-phone]) .cm-drawer-tab{top:var(--full-pane-top)}
+/* The right tab stands at the right drawer's outer edge: past the inspector or Coach panel when one is open, and past the drawer's own width. */
+#matrix-v2 .cm-board[data-shell=shared]:not([data-phone])>.cm-stage-right{right:calc(var(--play-inspector,0px) + var(--stage-side-offset,0px))}
+/* The ribbon is the HUD's height whatever its text (two lines or three), and while the combat band hangs from it, that plus the band. */
+#matrix-v2 .cm-board[data-shell=shared]:not([data-phone])>.cm-stage-top{min-height:var(--hud-top,58px)}
+#matrix-v2 .cm-board[data-shell=shared][data-combat]:not([data-phone])>.cm-stage-top{min-height:calc(var(--hud-top,58px) + var(--combat-h,0px))}
+/* Camera is built like Table: the button is the bordered box, the wrapper around it is plain. */
+#matrix-v2 .cm-board .cm-stage-top .cm-stage-camera{min-width:0;border:0;border-radius:0;background:none;box-shadow:none}
+#matrix-v2 .cm-board .cm-stage-top .cm-stage-camera>button{width:auto;background:var(--color-panel);border:1px solid var(--color-line-strong)}

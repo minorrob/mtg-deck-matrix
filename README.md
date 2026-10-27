@@ -955,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 632 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 633 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1265,6 +1265,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `board-attack-risk` — `tests/board-attack-risk.mjs` (Rob, 2026-10-25: on Declare attackers an option is red, ☠, when a creature that could block it could kill it, and yellow, ⊘, when it could kill none of them alone; flying, reach, deathtouch, indestructible and tapped blockers)
 - `board-mana-symbols` — `tests/board-mana-symbols.mjs` (Rob, 2026-10-25: a land's mana abilities one row of mana-symbol buttons, in Actions and in Card Preview, each named in full for a reader; a way that is more than mana alone stays words)
 - `board-graphics` — `tests/board-graphics.mjs` (Rob, 2026-10-25: the 3D table drawn at 150% of the screen's pixels by default, 50% to 200% in Settings, previewed, put back by Cancel and kept; the backdrop covering the stage edge to edge, cropped top and bottom on a wide screen, at the height the kept setting calls for, 720 to 1440 lines (2K at most), from `tools/stage-backdrops.mjs`; every design's skins painted in a worker at 2048 or 4096, 32-bit, mipmapped, with relief and inked edges)
+- `board-r5-visual` — `tests/board-r5-visual.mjs` (Rob, 2026-10-27: the 3D table at 1863 × 902 with both drawers open; the drawers from the ribbon's foot, no poison pill on the ribbon, a table label or a seat card, a seat's state a dot with its word on hover, two-row seat cards of one height with plain life, corner handles that draw nothing and keep their cursors, one ribbon height, drawer tabs hung from the top with their labels inside, no sideways scrolling and no bar on the Actions body while it fits, a pop-up as wide as its form, the action buttons 42px high with 15px type; six deliberate breaks caught)
 - `board-hover-during-choice` — `tests/board-hover-during-choice.mjs` (Rob, 2026-10-25: with a card's question open -- what to tap for it -- the card asked about is read in Actions, and the hover still pops up any card, on the table or named in an option, by pointer or keyboard, in 3D, Focus and Table)
 - `board-card-sharpness` — `tests/board-card-sharpness.mjs` (Rob, 2026-10-25: in 3D, at 100% and at the camera's closest zoom, the cards on the mats keep their picture's fine print as the hand's do: measured against the same picture drawn flat at the same size)
 - `board-target-lands` — `tests/board-target-lands.mjs` (Rob, 2026-10-25: in a question of targets, lands after every other option in a Lands group shut by default, open while one is picked; all-land targets and a cost's question shown as they are)

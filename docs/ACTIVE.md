@@ -1,5 +1,39 @@
 # Who holds the work
 
+## The Play screen made consistent: drawers, tabs, seat cards, pop-ups, the land screen, 2026-10-27 (a Claude cloud session, for Rob; `claude/gifted-ride-w6xoa3`)
+
+Rob, 2026-10-27, from screenshots and a list added as the work went: drawers that do not reach the ribbon, a poison counter at the top left, text out of
+alignment and at the wrong sizes, seat cards where "Deciding" and "Waiting" take a row of their own, circles on the table's corners, a "Your decision"
+section that should be "Actions" with bars always showing, tabs whose text falls out of them, pop-ups with a wide empty side, action buttons 15% too
+large, and a land played through a card, target, card review. His answers: *"Keep poisons in table vitals"* and *"Colored dot with the word on hover"*;
+*"Remove my no tests rule ... Only retest new changes"*; *"You'll merge to main and push to staging when done."* Files of the Codex · Play and
+Workshop lanes, at his word: `crankmagic-stage.css`, `crankmagic-stage.js`, `crankmagic-board.js`, `crankmagic.css` and four suites.
+
+- **Drawers** start at the ribbon (`--full-pane-top` was the ribbon plus the Next step row plus 24px, and is now the ribbon, plus the combat band;
+  the old sum lives on as `--full-clear-top`, which only the decision card's height uses). One inset (12px) and one heading size (15px) in both,
+  one helper size (13px); neither scrolls sideways; scrolling something into view leaves a margin.
+- **Actions body**: the section is called Actions. Its options list was a second scroller with a -3px margin that stood 3px outside its parent and
+  made the parent scroll too; it is now part of the decision, which scrolls only when it is taller than its cap.
+- **Poison** is gone from the ribbon, the table labels and the seat cards; Table vitals keeps it, and a seat that has some is still read aloud.
+- **A seat's state** is a colored dot (`data-state`: deciding, turn, waiting, out), the word in the page for a screen reader and shown on hover.
+  A seat card is two rows of one height: portrait, name over commander, the dot; then "40 life · 7 in hand" as plain text. The large bold life stays in
+  the ribbon alone.
+- **Tabs** are narrow flags hung from the top of the drawer's outer edge in the 3D view, the label running down them with a count badge below it, the
+  outer foot cut on a slant (Rob's sketch). In the flat views they stay at the middle. The right tab's offset now includes the drawer's own width.
+- **Ribbon**: one control height (36px) and radius; Camera built like Table; the words about whose move it is join the priority line, so the ribbon is
+  the same height in every state; its minimum height is explicit, with the combat band added while it hangs from it.
+- **Table corners** draw nothing and keep their 22px target and cursors. **Pop-ups**: an unclassed pop-up fits its content (floor 420px, ceiling 900px);
+  ones that name their own width keep it. **Action buttons** (Next step, Skip to end) are 42px high with 15px type, from 49px and 17px.
+- **Land**: a land, or any offer whose only target is its own card, goes straight to its screen: the card's name once, the picture, "Play Island" and
+  Cancel. Casting a spell with a real target still asks which; its layout is waiting on Rob's wireframe requirements (the canvas "Actions Drawer
+  Wireframes" holds one wireframe per situation).
+- **Not done, by decision:** the table region does not shrink when the right drawer opens (r4 keeps mats and hand fixed there, and tests it). Text on the
+  far mats is still foreshortened by the tilt; only the empty-state message got a floor, since larger labels wrapped the far mats at 1366px.
+- **Proven**: `board-r5-visual` 49 (new; six breaks caught). Re-run after the changes and passing: see the PR for the list. **Already failing on main
+  before this work, not repaired here:** `page-budget` (the Decks page has five explainer words before its grid, budget four), `feedback-sheet` (waits for
+  `#cm-account [data-action=account-sync]`, which r4 moved), `board-choices` (a scried card's stack shows no ×2), `board-3d-camera` (a timing check that
+  passes and fails on main), and a long list in `a11y-board` (72 places on main, fewer here; the Camera and profile focus-ring checks are named in the PR).
+
 ## The incoming wave merged into main: #893, #895, #896, #897, 2026-10-27 (a Claude cloud session, at Rob's word)
 
 Rob, 2026-10-27, after Codex ran out of credits: finish the merges of #893, #895, #896 and #897 in that order, preserving
