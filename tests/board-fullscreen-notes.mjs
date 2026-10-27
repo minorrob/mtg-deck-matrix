@@ -98,7 +98,8 @@ try {
           strip: document.querySelectorAll(".cm-stage-top [data-action=board-pass], .cm-stage-top .cm-full-pill [data-action=board-skip]").length};
       });
       ok(bar.inRegion && bar.words.includes("Next step") && bar.words.includes("Skip to end"), `full: Next step and Skip to end stand over the table (${bar.words.join(", ")})`);
-      ok(bar.tall >= 48 && bar.tall <= 50 && bar.font === 17, `full: actions reduced about 12% while retaining readable targets (${Math.round(bar.tall)}px tall, ${bar.font}px words)`);
+      /* Reduced about 12% once (49px, 17px), and a further 15% or so at Rob's word on 2026-10-27: 42px high, the type held at the HUD's 15px floor. */
+      ok(bar.tall >= 41 && bar.tall <= 43 && bar.font === 15, `full: actions reduced about 15% more while retaining readable targets (${Math.round(bar.tall)}px tall, ${bar.font}px words)`);
       ok(bar.center < 4 && bar.top < 40, `full: at the top of the table, centered (${Math.round(bar.center)}px off center, ${Math.round(bar.top)}px down)`);
       eq(bar.strip, 0, "full: and not in the strip as well");
     }
