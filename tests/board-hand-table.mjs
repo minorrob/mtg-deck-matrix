@@ -340,7 +340,7 @@ try {
     await page.mouse.move(spots.mat.x, spots.mat.y);
     eq(await cursor(spots.mat), plain, `and let go, it is the mat's again (${plain})`);
     /* Ctrl + drag down: longer, every frame aligned */
-    const tiltWas = await stored(page, "cm-board-tilt-v3"), cardWas = await page.evaluate(() => getComputedStyle(document.querySelector(".cm-stage-region")).getPropertyValue("--stage-card"));
+    const tiltWas = await stored(page, "cm-board-tilt-v4"), cardWas = await page.evaluate(() => getComputedStyle(document.querySelector(".cm-stage-region")).getPropertyValue("--stage-card"));
     await page.evaluate(() => {globalThis.__frames = []; const loop = () => {const d = CrankStage.diagnostics(); if (d.length) __frames.push({reach: d.length.reach, scale: d.length.scale, builds: d.length.builds, mis: Math.max(...d.quad.map((n, i) => Math.abs(n - d.domQuad[i]))), mm: Math.max(...d.front.shown.map((n, i) => Math.abs(n - d.front.matrix[i])))}); globalThis.__raf = requestAnimationFrame(loop);}; loop();});
     await page.mouse.move(spots.mat.x, spots.mat.y);
     await page.keyboard.down("Control");
@@ -368,7 +368,7 @@ try {
     ok(misalign(longer) < .03 && mismatrix(longer) < .001, `and after it the DOM and Babylon tables agree (${misalign(longer)}px)`);
     const cardNow = await page.evaluate(() => getComputedStyle(document.querySelector(".cm-stage-region")).getPropertyValue("--stage-card"));
     ok(parseFloat(cardNow) > parseFloat(cardWas), `the mat's cards grow with it (${cardWas} → ${cardNow})`);
-    eq([longer.pan, await stored(page, "cm-board-tilt-v3")], [{x: 0, y: 0}, tiltWas], "Ctrl + drag neither moves the view nor tilts it");
+    eq([longer.pan, await stored(page, "cm-board-tilt-v4")], [{x: 0, y: 0}, tiltWas], "Ctrl + drag neither moves the view nor tilts it");
     ok(Number(await stored(page, "cm-stage-reach-v1")) > 0, "the length is kept on this device");
     let length = await slider(page, ".cm-stage-camera [data-stage-length]");
     eq(length, null, "(Camera is shut)");
@@ -414,11 +414,11 @@ try {
     const back = await diag(page);
     ok(Math.abs(back.pan.x) < 1 && Math.abs(back.length.reach - after.length.reach) < 1e-6, `dragged back, the view is where it was and the length unchanged (${JSON.stringify(back.pan)})`);
     await page.mouse.move(spots.ground.x, spots.ground.y); await page.mouse.down(); await page.mouse.move(spots.ground.x, spots.ground.y + 20, {steps: 5}); await page.mouse.up();
-    eq(await stored(page, "cm-board-tilt-v3"), "2", "a plain drag on the bare table still tilts it (10 to 2 from the floor)");
+    eq(await stored(page, "cm-board-tilt-v4"), "32", "a plain drag on the bare table still tilts it (40 to 32 from the floor)");
     const tilted = await diag(page);
     ok(misalign(tilted) < .03 && mismatrix(tilted) < .001, `tilted, the long table is still aligned (${misalign(tilted)}px)`);
     await page.getByRole("button", {name: "Camera", exact: false}).click();
-    await page.getByRole("slider", {name: "Table tilt", exact: true}).fill("10");
+    await page.getByRole("slider", {name: "Table tilt", exact: true}).fill("40");
     await page.getByRole("button", {name: "Camera", exact: false}).click();
     await page.mouse.move(region.x + region.width * .8, region.y + region.height * .55);
     await page.mouse.down({button: "right"});

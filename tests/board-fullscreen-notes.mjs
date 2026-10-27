@@ -85,10 +85,12 @@ try {
     await show(played());sent.length=0;
     const after=await page.evaluate(id=>{const start=performance.now();document.querySelector(id).dispatchEvent(new MouseEvent('click',{bubbles:true,detail:1}));return document.getElementById('cm-card-menu')?performance.now()-start:null;},playedSelector);
     ok(after!==null && after<280,`${mode}: single click opens the read-only menu without a 300ms wait (${after}ms)`);eq(acts(),[],`${mode}: reading the card menu sends nothing`);
-    await page.locator(`#cm-card-menu [data-act=activate-mana][data-card='${PLAYED}']`).click();eq(acts(),[],`${mode}: selecting a mana row stages its binding action`);
-    await binding(page).click();
+    await page.locator(`#cm-card-menu [data-act=activate-mana][data-card='${PLAYED}']`).click();
+    /* Rob, 2026-10-27, standing rule: the card, then its row, are two clicks already; a third step to confirm is not asked. */
     for(let i=0;i<125&&!acts().length;i++)await page.waitForTimeout(20);
-    eq(acts(),[[1]],`${mode}: the binding press taps it for mana once`);
+    eq(acts(),[[1]],`${mode}: a mana row taps it for mana at once, with no second press in Actions`);
+    /* the pointer's press leaves the focus on the card; a pop-up held beside the focused card is put away by design (focusin), so the next step starts with the focus off it */
+    await page.evaluate(()=>document.activeElement?.blur());
     if (mode === "full") {
       /* ---- 3. the actions, large, over the table ---- */
       const bar = await page.evaluate(() => {

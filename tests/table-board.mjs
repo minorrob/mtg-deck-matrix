@@ -690,7 +690,7 @@ try {
   await maya.page.getByRole('slider',{name:'Table tilt',exact:true}).fill('90');
   const flatPlane=await maya.page.locator('.cm-stage-front').evaluate(el=>{const m=new DOMMatrix(getComputedStyle(el).transform);return Math.abs(m.m11-m.m22)<.001;});
   ok(flatPlane,"90 degrees, perpendicular to the floor, gives a flat, undistorted table");
-  await maya.page.getByRole('slider',{name:'Table tilt',exact:true}).fill('10');
+  await maya.page.getByRole('slider',{name:'Table tilt',exact:true}).fill('40');
   await maya.page.getByRole('button',{name:'Camera',exact:false}).click();
   await shot(maya.page,"board-full-3d-1280");
   ok(/played (Forest|Island)/.test(await text(maya.page, ".cm-stage-side .cm-stage-module[data-module=history] .cm-board-band")), "and the history in the side column");

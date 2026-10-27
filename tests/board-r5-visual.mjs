@@ -9,7 +9,13 @@
      7. Neither drawer scrolls sideways; the Actions body shows no bar while it fits.
      8. A pop-up is as wide as its content ("Make the pop-up windows properly sized for the content they include").
      9. The action buttons over the table are about 15% smaller than they were (49px high, 17px type), their type held at the HUD's 15px floor.
-    10. A land is played from a screen of its name, its picture, Play and Cancel (board-r4-decisions covers that screen's contents). */
+    10. A land is played from a screen of its name, its picture, Play and Cancel (board-r4-decisions covers that screen's contents).
+    11. The ribbon says neither the turn nor who has priority; Priority stands under the life totals in the top-left caption; the Open-drawer arrow
+        beside Table is not drawn while the drawer is open ("I have no idea what that left-triangle/arrow ... is meant to do").
+    12. The Camera menu: View seats and Reset are its first row, HUD text under them; no slider runs under its word.
+    13. The bar between a mat's land and battlefield resizes them and leaves the table where it is.
+    14. Zero tilt is the floor's own slope in the backdrop: steeper than the seated 45 degrees it was.
+    15. A tall Actions module around a short list shows no scrollbar of either kind. */
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import path from "node:path";
@@ -90,7 +96,7 @@ await page.mouse.move(900,500);
 eq(m.corners.length,4,"the table has four corner handles");
 for(const c of m.corners){ok(c.w>=22&&c.h>=22&&/nwse|nesw/.test(c.cursor),"a corner handle is a 22px target with its resize cursor");ok(c.shadow==="none"&&c.bg==="rgba(0, 0, 0, 0)"&&c.border==="0px","and draws nothing");}
 /* 6. */
-const heights=m.ctl.map(c=>Math.round(c.h));ok(heights.length>=4&&new Set(heights).size===1,`the ribbon's controls share one height; the round profile button stays its own 34px (${m.ctl.map(c=>c.t+" "+Math.round(c.h)).join(", ")})`);
+const heights=m.ctl.map(c=>Math.round(c.h));ok(heights.length>=3&&new Set(heights).size===1,`the ribbon's controls share one height; the round profile button stays its own 34px (${m.ctl.map(c=>c.t+" "+Math.round(c.h)).join(", ")})`);
 eq(m.tabs.length,2,"there are two drawer tabs");
 for(const t of m.tabs){
   ok(t.label.l>=t.box.l-1&&t.label.r<=t.box.r+1&&t.label.t>=t.box.t-1&&t.label.b<=t.box.b+1,`${t.side} tab: its label is inside it`);
@@ -105,6 +111,38 @@ ok(m.decision&&m.decision.ox==="hidden"&&m.decision.fits,"the Actions body has n
 eq(m.heading,"Actions","the first section is called Actions");
 /* 9. */
 ok(m.actions.length>=1&&m.actions.every(b=>b.h<=43&&b.fs>=15),`the action buttons are 42px high with 15px type (${m.actions.map(b=>Math.round(b.h)+"/"+b.fs).join(", ")})`);
+/* 11. */
+const rb=await page.evaluate(()=>{const R=e=>{const r=e.getBoundingClientRect();return {l:r.left,t:r.top,r:r.right,b:r.bottom}};const top=document.querySelector(".cm-stage-top"),cap=document.querySelector(".cm-stage-caption"),life=cap.querySelector(".cm-stage-life-list"),pr=cap.querySelector(".cm-stage-priority");
+  return {ribbon:top.textContent,ribbonPriority:top.querySelectorAll(".cm-stage-priority,.cm-board-turn").length,caption:cap.textContent,arrow:top.querySelectorAll("[data-action=board-actions-open]").length,life:R(life),pr:pr&&R(pr)};});
+ok(!/Turn \d+/i.test(rb.ribbon)&&!/Priority/.test(rb.ribbon)&&rb.ribbonPriority===0,"the ribbon says neither the turn nor the priority");
+ok(/TURN \d+/.test(rb.caption)&&/Priority: /.test(rb.caption),"the top-left caption has the turn and the priority");
+ok(rb.pr&&rb.pr.t>=rb.life.b-1&&rb.pr.t-rb.life.b<14&&Math.abs(rb.pr.l-rb.life.l)<2,"Priority stands directly under the life totals");
+eq(rb.arrow,0,"the open-drawer arrow is not drawn while the drawer is open");
+/* 12. */
+await page.locator("[data-action=board-camera]").click();
+await page.waitForTimeout(250);
+const cm=await page.evaluate(()=>{const R=e=>{const r=e.getBoundingClientRect();return {l:r.left,t:r.top,r:r.right,b:r.bottom}};const menu=document.querySelector(".cm-stage-camera>div");
+  const seats=[...menu.querySelectorAll(":scope>span")].find(x=>/View seats/.test(x.textContent)),reset=menu.querySelector(".cm-stage-camera-reset"),hud=menu.querySelector(".cm-hud-slider");
+  const labels=[...menu.querySelectorAll(":scope>label:not(.cm-stage-style)")].map(l=>{const range=document.createRange(),node=[...l.childNodes].find(n=>n.nodeType===3&&n.textContent.trim());range.selectNodeContents(node);return {word:node.textContent.trim(),textRight:range.getBoundingClientRect().right,inputLeft:l.querySelector("input").getBoundingClientRect().left};});
+  return {seats:R(seats),reset:R(reset),hud:R(hud),labels};});
+ok(Math.abs(cm.seats.t-cm.reset.t)<10&&cm.hud.t>=cm.seats.b-1&&cm.hud.t>=cm.reset.b-1,"View seats and Reset share the first row; HUD text is under them");
+ok(cm.labels.length>=6&&cm.labels.every(x=>x.textRight<=x.inputLeft-2),`no slider runs under its word (${cm.labels.map(x=>x.word+":"+Math.round(x.inputLeft-x.textRight)).join(", ")})`);
+await page.locator("[data-action=board-camera]").click();
+/* 13. */
+const grip=page.locator(".cm-stage-front [data-drag=zones]").first();
+const before=await page.evaluate(()=>({front:getComputedStyle(document.querySelector(".cm-stage-front")).transform,field:document.querySelector(".cm-stage-front .cm-mat-grid").style.getPropertyValue("--field-px")}));
+const gb=await grip.boundingBox();
+await page.mouse.move(gb.x+gb.width/2,gb.y+gb.height/2);await page.mouse.down();await page.mouse.move(gb.x+gb.width/2,gb.y+gb.height/2-26,{steps:8});await page.mouse.up();await page.waitForTimeout(250);
+const after=await page.evaluate(()=>({front:getComputedStyle(document.querySelector(".cm-stage-front")).transform,field:document.querySelector(".cm-stage-front .cm-mat-grid").style.getPropertyValue("--field-px")}));
+ok(before.field!==after.field,`dragging the divider resizes the land and battlefield (${before.field} to ${after.field})`);
+eq(after.front,before.front,"and the table does not move with it");
+/* 14. */
+const [floor,limit]=await page.evaluate(()=>[CrankStage.appearances.backgrounds.map(b=>CrankStage.floorTilt(b.id)),CrankStage.TILT_LIMIT]);
+ok(floor.length>=1&&floor.every(t=>t>=60&&t<=limit),`every backdrop's floor lies past the seated 45 degrees, within the camera's limit (${floor.join(", ")})`);
+/* 15. */
+const tall=await page.evaluate(()=>{const body=document.querySelector('.cm-stage-module[data-module="actions"]>.cm-module-body');body.style.height="560px";body.style.maxHeight="560px";
+  return [...body.querySelectorAll("*"),body].filter(e=>/auto|scroll/.test(getComputedStyle(e).overflowY+getComputedStyle(e).overflowX)).map(e=>({cls:e.className.toString().slice(0,30),ox:getComputedStyle(e).overflowX,oy:getComputedStyle(e).overflowY,y:e.scrollHeight>e.clientHeight+1,x:e.scrollWidth>e.clientWidth+1}));});
+ok(tall.every(e=>!e.y&&!e.x&&e.ox!=="scroll"&&e.oy!=="scroll"),`a tall Actions module with a short list has no scrollbar (${JSON.stringify(tall)})`);
 /* 8. */
 await page.evaluate(()=>document.querySelector('[data-action="send-feedback"]').click());
 await page.waitForTimeout(700);
