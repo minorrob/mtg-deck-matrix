@@ -2,6 +2,12 @@
 
 ## r4 coordinated execution, October26,2026 (Codex; Rob: "go")
 
+**Later direct instruction:** "No more test runs. Merge it all now." Tests are stopped and the first
+Actions run40429396786 was canceled. OpenAI is merging the completed work and releasing staging under
+that explicit direction, preserving the rollback checkpoint. This is not a green-CI claim. The final
+repair commits, known Scry grouping and accessibility findings, and the no-test release procedure are
+recorded at the top of docs/r4-execution/HANDOFF.md; PR #890 holds the actual merge/deployment result.
+
 **Pre-CI source/local-proof snapshot:** main b13607b2 is reconciled. All targeted local gates are green; current production/pins are through 0ea8fba6 (board118, stage.js22, stage.css73, table46, app600, SW583). All browsers are released. Real-table321, full tabletop, shared-shell, sectioned Settings114, fullscreen49, graphics87, Admin51/menu85 and targeted backend/build/static checks have bounded evidence in docs/r4-execution/HANDOFF.md. The coordinator owns final scan/push/CI/main; Engine executes staging after green CI/main. Preserve the untracked design renders.
 
 The rollback tag rollback/pre-r4-2026-10-26-b13607b2 is pushed and verified; docs/r4-execution/ROLLBACK.md also records the current Cloudflare deployment/version. EX-28 permits hand overlap without restricting zoom. No further 3D behavior work is authorized for that concern.

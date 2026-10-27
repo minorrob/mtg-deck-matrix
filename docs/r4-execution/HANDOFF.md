@@ -1,5 +1,28 @@
 # r4 acceptance snapshot
 
+## Later release direction, October 26, 2026
+
+Rob explicitly directed: "No more test runs. Merge it all now." All new test runs are stopped;
+the in-progress first Actions run 40429396786 was canceled. This direction supersedes the earlier
+green-CI and staging acceptance prerequisites below. Merge and staging must not be reported as a
+fully passing test gate. The source rollback tag remains rollback/pre-r4-2026-10-26-b13607b2.
+
+The final integration includes Foundation through 74a45662, Engine's test adapters through daa60d3d,
+and Workshop's four test adapters at 6149ce05. Confirmed product repairs restore the combat Camera
+button's position, Play settings dialog semantics, and themed Camera label/output ink. Camera motion,
+zoom, tilt, hand overlap, and tapped-card spacing are unchanged by these repairs. Asset cache metadata
+was regenerated without running a test suite.
+
+Known outstanding findings: identical Scry cards can fail to group because redundant affected-card
+identity enters the grouping key. The last complete accessibility walk reached 106 pixel screens and
+59 focus-ring samples, with unresolved contrast/occlusion/ring findings; the last Camera ink correction
+has not been rerun. Workshop's latest adapters have no subsequent browser run. Earlier proof below
+remains bounded to its recorded source. No further test, source repair, or claimed closure is implied.
+
+Build and push cloud-staging using the existing release builder without the test-running release wrapper.
+Confirm deployment and served version through read-only metadata. PR #890 records the actual merged
+and deployed revisions and these limits. Production remains outside this release instruction.
+
 Integration: integration/r4, main baseline b13607b2 (PR #891 reconciled). This is the pre-CI source and local-proof snapshot.
 The current CI, main merge, staging revision/deployment and live readback are recorded in
 [PR #890](https://github.com/minorrob/mtg-deck-matrix/pull/890), with tracking in
