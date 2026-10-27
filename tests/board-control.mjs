@@ -44,8 +44,44 @@ async function fixture(width,height,mode="full",seat=0,scale=100){
 }
 async function point(page,selector){
   const el=page.locator(selector).first();
-  assert.ok(await el.evaluate(el=>{const r=el.getBoundingClientRect();return [[.5,.5],[.25,.25],[.75,.75]].every(([fx,fy])=>{const x=r.x+r.width*fx,y=r.y+r.height*fy;return x>=0&&y>=0&&x<innerWidth&&y<innerHeight&&el.contains(document.elementFromPoint(x,y));});}),`${selector}: reachable without Playwright scrolling overflow:hidden`);
-  const r=await el.boundingBox();return {x:r.x+r.width/2,y:r.y+r.height/2};
+  /* EX15 permits grown Table/Focus mats to scroll. Reach through actual wheel input, never forced clicks,
+     scrollIntoView or assignment to scrollTop. A covered, already-visible point remains a hard failure. */
+  const probe=()=>el.evaluate(el=>{
+    const rect=r=>({x:r.x,y:r.y,width:r.width,height:r.height,top:r.top,bottom:r.bottom,left:r.left,right:r.right});
+    const describe=n=>n?`${n.tagName.toLowerCase()}${n.id?'#'+n.id:''}${[...n.classList].map(c=>'.'+c).join('')}`:null;
+    const r=el.getBoundingClientRect(),points=[[.5,.5],[.25,.25],[.75,.75]].map(([fx,fy])=>{
+      const x=r.x+r.width*fx,y=r.y+r.height*fy,hit=document.elementFromPoint(x,y);
+      return {x,y,ok:x>=0&&y>=0&&x<innerWidth&&y<innerHeight&&el.contains(hit),hit:describe(hit)};
+    });
+    const ancestors=[];let wheel=null,index=0;
+    for(let a=el.parentElement;a;a=a.parentElement,index++){
+      const s=getComputedStyle(a),b=a.getBoundingClientRect(),top=Math.max(0,b.top),bottom=Math.min(innerHeight,b.bottom),left=Math.max(0,b.left),right=Math.min(innerWidth,b.right);
+      ancestors.push({index,node:describe(a),rect:rect(b),overflowX:s.overflowX,overflowY:s.overflowY,scrollTop:a.scrollTop,scrollHeight:a.scrollHeight,clientHeight:a.clientHeight});
+      const up=Math.min(...points.map(p=>p.y))<top+2,down=Math.max(...points.map(p=>p.y))>bottom-2;
+      if(wheel || !/(auto|scroll)/.test(s.overflowY) || a.scrollHeight<=a.clientHeight+1 || bottom-top<20 || right-left<20 || (!up&&!down))continue;
+      const dy=up?-Math.max(60,Math.min(500,(top+bottom-r.top-r.bottom)/2)):Math.max(60,Math.min(500,(r.top+r.bottom-top-bottom)/2));
+      if(dy<0&&a.scrollTop<=0 || dy>0&&a.scrollTop+a.clientHeight>=a.scrollHeight-1)continue;
+      for(const [fx,fy] of [[.5,.5],[.3,.3],[.7,.7],[.3,.7],[.7,.3]]){
+        const x=left+(right-left)*fx,y=top+(bottom-top)*fy;
+        if(a.contains(document.elementFromPoint(x,y))){wheel={index,x,y,dy,from:a.scrollTop};break;}
+      }
+    }
+    return {rect:rect(r),points,ancestors,wheel,viewport:{width:innerWidth,height:innerHeight}};
+  });
+  let facts=await probe(),wheels=0;
+  while(!facts.points.every(p=>p.ok)&&facts.wheel&&wheels<12){
+    const w=facts.wheel;
+    await page.mouse.move(w.x,w.y);await page.mouse.wheel(0,w.dy);
+    await page.waitForFunction(({selector,index,from})=>{
+      let a=document.querySelector(selector)?.parentElement;for(let i=0;a&&i<index;i++)a=a.parentElement;
+      return a&&Math.abs(a.scrollTop-from)>0.5;
+    },{selector,index:w.index,from:w.from},{timeout:3000}).catch(()=>{});
+    facts=await probe();wheels++;
+    assert.ok(facts.ancestors[w.index]&&Math.abs(facts.ancestors[w.index].scrollTop-w.from)>0.5,`${selector}: native wheel must move its real scroll viewport (${JSON.stringify(facts)})`);
+  }
+  assert.ok(facts.points.every(p=>p.ok),`${selector}: all three native points must be uncovered after ${wheels} permitted wheel inputs (${JSON.stringify(facts)})`);
+  if(wheels)console.log(`Control native scroll: ${selector}; ${wheels} wheel inputs; ${JSON.stringify(facts.rect)}`);
+  return {x:facts.points[0].x,y:facts.points[0].y};
 }
 async function shot(page,width,height){
   if(!process.env.UAT_SHOTS)return;
