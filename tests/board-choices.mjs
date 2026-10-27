@@ -202,10 +202,14 @@ const canPeek = (v) => v.state.turnPlayerId === v.seat && v.state.phase === "MAI
   && v.state.players[v.seat].zones.Battlefield.cards.some((c) => c.name === "Mountain" && !c.tapped);
 await playUntil(scryAt, () => scryView, scrySend, canPeek);
 ok(scryView && canPeek(scryView), `the second table reaches Rob's main phase with Peek Three in hand, a Mountain untapped and his land still to play (turn ${scryView?.state.turn})`);
-/* Tapped and cast: the cast passes for him (game/room/room.mjs, passAfterCast), the AI seat passes, and the spell resolves
-   to its question. */
+/* Tapped and cast: CH-57 preserves the caster's Undo/priority window. Explicitly pass the offered action;
+   the AI seat then passes and the spell resolves to its question. */
 for (const pick of [(o) => o.act === "activate-mana" && o.label === "Mountain", (o) => o.act === "cast" && o.label === "Peek Three"])
   await scrySend(scryView, {indices: [scryView.decision.options.find(pick).index]});
+const scryPass=scryView.decision?.options.find(o=>o.act==='pass');
+ok(scryView.canUndo===true && scryView.decision?.kind==='priority' && scryView.state.stack.some(s=>s.name==='Peek Three') && scryPass,
+  'casting Peek Three preserves the server-offered Undo window and priority before any library information is revealed');
+await scrySend(scryView,{indices:[scryPass.index]});
 /* The game as the table saved it (the room checkpoints at every person's decision): what no seat's view shows, the order of
    a library. */
 function savedLibrary(tableId, seat) {
@@ -337,13 +341,17 @@ try {
   await zapCard.click();
   ok(await page.locator(".cm-stage-rail #cm-board-decision .cm-action-card").isVisible() && await page.locator("#cm-card-inspector").count() === 0,"source card remains visible beside choices, in the Actions desk, with no second pane");
   if(SHOTS)await page.screenshot({path:path.join(SHOTS,"board-choices-1280x720.png")});
-  /* The cast passes for Rob (game/room/room.mjs, passAfterCast) and the AI seat passes, so Zap resolves in the same turn of
-     the room as it is cast: what it hit is read off the game, Maya one life down, rather than off the stack. */
+  /* Casting keeps Rob's explicit Undo/priority window. A native Pass closes it before the AI passes and Zap resolves;
+     what it hit is still read off the game, Maya one life down, rather than inferred from the stack. */
   const mayaLife = (v) => v.state.players[1].health.life, before = mayaLife(latest), castsBefore = latest.history.filter((h) => h.text === "Rob cast Zap").length;
   await dialog.locator("[data-action=board-option]", {hasText: /^Cast Zap → Maya$/}).click();
   eq(mayaLife(latest),before,"selection has not changed the game");
   await dialog.locator("[data-action=board-confirm]").click();
   await page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"));
+  for (let t = 0; t < 100 && !latest.canUndo; t += 1) await new Promise((r) => setTimeout(r, 100));
+  ok(latest.canUndo===true && latest.decision?.kind==='priority' && latest.state.stack.some(s=>s.name==='Zap') && latest.decision.options.some(o=>o.act==='pass') && mayaLife(latest)===before,
+    'native Cast leaves Zap on the stack with Undo and an offered Pass, without applying its damage');
+  await page.locator('#cm-board .cm-stage-top [data-action=board-pass]:not([disabled])').click();
   for (let t = 0; t < 100 && mayaLife(latest) === before; t += 1) await new Promise((r) => setTimeout(r, 100));
   ok(mayaLife(latest) === before - 1 && latest.history.filter((h) => h.text === "Rob cast Zap").length === castsBefore + 1 && latest.history.some((h) => h.text === "Zap resolved"),
     `choosing "→ Maya" casts Zap at Maya: it resolves, and Maya's life goes ${before} → ${mayaLife(latest)}`);
