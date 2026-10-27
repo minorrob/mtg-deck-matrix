@@ -122,7 +122,7 @@ branches, each containing the one before (its interim word of 23:12 UTC; its own
 **The order for OpenAI:** this branch first (it changes who may spend, and its `cloud/worker.mjs` change is the
 smaller), then the three feedback branches in stack order, each a merge commit, with one green Actions run per PR.
 After each merge: `node tests/asset-versions.mjs --update` (never by hand), and the README's suite count set to the
-count (598 on `main`, 599 with this branch, 602 with all four).
+count (599 on `main` after #891, 600 with this branch, 603 with all four).
 
 **Where both bodies of work touch one file, and what to keep:**
 
@@ -132,7 +132,7 @@ count (598 on `main`, 599 with this branch, 602 with all four).
 | `cloud/access.mjs` | `GROUPS` and `groupOf` added before `serviceIdentity` | One condition in `verifyAccess` (`deps.service === true` beside `SERVICE_SEATS`) | Keep both; they do not overlap. |
 | `cloud/feedback.mjs` `isOwner` | — | Its owner test is `INVITE_ADMIN_ID` | `groupOf(...) === "owner"` (by `OWNER_EMAIL`), with `INVITE_ADMIN_ID` as a fallback inside `isOwner` only, until Rob sets `OWNER_EMAIL`; that session was asked to make it so. |
 | `docs/ACTIVE.md` | A section at the top and Requests row 14 | Three sections at the top and a Requests row, to be numbered 15 | Keep all; the rows are 14 (groups) and 15 (feedback). |
-| `README.md` | `engine-threat` named; 599 suites | Its suites named; its count | 602 after all four. |
+| `README.md` | `engine-threat` named; 600 suites | Its suites named; its count | 603 after all four. |
 | Asset pins and `tests/fixtures/asset-versions.json` | Bumped for the fan (board 107, stage.css 64, sw 565, app 582) | Bumped for the sheet | Re-record after the merge with the tool. |
 | `tests/page-budget.mjs` | — | Six control budgets +1 for the Send feedback glyph | Theirs. |
 | Migrations | None taken | 0009 (0007 and 0008 untouched) | Theirs; this branch takes no number. |
