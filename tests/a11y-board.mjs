@@ -459,6 +459,8 @@ function regionOf() {
   return (el) => {
     if (!el || el === document.body || el === document.documentElement) return "none";
     if (!el.closest("#cm-board")) return `outside:${el.tagName.toLowerCase()}${el.id ? "#" + el.id : ""}.${String(el.className || "").split(" ")[0]}`;
+    if(el.closest('.cm-other-seats'))return 'other-seats';
+    if(el.closest('.cm-table-menu')&&!el.closest('.cm-stage-top'))return 'table-menu';
     const slot = el.closest(".cm-board-slot");
     if (slot) return `board-${slot.dataset.area}`;
     if (el.closest(".cm-stage-rail, .cm-board-panegrip, .cm-stage-left")) return "actions-and-boards";
@@ -651,9 +653,9 @@ try {
   /* ---- 2. FOCUS ORDER ---- */
   const EXPECT = {
     /* Focus: the strip, the seats, the board, what the room asks, the hand */
-    focus: ["strip", "board", "ask", "hand", "camera", "actions-and-boards", "side"],
+    focus: ["strip", "other-seats", "board", "ask", "hand", "table-menu", "camera", "actions-and-boards", "side"],
     /* Table: the strip, the boards as they sit (top row left to right, then the bottom), the bar, the life counter, the hand */
-    table: ["strip", "board-a", "board-b", "board-c", "board-d", "rowbar", "counter", "ask", "hand", "camera", "actions-and-boards", "side"],
+    table: ["strip", "board-a", "board-b", "board-c", "board-d", "rowbar", "counter", "ask", "hand", "table-menu", "camera", "actions-and-boards", "side"],
     /* Full screen (the tabletop): the top strip with the pill and the profile, the other seats across the back, your board
        with its corner and the camera, what the room asks, your hand, then the two drawers' handles */
     full: ["strip", "others", "board", "ask", "hand", "actions-and-boards", "side"],
@@ -677,16 +679,19 @@ try {
     }
     await view(page, "focus");
   }
-  /* In the seat pane, whose turn it is (the brass mark) covers nothing of a tile's own words: its vitals, its flag. */
+  /* The shared SeatHeader marks the active seat with its portrait ring. It must not cover
+     the same header's name, commander, life or status facts. */
   for (const who of [rob, maya]) {
-    const clash = await who.page.evaluate(() => [...document.querySelectorAll(".cm-board-pane .cm-board-tile")].flatMap((tile) => {
-      const mark = tile.querySelector(":scope > .cm-board-turn-mark");
-      if (!mark) return [];
-      const m = mark.getBoundingClientRect();
-      return [...tile.querySelectorAll(".cm-vitals, .cm-board-tile-flag:not(:empty), .cm-board-tile-name")].filter((el) => {const r = el.getBoundingClientRect(); return r.width && m.left < r.right - 0.5 && r.left < m.right - 0.5 && m.top < r.bottom - 0.5 && r.top < m.bottom - 0.5;}).map((el) => `${tile.dataset.seat}: ${el.className}`);
-    }));
-    const marks = await who.page.locator(".cm-board-pane .cm-board-turn-mark").count();
-    ok(marks === 1 && !clash.length, `at ${who.page.viewportSize().width}, the turn mark in the seat pane covers none of its tile's words (${marks} mark; ${clash.join(", ") || "clear"})`);
+    const turn=await who.page.evaluate(()=>{
+      const active=[...document.querySelectorAll('.cm-board-pane .cm-seat-header.is-turn')];
+      const clash=active.flatMap(head=>{
+        const portrait=head.querySelector('.cm-seat-portrait'),box=portrait.getBoundingClientRect(),r={left:box.left-5,right:box.right+5,top:box.top-5,bottom:box.bottom+5};
+        return [...head.querySelectorAll('.cm-vitals,.cm-mat-name,.cm-seat-commander,.cm-seat-state,.cm-seat-hand')].filter(el=>{const b=el.getBoundingClientRect();return b.width&&b.height&&r.left<b.right-.5&&b.left<r.right-.5&&r.top<b.bottom-.5&&b.top<r.bottom-.5;}).map(el=>el.className);
+      });
+      const ring=active.length===1?getComputedStyle(active[0].querySelector('.cm-seat-portrait')).boxShadow:'';
+      return {marks:active.length,clash,ring};
+    });
+    ok(turn.marks===1&&turn.ring!=='none'&&!turn.clash.length,`at ${who.page.viewportSize().width}, the active SeatHeader's portrait ring covers none of its facts (${JSON.stringify(turn)})`);
   }
   /* the focus ring, measured, on each kind of control */
   for (const [who, t] of [[rob, "dark"], [maya, "light"]]) {
@@ -702,11 +707,13 @@ try {
     await readRing(page, '.cm-stage-camera [data-board-scale=board]', `${t}: Camera's Board cards slider`);
     const reach = await page.evaluate(() => {
       const c = document.querySelector(".cm-board-center"), r = c && c.getBoundingClientRect();
-      if (!r) return "no logo";
+      if (!r) return {error:"no logo"};
       const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-      return hit && c.contains(hit) ? "" : `${hit ? String(hit.className || hit.tagName).split(" ")[0] : "nothing"} is over it`;
+      return {error:hit&&c.contains(hit)?"":`${hit?String(hit.className||hit.tagName).split(" ")[0]:"nothing"} is over it`,
+        logo:r.toJSON(),hit:hit?{tag:hit.tagName,cls:hit.className,data:{...hit.dataset},rect:hit.getBoundingClientRect().toJSON()}:null,
+        focused:document.activeElement?{tag:document.activeElement.tagName,data:{...document.activeElement.dataset}}:null};
     });
-    ok(!reach, `${t}: with Board cards' slider focused, a click on the life counter's logo reaches it (${reach || "it does"})`);
+    ok(!reach.error, `${t}: with Board cards' slider focused, a click on the life counter's logo reaches it (${JSON.stringify(reach)})`);
     await view(page, "focus");
   }
   /* A VIEW ARRIVING keeps the focus where it was: the board is drawn again, and the same card still has it. */
@@ -930,8 +937,12 @@ try {
       await page.locator(".cm-stage-rail.is-open #cm-board-decision").waitFor();
       const said = await page.locator(".cm-stage-top [data-action=board-actions-open]").getAttribute("aria-expanded");
       await page.keyboard.press("Escape");
-      const closed = await page.locator(".cm-stage-rail.is-open").count() === 0, back = await page.evaluate(() => document.activeElement.matches("[data-action=board-stage-rail]"));
-      ok(said === "true" && closed && back, `Actions says it is open (aria-expanded ${said}); Escape closes it (${closed}) with the focus back on it (${back})`);
+      const tableOpen=await page.locator('#cm-table-menu').count()===1,tableFocus=await page.evaluate(()=>document.activeElement.matches('[data-action=board-table-menu]'));
+      ok(said==='true'&&tableOpen&&tableFocus,`Actions exposes expanded state; CH45 Escape opens Table with focus (${JSON.stringify({said,tableOpen,tableFocus})})`);
+      await page.keyboard.press('Escape');await page.locator('#cm-table-menu').waitFor({state:'detached'});
+      const actionsSpine=page.locator('.cm-stage-left[data-action=board-stage-rail]');await actionsSpine.focus();await page.keyboard.press('Enter');
+      const closed=await page.locator('.cm-stage-rail.is-open').count()===0,back=await page.evaluate(()=>document.activeElement.matches('.cm-stage-left[data-action=board-stage-rail]'));
+      ok(closed&&back&&await actionsSpine.getAttribute('aria-expanded')==='false',`the native Actions spine collapses the drawer and retains keyboard focus (${JSON.stringify({closed,back})})`);
       /* the card that can be cast keeps its bright ring inside the focus ring */
       await page.keyboard.press("Shift");
       await page.locator(`.cm-board-hand .cm-bcard.is-bright[data-card="${castable.cardId}"]`).focus();
@@ -951,9 +962,13 @@ try {
       hand(ROB, real);
       await page.waitForTimeout(300);
     }
-    await page.click(".cm-stage-right");
+    const stackSpine=page.locator('.cm-stage-right[data-action=board-stage-side]');
+    if(await stackSpine.getAttribute('aria-expanded')!=='true')await stackSpine.click();
     await page.keyboard.press("Escape");
-    ok(await page.locator(".cm-stage-side.is-open").count() === 0, "Escape closes the shared drawer");
+    ok(await page.locator('#cm-table-menu').count()===1&&await page.evaluate(()=>document.activeElement.matches('[data-action=board-table-menu]')),'CH45 Escape from the shared drawer opens Table with focus');
+    await page.keyboard.press('Escape');await page.locator('#cm-table-menu').waitFor({state:'detached'});
+    await stackSpine.focus();await page.keyboard.press('Enter');
+    ok(await page.locator('.cm-stage-side.is-open').count()===0&&await stackSpine.getAttribute('aria-expanded')==='false'&&await page.evaluate(()=>document.activeElement.matches('.cm-stage-right[data-action=board-stage-side]')),'the native Stack spine collapses the drawer, exposes collapsed state and retains keyboard focus');
     await view(page, "full");
     await page.evaluate(() => {const a = document.activeElement; if (a && a !== document.body) a.blur();});
     await page.keyboard.press("Escape");

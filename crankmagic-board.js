@@ -1289,7 +1289,7 @@ globalThis.CrankBoard = Object.seal({
         <label>Cards <input type="range" min="70" max="${CAMERA_MAX}" value="${camera.cards}" data-stage-camera="cards" aria-label="Tabletop card size"><output>${camera.cards}%</output></label>
         ${stageSliders()}` : `${scaleSlider("board", "Board cards")}${scaleSlider("hand", "Hand cards")}`}
         <label>Spacing <input type="range" min="-70" max="20" step="1" value="${spacing()}" data-board-spacing aria-label="Card spacing" aria-valuetext="${spacing()}%"><output>${spacing()}%</output></label>
-        ${b('Play settings','board-tools')}
+        ${b('Play settings','board-tools').replace('<button ','<button aria-haspopup="dialog" ')}
         ${stageEnabled() ? `<label class="cm-stage-style">Background <select data-stage-style="background" aria-label="Background">${(CrankStage.appearances.backgrounds).map(x=>`<option value="${x.id}"${appearance.background===x.id?" selected":""}>${x.name}</option>`).join("")}</select></label>
         <label class="cm-stage-style">Table <select data-stage-style="table" aria-label="Table design">${(CrankStage.appearances.tables).map(x=>`<option value="${x.id}"${tableDesignId(appearance.table)===x.id?" selected":""}>${x.name}</option>`).join("")}</select></label>` : ""}</div>` : ""}</div>`; }
   /* 3D's two sizes beside Cards: ✋ the hand's cards (the wheel over the hand moves it too), ↕ the table's length on your
