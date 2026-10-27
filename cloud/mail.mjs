@@ -1,4 +1,5 @@
-/* Transactional delivery only. Credentials remain in Worker secrets; callers persist the job ID. */
+/* Transactional delivery only. Credentials remain in Worker secrets; callers persist the job ID.
+   `job.html`, when given, is sent beside the text (the invitation, cloud/invite-email.mjs); it is never stored. */
 export const INVITE_SENDER = 'CrankMagic <invite@crankmagic.com>';
 export const mailReady = env => typeof env.RESEND_API_KEY === 'string' && !!env.RESEND_API_KEY.trim();
 export async function sendMail(env, job, fetchImpl = fetch) {
@@ -7,7 +8,7 @@ export async function sendMail(env, job, fetchImpl = fetch) {
     method: 'POST', redirect: 'manual', signal: AbortSignal.timeout(15000),
     headers: {authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json',
       'Idempotency-Key': `crankmagic-mail/${job.id}`},
-    body: JSON.stringify({from: INVITE_SENDER, to: [job.recipient], subject: job.subject, text: job.text}),
+    body: JSON.stringify({from: INVITE_SENDER, to: [job.recipient], subject: job.subject, text: job.text, ...(job.html ? {html: job.html} : {})}),
   });
   // workerd rejects redirect:'error'. Reject redirects without forwarding credentials.
   // Never propagate provider responses: they can contain recipient or credential details.

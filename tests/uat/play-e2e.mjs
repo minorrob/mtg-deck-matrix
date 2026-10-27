@@ -412,6 +412,7 @@ try {
       /* The host ends it for everyone; the record replays with the table's own cards. */
       await page.locator("[data-action=board-profile]").click();
       await page.locator(".cm-profile-menu [data-action=board-tools]").click();
+      await page.locator("#cm-dialog [role=tab][data-tab=gameplay]").click();
       await page.locator("[data-action=board-end]").click();
       await page.locator("[data-action=board-end][data-confirm]").click();
       for (const p of [page, newcomer]) await p.locator(".cm-board-over").waitFor({timeout: 30000});

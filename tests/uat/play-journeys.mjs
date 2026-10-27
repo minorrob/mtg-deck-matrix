@@ -302,6 +302,7 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
   if (conceding) {
     await maya.page.click(".cm-phone-rail [data-action=board-profile]");
     await maya.page.click(".cm-profile-menu [data-action=board-tools]");
+    await maya.page.click("#cm-dialog [role=tab][data-tab=gameplay]");
     await maya.page.click("#cm-board-tools [data-action=board-concede]");
     await waitText(maya.page, ".cm-board-banner", /You have left this game; the others play on/);
     for (let i = 0; i < 100 && viewsAt(ROB, id).at(-1)?.departures?.s1 !== "conceded"; i += 1) await rob.page.waitForTimeout(50);
@@ -312,6 +313,7 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
   /* END, and THE RECORD. */
   await rob.page.click("[data-action=board-profile]");
   await rob.page.click(".cm-profile-menu [data-action=board-tools]");
+  await rob.page.click("#cm-dialog [role=tab][data-tab=gameplay]");
   await rob.page.click("#cm-board-tools [data-action=board-end]");
   await rob.page.click("#cm-board-tools [data-action=board-end][data-confirm='1']");
   await waitText(rob.page, ".cm-board-over", /ended early/).catch(async (e) => {console.log("ROB AT END", (await text(rob.page, "#cm-main")).slice(0, 500).replace(/\n+/g, " | ")); throw e;});
