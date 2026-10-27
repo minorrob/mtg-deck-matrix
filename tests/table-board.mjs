@@ -1855,7 +1855,8 @@ async function useCardOffer(page, card, act) {
   const offered = page.locator('#cm-card-menu [data-action=board-card-menu-do][data-act="'+act+'"]');
   eq(await offered.count(), 1, 'the selected card offers exactly one '+act+' action');
   await offered.click();
-  if (!['undo-mana', 'undo-land', 'undo-play'].includes(act)) await bindSelection(page);
+  /* Rob, 2026-10-27: a row that asks nothing more is sent by the press itself; only an offer needing a target is staged for its binding press (both casts here are creatures with none). */
+  if (!['undo-mana', 'undo-land', 'undo-play', 'play-land', 'activate-mana', 'cast'].includes(act)) await bindSelection(page);
 }
 async function openCoachQuestions(page) {
   const questions = page.locator('#cm-board-coach .cm-coach-questions');

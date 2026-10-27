@@ -364,11 +364,8 @@ try {
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("Enter");
   ok(await menu.count() === 0, "choosing an offer closes the menu");
-  const binding=page.locator("#cm-board-decision [data-action=board-confirm]:visible:not([disabled]),#cm-board-decision [data-action=board-direct]:visible:not([disabled])");await binding.waitFor({timeout: 3000});
-  eq(acts(), [], "and stages it, as a click on the card does: nothing is sent yet");
-  await binding.click();
   for (let i = 0; i < 100 && !acts().length; i += 1) await page.waitForTimeout(20);
-  eq(acts(), [[1]], "Confirm plays it, once");
+  eq(acts(), [[1]], "and plays it at once, once: the card and its row are two presses already (Rob, 2026-10-27)");
   /* The view a played land leaves is not this test's business: the offers come back as they were. */
   await again();
   await cardOn(RIME).click({button: "right"});

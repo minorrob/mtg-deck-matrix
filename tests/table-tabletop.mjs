@@ -83,7 +83,7 @@ try {
   await page.addInitScript(()=>{
     globalThis.__tabletopExpectedGeometry=()=>{
       const host=document.querySelector('.cm-stage-region'),r=host.getBoundingClientRect();
-      const tilt=(90-Number(document.querySelector('[data-stage-camera="tilt"]').value))*CrankStage.floorTilt(CrankStage.appearances.backgrounds[0].id)/90,zoom=Number(document.querySelector('[data-stage-camera="zoom"]').value);
+      const tilt=(90-Number(document.querySelector('[data-stage-camera="tilt"]').value))*CrankStage.floorTilt(document.querySelector('[data-stage-style=background]')?.value||CrankStage.appearances.backgrounds[0].id)/90,zoom=Number(document.querySelector('[data-stage-camera="zoom"]').value);
       const options={tilt,zoom,seats:3,pan:{x:0,y:0},reach:Number(localStorage.getItem('cm-stage-reach-v1'))||0};
       const base=CrankStage.geometry(r.width,r.height,options);
       const regions=[document.querySelector('.cm-stage-front'),...document.querySelectorAll('.cm-stage-rear')];
@@ -418,7 +418,7 @@ try {
       const alignment = await page.evaluate(() => {
         const host=document.querySelector('.cm-stage-region'), r=host.getBoundingClientRect();
         /* The slider is the angle to the floor; the camera's tilt from straight down is what it lacks of 90, over 90, of the floor's own slope in the backdrop. */
-        const tilt=(90-Number(document.querySelector('[data-stage-camera="tilt"]').value))*CrankStage.floorTilt(CrankStage.appearances.backgrounds[0].id)/90, zoom=Number(document.querySelector('[data-stage-camera="zoom"]').value);
+        const tilt=(90-Number(document.querySelector('[data-stage-camera="tilt"]').value))*CrankStage.floorTilt(document.querySelector('[data-stage-style=background]')?.value||CrankStage.appearances.backgrounds[0].id)/90, zoom=Number(document.querySelector('[data-stage-camera="zoom"]').value);
         const {geometry,options:expectedOptions,contentMinima}=globalThis.__tabletopExpectedGeometry();
         const regions=[document.querySelector('.cm-stage-front'),...document.querySelectorAll('.cm-stage-rear')];
         const matrixDetails=[];

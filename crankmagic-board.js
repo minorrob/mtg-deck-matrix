@@ -1302,12 +1302,17 @@ globalThis.CrankBoard = Object.seal({
     barSeen = key;
     return `<div class="cm-stage-actions${live ? " is-live" : ""}${fresh && !reduced() ? " is-rising" : ""}" role="group" aria-label="Your actions">${passButton("")}${resolveAllButton("")}${skipControl(false, "")}</div>`;
   }
+  /* Table and Focus have no caption over the table: the turn and the priority stay in their ribbon. Only 3D moves them (Rob, 2026-10-27). */
+  function legacyPriority(conn) {
+    const s = view.state, turnName = s.turnPlayerId === null ? "" : nameOf(s.turnPlayerId);
+    return `<span class="cm-stage-priority"><span class="cm-board-turn" title="Turn ${s.turn} of the game, counting every player's${view.yourTurn ? `; your ${ordinal(view.yourTurn)} turn` : ''}">${s.turn ? `Turn ${s.turn} · ${e(turnName)}` : "Before turn 1"}</span><br>Priority: ${e(s.priorityPlayerId==null?'—':nameOf(s.priorityPlayerId))}<span class="cm-board-waiting" title="${e(waitingText())}">${e(waitingText())}</span>${conn}</span>`;
+  }
   function boardHeader() {
     const me=players()[view.seat];
     const pill=`<div class="cm-full-pill">${stageEnabled() ? "" : `${passButton()}${resolveAllButton()}${skipControl(true)}`}</div>`;
     const conn=status === "open" ? "" : `<span class="cm-board-conn">${status === "reconnecting" ? "Reconnecting…" : "Connecting…"}</span>`;
     return `<header class="cm-stage-top"><span class="cm-stage-self" role="group" aria-label="${e(seatLabel(me))}, your seat" title="${e(seatLabel(me))}">${seatHeader(me)}</span><span class="cm-board-tools cm-board-turnsteps">${turnRibbon()}${stepsOpen ? stepsMenu() : ""}</span>
-      ${conn}${alsoButton()}${stageRail && !actionsShut ? "" : opens(ib("▸", "board-actions-open", "Open decision drawer", {}, {cls:"compact"}), false)}${pill}${stageEnabled()?cameraMenu():""}${stageProfile(me)}${combatStrip()}</header>`;
+      ${stageEnabled() ? conn : legacyPriority(conn)}${alsoButton()}${stageEnabled() ? (stageRail && !actionsShut ? "" : opens(ib("▸", "board-actions-open", "Open decision drawer", {}, {cls:"compact"}), false)) : opens(ib(stageRail && !actionsShut ? "◂" : "▸", "board-actions-open", "Open decision drawer", {}, {cls:"compact"}), stageRail && !actionsShut)}${pill}${stageEnabled()?cameraMenu():""}${stageProfile(me)}${combatStrip()}</header>`;
   }
   function boardDrawers() {
     const pending = view.decision && view.decision.kind !== 'draw' ? 1 : 0, count = view.state.stack.length;
@@ -3969,7 +3974,8 @@ globalThis.CrankBoard = Object.seal({
     if(['undo-mana','undo-land','undo-play'].includes(o.act))return bindOffer(el.dataset);
     /* STANDING RULE (Rob, 2026-10-27): where two clicks already stand between the player and the action -- the card, then its row --
        there is no third step to confirm. A row that asks nothing more is sent; one that needs a target is staged in Actions for it. */
-    if(selfOnly(o))return commitOffer(o);
+    /* Only an offer of priority: the picks of a many-of question (discard some, sacrifice some) are toggled here, and sent by its own Confirm. */
+    if(view.decision?.kind==="priority" && selfOnly(o))return commitOffer(o);
     option(o.index);
   };
   function commitOffer(o) {

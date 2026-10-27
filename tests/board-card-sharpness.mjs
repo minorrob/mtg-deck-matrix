@@ -24,7 +24,7 @@ let checks=0;
 const ok=(c,m)=>{assert.ok(c,m);checks++};
 async function measure(zoom){
   const context=await browser.newContext({viewport:{width:1440,height:900},reducedMotion:"reduce",serviceWorkers:"block"});
-  await context.addInitScript(z=>{localStorage.setItem("cm-board-view","full");localStorage.setItem("crankmagic-audio-muted","true");localStorage.setItem("cm-board-zoom-v2",String(z));localStorage.setItem("cm-board-tilt-v2","40");localStorage.setItem("cm-stage-resolution","150");},zoom);
+  await context.addInitScript(z=>{localStorage.setItem("cm-board-view","full");localStorage.setItem("crankmagic-audio-muted","true");localStorage.setItem("cm-board-zoom-v2",String(z));localStorage.setItem("cm-board-tilt-v4","42.631579");/* the camera at exactly 40 degrees on the first backdrop (floor 76 from straight down): this measure is sensitive to the angle */localStorage.setItem("cm-stage-resolution","150");},zoom);
   const page=await context.newPage();if(stub)await stub(page);
   await page.route("**://cards.scryfall.io/**",r=>r.fulfill({status:200,contentType:"image/png",body:CARD}));
   await page.route("**://api.scryfall.com/cards/named**",r=>r.fulfill({status:200,contentType:"image/png",body:CARD}));
