@@ -29,7 +29,7 @@
  *   GET  /api/ai-meter             this person's AI spending over the last 24 hours against their cap (AI-6)
  *   GET  /api/ai/login?to=#...     back to the app once signed in to the AI door
  */
-import {verifyAccess, Unauthorized} from "./access.mjs";
+import {verifyAccess, Unauthorized, groupOf} from "./access.mjs";
 import {createLibrary, Conflict, Invalid, LIMITS} from "./library.mjs";
 import {archidekt, ImportError} from "./import.mjs";
 import {createAi, everyone, settings, explain, coach, advise, readQuestion, Closed} from "./ai.mjs";
@@ -45,7 +45,7 @@ async function aiMeter(env, email, now) {
   if (!env.DB) return {open: false};
   let config;
   try {config = settings(env);} catch {return {open: false};}
-  const ai = createAi(env.DB, {now, everyone: everyone(env)});
+  const ai = createAi(env.DB, {now, owner: env.OWNER_EMAIL});
   if (!(await ai.allowed(email))) return {open: false};
   const {mine} = await ai.spent(email);
   return {open: true, spentCents: Math.round(mine / 10000 * 100) / 100, capCents: config.capPerson / 10000};
@@ -53,7 +53,21 @@ async function aiMeter(env, email, now) {
 async function aiSeatOpen(env, email, flag = "AI_PILOT") {
   if (env[flag] !== "on" || !env.DB) return false;
   try {settings(env);} catch {return false;}
-  return createAi(env.DB, {everyone: everyone(env)}).allowed(email);
+  return createAi(env.DB, {owner: env.OWNER_EMAIL}).allowed(email);
+}
+
+/* THE OWNER'S ROSTER (Rob, 2026-10-26; cloud/access.mjs): who is a Game Theory Insider, read and set by the owner alone.
+   GET lists the roster; PUT {email, group: "insider" | "general", note} adds a person to it or takes them off. A person is
+   general by being on no list, so there is nothing to delete. Anyone but the owner is refused, saying who may. */
+async function adminGroups(request, env, who, ms) {
+  const group = await groupOf(who.email, env, env.DB);
+  if (group !== "owner") return reply(403, {error: "Only CrankMagic's owner can manage access groups."});
+  const ai = createAi(env.DB, {now: () => new Date(ms()).toISOString(), owner: env.OWNER_EMAIL});
+  if (request.method === "GET") return reply(200, {owner: true, insiders: await ai.insiders()});
+  if (request.method !== "PUT") return reply(405, {error: "The roster is read with GET and set with PUT."});
+  const input = await body(request);
+  try {return reply(200, await ai.setGroup(input.email, input.group, input.note));}
+  catch (error) {if (error instanceof Closed) return reply(error.status, {error: error.message}); throw error;}
 }
 
 /** An invitation's link, `/api/join/<table>/<code>`: where it sends the person -- the app, at the seat's fragment -- or
@@ -239,7 +253,10 @@ export async function handle(request, env, deps = {}) {
        `to` already carried it; nothing here keeps it, and it seats only someone Access admits. */
     const joined = method === "GET" ? joinLocation(url) : null;
     if (joined) return new Response(null, {status: 302, headers: {location: joined, "cache-control": "no-store", "referrer-policy": "no-referrer"}});
-    if (method === "GET" && path === "/api/me") return reply(200, {email: loginEmail, since: person.createdAt, head: await library.head(person.id), admin:administrator(who,person,env)});
+    /* WHO IS ASKING, AND THEIR GROUP (cloud/access.mjs): owner, insider or general. The browser hides what a group may not
+       press; every route still asks for itself. `admin` is the Admin window's own gate (r4). */
+    if (method === "GET" && path === "/api/me") return reply(200, {email: loginEmail, since: person.createdAt, group: await groupOf(who.email, env, env.DB), head: await library.head(person.id), admin:administrator(who,person,env)});
+    if (path === "/api/admin/groups") return adminGroups(request, env, who, ms);
     /* AN AI ON CLAUDE (AI-2): New table offers one only where the table's object would seat it (cloud/game-room.mjs
        `pilotOpen`): the switch on, the door's key, caps and model set, and this person on the allowlist. */
     if (method === "GET" && path === "/api/ai-seat") return reply(200, {open: await aiSeatOpen(env, person.email)});
@@ -309,7 +326,7 @@ async function aiDoor(request, env, deps, url, ms) {
   if (!feature) return reply(404, {error: "No such endpoint."});
   if (request.method !== "POST") return reply(405, {error: `${feature} is a POST.`});
   if (!fromTheApp(request, url, "ai")) return reply(403, {error: "That request did not come from CrankMagic."});
-  const ai = createAi(env.DB, {now: () => new Date(ms()).toISOString(), everyone: everyone(env), ...(deps.newId ? {newId: deps.newId} : {})});
+  const ai = createAi(env.DB, {now: () => new Date(ms()).toISOString(), owner: env.OWNER_EMAIL, ...(deps.newId ? {newId: deps.newId} : {})});
   if (!(await ai.allowed(who.email))) return reply(403, {error: "Your account is not on CrankMagic's list for AI features. Ask the person who invited you."});
   /* The Coach sends a person's hand and board, which the privacy page must say before it is offered: its own switch. */
   if (feature === "The Coach" && env.AI_COACH !== "on") return reply(503, {error: "The Coach is not switched on here yet."});

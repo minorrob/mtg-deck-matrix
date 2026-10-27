@@ -150,8 +150,8 @@
       "sha": "5dd742bd996b24a6"
     },
     "crankmagic-app.js": {
-      "version": 601,
-      "sha": "f20dcf75e92146b5"
+      "version": 602,
+      "sha": "fd2a723b14309ddb"
     },
     "crankmagic-assets.js": {
       "version": 36,
@@ -162,8 +162,8 @@
       "sha": "ddab072cfc45df40"
     },
     "crankmagic-board.js": {
-      "version": 119,
-      "sha": "c508e88df1717ae3"
+      "version": 120,
+      "sha": "7b0057778dfa5213"
     },
     "crankmagic-brand.js": {
       "version": 6,
@@ -338,8 +338,8 @@
       "sha": "66bbfde592de2d04"
     },
     "crankmagic-stage.css": {
-      "version": 74,
-      "sha": "c241326a600690c0"
+      "version": 75,
+      "sha": "05c7c850eb613c4f"
     },
     "crankmagic-stage.js": {
       "version": 22,
@@ -350,8 +350,8 @@
       "sha": "07440b83396bb9e2"
     },
     "crankmagic-sw.js": {
-      "version": 584,
-      "sha": "818b3f2a3417d588"
+      "version": 585,
+      "sha": "b8dc22261b7ee299"
     },
     "crankmagic-table.js": {
       "version": 46,

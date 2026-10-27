@@ -114,6 +114,7 @@ eq(keyFetches, 1, "and the keys were fetched again once, which is how a rotation
 published = [signing.jwk, rotated.jwk];
 eq((await call("GET", "/api/me", {jwt: await token({}, {key: rotated})})).status, 200, "after the team publishes the rotated key, its tokens are accepted without a restart");
 const me = await call("GET", "/api/me");
+eq(me.json.group, "general", "/api/me says the person's group: general, on no list and with no OWNER_EMAIL (cloud/access.mjs)");
 eq([me.status, me.json.email, me.json.head], [200, "rob@example.com", null], "a valid token: the person, lower-cased, with no library saved yet");
 await assert.rejects(handle(new Request("https://crankmagic.test/api/me"), {DB}, {fetchImpl}), /ACCESS_TEAM_DOMAIN and ACCESS_AUD/, "a Worker deployed without its Access settings refuses everything"); checks++;
 

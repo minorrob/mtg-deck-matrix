@@ -1426,8 +1426,10 @@ globalThis.CrankBoard = Object.seal({
     return `<div class="cm-stage-hand"><section class="cm-stage-fan${own?"":" is-backs"}" aria-label="${e(label)}" style="--fan-count:${count};${backStyle(p.playerId)}">
       <span class="cm-stage-hand-label">${own?"Your hand":`${e(p.name)}'s hand`} · ${n}</span>
       ${n>limit?arrow(-1):""}<div class="cm-stage-fan-cards">${indices.map((index,i)=>{
+        /* STACKED LEFT OVER RIGHT (Rob, 2026-10-26: "The left side of each card should be under the next card"): the leftmost
+           card is on top, and each card's left edge tucks under the card to its left, so the card you read first is whole. */
         const offset=i-(count-1)/2;
-        return `<div class="cm-stage-fan-slot" data-hand-index="${index}" style="--fan-x:${offset};--fan-angle:${offset*3.5}deg;--fan-y:${Math.abs(offset)*Math.abs(offset)*2}px;z-index:${i+1}">${own?card(cards[index],{where:"hand"}):'<div class="cm-bcard is-back" aria-hidden="true"></div>'}</div>`;
+        return `<div class="cm-stage-fan-slot" data-hand-index="${index}" style="--fan-x:${offset};--fan-angle:${offset*3.5}deg;--fan-y:${Math.abs(offset)*Math.abs(offset)*2}px;z-index:${count-i}">${own?card(cards[index],{where:"hand"}):'<div class="cm-bcard is-back" aria-hidden="true"></div>'}</div>`;
       }).join("")}</div>${n>limit?arrow(1):""}
       ${n===0?'<span class="cm-stage-hand-empty">No cards in hand</span>':""}</section></div>`;
   }

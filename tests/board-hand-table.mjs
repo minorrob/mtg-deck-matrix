@@ -229,6 +229,20 @@ try {
     ok(wide.left >= 0 && wide.right <= wide.w && step >= wide.width * .4 - .5, `at 160% seven cards stay inside the window, each showing ${Math.round(step / wide.width * 100)}% of itself (${JSON.stringify(wide)})`);
     const arrows = await page.evaluate(() => [...document.querySelectorAll(".cm-stage-hand-arrow")].map((a) => {const r = a.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.right)];}));
     ok(arrows.length === 2 && arrows[0][0] >= 0 && arrows[1][1] <= wide.w && arrows[0][1] <= wide.left + 12 && arrows[1][0] >= wide.right - 12, `and its ‹ › stay beside it, inside the window (${JSON.stringify(arrows)})`);
+    /* STACKED LEFT OVER RIGHT (Rob, 2026-10-26: "The left side of each card should be under the next card"): the leftmost card
+       is on top and each card's left edge is under the card to its left, so each name begins past where the card to its
+       left ends, and the first card's name is whole. */
+    await page.mouse.move(2, 2); await settle(page, 200);   /* the pointer off the fan: a hovered card rises to the top on purpose */
+    const stack = await page.evaluate(() => {
+      const slots = [...document.querySelectorAll(".cm-stage-fan-slot")];
+      const z = slots.map((el) => Number(getComputedStyle(el).zIndex));
+      /* In the card's own frame (before the fan's rotation): the card to the left covers the first (width - step) of it. */
+      const step = parseFloat(getComputedStyle(document.querySelector(".cm-stage-fan")).getPropertyValue("--fan-step"));
+      const starts = slots.map((el) => {const name = el.querySelector(".cm-bcard-name"); return [name.offsetLeft, el.offsetWidth];});
+      return {z, firstWhole: starts[0][0] <= starts[0][1] * .1, restPast: starts.slice(1).every(([left, width]) => left >= width - step + 8)};
+    });
+    ok(stack.z.every((v, i) => i === 0 || v < stack.z[i - 1]), `the fan stacks left over right: the leftmost card on top (${stack.z.join(" > ")})`);
+    ok(stack.firstWhole && stack.restPast, `each card's name begins past where the card to its left ends; the first card's is whole (${JSON.stringify(stack)})`);
     ok(!errors.length, `no page error (${errors.join(" | ")})`);
     await context.close();
   }

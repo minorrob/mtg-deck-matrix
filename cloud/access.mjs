@@ -93,6 +93,27 @@ export async function verifyAccess(request, env, deps = {}) {
 
 /** Who a service token is, where a release seats one: `service:` and the first twelve hex of its client id's SHA-256 --
     the same token always the same identity, two tokens two, never a person's address, and the client id not repeated. */
+/* THE THREE ACCESS GROUPS (Rob, 2026-10-26: "a user group authorized for everything in CrankHub ... Game Theory Insiders.
+ * The second user group will be General Access. General Access will never be able to run or cause token costs ... The
+ * third user group is me, and I would have access to absolutely everything, including all game logs").
+ *
+ *   owner     one address, OWNER_EMAIL, a Worker variable set in the dashboard and never written in this repository
+ *   insider   a Game Theory Insider: a row in ai_allowlist, which is the Insiders roster (the owner keeps it, below)
+ *   general   everyone else Access admits: the library, decks, Play against the rules-only AI, never a cent spent
+ *
+ * The group is read here and nowhere else, so every spending route asks the same question (cloud/ai.mjs `allowed`), and
+ * the browser is told its group (/api/me) only to hide what it may not press: the Worker is the gate.
+ */
+export const GROUPS = Object.freeze(["owner", "insider", "general"]);
+export async function groupOf(email, env, db) {
+  const who = typeof email === "string" ? email.trim().toLowerCase() : "";
+  if (!who.includes("@")) return "general";
+  const owner = String(env?.OWNER_EMAIL || "").trim().toLowerCase();
+  if (owner && who === owner) return "owner";
+  if (db && (await db.prepare("SELECT 1 AS yes FROM ai_allowlist WHERE email = ?").bind(who).first())) return "insider";
+  return "general";
+}
+
 export async function serviceIdentity(clientId) {
   const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(clientId)));
   return "service:" + [...digest.slice(0, 6)].map((b) => b.toString(16).padStart(2, "0")).join("");
