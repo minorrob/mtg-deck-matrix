@@ -37,6 +37,7 @@
 
 import {housePilot, meetRequirements, withinBudget, keptWithin} from "./house-pilot.mjs";
 import {threatTable, absurd} from "./threat.mjs";
+import {reserveFor, RISK} from "./reserve.mjs";
 import {atLeast} from "./odds.mjs";
 import {createRng} from "../rng.mjs";
 
@@ -168,6 +169,25 @@ export function defend({attackers, blockers, life, canBlock = mayBlock, worth, t
   return {blocks, through: through(), attackersLost, blockersLost};
 }
 
+/**
+ * WHAT GETS THROUGH A DEFENDER THAT BLOCKS TO ABSORB: the planning model behind the reserve (reserve.mjs), where `defend` above is
+ * the model of a sensible defender, one that never chumps until it must. Here every blocker is put where it cuts the most damage
+ * -- a blocked attacker deals none, a trampler all but what its blocker soaks (CR 702.19), a flyer is met only by a flyer or reach --
+ * one blocker to an attacker, the biggest cut first. Returns the damage through; the creatures' fates are not its business.
+ */
+export function absorb(attackers, blockers, canBlock = mayBlock) {
+  const pairs = [];
+  for (const a of attackers) for (const b of blockers) if (canBlock(b, a)) pairs.push({a, b, cut: hits(a) - trampleOver(a, b)});
+  pairs.sort((x, y) => y.cut - x.cut || x.a.cardId - y.a.cardId || x.b.cardId - y.b.cardId);
+  const usedA = new Set(), usedB = new Set();
+  let cut = 0;
+  for (const p of pairs) {
+    if (p.cut <= 0 || usedA.has(p.a.cardId) || usedB.has(p.b.cardId)) continue;
+    usedA.add(p.a.cardId); usedB.add(p.b.cardId); cut += p.cut;
+  }
+  return attackers.reduce((n, a) => n + hits(a), 0) - cut;
+}
+
 /* A chance in [0, 1) from the match's seed, the seat and the question: the same every time it is asked. */
 const chance = (...parts) => createRng(parts.join("|")).unit();
 
@@ -192,9 +212,12 @@ export function pick(plans, setting, roll, temperature = TEMPERATURE) {
  *   `deck`: the seat's own deck list by name, which its player knows; `setting`: "easy" or "normal"; `seed`: the match's,
  *   for easy's chance; `picks`: its floor takes what a choice it may answer with none is for (house-pilot.mjs).
  */
-export function scoredPilot({seat, cards = () => null, deck = [], setting = "normal", seed = "", parts = PARTS, weights = WEIGHTS, temperature = TEMPERATURE, picks = false} = {}) {
+export function scoredPilot({seat, cards = () => null, deck = [], setting = "normal", seed = "", parts = PARTS, weights = WEIGHTS, temperature: baseTemperature = TEMPERATURE, picks = false, disposition = null} = {}) {
   if (!SETTINGS.includes(setting)) throw new Error(`The house pilot plays at ${SETTINGS.slice(0, -1).join(", ")} or ${SETTINGS.at(-1)}, not ${setting}`);
   const on = new Set(parts);
+  /* A PERSONA'S OVERRIDES (roster.mjs `dispositionFor`): the temperature of its chance moved by up to one, and the reserve's risk
+     appetite by up to a third; nothing else about what it sees or whom it weighs changes. */
+  const temperature = disposition?.temperatureDelta ? {...baseTemperature, [setting]: Math.max(0, (baseTemperature[setting] ?? 0) + disposition.temperatureDelta)} : baseTemperature;
   const floor = housePilot({seat, cards, picks});
   const known = (name) => (name ? cards(name) : null) ?? null;
   const manaValue = (name) => known(name)?.manaValue ?? Infinity;
@@ -390,8 +413,24 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
     const threats = threatsOf(view);
     /* Hard gives each creature its own defender (below); the creatures it holds home for the swing back are not in the attack. */
     const assign = setting === "hard", keepHome = new Set();
+    /* THE RESERVE (reserve.mjs): the creatures held home for the swing back, by the difficulty's risk appetite; Easy keeps none
+       beyond L1's own exposure terms. Not when the one opponent can be killed outright. */
+    const risk = RISK[setting] === undefined ? null : Math.max(0.05, Math.min(0.9, RISK[setting] + (disposition?.risk ?? 0)));
+    if (risk !== null && foes.length) {
+      const canAttack = new Set(choice.options.filter((o) => o.planeswalkerId === undefined).map((o) => o.cardId));
+      const awake = [...mine.values()].filter((c) => !c.tapped);
+      const guards = awake.filter((c) => has(c, "Defender") || power(c) <= 0 || has(c, "Vigilance"));
+      const candidates = awake.filter((c) => canAttack.has(c.cardId) && power(c) > 0 && !has(c, "Defender") && !has(c, "Vigilance"));
+      const sole = foes.length === 1 ? foes[0] : null;
+      const wins = sole && defend({attackers: awake.filter((c) => canAttack.has(c.cardId) && power(c) > 0), blockers: creaturesOf(view, sole.playerId).filter((c) => !c.tapped), life: sole.life, worth}).through >= sole.life;
+      if (!wins) {
+        const theirsOf = (id) => creaturesOf(view, id).filter((c) => !has(c, "Defender") && power(c) > 0);
+        for (const id of reserveFor({candidates, guards, foes: foes.map((f) => ({playerId: f.playerId, life: f.life})), myLife: self.life, theirs: theirsOf,
+          blockersOf: (id2) => creaturesOf(view, id2).filter((c) => !c.tapped), threatOf: (id2) => threats.of(id2), through: absorb, worth, risk})) keepHome.add(id);
+      }
+    }
     for (const p of foes) {
-      const ready = choice.options.filter((o) => o.defenderId === p.playerId && o.planeswalkerId === undefined && power(mine.get(o.cardId)) > 0)
+      const ready = choice.options.filter((o) => o.defenderId === p.playerId && o.planeswalkerId === undefined && power(mine.get(o.cardId)) > 0 && !keepHome.has(o.cardId))
         .map((o) => ({o, c: mine.get(o.cardId)}));
       if (!ready.length) continue;
       const walls = creaturesOf(view, p.playerId).filter((c) => !c.tapped);
@@ -495,6 +534,12 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
        back. When the top seat offers no attack worth the name (walled, or out of reach), the rest of the table is open. */
     if (setting === "easy" && plans.some((pl) => pl.set.length && pl.p.playerId === threats.top)) {
       for (let i = plans.length - 1; i >= 0; i -= 1) if (plans[i].set.length && threats.over(plans[i].p.playerId) < 0 && !plans[i].lethal) plans.splice(i, 1);
+    }
+    /* Every creature that could attack is held home for the swing back: that is an answer (attack with none, as the rules allow),
+       not a decision to leave to L0, which would send them all. */
+    if (!plans.length && keepHome.size) {
+      if (scores) return null;
+      return {indices: meetRequirements(choice, [], null)};
     }
     if (!plans.length) return null;
     /* Holding back is one plan, however many opponents there are. */

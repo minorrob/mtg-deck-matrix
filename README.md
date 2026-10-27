@@ -955,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 635 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 636 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1142,6 +1142,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-scored-pilot` — `tests/engine-scored-pilot.mjs` (the house pilot's L1: draw odds, exact combat, its choices scored, Easy and Normal)
 - `ai-personas` — `tests/ai-personas.mjs` (the AI roster: four difficulties and four personas on three dials, each persona within its limits and none able to touch information or person bias; a seat names a level and a persona and a table carries the persona from the lobby to the launched room)
 - `pilot-roles` — `tests/pilot-roles.mjs` (which cards double, loop, drain or are salty and how dangerous a commander is: a few kilobytes of the corpus held equal to their sources and handed to every pilot with a card's other public facts)
+- `engine-hard-pilot` — `tests/engine-hard-pilot.mjs` (Hard: a preferred defender for each creature, and the blockers a trampler or a flyer needs held home; the reserve's weighted probability and the absorbing-defender model behind it)
 - `engine-threat` — `tests/engine-threat.mjs` (the threat table every difficulty reads: life, hitters, growth and ramp off the seat's view; Easy's rank, Normal's weighted mean; a person and an AI the same row; L1 attacks where threat × effect is highest; the floor under an attack that dies for nothing)
 - `engine-pilot-picks` — `tests/engine-pilot-picks.mjs` (the AI seats take what an "up to" or a search is for: the lands of the colors they lack, proliferate's good counters, their own side; old matches answered as before)
 - `engine-ingest` — `tests/engine-ingest.mjs`
