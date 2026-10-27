@@ -654,7 +654,7 @@ try {
   await rob.page.mouse.move(paneGrip.x + paneGrip.width / 2 + 200, paneGrip.y + 200, {steps: 4});
   await rob.page.mouse.up();
   const pane1 = await paneGeo(), paneRows=await rob.page.evaluate(tableRowFacts);
-  ok(pane0.pane === 330 && Math.abs(pane1.pane - 530) <= 2 && pane1.tile > pane0.tile + 150 && pane1.matW < pane0.matW && paneRows.valid && paneRows.widths,
+  ok(pane0.pane === 270 && Math.abs(pane1.pane - 470) <= 2 && pane1.tile > pane0.tile + 150 && pane1.matW < pane0.matW && paneRows.valid && paneRows.widths,
     `the divider between the pane and the mat drags: 200px right, the pane ${pane0.pane} → ${pane1.pane}px, the tiles growing with it, the mat retains conditional aspect, complete rows and largest available width beside the reserved pane`);
   ok(pane0.mini === 0 && pane1.mini === 2 && pane1.robLands >= 1 && pane1.inert, `and past 400px each tile is a miniature of that seat's board, cards and all (the Forest on Rob's: ${pane1.robLands}), only to look at`);
   await shot(rob.page, "pane-miniatures-1400");

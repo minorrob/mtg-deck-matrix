@@ -190,11 +190,11 @@ globalThis.CrankBoard = Object.seal({
   /* FOCUS AND FULL SCREEN'S DIVIDERS (items 15 and 18), remembered on the device like the rest: the seat pane's width,
      past which each tile is a miniature of that seat's board; and the share of the Panel, and of Full screen's side
      column, given to the card above its divider. */
-  const PANE_KEY = "cm-board-pane", PANE = [260, 560], MINI_AT = 400;
+  const PANE_KEY = "cm-board-pane", PANE = [160, 560], MINI_AT = 400;
   /* THE RIGHT PANE, DOCKED (Rob's note 10, 2026-10-11: "it should sit beside it like the left one, its width dragged
      within the same bounds"): beside the mat in Focus and the Table view, never over them, its width remembered on the
      device; its tabs are Turn Resources (note 9), Panel (the card to read, the stack, the history) and History. */
-  const PANELW_KEY = "cm-board-panel-w", PANELW = [240, 560];
+  const PANELW_KEY = "cm-board-panel-w", PANELW = [180, 560];
   const panelWidth = () => {const raw = stored(PANELW_KEY), v = Number(raw); return raw !== null && v >= PANELW[0] && v <= PANELW[1] ? v : 340;};
   let panelTab = "panel";
   const SPLIT_KEY = {panel: "cm-board-split:panel", side: "cm-board-split:side"}, SPLIT = [0.2, 0.8], SPLIT_AT = {panel: 0.45, side: 0.4};
@@ -206,7 +206,15 @@ globalThis.CrankBoard = Object.seal({
   const moduleHeights = () => {try {const v = JSON.parse(stored(MODH_KEY) || "{}"); return v && typeof v === "object" ? v : {};} catch {return {};}};
   const moduleH = (id) => {const v = Number(moduleHeights()[id]); return v >= MODH[0] && v <= MODH[1] ? v : 0;};
   const deskW = () => {const raw = stored(DESK_KEY), v = Number(raw); return raw !== null && v >= DESK[0] && v <= DESK[1] ? v : 150;};
-  const paneWidth = () => {const raw = stored(PANE_KEY), v = Number(raw); return raw !== null && v >= PANE[0] && v <= PANE[1] ? v : 330;};
+  const paneWidth = () => {const raw = stored(PANE_KEY), v = Number(raw); return raw !== null && v >= PANE[0] && v <= PANE[1] ? v : 270;};
+  /* A DRAWER NARROWER THAN ITS CONTENT'S OWN WIDTH (Rob, 2026-10-27, on the Actions wireframes): text and objects wrap first, as the drawer narrows to about the width of the
+     default card (DRAWER_FULL); narrower than that, every font and object shrinks in step with it (CSS zoom, --pane-k / --panel-k), down to the drawer's least width. */
+  const DRAWER_FULL = 220, drawerK = (w) => Math.max(.5, Math.min(1, w / DRAWER_FULL)).toFixed(3);
+  /* the scale is set, and the zoom switched on, only while a drawer is narrower than DRAWER_FULL: a zoom of 1 still moves a layout by a pixel or two */
+  function setDrawerK(host, which, w) {
+    host.style.setProperty(`--${which}-k`, drawerK(w));
+    if (w < DRAWER_FULL) host.dataset[which === "pane" ? "narrowPane" : "narrowPanel"] = "on"; else delete host.dataset[which === "pane" ? "narrowPane" : "narrowPanel"];
+  }
   const splitOf = (k) => {const raw = stored(SPLIT_KEY[k]), v = Number(raw); return raw !== null && v >= SPLIT[0] && v <= SPLIT[1] ? v : SPLIT_AT[k];};
   let stageSide = false, stageRail = true, cameraOpen = false, stageError = "";
   let tableMenuOpen = false;
@@ -2858,10 +2866,10 @@ globalThis.CrankBoard = Object.seal({
     host.dataset["3d"] = stageEnabled() ? "on" : "off";
     /* The turn moved to another seat a moment ago: this paint's light arrives, crossfading (~600 ms). */
     if (performance.now() - turnLit < 900) host.dataset.turnChanged = "1"; else delete host.dataset.turnChanged;
-    host.style.setProperty("--panel-w", `${panelWidth()}px`);
+    host.style.setProperty("--panel-w", `${panelWidth()}px`); setDrawerK(host, "panel", panelWidth());
     host.classList.remove("has-panel");
     host.dataset.shell="shared";
-    host.style.setProperty("--stage-left-width", `${paneWidth()}px`);
+    host.style.setProperty("--stage-left-width", `${paneWidth()}px`); setDrawerK(host, "pane", paneWidth());
     host.dataset.inspecting = inspection && !deskInspection() ? "on" : "off";
     if (mode === "full") host.innerHTML = `${fullView()}${showHand()}${banner()}`;
     else if (mode === "table") host.innerHTML = `${boardHeader()}${tableView()}${cameraMenu()}${boardDrawers()}${showHand()}${banner()}`;
@@ -3140,7 +3148,7 @@ globalThis.CrankBoard = Object.seal({
     if (was !== (w >= MINI_AT)) {render(); refocus("pane");}
     else {
       const host = document.getElementById("cm-board");
-      if (host) host.style.setProperty("--stage-left-width", `${w}px`);
+      if (host) {host.style.setProperty("--stage-left-width", `${w}px`); setDrawerK(host, "pane", w);}
       const g = document.querySelector('#cm-board [data-drag="pane"]');
       if (g) g.setAttribute("aria-valuenow", String(w));
       fit();
@@ -3151,7 +3159,7 @@ globalThis.CrankBoard = Object.seal({
     const w = Math.min(PANELW[1], Math.max(PANELW[0], Math.round(v)));
     keep(PANELW_KEY, w);
     const host = document.getElementById("cm-board");
-    if (host) host.style.setProperty("--panel-w", `${w}px`);
+    if (host) {host.style.setProperty("--panel-w", `${w}px`); setDrawerK(host, "panel", w);}
     const body = document.querySelector("#cm-board .cm-board-body");
     if (body) body.style.setProperty("--panel-w", `${w}px`);
     const g = document.querySelector('#cm-board [data-drag="panelw"]');

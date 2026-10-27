@@ -1293,9 +1293,16 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-mat .cm-board-cards>.cm-bcard .cm-bcard-name{background:#f6f1e4;color:#1f1c18;border-radius:2px;padding:1px 4px}
 #matrix-v2 .cm-board .cm-stage-camera .cm-board-scale{background:transparent;border:0}
 #matrix-v2 .cm-board:is([data-view=focus],[data-view=table])[data-shell="shared"]:has(>.cm-stage-rail.is-open){--play-left:calc(var(--stage-left-width) + 40px)}
-#matrix-v2 .cm-board .cm-stage-front>.cm-mat{padding-top:62px}   /* the corner header (35px) stands clear of the first row of cards, and of the tips of the tapped ones turned up beside it */
-#matrix-v2 .cm-board .cm-board-pie-priority{padding:3px 4px}   /* the scrim reaches the descenders of its words */
+#matrix-v2 .cm-board .cm-board-pie-priority{padding:3px 4px;margin-top:-6px}   /* the scrim reaches the descenders of its words, and stands clear of the dial below it */
 #matrix-v2 .cm-board .cm-mat .cm-board-cards>.cm-bcard.is-tapped .cm-bcard-name{right:34%}   /* a tapped card's neighbour lies over its right side: the name wraps clear of it */
 #matrix-v2 .cm-board .cm-board-pie-life small{padding:3px 5px;line-height:1.2}   /* the scrim reaches the descender of "Maya" */
-#matrix-v2 .cm-board .cm-bcard:focus-visible{outline-offset:3px;box-shadow:0 0 0 3px var(--focus-halo),0 6px 14px -6px rgb(0 0 0 / .85)}   /* a halo of 3px between the card and its ring: on a pale mat the ring alone is not 3:1 all the way round */
-#matrix-v2 .cm-board .cm-board-panegrip{z-index:28}   /* the width grip is never covered by the tab hung beside it when it has the focus (a11y-board); the tab's own edge 6px is the grip's */
+#matrix-v2 .cm-board .cm-bcard:focus-visible{outline-offset:3px;box-shadow:0 0 0 1px #0b1213,0 0 0 3px var(--focus-halo),0 6px 14px -6px rgb(0 0 0 / .85)}   /* a dark line against the card, then the halo, then the ring: on a pale mat the light ring and halo alone are not 3:1 all the way round */
+#matrix-v2 .cm-board[data-shell=shared]>.cm-board-panegrip{left:calc(var(--stage-left-width) - 12px)}   /* the width grip lies wholly inside the drawer's edge: the tab hung outside it neither covers it (a11y-board) nor is covered by it */
+/* DRAWERS NARROWER THAN THEIR CONTENT (Rob, 2026-10-27, wireframes A1-A2, B2): the default drawer is 270px; text and objects wrap first -- the Cancel button under the main one, the mana
+   symbols onto a second centered row, a long name onto a second line, an object growing to hold it -- down to the width of the default card (220px); narrower, the module's fonts and
+   objects shrink in step (--pane-k, --panel-k from the board's script) until the drawer's least width. */
+#matrix-v2 .cm-board[data-narrow-pane] .cm-stage-rail :is(.cm-stage-module,.cm-board-pane){zoom:var(--pane-k,1)}
+#matrix-v2 .cm-board[data-narrow-panel] .cm-stage-side .cm-stage-module{zoom:var(--panel-k,1)}
+#matrix-v2 .cm-board .cm-stage-rail .cm-stage-module .cm-board-decision .v-button{white-space:normal;overflow-wrap:anywhere;text-align:center;line-height:1.2;height:auto;padding-block:6px}
+#matrix-v2 .cm-board .cm-stage-module .cm-mana-row{justify-content:center}
+#matrix-v2 .cm-board .cm-stage-front>.cm-mat{padding-top:62px}   /* the corner header (35px) stands clear of the first row of cards, and of the tips of the tapped ones turned up beside it */
