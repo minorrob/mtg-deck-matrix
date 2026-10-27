@@ -49,7 +49,7 @@ const m=await page.evaluate(()=>{
   const top=q(".cm-stage-top"),rail=q(".cm-stage-rail"),side=q(".cm-stage-side");
   const seatCards=qa(".cm-stage-rail .cm-seat-header").map(h=>{const st=h.querySelector(".cm-seat-state"),hand=h.querySelector(".cm-seat-hand"),v=h.querySelector(".cm-vitals"),w=h.querySelector(".cm-state-word");return {h:R(h),dot:R(st),word:{text:w.textContent.trim(),box:R(w)},dotAfter:getComputedStyle(st,"::before").backgroundColor,hand:R(hand),handFs:cs(hand,"fontSize"),lifeFs:cs(v.querySelector("b"),"fontSize"),lifeW:cs(v.querySelector("b"),"fontWeight"),handW:cs(hand,"fontWeight"),vit:R(v)}});
   const tabs=qa(".cm-drawer-tab").map(t=>{const lab=t.querySelector(".cm-tab-label"),cnt=t.querySelector(".cm-tab-count");return {box:R(t),label:R(lab),count:cnt&&R(cnt),side:t.classList.contains("cm-stage-right")?"right":"left"}});
-  const ctl=qa(".cm-stage-top .cm-table-menu>button,.cm-stage-top .cm-stage-camera>button,.cm-stage-top .v-button,.cm-stage-top .cm-profile-avatar").map(e=>({t:(e.textContent.trim()||e.getAttribute("aria-label")||"").slice(0,10),h:R(e).h}));
+  const ctl=qa(".cm-stage-top .cm-table-menu>button,.cm-stage-top .cm-stage-camera>button,.cm-stage-top .v-button").map(e=>({t:(e.textContent.trim()||e.getAttribute("aria-label")||"").slice(0,10),h:R(e).h}));
   const dec=q("#cm-board-decision");
   return {
     viewport:[innerWidth,innerHeight],ribbon:R(top),rail:R(rail),side:R(side),
@@ -90,7 +90,7 @@ await page.mouse.move(900,500);
 eq(m.corners.length,4,"the table has four corner handles");
 for(const c of m.corners){ok(c.w>=22&&c.h>=22&&/nwse|nesw/.test(c.cursor),"a corner handle is a 22px target with its resize cursor");ok(c.shadow==="none"&&c.bg==="rgba(0, 0, 0, 0)"&&c.border==="0px","and draws nothing");}
 /* 6. */
-const heights=m.ctl.map(c=>Math.round(c.h));ok(heights.length>=5&&new Set(heights).size===1,`the ribbon's controls share one height (${m.ctl.map(c=>c.t+" "+Math.round(c.h)).join(", ")})`);
+const heights=m.ctl.map(c=>Math.round(c.h));ok(heights.length>=4&&new Set(heights).size===1,`the ribbon's controls share one height; the round profile button stays its own 34px (${m.ctl.map(c=>c.t+" "+Math.round(c.h)).join(", ")})`);
 eq(m.tabs.length,2,"there are two drawer tabs");
 for(const t of m.tabs){
   ok(t.label.l>=t.box.l-1&&t.label.r<=t.box.r+1&&t.label.t>=t.box.t-1&&t.label.b<=t.box.b+1,`${t.side} tab: its label is inside it`);

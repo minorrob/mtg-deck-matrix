@@ -31,10 +31,18 @@ Workshop lanes, at his word: `crankmagic-stage.css`, `crankmagic-stage.js`, `cra
   hover tooltip; do not widen a gap or a box. The status dot, the hung tabs and the profile button's inset focus ring follow it.
 - **Not done, by decision:** the table region does not shrink when the right drawer opens (r4 keeps mats and hand fixed there, and tests it). Text on the
   far mats is still foreshortened by the tilt; only the empty-state message got a floor, since larger labels wrapped the far mats at 1366px.
-- **Proven**: `board-r5-visual` 49 (new; six breaks caught). Re-run after the changes and passing: see the PR for the list. **Already failing on main
-  before this work, not repaired here:** `page-budget` (the Decks page has five explainer words before its grid, budget four), `feedback-sheet` (waits for
-  `#cm-account [data-action=account-sync]`, which r4 moved), `board-choices` (a scried card's stack shows no ×2), `board-3d-camera` (a timing check that
-  passes and fails on main), and a long list in `a11y-board` (72 places on main, fewer here; the Camera and profile focus-ring checks are named in the PR).
+- **Proven**, on the final code: `board-r5-visual` 49 (new; six breaks caught); `board-r4-shell` 111, `board-r4-views` 129, `board-r4-caption-fit` 171,
+  `board-r4-decisions` 120 (with a new check on the land screen), `board-r4-input` 62, `board-r4-combat` 99, `board-combat-display`, `board-fullscreen-notes` 49,
+  `board-drawer-sizes` 47, `board-settings-window` 114, `admin-window` 51, `board-graphics` 87, `board-hand-table` 111, `board-mana-pool` 20, `table-lobby` 155,
+  `table-tabletop`, `table-board` 325, `board-stack-choices`, `menu-help`, `settings-r3`, `account-menu-r4`, and the static suites (`asset-versions`, `design-tokens`,
+  `feature-wiring`, `service-worker`, `release-pages`). Tests changed for Rob's new rules: the land screen's button, the action buttons' size (42px, 15px type),
+  the right pane starting at the ribbon, and a module's own height measured in the same state.
+  `a11y-board` fails at 71 places, main at 72: three of main's are fixed and none is new (found and fixed on the way: Camera's focus ring, the profile button's
+  size). One `board-r4-views` read (a Coach header at 0px) failed once under load and passed twice alone.
+  **Already failing on main before this work, not repaired here:** `page-budget` (the Decks page has five explainer words before its grid, budget four),
+  `feedback-sheet` (waits for `#cm-account [data-action=account-sync]`, which r4 moved), `board-choices` (a scried card's stack shows no ×2),
+  `board-3d-camera` (a timing check), `board-commander-hand` (Table at 1280×720), `board-target-lands`, `board-r2-actions-inspection`,
+  `board-hover-during-choice` and `board-control`.
 
 ## The incoming wave merged into main: #893, #895, #896, #897, 2026-10-27 (a Claude cloud session, at Rob's word)
 
