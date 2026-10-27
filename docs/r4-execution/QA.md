@@ -122,3 +122,11 @@ reconciliation. It verifies canonical per-owner result filing, private downloads
 reconnect/newest-wins, idempotency and native Review-to-deck-Record navigation. The physical hand may
 overlap the board under EX-28; tabletop records allowed hand interceptions separately from uncovered
 card hits and unrelated blockers. No hand-clearance geometry or overlap-driven zoom limit was kept.
+
+Final local gate record: full tabletop on0ea8fba6 (test42162b27) and shared-shell on42162b27 pass.
+Main-merge affected Settings114/fullscreen49/graphics87 and Admin51/menu85 pass on83aab1d2. The graphics
+oracle now follows EX-22 full-width16:9 playback with permitted vertical cropping/letterboxing; rendering
+code was unchanged. The Actions footer repair7921251f passes all six existing60/150-option cases at
+1024×768,1280×720 and1400×900, including strict visible title/tally/Confirm, native scroll and exact answers.
+The obsolete floating-box coverage aggregate is not claimed beneath the fixed opaque Actions drawer.
+Final combined CI and actual staging release/readback remain separate gates, recorded on PR #890.

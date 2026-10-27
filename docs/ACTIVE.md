@@ -2,9 +2,9 @@
 
 ## r4 coordinated execution, October26,2026 (Codex; Rob: "go")
 
-**Pre-CI source/local-proof snapshot:** current main b13607b2 is reconciled at 83aab1d2, with matching source/cache pins and the pre-merge rollback tag pushed.
-The coordinator owns canonical Git/index/pins/docs; Workshop holds the serial native browser; Engine remains staging release executor and its final real-table run is queued. Foundation's affected main-merge Settings/graphics checks and coordinator shared-shell gate are queued. Source snapshots, commands, proof and
-outstanding gates are in docs/r4-execution/HANDOFF.md. Preserve the untracked design renders.
+**Pre-CI source/local-proof snapshot:** main b13607b2 is reconciled. All targeted local gates are green; current production/pins are through 0ea8fba6 (board118, stage.js22, stage.css73, table46, app600, SW583). All browsers are released. Real-table321, full tabletop, shared-shell, sectioned Settings114, fullscreen49, graphics87, Admin51/menu85 and targeted backend/build/static checks have bounded evidence in docs/r4-execution/HANDOFF.md. The coordinator owns final scan/push/CI/main; Engine executes staging after green CI/main. Preserve the untracked design renders.
+
+The rollback tag rollback/pre-r4-2026-10-26-b13607b2 is pushed and verified; docs/r4-execution/ROLLBACK.md also records the current Cloudflare deployment/version. EX-28 permits hand overlap without restricting zoom. No further 3D behavior work is authorized for that concern.
 
 The current CI, main merge, staging deployment/readback and remaining release limits are maintained in
 [PR #890](https://github.com/minorrob/mtg-deck-matrix/pull/890), linked to ROB-197. This section is the

@@ -8,14 +8,13 @@ Production requires Rob's separate go.
 
 ## Source and ownership
 
-The coordinator owns canonical Git/index/pins/docs. Workshop currently owns the serial browser; Engine's final real-table run, the coordinator's shared-shell gate and Foundation's affected Settings/graphics gates are queued. Engine remains the staging release executor. No browser overlap is permitted. No further visual
-polish is in scope; an actual failed acceptance gate may require a bounded repair.
+All local acceptance gates are complete and all browser/preview processes are released. The coordinator owns final docs/pins/Git, exact-head scan/push and CI/main readiness. Engine is ready to execute the existing gated Cloudflare staging release after green CI/main. No additional feature work or 3D investigation is in scope; incoming PRs remain queued.
 
 All61 explicit CH rows are integrated, except CH-03, superseded by the later EX-18 Cinzel/gilt request.
 The source numbering ends at89 with gaps. The129 original audit findings remain individually tracked;
 53 unmapped findings and bounded partial/open evidence are not converted into closure by a CH mapping.
 
-Current integrated source/pin snapshot: 83aab1d2cfb083bc3f44ce7b429f509112283427, including main b13607b2. Board117, stage.js22, stage.css73, table46, Admin4, sharing6, app599 and SW582 match Git/working/manifest bytes for all 133 assets. README registers all 628 root suites. Targeted gates pass: sharing149, cloud-worker154, design-tokens200, asset133, wiring131, data50 variants/50 buy profiles, readout1121, release-pages226 (sandbox-only temporary Git denial retried successfully outside the sandbox).
+Current production/pin snapshot: 0ea8fba65745099f0a13d587664624a0d60f20d8, including main b13607b2 and the measured Actions footer repair. Board118, stage.js22, stage.css73, table46, Admin4, sharing6, app600 and SW583 match Git/working/manifest bytes for all 133 assets. README registers all 628 root suites. Targeted gates pass: sharing149, cloud-worker154, design-tokens200, asset133, wiring131, data50 variants/50 buy profiles, readout1121, release-pages226 (sandbox-only temporary Git denial retried successfully outside the sandbox).
 Preserve the preexisting untracked docs/design/2026-10-25-redesign-r4/renders/ and all evidence worktrees.
 
 ## Incoming work and intent
@@ -54,7 +53,11 @@ The coordinator inspected representative Full/Table/Focus/phone captures and the
 
 The full real-table run39 PASSES 321 checks on exact 83aab1d2cfb083bc3f44ce7b429f509112283427. This includes Coach, reconnect/newest-wins, phone wheel/Library, per-owner canonical s0/s1 filing, private download/hidden-hand privacy, idempotency, Back-to-table, the native persistent Review link to the exact deck/game, deck Record and AI outcome badge. Evidence: workbench/r4-table-board-20261026-r39.log and r4-table-board-proof-20261026-r39/ (28 captures). Browser closed; Engine is ready for staging after green CI/main. No fresh live cloud finished-match/account-sync claim is made.
 
-Shared-shell's actual folded-decision/spine collision is repaired at dc360e82 (8 native checks twice); its full baseline rerun is pending. EX-28 expressly allows hand overlap without zoom restrictions. Tabletop's 270 recorded land samples comprise 166 uncovered hits and 104 allowed native hand overlaps, with no other blockers. Its remaining projection comparison has diagnostics for the actual options/animation state; no camera source change or test waiver is claimed. Main's sectioned Settings/graphics tests and the complete tabletop/shared-shell/real-game gates remain pending before full CI.
+All remaining native gates are green. Tabletop passes on 0ea8fba6 with final test reconciliation 42162b27: all six camera endpoints at unchanged .01 tolerance, reload/card planes, owner/cloud-sync persistence, private backs/canvas identity, Coach draft/node identity, stack geometry/keyboard/motion/mutation and all six 60/150-option footer cases. Its 270 land samples are 166 uncovered hits plus 104 approved hand overlaps. The old floating-box ground-coverage aggregate is inapplicable beneath the opaque Actions drawer (0 eligible points, honestly reported); actual decision/control assertions remain strict.
+
+Shared-shell passes on 42162b27: all three desktop widths by all three views, native drawer resizing/geometry, Camera/utility windows, actual Account/hand Escape focus and phone boundary. Settings114, fullscreen49 and graphics87 pass on 83aab1d2 after main reconciliation. Graphics follows EX-22's full-width video rule, with no production rendering change. The only later production patch (7921251f) budgets Actions from its actual viewport; its six strict long-choice cases pass within full tabletop. No hand-clearance geometry or overlap-driven zoom limit was kept.
+
+Required full CI, final main readiness/merge and staging deployment/readback are the remaining release gates. The exact candidate head and subsequent outcomes are recorded on PR #890.
 
 Rollback is already available remotely: rollback/pre-r4-2026-10-26-b13607b2. ROLLBACK.md records the exact source tag and Cloudflare staging deployment/version. Main must still be rechecked immediately before merge. OpenAI owns all release operations. New #893/#895–#897 are the next wave after r4 main/staging, with dependency/security/configuration gates in INCOMING-QUEUE.md. User explicitly said to push Cloudflare staging after the merge, then continue.
 
