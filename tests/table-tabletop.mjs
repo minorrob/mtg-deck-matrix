@@ -223,7 +223,10 @@ try {
   for(const width of [1400,1024]) {
     await page.setViewportSize({width,height:800});
     for(const opened of [true,false]) {
-      if(Boolean(await page.locator('.cm-stage-side.is-open').count())!==opened)await page.locator('.cm-stage-right[data-action=board-stage-side]').click();
+      if(Boolean(await page.locator('.cm-stage-side.is-open').count())!==opened){
+        if(await page.locator('.cm-stage-camera>div').count())await page.locator('[data-action=board-camera]').click();
+        await page.locator('.cm-stage-right[data-action=board-stage-side]').click();
+      }
       for(const expanded of [false,true]) {
         if(Boolean(await page.locator('.cm-stage-camera>div').count())!==expanded)await page.locator('[data-action=board-camera]').click();
         await reachable('[data-action=board-camera]',`${width}: Camera with Stack ${opened?'open':'closed'} and popup ${expanded?'open':'closed'}`);
@@ -395,11 +398,14 @@ try {
         const tilt=(90-Number(document.querySelector('[data-stage-camera="tilt"]').value))/2, zoom=Number(document.querySelector('[data-stage-camera="zoom"]').value);
         const geometry=CrankStage.geometry(r.width,r.height,{tilt,zoom,seats:3});
         const regions=[document.querySelector('.cm-stage-front'),...document.querySelectorAll('.cm-stage-rear')];
+        const matrixDetails=[];
         const matrices=regions.map((el,i)=> {
           /* A mat laid out k times larger for sharpness (crankmagic-stage.js, sharpness) carries the matrix shrunk by k:
              its transform after the scale(k) of its layout is the geometry's. */
           const actual=new DOMMatrix(getComputedStyle(el).transform).toFloat64Array(),k=Number(el.dataset.sharp||1);
-          return Array.from(actual).every((v,j)=>Math.abs((j<8?v*k:v)-[geometry.front,...geometry.rear][i].matrix[j])<.01);
+          const shown=Array.from(actual,(v,j)=>j<8?v*k:v),expected=[geometry.front,...geometry.rear][i].matrix,errors=shown.map((v,j)=>Math.abs(v-expected[j]));
+          matrixDetails.push({region:i,sharpness:k,maxError:Math.max(...errors),actual:shown,expected});
+          return errors.every(error=>error<.01);
         });
         const front=regions[0], card=front.querySelector('.cm-bcard:not(.is-tapped)'), inverse=new DOMMatrix(getComputedStyle(front).transform).inverse();
         const corners=[[0,0],[card.offsetWidth,0],[card.offsetWidth,card.offsetHeight],[0,card.offsetHeight]].map(([x,y])=>{
@@ -409,9 +415,11 @@ try {
         });
         // Undoing the mat's camera must recover an ordinary rectangular card.
         const rectangular=Math.abs(corners[0].y-corners[1].y)<.1 && Math.abs(corners[2].y-corners[3].y)<.1 && Math.abs(corners[0].x-corners[3].x)<.1 && Math.abs(corners[1].x-corners[2].x)<.1;
-        return {matrices,rectangular,hand:getComputedStyle(document.querySelector('.cm-stage-hand')).transform};
+        const stage=CrankStage.diagnostics(),rearMeasurements=[...host.querySelectorAll('.cm-stage-rear')].map(rear=>{const grid=rear.querySelector('.cm-mat-grid'),label=rear.querySelector('.cm-stage-seat-label'),css=getComputedStyle(grid),gap=parseFloat(getComputedStyle(rear).rowGap)||0,raster=Math.max(0,...[...grid.querySelectorAll('.cm-bcard')].map(c=>c.offsetHeight)),labelHeight=label?.offsetHeight||0,padding=(parseFloat(css.paddingTop)||0)+(parseFloat(css.paddingBottom)||0);return {labelHeight,gap,raster,padding,minimum:labelHeight+gap+raster+padding+4};});
+        return {matrices,rectangular,hand:getComputedStyle(document.querySelector('.cm-stage-hand')).transform,
+          diagnostic:{viewport:[innerWidth,innerHeight],region:[r.width,r.height],tilt,zoom,glanceStrength:localStorage.getItem('cm-look-strength'),rearMeasurements,rendererRear:stage.rear,rendererFront:stage.front,pan:stage.pan,length:stage.length,look:stage.look,camera:stage.camera,animations:host.getAnimations({subtree:true}).map(a=>({playState:a.playState,currentTime:a.currentTime})),matrixDetails}};
       });
-      assert.ok(alignment.matrices.every(Boolean), 'all four DOM mats use the same projection as their canvas surfaces');
+      assert.ok(alignment.matrices.every(Boolean), `all four DOM mats use the same projection as their canvas surfaces (${width}x768, tilt ${tilt}, zoom ${zoom}): ${JSON.stringify(alignment.diagnostic)}`);
       assert.equal(alignment.rectangular,true,'cards lie on the same perspective plane as their mat');
       assert.equal(alignment.hand,'none','the hand remains upright outside the tabletop camera');
     }
