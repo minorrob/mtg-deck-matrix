@@ -399,7 +399,7 @@ try {
   await rob.page.click(".cm-sidebar a[data-nav=game]");
   await rob.page.locator('#cm-play-home').waitFor({timeout:30000});
   ok(routes[ROB].length === robSockets, "Play's lounge preserves the live socket while showing Resume");
-  await rob.page.getByRole('button',{name:'Resume your table',exact:true}).click();
+  await rob.page.getByRole('button',{name:'Resume game',exact:true}).click();
   await rob.page.locator("#cm-board .cm-stage-top").waitFor({timeout: 30000});
   ok(/^#table\?id=/.test(await rob.page.evaluate(() => location.hash)) && routes[ROB].length === robSockets, "Resume from Play returns to the game, on the same socket");
   ok(awayFrames() === awayBefore && !/Dropped/.test(await text(maya.page, ".cm-board-tile[data-seat='0'] .cm-seat-state")), "and through all of it the room never marked Rob's seat away");

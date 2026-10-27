@@ -98,7 +98,7 @@ try {
       await page.locator("#cm-play-home").waitFor({timeout: 20000});
       ok(await page.getByRole("heading", {name: "A place at the table"}).count() === 1 && await page.locator("#cm-table-new").count() === 0, "Play opens the Commander lounge before table setup");
       await shot("02-play-lounge");
-      await page.getByRole("button", {name: "New table", exact: true}).click();
+      await page.getByRole("button", {name: "Start a new game", exact: true}).click();
       await page.locator("#cm-table-new").waitFor({timeout: 20000});
       ok(await page.getByRole("heading", {name: "New table", exact: true}).count() === 1, "New table opens table setup from the lounge");
       await shot("02-play-new-table");

@@ -101,20 +101,21 @@ try{
     await page.goto(`${base}/index.html#game`);await page.locator('#cm-play-home').waitFor();
     ok(await page.evaluate(()=>BABYLON.Engine.Instances.length===0),'leaving the board disposes its engine and listeners');
     ok(await page.locator('#cm-table-new').count()===0,'Play opens the lounge, not the New table form');
-    await page.getByRole('button',{name:'Resume your table',exact:true}).click();await page.locator('[data-engine=babylon]').waitFor();
+    await page.getByRole('button',{name:'Resume game',exact:true}).click();await page.locator('[data-engine=babylon]').waitFor();
     await align('re-entry');
   }
   await page.goto(`${base}/index.html#game`);await page.locator('#cm-play-home').waitFor();
+  await page.getByRole('button',{name:'Join existing game',exact:true}).click();
   await page.locator('#cm-play-invite').fill('https://evil.example/api/join/tablepreview01/token');
   await page.getByRole('button',{name:'Open invitation',exact:true}).click();
   ok((await page.locator('#cm-play-join-error').innerText()).includes('complete CrankMagic invitation'),'invalid invitation stays in lounge with recovery instruction');
-  await page.locator('#cm-play-invite').fill('');
+  await page.locator('#cm-play-invite').fill('');await page.getByRole('button',{name:'Cancel',exact:true}).click();
   for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:844,height:390}]){
     await page.setViewportSize(viewport);
     ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'lounge fits viewport');
     if(shots)await page.screenshot({path:path.join(shots,`lounge-${viewport.width}.png`),fullPage:true});
   }
-  await page.getByRole('button',{name:'New table',exact:true}).click();await page.locator('#cm-table-new').waitFor();
+  await page.getByRole('button',{name:'Start a new game',exact:true}).click();await page.locator('#cm-table-new').waitFor();
   ok(true,'New table remains an explicit action');
   const failed=await browser.newPage({viewport:{width:1280,height:720}});
   await failed.route('**/vendor/babylon.js*',route=>route.abort());

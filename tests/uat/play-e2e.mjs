@@ -141,7 +141,7 @@ try {
   ok(await page.getByRole("heading", {name: "A place at the table"}).count() === 1 && await page.locator("#cm-table-new").count() === 0, `it is the Commander lounge: ${text.replace(/\s+/g, " ").trim().slice(0, 90)}…`);
   eq(await page.evaluate(() => [...document.scripts].map((s) => s.src).filter((s) => /crankmagic-(game|lobby|online)\.js|collection-lobby-draft/.test(s))), [], "and the local game host's modules are not in the page");
   await shot(page, "tab-1400");
-  await page.getByRole("button", {name: "New table", exact: true}).click();
+  await page.getByRole("button", {name: "Start a new game", exact: true}).click();
   await page.locator("#cm-table-new").waitFor();
   ok(await page.getByRole("heading", {name: "New table", exact: true}).count() === 1, "New table explicitly opens table setup");
 

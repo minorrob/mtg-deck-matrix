@@ -1460,3 +1460,4 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board :is(.cm-board-band li,.cm-history-list li){width:max-content;min-width:100%;box-sizing:border-box}
 #matrix-v2 .cm-board :is(.cm-board-band li,.cm-history-list li:not(.is-turn)) span:first-child{flex:0 0 auto;overflow:visible;text-overflow:clip;white-space:nowrap}
 #matrix-v2 .cm-board .cm-stage-lifetoggle{display:inline-grid;place-items:center}
+#matrix-v2 .cm-board .cm-stage-turnrow>.cm-board-turn{color:#e4efe6}
