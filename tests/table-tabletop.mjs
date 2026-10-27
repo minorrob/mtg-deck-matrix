@@ -80,11 +80,31 @@ try {
     });
   }
   await accountRoutes(page);
+  await page.addInitScript(()=>{
+    globalThis.__tabletopExpectedGeometry=()=>{
+      const host=document.querySelector('.cm-stage-region'),r=host.getBoundingClientRect();
+      const tilt=(90-Number(document.querySelector('[data-stage-camera="tilt"]').value))/2,zoom=Number(document.querySelector('[data-stage-camera="zoom"]').value);
+      const options={tilt,zoom,seats:3,pan:{x:0,y:0},reach:Number(localStorage.getItem('cm-stage-reach-v1'))||0};
+      const base=CrankStage.geometry(r.width,r.height,options);
+      const regions=[document.querySelector('.cm-stage-front'),...document.querySelectorAll('.cm-stage-rear')];
+      // Rear caption repair measures the initial rear layout, then expands it once. Measure
+      // content in that base layout, not the expanded row (whose larger cards would feed back).
+      const contentMinima=regions.slice(1).map((rear,i)=>{
+        const probe=rear.cloneNode(true),initial=base.rear[i],k=Number(rear.dataset.sharp||1);
+        Object.assign(probe.style,{left:'-10000px',top:'0px',width:`${initial.width*k}px`,height:`${initial.height*k}px`,transform:'none',visibility:'hidden',pointerEvents:'none'});
+        probe.style.setProperty('--rear-card',`${Math.max(18,(initial.height-28)/4.8)}px`);host.append(probe);
+        try{const grid=probe.querySelector('.cm-mat-grid'),label=probe.querySelector('.cm-stage-seat-label'),css=getComputedStyle(grid),gap=parseFloat(getComputedStyle(probe).rowGap)||0,raster=Math.max(0,...[...grid.querySelectorAll('.cm-bcard')].map(c=>c.offsetHeight));return (label?.offsetHeight||0)+gap+raster+(parseFloat(css.paddingTop)||0)+(parseFloat(css.paddingBottom)||0)+4;}finally{probe.remove();}
+      });
+      const geometry=CrankStage.geometry(r.width,r.height,{...options,rearMin:Math.max(0,...contentMinima)});
+      return {geometry,options:{...options,rearMin:Math.max(0,...contentMinima)},contentMinima};
+    };
+  });
   const MODULE_IDS=['history','coach','counter','resources','mana','stack','inspect','table','recommended','chat'];
   const MODULE_TITLES=['History','AI Coach','Counter-Intel','Resources','Mana Pool','On the Stack','Card Preview','Table Vitals','Recommended Actions','Chat','Actions'];
   const openDrawerSettings=async(p=page)=>{
     if(!await p.locator('#cm-board .cm-stage-camera>div').count())await p.locator('#cm-board [data-action=board-camera]').first().click();
     await p.locator('#cm-board [data-action=board-tools]').click();
+    await p.getByRole('tab',{name:'General',exact:true}).click();
     await p.getByRole('button',{name:'Set Side Drawer Modules',exact:true}).click();
     await p.locator('#cm-drawer-settings').waitFor();
   };
@@ -215,13 +235,15 @@ try {
   const reachable=async(selector,label)=>{
     const result=await page.locator(selector).evaluate(el=>{
       const r=el.getBoundingClientRect();
-      return {inside:r.width>0&&r.height>0&&r.left>=0&&r.top>=0&&r.right<=innerWidth&&r.bottom<=innerHeight,
+      return {rect:r.toJSON(),viewport:[innerWidth,innerHeight],inside:r.width>0&&r.height>0&&r.left>=0&&r.top>=0&&r.right<=innerWidth&&r.bottom<=innerHeight,
         hits:[.2,.5,.8].map(f=>{const hit=document.elementFromPoint(r.left+r.width*f,r.top+r.height/2);return hit===el||el.contains(hit);})};
     });
     assert.ok(result.inside&&result.hits.every(Boolean),`${label} fits and takes the pointer at three points: ${JSON.stringify(result)}`);
   };
+  await page.bringToFront();
   for(const width of [1400,1024]) {
     await page.setViewportSize({width,height:800});
+    await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
     for(const opened of [true,false]) {
       if(Boolean(await page.locator('.cm-stage-side.is-open').count())!==opened){
         if(await page.locator('.cm-stage-camera>div').count())await page.locator('[data-action=board-camera]').click();
@@ -396,7 +418,7 @@ try {
         const host=document.querySelector('.cm-stage-region'), r=host.getBoundingClientRect();
         /* The slider is the angle to the floor; the camera's tilt from straight down is half of what it lacks of 90. */
         const tilt=(90-Number(document.querySelector('[data-stage-camera="tilt"]').value))/2, zoom=Number(document.querySelector('[data-stage-camera="zoom"]').value);
-        const geometry=CrankStage.geometry(r.width,r.height,{tilt,zoom,seats:3});
+        const {geometry,options:expectedOptions,contentMinima}=globalThis.__tabletopExpectedGeometry();
         const regions=[document.querySelector('.cm-stage-front'),...document.querySelectorAll('.cm-stage-rear')];
         const matrixDetails=[];
         const matrices=regions.map((el,i)=> {
@@ -417,7 +439,7 @@ try {
         const rectangular=Math.abs(corners[0].y-corners[1].y)<.1 && Math.abs(corners[2].y-corners[3].y)<.1 && Math.abs(corners[0].x-corners[3].x)<.1 && Math.abs(corners[1].x-corners[2].x)<.1;
         const stage=CrankStage.diagnostics(),rearMeasurements=[...host.querySelectorAll('.cm-stage-rear')].map(rear=>{const grid=rear.querySelector('.cm-mat-grid'),label=rear.querySelector('.cm-stage-seat-label'),css=getComputedStyle(grid),gap=parseFloat(getComputedStyle(rear).rowGap)||0,raster=Math.max(0,...[...grid.querySelectorAll('.cm-bcard')].map(c=>c.offsetHeight)),labelHeight=label?.offsetHeight||0,padding=(parseFloat(css.paddingTop)||0)+(parseFloat(css.paddingBottom)||0);return {labelHeight,gap,raster,padding,minimum:labelHeight+gap+raster+padding+4};});
         return {matrices,rectangular,hand:getComputedStyle(document.querySelector('.cm-stage-hand')).transform,
-          diagnostic:{viewport:[innerWidth,innerHeight],region:[r.width,r.height],tilt,zoom,glanceStrength:localStorage.getItem('cm-look-strength'),rearMeasurements,rendererRear:stage.rear,rendererFront:stage.front,pan:stage.pan,length:stage.length,look:stage.look,camera:stage.camera,animations:host.getAnimations({subtree:true}).map(a=>({playState:a.playState,currentTime:a.currentTime})),matrixDetails}};
+          diagnostic:{viewport:[innerWidth,innerHeight],region:[r.width,r.height],tilt,zoom,expectedOptions,contentMinima,glanceStrength:localStorage.getItem('cm-look-strength'),rearMeasurements,rendererRear:stage.rear,rendererFront:stage.front,pan:stage.pan,length:stage.length,look:stage.look,camera:stage.camera,animations:host.getAnimations({subtree:true}).map(a=>({playState:a.playState,currentTime:a.currentTime})),matrixDetails}};
       });
       assert.ok(alignment.matrices.every(Boolean), `all four DOM mats use the same projection as their canvas surfaces (${width}x768, tilt ${tilt}, zoom ${zoom}): ${JSON.stringify(alignment.diagnostic)}`);
       assert.equal(alignment.rectangular,true,'cards lie on the same perspective plane as their mat');
@@ -437,8 +459,8 @@ try {
   await page.getByRole('button',{name:'Camera',exact:false}).click();
   for(const [name,value] of Object.entries(keptCamera)) assert.equal(await page.getByRole('slider',{name,exact:true}).inputValue(),value,`${name} is kept on this device through a reload`);
   assert.ok(await page.evaluate(()=>{
-    const r=document.querySelector('.cm-stage-region').getBoundingClientRect(), g=CrankStage.geometry(r.width,r.height,{tilt:(90-27)/2,zoom:83,seats:3});
-    return Array.from(new DOMMatrix(getComputedStyle(document.querySelector('.cm-stage-front')).transform).toFloat64Array()).every((v,j)=>Math.abs(v-g.front.matrix[j])<.01);
+    const {geometry:g}=globalThis.__tabletopExpectedGeometry(),front=document.querySelector('.cm-stage-front'),k=Number(front.dataset.sharp||1);
+    return Array.from(new DOMMatrix(getComputedStyle(front).transform).toFloat64Array()).every((v,j)=>Math.abs((j<8?v*k:v)-g.front.matrix[j])<.01);
   }),'and the table is drawn again at the kept tilt and zoom');
   await page.getByRole('slider',{name:'Tabletop card size',exact:true}).fill('100');
   await page.getByRole('slider',{name:'Table tilt',exact:true}).fill('10');
