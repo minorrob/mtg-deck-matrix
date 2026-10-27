@@ -8,7 +8,7 @@
         said); dithered.
      2. The setting, in the table's Settings window: 50% to 200%, previewed as it moves, put back by Cancel, kept by its
         change and Save, and still there after a reload; and in Settings › Play, with the same value.
-     3. The backdrop whole: the video at its 16:9 as large as the stage allows without cropping, its poster blurred behind.
+     3. The backdrop spans the stage's full width at16:9 (EX-22); vertical crop or letterbox is allowed, with its poster behind.
         And its resolution (Rob, 2026-10-26: "Maintain resolution in line with settings selection with 2k at max
         resolution"): of the heights kept (tools/stage-backdrops.mjs), the smallest that fills the backdrop at the kept
         setting, never over 1440; changed when the setting is kept, not while it is previewed, the clip keeping its place.
@@ -99,13 +99,13 @@ try{
   eq(await there.inputValue(),"100","Settings › Play has the same slider, at the kept value");
   await page.evaluate(()=>localStorage.setItem("cm-stage-resolution","150"));
 
-  /* 3. The backdrop whole. */
+  /* 3. EX-22: full-width backdrop, without blurred side gaps; vertical crop or letterbox is allowed. */
   await open();
-  const fit=await page.evaluate(()=>{const env=document.querySelector(".cm-stage-environment"),v=env.querySelector("video"),a=env.getBoundingClientRect(),b=v.getBoundingClientRect();return {env:[a.width,a.height],video:[b.width,b.height],behind:getComputedStyle(env,"::before").backgroundImage,inside:b.left>=a.left-1&&b.right<=a.right+1&&b.top>=a.top-1&&b.bottom<=a.bottom+1};});
-  ok(fit.inside&&Math.abs(fit.video[0]/fit.video[1]-16/9)<.01,`the backdrop is shown whole, at 16:9 inside the stage (${fit.video.map(Math.round).join("×")} in ${fit.env.map(Math.round).join("×")})`);
-  ok(Math.abs(fit.video[1]-fit.env[1])<2||Math.abs(fit.video[0]-fit.env[0])<2,"as large as the stage allows");
+  const fit=await page.evaluate(()=>{const env=document.querySelector(".cm-stage-environment"),v=env.querySelector("video"),a=env.getBoundingClientRect(),b=v.getBoundingClientRect();return {env:[a.width,a.height],video:[b.width,b.height],behind:getComputedStyle(env,"::before").backgroundImage,centered:Math.abs((b.left+b.right)-(a.left+a.right))<2,coversSides:b.left<=a.left+1&&b.right>=a.right-1};});
+  ok(fit.centered&&Math.abs(fit.video[0]/fit.video[1]-16/9)<.01,`the full-width backdrop preserves16:9 and horizontal centering (${fit.video.map(Math.round).join("×")} in ${fit.env.map(Math.round).join("×")})`);
+  ok(fit.coversSides&&Math.abs(fit.video[0]-fit.env[0])<2,"the backdrop spans the full stage width without blurred side gaps");
   const first=await page.evaluate(()=>{const b=CrankStage.appearances.backgrounds[0];return {id:b.id,poster:b.poster,video:Object.values(b.video)};});
-  ok(fit.behind.includes(first.poster.split("?")[0]),"its poster, blurred, fills what is left");
+  ok(fit.behind.includes(first.poster.split("?")[0]),"its blurred poster remains behind for vertical letterboxing");
   /* 3b. Its resolution follows the setting, 2K at the most. A stage 1000 pixels high, a screen of pixel ratio 1. */
   const tiers=await page.evaluate(()=>{const all={video:{720:"a",1080:"b",1440:"c",2160:"d"}},one={video:{720:"a"}},box={width:1830,height:1000};
     return {all:[50,70,100,110,150,200].map(p=>CrankStage.backdropLines(all,box,p)),one:[50,200].map(p=>CrankStage.backdropLines(one,box,p)),
@@ -168,5 +168,5 @@ try{
   g=await gfx();
   eq([g.size,await ratio(2)],[4096,2],"at 200% the skins are painted at 4096 and the table drawn at twice the screen's pixels");
   eq(errors,[],"no page errors");
-  console.log(`board-graphics: ${checks} checks passed — the table drawn at 150% of the screen's pixels by default, 50% to 200% in Settings, previewed, put back and kept; the backdrop whole, at the height the setting calls for, 2K at most; every design's skins painted off the page at 2048 or 4096 in full color, mipmapped, with relief and inked edges.`);
+  console.log(`board-graphics: ${checks} checks passed — the table drawn at 150% of the screen's pixels by default, 50% to 200% in Settings, previewed, put back and kept; the backdrop full width at16:9, at the height the setting calls for, 2K at most; every design's skins painted off the page at 2048 or 4096 in full color, mipmapped, with relief and inked edges.`);
 }finally{await context.close();await close();}
