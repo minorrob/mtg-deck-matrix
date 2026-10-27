@@ -488,16 +488,21 @@ try {
   await page.locator('.cm-stage-camera [data-view=full]').click();
   await page.getByRole('button',{name:'Open AI Coach',exact:true}).click();
   await page.locator('.cm-stage-rail #cm-board-coach .cm-coach-input').fill('Keep this draft while moving modules');
-  await page.getByRole('button',{name:'Move AI Coach down',exact:true}).click();
-  await page.waitForFunction(()=>document.querySelector('.cm-module-coach-host #cm-board-coach'));
-  assert.equal(await page.locator('#cm-board-coach .cm-coach-input').inputValue(),'Keep this draft while moving modules','moving the Coach preserves its draft');
+  await page.evaluate(()=>{globalThis.__coachDraftInput=document.querySelector('#cm-board-coach .cm-coach-input');});
+  await openDrawerSettings();
+  await page.getByRole('radio',{name:'AI Coach: Right',exact:true}).check();
+  await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
+  await page.waitForFunction(()=>!document.querySelector('dialog[open]')&&document.querySelector('.cm-stage-side .cm-module-coach-host #cm-board-coach'));
+  assert.equal(await page.locator('#cm-board-coach .cm-coach-input').inputValue(),'Keep this draft while moving modules','moving the Coach through Settings preserves its draft');
+  assert.equal(await page.evaluate(()=>document.querySelector('#cm-board-coach .cm-coach-input')===globalThis.__coachDraftInput),true,'the same native Coach input survives its move between drawers');
   assert.match(await page.locator('.cm-stage-module[data-module="chat"]').innerText(),/not connected yet/,'Chat does not pretend to send shared messages');
   await page.getByRole('button',{name:'Close the Coach',exact:true}).click();
   await openDrawerSettings();
   for(const title of ['AI Coach','Chat']) await page.getByRole('radio',{name:`${title}: None`,exact:true}).check();
   await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
-  assert.equal(await page.locator('.cm-stage-rail [data-module="actions"]').count(),1,'Actions stays available when optional modules are hidden');
+  assert.equal(await page.locator('.cm-stage-rail .cm-stage-module[data-module="actions"]').count(),1,'one actual Actions module stays available when optional modules are hidden');
+  console.log('table-tabletop: owner layouts, native module moves, private backs and six camera endpoints/reload/card planes passed');
   await page.emulateMedia({reducedMotion:'reduce'});
   await page.waitForTimeout(300);
   const still = await page.locator('canvas.cm-stage-canvas').screenshot();
@@ -546,13 +551,15 @@ try {
   await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
   for(const [selector,action] of [['.cm-stage-rail','board-stage-rail'],['.cm-stage-side','board-stage-side']]) if(!await page.locator(`${selector}.is-open`).count()) await page.locator(`.cm-stage-handle[data-action=${action}]`).click();
-  await page.locator('.cm-stage-hand .cm-bcard').first().focus();await page.locator('.cm-stage-hand .cm-bcard').first().press('Enter');await page.mouse.move(700,20);
+  const showModulePreview=async()=>{await page.locator('.cm-stage-hand .cm-bcard').first().hover();await page.locator('.cm-full-pick .cm-bcard').waitFor();};
+  await showModulePreview();
   assert.deepEqual(await page.locator('.cm-stack-summary strong').allTextContents(),['Intruder Alarm','Dundoolin Weaver'],'stack entries are in resolution order');
   assert.deepEqual(await page.locator('.cm-stack-position').allTextContents(),['#1','#2'],'each entry has its own stack position');
   assert.equal(await page.locator('.cm-stack-pile').count(),1,'one overlapping pile represents the whole stack');
   assert.equal(await page.locator('.cm-module-stack-row').count(),0,'no separate card rows');
   for(const width of [1400,1024]) {
     await page.setViewportSize({width,height:900});
+    await showModulePreview();
     const size=await page.evaluate(()=>{
       const r=e=>e.getBoundingClientRect(),preview=r(document.querySelector('.cm-full-pick .cm-bcard')),card=r(document.querySelector('[data-stack-depth="0"]')),text=r(document.querySelector('.cm-stack-list')),image=r(document.querySelector('.cm-stack-image')),row=document.querySelector('.cm-stack-browser');
       return {dw:card.width-preview.width,dh:card.height-preview.height,fraction:text.width/(text.width+image.width),overflow:row.scrollWidth-row.clientWidth};
@@ -572,6 +579,7 @@ try {
   assert.equal(await page.locator('.cm-stack-pile').evaluate(el=>el.getAnimations({subtree:true}).length),0,'reduced motion changes the shown card without animation');
   console.log('table-tabletop: stack geometry and focus passed');
   // Prove the size check rejects the former small stack thumbnails, then restore.
+  await showModulePreview();
   const brokenSize=await page.addStyleTag({content:'.cm-stage-module .cm-stack-card{--bc:96px!important}'});
   const mismatched=await page.evaluate(()=>Math.abs(document.querySelector('.cm-stack-card').getBoundingClientRect().width-document.querySelector('.cm-full-pick .cm-bcard').getBoundingClientRect().width));
   assert.throws(()=>assert.ok(mismatched<.5),'a deliberately undersized stack card fails the matching-size assertion');
