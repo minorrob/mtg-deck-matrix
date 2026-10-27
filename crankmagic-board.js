@@ -190,11 +190,11 @@ globalThis.CrankBoard = Object.seal({
   /* FOCUS AND FULL SCREEN'S DIVIDERS (items 15 and 18), remembered on the device like the rest: the seat pane's width,
      past which each tile is a miniature of that seat's board; and the share of the Panel, and of Full screen's side
      column, given to the card above its divider. */
-  const PANE_KEY = "cm-board-pane", PANE = [260, 560], MINI_AT = 400;
+  const PANE_KEY = "cm-board-pane", PANE = [160, 560], MINI_AT = 400;
   /* THE RIGHT PANE, DOCKED (Rob's note 10, 2026-10-11: "it should sit beside it like the left one, its width dragged
      within the same bounds"): beside the mat in Focus and the Table view, never over them, its width remembered on the
      device; its tabs are Turn Resources (note 9), Panel (the card to read, the stack, the history) and History. */
-  const PANELW_KEY = "cm-board-panel-w", PANELW = [240, 560];
+  const PANELW_KEY = "cm-board-panel-w", PANELW = [180, 560];
   const panelWidth = () => {const raw = stored(PANELW_KEY), v = Number(raw); return raw !== null && v >= PANELW[0] && v <= PANELW[1] ? v : 340;};
   let panelTab = "panel";
   const SPLIT_KEY = {panel: "cm-board-split:panel", side: "cm-board-split:side"}, SPLIT = [0.2, 0.8], SPLIT_AT = {panel: 0.45, side: 0.4};
@@ -206,7 +206,15 @@ globalThis.CrankBoard = Object.seal({
   const moduleHeights = () => {try {const v = JSON.parse(stored(MODH_KEY) || "{}"); return v && typeof v === "object" ? v : {};} catch {return {};}};
   const moduleH = (id) => {const v = Number(moduleHeights()[id]); return v >= MODH[0] && v <= MODH[1] ? v : 0;};
   const deskW = () => {const raw = stored(DESK_KEY), v = Number(raw); return raw !== null && v >= DESK[0] && v <= DESK[1] ? v : 150;};
-  const paneWidth = () => {const raw = stored(PANE_KEY), v = Number(raw); return raw !== null && v >= PANE[0] && v <= PANE[1] ? v : 330;};
+  const paneWidth = () => {const raw = stored(PANE_KEY), v = Number(raw); return raw !== null && v >= PANE[0] && v <= PANE[1] ? v : 270;};
+  /* A DRAWER NARROWER THAN ITS CONTENT'S OWN WIDTH (Rob, 2026-10-27, on the Actions wireframes): text and objects wrap first, as the drawer narrows to about the width of the
+     default card (DRAWER_FULL); narrower than that, every font and object shrinks in step with it (CSS zoom, --pane-k / --panel-k), down to the drawer's least width. */
+  const DRAWER_FULL = 220, drawerK = (w) => Math.max(.5, Math.min(1, w / DRAWER_FULL)).toFixed(3);
+  /* the scale is set, and the zoom switched on, only while a drawer is narrower than DRAWER_FULL: a zoom of 1 still moves a layout by a pixel or two */
+  function setDrawerK(host, which, w) {
+    host.style.setProperty(`--${which}-k`, drawerK(w));
+    if (w < DRAWER_FULL) host.dataset[which === "pane" ? "narrowPane" : "narrowPanel"] = "on"; else delete host.dataset[which === "pane" ? "narrowPane" : "narrowPanel"];
+  }
   const splitOf = (k) => {const raw = stored(SPLIT_KEY[k]), v = Number(raw); return raw !== null && v >= SPLIT[0] && v <= SPLIT[1] ? v : SPLIT_AT[k];};
   let stageSide = false, stageRail = true, cameraOpen = false, stageError = "";
   let tableMenuOpen = false;
@@ -263,20 +271,20 @@ globalThis.CrankBoard = Object.seal({
   let spacingPreview=null;
   const spacing = () => spacingPreview ?? Math.max(-70,Math.min(20,Number(stored('cm-board-spacing')) || 0));
   function applySpacing(host) {if(host)host.style.setProperty('--card-space',String(spacing()/100));}
-  /* TILT, 0 TO 90, THE TABLE'S ANGLE TO THE SCENE'S FLOOR (Rob, 2026-10-26: "tilt the table from 0 degrees to 90 degrees,
-     where only my height relative to the table's height would determine the angle I'd see the cards"; "0 degrees should
-     have no angle to the floor. 90 degrees should be perpendicular to the floor"). At 0 the table lies flat and you see it
-     from a seated player's eye, half its depth above it, looking at its middle from the near edge: 45 degrees of camera
-     tilt. At 90 it stands up facing you, seen straight on, as the old 0 was. Between, the camera tilts in step, so the old
-     60-degree ramp is gone. Kept as v3; a v2 value (camera degrees, 0 straight on) becomes 90 less twice it, so a saved
-     look stays the same. */
-  const TILT_MAX = 90, TILT_SEATED = 45, TILT_KEY = "cm-board-tilt-v3", TILT_DEFAULT = 10;
-  const tiltStored = () => {const v3 = stored(TILT_KEY), v2 = stored("cm-board-tilt-v2"), n = v3 !== null ? Number(v3) : v2 !== null ? TILT_MAX - Number(v2) * 2 : TILT_DEFAULT; return Math.max(0, Math.min(TILT_MAX, Number.isFinite(n) ? n : TILT_DEFAULT));};
+  /* TILT, 0 TO 90, THE TABLE'S ANGLE TO THE SCENE'S FLOOR (Rob, 2026-10-26: "tilt the table from 0 degrees to 90 degrees ...
+     0 degrees should have no angle to the floor. 90 degrees should be perpendicular to the floor"; 2026-10-27: "I want true 0
+     degree angle to the slope of the floor that it sits on ... the measured angle of the floor in the video"). At 0 the table
+     lies on the floor the backdrop's video shows, seen at the slope that floor is seen at (CrankStage.floorTilt, per
+     backdrop; the first, seated, eye's 45 degrees of camera tilt looked about 35 steeper than the floor). At 90 it stands up
+     facing you, seen straight on. Between, the camera tilts in step. Kept as v4: v3 was measured from the 45 degrees. */
+  const TILT_MAX = 90, TILT_SEATED = 45, TILT_KEY = "cm-board-tilt-v4", TILT_DEFAULT = 40;
+  const tiltStored = () => {const v4 = stored(TILT_KEY), n = v4 !== null ? Number(v4) : TILT_DEFAULT; return Math.max(0, Math.min(TILT_MAX, Number.isFinite(n) ? n : TILT_DEFAULT));};
   const camera = {cards: Math.max(70, Math.min(CAMERA_MAX, Number(stored("cm-stage-card-size-v2")) || 100)), tilt: tiltStored(), zoom: Math.max(60, Math.min(CAMERA_MAX, Number(stored("cm-board-zoom-v2")) || 100))};
   /* Where the 3D camera looks across the table, moved by dragging a mat (plane pixels from the table's center, y toward
      you). Kept for the visit only: ⌖ Center in Camera puts it back. */
   camera.pan = {x: 0, y: 0};
-  const cameraTilt = () => (TILT_MAX - camera.tilt) * TILT_SEATED / TILT_MAX;
+  const backdropId = () => table?.appearance?.background || appearance.background || globalThis.CrankStage?.appearances.backgrounds[0]?.id;
+  const cameraTilt = () => (TILT_MAX - camera.tilt) * (globalThis.CrankStage?.floorTilt?.(backdropId()) ?? TILT_SEATED) / TILT_MAX;
   /* How much longer the table runs on your side (Ctrl/⌘ + drag), a share of its resting length; kept on this device
      (CrankStage.geometry's `reach`). `stretch` is the drag under way, `stageGeom` the geometry the stage last drew. */
   const REACH_KEY = "cm-stage-reach-v1";
@@ -781,7 +789,7 @@ globalThis.CrankBoard = Object.seal({
     /* WHY NOT (ROB-24): a card of the person's own that nothing offered plays says why, from the room (`why`). */
     const label = `${named}${controlled ? `, ${controlSummary(c)}` : ""}${state.length ? ", " + state.join(", ") : ""}${bright ? `: ${can.join(" or ")}${opts.length > can.length ? `, ${opts.length} ways` : ""}` : c.why ? `. ${c.why}` : ""}`;
     if (!c.name && !c.faceDown) return `<div class="cm-bcard is-back" role="img" aria-label="${e(label)}"></div>`;
-    const html = `<button type="button" class="${cls}" data-action="${action}" data-card="${c.cardId}" data-card-revision="${view.revision}" data-card-choice="${e(view.decision?.id || '')}" data-card-match="${e(view.matchId)}"${aimed.length ? ` title="${e(`Targeted by ${aimed.join(" and ")}`)}"` : ""}${arrange ? ` draggable="true" data-arrange-card="true" title="Drag within this section to reorder; Alt + Left or Right works with a keyboard"` : ""} aria-label="${e(label)}">
+    const html = `<button type="button" class="${cls}" data-action="${action}" data-card="${c.cardId}" data-card-revision="${view.revision}" data-card-choice="${e(view.decision?.id || '')}" data-card-match="${e(view.matchId)}"${aimed.length ? ` title="${e(`Targeted by ${aimed.join(" and ")}`)}"` : ""}${arrange ? ` draggable="true" data-arrange-card="true" title="Drag within this section to reorder; Shift + Alt + Left or Right works with a keyboard"` : ""} aria-label="${e(label)}">
       ${c.name ? `<span class="cm-bcard-name">${e(c.name)}</span>` : ""}${creature ? `<span class="cm-bcard-pt">${c.power}/${c.toughness}</span>` : ""}${tax !== null ? `<span class="cm-bcard-tax" title="Commander tax: {${tax}} more to cast it from the command zone">+${tax}</span>` : ""}
       ${c.name ? `<img src="${e(pictureOf(c.name))}" alt="" draggable="false" loading="lazy" referrerpolicy="no-referrer">` : ""}${controlled ? `<span class="cm-control-label">Owner: ${e(nameOf(c.owner))}</span>` : ""}${marks ? `<span class="cm-bcard-marks">${marks}</span>` : ""}</button>`;
     return cardUndo(c,html,where);
@@ -864,7 +872,7 @@ globalThis.CrankBoard = Object.seal({
      button, so it is a navigation region, not an ARIA menu (whose items would want arrow keys it does not take). */
   function menu() {
     const links = [["Decks", "#decks"], ["Library", "#cards"], ["Explore", "#discover"], ["Play", "#game"], ["Settings", "#settings"]];
-    return `<nav class="cm-board-menu cm-board-nav" id="cm-board-nav" aria-label="Pages"><ul>${links.map(([l, h]) => `<li><a href="${h}">${l}</a></li>`).join("")}</ul>
+    return `<nav class="cm-board-menu cm-board-nav" id="cm-board-nav" aria-label="CrankMagic Pages"><ul>${links.map(([l, h]) => `<li><a href="${h}">${l}</a></li>`).join("")}</ul>
       <p class="cm-muted">The game keeps going, and your seat with it: Play, or Game on in the rail, brings you back.</p>
       <button type="button" class="v-button compact" data-action="page-help" data-help="table">Keys and help</button></nav>`;
   }
@@ -1093,6 +1101,34 @@ globalThis.CrankBoard = Object.seal({
     if(save)keep(zoneKey(seat),bounded/total);fitCardRows(document.getElementById('cm-board'));
   }
   const cardOrderKey=section=>`cm-card-order:${C.signedInAs?.() || 'local'}:${view?.matchId || tableId}:${view?.seat}:${section}`;
+  /* WHICH BATTLEFIELD ROW A CARD STANDS IN (Rob, 2026-10-27: "We don't lock in creatures, etc. to first row and artifacts, etc. to second row. We default play them there, but players can drag them to where they want them"). The rows are where a card goes by default; a card dragged to the other row is remembered here, for this game on this device. */
+  const rowKey=()=>`cm-card-rows:${C.signedInAs?.() || 'local'}:${view?.matchId || tableId}:${view?.seat}`;
+  const cardRows=new Map();
+  function rowMoves() {
+    const key=rowKey();let moves=cardRows.get(key);
+    if(!moves){try{const parsed=JSON.parse(stored(key) || '{}');moves=parsed && typeof parsed==='object' && !Array.isArray(parsed)?parsed:{};}catch{moves={};}cardRows.set(key,moves);}
+    return moves;
+  }
+  const BATTLE_ROW=/:(creatures|others)$/;
+  /* The row under a card being dragged: the one it is over, else, over bare battlefield, the nearest (the only one shown means the other). */
+  function rowUnder(event,arranged) {
+    if(!arranged || !BATTLE_ROW.test(arranged.section))return null;
+    const seat=arranged.section.split(':')[0],direct=event.target.closest?.('[data-card-section]');
+    if(direct && BATTLE_ROW.test(direct.dataset.cardSection))return direct.dataset.cardSection.split(':')[0]===seat?{name:direct.dataset.cardSection,el:direct}:null;
+    const field=event.target.closest?.('.cm-board-field');
+    if(!field || field.closest('[data-seat]')?.dataset.seat!==seat)return null;
+    const groups=[...field.querySelectorAll('[data-card-group]')];
+    if(!groups.length)return {name:`${seat}:creatures`,el:null};
+    if(groups.length===1)return {name:`${seat}:${groups[0].dataset.cardGroup==='creatures'?'others':'creatures'}`,el:null};
+    const near=groups.map(g=>{const r=g.getBoundingClientRect();return [Math.abs(event.clientY-(r.top+r.bottom)/2),g];}).sort((a,b)=>a[0]-b[0])[0][1];
+    return {name:`${seat}:${near.dataset.cardGroup}`,el:near.querySelector('[data-card-section]')};
+  }
+  function moveToRow(id,row,targetId,after) {
+    const moves=rowMoves();moves[id]=row.name.split(':')[1];keep(rowKey(),JSON.stringify(moves));
+    const key=cardOrderKey(row.name),order=(row.el?[...row.el.querySelectorAll('[data-arrange-card]')].map(el=>el.dataset.card):[]).filter(x=>x!==id),at=targetId?order.indexOf(targetId):-1;
+    order.splice(at<0?order.length:at+(after?1:0),0,id);cardOrders.set(key,order);keep(key,JSON.stringify(order));
+    draw();
+  }
   function arrangedCards(cards,section) {
     const key=cardOrderKey(section);let order=cardOrders.get(key);
     if(!order){try{const parsed=JSON.parse(stored(key) || '[]');order=Array.isArray(parsed)?parsed.map(String):[];}catch{order=[];}cardOrders.set(key,order);}
@@ -1128,8 +1164,9 @@ globalThis.CrankBoard = Object.seal({
     const ghosts = z.Battlefield.cards.filter(foreignControl);
     const lands = field.filter((c) => c.types.includes("Land"));
     const leadsBattlefield = c => c.types.includes("Creature") || c.types.includes("Planeswalker");
-    const creatures = field.filter((c) => !c.types.includes("Land") && leadsBattlefield(c));
-    const other = field.filter((c) => !c.types.includes("Land") && !leadsBattlefield(c));
+    const moves = you ? rowMoves() : {}, inCreatures = c => (moves[String(c.cardId)] ?? (leadsBattlefield(c) ? "creatures" : "others")) === "creatures";
+    const creatures = field.filter((c) => !c.types.includes("Land") && inCreatures(c));
+    const other = field.filter((c) => !c.types.includes("Land") && !inCreatures(c));
     const group = (label, cards) => {
       const references = ghosts.filter(c => !c.types.includes("Land") && leadsBattlefield(c) === (label === "Creatures"));
       return cards.length || references.length ? `<div class="cm-board-group" data-card-group="${label === "Creatures" ? "creatures" : "others"}"><h3>${e(label === "Creatures" && cards.some(c=>c.types.includes("Planeswalker")) ? "Creatures & planeswalkers" : label)} · ${cards.length}${references.length ? ` · ${references.length} with other players` : ""}</h3>${cardSection(cards,`${i}:${label === "Creatures" ? "creatures" : "others"}`,references)}</div>` : "";
@@ -1236,6 +1273,11 @@ globalThis.CrankBoard = Object.seal({
      Then indicate which player the turn is on by emboldening their row and putting one of the symbols ... as a small icon
      next to it"): you first, then the table in seat order; the seat whose turn it is in bold, after the turn symbol the
      seat cards use, smaller than the words. */
+  /* Who holds priority, under the life totals (Rob, 2026-10-27: out of the top ribbon, which no longer says the turn either). */
+  function priorityNote() {
+    const id = view.state.priorityPlayerId;
+    return `<span class="cm-stage-priority">Priority: ${e(id == null ? '—' : nameOf(id))}<span class="cm-board-waiting" title="${e(waitingText())}">${e(waitingText())}</span></span>`;
+  }
   function lifeList() {
     const ps = players(), mine = ps[view.seat], rows = [mine, ...ps.filter((p) => p && p !== mine)].filter(Boolean);
     return rows.map((p) => {const now = view.state.turnPlayerId === p.playerId;
@@ -1247,7 +1289,7 @@ globalThis.CrankBoard = Object.seal({
       <div class="cm-stage-mini">${mat(p, {size: "opp", head: "none"})}</div></section>`).join("");
     return `${boardHeader()}
       <div class="cm-full-mine cm-stage-region" aria-label="Tabletop">
-        <div class="cm-stage-caption"><span title="Turn ${view.state.turn}">TURN ${view.state.turn}</span><div class="cm-stage-life-list" role="group" aria-label="Player life totals">${lifeList()}</div></div>
+        <div class="cm-stage-caption"><span class="cm-board-turn" title="Turn ${view.state.turn} of the game, counting every player's${view.yourTurn ? `; your ${ordinal(view.yourTurn)} turn` : ''}">TURN ${view.state.turn}</span><div class="cm-stage-life-list" role="group" aria-label="Player life totals">${lifeList()}</div>${priorityNote()}</div>
         ${rear}<div class="cm-stage-front">${mat(big, {size: "full", head: "none"})}${corner}</div>
         ${stageEnabled() ? [0, 1, 2, 3].map((i) => `<span class="cm-stage-corner" data-corner="${i}" aria-hidden="true"></span>`).join("") : ""}
         ${actionBar()}
@@ -1268,12 +1310,17 @@ globalThis.CrankBoard = Object.seal({
     barSeen = key;
     return `<div class="cm-stage-actions${live ? " is-live" : ""}${fresh && !reduced() ? " is-rising" : ""}" role="group" aria-label="Your actions">${passButton("")}${resolveAllButton("")}${skipControl(false, "")}</div>`;
   }
+  /* Table and Focus have no caption over the table: the turn and the priority stay in their ribbon. Only 3D moves them (Rob, 2026-10-27). */
+  function legacyPriority(conn) {
+    const s = view.state, turnName = s.turnPlayerId === null ? "" : nameOf(s.turnPlayerId);
+    return `<span class="cm-stage-priority"><span class="cm-board-turn" title="Turn ${s.turn} of the game, counting every player's${view.yourTurn ? `; your ${ordinal(view.yourTurn)} turn` : ''}">${s.turn ? `Turn ${s.turn} · ${e(turnName)}` : "Before turn 1"}</span><br>Priority: ${e(s.priorityPlayerId==null?'—':nameOf(s.priorityPlayerId))}<span class="cm-board-waiting" title="${e(waitingText())}">${e(waitingText())}</span>${conn}</span>`;
+  }
   function boardHeader() {
-    const me=players()[view.seat],s=view.state,turnName=s.turnPlayerId===null ? "" : nameOf(s.turnPlayerId);
+    const me=players()[view.seat];
     const pill=`<div class="cm-full-pill">${stageEnabled() ? "" : `${passButton()}${resolveAllButton()}${skipControl(true)}`}</div>`;
     const conn=status === "open" ? "" : `<span class="cm-board-conn">${status === "reconnecting" ? "Reconnecting…" : "Connecting…"}</span>`;
     return `<header class="cm-stage-top"><span class="cm-stage-self" role="group" aria-label="${e(seatLabel(me))}, your seat" title="${e(seatLabel(me))}">${seatHeader(me)}</span><span class="cm-board-tools cm-board-turnsteps">${turnRibbon()}${stepsOpen ? stepsMenu() : ""}</span>
-      <span class="cm-stage-priority"><span class="cm-board-turn" title="Turn ${s.turn} of the game, counting every player's${view.yourTurn ? `; your ${ordinal(view.yourTurn)} turn` : ''}">${s.turn ? `Turn ${s.turn} · ${e(turnName)}` : "Before turn 1"}</span><br>Priority: ${e(s.priorityPlayerId==null?'—':nameOf(s.priorityPlayerId))}<span class="cm-board-waiting" title="${e(waitingText())}">${e(waitingText())}</span>${conn}</span>${alsoButton()}${opens(ib(stageRail && !actionsShut ? "◂" : "▸", "board-actions-open", "Open decision drawer", {}, {cls:"compact"}), stageRail && !actionsShut)}${pill}${stageEnabled()?cameraMenu():""}${stageProfile(me)}${combatStrip()}</header>`;
+      ${stageEnabled() ? conn : legacyPriority(conn)}${alsoButton()}${stageEnabled() ? (stageRail && !actionsShut ? "" : opens(ib("▸", "board-actions-open", "Open decision drawer", {}, {cls:"compact"}), false)) : opens(ib(stageRail && !actionsShut ? "◂" : "▸", "board-actions-open", "Open decision drawer", {}, {cls:"compact"}), stageRail && !actionsShut)}${pill}${stageEnabled()?cameraMenu():""}${stageProfile(me)}${combatStrip()}</header>`;
   }
   function boardDrawers() {
     const pending = view.decision && view.decision.kind !== 'draw' ? 1 : 0, count = view.state.stack.length;
@@ -1286,9 +1333,9 @@ globalThis.CrankBoard = Object.seal({
       <button type="button" class="cm-stage-handle cm-stage-right cm-drawer-tab" data-action="board-stage-side" aria-expanded="${stageSide}" aria-controls="cm-stack-drawer" aria-label="${stageSide ? 'Collapse' : 'Expand'} Stack${count ? `, ${count} on the stack` : ''}"><span class="cm-tab-label">Stack</span>${count ? `<i class="cm-tab-count" aria-hidden="true">${count}</i>` : ''}</button>${!phone()&&historyOpen?historyMenu():''}`;
   }
   function tableMenu() {
-    return `<div class="cm-table-menu"><button type="button" data-action="board-table-menu" aria-expanded="${tableMenuOpen}" aria-controls="cm-table-menu">Table ▾</button>${tableMenuOpen ? `<div id="cm-table-menu" role="group" aria-label="Table">${b('Pages','board-menu')}${menuOpen?menu():''}${b('History','board-history')}${b('Concede', 'board-concede')}${b('Leave table', 'board-leave-page')}${table?.youAreHost ? (confirmEnd ? `<p>End the game for everyone? The record is kept.</p>${b('Cancel', 'board-end-cancel')}${b('End game for everyone', 'board-end', {confirm:'1'}, true)}` : b('End game for everyone', 'board-end')) : ''}${b('Table rules', 'board-table-rules')}${b('Help', 'page-help', {help:'table'})}</div>` : ''}</div>`;
+    return `<div class="cm-table-menu"><button type="button" data-action="board-table-menu" aria-expanded="${tableMenuOpen}" aria-controls="cm-table-menu">Table ▾</button>${tableMenuOpen ? `<div id="cm-table-menu" role="group" aria-label="Table">${b('History','board-history')}${b('Concede', 'board-concede')}${b('Leave table', 'board-leave-page')}${table?.youAreHost ? (confirmEnd ? `<p>End the game for everyone? The record is kept.</p>${b('Cancel', 'board-end-cancel')}${b('End game for everyone', 'board-end', {confirm:'1'}, true)}` : b('End game for everyone', 'board-end')) : ''}${b('Table rules', 'board-table-rules')}${b('Help', 'page-help', {help:'table'})}${b('CrankMagic Pages','board-menu').replace('<button ','<button aria-haspopup="true" aria-expanded="'+menuOpen+'" ')}</div>${menuOpen ? `<aside class="cm-table-flyout" aria-label="CrankMagic Pages">${menu()}</aside>` : ''}` : ''}</div>`;
   }
-  function cameraMenu() { return `${tableMenu()}<div class="cm-stage-camera"><button type="button" data-action="board-camera" aria-expanded="${cameraOpen}">Camera ▾</button>${cameraOpen ? `<div>${phone() ? "" : switcher()}${hudSlider()}<span>View seats</span>${ib("◀", "board-rotate", "Previous seat", {by: "-1"})}${ib("▶", "board-rotate", "Next seat", {by: "1"})}<button type="button" class="cm-stage-camera-reset" data-action="board-camera-reset" title="Every Camera setting back to its default">Reset</button>
+  function cameraMenu() { return `${tableMenu()}<div class="cm-stage-camera"><button type="button" data-action="board-camera" aria-expanded="${cameraOpen}">Camera ▾</button>${cameraOpen ? `<div>${phone() ? "" : switcher()}<span>View seats</span>${ib("◀", "board-rotate", "Previous seat", {by: "-1"})}${ib("▶", "board-rotate", "Next seat", {by: "1"})}<button type="button" class="cm-stage-camera-reset" data-action="board-camera-reset" title="Every Camera setting back to its default">Reset</button>${hudSlider()}
         ${stageEnabled() ? `<label>Tilt <input type="range" min="0" max="${TILT_MAX}" value="${Math.round(camera.tilt)}" data-stage-camera="tilt" aria-label="Table tilt"><output>${Math.round(camera.tilt)}°</output></label>` : ""}
         ${stageEnabled() ? `<label>Zoom <input type="range" min="60" max="${CAMERA_MAX}" value="${camera.zoom}" data-stage-camera="zoom" aria-label="Table zoom"><output>${Math.round(camera.zoom)}%</output></label>
         <label>Cards <input type="range" min="70" max="${CAMERA_MAX}" value="${camera.cards}" data-stage-camera="cards" aria-label="Tabletop card size"><output>${camera.cards}%</output></label>
@@ -1671,6 +1718,9 @@ globalThis.CrankBoard = Object.seal({
   const visibleSpell = id => {const c=view.state.stack.find(c=>c.cardId===id && c.name && !c.faceDown && c.kind==="spell");return c ? {...c,types:c.types || [],keywords:c.keywords || [],counters:c.counters || {},controller:c.playerId,power:c.power ?? null,toughness:c.toughness ?? null} : null;};
   const namedFace = c => c?.faceDown ? {...c,name:null} : c;
   const sourceFor = (d,o) => {const id=d.sourceId ?? (d.kind === "priority" ? o?.cardId : null);return namedFace(findCard(id)) || visibleSpell(id);};
+  /* An offer that asks nothing more of the player: a land (it is not aimed at anything), or one whose only "target" is its own card
+     (Rob, 2026-10-27: "I don't need to target myself ... It's implied"). Its one press is the whole decision. */
+  const selfOnly = o => o.act === "play-land" || choiceTargets(o).every(g=>g.targets.every(t=>t.id === o.cardId));
   const choiceTargets = o => o?.targetGroups?.filter(g=>g.targets.length) || (o?.affected !== undefined || o?.target ? [{index:0,effect:o.effect,targets:[{kind:o.target?.kind || "object",id:o.affected ?? o.target?.id ?? o.cardId,controllerId:o.controllerId,effect:o.effect}]}] : []);
   const abilityTarget = t => t.kind === "ability" ? view.state.stack.find(s=>s.stackId===t.id && ["ability","trigger"].includes(s.kind)) : null;
   const targetController = t => t.controllerId ?? abilityTarget(t)?.playerId;
@@ -1735,7 +1785,10 @@ globalThis.CrankBoard = Object.seal({
      or one with a counter, stay two. A card the board does not show (one in a library being searched) is its name. Which
      of identical cards is taken changes nothing, so a stack gives the first it has not given yet. */
   const sameKey = (o) => {
-    const {index, cardId, ...words} = o;
+    /* `affected` (and a target's `id`) only repeat which card this is: left in, no two cards were ever the same card. */
+    const {index, cardId, affected, ...words} = o;
+    if (affected !== undefined && affected !== cardId) words.affected = affected;
+    if (words.target && words.target.id === cardId) words.target = {...words.target, id: undefined};
     let seen = null;
     if (cardId !== undefined) {const c = findCard(cardId); seen = c ? Object.fromEntries(Object.entries(c).filter(([k]) => k !== "cardId")) : "unseen";}
     return JSON.stringify([words, seen]);
@@ -1825,9 +1878,6 @@ globalThis.CrankBoard = Object.seal({
         : `<button type="button" class="v-button compact" data-action="board-option" data-index="${o.index}" aria-pressed="${picked.includes(o.index)}"${sending ? " disabled" : ""}>${sayHtml(o)}${n > 1 ? ` <span class="cm-muted">×${n}</span>` : ""}</button>`;
       /* One card's offers: its mana abilities one row of symbols. */
       const rows = [...seen.values()], count = new Map(rows.map((r) => [r.o, r.n]));
-      /* A land is played without being aimed at anything, and any offer whose only "target" is its own card needs no question
-         (Rob, 2026-10-27: "I don't need to target myself ... It's implied"). */
-      const selfOnly = (o) => o.act === "play-land" || choiceTargets(o).every((g) => g.targets.every((t) => t.id === o.cardId));
       if(actionCard !== null && rows.length===1 && selfOnly(rows[0].o)) {
         const o=rows[0].o;
         return `<section class="cm-board-decision" id="cm-board-decision" data-wf="W14"><h2>${e(sourceFor(d,o)?.name || o.label)}</h2>${deskCard()}<div class="cm-decide-actions">${b(verbFor(o),"board-direct",{index:String(o.index),revision:String(view.revision)},true,{disabled:sending || draftRevision !== view.revision})}${b("Cancel","board-action-all")}</div></section>`;
@@ -2619,7 +2669,7 @@ globalThis.CrankBoard = Object.seal({
   document.addEventListener("focusin", (event) => {
     const t = event.target;
     if (!t || !t.closest || !t.closest("#cm-board")) return;
-    const r = t.getBoundingClientRect();
+    const r = t.getBoundingClientRect();console.log('PLAYS focusin',t.className,t.id,t.dataset&&t.dataset.action,JSON.stringify(r));
     for (const pop of document.querySelectorAll("#cm-board-plays .cm-play-pop")) {
       const p = restingBox(pop.parentElement, pop);
       if (p.left < r.right && p.right > r.left && p.top < r.bottom && p.bottom > r.top) pop.remove();
@@ -2816,10 +2866,10 @@ globalThis.CrankBoard = Object.seal({
     host.dataset["3d"] = stageEnabled() ? "on" : "off";
     /* The turn moved to another seat a moment ago: this paint's light arrives, crossfading (~600 ms). */
     if (performance.now() - turnLit < 900) host.dataset.turnChanged = "1"; else delete host.dataset.turnChanged;
-    host.style.setProperty("--panel-w", `${panelWidth()}px`);
+    host.style.setProperty("--panel-w", `${panelWidth()}px`); setDrawerK(host, "panel", panelWidth());
     host.classList.remove("has-panel");
     host.dataset.shell="shared";
-    host.style.setProperty("--stage-left-width", `${paneWidth()}px`);
+    host.style.setProperty("--stage-left-width", `${paneWidth()}px`); setDrawerK(host, "pane", paneWidth());
     host.dataset.inspecting = inspection && !deskInspection() ? "on" : "off";
     if (mode === "full") host.innerHTML = `${fullView()}${showHand()}${banner()}`;
     else if (mode === "table") host.innerHTML = `${boardHeader()}${tableView()}${cameraMenu()}${boardDrawers()}${showHand()}${banner()}`;
@@ -3098,7 +3148,7 @@ globalThis.CrankBoard = Object.seal({
     if (was !== (w >= MINI_AT)) {render(); refocus("pane");}
     else {
       const host = document.getElementById("cm-board");
-      if (host) host.style.setProperty("--stage-left-width", `${w}px`);
+      if (host) {host.style.setProperty("--stage-left-width", `${w}px`); setDrawerK(host, "pane", w);}
       const g = document.querySelector('#cm-board [data-drag="pane"]');
       if (g) g.setAttribute("aria-valuenow", String(w));
       fit();
@@ -3109,7 +3159,7 @@ globalThis.CrankBoard = Object.seal({
     const w = Math.min(PANELW[1], Math.max(PANELW[0], Math.round(v)));
     keep(PANELW_KEY, w);
     const host = document.getElementById("cm-board");
-    if (host) host.style.setProperty("--panel-w", `${w}px`);
+    if (host) {host.style.setProperty("--panel-w", `${w}px`); setDrawerK(host, "panel", w);}
     const body = document.querySelector("#cm-board .cm-board-body");
     if (body) body.style.setProperty("--panel-w", `${w}px`);
     const g = document.querySelector('#cm-board [data-drag="panelw"]');
@@ -3637,18 +3687,24 @@ globalThis.CrankBoard = Object.seal({
   });
   document.addEventListener('dragover',event=>{
     const section=event.target.closest?.('[data-card-section]');clearCardDrop();
-    if(!arranging || section?.dataset.cardSection!==arranging.section)return;
+    const row=arranging && section?.dataset.cardSection!==arranging.section?rowUnder(event,arranging):null;
+    if(!arranging || (section?.dataset.cardSection!==arranging.section && (!row || row.name===arranging.section)))return;
     event.preventDefault();event.dataTransfer.dropEffect='move';event.target.closest?.('[data-arrange-card]')?.classList.add('cm-card-drop');
   });
   document.addEventListener('drop',event=>{
     const section=event.target.closest?.('[data-card-section]');clearCardDrop();
-    if(!arranging || section?.dataset.cardSection!==arranging.section)return;
-    event.preventDefault();const target=event.target.closest?.('[data-arrange-card]'),box=target?.getBoundingClientRect();
+    if(!arranging)return;
+    const target=event.target.closest?.('[data-arrange-card]'),box=target?.getBoundingClientRect();
+    if(section?.dataset.cardSection!==arranging.section){
+      const row=rowUnder(event,arranging);if(!row || row.name===arranging.section)return;
+      event.preventDefault();moveToRow(arranging.id,row,target?.dataset.card,box ? event.clientX>box.left+box.width/2 : false);arranging=null;return;
+    }
+    event.preventDefault();
     reorderCard(section,arranging.id,target?.dataset.card,box ? event.clientX>box.left+box.width/2 : false);arranging=null;
   });
   document.addEventListener('dragend',()=>{arranging=null;clearCardDrop();});
   document.addEventListener('keydown',event=>{
-    const card=event.target.closest?.('[data-arrange-card]');if(!card || !event.altKey || !['ArrowLeft','ArrowRight'].includes(event.key))return;
+    const card=event.target.closest?.('[data-arrange-card]');if(!card || !event.altKey || !event.shiftKey || event.ctrlKey || event.metaKey || !['ArrowLeft','ArrowRight'].includes(event.key))return;   /* Shift + Alt: Alt + Left alone is the browser's Back (Rob, 2026-10-27) */
     event.preventDefault();const section=card.closest('[data-card-section]'),cards=[...section.querySelectorAll('[data-arrange-card]')],i=cards.indexOf(card),right=event.key==='ArrowRight',target=cards[i+(right?1:-1)];
     if(target){reorderCard(section,card.dataset.card,target.dataset.card,right);card.focus({preventScroll:true});}
   });
@@ -3751,7 +3807,8 @@ globalThis.CrankBoard = Object.seal({
   document.addEventListener("pointerdown", (event) => {
     if (event.button !== 0 || event.pointerType === "touch" || !view || !stageEnabled() || !globalThis.CrankStage) return;
     const mat = event.target.closest?.("#cm-board .cm-stage-region .cm-mat");
-    if (!mat || event.target.closest(`.cm-bcard, button, a, [role=button], [data-zone-scroll], [draggable=true], ${OVERLAYS}`)) return;
+    /* a bar between a mat's rows (the land and the battlefield) is dragged on its own: it resizes them, and the table stays */
+    if (!mat || event.target.closest(`.cm-bcard, button, a, [role=button], [data-zone-scroll], [data-drag], [draggable=true], ${OVERLAYS}`)) return;
     event.preventDefault();
     const region = mat.closest(".cm-stage-region"), host = region.closest("#cm-board"), start = {x: event.clientX, y: event.clientY};
     let grab = null;
@@ -3851,7 +3908,7 @@ globalThis.CrankBoard = Object.seal({
      nothing is sent until Confirm. Drawn with the board, so the rows are always the current offers. A menu: arrows move,
      Escape or Tab closes it, back to the card. */
   let cardMenu = null;
-  const MENU = {"undo-play":["↶","Undo"],"play-land": ["⤓", "Play"], cast: ["✦", "Cast"], "activate-mana": ["↷", ""], activate: ["⚡", ""], "undo-mana": ["↶", "Untap"],
+  const MENU = {"undo-play":["↶","Undo"],"play-land": ["⤓", "Play"], cast: ["✦", "Cast"], "activate-mana": ["↷", "Tap for mana"], activate: ["⚡", "Activate"], "undo-mana": ["↶", "Untap"],
     "undo-land": ["↩", "To hand"], "turn-face-up": ["◐", "Face up"], suspend: ["⏳", "Suspend"], "resolve-all": ["⏩", "All"]};
   const menuGlyph = () => {const id = String(view.decision?.id || ""); return id.startsWith("declare-attackers") ? "⚔" : id.startsWith("declare-blockers") || blocking() ? "🛡" : "•";};
   const symbols = (text) => e(text).replace(/\{[^}]+\}/g, (m) => C.mana(m));
@@ -3893,12 +3950,25 @@ globalThis.CrankBoard = Object.seal({
     if (!view || !document.getElementById("cm-board")) return;
     const box = at instanceof Element ? at.getBoundingClientRect() : null;
     cardMenu = {id,members, x: Math.round(box ? box.right + 4 : at.x), y: Math.round(box ? box.top : at.y), from: el?.isConnected ? C.focusKey(el) : null,anchor:box?{left:box.left,right:box.right,top:box.top,bottom:box.bottom}:null};
-    peek(null);document.getElementById('cm-card-menu')?.remove();
+    peek(null);
+    /* The card is shown in Actions as well as in its menu (Rob, 2026-10-27): the same offers, and pressing either one settles both. */
+    if (view.decision?.kind === "priority" && !sending && optionsFor(id).length && actionsBodyOf()) {
+      actionCard = id; picked = []; draftRevision = view.revision; targetReviewing = false; alsoOpen = false;
+      if (!phone() && findCard(id)?.name) inspection = {id:String(id),kind:"card",matchId:view.matchId,automatic:true};
+      refreshActions();   /* only the Actions body: the card just clicked stays the node it was, for the second click of a double click */
+    }
+    document.getElementById('cm-card-menu')?.remove();
     document.getElementById('cm-board').insertAdjacentHTML('beforeend',cardMenuHtml());placeCardMenu();
     const m = document.getElementById("cm-card-menu");
     if (!m) return;
     (m.querySelector(".cm-card-menu-do:not([disabled])") || m.querySelector("[role=menuitem]"))?.focus({preventScroll: true});
     say(m.getAttribute("aria-label"));
+  }
+  /* The Actions module's body, where it is drawn open; its contents redrawn alone, not the board. */
+  const actionsBodyOf = () => document.querySelector('.cm-stage-module[data-module="actions"]>.cm-module-body:not([hidden])');
+  function refreshActions() {
+    const body = actionsBodyOf();
+    if (body) body.innerHTML = decision() || `<p class="cm-muted">${e(waitingText() || "Choose a card or continue your turn.")}</p>`;
   }
   function closeCardMenu(back = true) {
     if (!cardMenu) return;
@@ -3910,8 +3980,18 @@ globalThis.CrankBoard = Object.seal({
     const o=currentOffer(el.dataset);if(!o)return;
     closeCardMenu(true);
     if(['undo-mana','undo-land','undo-play'].includes(o.act))return bindOffer(el.dataset);
+    /* STANDING RULE (Rob, 2026-10-27): where two clicks already stand between the player and the action -- the card, then its row --
+       there is no third step to confirm. A row that asks nothing more is sent; one that needs a target is staged in Actions for it. */
+    /* Only an offer of priority: the picks of a many-of question (discard some, sacrifice some) are toggled here, and sent by its own Confirm. */
+    if(view.decision?.kind==="priority" && selfOnly(o))return commitOffer(o);
     option(o.index);
   };
+  function commitOffer(o) {
+    const d = view?.decision;
+    if (!d || sending || !d.options.some((x) => x.index === o.index)) return;
+    picked = [o.index]; draftRevision = view.revision; actionCard = null; targetReviewing = false;
+    return actions["board-confirm"]();
+  }
   actions["board-card-menu-view"] = (el) => {const id = el.dataset.card; closeCardMenu(true); inspect(id);};
   /* A press anywhere outside it puts it away, and still reaches what it was on. */
   document.addEventListener("pointerdown", (event) => {if (cardMenu && !event.target.closest?.("#cm-card-menu")) closeCardMenu(false);}, true);
@@ -3922,7 +4002,7 @@ globalThis.CrankBoard = Object.seal({
       if (el && view && (event.key === "ContextMenu" || (event.shiftKey && event.key === "F10"))) {event.preventDefault(); openCardMenu(Number(el.dataset.card), el);}
       return;
     }
-    if (event.key === "Escape" || event.key === "Tab") {event.preventDefault(); event.stopImmediatePropagation(); closeCardMenu(true); return;}
+    if (event.key === "Escape" || event.key === "Tab") {event.preventDefault(); event.stopImmediatePropagation(); closeCardMenu(true); if (actionCard !== null && !picked.length) {actionCard = null; draftRevision = null; refreshActions();} return;}
     const items = [...m.querySelectorAll("[role=menuitem]:not([disabled])")], i = items.indexOf(document.activeElement);
     if (!items.length || !["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
     event.preventDefault();
@@ -4013,6 +4093,40 @@ globalThis.CrankBoard = Object.seal({
     event.preventDefault(); event.stopImmediatePropagation();
     camera.reach = 0; keep(REACH_KEY, "0"); fit();
   }, true);
+  /* CARD SIZE BY ALT + DRAG (Rob, 2026-10-27: "Alt+left-click+drag up/down to zoom card size in/out on the area that's clicked ... drag up on
+     the battlefield, the card size increases. I do the same down on Lands and the same occurs."). Held over a mat, anywhere on it -- the
+     battlefield, the lands, a card -- Alt + the left button dragged up grows the cards, down shrinks them, as Camera's Cards slider does in
+     3D and Board cards does in Table and Focus (the one size each view keeps; 3D draws it larger or smaller on every mat). Kept as the
+     sliders keep it; the press is the size's, so nothing is played, picked or dragged by it. */
+  let sizing = null;
+  document.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0 || !event.altKey || event.ctrlKey || event.metaKey || event.shiftKey || event.pointerType === "touch" || !view) return;
+    if (!event.target.closest?.("#cm-board .cm-mat") || event.target.closest(OVERLAYS)) return;
+    event.preventDefault(); event.stopImmediatePropagation();
+    const flat = !stageEnabled(), host = document.getElementById("cm-board"), from = flat ? scaleOf("board") : camera.cards, y0 = event.clientY;
+    const s = sizing = {id: event.pointerId, moved: false};
+    const move = (next) => {
+      if (next.pointerId !== s.id) return;
+      if (!s.moved) {if (Math.abs(next.clientY - y0) < 3) return; s.moved = true; host.dataset.cardsize = "on"; peek(null);}
+      const to = from * Math.exp((y0 - next.clientY) / 250);
+      if (flat) {setScale("board", to); return;}
+      camera.cards = Math.round(Math.max(70, Math.min(CAMERA_MAX, to)));
+      const slider = host.querySelector('[data-stage-camera="cards"]');
+      if (slider) {slider.value = camera.cards; slider.parentElement.querySelector("output").textContent = `${camera.cards}%`;}
+      fit();
+    };
+    const end = (next) => {
+      if (next.pointerId !== s.id) return;
+      removeEventListener("pointermove", move, true); removeEventListener("pointerup", end, true); removeEventListener("pointercancel", end, true);
+      sizing = null; delete host.dataset.cardsize;
+      const swallow = (c) => {c.preventDefault(); c.stopImmediatePropagation();};
+      addEventListener("click", swallow, {capture: true, once: true}); setTimeout(() => removeEventListener("click", swallow, {capture: true}), 250);
+      if (!s.moved) return;
+      if (!flat) keep("cm-stage-card-size-v2", String(camera.cards));
+    };
+    addEventListener("pointermove", move, true); addEventListener("pointerup", end, true); addEventListener("pointercancel", end, true);
+  }, true);
+  document.addEventListener("dragstart", (event) => {if (sizing) event.preventDefault();}, true);
   /* ↕ in Camera: the same length, from the keyboard too; built again when it is let go. */
   document.addEventListener("input", (event) => {
     const el = event.target.closest?.("#cm-board [data-stage-length]"); if (!el) return;
