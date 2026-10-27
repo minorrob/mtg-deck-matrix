@@ -2,7 +2,7 @@
 
 /* ITS OWN CHAINS: PLAYING TOWARD THE DECK'S ENGINE (docs/ai-players/PLAN-2026-10-26.html §5; Rob's "the deck's formulas", L2 lite).
  *
- * Rob, 2026-10-26: Hard "know[s] the chains that exist within their deck and seek[s] to play towards the higher compounding,
+ * Rob, 2026-10-26: Hard "know[s] the chains that exist within their deck and seek[s] to play toward the higher compounding,
  * faster resolution options than easy or normal. Easy focuses more on the turn at hand versus the game at large. Normal
  * thinks about the game at large and about its engine ... but it weights them much lower than on hard."
  *
