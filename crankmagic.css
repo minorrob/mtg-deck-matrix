@@ -1863,7 +1863,9 @@ button.cm-pill:hover{filter:brightness(1.15)}
 .cm-crumb:hover{color:#fff}
 .cm-crumb+.cm-crumb{margin-left:8px}
 .cm-deck-hero .cm-crumb{color:var(--v-muted);position:relative}
-.cm-deck-hero .cm-help-btn{margin-left:auto}
+.cm-deck-hero .cm-help-btn{margin-left:auto}.cm-deck-hero .cm-feedback-btn{margin-left:0}
+/* SEND FEEDBACK (crankmagic-feedback.js): two glyph tiles for the kind, the text, a picture, and what goes with it. */
+.cm-feedback{display:grid;gap:12px;max-width:560px}.cm-feedback-kind{display:flex;gap:10px}.cm-feedback-tile{display:flex;align-items:center;gap:8px;padding:8px 14px;border:1px solid var(--v-line);border-radius:var(--v-radius);cursor:pointer;min-height:40px}.cm-feedback-tile:has(input:checked){border-color:var(--v-accent);background:var(--v-raised)}.cm-feedback-tile input{position:absolute;opacity:0;width:1px;height:1px}.cm-feedback-tile:has(input:focus-visible){outline:2px solid var(--v-accent)}.cm-feedback-glyph{font-size:17px;line-height:1}.cm-feedback textarea{width:100%;min-height:110px;resize:vertical}.cm-feedback-shot{display:flex;align-items:center;gap:8px;flex-wrap:wrap}#matrix-v2 .cm-feedback-upload{cursor:pointer}.cm-feedback-preview{display:inline-flex;align-items:center;gap:6px}.cm-feedback-preview img{height:40px;width:auto;max-width:96px;border-radius:4px;border:1px solid var(--v-line);object-fit:cover}.cm-feedback-context{display:flex;flex-wrap:wrap;gap:4px 8px;font-size:12px;margin:0}.cm-feedback .cm-form-footer{margin-top:4px}
 .cm-toolbar-split>.cm-how-link{margin-left:0}
 /* SIX FILTERS IN VIEW; the fold spans the panel and opens onto the same grid. */
 .cm-filter-panel>.cm-more-filters{grid-column:1/-1;border:0;padding:0;background:none}

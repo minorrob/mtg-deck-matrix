@@ -68,8 +68,21 @@ Service Auth policy and the variable is a dashboard step of Rob's; the release p
 `messageId`). Each move is to the next state and no other: never a skip, never back. A PATCH without `state` attaches
 `pr`, `issue`, `release` or `messageId` to the row as it is. The table itself refuses a state outside the six.
 
+## The sheet (PR 2, `crankmagic-feedback.js`)
+
+The control is one glyph, ✉ named "Send feedback": on every page's head (`pageHead`), beside More on a deck's page, in the
+board's profile strip during a game and in its menu, and the Menu's Send Feedback. The sheet gathers everything but the
+text and the kind: `C.board.held()` gives the game (the table, the match, the turn, the step, the seat's name, the
+decision id, the last public history line, the view), `version.json` the build, the route and `C.route()` the page, the
+deck page's `?deck=` and the card last under the pointer the deck, the window the device, and a ring of the last 20
+console errors kept from the moment the script loads. A picture is the browser's own capture where it offers one, else
+one chosen, encoded to WebP under 1 MiB. `C.feedback.draft({kind, text, screenshot})` is the report as it would go,
+already bounded; a suite reads it. Signed out, the sheet refuses with Sign in and Email instead; with no account cloud,
+the Menu's Send Feedback is the mailto it always was.
+
 ## Proof
 
 `node tests/feedback-store.mjs` (132 checks) and `python3 game/tools/batch/breaks.py tools/feedback-store-breaks.py`
 (29 breaks, each caught). `tests/release-pages.mjs` proves the schema module and the migration ship with the Worker in
-every cloud profile.
+every cloud profile. The sheet: `GEOMETRY_REQUIRED=1 node tests/feedback-sheet.mjs` (38 checks) and
+`tools/feedback-sheet-breaks.py` (18 breaks); the board's game context: `tests/table-board.mjs` and `tools/feedback-breaks.py`.
