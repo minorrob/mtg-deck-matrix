@@ -16,7 +16,10 @@
  *             an X of 0, not convoked); and blocking with a creature that dies and kills nothing while what came at it
  *             (double strike counted twice) would not have killed it (a chump block it did not need).
  *
- *   node tools/pilot-bench.mjs [--games 100] [--from 1] [--setting normal] [--json <out.json>]
+ *   node tools/pilot-bench.mjs [--games 100] [--from 1] [--setting normal] [--against normal] [--json <out.json>]
+ *   (--against: the other seat's setting, L1 against L1, as Hard against Normal; without it, L0)
+ *   (--seats 4: a pod of four decks, L1 against three of --against; the share to beat is then 25%, not 50%)
+ *   (--off reserve,assign,urgency,hold,chains: Hard's features turned off for the run, to measure each)
  *
  * The decks are data/live-state.json's, the card source the table's own (cloud/game-room.mjs `tableCards`). */
 import {readFileSync, writeFileSync} from "node:fs";
@@ -68,24 +71,28 @@ const interval = (wins, n) => {
 const quantile = (sorted, q) => (sorted.length ? sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))] : 0);
 
 /** One game: game n's pair of decks, L1 in the seat n's parity gives it. */
-export async function benchGame({n, decksByName, cards, setting = "normal", parts, weights, temperature, turnLimit = 400}) {
-  const [a, b] = PAIRS[(n - 1) % PAIRS.length];
-  const l1Seat = n % 2 === 0 ? 0 : 1;
-  const decks = [decksByName.get(a), decksByName.get(b)];
+export async function benchGame({n, decksByName, cards, setting = "normal", against = null, parts, weights, temperature, off, seats = 2, turnLimit = 400}) {
+  /* `seats` 4: a pod. Four of the seven decks (game n starts at the nth, then every 2nd, 3rd and 5th after it, so no two are alike), the
+     scored pilot in seat n mod 4 against three of `against`: the table's features, the threat model's and the reserve's, only show here. */
+  const names = seats === 4 ? [0, 1, 3, 5].map((k) => DECKS[((n - 1) + k) % DECKS.length]) : PAIRS[(n - 1) % PAIRS.length];
+  const [a, b] = names;
+  const l1Seat = seats === 4 ? n % 4 : n % 2 === 0 ? 0 : 1;
+  const decks = names.map((d) => decksByName.get(d));
   const times = [], counts = {l1: {passedWithSpell: 0, needlessChump: 0}, l0: {passedWithSpell: 0, needlessChump: 0}};
   const timed = (p) => ({...p,
     choose(view, actions) {const t = performance.now(); try {return p.choose(view, actions);} finally {times.push(performance.now() - t);}},
     answer(view, choice) {const t = performance.now(); try {return p.answer(view, choice);} finally {times.push(performance.now() - t);}}});
   /* The seats as the table seats them (game/room/room.mjs `seatPilot`): L1 at its setting, handed its deck and the match's
      seed by the room; L0 with none. Only what the bench measures, and any parts or weights it is trying, are added. */
-  const levels = l1Seat === 0 ? [setting, null] : [null, setting];
-  const makePilot = (given) => (given.level
-    ? watch(timed(parts || weights || temperature ? scoredPilot({...given, setting: given.level, ...(parts ? {parts} : {}), ...(weights ? {weights} : {}), ...(temperature ? {temperature} : {})}) : seatPilot(given)), counts.l1)
+  const levels = decks.map((_, i) => (i === l1Seat ? setting : against));
+  /* `against`: the other seat's setting (easy, normal, hard), or L0 when none (the default, as the bench has always run). */
+  const makePilot = (given) => (given.seat === l1Seat
+    ? watch(timed(parts || weights || temperature || off ? scoredPilot({...given, setting: given.level, ...(parts ? {parts} : {}), ...(weights ? {weights} : {}), ...(temperature ? {temperature} : {}), ...(off ? {off} : {})}) : seatPilot(given)), counts.l1)
     : watch(seatPilot(given), counts.l0));
   const game = await playGame({decks, seed: `bench-${n}`, matchId: `bench-${n}`, cards, humans: [], levels, pilot: makePilot, turnLimit});
   const winner = game.result?.winner ?? null;
   const outcome = winner === null ? "neither" : winner === `s${l1Seat}` ? "l1" : "l0";
-  return {n, decks: [a, b], l1Seat, outcome, reason: game.result?.reason ?? game.status, turns: game.turns, ms: game.ms, times, counts, refused: game.refusals?.total ?? 0};
+  return {n, decks: names, l1Seat, outcome, reason: game.result?.reason ?? game.status, turns: game.turns, ms: game.ms, times, counts, refused: game.refusals?.total ?? 0};
 }
 
 export function summarize(rows) {
@@ -100,8 +107,10 @@ export function summarize(rows) {
 
 async function main(argv) {
   const arg = (name, fallback) => {const i = argv.indexOf(`--${name}`); return i >= 0 ? argv[i + 1] : fallback;};
-  const games = Number(arg("games", "100")), from = Number(arg("from", "1")), setting = arg("setting", "normal");
+  const games = Number(arg("games", "100")), from = Number(arg("from", "1")), setting = arg("setting", "normal"), against = arg("against", null);
   /* --parts cast,attack: only those scored, the rest L0's (none: L0 throughout, the control); --weights '{"exposure": 5}': weights changed for the run. */
+  const seats = Number(arg("seats", "2"));
+  const off = arg("off") ? arg("off").split(",") : undefined;
   const parts = arg("parts") === "none" ? [] : arg("parts") ? arg("parts").split(",") : undefined;
   const weights = arg("weights") ? {...WEIGHTS, ...JSON.parse(arg("weights"))} : undefined;
   /* --temperature 3: easy's, for the run. */
@@ -111,16 +120,16 @@ async function main(argv) {
   const decksByName = new Map(decksFromBackup(backup, DECKS).map((d) => [d.name, d]));
   const rows = [];
   for (let n = from; n < from + games; n += 1) {
-    const row = await benchGame({n, decksByName, cards: tableCards, setting, parts, weights, temperature});
+    const row = await benchGame({n, decksByName, cards: tableCards, setting, against, parts, weights, temperature, off, seats});
     rows.push(row);
     console.log(`game ${n}: ${row.decks.join(" v ")}, L1 in s${row.l1Seat}: ${row.outcome === "l1" ? "L1 won" : row.outcome === "l0" ? "L0 won" : "neither"} (${row.reason}), ${row.turns} turns, ${(row.ms / 1000).toFixed(1)} s`);
   }
   const s = summarize(rows);
-  console.log(`L1 (${setting}) won ${s.l1}, L0 ${s.l0}, neither ${s.neither} of ${s.games}: L1 ${(100 * s.share).toFixed(0)}% of the decided games (95%: ${(100 * s.interval[0]).toFixed(0)}-${(100 * s.interval[1]).toFixed(0)}%)`);
+  console.log(`L1 (${setting}) won ${s.l1}, ${against ? `L1 (${against})` : "L0"} ${s.l0}, neither ${s.neither} of ${s.games}: L1 ${(100 * s.share).toFixed(0)}% of the decided games (95%: ${(100 * s.interval[0]).toFixed(0)}-${(100 * s.interval[1]).toFixed(0)}%)${seats === 4 ? ", a fair share being 25%" : ""}`);
   console.log(`L1's ${s.decisions} decisions: median ${s.medianMs.toFixed(2)} ms, slowest 5% from ${s.p95Ms.toFixed(2)} ms, slowest ${s.slowestMs.toFixed(1)} ms; ${s.refused} answers refused by the rules`);
   console.log(`blunders, L1 then L0: passed with a spell to cast ${s.blunders.l1.passedWithSpell} / ${s.blunders.l0.passedWithSpell}; a chump block not needed ${s.blunders.l1.needlessChump} / ${s.blunders.l0.needlessChump}`);
   const out = arg("json");
-  if (out) writeFileSync(out, JSON.stringify({setting, parts: parts ?? "all", weights: weights ?? WEIGHTS, node: process.version, summary: s, rows: rows.map(({times, ...r}) => r)}, null, 2));
+  if (out) writeFileSync(out, JSON.stringify({setting, against, off: off ?? [], parts: parts ?? "all", weights: weights ?? WEIGHTS, node: process.version, summary: s, rows: rows.map(({times, ...r}) => r)}, null, 2));
   return 0;
 }
 

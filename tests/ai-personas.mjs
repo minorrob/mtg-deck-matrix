@@ -34,7 +34,9 @@ const ROOT = new URL("../", import.meta.url);
 /* ---- 1. The roster ---- */
 {
   eq(rosterProblems(), [], "the roster is one this build can play");
-  eq(LEVELS.map((l) => l.id), ["easy", "normal", "hard", "llm"], "the levels, in the lobby's order: Easy, Normal, Hard, then the Claude seat");
+  eq(LEVELS.map((l) => l.id), ["easy", "normal", "hard", "llm"], "the levels, in the lobby's order: Easy, Normal, Hard, then the Veteran");
+  eq(LEVELS.map((l) => l.label), ["Easy", "Normal", "Hard", "Veteran"], "named Easy, Normal, Hard and Veteran: Rob's call, the Claude seat is the Veteran");
+  eq(LEVELS.map((l) => l.needsAi), [false, false, false, true], "and only the Veteran spends: it needs the AI door");
   eq(PERSONAS.map((p) => p.id), ["sable", "benny", "marcus", "june"], "four personas: the salty one, the group hug, the competitor, the casual");
   eq([...new Set(PERSONAS.map((p) => p.sex))].sort(), ["female", "male"], "male and female, and only those");
   ok(PERSONAS.every((p) => existsSync(new URL(p.avatar, ROOT)) && readFileSync(new URL(p.avatar, ROOT), "utf8").startsWith("<svg")), "each has its avatar on disk");
@@ -46,7 +48,7 @@ const ROOT = new URL("../", import.meta.url);
   ok(by.benny.disposition.friendliness === 2 && by.benny.overrides.saltCap < 0 && by.benny.overrides.politics === "avoid", "Benny is the group hug: friendliest, kindest cap, stays out of pile-ons");
   ok(by.marcus.disposition.competitiveness === 2 && by.marcus.overrides.saltCap === 1, "Marcus is the competitor");
   ok(by.june.overrides.temperatureDelta === 1 && by.june.disposition.competitiveness < 0, "June is the casual: she takes the fun line");
-  eq(levelOf("hard").available, false, "Hard is not offered until its pilot exists");
+  eq([levelOf("hard").available, LEVELS.filter((l) => l.available).map((l) => l.id)], [true, ["easy", "normal", "hard", "llm"]], "Hard is offered, now that its pilot exists");
 }
 
 /* ---- 2. What the validator refuses ---- */
@@ -78,7 +80,7 @@ const ROOT = new URL("../", import.meta.url);
 /* ---- 4. Dispositions ---- */
 {
   eq([dispositionFor("easy").saltCap, dispositionFor("normal").saltCap, dispositionFor("hard").saltCap, dispositionFor("llm").saltCap], [-1, -1, 0, 0],
-    "without a persona, Easy and Normal are capped at -1 (Rob's rule), Hard at 0, and the Claude seat at 0");
+    "without a persona, Easy and Normal are capped at -1 (Rob's rule), Hard at 0, and the Veteran at 0");
   eq(LEVELS.map((l) => l.saltCap), [-1, -1, 0, 0], "the roster says Hard's cap is 0 and Easy's and Normal's -1");
   for (const level of ["easy", "normal", "hard", "llm"]) eq(dispositionFor(level, "sable").saltCap, 4, `Sable raises the cap to 4 at ${level}: the one place a cap rises`);
   eq([dispositionFor("normal", "benny").saltCap, dispositionFor("easy", "june").saltCap], [-2, -1], "Benny lowers it, June keeps it");
@@ -94,7 +96,8 @@ const ROOT = new URL("../", import.meta.url);
 /* ---- 5. A seat names a level and a persona, and nothing else rides the wire ---- */
 {
   eq(readSeatAi({level: "easy", persona: "sable"}), {level: "easy", persona: "sable"}, "a level and a persona on the roster are kept");
-  eq(readSeatAi({level: "hard", persona: "june"}), {level: "normal", persona: "june"}, "an unavailable level (Hard, for now) is Normal; the persona stands");
+  eq(readSeatAi({level: "hard", persona: "june"}), {level: "hard", persona: "june"}, "Hard and a persona are kept");
+  eq(readSeatAi({level: "expert", persona: "june"}), {level: "normal", persona: "june"}, "a level the roster does not offer is Normal; the persona stands");
   eq(readSeatAi({level: "llm", persona: "Sable"}), {level: "llm", persona: null}, "an id is exact: 'Sable' is not 'sable'");
   eq(readSeatAi({level: "wizard", persona: "<script>"}), {level: "normal", persona: null}, "an unknown level is Normal and an unknown persona none");
   eq(readSeatAi({}), {level: "normal", persona: null}, "and a seat that says nothing is Normal with none");

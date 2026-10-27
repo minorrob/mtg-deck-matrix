@@ -33,8 +33,8 @@ export const PERSONA_SCHEMA = "CrankPersona@1";
 export const LEVELS = Object.freeze([
   Object.freeze({id: "easy", label: "Easy", saltCap: -1, available: true, needsAi: false}),
   Object.freeze({id: "normal", label: "Normal", saltCap: -1, available: true, needsAi: false}),
-  Object.freeze({id: "hard", label: "Hard", saltCap: 0, available: false, needsAi: false}),
-  Object.freeze({id: "llm", label: "Claude", saltCap: 0, available: true, needsAi: true}),
+  Object.freeze({id: "hard", label: "Hard", saltCap: 0, available: true, needsAi: false}),
+  Object.freeze({id: "llm", label: "Veteran", saltCap: 0, available: true, needsAi: true}),
 ]);
 
 export const DIALS = Object.freeze({

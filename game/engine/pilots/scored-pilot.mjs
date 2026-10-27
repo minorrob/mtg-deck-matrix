@@ -39,7 +39,8 @@ import {housePilot, meetRequirements, withinBudget, keptWithin} from "./house-pi
 import {threatTable, absurd} from "./threat.mjs";
 import {reserveFor, RISK} from "./reserve.mjs";
 import {threatsOnTable, netOf, holdFor, URGENCY} from "./urgency.mjs";
-import {has as hasFlag} from "./roles.mjs";
+import {has as hasFlag, isLink} from "./roles.mjs";
+import {bonus as chainBonus, linksIn, keepEdge} from "./chains.mjs";
 import {atLeast} from "./odds.mjs";
 import {createRng} from "../rng.mjs";
 
@@ -70,6 +71,9 @@ export const WEIGHTS = {
   /* WHAT AN ANSWER NETS (urgency.mjs): the urgency it removes less its cost, in worth, times this and the difficulty's weight
      (URGENCY: Easy 0, Normal 0.4, Hard 1), beside the mana a plan spends. */
   urgency: 0.5,
+  /* What a group-hug persona pays, in worth, to attack a seat that is not the table's top threat, times how much of a hug it is
+     (roster.mjs `groupHug`); a kill is not charged. A hit has to be worth it to someone who would rather give a card. */
+  hugCost: 1,
   /* An activated ability, by what the card says it does, against what it costs; used when it clears `activate`. */
   ability: {draw: 1.5, ramp: 2, tutor: 1.5, look: 0.3, proliferate: 1, counter: 1, life: 0.1, discard: 1, treasure: 1,
     mana: 0.25, tapCreature: 0.5, counterCost: 0.5, tapOther: 0.5, exile: 0.2, lifeCost: 0.2},
@@ -217,9 +221,11 @@ export function pick(plans, setting, roll, temperature = TEMPERATURE) {
  *   `deck`: the seat's own deck list by name, which its player knows; `setting`: "easy" or "normal"; `seed`: the match's,
  *   for easy's chance; `picks`: its floor takes what a choice it may answer with none is for (house-pilot.mjs).
  */
-export function scoredPilot({seat, cards = () => null, deck = [], setting = "normal", seed = "", parts = PARTS, weights = WEIGHTS, temperature: baseTemperature = TEMPERATURE, picks = false, disposition = null} = {}) {
+export function scoredPilot({seat, cards = () => null, deck = [], setting = "normal", seed = "", parts = PARTS, weights = WEIGHTS, temperature: baseTemperature = TEMPERATURE, picks = false, disposition = null, off = []} = {}) {
   if (!SETTINGS.includes(setting)) throw new Error(`The house pilot plays at ${SETTINGS.slice(0, -1).join(", ")} or ${SETTINGS.at(-1)}, not ${setting}`);
   const on = new Set(parts);
+  /* WHAT THE BENCH TURNS OFF, one at a time, to measure each (tools/pilot-bench.mjs --off): "reserve", "assign", "urgency", "hold", "chains". */
+  const without = new Set(off);
   /* A PERSONA'S OVERRIDES (roster.mjs `dispositionFor`): the temperature of its chance moved by up to one, and the reserve's risk
      appetite by up to a third; nothing else about what it sees or whom it weighs changes. */
   const temperature = disposition?.temperatureDelta ? {...baseTemperature, [setting]: Math.max(0, (baseTemperature[setting] ?? 0) + disposition.temperatureDelta)} : baseTemperature;
@@ -227,6 +233,8 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
   const known = (name) => (name ? cards(name) : null) ?? null;
   const manaValue = (name) => known(name)?.manaValue ?? Infinity;
   const W = weights;
+  /* Its own deck's engine (chains.mjs): how many cards of its list are links, which its player knows. */
+  const deckLinks = linksIn(deck, known);
 
   const me = (view) => {
     if (!view || view.viewerSeatId !== seat) throw new Error(`The house pilot for seat ${seat} was handed seat ${view?.viewerSeatId}'s view`);
@@ -271,17 +279,18 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
   }
 
   /* ---- Which spells, with the mana it has ---- */
-  function castPlan(view, actions, scores = null) {
+  function castPlan(view, actions, scores = null, collect = null) {
     const self = me(view);
     const offers = actions.filter((a) => a.kind === "cast" && a.x === undefined && !a.convoke);
     if (!offers.length) return null;
     /* RESPONSE URGENCY (urgency.mjs): what an answer is worth against what is on the table, and what it costs its caster. */
-    const U = URGENCY[setting] ?? 0, table = U > 0 ? threatsOnTable(view, {seat, facts: known}) : null;
+    const U = without.has("urgency") ? 0 : URGENCY[setting] ?? 0, table = U > 0 ? threatsOnTable(view, {seat, facts: known}) : null;
     const mineWorth = table ? battlefield(view).filter((c) => c.controller === seat && !isLand(c)).reduce((n, c) => n + worth(c), 0) : 0;
     /* One offer per spell: the one aimed best (and, where urgency is read, the one that answers the most). */
     const bySpell = new Map(), threats = threatsOf(view), declined = new Set();
+    const boardLinks = battlefield(view).filter((c) => c.controller === seat && isLink(known(c.name)?.flags)).length;
     for (const a of offers) {
-      const aim = aimOf(view, a, threats);
+      let aim = aimOf(view, a, threats);
       if ((a.targets ?? []).length && aim.on === 0) continue;
       const cost = manaValue(a.label) + (a.tax ?? 0);
       if (!Number.isFinite(cost)) continue;
@@ -289,15 +298,21 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
       if (table) {
         const wipe = hasFlag(known(a.label)?.flags, "K"), onPlayer = (a.targets ?? []).some((t) => t?.kind === "player");
         if ((wipe || a.hostile === true) && !onPlayer) {
-          const removed = wipe ? table.total : (a.targets ?? []).reduce((n, t) => n + (t?.kind === "object" ? (table.items.get(t.id)?.urgency ?? 0) : 0), 0);
-          const net = netOf({removed, cost, collateral: wipe ? mineWorth : 0});
-          /* THE PROPORTION RULE: at Hard an answer that is not worth what it costs is not cast, so one seed of a loop draws no wipe. */
-          if (U >= 1 && net <= 0) {declined.add(a.objectId); continue;}
+          const taken = wipe ? [...table.items.values()] : (a.targets ?? []).map((t) => (t?.kind === "object" ? table.items.get(t.id) : null)).filter(Boolean);
+          const removed = wipe ? table.total : taken.reduce((n, i) => n + i.urgency, 0);
+          const net = netOf({removed, boardWorth: taken.filter((i) => !isLand(i.card)).reduce((n, i) => n + worth(i.card), 0), cost, collateral: wipe ? mineWorth : 0});
+          /* THE PROPORTION RULE: at Hard a wipe that is not worth what it costs is not cast, so one seed of a loop draws no wipe. A single
+             answer that nets nothing is still cast: the mana is otherwise unused, and a pass there is a tempo lost (the bench measured it). */
+          if (U >= 1 && wipe && net <= 0) {declined.add(a.objectId); continue;}
           gain = Math.max(0, net);
+          /* ...but it is filler: the body it kills adds nothing to the choice of target, so the answer that removes urgency is the one cast. */
+          if (U >= 1 && net <= 0) aim = {on: aim.on, value: 0};
         }
       }
       const key = W.aimed * aim.value + U * W.urgency * gain, prev = bySpell.get(a.objectId);
-      if (!prev || key > prev.key) bySpell.set(a.objectId, {a, aim, cost, gain, key});
+      /* ITS OWN CHAIN (chains.mjs): a cast that is an engine link is worth more than the mana it spends. */
+      const chain = without.has("chains") ? 0 : chainBonus({setting, flags: known(a.label)?.flags, boardLinks, deckLinks});
+      if (!prev || key > prev.key) bySpell.set(a.objectId, {a, aim, cost, gain, key, chain});
     }
     const spells = [...bySpell.values()].sort((x, y) => y.cost - x.cost || x.a.objectId - y.a.objectId).slice(0, 12);
     if (!spells.length) {
@@ -307,7 +322,7 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
     }
     const sources = new Set(actions.filter((a) => a.kind === "activate-mana" && !a.costChoice).map((a) => a.objectId)).size;
     /* HARD LEAVES MANA UP for an instant answer, on its own turn, when the table holds a seed worth answering. */
-    const held = U >= 1 && view.turnPlayerId === seat && MAIN.includes(view.phase) && view.turn > view.players.length * 2
+    const held = U >= 1 && !without.has("hold") && view.turnPlayerId === seat && MAIN.includes(view.phase) && view.turn > view.players.length * 2
       ? holdFor({hand: zone(self, "Hand"), facts: known, threats}) : 0;
     const mana = sources + (self.mana ?? []).reduce((n, m) => n + m.amount, 0) - held;
     /* Every set that fits, scored by the mana it spends and then by what its spells aim at. */
@@ -317,12 +332,14 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
       const spent = set.reduce((n, s) => n + s.cost, 0);
       if (spent > mana) continue;
       const first = set[0];
-      plans.push({value: spent + W.aimed * set.reduce((n, s) => n + s.aim.value, 0) + U * W.urgency * set.reduce((n, s) => n + s.gain, 0), first: first.a});
+      plans.push({value: spent + W.aimed * set.reduce((n, s) => n + s.aim.value, 0) + U * W.urgency * set.reduce((n, s) => n + s.gain, 0) + set.reduce((n, s) => n + s.chain, 0), first: first.a,
+        why: `cast ${set.map((s) => s.a.label).join(", ")}: spends ${spent} of ${mana}${set.some((s) => s.gain > 0) ? `, answers a threat (net ${set.reduce((n, s) => n + s.gain, 0).toFixed(1)})` : ""}${set.some((s) => s.chain > 0) ? ", toward its engine" : ""}`});
     }
     /* The largest spell of the plan is cast first; the same first spell is one choice, at its best plan's score. */
     const firsts = new Map();
     for (const p of plans) if (!firsts.has(p.first.objectId) || p.value > firsts.get(p.first.objectId).value) firsts.set(p.first.objectId, p);
     if (scores) {scores.push(...[...firsts.values()].map((p) => p.value)); return null;}
+    if (collect) {collect.push(...firsts.values()); collect.held = held; return null;}
     /* What it keeps up for an instant leaves no spell it can afford: that is a pass, not a question for L0, which would cast it anyway. */
     if (!firsts.size) return held > 0 ? {declined: true} : null;
     const chosen = pick([...firsts.values()], setting, roll(view, `cast:${view.stackSize}:${spells.map((s) => s.a.objectId).join(",")}`), temperature);
@@ -419,7 +436,7 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
   }
 
   /* ---- Which creatures attack ---- */
-  function attackPlan(view, choice, scores = null) {
+  function attackPlan(view, choice, scores = null, collect = null) {
     const self = me(view);
     const mine = new Map(creaturesOf(view, seat).map((c) => [c.cardId, c]));
     const foes = opponents(view);
@@ -440,10 +457,14 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
     const held = swingBack([], () => [], []);
     const threats = threatsOf(view);
     /* Hard gives each creature its own defender (below); the creatures it holds home for the swing back are not in the attack. */
-    const assign = setting === "hard", keepHome = new Set();
+    const assign = setting === "hard" && !without.has("assign"), keepHome = new Set();
+    /* A GROUP-HUG PERSONA (roster.mjs `groupHug`): damage to a seat that is not the table's top threat is worth that much less to it,
+       so it hits what has to be stopped; a kill is worth what it was. */
+    const hug = disposition?.groupHug ?? 0;
+    const soft = (id) => (id === threats.top ? 1 : 1 - hug);
     /* THE RESERVE (reserve.mjs): the creatures held home for the swing back, by the difficulty's risk appetite; Easy keeps none
        beyond L1's own exposure terms. Not when the one opponent can be killed outright. */
-    const risk = RISK[setting] === undefined ? null : Math.max(0.05, Math.min(0.9, RISK[setting] + (disposition?.risk ?? 0)));
+    const risk = RISK[setting] === undefined || without.has("reserve") ? null : Math.max(0.05, Math.min(0.9, RISK[setting] + (disposition?.risk ?? 0)));
     if (risk !== null && foes.length) {
       const canAttack = new Set(choice.options.filter((o) => o.planeswalkerId === undefined).map((o) => o.cardId));
       const awake = [...mine.values()].filter((c) => !c.tapped);
@@ -468,14 +489,15 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
         const lethal = going.length > 0 && out.through >= p.life;
         /* The damage, and the same damage again by the seat's threat (threat × effect): it goes where it does the most. */
         const effect = Math.min(out.through, p.life) / Math.max(1, p.life);
-        let value = W.damage * effect + W.threat * threats.over(p.playerId) * effect + (lethal ? W.lethal : 0)
-          + W.trade * (out.blockersLost.reduce((n, c) => n + worth(c), 0) - out.attackersLost.reduce((n, c) => n + worth(c), 0));
+        let value = W.damage * effect * soft(p.playerId) + W.threat * threats.over(p.playerId) * effect + (lethal ? W.lethal : 0)
+          + W.trade * (out.blockersLost.reduce((n, c) => n + worth(c), 0) - out.attackersLost.reduce((n, c) => n + worth(c), 0))
+          - (going.length > 0 && !lethal && p.playerId !== threats.top ? hug * W.hugCost : 0);
         if (!(lethal && foes.length === 1)) {
           const back = swingBack(out.attackersLost, (id) => (id === p.playerId ? out.blockersLost : []), going);
           value -= W.exposure * Math.max(0, back - held) / Math.max(1, self.life);
           if (back >= self.life && held < self.life) value -= W.crackback;
         }
-        return {value, set, p, lethal, absurd: absurd(going, out)};
+        return {value, set, p, lethal, absurd: absurd(going, out), why: attackWhy(p, out, lethal, going.length)};
       };
       /* The plans, the most aggressive first: a tie goes to the attack, as L0 would make it. */
       /* Each no more than it can pay for (an attack tax, CR 508.1h; the record's `budget`): the strongest kept first. */
@@ -526,8 +548,9 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
             if (!at.length) continue;
             const out = defend({attackers: at, blockers: wallsOf.get(f.playerId), life: f.life, worth});
             const kills = out.through >= f.life, effect = Math.min(out.through, f.life) / Math.max(1, f.life);
-            value += W.damage * effect + W.threat * threats.over(f.playerId) * effect + (kills ? W.lethal : 0)
-              + W.trade * (out.blockersLost.reduce((n, c) => n + worth(c), 0) - out.attackersLost.reduce((n, c) => n + worth(c), 0));
+            value += W.damage * effect * soft(f.playerId) + W.threat * threats.over(f.playerId) * effect + (kills ? W.lethal : 0)
+              + W.trade * (out.blockersLost.reduce((n, c) => n + worth(c), 0) - out.attackersLost.reduce((n, c) => n + worth(c), 0))
+              - (!kills && f.playerId !== threats.top ? hug * W.hugCost : 0);
             lost.push(...out.attackersLost); gone.set(f.playerId, out.blockersLost); through += out.through; lethal ||= kills;
           }
           const back = swingBack(lost, (id) => gone.get(id) ?? [], going);
@@ -553,7 +576,8 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
         const joint = evaluate(set);
         if (set.length && !joint.absurd && !plans.some((pl) => key(pl.set) === key(set))) {
           const lead = set.reduce((top, r) => (power(r.c) > power(top.c) ? r : top));
-          plans.push({value: joint.value, set, p: foes.find((f) => f.playerId === lead.o.defenderId), lethal: joint.lethal, absurd: false});
+          plans.push({value: joint.value, set, p: foes.find((f) => f.playerId === lead.o.defenderId), lethal: joint.lethal, absurd: false,
+            why: `each creature at the seat where it does the most: ${[...new Set(set.map((r) => r.o.defenderId))].map((id) => `${set.filter((r) => r.o.defenderId === id).length} at seat ${id}`).join(", ")}${joint.lethal ? ", a kill" : ""}`});
         }
       }
     }
@@ -563,18 +587,24 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
     if (setting === "easy" && plans.some((pl) => pl.set.length && pl.p.playerId === threats.top)) {
       for (let i = plans.length - 1; i >= 0; i -= 1) if (plans[i].set.length && threats.over(plans[i].p.playerId) < 0 && !plans[i].lethal) plans.splice(i, 1);
     }
+    /* What the pilot's explanation (`explain`) reads: every plan it weighed, and the creatures the reserve kept home. */
+    if (collect) {collect.push(...plans); collect.keepHome = [...keepHome].map((id) => mine.get(id)?.name).filter(Boolean); collect.risk = risk;}
     /* Every creature that could attack is held home for the swing back: that is an answer (attack with none, as the rules allow),
        not a decision to leave to L0, which would send them all. */
     if (!plans.length && keepHome.size) {
-      if (scores) return null;
+      if (scores || collect) return null;
       return {indices: meetRequirements(choice, [], null)};
     }
     if (!plans.length) return null;
     /* Holding back is one plan, however many opponents there are. */
     if (scores) {scores.push(...plans.filter((p, i) => p.set.length || plans.findIndex((q) => !q.set.length) === i).map((p) => p.value)); return null;}
+    if (collect) return null;
     const chosen = pick(plans, setting, roll(view, `attack:${choice.id}`), temperature);
     return {indices: meetRequirements(choice, chosen.set.map((r) => r.o.index), chosen.p.playerId)};
   }
+  /* One line on an attack plan: what gets through, what is killed, what is lost. */
+  const attackWhy = (p, out, lethal, n) => (n === 0 ? "hold everything back"
+    : `${n} at seat ${p.playerId}: ${lethal ? "a kill" : `${Math.round(out.through)} through`}${out.blockersLost.length ? `, kills ${out.blockersLost.length} blocker${out.blockersLost.length > 1 ? "s" : ""}` : ""}${out.attackersLost.length ? `, loses ${out.attackersLost.length}` : ""}`);
 
   /* ---- Which creatures block ---- */
   function blockPlan(view, choice) {
@@ -597,7 +627,9 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
   }
 
   /* ---- Whether to keep the opening hand ---- */
-  function keepOrNot(view, choice) {
+  /* The opening hand's odds: the chance of its third land by its third turn, and the odds it keeps at (`W.keep`, lower at Hard for a
+     hand with a link). Null where the hand is not its to judge: past two mulligans, or a deck it cannot read. */
+  function keepEval(view, choice) {
     const self = me(view);
     const taken = Number(String(choice.id).split(":")[2] ?? 0);
     const facts = deck.map((name) => known(name));
@@ -607,15 +639,20 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
     const left = Math.max(0, facts.filter((f) => isLand(f)).length - lands);
     const draws = view.turnPlayerId === seat ? 2 : 3;
     const third = atLeast(size, Math.min(left, size), Math.min(draws, size), 3 - lands);
-    const keep = lands <= 5 && third >= W.keep;
-    const offered = (choice.options ?? []).map((o, i) => o.index ?? i);
-    return {indices: [offered[keep ? 0 : 1] ?? offered[0]]};
+    const need = W.keep - keepEdge({setting, handFlags: hand.map((c) => known(c.name)?.flags), lands});
+    return {third, need, lands, keep: lands <= 5 && third >= need, offered: (choice.options ?? []).map((o, i) => o.index ?? i)};
+  }
+  function keepOrNot(view, choice) {
+    const e = keepEval(view, choice);
+    return e ? {indices: [e.offered[e.keep ? 0 : 1] ?? e.offered[0]]} : null;
   }
 
   return {
     id: SCORED_PILOT_ID,
     seat,
     setting,
+    /** The persona's overrides this pilot plays with (roster.mjs `dispositionFor`), or null for the plain difficulty. */
+    disposition,
     /* Its quick pass is L0's, unless, in its own main phase with the stack empty, an ability on offer might be worth it. */
     passes(actions, stackSize, when = {}) {
       if (!floor.passes(actions, stackSize)) return false;
@@ -648,6 +685,47 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
       else if (offer.choice && String(offer.choice.id ?? "").startsWith("declare-attackers:") && on.has("attack")) attackPlan(view, offer.choice, scores);
       const sorted = scores.sort((a, b) => b - a);
       return sorted.length < 2 ? Infinity : sorted[0] - sorted[1];
+    },
+
+    /**
+     * WHAT THE FORMULAS WORKED OUT, for the Veteran's model to read (agent-pilot.mjs; cloud/ai.mjs): the table's threats, the most
+     * urgent things on the table, the creatures kept home, and the top plans as indices of the decision's options, each with its value
+     * and a line on why. `offer` is {actions} for a priority decision (an option each, in order) or {choice} for a question. Pure.
+     */
+    explain(view, offer = {}) {
+      me(view);
+      const threats = threatsOf(view), table = threatsOnTable(view, {seat, facts: known});
+      const out = {
+        threats: threats.rows.map((r) => ({playerId: r.playerId, score: r.score, signals: r.signals, life: view.players[r.playerId]?.life})).sort((a, b) => b.score - a.score),
+        top: threats.top,
+        urgency: [...table.items.values()].sort((a, b) => b.urgency - a.urgency).slice(0, 6).map((i) => ({playerId: i.controller, card: i.card.name, urgency: i.urgency})),
+        stack: table.stack,
+        alternatives: [],
+      };
+      const top = (list) => list.sort((a, b) => b.value - a.value).slice(0, 4);
+      if (offer.actions && on.has("cast")) {
+        const collected = [];
+        castPlan(view, offer.actions, null, collected);
+        out.alternatives = top(collected.map((p) => ({indices: [offer.actions.indexOf(p.first)], value: p.value, why: p.why}))).filter((a) => a.indices[0] >= 0);
+        const pass = offer.actions.findIndex((a) => a.kind === "pass");
+        if (pass >= 0) out.alternatives.push({indices: [pass], value: 0, why: collected.held ? `pass, keeping ${collected.held} mana up for an instant` : "pass"});
+        if (collected.held) out.held = collected.held;
+      } else if (offer.choice && String(offer.choice.id ?? "").startsWith("mulligan:") && on.has("keep")) {
+        const e = keepEval(view, offer.choice);
+        if (e && e.offered.length >= 2) {
+          out.alternatives = [{indices: [e.offered[0]], value: e.third, why: `keep: ${Math.round(100 * e.third)}% to have a third land by turn three, ${e.lands} lands in hand`},
+            {indices: [e.offered[1]], value: e.need, why: `mulligan: this hand keeps at ${Math.round(100 * e.need)}% or better`}];
+          out.close = Math.abs(e.third - e.need);
+        }
+      } else if (offer.choice && String(offer.choice.id ?? "").startsWith("declare-attackers:") && on.has("attack")) {
+        const collected = [];
+        attackPlan(view, offer.choice, null, collected);
+        const seen = new Set();
+        out.alternatives = top(collected.map((p) => ({indices: meetRequirements(offer.choice, p.set.map((r) => r.o.index), p.p?.playerId ?? null), value: p.value, why: p.why})))
+          .filter((a) => {const k = a.indices.join(","); if (seen.has(k)) return false; seen.add(k); return true;});
+        if (collected.keepHome?.length) {out.reserve = {holdHome: collected.keepHome, risk: collected.risk};}
+      }
+      return out;
     },
 
     answer(view, choice) {

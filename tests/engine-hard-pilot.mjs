@@ -14,6 +14,8 @@
  */
 import assert from "node:assert/strict";
 import {scoredPilot, SETTINGS, TEMPERATURE, absorb} from "../game/engine/pilots/scored-pilot.mjs";
+import {seatPilot} from "../game/room/room.mjs";
+import {bonus, linksIn, keepEdge, CHAIN, DENSE, KEEP_EDGE} from "../game/engine/pilots/chains.mjs";
 import {reserveFor, RISK, PMIN, MOST_CANDIDATES} from "../game/engine/pilots/reserve.mjs";
 
 let checks = 0;
@@ -25,7 +27,7 @@ const FACTS = {Forest: {manaValue: 0, types: ["Land"], makes: ["G"], flags: ""},
   Murder: {manaValue: 3, types: ["Instant"], makes: [], flags: "A"}, Wrath: {manaValue: 4, types: ["Sorcery"], makes: [], flags: "K"},
   "Loop Piece": {manaValue: 2, types: ["Creature"], makes: [], flags: "UL"}, "Token Engine": {manaValue: 3, types: ["Creature"], makes: [], flags: "T"},
   Doubler: {manaValue: 4, types: ["Enchantment"], makes: [], flags: "D"}, "Three Drop": {manaValue: 3, types: ["Creature"], makes: [], flags: ""},
-  "Loop Commander": {manaValue: 4, types: ["Creature"], makes: [], flags: "", commanderClass: 1}};
+  "Loop Commander": {manaValue: 4, types: ["Creature"], makes: [], flags: "", commanderClass: 1}, "Big Vanilla": {manaValue: 4, types: ["Creature"], makes: [], flags: ""}};
 const cards = (name) => FACTS[name] ?? null;
 let ids = 0;
 const C = (name, controller, power, toughness, extra = {}) => ({cardId: ++ids, name, types: FACTS[name].types, controller, owner: controller, tapped: false, damage: 0, keywords: [], power, toughness, ...extra});
@@ -141,13 +143,14 @@ ok(SETTINGS.includes("hard") && TEMPERATURE.hard === 0, "L1 knows a hard setting
   const choose = (setting, v, actions) => scoredPilot({seat: 0, cards, setting, seed: "s"}).choose(v, actions);
   const kind = (a) => a.kind + (a.label ? `:${a.label}` : "");
 
-  /* Murder on a vanilla 1/1: Hard keeps the card; Normal and Easy cast it as they always have. */
+  /* Murder on a vanilla 1/1: every setting casts it. Only a wipe is held to the proportion rule (the bench measured a Hard that passed
+     with spot removal in hand and lost tempo for it). */
   ids = 0;
   const tiny = C("Bear", 1, 1, 1);
   const v1 = main([{}, {battlefield: [tiny]}]);
   const a1 = [offer("Murder", 9, [at(tiny.cardId)], true), ...lands(4), {kind: "pass"}];
-  eq([kind(choose("hard", v1, a1)), kind(choose("normal", v1, a1)), kind(choose("easy", v1, a1))], ["pass", "cast:Murder", "cast:Murder"],
-    "a removal spell for a vanilla 1/1: Hard passes (not worth its cost), Normal and Easy cast it");
+  eq([kind(choose("hard", v1, a1)), kind(choose("normal", v1, a1)), kind(choose("easy", v1, a1))], ["cast:Murder", "cast:Murder", "cast:Murder"],
+    "a removal spell for a vanilla 1/1: every setting casts it, the mana being otherwise unused");
 
   /* The same spell on a loop piece with its partner in sight: Hard casts it, at the loop piece and not at the bigger body. */
   ids = 0;
@@ -167,8 +170,8 @@ ok(SETTINGS.includes("hard") && TEMPERATURE.hard === 0, "L1 knows a hard setting
   const big = [C("Bear", 1, 5, 5), C("Bear", 1, 5, 5), C("Bear", 1, 5, 5), C("Bear", 1, 5, 5)], lone = C("Bear", 0, 1, 1);
   eq(kind(choose("hard", main([{life: 12, battlefield: [lone]}, {battlefield: big}]), wrath)), "cast:Wrath", "four 5/5s against my one 1/1 at 12 life: Hard wipes the board");
   ids = 0;
-  const big2 = [C("Bear", 1, 5, 5), C("Bear", 1, 5, 5), C("Bear", 1, 5, 5), C("Bear", 1, 5, 5)], mine3 = [C("Bear", 0, 5, 5), C("Bear", 0, 5, 5), C("Bear", 0, 5, 5)];
-  eq(kind(choose("hard", main([{life: 12, battlefield: mine3}, {battlefield: big2}]), wrath)), "pass", "with three 5/5s of my own, the wipe costs more than it removes: Hard passes");
+  const big2 = [C("Bear", 1, 5, 5), C("Bear", 1, 5, 5), C("Bear", 1, 5, 5), C("Bear", 1, 5, 5)], mine4 = [C("Bear", 0, 5, 5), C("Bear", 0, 5, 5), C("Bear", 0, 5, 5), C("Bear", 0, 5, 5)];
+  eq(kind(choose("hard", main([{life: 12, battlefield: mine4}, {battlefield: big2}]), wrath)), "pass", "an even trade, four 5/5s of mine for four of theirs: the wipe costs more than it removes, and Hard passes");
 
   /* Mana held for an instant answer, on its own turn, when the table holds a seed worth answering. */
   ids = 0;
@@ -183,4 +186,56 @@ ok(SETTINGS.includes("hard") && TEMPERATURE.hard === 0, "L1 knows a hard setting
   eq(choose("easy", v2, a2).targets[0].id, body.cardId, "Easy goes at the biggest body, as L1 always has");
 }
 
-console.log(`engine-hard-pilot: ${checks} checks passed — Hard gives each creature the defender where it does the most and holds home the blockers a trampler or a flyer needs, and answers a threat in proportion to it.`);
+/* ---- 6. Its own chains: playing toward the deck's engine ---- */
+{
+  ok(CHAIN.easy === 0 && CHAIN.normal < CHAIN.hard && DENSE === 6 && KEEP_EDGE === 0.15, "Easy reads no chain, Normal's weighs less than Hard's");
+  const f = (flags) => (n) => (n === "Link" ? {flags} : n === "Other" ? {flags: ""} : null);
+  eq(linksIn(["Link", "Link", "Other", "Unknown"], f("T")), 2, "a deck's links are the cards whose flags are an engine link");
+  eq([bonus({setting: "easy", flags: "T", boardLinks: 3, deckLinks: 9}), bonus({setting: "hard", flags: "B", boardLinks: 3, deckLinks: 9}), bonus({setting: "hard", flags: "T", boardLinks: 0, deckLinks: 0})], [0, 0, 0],
+    "Easy gets nothing, a card that is no link nothing, and a deck with no engine nothing");
+  eq([bonus({setting: "normal", flags: "T", boardLinks: 0, deckLinks: 9}), bonus({setting: "normal", flags: "T", boardLinks: 1, deckLinks: 9})], [0, 0.75], "Normal credits a chain only once a link is down, and lightly");
+  eq([bonus({setting: "hard", flags: "T", boardLinks: 0, deckLinks: 6}), bonus({setting: "hard", flags: "T", boardLinks: 2, deckLinks: 6}), bonus({setting: "hard", flags: "T", boardLinks: 0, deckLinks: 3})], [1.5, 3, 0.75],
+    "Hard credits it from the first card, more with links down, and in proportion to how much of the deck is engine");
+  eq([keepEdge({setting: "hard", handFlags: ["", "T"], lands: 2}), keepEdge({setting: "hard", handFlags: ["", "T"], lands: 1}), keepEdge({setting: "normal", handFlags: ["T"], lands: 3}), keepEdge({setting: "hard", handFlags: ["", undefined], lands: 3})], [0.15, 0, 0, 0],
+    "a hand with a link and two lands keeps at lower odds, at Hard only");
+  /* In a cast: 4 mana, a 4-mana vanilla or a 3-mana token engine. Hard goes to the engine; the others to the bigger body. */
+  ids = 0;
+  const lands4 = Array.from({length: 4}, (_, i) => ({kind: "activate-mana", objectId: 100 + i, label: "Forest", detail: "{G}"}));
+  const both = [{kind: "cast", objectId: 9, label: "Big Vanilla", tax: 0, autoTap: true, targets: []}, {kind: "cast", objectId: 10, label: "Token Engine", tax: 0, autoTap: true, targets: []}, ...lands4, {kind: "pass"}];
+  const deck = Array(8).fill("Token Engine");
+  const play = (setting, v) => scoredPilot({seat: 0, cards, setting, seed: "s", deck}).choose(v, both).label;
+  const v0 = viewOf({phase: "MAIN1", players: [{}, {}]});
+  eq([play("hard", v0), play("normal", v0), play("easy", v0)], ["Token Engine", "Big Vanilla", "Big Vanilla"], "Hard plays toward its engine, the 3-mana link over the 4-mana body; Normal and Easy take the bigger body");
+  const v1 = viewOf({phase: "MAIN1", players: [{battlefield: [C("Token Engine", 0, 1, 1)]}, {}]});
+  eq(play("normal", v1), "Big Vanilla", "and Normal, with a link already down, still takes the body: its weight is low");
+  /* The keep: 12 lands in 40, two in hand and a link: about a 52% chance of a third land by turn three. */
+  const names = [...Array(12).fill("Forest"), ...Array(6).fill("Token Engine"), ...Array(22).fill("Bear")];
+  const hand = Array.from({length: 7}, (_, i) => ({cardId: 500 + i, name: i < 2 ? "Forest" : i === 2 ? "Token Engine" : "Bear", types: i < 2 ? ["Land"] : ["Creature"]}));
+  const vm = viewOf({phase: "MAIN1", players: [{hand, library: 33}, {}]});
+  vm.players[0].zones.Library = {cards: [], count: 33};
+  const mull = {id: "mulligan:0:0", mode: "one", min: 1, max: 1, options: [{index: 0, label: "Keep"}, {index: 1, label: "Mulligan"}]};
+  const keeps = (setting) => scoredPilot({seat: 0, cards, setting, seed: "s", deck: names}).answer(vm, mull).indices[0] === 0;
+  eq([keeps("hard"), keeps("normal")], [true, false], "a 52% hand with a link and two lands: Hard keeps it, Normal sends it back");
+}
+
+/* ---- 7. A persona: through the room to the pilot, and a group hug in an attack ---- */
+{
+  const cardsNone = () => null;
+  const sable = seatPilot({seat: 1, cards: cardsNone, level: "hard", persona: "sable"}), plain = seatPilot({seat: 1, cards: cardsNone, level: "hard"});
+  eq([sable.setting, sable.disposition?.saltCap, sable.disposition?.risk, sable.disposition?.persona, plain.disposition], ["hard", 4, -0.1, "sable", null],
+    "a persona on a seat reaches the pilot as its disposition (Sable: cap 4, a little less risk); the plain difficulty has none");
+  const june = seatPilot({seat: 1, cards: cardsNone, level: "normal", persona: "june"});
+  eq([june.disposition.temperatureDelta, june.disposition.groupHug], [1, 0.3], "June's chance is a degree looser, with a little group hug");
+  /* A group hug does not hit a seat that is not the table's top threat unless it must; an open attack at one the plain pilot makes. */
+  ids = 0;
+  const a = C("Bear", 0, 2, 2);
+  const v = viewOf({players: [{battlefield: [a]}, {life: 40}, {life: 40, battlefield: [C("Bear", 2, 5, 5), C("Bear", 2, 5, 5)]}]});
+  const ch = {id: "declare-attackers:9", mode: "many", min: 0, max: 1, exclusiveBy: "cardId", options: [{index: 0, cardId: a.cardId, defenderId: 1}]};
+  const go = (disposition) => scoredPilot({seat: 0, cards, setting: "normal", seed: "s", disposition}).answer(v, ch).indices.length;
+  eq([go(null), go({groupHug: 0.8})], [1, 0], "a 2/2 at an open seat that is not the top threat: the plain Normal attacks, a group hug (0.8) does not");
+  const kill = viewOf({players: [{battlefield: [a]}, {life: 2}, {life: 40, battlefield: [C("Bear", 2, 5, 5), C("Bear", 2, 5, 5)]}]});
+  const goKill = (disposition) => scoredPilot({seat: 0, cards, setting: "normal", seed: "s", disposition}).answer(kill, ch).indices.length;
+  eq(goKill({groupHug: 0.8}), 1, "but a kill is a kill: at 2 life the group hug attacks");
+}
+
+console.log(`engine-hard-pilot: ${checks} checks passed — Hard gives each creature the defender where it does the most and holds home the blockers a trampler or a flyer needs, answers a threat in proportion to it, plays toward its own engine, and plays as a persona would.`);

@@ -23,8 +23,11 @@ const cardOf = (c) => ({name: c.name ?? (c.faceDown ? "a face-down card" : "a ca
   ...(c.damage ? {damage: c.damage} : {}), ...(c.keywords?.length ? {keywords: c.keywords} : {}),
   ...(c.counters && Object.keys(c.counters).length ? {counters: c.counters} : {}), ...(c.commander ? {commander: true} : {})});
 
-/** The brief for the seat's model: its view, its decision, and the house pilot's choice (`hint`, indices). */
-export function agentBrief(view, hint = []) {
+const round = (n, d = 2) => (Number.isFinite(n) ? Math.round(n * 10 ** d) / 10 ** d : n);
+
+/** The brief for the seat's model: its view, its decision, the house pilot's choice (`hint`, indices) and what the pilot worked out
+    (`analysis`, from the room: the table's threats, what is urgent, the reserve, its top plans), the seats in the brief's own words. */
+export function agentBrief(view, hint = [], analysis = null) {
   const s = view.state, me = view.seat;
   const names = s.players.map((p) => p.name).filter((n) => typeof n === "string" && n.trim().length > 1);
   /* A person's name, as a whole word ("→ Maya", "Maya's"), becomes their seat; a card's name that holds it is left alone. */
@@ -43,6 +46,24 @@ export function agentBrief(view, hint = []) {
     decision: {title: unnamed(decision.title), mode: decision.mode, min: decision.min ?? 0, max: decision.max ?? 1,
       options: (decision.options ?? []).map((o, i) => ({index: o.index ?? i, label: unnamed(o.label), ...(o.detail ? {detail: unnamed(o.detail)} : {})}))},
     housePilotWouldChoose: hint,
+    ...(analysis ? {analysis: shape(analysis, me, unnamed)} : {}),
+  };
+}
+
+/* The pilot's analysis in the brief's words: a seat is "you" or "Seat n", never a number and never a name; the plans are the decision's own
+   option indices; the seat's persona is its own (a short line of temperament), and no other seat's, setting or kind is anywhere in it. */
+function shape(a, me, unnamed) {
+  const seat = (id) => seatWord(id, me);
+  const words = (text) => String(text ?? "").replace(/seat (\d+)/g, (_, n) => seat(Number(n)));
+  return {
+    ...(a.persona ? {persona: a.persona} : {}),
+    threats: (a.threats ?? []).map((t) => ({seat: seat(t.playerId), score: round(t.score), life: t.life, signals: Object.fromEntries(Object.entries(t.signals ?? {}).map(([k, v]) => [k, round(v)]))})),
+    ...(a.top !== null && a.top !== undefined ? {top: seat(a.top)} : {}),
+    urgency: (a.urgency ?? []).map((u) => ({seat: seat(u.playerId), card: u.card, urgency: round(u.urgency)})),
+    ...(a.stack?.length ? {onTheStack: a.stack.map((e) => ({seat: seat(e.playerId), card: e.name, urgency: round(e.urgency)}))} : {}),
+    ...(a.reserve ? {reserve: {holdHome: a.reserve.holdHome, riskOfLife: a.reserve.risk}} : {}),
+    ...(a.held ? {manaKeptUpForAnInstant: a.held} : {}),
+    alternatives: (a.alternatives ?? []).map((x) => ({indices: x.indices, value: round(x.value, 1), why: unnamed(words(x.why))})),
   };
 }
 

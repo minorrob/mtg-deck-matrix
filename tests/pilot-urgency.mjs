@@ -13,7 +13,7 @@
  *   node tests/pilot-urgency.mjs
  */
 import assert from "node:assert/strict";
-import {tiersOf, urgencyOf, threatsOnTable, readTable, netOf, holdFor, TIER_WEIGHT, URGENCY, UNIT, CAP} from "../game/engine/pilots/urgency.mjs";
+import {tiersOf, urgencyOf, threatsOnTable, readTable, netOf, holdFor, TIER_WEIGHT, URGENCY, UNIT, CAP, BOARD} from "../game/engine/pilots/urgency.mjs";
 
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1;};
@@ -76,6 +76,9 @@ const view = (players, stack = []) => ({viewerSeatId: 0, turn: 9, stack, players
   near(netOf({removed: 0.5, cost: 3}), 1, "removing half a full urgency (4 worth) with a 3-mana spell nets 1");
   ok(netOf({removed: 0.2, cost: 3}) < 0, "removing little for 3 mana nets less than nothing: the proportion rule's case");
   ok(netOf({removed: 1, cost: 4, collateral: 6}) < 0 && netOf({removed: 1, cost: 4}) > 0, "a wipe's collateral, my own permanents it takes, is what turns it negative");
+  eq(BOARD, 0.5, "half of what a removed permanent is worth on the board counts beside the urgency");
+  near(netOf({removed: 0, boardWorth: 7.5, cost: 3}), 0.75, "a 5/5 with no urgency about it (worth 7.5) is still worth a 3-mana answer: 3.75 less 3");
+  ok(netOf({removed: 0.02, boardWorth: 1.5, cost: 3}) < 0, "a vanilla 1/1 is not: the proportion rule's case still holds");
   const hand = [{name: "Murder"}, {name: "Divination"}, {name: "Doom"}];
   const threats = (signals, score = 0.1) => ({rows: [{playerId: 1, signals: {engine: 0, commander: 0, ...signals}, score}]});
   eq(holdFor({hand, facts, threats: threats({engine: 0.33})}), 2, "with an engine seed on the table it holds the cheapest instant answer it has (Doom, 2)");

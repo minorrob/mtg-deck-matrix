@@ -19,12 +19,12 @@
       "id": "hard",
       "label": "Hard",
       "saltCap": 0,
-      "available": false,
+      "available": true,
       "needsAi": false
     },
     {
       "id": "llm",
-      "label": "Claude",
+      "label": "Veteran",
       "saltCap": 0,
       "available": true,
       "needsAi": true

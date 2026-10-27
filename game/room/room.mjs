@@ -101,7 +101,7 @@ import {createController} from "../engine/controller.mjs";
 import {createMatchStore} from "../engine/storage.mjs";
 import {housePilot, meetRequirements, manaColors} from "../engine/pilots/house-pilot.mjs";
 import {scoredPilot, SETTINGS} from "../engine/pilots/scored-pilot.mjs";
-import {personaOf} from "../engine/pilots/roster.mjs";
+import {personaOf, dispositionFor} from "../engine/pilots/roster.mjs";
 import {flagsOf, commanderClassOf} from "../engine/pilots/roles.mjs";
 import {agentPilot} from "../engine/pilots/agent-pilot.mjs";
 import {addToHistory} from "./history.mjs";
@@ -495,9 +495,12 @@ export function triggerRun(stack) {
  * WHAT ANSWERS FOR AN AI SEAT: L1 at its setting, handed its own deck list (which its player knows) and the match's seed
  * (easy's chance); without a setting, L0. Both see only the seat's projection. `picks`: the match's `pilotPicks`.
  */
-export function seatPilot({seat, cards, deck = [], level = null, seed = "", picks = false}) {
-  if (level === LLM) return agentPilot({seat, cards, deck, seed, picks});
-  return level ? scoredPilot({seat, cards, deck, setting: level, seed, picks}) : housePilot({seat, cards, picks});
+export function seatPilot({seat, cards, deck = [], level = null, persona = null, seed = "", picks = false}) {
+  /* A PERSONA'S OVERRIDES (roster.mjs `dispositionFor`): the pilot is made with them, so the seat plays its difficulty as that persona
+     would; a seat without one plays the plain difficulty, as every table has. */
+  const disposition = persona && level ? dispositionFor(level, persona) : null;
+  if (level === LLM) return agentPilot({seat, cards, deck, seed, picks, disposition});
+  return level ? scoredPilot({seat, cards, deck, setting: level, seed, picks, disposition}) : housePilot({seat, cards, picks});
 }
 /** The LLM seat's setting: L1, but its close calls are offered to the seat, for its model to answer (`consults`). */
 export const LLM = "llm";
@@ -1252,6 +1255,23 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       }
       const given = pilot.answer(seen, awaitingChoice(state));
       return {indices: given.indices ?? [], ...(given.amounts ? {amounts: given.amounts} : {}), ...(given.value !== undefined ? {value: given.value} : {}), ...(given.cancel ? {cancel: true} : {})};
+    },
+
+    /**
+     * WHAT THE SEAT'S PILOT WORKED OUT for the decision it is being asked (the Veteran's brief reads it; game/room/agent-brief.mjs):
+     * the table's threats, what is urgent on it, the creatures kept home, its top plans as this decision's own option indices, and the
+     * seat's own persona. Read-only: it answers nothing and changes nothing. Null for a pilot that does not explain.
+     */
+    analysis(seatId) {
+      const seat = seatIndex(seatId);
+      if (seat < 0 || seats[seat].pilot !== "house") throw new RoomError(403, "That is not an AI seat at this table.");
+      if (pendingSeat !== seat || !controller.pending) throw new RoomError(409, "That seat is not being asked anything.");
+      const pilot = pilotFor(seat);
+      if (typeof pilot.explain !== "function") return null;
+      const seen = projectFor(state, seat);
+      const explained = pilot.explain(seen, pendingActions ? {actions: pendingActions} : {choice: awaitingChoice(state)});
+      const p = personaOf(seats[seat].persona);
+      return {...explained, persona: p ? {name: p.name, blurb: p.blurb, ...p.disposition} : null};
     },
 
     /**

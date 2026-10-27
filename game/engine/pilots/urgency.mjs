@@ -21,8 +21,8 @@
  *   long        a seed: one link with no partner, a doubler alone, a game changer
  * and `urgencyOf` weighs them 1 : 0.6 : 0.3 (TIER_WEIGHT), capped at 1.5.
  *
- * WHAT AN ANSWER IS WORTH is the urgency it removes, in worth (UNIT per full urgency), less what it costs the caster: the card's
- * mana value and, for a wipe, the worth of the caster's own permanents it takes too (`net`). THE PROPORTION RULE: an answer whose
+ * WHAT AN ANSWER IS WORTH is the urgency it removes, in worth (UNIT per full urgency), and half the board worth of what it takes (BOARD),
+ * less what it costs the caster: the card's mana value and, for a wipe, the worth of the caster's own permanents it takes too (`net`). THE PROPORTION RULE: an answer whose
  * net is not above 0 is never taken at Hard, so one loop seed never draws a board wipe unless the board's other creatures make the
  * wipe worth it on its own. The weight the net carries in a cast choice is the difficulty's (URGENCY): Easy 0, Normal 0.4, Hard 1.
  *
@@ -96,11 +96,16 @@ export function threatsOnTable(view, {seat, facts = () => null}) {
   return {ctx, items, stack, total: [...items.values()].reduce((n, i) => n + i.urgency, 0)};
 }
 
+/* How much of what a removed permanent is worth on the board (power and half toughness for a creature, its mana value otherwise) counts
+   beside the urgency: killing a 5/5 is worth more than the damage it threatens, since it is a card of theirs gone for a card of mine. */
+export const BOARD = 0.5;
+
 /**
- * What an answer nets: the worth of the urgency it removes, less its cost. `removed` is the summed urgency of what it takes from
- * the opponents; `cost` its mana value; `collateral` the worth of the caster's own permanents a wipe takes too.
+ * What an answer nets: the worth of the urgency it removes and half the board worth of what it takes, less its cost. `removed` is the
+ * summed urgency of what it takes from the opponents; `boardWorth` the summed worth of those permanents; `cost` its mana value;
+ * `collateral` the worth of the caster's own permanents a wipe takes too.
  */
-export const netOf = ({removed, cost, collateral = 0}) => removed * UNIT - cost - collateral;
+export const netOf = ({removed, boardWorth = 0, cost, collateral = 0}) => removed * UNIT + BOARD * boardWorth - cost - collateral;
 
 /**
  * The mana to leave up for an instant answer (Hard, on its own turn): the cheapest answer it holds, when the table holds a seed
