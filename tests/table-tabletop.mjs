@@ -258,7 +258,8 @@ try {
             return {bottom:r('.cm-stage-side').bottom,top:r('.cm-stage-side').top,header:r('.cm-stage-top').bottom,actions:r('.cm-stage-actions').bottom};
           });
           assert.equal(Math.round(edges.bottom),800,'right pane reaches the bottom through the hand area');
-          assert.ok(edges.top>=Math.max(edges.header,edges.actions),`right pane starts below the actual shared header and action row: ${JSON.stringify(edges)}`);
+          /* Rob, 2026-10-27: the drawers reach the ribbon ("Left and right drawers don't go all the way to the top ribbon"); the action row is in the middle of the table, clear of both. */
+          assert.ok(Math.abs(edges.top-edges.header)<=1.5,`right pane starts at the foot of the shared header: ${JSON.stringify(edges)}`);
         }
         if(expanded) {
           const popup=await page.locator('.cm-stage-camera>div').boundingBox();
