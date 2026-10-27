@@ -102,6 +102,7 @@ import {createMatchStore} from "../engine/storage.mjs";
 import {housePilot, meetRequirements, manaColors} from "../engine/pilots/house-pilot.mjs";
 import {scoredPilot, SETTINGS} from "../engine/pilots/scored-pilot.mjs";
 import {personaOf} from "../engine/pilots/roster.mjs";
+import {flagsOf, commanderClassOf} from "../engine/pilots/roles.mjs";
 import {agentPilot} from "../engine/pilots/agent-pilot.mjs";
 import {addToHistory} from "./history.mjs";
 import {tableEvent, eventsFor, keep, EVENTS_SCHEMA} from "./events.mjs";
@@ -145,8 +146,11 @@ const manaValueOf = (cost) => (String(cost || "").match(/\{([^}]+)\}/g) || []).r
 export const factsFrom = (cards) => {
   /* Read once a name: a card's facts do not change in a match. */
   const known = new Map();
-  return (name) => (known.has(name) ? known.get(name) : known.set(name, factsOf(cards(name))).get(name));
+  return (name) => (known.has(name) ? known.get(name) : known.set(name, withRoles(name, factsOf(cards(name)))).get(name));
 };
+/* What a card does to a game (game/engine/pilots/roles.mjs): its role flags and, as a commander, its class -- public facts, as
+   a card's own text is, so the threat table and the urgency read them alike for every seat. */
+const withRoles = (name, facts) => (facts ? {...facts, flags: flagsOf(name), commanderClass: commanderClassOf(name)} : facts);
 const factsOf = (c) => {
   /* `x`: a cost with {X} (CR 107.3), so the house pilot taps everything before it casts. `subtypes`, and what each activated
      ability costs and does (`activated`), as the card says: L1 weighs an ability by them (scored-pilot.mjs). Its `colors`
