@@ -324,7 +324,7 @@
 .cm-stage-top .cm-board-ribbon.is-strip li.is-done{color:#b2c8bd}
 .cm-profile-menu .cm-board-menu{color:var(--v-ink)}
 .cm-stage-camera{background:#0b2023}
-#matrix-v2 .cm-stage-camera label,#matrix-v2 .cm-stage-camera output{color:#edf6ef}
+#matrix-v2 .cm-stage-camera label,#matrix-v2 .cm-stage-camera output{color:var(--color-ink)}
 #matrix-v2 .cm-stage-camera .cm-board-views .v-button{height:38px;color:#edf6ef;background:#1c302e}
 #matrix-v2 .cm-stage-camera .cm-board-views .v-button.is-on{color:#0d120c;background:#87c6a1}
 /* ROB-171: real objects remain actionable; ownership ghosts are inspection references only. */
@@ -748,7 +748,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-drawer{transition:none}
 #matrix-v2 .cm-board .cm-board-hand-types :is(li,span,b){font-size:calc(var(--text-hud-caption)*var(--hud-scale,1))}
 #matrix-v2 .cm-board .cm-board-decision :is(h3,p,span,.v-button,label,input,select,small){font-size:calc(var(--text-hud-caption)*var(--hud-scale,1))}
 #matrix-v2 .cm-board .cm-board-options [aria-pressed=true]{background:var(--color-ink)!important;color:var(--color-bg)!important;outline-color:var(--color-ink)}
-#matrix-v2 .cm-board[data-shell=shared][data-combat] .cm-table-menu,#matrix-v2 .cm-board[data-shell=shared][data-combat] .cm-stage-camera{top:calc(var(--hud-top) + 140px)}
+#matrix-v2 .cm-board[data-shell=shared][data-combat] .cm-table-menu,#matrix-v2 .cm-board[data-shell=shared][data-combat] .cm-stage-camera{top:calc(var(--rail-top) + 10px)}
 #matrix-v2 .cm-board[data-shell=shared][data-combat] .cm-stage-rail,#matrix-v2 .cm-board[data-shell=shared][data-combat] .cm-stage-side{top:calc(var(--hud-top) + 130px)}
 
 /* Camera and Table are ordinary controls; the HUD scale changes information, not their hit targets. */
