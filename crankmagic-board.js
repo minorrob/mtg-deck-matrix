@@ -2696,6 +2696,20 @@ globalThis.CrankBoard = Object.seal({
   /* Drawn anew at every view, the board keeps the focus on the control the keyboard was on (C.keepFocus), holds it in
      Show hand while that is open, and says what has just happened in its status region. */
   let handWas = null, handFrom = null;
+  function fitDrawerDecision(host) {
+    const decision=host.querySelector('.cm-stage-module[data-module="actions"] #cm-board-decision');
+    const drawer=decision?.closest('.cm-drawer'),body=decision?.closest('.cm-module-body'),module=decision?.closest('.cm-stage-module');
+    if(!drawer || !body || !module || !decision.getClientRects().length)return;
+    // Header wrapping moves the drawer below its nominal rail-top. Budget from its real
+    // viewport, keeping the module's foot/grip and padding outside the scrolling choice list.
+    decision.style.removeProperty('max-height');
+    const number=(el,key)=>parseFloat(getComputedStyle(el)[key])||0;
+    const r=decision.getBoundingClientRect(),d=drawer.getBoundingClientRect(),b=body.getBoundingClientRect(),m=module.getBoundingClientRect();
+    const bottom=Math.min(innerHeight,d.bottom)-number(drawer,'paddingBottom')-Math.max(0,m.bottom-b.bottom)-number(body,'paddingBottom');
+    const room=bottom-(r.top+drawer.scrollTop);
+    const explicit=module.classList.contains('has-height')?b.bottom-number(body,'paddingBottom')-r.top:Infinity;
+    decision.style.maxHeight=`${Math.max(0,Math.floor(Math.min(room,explicit)))}px`;
+  }
   function fitDecisionSlot(host) {
     const slot=host.querySelector('#cm-decision-slot:not([hidden])');if(!slot||phone())return;
     for(const key of ['width','max-width','left','transform','margin-left','margin-right'])slot.style.removeProperty(key);
@@ -2963,6 +2977,7 @@ globalThis.CrankBoard = Object.seal({
          tall as the window leaves below its top, and its middle scrolls (crankmagic-stage.css). Focus starts it lower
          than Table, so the room is measured, not assumed -- last, once everything above it has its size. */
       fitDecisionSlot(host);
+      fitDrawerDecision(host);
       const ask = host.querySelector(".cm-board-main>.cm-board-ask, .cm-board-tabletop>.cm-board-ask");
       if (ask) ask.style.maxHeight = `${Math.max(160, Math.floor(innerHeight - ask.getBoundingClientRect().top - 12))}px`;
       placeCallouts();
