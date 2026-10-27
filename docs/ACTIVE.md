@@ -27,6 +27,8 @@ Workshop lanes, at his word: `crankmagic-stage.css`, `crankmagic-stage.js`, `cra
 - **Land**: a land, or any offer whose only target is its own card, goes straight to its screen: the card's name once, the picture, "Play Island" and
   Cancel. Casting a spell with a real target still asks which; its layout is waiting on Rob's wireframe requirements (the canvas "Actions Drawer
   Wireframes" holds one wireframe per situation).
+- **Rob's standing rule (2026-10-27):** keep the footprint of overlays small. Where something does not fit, make the type smaller or say it with an icon and a
+  hover tooltip; do not widen a gap or a box. The status dot, the hung tabs and the profile button's inset focus ring follow it.
 - **Not done, by decision:** the table region does not shrink when the right drawer opens (r4 keeps mats and hand fixed there, and tests it). Text on the
   far mats is still foreshortened by the tilt; only the empty-state message got a floor, since larger labels wrapped the far mats at 1366px.
 - **Proven**: `board-r5-visual` 49 (new; six breaks caught). Re-run after the changes and passing: see the PR for the list. **Already failing on main

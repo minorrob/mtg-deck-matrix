@@ -1277,5 +1277,6 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-stage-top .cm-stage-camera>button{width:auto;background:var(--color-panel);border:1px solid var(--color-line-strong)}
 /* The left tab stands over the drawer's width grip, which runs the drawer's full height and overlaps the tab's first 6px. */
 #matrix-v2 .cm-board:not([data-phone]) .cm-stage-left.cm-drawer-tab{z-index:27}
-/* The profile button's focus ring needs clear ground: the feedback glyph beside it is 36px now, so the two stand 10px apart. */
-#matrix-v2 .cm-board .cm-stage-top .cm-stage-profile{gap:10px}
+/* The profile button's focus ring is drawn inside the button, so it never reaches the glyph beside it and the two need no more room between them
+   (Rob, 2026-10-27, a standing rule: keep an overlay's footprint small; make type smaller, or say it with an icon and a tooltip, rather than widen a gap). */
+#matrix-v2 .cm-board .cm-stage-top .cm-profile-avatar:focus-visible{outline-offset:-3px}
