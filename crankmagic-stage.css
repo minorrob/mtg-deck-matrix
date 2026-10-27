@@ -1294,7 +1294,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-stage-camera .cm-board-scale{background:transparent;border:0}
 #matrix-v2 .cm-board:is([data-view=focus],[data-view=table])[data-shell="shared"]:has(>.cm-stage-rail.is-open){--play-left:calc(var(--stage-left-width) + 40px)}
 #matrix-v2 .cm-board .cm-board-pie-priority{padding:3px 4px;margin-top:-6px}   /* the scrim reaches the descenders of its words, and stands clear of the dial below it */
-#matrix-v2 .cm-board .cm-mat .cm-board-cards>.cm-bcard.is-tapped .cm-bcard-name{right:34%}   /* a tapped card's neighbour lies over its right side: the name wraps clear of it */
+#matrix-v2 .cm-board .cm-mat .cm-board-cards>.cm-bcard.is-tapped .cm-bcard-name{right:34%}   /* a tapped card's neighbor lies over its right side: the name wraps clear of it */
 #matrix-v2 .cm-board .cm-board-pie-life small{padding:3px 5px;line-height:1.2}   /* the scrim reaches the descender of "Maya" */
 #matrix-v2 .cm-board .cm-bcard:focus-visible{outline-offset:3px;box-shadow:0 0 0 1px #0b1213,0 0 0 3px var(--focus-halo),0 6px 14px -6px rgb(0 0 0 / .85)}   /* a dark line against the card, then the halo, then the ring: on a pale mat the light ring and halo alone are not 3:1 all the way round */
 #matrix-v2 .cm-board[data-shell=shared]>.cm-board-panegrip{left:calc(var(--stage-left-width) - 12px)}   /* the width grip lies wholly inside the drawer's edge: the tab hung outside it neither covers it (a11y-board) nor is covered by it */
