@@ -189,10 +189,10 @@ function popAt(el,html){document.querySelectorAll('.cm-row-menu').forEach(m=>m.r
    record; To buy is the same table cut to what money would change, with its strip; Orders is
    one row per order. The Spreadsheet is the Sheet view of Library. #collection and #shop still
    open it, so nothing bookmarked or written down breaks. */
-const TABS=[['library','Library'],['buy','To buy'],['orders','Orders']];
+const TABS=[['library','Card Library'],['buy','To buy'],['orders','Orders'],['groups','Groups']];
 const tabOf=()=>{const r=C.route();return r.view==='cards'?(r.params.get('tab')||'library'):r.view==='shop'?'buy':'library';},buyTab=()=>tabOf()==='buy';
 const goCards=(tab,extra={})=>C.go('cards',{...extra,tab:tab==='library'?'':tab});
-function tabCounts(){const all=M.projection(C.state);return {library:all.length,buy:all.filter(r=>r.kind==='need').reduce((n,r)=>n+r.quantity,0)+(C.state.groups.find(g=>g.id===M.WANT_LIST)?.entries||[]).reduce((n,r)=>n+r.quantity,0),orders:M.orders(C.state).length};}
+function tabCounts(){const all=M.projection(C.state);return {library:all.length,buy:all.filter(r=>r.kind==='need').reduce((n,r)=>n+r.quantity,0)+(C.state.groups.find(g=>g.id===M.WANT_LIST)?.entries||[]).reduce((n,r)=>n+r.quantity,0),orders:M.orders(C.state).length,groups:C.state.groups.filter(g=>!C.state.decks.some(d=>d.groupId===g.id)).length};}
 /* THE THREE VIEWS, Rob's words: List (the rows), Sheet (the Master sheet), Table (the tabletop). They sit on the
    tab row under More, so every view can reach every other. A view a tab does not have is shown disabled and says why. */
 const viewSwitch=(view,tab='library')=>{const has={table:true,sheet:tab==='library',tabletop:tab!=='orders'};const why={sheet:'The sheet reads the library',tabletop:'Orders have one view'};
@@ -202,7 +202,7 @@ const viewSwitch=(view,tab='library')=>{const has={table:true,sheet:tab==='libra
    and drops the head, as it dropped the head before. */
 function cardsHead(params,tab,view='table',{tight=false}={}){const n=tabCounts(),group=params.get('group')||'';
   const third=tab==='buy'?b('Print buy list','print-buy-list',{},false,{cls:'compact'}):tab==='orders'?b('Paste receipt','paste-receipt',{},false,{cls:'compact'}):view==='sheet'?b('Add a card row','sheet-add',{},false,{cls:'compact'}):b('New group','new-group',{},false,{cls:'compact'});
-  const tabs=`<div class="cm-tabs cm-cards-tabs" role="tablist" aria-label="Library">${TABS.map(([id,label])=>`<button type="button" role="tab" aria-selected="${id===tab}" data-action="cards-tab" data-tab="${id}">${label} <small>${n[id].toLocaleString('en-US')}</small></button>`).join('')}<div class="cm-tabs-views">${viewSwitch(view,tab)}</div></div>`;
+  const tabs=`<div class="cm-tabs cm-cards-tabs" role="tablist" aria-label="Library">${TABS.map(([id,label])=>`<button type="button" role="tab" aria-selected="${id===tab}" data-action="cards-tab" data-tab="${id}">${label} <small>${n[id].toLocaleString('en-US')}</small></button>`).join('')}<div class="cm-tabs-views">${tab==='groups'?'':viewSwitch(view,tab)}</div></div>`;
   /* Add cards is the one thing done often, so it is the primary, and it sits last, where r3 puts every page's primary (wireframe 36); Import and New group are done sometimes. All four are compact — the page's buttons share a row and a height (the geometry suite holds them to it), and Rob asked for smaller ones. */
     /* THE SUMMARY SENTENCE (Track V.4c, the guide's "One head, one primary"): what the library
      holds, in the two figures that matter -- the copies owned, and the ones on the bench that no
@@ -242,13 +242,18 @@ actions['sitting-confirm']=()=>{const sb=C.sandbox;if(!sb||!sb.open)return;
   const dlg=$('#cm-dialog');if(dlg){sb.hold();dlg.addEventListener('close',()=>sb.release(),{once:true});}};
 C.cardsHead=cardsHead;
 C.SUBNAV.cards=()=>{const n=tabCounts(),r=C.route(),tab=r.view==='cards'?(r.params.get('tab')||'library'):tabOf(),sheet=r.view==='cards'&&r.params.get('view')==='sheet';
-  return [{label:'Library',hash:'#cards',count:n.library,current:tab==='library'&&!sheet},{label:'To buy',hash:'#cards?tab=buy',count:n.buy,current:tab==='buy'},{label:'Orders',hash:'#cards?tab=orders',count:n.orders,current:tab==='orders'},{label:'Sheet',hash:'#cards?view=sheet',current:sheet},{label:'Upload cards',hash:'#cards',action:'import-list'},
+  return [{label:'Card Library',hash:'#cards',count:n.library,current:tab==='library'&&!sheet},{label:'To buy',hash:'#cards?tab=buy',count:n.buy,current:tab==='buy'},{label:'Orders',hash:'#cards?tab=orders',count:n.orders,current:tab==='orders'},{label:'Groups',hash:'#cards?tab=groups',count:n.groups,current:tab==='groups'},{label:'Sheet',hash:'#cards?view=sheet',current:sheet},{label:'Upload cards',hash:'#cards',action:'import-list'},
     /* SHARED LIBRARIES live under Library (the Decks requirements' Q9): the Decks nav's Shared is decks only. */
     ...(C.sharingAvailable?.()?[{label:'Shared Libraries',hash:'#shared?kind=library',current:r.view==='shared'&&r.params.get('kind')==='library'}]:[])];};
 /* UPLOAD CARDS (Rob, 2026-09-28): every card you have, straight into the library, without going through a deck.
    It is the same reviewed import as everywhere else, reached from the Library's own menu. */
 /* Library and To buy each have a List and a Table; the Sheet reads the library only; Orders has its list. */
-views.cards=params=>params.get('view')==='tabletop'&&params.get('tab')!=='orders'?tabletop(params,params.get('tab')==='buy'):params.get('tab')==='buy'?show(params,true):params.get('view')==='sheet'?sheet(params):show(params,false);
+/* GROUPS under Library (Rob, 2026-10-27): every collection group in one list, with its template and its size; a deck's own group is
+   reached from the deck. A row opens the library cut to that group; Manage is the group's own pop-up. */
+function groupsView(params){const own=g=>C.state.decks.some(d=>d.groupId===g.id),groups=C.state.groups.filter(g=>!own(g));
+  const size=g=>C.state.lots.filter(l=>l.groupIds.includes(g.id)).reduce((n,l)=>n+l.quantity,0)+(g.entries||[]).reduce((n,r)=>n+(r.quantity||1),0);
+  C.main.innerHTML=cardsHead(params,'groups')+(groups.length?`<div class="cm-table-wrap"><table class="cm-table cm-groups"><thead><tr><th scope="col">Group</th><th scope="col">Template</th><th scope="col">Cards</th><th scope="col">Actions</th></tr></thead><tbody>${groups.map(g=>`<tr><td><a href="#cards?group=${encodeURIComponent(g.id)}"><strong>${e(g.name)}</strong></a></td><td>${e(M.TEMPLATE_LABELS[g.template||'general']||'General')}</td><td>${size(g).toLocaleString('en-US')}</td><td>${b('Manage','manage-group',{group:g.id},false,{cls:'compact'})}</td></tr>`).join('')}</tbody></table></div>`:note('No groups yet. New group makes one.'));}
+views.cards=params=>params.get('tab')==='groups'?groupsView(params):params.get('view')==='tabletop'&&params.get('tab')!=='orders'?tabletop(params,params.get('tab')==='buy'):params.get('tab')==='buy'?show(params,true):params.get('view')==='sheet'?sheet(params):show(params,false);
 views.collection=params=>{const extra=Object.fromEntries(params);delete extra.sheet;goCards('library',params.get('sheet')?{...extra,view:'sheet'}:extra);};
 views.shop=params=>{const extra=Object.fromEntries(params);delete extra.tab;goCards(params.get('tab')==='orders'?'orders':'buy',extra);};
 actions['cards-tab']=el=>goCards(el.dataset.tab);

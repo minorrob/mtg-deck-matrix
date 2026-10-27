@@ -65,7 +65,8 @@ try {
   ok(!(await page.$eval("[data-action=flow-next]", (x) => x.disabled)), "a commander picked, Next is ready");
   await page.locator(".cm-flow-nav button", {hasText: "Choose colors"}).click();
   ok(!(await page.$eval("[data-action=flow-next]", (x) => x.disabled)) && /Krenko, Mob Boss/.test(await page.locator("#cm-flow-chosen").textContent()), "the selection survives switching methods");
-  await page.click("[data-action=flow-color][data-id=W]");await page.click("[data-action=flow-color][data-id=U]");
+  ok(await page.$eval("[data-action=flow-color][data-id=R]", (x) => x.getAttribute("aria-pressed")) === "true" && /outside/.test(await page.locator(".cm-flow-foot-note").textContent()), "the commander's own color is preselected, with the warning");
+  await page.click("[data-action=flow-color][data-id=R]");await page.click("[data-action=flow-color][data-id=W]");await page.click("[data-action=flow-color][data-id=U]");
   const exact = await page.$$eval(".cm-flow-results [data-name]", (bs) => bs.length);
   ok(exact > 5, `W + U lists Azorius commanders (${exact} shown)`);
   const exactCi = await page.$$eval(".cm-flow-results [data-name]", (bs) => bs.map((x) => (globalThis.__cm.catalog.exact(x.dataset.name)?.colorIdentity || []).slice().sort().join("")));
@@ -81,6 +82,9 @@ try {
   await page.locator("[data-action=flow-mech]").first().click();
   ok(await page.locator(".cm-flow-results [data-name]").count() > 0, "and so do mechanics");
   await page.locator(".cm-flow-nav button", {hasText: "Pick a commander"}).click();
+  await page.fill("#cm-flow-query", "Krenko, Mob");
+  await page.locator(".cm-flow-results [data-name='Krenko, Mob Boss']").click();
+  ok(await page.locator(".cm-flow-results").count() === 0, "a picked commander closes the list");
 
   /* 3. Next: the commander only. */
   await page.click("[data-action=flow-next]");
