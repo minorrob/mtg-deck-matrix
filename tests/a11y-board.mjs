@@ -175,6 +175,13 @@ async function utilityOpener(page, action) {
   return page.locator(`#cm-table-menu [data-action="${action}"]`);
 }
 async function utility(page, action) {await (await utilityOpener(page,action)).click();}
+async function readCard(page,card) {
+  const id=await card.getAttribute('data-card');
+  await card.click();
+  await page.locator(`#cm-card-menu [data-action=board-card-menu-view][data-card="${id}"]`).click();
+  await page.locator(`#cm-card-inspector .cm-bcard[data-card="${id}"]`).waitFor();
+  return id;
+}
 /* Rest the pointer where nothing reacts to it (a card under it would be shown large). */
 const rest = async (page) => {const s = page.viewportSize(); await page.mouse.move(s.width - 2, s.height - 2);};
 
@@ -706,14 +713,23 @@ try {
     await page.locator('[data-action=board-camera]').click();
     await readRing(page, '.cm-stage-camera [data-board-scale=board]', `${t}: Camera's Board cards slider`);
     const reach = await page.evaluate(() => {
-      const c = document.querySelector(".cm-board-center"), r = c && c.getBoundingClientRect();
-      if (!r) return {error:"no logo"};
-      const hit = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-      return {error:hit&&c.contains(hit)?"":`${hit?String(hit.className||hit.tagName).split(" ")[0]:"nothing"} is over it`,
-        logo:r.toJSON(),hit:hit?{tag:hit.tagName,cls:hit.className,data:{...hit.dataset},rect:hit.getBoundingClientRect().toJSON()}:null,
-        focused:document.activeElement?{tag:document.activeElement.tagName,data:{...document.activeElement.dataset}}:null};
+      const c=document.querySelector('.cm-board-center'),r=c?.getBoundingClientRect();if(!r)return {point:null,error:'no logo'};
+      // EX-28 allows the hand over the board. Prove an uncovered native point, not that the entire logo stays clear.
+      for(const fy of [.5,.25,.1,.75,.9])for(const fx of [.5,.25,.75]) {
+        const x=r.left+r.width*fx,y=r.top+r.height*fy,hit=document.elementFromPoint(x,y);
+        if(x>=0&&y>=0&&x<innerWidth&&y<innerHeight&&hit&&c.contains(hit))return {point:{x,y},logo:r.toJSON()};
+      }
+      const hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);
+      return {point:null,logo:r.toJSON(),hit:hit?{tag:hit.tagName,cls:hit.className,data:{...hit.dataset},rect:hit.getBoundingClientRect().toJSON()}:null};
     });
-    ok(!reach.error, `${t}: with Board cards' slider focused, a click on the life counter's logo reaches it (${JSON.stringify(reach)})`);
+    ok(!!reach.point,`${t}: the life logo has an uncovered native point with Board cards focused (${JSON.stringify(reach)})`);
+    if(reach.point) {
+      await page.mouse.click(reach.point.x,reach.point.y);
+      await page.locator('#cm-dialog[open] .cm-table-vitals').waitFor();
+      const [vitalsAx]=await axOf(who,'#cm-dialog');
+      ok(vitalsAx?.role==='dialog'&&vitalsAx.modal&&/^Table vitals$/i.test(vitalsAx.name),`${t}: native life-logo click opens the named modal Table vitals (${JSON.stringify(vitalsAx)})`);
+      await page.keyboard.press('Escape');await page.waitForFunction(()=>!document.querySelector('#cm-dialog[open]'));
+    }
     await view(page, "focus");
   }
   /* A VIEW ARRIVING keeps the focus where it was: the board is drawn again, and the same card still has it. */
@@ -1023,11 +1039,15 @@ try {
       ok(marks.some((m) => /^Blocking/.test(m)), `${t}'s board: and the blocker shows it, too (${marks.join(", ")})`);
       ok(!(await everythingSaid(who)).includes(secret), `${t}'s page says the face-down card's name nowhere: not in its markup, any label, or the accessibility tree`);
     }
-    /* Full screen: the card picked is said to be selected; a card chosen in a many-of question is said to be chosen. */
+    /* Full screen's card menu explicitly opens Read. The inspector names the same visible card and returns focus on close. */
     await view(rob.page, "full");
-    await rob.page.click(`.cm-full-mine .cm-bcard[data-card="${att.cardId}"]`);
-    const picked = await axOf(rob, `.cm-full-mine .cm-bcard[data-card="${att.cardId}"]`);
-    ok(picked.length === 1 && /, selected\b/.test(picked[0].name), `Full screen: the card picked to read is said to be selected ("${picked[0] && picked[0].name}")`);
+    await readCard(rob.page,rob.page.locator(`.cm-full-mine .cm-bcard[data-card="${att.cardId}"]`));
+    const [inspectionAx]=await axOf(rob,'#cm-card-inspector'),[readAx]=await axOf(rob,`#cm-card-inspector .cm-bcard[data-card="${att.cardId}"]`);
+    const closeFocused=await rob.page.evaluate(()=>document.activeElement.matches('[data-action=board-inspect-close]'));
+    ok(inspectionAx?.role==='complementary'&&inspectionAx.name==='Card inspection'&&readAx?.role==='button'&&readAx.name.startsWith(att.name+',')&&/, tapped\b/.test(readAx.name)&&closeFocused,`Full screen's native Read names the same tapped card and focuses its close control (${JSON.stringify({inspectionAx,readAx,closeFocused})})`);
+    await rob.page.locator('#cm-card-inspector [data-action=board-inspect-close]').click();
+    await rob.page.locator('#cm-card-inspector').waitFor({state:'detached'});
+    ok(await rob.page.evaluate(id=>document.activeElement.matches('.cm-bcard')&&document.activeElement.dataset.card===String(id),att.cardId),'closing Read returns focus to its originating physical card');
     await view(rob.page, "focus");
     hand(ROB, robFrame); hand(MAYA, mayaFrame);
     await rob.page.waitForTimeout(300);
@@ -1041,6 +1061,7 @@ try {
       await focusSeat(page, 0);
       const pick = page.locator(`.cm-board-mat .cm-bcard[data-card="${mine[0].cardId}"]`);
       await pick.click();
+      await page.locator(`#cm-card-menu [data-action=board-card-menu-do][data-index="0"][data-card="${mine[0].cardId}"]`).click();
       await page.locator(`.cm-board-mat .cm-bcard.is-picked[data-card="${mine[0].cardId}"]`).waitFor({timeout: 5000});
       const [said] = await axOf(rob, `.cm-board-mat .cm-bcard[data-card="${mine[0].cardId}"]`);
       await page.keyboard.press("Shift");
@@ -1136,7 +1157,12 @@ try {
       await readWords(page, all ? "#cm-board" : "#cm-board .cm-board-stage", `${t} at ${w}, Focus, the ${mine} mat`);
       if (all) await shot(page, `focus-${t}`);
       await readRing(page, ".cm-board-mat .cm-board-field .cm-bcard:not(.is-selected)", `${t} at ${w}, a card on the ${mine} mat`);
-      if (all && who === rob) await readRing(page, ".cm-board-mat .cm-bcard.is-selected", `${t} at ${w}, the card picked to read, on the ${mine} mat`);
+      if(all&&who===rob) {
+        const id=await readCard(page,page.locator('.cm-board-mat .cm-board-field .cm-bcard').first());
+        await readRing(page,`#cm-card-inspector .cm-bcard[data-card="${id}"]`,`${t} at ${w}, the card opened to Read on the ${mine} mat`);
+        await page.locator('#cm-card-inspector [data-action=board-inspect-close]').click();
+        await page.locator('#cm-card-inspector').waitFor({state:'detached'});
+      }
       await view(page, "table");
       await rest(page);
       await readWords(page, all ? "#cm-board" : "#cm-board .cm-board-table", `${t} at ${w}, Table, the ${mine} and ${theirs} mats`);
