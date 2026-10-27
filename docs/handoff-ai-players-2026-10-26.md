@@ -108,31 +108,81 @@ command that proves each claim, and what is outstanding with the reason.*
   nothing between calls so a replay agrees); the effect is the same within a turn unless the board changes.
 - Rob's "AI-8": read as the LLM seat; he confirmed the six calls without naming otherwise.
 
-## 6. Merging this with the feedback-loop session's work
+## 6. Merging this with the feedback-loop session's work: the one order for OpenAI
 
-The feedback-loop session (`session_01X2xxK5FjzqAb91gfMipUAB`, started by this one) builds its plan on three stacked
-branches, each containing the one before (its interim word of 23:12 UTC; its own hand-off,
-`docs/handoff-feedback-loop-2026-10-26.md` on the third branch, follows once its suites are green):
+The feedback-loop session (`session_01X2xxK5FjzqAb91gfMipUAB`, started by this one) sent its hand-off at 00:54 UTC on
+2026-10-27. Its own document is `docs/handoff-feedback-loop-2026-10-26.md` on `claude/deck-feedback-triage`. Nothing
+from either session is merged. Rob's word to it: no second Actions run for a timing error; straight to merge.
 
-1. `claude/engine-feedback-store`, PR #895 (head 74f8c228 at that word), from `main` c567c581: the schema, migration
-   0009, the routes;
-2. `claude/workshop-feedback-sheet`, PR #896 (head d884c03d, two test fixes to come): the control and the sheet;
-3. `claude/deck-feedback-triage`, PR #897 (head d6501d08): the triage agent.
+### 6.1 The four branches, in merge order, each a merge commit
 
-**The order for OpenAI:** this branch first (it changes who may spend, and its `cloud/worker.mjs` change is the
-smaller), then the three feedback branches in stack order, each a merge commit, with one green Actions run per PR.
-After each merge: `node tests/asset-versions.mjs --update` (never by hand), and the README's suite count set to the
-count (599 on `main` after #891, 600 with this branch, 603 with all four).
+| # | Branch | Head | PR | Actions on that head |
+| --- | --- | --- | --- | --- |
+| 1 | `claude/sharp-hawking-8lbwy9` (this) | the pushed head; merged with `main` b13607b2 | #893 | a draft: not run; the local gate's scan passed on each push |
+| 2 | `claude/engine-feedback-store` | 86f1f265 (from `main` c567c581) | #895 | `suites` green (run 40418687834) |
+| 3 | `claude/workshop-feedback-sheet` (contains 2) | 85a12f42 | #896 | run 40420725479: one check red, `tests/table-tabletop.mjs:468` "selection animates cards cycling through the pile", an animation-count read right after a click; every other suite green. Not that PR's: it fails identically on a clean checkout of `main` c567c581, the PR touches neither the stack pile nor the motion gate, and the same tree passed on #897's run. Rob: no re-run. The reasoning is a comment on #896. |
+| 4 | `claude/deck-feedback-triage` (contains 2 and 3) | cdfe26c3 | #897 | `suites` green (run 40421560221); its tree is PRs 1 + 2 + 3 of the feedback plan, so this green covers #896's files too |
 
-**Where both bodies of work touch one file, and what to keep:**
+After each merge: `node tests/asset-versions.mjs --update` (never by hand), and `README.md`'s suite count set to the
+count: **599 on `main` after #891, 600 with this branch, 603 with all four** (the feedback hand-off says 602: it was
+written before #891 added a suite to `main`).
+
+### 6.2 The shared files, and what to keep
 
 | File | This branch | The feedback branches | At the merge |
 | --- | --- | --- | --- |
-| `cloud/worker.mjs` | `groupOf` imported from `./access.mjs`; `/api/me` gains `group`; `adminGroups` and its route; `owner: env.OWNER_EMAIL` on every `createAi` call | An import from `./feedback.mjs`; a `/api/admin/feedback*` route after the `/api/ai/` dispatch; a `/api/feedback` POST block; three functions before the AI door's comment; header lines | Keep both; nothing inside an existing function changes on either side. **One collision, asked of that session before its hand-off:** its `./feedback.mjs` also exported a `groupOf`; it is to import this branch's from `./access.mjs` instead, so the name is bound once. If its hand-off does not confirm that, resolve it that way. |
-| `cloud/access.mjs` | `GROUPS` and `groupOf` added before `serviceIdentity` | One condition in `verifyAccess` (`deps.service === true` beside `SERVICE_SEATS`) | Keep both; they do not overlap. |
-| `cloud/feedback.mjs` `isOwner` | — | Its owner test is `INVITE_ADMIN_ID` | `groupOf(...) === "owner"` (by `OWNER_EMAIL`), with `INVITE_ADMIN_ID` as a fallback inside `isOwner` only, until Rob sets `OWNER_EMAIL`; that session was asked to make it so. |
-| `docs/ACTIVE.md` | A section at the top and Requests row 14 | Three sections at the top and a Requests row, to be numbered 15 | Keep all; the rows are 14 (groups) and 15 (feedback). |
-| `README.md` | `engine-threat` named; 600 suites | Its suites named; its count | 603 after all four. |
-| Asset pins and `tests/fixtures/asset-versions.json` | Bumped for the fan (board 107, stage.css 64, sw 565, app 582) | Bumped for the sheet | Re-record after the merge with the tool. |
-| `tests/page-budget.mjs` | — | Six control budgets +1 for the Send feedback glyph | Theirs. |
-| Migrations | None taken | 0009 (0007 and 0008 untouched) | Theirs; this branch takes no number. |
+| `cloud/worker.mjs` | `groupOf` imported from `./access.mjs`; `/api/me` gains `group`; `adminGroups` and its route; `owner: env.OWNER_EMAIL` on every `createAi` call | One import line after the sharing import (its group function is named `feedbackGroup`, so `groupOf` is bound once); one route line before `let who;` (`/api/admin/feedback*`); a `/api/feedback` POST block before the general `fromTheApp` check; three functions before the AI door's comment; six header lines. Nothing inside an existing function. | Keep both. |
+| `cloud/access.mjs` | `GROUPS` and `groupOf` before `serviceIdentity` | One condition in `verifyAccess` (`deps.service === true` beside `SERVICE_SEATS`) | Keep both; no overlap. |
+| `cloud/feedback.mjs` `isOwner` | — | `OWNER_EMAIL` first (any letter case), else `INVITE_ADMIN_ID` | Theirs, as agreed. |
+| `docs/ACTIVE.md` | A section at the top; Requests row 14 | Three sections at the top; Requests row 15 | Keep all. |
+| `README.md` | `engine-threat` named; 600 suites | Three suites named | 603 after all four. |
+| Asset pins and `tests/fixtures/asset-versions.json` | Bumped for the fan | Bumped for the sheet | Re-record with the tool after each merge. |
+| `tests/page-budget.mjs` | — | +1 on six control budgets for the glyph | Theirs. |
+| Migrations | None taken | 0009 (0007 and 0008 untouched) | Theirs. |
+
+### 6.3 What the feedback branches prove, in their session's words, with the command for each claim
+
+- **PR 1, the store** (#895): `node tests/feedback-store.mjs` 135 (migration 0009; `CrankFeedback@1`'s bounds refused by
+  name and unknown fields dropped; `POST /api/feedback` for a signed-in person, the reporter from the token, a screenshot
+  dropped and its bytes kept nowhere; ten an hour a person, the eleventh refused with when to retry; `GET`/`PATCH
+  /api/admin/feedback` for the owner by `OWNER_EMAIL` or `INVITE_ADMIN_ID`, and for the agent's service token on its own
+  Access application only; the six states, each move the next and no other). `python3 game/tools/batch/breaks.py
+  tools/feedback-store-breaks.py` 31 breaks, each caught. `node tests/release-pages.mjs` 228. Also green: `card-demand`,
+  `cloud-worker`, `ai-door`, `data-integrity`, `feature-wiring`, `sharing`, `agent-seat-table`. `tools/local-ci.sh
+  86f1f265 0` scan pass.
+- **PR 2, the control and the sheet** (#896): `GEOMETRY_REQUIRED=1 node tests/feedback-sheet.mjs` 38 (the glyph on three
+  pages and the Menu; every field posted with its header, never the person; the Worker's 429 shown with the text kept; a
+  picture as WebP under 1 MiB; signed out refused with Sign in / Email instead). `tools/feedback-sheet-breaks.py` 17
+  caught. `GEOMETRY_REQUIRED=1 node tests/table-board.mjs` 294; `tools/feedback-breaks.py`, five board breaks caught.
+  `page-budget` 80. Also green: `feature-wiring`, `menu-help`, `settings-r3`, `data-integrity`, `service-worker`,
+  `asset-versions`, `release-pages`. `a11y-board` fails in its container identically on `main` (one contrast pixel,
+  steel-cobalt mat card P/T) and passed on Actions for #895 and #897.
+- **PR 3, the triage agent** (#897): `node tests/feedback-triage.mjs` 75 on `tests/fixtures/feedback-rows.json` with
+  Linear, the Worker and the model stood in. `python3 game/tools/batch/breaks.py tools/feedback-triage-breaks.py` 24
+  caught. `node tools/feedback-triage.mjs --dry-run --fixtures tests/fixtures/feedback-rows.json --out work/triage`
+  writes `digest.md` and `issues.json`. `data-integrity`, `feature-wiring` green.
+
+**Assumed there** (Rob's calls on the plan's defaults, named in each PR): D1 not Supabase; GitHub Actions for the agent;
+approval by Linear label; screenshots dropped until R2 is on; the invite sender for its PR 5; the outcome project the
+route maps to; Claude Haiku 5.5 as the agent's model (`FEEDBACK_MODEL` otherwise).
+
+**Not proven there:** the agent's service token against live Access (no application exists yet); migration 0009 on
+staging D1 (applied at the next staging release, as 0006 was); a live triage run (no Linear key, model key or agent
+token in its container by design: the Linear GraphQL shapes and the Agent SDK's `query()` are written from their
+documented shapes, unexercised); the browser's own screen capture (a person must pick the tab); a phone's layout of the
+sheet.
+
+**Rob's steps for the feedback loop:** an Access application for the agent with a Service Auth policy, its audience as
+`FEEDBACK_AGENT_AUD` in the staging profile (`tools/release-pages.mjs` vars); repository secrets `ANTHROPIC_API_KEY`,
+`LINEAR_API_KEY`, `FEEDBACK_AGENT_CLIENT_ID`, `FEEDBACK_AGENT_CLIENT_SECRET` and the variable `FEEDBACK_API`; then one
+`workflow_dispatch` of `feedback-triage.yml`, read in Linear. **Not built there:** its PRs 4 (approval channels), 5
+(release notification) and 6 (admin view); the store already takes their state moves.
+
+### 6.4 Rob's steps for this branch
+
+`OWNER_EMAIL` on staging and production (a dashboard variable); until it is set, nobody is the owner, the admin routes
+answer 403 to everyone, and the feedback store's owner falls back to `INVITE_ADMIN_ID`.
+
+### 6.5 After the merges
+
+The remaining AI-player work is `docs/ai-players/NEXT-2026-10-27.md`, stored for the next session on Rob's word.
