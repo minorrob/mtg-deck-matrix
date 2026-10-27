@@ -420,41 +420,181 @@
   }
 
   /* Play home is distinct from a table's preparation lobby. Reading it never claims or releases a seat. */
+  /* PLAY HOME, THE PRE-LOBBY (Rob, 2026-10-27; the Claude Design reference "Pre-lobby"). Below the lounge banner, two columns of one height, the left
+     2.5 times the right: LIVE GAMES (every public table in its lobby or under way, and your own and the ones you sit at, private; the admin sees them all),
+     and, stacked, START A GAME (Start a new game, Join existing game, Resume game), the LEADERBOARD (sortable) and the Pre-lobby chat (Coming soon).
+     Reading this page never claims or releases a seat. The server's half is asked for in docs/ACTIVE.md's Requests table: `GET /api/tables/live`,
+     `GET /api/leaderboard`, and the request-join, watch, quit and log doors; until one answers, its part reads empty and says so, and nothing is made up. */
+  const plPad = (n) => String(n).padStart(2, "0");
+  const plRun = (sec) => `${Math.floor(sec / 3600)}:${plPad(Math.floor(sec % 3600 / 60))}:${plPad(sec % 60)}`;
+  const PL_CARET = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6l4 4 4-4"></path></svg>';
+  const PL_MAIL = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3.5" width="12" height="9" rx="1.5"></rect><path d="M2.5 4.5 8 9l5.5-4.5"></path></svg>';
+  const PL_AI = '<sup class="cm-ai" aria-label="AI">ai</sup>';
+  /* A table the server lists, as the page reads it. */
+  const plGame = (g, admin) => {
+    const live = g.location === "live", mine = g.mine === true;
+    return {id: g.tableId, live, mine, organizer: g.organizer || "A player", commander: g.commander || "No deck yet", mechanic: g.mechanic || "", privacy: g.privacy === "private" ? "Private" : "Public",
+      ai: Number(g.ai) || 0, human: Number(g.human) || 0, open: Number(g.open) || 0, startedAt: live && g.startedAt ? Number(g.startedAt) : null, roster: Array.isArray(g.roster) ? g.roster : [],
+      canJoin: !live && Number(g.open) > 0 && !mine, canAdmin: admin || mine, adminLabel: admin && !mine ? "Admin" : "Organizer"};
+  };
   views.playHome = () => {
     if(!cloudPlay())return views.table(new URLSearchParams());
-    let active=true;
-    C.main.innerHTML=C.pageHead('Play','','table')+`<div class="cm-play-home" id="cm-play-home">
-      <section class="v-panel cm-play-welcome"><p class="cm-play-eyebrow">THE COMMANDER LOUNGE</p><h2>A place at the table</h2>
-      <p>Bring a deck. Invite your friends. Make the next game yours.</p>
-      <div id="cm-play-resume" aria-live="polite"></div>
-      <div class="cm-actions">${b('New table','play-new-table',{},true)}<a class="v-button" href="#decks">Choose a deck</a></div></section>
-      <section class="v-panel cm-play-join"><p class="cm-play-eyebrow">START</p><h2>Join a table</h2><p>Have an invitation? Paste its full link to take your invited seat.</p>
-      <form id="cm-play-join"><label for="cm-play-invite">Invitation link<input id="cm-play-invite" name="invitation" type="text" autocomplete="off" spellcheck="false" placeholder="Paste your table invitation"></label>
-      <div class="cm-actions">${b('Open invitation','play-join')}</div><p id="cm-play-join-error" role="status"></p></form>
-      <p class="cm-muted">Waiting for an invite? Keep this page open, then open the link your host sends. Seats are claimed only when you join.</p></section>
-      <section class="v-panel cm-play-social"><p class="cm-play-eyebrow">AROUND THE TABLES</p><h2>Your next game</h2><div class="cm-lounge-table-art" aria-hidden="true"><i></i><i></i><i></i><i></i><span>COMMANDER</span></div><p>Gather friends at an invitation-only table, or practice against AI.</p><div class="cm-actions">${b('Set up an AI game','play-ai-table')}</div><p class="cm-muted">Public game discovery is not connected yet. Your current seat stays yours while you browse.</p></section>
-      <section class="v-panel cm-play-talk"><p class="cm-play-eyebrow">TABLE TALK</p><h2>Meet here. Play together.</h2><p>Waiting for a friend? Share a table invitation once you have set your seats.</p><div class="cm-lounge-unavailable"><strong>Lounge chat is not connected yet</strong><p>There are no live messages or presence counts to display. Use your usual chat to coordinate and send the invitation link.</p></div></section>
-      <section class="v-panel cm-play-standing"><h2>Your record</h2><div class="cm-play-stats">${['win','loss','draw'].map((outcome,i)=>`<div><strong>${(C.state.games||[]).filter(g=>g.outcome===outcome).length}</strong><span>${['Wins','Losses','Draws'][i]}</span></div>`).join('')}</div><p class="cm-muted">Completed games saved in your library. A cross-player leaderboard is not connected yet.</p></section>
-      <section class="v-panel cm-play-records" id="cm-play-records"><h2>Recent games</h2><p class="cm-muted">Your completed games will appear here.</p></section></div>`;
-    document.getElementById('cm-play-join').addEventListener('submit',event=>{event.preventDefault();actions['play-join']();});
-    document.getElementById('cm-play-invite').addEventListener('input',()=>{document.getElementById('cm-play-join-error').textContent='';});
-    const games=[...(C.state.games||[])].sort((a,b)=>String(b.playedAt||b.at||'').localeCompare(String(a.playedAt||a.at||''))).slice(0,5);
-    if(games.length){const word={win:'Won',loss:'Lost',draw:'Drew',unfinished:'Unfinished'};
-      document.getElementById('cm-play-records').innerHTML=`<h2>Recent games</h2><ol class="cm-table-recent-list">${games.map(g=>{
-        const deck=(C.state.decks||[]).find(d=>d.id===g.deckId);
-        return `<li class="cm-table-recent-row"><b>${e(word[g.outcome]||'Played')}</b><span>${deck?`<a href="#decks?deck=${encodeURIComponent(deck.id)}">${e(deck.name)}</a>`:'Shared or archived deck'}</span><span>${g.playedAt||g.at?e(C.usDate(g.playedAt||g.at)):''}</span></li>`;
-      }).join('')}</ol>`;}
-    const id=C.board?.live?.()?.tableId||seatKept();
-    if(id){const slot=document.getElementById('cm-play-resume');slot.textContent='Checking your seat…';
-      api('GET',tableUrl(id)).then(({table:t})=>{
-        if(!active||!slot.isConnected)return;
-        if(!t.seats.some(s=>s?.you)){slot.textContent='Your previous seat is no longer held.';return;}
-        const phase=t.phase==='playing'?'Game in progress':t.phase==='rematch'?'Play again':t.phase==='countdown'?'Starting soon':'Preparing the table';
-        const live=C.board?.live?.(),summary=live?.tableId===t.tableId?live:null;
-        slot.closest('.cm-play-welcome')?.querySelector('[data-action=play-new-table]')?.classList.remove('primary');
-        slot.innerHTML=`<div class="cm-play-return"><strong>${e(phase)}${summary?.turn?' · Turn '+e(String(summary.turn)):''}</strong><span>${e(t.seats.filter(Boolean).map(s=>s.deck?.commander?.join(' + ')||s.name).join(' · '))}</span>${summary?.seats?.length?`<span>${summary.seats.map(s=>`${e(s.name)}: ${e(String(s.life))} life`).join(' · ')}</span>`:''}<div class="cm-actions">${b('Resume your table','table-back',{table:t.tableId},true)}${b('Leave table','play-leave-seat',{table:t.tableId})}</div></div>`;
-      }).catch(()=>{if(active&&slot.isConnected)slot.innerHTML=`<p>Your table could not be checked. ${b('Try your table','table-back',{table:id})}</p>`;});}
-    return ()=>{active=false;};
+    let active = true;
+    const admin = C.adminAllowed?.() === true;
+    const st = {games: [], lb: [], liveKnown: false, lbKnown: false, open: null, sortKey: "wins", sortDir: -1, joinOpen: false, resume: null, resumeChecked: false};
+    const root = document.createElement("div");
+    root.className = "cm-pl"; root.id = "cm-play-home";
+    C.main.replaceChildren(root);
+    const clock = () => Date.now() + skew;
+    const runOf = (g) => g.startedAt ? plRun(Math.max(0, Math.floor((clock() - g.startedAt) / 1000))) : "Not started";
+    const countBtn = (g, kind, n) => `<button type="button" class="cm-pl-count" data-pl="seats" data-game="${e(g.id)}" data-kind="${kind}" aria-expanded="${st.open === `${g.id}:${kind}`}" aria-label="${n} ${kind === "ai" ? "AI" : "human"} seats in ${e(g.organizer)}'s game. Show players.">${n}</button>`;
+    const gameRows = () => st.games.map((g) => {
+      const menuOpen = st.open === g.id, ai = st.open === `${g.id}:ai`, human = st.open === `${g.id}:human`, label = `Actions for ${g.organizer}'s game`;
+      const people = g.roster.filter((p) => (ai ? p.ai : !p.ai));
+      return `<tr class="cm-pl-row" data-game="${e(g.id)}">
+        <td><span class="cm-pl-loc ${g.live ? "is-live" : "is-lobby"}"><i aria-hidden="true"></i>${g.live ? "Live" : "Lobby"}</span><span class="cm-pl-priv">${g.privacy}</span></td>
+        <td><b>${e(g.organizer)}</b>${g.mine ? '<span class="cm-pl-you"> · you</span>' : ""}</td>
+        <td><span class="cm-pl-cmd"><span>${e(g.commander)}</span>${g.mechanic ? `<span class="cm-pl-pill" title="${e(g.mechanic)}">${e(g.mechanic)}</span>` : ""}</span></td>
+        <td class="is-r">${countBtn(g, "ai", g.ai)}</td>
+        <td class="is-r">${countBtn(g, "human", g.human)}${g.open > 0 ? `<span class="cm-pl-open">${g.open} open</span>` : ""}</td>
+        <td class="is-r cm-pl-run${g.live ? "" : " is-idle"}" ${g.live ? `data-run-start="${g.startedAt}"` : ""}>${runOf(g)}</td>
+        <td class="cm-pl-sticky"><button type="button" class="cm-pl-caret" data-pl="menu" data-game="${e(g.id)}" aria-expanded="${menuOpen}" aria-label="${e(label)}">${PL_CARET}</button></td></tr>
+      ${menuOpen ? `<tr class="cm-pl-more"><td colspan="7"><div class="cm-pl-menu" role="menu" aria-label="${e(label)}">
+        ${g.canJoin ? `<button type="button" role="menuitem" class="cm-pl-mi" data-pl="join" data-game="${e(g.id)}">Request to join<small>The organizer approves your seat</small></button>` : ""}
+        <button type="button" role="menuitem" class="cm-pl-mi" data-pl="watch" data-game="${e(g.id)}">Watch<small>Spectate any seat. No hands or libraries.</small></button>
+        ${g.canAdmin ? `<hr><p>${g.adminLabel}</p><button type="button" role="menuitem" class="cm-pl-mi" data-pl="logs" data-game="${e(g.id)}">Game logs</button><button type="button" role="menuitem" class="cm-pl-mi is-danger" data-pl="quit" data-game="${e(g.id)}">Quit game</button>` : ""}
+      </div></td></tr>` : ""}
+      ${ai || human ? `<tr class="cm-pl-more"><td colspan="7"><div class="cm-pl-info" role="region" aria-label="${ai ? "AI seats" : "Human seats"} · ${e(g.organizer)}'s game">
+        <div class="cm-pl-info-head"><p>${ai ? "AI seats" : "Human seats"} · ${e(g.organizer)}'s game</p><button type="button" data-pl="close-info" aria-label="Close">×</button></div>
+        <table><thead><tr><th scope="col">Player</th><th scope="col">Commander</th><th scope="col">Core mechanic</th></tr></thead><tbody>${people.map((p) => `<tr><td>${e(p.name)}${p.ai ? PL_AI : ""}</td><td>${e(p.commander || "")}</td><td><span class="cm-pl-pill">${e(p.mechanic || "")}</span></td></tr>`).join("")}</tbody></table>
+        ${people.length ? "" : `<p class="cm-pl-muted">${ai ? "No AI seats at this table." : "No human seats at this table."}</p>`}</div></td></tr>` : ""}`;
+    }).join("");
+    const lbRows = () => {
+      const {sortKey: key, sortDir: dir} = st;
+      return [...st.lb].sort((a, b) => key === "name" ? dir * String(a.name).localeCompare(b.name) : dir * ((a[key] || 0) - (b[key] || 0)) || String(a.name).localeCompare(b.name));
+    };
+    const lbHead = () => [["name", "User name"], ["wins", "Win"], ["losses", "Loss"], ["ties", "Tie"], ["unfinished", "Unfinished"]].map(([k, label]) => {
+      const on = k === st.sortKey;
+      return `<th scope="col" aria-sort="${on ? (st.sortDir === 1 ? "ascending" : "descending") : "none"}"><button type="button" class="cm-pl-sort" data-pl="sort" data-key="${k}" aria-pressed="${on}" aria-label="Sort by ${label}"><span>${label}</span><span aria-hidden="true">${on ? (st.sortDir === 1 ? "▲" : "▼") : ""}</span></button></th>`;
+    }).join("");
+    const joinable = () => st.games.filter((g) => g.canJoin);
+    const resumeText = () => st.resume ? `Saved: ${st.resume.text}` : "No saved game. A game you leave without conceding waits here.";
+    const liveN = () => st.games.filter((g) => g.live).length;
+    const render = () => {
+      const noGames = !st.games.length, noJoin = !joinable().length;
+      root.innerHTML = `<header class="cm-pl-head"><h1 class="cm-pl-title">Play</h1>
+        <button type="button" class="cm-pl-ibtn" data-action="page-help" data-help="table" aria-label="About this page" title="About this page">?</button>
+        <button type="button" class="cm-pl-ibtn" data-action="send-feedback" aria-label="Send feedback" title="Send feedback">${PL_MAIL}</button></header>
+      <section class="cm-pl-hero" aria-label="The Commander lounge"><img src="assets/crankmagic/lounge-hero.jpg" alt="" aria-hidden="true"><i aria-hidden="true"></i>
+        <div><p class="cm-pl-hero-eyebrow">The Commander lounge</p><h2>A place at the table</h2><p class="cm-pl-hero-sub">Bring a deck. Invite your friends. Make the next game yours.</p></div></section>
+      <div class="cm-pl-grid">
+        <section class="cm-pl-card" aria-labelledby="cm-pl-live">
+          <div class="cm-pl-cardhead"><div><p class="cm-pl-eyebrow">Around the tables</p><h2 class="cm-pl-h2" id="cm-pl-live">Live games</h2></div>
+            <p class="cm-pl-muted">${st.liveKnown ? `${liveN()} live · ${st.games.length - liveN()} in lobby` : "Checking the tables…"}</p></div>
+          <div class="cm-pl-tablewrap"><table class="cm-pl-games"><thead><tr><th scope="col">Location</th><th scope="col">Organizer</th><th scope="col">Commander</th><th scope="col" class="is-r">AI seats</th><th scope="col" class="is-r">Human seats</th><th scope="col" class="is-r">Run time</th><th scope="col" class="cm-pl-sticky"><span class="cm-pl-sr">Actions</span></th></tr></thead>
+            <tbody>${gameRows()}</tbody></table>
+            ${noGames && st.liveKnown ? '<div class="cm-pl-empty"><p>No games are running</p><p>Start one and it shows here for everyone.</p></div>' : ""}</div>
+          <p class="cm-pl-muted">Private games are listed only for their seats and the admin.</p></section>
+        <div class="cm-pl-side">
+          <section class="cm-pl-card is-start" aria-labelledby="cm-pl-start"><div style="display:flex;flex-direction:column;gap:2px"><p class="cm-pl-eyebrow">Start</p><h2 class="cm-pl-h2" id="cm-pl-start">Start a game</h2></div>
+            <button type="button" class="cm-pl-btn is-primary is-big" data-pl="new">Start a new game</button>
+            <button type="button" class="cm-pl-btn is-big" data-pl="open-join"${noJoin && !st.joinAlways ? " disabled" : ""}>Join existing game</button>
+            <button type="button" class="cm-pl-btn is-big" data-pl="resume"${st.resume ? "" : " disabled"}>Resume game</button>
+            <p class="cm-pl-muted">${e(resumeText())}</p></section>
+          <section class="cm-pl-card is-board" aria-labelledby="cm-pl-lb"><div style="display:flex;flex-direction:column;gap:2px"><p class="cm-pl-eyebrow">Standings</p><h2 class="cm-pl-h2" id="cm-pl-lb">Leaderboard</h2></div>
+            <div class="cm-pl-lbwrap"><table class="cm-pl-lb"><thead><tr>${lbHead()}</tr></thead><tbody>${lbRows().map((r) => `<tr><td style="font-weight:${r.you ? 700 : 400}">${e(r.name)}</td><td>${Number(r.wins) || 0}</td><td>${Number(r.losses) || 0}</td><td>${Number(r.ties) || 0}</td><td>${Number(r.unfinished) || 0}</td></tr>`).join("")}</tbody></table>
+              ${st.lbKnown && !st.lb.length ? '<p class="cm-pl-muted" style="padding:10px 2px">No finished games yet.</p>' : ""}</div></section>
+          <section class="cm-pl-card is-chat" aria-labelledby="cm-pl-chat"><div class="cm-pl-chathead"><h2 class="cm-pl-h2 is-small" id="cm-pl-chat">Pre-lobby chat</h2><span class="cm-pl-soon">Coming soon</span></div>
+            <p class="cm-pl-muted">Signed-in players will send and read messages here in real time.</p>
+            <div class="cm-pl-chatrow"><label style="flex:1 1 auto;min-width:0"><span class="cm-pl-sr">Message</span><input disabled placeholder="Chat opens soon"></label><button type="button" disabled>Send</button></div></section>
+        </div></div>`;
+    };
+    /* ---- the pop-ups: their own layer, so typing in one is never undone by a redraw of the page ---- */
+    let layer = null;
+    const closeLayer = () => {layer?.remove(); layer = null; document.removeEventListener("keydown", escKey, true);};
+    const escKey = (event) => {if (event.key === "Escape") {event.stopPropagation(); closeLayer(); st.joinOpen = false;}};
+    const openLayer = (html) => {
+      closeLayer();
+      layer = document.createElement("div"); layer.className = "cm-pl cm-pl-scrim"; layer.innerHTML = html;
+      document.getElementById("matrix-v2").append(layer);
+      document.addEventListener("keydown", escKey, true);
+      layer.addEventListener("click", (event) => {if (event.target === layer) closeLayer();});
+      layer.querySelector("input,button")?.focus({preventScroll: true});
+      return layer;
+    };
+    const toast = (text) => {
+      document.querySelector(".cm-pl-toast")?.remove();
+      const el = document.createElement("div"); el.className = "cm-pl cm-pl-toast"; el.setAttribute("role", "status");
+      el.innerHTML = `${e(text)}<button type="button" aria-label="Dismiss">×</button>`;
+      el.querySelector("button").addEventListener("click", () => el.remove());
+      document.getElementById("matrix-v2").append(el); setTimeout(() => el.remove(), 6000);
+    };
+    const say = (text) => {st.open = null; render(); toast(text);};
+    const failure = (error, what) => say(error?.status === 404 || error?.status === 405 ? `${what} is not open on this server yet.` : error?.message || `${what} did not go through.`);
+    const gameOf = (id) => st.games.find((g) => g.id === id);
+    const joinDialog = () => {
+      const list = joinable();
+      openLayer(`<div class="cm-pl-dialog" role="dialog" aria-modal="true" aria-labelledby="cm-pl-join-title">
+        <div style="display:flex;flex-direction:column;gap:4px"><h2 id="cm-pl-join-title">Join an existing game</h2><p style="color:var(--color-muted)">Pick a public lobby with an open seat, or paste the invitation a host sent you.</p></div>
+        ${list.length ? `<div class="cm-pl-joinlist">${list.map((g) => `<div class="cm-pl-joinrow"><span><b>${e(g.organizer)} · ${e(g.commander)}</b><small>${g.human} human · ${g.ai} AI · ${g.open} open seat${g.open === 1 ? "" : "s"}</small></span><button type="button" class="cm-pl-btn" style="height:36px;padding:0 14px;white-space:nowrap" data-pl="join" data-game="${e(g.id)}">Request to join</button></div>`).join("")}</div>` : ""}
+        <label class="cm-pl-field">Invitation link<input id="cm-play-invite" name="invitation" type="text" autocomplete="off" spellcheck="false" placeholder="Paste the full link your host sent"></label>
+        <p id="cm-play-join-error" role="status" style="color:var(--color-required);min-height:0"></p>
+        <div class="cm-pl-actions"><button type="button" class="cm-pl-btn" data-pl="close-layer" style="padding:0 16px">Cancel</button><button type="button" class="cm-pl-btn is-primary" data-pl="invite" style="padding:0 16px">Open invitation</button></div></div>`);
+      layer.querySelector("#cm-play-invite").addEventListener("keydown", (event) => {if (event.key === "Enter") {event.preventDefault(); actions["play-join"]();}});
+      layer.querySelector("#cm-play-invite").addEventListener("input", () => {document.getElementById("cm-play-join-error").textContent = "";});
+    };
+    const onClick = async (event) => {
+      const el = event.target.closest("[data-pl]"); if (!el || !(root.contains(el) || layer?.contains(el))) return;
+      const g = el.dataset.game ? gameOf(el.dataset.game) : null;
+      switch (el.dataset.pl) {
+        case "menu": st.open = st.open === g.id ? null : g.id; render(); break;
+        case "seats": {const k = `${g.id}:${el.dataset.kind}`; st.open = st.open === k ? null : k; render(); break;}
+        case "close-info": st.open = null; render(); break;
+        case "sort": st.sortDir = el.dataset.key === st.sortKey ? -st.sortDir : (el.dataset.key === "name" ? 1 : -1); st.sortKey = el.dataset.key; render(); break;
+        case "new": C.go("table?new=1"); break;
+        case "open-join": joinDialog(); break;
+        case "close-layer": closeLayer(); break;
+        case "invite": actions["play-join"](); break;
+        case "resume": if (st.resume) C.go("table", {id: st.resume.id}); break;
+        case "join": try {await api("POST", `${tableUrl(g.id)}/request-join`, {}); closeLayer(); say(`Request sent to ${g.organizer}.`);} catch (error) {closeLayer(); failure(error, "Requesting a seat");} break;
+        case "watch": try {await api("GET", `${tableUrl(g.id)}/watch`); C.go("table", {id: g.id, watch: "1"});} catch (error) {failure(error, "Watching a table");} break;
+        case "logs": try {const {log} = await api("GET", `${tableUrl(g.id)}/log`); st.open = null; render(); C.modal(`Game log · ${g.organizer}'s table`, `<pre class="cm-muted" style="white-space:pre-wrap;max-height:60vh;overflow:auto">${e(Array.isArray(log) ? log.map((l) => l.text || String(l)).join("\n") : String(log || ""))}</pre><div class="cm-form-footer">${b("Close", "close", {}, true)}</div>`);} catch (error) {failure(error, "The game log");} break;
+        case "quit": C.modal(`Quit ${g.organizer}'s game?`, `<p>The game ends for everyone at the table. Its record is kept.</p><div class="cm-form-footer">${b("Cancel", "close")}${b("Quit game", "play-quit-confirm", {table: g.id}, true)}</div>`); break;
+        default:
+      }
+    };
+    document.addEventListener("click", onClick, true);
+    actions["play-quit-confirm"] = async (el) => {actions.close(); try {await api("POST", `${tableUrl(el.dataset.table)}/quit`, {}); await loadLive(); say("The game was ended.");} catch (error) {failure(error, "Quitting a game");}};
+    /* ---- the server's answers ---- */
+    const loadLive = async () => {
+      try {
+        const {games} = await api("GET", "/api/tables/live");
+        st.games = (games || []).map((g) => plGame(g, admin)); st.liveKnown = true;
+      } catch {st.games = []; st.liveKnown = true;}
+      if (active) {if (st.open && !st.games.some((g) => st.open.startsWith(g.id))) st.open = null; render();}
+    };
+    const loadBoard = async () => {
+      try {const {rows} = await api("GET", "/api/leaderboard"); st.lb = Array.isArray(rows) ? rows : [];} catch {st.lb = [];}
+      st.lbKnown = true; if (active) render();
+    };
+    const checkResume = async () => {
+      const id = C.board?.live?.()?.tableId || seatKept();
+      if (!id) return;
+      try {
+        const {table: t} = await api("GET", tableUrl(id));
+        if (!active || !t.seats.some((s) => s?.you) || t.phase === "over") return;
+        const mine = t.seats.find((s) => s?.you), others = t.seats.filter((s) => s && !s.you);
+        const live = C.board?.live?.(), summary = live?.tableId === t.tableId ? live : null;
+        const ai = others.filter((s) => s.kind === "ai").length, humans = others.length - ai;
+        st.resume = {id: t.tableId, text: `${mine?.deck?.commander?.join(" + ") || "your table"}${others.length ? ` vs ${[ai ? `${ai} AI seat${ai === 1 ? "" : "s"}` : "", humans ? `${humans} player${humans === 1 ? "" : "s"}` : ""].filter(Boolean).join(" and ")}` : ""}${summary?.turn ? `, turn ${summary.turn}` : ""}.`};
+        render();
+      } catch {/* the seat is gone: nothing to resume */}
+    };
+    render();
+    loadLive(); loadBoard(); checkResume();
+    const poll = setInterval(() => {if (active) loadLive();}, 5000);
+    const tick = setInterval(() => {for (const cell of root.querySelectorAll("[data-run-start]")) cell.textContent = plRun(Math.max(0, Math.floor((clock() - Number(cell.dataset.runStart)) / 1000)));}, 1000);
+    return () => {active = false; clearInterval(poll); clearInterval(tick); document.removeEventListener("click", onClick, true); closeLayer(); document.querySelector(".cm-pl-toast")?.remove();};
   };
   actions['play-leave-seat']=el=>C.modal('Leave this table?',`<p>This device will disconnect. Your seat follows the table's normal reconnect window, and its saved shortcut remains available if you want to return.</p><div class="cm-form-footer">${b('Cancel','close')}${b('Leave table','play-leave-confirm',{table:el.dataset.table},true)}</div>`);
   actions['play-leave-confirm']=async el=>{const id=el.dataset.table;C.board?.close();actions.close();await C.render();C.notice('Disconnected from the table on this device.',false,{undo:false,action:{label:'Return to table',run:()=>C.go('table',{id})}});};

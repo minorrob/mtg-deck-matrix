@@ -17,6 +17,8 @@
     14. Zero tilt is the floor's own slope in the backdrop: steeper than the seated 45 degrees it was.
     15. A tall Actions module around a short list shows no scrollbar of either kind.
     16. The ribbon's life stands on the player name's baseline, and the step now under way keeps the line of the other steps.
+    18. The Turn row has a fold arrow that hides and shows the life box under it; priority is a blue dot at the right of the holder's life.
+    19. A history line is read in full by scrolling sideways, never cut with an ellipsis.
     17. Alt + the left button dragged up over the battlefield grows the cards, down over the lands shrinks them (Camera's Cards follows); nothing is sent. */
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
@@ -114,11 +116,12 @@ eq(m.heading,"Actions","the first section is called Actions");
 /* 9. */
 ok(m.actions.length>=1&&m.actions.every(b=>b.h<=43&&b.fs>=15),`the action buttons are 42px high with 15px type (${m.actions.map(b=>Math.round(b.h)+"/"+b.fs).join(", ")})`);
 /* 11. */
-const rb=await page.evaluate(()=>{const R=e=>{const r=e.getBoundingClientRect();return {l:r.left,t:r.top,r:r.right,b:r.bottom}};const top=document.querySelector(".cm-stage-top"),cap=document.querySelector(".cm-stage-caption"),life=cap.querySelector(".cm-stage-life-list"),pr=cap.querySelector(".cm-stage-priority");
-  return {ribbon:top.textContent,ribbonPriority:top.querySelectorAll(".cm-stage-priority,.cm-board-turn").length,caption:cap.textContent,arrow:top.querySelectorAll("[data-action=board-actions-open]").length,life:R(life),pr:pr&&R(pr)};});
+const rb=await page.evaluate(()=>{const R=e=>{const r=e.getBoundingClientRect();return {l:r.left,t:r.top,r:r.right,b:r.bottom}};const top=document.querySelector(".cm-stage-top"),cap=document.querySelector(".cm-stage-caption"),life=cap.querySelector(".cm-stage-life-list"),pr=cap.querySelector(".cm-stage-life-prio:not(.is-off)"),row=pr&&pr.closest(".cm-stage-life"),turn=cap.querySelector(".cm-board-turn"),tog=cap.querySelector("[data-action=board-life-toggle]");
+  return {row:row&&R(row),turnb:R(turn),tog:tog&&R(tog),ribbon:top.textContent,ribbonPriority:top.querySelectorAll(".cm-stage-priority,.cm-board-turn").length,caption:cap.textContent,arrow:top.querySelectorAll("[data-action=board-actions-open]").length,life:R(life),pr:pr&&R(pr)};});
 ok(!/Turn \d+/i.test(rb.ribbon)&&!/Priority/.test(rb.ribbon)&&rb.ribbonPriority===0,"the ribbon says neither the turn nor the priority");
-ok(/TURN \d+/.test(rb.caption)&&/Priority: /.test(rb.caption),"the top-left caption has the turn and the priority");
-ok(rb.pr&&rb.pr.t>=rb.life.b-1&&rb.pr.t-rb.life.b<14&&Math.abs(rb.pr.l-rb.life.l)<2,"Priority stands directly under the life totals");
+ok(/TURN \d+/.test(rb.caption)&&!/Priority/.test(rb.caption),"the top-left caption has the turn and no priority text");
+ok(rb.pr&&rb.row&&rb.row.r-rb.pr.r<14&&rb.pr.t>=rb.life.t&&rb.pr.b<=rb.life.b,"a blue dot at the right of the priority holder's life row says where priority sits");
+ok(rb.tog&&rb.life.t>=rb.turnb.b-1&&rb.tog.l>=rb.turnb.r-1&&Math.abs(rb.tog.t+rb.tog.b-rb.turnb.t-rb.turnb.b)<8,"the life box sits under the Turn row and its fold arrow is beside Turn");
 eq(rb.arrow,0,"the open-drawer arrow is not drawn while the drawer is open");
 /* 12. */
 await page.locator("[data-action=board-camera]").click();
@@ -162,6 +165,16 @@ await altDrag(field,-80);const c1=await cardsValue();
 ok(c1>c0,`Alt + drag up on the battlefield grows the cards (${c0} to ${c1})`);
 await altDrag(await page.locator(".cm-stage-front .cm-board-lands").first().boundingBox(),80,.15);const c2=await cardsValue();
 ok(c2<c1,`Alt + drag down on the lands shrinks them (${c1} to ${c2})`);
+/* 18. */
+const fold=page.locator("[data-action=board-life-toggle]");
+await fold.click();
+eq(await page.locator(".cm-stage-caption .cm-stage-life-list").count(),0,"the fold arrow beside Turn hides the life box");
+eq(await page.locator(".cm-stage-caption .cm-board-turn").count(),1,"Turn stays when the box is folded");
+await page.locator("[data-action=board-life-toggle]").click();
+ok(await page.locator(".cm-stage-caption .cm-stage-life-list").count()===1,"the fold arrow brings the life box back");
+/* 19. */
+const hist=await page.evaluate(()=>{const ol=document.querySelector(".cm-board-band ol");if(!ol)return null;const li=ol.querySelector("li span:first-child");li.textContent="A very long line of the game's history that must be read in full by scrolling sideways, never cut off with dots "+li.textContent;const cs=getComputedStyle(li);return {scroll:ol.scrollWidth>ol.clientWidth+20,ellipsis:cs.textOverflow==="ellipsis",xauto:["auto","scroll"].includes(getComputedStyle(ol).overflowX)};});
+ok(hist&&hist.scroll&&!hist.ellipsis&&hist.xauto,"a long history line scrolls sideways and is not cut with an ellipsis");
 /* 8. */
 await page.evaluate(()=>document.querySelector('[data-action="send-feedback"]').click());
 await page.waitForTimeout(700);
