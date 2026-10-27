@@ -7,7 +7,8 @@
  * earlier on". The pilots cannot read the 16 MB corpus, so a generator keeps a few kilobytes of it.
  *
  *   1. The module is what its sources say (the generator's --check), small enough for a Worker, and holds the engine's cards only.
- *   2. Famous cards read as what they are: doublers, untappers and loop pieces, token and draw engines, bleed, salty.
+ *   2. Famous cards read as what they are: doublers, untappers and loop pieces, token and draw engines, bleed, salty,
+ *      and the answers, wipes and ramp a pilot weighs a spell in hand by.
  *   3. A commander's class: the loops highest, the engines in the middle, the unclassified none.
  *   4. The accessors fold a name as the engine does, and an unknown card has no flags.
  *   5. The room hands every pilot a card's flags and a commander's class with its other public facts.
@@ -34,8 +35,8 @@ const ROOT = new URL("../", import.meta.url);
   eq(text, moduleText(build()), "roles-data.mjs is what its sources say (node tools/build-pilot-roles.mjs writes it)");
   ok(text.length < 200 * 1024, `and is small enough for a Worker (${(text.length / 1024).toFixed(0)} KB of 200)`);
   ok(Object.keys(CARD_FLAGS).every((k) => DEFINITIONS[k]), "it holds engine cards only: every name is a playable definition");
-  ok(Object.values(CARD_FLAGS).every((v) => /^[DWTURCLXBGS]+$/.test(v)) && !Object.values(CARD_FLAGS).includes(""), "every card has at least one flag, from the legend");
-  ok(Object.values(CARD_FLAGS).every((v) => v === [...v].sort((a, b) => "DWTURCLXBGS".indexOf(a) - "DWTURCLXBGS".indexOf(b)).join("")), "in the legend's order");
+  ok(Object.values(CARD_FLAGS).every((v) => /^[DWTURCLXBGSAKP]+$/.test(v)) && !Object.values(CARD_FLAGS).includes(""), "every card has at least one flag, from the legend");
+  ok(Object.values(CARD_FLAGS).every((v) => v === [...v].sort((a, b) => "DWTURCLXBGSAKP".indexOf(a) - "DWTURCLXBGSAKP".indexOf(b)).join("")), "in the legend's order");
   ok(Object.keys(CARD_FLAGS).length > 800 && Object.keys(COMMANDER_CLASS).length > 1000, `a table worth reading: ${Object.keys(CARD_FLAGS).length} cards, ${Object.keys(COMMANDER_CLASS).length} commanders`);
   ok(Object.values(COMMANDER_CLASS).every((v) => v >= 0.35 && v <= 1), "a commander's class is kept from 0.35 to 1");
   const salty = JSON.parse(readFileSync(new URL("data/ai-players/salty-cards.json", ROOT), "utf8"));
@@ -54,7 +55,10 @@ const ROOT = new URL("../", import.meta.url);
   ok(flags("blood artist").includes("B") && flags("zulaport cutthroat").includes("B") && flags("impact tremors").includes("B"), "Blood Artist, Zulaport Cutthroat and Impact Tremors bleed the table");
   ok(flags("smothering tithe").includes("W") && flags("smothering tithe").includes("G") && flags("smothering tithe").includes("S"), "Smothering Tithe is a draw and token engine, a game changer, and salty");
   ok(flags("armageddon").includes("S") && !isLink(flags("armageddon")), "Armageddon is salty and is no engine link");
-  ok(!(flags("sol ring")) && !(flags("forest")), "Sol Ring and a Forest have no role worth a flag");
+  eq([flags("sol ring"), flags("forest")], ["P", ""], "Sol Ring is ramp and a Forest has no role worth a flag");
+  ok(flags("swords to plowshares") === "A" && flags("path to exile") === "A", "Swords to Plowshares and Path to Exile are answers");
+  ok(flags("wrath of god").includes("K") && flags("damnation").includes("K"), "Wrath of God and Damnation are wipes");
+  ok(flags("rampant growth") === "P" && flags("cultivate") === "P", "Rampant Growth and Cultivate are ramp");
   ok([...LINKS].every((l) => Object.values(CARD_FLAGS).some((v) => v.includes(l))), "every engine link kind is found somewhere in the table");
 }
 

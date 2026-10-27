@@ -20,7 +20,12 @@ let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1;};
 const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1;};
 
-const FACTS = {Forest: {manaValue: 0, types: ["Land"], makes: ["G"], flags: ""}, Bear: {manaValue: 2, types: ["Creature"], makes: [], flags: ""}, Wall: {manaValue: 2, types: ["Creature"], makes: [], flags: ""}};
+const FACTS = {Forest: {manaValue: 0, types: ["Land"], makes: ["G"], flags: ""}, Bear: {manaValue: 2, types: ["Creature"], makes: [], flags: ""}, Wall: {manaValue: 2, types: ["Creature"], makes: [], flags: ""},
+  /* Spells and engine pieces, with the role flags the room hands every pilot (pilots/roles.mjs). */
+  Murder: {manaValue: 3, types: ["Instant"], makes: [], flags: "A"}, Wrath: {manaValue: 4, types: ["Sorcery"], makes: [], flags: "K"},
+  "Loop Piece": {manaValue: 2, types: ["Creature"], makes: [], flags: "UL"}, "Token Engine": {manaValue: 3, types: ["Creature"], makes: [], flags: "T"},
+  Doubler: {manaValue: 4, types: ["Enchantment"], makes: [], flags: "D"}, "Three Drop": {manaValue: 3, types: ["Creature"], makes: [], flags: ""},
+  "Loop Commander": {manaValue: 4, types: ["Creature"], makes: [], flags: "", commanderClass: 1}};
 const cards = (name) => FACTS[name] ?? null;
 let ids = 0;
 const C = (name, controller, power, toughness, extra = {}) => ({cardId: ++ids, name, types: FACTS[name].types, controller, owner: controller, tapped: false, damage: 0, keywords: [], power, toughness, ...extra});
@@ -127,4 +132,55 @@ ok(SETTINGS.includes("hard") && TEMPERATURE.hard === 0, "L1 knows a hard setting
   eq(absorb([T(2, 2, ["Double Strike"])], []), 4, "(4 unblocked)");
 }
 
-console.log(`engine-hard-pilot: ${checks} checks passed — Hard gives each creature the defender where it does the most and holds home the blockers a trampler or a flyer needs.`);
+/* ---- 5. Response urgency in the cast choice: answer in proportion ---- */
+{
+  const lands = (n) => Array.from({length: n}, (_, i) => ({kind: "activate-mana", objectId: 100 + i, label: "Forest", detail: "{G}"}));
+  const offer = (name, objectId, targets = [], hostile = false) => ({kind: "cast", objectId, label: name, tax: 0, autoTap: true, ...(hostile ? {hostile: true} : {}), targets});
+  const at = (id) => ({kind: "object", id});
+  const main = (players, extra = {}) => viewOf({phase: "MAIN1", players, ...extra});
+  const choose = (setting, v, actions) => scoredPilot({seat: 0, cards, setting, seed: "s"}).choose(v, actions);
+  const kind = (a) => a.kind + (a.label ? `:${a.label}` : "");
+
+  /* Murder on a vanilla 1/1: Hard keeps the card; Normal and Easy cast it as they always have. */
+  ids = 0;
+  const tiny = C("Bear", 1, 1, 1);
+  const v1 = main([{}, {battlefield: [tiny]}]);
+  const a1 = [offer("Murder", 9, [at(tiny.cardId)], true), ...lands(4), {kind: "pass"}];
+  eq([kind(choose("hard", v1, a1)), kind(choose("normal", v1, a1)), kind(choose("easy", v1, a1))], ["pass", "cast:Murder", "cast:Murder"],
+    "a removal spell for a vanilla 1/1: Hard passes (not worth its cost), Normal and Easy cast it");
+
+  /* The same spell on a loop piece with its partner in sight: Hard casts it, at the loop piece and not at the bigger body. */
+  ids = 0;
+  const loop = C("Loop Piece", 1, 1, 1), engine = C("Token Engine", 1, 1, 1), body = C("Bear", 1, 3, 3);
+  const v2 = main([{}, {battlefield: [loop, engine, body]}]);
+  const a2 = [offer("Murder", 9, [at(body.cardId)], true), offer("Murder", 9, [at(loop.cardId)], true), offer("Murder", 9, [at(engine.cardId)], true), ...lands(4), {kind: "pass"}];
+  const hard = choose("hard", v2, a2);
+  eq([hard.kind, hard.targets[0].id], ["cast", loop.cardId], "with a loop piece and its partner on the board, Hard casts Murder at the loop piece, not the bigger vanilla body");
+  eq(choose("normal", v2, a2).targets[0].id, body.cardId, "Normal, with urgency a light weight, still goes at the bigger body");
+
+  /* A board wipe: not for one seed of a loop; yes when the other seats' creatures are many and mine are few. */
+  ids = 0;
+  const seed = C("Doubler", 1, 0, 0), m1 = C("Bear", 0, 3, 3), m2 = C("Bear", 0, 3, 3), m3 = C("Bear", 0, 3, 3);
+  const wrath = [offer("Wrath", 9, [], true), ...lands(5), {kind: "pass"}];
+  eq(kind(choose("hard", main([{battlefield: [m1, m2, m3]}, {battlefield: [seed]}]), wrath)), "pass", "one doubler seed is no reason for a wipe that takes my three creatures: Hard passes");
+  ids = 0;
+  const big = [C("Bear", 1, 5, 5), C("Bear", 1, 5, 5), C("Bear", 1, 5, 5), C("Bear", 1, 5, 5)], lone = C("Bear", 0, 1, 1);
+  eq(kind(choose("hard", main([{life: 12, battlefield: [lone]}, {battlefield: big}]), wrath)), "cast:Wrath", "four 5/5s against my one 1/1 at 12 life: Hard wipes the board");
+  ids = 0;
+  const big2 = [C("Bear", 1, 5, 5), C("Bear", 1, 5, 5), C("Bear", 1, 5, 5), C("Bear", 1, 5, 5)], mine3 = [C("Bear", 0, 5, 5), C("Bear", 0, 5, 5), C("Bear", 0, 5, 5)];
+  eq(kind(choose("hard", main([{life: 12, battlefield: mine3}, {battlefield: big2}]), wrath)), "pass", "with three 5/5s of my own, the wipe costs more than it removes: Hard passes");
+
+  /* Mana held for an instant answer, on its own turn, when the table holds a seed worth answering. */
+  ids = 0;
+  const hand = [{cardId: 70, name: "Murder", types: ["Instant"]}, {cardId: 71, name: "Three Drop", types: ["Creature"]}];
+  const drop = [offer("Three Drop", 71), ...lands(4), {kind: "pass"}];
+  const worried = main([{hand}, {command: [C("Loop Commander", 1, 3, 3, {commander: true})]}]);
+  const calm = main([{hand}, {}]);
+  eq([kind(choose("hard", worried, drop)), kind(choose("hard", calm, drop))], ["pass", "cast:Three Drop"], "Hard with Murder in hand and a loop commander across the table leaves three of its four mana up and does not cast the 3-drop; with a calm table it does");
+  eq(kind(choose("normal", worried, drop)), "cast:Three Drop", "Normal does not hold mana");
+
+  /* Easy pays no attention at all: the same spell it always cast at the worthiest target. */
+  eq(choose("easy", v2, a2).targets[0].id, body.cardId, "Easy goes at the biggest body, as L1 always has");
+}
+
+console.log(`engine-hard-pilot: ${checks} checks passed — Hard gives each creature the defender where it does the most and holds home the blockers a trampler or a flyer needs, and answers a threat in proportion to it.`);

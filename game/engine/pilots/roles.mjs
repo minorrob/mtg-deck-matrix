@@ -11,7 +11,7 @@ import {CARD_FLAGS, COMMANDER_CLASS} from "./roles-data.mjs";
 /* The fold the engine matches names by (game/engine/cards/definitions.mjs): case, accents, punctuation and spacing. */
 export const fold = (name) => String(name ?? "").normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9/ ]+/g, "").replace(/\s+/g, " ").trim();
 
-/** An ENGINE LINK is a doubler, draw engine, token engine, untapper, recursion engine or copier on a permanent. */
+/** An ENGINE LINK is a doubler, draw engine, token engine, untapper, recursion engine or copier on a permanent. Of the other flags, A is an answer, K a wipe and P ramp (the pilot weighs a spell in hand by them). */
 export const LINKS = "DWTURC";
 
 export const flagsOf = (name) => CARD_FLAGS[fold(name)] ?? "";

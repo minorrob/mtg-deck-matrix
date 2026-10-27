@@ -22,6 +22,9 @@
  *   B bleed         drain, poison, infect, extort: damage that goes round the board
  *   G game changer  on Wizards' list
  *   S salty         a game changer, an extra turn, or on data/ai-players/salty-cards.json (Rob's to edit)
+ *   A answer        removal: what a player holds up, or casts, against a threat
+ *   K wipe          a mass answer: it takes the board, mine with theirs (the pilot weighs what it costs the caster)
+ *   P ramp          mana ahead of the curve
  * An ENGINE LINK is D, W, T, U, R or C on a permanent; the threat signal counts them (pilots/threat.mjs).
  *
  * A COMMANDER'S CLASS, 0 to 1, from the strategies the catalog classifies it into (data/commander-strategies.json): the loops
@@ -42,7 +45,7 @@ const BLEED = new Set(["infect", "toxic", "extort", "drain life", "blood drain",
 const STRATEGY = {"untap-loop": 1, "extra-turns": 1, "copy-loop": 0.9, "blink-loop": 0.8, "tutor-chain": 0.8, "recursion-loop": 0.7, "sacrifice-supply": 0.6,
   "etb-payoff": 0.5, "death-payoff": 0.5, "draw-payoff": 0.5, "counters": 0.5, "landfall": 0.4, "spellslinger": 0.4, "team-quality": 0.35, "stat-payoff": 0.3, "tribal-payoff": 0.3};
 const KEEP_CLASS = 0.35, POPULAR = 300, POPULAR_BONUS = 0.1;
-const ORDER = ["D", "W", "T", "U", "R", "C", "L", "X", "B", "G", "S"];
+const ORDER = ["D", "W", "T", "U", "R", "C", "L", "X", "B", "G", "S", "A", "K", "P"];
 
 export function build() {
   const graph = read("data/graph.json"), strategies = read("data/commander-strategies.json");
@@ -70,6 +73,9 @@ export function build() {
     if (mech.some((m) => BLEED.has(m)) || (permanent && ((g?.causes ?? []).includes("life-loss") || eff.includes("loseLife")) && live)) f.add("B");
     if (g?.gameChanger) f.add("G");
     if (f.has("G") || f.has("X") || salty.has(key)) f.add("S");
+    if (roles.has("removal")) f.add("A");
+    if (roles.has("wipe")) f.add("K");
+    if (roles.has("ramp")) f.add("P");
     if (f.size) cards[key] = ORDER.filter((l) => f.has(l)).join("");
     void triggers;
   }

@@ -38,6 +38,8 @@
 import {housePilot, meetRequirements, withinBudget, keptWithin} from "./house-pilot.mjs";
 import {threatTable, absurd} from "./threat.mjs";
 import {reserveFor, RISK} from "./reserve.mjs";
+import {threatsOnTable, netOf, holdFor, URGENCY} from "./urgency.mjs";
+import {has as hasFlag} from "./roles.mjs";
 import {atLeast} from "./odds.mjs";
 import {createRng} from "../rng.mjs";
 
@@ -65,6 +67,9 @@ export const WEIGHTS = {
      both are nothing: the table says where, never whether. */
   threat: 6,
   threatAim: 0.5,
+  /* WHAT AN ANSWER NETS (urgency.mjs): the urgency it removes less its cost, in worth, times this and the difficulty's weight
+     (URGENCY: Easy 0, Normal 0.4, Hard 1), beside the mana a plan spends. */
+  urgency: 0.5,
   /* An activated ability, by what the card says it does, against what it costs; used when it clears `activate`. */
   ability: {draw: 1.5, ramp: 2, tutor: 1.5, look: 0.3, proliferate: 1, counter: 1, life: 0.1, discard: 1, treasure: 1,
     mana: 0.25, tapCreature: 0.5, counterCost: 0.5, tapOther: 0.5, exile: 0.2, lifeCost: 0.2},
@@ -270,20 +275,41 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
     const self = me(view);
     const offers = actions.filter((a) => a.kind === "cast" && a.x === undefined && !a.convoke);
     if (!offers.length) return null;
-    /* One offer per spell: the one aimed best. */
-    const bySpell = new Map(), threats = threatsOf(view);
+    /* RESPONSE URGENCY (urgency.mjs): what an answer is worth against what is on the table, and what it costs its caster. */
+    const U = URGENCY[setting] ?? 0, table = U > 0 ? threatsOnTable(view, {seat, facts: known}) : null;
+    const mineWorth = table ? battlefield(view).filter((c) => c.controller === seat && !isLand(c)).reduce((n, c) => n + worth(c), 0) : 0;
+    /* One offer per spell: the one aimed best (and, where urgency is read, the one that answers the most). */
+    const bySpell = new Map(), threats = threatsOf(view), declined = new Set();
     for (const a of offers) {
       const aim = aimOf(view, a, threats);
       if ((a.targets ?? []).length && aim.on === 0) continue;
       const cost = manaValue(a.label) + (a.tax ?? 0);
       if (!Number.isFinite(cost)) continue;
-      const prev = bySpell.get(a.objectId);
-      if (!prev || aim.value > prev.aim.value) bySpell.set(a.objectId, {a, aim, cost});
+      let gain = 0;
+      if (table) {
+        const wipe = hasFlag(known(a.label)?.flags, "K"), onPlayer = (a.targets ?? []).some((t) => t?.kind === "player");
+        if ((wipe || a.hostile === true) && !onPlayer) {
+          const removed = wipe ? table.total : (a.targets ?? []).reduce((n, t) => n + (t?.kind === "object" ? (table.items.get(t.id)?.urgency ?? 0) : 0), 0);
+          const net = netOf({removed, cost, collateral: wipe ? mineWorth : 0});
+          /* THE PROPORTION RULE: at Hard an answer that is not worth what it costs is not cast, so one seed of a loop draws no wipe. */
+          if (U >= 1 && net <= 0) {declined.add(a.objectId); continue;}
+          gain = Math.max(0, net);
+        }
+      }
+      const key = W.aimed * aim.value + U * W.urgency * gain, prev = bySpell.get(a.objectId);
+      if (!prev || key > prev.key) bySpell.set(a.objectId, {a, aim, cost, gain, key});
     }
     const spells = [...bySpell.values()].sort((x, y) => y.cost - x.cost || x.a.objectId - y.a.objectId).slice(0, 12);
-    if (!spells.length) return null;
+    if (!spells.length) {
+      /* Every spell it could cast it has judged not worth its cost: that is an answer (pass), not a question for L0. */
+      if (declined.size && !scores && actions.filter((a) => a.kind === "cast").every((a) => declined.has(a.objectId))) return {declined: true};
+      return null;
+    }
     const sources = new Set(actions.filter((a) => a.kind === "activate-mana" && !a.costChoice).map((a) => a.objectId)).size;
-    const mana = sources + (self.mana ?? []).reduce((n, m) => n + m.amount, 0);
+    /* HARD LEAVES MANA UP for an instant answer, on its own turn, when the table holds a seed worth answering. */
+    const held = U >= 1 && view.turnPlayerId === seat && MAIN.includes(view.phase) && view.turn > view.players.length * 2
+      ? holdFor({hand: zone(self, "Hand"), facts: known, threats}) : 0;
+    const mana = sources + (self.mana ?? []).reduce((n, m) => n + m.amount, 0) - held;
     /* Every set that fits, scored by the mana it spends and then by what its spells aim at. */
     const plans = [];
     for (let mask = 1; mask < 1 << spells.length; mask += 1) {
@@ -291,12 +317,14 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
       const spent = set.reduce((n, s) => n + s.cost, 0);
       if (spent > mana) continue;
       const first = set[0];
-      plans.push({value: spent + W.aimed * set.reduce((n, s) => n + s.aim.value, 0), first: first.a});
+      plans.push({value: spent + W.aimed * set.reduce((n, s) => n + s.aim.value, 0) + U * W.urgency * set.reduce((n, s) => n + s.gain, 0), first: first.a});
     }
     /* The largest spell of the plan is cast first; the same first spell is one choice, at its best plan's score. */
     const firsts = new Map();
     for (const p of plans) if (!firsts.has(p.first.objectId) || p.value > firsts.get(p.first.objectId).value) firsts.set(p.first.objectId, p);
     if (scores) {scores.push(...[...firsts.values()].map((p) => p.value)); return null;}
+    /* What it keeps up for an instant leaves no spell it can afford: that is a pass, not a question for L0, which would cast it anyway. */
+    if (!firsts.size) return held > 0 ? {declined: true} : null;
     const chosen = pick([...firsts.values()], setting, roll(view, `cast:${view.stackSize}:${spells.map((s) => s.a.objectId).join(",")}`), temperature);
     return chosen ? chosen.first : null;
   }
@@ -603,7 +631,10 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
         const l0 = floor.choose(view, actions);
         if (l0.kind === "activate") return l0;
       }
-      const planned = (on.has("cast") ? castPlan(view, actions) : null) ?? (on.has("ability") ? abilityPlan(view, actions) : null);
+      const cast = on.has("cast") ? castPlan(view, actions) : null;
+      /* It judged every spell not worth its cost: an ability worth taking, else pass -- never L0's most expensive spell. */
+      if (cast?.declined) return (on.has("ability") ? abilityPlan(view, actions) : null) ?? actions.find((a) => a.kind === "pass") ?? floor.choose(view, actions);
+      const planned = cast ?? (on.has("ability") ? abilityPlan(view, actions) : null);
       return planned ?? floor.choose(view, actions);
     },
 
