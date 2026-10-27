@@ -1586,6 +1586,42 @@ function manaOffers(state, player) {
   return actions;
 }
 
+/**
+ * THE MANA A PLAYER'S PERMANENTS COULD MAKE (the board's Mana Pool; Rob, 2026-10-26: "a total sum of available mana (from
+ * mana dorks, mana rocks, basic lands, lands, legendary lands, and all of their potential options"). Each permanent of
+ * theirs with a mana ability that taps it -- a land, a rock, a dork -- once: its name, whether it is tapped, whether it
+ * could be tapped for mana now (`ready`: not tapped, not summoning sick, nothing stopping its abilities), and its `ways`,
+ * each what one activation adds (`mana`, as manaAlternatives counts it now) and what mana it costs first (`pay`, a
+ * Signet's {1}). Abilities whose condition is not met, whose limit is used up or whose counters are not there are left
+ * out, and so is any ability that taps or sacrifices something else, or exiles from the graveyard, to make its mana: what
+ * it spends is the player's to choose. Facts only, public as the permanents are; the board does the sums.
+ */
+export function manaSources(state, player) {
+  const out = [];
+  for (const id of state.zones.battlefield) {
+    const object = state.objects[id];
+    if (object.controller !== player || object.faceDown) continue;
+    const blocked = activationsForbidden(state, id) || permanentActivationForbidden(state, id) || sickForAbilities(state, id);
+    const ways = [];
+    for (const ability of abilitiesOf(state, id)) {
+      if (ability.kind !== "mana" || !ability.tapSelf || ability.zone === "hand" || ability.sacrifice || ability.tapCreature || ability.exileFromGraveyard) continue;
+      if (!conditionHolds(state, ability.condition, {controller: player, source: id}) || !withinLimit(state, id, ability) || !countersPayable(state, id, ability.counterCost) || !millPayable(state, player, ability)) continue;
+      let pay = 0, payColors = {};
+      try {
+        const cost = parseManaCost(ability.cost || "");
+        pay = manaValue(cost);
+        payColors = Object.fromEntries(Object.entries(cost.colored).filter(([, n]) => n > 0));
+      } catch { continue; }
+      for (const mana of manaAlternatives(state, player, ability, id)) {
+        const made = Object.fromEntries(Object.entries(mana ?? {}).filter(([k, n]) => MANA_KEYS.includes(k) && n > 0));
+        if (Object.keys(made).length) ways.push({mana: made, ...(pay ? {pay} : {}), ...(Object.keys(payColors).length ? {payColors} : {}), ...((ability.payLife || 0) > state.players[player].life ? {ready: false} : {})});
+      }
+    }
+    if (ways.length) out.push({cardId: id, name: object.card, tapped: object.tapped === true, ready: !object.tapped && !blocked && ways.some((w) => w.ready !== false), ways});
+  }
+  return out;
+}
+
 /* A MANA ABILITY THAT TAPS ANOTHER CREATURE: "{T}, Tap an untapped creature you control: Add one mana of any color" (Jaspera
    Sentinel, Saruli Caretaker; CR 605.1a, 602.2b). Which creature is its player's to choose, so each one it may tap is an offer
    of its own, as a mana ability's sacrifice is, and nothing that pays for them (tapUnits, rules/mana.mjs's plainSources)
@@ -1629,7 +1665,9 @@ export function tapUnits(state, player, offered = manaOffers(state, player), bun
 /* A cast that may tap for itself: from the hand or the command zone, its mana cost (and a commander's tax) paid, with
    nothing in the pool -- so the mana tapped is exactly the cost, and paying it is no further choice. */
 /* X paid in life (`payLifeX`, Toxic Deluge) is no X its sources' mana pays: it is tapped for as any other. */
-const tapCastable = (state, player, action) => ["hand", "command"].includes(action.from) && !action.free && !action.flashback
+const tapZone = (state, player, from, id) => ["hand", "command"].includes(from) || (state.preparedTaps === true && from === "exile"
+  && preparedCopyStays(state, id) && controllerOf(state, state.objects[id].prepareOf) === player);
+const tapCastable = (state, player, action) => tapZone(state, player, action.from, action.objectId) && !action.free && !action.flashback
   && action.escape === undefined && action.alternative === undefined && (action.x === undefined || action.payLifeX === true || xTaps(state))
   && (pooledTaps(state) || poolSize(poolFor(state, player, {spell: action.objectId})) === 0);
 
@@ -1881,7 +1919,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
     let autoTap = false;
     /* Not with creatures tapped as an additional cost or for escalate: one tapped for mana as the cast taps its sources could
        not then be tapped for it (their mana is paid from the pool first). */
-    if (!payment && (pooledTaps(state) ? !canPay(pool, cost, {life: lifeLeft, x: x + (xMana ?? 0) * cost.variable}) : poolSize(pool) === 0) && (xMana === null || tapsForX) && !freely && !back && !fled && !way && !tapsAny && !variant.escalateTap && ["hand", "command"].includes(from)) {
+    if (!payment && (pooledTaps(state) ? !canPay(pool, cost, {life: lifeLeft, x: x + (xMana ?? 0) * cost.variable}) : poolSize(pool) === 0) && (xMana === null || tapsForX) && !freely && !back && !fled && !way && !tapsAny && !variant.escalateTap && tapZone(state, player, from, id)) {
       const paying = xMana === null ? cost : xCounted(cost, xMana);
       const [plan] = fundingPlans(state, player, id, {...paying, generic: paying.generic + x}, 1, tappable());
       if (plan) {
@@ -2479,6 +2517,16 @@ function divisionProblem(state, player, action) {
   return null;
 }
 
+/** The script of this exact offered face and mode, for public decision descriptions. It is not an action permission. */
+export function offerScript(state, action) {
+  if (!state.objects[action?.objectId] || action.disguise) return null;
+  return asCast(state, action, () => {
+    const object = state.objects[action.objectId];
+    const ability = action.kind === "cast" ? object.spell : chosenFor(abilitiesOf(state, action.objectId).find(a => a.id === action.abilityId), object);
+    return ability ? structuredClone(ability.modal && Array.isArray(action.modes) ? {...ability, ...modalScript(ability.modal, action.modes)} : ability) : null;
+  });
+}
+
 export function offerSpecs(state, player, action) {
   const object = state.objects[action.objectId];
   if (!object) return {specs: [], context: {controller: player, source: action.objectId}};
@@ -2521,7 +2569,8 @@ export function chooseTargetsChoice(state, awaiting) {
     const object = state.objects[awaiting.action.objectId];
     const ability = awaiting.action.kind === "activate" ? abilitiesOf(state, awaiting.action.objectId).find((a) => a.id === awaiting.action.abilityId) : object?.spell;
     return countedChoice(state, specs[awaiting.index], context, {id: `choose-targets:${awaiting.action.objectId}:${awaiting.index}`,
-      name: object?.card ?? "That spell", hostile: awaiting.action.hostile === true || isHostile(ability?.effects ?? []), placeholder: awaiting.action.targets[awaiting.index]});
+      name: object?.card ?? "That spell", hostile: awaiting.action.hostile === true || isHostile(ability?.effects ?? []), placeholder: awaiting.action.targets[awaiting.index],
+      effects: ability?.effects ?? [], targetIndex: awaiting.index});
   });
 }
 

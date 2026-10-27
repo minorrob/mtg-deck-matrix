@@ -147,24 +147,19 @@
     } finally {running = false; draw();}
   };
 
-  /* THE MENU'S FIRST SECTION, AND THE CHIP THAT OPENS IT (r3, 06-global-menu). The chip at the rail's
-     foot says who is signed in and whether the library has reached the cloud; the Account section
-     says it in full, with Sync now; Sign out is the Menu's last entry, in red, away from everything
-     a reader means to press. */
+  /* The shared r4 menu keeps identity in You, sync in This device and Sign out alone at the foot.
+     Account redraws update those slots without replacing settings, verified Invite/Admin or data controls. */
   function draw() {
     const menu = C.$("#cm-user-menu");
     if (!menu) return;
-    let box = C.$("#cm-account");
-    if (!box) {box = document.createElement("div"); box.id = "cm-account"; box.className = "cm-account"; menu.prepend(box);}
-    /* Refresh (Rob, 2026-09-29) sits under Sync now: the app's newest files, the library untouched (crankmagic-app.js). */
-    const refresh = `<button type="button" data-action="app-refresh" title="Reload CrankMagic with its newest files from the site. Your library is not touched.">Refresh</button>`;
+    const box = C.$("#cm-account"), deviceBox = C.$("#cm-account-device");
+    if (!box || !deviceBox) return;
     box.innerHTML = who.email
-      ? `<p>Account</p><p class="cm-account-who">Signed in as ${e(who.email)}</p>${status ? `<p class="cm-account-status">${e(status)}</p>` : ""}`
-        + `<button type="button" data-action="account-sync">Sync now</button>${refresh}<hr>`
-      : `<p>Account</p><button type="button" data-action="account-sign-in">Sign In (Save to Cloud)</button>${refresh}<hr>`;
-    let out = C.$("#cm-account-out");
-    if (who.email && !out) {out = document.createElement("div"); out.id = "cm-account-out"; out.innerHTML = `<hr><button type="button" class="cm-danger" data-action="account-sign-out">Sign out</button>`; menu.append(out);}
-    if (!who.email && out) out.remove();
+      ? `<p class="cm-account-who">Signed in as ${e(who.email)}</p>${status ? `<p class="cm-account-status">${e(status)}</p>` : ""}`
+      : `<p class="cm-account-who">Signed out · saved on this device</p><button type="button" data-action="account-sign-in">Sign In (Save to Cloud)</button>`;
+    deviceBox.innerHTML = who.email ? `<button type="button" data-action="account-sync"${running?' disabled':''}>${running?'Syncing…':'Sync now'}</button>` : '';
+    const out = C.$("#cm-account-out");
+    if(out){out.hidden=!who.email;out.innerHTML=who.email?`<button type="button" class="cm-danger" data-action="account-sign-out">Sign out</button>`:'';}
     chip();
     settings();
     danger();
