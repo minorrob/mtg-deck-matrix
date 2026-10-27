@@ -254,7 +254,7 @@
 .cm-stage-module[data-module="actions"] .cm-board-decision{position:static;width:100%;max-width:none;max-height:none;margin:0}
 
 /* Drawer stack and Card Preview use one readable card size in either drawer. */
-.cm-board[data-shell="shared"]{--module-card-w:min(calc((min(var(--stage-side-width),var(--stage-left-width,270px)) - 74px) * .75),calc((clamp(180px,30vh,320px) - 20px) * 5 / 7))}   /* one card size for every module, by the narrower drawer, so a pile and the Card Preview match wherever they are put */
+.cm-board[data-shell="shared"]{--module-card-w:min(calc((min(var(--stage-side-width),var(--stage-left-width,270px)) - 64px) * .75),calc((clamp(180px,30vh,320px) - 20px) * 5 / 7))}   /* one card size for every module, by the narrower drawer, so a pile and the Card Preview match wherever they are put */
 .cm-stage-module .cm-full-pick .cm-bcard,.cm-stage-module .cm-stack-card{--bc:var(--module-card-w);width:var(--bc);max-width:100%}
 .cm-stage-module #cm-full-pick,.cm-stage-side .cm-module-body #cm-full-pick{height:auto;min-height:0;overflow:visible}
 .cm-stage-module .cm-full-pick{background:none;border:0;padding:0}
