@@ -1246,11 +1246,11 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 /* SCROLLING (Rob, 2026-10-27: the bars "are seemingly always present, even when text isn't bleeding out"; "we already have text
    wrapping in here, so the left-right should likely never be needed"). Neither drawer scrolls sideways, ever. Down the drawer there is
    one scroller, and a bar shows only when there is more than fits. The decision's option list was a second scroller with a -3px
-   margin, which stood 3px outside its parent and made the parent scroll too; it is now part of the decision, which scrolls (up and
-   down only) when it is taller than the room it is given. */
+   margin, which stood 3px outside its parent and made the parent scroll too; it is now the one scroller, up and down only, with a margin that stays
+   inside its parent; the decision's own title and buttons stay in view, and it scrolls only when the list is longer than its room. */
 #matrix-v2 .cm-board :is(.cm-stage-rail,.cm-stage-side){overflow-x:hidden;overflow-y:auto}
 #matrix-v2 .cm-board .cm-stage-module[data-module=actions] .cm-board-decision{overflow-x:hidden;overflow-y:auto}
-#matrix-v2 .cm-board .cm-stage-module[data-module=actions] .cm-board-options{overflow:visible;flex:0 0 auto;min-height:0;margin:0 -3px;padding:3px}
+#matrix-v2 .cm-board .cm-stage-module[data-module=actions] .cm-board-options{overflow-x:hidden;overflow-y:auto;flex:1 1 auto;min-height:120px;margin:0 -3px;padding:3px}
 #matrix-v2 .cm-board .cm-stage-module.has-height>.cm-module-body{overflow-x:hidden}
 #matrix-v2 .cm-board :is(.cm-stage-rail,.cm-stage-side) :is(p,li,span,button,h3,strong,b){overflow-wrap:anywhere}
 #matrix-v2 .cm-board :is(.cm-stage-rail,.cm-stage-side) :is(.cm-board-band,#cm-full-pick,.cm-board-stack){overflow-x:hidden}
