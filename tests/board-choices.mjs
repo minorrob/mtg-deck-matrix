@@ -338,14 +338,20 @@ try {
   eq(await dialog.locator(".cm-lean.is-against").allInnerTexts(),["⚠ against you"],"only self-harm is marked");
   eq(await page.locator("#cm-dialog[open]").count(),0,"choices leave the board unobstructed");
   await page.setViewportSize({width:1280,height:720});
+  ok(await page.locator(".cm-stage-rail #cm-board-decision .cm-action-card").isVisible(),"Actions' explicit Choose path keeps the source card beside its legal ways");
+  const beforeStaging=latest.revision;
   await zapCard.click();
-  ok(await page.locator(".cm-stage-rail #cm-board-decision .cm-action-card").isVisible() && await page.locator("#cm-card-inspector").count() === 0,"source card remains visible beside choices, in the Actions desk, with no second pane");
+  const mayaOffer=castOptions.find(o=>o.detail==='→ Maya');
+  const menuChoice=page.locator(`#cm-card-menu [data-action=board-card-menu-do][data-index="${mayaOffer.index}"]`);
+  eq(await menuChoice.count(),1,'the native card menu exposes the exact current offer targeting Maya');
+  await menuChoice.click();
+  ok(await dialog.locator(`.cm-pick .cm-bcard[data-card="${mayaOffer.cardId}"]`).isVisible() && await page.locator("#cm-card-inspector").count() === 0,"the selected source stays in the Actions review, without a second inspection pane");
+  eq(latest.revision,beforeStaging,'opening the card menu and staging its exact offer have sent no game action');
   if(SHOTS)await page.screenshot({path:path.join(SHOTS,"board-choices-1280x720.png")});
   /* Casting keeps Rob's explicit Undo/priority window. A native Pass closes it before the AI passes and Zap resolves;
      what it hit is still read off the game, Maya one life down, rather than inferred from the stack. */
   const mayaLife = (v) => v.state.players[1].health.life, before = mayaLife(latest), castsBefore = latest.history.filter((h) => h.text === "Rob cast Zap").length;
-  await dialog.locator("[data-action=board-option]", {hasText: /^Cast Zap → Maya$/}).click();
-  eq(mayaLife(latest),before,"selection has not changed the game");
+  eq([mayaLife(latest),latest.history.filter(h=>h.text==='Rob cast Zap').length,latest.state.stack.filter(s=>s.name==='Zap').length],[before,castsBefore,0],"staging the selected offer has changed neither life, cast history nor the stack");
   await dialog.locator("[data-action=board-confirm]").click();
   await page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"));
   for (let t = 0; t < 100 && !latest.canUndo; t += 1) await new Promise((r) => setTimeout(r, 100));
@@ -363,7 +369,7 @@ try {
   await page.goto("about:blank");
   await page.goto(`${base}/index.html#table?id=${SCRY_TABLE}`);
   const box = page.locator("#cm-board-decision");
-  await box.locator("h3", {hasText: "Scry 3"}).waitFor({timeout: 60000});
+  await box.getByRole("heading", {name: /^Scry 3:/}).waitFor({timeout: 60000});
   const cardsBox = box.locator("[data-action=board-option]"), confirm = box.locator("[data-action=board-confirm]");
   const foot = async () => (await box.locator(".cm-board-decision-foot .cm-muted").first().innerText()).replace(/\s+/g, " ").trim();
   /* THE SAME CARD, ONE STACK (Rob, 2026-10-25): a button for each different card looked at, and the same card twice one
@@ -373,7 +379,7 @@ try {
   const choices = box.locator("[data-action=board-option], [data-action=board-option-same]");
   const choicePressed = async () => Promise.all((await choices.all()).map((el) => el.getAttribute("aria-pressed")));
   const words = async () => (await choices.allInnerTexts()).map((x) => x.replace(/\s+/g, " ").trim());
-  eq([(await box.locator("h3").textContent()).trim(), await words(), await choicePressed()],
+  eq([(await box.getByRole("heading").first().textContent()).trim(), await words(), await choicePressed()],
     ["Scry 3: choose any to put on the bottom", groups.map((g) => g.length > 1 ? `${g[0].label} ×${g.length}` : g[0].label), groups.map(() => "false")],
     "the board draws Rob's scry as a pick-several pop-up: the question, a button for each different card looked at (the same card one stack), none picked");
   ok(await confirm.isEnabled() && await foot() === "0 chosen · 0 to 3", `Confirm is ready with none picked, since keeping all three is an answer ("${await foot()}")`);
@@ -389,8 +395,8 @@ try {
   eq([await choicePressed(), await foot()], [groups.map((_, i) => i === 0 ? "true" : "false"), "1 chosen · 0 to 3"], "and a second press puts one back: a pick-several, not a pick-one");
   if (SHOTS) await page.screenshot({path: path.join(SHOTS, "board-scry-bottom-1400.png")});
   await confirm.click();
-  await box.locator("h3", {hasText: "Put the rest back on top"}).waitFor({timeout: 10000});
-  eq([(await box.locator("h3").textContent()).trim(), await cardsBox.count()], ["Put the rest back on top of your library, the first you choose on top", 2],
+  await box.getByRole("heading", {name: /^Put the rest back on top/}).waitFor({timeout: 10000});
+  eq([(await box.getByRole("heading").first().textContent()).trim(), await cardsBox.count()], ["Put the rest back on top of your library, the first you choose on top", 2],
     "one to the bottom and two kept: the board asks the order of the two, a second pop-up");
   await cardsBox.nth(1).focus();
   await page.keyboard.press('Enter');
@@ -411,7 +417,7 @@ try {
   await page.goto("about:blank");
   await page.goto(`${base}/index.html#table?id=${DAMAGE_TABLE}`);
   const dbox = page.locator("#cm-board-decision");
-  await dbox.locator("h3", {hasText: "Assign 3 damage"}).waitFor({timeout: 60000});
+  await dbox.getByRole("heading", {name: /^Assign 3 damage/}).waitFor({timeout: 60000});
   const rows = dbox.locator(".cm-board-amount"), dconfirm = dbox.locator("[data-action=board-confirm]");
   const said = async () => (await dbox.locator(".cm-board-decision-foot .cm-muted").first().innerText()).replace(/\s+/g, " ").trim();
   const rowWords = async () => (await rows.allInnerTexts()).map((t) => t.replace(/\s+/g, " ").trim());
