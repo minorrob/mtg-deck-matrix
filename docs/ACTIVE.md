@@ -53,6 +53,11 @@ Design work in the Workshop lane's `docs/design/**` and a new `assets/email/`; n
 - **Proven here:** the UK-spelling and "e-mail" scan of `tests/feature-wiring.mjs` applied to the new files (clean);
   each template's tokens, pictures and links counted. **Not proven:** the templates in real inboxes (Gmail, Apple Mail,
   Outlook); that is Rob's send from staging once they are wired into `cloud/invite-email.mjs`.
+- **Rob's revisions, 2026-10-27:** "get the cards"; the three callouts are Build and tune decks, Manage library, Play
+  with AI and others (General: Play with others, since it never names AI); the yellow "AI powered" band is gone (the
+  Insiders eyebrow still says AI powered); the button is centered; the headline is "Your exclusive CrankMagic invite is
+  here!". And `docs/design/invite-email/gmail/`: the same two templates with the pictures served from this repository
+  and "[Name]" to type over, to paste into a Gmail compose until Admin › Share sends them (the README says how).
 - **Not done, by design:** the wiring (`cloud/invite-email.mjs`, an audience field in Admin › Share, `cloud/sharing.mjs`,
   `tests/sharing.mjs`) is the Codex · Workshop lane's; the README lists the steps.
 

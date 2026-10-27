@@ -13,11 +13,12 @@ sapphire button.
 
 | File | Audience | What differs |
 | --- | --- | --- |
-| `invite-general.html` | General | Eyebrow "You are invited"; three highlights (Build decks, Keep your library, Play at the table); no mention of AI. |
-| `invite-insiders.html` | Game Theory Insiders | Eyebrow "Game Theory Insiders · AI powered" in the decision gold; an "AI powered" band with the coach icon; the third highlight is "Play with a coach"; the feedback line says insiders' notes carry the most weight. |
+| `invite-general.html` | General | Eyebrow "You are invited"; three highlights (Build and tune decks, Manage library, Play with others); no mention of AI. |
+| `invite-insiders.html` | Game Theory Insiders | Eyebrow "Game Theory Insiders · AI powered" in the decision gold; "You are invited to CrankMagic as a Game Theory Insider"; the third highlight is "Play with AI and others"; the feedback line says insiders' notes carry the most weight. |
 
-Both share: the logo and wordmark, "Your seat at the table is ready", "Hi {{name}},", the one-paragraph pitch, the
-sign-in line (this email address, no other), the **Open CrankMagic** button to https://staging.crankmagic.com, the
+Both share: the logo and wordmark, "Your exclusive CrankMagic invite is here!", "Hi {{name}},", the one-paragraph pitch
+("plan the hundred, get the cards, bring the deck to the table"), the sign-in line (this email address, no other), the
+centered **Open CrankMagic** button to https://staging.crankmagic.com, the
 copy-this-link fallback, a feedback panel pointing at admin@crankmagic.com, and the footer (the administrator notice,
 the Fan Content line verbatim, the site).
 
@@ -38,7 +39,7 @@ In `assets/email/`, all PNG, all at 2x for the size they are shown at:
 | --- | --- | --- |
 | `invite-logo.png` (256×256) | 104×104 | The gear logo, `assets/crankmagic/crankmagic-logo-gear-v4-256.webp` as PNG. |
 | `invite-wordmark.png` (525×78) | 182×27 | CRANKMAGIC in Cinzel 600 at .08em, in `color-brand` gilt (#d2a973), rendered from the design system's own font file so no mail client needs the web font. |
-| `icon-build.png`, `icon-library.png`, `icon-table.png`, `icon-coach.png` (80×80) | 40×40 | The highlight icons: 16-unit grid, 1.75 stroke, round caps, gilt. The coach icon is on the Insiders band only. |
+| `icon-build.png`, `icon-library.png`, `icon-table.png` (80×80) | 40×40 | The highlight icons: 16-unit grid, 1.75 stroke, round caps, gilt. |
 
 They reach production (crankmagic.com) **with a release before** a template that names them, so no email points at a
 missing picture (`docs/design/invite-email/BRIEF.md`, "Taking the design in").
@@ -49,6 +50,23 @@ Tables with `role="presentation"`, inline styles, 600 px content on a full-width
 for the phone (columns stack, side padding 20 px, the headline 26 px) and client resets, no JavaScript, no forms, PNG
 only, a hidden preheader, `<title>` "You are invited to CrankMagic". The Google Fonts link is an enhancement: Cinzel
 falls back to Georgia and Lato to Arial where a client strips it, and the wordmark is a picture so the name holds.
+
+## Sending one by hand from Gmail, until it is wired
+
+`gmail/invite-general.gmail.html` and `gmail/invite-insiders.gmail.html` are the same two templates with the pictures
+pointed at this public repository (the commit that added them, so the links hold whatever happens to the branch) and
+"[Name]" where the invitee's name goes. To send one:
+
+1. Open the file in Chrome (double-click it, or drag it onto a tab).
+2. Select all (Ctrl+A or Cmd+A) and copy (Ctrl+C or Cmd+C).
+3. In Gmail, Compose; paste into the body (Ctrl+V or Cmd+V). The dark ground, the panel, the pictures and the button
+   come across; Gmail drops the phone-only styles, which is fine on a desktop and still readable on a phone.
+4. Replace "[Name]", set the subject to **You are invited to CrankMagic**, and send.
+5. To keep it as a Gmail template: Settings › See all settings › Advanced › Templates › Enable, then in Compose,
+   the three dots › Templates › Save draft as template. Do this once per audience.
+
+Add the invitee's address to Cloudflare Access for staging first (Admin › Share does that when it sends), or the
+link takes them to a sign-in that refuses them.
 
 ## Wiring (not done here)
 
