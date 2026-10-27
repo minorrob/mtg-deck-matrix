@@ -48,7 +48,7 @@ const ROOT = new URL("../", import.meta.url);
   ok(by.benny.disposition.friendliness === 2 && by.benny.overrides.saltCap < 0 && by.benny.overrides.politics === "avoid", "Benny is the group hug: friendliest, kindest cap, stays out of pile-ons");
   ok(by.marcus.disposition.competitiveness === 2 && by.marcus.overrides.saltCap === 1, "Marcus is the competitor");
   ok(by.june.overrides.temperatureDelta === 1 && by.june.disposition.competitiveness < 0, "June is the casual: she takes the fun line");
-  eq([levelOf("hard").available, LEVELS.filter((l) => l.available).map((l) => l.id)], [true, ["easy", "normal", "hard", "llm"]], "Hard is offered, now that its pilot exists");
+  eq([levelOf("hard").available, LEVELS.filter((l) => l.available).map((l) => l.id)], [false, ["easy", "normal", "llm"]], "Hard is built but held back until the bench shows it beating Normal (tools/pilot-bench.mjs --seats 4)");
 }
 
 /* ---- 2. What the validator refuses ---- */
@@ -96,7 +96,7 @@ const ROOT = new URL("../", import.meta.url);
 /* ---- 5. A seat names a level and a persona, and nothing else rides the wire ---- */
 {
   eq(readSeatAi({level: "easy", persona: "sable"}), {level: "easy", persona: "sable"}, "a level and a persona on the roster are kept");
-  eq(readSeatAi({level: "hard", persona: "june"}), {level: "hard", persona: "june"}, "Hard and a persona are kept");
+  eq(readSeatAi({level: "llm", persona: "june"}), {level: "llm", persona: "june"}, "the Veteran and a persona are kept");
   eq(readSeatAi({level: "expert", persona: "june"}), {level: "normal", persona: "june"}, "a level the roster does not offer is Normal; the persona stands");
   eq(readSeatAi({level: "llm", persona: "Sable"}), {level: "llm", persona: null}, "an id is exact: 'Sable' is not 'sable'");
   eq(readSeatAi({level: "wizard", persona: "<script>"}), {level: "normal", persona: null}, "an unknown level is Normal and an unknown persona none");

@@ -19,7 +19,7 @@
       "id": "hard",
       "label": "Hard",
       "saltCap": 0,
-      "available": true,
+      "available": false,
       "needsAi": false
     },
     {
