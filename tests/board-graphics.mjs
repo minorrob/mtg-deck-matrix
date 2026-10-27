@@ -10,6 +10,7 @@
         change and Save, and still there after a reload; and in Settings › Play, with the same value.
      3. The backdrop whole: the video covers the stage edge to edge at its 16:9, cropped top and bottom on a wide screen
         (Rob, 2026-10-27: no blurred sides), its poster blurred behind it until it draws.
+        (EX-22 had it span the full width at 16:9, letterboxed on a taller stage; now it covers, cropped on whichever axis is long.)
         And its resolution (Rob, 2026-10-26: "Maintain resolution in line with settings selection with 2k at max
         resolution"): of the heights kept (tools/stage-backdrops.mjs), the smallest that fills the backdrop at the kept
         setting, never over 1440; changed when the setting is kept, not while it is previewed, the clip keeping its place.
@@ -21,18 +22,21 @@ import {readFileSync} from "node:fs";
 import path from "node:path";
 import {openBrowser,ROOT} from "./uat/browser-runner.mjs";
 import {writeCatalog} from "../tools/stage-backdrops.mjs";
-import {copyFileSync,mkdtempSync,rmSync} from "node:fs";
+import {copyFileSync,mkdtempSync,rmSync,writeFileSync} from "node:fs";
 import os from "node:os";
 /* The list tools/stage-backdrops.mjs writes is still between its markers in crankmagic-stage.js. */
 {const dir=mkdtempSync(path.join(os.tmpdir(),"backdrops-")),copy=path.join(dir,"stage.js");copyFileSync(path.join(ROOT,"crankmagic-stage.js"),copy);
+  for (const newline of ["\n","\r\n"]) {
+  writeFileSync(copy,readFileSync(path.join(ROOT,"crankmagic-stage.js"),"utf8").replace(/\r?\n/g,newline));
   writeCatalog(copy,[{id:"x-test",name:"X",poster:"p.jpg",video:{720:"x-720.webm"}}]);
-  assert.match(readFileSync(copy,"utf8"),/\/\* backdrops:begin \*\/\n  const BACKDROPS=\[\{id:"x-test",name:"X",poster:"p\.jpg",video:\{720:"x-720\.webm"\}\}\];\n  \/\* backdrops:end \*\/\n  const appearances = Object\.freeze\(\{backgrounds: BACKDROPS,/,"the backdrop tool rewrites the stage's list between its markers");
+  assert.match(readFileSync(copy,"utf8").replace(/\r\n/g,"\n"),/\/\* backdrops:begin \*\/\n  const BACKDROPS=\[\{id:"x-test",name:"X",poster:"p\.jpg",video:\{720:"x-720\.webm"\}\}\];\n  \/\* backdrops:end \*\/\n  const appearances = Object\.freeze\(\{backgrounds: BACKDROPS,/,"the backdrop tool rewrites the stage's list between its markers");
+  }
   rmSync(dir,{recursive:true});}
 const {browser,base,stub,close}=await openBrowser({name:"board-graphics",flag:"GEOMETRY_REQUIRED"});
 const sample=JSON.parse(readFileSync(path.join(ROOT,"docs/reference/replit-sample-views.json"),"utf8")).views[13];
 const html=readFileSync(path.join(ROOT,"index.html"),"utf8").replace("</head>",'<meta name="crankmagic-accounts" content="on"><meta name="crankmagic-play" content="cloud"></head>');
 const table={tableId:"gfxfixture01",phase:"playing",matchId:sample.matchId,away:[],blockers:[],rules:{},seats:sample.state.players.map(p=>({seatId:p.playerId,name:p.name,kind:p.playerId===sample.seat?"human":"ai",you:p.playerId===sample.seat,occupied:true}))};
-const DESIGNS=["medieval-banded","colonial-inlay","glass-future","tavern-plank","felt-card","stone-dais","obsidian-glass"];
+const DESIGNS=["study","medieval-banded","colonial-inlay","glass-future","tavern-plank","felt-card","stone-dais","obsidian-glass"];
 let checks=0;
 const ok=(c,m)=>{assert.ok(c,m);checks++};
 const eq=(a,b,m)=>{assert.deepEqual(a,b,m);checks++};
@@ -63,6 +67,8 @@ try{
   /* 1. The default. */
   await open();
   let g=await gfx();
+  eq(g.design,"study","unset preference builds the actual Study table");
+  if(process.env.UAT_SHOTS) {await painted();await page.mouse.move(3,3);await page.waitForTimeout(350);await page.screenshot({path:path.join(process.env.UAT_SHOTS,"r4-study-babylon-1830.png")});}
   eq(g.resolution,g.software?100:150,`the default resolution is 150% of the screen's pixels where a graphics card draws, 100% where the browser draws in software (here: ${g.software?"software":"a graphics card"}, ${g.resolution}%)`);
   /* The rest at 150%, the default a graphics card gets. */
   await page.evaluate(()=>localStorage.setItem("cm-stage-resolution","150"));await open();g=await gfx();
@@ -72,7 +78,7 @@ try{
   /* 2. The table's Settings window. */
   /* Settings' sections run down its left (Rob, 2026-10-26): Graphics resolution is under Video. */
   const video=()=>page.locator("#cm-dialog [role=tab][data-tab=video]").click();
-  await page.locator("[data-action=board-profile]").click();await page.locator("[data-action=board-tools]").click();await video();
+  await page.locator("[data-action=board-camera]").click();await page.locator(".cm-stage-camera [data-action=board-tools]").click();await video();
   const slider=page.locator("#cm-board-tools [data-stage-resolution]");
   await slider.waitFor();
   eq([await slider.getAttribute("min"),await slider.getAttribute("max"),await slider.inputValue()],["50","200","150"],"Settings has Graphics resolution, 50% to 200%, at 150%");
@@ -81,7 +87,7 @@ try{
   eq(await page.evaluate(()=>localStorage.getItem("cm-stage-resolution")),"150","a preview is not kept");
   await page.locator(".cm-play-settings-foot [data-action=close]").click();
   eq(await ratio(1.5),1.5,"Cancel puts it back");
-  await page.locator("[data-action=board-profile]").click();await page.locator("[data-action=board-tools]").click();await video();
+  await page.locator("[data-action=board-camera]").click();await page.locator(".cm-stage-camera [data-action=board-tools]").click();await video();
   await slider.evaluate(el=>{el.value="50";el.dispatchEvent(new Event("input",{bubbles:true}));el.dispatchEvent(new Event("change",{bubbles:true}));});
   eq(await ratio(.5),.5,"at its least, 50%: half the screen's pixels");
   await slider.evaluate(el=>{el.value="100";el.dispatchEvent(new Event("input",{bubbles:true}));el.dispatchEvent(new Event("change",{bubbles:true}));});
@@ -95,7 +101,7 @@ try{
   eq(await there.inputValue(),"100","Settings › Play has the same slider, at the kept value");
   await page.evaluate(()=>localStorage.setItem("cm-stage-resolution","150"));
 
-  /* 3. The backdrop whole. */
+  /* 3. The backdrop covers the stage (Rob, 2026-10-27, over EX-22): no blurred gaps at any side; cropped on the long axis. */
   await open();
   const fit=await page.evaluate(()=>{const env=document.querySelector(".cm-stage-environment"),v=env.querySelector("video"),a=env.getBoundingClientRect(),b=v.getBoundingClientRect(),c=getComputedStyle(v);return {env:[a.width,a.height],video:[b.width,b.height],behind:getComputedStyle(env,"::before").backgroundImage,fit:c.objectFit,mask:c.maskImage||c.webkitMaskImage,same:Math.abs(b.width-a.width)<2&&Math.abs(b.height-a.height)<2};});
   ok(fit.same&&fit.fit==="cover",`the backdrop covers the stage edge to edge, cropped rather than letterboxed (${fit.video.map(Math.round).join("×")} in ${fit.env.map(Math.round).join("×")}, ${fit.fit})`);
@@ -144,6 +150,12 @@ try{
     const where=await page.evaluate(()=>CrankTables.painting());
     g=await gfx();
     eq(g.design,id,`${id}: built`);
+    if(id === "study") {
+      const d=await page.evaluate(()=>CrankStage.diagnostics());
+      ok(["top","edge","side","leg"].every(p=>d.parts.includes(p)),"Study has a walnut top, fine edge, apron and legs");
+      ok(g.textures.some(t=>t.name==="study walnut"),"Study paints walnut rather than inherited oak");
+
+    }
     const skins=g.textures.filter(t=>!/ relief| glow/.test(t.name));
     ok(skins.length&&Math.max(...skins.map(t=>t.width))>=2048,`${id}: its largest skin is ${Math.max(...skins.map(t=>t.width))} px`);
     ok(g.textures.every(t=>t.mips&&t.aniso>=8),`${id}: every texture mipmapped and anisotropic`);
@@ -158,5 +170,5 @@ try{
   g=await gfx();
   eq([g.size,await ratio(2)],[4096,2],"at 200% the skins are painted at 4096 and the table drawn at twice the screen's pixels");
   eq(errors,[],"no page errors");
-  console.log(`board-graphics: ${checks} checks passed — the table drawn at 150% of the screen's pixels by default, 50% to 200% in Settings, previewed, put back and kept; the backdrop whole, at the height the setting calls for, 2K at most; every design's skins painted off the page at 2048 or 4096 in full color, mipmapped, with relief and inked edges.`);
+  console.log(`board-graphics: ${checks} checks passed — the table drawn at 150% of the screen's pixels by default, 50% to 200% in Settings, previewed, put back and kept; the backdrop full width at16:9, at the height the setting calls for, 2K at most; every design's skins painted off the page at 2048 or 4096 in full color, mipmapped, with relief and inked edges.`);
 }finally{await context.close();await close();}

@@ -448,8 +448,19 @@
     /* A graph opened from a deck says which deck (wireframe 50: "Explore › D6 Krenko Goblins") and has the
        way back to it in the head, beside Filters · lens. */
     const fromDeck = params.get('deck') ? (C.state.decks || []).find((d) => d.id === params.get('deck') && !d.archived) : null;
+    /* A Measure handoff carries a filed report, never query-supplied score facts. Its score components
+       are model outcomes, not graph roles: retain that context without inventing a role filter. */
+    const fromReport=fromDeck?(C.state.reports||[]).find(r=>r.id===params.get('report')&&r.deckId===fromDeck.id):null;
+    const reportParts=(fromReport?.scoreParts||[]).filter(p=>Number.isFinite(p.points)&&Number.isFinite(p.max)&&p.max>0);
+    const reportAxis=reportParts.find(p=>(p.key||p.label)===params.get('axis'));
+    const reportScore=fromReport?.metrics?.score?.value;
+    const reportContext=fromReport?`<section class="cm-measure-context" aria-label="Measurement to refine" data-measure-report="${e(fromReport.id)}"><strong>Measured ${Number.isFinite(reportScore)?e(String(reportScore)):'—'} of 100</strong>${reportAxis?`<span> · Refine ${e(reportAxis.label)} · ${e(String(reportAxis.points))} of ${e(String(reportAxis.max))}</span>`:''}<a class="v-button compact" href="#decks?${e(new URLSearchParams({deck:fromDeck.id,report:fromReport.id}).toString())}">Back to report</a></section>`:'';
+    const replaceSlot=fromDeck?.slots.find(r=>r.purpose==='main'&&r.cardId===params.get('replace'));
+    const replaceCard=replaceSlot?C.card(replaceSlot.cardId):null;
+    const replaceContext=replaceCard?`<section class="cm-measure-context" aria-label="Card to replace"><strong>Replace ${e(replaceCard.name)}</strong><a class="v-button compact" href="#decks?${e(new URLSearchParams({deck:fromDeck.id,tab:'upgrades'}).toString())}">Review marked cards</a></section>`:'';
     C.main.innerHTML = (fromDeck ? `<div class="cm-crumbs"><a class="cm-crumb" href="#discover">Explore</a><a class="cm-crumb" href="#decks?deck=${encodeURIComponent(fromDeck.id)}">${e(fromDeck.name)}</a></div>` : '')
       + C.pageHead('Explore', advancedToolsButton() + (fromDeck ? `<a class="v-button" href="#decks?deck=${encodeURIComponent(fromDeck.id)}">Back to deck</a>` : '') + toolsButton(), 'discover')
+      + reportContext + replaceContext
       + `<div class="cm-toolbar"><label class="cm-search">Find a card<input id="cm-graph-query" placeholder="Card name" list="cm-graph-names"><datalist id="cm-graph-names"></datalist></label>${C.select('Connections', 'edgeType', [['mechanic', 'Shared mechanics / roles'], ['played', 'EDHREC co-play']], 'mechanic')}${b('Search catalog / link', 'graph-lookup')}${b('Back', 'graph-back')}${b('Reset view', 'graph-reset')}</div>
 
 
@@ -493,6 +504,10 @@
 
     applyStage();
     const pane = $('#cm-card-view');
+    function syncPickerPrimary(){if(!pane.isConnected||document.getElementById('cm-card-view')!==pane)return;const popup=$('#cm-graph-pop'),insidePopup=popup&&!popup.hidden;
+      for(const button of pane.querySelectorAll('.cm-card-view-buy [data-action=add-buy],.cm-list-detail [data-action=graph-card]'))button.classList.toggle('primary',!insidePopup&&!picked.size);
+      for(const button of pane.querySelectorAll('.cm-pick-actions [data-action=results-group]'))button.classList.toggle('primary',!insidePopup&&picked.size>0);
+    }
     const view = $('#cm-pane-body');
     applyTab();
 
@@ -699,6 +714,7 @@
         graph?.setHighlight([hit.a.id, hit.b.id]);
       }
       pop.hidden = false;
+      syncPickerPrimary();
       /* A card's pop-up opens to the RIGHT of its node, top edge level with it, so the node
          stays in view beside its own picture; when the column has no room on the right it
          opens on the left. A line's pop-up still hangs under the point that was tapped. */
@@ -719,7 +735,7 @@
       if (top + pop.offsetHeight > canvas.offsetTop + canvas.clientHeight - 6) top = Math.max(canvas.offsetTop + 6, canvas.offsetTop + canvas.clientHeight - pop.offsetHeight - 6);
       pop.style.left = left + 'px'; pop.style.top = top + 'px';
     }
-    function hidePop() { popId = ''; const pop = $('#cm-graph-pop'); if (pop && !pop.hidden) { pop.hidden = true; pop.innerHTML = ''; } graph?.setHighlight(null); }
+    function hidePop() { popId = ''; const pop = $('#cm-graph-pop'); if (pop && !pop.hidden) { pop.hidden = true; pop.innerHTML = ''; } graph?.setHighlight(null);syncPickerPrimary(); }
     function modeHint(m) { return m === 'inspect' ? 'Tap a card for its terms and its link to the focus; tap a line for why two cards are joined.' : m === 'select' ? 'Tap cards to tick them, then add them to a group from the Card View.' : 'Tap a card to make it the focus; the card you came from stays at the left.'; }
     /* Escape is the way out of presentation mode as well as out of a pop-up, in that order:
        the mode hides the nav rail, so it needs an exit that does not depend on finding the
@@ -778,7 +794,7 @@
     function buyMenu(c, rec, compact = false) {
       return compact
         ? `<button type="button" class="v-button cm-buy-caret" data-action="add-buy" data-card="${e(c.name)}" title="Add and/or buy" aria-label="Add or buy ${e(c.name)}">${C.caret ? C.caret('down') : '▾'}</button>`
-        : `<button type="button" class="v-button primary" data-action="add-buy" data-card="${e(c.name)}">Add and/or buy…</button>`;
+        : `<button type="button" class="v-button${picked.size||popId?'':' primary'}" data-action="add-buy" data-card="${e(c.name)}">Add and/or buy…</button>`;
     }
     actions['add-buy'] = (el) => {
       const name = el.dataset.card, rec = C.catalog.exact(name) || {name}, c = C.catalog.get(CrankCatalog.key(name)) || rec;
@@ -925,6 +941,7 @@
           <section><h4>Could join it <small>${r.candidates.length}</small></h4>${candRows ? `<ul class="cm-lens-list">${candRows}</ul>${r.candidates.length > 40 ? `<p class="cm-muted">${r.candidates.length - 40} more, further down the ranking.</p>` : ''}` : '<p class="cm-muted">Nothing outside the hundred carries this role inside the deck\'s colors — not the bench, the buy list, the linked upgrades or the commander\'s co-play neighbours.</p>'}
             <p class="cm-muted cm-lens-foot">Ranked by how often the commander\'s real decks run the card, then owned before ordered before not owned. <em>Swap for…</em> links the card as an uncommitted upgrade option on a slot you choose; the hundred does not change.</p></section>
         </div></div>`;
+      syncPickerPrimary();
       $('#cm-graph-size').textContent = lastInfo && lastInfo.total ? `${lastInfo.total} on canvas · lens: ${r.lens}` : '';
       sizePane();
     }
@@ -1124,7 +1141,7 @@
       return `<div class="cm-list-pop cm-list-pop-row"><p class="cm-muted cm-pop-type">${e(r.type)}${r.depth ? ` · ring ${r.depth}` : ''}</p>
         ${parent ? `<h4>Joined to ${e(parent.name)} by</h4>${relationHTML(rel, r.card, parent)}` : ''}
         ${ownTermsHTML(r.card)}
-        <div class="cm-actions">${landsOnly() ? '' : b('Focus here', 'graph-card', {id: r.id}, true)}${b('Inspect card', 'card', {card: CrankCatalog.key(r.name)})}<button type="button" class="v-button${picked.has(r.id) ? ' is-on' : ''}" data-action="graph-tick" data-id="${e(r.id)}">${picked.has(r.id) ? 'Ticked ✓' : 'Tick for a group'}</button></div></div>`;
+        <div class="cm-actions">${landsOnly() ? '' : b('Focus here', 'graph-card', {id: r.id}, !picked.size&&!popId)}${b('Inspect card', 'card', {card: CrankCatalog.key(r.name)})}<button type="button" class="v-button${picked.has(r.id) ? ' is-on' : ''}" data-action="graph-tick" data-id="${e(r.id)}">${picked.has(r.id) ? 'Ticked ✓' : 'Tick for a group'}</button></div></div>`;
     }
     actions['list-card'] = (el) => {
       const id = el.dataset.id;
@@ -1148,7 +1165,8 @@
     function optionDialog(deck, card, why, firstSlots = new Set()) {
       const mains = deck.slots.filter((x) => x.purpose === 'main');
       const slots = mains.map((x) => [x.id, `${C.card(x.cardId)?.name || x.cardId}${firstSlots.has(x.id) ? ' — in the role' : ''}`]).sort((a, b) => (firstSlots.has(a[0]) ? 0 : 1) - (firstSlots.has(b[0]) ? 0 : 1) || a[1].localeCompare(b[1]));
-      const firstSlot = slots[0] && slots[0][0];
+      const requested=deck.slots.find(x=>x.purpose==='main'&&x.cardId===params.get('replace'));
+      const firstSlot = requested?.id || (slots[0] && slots[0][0]);
       /* THE TWO CARDS, THE WAY PROMOTE SHOWS THEM (Rob, 16 September). The deck page's Promote
          dialog puts the outgoing and incoming cards side by side before the swap is agreed to;
          a swap decided from a name in a dropdown is decided blind. The difference here is that
@@ -1278,6 +1296,7 @@
         </h3><div class="cm-term-chips">${chips.join('')}</div>` : ''}
         ${loopMode && lastInfo && lastInfo.total === 1 ? `<p class="cm-muted cm-card-view-foot">Loops only is on and no join from ${e(c.name)} continues a loop under these filters. Turn it off to see every connection.</p>` : ''}
         ${lastInfo && lastInfo.total ? `<p class="cm-muted cm-card-view-foot">${lastInfo.total} cards on the canvas · ${lastInfo.byDepth.filter(Boolean).join(' / ')} by ring · ${lastInfo.crossLinks} cross-links${lastInfo.crossLinks > 60 ? ' (too many to draw at once: rest on a card, or inspect it, to see its own)' : ''}</p>` : ''}`;
+      syncPickerPrimary();
       $('#cm-graph-size').textContent = lastInfo && lastInfo.total ? `${lastInfo.total} on canvas${loopMode ? ' · loops only' : ''}` : '';
       sizePane();
     }

@@ -35,7 +35,7 @@ export function sharing(db,env,{now=()=>new Date().toISOString(),fetchImpl=fetch
   const projections=cacheProjections?projectionMemo(db):null;
   const library=createLibrary(db,{now}),q=(sql,...args)=>db.prepare(sql).bind(...args);
   const all=async(sql,...args)=>(await q(sql,...args).all()).results;
-  const isAdmin=person=>String(person.id)===String(env.INVITE_ADMIN_ID||'');
+  const isAdmin=person=>!!person&&!person.service&&typeof person.email==='string'&&person.email.includes('@')&&!person.email.startsWith('service:')&&!!env.INVITE_ADMIN_ID&&String(person.id)===String(env.INVITE_ADMIN_ID);
   async function profile(person){
     await q("INSERT INTO profiles(user_id,name,avatar,updated_at) VALUES (?,'','',?) ON CONFLICT(user_id) DO NOTHING",person.id,now()).run();
     const p=await q('SELECT name,avatar,email FROM profiles WHERE user_id=?',person.id).first();

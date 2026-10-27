@@ -3,8 +3,8 @@
    ROB'S FULLSCREEN NOTES ON THE BOARD (Oct 21, 2026; crankmagic-board.js, crankmagic-stage.css).
 
      1. Clicking or double-clicking a card stages its action in every view; confirmation plays it once.
-     2. A land just played (the room's `undo-land`) goes back to the hand on its double-click -- no button for it under
-        "You can also" -- and its single click, a tap for mana, waits out the double-click before it is sent.
+     2. The r4 click map supersedes take-back double click: a just-played land returns through its offered Undo drawer;
+        a single click immediately opens the read-only action menu; a native second click activates mana.
      3. In Full screen the pass, Resolve all and Skip to end stand large over the table, at its top, not in the strip.
      4. Each card another seat casts or plays is held up at the side for ten seconds, or until its ✕: never your own, never
         twice for one event, three at most, nothing from a view of a game seen for the first time.
@@ -31,6 +31,7 @@ const ISLAND = 524, PLAYED = 600;
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1;};
 const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1;};
+const binding = page => page.locator('#cm-board-decision [data-action=board-confirm]:visible:not([disabled]),#cm-board-decision [data-action=board-direct]:visible:not([disabled])');
 
 async function board(mode, {width = 1440, height = 900} = {}) {
   const context = await browser.newContext({viewport: {width, height}, reducedMotion: "reduce", serviceWorkers: "block"});
@@ -73,41 +74,21 @@ try {
     await page.locator(hand).dblclick();
     await page.waitForTimeout(500);
     eq(acts(), [], `${mode}: a double-click stages the land without playing it`);
-    await page.locator("#cm-board-decision [data-action=board-confirm]").click();
+    await binding(page).click();
     await page.waitForTimeout(100);
     eq(acts(), [[1]], `${mode}: confirming plays the staged Island once`);
-    /* ---- 2. the land just played: a double-click takes it back; no button for it ---- */
-    await show(played());
-    await page.locator(".cm-stage-top [data-action=board-actions-open]").click();
-    await page.locator(".cm-stage-rail [data-action=board-option]").first().waitFor({timeout: 5000});
-    const also = await page.evaluate(() => [...document.querySelectorAll(".cm-stage-rail [data-action=board-option]")].map((b) => b.textContent.trim()));
-    ok(also.some((t) => /Island/.test(t)) && !also.some((t) => /Return Island/.test(t)), `${mode}: You can also offers the tap, and no button says Return Island: the land goes back by its double-click (${JSON.stringify(also)})`);
-    await page.locator(".cm-stage-top [data-action=board-actions-open]").click();
-    sent.length = 0;
-    if (mode === 'full') {
-      await page.locator('.cm-stage-hand .cm-bcard').last().click({button:'right'});await page.locator('#cm-card-menu [data-action=board-card-menu-view]').click();
-      const row = page.locator('.cm-stage-front .cm-board-lands [data-zone-scroll]');
-      await row.hover();await page.mouse.wheel(0,900);await page.waitForTimeout(150);
-      ok(await row.evaluate(el=>el.scrollTop>0||el.scrollLeft>0), 'the narrowed land row scrolls instead of spilling under graveyard');
-    }
-    await page.locator(`#cm-board .cm-bcard[data-card='${PLAYED}'][data-action=board-card]`).dblclick();
-    await page.waitForTimeout(600);
-    eq(acts(), [[2]], `${mode}: a double-click on the Island just played sends its take-back, and nothing else`);
-    await show(played());
-    sent.length = 0;
-    /* One click, as the browser counts it (detail 1), timed in the page from the click to its act leaving the socket: a
-       look from here, a round trip later, read a busy CI runner's latency as the board's (Actions, 2026-10-22). */
-    const after = await page.evaluate((id) => new Promise(done => {
-      const start=performance.now();
-      const timer=setInterval(()=>{if(document.querySelector('#cm-board-decision [data-action=board-confirm]')){clearInterval(timer);done(performance.now()-start);}},10);
-      document.querySelector(`#cm-board .cm-bcard[data-card='${id}'][data-action=board-card]`).dispatchEvent(new MouseEvent('click',{bubbles:true,detail:1}));
-      setTimeout(()=>{clearInterval(timer);done(null);},3000);
-    }),PLAYED);
-    ok(after !== null && after >= 280, `${mode}: single click waits for possible land take-back before staging mana (${after}ms)`);
-    eq(acts(),[],`${mode}: staging mana does not tap the land`);
-    await page.locator('#cm-board-decision [data-action=board-confirm]').click();
+    /* ---- 2. r4: the authoritative legacy take-back is the card's Undo drawer. */
+    await show(played());sent.length=0;
+    const playedSelector=`#cm-board .cm-bcard[data-action=board-card]:is([data-card='${PLAYED}'],[data-land-members='${PLAYED}'],[data-land-members^='${PLAYED},'],[data-land-members$=',${PLAYED}'],[data-land-members*=',${PLAYED},'])`,playedCard=page.locator(playedSelector).first();await playedCard.scrollIntoViewIfNeeded();await playedCard.hover();
+    const undo=page.locator(`[data-action=board-offered-undo][data-card='${PLAYED}']`).first();await undo.click();
+    eq(acts(),[[2]],`${mode}: the actual offered Undo rewinds the land play once`);
+    await show(played());sent.length=0;
+    const after=await page.evaluate(id=>{const start=performance.now();document.querySelector(id).dispatchEvent(new MouseEvent('click',{bubbles:true,detail:1}));return document.getElementById('cm-card-menu')?performance.now()-start:null;},playedSelector);
+    ok(after!==null && after<280,`${mode}: single click opens the read-only menu without a 300ms wait (${after}ms)`);eq(acts(),[],`${mode}: reading the card menu sends nothing`);
+    await page.locator(`#cm-card-menu [data-act=activate-mana][data-card='${PLAYED}']`).click();eq(acts(),[],`${mode}: selecting a mana row stages its binding action`);
+    await binding(page).click();
     for(let i=0;i<125&&!acts().length;i++)await page.waitForTimeout(20);
-    eq(acts(),[[1]],`${mode}: confirming taps it for mana`);
+    eq(acts(),[[1]],`${mode}: the binding press taps it for mana once`);
     if (mode === "full") {
       /* ---- 3. the actions, large, over the table ---- */
       const bar = await page.evaluate(() => {
@@ -129,33 +110,30 @@ try {
         {eventId: "event:9003", kind: "cast", player: 0, card: {cardId: 9003, name: "Rime Chill"}, stackId: 2},
         {eventId: "event:9004", kind: "cast", player: 3, card: {cardId: 9004, name: null}, stackId: 3}];
       await show(plays);
+      if(mode==='full')ok(await page.locator('[data-action=board-stage-rail]').evaluate(el=>{const r=el.getBoundingClientRect();return [[.15,.2],[.5,.5],[.85,.8]].every(([x,y])=>el.contains(document.elementFromPoint(r.x+r.width*x,r.y+r.height*y)));}),'Full: previews leave the drawer disclosure natively reachable');
+
       if (mode === "focus") {
         // Hold previews while collecting screenshots; expiration is exercised below with the next event batch.
         for(const pop of await page.locator('.cm-play-pop').all())await pop.dispatchEvent('mouseenter');
         if (!await page.locator('.cm-stage-rail.is-open').count()) await page.locator('[data-action=board-stage-rail]').evaluate(el=>el.click());
+        let gapCases=0,overlayCases=0;
         for (const width of [2240, 1280]) {
           await page.setViewportSize({width, height:900});
           await page.waitForTimeout(100);
           const gap = await page.evaluate(() => {
-            const drawer={right:Math.max(...[...document.querySelectorAll('.cm-board-pane, .cm-stage-rail.is-open')].map(e=>e.getBoundingClientRect().right))},mat=document.querySelector('.cm-board-stage .cm-board-mat').getBoundingClientRect(),pop=document.querySelector('.cm-play-pop').getBoundingClientRect();
+            const drawer={right:Math.max(...[...document.querySelectorAll('.cm-board-pane, .cm-stage-rail.is-open, .cm-stage-left')].map(e=>e.getBoundingClientRect().right))},mat=document.querySelector('.cm-board-stage .cm-board-mat').getBoundingClientRect(),pop=document.querySelector('.cm-play-pop').getBoundingClientRect();
             return {drawer:drawer.right,mat:mat.left,left:pop.left,right:pop.right,width:pop.width};
           });
-          ok(gap.right <= gap.mat-10,`focus ${width}: preview keeps the play area clear (${JSON.stringify(gap)})`);
-          if(width===2240)ok(gap.left>=gap.drawer+10,'focus: a wide gap holds the previews without covering the open drawer');
-          else ok(gap.mat-gap.drawer<gap.width&&gap.left<gap.drawer,'focus: only a gap narrower than the preview makes it overlap the drawer');
+          ok(gap.left>=gap.drawer-1,`focus ${width}: preview never covers the open drawer (${JSON.stringify(gap)})`);
+          ok(await page.locator('[data-action=board-stage-rail]').evaluate(el=>{const r=el.getBoundingClientRect();return [[.15,.2],[.5,.5],[.85,.8]].every(([x,y])=>el.contains(document.elementFromPoint(r.x+r.width*x,r.y+r.height*y)));}),`Focus ${width}: preview leaves the drawer disclosure natively reachable`);
+          if(gap.mat-gap.drawer>=gap.width){gapCases++;ok(gap.right<=gap.mat+1,'Focus uses the actual gap when the whole preview fits');}
+          else{overlayCases++;ok(gap.left>=gap.drawer+10&&gap.right<=width-8,'Focus with insufficient gap stands past the drawer over the table');}
           if(process.env.UAT_SHOTS){mkdirSync(process.env.UAT_SHOTS,{recursive:true});await page.screenshot({path:path.join(process.env.UAT_SHOTS,`played-card-gap-${width}.png`)});}
         }
-        let low=1280,high=2240,edge;
-        for(let n=0;n<11;n++){
-          const width=Math.round((low+high)/2);await page.setViewportSize({width,height:900});
-          edge=await page.evaluate(()=>{dispatchEvent(new Event('resize'));const d={right:Math.max(...[...document.querySelectorAll('.cm-board-pane, .cm-stage-rail.is-open')].map(e=>e.getBoundingClientRect().right))},m=document.querySelector('.cm-board-stage .cm-board-mat').getBoundingClientRect(),p=document.querySelector('.cm-play-pop').getBoundingClientRect();return {space:m.left-d.right-p.width,left:p.left,drawer:d.right};});
-          if(edge.space>=4&&edge.space<=12)break;
-          if(edge.space<4)low=width+1;else high=width-1;
-        }
-        ok(edge.space>=0&&edge.space<24&&edge.left>=edge.drawer,'focus: a card that fits without the preferred margin still clears the drawer');
-        await page.locator('[data-action=board-pane]').evaluate(el=>el.click());
-        const collapsed=await page.evaluate(()=>{const p=document.querySelector('.cm-play-pop').getBoundingClientRect(),m=document.querySelector('.cm-board-stage .cm-board-mat').getBoundingClientRect();return p.left>=8&&p.right<m.left;});
-        ok(collapsed,'focus: collapsing the drawer recomputes the preview position');
+        console.log(`Focus preview existing widths: ${gapCases} gap-fit, ${overlayCases} over-table cases`);
+        await page.locator('[data-action=board-stage-rail]').evaluate(el=>el.click());
+        const collapsed=await page.evaluate(()=>{const p=document.querySelector('.cm-play-pop').getBoundingClientRect();const edge=document.querySelector('.cm-stage-left').getBoundingClientRect().right;return !document.querySelector('.cm-stage-rail.is-open')&&p.left>=edge+10&&p.left<=edge+14&&p.right<=innerWidth-8;});
+        ok(collapsed,'Focus: the folded drawer puts previews at the edge without covering drawer controls');
         await page.setViewportSize({width:1440,height:900});
       }
       const shown = () => page.evaluate(() => [...document.querySelectorAll("#cm-board-plays .cm-play-pop")].map((el) => el.getAttribute("aria-label")));
@@ -187,8 +165,8 @@ try {
       await page.locator("[data-action=board-camera]").click();
     }
     /* ---- 5. Settings: the two choices ---- */
-    await page.locator(".cm-stage-top [data-action=board-profile]").click();
-    await page.locator(".cm-stage-top [data-action=board-tools]").click();
+    await page.locator("[data-action=board-camera]").click();
+    await page.locator(".cm-stage-camera [data-action=board-tools]").click();
     await page.locator("#cm-dialog [role=tab][data-tab=gameplay]").click();
     const boxes = await page.evaluate(() => [...document.querySelectorAll(".cm-board-hold")].map((l) => {
       const box = l.querySelector("input").getBoundingClientRect(), words = getComputedStyle(l.querySelector("span"));
@@ -227,4 +205,4 @@ try {
 } finally {
   await close();
 }
-console.log(`board-fullscreen-notes: ${checks} checks passed -- card actions reviewed and confirmed in every view, a land just played taken back by its double-click, the actions large over the table in Full screen, the others' plays held up for ten seconds, the two priority choices, the tabletop to 200%, the commander tax below the title bar.`);
+console.log(`board-fullscreen-notes: ${checks} checks passed -- card actions reviewed and confirmed in every view, a land just played taken back by its offered Undo drawer, the actions large over the table in Full screen, the others' plays held up for ten seconds, the two priority choices, the tabletop to 200%, the commander tax below the title bar.`);

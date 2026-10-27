@@ -35,6 +35,7 @@
    allows. No server-side fallback is asked for, since it can re-run a declined request on a dearer model; a refusal is
    said plainly (422). */
 import * as Advise from "./advise-brief.mjs";
+import {groupOf} from "./access.mjs";
 
 export const DEFAULT_MODEL = "claude-haiku-5-5";
 export const MODELS = ["claude-haiku-5-5", "claude-sonnet-5-5"];
@@ -110,16 +111,32 @@ export function spendOf(json, model) {
   return {model: (json && json.model) || model, input, output, micros};
 }
 
-/* AI_EVERYONE (Rob, 2026-10-14): everyone signed in may use the AI features, so Access's invite list is the list. */
+/* AI_EVERYONE (Rob, 2026-10-14): the app's own sign-in opens the AI door too, so a person needs no second sign-in. Since
+   2026-10-26 it widens the sign-in only, never who may spend: that is the person's group (cloud/access.mjs `groupOf`; Rob:
+   "General Access will never be able to run or cause token costs"). */
 export const everyone = (env) => env?.AI_EVERYONE === "on";
 
-export function createAi(db, {now = () => new Date().toISOString(), newId = () => crypto.randomUUID(), everyone = false} = {}) {
+export function createAi(db, {now = () => new Date().toISOString(), newId = () => crypto.randomUUID(), owner = ""} = {}) {
   const since = () => new Date(Date.parse(now()) - 24 * 3600 * 1000).toISOString();
   return {
-    /* On the list: a row in ai_allowlist, or anyone Access has named where the door is open to everyone signed in. */
+    /* Who may spend: the owner, or a Game Theory Insider (a row in ai_allowlist, the roster). Never General Access. */
     async allowed(email) {
-      if (everyone) return typeof email === "string" && email.includes("@");
-      return !!(await db.prepare("SELECT 1 AS yes FROM ai_allowlist WHERE email = ?").bind(email).first());
+      return (await groupOf(email, {OWNER_EMAIL: owner}, db)) !== "general";
+    },
+    /* THE INSIDERS ROSTER, kept by the owner (GET and PUT /api/admin/groups in worker.mjs). */
+    async insiders() {
+      const {results} = await db.prepare("SELECT email, added_at AS addedAt, note FROM ai_allowlist ORDER BY added_at, email").all();
+      return results.map((r) => ({email: r.email, addedAt: r.addedAt, note: r.note ?? ""}));
+    },
+    async setGroup(email, group, note = "") {
+      const who = String(email || "").trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(who)) throw new Closed("That is not an email address.", 400);
+      if (group === "insider") {
+        await db.prepare("INSERT INTO ai_allowlist (email, added_at, note) VALUES (?, ?, ?) ON CONFLICT(email) DO UPDATE SET note = excluded.note").bind(who, now(), String(note || "").slice(0, 200)).run();
+      } else if (group === "general") {
+        await db.prepare("DELETE FROM ai_allowlist WHERE email = ?").bind(who).run();
+      } else throw new Closed("A person is an insider or general; the owner is set in the Worker's settings.", 400);
+      return {email: who, group};
     },
     /* What was spent in the last 24 hours: by this person, by everyone, and by everyone on this one feature. */
     async spent(email, feature = null) {

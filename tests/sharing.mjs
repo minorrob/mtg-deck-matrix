@@ -232,4 +232,13 @@ await assert.rejects(()=>cached.read(visibleId,reviewer),/checksum/);checks++;
   ok2(!JSON.stringify(status).includes('test-only')&&!JSON.stringify(status).includes('@'),'and carries no secret and no address');
   eq((await both.profile(owner)).isAdmin,true,'the administrator’s profile says so');eq((await both.profile(stranger)).isAdmin,false,'nobody else’s does');
 }
+// The shared service also rejects a service principal even when its database id equals the owner.
+let rejectedAdminQueries=0;
+const forbiddenDb={prepare(){rejectedAdminQueries++;throw new Error('A denied administrator must not reach storage.');}};
+const adminGate=sharing(forbiddenDb,env,{fetchImpl:mailFetch,now,cacheProjections:false});
+for(const person of [{...owner,email:'service:test'},{...owner,service:true}]){
+  await rejects(()=>adminGate.admin(person,'https://example.com'),403);
+  await rejects(()=>adminGate.invite(person,{name:'Friend',email:'friend@example.com'},'https://example.com'),403);
+}
+eq(rejectedAdminQueries,0,'service principals with the owner id perform no invitation-admin reads or invitation writes');
 console.log(`sharing: ${checks} checks passed — live permissions, revocation, public access, concurrent edits, privacy, notification retry and owner-only invitations.`);

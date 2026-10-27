@@ -1,0 +1,20 @@
+diff --git a/index.html b/index.html
+index 9c2d437..bc45a5b 100644
+--- a/index.html
++++ b/index.html
+@@ -1,5 +1,5 @@
+ <!doctype html>
+-<html lang="en" style="color-scheme:dark" data-palette="moss-iron" data-theme="dark">
++<html lang="en" style="color-scheme:dark" data-palette="sapphire-obsidian" data-theme="dark">
+ <head>
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+@@ -121,7 +121,7 @@
+   <script src="crankmagic-brand.js?v=6" defer></script>
+ </head>
+ <body>
+-<div id="matrix-v2" aria-label="CrankMagic" data-palette="moss-iron" data-theme="dark">
++<div id="matrix-v2" aria-label="CrankMagic" data-palette="sapphire-obsidian" data-theme="dark">
+   <a class="cm-skip" href="#cm-main">Skip to content</a>
+   <div class="cm-layout"><aside class="cm-sidebar">
+     <div class="v-brand-block"><a class="v-brand-home" href="#welcome" aria-label="CrankMagic home" title="CrankMagic home"><img class="v-brand-logo" src="assets/crankmagic/crankmagic-logo-gear-v4-256.webp?v=2" alt="" width="36" height="36"></a><div class="v-brand-copy"><a class="v-brand" href="#welcome" title="CrankMagic home">CrankMagic</a><div class="v-aether-wrap"><canvas class="v-aether" width="190" height="56" aria-hidden="true"></canvas><canvas class="v-aether-front" width="190" height="56" aria-hidden="true"></canvas><button class="v-aether-toggle" type="button" aria-label="Pause aether animation" title="Pause aether animation">Ⅱ</button></div></div></div>

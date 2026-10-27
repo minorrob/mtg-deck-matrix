@@ -25,16 +25,24 @@
  *   POST /api/ai/advise            the deck advisor (AI-4): the same door, the brief built here from the person's own
  *                                  library in the cloud (cloud/advise.mjs); its own switch, AI_ADVISE
  *   GET  /api/ai-advise            whether this person may ask the advisor (AI-4): {open}
+ *   GET  /api/ai-coach             whether this person may ask the table Coach: {open}
  *   GET  /api/ai-meter             this person's AI spending over the last 24 hours against their cap (AI-6)
  *   GET  /api/ai/login?to=#...     back to the app once signed in to the AI door
+ *   POST  /api/feedback            a report from any page or mid-game (CrankFeedback@1, feedback-schema.js), from any
+ *                                  signed-in person, 10 an hour each -> 201 {feedback} (cloud/feedback.mjs)
+ *   GET   /api/admin/feedback      the reports, oldest first (?since=&state=&limit=): the owner, and the triage agent's
+ *                                  service token for its own Access application (FEEDBACK_AGENT_AUD)
+ *   PATCH /api/admin/feedback/:id  the same two move a report along new -> triaged -> approved -> in-progress ->
+ *                                  released -> notified, with the issue, PR, release commit and message id
  */
-import {verifyAccess, Unauthorized} from "./access.mjs";
+import {verifyAccess, Unauthorized, groupOf} from "./access.mjs";
 import {createLibrary, Conflict, Invalid, LIMITS} from "./library.mjs";
 import {archidekt, ImportError} from "./import.mjs";
 import {createAi, everyone, settings, explain, coach, advise, readQuestion, Closed} from "./ai.mjs";
 import {readAsk, openVersion, adviseBrief} from "./advise.mjs";
 import {tables} from "./tables.mjs";
 import {social, ShareError, sharedIdentity} from "./sharing.mjs";
+import {createFeedback, FeedbackInvalid, FeedbackRefused, isOwner, feedbackGroup} from "./feedback.mjs";
 
 /** Whether this person may seat an AI on Claude: the same gates as the table's object checks when it seats one. */
 /* AI COACH SETTINGS (AI-6): the person's own spending over the last 24 hours against their cap, from the call log, for
@@ -44,7 +52,7 @@ async function aiMeter(env, email, now) {
   if (!env.DB) return {open: false};
   let config;
   try {config = settings(env);} catch {return {open: false};}
-  const ai = createAi(env.DB, {now, everyone: everyone(env)});
+  const ai = createAi(env.DB, {now, owner: env.OWNER_EMAIL});
   if (!(await ai.allowed(email))) return {open: false};
   const {mine} = await ai.spent(email);
   return {open: true, spentCents: Math.round(mine / 10000 * 100) / 100, capCents: config.capPerson / 10000};
@@ -52,7 +60,21 @@ async function aiMeter(env, email, now) {
 async function aiSeatOpen(env, email, flag = "AI_PILOT") {
   if (env[flag] !== "on" || !env.DB) return false;
   try {settings(env);} catch {return false;}
-  return createAi(env.DB, {everyone: everyone(env)}).allowed(email);
+  return createAi(env.DB, {owner: env.OWNER_EMAIL}).allowed(email);
+}
+
+/* THE OWNER'S ROSTER (Rob, 2026-10-26; cloud/access.mjs): who is a Game Theory Insider, read and set by the owner alone.
+   GET lists the roster; PUT {email, group: "insider" | "general", note} adds a person to it or takes them off. A person is
+   general by being on no list, so there is nothing to delete. Anyone but the owner is refused, saying who may. */
+async function adminGroups(request, env, who, ms) {
+  const group = await groupOf(who.email, env, env.DB);
+  if (group !== "owner") return reply(403, {error: "Only CrankMagic's owner can manage access groups."});
+  const ai = createAi(env.DB, {now: () => new Date(ms()).toISOString(), owner: env.OWNER_EMAIL});
+  if (request.method === "GET") return reply(200, {owner: true, insiders: await ai.insiders()});
+  if (request.method !== "PUT") return reply(405, {error: "The roster is read with GET and set with PUT."});
+  const input = await body(request);
+  try {return reply(200, await ai.setGroup(input.email, input.group, input.note));}
+  catch (error) {if (error instanceof Closed) return reply(error.status, {error: error.message}); throw error;}
 }
 
 /** An invitation's link, `/api/join/<table>/<code>`: where it sends the person -- the app, at the seat's fragment -- or
@@ -100,6 +122,69 @@ async function body(request) {
   try {return JSON.parse(text);} catch {throw new Invalid("that request is not JSON");}
 }
 
+/* Read-only administration (r4 CH-88). Access has already verified the identity before this
+   permission is considered. The existing invitation owner remains the owner unless an explicit
+   ADMIN_EMAIL is configured; service seats and client-supplied identity headers never qualify. */
+function administrator(who, person, env) {
+  if (who.service || !who.email || who.email.startsWith('service:')) return false;
+  const owner = typeof env.ADMIN_EMAIL === 'string' ? env.ADMIN_EMAIL.trim().toLowerCase() : '';
+  if (owner) return who.email === owner;
+  return !!env.INVITE_ADMIN_ID && String(person.id) === String(env.INVITE_ADMIN_ID);
+}
+const ADMIN_FLAGS = ['SHARING_ENABLED','AI_EVERYONE','AI_COACH','AI_ADVISE','AI_PILOT','PLAYTEST_TABLES','PLAY_TABLES_CLOSED','SERVICE_SEATS'];
+const adminFeatures = env => ADMIN_FLAGS.map(key => ({key, value: env[key] === 'on' ? 'on' : 'off',
+  defaultValue: 'off', source: Object.hasOwn(env,key) ? 'Worker configuration' : 'Code default'}));
+async function adminRead(path, url, env, now) {
+  if (path === '/api/admin' || path === '/api/admin/features') return reply(200, {
+    readOnly: true, features: adminFeatures(env), invitationsEnabled: env.SHARING_ENABLED === 'on',
+  });
+  if (path === '/api/admin/spend') {
+    const since = new Date(now - 24 * 60 * 60 * 1000).toISOString();
+    const row = await env.DB.prepare('SELECT COUNT(*) AS calls, COALESCE(SUM(cost_micros),0) AS micros FROM ai_calls WHERE at>=? AND at<=?')
+      .bind(since,new Date(now).toISOString()).first();
+    const cap = env.AI_CAP_TOTAL_CENTS == null || env.AI_CAP_TOTAL_CENTS === '' ? null : Number(env.AI_CAP_TOTAL_CENTS);
+    return reply(200,{readOnly:true, since, until:new Date(now).toISOString(), calls:Number(row?.calls||0),
+      spentCents:Number(row?.micros||0)/10000, capCents:Number.isFinite(cap) && cap>=0 ? cap : null});
+  }
+  if (path === '/api/admin/health') {
+    let release=null;
+    if (env.ASSETS) {
+      try {
+        const response=await env.ASSETS.fetch(new Request(new URL('/version.json',url)));
+        if(response.ok) {
+          const value=await response.json();
+          release={commit:/^[a-f0-9]{7,40}$/.test(value.commit||'') ? value.commit : null,
+            profile:['pages','cloud-staging','cloud-production','cloud-production-standby'].includes(value.profile) ? value.profile : null,
+            date:/^\d{4}-\d{2}-\d{2}$/.test(value.date||'') ? value.date : null};
+        }
+      } catch { /* No release metadata is an unavailable measurement, not a healthy version claim. */ }
+    }
+    return reply(200,{readOnly:true,release});
+  }
+  if (path === '/api/admin/invites') {
+    if (env.SHARING_ENABLED !== 'on') return reply(503,{error:'Invitations are not enabled on this copy yet.'});
+    const requested = Number(url.searchParams.get('limit'));
+    const limit = Number.isInteger(requested) && requested > 0 ? Math.min(100,requested) : 30;
+    const before = url.searchParams.get('before') || '', after = url.searchParams.get('after') || '';
+    if ((before || after) && (!/^\d{4}-\d{2}-\d{2}T[^\s]{1,30}$/.test(before) || after.length>254 || !/^[^\s@]+@[^\s@]+$/.test(after)))
+      return reply(400,{error:'Use the next-page link supplied by the invitation list.'});
+    try {
+      const page = await env.DB.prepare(`SELECT i.email,i.name,i.created_at AS createdAt,i.status,
+        (SELECT m.status FROM share_mail m WHERE m.recipient=i.email AND m.subject='You are invited to CrankMagic'
+          ORDER BY m.created_at DESC,m.id DESC LIMIT 1) AS deliveryStatus
+        FROM account_invitations i ${before ? 'WHERE i.created_at<? OR (i.created_at=? AND i.email>?)' : ''}
+        ORDER BY i.created_at DESC,i.email ASC LIMIT ?`)
+        .bind(...(before ? [before,before,after] : []),limit+1).all();
+      const rows=page.results||[], invites=rows.slice(0,limit), last=invites.at(-1);
+      return reply(200,{readOnly:true,invites,next:rows.length>limit && last ? {before:last.createdAt,after:last.email} : null});
+    } catch(error) {
+      if (/no such table/i.test(error.message)) return reply(503,{error:'Invitation storage is not available on this copy yet.'});
+      throw error;
+    }
+  }
+  return reply(404,{error:'No such administration endpoint.'});
+}
+
 /* `deps` lets the suite stand in for the network and the clock: {fetchImpl, now (ms), newId}. */
 export async function handle(request, env, deps = {}) {
   const url = new URL(request.url), path = url.pathname, method = request.method;
@@ -118,6 +203,7 @@ export async function handle(request, env, deps = {}) {
     catch (error) {if (error instanceof ImportError) return reply(error.status, {error: error.message}); throw error;}
   }
   if (path.startsWith("/api/ai/")) return aiDoor(request, env, deps, url, ms);
+  if (path === "/api/admin/feedback" || path.startsWith("/api/admin/feedback/")) return feedbackAdmin(request, env, deps, url, ms);
   let who;
   try {who = await verifyAccess(request, env, {fetchImpl: deps.fetchImpl, now: ms()});}
   catch (error) {
@@ -126,6 +212,9 @@ export async function handle(request, env, deps = {}) {
   }
   if (await overLimit(env.LIMIT_PERSON, who.email)) return tooMany("your account");
   const loginEmail = who.email;
+  // Invitation administration is human-only, before identity/library queries. Its owner remains INVITE_ADMIN_ID.
+  if (path === '/api/social/admin' && (who.service || !who.email || who.email.startsWith('service:')))
+    return reply(403, {error: 'Only the CrankMagic administrator can open Admin.'});
   if (env.SHARING_ENABLED === 'on') {
     const canonical = await sharedIdentity(env.DB, loginEmail);
     if (!canonical) return reply(401, {error: 'Your email address changed. Sign out and sign in with your verified new address.'});
@@ -144,14 +233,30 @@ export async function handle(request, env, deps = {}) {
     if (request.headers.get("upgrade") === "websocket" && origin !== url.origin) return reply(403, {error: "That request did not come from CrankMagic."});
     return tables(request, env, who);
   }
+  /* FEEDBACK (the feedback loop, PR 1; cloud/feedback.mjs): any signed-in person, from the app's own sheet. The reporter
+     is who Access named, never a name in the report; a screenshot is not kept until R2 is on. */
+  if (path === "/api/feedback") {
+    if (method !== "POST") return reply(405, {error: "Feedback is a POST."});
+    if (!fromTheApp(request, url, "feedback")) return reply(403, {error: "That request did not come from CrankMagic."});
+    if (!env.DB) return reply(503, {error: "Feedback is not switched on here yet."});
+    const library = createLibrary(env.DB, {now: () => new Date(ms()).toISOString()});
+    const person = await library.user(who.email);
+    return fileFeedback(request, env, deps, ms, {email: person.email, group: feedbackGroup(env, person)});
+  }
   if (method !== "GET" && !fromTheApp(request, url)) return reply(403, {error: "That request did not come from CrankMagic."});
 
   const library = createLibrary(env.DB, {now: () => new Date(ms()).toISOString(), ...(deps.newId ? {newId: deps.newId} : {})});
   const person = await library.user(who.email);
   try {
+    if (path === '/api/admin' || path.startsWith('/api/admin/')) {
+      if (!administrator(who,person,env)) return reply(403,{error:'Only the CrankMagic administrator can open this page.'});
+      if (method !== 'GET') return new Response(JSON.stringify({error:'Administration is read-only in this version.'}),
+        {status:405,headers:{...HEADERS,allow:'GET'}});
+      return adminRead(path,url,env,ms());
+    }
     if (path.startsWith('/api/social/')) {
       if (env.SHARING_ENABLED !== 'on') return reply(503, {error: 'Sharing is not enabled on this copy yet.'});
-      return reply(200, await social(request, env, person, {now: () => new Date(ms()).toISOString(), ...(deps.fetchImpl ? {fetchImpl: deps.fetchImpl} : {})}));
+      return reply(200, await social(request, env, {...person, service: who.service === true}, {now: () => new Date(ms()).toISOString(), ...(deps.fetchImpl ? {fetchImpl: deps.fetchImpl} : {})}));
     }
     if (method === "GET" && path === "/api/auth/login") {
       /* Only a fragment of this app may be the destination: never another site, never another path. */
@@ -166,12 +271,17 @@ export async function handle(request, env, deps = {}) {
        `to` already carried it; nothing here keeps it, and it seats only someone Access admits. */
     const joined = method === "GET" ? joinLocation(url) : null;
     if (joined) return new Response(null, {status: 302, headers: {location: joined, "cache-control": "no-store", "referrer-policy": "no-referrer"}});
-    if (method === "GET" && path === "/api/me") return reply(200, {email: loginEmail, since: person.createdAt, head: await library.head(person.id)});
+    /* WHO IS ASKING, AND THEIR GROUP (cloud/access.mjs): owner, insider or general. The browser hides what a group may not
+       press; every route still asks for itself. `admin` is the Admin window's own gate (r4). */
+    if (method === "GET" && path === "/api/me") return reply(200, {email: loginEmail, since: person.createdAt, group: await groupOf(who.email, env, env.DB), head: await library.head(person.id), admin:administrator(who,person,env)});
+    if (path === "/api/admin/groups") return adminGroups(request, env, who, ms);
     /* AN AI ON CLAUDE (AI-2): New table offers one only where the table's object would seat it (cloud/game-room.mjs
        `pilotOpen`): the switch on, the door's key, caps and model set, and this person on the allowlist. */
     if (method === "GET" && path === "/api/ai-seat") return reply(200, {open: await aiSeatOpen(env, person.email)});
     /* THE DECK ADVISOR (AI-4): a deck's page offers Ask the advisor only where the door would answer this person. */
     if (method === "GET" && path === "/api/ai-advise") return reply(200, {open: await aiSeatOpen(env, person.email, "AI_ADVISE")});
+    /* The table shows a composer only where the existing Coach switch and this person's AI gates are open. */
+    if (method === "GET" && path === "/api/ai-coach") return reply(200, {open: await aiSeatOpen(env, person.email, "AI_COACH")});
     if (method === "GET" && path === "/api/ai-meter") return reply(200, await aiMeter(env, person.email, () => new Date(ms()).toISOString()));
     if (method === "GET" && path === "/api/library") return reply(200, {head: await library.head(person.id)});
     if (method === "PUT" && path === "/api/library") {
@@ -199,6 +309,74 @@ export async function handle(request, env, deps = {}) {
     if (error instanceof Conflict) return reply(409, {error: "Your library changed on another device since this one last saved.", head: error.head});
     if (error instanceof Invalid) return reply(400, {error: `The cloud refused that: ${error.message}.`});
     throw error;
+  }
+}
+
+/* THE FEEDBACK LOOP'S STORE (PR 1; cloud/feedback.mjs, migration 0009). A report is bounded by its schema before it is
+   read in full: the sheet bounds it (feedback-schema.js boundReport), and a body past what a bounded report can be -- the
+   text, a 1 MiB screenshot as base64, the console -- is refused before it is parsed. */
+const FEEDBACK_BODY = 1_500_000;
+async function fileFeedback(request, env, deps, ms, person) {
+  const text = await request.text();
+  if (text.length > FEEDBACK_BODY) return reply(413, {error: "That report is larger than CrankMagic takes (a screenshot is 1 MB at most). Nothing was saved."});
+  let input;
+  try {input = JSON.parse(text);} catch {return reply(400, {error: "That request is not JSON."});}
+  const store = createFeedback(env.DB, {now: () => new Date(ms()).toISOString(), ...(deps.newId ? {newId: deps.newId} : {})});
+  try {return reply(201, {feedback: await store.file(person, input)});}
+  catch (error) {return feedbackRefusal(error);}
+}
+function feedbackRefusal(error) {
+  if (error instanceof FeedbackInvalid) return reply(400, {error: `CrankMagic refused that report: ${error.message}. Nothing was saved.`});
+  if (error instanceof FeedbackRefused) return new Response(JSON.stringify({error: error.message, ...(error.retryAfterSeconds ? {retryAfterSeconds: error.retryAfterSeconds} : {}), ...(error.state ? {state: error.state} : {})}),
+    {status: error.status, headers: {...HEADERS, ...(error.retryAfterSeconds ? {"retry-after": String(error.retryAfterSeconds)} : {})}});
+  throw error;
+}
+/* THE ADMIN ROUTES: the owner (OWNER_EMAIL, else INVITE_ADMIN_ID, the administrator the release names), and the triage agent as the service
+   token of its own Access application (FEEDBACK_AGENT_AUD, a dashboard step of Rob's: an application for the agent with a
+   Service Auth policy, never a person's session). A person's token is checked against the app's own application as
+   everywhere else; the agent's audience admits a service token and nothing more. Unset, no agent is admitted. */
+async function feedbackAdmin(request, env, deps, url, ms) {
+  const path = url.pathname, method = request.method;
+  if (method !== "GET" && method !== "PATCH") return reply(405, {error: "Feedback is read with GET and moved with PATCH."});
+  let who = null;
+  if (env.FEEDBACK_AGENT_AUD) {
+    try {who = await verifyAccess(request, env, {fetchImpl: deps.fetchImpl, now: ms(), audience: env.FEEDBACK_AGENT_AUD, service: true});}
+    catch (error) {if (!(error instanceof Unauthorized)) throw error;}
+  }
+  if (!who) {
+    try {who = await verifyAccess(request, env, {fetchImpl: deps.fetchImpl, now: ms()});}
+    catch (error) {
+      if (error instanceof Unauthorized) return reply(401, {error: "Sign in as CrankMagic's owner to read feedback.", why: error.message});
+      throw error;
+    }
+  }
+  if (await overLimit(env.LIMIT_PERSON, who.email)) return tooMany("your account");
+  if (!env.DB) return reply(503, {error: "Feedback is not switched on here yet."});
+  if (!who.service) {
+    let email = who.email;
+    if (env.SHARING_ENABLED === "on") {
+      email = await sharedIdentity(env.DB, email);
+      if (!email) return reply(401, {error: "Your email address changed. Sign out and sign in with your verified new address."});
+    }
+    const person = await createLibrary(env.DB, {now: () => new Date(ms()).toISOString()}).user(email);
+    if (!isOwner(env, person)) return reply(403, {error: "Only CrankMagic's owner reads feedback here. Your own reports are sent from the feedback sheet."});
+  }
+  if (method !== "GET" && !fromTheApp(request, url, "feedback-admin")) return reply(403, {error: "That request did not come from CrankMagic."});
+  const store = createFeedback(env.DB, {now: () => new Date(ms()).toISOString()});
+  const one = /^\/api\/admin\/feedback\/([0-9a-f-]{36})$/.exec(path);
+  try {
+    if (method === "GET" && path === "/api/admin/feedback") return reply(200, {feedback: await store.list({since: url.searchParams.get("since"), state: url.searchParams.get("state"), limit: url.searchParams.get("limit")})});
+    if (method === "PATCH" && one) {
+      const text = await request.text();
+      if (text.length > 8192) return reply(413, {error: "That change is larger than a feedback change can be."});
+      let input;
+      try {input = JSON.parse(text);} catch {return reply(400, {error: "That request is not JSON."});}
+      return reply(200, {feedback: await store.patch(one[1], input)});
+    }
+    return reply(404, {error: "No such endpoint."});
+  } catch (error) {
+    if (error instanceof FeedbackInvalid) return reply(400, {error: `CrankMagic refused that change: ${error.message}. Nothing was changed.`});
+    return feedbackRefusal(error);
   }
 }
 
@@ -234,7 +412,7 @@ async function aiDoor(request, env, deps, url, ms) {
   if (!feature) return reply(404, {error: "No such endpoint."});
   if (request.method !== "POST") return reply(405, {error: `${feature} is a POST.`});
   if (!fromTheApp(request, url, "ai")) return reply(403, {error: "That request did not come from CrankMagic."});
-  const ai = createAi(env.DB, {now: () => new Date(ms()).toISOString(), everyone: everyone(env), ...(deps.newId ? {newId: deps.newId} : {})});
+  const ai = createAi(env.DB, {now: () => new Date(ms()).toISOString(), owner: env.OWNER_EMAIL, ...(deps.newId ? {newId: deps.newId} : {})});
   if (!(await ai.allowed(who.email))) return reply(403, {error: "Your account is not on CrankMagic's list for AI features. Ask the person who invited you."});
   /* The Coach sends a person's hand and board, which the privacy page must say before it is offered: its own switch. */
   if (feature === "The Coach" && env.AI_COACH !== "on") return reply(503, {error: "The Coach is not switched on here yet."});

@@ -1,0 +1,71 @@
+name: Feedback triage
+
+# The feedback loop's triage agent (docs/feedback-loop/PLAN-2026-10-26.html, section 3; tools/feedback-triage.mjs).
+# Hourly, and on demand: reads the reports in state `new` from the Worker's admin route with the agent's own Access
+# service token, groups duplicates, files one Linear issue per group in the outcome project the route maps to with the
+# Lane label and `feedback`, writes the issue key back to the rows (state `triaged`), and writes the digest -- one line
+# per issue with its recommendation -- to the job summary and an artifact. The agent never executes a fix.
+#
+# Secrets, by name, set in the repository's settings (Rob's step): ANTHROPIC_API_KEY (the model, Claude Haiku 5.5 by
+# default; left out, the rules' draft stands), LINEAR_API_KEY (a key that may create issues and labels in team ROB),
+# FEEDBACK_AGENT_CLIENT_ID and FEEDBACK_AGENT_CLIENT_SECRET (the Access service token of the agent's own application,
+# whose audience the Worker knows as FEEDBACK_AGENT_AUD). The variable FEEDBACK_API names the Worker; staging until the
+# loop is proven there.
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+    inputs:
+      model:
+        description: "Run the model (Claude Agent SDK) over the rules' draft"
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: feedback-triage
+  cancel-in-progress: false
+
+jobs:
+  triage:
+    # THE HOURLY RUN IS HELD (merge of #897, 2026-10-27): the schedule still ticks, but the job runs only on
+    # workflow_dispatch. Merging must not activate the agent: its secrets are not set, and
+    # docs/r4-execution/INCOMING-QUEUE.md lists findings to settle before any live run (the prompt built from reporters'
+    # words under permissionMode bypassPermissions, a duplicate Linear issue when recording the key fails, a replacement
+    # body that drops the reporter's facts, source paths outside the repository, equal-timestamp paging). One
+    # workflow_dispatch is the first run; delete the next line to let the hourly schedule run once those are settled.
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      # The model reads the repository through the Claude Agent SDK; installed for the run, never committed (the
+      # repository has no package.json on purpose).
+      - name: Install the Claude Agent SDK
+        if: ${{ inputs.model != false }}
+        run: npm install --no-save --no-package-lock @anthropic-ai/claude-agent-sdk
+
+      - name: Triage the new feedback
+        env:
+          FEEDBACK_API: ${{ vars.FEEDBACK_API || 'https://staging.crankmagic.com' }}
+          CF_ACCESS_CLIENT_ID: ${{ secrets.FEEDBACK_AGENT_CLIENT_ID }}
+          CF_ACCESS_CLIENT_SECRET: ${{ secrets.FEEDBACK_AGENT_CLIENT_SECRET }}
+          LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node tools/feedback-triage.mjs --live --out work/triage ${{ inputs.model == false && '--no-model' || '' }}
+
+      - name: Keep the digest
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: feedback-digest
+          path: work/triage/
+          if-no-files-found: ignore
+          retention-days: 30

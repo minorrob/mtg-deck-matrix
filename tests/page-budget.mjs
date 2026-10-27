@@ -37,6 +37,9 @@ const EXPLORE_COMMANDER = "Chulane%2C%20Teller%20of%20Tales";
 /* [route, name, boundary, {desktop budgets}, {phone budgets}]. The boundary is the first
    table, list or canvas of the page; words and controls are counted before it in document
    order. Budgets are words / controls / explainer words. */
+/* SEND FEEDBACK (the feedback loop, PR 2, 2026-10-26; docs/feedback-loop/PLAN-2026-10-26.html): one glyph on every page's
+   head, beside the "?", so a person can report from wherever they are. One control more on each page it reaches before
+   the boundary (Decks, and the Library's five tabs); the word budgets do not move, the glyph has no words. */
 const PAGES = [
   /* R3.4 (r3, 16-decks-hub; INTAKE row R3.4, approved 2026-09-25): the design puts a bar above the tiles --
      four stage chips, the sort, and Show archived, which moved up from the footer under the grid. That is one
@@ -47,7 +50,7 @@ const PAGES = [
      controls stay at nine because Loading, like Defining before it, shows only when it has decks.
      The deck stages (Rob, 2026-10-23, the Decks requirements' FLT-1): All · Boxed · Defined · Building · Shared, five
      chips that always show where there were four, and Bulk actions where Compare was -- ten controls. */
-  ["decks", "Decks", ".cm-deck-grid", [26, 10, 4], [26, 10, 4]],
+  ["decks", "Decks", ".cm-deck-grid", [26, 11, 4], [26, 11, 4]],
   /* R3.8, the landing page (INTAKE row R3.8, 2026-09-26): measured up to the four doors, so it counts the header,
      the hero and Step one -- 92 words and 10 controls, every one of them the design's own copy. A landing page
      speaks more than a working page before its first list; the budget holds it at what it says today. */
@@ -85,9 +88,9 @@ const PAGES = [
   /* Card states (docs/card-states.md, Rob, 2026-09-26): the seven count tiles became eight -- the four stages,
      then Owned split four ways -- so controls rise by that one tile, 27 -> 28. The caption states the sum's rule
      rather than repeating the figures above it, so the word budget does not move. */
-  ["cards", "Cards · Library", "#cm-roster-table table", [84, 28, 16], [84, 28, 16]],
-  ["cards?tab=buy", "Cards · To buy", "#cm-roster-table table, .cm-shop-strip", [51, 18, 8], [51, 10, 4]],
-  ["cards?view=sheet", "Cards · Sheet", "#cm-sheet-table table", [60, 16, 20], [60, 16, 20]],
+  ["cards", "Cards · Library", "#cm-roster-table table", [84, 29, 16], [84, 29, 16]],
+  ["cards?tab=buy", "Cards · To buy", "#cm-roster-table table, .cm-shop-strip", [51, 19, 8], [51, 10, 4]],
+  ["cards?view=sheet", "Cards · Sheet", "#cm-sheet-table table", [60, 17, 20], [60, 17, 20]],
   ["lab", "Build", "#cm-lab-results", [90, 16, 40], [90, 16, 40]],
   /* Explore is two pages now, and this budget used to name only the second of them.
      #discover on its own became the scope chooser in Explore A -- three doors and the recent
@@ -105,7 +108,7 @@ const PAGES = [
   [`discover?commander=${EXPLORE_COMMANDER}`, "Explore · graph", "#cm-graph", [310, 24, 12], [310, 24, 12]],
   [`pull?deck=${DECK}`, "Planned Changes", ".cm-plan-table", [48, 8, 4], [48, 8, 4]],
   ["about-deck-building", "About Deck Building", ".cm-how-flow", [14, 3, 2], [14, 3, 2]],
-  ["cards?tab=orders", "Cards · Orders", ".cm-orders, .cm-table", [35, 11, 4], [35, 11, 4]],
+  ["cards?tab=orders", "Cards · Orders", ".cm-orders, .cm-table", [35, 12, 4], [35, 12, 4]],
   /* Cards · Table (15 September, play space PR 6). Everything above the mat is the page head,
      the three tabs, the view switch and the five filters — the mat itself carries no prose, which
      is the point of it: the words are on the cards. 40 words, 17 controls, and the same at both
@@ -113,7 +116,7 @@ const PAGES = [
   /* 44 / 18, not 40 / 17: "Back to Play Space" is the control Rob asked for by name after the
      corner arrow ended up wherever the open pile had pushed it (15 September). Raised
      deliberately; the next control on this page has to argue for itself. */
-  ["cards?view=tabletop", "Cards · Table", ".cm-tt-mat", [61, 18, 16], [61, 18, 16]],
+  ["cards?view=tabletop", "Cards · Table", ".cm-tt-mat", [61, 19, 16], [61, 19, 16]],
 ];
 const WIDTHS = [[1400, "desktop", 3], [390, "phone", 4]];
 

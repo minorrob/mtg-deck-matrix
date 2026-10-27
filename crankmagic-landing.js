@@ -56,8 +56,8 @@
     const email = signedIn && C.signedInAs ? C.signedInAs() : "";
     const chipLabel = email || (accounts() ? "Sign in" : "Menu");
     const avatar = email ? e(email.charAt(0).toUpperCase()) : `<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="5.5" r="2.75" fill="none" stroke="currentColor" stroke-width="1.4"/><path d="M2.75 13.5c.6-2.6 2.7-4 5.25-4s4.65 1.4 5.25 4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`;
-    const signIn = `<button type="button" class="cm-landing-chip${email ? " is-signed-in" : ""}" popovertarget="cm-user-menu" aria-haspopup="menu" aria-label="${e(email ? `Account: ${email}` : accounts() ? "Sign in, settings and backup" : "Menu, settings and backup")}"><span class="cm-chip-avatar" aria-hidden="true">${avatar}</span><span class="cm-landing-chip-name">${e(chipLabel)}</span><svg class="cm-caret cm-btn-chevron" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2 3.5 5 6.5 8 3.5"/></svg></button>`;
-    const go = known ? `<a class="v-button primary" href="#decks">Open your decks</a>` : `<button type="button" class="v-button primary" data-action="landing-start">Start without an account</button>`;
+    const signIn = `<button type="button" class="cm-landing-chip${email ? " is-signed-in" : ""}" popovertarget="cm-user-menu" aria-controls="cm-user-menu" aria-expanded="false" aria-label="${e(email ? `Account: ${email}` : accounts() ? "Sign in, settings and backup" : "Menu, settings and backup")}"><span class="cm-chip-avatar" aria-hidden="true">${avatar}</span><span class="cm-landing-chip-name">${e(chipLabel)}</span><svg class="cm-caret cm-btn-chevron" viewBox="0 0 10 10" aria-hidden="true" focusable="false"><path d="M2 3.5 5 6.5 8 3.5"/></svg></button>`;
+    const go = known ? `<a class="v-button" href="#decks">Open my decks</a>` : `<button type="button" class="v-button" data-action="landing-start">Start without an account</button>`;
     const playSoon = document.querySelector('meta[name="crankmagic-play"]')?.content !== "cloud";
     C.main.innerHTML = `<div class="cm-landing">
 <header class="cm-landing-head">
@@ -73,7 +73,7 @@
     <form class="cm-landing-start" id="cm-landing-start">
       <div class="cm-landing-step"><span aria-hidden="true">1</span><strong>${known ? "Start a new deck" : "Step one: start your first deck"}</strong></div>
       <div class="cm-landing-row"><label class="cm-landing-field"><span aria-hidden="true">⌕</span><input id="cm-landing-query" name="query" autocomplete="off" aria-label="A commander’s name, or a pasted deck list" placeholder="Name a commander, or paste a deck list…"></label><button type="submit" class="v-button primary">Start my deck →</button></div>
-      <p class="cm-landing-or"><span>Or:</span><button type="button" class="cm-landing-link" data-action="import-archidekt">Import from Archidekt</button><button type="button" class="cm-landing-link" data-action="landing-list">Upload a CSV</button><button type="button" class="cm-landing-link" data-action="start-precon">Start from a precon</button><button type="button" class="cm-landing-link" data-action="restore">Restore a backup</button></p>
+      <p class="cm-landing-or"><button type="button" class="cm-landing-link" data-action="new-deck">Other ways to start</button></p>
     </form>
     <p class="cm-landing-fine">No account needed: your library stays in this browser${accounts() ? ". Sign in to keep it in the cloud" : ""}.</p>
   </div>
@@ -93,7 +93,7 @@
   <ol class="cm-landing-steps">${STEPS.map(([n, title, body, key]) => `<li>${visual[key]}<div class="cm-landing-step-name"><span>${n}</span><h3>${e(title)}</h3></div><p>${e(body)}</p></li>`).join("")}</ol>
 </div></section>
 <section class="cm-landing-section cm-landing-promises">${promises().map(([title, body]) => `<div><strong>${e(title)}</strong><span>${e(body)}</span></div>`).join("")}</section>
-<section class="cm-landing-section"><div class="cm-landing-close"><h2>Your first deck is one commander away.</h2><button type="button" class="v-button" data-action="landing-start">Start my deck →</button></div></section>
+<section class="cm-landing-section"><div class="cm-landing-close"><h2>Your first deck is one commander away.</h2><button type="button" class="v-button" data-action="landing-start">Start my deck →</button><button type="button" class="cm-text-button" data-action="tour">Take a tour</button></div></section>
 </div>`;
     const form = C.main.querySelector("#cm-landing-start"), input = form.querySelector("input");
     /* A single line is a commander to search for; more than one is a list, and goes where lists go -- the same rule

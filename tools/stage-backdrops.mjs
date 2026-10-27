@@ -101,7 +101,7 @@ export function catalogLine(entries) {
 
 export function writeCatalog(stageFile, entries) {
   const text = readFileSync(stageFile, "utf8");
-  const re = /(\/\* backdrops:begin \*\/\n)[\s\S]*?(\n\s*\/\* backdrops:end \*\/)/;
+  const re = /(\/\* backdrops:begin \*\/\r?\n)[\s\S]*?(\r?\n\s*\/\* backdrops:end \*\/)/;
   if (!re.test(text)) throw new Error(`stage-backdrops: no backdrops:begin/end markers in ${stageFile}`);
   writeFileSync(stageFile, text.replace(re, (_, a, b) => a + catalogLine(entries) + b));
 }

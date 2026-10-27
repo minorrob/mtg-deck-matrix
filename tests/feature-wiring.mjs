@@ -112,21 +112,20 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   ok(/paidSource==='catalog'\),/.test(decks), "and the deck's Paid so far counts it as an estimate");
 }
 
-/* Track V.1b, r3, and since A1 (Rob, 2026-09-28) four themes: the theme is a saved preference the shell applies as a
-   palette and a face on <html> and #matrix-v2, and the Menu's Switch theme offers all four. */
+/* r4: three color-only skins and a dark/light/system register, with legacy values read through a map. */
 {
   const app = read("crankmagic-app.js");
-  ok(/function applyTheme\(\)\{const choice=themeChoice\(\),\[palette,face\]=THEME_FACE\[choice\]/.test(app) && /for\(const el of \[root,app\]\)\{if\(el\.dataset\.palette!==palette\)el\.dataset\.palette=palette;/.test(app), "applyTheme sets the palette and face from the saved choice, on <html> and #matrix-v2");
+  ok(/function applyTheme\(\)\{const choice=themeChoice\(\),\[palette,face\]=THEME_FACE\[choice\]/.test(app) && /for\(const el of \[root,app\]\)\{if\(el\.dataset\.palette!==palette\)el\.dataset\.palette=palette;/.test(app), "applyTheme sets the palette and face on html and matrix-v2");
   ok(/describeData\(\);applyTheme\(\);/.test(app), "render applies it");
-  ok(/t==='dark'\?'brass-slate':t==='light'\?'felt-cream':'moss-iron'/.test(app), "a value saved before A1 reads as its theme, and nothing or Match system as Moss & Iron");
-  ok(!/lightQuery|prefers-color-scheme: light/.test(app), "and nothing follows the device's light or dark setting any more");
-  ok(/actions\['set-theme'\]/.test(app) && !/actions\['toggle-theme'\]/.test(app), "the Menu sets a theme rather than flipping one");
+  for (const old of ["moss-iron", "brass-slate", "felt-cream", "steel-cobalt"]) ok(app.includes(`'${old}':`), `r4 reads the saved ${old} choice through the legacy map`);
+  ok(/prefers-color-scheme: dark/.test(app) && /themeQuery.addEventListener\('change'/.test(app), "System appearance follows device changes");
+  ok(/actions\['set-theme'\]/.test(app) && /actions\['set-theme-skin'\]/.test(app) && /actions\['set-theme-mode'\]/.test(app), "themes, skins and registers are bound actions");
   for (const f of ["index.html", "crankmagic.html"]) {
-    for (const choice of ["moss-iron", "brass-slate", "felt-cream", "steel-cobalt"])
-      ok(new RegExp(`data-action="set-theme" data-theme-choice="${choice}" aria-pressed=`).test(read(f)), `${f}: the menu offers the ${choice} theme`);
-    ok(/<div id="matrix-v2"[^>]*data-palette="moss-iron"/.test(read(f)), `${f}: before any script runs, the page is Moss & Iron`);
+    for (const skin of ["sapphire-obsidian", "bronze-basalt", "chalk-coal"]) ok(read(f).includes(`data-theme-skin="${skin}"`), `${f}: the menu offers ${skin}`);
+    for (const mode of ["dark", "light", "system"]) ok(read(f).includes(`data-theme-mode="${mode}"`), `${f}: the menu offers ${mode}`);
+    ok(/<div id="matrix-v2"[^>]*data-palette="sapphire-obsidian"/.test(read(f)), `${f}: the first paint is Sapphire & Obsidian`);
   }
-  ok(!/--v-[a-z]+:light-dark\(/.test(read("crankmagic-design.css")), "no legacy token carries its own colors; all read the Gallery tokens");
+  ok(!/--v-[a-z]+:light-dark\(/.test(read("crankmagic-design.css")), "legacy names read the shared tokens");
 }
 
 /* Track V.1c: the mana pips are read from the tokens, not hard-coded in JavaScript (revision 2

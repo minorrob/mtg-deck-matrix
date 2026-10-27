@@ -96,25 +96,73 @@ eq((await call({method: "GET"})).status, 405, "explain is a POST");
 eq((await call({path: "/api/ai/elsewhere"})).status, 404, "no other AI endpoint");
 eq([sent.length, calls().length], [0, 0], "none of that reached the provider or spent anything");
 
-/* EVERYONE SIGNED IN (Rob, 2026-10-14: "I want everyone I add to be able to use the AI features"): with AI_EVERYONE on,
-   the invite list is the list, and the library's own sign-in opens the door; every other gate holds as before. */
+/* THE GROUPS (Rob, 2026-10-26: "General Access will never be able to run or cause token costs"; cloud/access.mjs
+   `groupOf`). AI_EVERYONE (Rob, 2026-10-14) opens the door to the app's own sign-in, so an insider needs no second
+   sign-in; who may spend is the group: the owner (OWNER_EMAIL, never in this repository) or a Game Theory Insider (a row
+   in ai_allowlist, the roster). General Access is refused with the switch on or off; every other gate holds as before. */
 const EVERYONE = {...OPEN, AI_EVERYONE: "on"};
+const OWNED = {...OPEN, OWNER_EMAIL: "Owner@Example.com"};
 const stranger = (aud = AI_AUD) => token({aud, email: "new@example.com"});
+const owner = (aud = AI_AUD) => token({aud, email: "owner@example.com"});
 const {ANTHROPIC_API_KEY: _k0, ...everyoneNoKey} = EVERYONE;
-eq((await call({env: everyoneNoKey, jwt: await stranger(AUD)})).status, 503, "AI_EVERYONE on, but no key entered: still shut");
+eq((await call({env: everyoneNoKey, jwt: await token({aud: AUD})})).status, 503, "AI_EVERYONE on, an insider at the app's own sign-in, but no key entered: still shut");
 eq((await call({env: EVERYONE, jwt: await token({aud: "aud-elsewhere", email: "new@example.com"})})).status, 401, "a token for any other application is still refused");
 eq((await call({env: EVERYONE, jwt: null})).status, 401, "and no token is still 401");
-eq((await call({jwt: await stranger()})).status, 403, "with AI_EVERYONE off, someone not on the allowlist is refused, as before");
+eq((await call({jwt: await stranger()})).status, 403, "with AI_EVERYONE off, someone not on the roster is refused, as before");
+eq((await call({env: EVERYONE, jwt: await stranger()})).status, 403, "and with it on, too: General Access never spends");
+eq((await call({env: EVERYONE, jwt: await stranger(AUD)})).status, 403, "by either sign-in");
 eq((await call({env: {...EVERYONE, SERVICE_SEATS: "on"}, jwt: await token({aud: AUD, email: null, common_name: "agent-1.access"})})).status, 403,
   "a service token, a test identity seated at staging's tables and no person, is not let in by AI_EVERYONE");
+eq((await call({env: OPEN, jwt: await owner()})).status, 403, "with no OWNER_EMAIL set, nobody is the owner");
 eq(sent.length, 0, "none of that reached the provider");
 answer = reply("[[Mountain]] is there.");
-eq((await call({env: EVERYONE, jwt: await stranger()})).status, 200, "with it on, a person Access let in who is not on the allowlist is answered");
-eq((await call({env: EVERYONE, jwt: await stranger(AUD)})).status, 200, "and the library's own sign-in opens the door");
-eq(calls().map((c) => [c.email, c.outcome]), [["new@example.com", "ok"], ["new@example.com", "ok"]], "each call logged under the person, on the same caps");
-const library = async (path, env) => (await handle(new Request(`https://crankmagic.test${path}`, {headers: {"cf-access-jwt-assertion": await stranger(AUD)}}), env, {fetchImpl, now: clock})).json();
-eq([(await library("/api/ai-advise", {...EVERYONE, AI_ADVISE: "on"})).open, (await library("/api/ai-advise", {...OPEN, AI_ADVISE: "on"})).open], [true, false], "the deck page offers the advisor to everyone signed in only with AI_EVERYONE on");
-eq([(await library("/api/ai-meter", EVERYONE)).open, (await library("/api/ai-meter", OPEN)).open], [true, false], "and the settings' meter reads the same way");
+eq((await call({env: EVERYONE, jwt: await token({aud: AUD})})).status, 200, "with it on, an insider at the app's own sign-in is answered");
+eq((await call({env: OWNED, jwt: await owner()})).status, 200, "the owner, named by OWNER_EMAIL in any case and on no list, is answered");
+eq(calls().map((c) => [c.email, c.outcome]), [["rob@example.com", "ok"], ["owner@example.com", "ok"]], "each call logged under the person, on the same caps");
+const library = async (path, env, jwt) => (await handle(new Request(`https://crankmagic.test${path}`, {headers: {"cf-access-jwt-assertion": jwt ?? await stranger(AUD)}}), env, {fetchImpl, now: clock})).json();
+eq([(await library("/api/ai-advise", {...EVERYONE, AI_ADVISE: "on"})).open, (await library("/api/ai-advise", {...OPEN, AI_ADVISE: "on"})).open], [false, false], "the deck page never offers the advisor to General Access, with AI_EVERYONE on or off");
+eq((await library("/api/ai-advise", {...EVERYONE, AI_ADVISE: "on"}, await token({aud: AUD}))).open, true, "and offers it to an insider");
+eq([(await library("/api/ai-meter", EVERYONE)).open, (await library("/api/ai-meter", OWNED, await owner(AUD))).open], [false, true], "the settings' meter reads the same way: shut to General Access, open to the owner");
+/* The composer is offered only by the server's existing Coach gate, never inferred from UI presence. With the access groups
+   the person asking is an insider (the roster) or the owner; General Access is never offered it, AI_EVERYONE or not. */
+const insider = await token({aud: AUD});
+const providerBeforeProbe = sent.length, logBeforeProbe = calls().length;
+for (const [probe, jwt, expected] of [
+  [{...EVERYONE, AI_COACH: "on"}, insider, true],
+  [{...OPEN, AI_COACH: "on"}, insider, true],
+  [{...EVERYONE, AI_COACH: "on"}, undefined, false],
+  [{...OPEN, AI_COACH: "on"}, undefined, false],
+  [{...EVERYONE, AI_COACH: "off"}, insider, false],
+  [{...everyoneNoKey, AI_COACH: "on"}, insider, false],
+  [{...EVERYONE, AI_COACH: "on", AI_CAP_TOTAL_CENTS: "0"}, insider, false],
+  [{...EVERYONE, AI_COACH: "on", AI_MODEL: "unknown"}, insider, false],
+]) eq((await library("/api/ai-coach", probe, jwt)).open, expected, "Coach availability reuses the real switch, settings, and group gates");
+eq((await call({path: "/api/ai-coach", method: "GET", jwt: null, env: {...EVERYONE, AI_COACH: "on"}})).status, 401, "the Coach probe requires verified Access");
+eq((await library("/api/ai-coach", {...EVERYONE, AI_COACH: "on", SERVICE_SEATS: "on"}, insider)).open, true, "a real person retains access where test seats are enabled");
+eq((await call({path: "/api/ai-coach", method: "GET", jwt: await token({aud: AUD, email: null, common_name: "agent-1.access"}), env: {...EVERYONE, AI_COACH: "on", SERVICE_SEATS: "on"}})).json.open, false, "a service seat never gains the person's composer through AI_EVERYONE");
+eq([sent.length, calls().length], [providerBeforeProbe, logBeforeProbe], "availability never calls the provider or records spend");
+/* /api/me says the group, so the browser can hide what a group may not press; the Worker is still the gate. */
+const me = (jwt, env = OPEN) => library("/api/me", env, jwt);
+eq([(await me(await token({aud: AUD}))).group, (await me(await stranger(AUD))).group, (await me(await owner(AUD), OWNED)).group], ["insider", "general", "owner"], "/api/me: insider by the roster, general by no list, owner by OWNER_EMAIL");
+/* THE ROSTER (cloud/worker.mjs adminGroups): the owner reads it and sets who is an insider; nobody else may. */
+const admin = async (method, jwt, env, body) => {
+  const init = {method, headers: {"cf-access-jwt-assertion": jwt, ...(body ? {"content-type": "application/json", "x-crankmagic": "sync"} : {})}};
+  if (body) init.body = JSON.stringify(body);
+  const r = await handle(new Request("https://crankmagic.test/api/admin/groups", init), env, {fetchImpl, now: clock});
+  return {status: r.status, json: await r.json()};
+};
+eq([(await admin("GET", await token({aud: AUD}), OWNED)).status, (await admin("GET", await stranger(AUD), OWNED)).status, (await admin("GET", await owner(AUD), OPEN)).status], [403, 403, 403], "an insider, General Access, and anyone with no OWNER_EMAIL set: none may read the roster");
+ok(/owner can manage/.test((await admin("GET", await stranger(AUD), OWNED)).json.error), "and the refusal says who may");
+const roster = await admin("GET", await owner(AUD), OWNED);
+eq([roster.status, roster.json.insiders.map((r) => r.email)], [200, ["rob@example.com"]], "the owner reads the roster");
+eq((await admin("PUT", await owner(AUD), OWNED, {email: "New@Example.com", group: "insider", note: "tester"})).json, {email: "new@example.com", group: "insider"}, "the owner adds a person, lower-cased");
+eq((await me(await stranger(AUD))).group, "insider", "who is now an insider");
+eq((await call({jwt: await stranger()})).status, 200, "and is answered at the door");
+eq((await admin("PUT", await owner(AUD), OWNED, {email: "new@example.com", group: "general"})).json.group, "general", "the owner takes them off");
+eq([(await me(await stranger(AUD))).group, (await call({jwt: await stranger()})).status], ["general", 403], "and they are general again, refused at the door");
+eq([(await admin("PUT", await owner(AUD), OWNED, {email: "nobody", group: "insider"})).status, (await admin("PUT", await owner(AUD), OWNED, {email: "x@example.com", group: "owner"})).status], [400, 400], "a bad address, or a group the roster cannot give, is refused");
+eq((await admin("PUT", await token({aud: AUD}), OWNED, {email: "x@example.com", group: "insider"})).status, 403, "an insider cannot add anyone");
+eq((await admin("GET", await owner(AUD), OWNED)).json.insiders.length, 1, "and the roster is as it was");
 DB.raw.prepare("DELETE FROM ai_calls").run();
 sent = [];
 

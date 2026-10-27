@@ -477,7 +477,12 @@ cast and resolved between two views (an opponent passed for, `passStack`) arrive
   - `seats: [{seatId, name, pilot, level?}]`;
   - `waitingOn`, `decision`, `state`, `history`;
   - sometimes `continuing`, `stepByStep`, `yourTurn`, `yielding` and `mayYield` (the last two the seat's own only);
-  - `eventsSchema` (`"events.v1"`), `events`, and sometimes `eventsReset` (below).
+  - `eventsSchema` (`"events.v1"`), `events`, and sometimes `eventsReset` (below);
+  - `manaSources` (Rob, Oct 26, the Mana Pool module): the seat's own permanents with a mana ability that taps them,
+    each `{cardId, name, tapped, ready, ways: [{mana: {W: 1, ...}, pay?}]}` (`rules/actions.mjs`, `manaSources`). A way is
+    what one activation adds; `pay` is mana it costs first (a Signet's 1); `ready` is untapped and able to tap now (not
+    summoning sick, nothing stopping its abilities). Facts only, the sums are the screen's; no other seat's view carries
+    them.
 - **`state`:** `turn`, `round`, `turnInRound`, `turnId`, `extraTurn`, `turnPlayerId`, `priorityPlayerId`, `phase`,
   `players`, `combat`, `stack`, `stackSize`, `gameOver`.
 - **Each player:** `{playerId, name, life, health, counters, mana, landsPlayed, monarch?, zones}`. A player's `counters`
@@ -648,3 +653,5 @@ When a concept is worth keeping, export the code with a `HANDOFF.md` that says:
 4. Anything it wanted that the view does not carry, and why. These become requests to CrankMagic's engine.
 5. Anything it assumed that this brief did not state.
 6. The libraries it uses, and their licenses.
+
+Mana source ways may include `payColors` for fixed colored activation requirements and `ready: false` when a non-mana cost cannot be paid. The source is ready only when at least one of its ways is ready. The Mana Pool counts activation funding with distinct sources and color balances; this does not choose or execute a player payment.

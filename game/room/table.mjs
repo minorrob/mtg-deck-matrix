@@ -28,6 +28,7 @@ import {createTable, transitionTable, countdownBlockers} from "../contracts/tabl
 import {coachBrief} from "./coach-brief.mjs";
 import {startRoom, openRoom, RoomError, basicCards} from "./room.mjs";
 import {createMatchStore} from "../engine/storage.mjs";
+import {resultRecord} from "./result-record.mjs";
 
 /* An AI seat's setting (AI-2): "easy", "llm" (an AI on Claude) or, unless one of those was chosen, "normal". */
 const levelOf = (s) => (s.level === "easy" || s.level === "llm" ? s.level : "normal");
@@ -186,6 +187,16 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
      which the object's alarm notices (`nextAlarm`, `tick`). */
   async function settle(now) {
     if (record.lifecycle.phase === "playing" && room && room.status === "finished") {
+      const matchId = record.lifecycle.matchId;
+      record.gameRecords ??= {};
+      if (!record.gameRecords[matchId]) {
+        record.gameRecords[matchId] = Object.fromEntries(room.seats.filter(s => s.pilot !== "house").map(s => {
+          const mine = room.view(s.seatId), seat = Number(s.seatId.slice(1));
+          const opponents = room.seats.filter(other => other.seatId !== s.seatId).map(other => ({seatId: other.seatId, name: other.name,
+            commanders: [...(record.decks[Number(other.seatId.slice(1))]?.commander ?? [])], ai: other.pilot === "house"}));
+          return [s.seatId, resultRecord({tableId: record.tableId, matchId, view: mine, deck: record.decks[seat], opponents, now})];
+        }));
+      }
       step({type: "completed", matchId: record.lifecycle.matchId}, now);
       record.away = {};
       decideRematch(now);
@@ -438,6 +449,8 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
          (Rob's playtest, 2026-10-15: a commander should be castable with what is on the board): new matches only, so a
          match launched before keeps its choices and its replay (rules/actions.mjs, `pooledTaps`). */
       pooledTaps: true,
+      preparedTaps: true,
+      resultRecords: true,
       /* An {X} spell tapped for too, for each X the pool and the untapped sources pay together, so a person casts it from the
          hand, choosing X, without tapping each land first (rules/actions.mjs, `xTaps`): new matches only. */
       xTaps: true,
@@ -463,6 +476,8 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
          just played put back in the hand while nothing has happened since (`takeBackLand`), and a spell or ability aimed at
          a person asked of them before it resolves (`askAimed`). New matches only, so one launched before plays as it did. */
       landAnyStep: true, takeBackLand: true, askAimed: true,
+      /* r4: a new match keeps its undo house rule, so older matches retain their original choices. */
+      houseRules: {undoLastPlay: true},
       /* Its AI seats take what a choice they may answer with none is for -- the land Evolving Wilds finds, the counters
          proliferate adds -- where they took none (Linear ROB-164, 2026-10-19): new matches only, so one launched
          before replays as it was played (room.mjs, `pilotPicks`). */
@@ -613,7 +628,8 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
       if (game.status !== "finished") throw new TableError(409, "A game's record is ready once the game is over.");
       const seatId = seatName(seat);
       if (!game.seats.some((s) => s.seatId === seatId)) throw new TableError(403, "You did not have a seat in that game.");
-      const mine = game.view(seatId), base = {schema: RECORD_SCHEMA, tableId: record.tableId, matchId: id, playtest: !!record.playtest, result: mine.result, departures: mine.departures, seats: game.seats, history: game.history, refusals: game.refusals};
+      const mine = game.view(seatId), base = {schema: RECORD_SCHEMA, tableId: record.tableId, matchId: id, playtest: !!record.playtest, result: mine.result, departures: mine.departures, seats: game.seats, history: game.history, refusals: game.refusals,
+        gameRecord: structuredClone(record.gameRecords?.[id]?.[seatId] ?? null)};
       if (!record.playtest) return {...base, kind: "seat", seatId, view: mine};
       const store = createMatchStore(storage, id), meta = await store.loadMatch();
       const cardReports = (record.cardReports || []).filter((r) => r.matchId === id);
@@ -632,6 +648,8 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
         countdownAt: t.countdownAt, launchError: t.launchError, matchId: t.phase === "playing" ? t.matchId : null,
         blockers: countdownBlockers(t).map(({seatId, reason}) => ({seatId, reason})),
         rules: rulesOf(),
+        // The result is private to its human seat, including its own library source; never another player's source.
+        gameRecord: mine !== null && t.phase === "rematch" ? structuredClone(record.gameRecords?.[t.matchId]?.[seatName(mine)] ?? null) : null,
         away: Object.entries(record.away || {}).map(([seatId, until]) => ({seatId: Number(seatId), until})),
         /* Play again (Requests row 12): while a finished game's players answer, the game it follows, until when, each
            seat's answer, and -- once every person has answered and there is no next game -- that the table is over and

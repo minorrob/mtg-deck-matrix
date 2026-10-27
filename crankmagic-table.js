@@ -80,7 +80,7 @@
   }
   const tableUrl = (id) => `/api/tables/${encodeURIComponent(id)}`;
   /* The board sends End game and Concede through the same door, then has the lobby read the table again. */
-  C.tableApi = {api, tableUrl, refresh: (id) => refresh(id)};
+  C.tableApi = {api, tableUrl, refresh: (id) => refresh(id), fileResult};
   /* Through the Worker (cloud/worker.mjs, /api/join): Access's sign-in keeps the path, where it would drop a fragment. */
   const inviteLink = (id, code) => `${location.origin}/api/join/${id}/${code}`;
 
@@ -135,7 +135,8 @@
     return {total: all.length, unknown: missing, count: all.filter((n) => missing.includes(n)).length};
   }
   const readinessText = (r) => r.count ? `${r.total - r.count} of ${r.total} known · ${r.count} to learn` : `Playable at the table · all ${r.total} cards known`;
-  const playable = (deck) => !deck.archived && (deck.commanders || []).length > 0;
+  /* Over 100 on the list or in the box, a deck is Building and the table does not take it (Rob, 2026-10-26). */
+  const playable = (deck) => {if(deck.archived||!(deck.commanders||[]).length)return false;if(C.M?.deckStatus&&C.M.deckStatus(C.state,deck).over)return false;const list=deckForTable(deck);return list.commander.length+list.cards.length===100;};
   C.play = {
     open: cloudPlay,
     /* The decks hub: each tile's slot says "Playable at the table", or how many of its cards are still to learn. */
@@ -150,6 +151,8 @@
         el.textContent = r.count ? `${r.count} card${r.count === 1 ? "" : "s"} to learn for the table` : "Playable at the table";
         el.classList.toggle("is-playable", !r.count);
         el.hidden = false;
+        const tile=el.closest('[data-deck-tile]');let door=tile?.querySelector('[data-tile-play]');
+        if(r.count)door?.remove();else if(tile&&!door){door=document.createElement('a');door.className='v-button compact cm-tile-play';door.dataset.tilePlay=d.id;door.href='#table?'+new URLSearchParams({deck:d.id});door.textContent='Play it';door.setAttribute('aria-label','Play '+d.name);tile.append(door);}
       }
     },
     /* The decks hub's summary: how many of `decks` the table can play every card of -- each tile's "Playable at the table",
@@ -166,11 +169,22 @@
     async deck(d) {
       const el = document.getElementById("cm-deck-play");
       if (!el || !cloudPlay() || !playable(d)) return;
+      const route=C.route(),routeKey=route.view+'?'+route.params.toString(),version=d.version;
       let r;
       try {r = await readiness(d);} catch {return;}
+      const currentRoute=C.route(),currentDeck=C.state.decks.find(x=>x.id===d.id);
+      const currentView=el.isConnected&&document.getElementById('cm-deck-play')===el&&el.dataset.deck===d.id&&currentRoute.view==='decks'&&currentRoute.params.get('deck')===d.id&&currentRoute.view+'?'+currentRoute.params.toString()===routeKey&&currentDeck&&!currentDeck.archived&&currentDeck.version===version;
+      if(!currentView)return;
+      const playPrimary=!r.count&&C.M?.readiness(C.state,d).complete===true&&(!C.route().params.get('tab')||C.route().params.get('tab')==='overview');
       el.innerHTML = `<span class="cm-deck-play-line">${e(readinessText(r))}</span>`
         + (r.count ? ` <span class="cm-muted">The table cannot play ${r.unknown.length === 1 ? "this one" : "these"} yet: ${e(r.unknown.slice(0, 6).join(", "))}${r.unknown.length > 6 ? ", …" : ""}.</span>`
-          : ` ${b("Play this deck", "deck-play", {deck: d.id}, true, {cls: "compact"})}`);
+          : ` ${b("Play this deck", "deck-play", {deck: d.id}, playPrimary, {cls: "compact"})}`);
+      if(playPrimary)for(const button of document.querySelectorAll('.cm-deck-work .primary,.cm-action-bar .primary')){button.classList.remove('primary');button.dataset.playDemoted='true';}
+      else for(const button of document.querySelectorAll('[data-play-demoted]')){button.classList.add('primary');delete button.dataset.playDemoted;}
+      const blocked=r.count?`${r.count} card${r.count===1?'':'s'} unplayable at the table. Fix the list before playing.`:'';
+      el.dataset.blockedState=blocked;
+      if(blocked)el.insertAdjacentHTML('beforeend',` <strong class="cm-deck-blocked">${e(blocked)}</strong>`);
+      const next=document.querySelector('#cm-deck-next .cm-bento-next-line');if(next)next.textContent=blocked||(playPrimary?'The box is ready. Play this deck or log a game.':next.dataset.nextDefault);
       el.classList.toggle("is-playable", !r.count);
       el.hidden = false;
     },
@@ -193,7 +207,7 @@
     const line = away ? `Dropped · back by ${new Date(away.until).toLocaleTimeString("en-US", {hour: "numeric", minute: "2-digit"})}`
       /* The table sends a card count for your own seat only; nobody sees another seat's cards. */
       : s.deck ? `${s.deck.name}${s.cards !== undefined ? ` · ${s.cards + (s.deck.commander || []).length} cards` : ""}`
-      : s.occupied ? (s.you ? "Choose a deck." : "Choosing a deck")
+      : s.occupied ? (s.you ? "Choose a deck." : s.kind === "ai" ? "Choose an AI deck" : "Choosing a deck")
       : s.invited ? "Invitation sent · waiting on them" : s.kind === "ai" ? "No deck yet" : "Invite someone";
     const controls = [];
     if (t.phase === "selecting" || t.phase === "countdown") {
@@ -202,9 +216,9 @@
         controls.push(b("Choose mat", "table-mat", {}, false, {cls: "compact"}));
         if (s.deck) controls.push(b(s.ready ? "Not ready" : "Ready", "table-ready", {ready: s.ready ? "" : "1"}, !s.ready, {cls: "compact"}));
       } else if (t.youAreHost && s.kind === "ai") {
-        controls.push(b(s.deck ? "Change deck" : "Choose its deck", "table-deck", {seat: String(s.seatId)}, !s.deck, {cls: "compact"}));
+        controls.push(b(s.deck ? "Change deck" : "Choose its deck", "table-deck", {seat: String(s.seatId)}, false, {cls: "compact"}));
       } else if (t.youAreHost && s.kind === "human" && !s.occupied) {
-        controls.push(b(s.invited ? "New link" : "Invite", "table-invite", {seat: String(s.seatId)}, !s.invited, {cls: "compact"}));
+        controls.push(b(s.invited ? "New link" : "Invite", "table-invite", {seat: String(s.seatId)}, false, {cls: "compact"}));
         if (s.invited) controls.push(b("Withdraw", "table-uninvite", {seat: String(s.seatId)}, false, {cls: "compact"}));
       }
     }
@@ -267,10 +281,35 @@
      seats, decks and rules, each person's answer shown, Yes or Leave the table; the answers close two minutes after the
      game's end (said in the reader's own time), and silence is leaving. The AI seats always stay. Closed, it says why,
      with New table. */
+  function resultReview(t){const record=t.gameRecord,deck=record?.source?.deckId&&C.state.decks.find(d=>d.id===record.source.deckId);
+    if(!record)return '';
+    const filed=deck&&C.state.games.some(g=>g.id===record.id&&g.deckId===deck.id);
+    const outcome={win:'Won',loss:'Lost',draw:'Draw',unfinished:'Unfinished'}[record.outcome]||'Finished';
+    return `<section class="v-panel cm-game-result" aria-label="Game result"><h2>${e(outcome)}</h2><p>Turn ${e(String(record.turns))} · ${e(String(record.pod))} seats${record.bracket?' · Bracket '+e(String(record.bracket)):''}</p><p>${e(record.finishReason||'')}</p><div class="cm-actions"><a class="v-button" href="#game">Back to lobby</a>${filed?`<a class="v-button" href="#decks?${e(new URLSearchParams({deck:deck.id,tab:'overview',game:record.id}).toString())}">Review this game</a>`:`<span class="cm-muted">${deck?'This result has not been filed in this library yet.':'The result stays at this table; its original deck is not in this library.'}</span>`}</div></section>`;}
+  const filing=new Map();
+  /* The board's verified record read and the lobby's owner-only result share one writer. No
+     snapshot, cards or hidden zones are copied into the account's library. */
+  function fileResult(r,context={}){const owner=context.account??context.owner??null,currentOwner=()=>C.signedInAs?.()||null;
+    const d=r?.source?.deckId&&C.state.decks.find(x=>x.id===r.source.deckId&&!x.archived);
+    const contextMatches=['tableId','matchId','seatId'].every(k=>context[k]===undefined||String(context[k])===String(r?.[k]));
+    if(!owner||owner!==currentOwner()||!contextMatches||r?.schema!=='CrankMagicTableResult@1'||!d||!Number.isSafeInteger(r.source.deckVersion)||r.source.deckVersion<1||r.source.deckVersion>d.version
+      ||!/^[a-z0-9]{8,40}$/.test(r.tableId)||!new RegExp('^'+r.tableId+'g[1-9][0-9]{0,5}$').test(r.matchId)||!/^s[0-3]$/.test(r.seatId)||r.id!==`game:table:${r.matchId}:${r.seatId}`
+      ||!Number.isFinite(Date.parse(r.playedAt))||!['win','loss','draw','unfinished'].includes(r.outcome)||!Number.isInteger(r.pod)||r.pod<2||r.pod>4||!Number.isInteger(r.seat)||r.seat<1||r.seat>r.pod||!Number.isInteger(r.turns)||r.turns<0
+      ||typeof r.ai!=='boolean'||typeof r.finishReason!=='string'||!(r.finishRank===null||Number.isInteger(r.finishRank)&&r.finishRank>=1&&r.finishRank<=r.pod)||!(r.bracket===null||Number.isInteger(r.bracket)&&r.bracket>=1&&r.bracket<=5)
+      ||!Array.isArray(r.opponents)||r.opponents.some(x=>!Array.isArray(x.commanders)||x.commanders.some(n=>typeof n!=='string')))return Promise.resolve(false);
+    if(C.state.games.some(g=>g.id===r.id&&g.deckId===d.id))return Promise.resolve(true);
+    const key=owner+'|'+r.id;if(filing.has(key))return filing.get(key);
+    const write=(async()=>{try{if(owner!==currentOwner())return false;
+      await C.commit({type:'game',deckId:d.id,gameId:r.id,outcome:r.outcome,playedAt:r.playedAt,finish:r.finishRank??null,pod:r.pod,bracket:r.bracket??null,turns:r.turns,seat:r.seat,opponents:r.opponents.map(x=>x.commanders.join(' + ')).join(' · '),notes:r.finishReason||'',table:{schema:r.schema,tableId:r.tableId,matchId:r.matchId,seatId:r.seatId,ai:!!r.ai,reason:r.finishReason||'',deckVersion:r.source.deckVersion}},{renderView:false});
+      return owner===currentOwner()&&C.state.games.some(g=>g.id===r.id&&g.deckId===d.id);
+    }catch(error){if(owner===currentOwner()&&!C.state.games.some(g=>g.id===r.id))C.notice('The game result has not been saved to this library. '+error.message,true,{stay:true,action:{label:'Retry',run:()=>fileResult(r,context)}});return false;}
+    })();filing.set(key,write);write.finally(()=>{if(filing.get(key)===write)filing.delete(key);});return write;
+  }
   function gamePanel(t) {
+    const review=resultReview(t);
     const r = t && t.rematch;
-    if (!r) return `<section class="v-panel cm-table-game" id="cm-table-game"><h2>The game is over</h2><p class="cm-muted">Its record is kept.</p></section>`;
-    if (r.outcome === "closed") return `<section class="v-panel cm-table-game" id="cm-table-game"><h2>The game is over</h2><p>${e(r.reason || "This table's games are over. Start a new table to play again.")}</p>
+    if (!r) return review+`<section class="v-panel cm-table-game" id="cm-table-game"><h2>The game is over</h2><p class="cm-muted">Its record is kept.</p></section>`;
+    if (r.outcome === "closed") return review+`<section class="v-panel cm-table-game" id="cm-table-game"><h2>The game is over</h2><p>${e(r.reason || "This table's games are over. Start a new table to play again.")}</p>
       <div class="cm-actions">${b("New table", "table-new-after", {}, true)}</div></section>`;
     const seatOf = (id) => t.seats[id] || {};
     const said = {yes: "playing again", no: "leaving", pending: "deciding"};
@@ -278,7 +317,7 @@
     const closes = new Date(r.deadline + (Date.now() - tableNow())).toLocaleTimeString("en-US", {hour: "numeric", minute: "2-digit"});
     const votes = `<ul class="cm-table-votes" aria-label="Who is playing again">${(r.votes || []).map((v) => `<li data-vote="${e(v.vote)}"><strong>${e(seatOf(v.seatId).you ? "You" : seatOf(v.seatId).name || `Seat ${v.seatId + 1}`)}</strong> · ${e(said[v.vote] || v.vote)}</li>`).join("")}</ul>`;
     const buttons = mine ? `${mine.vote !== "yes" ? b("Play again", "table-rematch", {accept: "yes"}, true) : ""}${b("Leave the table", "table-rematch", {accept: "no"}, false)}` : "";
-    return `<section class="v-panel cm-table-game" id="cm-table-game"><h2>Play again?</h2>
+    return review+`<section class="v-panel cm-table-game" id="cm-table-game"><h2>Play again?</h2>
       <p class="cm-muted">The same seats, decks and rules; the last game's record is kept. ${mine && mine.vote === "yes" ? "You are staying. " : ""}Answers close at ${e(closes)}; no answer is leaving the table.</p>
       ${votes}<div class="cm-actions">${buttons}</div></section>`;
   }
@@ -325,10 +364,13 @@
   }
   /* `live` says whether the page still wants this table: a read that lands after the person left draws nothing. */
   async function refresh(id, live = () => true) {
+    const owner=C.signedInAs?.()||null;
     const asked = performance.now();   /* the board weighs the read against the room's newer frames by when it was asked */
     const {table, now} = await api("GET", tableUrl(id));
-    if (!live()) return table;
+    if (!live()||owner!==(C.signedInAs?.()||null)) return table;
     if (Number.isFinite(now)) skew = now - Date.now();
+    await fileResult(table.gameRecord,{account:owner,tableId:id,matchId:table.gameRecord?.matchId,seatId:table.gameRecord?.seatId});
+    if(!live()||owner!==(C.signedInAs?.()||null))return table;
     draw(table, asked);
     return table;
   }
@@ -348,6 +390,9 @@
       const seconds = document.getElementById("cm-table-seconds"), left = current && current.countdownAt ? String(Math.max(0, Math.ceil((current.countdownAt - tableNow()) / 1000))) : null;
       /* written only when it changes: the count is a live region, said each time it is written */
       if (seconds && left !== null && seconds.textContent !== left) seconds.textContent = left;
+      const host=document.querySelector('.cm-cloud-table');if(host&&globalThis.CrankBoard?.countdown){const value=current?.phase==='countdown'?Number(left):null;if(host.dataset.countdownValue!==String(value)){globalThis.CrankBoard.countdown(host,value);host.dataset.countdownValue=String(value);}}
+      /* The way back stays above the shared dimmer, beside its callout, rather than under it. */
+      const cancel=host?.querySelector('[data-action=table-cancel]');if(cancel&&cancel.parentElement!==host){cancel.classList.add('cm-countdown-cancel');host.append(cancel);}
     };
     const loop = async () => {
       if (stop) return;
@@ -405,10 +450,14 @@
         if(!active||!slot.isConnected)return;
         if(!t.seats.some(s=>s?.you)){slot.textContent='Your previous seat is no longer held.';return;}
         const phase=t.phase==='playing'?'Game in progress':t.phase==='rematch'?'Play again':t.phase==='countdown'?'Starting soon':'Preparing the table';
-        slot.innerHTML=`<div class="cm-play-return"><strong>${e(phase)}</strong><span>${e(t.seats.filter(Boolean).map(s=>s.name).join(' · '))}</span>${b('Resume your table','table-back',{table:t.tableId},true)}</div>`;
+        const live=C.board?.live?.(),summary=live?.tableId===t.tableId?live:null;
+        slot.closest('.cm-play-welcome')?.querySelector('[data-action=play-new-table]')?.classList.remove('primary');
+        slot.innerHTML=`<div class="cm-play-return"><strong>${e(phase)}${summary?.turn?' · Turn '+e(String(summary.turn)):''}</strong><span>${e(t.seats.filter(Boolean).map(s=>s.deck?.commander?.join(' + ')||s.name).join(' · '))}</span>${summary?.seats?.length?`<span>${summary.seats.map(s=>`${e(s.name)}: ${e(String(s.life))} life`).join(' · ')}</span>`:''}<div class="cm-actions">${b('Resume your table','table-back',{table:t.tableId},true)}${b('Leave table','play-leave-seat',{table:t.tableId})}</div></div>`;
       }).catch(()=>{if(active&&slot.isConnected)slot.innerHTML=`<p>Your table could not be checked. ${b('Try your table','table-back',{table:id})}</p>`;});}
     return ()=>{active=false;};
   };
+  actions['play-leave-seat']=el=>C.modal('Leave this table?',`<p>This device will disconnect. Your seat follows the table's normal reconnect window, and its saved shortcut remains available if you want to return.</p><div class="cm-form-footer">${b('Cancel','close')}${b('Leave table','play-leave-confirm',{table:el.dataset.table},true)}</div>`);
+  actions['play-leave-confirm']=async el=>{const id=el.dataset.table;C.board?.close();actions.close();await C.render();C.notice('Disconnected from the table on this device.',false,{undo:false,action:{label:'Return to table',run:()=>C.go('table',{id})}});};
   actions['play-new-table']=()=>C.go('table?new=1');
   actions['play-ai-table']=()=>C.go('table?new=1&ai=1');
   actions['play-join']=()=>{
@@ -431,11 +480,13 @@
       <input name="name${n}" maxlength="60" placeholder="${n === 2 ? "Their name" : "Name (optional)"}" aria-label="Seat ${n} name"></div>`;
     C.main.innerHTML = C.pageHead("Play", "", "table") + `<section class="v-panel cm-table-new"><h2>New table</h2>
       <p class="cm-muted">You sit in seat 1 as the host. Each other seat is a person you invite, an AI, or nobody; a table seats two to four.</p>
-      <form id="cm-table-new"><div class="cm-table-new-deck" id="cm-table-new-deck" hidden></div><div class="cm-new-table-square"><div class="cm-table-new-seat cm-new-host" data-seat-position="1"><strong>You · Host</strong><label>Your name at the table<input name="hostName" maxlength="60" required></label></div>${row(2)}${row(3)}${row(4)}<span class="cm-new-table-center" aria-hidden="true">COMMANDER</span></div><div class="cm-new-table-rules"><span>Commander</span><span>Invitation-only</span><span>2–4 seats</span><span>Review rules at the table</span></div><label>Your deck<select name="deck" id="cm-new-table-deck"><option value="">Choose at the table</option>${libraryDecks().map(d=>`<option value="${e(d.id)}"${d.id===deckId?' selected':''}>${e(d.name)}</option>`).join('')}</select></label>
+      <form id="cm-table-new"><div class="cm-table-new-deck" id="cm-table-new-deck" aria-live="polite"></div><div class="cm-new-table-square"><div class="cm-table-new-seat cm-new-host" data-seat-position="1"><strong>You · Host</strong><label><span>Your name at the table&nbsp;<span aria-hidden="true">*</span></span><input name="hostName" maxlength="60" required aria-describedby="cm-table-host-error"><span class="cm-error cm-table-field-error" id="cm-table-host-error" role="alert"></span></label></div>${row(2)}${row(3)}${row(4)}<span class="cm-new-table-center" aria-hidden="true">COMMANDER</span></div><div class="cm-new-table-rules"><span>Commander</span><span>Invitation-only</span><span>2–4 seats</span><span>Review rules at the table</span></div><label>Your deck<select name="deck" id="cm-new-table-deck"><option value="">Choose at the table</option>${libraryDecks().map(d=>`<option value="${e(d.id)}"${d.id===deckId?' selected':''}>${e(d.name)}</option>`).join('')}</select></label>
+      <p class="cm-error" id="cm-table-new-error" role="alert"></p><fieldset class="cm-table-setup-rules"><legend>Table rules</legend><label>Starting life<input name="startingLife" type="number" min="1" max="999" value="40" required aria-describedby="cm-table-rules-error"><span class="cm-error cm-table-field-error" id="cm-table-rules-error" role="alert"></span></label><label>Bracket limit<select name="bracketLimit"><option value="">Any</option>${[1,2,3,4,5].map(n=>`<option value="${n}"${libraryDecks().find(d=>d.id===deckId)?.definition.baseBracket===n?' selected':''}>${n} or lower</option>`).join('')}</select></label></fieldset>
       <div class="cm-actions">${b("Set the table", "table-create", {}, true)}</div></form></section>`;
     try {const last=JSON.parse(localStorage.getItem("cm-table-setup")||"null");if(last && last.owner === (C.signedInAs?.() || null)){const form=document.getElementById("cm-table-new");for(const key of ["hostName","kind2","name2","kind3","name3","kind4","name4"]){if(typeof last[key]==="string" && form.elements[key] && (!key.startsWith("kind") || ["human","ai","ai-easy","none"].includes(last[key])))form.elements[key].value=last[key];}}}catch{}
+    document.querySelector('[name=hostName]').addEventListener('input',event=>{event.target.removeAttribute('aria-invalid');document.getElementById('cm-table-host-error').textContent='';});
     if(ai){const f=document.getElementById("cm-table-new");f.elements.kind2.value="ai";f.elements.name2.value="AI";f.elements.kind3.value="none";f.elements.kind4.value="none";}
-    document.getElementById("cm-new-table-deck").addEventListener("change",event=>{const deck=libraryDecks().find(d=>d.id===event.target.value);if(deck)bringing(deck);else document.getElementById("cm-table-new-deck").hidden=true;});
+    document.getElementById("cm-new-table-deck").addEventListener("change",event=>{const deck=libraryDecks().find(d=>d.id===event.target.value);if(deck)bringing(deck);else document.getElementById("cm-table-new-deck").replaceChildren();});
     recentGames();
     const bring = deckId ? libraryDecks().find((d) => d.id === deckId) : null;
     if (bring) bringing(bring);
@@ -508,26 +559,38 @@
     C.go("table", {id: el.dataset.table});
   };
   actions["table-back"] = (el) => C.go("table", {id: el.dataset.table});
+  const creatingTables=new WeakSet();
   actions["table-create"] = async () => {
     const form = document.getElementById("cm-table-new");
+    if(creatingTables.has(form))return;
     const v = Object.fromEntries(new FormData(form));
-    if (!v.hostName.trim()) throw Error("Give your name at the table.");
+    if (!v.hostName.trim()){const input=form.elements.hostName;input.setAttribute('aria-invalid','true');document.getElementById('cm-table-host-error').textContent='Give your name at the table.';input.focus();return;}
+    const life=Number(v.startingLife);if(!Number.isInteger(life)||life<1||life>999){const input=form.elements.startingLife;input.setAttribute('aria-invalid','true');document.getElementById('cm-table-rules-error').textContent='Choose starting life from 1 to 999.';input.focus();return;}
     /* An AI at Normal or Easy (AI-2): Normal scores its choices; Easy, now and then, takes the second best; Claude asks a
        model at its close calls. */
     const seats = [2, 3, 4].filter((n) => v[`kind${n}`] !== "none").map((n) => (v[`kind${n}`].startsWith("ai")
       ? {kind: "ai", level: ({"ai-easy": "easy", "ai-llm": "llm"})[v[`kind${n}`]] || "normal", name: v[`name${n}`]}
       : {kind: v[`kind${n}`], name: v[`name${n}`]}));
-    if (!seats.length) throw Error("A table needs at least one other seat: a person or an AI.");
+    if (!seats.length){document.getElementById('cm-table-new-error').textContent='Choose at least one other seat: a person or an AI.';form.elements.kind2.focus();return;}
+    document.getElementById('cm-table-new-error').textContent='';
+    creatingTables.add(form);
+    try{
     const {table} = await api("POST", "/api/tables", {hostName: v.hostName, seats});
     try {localStorage.setItem("cm-table-setup",JSON.stringify({owner:C.signedInAs?.() || null,...Object.fromEntries(["hostName","kind2","name2","kind3","name3","kind4","name4"].map(k=>[k,v[k]]))}));}catch{}
-    /* The deck you came with (Play this deck, AI-5) takes your seat now; if the table refuses it, its lobby says why. */
-    const bring = v.deck ? libraryDecks().find((d) => d.id === v.deck) : null;
-    if (bring) {
-      try {await api("POST", `${tableUrl(table.tableId)}/deck`, {seatId: 0, deck: deckForTable(bring)});}
-      catch (error) {C.notice(`${bring.name} did not take your seat: ${error.message}`, true);}
-    }
-    C.go("table", {id: table.tableId});
+    keepSeat(table.tableId);
+    await finishTableSetup(table,v);
+    }finally{creatingTables.delete(form);}
   };
+  const settingUp=new Set();
+  async function finishTableSetup(table,v){if(settingUp.has(table.tableId))return;settingUp.add(table.tableId);
+    try{await api('POST',`${tableUrl(table.tableId)}/rules`,{startingLife:Number(v.startingLife),bracketLimit:v.bracketLimit?Number(v.bracketLimit):null});}
+    catch(error){C.go('table',{id:table.tableId});C.notice('Your table was created, but its rules were not saved. '+error.message,true,{action:{label:'Retry rules',run:()=>finishTableSetup(table,v)}});settingUp.delete(table.tableId);return;}
+    try{const bring=v.deck?libraryDecks().find(d=>d.id===v.deck):null;
+      if(bring){try{await api('POST',`${tableUrl(table.tableId)}/deck`,{seatId:0,deck:deckForTable(bring)});}catch(error){C.notice(`${bring.name} did not take your seat: ${error.message}`,true);}}
+      const autoFailures=await autoDeckAI(table);C.go('table',{id:table.tableId});
+      if(autoFailures.length)C.notice(autoFailures.join(' '),true,{undo:false});else C.notice('Table setup saved.',false,{undo:false});
+    }finally{settingUp.delete(table.tableId);}
+  }
 
   /* ---- invitations ---- */
   actions["table-invite"] = async (el) => {
@@ -577,6 +640,27 @@
         cards: d.cards.filter(([n]) => !commander.includes(n)).flatMap(([n, q]) => Array(q).fill(n))};
     });
   })().catch((error) => {preconsOnce = null; throw error;});
+  /* AI seats start with an engine-known public precon. This is the same host-authorized deck
+     assignment the chooser uses; a failed or unsupported list never becomes a pretend choice. */
+  async function autoDeckAI(table){const seats=(table.seats||[]).filter(s=>s.kind==='ai'&&s.occupied&&!s.deck);
+    if(!table.youAreHost||table.phase!=='selecting'||!seats.length)return [];
+    const failures=[];let candidates;
+    try{const lists=(await tablePrecons()).filter(d=>d.commander.length+d.cards.length===100);
+      const names=[...new Set(lists.flatMap(d=>[...d.commander,...d.cards]))];
+      const answer=await api('POST',`${tableUrl(table.tableId)}/known`,{names});
+      if(!Array.isArray(answer.unknown))throw Error('Deck verification is unavailable. Choose its deck when the table can be checked.');
+      const unknown=new Set(answer.unknown);
+      candidates=lists.filter(d=>[...d.commander,...d.cards].every(name=>!unknown.has(name)));
+    }catch(error){return seats.map(s=>`${s.name||'AI'} needs a deck: ${error.message}`);}
+    for(const seat of seats){if(!candidates.length){failures.push(`${seat.name||'AI'} needs a deck: no public precon is fully known by this table. Choose its deck.`);continue;}
+      let assigned=false,last='No eligible precon.';
+      for(let i=0;i<candidates.length;i++){const deck=candidates[(Math.max(0,seat.seatId-1)+i)%candidates.length];
+        try{await api('POST',`${tableUrl(table.tableId)}/deck`,{seatId:seat.seatId,deck:{name:deck.name,commander:[...deck.commander],cards:[...deck.cards]}});assigned=true;break;}
+        catch(error){last=error.message;if(error.signedOut||error.status>=500)break;}}
+      if(!assigned)failures.push(`${seat.name||'AI'} needs a deck: ${last} Choose its deck.`);
+    }
+    return failures;
+  }
   let availablePrecons = [];
   const sharedReady = new Set();
   let availableSharedDecks = [];
@@ -613,10 +697,22 @@
       if (texts.length && el.isConnected) {el.textContent = cut(texts.join(" · ")); el.removeAttribute("data-about-for");}
     }
   }
-  /* PLAYABLE ONLY (Rob: "include a toggle check box to filter for Playable"): the decks the table can play every card of,
-     the rest put away once it has said so -- off until it is ticked, and then remembered on this device. */
+  /* Compare the same expanded commander/card list submitted to the table, never a display name.
+     Shared snapshots expose no canonical library source ID. Exact contents can identify an already
+     available local list without conflating a different shared revision or two distinct local decks. */
+  const deckContents = (d) => {
+    if (!Array.isArray(d?.commander) || !d.commander.length || !Array.isArray(d.cards)
+        || [...d.commander, ...d.cards].some(n => typeof n !== 'string' || !n.trim())) return null;
+    const names = a => a.map(n => n.normalize('NFC').trim()).sort();
+    return JSON.stringify([names(d.commander), names(d.cards)]);
+  };
+  function tableOnlyShared(shared, decks) {
+    const local = new Set(decks.map(d => deckContents(deckForTable(d))).filter(Boolean));
+    return shared.filter(d => {const contents=deckContents(d);return !contents || !local.has(contents);});
+  }
+  /* Default to the server-supported complete lists; an explicit device choice is remembered. */
   const ONLY_KEY = "cm-table-deck-playable";
-  const onlyPlayable = () => {try {return localStorage.getItem(ONLY_KEY) === "on";} catch {return false;}};
+  const onlyPlayable = () => {try {return localStorage.getItem(ONLY_KEY) !== "off";} catch {return true;}};
   document.addEventListener("change", (event) => {
     const el = event.target.closest?.("[data-table-deck-playable]");
     if (!el) return;
@@ -625,24 +721,25 @@
   });
   actions["table-deck"] = async (el) => {
     await C.sharingReady;
-    availableSharedDecks = C.sharingAvailable?.() && C.sharedDecks ? await C.sharedDecks() : [];
+    const sharedDecks = C.sharingAvailable?.() && C.sharedDecks ? await C.sharedDecks() : [];
     let preconError = "";
     try {availablePrecons = await tablePrecons();} catch (error) {availablePrecons = []; preconError = error.message;}
     const seatId = Number(el.dataset.seat), decks = libraryDecks();
+    availableSharedDecks = tableOnlyShared(sharedDecks, decks);
     const test = current && current.playtest
       ? `<li><button type="button" class="cm-table-deck" data-action="table-use-test-deck" data-seat="${seatId}"><strong>${e(TEST_DECK.name)}</strong><span class="cm-muted">Wastes and 99 basic lands · for trying a game through quickly on this playtest table</span></button></li>`
       : "";
     const list = decks.length || test
-      ? `<ul class="cm-table-decks">${test}${decks.map((d) => `<li><button type="button" class="cm-table-deck" data-action="table-use-deck" data-seat="${seatId}" data-deck="${e(d.id)}">${deckLines(d.name, (d.commanders || []).map((c) => (C.card(c) || {}).name).filter(Boolean), d.notes)}<span class="cm-muted cm-table-deck-known" data-known-for="${e(d.id)}"></span></button></li>`).join("")}</ul>`
+      ? `<ul class="cm-table-decks">${test}${decks.map((d) => `<li><button type="button" class="cm-table-deck is-unknown" data-action="table-use-deck" data-seat="${seatId}" data-deck="${e(d.id)}">${deckLines(d.name, (d.commanders || []).map((c) => (C.card(c) || {}).name).filter(Boolean), d.notes)}<span class="cm-muted cm-table-deck-known" data-known-for="${e(d.id)}">Checking this server…</span></button></li>`).join("")}</ul>`
       : "";
     /* AN EMPTY LIBRARY says how to fill it (the readiness checks of 2026-10-04: a friend new to CrankMagic, invited
        before restoring the host's backup, saw only the test deck). A restore keeps this page, so the seat is still
        theirs when it is done. */
-    const empty = decks.length ? "" : `<div class="cm-table-deck-empty"><p>You can play a precon above without adding anything to your library.</p><p class="cm-muted">To use your own deck later, build or import one in Decks.</p></div>`;
-    const precons = `<section aria-label="Precons"><h3>Precons</h3><p>Wizards' newest Commander decks, open to everyone. Choose one and play; nothing is added to your library.</p>${preconError ? `<p class="cm-note cm-warning">${e(preconError)}</p>` : `<ul class="cm-table-decks">${availablePrecons.map(d => `<li><button type="button" class="cm-table-deck" data-action="table-use-precon" data-precon="${d.id}" data-seat="${seatId}" disabled>${deckLines(d.name, d.commander, d.notes)}<span class="cm-muted" data-precon-status="${d.id}">Checking this server…</span></button></li>`).join("")}</ul>`}</section>`;
-    const shared = availableSharedDecks.length ? `<section aria-label="Shared with you"><h3>Shared with you</h3><p>Decks other players shared with you or made public. No import or library setup needed.</p><ul class="cm-table-decks">${availableSharedDecks.map(d => `<li><button type="button" class="cm-table-deck" data-action="table-use-shared-deck" data-shared-deck="${d.id}" data-seat="${seatId}" disabled>${deckLines(d.name, d.commander, d.notes)}<span class="cm-muted" data-shared-status="${d.id}">Checking this server…</span></button></li>`).join("")}</ul></section>` : "";
-    const only = `<label class="cm-checkbox cm-table-deck-only"><input type="checkbox" data-table-deck-playable${onlyPlayable() ? " checked" : ""}>Playable</label>`;
-    C.modal(`Choose a deck · Seat ${seatId + 1}`, `<div class="cm-table-deck-choose${onlyPlayable() ? " is-playable-only" : ""}">${only}${precons}${shared}${decks.length ? '<h3>Your library decks</h3>' : ''}${list}${empty}</div><div id="cm-table-deck-error" class="cm-note cm-warning" hidden></div><div class="cm-form-footer">${b("Cancel", "close")}</div>`);
+    const empty = decks.length ? "" : `<div class="cm-table-deck-empty"><p>You can play a public precon without adding anything to your library.</p><p class="cm-muted">To use your own deck later, build or import one in Decks.</p></div>`;
+    const precons = `<details class="cm-table-precon-catalog" open><summary>Public precons</summary><p>Wizards' newest Commander decks, open to everyone. Choose one and play; nothing is added to your library.</p>${preconError ? `<p class="cm-note cm-warning">${e(preconError)}</p>` : `<ul class="cm-table-decks">${availablePrecons.map(d => `<li><button type="button" class="cm-table-deck" data-action="table-use-precon" data-precon="${d.id}" data-seat="${seatId}" disabled>${deckLines(d.name, d.commander, d.notes)}<span class="cm-muted" data-precon-status="${d.id}">Checking this server…</span></button></li>`).join("")}</ul>`}</details>`;
+    const shared = availableSharedDecks.length ? `<section aria-label="Shared with the table"><h3>Shared with the table</h3><p>Other shared lists available to your account. Choosing one does not import it or change its access.</p><ul class="cm-table-decks">${availableSharedDecks.map(d => `<li><button type="button" class="cm-table-deck" data-action="table-use-shared-deck" data-shared-deck="${d.id}" data-seat="${seatId}" disabled>${deckLines(d.name, d.commander, d.notes)}<span class="cm-muted" data-shared-status="${d.id}">Checking this server…</span></button></li>`).join("")}</ul></section>` : "";
+    const only = `<label class="cm-checkbox cm-table-deck-only"><input type="checkbox" data-table-deck-playable${onlyPlayable() ? " checked" : ""}>Only table-legal decks</label><p class="cm-muted">Complete lists supported by this server and within this table's bracket limit. The server checks your choice before seating it.</p>`;
+    C.modal(`Choose a deck · Seat ${seatId + 1}`, `<div class="cm-table-deck-choose${onlyPlayable() ? " is-playable-only" : ""}">${only}<section aria-label="Your decks"><h3>Your decks</h3>${list}${empty}</section>${shared}${precons}</div><div id="cm-table-deck-error" class="cm-note cm-warning" hidden></div><div class="cm-form-footer">${b("Cancel", "close")}</div>`);
     knownCounts(decks);
     checkSharedDecks(current.tableId);
     fillAbout();
@@ -658,10 +755,12 @@
       for (const [d, attr] of [...availablePrecons.map((d) => [d, "data-precon-status"]), ...availableSharedDecks.map((d) => [d, "data-shared-status"])]) {
         const status = document.querySelector(`[${attr}="${d.id}"]`);
         if (!status) continue;
-        const missing = [...d.commander, ...d.cards].filter(n => unknown.has(n));
-        status.textContent = missing.length ? "Not available on this server yet" : "Ready to play";
-        status.closest("button").disabled = missing.length > 0;
-        if (!missing.length) sharedReady.add(d.id);
+        const all = [...d.commander, ...d.cards], missing = all.filter(n => unknown.has(n));
+        const bracket = rulesOf(current).bracketLimit, above = bracket && Number(d.bracket) > bracket;
+        const reason = all.length !== 100 ? `Needs 100 cards · ${all.length} listed` : above ? `Above this table's bracket limit (${bracket})` : missing.length ? "Not available on this server yet" : "";
+        status.textContent = reason || "Ready to play";
+        status.closest("button").disabled = !!reason;
+        if (!reason) sharedReady.add(d.id);
       }
     } catch (error) {
       for (const status of document.querySelectorAll('[data-shared-status], [data-precon-status]')) status.textContent = "Could not check this deck. Close and reopen to retry.";
@@ -711,8 +810,9 @@
       const el = document.querySelector(`[data-known-for="${CSS.escape(r.id)}"]`);
       if (!el) continue;
       const all = [...r.deck.commander, ...r.deck.cards], missing = all.filter((n) => unknown.has(n)).length;
-      el.textContent = missing ? `${all.length - missing} of ${all.length} known · ${missing} to learn` : `All ${all.length} cards known`;
-      el.closest(".cm-table-deck")?.classList.toggle("is-unknown", missing > 0);
+      const bracket = rulesOf(current).bracketLimit, above = bracket && Number(r.deck.bracket) > bracket;
+      el.textContent = all.length !== 100 ? `Needs 100 cards · ${all.length} listed` : above ? `Above this table's bracket limit (${bracket})` : missing ? `${all.length - missing} of ${all.length} known · ${missing} to learn` : `All ${all.length} cards known`;
+      el.closest(".cm-table-deck")?.classList.toggle("is-unknown", missing > 0 || all.length !== 100 || !!above);
     }
   }
   actions["table-use-test-deck"] = async (el) => {

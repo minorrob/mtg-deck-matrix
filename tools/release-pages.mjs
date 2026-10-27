@@ -68,13 +68,13 @@ export const ROOTS = ["index.html", "crankmagic.html", "graph.html", "not-invite
    the two files stay in the repository for the tools that build them and are never served. */
 export const NEVER = /^(game|tools|tests|docs|design|prototype|graph|payload|payload_v3|schema|\.github|\.claude)\/|^data\/(engine|source|archive|game-logs)\/|^data\/live-(state|load)\.json$/;
 
-const PLAY = ["crankmagic-mats.css", "crankmagic-seat-art.js", "crankmagic-game.js", "crankmagic-lobby.js", "crankmagic-online.js", "crankmagic-online.css", "collection-lobby-draft.js", "crankmagic-table.js", "crankmagic-board.js", "crankmagic-audio.js", "crankmagic-stage.js", "crankmagic-stage.css", "crankmagic-stage-tables.js", "crankmagic-stage-paint.js", "vendor/babylon.js", "vendor/BABYLON-LICENSE.txt"];
+const PLAY = ["crankmagic-mats.css", "crankmagic-seat-art.js", "crankmagic-game.js", "crankmagic-lobby.js", "crankmagic-online.js", "crankmagic-online.css", "collection-lobby-draft.js", "crankmagic-table.js", "crankmagic-board.js", "crankmagic-coach.js", "crankmagic-coach.css", "crankmagic-audio.js", "crankmagic-stage.js", "crankmagic-stage.css", "crankmagic-stage-tables.js", "crankmagic-stage-paint.js", "vendor/babylon.js", "vendor/BABYLON-LICENSE.txt"];
 /* PLAY IN THE CLOUD (M5): the table's lobby, the seats it draws, Rob's artwork mats, the board, and its sound (B8: the pack
    in assets/audio/, reached only from crankmagic-audio.js), over the Worker's /api/tables. The rest of PLAY is the
    local game host's (a Node server on this machine or a tunnel), which no release carries. */
-const PLAY_CLOUD = ["crankmagic-mats.css", "crankmagic-seat-art.js", "crankmagic-table.js", "crankmagic-board.js", "crankmagic-audio.js", "crankmagic-stage.js", "crankmagic-stage.css", "crankmagic-stage-tables.js", "crankmagic-stage-paint.js", "vendor/babylon.js", "vendor/BABYLON-LICENSE.txt"];
+const PLAY_CLOUD = ["crankmagic-mats.css", "crankmagic-seat-art.js", "crankmagic-table.js", "crankmagic-board.js", "crankmagic-coach.js", "crankmagic-coach.css", "crankmagic-audio.js", "crankmagic-stage.js", "crankmagic-stage.css", "crankmagic-stage-tables.js", "crankmagic-stage-paint.js", "vendor/babylon.js", "vendor/BABYLON-LICENSE.txt"];
 const LOCAL_PLAY = PLAY.filter((f) => !PLAY_CLOUD.includes(f));
-const ACCOUNTS = ["cloud-sync.js", "crankmagic-account.js", "crankmagic-sharing.js"];
+const ACCOUNTS = ["cloud-sync.js", "crankmagic-account.js", "crankmagic-sharing.js", "crankmagic-admin.js"];
 /* What every release shares: Play says Coming Soon, no game host, served by Cloudflare. */
 const RELEASE = {
   play: "coming-soon",
@@ -328,6 +328,8 @@ export function referencesOf(file, text, files) {
    imports through the same commit. A bare or node: import, or a module the commit lacks, is named: the Worker
    could not be bundled from the release. */
 export const PLAY_WORKER = "cloud/play-worker.mjs";
+/* The account cloud's Worker (cloud/worker.mjs), whose imports a release without Play carries the same way. */
+export const API_WORKER = "cloud/worker.mjs";
 const IMPORT = /\b(?:import|export)\s+(?:[^;]*?\sfrom\s+)?["']([^"']+)["']|\bimport\s*\(\s*["']([^"']+)["']\s*\)/g;
 export function workerModules(source, entry = PLAY_WORKER) {
   const seen = new Set(), queue = [entry], problems = [];
@@ -400,6 +402,8 @@ export function verify(built, profile) {
   const problems = [], files = new Set(built.keys());
   const engine = profile.cloud && profile.tables ? workerModules(builtSource(built)) : {files: [], problems: []};
   for (const f of files) if (NEVER.test(f) && !(/^game\/.+\.mjs$/.test(f) && engine.files.includes(f))) problems.push(`${f} is in a folder that never ships`);
+  /* The API Worker bundles from the release tree: a module it imports that the tree lacks is a Worker wrangler cannot build. */
+  if (profile.cloud) for (const p of workerModules(builtSource(built), API_WORKER).problems) problems.push(p.replace("Play's Worker", "the Worker"));
   for (const f of profile.leaveOut) if (files.has(f)) problems.push(PLAY.includes(f) ? `${f} is Play, and Play is not in this release` : `${f} is left out of this release, and is in it`);
   for (const [f, body] of built) {
     if (!TEXT.test(f)) continue;
@@ -528,9 +532,11 @@ export function build({source, profileName = "pages", origin = "", domain = ""})
   built.set("version.json", Buffer.from(JSON.stringify({commit: source.commit, date: source.date, profile: profileName, source: source.ref, origin: origin || FIRST_PUBLIC}, null, 2) + "\n"));
   if (domain) built.set("CNAME", Buffer.from(domain + "\n"));
   if (profile.host) for (const [f, text] of Object.entries(HOST_FILES[profile.host]({date: source.date, origin: origin || FIRST_PUBLIC, profile}))) built.set(f, Buffer.from(text));
-  /* The Worker and its migrations, from the same commit as the pages (never walked: nothing links to them). */
+  /* The Worker and its migrations, from the same commit as the pages (never walked: nothing links to them), and every
+     module the Worker imports from outside cloud/ (feedback-schema.js, the report's schema the pages load too). */
   if (profile.cloud) {
     const worker = [...source.files].filter((f) => /^cloud\/[\w.-]+\.mjs$|^cloud\/migrations\/[\w.-]+\.sql$/.test(f));
+    for (const f of workerModules(source, API_WORKER).files) if (!worker.includes(f)) worker.push(f);
     source.readMany(worker);
     for (const f of worker) built.set(f, source.read(f));
     if (profile.tables) for (const f of workerModules(source).files) if (!built.has(f)) built.set(f, source.read(f));

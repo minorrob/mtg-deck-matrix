@@ -86,13 +86,36 @@ export async function verifyAccess(request, env, deps = {}) {
      -- the Worker keys a person by what it is handed here, and nothing else reads it as mail. Only a service token
      Access admits reaches here: staging's Service Auth policies. */
   const email = typeof claims.email === "string" ? claims.email.trim().toLowerCase() : "";
-  if (!email && env.SERVICE_SEATS === "on" && typeof claims.common_name === "string" && claims.common_name.trim()) return {email: await serviceIdentity(claims.common_name.trim()), service: true};
+  /* `deps.service` is a route that takes a service token as itself, for the one audience it named: the feedback loop's
+     admin routes, read and written by the triage agent's token for its own Access application (cloud/feedback.mjs). */
+  if (!email && (env.SERVICE_SEATS === "on" || deps.service === true) && typeof claims.common_name === "string" && claims.common_name.trim()) return {email: await serviceIdentity(claims.common_name.trim()), service: true};
   if (!/^[^\s@]+@[^\s@]+$/.test(email)) throw new Unauthorized("a token that names no person");
   return {email};
 }
 
 /** Who a service token is, where a release seats one: `service:` and the first twelve hex of its client id's SHA-256 --
     the same token always the same identity, two tokens two, never a person's address, and the client id not repeated. */
+/* THE THREE ACCESS GROUPS (Rob, 2026-10-26: "a user group authorized for everything in CrankHub ... Game Theory Insiders.
+ * The second user group will be General Access. General Access will never be able to run or cause token costs ... The
+ * third user group is me, and I would have access to absolutely everything, including all game logs").
+ *
+ *   owner     one address, OWNER_EMAIL, a Worker variable set in the dashboard and never written in this repository
+ *   insider   a Game Theory Insider: a row in ai_allowlist, which is the Insiders roster (the owner keeps it, below)
+ *   general   everyone else Access admits: the library, decks, Play against the rules-only AI, never a cent spent
+ *
+ * The group is read here and nowhere else, so every spending route asks the same question (cloud/ai.mjs `allowed`), and
+ * the browser is told its group (/api/me) only to hide what it may not press: the Worker is the gate.
+ */
+export const GROUPS = Object.freeze(["owner", "insider", "general"]);
+export async function groupOf(email, env, db) {
+  const who = typeof email === "string" ? email.trim().toLowerCase() : "";
+  if (!who.includes("@")) return "general";
+  const owner = String(env?.OWNER_EMAIL || "").trim().toLowerCase();
+  if (owner && who === owner) return "owner";
+  if (db && (await db.prepare("SELECT 1 AS yes FROM ai_allowlist WHERE email = ?").bind(who).first())) return "insider";
+  return "general";
+}
+
 export async function serviceIdentity(clientId) {
   const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(clientId)));
   return "service:" + [...digest.slice(0, 6)].map((b) => b.toString(16).padStart(2, "0")).join("");

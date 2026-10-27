@@ -1,9 +1,9 @@
 {
   "workstream": "codex-workshop",
-  "updated": "2026-10-24T20:32:43.113Z",
-  "updated_by": "Codex · Workshop",
-  "branch": "codex/workshop-sharing-acceptance",
-  "now": "Merging the completed Share Library boundary tests in PR #769 and releasing current main to staging on Rob’s October 24 instruction. Live recipient sharing acceptance remains open.",
+  "updated": "2026-10-26T22:51:35.609Z",
+  "updated_by": "Codex r4 coordinator, Personal-HP",
+  "branch": "integration/r4",
+  "now": "The r4 Workshop/Admin/shared AccountMenu source and October 26 deck follow-ups are integrated with joined journey, menu, lobby/setup and native-restore density proof. PR #890 (ROB-197) is the canonical combined gate and deployment record. Bounded audit evidence and open follow-ups: docs/r4-execution/.",
   "items": [
     {
       "id": "ROB-36",

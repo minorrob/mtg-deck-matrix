@@ -8,7 +8,35 @@ sentences (the design is `docs/ai-agents.md` §4). The code is `cloud/ai.mjs`, t
 row M6) is a gate that is closed while it is unset. None of them has a default that spends money. The browser does
 not offer the feature yet.
 
-## Open to everyone signed in (Rob, 2026-10-14)
+## Three access groups (Rob, 2026-10-26)
+
+Rob: *"a user group authorized for everything in CrankHub. We'll call them Game Theory Insiders. The second user group
+will be General Access. General Access will never be able to run or cause token costs ... The third user group is me,
+and I would have access to absolutely everything."* `cloud/access.mjs` `groupOf(email, env, db)` answers one of three,
+and every spending route asks it through `createAi(...).allowed` (`cloud/ai.mjs`):
+
+| Group | Who | At the door |
+| --- | --- | --- |
+| `owner` | The one address in `OWNER_EMAIL`, a Worker variable set in the dashboard (staging and production each), never written in this repository; matched in any letter case | Everything, and `/api/admin/*` |
+| `insider` | A row in `ai_allowlist`, which is now **the Insiders roster** | Explain, the Coach, the advisor, an AI on Claude at a table, the meter |
+| `general` | Everyone else Access admits | Refused at every one of those, with the switch `AI_EVERYONE` on or off; the library, decks, the generator and Play against the rules-only AI are theirs |
+
+- **`AI_EVERYONE` now widens the sign-in only** (the app's own Access application opens the AI door, so an insider needs
+  no second sign-in). It no longer makes everyone signed in an insider: that was Rob's 2026-10-14 word, and his
+  2026-10-26 word supersedes it. Staging and production keep it on, and only the roster and the owner spend.
+- **The roster is the owner's:** `GET /api/admin/groups` lists it; `PUT /api/admin/groups` with
+  `{"email": "...", "group": "insider" | "general", "note": "..."}` adds a person or takes them off (a person is general by
+  being on no list). Anyone else gets 403 saying only the owner may. The `wrangler d1 execute` commands below still work
+  and write the same table.
+- **`/api/me` carries `group`**, so the browser can hide the controls a group may not press (the Workshop lane's
+  Settings card and the deck page's AI button; the Play lane's lobby already follows `/api/ai-seat`). The Worker is the
+  gate either way.
+- **Proof:** `node tests/ai-door.mjs` (General Access refused with the switch on or off, by either sign-in; an insider
+  answered at the app's own sign-in; the owner answered on no list and refused when `OWNER_EMAIL` is unset; `/api/me`'s
+  group; the roster read and set by the owner alone), `node tests/agent-seat-table.mjs` (a host not on the roster refused
+  with the switch on; the owner seats an AI on Claude), `node tests/cloud-worker.mjs` (`/api/me` says general).
+
+## Open to everyone signed in (Rob, 2026-10-14; the sign-in half still holds, the spending half is superseded above)
 
 Rob: *"I want the AI door open on staging and production for anyone that can sign in (e.g. given I am manually adding
 who can access, I'm fine with those I want everyone I add to be able to use the AI features)."*

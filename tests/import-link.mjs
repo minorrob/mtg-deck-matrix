@@ -44,8 +44,9 @@ try {
   {
     const {context, page, asked, outside, answer} = await fresh();
     await page.goto(`${base}/index.html`);
-    await page.locator(".cm-landing [data-action=import-archidekt]").waitFor({timeout: 60000});
-    await page.locator(".cm-landing [data-action=import-archidekt]").click();
+    await page.locator(".cm-landing [data-action=new-deck]").waitFor({timeout: 60000});
+    await page.locator(".cm-landing [data-action=new-deck]").click();
+    await page.locator("#cm-dialog [data-action=import-archidekt]").click();
     eq(await dialog(page), "Import from Archidekt", "the landing page's Import from Archidekt asks for the deck's link");
     await page.locator("#cm-dialog input[name=url]").fill(LINK);
     await page.locator("#cm-dialog [type=submit]").click();
@@ -68,7 +69,8 @@ try {
     await closeDialog(page);
 
     /* 4. What to do instead. */
-    const tryLink = async (link) => { await page.locator(".cm-landing [data-action=import-archidekt]").click(); await dialog(page); await page.locator("#cm-dialog input[name=url]").fill(link); await page.locator("#cm-dialog [type=submit]").click(); await page.waitForTimeout(800); return (await page.locator("#cm-dialog[open] .cm-error").innerText().catch(() => "")) || await notice(page); };
+    const tryLink = async (link) => { await page.locator(".cm-landing [data-action=new-deck]").click();
+    await page.locator("#cm-dialog [data-action=import-archidekt]").click(); await dialog(page); await page.locator("#cm-dialog input[name=url]").fill(link); await page.locator("#cm-dialog [type=submit]").click(); await page.waitForTimeout(800); return (await page.locator("#cm-dialog[open] .cm-error").innerText().catch(() => "")) || await notice(page); };
     ok(/Moxfield.*Export.*paste/is.test(await tryLink("https://www.moxfield.com/decks/abcDEF123")), "a Moxfield link: says Moxfield will not serve it, and to export and paste");
     await closeDialog(page);
     answer(() => ({status: 404, json: {error: "Archidekt has no public deck 99. A private deck cannot be read by link; export its list and paste it."}}));

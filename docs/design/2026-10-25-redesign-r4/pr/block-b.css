@@ -1,0 +1,63 @@
+/* THE PAGE'S NAMES FOR THE TOKENS (the --v-* layer). Every one resolves to a token above; none carries a literal. They are
+   :root's as well as #matrix-v2's, because menus, tooltips and toasts are popovers on <body> (Rob, 24 September).
+   Three planes and three signals: --v-bg ground, --v-panel a card on it, --v-raised a control on the card, lighter
+   always; --v-accent press this, --v-decision answer this, --v-required you missed this. Three hues, never one. */
+:root,#matrix-v2{
+  --v-bg:var(--color-bg);--v-panel:var(--color-panel);--v-raised:var(--color-raised);
+  --v-ink:var(--color-ink);--v-muted:var(--color-muted);
+  --v-line:var(--color-line);--v-line-strong:var(--color-line-strong);
+  --v-field:var(--color-raised);--v-field-line:var(--color-field-line);
+  --v-accent:var(--color-accent);--v-on:var(--color-on-accent);--v-soft:var(--color-accent-soft);
+  /* "Brass = the one primary" survives as a name: it is the accent. */
+  --v-brass:var(--color-accent);
+  /* r4's accents carry their own ink at 4.5:1 or better in every skin and register, so the darkened fill is retired. */
+  --accent-fill:var(--color-accent);
+  --v-warm:var(--color-money);--v-money:var(--color-money);
+  --v-decision:var(--color-money);--v-decision-bg:var(--color-decision-bg);--v-decision-line:var(--color-decision-line);
+  --v-decision-ink:var(--color-decision-ink);--v-decision-field:var(--color-decision-field);
+  --v-required:var(--color-required);
+  --v-aether:var(--color-aether);
+  --v-radius:var(--radius-control);--v-radius-card:var(--radius-card);--v-radius-tile:var(--radius-tile);
+  --v-display:var(--font-display);--v-body:var(--font-body);
+  /* THE TABLE. The poster pair under commander art, the lobby's center card, the felt, the cards and the callout lights
+     are the table's, not the page's, and keep their values in every skin and both registers. */
+  --font-callout:'Barlow Condensed',Lato,system-ui,sans-serif;
+  --poster-ground:#0c0c10;
+  --poster-ink:#f3f1ee;
+  --table-panel:#fbfaf7;
+  --table-ink:#1f1c18;
+  --mat-felt:#2b3a2c;
+  --mat-felt-edge:#141812;
+  --mat-ink:#f3efe6;
+  --mat-scrim:rgb(0 0 0 / .8);
+  --tray:color-mix(in srgb,var(--table-ink) 84%,transparent);
+  --focus-halo:var(--table-ink);
+  --focus-ring:color-mix(in srgb,var(--color-aether) 45%,white);
+  --card-face:#ece5d6;
+  --card-face-edge:#cfc5b0;
+  --card-back:#3a2f22;
+  --card-back-edge:#2c231a;
+  --vital-danger:#b3261e;
+  --on-accent:#1a1611;
+  --callout-harm:#ff5c4d;
+  --callout-answer:#5fd3ff;
+  --callout-growth:#6ff06a;
+  --callout-value:#ffd34d;
+  --callout-fade:#c99bff;
+  --mat-forge:#3b2113;
+  --mat-forge-edge:#120a06;
+  --mat-forge-glow:#d9772f;
+  --mat-cavern:#30363c;
+  --mat-cavern-edge:#0f1215;
+  --mat-sea:#0f3d48;
+  --mat-sea-edge:#06161b;
+  --mat-sea-foam:#9fd8e0;
+  --mat-night:#1d1b3d;
+  --mat-night-edge:#07071a;
+  --table-wood:#3a2414;
+  --table-grain:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%271600%27 height=%271000%27%3E%3Cfilter id=%27g%27 x=%270%27 y=%270%27 width=%27100%25%27 height=%27100%25%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%27.0016 .026%27 numOctaves=%274%27 seed=%2711%27 stitchTiles=%27stitch%27/%3E%3CfeColorMatrix values=%270 0 0 0 .06  0 0 0 0 .03  0 0 0 0 .012  1.5 0 0 0 -.5%27/%3E%3C/filter%3E%3Cfilter id=%27h%27 x=%270%27 y=%270%27 width=%27100%25%27 height=%27100%25%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%27.003 .09%27 numOctaves=%273%27 seed=%274%27 stitchTiles=%27stitch%27/%3E%3CfeColorMatrix values=%270 0 0 0 .55  0 0 0 0 .36  0 0 0 0 .21  0 .9 0 0 -.45%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 fill=%27%234a2d19%27/%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23g)%27/%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23h)%27/%3E%3C/svg%3E");
+  --table-light:rgb(255 184 108 / .20);
+  --table-shade:rgb(12 6 2 / .88);
+  --table-felt:#292724;
+  --table-felt-nap:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27240%27 height=%27240%27%3E%3Cfilter id=%27n%27 x=%270%27 y=%270%27 width=%27100%25%27 height=%27100%25%27%3E%3CfeTurbulence type=%27fractalNoise%27 baseFrequency=%27.85%27 numOctaves=%272%27 seed=%273%27 stitchTiles=%27stitch%27/%3E%3CfeColorMatrix values=%270 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .08 0%27/%3E%3C/filter%3E%3Crect width=%27100%25%27 height=%27100%25%27 filter=%27url(%23n)%27/%3E%3C/svg%3E");
+  --table-brass:#b8925a;}

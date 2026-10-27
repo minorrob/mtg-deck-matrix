@@ -36,11 +36,13 @@
  */
 
 import {housePilot, meetRequirements, withinBudget, keptWithin} from "./house-pilot.mjs";
+import {threatTable, absurd} from "./threat.mjs";
 import {atLeast} from "./odds.mjs";
 import {createRng} from "../rng.mjs";
 
 export const SCORED_PILOT_ID = "house-pilot-l1";
 export const SETTINGS = ["easy", "normal"];
+/* The setting the threat table reads for each (threat.mjs THREAT_WEIGHTS): Easy's rank, Normal's weighted mean. */
 
 /* WHAT THINGS ARE WORTH, in one table, so the weights are tuned in one place (the bench: tools/pilot-bench.mjs). A
    creature's worth is its power and half its toughness, plus its keywords; another permanent's is its mana value; a
@@ -56,6 +58,12 @@ export const WEIGHTS = {
   crackback: 60,      // for an attack that leaves it dead to the swing back when holding back would not
   others: 0.5,        // each opponent but the most dangerous, in the swing back: not all of them come at once
   aimed: 0.25,        // a spell's target's worth, beside the mana it spends
+  /* WHO IT GOES AT (threat.mjs; docs/ai-players/PLAN-2026-10-26.html §4): threat × effect. `threat` is worth, for dealing a
+     seat's whole life, when that seat's threat score is one above the table's mean (beside `damage`, which every seat's
+     life is worth); `threatAim` raises a hostile target's worth by its controller's score over the mean. With one opponent
+     both are nothing: the table says where, never whether. */
+  threat: 6,
+  threatAim: 0.5,
   /* An activated ability, by what the card says it does, against what it costs; used when it clears `activate`. */
   ability: {draw: 1.5, ramp: 2, tutor: 1.5, look: 0.3, proliferate: 1, counter: 1, life: 0.1, discard: 1, treasure: 1,
     mana: 0.25, tapCreature: 0.5, counterCost: 0.5, tapOther: 0.5, exile: 0.2, lifeCost: 0.2},
@@ -214,7 +222,8 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
   }
 
   /* An offer's targets: how many are on the side its effect is meant for (as L0 counts them), and what they are worth. */
-  function aimOf(view, action) {
+  const threatsOf = (view) => threatTable(view, {seat, cards: known, setting});
+  function aimOf(view, action, threats = threatsOf(view)) {
     const where = new Map(battlefield(view).map((c) => [c.cardId, c]));
     let on = 0, value = 0;
     for (const t of action.targets ?? []) {
@@ -226,7 +235,9 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
         : (card?.controller ?? seat) !== seat;
       if (theirs !== (action.hostile === true)) continue;
       on += 1;
-      value += card ? worth(card) : 0;
+      /* A hostile target is worth more on a bigger threat's board: the engine it feeds, not only the body. */
+      const holder = t.kind === "player" ? t.id : card ? card.controller : null;
+      value += card ? worth(card) * (theirs && holder !== null ? 1 + W.threatAim * threats.over(holder) : 1) : 0;
     }
     return {on, value};
   }
@@ -237,9 +248,9 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
     const offers = actions.filter((a) => a.kind === "cast" && a.x === undefined && !a.convoke);
     if (!offers.length) return null;
     /* One offer per spell: the one aimed best. */
-    const bySpell = new Map();
+    const bySpell = new Map(), threats = threatsOf(view);
     for (const a of offers) {
-      const aim = aimOf(view, a);
+      const aim = aimOf(view, a, threats);
       if ((a.targets ?? []).length && aim.on === 0) continue;
       const cost = manaValue(a.label) + (a.tax ?? 0);
       if (!Number.isFinite(cost)) continue;
@@ -344,10 +355,11 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
     if (!(view.turnPlayerId === seat && MAIN.includes(view.phase) && view.stackSize === 0)) return null;
     if (battlefield(view).length >= W.boardUpTo) return null;
     let best = null;
+    const threats = threatsOf(view);
     for (const a of abilityOffers(actions)) {
       const ability = abilityOf(a);
       if (!ability || !paysSomething(ability)) continue;
-      const aim = aimOf(view, a);
+      const aim = aimOf(view, a, threats);
       if ((a.targets ?? []).length && aim.on === 0) continue;
       const value = effectsWorth(view, ability, aim) - costWorth(view, ability, a);
       if (value > W.activate && (!best || value > best.value)) best = {a, value};
@@ -375,6 +387,7 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
       return (each[0] ?? 0) + W.others * each.slice(1).reduce((n, x) => n + x, 0);
     };
     const held = swingBack([], () => [], []);
+    const threats = threatsOf(view);
     for (const p of foes) {
       const ready = choice.options.filter((o) => o.defenderId === p.playerId && o.planeswalkerId === undefined && power(mine.get(o.cardId)) > 0)
         .map((o) => ({o, c: mine.get(o.cardId)}));
@@ -384,14 +397,16 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
         const going = set.map((r) => r.c);
         const out = defend({attackers: going, blockers: walls, life: p.life, worth});
         const lethal = going.length > 0 && out.through >= p.life;
-        let value = W.damage * Math.min(out.through, p.life) / Math.max(1, p.life) + (lethal ? W.lethal : 0)
+        /* The damage, and the same damage again by the seat's threat (threat × effect): it goes where it does the most. */
+        const effect = Math.min(out.through, p.life) / Math.max(1, p.life);
+        let value = W.damage * effect + W.threat * threats.over(p.playerId) * effect + (lethal ? W.lethal : 0)
           + W.trade * (out.blockersLost.reduce((n, c) => n + worth(c), 0) - out.attackersLost.reduce((n, c) => n + worth(c), 0));
         if (!(lethal && foes.length === 1)) {
           const back = swingBack(out.attackersLost, (id) => (id === p.playerId ? out.blockersLost : []), going);
           value -= W.exposure * Math.max(0, back - held) / Math.max(1, self.life);
           if (back >= self.life && held < self.life) value -= W.crackback;
         }
-        return {value, set, p};
+        return {value, set, p, lethal, absurd: absurd(going, out)};
       };
       /* The plans, the most aggressive first: a tie goes to the attack, as L0 would make it. */
       /* Each no more than it can pay for (an attack tax, CR 508.1h; the record's `budget`): the strongest kept first. */
@@ -415,8 +430,16 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
         const key = set.map((r) => r.o.index).sort((a, b) => a - b).join(",");
         if (seen.has(key)) continue;
         seen.add(key);
-        plans.push(score(set));
+        const plan = score(set);
+        /* THE FLOOR (threat.mjs `absurd`): a plan whose every attacker dies for nothing is not a plan, at any setting. */
+        if (!plan.absurd) plans.push(plan);
       }
+    }
+    /* EASY'S RANK (threat.mjs): its attacks go at the top of the rank and nowhere else, while there is an attack to make at
+       that seat, unless another seat is lethal; its chance (pick, below) then draws among plans at that seat, and holding
+       back. When the top seat offers no attack worth the name (walled, or out of reach), the rest of the table is open. */
+    if (setting === "easy" && plans.some((pl) => pl.set.length && pl.p.playerId === threats.top)) {
+      for (let i = plans.length - 1; i >= 0; i -= 1) if (plans[i].set.length && threats.over(plans[i].p.playerId) < 0 && !plans[i].lethal) plans.splice(i, 1);
     }
     if (!plans.length) return null;
     /* Holding back is one plan, however many opponents there are. */
