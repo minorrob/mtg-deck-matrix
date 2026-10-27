@@ -116,3 +116,9 @@ events that could not reach Library. The nested grid's scroll containment interc
 844×390 fixture fails before repair and passes all6 checks afterward (offset0→475, Library hit, fixed
 turn pill), plus the existing portrait folded case14. Frame sizing and JavaScript gestures are unchanged.
 Evidence: workbench/r4-play-evidence-20261026/phone-wheel-fix/. Physical phone hardware is still unproven.
+
+The complete local real-room/native table-board run39 passes321 checks on 83aab1d2 after current-main
+reconciliation. It verifies canonical per-owner result filing, private downloads/hidden-hand privacy,
+reconnect/newest-wins, idempotency and native Review-to-deck-Record navigation. The physical hand may
+overlap the board under EX-28; tabletop records allowed hand interceptions separately from uncovered
+card hits and unrelated blockers. No hand-clearance geometry or overlap-driven zoom limit was kept.

@@ -52,7 +52,7 @@ The coordinator inspected representative Full/Table/Focus/phone captures and the
 
 ## Remaining at this snapshot
 
-The full real-table run reached 306 on 0c415091: Coach, reconnect/newest-wins, phone wheel/Library and owner-only canonical s0/s1 filing passed. The obsolete success-toast assertion was migrated to CH59/86's persistent Review link and native navigation at 87391788. The next full run must finish private download, idempotency, Review/deck Record and AI outcome badges on the reconciled main base.
+The full real-table run39 PASSES 321 checks on exact 83aab1d2cfb083bc3f44ce7b429f509112283427. This includes Coach, reconnect/newest-wins, phone wheel/Library, per-owner canonical s0/s1 filing, private download/hidden-hand privacy, idempotency, Back-to-table, the native persistent Review link to the exact deck/game, deck Record and AI outcome badge. Evidence: workbench/r4-table-board-20261026-r39.log and r4-table-board-proof-20261026-r39/ (28 captures). Browser closed; Engine is ready for staging after green CI/main. No fresh live cloud finished-match/account-sync claim is made.
 
 Shared-shell's actual folded-decision/spine collision is repaired at dc360e82 (8 native checks twice); its full baseline rerun is pending. EX-28 expressly allows hand overlap without zoom restrictions. Tabletop's 270 recorded land samples comprise 166 uncovered hits and 104 allowed native hand overlaps, with no other blockers. Its remaining projection comparison has diagnostics for the actual options/animation state; no camera source change or test waiver is claimed. Main's sectioned Settings/graphics tests and the complete tabletop/shared-shell/real-game gates remain pending before full CI.
 
