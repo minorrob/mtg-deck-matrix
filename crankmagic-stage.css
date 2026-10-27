@@ -1288,3 +1288,14 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-stage-top .cm-board-ribbon .is-now{padding-top:5px;padding-bottom:5px}
 /* Card size by Alt + drag: the pointer is the size's while it is dragged. */
 .cm-board[data-cardsize] *{cursor:ns-resize!important}
+/* Contrast repairs (a11y-board): what is written on a mat stands on its own scrim; a card with no picture yet prints its name on a light chip; Camera's size sliders sit on the panel, not on a dark pill; in Table and Focus the drawer's tab no longer covers the first card (the content starts after it). */
+#matrix-v2 .cm-board .cm-full-corner .cm-seat-header{background:var(--mat-scrim);color:var(--mat-ink);border-radius:var(--radius-control);padding:0 8px}
+#matrix-v2 .cm-board .cm-mat .cm-board-cards>.cm-bcard .cm-bcard-name{background:#f6f1e4;color:#1f1c18;border-radius:2px;padding:1px 4px}
+#matrix-v2 .cm-board .cm-stage-camera .cm-board-scale{background:transparent;border:0}
+#matrix-v2 .cm-board:is([data-view=focus],[data-view=table])[data-shell="shared"]:has(>.cm-stage-rail.is-open){--play-left:calc(var(--stage-left-width) + 40px)}
+#matrix-v2 .cm-board .cm-stage-front>.cm-mat{padding-top:62px}   /* the corner header (35px) stands clear of the first row of cards, and of the tips of the tapped ones turned up beside it */
+#matrix-v2 .cm-board .cm-board-pie-priority{padding:3px 4px}   /* the scrim reaches the descenders of its words */
+#matrix-v2 .cm-board .cm-mat .cm-board-cards>.cm-bcard.is-tapped .cm-bcard-name{right:34%}   /* a tapped card's neighbour lies over its right side: the name wraps clear of it */
+#matrix-v2 .cm-board .cm-board-pie-life small{padding:3px 5px;line-height:1.2}   /* the scrim reaches the descender of "Maya" */
+#matrix-v2 .cm-board .cm-bcard:focus-visible{outline-offset:3px;box-shadow:0 0 0 3px var(--focus-halo),0 6px 14px -6px rgb(0 0 0 / .85)}   /* a halo of 3px between the card and its ring: on a pale mat the ring alone is not 3:1 all the way round */
+#matrix-v2 .cm-board .cm-board-panegrip{z-index:28}   /* the width grip is never covered by the tab hung beside it when it has the focus (a11y-board); the tab's own edge 6px is the grip's */

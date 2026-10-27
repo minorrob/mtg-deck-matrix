@@ -155,12 +155,12 @@ const sizeNow=()=>page.evaluate(()=>Number(document.querySelector("[data-stage-c
 await page.locator("[data-action=board-camera]").click();await page.waitForTimeout(200);
 const c0=Number(await page.locator("[data-stage-camera=cards]").inputValue());
 await page.locator("[data-action=board-camera]").click();
-const field=await page.locator(".cm-stage-front .cm-board-field").first().boundingBox(),landsBox=await page.locator(".cm-stage-front .cm-board-lands").first().boundingBox();
-const altDrag=async(box,dy)=>{const x=box.x+box.width*.6,y=box.y+box.height/2;await page.keyboard.down("Alt");await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x,y+dy,{steps:8});await page.mouse.up();await page.keyboard.up("Alt");await page.waitForTimeout(250);};
+const field=await page.locator(".cm-stage-front .cm-board-field").first().boundingBox();
+const altDrag=async(box,dy,at=.5)=>{const x=box.x+box.width*.6,y=box.y+box.height*at;await page.keyboard.down("Alt");await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x,y+dy,{steps:8});await page.mouse.up();await page.keyboard.up("Alt");await page.waitForTimeout(250);};
 const cardsValue=async()=>{await page.locator("[data-action=board-camera]").click();await page.waitForTimeout(150);const v=Number(await page.locator("[data-stage-camera=cards]").inputValue());await page.locator("[data-action=board-camera]").click();return v;};
 await altDrag(field,-80);const c1=await cardsValue();
 ok(c1>c0,`Alt + drag up on the battlefield grows the cards (${c0} to ${c1})`);
-await altDrag(landsBox,80);const c2=await cardsValue();
+await altDrag(await page.locator(".cm-stage-front .cm-board-lands").first().boundingBox(),80,.15);const c2=await cardsValue();
 ok(c2<c1,`Alt + drag down on the lands shrinks them (${c1} to ${c2})`);
 /* 8. */
 await page.evaluate(()=>document.querySelector('[data-action="send-feedback"]').click());
