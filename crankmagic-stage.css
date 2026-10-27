@@ -1306,3 +1306,10 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-stage-rail .cm-stage-module .cm-board-decision .v-button{white-space:normal;overflow-wrap:anywhere;text-align:center;line-height:1.2;height:auto;padding-block:6px}
 #matrix-v2 .cm-board .cm-stage-module .cm-mana-row{justify-content:center}
 #matrix-v2 .cm-board .cm-stage-front>.cm-mat{padding-top:62px}   /* the corner header (35px) stands clear of the first row of cards, and of the tips of the tapped ones turned up beside it */
+/* THE TABLE MENU'S PAGES, A DRAWER AT ITS SIDE (Rob, 2026-10-27: "when I select an option it should have a drawer that pops out the side of the menu with that selection's options. Currently it puts it at the bottom"): CrankMagic Pages is the menu's last item; its list opens beside the menu, to its left, never under it. */
+#matrix-v2 .cm-board .cm-table-menu>div{width:240px;min-width:0;box-sizing:border-box}
+#matrix-v2 .cm-board .cm-table-menu>.cm-table-flyout{position:absolute;right:248px;top:46px;width:220px;box-sizing:border-box;padding:12px;background:var(--color-panel);border:1px solid var(--color-line-strong);border-radius:var(--radius-card);box-shadow:var(--shadow-pop);max-height:70dvh;overflow:auto;z-index:1}
+#matrix-v2 .cm-board[data-view=full] .cm-stage-top .cm-table-menu>.cm-table-flyout{top:calc(100% + 6px)}
+#matrix-v2 .cm-board .cm-table-flyout .cm-board-nav{position:static;width:auto;border:0;box-shadow:none;background:none;padding:0}
+#matrix-v2 .cm-board .cm-table-flyout .cm-board-nav a{color:var(--color-ink)}
+#matrix-v2 .cm-board[data-phone] .cm-table-menu>.cm-table-flyout{position:fixed;left:8px;right:8px;top:auto;bottom:8px;width:auto}
