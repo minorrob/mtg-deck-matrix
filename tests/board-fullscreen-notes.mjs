@@ -167,6 +167,7 @@ try {
     /* ---- 5. Settings: the two choices ---- */
     await page.locator("[data-action=board-camera]").click();
     await page.locator(".cm-stage-camera [data-action=board-tools]").click();
+    await page.locator("#cm-dialog [role=tab][data-tab=gameplay]").click();
     const boxes = await page.evaluate(() => [...document.querySelectorAll(".cm-board-hold")].map((l) => {
       const box = l.querySelector("input").getBoundingClientRect(), words = getComputedStyle(l.querySelector("span"));
       return {text: l.textContent.trim(), w: Math.round(box.width), h: Math.round(box.height), weight: Number(words.fontWeight), size: parseFloat(words.fontSize), checked: l.querySelector("input").checked};

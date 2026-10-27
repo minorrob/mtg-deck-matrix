@@ -297,7 +297,7 @@
      motion (CrankMotion) jumps to either end.
      SOFTER, A GLANCE (Rob, 2026-10-25: "softer, about half"): every part of the motion -- the turn, the lean, the pitch and
      the read -- is `LOOK.strength` (one half) of what would center P exactly, so P ends halfway to the center of the view.
-     The timing is unchanged. The admin panel is to carry this and its kin as settings.
+     The timing is unchanged. Admin › General carries the strength on this device.
      UP, THEN OVER, THEN CLOSER (Rob, 2026-10-26: "the camera should move (not look) up slightly as a head would when getting
      ready to lean over, then the zoom that occurs when looking down at the end should be a bit more, maybe 25-35% more"):
        - the eye rises first, straight up, without turning to look: 2% of its height over the table at r = 1 (1% at the
@@ -310,13 +310,15 @@
      it was pressed. It follows with a head's lag (`steerMs`, 80 ms), never past 34 degrees aside or the near horizon above,
      nor past straight down; letting go takes it home with the rest of the motion. */
   const LOOK={turn:[0,.6],rise:[0,.35,.9],lean:[.2,.8],pitch:[.4,1],read:[.6,1],strength:.5,riseBy:.02,readBy:1.3,steerMs:80,steerYaw:.6,steerLow:.17};
+  /* Admin › General carries the strength (0 to 1, kept on the device as cm-look-strength); unset, the half Rob chose. */
+  const lookStrength=()=>{try{const v=localStorage.getItem('cm-look-strength'),n=Number(v);return v!==null&&v!==''&&n>=0&&n<=1?n:LOOK.strength;}catch{return LOOK.strength;}};
   const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
   const phase=(t,[a,b])=>ease(clamp((t-a)/(b-a),0,1));
   function aim(g,P) {
     const eye=g.camera.eye, u=clamp((P[0]-g.pan.x)/(g.width/2),-1,1), v=clamp((-P[2]-g.pan.y)/(g.base/2),-1,1), r=Math.min(1,Math.hypot(u,v));
     const lean=[.3*(P[0]-eye[0]),-.06*eye[1]*r,.25*(P[2]+g.pan.y)], leaned=eye.map((n,i)=>n+lean[i]);
     const k=(.06+.1*r)*LOOK.readBy, read=leaned.map((n,i)=>k*(P[i]-n)), d=P.map((n,i)=>n-leaned[i]-read[i]);
-    const f=LOOK.strength;
+    const f=lookStrength();
     return {lean:lean.map(n=>n*f),read:read.map(n=>n*f),yaw:f*Math.atan2(d[0],d[2]),pitch:f*(Math.atan2(-d[1],Math.hypot(d[0],d[2]))-g.camera.pitch),rise:LOOK.riseBy*eye[1]*(.5+.5*r),r,ms:250+400*r,point:P};
   }
   const mix=(a,b,k)=>({...b,lean:a.lean.map((n,i)=>n+(b.lean[i]-n)*k),read:a.read.map((n,i)=>n+(b.read[i]-n)*k),yaw:a.yaw+(b.yaw-a.yaw)*k,pitch:a.pitch+(b.pitch-a.pitch)*k,rise:a.rise+(b.rise-a.rise)*k,ms:a.ms+(b.ms-a.ms)*k});

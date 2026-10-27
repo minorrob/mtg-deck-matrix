@@ -879,16 +879,23 @@ globalThis.CrankBoard = Object.seal({
       <label class="cm-board-hold"><input type="checkbox" data-board-hold${stored(HOLD_KEY) === "on" ? " checked" : ""}><span>Hold priority after I cast</span></label>
       <label class="cm-board-hold"><input type="checkbox" data-board-skip-empty${skipEmpty() ? " checked" : ""}><span>Skip my priority if no response possible</span></label>
       <p class="cm-muted cm-board-yield-help">${yours ? "Skip to end passes your priority for you through the rest of your turn. It stops when anything is on the stack or you are asked anything else." : e(yieldHelp())}</p>`;
-    return `<div class="cm-play-settings-body" role="group" aria-label="Settings" id="cm-board-tools">
-      <div class="cm-actions cm-board-menu-row">${b("Set Side Drawer Modules", "board-modules-settings")}</div>
-      <div class="cm-actions cm-board-menu-row">${gb(COACH, "Recommended actions", "board-coach", {}, {cls: ""})}${b("Table vitals", "board-vitals", {})}${b("AI Coach settings…", "ai-settings", {})}</div>
-      ${priority}
-      <div class="cm-board-size">${C.cardScaleSlider()}<p class="cm-muted">${lo}% – ${hi}% · the table's size: it sets Board cards and Hand cards too · remembered on this device · ⌘/Ctrl + / − also work</p></div>
-      ${resolutionSlider()}
-      ${soundMenu()}
-      <div class="cm-actions cm-board-menu-row">${b("Try the callouts", "board-callout-demo", {}, false, {cls: "compact"})}<span class="cm-muted">Overlay ${overlay()}% · set in Settings › Play</span></div>
-      <p class="cm-muted">End game stops it for everyone and keeps its record. Concede leaves it to the others.</p>
-      <div class="cm-actions">${end}${b("Concede", "board-concede", {}, false, {disabled: over || left})}</div></div>`;
+    /* FOUR SECTIONS DOWN THE LEFT (Rob, 2026-10-26: "General, Video, Audio, Gameplay"), so the window fits without
+       scrolling and each section uses its whole width. Every control is the one it was; only where it sits changed. */
+    const tabs = [
+      {id: "general", icon: "⚙", label: "General", html: `
+        <div class="cm-actions cm-board-menu-row">${b("Set Side Drawer Modules", "board-modules-settings")}</div>
+        <div class="cm-actions cm-board-menu-row">${gb(COACH, "Recommended actions", "board-coach", {}, {cls: ""})}${b("Table vitals", "board-vitals", {})}${b("AI Coach settings…", "ai-settings", {})}</div>
+        <div class="cm-actions cm-board-menu-row">${b("Try the callouts", "board-callout-demo", {}, false, {cls: "compact"})}<span class="cm-muted">Overlay ${overlay()}% · set in Settings › Play</span></div>`},
+      {id: "video", icon: "🖥", label: "Video", html: `
+        <div class="cm-board-size">${C.cardScaleSlider()}<p class="cm-muted">${lo}% – ${hi}% · the table's size: it sets Board cards and Hand cards too · remembered on this device · ⌘/Ctrl + / − also work</p></div>
+        ${resolutionSlider()}`},
+      {id: "audio", icon: "🔊", label: "Audio", html: soundMenu() || `<p class="cm-muted">Sound is not available in this browser.</p>`},
+      {id: "gameplay", icon: "⚔", label: "Gameplay", html: `
+        ${priority}
+        <p class="cm-muted">End game stops it for everyone and keeps its record. Concede leaves it to the others.</p>
+        <div class="cm-actions">${end}${b("Concede", "board-concede", {}, false, {disabled: over || left})}</div>`},
+    ];
+    return `<div class="cm-play-settings-body" role="group" aria-label="Settings" id="cm-board-tools">${C.tabbed({id: "play-settings", label: "Settings sections", tabs})}</div>`;
   }
 
   /* Graphics resolution (crankmagic-stage.js, which handles the slider wherever it is): previewed as it moves, Cancel
@@ -930,10 +937,11 @@ globalThis.CrankBoard = Object.seal({
   function refreshSettings() {
     const body = tools && document.getElementById("cm-board-tools");
     if (!body || !view) return;
-    const top = body.scrollTop, key = C.focusKey(document.activeElement);
+    const panels = () => document.querySelector("#cm-board-tools .cm-tabbed-panels");
+    const top = panels()?.scrollTop || 0, key = C.focusKey(document.activeElement);
     body.outerHTML = toolsMenu();
     const next = document.getElementById("cm-board-tools");
-    next.scrollTop = top;
+    if (panels()) panels().scrollTop = top;
     (C.focusFind(key) || next.querySelector("[data-action=board-end]"))?.focus({preventScroll: true});
   }
   function openSettings() {
@@ -941,8 +949,8 @@ globalThis.CrankBoard = Object.seal({
     draw();
     const before = settingsNow();
     let saved = false;
-    const d = C.modal("Settings", `<div class="cm-play-settings">${toolsMenu()}<div class="cm-form-footer cm-play-settings-foot">${b("Cancel", "close")}${b("Save", "board-settings-save", {}, true)}</div></div>`);
-    d.classList.add("cm-play-settings-dialog");
+    const d = C.modal("Settings", `<div class="cm-play-settings">${toolsMenu()}<div class="cm-form-footer cm-play-settings-foot cm-tabbed-foot">${b("Cancel", "close")}${b("Save", "board-settings-save", {}, true)}</div></div>`);
+    d.classList.add("cm-play-settings-dialog", "cm-tabbed-dialog");
     tools = true;
     const session=settingsExit={closed:false,afterClose:null};
     const leave = (event) => {

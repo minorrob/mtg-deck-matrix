@@ -190,6 +190,9 @@ export async function handle(request, env, deps = {}) {
   }
   if (await overLimit(env.LIMIT_PERSON, who.email)) return tooMany("your account");
   const loginEmail = who.email;
+  // Invitation administration is human-only, before identity/library queries. Its owner remains INVITE_ADMIN_ID.
+  if (path === '/api/social/admin' && (who.service || !who.email || who.email.startsWith('service:')))
+    return reply(403, {error: 'Only the CrankMagic administrator can open Admin.'});
   if (env.SHARING_ENABLED === 'on') {
     const canonical = await sharedIdentity(env.DB, loginEmail);
     if (!canonical) return reply(401, {error: 'Your email address changed. Sign out and sign in with your verified new address.'});
@@ -221,7 +224,7 @@ export async function handle(request, env, deps = {}) {
     }
     if (path.startsWith('/api/social/')) {
       if (env.SHARING_ENABLED !== 'on') return reply(503, {error: 'Sharing is not enabled on this copy yet.'});
-      return reply(200, await social(request, env, person, {now: () => new Date(ms()).toISOString(), ...(deps.fetchImpl ? {fetchImpl: deps.fetchImpl} : {})}));
+      return reply(200, await social(request, env, {...person, service: who.service === true}, {now: () => new Date(ms()).toISOString(), ...(deps.fetchImpl ? {fetchImpl: deps.fetchImpl} : {})}));
     }
     if (method === "GET" && path === "/api/auth/login") {
       /* Only a fragment of this app may be the destination: never another site, never another path. */

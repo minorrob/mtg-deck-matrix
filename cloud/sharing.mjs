@@ -5,7 +5,8 @@ import '../collection-exchange.js';
 import {createLibrary, Conflict} from './library.mjs';
 import {ADVISE_CARDS,ADVISE_FIELDS} from './advise-cards.mjs';
 import {mailReady,sendMail} from './mail.mjs';
-import {admitAddress} from './access-invites.mjs';
+import {admitAddress,inviteTargets} from './access-invites.mjs';
+import {INVITE_SUBJECT,inviteText,inviteHtml} from './invite-email.mjs';
 const M = globalThis.CrankCollection, E = globalThis.CrankExchange;
 // Only immutable, sanitized projections are memoized. Never cache permissions, full backups,
 // bindings, promises, or request objects. Each database has a bounded, best-effort cache.
@@ -34,10 +35,12 @@ export function sharing(db,env,{now=()=>new Date().toISOString(),fetchImpl=fetch
   const projections=cacheProjections?projectionMemo(db):null;
   const library=createLibrary(db,{now}),q=(sql,...args)=>db.prepare(sql).bind(...args);
   const all=async(sql,...args)=>(await q(sql,...args).all()).results;
+  const isAdmin=person=>!!person&&!person.service&&typeof person.email==='string'&&person.email.includes('@')&&!person.email.startsWith('service:')&&!!env.INVITE_ADMIN_ID&&String(person.id)===String(env.INVITE_ADMIN_ID);
   async function profile(person){
     await q("INSERT INTO profiles(user_id,name,avatar,updated_at) VALUES (?,'','',?) ON CONFLICT(user_id) DO NOTHING",person.id,now()).run();
     const p=await q('SELECT name,avatar,email FROM profiles WHERE user_id=?',person.id).first();
-    return {...p,id:person.id,email:p.email||person.email,canInvite:String(person.id)===String(env.INVITE_ADMIN_ID||''),emailReady:mailReady(env)};
+    const admin=isAdmin(person);
+    return {...p,id:person.id,email:p.email||person.email,canInvite:admin,isAdmin:admin,emailReady:mailReady(env)};
   }
   async function snapshot(owner,knownHead){const head=knownHead||await library.head(owner);if(!head)fail('Sync your library to the cloud before sharing it.',409);const version=await library.version(owner,head.id);return {head,data:await decode(version.body)};}
   async function permitted(id,person,write=false,owner=false){
@@ -91,6 +94,13 @@ export function sharing(db,env,{now=()=>new Date().toISOString(),fetchImpl=fetch
     return {id:s.id,revision:s.revision,publicRole:s.public_role,grants:await all('SELECT g.user_id AS id,g.role,COALESCE(p.email,u.email) AS email,p.name FROM share_grants g JOIN users u ON u.id=g.user_id LEFT JOIN profiles p ON p.user_id=u.id WHERE g.share_id=?',s.id)};
   }
   async function queue(person,to,subject,text){const id=crypto.randomUUID();await q('INSERT INTO share_mail(id,actor_id,recipient,subject,text,created_at) VALUES (?,?,?,?,?,?)',id,person.id,to,subject,text,now()).run();return id;}
+  /* The invitation goes as HTML too. Nothing but its text is stored, so a retry draws the HTML again from the
+     invitation's own row: the same name, and the link its text carries. */
+  async function html(row){
+    if(row.subject!==INVITE_SUBJECT)return null;
+    const invited=await q('SELECT name FROM account_invitations WHERE email=?',row.recipient).first(),link=/\n\n(\S+)$/.exec(row.text)?.[1];
+    return invited&&link?inviteHtml({name:invited.name,link}):null;
+  }
   async function delivery(person,id){
     const row=await q('SELECT * FROM share_mail WHERE id=? AND actor_id=?',id,person.id).first();if(!row)fail('Message unavailable.',404);
     if(row.status==='sent')return {id,status:'sent'};
@@ -99,7 +109,7 @@ export function sharing(db,env,{now=()=>new Date().toISOString(),fetchImpl=fetch
     if(row.attempts>0&&(!row.first_attempt_at||row.first_attempt_at<=cutoff))return {id,status:row.status,error:'The safe email retry window expired. Ask the administrator to check delivery before sending again.'};
     const claim=await q("UPDATE share_mail SET status='sending',attempts=attempts+1,first_attempt_at=COALESCE(first_attempt_at,?),last_attempt_at=? WHERE id=? AND (status IN ('pending','failed') OR (status='sending' AND last_attempt_at<?)) AND attempts<5 AND (attempts=0 OR first_attempt_at>?)",at,at,id,stale,cutoff).run();
     if(!claim.meta.changes)return {id,status:row.status,error:'This message is already being sent or needs administrator review.'};
-    try {const sent=await sendMail(env,row,fetchImpl);await q("UPDATE share_mail SET status='sent',message_id=?,text='' WHERE id=?",sent.messageId,id).run();return {id,status:'sent'};}
+    try {const sent=await sendMail(env,{...row,html:await html(row)},fetchImpl);await q("UPDATE share_mail SET status='sent',message_id=?,text='' WHERE id=?",sent.messageId,id).run();return {id,status:'sent'};}
     catch {await q("UPDATE share_mail SET status='failed' WHERE id=?",id).run();return {id,status:'failed',error:'Sharing is saved, but the email could not be sent. Retry notification.'};}
   }
   async function save(person,input,origin){
@@ -148,7 +158,7 @@ export function sharing(db,env,{now=()=>new Date().toISOString(),fetchImpl=fetch
     return delivery(person,await queue(person,to,`CrankMagic deck: ${c.name}`,text));
   }
   async function admit(to){
-    await admitAddress(db,env,to,{now,fetchImpl,fail});
+    return admitAddress(db,env,to,{now,fetchImpl,fail});
   }
   return {profile,list,read,settings,save,edit,queue,delivery,emailDeck,
     async requestEmail(person,input,origin){
@@ -172,17 +182,26 @@ export function sharing(db,env,{now=()=>new Date().toISOString(),fetchImpl=fetch
     async search(person,query){const term=str(query||'',100);if(term.length<3)return {users:[]};const pattern=term.replace(/[\\%_]/g,'\\$&')+'%';return {users:await all("SELECT u.id,COALESCE(p.email,u.email) AS email,COALESCE(p.name,'') AS name FROM users u LEFT JOIN profiles p ON p.user_id=u.id WHERE u.id<>? AND u.email NOT LIKE 'service:%' AND (COALESCE(p.email,u.email) LIKE ? ESCAPE '\\' OR p.name LIKE ? ESCAPE '\\') ORDER BY p.name,u.email LIMIT 8",person.id,pattern,pattern)};},
     async updateProfile(person,input){const name=str(input.name,80),avatar=str(input.avatar||'',120000);if(avatar&&!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+=*$/.test(avatar))fail('Choose a PNG, JPEG or WebP profile picture.');await profile(person);await q('UPDATE profiles SET name=?,avatar=?,updated_at=? WHERE user_id=?',name,avatar,now(),person.id).run();return profile(person);},
     async invite(person,input,origin){
-      if(String(person.id)!==String(env.INVITE_ADMIN_ID||''))fail('Only the CrankMagic administrator can invite new accounts.',403);
+      if(!isAdmin(person))fail('Only the CrankMagic administrator can invite new accounts.',403);
       const to=email(input.email),name=str(input.name,80),canonical=await sharedIdentity(db,to);if(canonical===null)fail('That sign-in address was retired. Invite the person at their current address.',409);if(!name)fail('Enter the invited person’s name.');
-      if(!mailReady(env)||!env.ACCESS_INVITE_TOKEN||!env.ACCESS_INVITE_APP_IDS||!env.CLOUDFLARE_ACCOUNT_ID)fail('Invitations need email delivery and Access invitation permissions configured by the administrator.',503);
+      if(!mailReady(env)||!env.ACCESS_INVITE_TOKEN||!inviteTargets(env).length||!env.CLOUDFLARE_ACCOUNT_ID)fail('Invitations need email delivery and Access invitation permissions configured by the administrator.',503);
       await q("INSERT INTO account_invitations(email,name,invited_by,created_at,status) VALUES (?,?,?,?,'pending') ON CONFLICT(email) DO UPDATE SET name=excluded.name",to,name,person.id,now()).run();
-      const prior=await q('SELECT status FROM account_invitations WHERE email=?',to).first();
-      if(prior.status!=='admitted'){
-        await admit(to);
-        await q("UPDATE account_invitations SET status='admitted' WHERE email=?",to).run();
-      }
+      /* Every application, every time: admission is idempotent (an address already on a policy is read, not written),
+         and an application added to the list since an earlier invitation is reached by sending it again. No email
+         goes until every one has confirmed the address. */
+      const access=await admit(to);
+      await q("UPDATE account_invitations SET status='admitted' WHERE email=?",to).run();
       const invited=await library.user(canonical);await profile(invited);await q("UPDATE profiles SET name=? WHERE user_id=? AND name=''",name,invited.id).run();
-      return delivery(person,await queue(person,to,'You are invited to CrankMagic',`Hi ${name},\n\nYou are invited to CrankMagic. Sign in with this email address to use your profile, build decks and play.\n\n${origin}/api/auth/login?to=%23welcome`));
+      const link=`${env.INVITE_LINK_ORIGIN||origin}/api/auth/login?to=%23welcome`;
+      return {...await delivery(person,await queue(person,to,INVITE_SUBJECT,inviteText({name,link}))),access};
+    },
+    /* Admin › General: what this copy is set up to do, as yes or no. Never a secret, an address or a policy's rules. */
+    async admin(person,origin){
+      if(!isAdmin(person))fail('Only the CrankMagic administrator can open Admin.',403);
+      const invitations=await q("SELECT count(*) AS total,sum(status='admitted') AS admitted FROM account_invitations").first();
+      return {emailReady:mailReady(env),accessReady:!!env.ACCESS_INVITE_TOKEN&&inviteTargets(env).length>0&&/^[\da-f]{32}$/i.test(env.CLOUDFLARE_ACCOUNT_ID||''),
+        accessTargets:inviteTargets(env).length,linkOrigin:env.INVITE_LINK_ORIGIN||origin,aiEveryone:env.AI_EVERYONE==='on',
+        invitations:{total:Number(invitations?.total||0),admitted:Number(invitations?.admitted||0)}};
     }
   };
 }
@@ -200,6 +219,7 @@ export async function social(request,env,person,deps={}){
   if(path==='/settings'&&method==='PUT')return service.save(person,input,url.origin);
   if(path==='/email'&&method==='POST')return service.emailDeck(person,input,url.origin);
   if(path==='/invite'&&method==='POST')return service.invite(person,input,url.origin);
+  if(path==='/admin'&&method==='GET')return service.admin(person,url.origin);
   if(path==='/notify'&&method==='POST')return service.delivery(person,input.id);
   const item=/^\/shares\/([\da-f-]{36})$/.exec(path);
   if(item&&method==='GET')return service.read(item[1],person);

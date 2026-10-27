@@ -620,7 +620,7 @@ try {
   const sHand = await sizes();
   ok(Math.abs(sHand.hand / s100.hand - 1.3) < 0.02 && Math.abs(sHand.board - sBoard.board) < 0.0005 && sHand.scopes[1] === "1.3" && sHand.outs[1] === "130%",
     `Hand cards, on the tray's bar, sizes the hand's cards alone (${s100.hand.toFixed(0)} → ${sHand.hand.toFixed(0)}px; the boards' cards keep their size on their boards)`);
-  await utility(rob.page,"board-tools");
+  await utility(rob.page,"board-tools","video");
   await rob.page.locator("#cm-board-tools [data-card-scale]").fill("120");
   const sTools = await sizes();
   /* Opening Play settings closes Camera, so Board cards is read after reopening Camera. */
@@ -720,7 +720,7 @@ try {
   await maya.page.locator("#cm-board-peek").waitFor({state: "detached", timeout: 5000});
   /* THE CALLOUTS (the Replit brief's overlay): Tools › Try the callouts shows the grammar on demand, at most three at
      once, in a layer beside the board that a view's repaint leaves alone. */
-  await utility(maya.page,"board-tools");
+  await utility(maya.page,"board-tools","general");
   await maya.page.click("[data-action=board-callout-demo]");
   await maya.page.locator(".cm-callout").first().waitFor({timeout: 3000});
   await maya.page.waitForTimeout(1500);
@@ -798,8 +798,9 @@ try {
   /* B1, item 23: the rail squares its own buttons, not the ones in the menus it opens. */
   await utility(rob.page,"board-tools");
   await rob.page.locator("#cm-board-tools").waitFor();
+  await settingsSection(rob.page, "general");
   const toolsMenu = await rob.page.evaluate(() => {
-    const bs = [...document.querySelectorAll("#cm-board-tools .v-button")].map((el) => ({r: el.getBoundingClientRect(), clipped: el.scrollWidth > el.clientWidth + 1}));
+    const bs = [...document.querySelectorAll("#cm-board-tools .cm-tabbed-panel:not([hidden]) .v-button")].map((el) => ({r: el.getBoundingClientRect(), clipped: el.scrollWidth > el.clientWidth + 1}));
     const overlap = bs.some((a, i) => bs.some((b, j) => j > i && a.r.left < b.r.right - 1 && b.r.left < a.r.right - 1 && a.r.top < b.r.bottom - 1 && b.r.top < a.r.bottom - 1));
     return {n: bs.length, overlap, clipped: bs.filter((x) => x.clipped).length, narrow: bs.filter((x) => x.r.width <= 40).length};
   });
@@ -891,7 +892,7 @@ try {
      switch is Yield this turn; Tools says what it does, and that until then you hold priority. */
   ok((await text(active.page, "[data-action=board-skip]")).trim() === "Yield this turn", "at the turn's end Skip to end puts itself away, and on the next player's turn it is Yield this turn");
   ok((await text(other.page, "[data-action=board-skip]")).trim() === "Skip to end", "while on that player's own board it is still Skip to end");
-  await utility(active.page,"board-tools");
+  await utility(active.page,"board-tools","gameplay");
   const yieldHelp = await text(active.page, "#cm-board-tools .cm-board-yield-help");
   ok(new RegExp(`Yield this turn passes all your priority for the rest of ${active === rob ? "Maya" : "Rob"}'s turn`).test(yieldHelp) && /required decisions/.test(yieldHelp) && /after the room acknowledges/.test(yieldHelp),
     `Tools explains room Yield, required decisions, and acknowledged cancellation ("${yieldHelp.trim().slice(0, 90)}…")`);
@@ -912,9 +913,10 @@ try {
   /* CARD SIZE: the app's slider, in Tools; ⌘/Ctrl − steps it. */
   const handWidth = (page) => page.evaluate(() => document.querySelector(".cm-board-hand .cm-bcard").getBoundingClientRect().width);
   const w100 = await handWidth(rob.page);
-  await utility(rob.page,"board-tools");
+  await utility(rob.page,"board-tools","video");
   ok(/60% – 160%/.test(await text(rob.page, "#cm-board-tools .cm-board-size")), "Tools carries the card-size slider, 60% to 160%");
   /* B8: Tools › Sound, the pack's three settings: the effects and the music as sliders, and a mute, remembered. */
+  await settingsSection(rob.page, "audio");
   eq(await rob.page.locator("#cm-board-tools [data-board-sound]").evaluateAll((els) => els.map((el) => [el.dataset.boardSound, el.min, el.max, el.value])), [["sfx", "0", "100", "50"], ["bgm", "0", "100", "18"]], "Tools › Sound: Effects at 50% and Music at 18%, each a slider from 0 to 100%");
   await rob.page.locator("#cm-board-tools [data-board-sound=sfx]").fill("30");
   await rob.page.click("#cm-board-tools [data-action=board-mute]");
@@ -922,6 +924,7 @@ try {
   ok(soundKept[0] === "0.3" && soundKept[1] === "true" && /turn on/.test(await text(rob.page, "#cm-board-tools [data-action=board-mute]")), `moving Effects and pressing Mute are remembered on the device (${soundKept.join(", ")})`);
   await rob.page.click("#cm-board-tools [data-action=board-mute]");
   await rob.page.locator("#cm-board-tools [data-board-sound=sfx]").fill("50");
+  await settingsSection(rob.page, "video");
   await rob.page.locator("#cm-board-tools [data-card-scale]").fill("140");
   const w140 = await handWidth(rob.page);
   ok(Math.abs(w140 / w100 - 1.4) < 0.02, `the slider sizes the hand's cards as it moves (${w100.toFixed(0)}px → ${w140.toFixed(0)}px at 140%)`);
@@ -1087,7 +1090,7 @@ try {
   /* THE PANEL, a tapped land in it -- here, once its mana is spent on the creature: a land just tapped, its mana unspent,
      untaps on a click (room.mjs, untapMana), and this one is only shown. */
   const beforeDrawer=await second.page.locator('.cm-board-mat').boundingBox();
-  await utility(second.page,'board-tools');
+  await utility(second.page,'board-tools','general');
   await second.page.locator('[data-action=board-modules-settings]').click();
   await second.page.getByRole('radio',{name:'Resources: Right',exact:true}).check();
   await second.page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
@@ -1165,7 +1168,7 @@ try {
   }
   await holdCast.waitFor({timeout: 20000});
   const heldName = (await holdCast.getAttribute("aria-label")).split(/[,:]/)[0];
-  await utility(maya.page,"board-tools");
+  await utility(maya.page,"board-tools","gameplay");
   await maya.page.check("#cm-board-tools [data-board-hold]");
   /* The choice says itself, with no paragraph explaining it (Rob, Oct 21: "We don't want to directly state everything as
      written out instruction to end users"). */
@@ -1519,7 +1522,7 @@ try {
   await rob.page.locator("#cm-board-coach[hidden]").waitFor({state: "attached"});
   ok(true, "Escape closes the Coach");
   eq(await matWidth(), matBefore, "closing Coach restores the mat's available width");
-  await utility(rob.page,"board-tools");
+  await utility(rob.page,"board-tools","general");
   await rob.page.click("#cm-board-tools [data-action=board-coach]");
   await rob.page.locator("#cm-board-coach:not([hidden])").waitFor();
   await rob.page.click("#cm-board-coach [aria-label='Close the Coach']");
@@ -1675,10 +1678,10 @@ try {
   await rob.page.locator("#cm-game-on").waitFor({timeout: 10000});
   /* NEVER BEHIND THE GAME: callouts still waiting when the game ends -- Try the callouts' eight, here -- are cleared with
      the ones on screen, so nothing from before covers the game-over panel; the game's end is the last word. */
-  await utility(maya.page,"board-tools");
+  await utility(maya.page,"board-tools","general");
   await maya.page.click("[data-action=board-callout-demo]");
   await maya.page.locator(".cm-callout").first().waitFor({timeout: 3000});
-  await utility(maya.page,"board-tools");
+  await utility(maya.page,"board-tools","gameplay");
   await maya.page.click("#cm-board-tools [data-action=board-end]");
   eq((await text(maya.page, "#cm-board-tools [data-action=board-end][data-confirm='1']")).trim(), "End for everyone · keep the record", "End game in Tools asks a second tap first, naming what it does");
   await shot(maya.page, "board-end-1280");
@@ -1792,12 +1795,14 @@ async function chooseView(page, view) {
   if (!await page.locator('.cm-stage-camera [data-action=board-view]').count()) await page.locator('[data-action=board-camera]').click();
   await page.locator('.cm-stage-camera [data-action=board-view][data-view="'+view+'"]').click();
 }
-async function utility(page, action) {
+async function utility(page, action, section = "general") {
   await dismissAccount(page);
   if (action === 'board-tools') {
-    if (await page.locator('#cm-board-tools').isVisible()) return;
-    if (!await page.locator('.cm-stage-camera [data-action=board-tools]').count()) await page.locator('[data-action=board-camera]').click();
-    await page.locator('.cm-stage-camera [data-action=board-tools]').click();
+    if (!await page.locator('#cm-board-tools').isVisible()) {
+      if (!await page.locator('.cm-stage-camera [data-action=board-tools]').count()) await page.locator('[data-action=board-camera]').click();
+      await page.locator('.cm-stage-camera [data-action=board-tools]').click();
+    }
+    await settingsSection(page, section);
   } else if (action === 'board-help') {
     if (!await page.locator('#cm-table-menu').count()) await page.locator('[data-action=board-table-menu]').click();
     await page.locator('#cm-table-menu [data-action=page-help][data-help=table]').click();
@@ -1817,6 +1822,9 @@ async function utility(page, action) {
       globalThis.__uatHistoryAfterClick = {calls: globalThis.__uatHistoryCalls, count: document.querySelectorAll('#cm-board-history').length, rect: h?.getBoundingClientRect().toJSON(), display: h && getComputedStyle(h).display};
     });
   }
+}
+async function settingsSection(page, section) {
+  await page.locator(`#cm-dialog [role=tab][data-tab=${section}]`).click();
 }
 async function placeModule(page, label, side) {
   await utility(page, 'board-tools');
