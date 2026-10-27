@@ -33,7 +33,7 @@ try{
     eq(await menu.locator('[data-action=account-sync]').count(),test.signed?1:0,'manual sync is offered only to signed-in accounts');
     eq(await menu.locator('[data-action=account-sign-out]').count(),test.signed?1:0,'Sign out follows account state');
     eq(await menu.locator('[data-admin-link]').count(),test.admin?1:0,'Admin follows the verified administrator flag');
-    eq(await menu.locator('[data-action=invite-crankmagic]').count(),test.admin?1:0,'Invite keeps its separate verified permission gate');
+    eq(await menu.locator('[data-action=invite-crankmagic]').count(),0,'Invite is reached through Admin Share without a duplicate menu action; its separate gate is covered by admin-window');
     if(test.admin)ok(await menu.locator('[data-admin-link]').evaluate(n=>n.closest('.cm-menu-group').getAttribute('aria-label')==='You'),'Admin is in You, before the standalone Sign out');
     eq(await trigger.getAttribute('aria-expanded'),'true','the actual invoker exposes expanded state');
     ok(await page.evaluate(()=>__menuC.accountMenuOpen()&&document.getElementById('cm-user-menu').contains(document.activeElement)),'opening focuses a native control in the shared node');
