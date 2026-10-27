@@ -11,7 +11,7 @@
  * The seat is HARD (scored-pilot.mjs, setting "hard") for every decision it makes alone, and at the decisions below it asks to CONSULT:
  * the room offers that one decision to the seat as it would to a person (game/room/room.mjs), the table's Durable Object builds a brief
  * from what Hard worked out (`explain`: the table's threats, the urgency of what is on it, the reserve, its top plans as the decision's own
- * option indices) and asks the model to choose among them (cloud/ai.mjs `pilot`, instructed by veteran-skill.md), and answers through the
+ * option indices) and asks the model to choose among them (cloud/ai.mjs `pilot`, instructed by the Veteran skill file), and answers through the
  * room like a person. So the model's answer is on the tape and a replay never asks it; when the model cannot answer -- the game's cap
  * reached, a failure, an option that was not offered -- the room answers with Hard (`houseAnswer`), and that is on the tape too.
  *
