@@ -33,6 +33,34 @@ back with `tools/staging-check.mjs --expect 9ca99e53`.
   Worker setting was added since 1fcfc3d. Sharing stays off in `cloud-production` (it is on in the staging profile
   only), so the `cloud/sharing.mjs` changes do not run there.
 
+## The invitation email, designed: General and Game Theory Insiders, 2026-10-26 (a Claude cloud session, for Rob; `claude/eloquent-bardeen-wlwt3h`)
+
+Rob, 2026-10-26: *"You're creating an HTML email file that will be the invite that gets auto-sent from CrankMagic when I
+invite someone to the game from the Invite function in the Admin pane. The admin pane will have an option where I
+select: General or Game Theory Insiders. If Game Theory Insiders, it will also indicate that it's AI powered ... use
+the CrankMagic logo and design system ... a CTA button for CrankMagic with the staging.crankmagic.com hyperlink."*
+Design work in the Workshop lane's `docs/design/**` and a new `assets/email/`; no code, no lane's file edited.
+
+- **Two templates** in `docs/design/invite-email/`: `invite-general.html` and `invite-insiders.html` (the Insiders one
+  carries an "AI powered" band and eyebrow; General never mentions AI). Both keep `{{name}}` and `{{assets}}`; the
+  button is **Open CrankMagic** to https://staging.crankmagic.com, written in at Rob's word, so `{{link}}` is unused.
+  Feedback goes to admin@crankmagic.com (the address privacy.html publishes). Its README says what differs and how to
+  wire them.
+- **The pictures** in `assets/email/` (PNG, 2x): the gear logo, the Cinzel wordmark in gilt rendered from the design
+  system's font file, four highlight icons. They need a production release before a template that names them.
+- **The design canvas:** the Claude Design artifact "CrankMagic Invite Email", three artboards (General desktop,
+  Insiders desktop, Insiders phone), built on the CrankMagic design system (Sapphire & Obsidian, dark).
+- **Proven here:** the UK-spelling and "e-mail" scan of `tests/feature-wiring.mjs` applied to the new files (clean);
+  each template's tokens, pictures and links counted. **Not proven:** the templates in real inboxes (Gmail, Apple Mail,
+  Outlook); that is Rob's send from staging once they are wired into `cloud/invite-email.mjs`.
+- **Rob's revisions, 2026-10-27:** "get the cards"; the three callouts are Build and tune decks, Manage library, Play
+  with AI and others (General: Play with others, since it never names AI); the yellow "AI powered" band is gone (the
+  Insiders eyebrow still says AI powered); the button is centered; the headline is "Your exclusive CrankMagic invite is
+  here!". And `docs/design/invite-email/gmail/`: the same two templates with the pictures served from this repository
+  and "[Name]" to type over, to paste into a Gmail compose until Admin › Share sends them (the README says how).
+- **Not done, by design:** the wiring (`cloud/invite-email.mjs`, an audience field in Admin › Share, `cloud/sharing.mjs`,
+  `tests/sharing.mjs`) is the Codex · Workshop lane's; the README lists the steps.
+
 ## Admin, Play's Settings in sections, and the invitation to staging and production, 2026-10-26 (a Claude cloud session, for Rob; `claude/confident-cori-v447il`)
 
 Rob, 2026-10-26: *"Create an admin button or an admin option in the settings menu that only I can see ... let's adjust
