@@ -1,8 +1,8 @@
 /* THE ACCESSIBILITY PASS: WCAG 2.1 AA ON THE BOARD AND THE LOBBY (docs/plan-to-done-2026-09-30.md, Part 5's G-A list
  * and Part 6's UI/UX paragraph), measured in a real browser on a real table.
  *
- * A four-seat game -- Rob at 1400x900 in the default dark theme (Moss & Iron), Maya at 1280x800 in the light one (Felt &
- * Cream), two AIs -- played a few turns through the board's own controls (tests/uat/board-person.mjs), behind the pages
+ * A four-seat game -- Rob at1400x900 in Sapphire & Obsidian dark, Maya at1280x800 in its light register,
+ * two AIs -- played through the board's own controls (tests/uat/board-person.mjs), behind the pages
  * the real table (cloud/game-room.mjs) and its socket, as tests/table-board.mjs sets one up.
  *
  *   Contrast    1.4.3 and 1.4.11. Every word on the board and in the lobby, read from PIXELS: the screen with the words
@@ -122,6 +122,7 @@ async function person(email, viewport) {
   await page.addInitScript(() => (globalThis.CrankFeatures ||= []).push((C) => {globalThis.__cm = C;}));
   await page.route(`${base}/index.html*`, (r) => r.fulfill({contentType: "text/html; charset=utf-8", body: html}));
   await page.route(`${base}/api/me`, (r) => r.fulfill({json: {email}}));
+  await page.route(`${base}/api/ai-coach`, (r) => r.fulfill({json:{open:true}}));
   await page.route(`${base}/api/ai/**`, (r) => r.fulfill({status: 503, json: {error: "The Coach is not switched on here yet."}}));
   await page.route(`${base}/api/library**`, (r) => r.request().method() === "GET" ? r.fulfill({json: {head: null}})
     : r.fulfill({json: {head: {id: "00000000-0000-4000-8000-000000000000", revision: 1, checksum: "x", device: "test", createdAt: new Date().toISOString()}}}));
@@ -132,18 +133,48 @@ async function person(email, viewport) {
   page.__cdp = await context.newCDPSession(page);
   return {context, page, email, errors, cdp: page.__cdp};
 }
-const theme = (page, choice) => page.evaluate((t) => document.querySelector(`[data-action=set-theme][data-theme-choice=${t}]`).click(), choice);
+async function profile(page) {
+  if (await page.locator('#cm-user-menu:popover-open').count()) return;
+  const board = page.locator('#cm-board [data-action=board-profile]');
+  await (await board.count() ? board : page.locator('#cm-user-functions')).click();
+  await page.locator('#cm-user-menu:popover-open').waitFor();
+}
+async function closeProfile(page) {
+  if (await page.locator('#cm-user-menu:popover-open').count()) {
+    await page.keyboard.press('Escape');
+    await page.locator('#cm-user-menu:popover-open').waitFor({state:'hidden'});
+  }
+}
+async function theme(page, choice) {
+  const mode=choice.endsWith('-light')?'light':'dark',skin=choice.replace(/-light$/,'');
+  for (const [kind,value] of [['skin',skin],['mode',mode]]) {
+    await profile(page);
+    await page.locator(`#cm-user-menu [data-action=set-theme-${kind}][data-theme-${kind}="${value}"]`).click();
+    await page.waitForFunction(({kind,value})=>{
+      const app=document.getElementById('matrix-v2'),C=globalThis.__cm;
+      return kind==='skin'?app.dataset.palette===value&&C.themeChoice().replace(/-light$/,'')===value
+        :app.dataset.theme===value&&(C.state.preferences.themeMode??C.THEME_FACE[C.themeChoice()][1])===value;
+    },{kind,value});
+  }
+  await closeProfile(page);
+}
 const view = async (page, v) => {
-  if(await page.locator('.cm-profile-menu').count()) await page.locator('.cm-stage-top [data-action=board-profile]').click();
+  await closeProfile(page);
   if(!await page.locator('.cm-stage-camera [data-action=board-view]').count()) await page.locator('[data-action=board-camera]').click();
   await page.locator('.cm-stage-camera [data-action=board-view][data-view="'+v+'"]').click();
   await page.locator(v === 'full' ? '.cm-stage-region' : v === 'table' ? '.cm-board-table' : '.cm-board-mat').waitFor();
   await page.waitForTimeout(120);
 };
-async function profile(page) {
-  if(!await page.locator('.cm-profile-menu').count()) await page.locator('.cm-stage-top [data-action=board-profile]').click();
+async function utilityOpener(page, action) {
+  await closeProfile(page);
+  if(action==='board-tools') {
+    if(!await page.locator('.cm-stage-camera [data-action=board-tools]').count()) await page.locator('[data-action=board-camera]').click();
+    return page.locator('.cm-stage-camera [data-action=board-tools]');
+  }
+  if(!await page.locator('#cm-table-menu').count()) await page.locator('[data-action=board-table-menu]').click();
+  return page.locator(`#cm-table-menu [data-action="${action}"]`);
 }
-async function utility(page, action) {await profile(page); await page.locator('.cm-stage-top [data-action="'+action+'"]').click();}
+async function utility(page, action) {await (await utilityOpener(page,action)).click();}
 /* Rest the pointer where nothing reacts to it (a card under it would be shown large). */
 const rest = async (page) => {const s = page.viewportSize(); await page.mouse.move(s.width - 2, s.height - 2);};
 
@@ -505,7 +536,7 @@ try {
   await rob.page.goto(`${base}/index.html#table?id=${TABLE}`);
   await rob.page.locator(".cm-cloud-table .cm-lobby-seat[data-seat='3']").waitFor({timeout: 60000});
   await rob.page.waitForTimeout(800);
-  for (const t of ["moss-iron", "felt-cream"]) {
+  for (const t of ["sapphire-obsidian", "sapphire-obsidian-light"]) {
     await theme(rob.page, t);
     await rob.page.waitForTimeout(500);
     await rest(rob.page);
@@ -515,7 +546,7 @@ try {
     await rob.page.waitForTimeout(1200);
     await readWords(rob.page, ".cm-cloud-table", `the lobby a moment later, ${t}`, {min: 20});
   }
-  await theme(rob.page, "moss-iron");
+  await theme(rob.page, "sapphire-obsidian");
   {
     const stops = await (async () => {
       await fromTheTop(rob.page);
@@ -599,7 +630,7 @@ try {
   await rob.page.locator("#cm-board .cm-stage-top").waitFor({timeout: 60000});
   await maya.page.goto(`${base}/index.html#table?id=${TABLE}`);
   await maya.page.locator("#cm-board .cm-stage-top").waitFor({timeout: 60000});
-  await theme(maya.page, "felt-cream");
+  await theme(maya.page, "sapphire-obsidian-light");
   /* A few turns, through the boards' own controls, the AIs played by the house pilots on the table's alarm. */
   const alarm = setInterval(() => {if (object.room?.continuing) serial(() => object.alarm());}, 50);
   const people = [[rob, 0], [maya, 1]].map(([who, seat]) => boardPerson({page: who.page, seat, cards, current: () => views(who.email).at(-1)}));
@@ -691,14 +722,14 @@ try {
     ok(views(who.email).length > before && kept === id, `a view arriving redraws the board and the focus stays on the same card (${kept} for ${id})`);
   }
   /* A MENU closed by Escape gives the focus back to its button; one opened by the keyboard is entered by Tab. */
-  for (const [action, inside] of [["board-menu", "#cm-board-nav"], ["board-steps", "#cm-board-steps"]]) {
-    const page = rob.page; if(action!=="board-steps") await profile(page);
-    const opener = page.locator(`.cm-stage-top [data-action=${action}]`).first();
+  for (const [action, inside] of [["board-table-menu", "#cm-table-menu"], ["board-steps", "#cm-board-steps"]]) {
+    const page = rob.page;
+    const opener = page.locator(`#cm-board [data-action=${action}]`).first();
     await page.keyboard.press("Shift");
     await opener.focus();
     await page.keyboard.press("Enter");
     await page.locator(inside).waitFor();
-    const expanded = await page.locator(`.cm-stage-top [data-action=${action}]`).first().getAttribute("aria-expanded");
+    const expanded = await opener.getAttribute("aria-expanded");
     /* one with controls in it is the next thing Tab reaches (the steps hold only words: there is nothing to go to) */
     const controls = await page.evaluate((q) => !!document.querySelector(q).querySelector("button, a[href], input, select, textarea"), inside);
     await page.keyboard.press("Tab");
@@ -709,10 +740,10 @@ try {
     ok(expanded === "true" && entered && back, `${action}: Enter opens it and says so (aria-expanded ${expanded}), Tab goes into it (${entered}), Escape closes it with the focus back on its button (${back})`);
   }
   /* SETTINGS IS A WINDOW (Rob, Oct 25): its button says it opens a dialog, Enter opens it as one with the focus inside it,
-     and Escape closes it with the focus back on the Profile menu's button, the one still on the board. */
+     and Escape closes it with the focus back on Camera, the one still on the board. */
   {
-    const page = rob.page; await profile(page);
-    const opener = page.locator(".cm-stage-top [data-action=board-tools]").first();
+    const page = rob.page;
+    const opener = await utilityOpener(page,"board-tools");
     const popup = await opener.getAttribute("aria-haspopup");
     await page.keyboard.press("Shift");
     await opener.focus();
@@ -723,9 +754,9 @@ try {
     const entered = await page.evaluate(() => !!document.activeElement.closest("#cm-dialog[open]"));
     await page.keyboard.press("Escape");
     await page.locator("#cm-board-tools").waitFor({state: "detached"});
-    const back = await page.evaluate(() => !!document.activeElement.matches("[data-action=board-profile]"));
+    const back = await page.evaluate(() => !!document.activeElement.matches("[data-action=board-camera]"));
     ok(popup === "dialog" && dialogAx && dialogAx.role === "dialog" && /^settings$/i.test(dialogAx.name) && entered && back,
-      `board-tools: says it opens a dialog (${popup}), Enter opens Settings as a named dialog (${JSON.stringify(dialogAx)}), Tab stays inside it (${entered}), Escape closes it with the focus on the Profile menu's button (${back})`);
+      `board-tools: says it opens a dialog (${popup}), Enter opens Settings as a named dialog (${JSON.stringify(dialogAx)}), Tab stays inside it (${entered}), Escape closes it with the focus on Camera (${back})`);
   }
   /* What each is, said as it is: Tools a group of controls, ☰ the pages' navigation -- neither an ARIA menu, whose items
      would want the arrow keys they do not take. */
@@ -741,25 +772,31 @@ try {
     await page.keyboard.press("Escape");
     ok(toolsAx && toolsAx.role === "group" && /^(tools|settings)$/i.test(toolsAx.name) && navAx && navAx.role === "navigation" && menus === 0,
       `Tools is a named group and ☰ a navigation region, and nothing on the board claims to be an ARIA menu (${JSON.stringify([toolsAx, navAx, menus])})`);
-    /* Full screen's profile menu opens Settings the same way: the avatar says it opened a named group, its Settings
-       opens Tools as a named group, and Escape closes Tools without leaving Full screen */
+    /* Full screen's avatar opens the shared native Account popover. It has named groups,
+       native controls and focus return; Play settings is the distinct Camera door. */
     await view(page, "full");
     const avatar = page.locator(".cm-stage-top [data-action=board-profile]");
     await page.keyboard.press("Shift");
     await avatar.focus();
     await page.keyboard.press("Enter");
-    await page.locator(".cm-profile-menu").waitFor();
-    const [profileAx] = await axOf(rob, ".cm-profile-menu");
+    await page.locator("#cm-user-menu:popover-open").waitFor();
+    const [profileAx] = await axOf(rob, '#cm-user-menu>[role=group][aria-label=You]');
+    const [avatarAx] = await axOf(rob, '.cm-stage-top [data-action=board-profile]');
     const opened = await avatar.getAttribute("aria-expanded");
-    await page.locator(".cm-profile-menu [data-action=board-tools]").focus();
-    await page.keyboard.press("Enter");
+    const accountEntered=await page.evaluate(()=>document.getElementById('cm-user-menu').contains(document.activeElement));
+    const native=await page.locator('#cm-user-menu [role=menuitem]').count()===0&&await page.locator('#cm-user-menu').getAttribute('role')===null;
+    await page.keyboard.press('Tab');
+    const accountTab=await page.evaluate(()=>document.getElementById('cm-user-menu').contains(document.activeElement));
+    await page.keyboard.press('Escape');
+    const accountBack=await page.evaluate(()=>document.activeElement.matches('[data-action=board-profile]'));
+    await utility(page,'board-tools');
     await page.locator("#cm-board-tools").waitFor();
     const [fullToolsAx] = await axOf(rob, "#cm-board-tools");
     await page.keyboard.press("Escape");
     await page.locator("#cm-board-tools").waitFor({state: "detached"});
     const stayed = await page.locator(".cm-stage-top").count() === 1;
-    ok(opened === "true" && profileAx && profileAx.role === "group" && /^profile$/i.test(profileAx.name) && fullToolsAx && fullToolsAx.role === "group" && /^settings$/i.test(fullToolsAx.name) && stayed,
-      `Full screen's avatar says it opened the profile menu (aria-expanded ${opened}), a named group; its Settings opens Tools as a named group; Escape closes Tools and keeps Full screen (${JSON.stringify([profileAx, fullToolsAx, stayed])})`);
+    ok(opened === "true" && profileAx && profileAx.role === "group" && profileAx.name==='You' && avatarAx?.role==='button' && avatarAx.name==='Account menu' && accountEntered && accountTab && accountBack && native && fullToolsAx && fullToolsAx.role === "group" && /^settings$/i.test(fullToolsAx.name) && stayed,
+      `Full screen's native Account popover has its named You group, focus entry/Tab/return; Camera opens Play settings as a named group and keeps Full screen (${JSON.stringify([profileAx,avatarAx,accountEntered,accountTab,accountBack,native,fullToolsAx,stayed])})`);
     /* THE TABLE PANEL SCROLLS: opened by its handle, the panel's last control is brought into view when the keyboard
        reaches it, not cut off below the panel's foot */
     await page.click(".cm-stage-handle.cm-stage-right");
@@ -782,23 +819,25 @@ try {
     const foot = await page.evaluate(() => {const s = document.querySelector(".cm-stage-side"); return s.scrollTop + s.clientHeight >= s.scrollHeight - 2;});
     ok(over ? foot : drawer.whole, over ? `and the panel, run over, scrolls to its foot by the wheel (its foot reached: ${foot})` : `and the panel, which fits this window whole, needs no scroll (its last control whole: ${drawer.whole})`);
     await rest(page);
-    await page.click(".cm-stage-side [data-action=board-stage-side]");
+    await page.click(".cm-stage-right[data-action=board-stage-side]");
     await page.waitForFunction(() => !document.querySelector(".cm-stage-side.is-open"));
     await view(page, "focus");
   }
   {
-    const page = rob.page; await profile(page);
-    const opener = page.locator(".cm-stage-top [data-action=board-history]");
+    const page = rob.page;
+    const opener = await utilityOpener(page,'board-history');
     await page.keyboard.press("Shift");
     await opener.focus();
     await page.keyboard.press("Enter");
     await page.locator("#cm-board-history").waitFor();
+    const [historyAx]=await axOf(rob,'#cm-board-history');
     const inFilter = await page.evaluate(() => document.activeElement.matches("[data-board-history-filter]"));
-    const said = await page.locator(".cm-stage-top [data-action=board-history]").getAttribute("aria-expanded");
+    // The History entry closes its parent Table group; the persistent Table trigger is its return target.
+    const tableClosed=await page.locator('[data-action=board-table-menu]').getAttribute('aria-expanded')==='false';
     await page.keyboard.press("Escape");
     await page.locator("#cm-board-history").waitFor({state: "detached"});
-    const back = await page.evaluate(() => document.activeElement.matches("[data-action=board-history]"));
-    ok(inFilter && said === "true" && back, `History ▾: Enter opens it on its filter (${inFilter}) and says so (aria-expanded ${said}), Escape closes it with the focus back on History ▾ (${back})`);
+    const back = await page.evaluate(() => document.activeElement.matches("[data-action=board-table-menu]"));
+    ok(inFilter && historyAx?.role==='dialog' && historyAx.name==='History' && tableClosed && back, `Table History: Enter opens its named dialog on the filter (${inFilter}), closes Table truthfully (${tableClosed}), Escape restores the persistent Table button (${back})`);
   }
   /* SHOW HAND is a modal pop-up: it takes the focus, holds it, and gives it back to ✋ when it closes. */
   for (const who of [rob, maya]) {
@@ -1050,7 +1089,8 @@ try {
        region than it and the app's own notices */
     await page.click(".cm-board-coach-open");
     await page.locator("#cm-board-coach .cm-coach-input").waitFor();
-    await page.click("#cm-board-coach [data-action=board-coach-ask]");
+    await page.locator("#cm-board-coach .cm-coach-questions>summary").click();
+    await page.locator("#cm-board-coach [data-action=board-coach-ask]").first().click();
     await page.waitForFunction(() => /^The Coach: /.test(document.getElementById("cm-board-said")?.textContent || ""), null, {timeout: 10000}).catch(() => {});
     const reply = await page.evaluate(() => document.getElementById("cm-board-said")?.textContent || "");
     const regions = await page.evaluate(() => [...document.querySelectorAll("[aria-live], [role=status], [role=alert], [role=log]")].map((el) => el.id || el.className));
@@ -1099,7 +1139,7 @@ try {
   }
   lap("the mats");
   /* the board's own chrome in the other two themes, on Rob's page */
-  for (const t of ["brass-slate", "steel-cobalt"]) {
+  for (const t of ["bronze-basalt", "chalk-coal"]) {
     await theme(rob.page, t);
     await rob.page.waitForTimeout(400);
     for (const v of ["focus", "table", "full"]) {
@@ -1109,7 +1149,7 @@ try {
     }
     await view(rob.page, "focus");
   }
-  await theme(rob.page, "moss-iron");
+  await theme(rob.page, "sapphire-obsidian");
   await rob.page.waitForTimeout(400);
   /* the pop-ups over the board: Tools, History, Show hand */
   for (const [who, t] of [[rob, "dark"], [maya, "light"]]) {
@@ -1120,9 +1160,12 @@ try {
       await page.keyboard.press('Escape');
     }
     await profile(page);await rest(page);
-    await readWords(page,'.cm-profile-menu',`${t}: Profile`,{min:4});
+    await readWords(page,'#cm-user-menu',`${t}: Account`,{min:4});
     await utility(page,"board-tools");
-    await readWords(page, "#cm-board-tools", `${t}: Tools`, {min: 4});
+    for(const section of ['general','video','audio','gameplay']) {
+      await page.locator(`#cm-dialog [role=tab][data-tab=${section}]`).click();
+      await readWords(page, "#cm-board-tools", `${t}: Play settings ${section}`, {min:4});
+    }
     await page.keyboard.press("Escape");
     await page.locator("#cm-board-tools").waitFor({state: "detached"});
     await utility(page,"board-history");
