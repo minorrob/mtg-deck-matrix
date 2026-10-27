@@ -143,8 +143,8 @@
   }
   /* THE BACKDROP'S RESOLUTION (Rob, 2026-10-26: "Maintain resolution in line with settings selection with 2k at max
      resolution"): the video played is the smallest kept that fills the height it is shown at in drawn pixels -- the
-     stage's height at 16:9, times the screen's pixel ratio, times the kept Graphics resolution -- and never more than 1440
-     lines (2K). A slider being dragged previews the table only; the video follows the setting when it is kept. */
+     stage's height, or its width at 16:9 where the stage is wider than that (the video covers the stage, cropped top and
+     bottom), times the screen's pixel ratio, times the kept Graphics resolution -- and never more than 1440 lines (2K). A slider being dragged previews the table only; the video follows the setting when it is kept. */
   /* Where the browser draws WebGL in software the video is decoded by the same processor: with no resolution chosen, the
      backdrop stays at 720 lines there (a 1080 one took the table's frames on Actions' runners), as the skins stay at
      1024. A resolution chosen in Settings gets the backdrop it calls for, on any machine. */
@@ -154,7 +154,7 @@
     if(!kept.length)return null;
     const lines=kept[0]<=most?kept.filter(n=>n<=most):kept.slice(0,1);
     const w=box?.width||root.innerWidth||1280,h=box?.height||root.innerHeight||720;
-    const need=Math.min(h,w*9/16)*(root.devicePixelRatio||1)*pct/100;
+    const need=Math.max(h,w*9/16)*(root.devicePixelRatio||1)*pct/100;
     return lines.find(n=>n>=need)??lines.at(-1);
   }
   function environment(s) {

@@ -277,13 +277,12 @@
 .cm-stack-pile .cm-stack-card{position:absolute;left:0;top:0;margin:0;transform:translate(calc(var(--depth)*3px),calc(var(--depth)*5px));pointer-events:none;box-shadow:0 2px 5px #0008}
 .cm-stack-ghost{pointer-events:none}
 .cm-stage-environment{position:absolute;inset:58px 0 0;z-index:-1;overflow:hidden;pointer-events:none}
-/* The backdrop whole (crankmagic-stage.js, environment): the video at its own 16:9, as large as the stage allows without
-   cropping, centered; its poster, blurred, behind it; its edges feathered into that. */
-.cm-stage-environment{container-type:size;display:grid;place-items:center;background:#140806}
+/* The backdrop whole (crankmagic-stage.js, environment): the video fills the stage edge to edge, scaled to its width and
+   cropped top and bottom on a screen wider than 16:9 (Rob, 2026-10-27: no blurred sides); its poster, blurred, behind it
+   until the first frame is drawn. */
+.cm-stage-environment{background:#140806}
 .cm-stage-environment::before{content:"";position:absolute;inset:-48px;background:var(--env-poster,none) center/cover no-repeat;filter:blur(32px) saturate(1.15) brightness(.72)}
-.cm-stage-environment video{position:relative;display:block;width:min(100cqw,calc(100cqh * 16 / 9));height:auto;aspect-ratio:16/9;object-fit:cover;
-  -webkit-mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent),linear-gradient(transparent,#000 4%,#000 96%,transparent);-webkit-mask-composite:source-in;
-  mask-image:linear-gradient(90deg,transparent,#000 4%,#000 96%,transparent),linear-gradient(transparent,#000 4%,#000 96%,transparent);mask-composite:intersect}
+.cm-stage-environment video{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover;object-position:center}
 .cm-stage-region.has-video{background:transparent}
 
 .cm-bcard[data-arrange-card]{cursor:grab}.cm-bcard[data-arrange-card]:active{cursor:grabbing}.cm-bcard.cm-card-drop{outline:3px solid #a8dfbf;outline-offset:2px}

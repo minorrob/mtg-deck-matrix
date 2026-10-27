@@ -8,7 +8,8 @@
         said); dithered.
      2. The setting, in the table's Settings window: 50% to 200%, previewed as it moves, put back by Cancel, kept by its
         change and Save, and still there after a reload; and in Settings › Play, with the same value.
-     3. The backdrop whole: the video at its 16:9 as large as the stage allows without cropping, its poster blurred behind.
+     3. The backdrop whole: the video covers the stage edge to edge at its 16:9, cropped top and bottom on a wide screen
+        (Rob, 2026-10-27: no blurred sides), its poster blurred behind it until it draws.
         And its resolution (Rob, 2026-10-26: "Maintain resolution in line with settings selection with 2k at max
         resolution"): of the heights kept (tools/stage-backdrops.mjs), the smallest that fills the backdrop at the kept
         setting, never over 1440; changed when the setting is kept, not while it is previewed, the clip keeping its place.
@@ -96,19 +97,19 @@ try{
 
   /* 3. The backdrop whole. */
   await open();
-  const fit=await page.evaluate(()=>{const env=document.querySelector(".cm-stage-environment"),v=env.querySelector("video"),a=env.getBoundingClientRect(),b=v.getBoundingClientRect();return {env:[a.width,a.height],video:[b.width,b.height],behind:getComputedStyle(env,"::before").backgroundImage,inside:b.left>=a.left-1&&b.right<=a.right+1&&b.top>=a.top-1&&b.bottom<=a.bottom+1};});
-  ok(fit.inside&&Math.abs(fit.video[0]/fit.video[1]-16/9)<.01,`the backdrop is shown whole, at 16:9 inside the stage (${fit.video.map(Math.round).join("×")} in ${fit.env.map(Math.round).join("×")})`);
-  ok(Math.abs(fit.video[1]-fit.env[1])<2||Math.abs(fit.video[0]-fit.env[0])<2,"as large as the stage allows");
+  const fit=await page.evaluate(()=>{const env=document.querySelector(".cm-stage-environment"),v=env.querySelector("video"),a=env.getBoundingClientRect(),b=v.getBoundingClientRect(),c=getComputedStyle(v);return {env:[a.width,a.height],video:[b.width,b.height],behind:getComputedStyle(env,"::before").backgroundImage,fit:c.objectFit,mask:c.maskImage||c.webkitMaskImage,same:Math.abs(b.width-a.width)<2&&Math.abs(b.height-a.height)<2};});
+  ok(fit.same&&fit.fit==="cover",`the backdrop covers the stage edge to edge, cropped rather than letterboxed (${fit.video.map(Math.round).join("×")} in ${fit.env.map(Math.round).join("×")}, ${fit.fit})`);
+  ok(fit.env[0]/fit.env[1]>16/9+.05&&(!fit.mask||fit.mask==="none"),"on a screen wider than 16:9 no blurred poster shows at its sides, and no feathered edge fades into one");
   const first=await page.evaluate(()=>{const b=CrankStage.appearances.backgrounds[0];return {id:b.id,poster:b.poster,video:Object.values(b.video)};});
-  ok(fit.behind.includes(first.poster.split("?")[0]),"its poster, blurred, fills what is left");
+  ok(fit.behind.includes(first.poster.split("?")[0]),"its poster, blurred, is behind it until the first frame draws");
   /* 3b. Its resolution follows the setting, 2K at the most. A stage 1000 pixels high, a screen of pixel ratio 1. */
   const tiers=await page.evaluate(()=>{const all={video:{720:"a",1080:"b",1440:"c",2160:"d"}},one={video:{720:"a"}},box={width:1830,height:1000};
     return {all:[50,70,100,110,150,200].map(p=>CrankStage.backdropLines(all,box,p)),one:[50,200].map(p=>CrankStage.backdropLines(one,box,p)),
       wide:CrankStage.backdropLines(all,{width:1280,height:1000},100),none:CrankStage.backdropLines({},box,100),dpr:devicePixelRatio};});
   eq(tiers.dpr,1,"the screen's pixel ratio here is 1");
-  eq(tiers.all,[720,720,1080,1440,1440,1440],"at 50% and 70% the 720 lines, at 100% the 1080, at 110% and over the 1440: never the 2160 (2K at the most)");
+  eq(tiers.all,[720,1080,1080,1440,1440,1440],"at 50% the 720 lines, at 70% and 100% the 1080 (1830 wide covers 1029 lines), at 110% and over the 1440: never the 2160 (2K at the most)");
   eq(tiers.one,[720,720],"a backdrop kept at 720 only plays it at every setting");
-  eq(tiers.wide,720,"a stage narrower than 16:9 needs only the height its width allows (1280 wide: 720)");
+  eq(tiers.wide,1080,"a stage narrower than 16:9 is covered at its height, the sides cropped (1000 high: 1080)");
   eq(tiers.none,null,"a backdrop with no video has no height");
   /* With no resolution chosen, where WebGL is drawn in software (as here and on Actions' runners), 720 lines at most. */
   const unchosen=await page.evaluate(()=>{const k="cm-stage-resolution",v=localStorage.getItem(k);localStorage.removeItem(k);

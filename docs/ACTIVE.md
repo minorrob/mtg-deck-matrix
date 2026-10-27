@@ -33,6 +33,31 @@ back with `tools/staging-check.mjs --expect 9ca99e53`.
   Worker setting was added since 1fcfc3d. Sharing stays off in `cloud-production` (it is on in the staging profile
   only), so the `cloud/sharing.mjs` changes do not run there.
 
+## Play 3D's backdrop fills the stage, no blurred sides, 2026-10-27 (a Claude cloud session, for Rob; `claude/gifted-ride-w6xoa3`)
+
+Rob, 2026-10-27, with a screenshot of the Studious Retreat at 1884×899: *"update the background videos to crop their
+height, then zoom in to fill the screen so that the aspect ratio would fit the ratio seen in the screenshot, so that we
+don't have the blurred sides on each side."* At his word this changes the Codex · Play lane's `crankmagic-stage.css`,
+`crankmagic-stage.js` (one line of the tier rule) and `tests/board-graphics.mjs`. No open PR touched them.
+
+- **The video covers the stage** (`.cm-stage-environment video`: absolute, the stage's width and height, `object-fit:
+  cover`): on a screen wider than 16:9 it is scaled to the width and cropped top and bottom, centered; on one narrower it
+  is scaled to the height and cropped at the sides. The letterbox (the video at its own 16:9 inside the stage, the blurred
+  poster filling the sides, the feathered edge into it) is gone. The blurred poster stays behind the video until its
+  first frame draws.
+- **The tier follows the cover** (`backdropLines`): the lines needed are the larger of the stage's height and its width
+  at 16:9 (it was the smaller), times the pixel ratio, times the kept resolution, 1440 at most. On the suite's 1830×1000
+  stage that is 1029 lines, so 70% now plays the 1080 file (it played 720); a stage narrower than 16:9 plays the file for
+  its height. The 720 cap where WebGL is drawn in software and no resolution is chosen holds.
+- **Versions bumped:** `crankmagic-stage.css` 65, `crankmagic-stage.js` 20, with the service worker and app they drag
+  (`node tests/asset-versions.mjs --update`).
+- **Proven here:** `board-graphics` 77 (the video the stage's size with `cover`, no mask, no poster at the sides at
+  1830×772; the tiers 720/1080/1080/1440/1440/1440 and the narrow stage's 1080; the cover check seen red against a first
+  draft that kept the video at its intrinsic height), `feature-wiring` 124, `release-pages` 224, `asset-versions` 134. A
+  screenshot of the Studious Retreat at Rob's 1884×899 showed the video 1884×841, the stage's whole.
+- **Not proven:** the crop on a phone held upright (the sides go instead of the top and bottom), and the 1080 file at 70%
+  on a slow machine.
+
 ## Admin, Play's Settings in sections, and the invitation to staging and production, 2026-10-26 (a Claude cloud session, for Rob; `claude/confident-cori-v447il`)
 
 Rob, 2026-10-26: *"Create an admin button or an admin option in the settings menu that only I can see ... let's adjust
