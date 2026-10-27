@@ -1,5 +1,15 @@
 # Who holds the work
 
+## Library › Groups, a locked import, and a commander-aware Start from, 2026-10-27 (a Claude cloud session, for Rob; `claude/determined-carson-xif1xy`)
+
+Rob, 2026-10-27, from screenshots. Workshop-lane files, at his word: `crankmagic-collection.js`, `crankmagic-app.js`, `crankmagic-exchange-ui.js`, `crankmagic-newdeck.js`, `crankmagic.css`.
+
+- **Library**: the sub-entry is "Card Library" (sidebar and tab); **Groups** is a new sub-page (`#cards?tab=groups`) listing every group that is not a deck's own, with template, size and Manage.
+- **Import dialog** ("Import cards or a deck list") closes only through Cancel or Parse input: no ×, a click outside and Esc do nothing (`dialog.dataset.locked`).
+- **Start from**: picking a commander closes the list and shows its card under the name; Choose colors, play style and mechanics are preselected from `data/commander-index.json` (already a per-commander table of colors, styles, mechanics); a color outside the identity removes the commander, with a line saying so; footnotes say what is preselected.
+- **Define the Deck**: Define / Leave undefined only on General; "Other restrictions (optional)" is labeled, with a smaller field.
+- **Proven**: `new-deck-flow` 47 (two checks added), `asset-versions`, `feature-wiring`, `service-worker`, `library-r3`, `library-references`. Not run: the browser look of the Groups page and the locked dialog beyond those suites.
+
 ## The Play screen made consistent: drawers, tabs, seat cards, pop-ups, the land screen, 2026-10-27 (a Claude cloud session, for Rob; `claude/gifted-ride-w6xoa3`)
 
 Rob, 2026-10-27, from screenshots and a list added as the work went: drawers that do not reach the ribbon, a poison counter at the top left, text out of

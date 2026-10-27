@@ -4138,6 +4138,10 @@ button.cm-vitals{cursor:pointer}
 .cm-flow-results button[aria-selected=true]{border-color:var(--v-accent);background:var(--v-raised)}
 .cm-flow-results small{margin-left:auto}
 .cm-flow-chosen{display:flex;gap:8px;align-items:center;margin:0}
+.cm-flow-commander-art{display:block;width:min(100%,223px);height:auto;border-radius:10px;margin-top:8px}
+.cm-flow-foot-note{margin:6px 0 0;font-size:var(--text-small)}
+.cm-flow-other{display:grid;gap:4px;margin-top:8px;font-size:var(--text-small);color:var(--color-muted,inherit)}
+.cm-flow-other input{min-height:0;height:auto;padding:6px 10px;font-size:var(--text-small)}
 .cm-flow-modes{display:flex;flex-wrap:wrap;gap:8px}
 .cm-flow-mode{display:flex;gap:8px;align-items:center;padding:10px 12px;border:1px solid var(--v-line);border-radius:var(--v-radius);color:var(--v-ink);font-size:14px}
 .cm-flow-missing{margin:0;padding-left:18px;color:var(--v-accent)}
