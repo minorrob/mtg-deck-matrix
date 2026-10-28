@@ -27,9 +27,9 @@ Newest wave first. Each line names its command's result line, never a summary of
   authorized scan runs with escalation. Network fetch/gh also requires escalation. No approval review rejection.
 - **Next:** complete #834's corrected backstop checks and selected breaks; integrate the follow-up; route W4/W5/V8
   findings and continue the remaining five roles. Do not claim a passed gate from package history.
-- **Decision pending from Rob:** journals/history do not record static-ability application or distinguish all mana
-  abilities. May V8 supplement journal evidence with an in-memory counterfactual scenario proof? Existing journal-only
-  G-3 is unmet. The proposed proof method has not been implemented or credited while the answer is pending.
+- **Rob's decision, October 28:** "Allow the additional harness proof." V8 may supplement journal evidence with an
+  in-memory ability-removal scenario proof; the safeguards and limits are in `BRIEF.md`. G-3 remains unmet until the
+  evidence is measured. No saved card/rule instrumentation or schema/fidelity-only failure earns coverage.
 
 ## Wave 0 evidence so far
 
@@ -49,7 +49,7 @@ Fresh baseline on main `39a45706`, before engine changes:
 - `python game/tools/batch/anchors.py`: main baseline 57 stale anchors; prerequisite 57; no new anchor problem.
   The global anchor gate remains red; none is called caught. Gameplay debt still needs resolution or a named ignore.
 - `tests/data-integrity.mjs` initially found README missing the pre-existing `engine-mana-upkeep` and the new
-  `sentence-paragraphs` suite names. Both names added; validation pending.
+  `sentence-paragraphs` suite names. Both names added; rerun exit 0, `Validated 50 variants and 50 connected buy profiles.`
 - Pre-push scans at `08e6c900` (integration) and `ae3bfd6f` (prerequisite): `local-ci: SCAN PASS`.
 - Evidence logs live in `C:\Users\robmi\CrankMagic\worktrees\load100\scratch`; result lines are recorded here so the
   checkout is resumable without those scratch files.
@@ -61,8 +61,8 @@ Fresh baseline on main `39a45706`, before engine changes:
 | --- | --- | --- |
 | G-1 Commander cards final | 6,430 defined of about 32,046; 25,616 undefined | Main baseline: 6,424 nonbasic pool finals of 32,040 raw pool cards, plus 6 basic definitions; 25,616 undefined. Wish exemptions not subtracted from raw counts. Unmet. |
 | G-2 Candidates outstanding | 116 (compiler, live); 100 in the committed `candidates.json` | Main baseline reproduced: 116 candidates, 2 blocked. Unmet. |
-| G-3 `check-cards` | 6,430 definitions, 11,023 scenarios, 0 failed | Main baseline reproduced. Ability coverage remains unproved; journal observability decision pending. Unmet. |
-| G-4 Calibration failures | 4 of 4,165 (Blackblade Reforged, Contagion Clasp, Goblin Piledriver, Wayfarer's Bauble) | Main baseline reproduced. W4 reports 1 failure after its unintegrated fixes; integration and independent review pending. Unmet. |
+| G-3 `check-cards` | 6,430 definitions, 11,023 scenarios, 0 failed | Main baseline reproduced. Rob approved supplemental in-memory ability-removal proof; implementation and coverage remain unproved. Unmet. |
+| G-4 Calibration failures | 4 of 4,165 (Blackblade Reforged, Contagion Clasp, Goblin Piledriver, Wayfarer's Bauble) | Main baseline reproduced. W4's intermediate sentence-only fixes reported 1 failure before new trample questions required scenario inputs; final calibration, integration, and independent review pending. Unmet. |
 | G-5 Pool fuzz, clean of games | the harness has no pool mode yet; library 3 of 3, staging decks 1 of 1 clean | V8 harness in progress; no final integrated pool-game result yet. Unmet. |
 | G-6 Final cards exercised in a clean game | not measured (no ledger yet) | No measured clean-game coverage yet. Unmet. |
 | G-7 Gameplay-gap list open items | section 4: 21 open, 5 unsure; section 5: 10 open; section 7: 10 open; section 8: 10 rows open, 4 partial (`README.md`, "Open accuracy debt") | Debt fixes in progress. Main's 57 pre-existing stale break anchors are named in `w0/preexisting-break-anchors.json`. Unmet. |

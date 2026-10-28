@@ -223,6 +223,11 @@ an option first, measures which cards fail under it, and you deal those cards to
 the strict runner becomes the default only when they pass. That is the one place a check may run in two modes for a
 while, and `RUN.md` says so.
 
+**Proof-method update approved by Rob, October 28, 2026:** V8 may supplement journal evidence with the harness-only
+ability-removal proof specified in `BRIEF.md`, "Rob's approved ability-proof supplement." Existing events do not
+identify static applications or distinguish every mana ability. No saved card or rule instrumentation is permitted;
+undetected removals remain unproved. This changes the method, not the gate.
+
 Wave 0's done: every row fixed or a named ignore Rob can read; V8's first pool fuzz over every final card run, its
 findings routed and fixed. Only then does wave 1 start. Wave 0 may take more than one wave's length; that is expected.
 
