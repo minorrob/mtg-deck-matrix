@@ -61,7 +61,7 @@ if (browser) try {
   });
   await page.goto("about:blank");
   await page.goto(`${base}/index.html#decks`);
-  await page.locator("#cm-account [data-action=account-sync]").waitFor({state: "attached", timeout: 60000});
+  await page.waitForFunction(() => /Signed in as/.test(document.getElementById("cm-account")?.textContent || ""), null, {timeout: 60000});
   const sheet = page.locator("#cm-dialog form.cm-feedback");
 
   /* ---- 1. The glyph ---- */
