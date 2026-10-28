@@ -205,15 +205,14 @@ try {
   await rob.page.goto(`${base}/index.html#game`);
   await rob.page.locator("#cm-play-home").waitFor({timeout: 30000});
   ok(await rob.page.locator("#cm-table-new").count() === 0, "Play opens the lounge without creating a table");
-  ok(await rob.page.locator('.cm-play-talk').count()===1 && /not connected/.test(await rob.page.locator('.cm-play-talk').innerText()),"lounge has truthful Table talk availability");
-  ok(await rob.page.locator('.cm-play-standing .cm-play-stats').count()===1,"lounge shows the saved personal record");
-  await rob.page.getByRole('button',{name:'Set up an AI game',exact:true}).click();
+  ok(await rob.page.getByRole('heading',{name:'Live games'}).count()===1 && await rob.page.getByRole('heading',{name:'Leaderboard'}).count()===1 && /Coming soon/.test(await rob.page.locator('.cm-pl-chathead').innerText()),"the Pre-lobby has Live games, the Leaderboard and the chat's Coming soon");
+  await rob.page.goto(`${base}/index.html#table?new=1&ai=1`);
   await rob.page.locator('#cm-table-new').waitFor();
   eq(await rob.page.locator('[name=kind2]').inputValue(),'ai','AI shortcut stages a normal AI seat');
   ok(rob.page.url().includes('ai=1'),'AI setup has a restorable navigation URL');
   await rob.page.goto(`${base}/index.html#game`);
   await rob.page.locator('#cm-play-home').waitFor();
-  await rob.page.getByRole('button',{name:'New table',exact:true}).click();
+  await rob.page.getByRole('button',{name:'Start a new game',exact:true}).click();
   await rob.page.locator("#cm-table-new").waitFor({timeout: 30000});
   ok(!/Coming Soon/.test(await pageText(rob.page, "#cm-main")), "New table is an explicit action from the lounge");
   ok(await rob.page.locator('.cm-new-table-square .cm-table-new-seat').count()===4,"table setup shows four seats around a table");

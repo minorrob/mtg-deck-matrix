@@ -1,5 +1,35 @@
 # Who holds the work
 
+## Play: the Pre-lobby (first of three screens), the top-left box, History, 2026-10-27 (a Claude cloud session, for Rob; `claude/gifted-ride-w6xoa3`)
+
+Rob sent three Claude Design screens (Pre-lobby, New game pop-up, Lobby with walkthrough) and asked for screenshots that look exactly like them. This push is the first screen and four of his notes.
+
+- **Pre-lobby** (`views.playHome`, `crankmagic-table.js`; styles `.cm-pl-*` at the end of `crankmagic-stage.css`): hero, then Live games (2.5x) beside Start a game, Leaderboard (sortable) and the chat's Coming soon. Join existing game opens a pop-up (open lobbies, or the invitation link); it is greyed while no lobby has a seat, as in the design.
+- **Asked of the engine lane, not built here** (nothing is made up; each part reads empty and says so until its door answers): `GET /api/tables/live` (games: `tableId, location live|lobby, organizer, commander, mechanic, privacy, ai, human, open, startedAt, roster[{name,ai,commander,mechanic}], mine`; private games only to their seats and the admin), `GET /api/leaderboard` (`rows[{name,wins,losses,ties,unfinished,you}]`), and `POST /api/tables/:id/request-join|quit`, `GET /api/tables/:id/watch|log` (spectator: no hands or libraries).
+- **Top-left box** (3D): Turn row with a fold arrow (kept on the device); each life row has a blue dot at the right where priority sits; no Priority text; what the table waits on, when it is not a question in Actions, is in the ribbon.
+- **Combat tile**: the empty-blocks box stays inside its tile. **History** (module and pop-up): lines scroll sideways, never an ellipsis.
+- **Proven**: `table-board` 320, `table-lobby` 154, `board-babylon` 90, `board-r5-visual` 68, `board-r4-caption-fit` 171, `board-r4-views` 129, `board-combat-display`, `board-r4-decisions` 119, `board-r4-input` 62, `board-r4-layout` 90, `board-r4-shell` 111, `board-r4-combat` 99, `board-drawer-sizes` 47, `board-choices` 47, `board-battlefield-rows` 8, `board-settings-window` 114, `feature-wiring` 131, `board-hand-table` 111, `a11y-board` (one place: the white-sanctum card ring, 89%, as before). `board-3d-camera` (105) and `board-r4-views` each failed once on timing and passed on rerun; `board-3d-camera` does the same on main.
+- **Not done**: the New game pop-up and the Lobby with its walkthrough (the old `#table?new=1` page is still what Start a new game opens); in-game chat and the log.
+
+## Play screen, batch 4 (a Claude cloud session, for Rob; `claude/gifted-ride-w6xoa3`, PR 902), 2026-10-27
+
+Rob's list after batch 3: dropdown verbs and direct rows, library-search stacks, scrollbars, tilt 0 at the floor's slope, the Camera menu, Turn and Priority out of the ribbon,
+the do-nothing arrow, the divider dragging the table, free battlefield rows; then: life on the name's baseline, the current step on the others' line, Alt+Left
+(the browser's Back) no longer a shortcut, and Alt + drag for card size.
+
+- **Card menu**: a row that asks nothing more is sent by the press (priority offers only: a many-of question's rows still toggle a pick). The card is also shown in Actions.
+- **Stacks**: `sameKey` ignores `affected` when it is only the card itself, so a search lists "Forest x5". `board-choices` passes (it failed on main).
+- **3D ribbon**: no turn, no priority, no arrow while the drawer is open; Priority is under the life totals. Table and Focus have no caption and keep their ribbon text.
+- **Camera menu**: View seats + Reset, then HUD text; every slider word has a 76px column.
+- **Divider**: the mat pan ignores `[data-drag]`. **Rows**: `rowMoves()` keeps a card's row per game on this device; lands never leave theirs.
+- **Tilt**: 0 = the backdrop's floor (`FLOOR_ELEVATION` in `crankmagic-stage.js`, **estimates** from each clip's first frame; correct by eye). Key v4, default 40; the geometry's limit 80 degrees.
+- **Keyboard**: card reordering is Shift + Alt + Left/Right (Alt + Left is Back); the tooltip says so. **Alt + drag** up/down over a mat sizes cards (Cards in 3D, Board cards in Table and Focus).
+- **Proven**: `board-r5-visual` 63, `board-battlefield-rows` 8 (new), `board-fullscreen-notes` 47, `board-choices` 47, `board-r4-decisions` 119, `board-r4-input` 62, `board-r4-layout` 90, `board-r4-shell` 111,
+  `board-r4-views` 129, `board-r4-combat` 99, `board-r4-caption-fit` 171, `board-drawer-sizes` 47, `board-settings-window` 114, `board-babylon` 90, `board-3d-camera` 105, `board-hand-table` 111,
+  `table-board` 320, `table-tabletop`, `board-card-sharpness` (it is sensitive to the exact camera angle: seeded at 40 degrees), `a11y-board` 71 places, the same set as before this batch.
+  `table-tabletop` once failed a cards-cycling animation check under load and passed on the rerun.
+- **Not done**: the Actions drawer narrower by default with wrap-then-scale (Rob's notes on wireframes A1/A2), and A3's one-screen target flow (a draft awaiting his call).
+
 ## The Play screen made consistent: drawers, tabs, seat cards, pop-ups, the land screen, 2026-10-27 (a Claude cloud session, for Rob; `claude/gifted-ride-w6xoa3`)
 
 Rob, 2026-10-27, from screenshots and a list added as the work went: drawers that do not reach the ribbon, a poison counter at the top left, text out of

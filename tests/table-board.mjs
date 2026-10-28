@@ -399,7 +399,7 @@ try {
   await rob.page.click(".cm-sidebar a[data-nav=game]");
   await rob.page.locator('#cm-play-home').waitFor({timeout:30000});
   ok(routes[ROB].length === robSockets, "Play's lounge preserves the live socket while showing Resume");
-  await rob.page.getByRole('button',{name:'Resume your table',exact:true}).click();
+  await rob.page.getByRole('button',{name:'Resume game',exact:true}).click();
   await rob.page.locator("#cm-board .cm-stage-top").waitFor({timeout: 30000});
   ok(/^#table\?id=/.test(await rob.page.evaluate(() => location.hash)) && routes[ROB].length === robSockets, "Resume from Play returns to the game, on the same socket");
   ok(awayFrames() === awayBefore && !/Dropped/.test(await text(maya.page, ".cm-board-tile[data-seat='0'] .cm-seat-state")), "and through all of it the room never marked Rob's seat away");
@@ -654,7 +654,7 @@ try {
   await rob.page.mouse.move(paneGrip.x + paneGrip.width / 2 + 200, paneGrip.y + 200, {steps: 4});
   await rob.page.mouse.up();
   const pane1 = await paneGeo(), paneRows=await rob.page.evaluate(tableRowFacts);
-  ok(pane0.pane === 330 && Math.abs(pane1.pane - 530) <= 2 && pane1.tile > pane0.tile + 150 && pane1.matW < pane0.matW && paneRows.valid && paneRows.widths,
+  ok(pane0.pane === 270 && Math.abs(pane1.pane - 470) <= 2 && pane1.tile > pane0.tile + 150 && pane1.matW < pane0.matW && paneRows.valid && paneRows.widths,
     `the divider between the pane and the mat drags: 200px right, the pane ${pane0.pane} → ${pane1.pane}px, the tiles growing with it, the mat retains conditional aspect, complete rows and largest available width beside the reserved pane`);
   ok(pane0.mini === 0 && pane1.mini === 2 && pane1.robLands >= 1 && pane1.inert, `and past 400px each tile is a miniature of that seat's board, cards and all (the Forest on Rob's: ${pane1.robLands}), only to look at`);
   await shot(rob.page, "pane-miniatures-1400");
@@ -690,7 +690,7 @@ try {
   await maya.page.getByRole('slider',{name:'Table tilt',exact:true}).fill('90');
   const flatPlane=await maya.page.locator('.cm-stage-front').evaluate(el=>{const m=new DOMMatrix(getComputedStyle(el).transform);return Math.abs(m.m11-m.m22)<.001;});
   ok(flatPlane,"90 degrees, perpendicular to the floor, gives a flat, undistorted table");
-  await maya.page.getByRole('slider',{name:'Table tilt',exact:true}).fill('10');
+  await maya.page.getByRole('slider',{name:'Table tilt',exact:true}).fill('40');
   await maya.page.getByRole('button',{name:'Camera',exact:false}).click();
   await shot(maya.page,"board-full-3d-1280");
   ok(/played (Forest|Island)/.test(await text(maya.page, ".cm-stage-side .cm-stage-module[data-module=history] .cm-board-band")), "and the history in the side column");
@@ -1855,7 +1855,8 @@ async function useCardOffer(page, card, act) {
   const offered = page.locator('#cm-card-menu [data-action=board-card-menu-do][data-act="'+act+'"]');
   eq(await offered.count(), 1, 'the selected card offers exactly one '+act+' action');
   await offered.click();
-  if (!['undo-mana', 'undo-land', 'undo-play'].includes(act)) await bindSelection(page);
+  /* Rob, 2026-10-27: a row that asks nothing more is sent by the press itself; only an offer needing a target is staged for its binding press (both casts here are creatures with none). */
+  if (!['undo-mana', 'undo-land', 'undo-play', 'play-land', 'activate-mana', 'cast'].includes(act)) await bindSelection(page);
 }
 async function openCoachQuestions(page) {
   const questions = page.locator('#cm-board-coach .cm-coach-questions');

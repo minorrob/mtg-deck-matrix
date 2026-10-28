@@ -83,7 +83,7 @@ try {
   await page.addInitScript(()=>{
     globalThis.__tabletopExpectedGeometry=()=>{
       const host=document.querySelector('.cm-stage-region'),r=host.getBoundingClientRect();
-      const tilt=(90-Number(document.querySelector('[data-stage-camera="tilt"]').value))/2,zoom=Number(document.querySelector('[data-stage-camera="zoom"]').value);
+      const tilt=(90-Number(document.querySelector('[data-stage-camera="tilt"]').value))*CrankStage.floorTilt(document.querySelector('[data-stage-style=background]')?.value||CrankStage.appearances.backgrounds[0].id)/90,zoom=Number(document.querySelector('[data-stage-camera="zoom"]').value);
       const options={tilt,zoom,seats:3,pan:{x:0,y:0},reach:Number(localStorage.getItem('cm-stage-reach-v1'))||0};
       const base=CrankStage.geometry(r.width,r.height,options);
       const regions=[document.querySelector('.cm-stage-front'),...document.querySelectorAll('.cm-stage-rear')];
@@ -381,7 +381,7 @@ try {
   assert.equal(await page.locator('.cm-stage-fan').getAttribute('aria-label'),'Your hand');
   assert.equal(await page.evaluate(()=>globalThis.__canvas===document.querySelector('.cm-stage-canvas')),true,"the same graphics context survives redraw and rotation");
   await page.getByRole('button',{name:'Camera',exact:false}).click();
-  assert.equal(await page.getByRole('slider',{name:'Table tilt',exact:true}).inputValue(),'10');
+  assert.equal(await page.getByRole('slider',{name:'Table tilt',exact:true}).inputValue(),'40');
   for(const name of ['Table tilt','Table zoom','Tabletop card size']) {
     const slider=page.getByRole('slider',{name,exact:true}), box=await slider.boundingBox();
     await page.mouse.move(box.x+box.width/2,box.y+box.height/2);await page.mouse.down();
@@ -417,8 +417,8 @@ try {
       assert.ok(fan.every(r=>r.x>=0 && r.right<=width+1 && r.y>=0 && r.bottom<=805),'hand remains within screen width with only its bottoms clipping below the window');
       const alignment = await page.evaluate(() => {
         const host=document.querySelector('.cm-stage-region'), r=host.getBoundingClientRect();
-        /* The slider is the angle to the floor; the camera's tilt from straight down is half of what it lacks of 90. */
-        const tilt=(90-Number(document.querySelector('[data-stage-camera="tilt"]').value))/2, zoom=Number(document.querySelector('[data-stage-camera="zoom"]').value);
+        /* The slider is the angle to the floor; the camera's tilt from straight down is what it lacks of 90, over 90, of the floor's own slope in the backdrop. */
+        const tilt=(90-Number(document.querySelector('[data-stage-camera="tilt"]').value))*CrankStage.floorTilt(document.querySelector('[data-stage-style=background]')?.value||CrankStage.appearances.backgrounds[0].id)/90, zoom=Number(document.querySelector('[data-stage-camera="zoom"]').value);
         const {geometry,options:expectedOptions,contentMinima}=globalThis.__tabletopExpectedGeometry();
         const regions=[document.querySelector('.cm-stage-front'),...document.querySelectorAll('.cm-stage-rear')];
         const matrixDetails=[];
@@ -464,7 +464,7 @@ try {
     return Array.from(new DOMMatrix(getComputedStyle(front).transform).toFloat64Array()).every((v,j)=>Math.abs((j<8?v*k:v)-g.front.matrix[j])<.01);
   }),'and the table is drawn again at the kept tilt and zoom');
   await page.getByRole('slider',{name:'Tabletop card size',exact:true}).fill('100');
-  await page.getByRole('slider',{name:'Table tilt',exact:true}).fill('10');
+  await page.getByRole('slider',{name:'Table tilt',exact:true}).fill('40');
   await page.getByRole('slider',{name:'Table zoom',exact:true}).fill('100');
   if(await page.locator('.cm-stage-rail.is-open').count()) await page.locator('.cm-stage-left').click();
   const handEdges=await page.evaluate(()=>{
@@ -526,9 +526,9 @@ try {
   const dropBox=await row.locator('[data-arrange-card]').first().boundingBox();
   await row.locator('[data-arrange-card]').nth(1).dragTo(row.locator('[data-arrange-card]').first(),{targetPosition:{x:dropBox.width/2-5,y:dropBox.height/2}});
   assert.deepEqual((await order()).slice(0,2),[originalOrder[1],originalOrder[0]],'dragging snaps cards into order within their section');
-  await row.locator('[data-arrange-card]').first().focus();await row.locator('[data-arrange-card]').first().press('Alt+ArrowRight');
+  await row.locator('[data-arrange-card]').first().focus();await row.locator('[data-arrange-card]').first().press('Shift+Alt+ArrowRight');
   assert.deepEqual(await order(),originalOrder,'keyboard ordering gives the same arrangement control');
-  await row.locator('[data-arrange-card]').nth(1).focus();await row.locator('[data-arrange-card]').nth(1).press('Alt+ArrowLeft');
+  await row.locator('[data-arrange-card]').nth(1).focus();await row.locator('[data-arrange-card]').nth(1).press('Shift+Alt+ArrowLeft');
   const arranged=await order();
   const lands=page.locator('.cm-stage-front [data-card-section$=":lands"] [data-arrange-card]');
   await row.locator('[data-arrange-card]').first().dragTo(lands.first());

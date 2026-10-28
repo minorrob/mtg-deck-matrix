@@ -23,7 +23,7 @@ try{
   if(process.env.CAPTION_CASE && process.env.CAPTION_CASE!==`${mode}-${width}-${hud}`)continue;
   scenarios++;
   const f=await open(mode,width,false,fixture(seats),hud),{page,context,errors}=f;
-  if(width>=500)ok(/Priority:\s*You/.test(await page.locator('.cm-stage-priority').textContent()),`${mode}/${hud}: player zero remains a real priority holder`);
+  if(width>=500)ok(mode==='full'?/You hold priority/.test(await page.locator('.cm-stage-life-prio:not(.is-off)').first().getAttribute('aria-label')):/Priority:\s*You/.test(await page.locator('.cm-stage-priority').textContent()),`${mode}/${hud}: player zero remains a real priority holder`);
   await page.evaluate(choice=>__r4Act('set-theme',{themeChoice:choice}),mode==='focus'?'bronze-basalt-light':mode==='full'?'chalk-coal':'sapphire-obsidian');
   if(width<500)await page.locator('[data-action=board-stage-rail]').click();
   const problems=await page.evaluate(({roots,floor})=>[...document.querySelectorAll(`#cm-board ${roots.split(',').join(',#cm-board ')}`)].flatMap(root=>[root,...root.querySelectorAll('*')]).filter((el,i,all)=>all.indexOf(el)===i&&[...el.childNodes].some(n=>n.nodeType===3&&n.textContent.trim())&&!el.closest('[hidden],[inert],.cm-sr-only,.cm-board-peek,.cm-bcard-name,.cm-coach-head,.cm-coach-questions,.cm-stage-camera,.cm-table-menu,.cm-profile-avatar,.cm-seat-portrait')&&!(el.parentElement?.matches('.cm-stage-handle')&&el.tagName==='B')&&el.getClientRects().length&&getComputedStyle(el).visibility==='visible').map(el=>({text:el.textContent.trim().slice(0,70),size:parseFloat(getComputedStyle(el).fontSize),cls:el.className})).filter(x=>x.size<floor-.1),{roots,floor:15*hud/100});

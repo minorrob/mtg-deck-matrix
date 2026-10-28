@@ -42,7 +42,7 @@ try{
   const afterHorizontal=await page.evaluate(()=>CrankStage.diagnostics());
   ok(afterHorizontal.quad.every((v,i)=>Math.abs(v-beforeDrag.quad[i])<.03),'horizontal ground dragging does not rotate the table');
   await page.mouse.move(ground.x,ground.y);await page.mouse.down();await page.mouse.move(ground.x,ground.y+20,{steps:5});await page.mouse.up();
-  ok(Number(await page.evaluate(()=>localStorage.getItem('cm-board-tilt-v3')))===2,'vertical ground dragging adjusts and saves tilt (10 to 2 from the floor: the camera 40 to 44 degrees)');
+  ok(Number(await page.evaluate(()=>localStorage.getItem('cm-board-tilt-v4')))===32,'vertical ground dragging adjusts and saves tilt (40 to 32 from the floor)');
   await align('ground drag');
   ok(await page.locator('.cm-stage-canvas').getAttribute('tabindex')==='-1','pointer movement does not reintroduce a canvas tab stop');
   await page.getByRole('button',{name:'Camera',exact:false}).click();
@@ -52,7 +52,7 @@ try{
   await slide('Table tilt',0);
   const flat=await page.evaluate(()=>CrankStage.diagnostics());
   ok(Math.abs(flat.quad[1]-flat.quad[3])<.03&&Math.abs(flat.quad[5]-flat.quad[7])<.03,'a stored rotation from an older session cannot cant the table');
-  await slide('Table tilt',10);
+  await slide('Table tilt',40);
   const initial=await align('reset');
   for(let n=0;n<4;n++)for(const design of ['obsidian-glass','medieval-banded']){
     await page.getByLabel('Table design',{exact:true}).selectOption(design);
@@ -101,20 +101,23 @@ try{
     await page.goto(`${base}/index.html#game`);await page.locator('#cm-play-home').waitFor();
     ok(await page.evaluate(()=>BABYLON.Engine.Instances.length===0),'leaving the board disposes its engine and listeners');
     ok(await page.locator('#cm-table-new').count()===0,'Play opens the lounge, not the New table form');
-    await page.getByRole('button',{name:'Resume your table',exact:true}).click();await page.locator('[data-engine=babylon]').waitFor();
+    await page.getByRole('button',{name:'Resume game',exact:true}).click();await page.locator('[data-engine=babylon]').waitFor();
     await align('re-entry');
   }
   await page.goto(`${base}/index.html#game`);await page.locator('#cm-play-home').waitFor();
+  await page.route(`${base}/api/tables/live`,r=>r.fulfill({json:{games:[{tableId:'open01',location:'lobby',organizer:'Avery',commander:'Krenko, Mob Boss',privacy:'public',ai:1,human:1,open:1,roster:[]}]}}));
+  await page.reload();await page.locator('#cm-play-home').waitFor();
+  await page.getByRole('button',{name:'Join existing game',exact:true}).click();
   await page.locator('#cm-play-invite').fill('https://evil.example/api/join/tablepreview01/token');
   await page.getByRole('button',{name:'Open invitation',exact:true}).click();
   ok((await page.locator('#cm-play-join-error').innerText()).includes('complete CrankMagic invitation'),'invalid invitation stays in lounge with recovery instruction');
-  await page.locator('#cm-play-invite').fill('');
+  await page.locator('#cm-play-invite').fill('');await page.getByRole('button',{name:'Cancel',exact:true}).click();
   for(const viewport of [{width:1280,height:720},{width:390,height:844},{width:844,height:390}]){
     await page.setViewportSize(viewport);
     ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'lounge fits viewport');
     if(shots)await page.screenshot({path:path.join(shots,`lounge-${viewport.width}.png`),fullPage:true});
   }
-  await page.getByRole('button',{name:'New table',exact:true}).click();await page.locator('#cm-table-new').waitFor();
+  await page.getByRole('button',{name:'Start a new game',exact:true}).click();await page.locator('#cm-table-new').waitFor();
   ok(true,'New table remains an explicit action');
   const failed=await browser.newPage({viewport:{width:1280,height:720}});
   await failed.route('**/vendor/babylon.js*',route=>route.abort());

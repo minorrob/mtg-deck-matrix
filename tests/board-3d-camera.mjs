@@ -166,7 +166,7 @@ try {
   /* ---- 2. a mat drags the view; the bare table still tilts ---- */
   await page.locator("[data-action=board-camera-reset]").click();
   await page.getByRole("button", {name: "Camera", exact: false}).click();
-  const tiltWas = await page.evaluate(() => localStorage.getItem("cm-board-tilt-v3"));
+  const tiltWas = await page.evaluate(() => localStorage.getItem("cm-board-tilt-v4"));
   const grab = await page.evaluate(({x, y}) => CrankStage.pick(x, y).world, spots.mat);
   await page.mouse.move(spots.mat.x, spots.mat.y);
   await page.mouse.down();
@@ -176,17 +176,17 @@ try {
   ok(panned.pan.x > 40, `dragging a mat to the left moves the view to the right (${JSON.stringify(panned.pan)})`);
   const held = await page.evaluate(({x, y}) => CrankStage.pick(x, y).world, {x: spots.mat.x - 140, y: spots.mat.y - 30});
   ok(Math.hypot(held[0] - grab[0], held[2] - grab[2]) < 1.5, `the place taken hold of stays under the pointer (${JSON.stringify([grab, held])})`);
-  eq(await page.evaluate(() => localStorage.getItem("cm-board-tilt-v3")), tiltWas, "dragging a mat does not tilt the table");
+  eq(await page.evaluate(() => localStorage.getItem("cm-board-tilt-v4")), tiltWas, "dragging a mat does not tilt the table");
   ok(misalign(panned) < .03 && mismatrix(panned) < .001, `moved, the DOM and Babylon tables still agree (${misalign(panned)}px)`);
   eq(acts(), [], "dragging a mat plays nothing");
   await page.mouse.move(spots.ground.x, spots.ground.y);
   await page.mouse.down();
   await page.mouse.move(spots.ground.x, spots.ground.y + 20, {steps: 5});
   await page.mouse.up();
-  eq(await page.evaluate(() => localStorage.getItem("cm-board-tilt-v3")), "2", "dragging the bare table still tilts it, as before (10 to 2 from the floor: the camera 40 to 44 degrees)");
+  eq(await page.evaluate(() => localStorage.getItem("cm-board-tilt-v4")), "32", "dragging the bare table still tilts it, as before (40 to 32 from the floor)");
   eq((await diag(page)).pan, panned.pan, "and does not move the view");
   await page.getByRole("button", {name: "Camera", exact: false}).click();
-  await page.getByRole("slider", {name: "Table tilt", exact: true}).fill("10");
+  await page.getByRole("slider", {name: "Table tilt", exact: true}).fill("40");
   await page.locator("[data-action=board-camera-reset]").click();
   await page.getByRole("button", {name: "Camera", exact: false}).click();
   const home = await diag(page);
@@ -364,11 +364,8 @@ try {
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("Enter");
   ok(await menu.count() === 0, "choosing an offer closes the menu");
-  const binding=page.locator("#cm-board-decision [data-action=board-confirm]:visible:not([disabled]),#cm-board-decision [data-action=board-direct]:visible:not([disabled])");await binding.waitFor({timeout: 3000});
-  eq(acts(), [], "and stages it, as a click on the card does: nothing is sent yet");
-  await binding.click();
   for (let i = 0; i < 100 && !acts().length; i += 1) await page.waitForTimeout(20);
-  eq(acts(), [[1]], "Confirm plays it, once");
+  eq(acts(), [[1]], "and plays it at once, once: the card and its row are two presses already (Rob, 2026-10-27)");
   /* The view a played land leaves is not this test's business: the offers come back as they were. */
   await again();
   await cardOn(RIME).click({button: "right"});

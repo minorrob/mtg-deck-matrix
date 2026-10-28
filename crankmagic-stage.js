@@ -22,7 +22,7 @@
      The shortest is the length it always had, where the front mat's captions are already at 10px. */
   const REACH_PAD=8;
   function geometry(width, height, {tilt = 40, zoom = 100, seats = 3, rotation = 0, pan = null, look = null, reach = 0, rearMin = 0} = {}) {
-    const w=Math.max(1,width), h=Math.max(1,height), angle=clamp(tilt,0,60)*Math.PI/180;
+    const w=Math.max(1,width), h=Math.max(1,height), angle=clamp(tilt,0,TILT_LIMIT)*Math.PI/180;
     const yaw=clamp(rotation,-180,180)*Math.PI/180, c=Math.cos(yaw), q=Math.sin(yaw);
     const base=h*.88, sx=.902*clamp(zoom,60,200)/100, sy=sx*Math.cos(angle);
     const cx=w/2, cy=base/2, screenY=h*.43, distance=Math.max(w,h)*2.5, focal=sx*distance;
@@ -64,6 +64,14 @@
   }
   /* The backdrops: each video at up to three heights, 720, 1080 and 1440 lines, never more than its source (environment,
      backdropLines). The list between the markers is written by tools/stage-backdrops.mjs from a folder of videos. */
+  /* THE FLOOR EACH BACKDROP SITS ON (Rob, 2026-10-27: "I want true 0 degree angle to the slope of the floor that it sits on ... the
+     measured angle of the floor in the video"). The angle the video's floor is seen at, in degrees above the line of sight, near
+     where the table stands: read from the horizon and the floor's span in each clip's first frame (a camera of about a 35-degree
+     lens). ESTIMATES, to be corrected by eye here; the camera tilt that lies the table flat on it is 90 less this. A backdrop not
+     listed (one added by tools/stage-backdrops.mjs) is taken at FLOOR_DEFAULT. */
+  const FLOOR_ELEVATION = {"studious-retreat": 16, "japanese-samurai": 13, "dwarven-king": 14, "goblin-stronghold": 21, "golden-fields": 12, "island": 16}, FLOOR_DEFAULT = 15;
+  const TILT_LIMIT = 80;
+  const floorTilt = id => 90 - (FLOOR_ELEVATION[id] ?? FLOOR_DEFAULT);
   /* backdrops:begin */
   const BACKDROPS=[{id:"dwarven-king",name:"Dwarven King",poster:"assets/environments/dwarven-king-poster.jpg?v=ce56fc00",video:{720:"assets/environments/dwarven-king-720.webm?v=46fb486e",1080:"assets/environments/dwarven-king-1080.webm?v=f69c5735",1440:"assets/environments/dwarven-king-1440.webm?v=3a8afdcd"}},{id:"goblin-stronghold",name:"Goblin Stronghold",poster:"assets/environments/goblin-stronghold-poster.jpg?v=8bbf2db7",video:{720:"assets/environments/goblin-stronghold-720.webm?v=fae2bd14",1080:"assets/environments/goblin-stronghold-1080.webm?v=d706bdee",1440:"assets/environments/goblin-stronghold-1440.webm?v=0f0c9a66"}},{id:"golden-fields",name:"Golden Fields",poster:"assets/environments/golden-fields-poster.jpg?v=696fd3b1",video:{720:"assets/environments/golden-fields-720.webm?v=9e675296",1080:"assets/environments/golden-fields-1080.webm?v=e560ca38",1440:"assets/environments/golden-fields-1440.webm?v=a45b2556"}},{id:"island",name:"Island",poster:"assets/environments/island-poster.jpg?v=aacadaee",video:{720:"assets/environments/island-720.webm?v=55ace2f6"}},{id:"japanese-samurai",name:"Japanese Samurai",poster:"assets/environments/japanese-samurai-poster.jpg?v=fb02fadd",video:{720:"assets/environments/japanese-samurai-720.webm?v=aff25dba",1080:"assets/environments/japanese-samurai-1080.webm?v=7e2c32d4",1440:"assets/environments/japanese-samurai-1440.webm?v=0c57e8dc"}},{id:"studious-retreat",name:"Studious Retreat",poster:"assets/environments/studious-retreat-poster.jpg?v=e8810c3d",video:{720:"assets/environments/studious-retreat-720.webm?v=58ecd5e8",1080:"assets/environments/studious-retreat-1080.webm?v=0ecd0017",1440:"assets/environments/studious-retreat-1440.webm?v=ad87c4e2"}}];
   /* backdrops:end */
@@ -420,6 +428,6 @@
     if(s.canvas){s.canvas.removeEventListener('webglcontextlost',s.lost);s.canvas.remove();}
     s.scene?.dispose();s.engine?.dispose();
   }
-  root.CrankStage=Object.freeze({geometry,carousel,appearances,backdropLines,tableDesign,DEFAULT_TABLE,mount,layout,unmount,diagnostics,look,steer,unlook,headPose,pick,
+  root.CrankStage=Object.freeze({geometry,floorTilt,TILT_LIMIT,carousel,appearances,backdropLines,tableDesign,DEFAULT_TABLE,mount,layout,unmount,diagnostics,look,steer,unlook,headPose,pick,
     resolution,previewResolution,setResolution,RESOLUTION:Object.freeze({key:RES_KEY,min:RES_MIN,max:RES_MAX,default:RES_DEFAULT})});
 })(globalThis);
