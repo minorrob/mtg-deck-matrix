@@ -1,0 +1,19 @@
+{
+  "schema": "library-load-lane@1",
+  "lane": "W3",
+  "wave": 0,
+  "theme": "graveyard",
+  "branch": "codex/engine-load100-w0-w3-graveyard",
+  "source": "main 39a45706; README open accuracy debt; ORCHESTRATION wave 0",
+  "cards": [],
+  "review": [],
+  "debt": "The command-zone choice (CR 903.9b); Innocuous Rat (CR 701.40f); two \"you may play\" permissions asked; nested destruction replacements asked; Liesa's zone-change question waited on; **remembered objects** (`RememberObjects`, `RememberChanged`) and `MayPlay`",
+  "evidence": [
+    "| Innocuous Rat: a manifest-dread card that can't enter should go to the graveyard (CR 701.40f) | `script/effects/asking.mjs`:384, 453 (unsure) | W3 |",
+    "| The command-zone choice when a commander goes to hand or library by a cost or effect (CR 903.9b) | `rules/commander.mjs`:43 | W3 |",
+    "| Two limited \"you may play\" permissions: one picked for the player | `rules/actions.mjs`:1472 | W3 |",
+    "| Destruction replacements in nested effects (shield, then Auras in attach order) | `script/effects/zones.mjs`:864 | W3 |",
+    "| Zone-change replacements (Liesa): the question is raised, the move does not wait | `replacement.mjs`:35 | W3 |"
+  ],
+  "status": "queued; prerequisite PR 834 verification in progress"
+}

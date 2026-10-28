@@ -1,0 +1,19 @@
+{
+  "schema": "library-load-lane@1",
+  "lane": "W6",
+  "wave": 0,
+  "theme": "tokens",
+  "branch": "codex/engine-load100-w0-w6-tokens",
+  "source": "main 39a45706; README open accuracy debt; ORCHESTRATION wave 0",
+  "cards": [],
+  "review": [],
+  "debt": "Counter, token and entering replacements asked, not ordered in code; Plumb the Forbidden's copies by last known information; **Contagion Clasp**; Incubator copies (if V8 confirms)",
+  "evidence": [
+    "| Plumb the Forbidden copies only while it is on the stack | `asking.mjs`:1634 | W6 |",
+    "| Unsure, to be settled by a scenario: Song of the Dryads and Sagas under ability loss; Incubator copies single-faced; Social Snub's copy; Winter's prompt and a draw-two cost under Narset | `rules/layers.mjs`:870; `permanents.mjs`:644; `actions.mjs` | V8 finds, W1/W6/W2/W7 fix |",
+    "| Counter replacements (Hardened Scales with a doubler) | `rules/statics.mjs`:849, 911 | W6 |",
+    "| Token replacements outside a resolution | `statics.mjs`:570 | W6 |",
+    "| Entering replacements applied in the order found | `replacement.mjs`:579 | W6 |"
+  ],
+  "status": "queued; prerequisite PR 834 verification in progress"
+}

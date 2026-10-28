@@ -1,0 +1,17 @@
+{
+  "schema": "library-load-lane@1",
+  "lane": "W1",
+  "wave": 0,
+  "theme": "faces",
+  "branch": "codex/engine-load100-w0-w1-faces",
+  "source": "main 39a45706; README open accuracy debt; ORCHESTRATION wave 0",
+  "cards": [],
+  "review": [],
+  "debt": "Elspeth's emblem object; the remaining emblems (Daretti, the second Teferi); prepare on tokens and copies; battles (ROB-149's battle half)",
+  "evidence": [
+    "| Elspeth, Sun's Champion's emblem is two lasting effects, no emblem object (emblems exist, `rules/layers.mjs`:351) | `cards/e/elspeth-suns-champion.json`:94, 111 | W1 |",
+    "| Tokens and copies of prepare cards never prepared | `script/effects/attributes.mjs`:23 | W1 |",
+    "| Unsure, to be settled by a scenario: Song of the Dryads and Sagas under ability loss; Incubator copies single-faced; Social Snub's copy; Winter's prompt and a draw-two cost under Narset | `rules/layers.mjs`:870; `permanents.mjs`:644; `actions.mjs` | V8 finds, W1/W6/W2/W7 fix |"
+  ],
+  "status": "queued; prerequisite PR 834 verification in progress"
+}

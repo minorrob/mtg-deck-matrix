@@ -1,0 +1,20 @@
+{
+  "schema": "library-load-lane@1",
+  "lane": "V8",
+  "wave": 0,
+  "theme": "verify",
+  "branch": "codex/engine-load100-w0-v8-verify",
+  "source": "main 39a45706; README open accuracy debt; ORCHESTRATION wave 0",
+  "cards": [],
+  "review": [],
+  "debt": "The pool fuzz and the exercised ledger; the **ability ledger**: which abilities of each card no scenario ever makes fire or apply, read from the journal and history the engine already writes for every game (what `replay.mjs` and `fuzz-live.mjs` read), **never by instrumenting a rules module**, and reported by `check-cards.mjs` so a card with an unreached ability fails; the scenario runner's `settle` / `optional` / `targets: \"any\"`; `fuzz-live`'s silent throw and legendary-only commanders; `engine-room-games`' skipped seeds and frozen deal; `engine-x11-leave-questions`' replaced answers; coverage's partial constructs; the five unsure section-4 items settled by scenario. Then the first pool fuzz over **all 6,430 final cards**: the baseline of what still errors",
+  "evidence": [
+    "| Unsure, to be settled by a scenario: Song of the Dryads and Sagas under ability loss; Incubator copies single-faced; Social Snub's copy; Winter's prompt and a draw-two cost under Narset | `rules/layers.mjs`:870; `permanents.mjs`:644; `actions.mjs` | V8 finds, W1/W6/W2/W7 fix |",
+    "| The scenario runner: `settle` takes the first legal answer (3,547 scenario files use it), `optional` skips a move not offered silently, `targets: \"any\"` takes the first aim | `cards/scenario.mjs`:24–25, 235 | V8 (the runner); each card that turns red → its theme |",
+    "| `tools/fuzz-live.mjs`: a definition that throws is left out silently; commanders are legendary creatures only | `tools/fuzz-live.mjs`:103, 106 | V8 |",
+    "| `tests/engine-room-games.mjs`: seeds 3 and 5 left out, the deal frozen at `e243ccde`, refusals logged not failed | :16, :31, :115 | V8 |",
+    "| `tests/engine-x11-leave-questions.mjs`: refused pilot answers replaced, not failed (except a concession's) | :481, :518, :529 | V8 |",
+    "| Coverage counts seven partial constructs as built, so `coverage.md`'s shares read high | `game/tools/engine-constructs.mjs`:345–396 | V8 |"
+  ],
+  "status": "queued; prerequisite PR 834 verification in progress"
+}

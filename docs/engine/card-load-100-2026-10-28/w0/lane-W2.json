@@ -1,0 +1,19 @@
+{
+  "schema": "library-load-lane@1",
+  "lane": "W2",
+  "wave": 0,
+  "theme": "stack",
+  "branch": "codex/engine-load100-w0-w2-stack",
+  "source": "main 39a45706; README open accuracy debt; ORCHESTRATION wave 0",
+  "cards": [],
+  "review": [],
+  "debt": "New targets for copies of \"up to N\" spells; \"up to N\" spells cast free or by an effect; Metallic Mimic and the copiers; Gandalf's face-down cast from exile (CR 708.4); Refuse Cunning Wish and Extrapolate the Impossible by name in readDeck, per Rob, Oct 28, 2026 (ROB-198)",
+  "evidence": [
+    "| A copy of an \"up to N targets\" spell keeps the original's targets (\"you may choose new targets\" never offered) | `asking.mjs`:1648 (NAMED) | W2 |",
+    "| Metallic Mimic and the copiers: type asked after it enters; a copy of a copy | `replacement.mjs`:420 | W2 |",
+    "| Cast face down from exile (Gandalf; CR 708.4, 406.4) | `actions.mjs`:1783 | W2 |",
+    "| \"Up to N targets\" spells cast free or by an effect: left out | `asking.mjs`:2326 (NAMED) | W2 |",
+    "| Unsure, to be settled by a scenario: Song of the Dryads and Sagas under ability loss; Incubator copies single-faced; Social Snub's copy; Winter's prompt and a draw-two cost under Narset | `rules/layers.mjs`:870; `permanents.mjs`:644; `actions.mjs` | V8 finds, W1/W6/W2/W7 fix |"
+  ],
+  "status": "queued; prerequisite PR 834 verification in progress"
+}

@@ -1,0 +1,20 @@
+{
+  "schema": "library-load-lane@1",
+  "lane": "W4",
+  "wave": 0,
+  "theme": "combat",
+  "branch": "codex/engine-load100-w0-w4-combat",
+  "source": "main 39a45706; README open accuracy debt; ORCHESTRATION wave 0",
+  "cards": [],
+  "review": [],
+  "debt": "Trample assignment asked (CR 702.19b); trample over a planeswalker (702.19c); protection from a departed source; damage doublers' order; a token entering attacking asks whom; blocker-side requirements (ROB-149); calibration failures **Blackblade Reforged** and **Goblin Piledriver**",
+  "evidence": [
+    "| Damage from a source that left the battlefield is sourceless, so protection does not stop it | `asking.mjs`:1782 (NAMED) | W4 |",
+    "| Damage doublers where nobody can be asked: the order that deals the least | `rules/replacement.mjs`:34, 576 | W4 |",
+    "| Trample over a planeswalker (CR 702.19c) | `rules/combat.mjs`:118 | W4 |",
+    "| Trample blocked by one creature: exactly lethal assigned, the attacker's controller not asked (CR 702.19b) | `rules/combat.mjs`:781–790 | W4 |",
+    "| Two damage replacements where nobody can be asked | `rules/replacement.mjs`:34 | W4 |",
+    "| A token put onto the battlefield attacking attacks the first player in turn order | `script/effects/permanents.mjs`:270 | W4 |"
+  ],
+  "status": "queued; prerequisite PR 834 verification in progress"
+}
