@@ -955,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 634 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 639 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1208,6 +1208,11 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `room-refused-answer` — `tests/room-refused-answer.mjs`
 - `room-g1-terms` — `tests/room-g1-terms.mjs`
 - `game-table` — `tests/game-table.mjs`
+- `lounge-registry` — `tests/lounge-registry.mjs` (the Pre-lobby's lists: `live` and `mine` from the registry object, private tables kept to their seats, the organizer and the owner; the new create fields; `users/search`; `ai-seat`'s levels; no address anywhere)
+- `lounge-lobby` — `tests/lounge-lobby.mjs` (the Lobby's seat operations, an AI seat's mat chosen for it, AI decks by anyone seated, requests to join seen by the organizer alone, quit, the log)
+- `lounge-watch` — `tests/lounge-watch.mjs` (`connect?watch=1`: a spectator is sent the public view alone, none of a seat's hand, and its action frames are refused)
+- `lounge-chat` — `tests/lounge-chat.mjs` (chat in the lobby and the game: rate limit, push to every connection, the last 50 in the view)
+- `lounge-results` — `tests/lounge-results.mjs` (a row per person's seat when a game ends, the leaderboard, migration 0010, Observe AI game)
 - `game-leave` — `tests/game-leave.mjs`
 - `table-rematch` — `tests/table-rematch.mjs` (Play again once a table's game is over: the next game with the same seats, decks and rules as a new match, a No releasing the seat, silence a No at two minutes on the alarm, and the table's games over when the host goes or too few stay)
 - `table-lobby` — `tests/table-lobby.mjs`

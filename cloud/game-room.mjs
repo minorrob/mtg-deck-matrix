@@ -29,6 +29,8 @@ import {tableDefinition} from "../game/engine/cards/definitions.mjs";
 import {candidateDefinition} from "../game/engine/cards/candidates.mjs";
 import {agentBrief, pickOf} from "../game/room/agent-brief.mjs";
 import {createAi, settings, pilot, pilotWorst, Closed} from "./ai.mjs";
+import {groupOf} from "./access.mjs";
+import {Registry, REGISTRY, recordResults} from "./lounge.mjs";
 
 /* WHAT THE TABLE PLAYS (M5; the plan review's A2 and C4): the basic lands, and every definition in the engine's card
    directory (game/engine/cards/definitions.mjs, generated from it). A deck whose every card is one of these takes a
@@ -211,6 +213,10 @@ export class GameRoom {
  *        own seat's elsewhere. A table is a playtest table when the Worker's PLAYTEST_TABLES is "on" as it is made.
  *   GET  /table/brief    the Coach's brief for your seat (X13), asked for by the Worker's AI door alone
  *   GET  /connect (websocket), once the game is on: the seat this address holds
+ *   GET  /connect?watch=1  a spectator (lounge-contract §4): the public view alone, no action taken
+ *   POST /table/seat {op, seatId, ...}   remove | add-ai | edit-ai          POST /table/request-join, POST /table/request {requestId, accept}
+ *   POST /table/quit     the host or the admin ends the table for everyone  GET /table/log   POST /table/chat {text}
+ *   /lounge/report|live|mine   when this object is the registry (REGISTRY, cloud/lounge.mjs): the lounge's list of live tables
  *
  * ONE ALARM, TWO CLOCKS: the countdown's end, and a dropped player's five minutes (Rob, 2026-09-26). When a
  * seat's last socket closes mid-game its clock starts and the others are told who they are waiting for and
@@ -224,7 +230,10 @@ export class GameTable extends GameRoom {
     this.now = options.now || (() => Date.now());
     /* The model's fetch, for a suite to stand in for (the LLM seat); the platform's otherwise. */
     this.fetchImpl = options.fetchImpl || null;
-    this.table = tableOn(this.storage, {cards: this.cards, candidates: options.candidates || tableCandidates, slice: this.slice, ...(options.random ? {random: options.random} : {})});
+    this.table = tableOn(this.storage, {cards: this.cards, candidates: options.candidates || tableCandidates, slice: this.slice, ...(options.random ? {random: options.random} : {}),
+      watching: () => this.watchers()});
+    this.registry = new Registry(ctx.storage);
+    this.reportedAt = 0; this.resultsRetryAt = 0;
   }
 
   async load() {
@@ -232,22 +241,98 @@ export class GameTable extends GameRoom {
     return this.room;
   }
 
+  /* The object answers the table's routes, or, when it is the lounge's registry, the registry's. After a change the table tells
+     the registry (`report`) and files a finished game's results (`persistResults`); neither can fail a request. */
   async fetch(request) {
+    const url = new URL(request.url);
+    if (url.pathname.startsWith("/lounge/")) return this.registryFetch(request, url);
+    const response = await this.tableFetch(request);
+    if (request.method === "POST" && response.status < 400) {await this.persistResults(); await this.report();}
+    return response;
+  }
+
+  async registryFetch(request, url) {
+    const email = (request.headers.get("x-crankmagic-email") || "").toLowerCase(), now = this.now();
+    if (url.pathname === "/lounge/report" && request.method === "POST") return reply(200, await this.registry.report(await request.json().catch(() => null), now));
+    if (url.pathname === "/lounge/live") return reply(200, await this.registry.live({email, admin: request.headers.get("x-crankmagic-admin") === "1", now}));
+    if (url.pathname === "/lounge/mine") return reply(200, await this.registry.mine({email, now}));
+    return reply(404, {error: "No such endpoint."});
+  }
+
+  /** Whether this address is CrankMagic's owner, the admin (cloud/access.mjs, groupOf). */
+  async isAdmin(email) {return (await groupOf(email, this.env, null)) === "owner";}
+  /** How many sockets are watching (lounge-contract §4): a number only. */
+  watchers() {try {return this.ctx.getWebSockets().filter((s) => this.ctx.getTags(s)[0] === "watch").length;} catch {return 0;}}
+
+  /** Tell the registry what this table looks like now. */
+  async report() {
+    if (!this.env?.TABLES) return;
+    try {
+      const summary = await this.table.lounge.summary(this.now());
+      this.reportedAt = this.now();
+      await this.env.TABLES.get(this.env.TABLES.idFromName(REGISTRY)).fetch(new Request("https://table.internal/lounge/report",
+        {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify(summary)}));
+    } catch {/* the lounge is a list; the table goes on without it */}
+  }
+
+  /** File a finished game's rows for the leaderboard once (migration 0010); retried later when the table is absent. */
+  async persistResults() {
+    if (!this.env?.DB || this.now() < this.resultsRetryAt) return;
+    try {
+      for (const game of await this.table.lounge.pendingResults()) {
+        await recordResults(this.env.DB, game.rows, {matchId: game.matchId, now: this.now()});
+        await this.table.lounge.resultsWritten(game.matchId);
+      }
+    } catch {this.resultsRetryAt = this.now() + 10 * 60 * 1000;}
+  }
+
+  async tableFetch(request) {
     const url = new URL(request.url), email = (request.headers.get("x-crankmagic-email") || "").toLowerCase();
     const body = async () => {try {return await request.json();} catch {throw new TableError(400, "That request is not JSON.");}};
     const t = this.table, now = this.now();
     try {
       if (!email) return reply(401, {error: "Sign in to use a table."});
       const route = `${request.method} ${url.pathname}`;
+      /* The person asking, as the lounge reads them: their address, whether they are the owner, and the name the Worker gave. */
+      const who = {email, admin: await this.isAdmin(email), name: (request.headers.get("x-crankmagic-name") || "").trim().slice(0, 60)};
       if (route === "POST /table/create") {
         const b = await body();
+        /* Hard is not open yet (lounge-contract §2): refused here, at the route; the table itself still reads an unknown level as Normal. */
+        if (Array.isArray(b.seats) && b.seats.some((s) => s && s.kind === "ai" && s.level === "hard")) return reply(422, {error: "Hard is not open yet. Choose Normal or Easy."});
         /* An AI on Claude is seated only where the AI door would let this host spend on it (AI-2). */
         const llm = Array.isArray(b.seats) && b.seats.some((s) => s && s.kind === "ai" && s.level === "llm");
         return reply(201, {table: await t.create({tableId: b.tableId, host: email, hostName: b.hostName, seats: b.seats, playtest: this.env?.PLAYTEST_TABLES === "on",
-          llmAllowed: llm && (await this.pilotOpen(email)) === null})});
+          llmAllowed: llm && (await this.pilotOpen(email)) === null, privacy: b.privacy, observe: b.observe === true, admin: who.admin, now})});
       }
       /* With the table, the object's own time: a countdown is read against the clock that set it, not the device's. */
-      if (route === "GET /table") return reply(200, {table: await t.view(email), now});
+      if (route === "GET /table") {
+        try {return reply(200, {table: await t.view(email, {admin: who.admin, watch: url.searchParams.get("watch") === "1"}), now});}
+        catch (error) {
+          /* A person who asked to join and is not seated yet is told where their request stands. */
+          const asked = error instanceof TableError && error.status === 403 ? t.lounge.requestState(email) : null;
+          if (asked) return reply(403, {error: error.message, request: asked});
+          throw error;
+        }
+      }
+      /* THE LOUNGE (docs/ui-lane/lounge-contract.md §3, §5). */
+      if (route === "POST /table/seat") {
+        const b = await body();
+        const llm = b && b.level === "llm";
+        return reply(200, {table: await t.lounge.seat(who, b, now, {llmAllowed: llm && (await this.pilotOpen(await t.host())) === null})});
+      }
+      if (route === "POST /table/request-join") return reply(201, {request: await t.lounge.requestJoin(who, now)});
+      if (route === "POST /table/request") return reply(200, {table: await t.lounge.request(who, await body(), now)});
+      if (route === "POST /table/quit") {
+        const room = await this.load(); const view = await t.lounge.quit(who, now);
+        await this.schedule(); await this.share(room); this.announce({type: "quit", by: view.quit?.by ?? null});
+        return reply(200, {table: view});
+      }
+      if (route === "GET /table/log") return reply(200, await t.lounge.log(who));
+      if (route === "POST /table/chat") {
+        const message = await t.lounge.chat(who, (await body()).text, now);
+        this.announce({type: "chat", message});
+        return reply(201, {message});
+      }
       if (route === "GET /table/record") return reply(200, {record: await t.record(email, url.searchParams.get("match") || undefined)});
       /* The Coach's brief for this person's seat (game/room/coach-brief.mjs). Only the Worker's AI door asks for it: the
          front door (cloud/tables.mjs) forwards no such path. */
@@ -270,6 +355,15 @@ export class GameTable extends GameRoom {
       if (route === "POST /table/rematch") {const view = await t.rematch(email, (await body()).accept, now); await this.schedule(); return reply(200, {table: view});}
       if (route === "GET /connect") {
         if (request.headers.get("upgrade") !== "websocket") return reply(426, {error: "Connect with a WebSocket."});
+        /* A SPECTATOR (lounge-contract §4): tagged "watch", sent the public view alone, and read no further than asking for it. */
+        if (url.searchParams.get("watch") === "1") {
+          const watched = await t.watchRoom(who);
+          this.room = watched;
+          const pair = this.socketPair();
+          this.ctx.acceptWebSocket(pair[1], ["watch"]);
+          pair[1].send(JSON.stringify({type: "view", view: watched.watch()}));
+          return this.upgraded(pair[0]);
+        }
         const {room, seatId} = await t.room(email);
         this.room = room;
         const pair = this.socketPair();
@@ -282,6 +376,34 @@ export class GameTable extends GameRoom {
       if (error instanceof TableError || error instanceof RoomError) return reply(error.status, {error: error.message, ...(error.unsupported ? {unsupported: error.unsupported} : {})});
       throw error;
     }
+  }
+
+  /** A frame to every connection, spectators included (the chat; a table ended). */
+  announce(frame) {
+    for (const socket of this.ctx.getWebSockets()) {try {socket.send(JSON.stringify(frame));} catch {}}
+  }
+
+  /** Every connected seat gets its own view, a spectator the public one -- never a hand, whatever sockets are open. */
+  broadcast() {
+    for (const socket of this.ctx.getWebSockets()) {
+      const [seatId] = this.ctx.getTags(socket);
+      try {socket.send(JSON.stringify({type: "view", view: seatId === "watch" ? this.room.watch() : this.room.view(seatId)}));} catch {}
+    }
+    /* The turn the registry shows moves with the game: told at most every fifteen seconds. */
+    if (this.now() - this.reportedAt > 15000) this.report().catch(() => {});
+  }
+
+  /** A spectator sends nothing: it may ask for the view again, and any other frame is refused and not applied. */
+  async webSocketMessage(socket, message) {
+    if (this.ctx.getTags(socket)[0] !== "watch") return super.webSocketMessage(socket, message);
+    const send = (frame) => socket.send(JSON.stringify(frame));
+    let frame = null;
+    try {frame = typeof message === "string" && message.length <= MAX_FRAME ? JSON.parse(message) : null;} catch {/* refused below */}
+    if (frame && frame.type === "view") {
+      const room = await this.load();
+      return room ? send({type: "view", view: room.watch({after: typeof frame.after === "string" ? frame.after : undefined})}) : send({type: "refused", status: 409, error: "There is no game at this table."});
+    }
+    return send({type: "refused", status: 403, error: "A spectator watches; it does not play."});
   }
 
   /** Set the one alarm to whichever clock runs out first, or clear it. */
@@ -299,6 +421,7 @@ export class GameTable extends GameRoom {
     await this.agentTurns(await this.load());
     await this.schedule();
     await this.share(room);
+    await this.persistResults(); await this.report();
   }
 
   /* THE LLM SEAT'S TURNS (AI-2, docs/plan-to-done-2026-09-30.md). The room stops at the seat's close calls
@@ -370,6 +493,7 @@ export class GameTable extends GameRoom {
   async webSocketClose(socket, code) {
     try {socket.close(code, "closing");} catch {}
     const [seatId] = this.ctx.getTags(socket);
+    if (seatId === "watch") return;
     const open = this.ctx.getWebSockets().filter((s) => s !== socket && this.ctx.getTags(s)[0] === seatId);
     if (open.length) return;
     const seat = Number(seatId.slice(1)), now = this.now();

@@ -11,7 +11,8 @@ export function countdownBlockers(table) {
   const seated = table.seats.filter(s => s.occupied);
   const blockers = [];
   if (seated.length < 2) blockers.push({seatId: null, reason: 'A game needs at least two seats'});
-  if (!seated.some(s => s.kind === 'human')) blockers.push({seatId: null, reason: 'A game needs a human'});
+  /* An OBSERVE table (the admin's "Observe AI game", cloud lounge) has no person to seat: AI seats only, watched. */
+  if (!table.observe && !seated.some(s => s.kind === 'human')) blockers.push({seatId: null, reason: 'A game needs a human'});
   /* A chair nobody has sat in YET is not the same as one somebody left. With a live invitation
      out, the table used to count down and launch before the guest opened their link: the host
      readies, the AI seats are ready from birth, and an unoccupied seat is not judged. Waiting is
@@ -55,10 +56,10 @@ export function unfilledHumanSeats(table) {
 }
 
 /** Pure authoritative table transitions. Transport authenticates actor; clients never set time/IDs. */
-export function createTable({tableId,seats,settings}) {
-  if(!tableId||seats.length<2||seats.length>4||!seats.some(s=>s.kind==='human'))throw Error('A table needs 2–4 seats and a human');
+export function createTable({tableId,seats,settings,observe=false}) {
+  if(!tableId||seats.length<2||seats.length>4||(!observe&&!seats.some(s=>s.kind==='human')))throw Error('A table needs 2–4 seats and a human');
   if(seats.some((s,i)=>s.seatId!==i||!['human','ai'].includes(s.kind)))throw Error('Invalid seats');
-  return {schema:'CrankMagicTable@1',tableId,revision:0,phase:'selecting',generation:0,countdownAt:null,rematchAt:null,launchId:null,matchId:null,launchError:null,...(settings?{settings:structuredClone(settings)}:{}),
+  return {schema:'CrankMagicTable@1',tableId,revision:0,phase:'selecting',generation:0,countdownAt:null,rematchAt:null,launchId:null,matchId:null,launchError:null,...(settings?{settings:structuredClone(settings)}:{}),...(observe===true?{observe:true}:{}),
     seats:seats.map(s=>({...s,occupied:s.kind==='ai'||!!s.occupied,connected:s.kind==='ai'||!!s.occupied,ready:false,deckVersion:null,rematch:null,disconnectedAt:null,conceded:false,invited:false,released:false}))};
 }
 export function transitionTable(previous,event,{now,launchId}={}) {

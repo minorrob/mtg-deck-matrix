@@ -80,8 +80,8 @@ let now = Date.parse("2026-09-26T20:00:00Z");
   await refuses(t.join(SAM, late, now + INVITE_TTL + 1), 410, null, "a link used after its day is refused");
   const samLink = (await t.invite(ROB, 2, now)).code;
 
-  /* Mats: every seat starts on felt; a person picks their own from the app's mats, and everyone sees it. */
-  ok((await t.view(MAYA)).seats.every((s) => s.mat === "felt"), "every seat starts on felt");
+  /* Mats: every PERSON starts on felt (an AI seat is given one, Rob 2026-10-28: tests/lounge-lobby.mjs); a person picks their own from the app's mats, and everyone sees it. */
+  ok((await t.view(MAYA)).seats.filter((s) => s.kind === "human").every((s) => s.mat === "felt"), "every person starts on felt");
   eq((await t.mat(MAYA, "sea")).seats[1].mat, "sea", "Maya picks the sea for her own seat");
   eq((await t.view(ROB)).seats[1].mat, "sea", "and Rob sees it on her seat");
   await refuses(t.mat(MAYA, "someone-elses-art"), 400, /no such mat/, "a mat that is not one of the app's is refused");
@@ -93,7 +93,9 @@ let now = Date.parse("2026-09-26T20:00:00Z");
 
   /* Decks. */
   await refuses(t.deck(MAYA, 0, deckFor("maya"), now), 403, null, "a person chooses only their own seat's deck");
-  await refuses(t.deck(MAYA, 3, deckFor("maya"), now), 403, null, "and only the host chooses an AI's");
+  /* Changed with the lounge (Rob's Lobby, 2026-10-28): anyone SEATED brings an AI seat's deck, no longer the host alone;
+     someone with no seat still may not. (tests/lounge-lobby.mjs proves the seated person's side.) */
+  await refuses(t.deck(EVE, 3, deckFor("eve"), now), 403, null, "and only someone seated at the table chooses an AI's");
   const bad = await t.deck(MAYA, 1, {name: "x", commander: ["Krenko, Mob Boss"], cards: ["Mountain", "Sol Ring"]}, now).catch((e) => e);
   eq([bad.status, bad.unsupported], [422, ["Krenko, Mob Boss", "Sol Ring"]], "a deck the engine cannot play is refused, naming each card");
   await t.deck(ROB, 0, {...deckFor("rob"), source: {deckId: "deck:rob:1", deckVersion: 4}}, now);
