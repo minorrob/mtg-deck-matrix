@@ -1,0 +1,88 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Orzhov Locket",
+  "scenarios": [
+    {
+      "name": "It taps for {W} or {B}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Orzhov Locket"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Orzhov Locket"
+              },
+              "count": 2
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "Four hybrid mana, tap and sacrifice: draw two",
+      "library": [
+        "Island",
+        "Forest",
+        "Mountain"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Orzhov Locket",
+            "Plains",
+            "Plains",
+            "Swamp",
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "activate": "Orzhov Locket",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Orzhov Locket"
+          ]
+        }
+      ]
+    }
+  ]
+}

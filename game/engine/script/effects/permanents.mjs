@@ -50,6 +50,17 @@ export const PREDEFINED_TOKENS = Object.freeze({
   /* CR 111.10a */
   Treasure: {name: "Treasure", types: ["Artifact"], subtypes: ["Treasure"],
     abilities: [{id: "treasure", kind: "mana", tapSelf: true, anyColor: true, sacrificeSelf: true, text: "{T}, Sacrifice this artifact: Add one mana of any color."}]},
+  /* CR 111.10: a Blood token (Kamber, the Plunderer; Moonstone Eulogist) -- "{1}, {T}, Discard a card, Sacrifice this artifact: Draw a card." */
+  Blood: {name: "Blood", types: ["Artifact"], subtypes: ["Blood"],
+    abilities: [{id: "blood", kind: "activated", text: "{1}, {T}, Discard a card, Sacrifice this artifact: Draw a card.", targets: [],
+      cost: [{atom: "mana", cost: "{1}"}, {atom: "{T}"}, {atom: "discard"}, {atom: "sacrifice", self: true}], effects: [{effect: "draw", count: 1}]}]},
+  /* A 2/2 black Zombie creature token with decayed (CR 702.147; Tainted Adversary): it can't block (702.147a), and when it
+     attacks it is sacrificed at end of combat (702.147b) -- the keyword's two abilities, written out as a token's are. */
+  "Decayed Zombie": {name: "Zombie", types: ["Creature"], subtypes: ["Zombie"], colors: ["B"], power: 2, toughness: 2, keywords: ["Decayed"],
+    abilities: [
+      {id: "decayed-block", kind: "static", rule: "cant-block", affects: {what: "permanent", self: true}, text: "This creature can't block."},
+      {id: "decayed-attack", kind: "triggered", text: "When this creature attacks, sacrifice it at end of combat.", trigger: {on: "GameEventAttackersDeclared", who: "self"},
+        effects: [{effect: "delayedTrigger", at: "end of combat", text: "Sacrifice it at end of combat.", effects: [{effect: "moveZone", targets: "self", sacrifice: true}]}]}]},
   /* CR 111.10b */
   Food: {name: "Food", types: ["Artifact"], subtypes: ["Food"],
     abilities: [{id: "food", kind: "activated", text: "{2}, {T}, Sacrifice this artifact: You gain 3 life.", targets: [],

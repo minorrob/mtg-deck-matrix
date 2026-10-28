@@ -955,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 634 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 640 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1140,6 +1140,11 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-house-pilot` — `tests/engine-house-pilot.mjs`
 - `agent-seat-table` — `tests/agent-seat-table.mjs` (an AI on Claude at the table: seated only through the AI door, asked on the table's alarm, held to its game's cap)
 - `engine-scored-pilot` — `tests/engine-scored-pilot.mjs` (the house pilot's L1: draw odds, exact combat, its choices scored, Easy and Normal)
+- `ai-personas` — `tests/ai-personas.mjs` (the AI roster: four difficulties and four personas on three dials, each persona within its limits and none able to touch information or person bias; a seat names a level and a persona and a table carries the persona from the lobby to the launched room)
+- `veteran-agent` — `tests/veteran-agent.mjs` (the Veteran: Hard reasoned over by a model that is told how to read Hard's numbers and nothing of how any other seat is built; its brief carries Hard's plans in the decision's own indices and cannot tell a person from an AI)
+- `pilot-urgency` — `tests/pilot-urgency.mjs` (response urgency: three tiers from a card's role, its controller's links and my life; what an answer nets; the mana an instant answer holds)
+- `pilot-roles` — `tests/pilot-roles.mjs` (which cards double, loop, drain or are salty and how dangerous a commander is: a few kilobytes of the corpus held equal to their sources and handed to every pilot with a card's other public facts)
+- `engine-hard-pilot` — `tests/engine-hard-pilot.mjs` (Hard: a preferred defender for each creature, and the blockers a trampler or a flyer needs held home; the reserve's weighted probability and the absorbing-defender model behind it)
 - `engine-threat` — `tests/engine-threat.mjs` (the threat table every difficulty reads: life, hitters, growth and ramp off the seat's view; Easy's rank, Normal's weighted mean; a person and an AI the same row; L1 attacks where threat × effect is highest; the floor under an attack that dies for nothing)
 - `engine-pilot-picks` — `tests/engine-pilot-picks.mjs` (the AI seats take what an "up to" or a search is for: the lands of the colors they lack, proliferate's good counters, their own side; old matches answered as before)
 - `engine-ingest` — `tests/engine-ingest.mjs`
@@ -1573,6 +1578,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-roblists-food` - `tests/engine-roblists-food.mjs`: Rob's priority lists, lane P2 (2026-10-24) -- descend counted for a card's owner this turn, the Ring's temptations counted, a life adder for its controller alone, a leftover reduction taking off X (affinity), sacrifice X, that many Squirrels, devour, a linked card played free, damage by a name, skulk, what the schema refuses of each new key, and the lane's cards through their scenarios.
 - `engine-roblists-p1` - `tests/engine-roblists-p1.mjs`: Rob's priority lists, lane P1 (blink, 2026-10-24): a Phyrexian added as a card returns, Preston's 0/1 white Illusion, third from the top, an airbended card its owner's to cast, a permanent's own entering trigger when it is gone again in the same resolution (Panharmonicon, Elesh Norn), Y'shtola Rhul's additional end step each turn, and myriad at four seats.
 - `engine-precons-e` - `tests/engine-precons-e.mjs`: the precon load, lane E (Wretched Ranks, 2026-10-25) -- Kalitas's death replacement for each opponent at a table of three, an opponent's Kalitas, Kalitas beside Liesa (the game goes on), Josu Vess's kicked read off the permanent, a sacrifice remembered for every player (Syphon Flesh), what the schema refuses of each new key, and the deck's 40 cards through their scenarios.
+- `engine-deck-load-1027` - `tests/engine-deck-load-1027.mjs`: the card load of Rob's Orzhov deck (2026-10-27), the 25 cards the engine lacked -- every card of the list playable and the 25 through their scenarios, the choice of Agadeem's Awakening held to a different mana value for each card (refused with what to do), monocolored, the Blood token and the decayed Zombie, and what the schema refuses of the new key.
 
 ## Design and execution record
 

@@ -101,6 +101,8 @@ import {createController} from "../engine/controller.mjs";
 import {createMatchStore} from "../engine/storage.mjs";
 import {housePilot, meetRequirements, manaColors} from "../engine/pilots/house-pilot.mjs";
 import {scoredPilot, SETTINGS} from "../engine/pilots/scored-pilot.mjs";
+import {personaOf, dispositionFor} from "../engine/pilots/roster.mjs";
+import {flagsOf, commanderClassOf} from "../engine/pilots/roles.mjs";
 import {agentPilot} from "../engine/pilots/agent-pilot.mjs";
 import {addToHistory} from "./history.mjs";
 import {tableEvent, eventsFor, keep, EVENTS_SCHEMA} from "./events.mjs";
@@ -144,8 +146,11 @@ const manaValueOf = (cost) => (String(cost || "").match(/\{([^}]+)\}/g) || []).r
 export const factsFrom = (cards) => {
   /* Read once a name: a card's facts do not change in a match. */
   const known = new Map();
-  return (name) => (known.has(name) ? known.get(name) : known.set(name, factsOf(cards(name))).get(name));
+  return (name) => (known.has(name) ? known.get(name) : known.set(name, withRoles(name, factsOf(cards(name)))).get(name));
 };
+/* What a card does to a game (game/engine/pilots/roles.mjs): its role flags and, as a commander, its class -- public facts, as
+   a card's own text is, so the threat table and the urgency read them alike for every seat. */
+const withRoles = (name, facts) => (facts ? {...facts, flags: flagsOf(name), commanderClass: commanderClassOf(name)} : facts);
 const factsOf = (c) => {
   /* `x`: a cost with {X} (CR 107.3), so the house pilot taps everything before it casts. `subtypes`, and what each activated
      ability costs and does (`activated`), as the card says: L1 weighs an ability by them (scored-pilot.mjs). Its `colors`
@@ -174,7 +179,9 @@ function readPod(pod, cards) {
     const library = (Array.isArray(s.cards) ? s.cards : []).map(String);
     if (commander.length > 2 || commander.length + library.length > MAX_CARDS) throw new RoomError(400, `${seatId}'s deck is not one a table can hold.`);
     for (const name of [...commander, ...library]) if (!cards(name)) missing.add(name);
-    return {seatId, name: String(s.name || `Seat ${index + 1}`).slice(0, 60), pilot, ...(level ? {level} : {}), commander, cards: library};
+    /* An AI seat's persona (game/engine/pilots/roster.mjs): an id on the roster, or none; carried with the seat, replayed with it. */
+    const persona = level && personaOf(s.persona) ? s.persona : null;
+    return {seatId, name: String(s.name || `Seat ${index + 1}`).slice(0, 60), pilot, ...(level ? {level} : {}), ...(persona ? {persona} : {}), commander, cards: library};
   });
   if (missing.size) {
     const names = [...missing].sort();
@@ -488,9 +495,12 @@ export function triggerRun(stack) {
  * WHAT ANSWERS FOR AN AI SEAT: L1 at its setting, handed its own deck list (which its player knows) and the match's seed
  * (easy's chance); without a setting, L0. Both see only the seat's projection. `picks`: the match's `pilotPicks`.
  */
-export function seatPilot({seat, cards, deck = [], level = null, seed = "", picks = false}) {
-  if (level === LLM) return agentPilot({seat, cards, deck, seed, picks});
-  return level ? scoredPilot({seat, cards, deck, setting: level, seed, picks}) : housePilot({seat, cards, picks});
+export function seatPilot({seat, cards, deck = [], level = null, persona = null, seed = "", picks = false}) {
+  /* A PERSONA'S OVERRIDES (roster.mjs `dispositionFor`): the pilot is made with them, so the seat plays its difficulty as that persona
+     would; a seat without one plays the plain difficulty, as every table has. */
+  const disposition = persona && level ? dispositionFor(level, persona) : null;
+  if (level === LLM) return agentPilot({seat, cards, deck, seed, picks, disposition});
+  return level ? scoredPilot({seat, cards, deck, setting: level, seed, picks, disposition}) : housePilot({seat, cards, picks});
 }
 /** The LLM seat's setting: L1, but its close calls are offered to the seat, for its model to answer (`consults`). */
 export const LLM = "llm";
@@ -615,7 +625,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
   let matchSeed = "";
   /* And whether they take what a choice they may answer with none is for (`pilotPicks`), as the match was launched. */
   let pilotPicks = false;
-  const pilotMade = (seat) => makePilot({seat, cards: facts, deck: seats[seat].cards, level: seats[seat].level ?? null, seed: matchSeed, picks: pilotPicks});
+  const pilotMade = (seat) => makePilot({seat, cards: facts, deck: seats[seat].cards, level: seats[seat].level ?? null, persona: seats[seat].persona ?? null, seed: matchSeed, picks: pilotPicks});
   const pilotFor = (seat) => pilots[seat] || (pilots[seat] = pilotMade(seat));
   /* Whether the LLM seat asks for this decision (agent-pilot.mjs `consult`): never a seat that has left. */
   const consults = (seat, view, offer) => seats[seat].level === LLM && !leaving.includes(seat) && pilotFor(seat).consult?.(view, offer) === true;
@@ -977,7 +987,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
 
   const api = {
     matchId,
-    get seats() {return seats.map(({seatId, name, pilot, level}) => ({seatId, name, pilot, ...(level ? {level} : {})}));},
+    get seats() {return seats.map(({seatId, name, pilot, level, persona}) => ({seatId, name, pilot, ...(level ? {level} : {}), ...(persona ? {persona} : {})}));},
     get status() {return finished() ? "finished" : "playing";},
     get revision() {return controller.revision;},
     get waitingOn() {return pendingSeat === null ? null : seats[pendingSeat].seatId;},
@@ -1245,6 +1255,23 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       }
       const given = pilot.answer(seen, awaitingChoice(state));
       return {indices: given.indices ?? [], ...(given.amounts ? {amounts: given.amounts} : {}), ...(given.value !== undefined ? {value: given.value} : {}), ...(given.cancel ? {cancel: true} : {})};
+    },
+
+    /**
+     * WHAT THE SEAT'S PILOT WORKED OUT for the decision it is being asked (the Veteran's brief reads it; game/room/agent-brief.mjs):
+     * the table's threats, what is urgent on it, the creatures kept home, its top plans as this decision's own option indices, and the
+     * seat's own persona. Read-only: it answers nothing and changes nothing. Null for a pilot that does not explain.
+     */
+    analysis(seatId) {
+      const seat = seatIndex(seatId);
+      if (seat < 0 || seats[seat].pilot !== "house") throw new RoomError(403, "That is not an AI seat at this table.");
+      if (pendingSeat !== seat || !controller.pending) throw new RoomError(409, "That seat is not being asked anything.");
+      const pilot = pilotFor(seat);
+      if (typeof pilot.explain !== "function") return null;
+      const seen = projectFor(state, seat);
+      const explained = pilot.explain(seen, pendingActions ? {actions: pendingActions} : {choice: awaitingChoice(state)});
+      const p = personaOf(seats[seat].persona);
+      return {...explained, persona: p ? {name: p.name, blurb: p.blurb, ...p.disposition} : null};
     },
 
     /**

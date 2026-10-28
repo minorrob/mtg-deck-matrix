@@ -205,7 +205,7 @@ const l1 = scoredPilot({seat: 0, cards}), l0 = housePilot({seat: 0, cards});
   const seeds = Array.from({length: 40}, (_, i) => `match-${i}`);
   eq(seeds.map(chosen), seeds.map(chosen), "easy answers the same question the same way every time it is asked: a replay agrees");
   ok(new Set(seeds.map(chosen)).size > 1, `and across matches it does not always choose alike (${[...new Set(seeds.map(chosen))].join(", ")})`);
-  assert.throws(() => scoredPilot({seat: 0, setting: "hard"}), /easy or normal/);
+  assert.throws(() => scoredPilot({seat: 0, setting: "expert"}), /easy, normal or hard/);
   checks += 1;
 }
 

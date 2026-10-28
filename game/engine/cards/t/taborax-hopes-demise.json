@@ -1,0 +1,118 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Taborax, Hope's Demise",
+    "oracleId": "955abada-aba2-41c2-96ff-58e3679ad7e5",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Demon",
+      "Cleric"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying\nTaborax has lifelink as long as it has five or more +1/+1 counters on it.\nWhenever another nontoken creature you control dies, put a +1/+1 counter on Taborax. If that creature was a Cleric, you may draw a card. If you do, you lose 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "static",
+      "text": "Taborax has lifelink as long as it has five or more +1/+1 counters on it.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Lifelink"
+        ]
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "self": true,
+          "countersAtLeast": {
+            "counter": "+1/+1",
+            "count": 5
+          }
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another nontoken creature you control dies, put a +1/+1 counter on Taborax. If that creature was a Cleric, you may draw a card. If you do, you lose 1 life.",
+      "trigger": {
+        "on": "dies",
+        "who": "another",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "token": false
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        },
+        {
+          "effect": "branch",
+          "if": {
+            "about": "that card",
+            "is": {
+              "subtypes": [
+                "Cleric"
+              ]
+            }
+          },
+          "then": [
+            {
+              "effect": "modal",
+              "title": "Taborax, Hope's Demise: draw a card and lose 1 life?",
+              "modes": [
+                {
+                  "text": "Draw a card, then lose 1 life",
+                  "effects": [
+                    {
+                      "effect": "draw",
+                      "count": 1
+                    },
+                    {
+                      "effect": "loseLife",
+                      "amount": 1
+                    }
+                  ]
+                },
+                {
+                  "text": "No",
+                  "effects": []
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

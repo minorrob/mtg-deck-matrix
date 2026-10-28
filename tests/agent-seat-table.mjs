@@ -130,8 +130,8 @@ const pilotCalls = () => DB.raw.prepare("SELECT email, feature, model, outcome, 
   eq([game.made.json.table.seats[1].level, game.room.status], ["llm", "finished"], `an AI on Claude, seated and played to the end (${game.room.view("s0").state.turn} turns)`);
   ok(sent.length > 0, `its close calls went to the model: ${sent.length} of them`);
   ok(game.waits > 0 && game.alarmed === game.waits, `each time the room waited on the seat, the object's alarm was set for then (${game.alarmed} of ${game.waits})`);
-  ok(sent.every((b) => !b.messages[0].content.includes("Rob") && b.model === "claude-haiku-5-5" && b.output_config.effort === "low" && b.system === PILOT_SYSTEM),
-    "every request without a person's name, on the door's model at low effort, with the seat's instructions");
+  ok(sent.every((b) => !b.messages[0].content.includes("Rob") && b.model === "claude-haiku-5-5" && b.output_config.effort === "low" && b.system[0].text === PILOT_SYSTEM && b.system[0].cache_control.type === "ephemeral"),
+    "every request without a person's name, on the door's model at low effort, with the seat's instructions as the cached system prompt");
   const brief = JSON.parse(sent[0].messages[0].content);
   ok(brief.players.some((p) => p.seat === "you" && Array.isArray(p.hand)) && brief.players.filter((p) => p.hand).length === 1 && brief.decision.options.length > 0,
     "the brief: its own hand alone, the board, and the decision's options");

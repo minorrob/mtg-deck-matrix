@@ -31,6 +31,10 @@ const FACTS = {
   "Sol Ring": {manaValue: 1, types: ["Artifact"], makes: ["C"]}, "Llanowar Elves": {manaValue: 1, types: ["Creature"], makes: ["G"]},
   Bear: {manaValue: 2, types: ["Creature"], makes: []}, Dragon: {manaValue: 6, types: ["Creature"], makes: []},
   Wall: {manaValue: 2, types: ["Creature"], makes: []}, Banner: {manaValue: 3, types: ["Enchantment"], makes: []},
+  /* The role flags the room hands every pilot (pilots/roles.mjs): a doubler, an untapper and loop piece, a token engine; and a commander's class. */
+  "Doubling Season": {manaValue: 5, types: ["Enchantment"], makes: [], flags: "D"}, "Intruder Alarm": {manaValue: 4, types: ["Enchantment"], makes: [], flags: "UL"},
+  "Krenko Engine": {manaValue: 4, types: ["Creature"], makes: [], flags: "T"}, "Blood Artist": {manaValue: 2, types: ["Creature"], makes: [], flags: "B"},
+  "Loop Commander": {manaValue: 4, types: ["Creature"], makes: [], commanderClass: 1}, "Value Commander": {manaValue: 4, types: ["Creature"], makes: [], commanderClass: 0.5},
 };
 const cards = (name) => FACTS[name] ?? null;
 let ids = 0;
@@ -40,7 +44,7 @@ function viewOf({seat = 0, turn = 9, phase = "MAIN1", turnPlayerId = 0, players,
   return {viewerSeatId: seat, turn, turnPlayerId, phase, stackSize, combat, stack: [],
     players: players.map((p, i) => ({playerId: i, name: p.name ?? `P${i}`, life: p.life ?? 40, health: {life: p.life ?? 40, status: p.status ?? "active", poison: 0}, mana: [], counters: {},
       zones: {Battlefield: {cards: p.battlefield ?? [], count: (p.battlefield ?? []).length}, Hand: {cards: p.hand ?? [], count: p.handCount ?? (p.hand ?? []).length},
-        Library: {cards: [], count: 60}, Graveyard: {cards: []}, Exile: {cards: []}, Command: {cards: []}}, ...(p.extra ?? {})}))};
+        Library: {cards: [], count: 60}, Graveyard: {cards: []}, Exile: {cards: []}, Command: {cards: p.command ?? []}}, ...(p.extra ?? {})}))};
 }
 
 /* ---- 1. The signals ---- */
@@ -63,7 +67,7 @@ function viewOf({seat = 0, turn = 9, phase = "MAIN1", turnPlayerId = 0, players,
   /* Ramp: lands and what makes mana -- three lands, the Ring and the Elves are five sources; two lands are two. */
   near(a.ramp, 1, "ramp: mana sources a turn, lands and rocks and dorks alike, as a share of the fastest");
   near(b.ramp, 0.4, "(two sources against five)");
-  eq([a.engine, a.commander, b.engine, b.commander], [0, 0, 0, 0], "engine and commander: nothing yet (PR 2 of the plan reads the corpus and the catalog)");
+  eq([a.engine, a.commander, b.engine, b.commander], [0, 0, 0, 0], "engine and commander: 0 when no card says it has a role (the room hands the flags; section 1b)");
   ok(t.rows.every((r) => Object.values(r.signals).every((x) => x >= 0 && x <= 1) && r.score >= 0 && r.score <= 1), "every signal and score in [0, 1]");
   const w = THREAT_WEIGHTS.normal, sum = (s) => SIGNALS.reduce((n, k) => n + w[k] * s[k], 0) / SIGNALS.reduce((n, k) => n + w[k], 0);
   near(t.rows[0].score, sum(a), "Normal's score is the weighted mean under its weights");
@@ -78,6 +82,37 @@ function viewOf({seat = 0, turn = 9, phase = "MAIN1", turnPlayerId = 0, players,
   const lifeShare = THREAT_WEIGHTS.normal.life / SIGNALS.reduce((n, k) => n + THREAT_WEIGHTS.normal[k], 0);
   near(empty.rows[0].score, lifeShare, "empty boards: only life counts, at its weight's share");
   eq([empty.rows[1].score === empty.rows[0].score, empty.over(1), empty.over(2)], [true, 0, 0], "equal, and the mean says nobody stands out");
+}
+
+/* ---- 1b. The engine and the commander ---- */
+{
+  const links = (seat, n) => [card("Doubling Season", seat), card("Intruder Alarm", seat), card("Krenko Engine", seat, {power: 1, toughness: 1}), card("Doubling Season", seat)].slice(0, n);
+  const at = (setting, mine, theirs, command = []) => threatTable(viewOf({players: [{}, {battlefield: mine, command}, {battlefield: theirs}]}), {seat: 0, cards, setting});
+  const sig = (t, id, k) => t.rows.find((r) => r.playerId === id).signals[k];
+  /* Engine: Normal sees one when two links are down, Hard from the first, and Easy's weight is 0. */
+  eq([sig(at("normal", links(1, 1), []), 1, "engine"), sig(at("normal", links(1, 2), []), 1, "engine"), sig(at("normal", links(1, 4), []), 1, "engine")], [0, 0.5, 1],
+    "Normal: one link is no engine, two is half of one, four is one");
+  near(sig(at("hard", links(1, 1), []), 1, "engine"), 1 / 3, "Hard: the first link is already a seed (a third)");
+  eq([sig(at("hard", links(1, 3), []), 1, "engine"), sig(at("hard", links(1, 4), []), 1, "engine")], [1, 1], "and three links are one, more are no more");
+  eq([sig(at("easy", links(1, 4), []), 1, "engine"), sig(at("easy", [], [], [card("Loop Commander", 1)]), 1, "commander")], [0, 0], "Easy reads 0 for the engine and the commander, whatever is on the table");
+  eq([THREAT_WEIGHTS.easy.engine, THREAT_WEIGHTS.easy.commander], [0, 0], "and weighs neither");
+  ok(links(1, 1)[0].types.includes("Enchantment") && sig(at("hard", [card("Blood Artist", 1)], []), 1, "engine") === 0, "a bleed card is no engine link: only doublers, draw, token, untap, recursion and copy are");
+  /* Only a seat's own permanents count, and the seat itself and the lost never. */
+  eq(sig(at("hard", [], links(2, 4)), 1, "engine"), 0, "the other seat's links are the other seat's");
+  /* Commander: the strongest class in the command zone, or on the battlefield. */
+  const sigC = (setting, command, bf = []) => sig(at(setting, bf, [], command), 1, "commander");
+  eq([sigC("hard", [card("Loop Commander", 1)]), sigC("hard", [card("Value Commander", 1)]), sigC("hard", [])], [1, 0.5, 0], "a commander's class is the signal, from the command zone");
+  eq(sigC("hard", [], [card("Loop Commander", 1, {commander: true})]), 1, "and from the battlefield once it is out");
+  eq(sigC("hard", [card("Value Commander", 1), card("Loop Commander", 1)]), 1, "two commanders: the stronger");
+  /* The weights: Hard hears the commander at 1, Normal at 0.2, Easy at 0 -- so from turn one, on an empty board. */
+  const [h, n] = ["hard", "normal"].map((st) => at(st, [], [], [card("Loop Commander", 1)]).rows[0].score);
+  const [h0, n0] = ["hard", "normal"].map((st) => at(st, [], []).rows[0].score);
+  ok(h - h0 > 0.15 && n - n0 < 0.06 && h - h0 > 3 * (n - n0), `a loop commander on an empty board lifts Hard's score by ${(h - h0).toFixed(3)} and Normal's by ${(n - n0).toFixed(3)}`);
+  eq(at("easy", [], [], [card("Loop Commander", 1)]).rows[0].score, at("easy", [], []).rows[0].score, "and Easy's by nothing");
+  /* The table's top: two seats alike but for the commander; Hard goes at the loop commander's seat, Easy ties to the earlier. */
+  const twin = (setting, cmd) => threatTable(viewOf({players: [{}, {battlefield: [card("Bear", 1)]}, {battlefield: [card("Bear", 2)], command: cmd}]}), {seat: 0, cards, setting});
+  eq([twin("hard", [card("Loop Commander", 2)]).top, twin("hard", []).top], [2, 1], "Hard's top is the seat with the loop commander; without one, the earlier seat");
+  eq(twin("easy", [card("Loop Commander", 2)]).top, 1, "Easy never looked at it");
 }
 
 /* ---- 2. Easy's rank ---- */

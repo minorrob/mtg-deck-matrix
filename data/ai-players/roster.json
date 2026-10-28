@@ -1,0 +1,175 @@
+{
+  "schema": "CrankAiRoster@1",
+  "levels": [
+    {
+      "id": "easy",
+      "label": "Easy",
+      "saltCap": -1,
+      "available": true,
+      "needsAi": false
+    },
+    {
+      "id": "normal",
+      "label": "Normal",
+      "saltCap": -1,
+      "available": true,
+      "needsAi": false
+    },
+    {
+      "id": "hard",
+      "label": "Hard",
+      "saltCap": 0,
+      "available": true,
+      "needsAi": false
+    },
+    {
+      "id": "llm",
+      "label": "Veteran",
+      "saltCap": 0,
+      "available": true,
+      "needsAi": true
+    }
+  ],
+  "personas": [
+    {
+      "schema": "CrankPersona@1",
+      "id": "sable",
+      "name": "Sable",
+      "sex": "female",
+      "avatar": "assets/personas/sable.svg",
+      "blurb": "Plays the table like a grudge. Salty, relentless, remembers who hit her last.",
+      "disposition": {
+        "saltiness": 3,
+        "friendliness": -2,
+        "competitiveness": 2
+      },
+      "overrides": {
+        "saltCap": 4,
+        "grudge": 0.5,
+        "risk": -0.1,
+        "politics": "join"
+      },
+      "deckCriteria": {
+        "saltiness": 4,
+        "competitiveness": 4,
+        "speed": 3,
+        "playStyle": "Control"
+      }
+    },
+    {
+      "schema": "CrankPersona@1",
+      "id": "benny",
+      "name": "Benny",
+      "sex": "male",
+      "avatar": "assets/personas/benny.svg",
+      "blurb": "Everyone gets a card and a hug. Hits only what has to be stopped.",
+      "disposition": {
+        "saltiness": -2,
+        "friendliness": 2,
+        "competitiveness": -1
+      },
+      "overrides": {
+        "saltCap": -2,
+        "groupHug": 0.8,
+        "risk": 0.1,
+        "politics": "avoid"
+      },
+      "deckCriteria": {
+        "saltiness": 1,
+        "competitiveness": 2,
+        "speed": 2,
+        "playStyle": "Group Hug"
+      }
+    },
+    {
+      "schema": "CrankPersona@1",
+      "id": "marcus",
+      "name": "Marcus",
+      "sex": "male",
+      "avatar": "assets/personas/marcus.svg",
+      "blurb": "Plays to win, plays tight, plays the clock. Fair, never friendly.",
+      "disposition": {
+        "saltiness": 1,
+        "friendliness": 0,
+        "competitiveness": 2
+      },
+      "overrides": {
+        "saltCap": 1,
+        "risk": -0.15,
+        "politics": "neutral"
+      },
+      "deckCriteria": {
+        "saltiness": 3,
+        "competitiveness": 5,
+        "speed": 4,
+        "playStyle": "Combo"
+      }
+    },
+    {
+      "schema": "CrankPersona@1",
+      "id": "june",
+      "name": "June",
+      "sex": "female",
+      "avatar": "assets/personas/june.svg",
+      "blurb": "Here for the fun line. Takes the cool play over the best one.",
+      "disposition": {
+        "saltiness": -1,
+        "friendliness": 1,
+        "competitiveness": -1
+      },
+      "overrides": {
+        "saltCap": -1,
+        "temperatureDelta": 1,
+        "groupHug": 0.3,
+        "politics": "neutral"
+      },
+      "deckCriteria": {
+        "saltiness": 2,
+        "competitiveness": 2,
+        "speed": 2,
+        "playStyle": "Tribal"
+      }
+    }
+  ],
+  "dials": {
+    "saltiness": {
+      "min": -2,
+      "max": 4
+    },
+    "friendliness": {
+      "min": -2,
+      "max": 2
+    },
+    "competitiveness": {
+      "min": -2,
+      "max": 2
+    }
+  },
+  "overrideLimits": {
+    "saltCap": {
+      "min": -2,
+      "max": 4
+    },
+    "risk": {
+      "min": -0.3,
+      "max": 0.3
+    },
+    "grudge": {
+      "min": 0,
+      "max": 1
+    },
+    "groupHug": {
+      "min": 0,
+      "max": 1
+    },
+    "temperatureDelta": {
+      "min": -1,
+      "max": 1
+    },
+    "politics": [
+      "join",
+      "neutral",
+      "avoid"
+    ]
+  }
+}

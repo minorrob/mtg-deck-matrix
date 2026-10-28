@@ -9,9 +9,9 @@
  },
  "top": {
   "cards": 3238,
-  "defined": 1985,
+  "defined": 1990,
   "provisional": 0,
-  "everyRule": 2914
+  "everyRule": 2916
  },
  "sections": {
   "Keyword abilities (CR 702)": {
@@ -5825,7 +5825,7 @@
      "forge": "Untaps",
      "top": 3,
      "all": 30,
-     "blocks": 2,
+     "blocks": 1,
      "alone": 0
     },
     {
@@ -8925,8 +8925,8 @@
      "forge": "RememberChanged",
      "top": 124,
      "all": 1168,
-     "blocks": 45,
-     "alone": 4
+     "blocks": 44,
+     "alone": 3
     },
     {
      "kind": "option",
@@ -8949,7 +8949,7 @@
      "forge": "RememberObjects",
      "top": 123,
      "all": 1460,
-     "blocks": 45,
+     "blocks": 44,
      "alone": 8
     },
     {

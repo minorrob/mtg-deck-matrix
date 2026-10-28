@@ -1,0 +1,113 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sanguine Evangelist",
+    "oracleId": "a70d9645-7c25-4fcb-9d16-fb73ce8b55e2",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire",
+      "Cleric"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Battle cry (Whenever this creature attacks, each other attacking creature gets +1/+0 until end of turn.)\nWhen this creature enters or dies, create a 1/1 black Bat creature token with flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Battle cry (Whenever this creature attacks, each other attacking creature gets +1/+0 until end of turn.)",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "attacking": true,
+            "another": true
+          },
+          "power": 1,
+          "toughness": 0,
+          "until": "end-of-turn"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters or dies, create a 1/1 black Bat creature token with flying.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Bat",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Bat"
+            ],
+            "colors": [
+              "B"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters or dies, create a 1/1 black Bat creature token with flying.",
+      "trigger": {
+        "on": "dies",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Bat",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Bat"
+            ],
+            "colors": [
+              "B"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
