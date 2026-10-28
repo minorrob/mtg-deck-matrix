@@ -287,7 +287,7 @@ const trust = trustOf(library, calibrate({scripts, library, scenarios, definitio
   const assist = assistOf(strix, {library, trust: (id) => (/enters/.test(id) ? {ok: false} : trust(id)), except: "Baleful Strix"});
   eq([assist.known.map((a) => a.text), assist.write.map((w) => w.text)], [["Flying", "deathtouch"], ["When this creature enters, draw a card."]],
     "assisted: the library's trusted sentences written, the distrusted one left for the writer");
-  /* A keyword line's words are each an ability (CR 702.1c): deathtouch distrusted leaves Flying written. */
+  /* A keyword line's words are each an ability (CR 113.2c): deathtouch distrusted leaves Flying written. */
   const keywords = assistOf(strix, {library, trust: (id) => (/deathtouch/.test(id) ? {ok: false} : trust(id)), except: "Baleful Strix"});
   eq([keywords.known.map((a) => a.text), keywords.write.map((w) => w.text)], [["Flying", "When this creature enters, draw a card."], ["deathtouch"]],
     "a keyword line known in part: the known word written, the other asked alone");

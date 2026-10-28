@@ -1180,7 +1180,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `shop-export` — `tests/shop-export.mjs`
 - `sim-engine` — `tests/sim-engine.mjs`
 - `sentence-library` — `tests/sentence-library.mjs`
-- `sentence-paragraphs` — `tests/sentence-paragraphs.mjs`: complete unfinished abilities and independent keywords (CR 113.2c, 702.1c)
+- `sentence-paragraphs` — `tests/sentence-paragraphs.mjs`: complete unfinished abilities and independent keywords (CR 113.2c)
 - `status-and-groupings` — `tests/status-and-groupings.mjs`
 - `swap-record` — `tests/swap-record.mjs`
 - `slot-model` — `tests/slot-model.mjs`
