@@ -29,6 +29,7 @@ import {coachBrief} from "./coach-brief.mjs";
 import {startRoom, openRoom, RoomError, basicCards} from "./room.mjs";
 import {createMatchStore} from "../engine/storage.mjs";
 import {resultRecord} from "./result-record.mjs";
+import {loungeOn} from "./lounge.mjs";
 
 /* An AI seat's setting (AI-2): "easy", "llm" (an AI on Claude) or, unless one of those was chosen, "normal". */
 const levelOf = (s) => (s.level === "easy" || s.level === "llm" ? s.level : "normal");
@@ -144,8 +145,8 @@ function readSource(source) {
  *   `continuing`). `candidates`: the card compiler's (game/engine/cards/candidates.mjs), which a playtest table alone
  *   plays where `cards` has no definition, labeled (Rob's decision 2; card load step 5)
  */
-export function tableOn(storage, {cards = basicCards, candidates = () => null, random = (n) => crypto.getRandomValues(new Uint8Array(n)), slice} = {}) {
-  let record = null, room = null;
+export function tableOn(storage, {cards = basicCards, candidates = () => null, random = (n) => crypto.getRandomValues(new Uint8Array(n)), slice, watching = () => 0} = {}) {
+  let record = null, room = null, lounge = null;
   /* The cards a table takes in a deck: its own, and at a playtest table a candidate where it has none. */
   const cardsAt = (rec) => (rec?.playtest === true ? (name) => cards(name) ?? candidates(name) : cards);
   const load = async () => {
@@ -157,6 +158,7 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
   const seatOf = (email) => {const n = Object.entries(record.members).find(([, e]) => e === email); return n ? Number(n[0]) : null;};
   const isHost = (email) => email === record.host;
   const step = (event, now, extra = {}) => {
+    if (record.quit) throw new TableError(409, "This table has ended. Start a new table to play again.");
     try {record.lifecycle = transitionTable(record.lifecycle, {...event, revision: record.lifecycle.revision}, {now, ...extra});}
     catch (error) {throw new TableError(409, error.message);}
   };
@@ -170,7 +172,9 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
      it off, so a person at a table of AIs is not stopped at every spell they could not answer. */
   const rulesOf = () => {const r = (record.lifecycle && record.lifecycle.settings) || {};
     return {startingLife: Number.isInteger(r.startingLife) ? r.startingLife : 40, bracketLimit: Number.isInteger(r.bracketLimit) ? r.bracketLimit : null,
-      skipFirstDraw: r.skipFirstDraw !== false, passStack: r.passStack !== false};};
+      skipFirstDraw: r.skipFirstDraw !== false, passStack: r.passStack !== false,
+      /* The lounge's two (lounge-contract §2): said only once the host has set them, so a table that never did reads as it always did. */
+      ...(typeof r.houseRules === "boolean" ? {houseRules: r.houseRules} : {}), ...(r.privacy ? {privacy: r.privacy} : {})};};
   const seatNames = (list) => list.length === 1 ? list[0] : `${list.slice(0, -1).join(", ")} and ${list.at(-1)}`;
 
   /* A seat leaves the game (by choice, or when their time ran out), and the table follows the room. */
@@ -197,6 +201,7 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
           return [s.seatId, resultRecord({tableId: record.tableId, matchId, view: mine, deck: record.decks[seat], opponents, now})];
         }));
       }
+      lounge.fileResults(record, matchId, room);
       step({type: "completed", matchId: record.lifecycle.matchId}, now);
       record.away = {};
       decideRematch(now);
@@ -243,10 +248,16 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
     /** A new table, the host in seat 1. Seats after the first are a person to invite or an AI. */
     /* `llmAllowed`: whether this host may seat an AI on Claude (the LLM seat, AI-2), which the table's object works out
        from the AI door's gates (cloud/game-room.mjs); without it, such a seat is refused. */
-    async create({tableId, host, hostName, seats, settings = {}, playtest = false, llmAllowed = false}) {
+    async create({tableId, host, hostName, seats, settings = {}, playtest = false, llmAllowed = false, privacy, observe = false, admin = false, now = Date.now()}) {
       if (!TABLE_ID.test(String(tableId || ""))) throw new TableError(400, "A table needs its id.");
       if (await storage.get(KEY) !== null) throw new TableError(409, "This table already exists.");
+      if (observe === true) {
+        record = lounge.observe({tableId, host, hostName, seats, settings, playtest, admin, privacy, createTable, now, levelOf});
+        await save();
+        return api.view(host, {admin});
+      }
       const others = Array.isArray(seats) ? seats : [];
+      lounge.vetCreate(others, {privacy, admin});
       if (others.length < 1 || others.length > 3) throw new TableError(400, "A table seats two to four players.");
       /* An AI seat plays at a setting (AI-2, Rob, 2026-10-10): "easy" or "normal", normal unless the host chose easy; or
          "llm", an AI on Claude, only where the AI door lets this host seat one. */
@@ -259,8 +270,9 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
         lifecycle: createTable({tableId, seats: all.map((s, seatId) => ({seatId, kind: s.kind, name: s.name, ...(s.level ? {level: s.level} : {}), occupied: seatId === 0})), settings: {startingLife: 40, bracketLimit: null, ...settings}}),
         members: {0: host}, invites: [], decks: {}, matches: [], away: {}, playtest: playtest === true,
       };
+      lounge.decorate(record, others, {privacy, now});
       await save();
-      return api.view(host);
+      return api.view(host, {admin});
     },
 
     /** The host sends a seat's link. A new link for the same seat withdraws the one before. */
@@ -316,7 +328,8 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
       await load();
       const seat = record.lifecycle.seats[seatId];
       if (!seat) throw new TableError(400, "There is no such seat.");
-      if (seat.kind === "ai" ? !isHost(email) : seatOf(email) !== seatId) throw new TableError(403, "That is not your seat to choose for.");
+      /* Anyone at the table brings an AI seat's deck (Rob's Lobby, 2026-10-28); a person's own seat stays its sitter's. */
+      if (seat.kind === "ai" ? !(isHost(email) || seatOf(email) !== null) : seatOf(email) !== seatId) throw new TableError(403, "That is not your seat to choose for.");
       const read = readDeck(deck, cardsAt(record), {playtest: record.playtest === true}), limit = rulesOf().bracketLimit;
       if (limit !== null && read.bracket !== null && read.bracket > limit)
         throw new TableError(409, `${read.name} is bracket ${read.bracket}, above this table's limit of ${limit}. Choose a deck at bracket ${limit} or lower, or ask the host to raise the limit.`);
@@ -332,6 +345,7 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
         instead (AGENTS.md). */
     async rules(email, body, now) {
       await load(); needHost(email);
+      if (body && Object.keys(body).length && Object.keys(body).every((k) => k === "privacy")) return lounge.setPrivacy({email}, body.privacy);
       const t = record.lifecycle;
       if (t.phase !== "selecting") throw new TableError(409, "The table's rules can change only before the game starts.");
       const ready = t.seats.filter((x) => x.ready).map((x) => x.name);
@@ -351,7 +365,11 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
       const pass = b.passStack === undefined ? now_.passStack : b.passStack;
       if (typeof pass !== "boolean") throw new TableError(400, "Whether the stack is passed for a player with no answer to it is on or off: true or false.");
       void now;
-      record.lifecycle = {...t, settings: {...(t.settings || {}), startingLife: life, bracketLimit: limit, skipFirstDraw: skip, passStack: pass}, revision: t.revision + 1};
+      const house = b.houseRules === undefined ? {} : typeof b.houseRules === "boolean" ? {houseRules: b.houseRules} : null;
+      if (house === null) throw new TableError(400, "House rules are on or off: true or false.");
+      const privacy = b.privacy === undefined ? {} : {privacy: lounge.privacyOf(b.privacy)};
+      if (privacy.privacy) record.privacy = privacy.privacy;
+      record.lifecycle = {...t, settings: {...(t.settings || {}), startingLife: life, bracketLimit: limit, skipFirstDraw: skip, passStack: pass, ...house, ...privacy}, revision: t.revision + 1};
       await save();
       return api.view(email);
     },
@@ -412,6 +430,7 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
         the countdown has run out, the room launched with each seat's deck. Nothing happens early. */
     async tick(now, {storageForRoom = storage} = {}) {
       await load();
+      if (record.quit) return null;
       /* While the AI seats play on (the room's `continuing`), a leave waits: the alarm that plays on comes back for it. */
       const playingOn = record.lifecycle.phase === "playing" && (await api.currentRoom())?.continuing;
       for (const [seat, until] of Object.entries(record.away || {})) {
@@ -477,7 +496,7 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
          a person asked of them before it resolves (`askAimed`). New matches only, so one launched before plays as it did. */
       landAnyStep: true, takeBackLand: true, askAimed: true,
       /* r4: a new match keeps its undo house rule, so older matches retain their original choices. */
-      houseRules: {undoLastPlay: true},
+      ...(rulesOf().houseRules === false ? {} : {houseRules: {undoLastPlay: true}}),
       /* Its AI seats take what a choice they may answer with none is for -- the land Evolving Wilds finds, the counters
          proliferate adds -- where they took none (Linear ROB-164, 2026-10-19): new matches only, so one launched
          before replays as it was played (room.mjs, `pilotPicks`). */
@@ -489,6 +508,7 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
         room = await startRoom({storage: storageForRoom, matchId, cards, candidates, pod, seed: `${matchId}:${now}`, slice});
         step({type: "engine-started", launchId: matchId, matchId}, now);
         record.matches.push(matchId);
+        record.startedAt = now;
       } catch (error) {
         step({type: "engine-failed", launchId: matchId, error: error instanceof RoomError ? error.message : "The rules engine did not start."}, now);
       }
@@ -573,6 +593,7 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
         has yet to answer. */
     async nextAlarm(now = Date.now()) {
       await load();
+      if (record.quit) return null;
       const times = Object.values(record.away || {});
       if (record.lifecycle.phase === "countdown") times.push(record.lifecycle.countdownAt);
       const current = record.lifecycle.phase === "playing" ? await api.currentRoom() : null;
@@ -598,9 +619,18 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
     async room(email) {
       await load();
       const seat = needSeat(email);
-      if (record.lifecycle.phase !== "playing") throw new TableError(409, "No game is being played at this table.");
+      if (record.lifecycle.phase !== "playing" || record.quit) throw new TableError(409, "No game is being played at this table.");
       if (!room || room.matchId !== record.lifecycle.matchId) room = await openRoom({storage, matchId: record.lifecycle.matchId, cards, candidates, slice});
       return {room, seatId: seatName(seat)};
+    },
+
+    /** The room of the game being played, for someone watching it (lounge-contract §4): a spectator holds no seat. Public tables
+        to anyone signed in; private ones to their seats, the host and the admin. */
+    async watchRoom(who) {
+      await load();
+      if (!lounge.mayWatch(who)) throw new TableError(403, "This table is private. Ask the host to seat you or invite you.");
+      if (record.lifecycle.phase !== "playing" || record.quit) throw new TableError(409, "No game is being played at this table.");
+      return api.currentRoom();
     },
 
     /** THE COACH'S BRIEF (X13; game/room/coach-brief.mjs): the game as this person may see it, and the deck they brought --
@@ -629,7 +659,7 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
       const seatId = seatName(seat);
       if (!game.seats.some((s) => s.seatId === seatId)) throw new TableError(403, "You did not have a seat in that game.");
       const mine = game.view(seatId), base = {schema: RECORD_SCHEMA, tableId: record.tableId, matchId: id, playtest: !!record.playtest, result: mine.result, departures: mine.departures, seats: game.seats, history: game.history, refusals: game.refusals,
-        gameRecord: structuredClone(record.gameRecords?.[id]?.[seatId] ?? null)};
+        gameRecord: structuredClone(record.gameRecords?.[id]?.[seatId] ?? null), chat: await lounge.chatRecord()};
       if (!record.playtest) return {...base, kind: "seat", seatId, view: mine};
       const store = createMatchStore(storage, id), meta = await store.loadMatch();
       const cardReports = (record.cardReports || []).filter((r) => r.matchId === id);
@@ -637,12 +667,14 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
     },
 
     /** The table as one person sees it: every seat's state, but only their own deck's cards. */
-    async view(email, {any = false} = {}) {
+    async view(email, {any = false, admin = false, watch = false} = {}) {
       await load();
       const mine = email === null ? null : seatOf(email);
-      if (!any && mine === null && !isHost(email)) throw new TableError(403, "You do not have a seat at this table.");
+      /* Someone with no seat sees a table only as a spectator (lounge-contract §4): the admin any table, anyone signed in a public one. */
+      const who = {email, admin: admin === true};
+      if (!any && mine === null && !isHost(email) && !(admin === true || (watch === true && lounge.mayWatch(who)))) throw new TableError(403, "You do not have a seat at this table.");
       const t = record.lifecycle;
-      return {
+      const base = {
         schema: TABLE_SCHEMA, tableId: record.tableId, phase: t.phase, revision: t.revision, playtest: !!record.playtest,
         youAreHost: isHost(email), yourSeat: mine,
         countdownAt: t.countdownAt, launchError: t.launchError, matchId: t.phase === "playing" ? t.matchId : null,
@@ -664,9 +696,25 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
           invited: s.invited, you: s.seatId === mine, mat: (record.mats || {})[s.seatId] || "felt",
           deck: record.decks[s.seatId] ? {name: record.decks[s.seatId].name, commander: record.decks[s.seatId].commander, bracket: record.decks[s.seatId].bracket ?? null} : null,
           ...(s.seatId === mine && record.decks[s.seatId] ? {cards: record.decks[s.seatId].cards.length, source: record.decks[s.seatId].source || null} : {}),
+          ...lounge.seatExtra(s),
         })),
       };
+      return {...base, ...(await lounge.viewExtra(who, {mine}))};
     },
   };
+  /* The lounge around the table (game/room/lounge.mjs): its seat operations, requests, chat and registry summary, over this
+     table's own record and storage. Built here, last, so it reads the record through the closure. */
+  lounge = loungeOn({
+    storage, rec: () => record, load, save, step, seatOf, isHost, api, settle, watching,
+    fail: (status, message) => {throw new TableError(status, message);},
+    latestRoom: async () => {
+      const current = await api.currentRoom();
+      if (current) return current;
+      const id = record.matches.at(-1);
+      if (!id) return null;
+      return room && room.matchId === id ? room : openRoom({storage, matchId: id, cards, candidates});
+    },
+  });
+  Object.assign(api, {lounge});
   return api;
 }

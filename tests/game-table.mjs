@@ -93,7 +93,9 @@ let now = Date.parse("2026-09-26T20:00:00Z");
 
   /* Decks. */
   await refuses(t.deck(MAYA, 0, deckFor("maya"), now), 403, null, "a person chooses only their own seat's deck");
-  await refuses(t.deck(MAYA, 3, deckFor("maya"), now), 403, null, "and only the host chooses an AI's");
+  /* Changed with the lounge (Rob's Lobby, 2026-10-28): anyone SEATED brings an AI seat's deck, no longer the host alone;
+     someone with no seat still may not. (tests/lounge-lobby.mjs proves the seated person's side.) */
+  await refuses(t.deck(EVE, 3, deckFor("eve"), now), 403, null, "and only someone seated at the table chooses an AI's");
   const bad = await t.deck(MAYA, 1, {name: "x", commander: ["Krenko, Mob Boss"], cards: ["Mountain", "Sol Ring"]}, now).catch((e) => e);
   eq([bad.status, bad.unsupported], [422, ["Krenko, Mob Boss", "Sol Ring"]], "a deck the engine cannot play is refused, naming each card");
   await t.deck(ROB, 0, {...deckFor("rob"), source: {deckId: "deck:rob:1", deckVersion: 4}}, now);
