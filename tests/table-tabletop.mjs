@@ -22,6 +22,28 @@ for (const width of [1024, 1280, 1400]) for (const tilt of [0, 40, 60]) for (con
     assert.ok(r.x >= 0 && r.y >= 0 && r.x + r.width <= width && r.y + r.height <= 550, "interactive mats fit at every camera endpoint");
   }
 }
+/* The flat stage (Table and Focus): Rob, 2026-10-28, "each mat had a specific aspect ratio" -- every Table board the same 16:9, inside the stage and clear of the drawers' gutters. */
+for (const [w, h] of [[1280, 720], [1440, 900], [1863, 902]]) for (const seats of [1, 2, 3, 4]) {
+  const opts = {mode: "table", seats, reserve: 200, top: 76, gapX: 60, gapY: 22, padL: 204, capB: 190, inL: 310, inR: 380};
+  const g = scope.CrankStage.flatGeometry(w, h, opts), areas = {1: ["a"], 2: ["a", "b"], 3: ["a", "b", "c"], 4: ["a", "b", "c", "d"]}[seats];
+  const rects = areas.map(area => g.rect(area));
+  for (const r of rects) {
+    assert.ok(Math.abs(r.width * 9 / 16 - r.height) <= 1, `a Table board is 16:9 (${r.width}x${r.height} at ${w}x${h}, ${seats} seats)`);
+    assert.equal(r.width, rects[0].width, "every Table board is the same size");
+    assert.ok(r.x >= opts.inL && r.x + r.width <= w - opts.inR + 1, "a Table board lies between the drawers' gutters");
+    assert.ok(r.y >= 0 && r.y + r.height <= h - opts.reserve + 1, "a Table board lies above the hand's tray");
+  }
+  for (const [i, a] of rects.entries()) for (const b of rects.slice(i + 1)) assert.ok(a.x + a.width <= b.x || b.x + b.width <= a.x || a.y + a.height <= b.y || b.y + b.height <= a.y, "Table boards do not overlap");
+  const open = scope.CrankStage.flatGeometry(w, h, opts), again = scope.CrankStage.flatGeometry(w, h, {...opts});
+  assert.deepEqual(JSON.parse(JSON.stringify(open.rect("a"))), JSON.parse(JSON.stringify(again.rect("a"))), "the same inputs lay the boards the same");
+  const zoomed = scope.CrankStage.flatGeometry(w, h, {...opts, zoom: 150, pan: {x: 40, y: 0}});
+  assert.ok(Math.abs(zoomed.slot("a").matrix[0] - 1.5) < 1e-9, "the 3D view's zoom scales a flat board by one matrix");
+  const focus = scope.CrankStage.flatGeometry(w, h, {...opts, mode: "focus"});
+  assert.ok(Math.abs(focus.front.width * 9 / 16 - focus.front.height) <= 1, "the board looked at in Focus is 16:9");
+  assert.ok(focus.front.x >= opts.inL && focus.front.x + focus.front.width <= w - opts.inR + 1 && focus.front.y + focus.front.height <= h - opts.reserve + 1, "Focus's board lies between the gutters and above the hand");
+  for (const r of focus.rear) assert.ok(r.x >= opts.inL && r.x + r.width <= w - opts.inR + 1 && r.y + r.height <= focus.front.y + 1, "the others in Focus lie between the gutters and behind the board looked at");
+}
+console.log("table-tabletop: flat Table and Focus geometry passed");
 assert.deepEqual(Array.from(scope.CrankStage.carousel(9,8)),[8,0,1,2,3,4,5]);
 assert.deepEqual(Array.from(scope.CrankStage.carousel(9,-1)),[8,0,1,2,3,4,5]);
 assert.equal(scope.CrankStage.carousel(0).length,0);
@@ -43,7 +65,7 @@ const prefs={preferences:{play:{overlay:37,sidePane:{version:2,owner:'another@ex
 const prefScope={C:{state:prefs,signedInAs:()=> 'player@example.com',notice(){},async commit(command){prefs.preferences={...prefs.preferences,...command.values};}},draw(){}};
 vm.createContext(prefScope);vm.runInContext(preferenceCode,prefScope);
 const layout=()=>JSON.parse(JSON.stringify(vm.runInContext('paneLayout()',prefScope)));
-assert.deepEqual(layout(),{left:['actions'],right:['stack','history','coach']},'another account gets the r4 default without inheriting the saved owner layout');
+assert.deepEqual(layout(),{left:['actions'],right:['stack','history','chat','coach']},'another account gets the r4 default (Chat is a default module: Rob, 2026-10-28) without inheriting the saved owner layout');
 await vm.runInContext('savePaneModules({left:["history"],right:["stack","table"]})',prefScope);
 assert.deepEqual(layout(),{left:['actions','history'],right:['stack','table']},'saving preserves drawer placement and ordering');
 assert.equal(prefs.preferences.play.overlay,37,'saving modules does not replace unrelated Play settings');
