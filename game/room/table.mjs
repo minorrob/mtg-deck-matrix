@@ -350,8 +350,9 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
       if (body && Object.keys(body).length && Object.keys(body).every((k) => k === "privacy")) return lounge.setPrivacy({email}, body.privacy);
       const t = record.lifecycle;
       if (t.phase !== "selecting") throw new TableError(409, "The table's rules can change only before the game starts.");
-      const ready = t.seats.filter((x) => x.ready).map((x) => x.name);
-      if (ready.length) throw new TableError(409, `The rules can't change once a seat is ready, and ${seatNames(ready)} ${ready.length === 1 ? "is" : "are"}. Take back Ready (an AI seat is ready once its deck is chosen, so choose AI decks after the rules), then edit the rules.`);
+      /* An AI seat is ready from its deck, never by a choice, so only a person's Ready holds the rules (the lobby's host edits them with AI decks chosen; a deck above a new bracket limit is refused below). */
+      const ready = t.seats.filter((x) => x.ready && x.kind !== "ai").map((x) => x.name);
+      if (ready.length) throw new TableError(409, `The rules can't change once a seat is ready, and ${seatNames(ready)} ${ready.length === 1 ? "is" : "are"}. Take back Ready, then edit the rules.`);
       const now_ = rulesOf(), b = body || {};
       const life = b.startingLife === undefined ? now_.startingLife : Number(b.startingLife);
       if (!Number.isInteger(life) || life < 1 || life > 999) throw new TableError(400, "Starting life is a whole number from 1 to 999.");

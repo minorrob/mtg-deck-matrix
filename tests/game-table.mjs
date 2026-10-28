@@ -270,7 +270,7 @@ function objectCtx() {
   await t.ready(MAYA, false, now);
   eq((await t.rules(ROB, {bracketLimit: null}, now)).rules, {startingLife: 30, bracketLimit: null, skipFirstDraw: true, passStack: true}, "with nobody ready, the host takes the limit off again");
   await t.deck(ROB, 0, deckFor("rob"), now); await t.deck(ROB, 2, deckFor("shadrix"), now);
-  await refuses(t.rules(ROB, {startingLife: 25}, now), 409, /Shadrix is\. Take back Ready \(an AI seat is ready once its deck is chosen, so choose AI decks after the rules\)/, "an AI seat is ready once its deck is chosen, and the refusal says to set the rules first");
+  eq((await t.rules(ROB, {startingLife: 30}, now)).rules.startingLife, 30, "an AI seat is ready once its deck is chosen, and that does not hold the rules: only a person's Ready does (Rob, 2026-10-28: the lobby edits them with the AI seated)");
   await t.ready(ROB, true, now); await t.ready(MAYA, true, now);
   await t.start(ROB, now); const matchId = await t.tick(now + 11000);
   const room = await t.currentRoom();
@@ -300,8 +300,8 @@ for (const off of [false, true]) {
     eq((await t.rules(ROB, {passStack: false}, now)).rules.passStack, false, "the host turns it off");
   }
   await t.deck(ROB, 0, deckFor("rob"), now); await t.deck(ROB, 1, deckFor("shadrix"), now);
-  if (off) await refuses(t.rules(ROB, {skipFirstDraw: true}, now), 409, /^The rules can't change once a seat is ready, and Shadrix is\./, "once a seat is ready it is refused, as every rule is");
   await t.ready(ROB, true, now);
+  if (off) await refuses(t.rules(ROB, {skipFirstDraw: true}, now), 409, /^The rules can't change once a seat is ready, and Rob is\./, "once a person is ready it is refused, as every rule is");
   await t.start(ROB, now); const matchId = await t.tick(now + 11000);
   await t.endGame(ROB, now + 12000);
   const record = await t.record(ROB, matchId);

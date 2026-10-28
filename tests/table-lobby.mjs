@@ -266,7 +266,7 @@ try {
   await rob.page.waitForFunction(() => /#table\?id=table\d+/.test(location.hash), null, {timeout: 20000});
   await rob.page.locator(".cm-cloud-table .cm-lobby-seat").first().waitFor({state: "attached"});
   eq((await rob.page.locator(".cm-cloud-table .cm-lobby-seat h3").allTextContents()).map((t) => t.replace(/ai$/, "")), ["Seat 1 · You · Host", "Seat 2 · Maya", "Seat 3 · Shadrix"], "the lobby: you in seat 1, Maya to invite, an AI at Easy, as chosen; seat 4 left out");
-  eq(await rob.page.locator(".cm-lobby-seat[data-seat='2'] .cm-seat-tags span").allTextContents(), ["AI", "Easy"], "an AI seat says AI and its difficulty");
+  eq(await rob.page.locator(".cm-lobby-seat[data-seat='2'] .cm-seat-tags span").allTextContents(), ["AI", "Easy", "The salty one"], "an AI seat says AI, its difficulty and its persona");
   ok(await rob.page.locator('#cm-main [data-action="page-help"]').first().getAttribute("data-help") === "table", "and its head carries the same ?, to the table's help");
   const seaWords = await overSea(rob.page), seaLow = seaWords.filter((w) => w.ratio < 4.5);
   ok(seaWords.length >= 6 && !seaLow.length, `every word over a seat's sea reads at 4.5:1 or better over a white sea (${seaWords.length} read; ${(seaLow.length ? seaLow : seaWords.slice(0, 3)).map((w) => `"${w.text}" (${w.cls}) ${w.ratio}`).join(", ")})`);
@@ -423,11 +423,18 @@ try {
   }
   await waitText(rob.page, ".cm-lobby-seat[data-seat='2'] header", /Ready/);
   ok(true, "the host chose the AI's deck, and the AI is ready");
-  /* With a seat ready the rules are refused, saying how to change them. */
+  /* An AI seat is ready from its deck and does not hold the rules; a person's Ready does, saying how to change them. */
   await rob.page.click(".cm-table-rules-edit");
-  await waitText(rob.page, "#cm-notice", /The rules can't change once a seat is ready.*Take back Ready.*choose AI decks after the rules/);
-  eq(await rob.page.locator("#cm-table-rules-form").count(), 0, "with the AI ready, Edit is refused, saying how to change the rules; no dialog opens");
-
+  await rob.page.locator("#cm-table-rules-form").waitFor();
+  ok(true, "with only the AI ready, Edit still opens the rules");
+  await rob.page.click("[data-action=table-rules-cancel]");
+  await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-ready][data-ready='1']");
+  await waitText(rob.page, ".cm-lobby-seat[data-seat='0'] header", /Ready/);
+  await rob.page.click(".cm-table-rules-edit");
+  await waitText(rob.page, "#cm-notice", /The rules can't change once a seat is ready.*Take back Ready, then edit the rules/);
+  eq(await rob.page.locator("#cm-table-rules-form").count(), 0, "with Rob ready, Edit is refused, saying how to change the rules; no dialog opens");
+  await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-ready][data-ready='']");
+  await rob.page.locator(".cm-lobby-seat[data-seat='0'] [data-action=table-ready][aria-pressed=false]").waitFor({timeout: 10000});
   /* CHOOSE MAT: a strip of the app's mats, the zones previewed over the one picked; everyone sees the choice. */
   await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-mat]");
   await rob.page.locator("#cm-mat-preview").waitFor();

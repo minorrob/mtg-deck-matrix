@@ -1608,7 +1608,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-lb-grid .cm-seat-name,#matrix-v2 .cm-lb-grid .cm-seat-line{margin:0}
 #matrix-v2 .cm-lb-grid .cm-seat-name{font-weight:700;font-size:14px}
 #matrix-v2 .cm-lb-grid .cm-seat-name span,#matrix-v2 .cm-lb-grid .cm-seat-line span{padding:1px 6px;border-radius:5px;background:rgba(12,12,16,.62);color:#f3f1ee;box-decoration-break:clone;-webkit-box-decoration-break:clone}
-#matrix-v2 .cm-lb-grid .cm-seat-summary{margin:2px 0 0;font-size:13px;font-weight:700;line-height:1.45;color:#f3f1ee;text-shadow:0 1px 2px #0c0c10,0 0 6px rgba(12,12,16,.85),0 0 14px rgba(12,12,16,.55)}
+#matrix-v2 .cm-lb-grid .cm-seat-summary{margin:2px 0 0;width:fit-content;max-width:100%;padding:2px 8px;border-radius:6px;background:rgba(12,12,16,.62);font-size:13px;font-weight:700;line-height:1.45;color:#f3f1ee}
 #matrix-v2 .cm-lb-grid .cm-seat-tags{display:flex;gap:5px;flex-wrap:wrap}
 #matrix-v2 .cm-lb-grid [data-pos=tr] .cm-seat-tags,#matrix-v2 .cm-lb-grid [data-pos=br] .cm-seat-tags{justify-content:flex-end}
 #matrix-v2 .cm-lb-grid .cm-seat-tags span{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:999px;background:rgba(12,12,16,.72);border:1px solid rgba(243,241,238,.4);font:700 12px/1 Lato,system-ui,sans-serif;color:#f3f1ee}
