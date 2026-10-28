@@ -130,6 +130,7 @@ recorded with its evidence.
 | 6 | V8's play: the pool fuzz (≥ 200 games, `--replay --leaks --exercised`), the library's 50 seeds, the staging decks' 2 × 25 | every game clean, replays identical, no leak, **every card new this wave exercised** |
 | 7 | V8's review | every new or promoted card read; every finding fixed or a named ignore you agreed to |
 | 8 | `bash tools/local-ci.sh HEAD 0` | SCAN PASS |
+| 8b | `gzip -c game/engine/cards/definitions.mjs \| wc -c` and the same for `candidates.mjs` | Recorded in `RUN.md` each wave. The Worker ships both inside its script; a Cloudflare Worker script is capped at 10 MB compressed on the paid plan (3 MB free). At 6,430 cards `definitions.mjs` is 4.5 MB raw, 786 KB gzipped; the whole pool would be about 22 MB raw, 4 MB gzipped. **Stop and ask Rob at 2.5 MB gzipped** (about wave 12): the fix is the engine lane's, not a card's: keep each definition as JSON text parsed on first use (as `candidates.mjs` already does) or serve the directory from KV or R2 (`docs/plan-to-100.md`, M5) |
 | 9 | Push; mark the PR **ready**; GitHub Actions `suites` (one run, about 45 to 60 minutes) | green on the exact head |
 
 The whole suite runs once, on GitHub (Rob, 2026-10-01: never twice). The Workers Builds checks
@@ -210,7 +211,7 @@ rows (copy them into `w0/lane-<role>.json` as `debt`, with the evidence). In sho
 | W5 | Urza's Saga's "mana cost {0} or {1}"; token shock lands asked; casts from exile and alternative costs with mana not yet in the pool; {X} and additional costs by an effect; delve with {X}; convoke with Phyrexian and {2/W}; the 24/12 payment caps complete or lifted; **Wayfarer's Bauble**; and **`tools/library-engine-index.mjs --pool`** (every undefined Commander card, dealt by theme, sentence first) with its suite |
 | W6 | Counter, token and entering replacements asked, not ordered in code; Plumb the Forbidden's copies by last known information; **Contagion Clasp**; Incubator copies (if V8 confirms) |
 | W7 | Alms Collector and dredge asked (CR 616.1); "each player draws" from the active player; draw replacements asked; dice modifiers and "whenever you roll"; the compiler's gate: a candidate's smoke game must have **played** the card, and the minimum template count raised to what the calibration supports (`game/tools/card-compiler.mjs`) |
-| V8 | The pool fuzz and the exercised ledger; the **ability ledger** in the scenario runner (`cards/scenario.mjs`): which abilities of each card no scenario ever makes fire or apply, reported by `check-cards.mjs` so a card with an unreached ability fails; the scenario runner's `settle` / `optional` / `targets: "any"`; `fuzz-live`'s silent throw and legendary-only commanders; `engine-room-games`' skipped seeds and frozen deal; `engine-x11-leave-questions`' replaced answers; coverage's partial constructs; the five unsure section-4 items settled by scenario. Then the first pool fuzz over **all 6,430 final cards**: the baseline of what still errors |
+| V8 | The pool fuzz and the exercised ledger; the **ability ledger**: which abilities of each card no scenario ever makes fire or apply, read from the journal and history the engine already writes for every game (what `replay.mjs` and `fuzz-live.mjs` read), **never by instrumenting a rules module**, and reported by `check-cards.mjs` so a card with an unreached ability fails; the scenario runner's `settle` / `optional` / `targets: "any"`; `fuzz-live`'s silent throw and legendary-only commanders; `engine-room-games`' skipped seeds and frozen deal; `engine-x11-leave-questions`' replaced answers; coverage's partial constructs; the five unsure section-4 items settled by scenario. Then the first pool fuzz over **all 6,430 final cards**: the baseline of what still errors |
 
 The monarch on the board is the Play lane's: put it in the Requests table of `docs/ACTIVE.md`. **Cunning Wish and
 Extrapolate the Impossible are ruled** (Rob, 2026-10-28): W2 makes a deck holding either illegal in Play, refused by name
@@ -245,6 +246,8 @@ run must be resumable from the repository alone, at any point, by any of them:
 
 - The same defect fails twice after a fix attempt (AGENTS.md).
 - A gate would pass only by weakening an assertion, retargeting a test or redefining "done".
+- The card bundle the Worker ships passes 2.5 MB gzipped (check 8b): a change to how the directory is served, before more
+  cards.
 - Anything that spends money (an API key, a paid plan), touches production, applies a D1 migration, deletes a branch,
   folder or record you did not create, or changes a shared setting.
 - A rules question the CR and the card's rulings do not settle (Rob's rulings decide; his ruling on "outside the game"

@@ -98,6 +98,29 @@ the last word, and why each finding afterward reopens the gate it belongs to.
 - **Resumable by any model.** Lanes live in files, branches and PR bodies; `RUN.md` is the hand-back. Rob moves the run
   between OpenAI and Claude as his limits allow.
 
+## How it fits the engine that exists
+
+Nothing here is new architecture. The run drives the pipeline the engine already has, end to end: a card is
+`game/engine/cards/<letter>/<slug>.json` with its `.scenarios.json`, proven by `check-cards.mjs` (schema, fidelity, smoke
+game, scenarios); the sentence library and compiler (`sentences.mjs`, `card-compiler.mjs`) learn from those definitions and
+write candidates; `card-waves.mjs` promotes them; `definitions.mjs` and `candidates.mjs` are generated and bundled into the
+Worker (`cloud/game-room.mjs`, `tableCards`, `tableCandidates`); `fuzz-live.mjs` plays whole games through the real room;
+`breaks.py` proves every change is caught. "Every verb a primitive" is ADR-001 and `game/engine/vocabulary.mjs`'s rule
+already; the batch procedure (`game/tools/batch/README.md`) credits constructs in `engine-constructs.mjs` the same way.
+
+The two tools wave 0 adds extend existing files rather than add a path: a `--pool` mode and an exercised ledger in
+`fuzz-live.mjs`, and an ability ledger read from the journal the engine already writes for every game. Three seams to
+watch, each in the procedure:
+
+- **The scenario runner's leniencies** (`settle`, `optional`, `targets: "any"`) are relied on by 3,547 scenario files.
+  Tightening them is run in two modes until the cards it turns red are fixed (ORCHESTRATION.md, wave 0).
+- **The Worker's bundle.** `definitions.mjs` is 4.5 MB raw, 786 KB gzipped at 6,430 cards; the whole pool would be about
+  22 MB raw, 4 MB gzipped, against a 10 MB compressed Worker script cap (paid plan). The consolidated test records the
+  size each wave and stops at 2.5 MB gzipped, where the directory's serving (lazy JSON text as `candidates.mjs` already
+  does, or KV/R2 per `plan-to-100.md` M5) must change: an engine-lane change, not a card's.
+- **Shared files with other lanes.** `game/room/table.mjs` (`readDeck`, where W2's refusal goes) is also edited by the
+  lounge work of 2026-10-28; merge `main` in before touching it, and keep the change to the one check.
+
 ## The scale, honestly
 
 - **Hand writing:** the last four loads wrote about 30 cards a lane a session (precons: 150 cards, five lanes; Rob's

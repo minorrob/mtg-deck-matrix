@@ -74,7 +74,7 @@ lane's theme owns it, stop on the card and name the construct; the orchestrator 
 | **W5 mana** | `w5-mana` | `mana` | Land types and abilities, mana abilities, restricted mana, landwalk, "land played" triggers, cost increases and reductions, alternative costs, X and additional costs cast by an effect |
 | **W6 tokens** | `w6-tokens` | `tokens` | Tokens, counters (divided at activation), sacrifice, life; the ordering of counter and token replacements (asked, not decided) |
 | **W7 spells** | `w7-spells` | `spells` (the catch-all) | Draws and draw replacements, discard, tutors, modal spells, dice, coins, `ChoosePlayer`, `Repeat`, "your life total" |
-| **V8 verifier** | `v8-verify` | none written | The test harnesses: `tools/fuzz-live.mjs`, `tests/fuzz-*.mjs`, `game/engine/cards/scenario.mjs` (the runner), the exercised ledger. **Never edits a card or a rule module.** |
+| **V8 verifier** | `v8-verify` | none written | The test harnesses: `tools/fuzz-live.mjs`, `tests/fuzz-*.mjs`, `game/engine/cards/scenario.mjs` (the runner), the exercised and ability ledgers (read from the journal the engine writes; **never by instrumenting a rules module**). **Never edits a card or a rule module.** |
 
 ## Rules (all of wave 4d's, and these)
 
