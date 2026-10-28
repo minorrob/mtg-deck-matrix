@@ -147,6 +147,19 @@ Claude's incoming #893 and #895–#897. They form the next release wave after r4
 dependency order, exact submitted heads, unfinished author validation and security/configuration gates
 are tracked in docs/r4-execution/INCOMING-QUEUE.md. No incoming source or live workflow is accepted yet.
 
+## AI players and the Orzhov deck load: merged and on staging, 2026-10-28 (a Claude cloud session, at Rob's word)
+
+PR #903 merged to `main` as `9ed12731` (a merge commit; it carries `claude/load-25-cards-deck-2daa2e`, Rob's Orzhov deck, 6,405 -> 6,430 definitions, and the
+AI players work in the section below: Hard and the Veteran offered in the roster, four personas, the pod bench). **Merged with Actions red on the head,
+knowingly:** run 40610631756 (835eb958, 54.6 minutes on the new `ubuntu-24.04` pin) failed 19 suites, one this PR's (`generators`, fixed in 03103be3) and the
+rest main's own (`coach`, `precons`, `table-record`, `playtest-harness` fail the same on 9e5b612e here; the Play lane's list covers `page-budget`,
+`feedback-sheet`, `board-*`, `a11y-board`); the PR touches no `.js`, `.css` or `.html`. `tools/release-staging.sh` built `9ed12731` and **release-acceptance passed
+(23), `play-e2e` did not**: it waits 30 s for `#cm-dialog [data-action=table-use-shared-deck]` (Krenko) at `tests/uat/play-e2e.mjs:350`, and fails the same on main
+before this merge (9e5b612e), so it is the Play lane's, not this PR's. On Rob's word (*"Complete the push to staging"*) `release/cloud-staging` was pushed by hand
+(`b6b0e598`) and `tools/staging-check.mjs --expect 9ed12731` passes. **For the Play lane:** that dialog step needs a look before the next release; `ubuntu-latest` is 26.04
+and the suites job is pinned to 24.04 until Playwright supports it. **Rob's to test on staging:** Hard (the pod bench has it at about 20% against a fair 25%, so a
+weaker seat than Normal), the Veteran (owner and insiders only; `OWNER_EMAIL` set on staging first), the Orzhov deck.
+
 ## AI players built: PR 6 access groups, PR 1 the threat model; the hand fan stacked left over right, 2026-10-26 (a Claude cloud session, for Rob; `claude/sharp-hawking-8lbwy9`, PR #893; hand-off `docs/handoff-ai-players-2026-10-26.md`)
 
 Rob, 2026-10-26: *"Confirmed on all six calls, start PR 6 then PR 1"*, with three changes folded into the plan (hugginess
