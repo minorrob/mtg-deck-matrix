@@ -47,6 +47,8 @@ export const ART_MATS = Object.freeze(["cloud-wolf", "sand-lion", "ember-serpent
   "star-tome", "dragon-pact", "moon-wolf", "falls-tree", "star-whale", "grove-arch", "molten-sword", "sky-tree", "void-ring", "desert-portal",
   "night-citadel", "white-sanctum", "grave-king", "tree-portal", "ringed-world", "mirror-gates", "orrery-bridge"]);
 export const MATS = Object.freeze([...DRAWN_MATS, ...ART_MATS]);
+/* The mats an AI seat is given (the lounge, game/room/lounge.mjs): the art mats and the drawn ones, felt kept for the people. */
+export const AI_MATS = Object.freeze([...ART_MATS, ...DRAWN_MATS.filter((m) => m !== "felt")]);
 /* A dropped player has this long to come back before they concede (Rob, 2026-09-26: five minutes), when another person is
    at the table to wait on them (`dropped`). */
 export const AWAY_LIMIT = 5 * 60 * 1000;
@@ -705,7 +707,7 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
   /* The lounge around the table (game/room/lounge.mjs): its seat operations, requests, chat and registry summary, over this
      table's own record and storage. Built here, last, so it reads the record through the closure. */
   lounge = loungeOn({
-    storage, rec: () => record, load, save, step, seatOf, isHost, api, settle, watching,
+    storage, rec: () => record, load, save, step, seatOf, isHost, api, settle, watching, aiMats: AI_MATS,
     fail: (status, message) => {throw new TableError(status, message);},
     latestRoom: async () => {
       const current = await api.currentRoom();

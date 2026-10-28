@@ -1209,7 +1209,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `room-g1-terms` — `tests/room-g1-terms.mjs`
 - `game-table` — `tests/game-table.mjs`
 - `lounge-registry` — `tests/lounge-registry.mjs` (the Pre-lobby's lists: `live` and `mine` from the registry object, private tables kept to their seats, the organizer and the owner; the new create fields; `users/search`; `ai-seat`'s levels; no address anywhere)
-- `lounge-lobby` — `tests/lounge-lobby.mjs` (the Lobby's seat operations, AI decks by anyone seated, requests to join seen by the organizer alone, quit, the log)
+- `lounge-lobby` — `tests/lounge-lobby.mjs` (the Lobby's seat operations, an AI seat's mat chosen for it, AI decks by anyone seated, requests to join seen by the organizer alone, quit, the log)
 - `lounge-watch` — `tests/lounge-watch.mjs` (`connect?watch=1`: a spectator is sent the public view alone, none of a seat's hand, and its action frames are refused)
 - `lounge-chat` — `tests/lounge-chat.mjs` (chat in the lobby and the game: rate limit, push to every connection, the last 50 in the view)
 - `lounge-results` — `tests/lounge-results.mjs` (a row per person's seat when a game ends, the leaderboard, migration 0010, Observe AI game)

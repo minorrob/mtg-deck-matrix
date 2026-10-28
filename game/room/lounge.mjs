@@ -22,6 +22,17 @@ const REQUESTS_OPEN = 10, REQUESTS_KEPT = 40, LOBBY_LOG = 100;
 const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,190}$/;
 const clean = (v, n = 60) => String(v ?? "").trim().slice(0, n);
 
+/** AN AI SEAT'S MAT, chosen for it (Rob, 2026-10-28: "AI players should have a mat auto-chosen for them during the Game Lobby"):
+    the pool's mat a hash of the table's id and the seat's picks, or the next one along that no other seat at the table has, so the
+    same table always gives the same mats and two AI seats share one only when the pool has run out. */
+export function pickMat(pool, tableId, seatId, taken = []) {
+  let hash = 2166136261;
+  for (const ch of `${tableId}:${seatId}`) hash = Math.imul(hash ^ ch.charCodeAt(0), 16777619) >>> 0;
+  const start = hash % pool.length;
+  for (let i = 0; i < pool.length; i += 1) {const mat = pool[(start + i) % pool.length]; if (!taken.includes(mat)) return mat;}
+  return pool[start];
+}
+
 /** An AI seat's level as asked: "easy", "normal" or "llm" (gated by the caller); "hard" is refused, saying so; unasked, normal. */
 export function levelAsked(level, fail) {
   if (level === undefined || level === null || level === "") return null;
@@ -117,6 +128,10 @@ export function loungeOn(h) {
     },
     /** A new table's lounge facts, set on its record before it is first saved. */
     decorate(rec, others, {privacy, now}) {
+      /* The AI seats' mats, seat by seat, each away from the ones already used. */
+      const mats = {};
+      others.forEach((s, i) => {if (s && s.kind === "ai") mats[i + 1] = pickMat(h.aiMats, rec.tableId, i + 1, Object.values(mats));});
+      if (Object.keys(mats).length) rec.mats = mats;
       rec.privacy = privacyAsked(privacy, fail);
       rec.createdAt = now;
       const reserved = {};
@@ -135,7 +150,9 @@ export function loungeOn(h) {
         fail(400, "An observed game is two to four AI seats and no one else.");
       for (const s of seats) {levelAsked(s.level, fail); personaAsked(s.persona, fail);}
       const all = seats.map((s, i) => ({kind: "ai", name: clean(s.name) || `AI ${i + 1}`, level: levelOf(s), ...(personaAsked(s.persona, fail) ? {persona: s.persona} : {})}));
-      return {
+      const mats = {};
+      all.forEach((_, i) => {mats[i] = pickMat(h.aiMats, tableId, i, Object.values(mats));});
+      return {mats,
         schema: "CrankTable@1", tableId, host, created: true, observe: true, hostName: clean(hostName) || "Observer",
         privacy: privacyAsked(privacy, fail), createdAt: now,
         lifecycle: createTable({tableId, observe: true, seats: all.map((s, seatId) => ({seatId, ...s, occupied: true})), settings: {startingLife: 40, bracketLimit: null, ...settings}}),
@@ -178,6 +195,7 @@ export function loungeOn(h) {
           if (persona) s.persona = persona; else delete s.persona;
         });
         if (rec.reserved) delete rec.reserved[seatId];
+        rec.mats = {...(rec.mats || {}), [seatId]: pickMat(h.aiMats, rec.tableId, seatId, Object.entries(rec.mats || {}).filter(([n]) => Number(n) !== seatId).map(([, m]) => m))};
         note(`An AI seat was added`, now);
       } else {
         if (seatId === 0) fail(400, "The host's own seat can't be removed. Cancel the table instead.");
