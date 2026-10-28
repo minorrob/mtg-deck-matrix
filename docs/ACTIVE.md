@@ -1,5 +1,22 @@
 # Who holds the work
 
+## Card load to 100%: the package for an OpenAI orchestrator, 2026-10-28 (Claude Code on Personal-HP, for Rob; `claude/engine-loading-orchestration-dd4c7f`)
+
+Rob, 2026-10-28: *"Pick back up the engine loading from its current state. Rationalize against the 100% load plan, create for me the kick-off
+copy/paste prompt and attachment instructions for OpenAI. It will run 8 different subagents ... I want 100% accuracy, 0 errors in the game when any
+given card is played."* Documents only; nothing in the engine changed.
+
+- **The package:** `docs/engine/card-load-100-2026-10-28/`: `README.md` (the state against `plan-to-100.md` M7, `docs/engine/PLAN.md` G4 to G7 and
+  the card load program, measured; eight gates G-1 to G-8 that define 100%; the open accuracy debt), `KICKOFF.md` (Rob's five attachments and the
+  prompt), `ORCHESTRATION.md` (waves of eight subagents, one integration branch, the consolidated test, merge, staging), `BRIEF.md` (the
+  subagents' brief: paths, the loader's commands with measured times, the roles W1 to W7 and the verifier V8), `RUN.md` (the run's record).
+- **Measured on main `39a45706`:** `check-cards` 6,430 definitions, 11,023 scenarios, 0 failed; `card-compiler` 25,616 undefined (116 candidates,
+  12,080 one sentence short, 1,069 other layouts); Rob's 477 live-deck cards final, 1 library card unloaded, 1,247 of the 3,239 most-played
+  unloaded; calibration 4,161 of 4,165 (Blackblade Reforged, Contagion Clasp, Goblin Piledriver, Wayfarer's Bauble fail); `fuzz-live` library 3 of 3
+  and staging decks 1 of 1 clean. The committed `data/engine/candidates.json` is stale (100 over 25,641).
+- **Not on main yet:** PR #834 (a paragraph is one ability; the gameplay-gap list). Wave 0 of the run lands it.
+- **When the run starts** it claims the card-load files here by Rob's assignment (`ORCHESTRATION.md`, "Before wave 0"). Until then nobody holds them.
+
 ## Play and the app's menus: Rob's follow-ups of 2026-10-28 (a Claude cloud session, for Rob; `claude/gifted-ride-w6xoa3`, the second PR of the day)
 
 Rob asked for these after the lounge push (the section below), as a separate PR, and to ship them to staging without him.
