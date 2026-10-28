@@ -558,7 +558,7 @@ async function main(argv) {
   if (ledger) {
     const summary = exerciseSummary(ledger);
     writeFileSync(exercisedPath, JSON.stringify({...ledger, summary}, null, 2) + "\n");
-    console.log(`exercised: ${summary.exercised} of ${summary.final} final cards cast or played and successfully resolved in ${ledger.games.length} clean games; ${summary.reached} of ${summary.abilities} printed abilities have unambiguous successful-resolution events; G-3 ${summary.complete ? "observed" : "unmet (unobserved abilities remain)"}`);
+    console.log(`exercised: ${summary.exercised} of ${summary.final} final cards cast or played and successfully resolved in ${ledger.games.length} clean games; ${summary.reached} of ${summary.abilities} printed abilities observed; scenario ability coverage ${summary.scenarioComplete ? "observed" : "unmet (unobserved abilities remain)"}`);
   }
   if (out) writeFileSync(out, JSON.stringify({...(fixed ? {decks: fixed.map((d) => d.name)} : fromPool ? {pool: true, finalPool: library.library.length, favor} : {library: true}), humans, level, strictRefusals, ...(picks ? {} : {picks}), ...(landsAt !== null ? {landsAt} : {}), node: process.version, rows}, null, 2));
   return clean === rows.length ? 0 : 1;

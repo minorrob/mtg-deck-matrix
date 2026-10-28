@@ -11,7 +11,7 @@ export function abilityInventory(script) {
     const face = part.identity?.name ?? script.identity.name;
     for (const [i, ability] of (part.abilities ?? []).entries()) out.push({
       path: `${prefix}abilities[${i}]`, runtimeId: ability.id ?? `a${i}`, face,
-      kind: ability.kind, text: ability.text ?? "", mana: ability.mana === true,
+      kind: ability.kind, keyword: ability.keyword ?? null, text: ability.text ?? "", mana: ability.mana === true,
       activated: 0, triggered: 0, resolved: 0, scenarios: [], games: [],
     });
     for (const key of ["back", "adventure", "prepare"]) if (part[key]) walk(part[key], `${prefix}${key}.`);
@@ -22,7 +22,8 @@ export function abilityInventory(script) {
 
 export function createExerciseLedger(scripts) {
   return {schema: EXERCISED_SCHEMA, games: [], scenarios: [], unattributed: [], cards: Object.fromEntries(scripts.map((script) => [script.identity.name,
-    {cast: 0, played: 0, resolved: 0, exercised: 0, games: [], abilities: abilityInventory(script)}]))};
+    {singleFace: !script.back && !script.adventure && !script.prepare && (!script.layout || script.layout === "normal") && !script.identity.name.includes(" // "),
+      cast: 0, played: 0, resolved: 0, exercised: 0, games: [], abilities: abilityInventory(script)}]))};
 }
 
 /* A face's name and the card's full name may both appear. If the journal cannot distinguish two face-local a0 ids,
@@ -39,11 +40,18 @@ export function addExerciseEvidence(ledger, events, {game = null, scenario = nul
   if (game === null && scenario === null) throw new Error("Exercise evidence names a clean game or a passing scenario.");
   const casts = new Map(), successful = new Set();
   const addName = (list, name) => {if (!list.includes(name)) list.push(name);};
-  const ability = (name, id, kind, event) => {
+  const ability = (name, id, kind, event, matchedSpell = false) => {
     const owner = ownerOf(ledger, name);
-    if (!owner || id === null || id === undefined) return;
+    if (!owner) return;
     const [full, card] = owner;
-    const matches = card.abilities.filter((a) => a.runtimeId === id && !a.mana && ["spell", "activated", "triggered"].includes(a.kind)
+    let method = "explicit-ability-id", matches;
+    if (id === null || id === undefined) {
+      /* Ordinary spell events currently omit spell.id. A successful resolution correlated to its actual cast can
+         identify a single printed spell ability, but never a copy, unmatched event, or ambiguous face/ability. */
+      if (kind !== "resolved" || !matchedSpell || !card.singleFace) return;
+      matches = card.abilities.filter((a) => a.kind === "spell");
+      method = "inferred-unique-printed-spell";
+    } else matches = card.abilities.filter((a) => a.runtimeId === id && !a.mana && ["spell", "activated", "triggered"].includes(a.kind)
       && (name === full || a.face === name));
     if (matches.length !== 1) {
       ledger.unattributed.push({game, scenario, kind: event.kind, name, abilityId: id, reason: matches.length ? "ambiguous face-local ability id" : "no printed ability with that id"});
@@ -51,6 +59,8 @@ export function addExerciseEvidence(ledger, events, {game = null, scenario = nul
     }
     const hit = matches[0];
     hit[kind] += 1;
+    (hit.observations ??= []).push({method, kind, game, scenario, stackId: event.data?.fields?.stackId ?? event.data?.fields?.sa?.stackId ?? null,
+      eventId: event.eventId ?? null});
     if (scenario !== null) addName(hit.scenarios, scenario);
     if (game !== null) addName(hit.games, game);
   };
@@ -68,11 +78,12 @@ export function addExerciseEvidence(ledger, events, {game = null, scenario = nul
       } else if (f.sa?.isSpell === false) ability(name, f.sa.abilityId, "activated", event);
     } else if (event.kind === "GameEventSpellResolved") {
       if (f.hasFizzled !== false) continue;
-      if (f.kind === "spell" && casts.get(f.stackId) === full && game !== null) {
+      const matchedSpell = f.kind === "spell" && casts.get(f.stackId) === full;
+      if (matchedSpell && game !== null) {
         card.resolved += 1; successful.add(full);
       }
       if (f.kind === "trigger") ability(name, f.abilityId, "triggered", event);
-      ability(name, f.abilityId, "resolved", event);
+      ability(name, f.abilityId, "resolved", event, matchedSpell);
     }
   }
   if (game !== null) {
@@ -84,16 +95,21 @@ export function addExerciseEvidence(ledger, events, {game = null, scenario = nul
 }
 
 export function exerciseSummary(ledger) {
-  const cards = Object.entries(ledger.cards), unreached = [];
-  let abilities = 0, reached = 0;
+  const cards = Object.entries(ledger.cards), unreached = [], scenarioUnreached = [];
+  let abilities = 0, reached = 0, scenarioReached = 0, counterfactualReached = 0;
   for (const [name, card] of cards) for (const a of card.abilities) {
     abilities += 1;
+    const proof = a.counterfactual?.some((p) => p.status === "proved" && p.baseline?.status === "passed" && p.result?.status === "failed") === true;
+    if (proof) counterfactualReached += 1;
+    if (proof || (a.resolved > 0 && a.scenarios.length > 0)) scenarioReached += 1;
+    else scenarioUnreached.push({card: name, path: a.path, kind: a.kind, reason: "no passing scenario has execution or runtime-removal behavior proof"});
     /* Successful resolution is stronger than an activation whose effect never happened. */
-    if (a.resolved > 0) reached += 1;
+    if (a.resolved > 0 || proof) reached += 1;
     else unreached.push({card: name, path: a.path, kind: a.kind,
       reason: a.mana || ["static", "keyword", "replacement"].includes(a.kind) ? "no unambiguous application event observed" : "no successful resolution observed"});
   }
   return {final: cards.length, exercised: cards.filter(([, card]) => card.exercised > 0).length,
     neverExercised: cards.filter(([, card]) => card.exercised === 0).map(([name]) => name),
-    abilities, reached, unreached, complete: unreached.length === 0};
+    abilities, reached, scenarioReached, counterfactualReached, unreached, scenarioUnreached,
+    complete: unreached.length === 0, scenarioComplete: scenarioReached === abilities};
 }

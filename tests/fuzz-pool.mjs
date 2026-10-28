@@ -121,6 +121,26 @@ eq(scenarios.cards.Bolt.abilities[0].scenarios, ["Bolt: damage"], "ability evide
 const summary = exerciseSummary(ledger);
 eq(summary.exercised, 2, "only two cards were played and completed");
 ok(!summary.complete && summary.unreached.some((a) => a.card === "Bear"), "unknown applications keep the ability gate unmet");
+ok(!summary.scenarioComplete, "clean-game observations alone do not claim the scenario ability gate");
+ok(summary.scenarioUnreached.some((a) => a.card === "Bolt"), "an ability observed only in a game is still named as unreached by scenarios");
+const inferredCast = (name, id) => event("GameEventSpellAbilityCast", {card: {name}, sa: {isSpell: true, abilityId: null, stackId: id}});
+const inferredResolution = (name, id, extra = {}) => resolved(name, id, {abilityId: null, ...extra});
+const unique = createExerciseLedger([script("Bolt", [{kind: "spell"}])]);
+addExerciseEvidence(unique, [inferredCast("Bolt", 1), inferredResolution("Bolt", 1)], {scenario: "one printed spell was actually cast and resolved"});
+eq(unique.cards.Bolt.abilities[0].resolved, 1, "a matched successful ordinary spell identifies its unique printed spell ability");
+eq(unique.cards.Bolt.abilities[0].observations[0].method, "inferred-unique-printed-spell", "the inference method is distinct from explicit journal ability ids");
+for (const [label, population, rows] of [
+  ["missing cast", [script("Bolt", [{kind: "spell"}])], [inferredResolution("Bolt", 1)]],
+  ["copy or wrong stack", [script("Bolt", [{kind: "spell"}])], [inferredCast("Bolt", 1), event("GameEventSpellCopied", {card: {name: "Bolt"}, stackId: 2}), inferredResolution("Bolt", 2)]],
+  ["fizzle", [script("Bolt", [{kind: "spell"}])], [inferredCast("Bolt", 1), inferredResolution("Bolt", 1, {hasFizzled: true})]],
+  ["multiple printed spells", [script("Bolt", [{kind: "spell"}, {kind: "spell"}])], [inferredCast("Bolt", 1), inferredResolution("Bolt", 1)]],
+  ["compound layout", [{...script("Bolt", [{kind: "spell"}]), back: {identity: {name: "Back"}, abilities: []}}], [inferredCast("Bolt", 1), inferredResolution("Bolt", 1)]],
+  ["wrong card", [script("Bolt", [{kind: "spell"}]), script("Other", [{kind: "spell"}])], [inferredCast("Bolt", 1), inferredResolution("Other", 1)]],
+]) {
+  const rejectedInference = createExerciseLedger(population);
+  addExerciseEvidence(rejectedInference, rows, {scenario: label});
+  eq(exerciseSummary(rejectedInference).scenarioReached, 0, `${label} cannot infer a printed spell's execution`);
+}
 
 /* A real room journal, rather than only hand-built events: a small fixture game deliberately ends by decking. */
 const storage = memoryStorage(), matchId = "pool-ledger-fixture";
