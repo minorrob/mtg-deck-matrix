@@ -31,7 +31,11 @@ try {
     const size=()=>card.evaluate(el=>el.getBoundingClientRect().width);
     const before=await size();
     await slider.fill('80');
-    assert.ok(await size()<before-1,'Camera changes battlefield card size continuously, preserving the EX16 readable-caption offset');
+    /* A board's cards are bounded by the room on its mat (--bc-cap) and never under 16px (placeFlat). Where the boards are small (a window of 1280x720 or less here, with both
+       drawers' gutters kept) a card is at that 16px floor from 70% to 200% and there is nothing to shrink; where there is room (1400x900 and up) Camera's Cards below 100% shrinks it. */
+    const floor=16,after=await size();
+    if(before>floor+.5) assert.ok(after<before-1,`Camera changes battlefield card size continuously, preserving the EX16 readable-caption offset (${before} to ${after} at ${width}x${height})`);
+    else assert.ok(Math.abs(before-floor)<.5&&Math.abs(after-floor)<.5,`where the boards leave no room, the card is at its ${floor}px floor and stays there (${before}, ${after} at ${width}x${height})`);
     await slider.focus();await page.keyboard.press('ArrowRight');
     assert.equal(await slider.inputValue(),'81','keyboard adjusts the same continuous slider');
     assert.equal(await page.evaluate(()=>localStorage.getItem('cm-stage-card-size-v2')),'81','the adjustment is saved on this device');
@@ -77,9 +81,16 @@ try {
     await hand.fill('100');await page.locator('[data-action=board-camera]').click();await page.evaluate(()=>scrollTo(0,0));
   }
   /* Focus has the same Cards slider in Camera. At 1920x1080 the focused board has room, and the slider sizes its cards continuously there (below
-     about 1600 wide the board's room, --bc-cap, is under the 35px readable-caption minimum and the slider is inert in Focus too: see the Table check). */
+     about 1400x900 a board's room, --bc-cap, is under the 16px floor and the slider is inert in Table; see the Table check). */
   await page.setViewportSize({width:1920,height:1080});
   await page.locator('[data-action=board-camera]').click();
+  /* Table at 1920x1080 has the room: Camera's Cards slider is continuous there, from 70% up (the smaller windows above have their cards at the 16px floor already). */
+  {
+    const slider=page.locator('.cm-stage-camera [data-stage-camera=cards]'),card=page.locator('.cm-stage-slot .cm-board-lands .cm-bcard').first(),size=()=>card.evaluate(el=>el.getBoundingClientRect().width);
+    const at={};for(const v of [70,80,100]){await slider.fill(String(v));at[v]=await size();}
+    assert.ok(at[70]>=16-.5&&at[70]<at[80]-1&&at[80]<at[100]-1,`Table at 1920x1080: Camera's Cards changes battlefield card size continuously (${JSON.stringify(at)})`);
+    await slider.fill('100');
+  }
   await page.locator('[data-action=board-view][data-view=focus]').click();
   await page.locator('[data-action=board-camera]').click();
   {

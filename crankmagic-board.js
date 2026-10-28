@@ -1595,7 +1595,7 @@ globalThis.CrankBoard = Object.seal({
     } else {host.style.removeProperty("--gut-l"); host.style.removeProperty("--gut-r");}
     if (flat) fitFan(host);   /* the tray's height first: the boards are fitted above it */
     const tray = host.querySelector(":scope > .cm-stage-hand");
-    const opts = {flat, grid: flat && mode === "table", reserve: flat ? Math.round((tray?.getBoundingClientRect().height || 0) + 14) : 0, tilt: cameraTilt(), zoom: camera.zoom, pan: camera.pan, reach: camera.reach, rearMin:0, live: !!stretch, rotation: 0, cards: camera.cards, reduced: globalThis.CrankMotion?.reduced() ?? false,
+    const opts = {flat, grid: flat && mode === "table", reserve: flat ? Math.round((tray?.classList.contains("is-hidden") ? (tray.getBoundingClientRect().height || 0) : Math.min(tray?.getBoundingClientRect().height || 0, Number(tray?.dataset.base) || Infinity)) + 14) : 0, tilt: cameraTilt(), zoom: camera.zoom, pan: camera.pan, reach: camera.reach, rearMin:0, live: !!stretch, rotation: 0, cards: camera.cards, reduced: globalThis.CrankMotion?.reduced() ?? false,
       background: table?.appearance?.background || appearance.background, table: tableDesignId(table?.appearance?.table || appearance.table),
       mats: (mode === "table" ? players() : [big, ...players().filter((p) => p.playerId !== big.playerId)]).map((p) => matOf(p.playerId)),
       combat: view.state.phase?.startsWith("COMBAT_") ?? false, instant: view.state.stack.some((s) => /Instant/i.test(typeLineOf(s))),
@@ -1658,6 +1658,7 @@ globalThis.CrankBoard = Object.seal({
     if (fits !== handFit) {const n = players()[view.seat]?.zones.Hand.count || 0, was = handFit; handFit = fits; if (n > Math.min(was, fits)) requestAnimationFrame(() => {if (view) draw();});}
     const hc = Math.round(Math.max(84, Math.min(rest * k, tallest, widest)));
     const step = spread ? Math.min(hc * .76, (wide / 2 - 60 - hc * .77) / spread) : hc * .76;
+    tray.dataset.base = String(Math.round(base));   /* the boards are laid out above the hand's own height, so a larger Hand cards setting never shrinks them */
     tray.style.height = `${Math.round(Math.max(base, hc * 1.4 + 24))}px`;
     tray.style.setProperty("--hc", `${hc}px`);
     fan.style.setProperty("--fan-step", `${step.toFixed(1)}px`);
@@ -4641,6 +4642,12 @@ globalThis.CrankBoard = Object.seal({
     const n = event.detail && event.detail.scale;
     handLive = null; clearTimeout(handKeep);
     if (n) {keep(SCALE_KEY.board, inRange(n)); keep(SCALE_KEY.hand, inRange(n));}
+    /* Tools' card size is the flat table's too: Camera's Cards takes its value, so the boards follow it (3D keeps its own). */
+    if (n && !stageEnabled()) {
+      camera.cards = Math.round(Math.max(70, Math.min(CAMERA_MAX, n))); keep("cm-stage-card-size-v2", String(camera.cards));
+      const slider = document.querySelector('#cm-board [data-stage-camera="cards"]');
+      if (slider) {slider.value = camera.cards; const out = slider.parentElement.querySelector("output"); if (out) out.textContent = `${camera.cards}%`;}
+    }
     applyScales();
     for (const scope of ["board", "hand"]) for (const el of document.querySelectorAll(`#cm-board [data-board-scale="${scope}"]`)) {
       el.value = String(scaleOf(scope));

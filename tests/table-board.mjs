@@ -256,17 +256,18 @@ try {
   const leaks = (email, owner, open = []) => frames[email].filter((f) => (f.match(new RegExp(`${owner} Secret [0-9]+`, "g")) || []).some((n) => !open.includes(n))).length;
   eq([leaks(MAYA, "Rob"), leaks(ROB, "Maya")], [0, 0], `no frame to either player named a card of the other's hand or library (${frames[MAYA].length + frames[ROB].length} frames read)`);
   await lookAt(maya.page, 0);
-  ok((await text(maya.page, ".cm-board-mat .cm-seat-header .cm-mat-name")).trim() === "Rob" && (await text(maya.page, ".cm-board-mat .cm-seat-hand")).trim() === "7 in hand", "Maya can look at Rob's board, and sees his hand as a count");
-  const mats = await maya.page.evaluate(() => {const m = document.querySelector(".cm-board-mat"); return [m.dataset.mat, getComputedStyle(m).backgroundImage.includes("radial-gradient")];});
+  /* (The board looked at is the big one, its name plain text above it; another seat's hand, a count, is read from its Boards module tile.) */
+  ok((await text(maya.page, ".cm-stage-big .cm-stage-boardname")).trim() === "Rob" && (await text(maya.page, ".cm-board-tile:not(.is-you) .cm-seat-hand")).trim() === "7 in hand", "Maya can look at Rob's board, and sees his hand as a count");
+  const mats = await maya.page.evaluate(() => {const m = document.querySelector(".cm-stage-big .cm-mat"); return [m.dataset.mat, getComputedStyle(m).backgroundImage.includes("radial-gradient")];});
   ok(mats[0] === "forge" && mats[1], "and it is drawn on Rob's mat, the forge");
   await lookAt(maya.page, 1);
-  const own = await maya.page.evaluate(() => {const m = document.querySelector(".cm-board-mat"); return [m.dataset.mat, getComputedStyle(m).backgroundImage];});
+  const own = await maya.page.evaluate(() => {const m = document.querySelector(".cm-stage-big .cm-mat"); return [m.dataset.mat, getComputedStyle(m).backgroundImage];});
   await lookAt(maya.page, 0);
-  const robs = await maya.page.evaluate(() => getComputedStyle(document.querySelector(".cm-board-mat")).backgroundImage);
+  const robs = await maya.page.evaluate(() => getComputedStyle(document.querySelector(".cm-stage-big .cm-mat")).backgroundImage);
   ok(own[0] === "felt" && own[1] !== robs, "her own board is on felt, and looks it");
   await serial(() => call("/table/mat", MAYA, {mat: "night"}));
   await lookAt(rob.page, 1);
-  await rob.page.waitForFunction(() => document.querySelector(".cm-board-mat")?.dataset.mat === "night", null, {timeout: 10000});
+  await rob.page.waitForFunction(() => document.querySelector(".cm-stage-big .cm-mat")?.dataset.mat === "night", null, {timeout: 10000});
   ok(true, "a mat changed mid-game reaches the other board");
   await lookAt(rob.page, 0);
   ok(!(await maya.page.content()).includes("Rob Secret"), "and her page holds none of his cards by name");
@@ -317,8 +318,12 @@ try {
   await shot(active.page, "board-priority-" + (active === rob ? "1400" : "1280"));
   await useCardOffer(active.page, brightLand, "play-land");
   await waitLands(active.page, 1);
-  /* The board says what mana is open and whether the land drop is used: the focus header's resources, or the chip at the foot of the board. */
-  ok(/land drop used/i.test(await text(active.page, ".cm-board-mat .cm-seat-resources, .cm-board-mat .cm-board-chip")), "tapping it plays it: one land on the board, the land drop used (the board says so)");
+  /* The board says what mana is open and whether the land drop is used: the chip at the foot of your own mat in Table (the Focus mat is drawn without its header's resources now,
+     so the view is Table's for this reading and Focus again after). */
+  await chooseView(active.page, "table"); await active.page.locator(".cm-mat.is-you .cm-board-chip").waitFor({timeout: 10000});
+  const dropSaid = await text(active.page, ".cm-mat.is-you .cm-board-chip");
+  await chooseView(active.page, "focus"); await active.page.locator(".cm-stage-big").waitFor({timeout: 10000});
+  ok(/land drop used/i.test(dropSaid), "tapping it plays it: one land on the board, the land drop used (the board says so)");
   ok(await heard(active === rob ? ROB : MAYA, "sfx/sfx_play_land.mp3"), "and it sounds as a land played (the pack's land voice)");
   await lookAt(other.page, activeSeat);
   await waitLands(other.page, 1);
@@ -415,7 +420,7 @@ try {
   await rob.page.getByRole('button',{name:'Resume game',exact:true}).click();
   await rob.page.locator("#cm-board .cm-stage-top").waitFor({timeout: 30000});
   ok(/^#table\?id=/.test(await rob.page.evaluate(() => location.hash)) && routes[ROB].length === robSockets, "Resume from Play returns to the game, on the same socket");
-  ok(awayFrames() === awayBefore && !/Dropped/.test(await text(maya.page, ".cm-stage-region [data-seat='0'] .cm-seat-state")), "and through all of it the room never marked Rob's seat away");
+  ok(awayFrames() === awayBefore && !/Dropped/.test(await text(maya.page, ".cm-board-tile[data-seat='0'] .cm-seat-state")), "and through all of it the room never marked Rob's seat away");   /* (a seat's state is read from its Boards module tile now: no header over the board says it) */
 
   /* THE THREE VIEWS. Table: every seat's board at once, each the same 16:9, yours at the right of the pair here, the logo between them opening
      Table vitals. Since 2026-10-28 Table is the 3D view's HUD on a flat stage: the boards are laid out by CrankStage.flatGeometry inside the stage (the
@@ -430,7 +435,7 @@ try {
     const ring = getComputedStyle(document.querySelector(".cm-seatboard.is-you")).boxShadow, hostStyle = getComputedStyle(document.getElementById("cm-board"));
     const gutL = parseFloat(hostStyle.getPropertyValue("--gut-l")) || 0, gutR = parseFloat(hostStyle.getPropertyValue("--gut-r")) || 0;
     const across = mine.left >= theirs.right - 1 && Math.abs(mine.top - theirs.top) < 1, down = mine.top >= theirs.bottom - 1 && Math.abs(mine.left - theirs.left) < 1;
-    return {mineRight: across || down, across, ring: ring !== "none" && /\dpx/.test(ring), same: Math.abs(mine.width - theirs.width) < 1 && Math.abs(mine.height - theirs.height) < 1,
+    return {mineRight: across || down, across, ring: ring !== "none" && /\dpx/.test(ring), same: Math.abs(mine.width / theirs.width - 1.12) < 0.02 && Math.abs(mine.height / theirs.height - 1.12) < 0.02,   /* yours is 12% larger, both the same 16:9 */
       ratio: Math.round(mine.width / mine.height * 100) / 100, fits: mine.right <= region.right - gutR + 1 && theirs.left >= region.left + gutL - 1 && mine.top >= region.top - 1 && mine.bottom <= hand.bottom + 1,
       whole: host.left === 0 && host.top === 0 && host.width === innerWidth && host.height === innerHeight,
       library: document.querySelectorAll(".cm-seatboard [data-zone=library]").length, trayBelow: hand.bottom <= innerHeight + 1 && hand.left === region.left && hand.width === region.width && mine.bottom <= hand.bottom + 1,
@@ -439,7 +444,7 @@ try {
   const initialRows = await rob.page.evaluate(tableFacts);
   ok(tableGeo.whole, "the game fills the window: the board is the whole viewport, the rail under it");
   ok(tableGeo.mineRight && tableGeo.ring, `Table view: two boards, one beside the other or one over the other, Rob's last (${tableGeo.across ? "on the right" : "below"}) in a ring, Maya's first`);
-  ok(tableGeo.same && tableGeo.fits && Math.abs(tableGeo.ratio - 16 / 9) < 0.02 && initialRows.valid && initialRows.same, `the boards are the same size, each 16:9 (${tableGeo.ratio}), whole and between the drawers' gutters, with their cards 5:7 (${JSON.stringify(initialRows.boards.map((b) => [Math.round(b.width), Math.round(b.height)]))})`);
+  ok(tableGeo.same && tableGeo.fits && Math.abs(tableGeo.ratio - 16 / 9) < 0.02 && initialRows.valid && initialRows.same, `the boards are each 16:9 (${tableGeo.ratio}), yours 12% larger than the other seat's, whole and between the drawers' gutters, with their cards 5:7 (${JSON.stringify(initialRows.boards.map((b) => [Math.round(b.width), Math.round(b.height)]))})`);
   ok(tableGeo.library === 2 && tableGeo.trayBelow, "each board draws its Library pile, and the hand sits along the foot of the window, the stage's whole width, no board reaching below it");
   /* The life counter with the wand logo at the true center is gone (Rob, 2026-10-28: the turn box top left has the life, names and priority; Table vitals open from a vitals pill): the boards meet with only a hair between them, nothing sits there. */
   ok(tableGeo.dial === 0 && tableGeo.gap >= 0 && tableGeo.gap <= 12 && tableGeo.sideways === 0, `the boards meet with only a hair between them (${Math.round(tableGeo.gap)}px) and no dial lies over it, and nothing scrolls sideways`);
@@ -501,11 +506,14 @@ try {
   ok(flat.includes("From Rob General — 0 / 21") && flat.includes("From Maya General 0 / 21 —"), `and each commander's damage to every other seat, its own seat "—" (${flat.slice(3).join(" | ")})`);
   await shot(rob.page, "table-vitals-1400");
   await rob.page.keyboard.press("Escape");
-  /* With Actions shut the pending choice floats over the stage, over Maya's header too; open, it is in the drawer and the header is free. */
+  /* A board has no header or vitals pill over it any more (Rob, 2026-10-28: a name in plain text above the mat), so another seat's pill is gone; Table vitals' other door is
+     Settings, General's Table vitals button, which leaves Settings and opens the same sheet. */
+  /* With Actions shut the pending choice floats over the stage; open, it is in the drawer and the stage is free. */
   await rail(rob.page, true);
-  await rob.page.locator(".cm-seatboard:not(.is-you) [data-action=board-vitals]").click();
+  await utility(rob.page, "board-tools");
+  await rob.page.locator("#cm-dialog [data-action=board-vitals]").click();
   await rob.page.locator(".cm-table-vitals").waitFor();
-  ok(true, "any seat's vitals pill opens Table vitals too");
+  ok(await rob.page.locator(".cm-table-vitals [role=row]").count() >= 3, "Settings' Table vitals button opens Table vitals too, every seat's in it");
   await rob.page.keyboard.press("Escape");
 
   /* THE BARS TOWARD 21 (CR 903.10a; the plan review's C1, 2026-10-03). The tally is kept under the commander's key, the
@@ -577,8 +585,8 @@ try {
   const zoom = rob.page.locator(".cm-stage-camera [data-stage-camera=zoom]");
   await zoom.fill("130"); await rob.page.waitForTimeout(300);
   const dragged = await geoT(), share = Number(await zoomKept()), draggedRows = await rob.page.evaluate(tableFacts);
-  ok(dragged.tw > even.tw * 1.25 && dragged.mw > even.mw * 1.25 && Math.abs(dragged.tw - dragged.mw) < 1 && draggedRows.valid && share === 130 && dragged.side,
-    `Camera's Zoom to 130%: both boards grow alike and stay 16:9, still a pair, one beside the other or over it (${even.tw.toFixed(0)} → ${dragged.tw.toFixed(0)}px over ${even.mw.toFixed(0)} → ${dragged.mw.toFixed(0)}px; kept ${share})`);
+  ok(dragged.tw > even.tw * 1.25 && dragged.mw > even.mw * 1.25 && Math.abs(dragged.mw / dragged.tw - 1.12) < 0.02 && draggedRows.valid && share === 130 && dragged.side,
+    `Camera's Zoom to 130%: both boards grow alike (yours still 12% larger) and stay 16:9, still a pair, one beside the other or over it (${even.tw.toFixed(0)} → ${dragged.tw.toFixed(0)}px over ${even.mw.toFixed(0)} → ${dragged.mw.toFixed(0)}px; kept ${share})`);
   await cameraIs(false);
   await chooseView(rob.page,"focus");
   await rob.page.locator(".cm-board-mat").waitFor();
@@ -601,7 +609,7 @@ try {
   const back = await geoT();
   await cameraIs(false);
   await verifyTableAccess(rob.page, await rob.page.evaluate(tableFacts));
-  ok(Number(await zoomKept()) === 100 && Math.abs(back.tw - back.mw) < 1 && Math.abs(back.tw - even.tw) < 1, "and back at 100%, the boards are as they began");
+  ok(Number(await zoomKept()) === 100 && Math.abs(back.mw / back.tw - 1.12) < 0.02 && Math.abs(back.tw - even.tw) < 1, "and back at 100%, the boards are as they began");
   /* The bar atop the hand tray (the hand's card size, dragged up) is gone too: Camera's Hand cards (✋) slider is the hand's size. Grown, the hand's
      cards grow and every board keeps its size and the hand its place (Rob, 2026-10-09: "Card hand size should never decrease the board size"). */
   await cameraIs(true);
@@ -610,29 +618,37 @@ try {
   const grown = await geoT(), handOut = (await handSlider.evaluate((el) => el.parentElement.querySelector("output").textContent)).trim();
   ok(grown.hand > even.hand * 1.2 && Math.abs(grown.tw - even.tw) < 1 && Math.abs(grown.mw - even.mw) < 1 && Math.abs(grown.trayTop - even.trayTop) < 1 && evenRows.valid && /^1[2-9]\d%$/.test(handOut),
     `Camera's Hand cards drags up: the hand's cards grow (${even.hand.toFixed(0)} → ${grown.hand.toFixed(0)}px, ${handOut}), every board keeps its size (${even.tw.toFixed(0)} → ${grown.tw.toFixed(0)}px) and the hand its place`);
-  /* The three card sizes: the board's and the hand's each their own; Tools sets both to its value. */
+  /* The three card sizes: the board's and the hand's each their own; Tools sets both to its value. A board's cards are bounded by the room on its mat (--bc-cap: they never
+     outgrow it, and Camera's Cards below 100% shrinks them under it), and Table's two boards leave a card at 1400x900 already at that bound from 100%: no slider
+     travel is left above it. The slider's growth is read on Focus, whose one board has the room (cards grow from 70% to about 140% and stop at the bound). */
+  await cameraIs(true); await chooseView(rob.page,"focus"); await rob.page.locator(".cm-stage-big").waitFor(); await cameraIs(true);
   const sizes = () => rob.page.evaluate(() => {
-    const land = document.querySelector(".cm-stage-slot .cm-board-lands .cm-bcard"), board = land.closest(".cm-seatboard"), slot = board.closest(".cm-stage-slot"), host = getComputedStyle(document.getElementById("cm-board"));
+    const land = document.querySelector(".cm-stage-slot .cm-board-lands .cm-bcard"), board = land.closest(".cm-mat"), slot = board.closest(".cm-stage-slot"), host = getComputedStyle(document.getElementById("cm-board"));
     const badges=[...board.querySelectorAll('.cm-bcard-pt,.cm-bcard-count,.cm-bcard-tax')].filter(b=>b.getClientRects().length&&getComputedStyle(b).visibility!=='hidden');
     const fits=badges.every(b=>{const r=b.getBoundingClientRect(),c=b.closest('.cm-bcard').getBoundingClientRect();return r.left>=c.left-1&&r.right<=c.right+1&&b.scrollWidth<=b.clientWidth+1;});
     const out = (sel) => document.querySelector(sel)?.closest('label').querySelector('output').textContent ?? null;
-    return {badgeFits:badges.length>0&&fits,board: parseFloat(getComputedStyle(land).width) / board.getBoundingClientRect().width, hand: parseFloat(getComputedStyle(document.querySelector(".cm-stage-fan .cm-bcard")).width),
+    return {cardW: land.getBoundingClientRect().width, cap: parseFloat(getComputedStyle(board).getPropertyValue("--bc-cap")), badgeFits:badges.length>0&&fits,board: parseFloat(getComputedStyle(land).width) / board.getBoundingClientRect().width, hand: parseFloat(getComputedStyle(document.querySelector(".cm-stage-fan .cm-bcard")).width),
       scopes: [slot.style.getPropertyValue("--board-scale").trim(), host.getPropertyValue("--hand-scale").trim()], outs: [out('#cm-board [data-stage-camera="cards"]'), out('#cm-board [data-board-scale="hand"]')]};
   });
   await handSlider.fill("100");
-  const boardSlider=rob.page.locator('.cm-stage-camera [data-stage-camera=cards]'),loScale=Number(await boardSlider.getAttribute('min')),upper=Number(await boardSlider.getAttribute('max')),middle=Math.round((loScale+upper)/2);
+  const boardSlider=rob.page.locator('.cm-stage-camera [data-stage-camera=cards]'),loScale=Number(await boardSlider.getAttribute('min')),sliderMax=Number(await boardSlider.getAttribute('max')),upper=140,middle=Math.round((loScale+upper)/2);
   await boardSlider.fill(String(loScale));const naturalLow=await sizes();
   await boardSlider.fill(String(middle));const naturalMid=await sizes();
   await boardSlider.fill(String(upper));const naturalUpper=await sizes();
   const firstSlope=(naturalMid.board-naturalLow.board)/(middle-loScale),lastSlope=(naturalUpper.board-naturalMid.board)/(upper-middle);
   ok([naturalLow,naturalMid,naturalUpper].every(v=>v.badgeFits)&&firstSlope>0&&lastSlope>0&&Math.abs(firstSlope-lastSlope)<.00005&&Math.abs(naturalLow.hand-naturalUpper.hand)<.5,
     'the native Card Scale range has useful positive natural growth, with any constant readability offset, and leaves Hand cards unchanged');
+  /* Past that the room is the limit: at the slider's end a card is no larger than the board's room for it (and no smaller than at 140%). */
+  await boardSlider.fill(String(sliderMax));const naturalMax=await sizes();
+  ok(naturalMax.cardW<=naturalMax.cap+.5&&naturalMax.cardW>=naturalUpper.cardW-.5&&Math.abs(naturalMax.hand-naturalLow.hand)<.5,
+    `and at the slider's end a card is no larger than the room its board leaves (${naturalMax.cardW.toFixed(1)}px of ${naturalMax.cap.toFixed(1)}px)`);
   await boardSlider.fill('100');
   const s100 = await sizes();
   await rob.page.locator(".cm-stage-camera [data-stage-camera=cards]").fill("80");
   const sBoard = await sizes();
+  /* (The stage maps the slider to a board's scale with the readable-caption offset, 1 + 0.8 x (value - 100)/100: 80% is 0.84, 120% is 1.16; the hand's scale is the slider's value as is.) */
   const boardFactor=sBoard.board/s100.board,boardScaleFits=sBoard.board>=naturalLow.board&&sBoard.board<s100.board;
-  ok(sBoard.badgeFits&&boardScaleFits && Math.abs(sBoard.hand - s100.hand) < 0.5 && sBoard.scopes[0] === "0.8" && sBoard.outs[0] === "80%",
+  ok(sBoard.badgeFits&&boardScaleFits && Math.abs(sBoard.hand - s100.hand) < 0.5 && sBoard.scopes[0] === "0.84" && sBoard.outs[0] === "80%",
     `Board cards, in Camera, sizes the boards' cards alone (to ${(sBoard.board / s100.board * 100).toFixed(0)}%; the hand stays ${sBoard.hand.toFixed(0)}px)`);
   await rob.page.locator(".cm-stage-camera [data-board-scale=hand]").fill("130");
   const sHand = await sizes();
@@ -643,7 +659,7 @@ try {
   const sTools = await sizes(), toolsOut = await rob.page.locator("#cm-board-tools [data-card-scale]").evaluate((el) => el.parentElement.querySelector("output").textContent);
   /* Opening Play settings closes Camera (Hand cards and Cards live in it), so the two sliders' values are read from the cards and, below, from Camera reopened. */
   const toolsScaleFits=sTools.board>s100.board&&sTools.board<=naturalUpper.board;
-  ok(sTools.badgeFits&&sTools.scopes.join() === "1.2,1.2" && toolsOut === "120%" && toolsScaleFits && Math.abs(sTools.hand / s100.hand - 1.2) < 0.02,
+  ok(sTools.badgeFits&&sTools.scopes.join() === "1.16,1.2" && toolsOut === "120%" && toolsScaleFits && Math.abs(sTools.hand / s100.hand - 1.2) < 0.02,
     `Tools is the table's card size, and moving it sets Board cards and Hand cards to its value (${toolsOut}; cards ${sTools.scopes.join(", ")})`);
   await rob.page.click("#cm-dialog [data-action=board-settings-save]");
   await cameraIs(true);
@@ -656,6 +672,7 @@ try {
   eq((await sizes()).outs, ["100%", "100%"], "and back to 100%, all three agree");
   await boardSlider.fill("100");
   await rob.page.locator('[data-action=board-camera]').click();
+  await chooseView(rob.page,"table"); await cameraIs(false); await rob.page.locator(".cm-stage-slot .cm-seatboard").nth(1).waitFor();
   await rob.page.locator(".cm-stage-slot:not(.is-you) .cm-seatboard").first().dblclick({position: {x: 4, y: 4}});   /* a double click on a board focuses it (Rob, 2026-10-28; the Focus button is gone) */
   await rob.page.locator(".cm-stage-big").waitFor();
   ok((await text(rob.page, ".cm-stage-big .cm-stage-boardname")).trim() === "Maya" && /^\d+ in hand$/.test((await text(rob.page, ".cm-board-tile:not(.is-you) .cm-seat-hand")).trim()) && await rob.page.getAttribute("#cm-board", "data-view") === "focus", "a double click on Maya's board puts it on the mat in the Focus view, her name above it and her hand count in the Boards module");
@@ -667,7 +684,7 @@ try {
      top layer now, so widening it moves nothing: the mat keeps its place and size (it no longer gives way beside the pane). */
   await rail(rob.page, true);
   const paneGeo = () => rob.page.evaluate(() => {
-    const pane = document.querySelector(".cm-stage-rail").getBoundingClientRect(), mat = document.querySelector(".cm-board-mat").getBoundingClientRect(), big = document.querySelector(".cm-stage-big").getBoundingClientRect();
+    const pane = document.querySelector(".cm-stage-rail").getBoundingClientRect(), mat = document.querySelector(".cm-stage-big .cm-mat").getBoundingClientRect(), big = document.querySelector(".cm-stage-big").getBoundingClientRect();
     const tile = document.querySelector(".cm-board-tile[data-seat='1']"), mine = document.querySelector(".cm-board-tile[data-seat='0']");
     return {pane: Math.round(pane.width), tile: Math.round(tile.getBoundingClientRect().width), mini: document.querySelectorAll(".cm-board-tile.is-mini .cm-board-mini .cm-mat[data-fit=mini]").length,
       robLands: mine.querySelectorAll(".cm-board-mini [data-zone=lands] .cm-bcard").length, inert: !!tile.querySelector(".cm-board-mini[inert]"),
@@ -686,7 +703,7 @@ try {
   ok(pane0.mini === 0 && pane1.mini === 2 && pane1.robLands >= 1 && pane1.inert, `and past 400px each tile is a miniature of that seat's board, cards and all (the Forest on Rob's: ${pane1.robLands}), only to look at`);
   await shot(rob.page, "pane-miniatures-1400");
   await rob.page.locator(".cm-board-tile[data-seat='1'] .cm-board-tile-main").click();
-  await rob.page.waitForFunction(() => document.querySelector(".cm-board-mat .cm-seat-header .cm-mat-name")?.textContent === "Maya", null, {timeout: 5000});
+  await rob.page.waitForFunction(() => document.querySelector(".cm-stage-big .cm-stage-boardname")?.textContent.trim() === "Maya", null, {timeout: 5000});   /* (the board looked at is named in plain text above it) */
   ok(true, "a miniature is still the tile: a click on it puts that seat's board on the mat");
   await rob.page.locator(".cm-board-tile[data-seat='0'] .cm-board-tile-main").click();
   await chooseView(rob.page,"table");
@@ -745,11 +762,11 @@ try {
   /* THE HOVER CARD IS READ AT FULL SIZE, WITHIN THE WINDOW (was: no taller than the mat, Rob, 2026-10-11). The cap to the mat's height (--peek-max, set by
      the old Focus and Table layouts) is superseded: the flat stage's boards are small by design (here her mat is 16:9 at about 180px tall), and a hover card
      held to that would be a thumbnail nobody can read, against "every card reference is one press from the card itself, to see it large and read it"
-     (AGENTS.md). Its closest equivalent: the card is its normal 400px wide (560 tall) where the window has room, and the window's room (80px to spare) where it has not. */
+     (AGENTS.md). Its closest equivalent: the card is its normal 320px wide (448 tall; the pop-up is 20% smaller since 2026-10-28, was 400 by 560) where the window has room, and the window's room (80px to spare) where it has not. */
   await maya.page.hover(".cm-stage-fan .cm-bcard[data-card]");
   await maya.page.locator("#cm-board-peek .cm-bcard").waitFor({timeout: 5000});
-  const peekCap = await maya.page.evaluate(() => {const p = document.querySelector("#cm-board-peek .cm-bcard").getBoundingClientRect(), m = document.querySelector(".cm-board-mat").getBoundingClientRect(); return {peek: Math.round(p.height), mat: Math.round(m.height), w: Math.round(p.width), win: innerHeight};});
-  ok(Math.abs(peekCap.peek-Math.min(560,(peekCap.win-80)))<2&&Math.abs(peekCap.w-Math.min(400,(peekCap.win-80)*5/7))<2, `the hover card is read at its normal 400px width cap, and within the window (${peekCap.peek}px tall in ${peekCap.win}px; ${peekCap.w}px wide; her mat is ${peekCap.mat}px)`);
+  const peekCap = await maya.page.evaluate(() => {const p = document.querySelector("#cm-board-peek .cm-bcard").getBoundingClientRect(), m = document.querySelector(".cm-stage-big .cm-mat").getBoundingClientRect(); return {peek: Math.round(p.height), mat: Math.round(m.height), w: Math.round(p.width), win: innerHeight};});
+  ok(Math.abs(peekCap.peek-Math.min(448,(peekCap.win-80)))<2&&Math.abs(peekCap.w-Math.min(320,(peekCap.win-80)*5/7))<2, `the hover card is read at its normal 320px width cap, and within the window (${peekCap.peek}px tall in ${peekCap.win}px; ${peekCap.w}px wide; her mat is ${peekCap.mat}px)`);
   await maya.page.mouse.move(2, 2);
   await maya.page.locator("#cm-board-peek").waitFor({state: "detached", timeout: 5000});
   /* THE CALLOUTS (the Replit brief's overlay): Tools › Try the callouts shows the grammar on demand, at most three at
@@ -981,7 +998,7 @@ try {
   await rob.page.locator("#cm-board-peek .cm-bcard").waitFor({timeout: 5000});
   const peekWidth = await rob.page.evaluate(() => document.querySelector("#cm-board-peek .cm-bcard").getBoundingClientRect().width);
   const peekBox = await rob.page.evaluate(() => {const r = document.querySelector("#cm-board-peek .cm-bcard").getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2), innerWidth / 2, innerHeight / 2];});
-  ok(Math.round(peekWidth) === 400 && Math.abs(peekBox[0] - peekBox[2]) < 2 && (await rob.page.locator('#cm-board-peek .cm-bcard').getAttribute('aria-label')).includes(robCardName) && Math.abs(peekBox[1] - peekBox[3]) < 2, `a card under the pointer shows large at the center of the screen, 400px (${robCardName})`);
+  ok(Math.round(peekWidth) === 320 && Math.abs(peekBox[0] - peekBox[2]) < 2 && (await rob.page.locator('#cm-board-peek .cm-bcard').getAttribute('aria-label')).includes(robCardName) && Math.abs(peekBox[1] - peekBox[3]) < 2, `a card under the pointer shows large at the center of the screen, 320px (the pop-up is 20% smaller since 2026-10-28) (${robCardName})`);
   /* The accessibility pass: the pop-up is said as well as shown, by the board's one polite status region beside the board
      (tests/a11y-board.mjs), its picture not read twice. */
   const peekSaid = await rob.page.evaluate(() => {const p = document.getElementById("cm-board-peek"), s = document.getElementById("cm-board-said"); return {hidden: p.getAttribute("aria-hidden"), role: s && s.getAttribute("role"), live: s && s.getAttribute("aria-live"), said: s ? s.textContent : "", beside: !!s && !s.closest("#cm-board")};});
@@ -1312,8 +1329,8 @@ try {
     await rob.page.locator(".cm-stage-camera [data-board-scale=hand]").first().fill(String(hi));
     await rob.page.waitForTimeout(300);
     const big = await at();
-    ok(big.card > before.card * 1.2 && big.w === before.w && big.h === before.h && big.x === before.x && big.y === before.y && JSON.stringify(big.tray) === JSON.stringify(before.tray),
-      `Focus: Hand cards at ${hi}%, the hand's cards grow (${before.card} → ${big.card}px), the board keeps its size and place (${before.w}×${before.h} at ${before.x},${before.y} → ${big.w}×${big.h} at ${big.x},${big.y}) and the tray its own`);
+    ok(big.card > before.card * 1.2 && big.w === before.w && big.h === before.h && big.x === before.x && big.y === before.y && big.tray[1] + big.tray[3] === before.tray[1] + before.tray[3] && big.tray[3] >= before.tray[3],   /* the hand is 3D's fan: its tray grows upward from the same foot, over the boards, never shrinking them */
+      `Focus: Hand cards at ${hi}%, the hand's cards grow (${before.card} → ${big.card}px), the board keeps its size and place (${before.w}×${before.h} at ${before.x},${before.y} → ${big.w}×${big.h} at ${big.x},${big.y}) and the tray grows upward from its own foot`);
     await rob.page.evaluate(() => {localStorage.removeItem("cm-board-scale:hand");});
     await rob.page.locator(".cm-stage-camera [data-board-scale=hand]").first().fill(String(await rob.page.evaluate(() => Math.round(globalThis.__cm.cardScale()))));
     await cameraIs(false);
@@ -1579,7 +1596,7 @@ try {
   await chooseView(maya.page,"focus");
 
   /* DROPPED: the room ends Rob's socket; his board reconnects; Maya is told, then the table says he is back. */
-  const socketsBefore = routes[ROB].length, robFlag = ".cm-stage-region [data-seat='0'] .cm-seat-state";
+  const socketsBefore = routes[ROB].length, robFlag = ".cm-board-tile[data-seat='0'] .cm-seat-state";
   /* One of Maya's reads (her table is read every two seconds) is answered by the room before Rob drops, and kept on
      the way back until the room has told her he dropped. Her board counts the reads it is handed, so the check below
      knows that one has landed. */
@@ -1602,7 +1619,7 @@ try {
   delete held[MAYA]; release();
   await rob.page.waitForFunction(() => document.querySelector(".cm-stage-top") && !document.querySelector(".cm-board-conn"), null, {timeout: 20000});
   ok(routes[ROB].length === socketsBefore + 1, "Rob's board opens a new socket by itself, and the room sends his view again");
-  await maya.page.waitForFunction(() => !/Dropped/.test(document.querySelector(".cm-stage-region [data-seat='0'] .cm-seat-state")?.innerText || ""), null, {timeout: 20000});
+  await maya.page.waitForFunction(() => !/Dropped/.test(document.querySelector(".cm-board-tile[data-seat='0'] .cm-seat-state")?.innerText || ""), null, {timeout: 20000});
   ok(true, "and once he is back, Maya's board stops saying so");
 
   /* PHONES (Linear ROB-18; Rob, Oct 18: "the upright Focused phone layout"): Maya's screen becomes a phone held sideways.
@@ -1844,6 +1861,7 @@ async function dismissAccount(page) {
 async function lookAt(page, seat) {
   if (await page.locator(`.cm-stage-big[data-seat='${seat}']`).count()) return;
   await page.locator(`.cm-stage-rear[data-seat='${seat}'] .cm-mat`).dblclick({position: {x: 4, y: 4}});   /* a double click on a board focuses it (Rob, 2026-10-28) */
+  await page.locator(`.cm-stage-big[data-seat='${seat}']`).waitFor({timeout: 10000});
 }
 /* Actions is the left drawer; the old row's "board-actions-open" toggle opened and shut it. */
 async function rail(page, open) {
@@ -1925,12 +1943,13 @@ function tableFacts() {
   const slots = [...document.querySelectorAll(focus ? '.cm-stage-big' : '.cm-stage-slot')], mats = slots.map((el) => el.querySelector(':scope > .cm-mat')).filter(Boolean);
   const boards = mats.map((mat) => {
     const r = mat.getBoundingClientRect(), cards = [...mat.querySelectorAll('.cm-bcard')], zones = [...mat.querySelectorAll('.cm-board-field,.cm-board-lands')];
-    return {seat: mat.dataset.seat, width: r.width, height: r.height, ratio: Math.abs(r.width * 9 / 16 - r.height) <= 1.5,
+    return {seat: mat.dataset.seat, you: mat.classList.contains('is-you'), width: r.width, height: r.height, ratio: Math.abs(r.width * 9 / 16 - r.height) <= 1.5,
       cards: cards.length > 0 && cards.every((c) => Math.abs(c.offsetWidth / c.offsetHeight - 5 / 7) < .02),
       inside: zones.every((z) => {const q = z.getBoundingClientRect(); return q.top >= r.top - 1 && q.bottom <= r.bottom + 1 && q.left >= r.left - 1 && q.right <= r.right + 1;})};
   });
   const host = document.getElementById('cm-board'), rears = [...document.querySelectorAll('.cm-stage-rear')].map((e) => e.getBoundingClientRect().width);
-  return {mode: focus ? 'focus' : 'table', boards, valid: boards.length === slots.length && boards.length > 0 && boards.every((b) => b.ratio && b.cards && b.inside), same: boards.every((b) => Math.abs(b.width - boards[0].width) < 1 && Math.abs(b.height - boards[0].height) < 1),
+  return {mode: focus ? 'focus' : 'table', boards, valid: boards.length === slots.length && boards.length > 0 && boards.every((b) => b.ratio && b.cards && b.inside), /* Table: the other seats' boards are identical and yours is 12% larger in both directions (Rob, 2026-10-28); Focus has the one. */
+    same: (() => {const others = boards.filter((b) => !b.you), mine = boards.filter((b) => b.you); return others.every((b) => Math.abs(b.width - others[0].width) < 1 && Math.abs(b.height - others[0].height) < 1) && mine.every((b) => !others.length || (Math.abs(b.width / others[0].width - 1.12) < 0.02 && Math.abs(b.height / others[0].height - 1.12) < 0.02));})(),
     largest: boards.length > 0 && rears.every((w) => boards[0].width >= w - 1), rears: rears.map(Math.round),
     horizontal: document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1, scrolls: host.scrollHeight > host.clientHeight + 1};
 }
@@ -1942,6 +1961,10 @@ async function verifyTableAccess(page, facts) {
   if (SHOTS) writeFileSync(path.join(SHOTS, 'table-row-geometry.json'), JSON.stringify(tableGeometryProof, null, 2));
   ok(facts.horizontal, 'the Table boards never introduce horizontal overflow');
   const size = page.viewportSize();
+  /* With Actions shut, a question you hold is raised as the pop-up over the table (the stage's ask(), above the boards by design, z-index over them); with Actions open it sits in
+     that drawer, which lies over no board's gutter. A pointer reaching the Lands row is measured with the question in the drawer, then Actions is put back as it was. */
+  const popped = await page.locator(".cm-stage-region #cm-board-decision").count();
+  if (popped) {await rail(page, true); await page.locator(".cm-stage-region #cm-board-decision").waitFor({state: "detached", timeout: 3000});}
   const reached = await page.evaluate(() => {
     const host = document.getElementById('cm-board'), found = [];
     for (const zone of document.querySelectorAll('.cm-stage-slot .cm-board-lands')) {
@@ -1958,6 +1981,7 @@ async function verifyTableAccess(page, facts) {
   });
   ok(reached.length > 0 && reached.every(Boolean), `each complete Lands row is in the window, at the top or after scrolling down, and reaches the pointer (${size.width}x${size.height}: ${JSON.stringify(reached)}; the stage ${facts.scrolls ? "scrolls" : "fits"})`);
   proof.landsReached = reached;
+  if (popped) await rail(page, false);
 }
 
 async function verifyCoachUsable(page) {
