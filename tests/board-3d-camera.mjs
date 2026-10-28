@@ -285,12 +285,14 @@ try {
     const r = document.querySelector(".cm-stage-region").getBoundingClientRect(), g = CrankStage.geometry(r.width, r.height, {tilt: 40, zoom: 100, seats: 3});
     const P = g.unproject(x - r.left, y - r.top).world, at = (t) => CrankStage.headPose(g, P, t);
     const toP = (p) => Math.hypot(P[0] - g.camera.eye[0] - p.x, P[1] - g.camera.eye[1] - p.y, P[2] - g.camera.eye[2] - p.z), rest = toP({x: 0, y: 0, z: 0});
-    return {early: at(.15), peak: at(.35), end: at(1), eye: g.camera.eye[1], closer: 1 - toP(at(1)) / rest};
+    const forward = (px, py) => CrankStage.headPose(g, g.unproject(px - r.left, py - r.top).world, 1).z;
+    return {early: at(.15), peak: at(.35), end: at(1), eye: g.camera.eye[1], closer: 1 - toP(at(1)) / rest, forwardFar: forward(x, y), forwardNear: forward(r.left + r.width / 2, r.bottom - 30), forwardSide: forward(r.left + 40, r.top + r.height * .6)};
   }, far);
+  ok(rise.forwardFar > 0 && rise.forwardNear > 0 && rise.forwardSide > 0, `the camera moves forward over the table to look down at the place held, wherever on the table it is (${rise.forwardFar.toFixed(0)}, ${rise.forwardNear.toFixed(0)}, ${rise.forwardSide.toFixed(0)} forward)`);
   ok(rise.early.y > 0 && rise.peak.y > rise.early.y && Math.abs(rise.early.yaw) < .02 && Math.abs(rise.early.pitch) < .002, `the head rises first, before it turns to look (${rise.early.y.toFixed(1)} then ${rise.peak.y.toFixed(1)} up; yaw ${rise.early.yaw.toFixed(4)})`);
-  near(rise.peak.y / rise.eye, .02 - .03 * phase35(), .006, "about 2% of its height over the table at the far corner, less what the lean has begun to lower");
+  near(rise.peak.y / rise.eye, .02 - .06 * phase35(), .006, "about 2% of its height over the table at the far corner, less what the lean has begun to lower (the lean lowers it twice as far as it did)");
   ok(rise.end.y < 0, "and by the end it has gone over and down, as before");
-  ok(rise.closer > .075 && rise.closer < .12, `the read at the end comes about a third closer than it did (the eye ${(rise.closer * 100).toFixed(1)}% nearer the place; it was 6%)`);
+  ok(rise.closer > .12 && rise.closer < .19, `the read at the end comes closer still, the eye leaning forward over the table (the eye ${(rise.closer * 100).toFixed(1)}% nearer the place; it was 9% before it leaned forward)`);
   /* Moved while held, the head turns after the pointer, by the angle the offset spans, and back on letting go. */
   await frames();
   await page.mouse.move(close_.x, close_.y);

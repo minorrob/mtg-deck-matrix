@@ -1704,3 +1704,15 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-board-pane .cm-seat-header{row-gap:0;line-height:1.2}
 #matrix-v2 .cm-board .cm-board-pane .cm-board-tile{grid-template-rows:auto;gap:0;padding:5px 8px}
 #matrix-v2 .cm-lb-grid .cm-lobby-seat>header>.cm-seat-remove{pointer-events:auto}
+
+/* THE HAND'S CENTER CARD IS THE CENTER OF WHAT YOU SEE (Rob, 2026-10-28: "the center card of the hand should always be centered, currently shifted right"): with the Stack & history drawer open, the hand is laid out between the drawers, not under the right one. */
+#matrix-v2 .cm-board[data-shell=shared]>.cm-stage-hand{margin-right:calc(var(--play-inspector,0px) + var(--stage-side-offset,0px))}
+
+/* THE MAT'S EDGES AND ITS PILES (Rob, 2026-10-28): the divider between the lands and the battlefield moves only those two; Commander and Exile stay at the top right of the mat, Library and Graveyard at the bottom right, whatever the divider does, and the mat has almost no margin round it (it kept 62px above, for a card of you that is no longer there, and 48px below). */
+#matrix-v2 .cm-board .cm-stage-front .cm-mat .cm-board-pile[data-zone="command"],
+#matrix-v2 .cm-board .cm-stage-front .cm-mat .cm-board-pile[data-zone="exile"]{grid-row:1 / -1;align-self:start}
+#matrix-v2 .cm-board .cm-stage-front .cm-mat .cm-board-pile[data-zone="library"],
+#matrix-v2 .cm-board .cm-stage-front .cm-mat .cm-board-pile[data-zone="graveyard"]{grid-row:1 / -1;align-self:end}
+#matrix-v2 .cm-board .cm-stage-front>.cm-mat{padding-bottom:2px}
+#matrix-v2 .cm-board .cm-stage-front:not(:has(>.cm-full-corner))>.cm-mat{padding-top:2px}
+#matrix-v2 .cm-board .cm-stage-front .cm-mat-grid{padding:2px}
