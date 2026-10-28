@@ -64,7 +64,7 @@ async function play({storage = memoryStorage(), matchId, forSeat, reopenAt = nul
   ok(game.room.status === "finished", `with houseAnswer for the LLM seat, the game finishes (${end.state.turn} turns, ${game.asked.length} close calls offered to the seat)`);
   ok(game.asked.length > 0, "and the seat was asked: some decisions were close calls");
   const kinds = new Set(game.asked.map((d) => d.kind === "priority" ? "priority" : String(d.id).split(":")[0]));
-  ok([...kinds].every((k) => k === "priority" || k === "declare-attackers"), `only spells to cast and attacks are ever offered to it (${[...kinds].join(", ")})`);
+  ok([...kinds].every((k) => ["priority", "declare-attackers", "mulligan"].includes(k)), `only spells to cast, attacks and an opening hand are ever offered to it (${[...kinds].join(", ")})`);
   ok(kinds.has("priority") && kinds.has("declare-attackers"), "and both are: a close call over which spell to cast, and one over an attack, each reach the seat");
   const replay = await replayMatch({storage: game.storage, matchId: game.matchId, cards: tableCards});
   ok(replay.same && replay.tape > game.asked.length, `replayed from its seed and the tape (${replay.tape} entries, the seat's among them): the same game`);
@@ -78,7 +78,7 @@ async function play({storage = memoryStorage(), matchId, forSeat, reopenAt = nul
 
 /* ---- The close calls, read off the pilot ---- */
 {
-  const FACTS = {A: {manaValue: 2, types: ["Creature"]}, B: {manaValue: 2, types: ["Creature"]}, C: {manaValue: 4, types: ["Creature"]}};
+  const FACTS = {A: {manaValue: 2, types: ["Creature"]}, B: {manaValue: 2, types: ["Creature"]}, C: {manaValue: 4, types: ["Creature"]}, D: {manaValue: 6, types: ["Creature"]}};
   const pilot = agentPilot({seat: 1, cards: (name) => FACTS[name] ?? null});
   const view = (phase, turnPlayerId) => ({viewerSeatId: 1, turn: 3, turnPlayerId, phase, stackSize: 0, combat: null,
     players: [0, 1].map((i) => ({playerId: i, life: 40, health: {status: "active"}, mana: [], zones: {Battlefield: {cards: []}, Hand: {cards: []}, Library: {count: 60, cards: []}}}))});
@@ -87,15 +87,17 @@ async function play({storage = memoryStorage(), matchId, forSeat, reopenAt = nul
   const two = [cast(1, "A"), cast(2, "B"), ...mana(2), {kind: "pass"}];
   eq(pilot.consult(view("MAIN1", 1), {actions: two}), true, "two spells of two, and mana for one of them: a close call, offered to the seat");
   eq(pilot.consult(view("MAIN1", 0), {actions: two}), false, "never on another player's turn");
-  eq(pilot.consult(view("MAIN1", 1), {actions: [cast(1, "A"), cast(3, "C"), ...mana(4), {kind: "pass"}]}), false, "a 4 against a 2 with four mana is no close call: L1 casts the 4");
-  eq(pilot.consult(view("MAIN1", 1), {actions: [cast(1, "A"), ...mana(2), {kind: "pass"}]}), false, "nor is one spell");
+  eq(pilot.consult(view("MAIN1", 1), {actions: [cast(1, "A"), cast(3, "C"), ...mana(4), {kind: "pass"}]}), true, "a 4 against a 2 with four mana is within three points: the model is asked");
+  eq(pilot.consult(view("MAIN1", 1), {actions: [cast(1, "A"), cast(4, "D"), ...mana(6), {kind: "pass"}]}), false, "a 6 against a 2 with six mana is no close call: Hard casts the 6");
+  eq(pilot.consult(view("MAIN1", 1), {actions: [cast(1, "A"), ...mana(2), {kind: "pass"}]}), false, "nor is one spell, a pass beside it not counted as a second");
   /* An attack whose every plan comes to nothing -- a 1/1 into an untapped 0/4 -- is a close call too: attacking or not
      scores the same. A 5/5 into an empty board is not: it attacks. */
   const card = (cardId, controller, power, toughness, tapped = false) => ({cardId, name: `C${cardId}`, controller, owner: controller, types: ["Creature"], power, toughness, keywords: [], damage: 0, tapped});
   const board = (mine, theirs) => {const v = view("COMBAT_DECLARE_ATTACKERS", 1); v.players[1].zones.Battlefield.cards = mine; v.players[0].zones.Battlefield.cards = theirs; return v;};
   const attack = (ids) => ({id: "declare-attackers:3", mode: "many", min: 0, max: ids.length, exclusiveBy: "cardId", options: ids.map((cardId, index) => ({index, cardId, defenderId: 0}))});
   eq(pilot.consult(board([card(11, 1, 1, 1)], [card(21, 0, 0, 4)]), {choice: attack([11])}), true, "a 1/1 into an untapped 0/4: attacking or not, nothing comes of it, a close call");
-  eq(pilot.consult(board([card(11, 1, 5, 5)], []), {choice: attack([11])}), false, "a 5/5 into an empty board is not");
+  eq(pilot.consult(board([card(11, 1, 5, 5)], []), {choice: attack([11])}), true, "a 5/5 into an empty board is asked about too: attacking or holding it back, the swing back is the model's to weigh");
+  eq(pilot.consult(board([card(11, 1, 5, 5)], []).players.map((p) => p) && (() => {const v = board([card(11, 1, 5, 5)], []); v.players[0].life = 4; return v;})(), {choice: attack([11])}), false, "but a kill (the 5/5 at a seat on 4 life, nothing to block) is not a question");
   /* Holding back is one plan, however many opponents: a 2/2 facing an untapped 3/3 on each of two opponents' sides is
      no close call -- it stays home -- though "stay home" is weighed against each of them. */
   const three = view("COMBAT_DECLARE_ATTACKERS", 1);
@@ -104,7 +106,7 @@ async function play({storage = memoryStorage(), matchId, forSeat, reopenAt = nul
   three.players[0].zones.Battlefield.cards = [card(21, 0, 3, 3)];
   const both = {id: "declare-attackers:3", mode: "many", min: 0, max: 1, exclusiveBy: "cardId", options: [{index: 0, cardId: 12, defenderId: 0}, {index: 1, cardId: 12, defenderId: 2}]};
   eq(pilot.consult(three, {choice: both}), false, "a 2/2 into a 3/3 on either side, at three players, is no close call: staying home counts once");
-  eq(CLOSE, 1, "a close call: two plans within a point of each other");
+  eq(CLOSE, 3, "a close call: two plans within three points of each other, Hard's plans being worth a few points each");
 }
 
 /* ---- 3. Reopened while it waits ---- */

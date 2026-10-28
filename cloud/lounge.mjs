@@ -12,6 +12,11 @@
  * matches the caller against (private tables are the seats', the organizer's and the admin's) and never returns.
  */
 
+/* The levels a table may seat now, as `GET /api/ai-seat` says them: the roster's available ones other than the AI on Claude, which is
+   `open`'s. A copy of game/engine/pilots/roster.mjs's answer, since this file imports nothing from game/; tests/lounge-registry.mjs
+   proves the two agree. */
+export const SEATABLE_LEVELS = Object.freeze(["easy", "normal", "hard"]);
+
 export const REGISTRY = "lounge-registry";
 export const ENTRY_TTL = 24 * 3600 * 1000;
 const PHASES = ["selecting", "countdown", "starting", "playing"];

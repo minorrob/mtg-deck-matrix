@@ -36,6 +36,7 @@
    said plainly (422). */
 import * as Advise from "./advise-brief.mjs";
 import {groupOf} from "./access.mjs";
+import {VETERAN_SKILL} from "./veteran-skill.mjs";
 
 export const DEFAULT_MODEL = "claude-haiku-5-5";
 export const MODELS = ["claude-haiku-5-5", "claude-sonnet-5-5"];
@@ -318,13 +319,10 @@ export async function coach({ai, who, brief, question, config, fetchImpl = fetch
  * logged as `pilot` under the host who seated it. The table holds the game's 25 cents (cloud/game-room.mjs); the door
  * holds the day's caps, as for every feature. What comes back is indices, read by `pickOf`; anything else is not used. */
 export const PILOT_MAX_TOKENS = 300;
-export const PILOT_SYSTEM = [
-  "You play one seat in a game of Magic: The Gathering (Commander). You are asked one decision at a time.",
-  "Choose only among the decision's options, by their index: one index when its mode is \"one\", between its min and max indices when it is \"many\".",
-  "housePilotWouldChoose is a heuristic's choice: take it unless another option is clearly better.",
-  "You see your own hand and the board as every player sees it; nobody's hand but yours, and no library's order. Do not guess at them.",
-  "Play to win. In why, one short sentence.",
-].join(" ");
+/* THE VETERAN'S INSTRUCTION SET (game/engine/pilots/veteran-skill.md, generated into a module for the Worker): what each number in the
+   brief means and how to weigh it, so the model reads Hard's scores as a scouting report. No tools, and nothing about how any other
+   seat is built; sent as the cached system prompt, so each call pays for it once. */
+export const PILOT_SYSTEM = VETERAN_SKILL;
 const PILOT_SCHEMA = {
   type: "object",
   properties: {indices: {type: "array", items: {type: "integer"}}, why: {type: "string"}},
@@ -339,7 +337,7 @@ const PILOT_SCHEMA = {
 const PILOT_THINKING = {"claude-haiku-5-5": {type: "disabled"}, "claude-sonnet-5-5": {type: "between_tools"}};
 export function pilotBody(brief, model) {
   return {
-    model, max_tokens: PILOT_MAX_TOKENS, system: PILOT_SYSTEM,
+    model, max_tokens: PILOT_MAX_TOKENS, system: [{type: "text", text: PILOT_SYSTEM, cache_control: {type: "ephemeral"}}],
     ...(PILOT_THINKING[model] ? {thinking: PILOT_THINKING[model]} : {}),
     output_config: {effort: "low", format: {type: "json_schema", schema: PILOT_SCHEMA}},
     messages: [{role: "user", content: JSON.stringify(brief)}],

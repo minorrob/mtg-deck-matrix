@@ -47,7 +47,7 @@ const BLOCKERS_DECLARED = ["COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAG
 export const SELECTOR_KEYS = Object.freeze([
   "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
   "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking", "toughness", "countersAtLeast", "attackedThisTurn", "commander", "nonColors", "owner", "enteredThisTurn", "toughnessOverPower",
-  "unblocked", "singleTarget", "abilityKind", "goaded", "uniqueName", "sharesCreatureType", "multicolored", "sharesColor",
+  "unblocked", "singleTarget", "abilityKind", "goaded", "uniqueName", "sharesCreatureType", "multicolored", "monocolored", "sharesColor",
   /* "Whenever a modified creature you control deals combat damage" (Kodama of the West Tree; CR 700.15, rules/layers.mjs). */
   "modified",
   /* Bludgeon Brawl (wave 4d L3): "attached to it", the object a layer-7 amount is counted for (rules/layers.mjs, counted's
@@ -217,6 +217,7 @@ function assertGrammar(selector) {
   /* What it shares a creature type with: a selector of permanents, held to the same grammar. */
   if (selector.sharesCreatureType !== undefined) compileSelector({...selector.sharesCreatureType, what: "permanent"});
   if (selector.multicolored !== undefined && selector.multicolored !== true) throw new Error("A selector's multicolored is true: two or more colors");
+  if (selector.monocolored !== undefined && selector.monocolored !== true) throw new Error("A selector's monocolored is true: exactly one color");
   if (selector.sharesColor !== undefined && selector.sharesColor !== "self") throw new Error("A selector's sharesColor is \"self\": a color of its source's");
   if (selector.sharesCreatureTypeWithCommander !== undefined && selector.sharesCreatureTypeWithCommander !== true)
     throw new Error("A selector's sharesCreatureTypeWithCommander is true: a creature type of a commander of yours");
@@ -388,6 +389,8 @@ export function compileSelector(selector) {
     if (selector.colorless === false && colorsOf(state, id).length === 0) return false;
     /* "A multicolored spell" (CR 105.2b, Mage Tower Referee): two or more colors, through the layers. */
     if (selector.multicolored === true && colorsOf(state, id).length < 2) return false;
+    /* "Target monocolored permanent" (CR 105.2a; Vanishing Verse): exactly one color, through the layers -- colorless is not one. */
+    if (selector.monocolored === true && colorsOf(state, id).length !== 1) return false;
     /* "It's only the color its controller chose" (Selective Obliteration; CR 105.2): exactly one color, through the layers, and
        that one the color its controller chose as this resolved (`chosenColors`, by chooser; script/resolution.mjs) -- a
        controller who chose none has no such color. `false`, any other permanent. */

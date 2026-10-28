@@ -30,9 +30,12 @@ import {startRoom, openRoom, RoomError, basicCards} from "./room.mjs";
 import {createMatchStore} from "../engine/storage.mjs";
 import {resultRecord} from "./result-record.mjs";
 import {loungeOn} from "./lounge.mjs";
+import {readSeatAi} from "../engine/pilots/roster.mjs";
 
-/* An AI seat's setting (AI-2): "easy", "llm" (an AI on Claude) or, unless one of those was chosen, "normal". */
-const levelOf = (s) => (s.level === "easy" || s.level === "llm" ? s.level : "normal");
+/* An AI seat's setting (AI-2) and persona (docs/ai-players/PLAN-2026-10-26.html §7), as the roster offers them
+   (game/engine/pilots/roster.mjs): a level that is available, "normal" unless one was chosen; a persona on the roster, or none. */
+const levelOf = (s) => readSeatAi(s).level;
+const personaOf = (s) => readSeatAi(s).persona;
 /** Whether the room is waiting on an LLM seat, whose answer the table's object gives (cloud/game-room.mjs). */
 export const llmWaiting = (room) => !!room && !!room.waitingOn && room.status !== "finished" && room.seats.some((s) => s.seatId === room.waitingOn && s.level === "llm");
 
@@ -265,11 +268,11 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
          "llm", an AI on Claude, only where the AI door lets this host seat one. */
       if (others.some((s) => s && s.kind === "ai" && s.level === "llm") && !llmAllowed) throw new TableError(403, "An AI on Claude needs CrankMagic's AI features, switched on here and open to you. Choose a Normal or Easy AI.");
       const all = [{kind: "human", name: clean(hostName) || "Host"}, ...others.map((s, i) => (s && s.kind === "ai"
-        ? {kind: "ai", name: clean(s.name) || `AI ${i + 2}`, level: levelOf(s)}
+        ? {kind: "ai", name: clean(s.name) || `AI ${i + 2}`, level: levelOf(s), ...(personaOf(s) ? {persona: personaOf(s)} : {})}
         : {kind: "human", name: clean(s && s.name) || `Seat ${i + 2}`}))];
       record = {
         schema: TABLE_SCHEMA, tableId, host, created: true,
-        lifecycle: createTable({tableId, seats: all.map((s, seatId) => ({seatId, kind: s.kind, name: s.name, ...(s.level ? {level: s.level} : {}), occupied: seatId === 0})), settings: {startingLife: 40, bracketLimit: null, ...settings}}),
+        lifecycle: createTable({tableId, seats: all.map((s, seatId) => ({seatId, kind: s.kind, name: s.name, ...(s.level ? {level: s.level} : {}), ...(s.persona ? {persona: s.persona} : {}), occupied: seatId === 0})), settings: {startingLife: 40, bracketLimit: null, ...settings}}),
         members: {0: host}, invites: [], decks: {}, matches: [], away: {}, playtest: playtest === true,
       };
       lounge.decorate(record, others, {privacy, now});
@@ -456,7 +459,7 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
       const pod = {seats: t.seats.filter((s) => s.occupied).map((s) => ({
         seatId: seatName(s.seatId), name: s.name, pilot: s.kind === "ai" ? "house" : "human",
         /* An AI seat's setting; a table made before settings were, normal. */
-        ...(s.kind === "ai" ? {level: levelOf(s)} : {}),
+        ...(s.kind === "ai" ? {level: levelOf(s), ...(personaOf(s) ? {persona: personaOf(s)} : {})} : {}),
         commander: record.decks[s.seatId].commander, cards: record.decks[s.seatId].cards,
       })), startingLife: rulesOf().startingLife, ...(rulesOf().skipFirstDraw === false ? {skipFirstDraw: false} : {}),
       /* The table's beats (game/room/room.mjs): a step with nothing to do passes itself (item 11); once every person is
@@ -695,7 +698,7 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
           votes: t.seats.filter((s) => s.occupied).map((s) => ({seatId: s.seatId, vote: s.rematch === true ? "yes" : s.rematch === false ? "no" : "pending"})),
         } : null,
         seats: t.seats.map((s) => ({
-          seatId: s.seatId, kind: s.kind, name: s.name, ...(s.kind === "ai" ? {level: levelOf(s)} : {}), occupied: s.occupied, connected: s.connected, ready: s.ready,
+          seatId: s.seatId, kind: s.kind, name: s.name, ...(s.kind === "ai" ? {level: levelOf(s), ...(personaOf(s) ? {persona: personaOf(s)} : {})} : {}), occupied: s.occupied, connected: s.connected, ready: s.ready,
           invited: s.invited, you: s.seatId === mine, mat: (record.mats || {})[s.seatId] || "felt",
           deck: record.decks[s.seatId] ? {name: record.decks[s.seatId].name, commander: record.decks[s.seatId].commander, bracket: record.decks[s.seatId].bracket ?? null} : null,
           ...(s.seatId === mine && record.decks[s.seatId] ? {cards: record.decks[s.seatId].cards.length, source: record.decks[s.seatId].source || null} : {}),

@@ -231,6 +231,8 @@ const TRIGGERS = {
     ? {on: "GameEventCardChangeZone", to: "Battlefield", who: t.who ?? "self", ...(t.filter ? {filter: t.filter} : {}),
       /* "When this land enters untapped" (Mystic Sanctuary): not when it entered tapped (rules/trigger.mjs). */
       ...(t.untapped ? {untapped: true} : {}),
+      /* "Without being played" (Deep Gnome Terramancer): `played: false`, a land that was not played (rules/trigger.mjs). */
+      ...(t.played !== undefined ? {played: t.played} : {}),
       /* "When this creature enters from your hand" (Thousand-Faced Shadow): the zone it came from (rules/trigger.mjs). */
       ...(t.from ? {from: t.from[0].toUpperCase() + t.from.slice(1)} : {})} : null),
   /* "Whenever you create one or more creature tokens" (Staff of the Storyteller): a token is put onto the battlefield only

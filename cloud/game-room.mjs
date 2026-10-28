@@ -31,6 +31,7 @@ import {agentBrief, pickOf} from "../game/room/agent-brief.mjs";
 import {createAi, settings, pilot, pilotWorst, Closed} from "./ai.mjs";
 import {groupOf} from "./access.mjs";
 import {Registry, REGISTRY, recordResults} from "./lounge.mjs";
+import {LEVELS as ROSTER_LEVELS} from "../game/engine/pilots/roster.mjs";
 
 /* WHAT THE TABLE PLAYS (M5; the plan review's A2 and C4): the basic lands, and every definition in the engine's card
    directory (game/engine/cards/definitions.mjs, generated from it). A deck whose every card is one of these takes a
@@ -297,8 +298,9 @@ export class GameTable extends GameRoom {
       const who = {email, admin: await this.isAdmin(email), name: (request.headers.get("x-crankmagic-name") || "").trim().slice(0, 60)};
       if (route === "POST /table/create") {
         const b = await body();
-        /* Hard is not open yet (lounge-contract §2): refused here, at the route; the table itself still reads an unknown level as Normal. */
-        if (Array.isArray(b.seats) && b.seats.some((s) => s && s.kind === "ai" && s.level === "hard")) return reply(422, {error: "Hard is not open yet. Choose Normal or Easy."});
+        /* A level the roster has not opened is refused here, at the route (lounge-contract §2); the table itself still reads an unknown level as Normal. */
+        const closed = Array.isArray(b.seats) ? b.seats.find((s) => s && s.kind === "ai" && ROSTER_LEVELS.some((l) => l.id === s.level && !l.available)) : null;
+        if (closed) return reply(422, {error: `${ROSTER_LEVELS.find((l) => l.id === closed.level).label} is not open yet. Choose Normal or Easy.`});
         /* An AI on Claude is seated only where the AI door would let this host spend on it (AI-2). */
         const llm = Array.isArray(b.seats) && b.seats.some((s) => s && s.kind === "ai" && s.level === "llm");
         return reply(201, {table: await t.create({tableId: b.tableId, host: email, hostName: b.hostName, seats: b.seats, playtest: this.env?.PLAYTEST_TABLES === "on",
@@ -459,7 +461,8 @@ export class GameTable extends GameRoom {
   async agentChoice(room, view, hint) {
     const host = await this.table.host();
     if ((await this.pilotOpen(host)) !== null) return null;
-    const config = settings(this.env), brief = agentBrief(view, hint);
+    /* What the seat's pilot worked out (room.analysis): the brief the model reads carries it, in seat words and the decision's own indices. */
+    const config = settings(this.env), brief = agentBrief(view, hint, room.analysis(room.waitingOn));
     const key = `pilot-spent/${room.matchId}`, spent = Number(await this.ctx.storage.get(key)) || 0;
     const cap = (Number(this.env.AI_CAP_PILOT_GAME_CENTS) > 0 ? Number(this.env.AI_CAP_PILOT_GAME_CENTS) : PILOT_GAME_CENTS) * 10000;
     if (spent + pilotWorst(brief, config.model) > cap) return null;

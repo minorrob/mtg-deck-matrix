@@ -235,7 +235,7 @@ DB.raw.prepare("DELETE FROM ai_calls WHERE id IN ('expl', 'mate')").run();
   };
   const PILOT = {...OPEN, AI_PILOT: "on"};
   eq([(await seatAsk(OPEN)).json, (await seatAsk(PILOT)).json, (await seatAsk(PILOT, STRANGER)).json, (await seatAsk({...PILOT, ANTHROPIC_API_KEY: undefined})).json],
-    [{open: false, levels: ["easy", "normal"]}, {open: true, levels: ["easy", "normal"]}, {open: false, levels: ["easy", "normal"]}, {open: false, levels: ["easy", "normal"]}],
+    [{open: false, levels: ["easy", "normal", "hard"]}, {open: true, levels: ["easy", "normal", "hard"]}, {open: false, levels: ["easy", "normal", "hard"]}, {open: false, levels: ["easy", "normal", "hard"]}],
     "an AI on Claude is offered only with its switch on, the door's key and caps set, and the person on the allowlist");
 }
 const login = await ask({method: "GET", path: `/api/ai/login?to=${encodeURIComponent(`#table?id=${TABLE}`)}`});

@@ -8,8 +8,11 @@
  *   ai-seat   gains `levels`;   users/search   people by name, never an address
  *   Nowhere an address: every answer is searched for the addresses the suite used.
  */
+import {LEVELS as ROSTER} from "../game/engine/pilots/roster.mjs";
+import {SEATABLE_LEVELS} from "../cloud/lounge.mjs";
 import {ROB, MAYA, SAM, EVE, AVERY, ok, eq, count, world, deckFor, everyString} from "./helpers/lounge-harness.mjs";
 
+const SEATABLE_LEVELS_NOW = ROSTER.filter((l) => l.available && !l.needsAi).map((l) => l.id);
 const noAddress = (value, message) => ok(![...everyString(value)].some((s) => /[\w.+-]+@[\w-]+\.[a-z]/i.test(s)), message);
 
 /* 1. LIVE: who sees which table. Rob is CrankMagic's owner (OWNER_EMAIL), so the admin; Maya hosts. */
@@ -73,8 +76,8 @@ function clockStep(w, ms) {w.clock.t += ms;}
 {
   const w = await world();
   eq((await w.make(MAYA, {hostName: "Maya", privacy: "secret", seats: [{kind: "ai"}]})).status, 400, "a privacy that is neither is refused");
-  eq((await w.make(MAYA, {hostName: "Maya", seats: [{kind: "ai", level: "hard"}]})).json.error, "Hard is not open yet. Choose Normal or Easy.", "Hard answers 'Hard is not open yet'");
-  eq((await w.make(MAYA, {hostName: "Maya", seats: [{kind: "ai", level: "hard"}]})).status, 422, "with a 422");
+  const hardMade = await w.make(MAYA, {hostName: "Maya", seats: [{kind: "ai", level: "hard"}]});
+  eq([hardMade.status, hardMade.json.table.seats[1].level], [201, "hard"], "Hard is seated now that the roster has opened it");
   eq((await w.make(MAYA, {hostName: "Maya", seats: [{kind: "ai", level: "llm"}]})).status, 403, "the AI on Claude stays behind the AI door");
   eq((await w.make(MAYA, {hostName: "Maya", seats: [{kind: "ai", persona: "Sable!"}]})).status, 400, "a persona is one to twenty lower-case letters");
   eq((await w.make(MAYA, {hostName: "Maya", seats: [{kind: "human", name: "Avery", email: "not an address"}]})).status, 400, "a person's email must be one");
@@ -129,7 +132,8 @@ function clockStep(w, ms) {w.clock.t += ms;}
   eq((await w.call("GET", "/api/users/search?q=a", {as: MAYA})).json.users, [], "one letter finds no one");
   eq((await w.call("GET", "/api/users/search?q=bot", {as: MAYA})).json.users, [], "a service identity is nobody to invite");
 
-  eq((await w.call("GET", "/api/ai-seat", {as: MAYA})).json, {open: false, levels: ["easy", "normal"]}, "ai-seat names the levels a table may seat now: Hard is not among them, nor the AI on Claude while it is shut");
+  eq((await w.call("GET", "/api/ai-seat", {as: MAYA})).json, {open: false, levels: SEATABLE_LEVELS_NOW}, "ai-seat names the levels a table may seat now (the roster's open ones), and not the AI on Claude while it is shut");
+  eq(SEATABLE_LEVELS, SEATABLE_LEVELS_NOW, "and the Worker's list is the roster's: Easy, Normal and Hard open, the Veteran behind its door");
   const bare = await world({db: false});
   eq([(await bare.call("GET", "/api/tables/live", {as: MAYA})).status], [200], "the lounge answers without a database");
 }

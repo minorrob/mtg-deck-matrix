@@ -5,16 +5,18 @@
  * the New game pop-up and the Lobby ask of one table lives here, in its own module, so game/room/table.mjs keeps its
  * shape: it builds `loungeOn(...)` over its own record and storage and adds the result to its api.
  *
- * This file holds no storage of its own and imports nothing: `h` hands it the table's record (`h.rec()`), its steps and its
+ * This file holds no storage of its own and imports only the AI roster's levels: `h` hands it the table's record (`h.rec()`), its steps and its
  * errors. An address is the table's secret (the room only knows "s0".."s3"); nothing here puts one in a view, a summary's
  * public fields, the log or the chat. The registry's `members` list is the one place the table lets addresses out, and it
  * stays inside the Worker (cloud/lounge.mjs never returns it).
  */
 
+import {LEVELS as ROSTER_LEVELS} from "../engine/pilots/roster.mjs";
+
 export const PRIVACY = Object.freeze(["public", "private"]);
 export const PERSONA = /^[a-z]{1,20}$/;
-/* The levels a table may seat now (contract §2): "hard" is not open yet; "llm" is gated by the AI door, not here. */
-export const LEVELS_NOW = Object.freeze(["easy", "normal"]);
+/* The levels a table may seat now (contract §2): the roster's available ones (game/engine/pilots/roster.mjs); "llm" is gated by the AI door, not here. */
+export const LEVELS_NOW = Object.freeze(ROSTER_LEVELS.filter((l) => l.available && !l.needsAi).map((l) => l.id));
 export const CHAT_KEEP = 500, CHAT_VIEW = 50, CHAT_MAX = 300;
 /* Chat is limited to a few messages a second: this many within this window, per person. */
 export const CHAT_BURST = 4, CHAT_WINDOW = 2000;
@@ -33,11 +35,12 @@ export function pickMat(pool, tableId, seatId, taken = []) {
   return pool[start];
 }
 
-/** An AI seat's level as asked: "easy", "normal" or "llm" (gated by the caller); "hard" is refused, saying so (the table object's routes do, cloud/game-room.mjs; the table itself still reads an unknown level as Normal); unasked, none. */
-export function levelAsked(level, fail, refuseHard = true) {
+/** An AI seat's level as asked: "easy", "normal", "hard" or "llm" (gated by the caller); one the roster has not opened is refused, saying so (the table object's routes do, cloud/game-room.mjs; the table itself still reads an unknown level as Normal); unasked, none. */
+export function levelAsked(level, fail, refuseClosed = true) {
   if (level === undefined || level === null || level === "") return null;
-  if (level === "hard" && refuseHard) fail(422, "Hard is not open yet. Choose Normal or Easy.");
-  return level === "easy" || level === "llm" || level === "normal" ? level : "normal";
+  const known = ROSTER_LEVELS.find((l) => l.id === level);
+  if (known && !known.available && refuseClosed) fail(422, `${known.label} is not open yet. Choose ${LEVELS_NOW.map((id) => ROSTER_LEVELS.find((l) => l.id === id).label).slice(0, 2).join(" or ")}.`);
+  return known && known.available ? known.id : "normal";
 }
 export function personaAsked(persona, fail) {
   if (persona === undefined || persona === null || persona === "") return null;

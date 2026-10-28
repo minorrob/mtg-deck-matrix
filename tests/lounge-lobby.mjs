@@ -1,7 +1,7 @@
 /* THE LOBBY'S OPERATIONS (docs/ui-lane/lounge-contract.md §3 and the coordinator's change of 2026-10-28), through the Worker's front door.
  *
  *   seat           remove | add-ai: the organizer's; edit-ai: any person at the table (and the owner); the lobby only, and not once a
- *                  person is ready; a table keeps two seats; Hard is not open; the AI on Claude stays behind the AI door
+ *                  person is ready; a table keeps two seats; Hard is chosen as the roster allows; the AI on Claude stays behind the AI door
  *   deck           anyone seated brings an AI seat's deck; a person's own seat stays its sitter's
  *   request-join   a person with no seat asks; the organizer alone sees the request; accept seats them, decline says so
  *   quit           the organizer or the owner ends the table for everyone, and nothing more is done at it
@@ -38,7 +38,8 @@ const spectated = (await w.call("GET", T(id) + "?watch=1", {as: EVE})).json.tabl
 eq([spectated.seats[2].level, spectated.seats[2].persona], ["easy", "gale"], "and so does a spectator");
 eq((await seat(id, EVE, {op: "edit-ai", seatId: 2, name: "Nope"})).status, 403, "someone with no seat cannot");
 eq((await seat(id, ROB, {op: "edit-ai", seatId: 2, name: "Gale"})).status, 200, "the owner can, watching");
-eq((await seat(id, MAYA, {op: "edit-ai", seatId: 2, level: "hard"})).json.error, "Hard is not open yet. Choose Normal or Easy.", "Hard is not open");
+eq((await seat(id, MAYA, {op: "edit-ai", seatId: 2, level: "hard"})).json.table.seats[2].level, "hard", "Hard can be chosen now that the roster has opened it");
+eq((await seat(id, MAYA, {op: "edit-ai", seatId: 2, level: "easy"})).status, 200, "and back to Easy");
 eq((await seat(id, MAYA, {op: "edit-ai", seatId: 2, level: "llm"})).status, 403, "the AI on Claude stays behind the AI door");
 eq((await seat(id, MAYA, {op: "edit-ai", seatId: 2, persona: "NOPE"})).status, 400, "a persona is lower-case letters");
 eq((await seat(id, MAYA, {op: "edit-ai", seatId: 1, name: "x"})).status, 400, "a person's seat is not an AI seat");
