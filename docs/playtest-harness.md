@@ -74,7 +74,7 @@ A run, step by step (the decks to paste, the tables to make, the records to hand
 
 Buttons carry `data-action`:
 
-- `table-create`: start a table.
+- Starting a table is the New game pop-up (`crankmagic-lounge.js`, opened from Play's Pre-lobby): rows for the humans and the AI seats, difficulty and personality, rules and privacy, then Create; its buttons carry `data-ng` (not `data-action`). It replaced the lobby's old create button on 2026-10-28.
 - `table-invite`, `table-copy-link`, `table-uninvite`: invite a seat, copy its link, take the invitation back.
 - `table-deck`, then `table-use-deck` or `table-use-test-deck`: choose a deck for your seat.
 - `table-mat`, `table-mat-pick`, `table-mat-use`: choose a mat. *Use this mat* sits beside the ✕ and is off until a mat is picked.
