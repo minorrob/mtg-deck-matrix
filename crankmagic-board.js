@@ -19,11 +19,14 @@
  *                 (CrankStage.flatGeometry), every board set by one matrix, so the 3D view's zoom (the wheel, Camera's slider) and pan (a
  *                 drag) move them too. The drawers lie over the stage and the hand and move neither; a flat view keeps its boards clear of
  *                 where they lie (--gut-l, --gut-r, the same open or shut)
- *   Table view    four identical 16:9 boards, two across and two down (side by side for two; two over one for three, the dial between
- *                 the top two), the largest that fit above the hand, the dial and the action pop-up in the gaps; each board's header a line
- *   Focus view    the seat looked at the largest 16:9 that fits between the others (a row across the back, or a column at the right where
- *                 the window is wide and not tall) and the hand; Commander and Exile, Library and Graveyard as card-sized piles with the
- *                 History between them; the page scrolls, there is no scroll of its own
+ *   Table view    four 16:9 boards, two across and two down (side by side for two; two over one for three), the others the same size and yours 12%
+ *                 larger, each with only its name above it as plain text and 8px between them; no dial, no header chip, no Focus button: a double click
+ *                 on a board, or the board in the Boards module, focuses it (pressed again in the module, the focus is given back)
+ *   Focus view    the seat looked at the largest 16:9 that fits between the others (boards of their own with their names above, in a row across the
+ *                 back or a column at the right) and the hand; Commander and Exile, Library and Graveyard card-sized with the History between them.
+ *                 Below a least board size (Table 320px, Focus 560px) the page scrolls instead of the boards shrinking
+ *   Both          the quick action tab under a card of yours (Tap, Cast, Play, Undo), the card pop-up at 320px, and the right button held on a board
+ *                 to peek: over it, then in, and back when let go
  *   Skip to end   passes priority for you through the rest of this turn, and stops the moment anything is on the
  *                 stack or the room asks you something else. On another player's turn, Yield this turn sends the room's
  *                 turn-scoped policy (ROB-28): spells do not cancel it, required choices remain yours, and the view
