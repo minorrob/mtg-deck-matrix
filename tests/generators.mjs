@@ -128,6 +128,11 @@ const CHECKABLE = [
   /* The engine catalog: every keyword action and ability of the rules and every construct the cards use, with where the
      engine stands on each (Rob, 2026-10-01). */
   ["game/tools/engine-catalog.mjs", ["--check"]],
+  /* The AI players' generated modules: the roles table (graph corpus, strategies, salty cards, engine definitions), the lobby's
+     roster, and the Veteran's instruction set. */
+  ["tools/build-pilot-roles.mjs", ["--check"]],
+  ["tools/build-ai-roster.mjs", ["--check"]],
+  ["tools/build-veteran-skill.mjs", ["--check"]],
   /* The refresh runner's --check runs every check above in turn (an hour with the fetching
      ones); here its --plan proves the runner loads and its plan resolves every tool it names.
      tests/refresh.mjs holds the plan to the registry. */
