@@ -75,7 +75,7 @@ derive display names from the invite list (`cloud/access-invites.mjs`) and say s
 
 ### `GET /api/ai-seat` gains `levels` -> `{open, levels: ["easy","normal"], personas: [...]?}`
 
-The levels a table may seat now (so the pop-up greys the rest with "not open yet"). `open` is unchanged (the Veteran/
+The levels a table may seat now (so the pop-up grays the rest with "not open yet"). `open` is unchanged (the Veteran/
 `llm` gate).
 
 ## 3. The lobby
