@@ -31,11 +31,11 @@ await w.call("POST", T(id, "/join"), {as: SAM, body: {code: (await w.call("POST"
 eq((await view(id, SAM)).seats[2].persona, undefined, "an AI seat made with no persona has none");
 
 /* edit-ai: any person at the table. */
-const edited = await seat(id, SAM, {op: "edit-ai", seatId: 2, name: "Gale", level: "easy", persona: "gale"});
-eq([edited.status, edited.json.table.seats[2].name, edited.json.table.seats[2].level, edited.json.table.seats[2].persona], [200, "Gale", "easy", "gale"], "a guest seated at the table changes an AI seat's name, level and persona");
-for (const as of [MAYA, SAM]) eq((await view(id, as)).seats[2].persona, "gale", "and every seat sees the persona and level");
+const edited = await seat(id, SAM, {op: "edit-ai", seatId: 2, name: "Gale", level: "easy", persona: "june"});
+eq([edited.status, edited.json.table.seats[2].name, edited.json.table.seats[2].level, edited.json.table.seats[2].persona], [200, "Gale", "easy", "june"], "a guest seated at the table changes an AI seat's name, level and persona");
+for (const as of [MAYA, SAM]) eq((await view(id, as)).seats[2].persona, "june", "and every seat sees the persona and level");
 const spectated = (await w.call("GET", T(id) + "?watch=1", {as: EVE})).json.table;
-eq([spectated.seats[2].level, spectated.seats[2].persona], ["easy", "gale"], "and so does a spectator");
+eq([spectated.seats[2].level, spectated.seats[2].persona], ["easy", "june"], "and so does a spectator");
 eq((await seat(id, EVE, {op: "edit-ai", seatId: 2, name: "Nope"})).status, 403, "someone with no seat cannot");
 eq((await seat(id, ROB, {op: "edit-ai", seatId: 2, name: "Gale"})).status, 200, "the owner can, watching");
 eq((await seat(id, MAYA, {op: "edit-ai", seatId: 2, level: "hard"})).json.table.seats[2].level, "hard", "Hard can be chosen now that the roster has opened it");
@@ -52,7 +52,7 @@ eq((await seat(id, SAM, {op: "add-ai", seatId: 3})).status, 403, "so is adding o
 eq((await w.call("POST", T(id, "/deck"), {as: SAM, body: {seatId: 2, deck: deckFor("sable")}})).status, 200, "a guest brings an AI seat's deck");
 eq((await w.call("POST", T(id, "/deck"), {as: EVE, body: {seatId: 2, deck: deckFor("eve")}})).status, 403, "a stranger does not");
 eq((await w.call("POST", T(id, "/deck"), {as: MAYA, body: {seatId: 1, deck: deckFor("maya")}})).status, 403, "and a person's own seat stays its sitter's, the host's too");
-eq((await seat(id, SAM, {op: "edit-ai", seatId: 2, persona: "ember"})).status, 200, "an AI seat whose deck is chosen (so ready) can still be edited; its deck stays");
+eq((await seat(id, SAM, {op: "edit-ai", seatId: 2, persona: "benny"})).status, 200, "an AI seat whose deck is chosen (so ready) can still be edited; its deck stays");
 eq((await view(id, SAM)).seats[2].ready, true, "and stays ready");
 
 /* remove and add-ai; a table keeps two seats. */
@@ -60,9 +60,9 @@ const removed = await seat(id, MAYA, {op: "remove", seatId: 3});
 eq([removed.status, removed.json.table.seats[3].kind, removed.json.table.seats[3].occupied, removed.json.table.seats[3].open], [200, "human", false, true], "an AI seat is removed and its chair is open");
 eq((await seat(id, MAYA, {op: "remove", seatId: 0})).status, 400, "the host's own seat never");
 eq((await seat(id, MAYA, {op: "add-ai", seatId: 2})).status, 409, "an AI is added to an open chair only");
-const added = await seat(id, MAYA, {op: "add-ai", seatId: 3, name: "Moss", level: "easy", persona: "moss"});
+const added = await seat(id, MAYA, {op: "add-ai", seatId: 3, name: "Moss", level: "easy", persona: "marcus"});
 eq([added.json.table.seats[3].kind, added.json.table.seats[3].name, added.json.table.seats[3].level, added.json.table.seats[3].persona, added.json.table.seats[3].ready, added.json.table.seats[3].open],
-  ["ai", "Moss", "easy", "moss", false, undefined], "an open chair becomes an AI seat, not ready until it has a deck");
+  ["ai", "Moss", "easy", "marcus", false, undefined], "an open chair becomes an AI seat, not ready until it has a deck");
 eq((await seat(id, MAYA, {op: "remove", seatId: 3})).status, 200, "removed again");
 eq((await seat(id, MAYA, {op: "remove", seatId: 2})).status, 200, "Sable may go: Maya and Sam are two seats");
 eq((await seat(id, MAYA, {op: "remove", seatId: 1})).status, 409, "but not Sam: a table needs two seats left");
@@ -166,7 +166,7 @@ ok(![...everyString(lg.json)].some((s) => /@example|Bear|Grove/.test(s)), "no ad
   const addedAi = await seat(t.id, MAYA, {op: "add-ai", seatId: 1, name: "Newcomer"});
   const after = mats(addedAi.json.table);
   eq([after[1] !== "felt", new Set([after[1], after[2], after[3]]).size, after[2], after[3]], [true, 3, before[2], before[3]], "an AI added to an open chair gets a mat no other AI seat has, and the others keep theirs");
-  const edited2 = await seat(t.id, MAYA, {op: "edit-ai", seatId: 1, name: "Renamed", level: "easy", persona: "gale"});
+  const edited2 = await seat(t.id, MAYA, {op: "edit-ai", seatId: 1, name: "Renamed", level: "easy", persona: "june"});
   eq(mats(edited2.json.table), after, "editing an AI seat leaves every mat alone");
   eq(mats((await seat(t.id, MAYA, {op: "remove", seatId: 1})).json.table)[1], "felt", "a removed seat's chair is plain felt again");
   const obs = await w.make(ROB, {hostName: "Rob", observe: true, seats: [{kind: "ai"}, {kind: "ai"}, {kind: "ai"}, {kind: "ai"}]});

@@ -11,7 +11,7 @@
  * stays inside the Worker (cloud/lounge.mjs never returns it).
  */
 
-import {LEVELS as ROSTER_LEVELS} from "../engine/pilots/roster.mjs";
+import {LEVELS as ROSTER_LEVELS, personaOf as rosterPersona} from "../engine/pilots/roster.mjs";
 
 export const PRIVACY = Object.freeze(["public", "private"]);
 export const PERSONA = /^[a-z]{1,20}$/;
@@ -45,7 +45,8 @@ export function levelAsked(level, fail, refuseClosed = true) {
 export function personaAsked(persona, fail) {
   if (persona === undefined || persona === null || persona === "") return null;
   if (typeof persona !== "string" || !PERSONA.test(persona)) fail(400, "An AI's persona is one to twenty lower-case letters.");
-  return persona;
+  /* A well-formed id the roster does not know is no persona, as the table has always read one (tests/ai-personas.mjs). */
+  return rosterPersona(persona) ? persona : null;
 }
 export const privacyAsked = (privacy, fail, fallback = "private") => {
   if (privacy === undefined || privacy === null) return fallback;
