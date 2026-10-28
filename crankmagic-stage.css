@@ -1791,3 +1791,8 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 .cm-stage-hand.is-hidden .cm-stage-hand-label{top:auto;bottom:0}
 /* A pile's count never reads under 10px, however small its card (the boards fit the window). */
 #matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-bcard-count{font-size:max(10px,calc(var(--bc) * .3))}
+/* On a small card the quick action tab is as short as its words allow, so a press in the middle of the card still reaches the card; its focus ring and the hand tab's are not clipped. */
+#matrix-v2 .cm-board .cm-stage-slot .cm-quick-drawer{min-height:0;padding:0 2px;gap:3px}
+#matrix-v2 .cm-board .cm-stage-slot .cm-quick-do{padding:0 4px;border-radius:3px;font-size:max(10px,min(calc(13px*var(--hud-scale,1)),calc(var(--bc,60px) * .5)));line-height:1.2}
+.cm-stage-hand-label:focus-visible{clip-path:none;outline:3px solid var(--color-aether,#4aa8ff);outline-offset:2px}
+#matrix-v2 .cm-board .cm-stage-max{font-size:calc(15px*var(--hud-scale,1));height:auto;padding:2px 8px;line-height:1.2}
