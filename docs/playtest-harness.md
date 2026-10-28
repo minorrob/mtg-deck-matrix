@@ -145,7 +145,7 @@ few seconds (*The AI players are still taking their turns*); try again when the 
 
 **Table view:**
 
-- The life counter at the center: `.cm-board-pie`, `role=group`, named *Life: You 40, Maya 40*. Its logo, `data-action=board-vitals`, opens Table vitals.
+- Life, names and priority are in the turn box at the top left (`.cm-stage-caption`, one `.cm-stage-life` row per seat). The Table view's center life counter is gone (2026-10-28); Table vitals open from the Table menu (`data-action=board-vitals`).
 - The row bar and the tray bar: `[data-drag=rows]` and `[data-drag=hand]`, `role=separator`. The arrow keys move them.
   With two seats the boards sit side by side, yours on the right, and the row bar stands upright between them (← and →).
 - The hand never takes the boards' room: a hand larger than the table's card size runs on below the window, and the

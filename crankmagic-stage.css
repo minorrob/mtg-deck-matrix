@@ -1777,7 +1777,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-quick-do:disabled{opacity:.5;cursor:default}
 /* A BOARD'S NAME is plain text above it (Rob, 2026-10-28): no container, no fill; the turn's seat in the accent color. A double click on a board focuses it. */
 .cm-stage-boardname{position:absolute;left:2px;bottom:100%;margin-bottom:2px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 calc(16px*var(--hud-scale,1))/1.2 var(--font-body);color:#eef4ea;text-shadow:0 1px 3px #000d;cursor:default}
-.cm-stage-boardname.is-turn{color:var(--color-aether,#8fd0ff)}
+.cm-stage-boardname.is-turn{color:#8fd0ff}   /* the flat stage's ground is dark in every theme, so its names do not follow the theme's accent */
 .cm-stage-rear.cm-flat-rear{display:block}
 .cm-flat-rear>.cm-stage-mini{position:absolute;inset:0}
 .cm-stage-region.is-peeking{cursor:zoom-in}
@@ -1794,5 +1794,9 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 /* On a small card the quick action tab is as short as its words allow, so a press in the middle of the card still reaches the card; its focus ring and the hand tab's are not clipped. */
 #matrix-v2 .cm-board .cm-stage-slot .cm-quick-drawer{min-height:0;padding:0 2px;gap:3px}
 #matrix-v2 .cm-board .cm-stage-slot .cm-quick-do{padding:0 4px;border-radius:3px;font-size:max(10px,min(calc(13px*var(--hud-scale,1)),calc(var(--bc,60px) * .5)));line-height:1.2}
-.cm-stage-hand-label:focus-visible{clip-path:none;outline:3px solid var(--color-aether,#4aa8ff);outline-offset:2px}
+.cm-stage-hand-label:focus-visible{clip-path:none;border-radius:6px 6px 0 0;outline:0;box-shadow:0 0 0 1px #0b1213,0 0 0 3px var(--focus-halo,#fff),0 0 0 6px var(--v-accent,#4aa8ff)}   /* the card's own two-tone ring, which a trapezoid's clip-path would cut off */
 #matrix-v2 .cm-board .cm-stage-max{font-size:calc(15px*var(--hud-scale,1));height:auto;padding:2px 8px;line-height:1.2}
+/* THE LOBBY'S BUTTONS (Rob, 2026-10-28): Start (and Cancel, once it counts down) takes the full-width place End game had, under the "n to Ready Up" box, which now runs the panel's whole width; End game is at the top right, beside Leave lobby. */
+#matrix-v2 .cm-lb-grid .cm-table-action-row .v-button{flex:1 1 auto;width:100%}
+#matrix-v2 .cm-pl-head .cm-lb-end-top{height:40px;padding:0 16px;margin-left:auto;font-size:14px}
+#matrix-v2 .cm-pl-head .cm-lb-end-top + .cm-lb-leave{margin-left:16px}

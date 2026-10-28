@@ -1341,7 +1341,7 @@ globalThis.CrankBoard = Object.seal({
         <div class="cm-stage-caption${lifeShut ? ' is-shut' : ''}"><span class="cm-stage-turnrow"><span class="cm-board-turn" title="Turn ${view.state.turn} of the game, counting every player's${view.yourTurn ? `; your ${ordinal(view.yourTurn)} turn` : ''}">TURN ${view.state.turn}</span><button type="button" class="cm-stage-lifetoggle" data-action="board-life-toggle" aria-expanded="${!lifeShut}" aria-controls="cm-stage-life-list" aria-label="${lifeShut ? 'Show' : 'Hide'} the players' life totals" title="${lifeShut ? 'Show' : 'Hide'} the players' life totals"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${lifeShut ? 'M6 4l4 4-4 4' : 'M4 6l4 4 4-4'}"/></svg></button>${mode === "table" ? `<button type="button" class="cm-stage-max${tableMax ? " is-on" : ""}" data-action="board-table-max" aria-pressed="${tableMax}" title="${tableMax ? "Back to the default size and show the hand" : "Make the boards as large as the drawers allow, and put the hand away"}">Max</button>` : ""}</span>${lifeShut ? '' : `<div class="cm-stage-life-list" id="cm-stage-life-list" role="group" aria-label="Player life totals">${lifeList()}</div>`}</div>
         ${stageEnabled() ? [0, 1, 2, 3].map((i) => `<span class="cm-stage-corner" data-corner="${i}" aria-hidden="true"></span>`).join("") : ""}
         ${actionBar()}
-        <span class="cm-stage-error" role="status">${e(stageError)}</span>${ask()}
+        <span class="cm-stage-error">${e(stageError)}</span>${ask()}
       </div>
       ${stageHand(big)}
       ${boardDrawers()}`;
@@ -1500,14 +1500,14 @@ globalThis.CrankBoard = Object.seal({
     /* What the others say while the drawer is shut is counted on its tab. */
     const mine = message.seatId !== null && message.seatId === table?.yourSeat;
     if (!mine && !stageSide) chatUnread += 1;
-    if (document.getElementById("cm-board")) draw();
+    if (document.getElementById("cm-board")) {draw(); if (!mine) say(`${message.name || "A player"} says: ${message.text}`);}   /* said by the board's one polite region, not a live region of the chat's own */
   }
   const chatToBottom = () => {const list = document.querySelector(".cm-chat-list"); if (list && chatStick) list.scrollTop = list.scrollHeight;};
   document.addEventListener("scroll", (event) => {const t = event.target; if (t?.classList?.contains("cm-chat-list")) chatStick = t.scrollHeight - t.scrollTop - t.clientHeight < 40;}, true);
   const chatSaid = (m) => `<li class="cm-chat-line${m.seatId !== null && m.seatId === table?.yourSeat ? " is-mine" : ""}"><b>${e(m.name || "A player")}</b> <span>${e(m.text)}</span></li>`;
   function chatBody() {
     const may = !(view?.spectator === true && table?.youAreAdmin !== true), can = may && status === "open" && !chatSending;
-    return `<section class="cm-chat" aria-label="Table chat"><ol class="cm-chat-list" role="log" aria-live="polite" aria-label="Messages">${chatLog.length ? chatLog.map(chatSaid).join("") : `<li class="cm-chat-empty cm-muted">No messages yet.</li>`}</ol>
+    return `<section class="cm-chat" aria-label="Table chat"><ol class="cm-chat-list" aria-label="Messages">${chatLog.length ? chatLog.map(chatSaid).join("") : `<li class="cm-chat-empty cm-muted">No messages yet.</li>`}</ol>
       <form class="cm-chat-form" data-chat-form><input class="cm-chat-input" type="text" maxlength="300" autocomplete="off" enterkeyhint="send" aria-label="Message to the table" placeholder="${may ? "Message the table" : "Only the players chat"}" value="${e(chatDraft)}"${may ? "" : " disabled"}><button type="submit" class="v-button compact"${can ? "" : " disabled"}>Send</button></form></section>`;
   }
   document.addEventListener("input", (event) => {if (event.target?.matches?.(".cm-chat-input")) chatDraft = event.target.value;});
@@ -1600,7 +1600,7 @@ globalThis.CrankBoard = Object.seal({
       mats: (mode === "table" ? players() : [big, ...players().filter((p) => p.playerId !== big.playerId)]).map((p) => matOf(p.playerId)),
       combat: view.state.phase?.startsWith("COMBAT_") ?? false, instant: view.state.stack.some((s) => /Instant/i.test(typeLineOf(s))),
       onReady() {stageError = ""; const el = document.querySelector(".cm-stage-error"); if (el) el.textContent = "";},
-      onError(message) {stageError = message; const el = document.querySelector(".cm-stage-error"); if (el) el.textContent = `${message} Use Focus view in Camera if graphics are unavailable.`;}};
+      onError(message) {stageError = message; const el = document.querySelector(".cm-stage-error"); if (el) el.textContent = `${message} Use Focus view in Camera if graphics are unavailable.`; say(`${message} Use Focus view in Camera if graphics are unavailable.`);}};
     if (flat) {
       opts.background = ""; opts.table = "";
       /* The boards meet with only a hair between them (no dial at the center now); they start below the action pop-up, and the turn box top left is not drawn over a board's name. */
