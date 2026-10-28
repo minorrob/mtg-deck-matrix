@@ -474,11 +474,18 @@ export function describe(game) {
   return `seed ${game.seed}: ${game.status} (${end}), ${game.turns} turns, ${game.decisions} decisions, ${(game.ms / 1000).toFixed(1)} s, longest wait for a person ${wait}, ${game.refusals?.total ?? "?"} refused over the whole match${people}${judged ? `, ${judged}` : ""}${v.clean ? "" : ` -- NOT CLEAN: ${v.problems.join("; ")}`}`;
 }
 
-export const seedsFrom = (spec) => [...new Set(spec.split(",").flatMap((part) => {
-  const [a, b] = part.split("-").map(Number);
-  if (!part || !Number.isInteger(a) || a < 0 || (b !== undefined && (!Number.isInteger(b) || b < a))) throw new Error(`Seeds are nonnegative numbers or ascending ranges, like 1-50: ${spec}`);
-  return b === undefined ? [a] : Array.from({length: b - a + 1}, (_, i) => a + i);
-}))];
+export function seedsFrom(spec) {
+  const fail = () => {throw new Error(`Seeds are nonnegative safe integers or ascending ranges, like 1-50: ${spec}`);};
+  if (typeof spec !== "string" || !spec.trim()) fail();
+  const seeds = spec.split(",").flatMap((part) => {
+    const range = /^(\d+)(?:-(\d+))?$/.exec(part.trim());
+    if (!range) fail();
+    const a = Number(range[1]), b = range[2] === undefined ? a : Number(range[2]);
+    if (!Number.isSafeInteger(a) || !Number.isSafeInteger(b) || b < a) fail();
+    return Array.from({length: b - a + 1}, (_, i) => a + i);
+  });
+  return [...new Set(seeds)];
+}
 
 export function favorNames(text) {
   const plain = text.trim();

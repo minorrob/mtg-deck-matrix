@@ -52,7 +52,9 @@ eq(favorNames('{"cards":[{"name":"Favored"}]}'), ["Favored"], "lane-file favors"
 throws(() => favorNames('[null]'), /needs a card name/, "invalid favored entries fail");
 eq(seedsFrom("1-3,2,5"), [1, 2, 3, 5], "duplicate seeds are not claimed as different games");
 throws(() => seedsFrom("4-1"), /ascending ranges/, "an empty seed range cannot pass zero games");
-throws(() => seedsFrom(""), /nonnegative numbers/, "an empty seed list fails");
+for (const input of ["", " ", "NaN", "Infinity", "1.5", "1-2-3", "1,", "-1", "9007199254740992"])
+  throws(() => seedsFrom(input), /nonnegative safe integers/, `invalid seed specification ${JSON.stringify(input)} cannot certify an empty or truncated run`);
+eq(seedsFrom("0, 2-3"), [0, 2, 3], "valid finite integer seeds include zero and trimmed ranges");
 const clean = {status: "finished", refusals: {since: 0, total: 0}, personRefused: [{reason: "refused"}]};
 ok(verdict(clean).clean, "legacy interactive evidence keeps the existing refusal policy");
 ok(!verdict({...clean, strictRefusals: true}).clean, "strict evidence includes a person's refused-and-retried answers");

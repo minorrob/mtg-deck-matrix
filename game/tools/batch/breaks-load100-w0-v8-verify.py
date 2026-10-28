@@ -20,7 +20,7 @@ BREAKS = [
     ('library strict evidence is explicit', FUZZ, 'argv.includes("--pool") || argv.includes("--strict-refusals")', 'argv.includes("--pool")'),
     ('provider levels are refused', FUZZ, 'if (level !== null && !["easy", "normal"].includes(level))', 'if (false)'),
     ('ascending seed ranges are required', FUZZ, 'b < a', 'false'),
-    ('duplicate seeds do not inflate evidence', FUZZ, 'export const seedsFrom = (spec) => [...new Set(spec.split(",").flatMap((part) => {', 'export const seedsFrom = (spec) => [...(spec.split(",").flatMap((part) => {'),
+    ('duplicate seeds do not inflate evidence', FUZZ, 'return [...new Set(seeds)];', 'return seeds;'),
     ('invalid favored entries fail', FUZZ, 'if (names.some((name) => typeof name !== "string" || !name.trim())) throw', 'if (false) throw'),
     ('unclean games supply no evidence', EVIDENCE, 'if (game !== null && !clean) return false;', ''),
     ('evidence identifies a scenario or game', EVIDENCE, 'if (game === null && scenario === null) throw', 'if (false) throw'),
