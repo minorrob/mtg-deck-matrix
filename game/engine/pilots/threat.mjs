@@ -15,9 +15,10 @@
  *   hitters    the power on their board, evasion counted, as a share of my life: how fast they could kill me
  *   growth     nonland permanents they have put on the board, a turn, against the table's fastest
  *   ramp       mana sources on their board, a turn, against the table's fastest (lands, and what makes mana)
- *   engine     compounding permanents (doublers, draw engines, token makers with payoffs, untappers, recursion): PR 2 of
- *              the plan reads them from the graph corpus; until then 0, and its weight is 0 at Easy
- *   commander  the commander's threat class from the catalog: PR 2 as well; until then 0
+ *   engine     the engine links on their board -- doublers, draw engines, token makers, untappers, recursion and copiers
+ *              (pilots/roles.mjs flags): Normal sees an engine from two links, Hard from the first (ENGINE_RULE); Easy reads 0
+ *   commander  the class of the strongest commander they have, in the command zone or on the battlefield, from the catalog's
+ *              classified strategies (tools/build-pilot-roles.mjs): a loop or extra-turn commander reads high from turn one
  *
  * EASY reads the four foundation signals at equal weight and keeps a rank, not a score: the top row scores 1 and the rest
  * 0 (ties to the lowest life, then the earlier seat), so its target is the top of the rank and nothing else moves it.
@@ -27,7 +28,13 @@
  * `over(playerId)`, the score less the table's mean: the table decides where, never whether.
  */
 
+import {isLink} from "./roles.mjs";
+
 export const SIGNALS = Object.freeze(["life", "hitters", "growth", "ramp", "engine", "commander"]);
+
+/* How many engine links make an engine, by setting (the plan's §3): Normal sees a chain once two links are down, Hard at the
+   first seed; Easy does not look (its weight is 0). `over` is the count at which the signal reaches 1. */
+export const ENGINE_RULE = Object.freeze({normal: Object.freeze({least: 2, over: 4}), hard: Object.freeze({least: 1, over: 3})});
 
 /* The weights, by difficulty: the plan's table, §4. A weight of 0 leaves a signal out of the mean. */
 export const THREAT_WEIGHTS = Object.freeze({
@@ -54,7 +61,9 @@ const clamp = (v) => (Number.isFinite(v) ? Math.max(0, Math.min(1, v)) : 0);
  * @returns {{rows: Array<{playerId: number, signals: object, score: number}>, top: ?number, of: (playerId: number) => number}}
  */
 export function threatTable(view, {seat, cards = () => null, setting = "normal", weights = THREAT_WEIGHTS} = {}) {
-  const w = weights[setting] ?? weights.normal;
+  /* Easy does not look past the four foundation signals: the engine and the commander read 0 for it, whatever is on the table. */
+  const looks = setting !== "easy";
+  const w = weights[setting] ?? weights.normal, rule = ENGINE_RULE[setting] ?? ENGINE_RULE.normal;
   const me = view?.players?.[seat];
   const foes = (view?.players ?? []).filter((p) => p.playerId !== seat && p.health?.status === "active");
   const known = (name) => (name ? cards(name) : null) ?? null;
@@ -68,7 +77,12 @@ export function threatTable(view, {seat, cards = () => null, setting = "normal",
     const hitters = cards.filter((c) => isCreature(c) && !(c.keywords ?? []).includes("Defender")).reduce((n, c) => n + hits(c), 0);
     const nonland = cards.filter((c) => !isLand(c)).length;
     const sources = cards.filter((c) => isLand(c) || (known(c.name)?.makes ?? []).length > 0).length;
-    return {playerId: p.playerId, life: Math.max(0, p.life ?? 0), hitters: hitters / myLife, growth: nonland / turns, ramp: sources / turns};
+    /* ENGINE: the compounding permanents on their board, from the role flags the room hands every pilot with a card's other facts. */
+    const links = cards.filter((c) => isLink(known(c.name)?.flags)).length;
+    /* COMMANDER: the class of the strongest commander they have, in the command zone or on the battlefield -- public either way. */
+    const commanders = [...(p?.zones?.Command?.cards ?? []), ...cards.filter((c) => c.commander)];
+    const commander = commanders.reduce((m, c) => Math.max(m, known(c.name)?.commanderClass ?? 0), 0);
+    return {playerId: p.playerId, life: Math.max(0, p.life ?? 0), hitters: hitters / myLife, growth: nonland / turns, ramp: sources / turns, links, commander};
   });
   const most = (key) => raw.reduce((m, r) => Math.max(m, r[key]), 0);
   const topLife = most("life"), topGrowth = most("growth"), topRamp = most("ramp");
@@ -78,8 +92,8 @@ export function threatTable(view, {seat, cards = () => null, setting = "normal",
       hitters: clamp(r.hitters),
       growth: topGrowth > 0 ? clamp(r.growth / topGrowth) : 0,
       ramp: topRamp > 0 ? clamp(r.ramp / topRamp) : 0,
-      engine: 0,
-      commander: 0,
+      engine: looks && r.links >= rule.least ? clamp(r.links / rule.over) : 0,
+      commander: looks ? clamp(r.commander) : 0,
     };
     const total = SIGNALS.reduce((n, k) => n + (w[k] ?? 0), 0);
     const score = total > 0 ? SIGNALS.reduce((n, k) => n + (w[k] ?? 0) * signals[k], 0) / total : 0;

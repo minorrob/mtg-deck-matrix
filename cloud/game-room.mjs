@@ -336,7 +336,8 @@ export class GameTable extends GameRoom {
   async agentChoice(room, view, hint) {
     const host = await this.table.host();
     if ((await this.pilotOpen(host)) !== null) return null;
-    const config = settings(this.env), brief = agentBrief(view, hint);
+    /* What the seat's pilot worked out (room.analysis): the brief the model reads carries it, in seat words and the decision's own indices. */
+    const config = settings(this.env), brief = agentBrief(view, hint, room.analysis(room.waitingOn));
     const key = `pilot-spent/${room.matchId}`, spent = Number(await this.ctx.storage.get(key)) || 0;
     const cap = (Number(this.env.AI_CAP_PILOT_GAME_CENTS) > 0 ? Number(this.env.AI_CAP_PILOT_GAME_CENTS) : PILOT_GAME_CENTS) * 10000;
     if (spent + pilotWorst(brief, config.model) > cap) return null;

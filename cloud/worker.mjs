@@ -127,6 +127,9 @@ async function body(request) {
    ADMIN_EMAIL is configured; service seats and client-supplied identity headers never qualify. */
 function administrator(who, person, env) {
   if (who.service || !who.email || who.email.startsWith('service:')) return false;
+  /* THE OWNER (OWNER_EMAIL, cloud/access.mjs: Rob's third group, "access to absolutely everything") opens Admin as the administrator
+     does; ADMIN_EMAIL and the invite admin's id below are as they were. */
+  if (typeof env.OWNER_EMAIL === 'string' && env.OWNER_EMAIL.trim() && who.email === env.OWNER_EMAIL.trim().toLowerCase()) return true;
   const owner = typeof env.ADMIN_EMAIL === 'string' ? env.ADMIN_EMAIL.trim().toLowerCase() : '';
   if (owner) return who.email === owner;
   return !!env.INVITE_ADMIN_ID && String(person.id) === String(env.INVITE_ADMIN_ID);
@@ -248,6 +251,8 @@ export async function handle(request, env, deps = {}) {
   const library = createLibrary(env.DB, {now: () => new Date(ms()).toISOString(), ...(deps.newId ? {newId: deps.newId} : {})});
   const person = await library.user(who.email);
   try {
+    /* THE ACCESS GROUPS' ROSTER (adminGroups above) is the owner's and is read and set here, before Admin's own read-only pages. */
+    if (path === "/api/admin/groups") return adminGroups(request, env, who, ms);
     if (path === '/api/admin' || path.startsWith('/api/admin/')) {
       if (!administrator(who,person,env)) return reply(403,{error:'Only the CrankMagic administrator can open this page.'});
       if (method !== 'GET') return new Response(JSON.stringify({error:'Administration is read-only in this version.'}),
@@ -274,7 +279,6 @@ export async function handle(request, env, deps = {}) {
     /* WHO IS ASKING, AND THEIR GROUP (cloud/access.mjs): owner, insider or general. The browser hides what a group may not
        press; every route still asks for itself. `admin` is the Admin window's own gate (r4). */
     if (method === "GET" && path === "/api/me") return reply(200, {email: loginEmail, since: person.createdAt, group: await groupOf(who.email, env, env.DB), head: await library.head(person.id), admin:administrator(who,person,env)});
-    if (path === "/api/admin/groups") return adminGroups(request, env, who, ms);
     /* AN AI ON CLAUDE (AI-2): New table offers one only where the table's object would seat it (cloud/game-room.mjs
        `pilotOpen`): the switch on, the door's key, caps and model set, and this person on the allowlist. */
     if (method === "GET" && path === "/api/ai-seat") return reply(200, {open: await aiSeatOpen(env, person.email)});

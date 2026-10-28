@@ -530,6 +530,9 @@ function matches(state, event, condition, sourceId, controller) {
     if (condition.who === "another" && moved === sourceId) return false;
     /* "When this land enters untapped": as it entered (the event says so), not as it is now. */
     if (condition.untapped && fields.enteredTapped === true) return false;
+    /* "Enters under an opponent's control without being played" (Deep Gnome Terramancer; CR 305.1): the arrival was a land
+       play (rules/actions.mjs stamps it), or was not. */
+    if (condition.played !== undefined && (fields.played === true) !== condition.played) return false;
     /* What arrived must match (`filter`), read where it now is; "you" is this trigger's controller. What LEFT the
        battlefield ("another creature you control dies") is read as it last existed (CR 603.10a). */
     if (condition.filter) {
