@@ -410,7 +410,7 @@
 /* A card you can use now: its outline brighter, with a glow (Rob: "make the green outlines around cards more prominent"); a
    card already chosen keeps its own glow (.is-picked). */
 #matrix-v2 .cm-board .cm-bcard.is-bright:not(.is-picked){box-shadow:0 0 0 4px var(--v-accent),0 0 14px 3px color-mix(in srgb,var(--v-accent) 60%,transparent),0 6px 14px -6px rgb(0 0 0 / .85)}
-#matrix-v2 .cm-board .cm-bcard.is-bright:not(.is-picked):focus-visible{box-shadow:0 0 0 2px var(--focus-halo),0 0 0 7px var(--v-accent),0 0 16px 4px color-mix(in srgb,var(--v-accent) 60%,transparent)}
+#matrix-v2 .cm-board .cm-bcard.is-bright:not(.is-picked):focus-visible{box-shadow:0 0 0 1px #0b1213,0 0 0 3px var(--focus-halo),0 0 0 7px var(--v-accent),0 0 16px 4px color-mix(in srgb,var(--v-accent) 60%,transparent)}
 /* THE TURN'S ACTIONS over the table in Full screen, large, at the top where the callouts are; dimmed while not yours. */
 /* Solid behind its words, whatever the scene under it (a11y-board reads every word's contrast over every mat); while the
    question is not yours, its buttons are off, and the pass reads as off by itself. */
@@ -1737,8 +1737,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-lb .cm-lb-leave{color:var(--color-ink);text-decoration:underline;text-underline-offset:3px}
 
 /* Focus rings that stand on any ground (a11y-board): a keyboard's focus is scrolled into view with room for its ring, and where the
-   ring is the accent alone (a seat's focus button, a bright card) a dark line is drawn outside it, so a pale mat or a bright patch
+   ring is the accent alone (a seat's focus button) a dark line is drawn outside it, so a bright patch
    of the backdrop does not take it. */
 #matrix-v2 .cm-lb :is(button,a,input,select){scroll-margin:14px}
 #matrix-v2 .cm-board .cm-seatboard [data-action=board-focus]:focus-visible{outline:2px solid #11161f;outline-offset:2px;box-shadow:0 0 0 2px #ffffff}
-#matrix-v2 .cm-board .cm-bcard.is-bright:not(.is-picked):focus-visible{outline-color:#0b1213;outline-offset:7px}
