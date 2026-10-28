@@ -62,7 +62,7 @@ lane's theme owns it, stop on the card and name the construct; the orchestrator 
 | Role | Branch suffix | Cards | Rules it owns (beyond its cards' own) |
 | --- | --- | --- | --- |
 | **W1 faces** | `w1-faces` | Lane files `faces` and `walkers`: split, adventure, modal double-faced, transform, flip, meld, prepare, rooms, mutate; planeswalkers, sagas, battles | Layouts and faces; loyalty; emblems; battles (ROB-149's battle half) |
-| **W2 stack** | `w2-stack` | `stack` | Counters, copies of spells and abilities ("you may choose new targets"), timing, flash grants, storm, morph, control changes, cards from outside the game |
+| **W2 stack** | `w2-stack` | `stack` | Counters, copies of spells and abilities ("you may choose new targets"), timing, flash grants, storm, morph, control changes. Cards from outside the game are **not written**: Rob's ruling of 2026-10-28 makes a deck holding Cunning Wish or Extrapolate the Impossible illegal in Play, refused by name (`README.md`, section 8) |
 | **W3 graveyard** | `w3-graveyard` | `graveyard` | Recursion, dies and leaves triggers, mill, manifest; **remembered objects** (`RememberObjects`, `RememberChanged`: the most-played missing construct), exile-until, `MayPlay` from exile, every route to a graveyard |
 | **W4 combat** | `w4-combat` | `combat` | Attack and block requirements (ROB-149), evasion, protection (including from a source that left), trample assignment **asked** (CR 702.19b), equipment and auras, damage redirection and doubling |
 | **W5 mana** | `w5-mana` | `mana` | Land types and abilities, mana abilities, restricted mana, landwalk, "land played" triggers, cost increases and reductions, alternative costs, X and additional costs cast by an effect |

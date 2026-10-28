@@ -204,8 +204,10 @@ rows (copy them into `w0/lane-<role>.json` as `debt`, with the evidence). In sho
 | W7 | Alms Collector and dredge asked (CR 616.1); "each player draws" from the active player; draw replacements asked; dice modifiers and "whenever you roll"; the compiler's gate: a candidate's smoke game must have **played** the card, and the minimum template count raised to what the calibration supports (`game/tools/card-compiler.mjs`) |
 | V8 | The pool fuzz and the exercised ledger; the scenario runner's `settle` / `optional` / `targets: "any"`; `fuzz-live`'s silent throw and legendary-only commanders; `engine-room-games`' skipped seeds and frozen deal; `engine-x11-leave-questions`' replaced answers; coverage's partial constructs; the five unsure section-4 items settled by scenario. Then the first pool fuzz over **all 6,430 final cards**: the baseline of what still errors |
 
-The monarch on the board is the Play lane's: put it in the Requests table of `docs/ACTIVE.md`. Cunning Wish and
-Extrapolate the Impossible wait on Rob's ruling.
+The monarch on the board is the Play lane's: put it in the Requests table of `docs/ACTIVE.md`. **Cunning Wish and
+Extrapolate the Impossible are ruled** (Rob, 2026-10-28): W2 makes a deck holding either illegal in Play, refused by name
+in `readDeck` (`game/room/table.mjs`) with the reason and the way out, and a suite that proves it; the Decks wishboard is
+Linear ROB-198, after the load. Neither card is written.
 
 A scenario-runner fix will turn many scenarios red at once (3,547 files use `settle`). V8 lands the runner change behind
 an option first, measures which cards fail under it, and you deal those cards to their theme lanes in wave 0 or wave 1;
@@ -221,8 +223,8 @@ findings routed and fixed. Only then does wave 1 start. Wave 0 may take more tha
 - A gate would pass only by weakening an assertion, retargeting a test or redefining "done".
 - Anything that spends money (an API key, a paid plan), touches production, applies a D1 migration, deletes a branch,
   folder or record you did not create, or changes a shared setting.
-- A rules question the CR and the card's rulings do not settle (Rob's rulings decide: Cunning Wish's "outside the game"
-  is one).
+- A rules question the CR and the card's rulings do not settle (Rob's rulings decide; his ruling on "outside the game"
+  is in `README.md`, section 8).
 - Your own context is past one wave's worth: write `RUN.md` and stop; a fresh orchestrator resumes from it.
 
 ## After each wave, a checkpoint to Rob (10 lines)

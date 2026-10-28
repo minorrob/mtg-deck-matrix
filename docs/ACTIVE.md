@@ -15,6 +15,9 @@ given card is played."* Documents only; nothing in the engine changed.
   unloaded; calibration 4,161 of 4,165 (Blackblade Reforged, Contagion Clasp, Goblin Piledriver, Wayfarer's Bauble fail); `fuzz-live` library 3 of 3
   and staging decks 1 of 1 clean. The committed `data/engine/candidates.json` is stale (100 over 25,641).
 - **Not on main yet:** PR #834 (a paragraph is one ability; the gameplay-gap list). Wave 0 of the run lands it.
+- **Rob's ruling, 2026-10-28, on cards from outside the game** (Cunning Wish, Extrapolate the Impossible; CR 400.11, 903.11): *"For now, it
+  refuses them at the table ... these cards in a deck make the deck illegal to play in Play."* The run's W2 builds the refusal by name in `readDeck`;
+  the Decks wishboard comes after the load, Linear ROB-198 (under ROB-85).
 - **When the run starts** it claims the card-load files here by Rob's assignment (`ORCHESTRATION.md`, "Before wave 0"). Until then nobody holds them.
 
 ## Play and the app's menus: Rob's follow-ups of 2026-10-28 (a Claude cloud session, for Rob; `claude/gifted-ride-w6xoa3`, the second PR of the day)

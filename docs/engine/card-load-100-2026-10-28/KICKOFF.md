@@ -105,7 +105,7 @@ Start now: read, claim, baseline, then wave 0.
 
 - **Pace.** Each wave's merge waits on one GitHub Actions run (about 45 to 60 minutes) after the lanes finish. The
   prompt continues wave after wave; tell the orchestrator a number of waves or a date if you want a stop.
-- **Cunning Wish, Extrapolate the Impossible** ("from outside the game", CR 400.11): your ruling on what that means in
-  Commander here. The orchestrator stops on them until you give it.
+- **Cunning Wish, Extrapolate the Impossible** ("from outside the game", CR 400.11): ruled 2026-10-28. A deck holding
+  either is illegal in Play for now, refused by name; the Decks wishboard comes after the load (Linear ROB-198).
 - **Your playtests.** After each staging release the wave's Linear issue lists what became playable and three decks to
   try. Your sign-off is gate G-8.

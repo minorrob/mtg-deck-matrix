@@ -171,7 +171,13 @@ AGENTS.md: *"any decisions that takes place within the game the players should b
   (planar dice), Mox Diamond, The Earth Crystal, Sylvan Library, Arena of Glory, Six, Ragavan and Birgi, Chord of Calling.
 - **Partial:** emblems (Daretti, a second Teferi and Elspeth's emblem object left); Endurance; Valgavoth; The Legend of
   Kyoshi.
-- **Open:** cards from outside the game (Cunning Wish, Extrapolate the Impossible: **Rob's ruling first**); blocker-side
+- **Ruled by Rob, 2026-10-28:** cards from outside the game (Cunning Wish, Extrapolate the Impossible; CR 400.11, 903.11)
+  are **refused at the table for now**: a deck holding either is illegal in Play, refused by name with the reason and the
+  way out (remove the card), as the table already refuses a card it cannot play (`game/room/table.mjs`, `readDeck`;
+  `game/engine/cards/index.mjs`). The two are **exempt from G-1 and G-2** until the Decks wishboard is built (Linear
+  ROB-198, after the load): each deck lists the cards its wishes may fetch, in the commander's colors and under
+  903.11a's name limits.
+- **Open:** blocker-side
   requirements and battles (ROB-149); draw replacements (Notion Thief, Abundance, Underrealm Lich); "exiled with", mana of
   any type, ability cost reduction (Nightveil Specter, Dire Fleet Daredevil, Forensic Gadgeteer); Purphoros,
   Bronze-Blooded; Sanctuary Warden (shield counters are built, the card is not); Nulldrifter; The Lord of Pain, Decree of
