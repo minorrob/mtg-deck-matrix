@@ -56,7 +56,7 @@ const checkSpectator = () => {
     for (const name of held) {ok(!text.includes(JSON.stringify(name)), `the spectator frame at revision ${f.view.revision} does not carry "${name}", a card in Maya hand: ...${text.slice(Math.max(0, text.indexOf(JSON.stringify(name)) - 200), text.indexOf(JSON.stringify(name)) + 60)}`); leakChecks += 1;}
     for (const p of f.view.state.players) {
       eq([p.zones.Hand.cards.length, Number.isInteger(p.zones.Hand.count)], [0, true], "a hand is a count and no cards (nothing was revealed at this table)");
-      eq([p.zones.Library.cards.length, p.zones.Library.count > 0], [0, true], "a library is a count and no cards");
+      eq([p.zones.Library.cards.length, Number.isInteger(p.zones.Library.count)], [0, true], "a library is a count and no cards");
     }
     eq([f.view.decision, f.view.manaSources, f.view.seatId, f.view.seat, f.view.spectator], [null, [], null, null, true], "no decision, no mana sources, and no seat of its own");
     ok(!("canUndo" in f.view) && !("stepByStep" in f.view) && !("yielding" in f.view), "none of a seat's own ways of playing");
