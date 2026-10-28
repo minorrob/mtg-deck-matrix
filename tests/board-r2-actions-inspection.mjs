@@ -1,4 +1,5 @@
-/* R2's shared interactions against seat-projected room frames. No rules are simulated here. */
+/* R2's shared interactions against seat-projected room frames, in Table, Focus and 3D (all three are the 3D HUD; Table and Focus run it on a
+ * flat stage). Drawers and the inspector are the top layer: they lie over a stage that never moves. No rules are simulated here. */
 import assert from "node:assert/strict";
 import {readFileSync,mkdirSync} from "node:fs";
 import path from "node:path";
@@ -152,7 +153,8 @@ try{
  await page.locator('#cm-board-decision [data-index="1"]').click();
  eq(sent.filter(x=>x.type==='act').length,beforePay,'payment is not sent on selection');
  ok((await page.locator('#cm-board-decision [data-index="1"][aria-pressed="true"]').innerText()).includes('Forest and Sol Ring'),'payment sources shown for review, outlined');
- await page.locator('[data-action=board-profile]').click();
+ /* Play settings moved from the account menu to the Camera menu with the 3D HUD (Table and Focus share it). */
+ await page.locator('[data-action=board-camera]').click();
  await page.locator('[data-action=board-tools]').click();await page.keyboard.press('Escape');
  await page.locator('#cm-board-tools').waitFor({state:'detached',timeout:3000});
  eq(await page.locator('#cm-board-tools').count(),0,'Escape closes the foremost Settings menu');

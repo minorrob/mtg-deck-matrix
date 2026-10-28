@@ -68,7 +68,7 @@
      hand. FOCUS: the others' boards in a row across the back, and the seat looked at the largest 16:9 that fits between them and the hand. `reserve` is the foot of
      the stage the hand's tray covers; `gapX` and `gapY` what lies between boards (Table's life counter sits over the crossing). */
   const GRID_MARGIN=10, GRID_GAP=12;
-  function flatGeometry(width, height, {mode = "table", zoom = 100, pan = null, seats = 4, reserve = 0, top = 0, gapX = GRID_GAP, gapY = GRID_GAP, padL = 0, capB = 0, stripMin = 0, inL = 0, inR = 0} = {}) {
+  function flatGeometry(width, height, {mode = "table", zoom = 100, pan = null, seats = 4, reserve = 0, top = 0, gapX = GRID_GAP, gapY = GRID_GAP, padL = 0, capB = 0, stripMin = 0, inL = 0, inR = 0, gapWide = 0} = {}) {
     const w=Math.max(1,width), h=Math.max(1,height), n=clamp(seats,1,4), z=clamp(zoom,60,200)/100;
     const roomW=w-GRID_MARGIN*2-padL-inL-inR, roomH=Math.max(60,h-top-reserve-GRID_MARGIN*2);
     const cx=w/2, cy=top+(h-top-reserve)/2, at={x:clamp(pan?.x,-w,w),y:clamp(pan?.y,-h,h)};
@@ -84,7 +84,7 @@
     if(mode==="focus"){
       /* The others go across the back, or -- where the window is wide and not tall -- in a column at the right, whichever lets the board looked at be larger. */
       const others=Math.max(0,n-1), x1=GRID_MARGIN+padL+inL, between=others?GRID_GAP:0;
-      const stripH=others?Math.round(Math.max(clamp(roomH*.15,80,112),Math.min(stripMin,roomH*.3))):0;
+      const stripH=others?Math.round(Math.max(clamp(roomH*.15,80,112),Math.min(stripMin,roomH*.55))):0;
       const availStrip=Math.max(60,roomH-stripH-between), stripY=top+GRID_MARGIN, bigY=stripY+stripH+between;
       /* the caption (top left) is cleared by the strip, and by the board looked at only where it reaches down to it */
       const bigPad=(bigY>=capB?0:padL)+inL, bigW=w-GRID_MARGIN*2-bigPad-inR, bwStrip=Math.max(120,Math.floor(Math.min(bigW,availStrip*16/9)));
@@ -104,17 +104,24 @@
       return {...common,focus:true,rear,front:surface(big),board:{width:bw,height:bh,strip:stripH}};
     }
     const cols=n===1?1:2, rows=n<=2?1:2;
-    /* The turn box (top left) is cleared the way that leaves the larger boards: they start to its right, or below it. */
-    const fitFor=(left,above)=>Math.max(60,Math.floor(Math.min((w-GRID_MARGIN*2-left-inL-inR-gapX*(cols-1))/cols,(Math.max(60,h-above-reserve-GRID_MARGIN*2)-gapY*(rows-1))/rows*16/9)));
-    const below=padL&&capB>top?capB:top, side=fitFor(padL,top), under=fitFor(0,below), useUnder=padL>0&&under>side*1.05;
-    const fit=useUnder?under:side, shift=useUnder?0:padL, ceil=useUnder?below:top;
+    /* The turn box (top left) is cleared the way that leaves the larger boards: they start to its right, or below it. The action pop-up stands over
+       the middle: boards start below it, or are parted wide enough for it to stand in the gap (gapWide) -- whichever leaves them larger. */
+    const fitFor=(left,above,gx)=>Math.max(60,Math.floor(Math.min((w-GRID_MARGIN*2-left-inL-inR-gx*(cols-1))/cols,(Math.max(60,h-above-reserve-GRID_MARGIN*2)-gapY*(rows-1))/rows*16/9)));
+    const choices=[];
+    for(const [gx,up] of [[gapX,top],...(gapWide>gapX&&cols>1?[[gapWide,0]]:[])]) {
+      choices.push({gx,up,left:padL,fit:fitFor(padL,up,gx)});
+      if(padL) {const below=Math.max(up,capB); choices.push({gx,up:below,left:0,fit:fitFor(0,below,gx)});}
+    }
+    /* the first is the plain way; another is taken only for 5% more */
+    const best=choices.reduce((a,c)=>c.fit>a.fit*1.05?c:a,choices[0]);
+    const fit=best.fit, shift=best.left, ceil=best.up, gapUsed=best.gx;
     const roomW2=w-GRID_MARGIN*2-shift-inL-inR, roomH2=Math.max(60,h-ceil-reserve-GRID_MARGIN*2);
-    const bw=fit, bh=Math.round(fit*9/16), usedW=bw*cols+gapX*(cols-1), usedH=bh*rows+gapY*(rows-1);
+    const bw=fit, bh=Math.round(fit*9/16), usedW=bw*cols+gapUsed*(cols-1), usedH=bh*rows+gapY*(rows-1);
     const x0=Math.round(shift+inL+GRID_MARGIN+(roomW2-usedW)/2), y0=Math.round(ceil+GRID_MARGIN+Math.max(0,(roomH2-usedH)/2));
     /* where each seat sits, by its area letter (a top left, b top right, c bottom left, d bottom right; three seats put the third across the foot) */
     const cell={a:[0,0],b:[1,0],c:n===3?[.5,1]:[0,1],d:[1,1]};
-    const rect=area=>{const [c,r]=cell[area]||cell.a;return {x:Math.round(x0+c*(bw+gapX)),y:Math.round(y0+r*(bh+gapY)),width:bw,height:bh};};
-    return {...common,grid:true,rear:[],front:null,board:{width:bw,height:bh,gapX,gapY,x:x0,y:y0,cols,rows,usedW,usedH},rect,surface,slot:area=>surface(rect(area)),mid:view(x0+usedW/2,y0+(n===3?bh/2:usedH/2))};
+    const rect=area=>{const [c,r]=cell[area]||cell.a;return {x:Math.round(x0+c*(bw+gapUsed)),y:Math.round(y0+r*(bh+gapY)),width:bw,height:bh};};
+    return {...common,grid:true,rear:[],front:null,board:{width:bw,height:bh,gapX:gapUsed,gapY,x:x0,y:y0,cols,rows,usedW,usedH},rect,surface,slot:area=>surface(rect(area)),mid:view(x0+usedW/2,y0+(n===3?bh/2:usedH/2))};
   }
   /* The backdrops: each video at up to three heights, 720, 1080 and 1440 lines, never more than its source (environment,
      backdropLines). The list between the markers is written by tools/stage-backdrops.mjs from a folder of videos. */
@@ -336,7 +343,7 @@
   /* The flat stage (Table and Focus): the boards laid out by flatGeometry, set by one matrix each. A board's own layout is computed at the size it is drawn (--row-w, --mat-w). */
   function placeFlat(s) {
     const o=s.opts, cards=1+.8*(clamp(o.cards??100,70,200)-100)/100, seatsN=(o.mats||[]).length;
-    const g=flatGeometry(s.box.width,s.box.height,{mode:o.grid?"table":"focus",zoom:o.zoom,pan:o.pan,seats:seatsN,reserve:o.reserve||0,top:o.top||0,gapX:o.gapX,gapY:o.gapY,padL:o.padL||0,capB:o.capB||0,stripMin:o.stripMin||0,inL:o.inL||0,inR:o.inR||0});
+    const g=flatGeometry(s.box.width,s.box.height,{mode:o.grid?"table":"focus",zoom:o.zoom,pan:o.pan,seats:seatsN,reserve:o.reserve||0,top:o.top||0,gapX:o.gapX,gapY:o.gapY,padL:o.padL||0,capB:o.capB||0,stripMin:o.stripMin||0,inL:o.inL||0,inR:o.inR||0,gapWide:o.gapWide||0});
     s.view=g;
     const size=(el,r)=>{
       el.style.setProperty('--row-w',`${r.width}px`);el.style.setProperty('--mat-w',`${r.width}px`);el.style.setProperty('--mat-h',`${r.height}px`);el.style.setProperty('--board-scale',String(cards));

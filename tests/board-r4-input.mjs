@@ -36,13 +36,21 @@ try{
   if(process.env.UAT_SHOTS){mkdirSync(process.env.UAT_SHOTS,{recursive:true});await page.screenshot({path:path.join(process.env.UAT_SHOTS,`r4-input-${mode}.png`)});}
   eq(errors,[],`${mode}: no browser errors`);await context.close();
  }
+ /* Double clicking an empty part of an opponent's board focuses it and sends nothing. The flat Table's boards are four 16:9 slots (.cm-stage-slot), a
+  * double click on one opens Focus on that seat (.cm-stage-big, the seat looked at); in 3D the seat's board comes to the front (.cm-stage-front). In
+  * Focus the opponents behind the big board are inert mini tiles (a seat-label button, board-focus, is their way in), so there the seat is first
+  * brought forward through that action and the double click on its empty field must leave it focused and the reviewed choice untouched. */
+ const frontSeat=page=>page.evaluate(()=>document.querySelector('.cm-stage-big>.cm-mat, .cm-stage-front>.cm-mat')?.dataset.seat??null);
  for(const mode of ['table','full','focus']) {
   const v=fixture();v.state.players[1].zones.Battlefield.cards=[];v.decision.options[1]={index:1,act:'activate',cardId:9001,label:'Island ability'};
   const {page,context,sent}=await open(mode,1440,false,v);await page.evaluate(()=>__r4Act('board-option',{index:'1'}));
   if(mode==='focus')await page.evaluate(()=>__r4Act('board-focus',{seat:'1'}));
+  await page.waitForTimeout(400);
+  const seatBefore=await frontSeat(page);
+  if(mode==='table')eq(seatBefore,null,'table: no board is the one looked at before the double click');else ok(seatBefore!=='1'||mode==='focus',`${mode}: the opponent's board is not in front before the double click`);
   const before=await page.locator('#cm-board-decision [data-action=board-direct]').getAttribute('data-index'),field=page.locator('.cm-mat[data-seat="1"] .cm-board-field').first();await field.scrollIntoViewIfNeeded();
-  const point=await field.evaluate(el=>{const r=el.getBoundingClientRect();for(const fy of [.2,.5,.8])for(const fx of [.2,.5,.8]){const x=r.x+r.width*fx,y=r.y+r.height*fy,at=document.elementFromPoint(x,y);if(at?.closest('.cm-mat')===el.closest('.cm-mat')&&!at.closest('button,a,input,select,textarea,[role=separator]'))return {x:x-r.x,y:y-r.y};}return null;});ok(point,`${mode}: actual empty opponent area available`);await field.dblclick({position:point});
-  const target=page.locator(mode==='full'?'.cm-stage-front .cm-mat':'.cm-board-stage>.cm-mat');eq(await target.getAttribute('data-seat'),'1',`${mode}: native empty opponent double click focuses that board`);eq(await page.locator('#cm-board-decision [data-action=board-direct]').getAttribute('data-index'),before,`${mode}: empty-board focus preserves unsent selection`);eq(sent.filter(s=>s.type==='act').length,0,`${mode}: focus never sends a game action`);await page.locator('#cm-board-decision [data-action=board-direct]').click();eq(sent.filter(s=>s.type==='act').map(s=>s.indices),[[1]],`${mode}: preserved reviewed action still binds the exact offer once`);await context.close();
+  const point=await field.evaluate(el=>{const r=el.getBoundingClientRect();for(const fy of [.2,.5,.8])for(const fx of [.2,.5,.8]){const x=r.x+r.width*fx,y=r.y+r.height*fy,at=document.elementFromPoint(x,y);if(at?.closest('.cm-mat')===el.closest('.cm-mat')&&!at.closest('button,a,input,select,textarea,[role=separator]'))return {x:x-r.x,y:y-r.y};}return null;});ok(point,`${mode}: actual empty opponent area available`);await field.dblclick({position:point});await page.waitForTimeout(500);
+  eq(await frontSeat(page),'1',`${mode}: native empty opponent double click focuses that board`);if(mode==='table')eq(await page.locator('#cm-board').getAttribute('data-view'),'focus','table: the double click opens Focus on that seat');eq(await page.locator('#cm-board-decision [data-action=board-direct]').getAttribute('data-index'),before,`${mode}: empty-board focus preserves unsent selection`);eq(sent.filter(s=>s.type==='act').length,0,`${mode}: focus never sends a game action`);await page.locator('#cm-board-decision [data-action=board-direct]').click();eq(sent.filter(s=>s.type==='act').map(s=>s.indices),[[1]],`${mode}: preserved reviewed action still binds the exact offer once`);await context.close();
  }
  {
   const v=fixture();v.state.players[0].zones.Battlefield.cards[0].tapped=true;v.decision.options[1]={index:1,act:'undo-mana',label:'Untap Island',cardId:9001};const {page,context,sent}=await open('focus',390,true,v);

@@ -1572,7 +1572,16 @@ globalThis.CrankBoard = Object.seal({
     /* Table and Focus are this stage without the canvas (`flat`); Table's boards are a grid, above the hand's tray. */
     const flat = !stageEnabled();
     /* The turn box keeps beside the left drawer, as the tab does; the drawers move nothing else. */
-    host.style.setProperty("--drawer-l", `${host.querySelector(":scope > .cm-stage-rail.is-open")?.offsetWidth || 0}px`);
+    const drawerL = host.querySelector(":scope > .cm-stage-rail.is-open")?.offsetWidth || 0;
+    host.style.setProperty("--drawer-l", `${drawerL}px`);
+    /* The action pop-up stands in the middle of what the drawers leave seen, and clear of the turn box, not behind a drawer or over the box. */
+    const popup = region.querySelector(":scope > .cm-stage-actions");
+    if (popup) {
+      const at0 = region.getBoundingClientRect(), covered = [...host.querySelectorAll(":scope > .cm-stage-side.is-open, :scope > #cm-card-inspector")].reduce((n, el) => el.getClientRects().length ? Math.max(n, at0.right - el.getBoundingClientRect().left) : n, 0);
+      const cap = region.querySelector(":scope > .cm-stage-caption")?.getBoundingClientRect(), half = popup.offsetWidth / 2;
+      const lo = Math.max(drawerL + half + 8, cap ? cap.right - at0.left + 12 + half : 0), hi = region.clientWidth - covered - half - 8;
+      popup.style.left = `${Math.round(Math.max(lo > hi ? hi : lo, Math.min(hi, (drawerL + region.clientWidth - covered) / 2)))}px`;
+    }
     /* Drawers lie over the stage and the hand and move neither: a flat table keeps its boards clear of where they lie, open or not (the 40px is the tab on each edge). */
     if (flat) {
       const railW = host.querySelector(":scope > .cm-stage-rail.is-open")?.offsetWidth, sideW = host.querySelector(":scope > .cm-stage-side.is-open")?.offsetWidth;
@@ -1595,6 +1604,8 @@ globalThis.CrankBoard = Object.seal({
       const pie = Math.round(144 * hudScale() / 100);
       host.style.setProperty("--pie", `${pie}px`);
       /* ...and clear of it side to side: the boards on a row leave the dial the gap between them (it covers no board), and start below the action pop-up. */
+      const barW = host.querySelector(":scope .cm-stage-actions")?.offsetWidth || 0;
+      opts.gapWide = players().length >= 2 ? barW + 28 : 0;
       opts.gapX = players().length >= 2 ? Math.min(pie + 8, Math.round((region.clientWidth - gutter.left - gutter.right) * .25)) : 22; opts.gapY = 22;
       const caption = host.querySelector(":scope .cm-stage-caption"), at = region.getBoundingClientRect();
       /* Focus's boards start under the action pop-up (the 3D view's others are far enough back to lie under it); Table's have it in the gap between them. */
