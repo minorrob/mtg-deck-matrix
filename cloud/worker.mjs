@@ -282,8 +282,8 @@ export async function handle(request, env, deps = {}) {
        `pilotOpen`): the switch on, the door's key, caps and model set, and this person on the allowlist. */
     if (method === "GET" && path === "/api/ai-seat") {
       const open = await aiSeatOpen(env, person.email);
-      /* The levels a table may seat now (lounge contract §2): Hard is not open yet; the AI on Claude, only where `open`. */
-      return reply(200, {open, levels: open ? ["easy", "normal", "llm"] : ["easy", "normal"]});
+      /* The levels a table may seat now (lounge contract §2): Hard is not open yet. The AI on Claude is `open`'s, unchanged. */
+      return reply(200, {open, levels: ["easy", "normal"]});
     }
     /* THE LOUNGE (lounge-contract §1, §2): the people a host may invite by name, and the leaderboard. */
     if (method === "GET" && path === "/api/users/search") return reply(200, await searchUsers(env.DB, person.email, url.searchParams.get("q")));

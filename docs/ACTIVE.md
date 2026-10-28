@@ -1,5 +1,45 @@
 # Who holds the work
 
+## The lounge's server half: live and mine, seats, requests, quit, watching, chat, results, leaderboard, 2026-10-28 (a Claude cloud session, for Rob; worktree branch `worktree-agent-a1bba86cf562e4338`, from `claude/gifted-ride-w6xoa3`)
+
+Rob, 2026-10-28: *"You can do the server half."* The contract is `docs/ui-lane/lounge-contract.md`; this is every route of it, built, with the Play session's
+one change of the day (the AI-seat controls are for every seated person). Nothing was pushed, no migration was run, nothing was deployed.
+
+- **Where it lives.** New: `game/room/lounge.mjs` (everything a table owes the lounge: seat operations, requests, quit, log, chat, results rows, the registry
+  summary), `cloud/lounge.mjs` (the registry, users/search, results, leaderboard; imports nothing from `game/`, as `cloud/tables.mjs` still does not).
+  Small, additive hooks in `game/room/table.mjs` (about 60 lines: `create`, `rules`, `deck`, `settle`, `tick`, `view`, a `step` guard once a table has ended),
+  `game/room/room.mjs` (one method, `watch()`), `game/contracts/table-lifecycle.mjs` (a table with no person, for Observe AI game), `cloud/game-room.mjs`,
+  `cloud/tables.mjs`, `cloud/worker.mjs`. The AI-players branch's `readSeatAi`/`levelOf`/`personaOf` are not touched: a seat's `persona` is stored as an opaque
+  key on the lifecycle seat and echoed.
+- **The registry is one more object of the `TABLES` binding**, named `lounge-registry` (a hyphen, so never a table), answered by the same `GameTable` class at
+  `/lounge/*`: no new binding, no new class migration, so `tools/release-pages.mjs` and its exact-equality tests are unchanged. Each table reports its summary
+  after every POST, every alarm and (at most every 15 s) every broadcast; an entry a day old is dropped when read; a table that is over reports itself unlisted.
+- **Routes.** `GET /api/tables/live`, `GET /api/tables/mine`, `GET /api/leaderboard`, `GET /api/users/search?q=`, `GET /api/ai-seat` (+`levels`), `POST
+  /api/tables` (+`privacy`, `observe`, seat `email`/`user`/`persona`), `POST /:id/rules` (+`houseRules`, `privacy`), `POST /:id/seat|request-join|request|quit|chat`,
+  `GET /:id/log`, `GET /:id?watch=1`, `GET /:id/connect?watch=1`; the `deck` action now lets anyone seated bring an AI seat's deck.
+- **Migration `cloud/migrations/0010_match_results.sql`** (0007 and 0008 stay the engine lane's; 0009 is feedback): `match_results(match_id, seat_id, email, name,
+  outcome win|loss|tie|unfinished, humans, ai, turns, ended_at)`, one row per person's seat when a game ends, never an AI seat. **Rob applies it.** Until then
+  the leaderboard answers `{rows: []}`, the game is unharmed, and the table keeps its rows and retries (at most every 10 minutes, on its next change or alarm).
+- **Deviations from the contract, each deliberate:** (1) `rules.houseRules` and `rules.privacy` appear in `rules` only once the host has set them (five exact
+  `rules` equalities in `tests/game-table.mjs` stand); the view always carries top-level `houseRules` (true unless turned off) and `privacy`. `houseRules: false`
+  leaves the match without its `undoLastPlay` house rule. (2) A table that was ended (`quit`) reads `phase: "over"` in its view, with `quit: {at, by}`. (3) The
+  seat view gains `open` (a person's chair nobody holds or is invited to) and `persona`; a seat `remove`d becomes an open human chair, it is not dropped from
+  `seats[]`, so `seats[yourSeat]` keeps working. (4) Seat operations are refused when a *person* is ready (an AI seat is ready from its deck, so that cannot count
+  or `edit-ai` after its deck was impossible). (5) `GET /api/ai-seat` always answers `levels: ["easy","normal"]`; the AI on Claude stays `open`'s. `tests/coach.mjs` asserted the exact old shape `{open}`
+  and now asserts `{open, levels}` (the contract's own addition). (6) A game line in `GET log` has `at: null` (the
+  game's history lines carry no wall-clock) and `turn`; lobby lines have a real `at`. (7) `request-join` answers `201 {request: {requestId, name, status}}`; a person
+  who asked and is not seated yet reads `403 {error, request: {requestId, status: open|declined}}` from `GET /:id`. (8) `GET /:id?watch=1` is added so a spectator
+  can read a public table's lobby. (9) A person's name for requests and chat comes from their profile or invitation name, else "A player". (10) `tests/game-table.mjs`
+  had one assertion that only the host chooses an AI's deck; it now says a stranger cannot (Rob's Lobby change, 2026-10-28).
+- **Proven** (Node, cloud container; `NODE_PATH=/opt/node-tools/node_modules GEOMETRY_REQUIRED=1 node tests/<name>.mjs`): `lounge-registry` 53, `lounge-lobby` 67,
+  `lounge-watch` (about 500; a spectator is sent none of 200 hands' card names, and an action frame is refused and not applied; red when the projection is made to
+  leak), `lounge-chat` 21, `lounge-results` 34 (an AI-only game plays to its end in 41 alarms; the mid-slice quit path is exercised), plus the existing
+  `game-table` 182, `game-room` 531, `room-ending` 34, `cloud-worker` 155, `release-pages` 230 and `node --test game/tests/*.test.mjs` 262. `ai-door` fails at "and the
+  refusal says who may" on the base commit too (not from this work).
+- **Not proven:** nothing here ran against a real Durable Object, D1 or a browser: the sockets are recorded stand-ins and D1 is Node's SQLite with the real
+  migrations. The registry's `storage.list` on a real object, the 15-second report throttle, hibernation of a watcher's socket, and the migration on a real D1 are
+  unproven until staging. A spectator's `chat`/`quit` frames are pushed to every socket but the board does not read them yet (the Play lane's half).
+
 ## Play: the Pre-lobby (first of three screens), the top-left box, History, 2026-10-27 (a Claude cloud session, for Rob; `claude/gifted-ride-w6xoa3`)
 
 Rob sent three Claude Design screens (Pre-lobby, New game pop-up, Lobby with walkthrough) and asked for screenshots that look exactly like them. This push is the first screen and four of his notes.
