@@ -16,7 +16,9 @@
     "| Two damage replacements where nobody can be asked | `rules/replacement.mjs`:34 | W4 |",
     "| A token put onto the battlefield attacking attacks the first player in turn order | `script/effects/permanents.mjs`:270 | W4 |"
   ],
-  "status": "first bounded implementation: sentence calibration and single-blocker trample; remaining debt queued",
+  "status": "bounded checkpoint complete: sentence calibration and single-blocker trample; remaining debt queued",
+  "codeCheckpoint": "8e0f3a2f01e32bfdc0fc00639a42092c417fb892",
+  "pullRequest": "https://github.com/minorrob/mtg-deck-matrix/pull/914",
   "completed": [
     "Blackblade Reforged: held-out translation counts Land after for each, not the equipped Creature",
     "Goblin Piledriver: a teacher's implicit times 1 is learned as the printed multiplier slot",
@@ -29,15 +31,18 @@
     "Departed-source protection: reproduced 3 damage instead of 0 with lastKnown colors R; snapshot must flow through damage and prevention",
     "Damage replacements outside an askable resolution still choose leastFirst",
     "Tokens entering attacking outside a resolution still choose the first player",
-    "Blocker-side requirements need a joint maximum-requirements solver (ROB-149)"
+    "Blocker-side requirements need a joint maximum-requirements solver (ROB-149)",
+    "V8 independent depth finding: Serra Angel's saved scenarios do not behaviorally exercise Flying or Vigilance. Add saved scenarios proving no ground blocker can block it and that attacking leaves it untapped; keyword-list presence is not behavior proof."
   ],
   "ignores": [],
   "proof": {
     "red": "sentence-load100-w0: three original held-out scenario families failed before the fix; engine-load100-w0-combat: single-blocker choice false before fix",
-    "calibration": "Intermediate before combat prompts: 4164 of 4165 passed. Per-target binding then repaired Clasp; all four original failure families pass in focused checks. Full final calibration pending; no G-4 claim.",
+    "calibration": "Final tests/sentence-library.mjs: 77 checks passed; 8048 templates from 6353 cards; 4165 translated with themselves held out, 4165 passed their own scenarios. Zero calibration failures; the other G-4 conditions are not claimed.",
     "focused": ["sentence-load100-w0: 14 checks passed, including V8's independent two-target/count counterexample", "engine-load100-w0-combat: 17 checks passed", "30 original scenarios in eight edited card files passed", "all 29 engine suites directly naming rules/combat.mjs passed", "sentence-paragraphs: 11 checks passed", "data-integrity and feature-wiring passed"],
     "mutation": "eleven breaks caught, missed: []; anchors remain 57 existing problems, with no new problem on changed files",
-    "fullCheck": "The initial post-prompt check-cards found seven scenarios needing explicit damage input; all are repaired without changing any expectation. Final check-cards and sentence-library are running.",
+    "fullCheck": "Final check-cards: 6430 definitions; 11023 scenarios, 0 failed; exit 0. Seven initially unanswered scenario inputs were repaired without changing expectations. Final sentence-library suite exit 0.",
+    "generated": "engine-definitions --check: current; engine-candidates --check: current; data-inventory --check: matches the repository, 60 artifacts",
+    "scan": "tools/local-ci.sh HEAD 0: SCAN PASS on code checkpoint 8e0f3a2f; record updates are scanned separately before push",
     "limitations": "No new cards or definitions changed; queued debt is open, not waived; independent V8 review, consolidated gate and staging not done"
   },
   "rulings": [
