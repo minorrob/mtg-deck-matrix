@@ -185,6 +185,8 @@ This supplements the journal-only method above; it does not change G-3's require
   every probe; no probe may affect the next scenario or a played game.
 - Run the original scenario successfully first. A failure caused only by schema or fidelity validation of a modified
   script is not behavioral proof; remove the ability from a valid compiled/runtime definition.
+- A keyword-list presence assertion alone is not proof of evasion, combat, or another keyword's behavior. Preserve
+  that assertion, but distinguish it from a behavioral failure when recording counterfactual coverage.
 - Record the card, ability path, scenario, original result, removal result, and evidence method. Keep ambiguity,
   redundancy, and a removal the scenario does not detect as unproved, with G-3 unmet for that ability.
 - This proves that a scenario depends on the ability. Its accuracy still needs independent Oracle/rules review and

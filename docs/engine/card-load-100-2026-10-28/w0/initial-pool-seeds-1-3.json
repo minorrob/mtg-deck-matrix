@@ -1,0 +1,194 @@
+{
+  "pool": true,
+  "finalPool": 6424,
+  "favor": [],
+  "humans": [
+    0
+  ],
+  "level": "normal",
+  "strictRefusals": true,
+  "node": "v22.23.3",
+  "rows": [
+    {
+      "seed": 1,
+      "decks": [
+        "Jhoira, Weatherlight Captain",
+        "Thassa, Deep-Dwelling",
+        "Ghalta, Stampede Tyrant",
+        "Szarel, Genesis Shepherd"
+      ],
+      "status": "finished",
+      "result": {
+        "winner": null,
+        "reason": "every person had left the game, so it ended there",
+        "endedBy": null,
+        "ending": {
+          "kind": "eliminated",
+          "seatId": "s0",
+          "reason": "life",
+          "seats": [
+            {
+              "seatId": "s0",
+              "outcome": "lost",
+              "reason": "life"
+            },
+            {
+              "seatId": "s1",
+              "outcome": "playing",
+              "reason": null
+            },
+            {
+              "seatId": "s2",
+              "outcome": "playing",
+              "reason": null
+            },
+            {
+              "seatId": "s3",
+              "outcome": "playing",
+              "reason": null
+            }
+          ]
+        }
+      },
+      "turns": 34,
+      "decisions": 73,
+      "ms": 15876,
+      "longestWait": {
+        "ms": 1508,
+        "turn": 33
+      },
+      "refusals": {
+        "total": 0,
+        "since": 0,
+        "first": []
+      },
+      "personRefused": 0,
+      "loopsStopped": 0,
+      "replaySame": true,
+      "leaks": [],
+      "leakChecks": 74,
+      "clean": true
+    },
+    {
+      "seed": 2,
+      "decks": [
+        "Cid, Freeflier Pilot",
+        "Dragonhawk, Fate's Tempest",
+        "Jin-Gitaxias, Progress Tyrant",
+        "Gollum, Riddle Master"
+      ],
+      "status": "finished",
+      "result": {
+        "winner": "s1",
+        "reason": "last player standing",
+        "ending": {
+          "kind": "won",
+          "seatId": "s1",
+          "reason": null,
+          "seats": [
+            {
+              "seatId": "s0",
+              "outcome": "lost",
+              "reason": "life"
+            },
+            {
+              "seatId": "s1",
+              "outcome": "won",
+              "reason": null
+            },
+            {
+              "seatId": "s2",
+              "outcome": "lost",
+              "reason": "life"
+            },
+            {
+              "seatId": "s3",
+              "outcome": "lost",
+              "reason": "life"
+            }
+          ]
+        }
+      },
+      "turns": 35,
+      "decisions": 100,
+      "ms": 26572,
+      "longestWait": {
+        "ms": 2241,
+        "turn": 32
+      },
+      "refusals": {
+        "total": 0,
+        "since": 0,
+        "first": []
+      },
+      "personRefused": 0,
+      "loopsStopped": 0,
+      "replaySame": true,
+      "leaks": [],
+      "leakChecks": 101,
+      "clean": true
+    },
+    {
+      "seed": 3,
+      "decks": [
+        "Tekuthal, Inquiry Dominus",
+        "Stockman, Mad Fly-entist",
+        "Xenagos, God of Revels",
+        "Scarlet Witch, Wanda Maximoff"
+      ],
+      "status": "finished",
+      "result": {
+        "winner": null,
+        "reason": "every person had left the game, so it ended there",
+        "endedBy": null,
+        "ending": {
+          "kind": "eliminated",
+          "seatId": "s0",
+          "reason": "life",
+          "seats": [
+            {
+              "seatId": "s0",
+              "outcome": "lost",
+              "reason": "life"
+            },
+            {
+              "seatId": "s1",
+              "outcome": "lost",
+              "reason": "life"
+            },
+            {
+              "seatId": "s2",
+              "outcome": "playing",
+              "reason": null
+            },
+            {
+              "seatId": "s3",
+              "outcome": "playing",
+              "reason": null
+            }
+          ]
+        }
+      },
+      "turns": 38,
+      "decisions": 97,
+      "ms": 17961,
+      "longestWait": {
+        "ms": 1209,
+        "turn": 33
+      },
+      "refusals": {
+        "total": 0,
+        "since": 0,
+        "first": []
+      },
+      "personRefused": 0,
+      "loopsStopped": 0,
+      "replaySame": true,
+      "leaks": [],
+      "leakChecks": 98,
+      "clean": true
+    }
+  ],
+  "evidenceScope": "Initial V8 harness checkpoint ae7e22ba; pre-final integration; app-finished includes no-person termination",
+  "sourceSha256": "a9de8cb5481d3f17abc645155f26dd2d580ce84975b8b2ef0d52a28719d0162f"
+}

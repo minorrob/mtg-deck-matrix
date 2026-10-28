@@ -12,12 +12,15 @@ Newest wave first. Each line names its command's result line, never a summary of
   Package #911 and prerequisite #834 merged locally; eight debt lane files committed at `c9d31c40`.
   Draft integration PR #912: https://github.com/minorrob/mtg-deck-matrix/pull/912.
 - **Prerequisite:** original #834 remains open and conflicted on GitHub. Isolated reconciliation branch
-  `codex/engine-load100-pr834` at pushed `ae3bfd6f` merges main and preserves paragraph boundaries alongside current
-  castable-card spell segmentation. Integrated through `50b1623c`. Full backstop validation exposed its inherited
+  `codex/engine-load100-pr834` at `ba82617b` merges main and preserves paragraph boundaries alongside current
+  castable-card spell segmentation. Integrated through `8c0566dc`. Full backstop validation exposed its inherited
   assertion that Gemstone Caverns must never be sampled; fixed to require sampling and successful scenario execution,
-  with a mutation restoring the exclusion. Selected backstop breaks are running; do not mark the prerequisite complete.
-- **Lanes:** V8 `codex/engine-load100-w0-v8-verify` is building the independent harness. W4 combat and W5 mana
-  are implementing their first bounded fixes in isolated worktrees; other roles queued. This session has three subagent
+  with a mutation restoring the exclusion. The corrected full backstop suite passes in the mutation runner's baseline;
+  both selected backstop breaks are caught, `missed: []`. The five paragraph breaks were also rerun and caught.
+- **Lanes:** V8 `codex/engine-load100-w0-v8-verify` at pushed `8acb3213` (draft #913) is adding the approved proof
+  supplement after its initial harness checkpoint. W4 combat at pushed `8e0f3a2f` (draft #914) and W5 mana at pushed
+  `8e6f5b5e` (draft #915) have bounded fixes, with final evidence being completed. W1/W2/W3/W6/W7 remain queued;
+  W6's worktree is prepared. This session has three subagent
   slots, so all eight roles remain separate and run in batches. No lane is complete.
 - **Ownership:** the primary checkout has another session's unresolved merge and remains untouched. The old standing
   engine table predates Rob's direct October 28 assignment; current open PRs were checked. No active engine-rule PR
@@ -44,6 +47,10 @@ Fresh baseline on main `39a45706`, before engine changes:
   8,048 templates, 4,165 held out, 4,161 passed. This is a green suite with four calibration failures, not G-4 passed.
 - `node tests/sentence-paragraphs.mjs`: `sentence-paragraphs: 11 checks passed`.
 - `python -u game/tools/batch/breaks.py game/tools/batch/breaks-sentence-paragraphs.py`: all five caught, `missed: []`.
+- `python -u game/tools/batch/breaks.py game/tools/batch/breaks-card-backstop.py "a spell half written"
+  "sample includes complete unfinished abilities"`: `baseline: every suite passes unbroken`;
+  `caught sample includes complete unfinished abilities -- tests/engine-compile.mjs`;
+  `caught a spell half written -- tests/sentence-paragraphs.mjs`; `missed: []`.
 - `node tests/card-waves.mjs`: `card-waves: 22 checks passed`.
 - `node tests/feature-wiring.mjs`: `feature-wiring: 131 checks passed`.
 - `python game/tools/batch/anchors.py`: main baseline 57 stale anchors; prerequisite 57; no new anchor problem.
@@ -53,7 +60,42 @@ Fresh baseline on main `39a45706`, before engine changes:
 - Pre-push scans at `08e6c900` (integration) and `ae3bfd6f` (prerequisite): `local-ci: SCAN PASS`.
 - Evidence logs live in `C:\Users\robmi\CrankMagic\worktrees\load100\scratch`; result lines are recorded here so the
   checkout is resumable without those scratch files.
-- No pool games, independent card reviews, ability ledger, exercise totals, staging release, or Rob sign-off yet.
+- No final integrated pool run, completed independent card review, complete ability ledger, staging release, or Rob sign-off yet.
+
+## First lane checkpoints (not final integration evidence)
+
+- **V8:** first pushed `ae7e22ba`, then parser follow-up `8acb3213`, draft PR #913 into #912's branch. Pool suite 64 checks, library suite 12,
+  feature-wiring 131, data-integrity, 28 mutation breaks caught (`missed: []`), SCAN PASS. Seed-parser review found
+  whitespace, truncated ranges, and unsafe integer inputs; V8's follow-up passes 73 pool checks and two affected
+  parser breaks. Exact empty and reversed ranges were already rejected; root's initial contrary inference from a
+  truncated diff was corrected after reading the full committed function.
+- **Initial pool baseline on V8's branch:** seeds 1-3, normal house pilots plus person seat 0; 3 of 3 finished clean,
+  no human or AI refusals, replays identical, 0 leaks over 273 checks. 131 of 6,430 finals exercised; 47 of 11,636
+  inventoried abilities have successful-resolution event evidence. This is not G-5's 5,000 games or full G-6 coverage.
+  Seeds 1 and 3 ended when the only person was eliminated, with three AI seats still playing and no winner; seed 2
+  reached a last-player-standing winner. The first two prove clean app termination and the played prefix, not a full
+  four-player match to a winner. Exact result objects are in `w0/initial-pool-seeds-1-3.json`.
+- **V8 proof method:** two guard mutation attempts were interrupted and restored after invalid difficulty testing
+  could enter standalone room setup. The harness had no provider transport and made no model API call. Invalid-level
+  CLI tests were removed; an exported pure validator is now tested without any game creation. Safe rerun: 28 caught.
+- **W4:** pushed `8e0f3a2f`, draft #914. Sentence-slot fixes, single-blocker trample choice, explicit scenario inputs;
+  11 mutation breaks caught, 29 combat reader suites plus data-integrity/feature-wiring pass. Fresh full check-cards:
+  `6430 definitions`; `11023 scenarios, 0 failed`. All four original calibration cases pass the focused 14-check suite;
+  final full calibration pending. V8 independently reproduced its two-target counterexample fixed, without denominator
+  exclusions, and reviewed chosen trample overassignment/lethal constraints. Five other W4 debts remain queued.
+- **W5:** pushed `8e6f5b5e`, draft #915. Saga exact-cost selector, Phyrexian/monohybrid convoke, full-pool dealer;
+  20 mutation breaks caught, focused mana 36, pool 16, existing convoke 43, selected engine suites pass. Fresh full
+  check-cards: `6430 definitions`; `11025 scenarios, 0 failed`. V8 independently probed mixed convoke/life, snow and
+  insufficient-life cases; no new finding in this bounded scope. Generated Saga definitions and inventory remain for
+  consolidated regeneration; local regenerated table-basics proof/restoration pending. Other W5 debt remains queued.
+- **W5 approval review:** its first push/draft creation was rejected as an unverified code export. Root verified the
+  exact HTTPS remote (no embedded credentials), all 12 authorized card-load paths, the full commit SHA, Rob's attached
+  push/draft instruction, and independently reran SCAN PASS on that SHA. Root's bounded publish then succeeded:
+  #915. No user action remains for that resolved review block.
+- Initial exercise evidence is archived as `w0/initial-exercised-summary.json` (133 observed card records, of which
+  131 exercised; unlisted cards remain unobserved). The complete scratch ledger and seed JSON are hashed there so
+  their provenance is checkable. These are initial summaries, not the final all-card exercised ledger.
+- No staging release, main merge, full-pool coverage, complete ability coverage, or Rob playtest sign-off yet.
 
 ## The gates, measured
 
