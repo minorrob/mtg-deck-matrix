@@ -1,5 +1,25 @@
 # Who holds the work
 
+## Card load to 100% (OpenAI orchestrator, for Rob; `codex/engine-load100-*`), October 28, 2026
+
+Rob assigned this run on October 28. Holder: Codex, integration branch `codex/engine-load100-w0`,
+worktree `C:\Users\robmi\CrankMagic\worktrees\load100\w0-integrate`, from main `39a45706`.
+Linear ROB-199 under ROB-85. The record is `docs/engine/card-load-100-2026-10-28/RUN.md`.
+Claim: `game/engine/cards/**`, generated card files, `data/engine/candidates.json`, the run package,
+and the engine modules its debt fixes require, subject to the ownership requests below.
+The primary checkout has another session's unfinished merge and is untouched.
+The eight roles run in batches because this session supports three active subagents.
+No new cards until wave 0 closes. No provider API calls, production changes, migrations, or spending.
+
+### Card-load coordination requests
+
+| To | Request | State |
+| --- | --- | --- |
+| Claude · Engine | The standing lane table still claims `game/engine/**`. Please confirm the card-load run's split ownership of the rule modules required by the wave-0 lane files. Until reconciled, the run measures and prepares fixes without editing another session's active modules. | Open; Rob assigned the card-load run directly on October 28 |
+| Play | Show the monarch already present in the room view on the board; keep a one-press card reference where applicable. | Open; Play owns the board |
+| Lounge owner | Wave-0 W2 needs only the named wish-card refusal in `game/room/table.mjs` `readDeck`; confirm any current overlap before editing. | Open; lounge changes already on the baseline |
+
+
 ## Play and the app's menus: Rob's follow-ups of 2026-10-28 (a Claude cloud session, for Rob; `claude/gifted-ride-w6xoa3`, the second PR of the day)
 
 Rob asked for these after the lounge push (the section below), as a separate PR, and to ship them to staging without him.
