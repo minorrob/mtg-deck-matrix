@@ -247,7 +247,12 @@ export async function handle(request, env, deps = {}) {
     if (!env.DB) return reply(503, {error: "Feedback is not switched on here yet."});
     const library = createLibrary(env.DB, {now: () => new Date(ms()).toISOString()});
     const person = await library.user(who.email);
-    return fileFeedback(request, env, deps, ms, {email: person.email, group: feedbackGroup(env, person)});
+    /* A database without the feedback table (migration 0009 not applied there yet) is "not switched on", not a fault in the sheet. */
+    try {return await fileFeedback(request, env, deps, ms, {email: person.email, group: feedbackGroup(env, person)});}
+    catch (error) {
+      if (/no such table: *feedback/i.test(String(error && error.message))) return reply(503, {error: "Feedback is not switched on here yet."});
+      throw error;
+    }
   }
   if (method !== "GET" && !fromTheApp(request, url)) return reply(403, {error: "That request did not come from CrankMagic."});
 

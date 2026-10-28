@@ -502,7 +502,7 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
          a person asked of them before it resolves (`askAimed`). New matches only, so one launched before plays as it did. */
       landAnyStep: true, takeBackLand: true, askAimed: true,
       /* r4: a new match keeps its undo house rule, so older matches retain their original choices. */
-      ...(rulesOf().houseRules === false ? {} : {houseRules: {undoLastPlay: true}}),
+      ...(rulesOf().houseRules === false ? {} : {houseRules: {undoLastPlay: true}, keepStepMana: true}),
       /* Its AI seats take what a choice they may answer with none is for -- the land Evolving Wilds finds, the counters
          proliferate adds -- where they took none (Linear ROB-164, 2026-10-19): new matches only, so one launched
          before replays as it was played (room.mjs, `pilotPicks`). */

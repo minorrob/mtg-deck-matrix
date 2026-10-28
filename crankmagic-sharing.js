@@ -139,7 +139,7 @@
   actions['profile-email-confirm']=async el=>{const result=await api('POST','/profile/email/confirm',{token:el.dataset.token});C.modal('Email verified',`<p>Your sign-in is now ${e(result.email)}. Sign out, then sign in with this address.</p><a class="v-button primary" href="/cdn-cgi/access/logout">Sign out</a>`);};
   // The shared Admin module owns the single menu entry; invitations are its Share section.
   C.profileMenu=()=>'';
-  actions['open-profile']=()=>C.go('settings');
+  actions['open-profile']=()=>{C.go('settings');let tries=0;const reach=()=>{const h=document.getElementById('cm-settings-h-profile');if(h){h.scrollIntoView({block:'start'});h.closest('section')?.querySelector('input,button')?.focus({preventScroll:true});return;}if(tries++<20)setTimeout(reach,50);};reach();};
   C.sharingAvailable=()=>!!me;
   C.sharingOwner=()=>me?.email||null;
   C.canInvite=()=>me?.canInvite===true;

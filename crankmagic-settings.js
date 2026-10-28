@@ -48,9 +48,9 @@ views.settings=async()=>{
    +card('budget','Budget',budgetCard(acct))
    +card('ai','AI Coach',`<p>What the AI may suggest, how much it says, and what the Coach may see at a table. Nothing here turns an AI feature on: those are invite-only.</p><div class="cm-settings-row">${b('AI Coach settings…','ai-settings')}</div>`)
    +card('data','Data',
-      `<div class="cm-settings-stack">${b('Save a backup file','backup')}${b('Restore from a backup file','restore')}${b('Export as Excel','export-excel')}${b('Email the export…','share-export')}${b('Apply deck write-ups…','apply-writeups')}</div>`
+      `<div class="cm-settings-stack">${b('Save a backup file','backup')}${b('Restore from a backup file','restore')}${b('Export as Excel','export-excel')}${b('Email the export…','share-export')}${b('Apply deck write-ups…','apply-writeups')}${b('Reload with newest files','app-refresh')}</div>`
       +`<p class="cm-settings-label">History</p><div class="cm-settings-stack">${b('See every change…','history')}${b('Undo last change','undo')}</div>`
-      +`<div class="cm-settings-danger"><p class="cm-settings-label">Danger zone</p><div id="cm-settings-delete"></div>${b('Clear all data','clear',{},false,{cls:'cm-danger'})}<p class="cm-muted">Removes the library, decks, history and cached card data from this device. Save a backup first.</p></div>`)
+      +`<div class="cm-settings-danger"><p class="cm-settings-label">Danger zone</p><div id="cm-settings-delete"></div>${b('Reset All…','reset-all',{},false,{cls:'cm-danger'})}${b('Clear all data','clear',{},false,{cls:'cm-danger'})}<p class="cm-muted">Removes the library, decks, history and cached card data from this device. Save a backup first.</p></div>`)
    +card('about','About',`<p id="cm-save-status" class="cm-muted"></p><div id="cm-data-dates" class="cm-data-dates"></div>${version?'':'<p class="cm-muted">A development copy: no release version.</p>'}`
       +`<p class="cm-settings-links"><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="THIRD-PARTY-NOTICES.md">Third-party notices</a><a href="LICENSE">License</a></p>`)
    +`</div>`;

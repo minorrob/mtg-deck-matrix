@@ -152,12 +152,13 @@
   function draw() {
     const menu = C.$("#cm-user-menu");
     if (!menu) return;
+    /* The menu holds You, Skin, Help and Sign out (Rob, 2026-10-28); Sync now lives in Settings, Account. */
     const box = C.$("#cm-account"), deviceBox = C.$("#cm-account-device");
-    if (!box || !deviceBox) return;
+    if (!box) return;
     box.innerHTML = who.email
       ? `<p class="cm-account-who">Signed in as ${e(who.email)}</p>${status ? `<p class="cm-account-status">${e(status)}</p>` : ""}`
       : `<p class="cm-account-who">Signed out · saved on this device</p><button type="button" data-action="account-sign-in">Sign In (Save to Cloud)</button>`;
-    deviceBox.innerHTML = who.email ? `<button type="button" data-action="account-sync"${running?' disabled':''}>${running?'Syncing…':'Sync now'}</button>` : '';
+    if (deviceBox) deviceBox.innerHTML = who.email ? `<button type="button" data-action="account-sync"${running?' disabled':''}>${running?'Syncing…':'Sync now'}</button>` : '';
     const out = C.$("#cm-account-out");
     if(out){out.hidden=!who.email;out.innerHTML=who.email?`<button type="button" class="cm-danger" data-action="account-sign-out">Sign out</button>`:'';}
     chip();

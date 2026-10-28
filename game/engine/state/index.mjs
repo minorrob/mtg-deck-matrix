@@ -137,6 +137,8 @@ export function createState(pod) {
        `landAnyStep`; Rob, 2026-10-21: "When I am on any step of my turn, I should be able to play a land"): a house rule,
        for the people at a table, never its AI seats. Only a pod that names them carries the key, as above. */
     ...(Array.isArray(pod?.landAnyStep) && pod.landAnyStep.length ? {landAnyStep: [...pod.landAnyStep]} : {}),
+    /* The people whose upkeep and draw-step mana stays for the turn (rules/turn.mjs, emptyManaPools; Rob, 2026-10-28), a house rule. Only a pod that asks carries the key. */
+    ...(Array.isArray(pod?.keepStepMana) && pod.keepStepMana.length ? {keepStepMana: [...pod.keepStepMana]} : {}),
     /* A starting life other than 40, for "your starting life total" (startingLifeOf, above). */
     ...(life !== STARTING_LIFE ? {startingLife: life} : {}),
     players: seats.map((seat, id) => ({

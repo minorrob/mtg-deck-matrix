@@ -1018,6 +1018,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         ...(pod && pod.pilotPicks === true ? {pilotPicks: true} : {}),
         ...(pod && pod.passStack === true ? {passStack: true} : {}), ...(pod && pod.yieldTurn === true ? {yieldTurn: true} : {}),
         ...(pod && pod.blocksNone === true ? {blocksNone: true} : {}),
+        ...(pod && pod.keepStepMana === true ? {keepStepMana: true} : {}),
         ...(pod && pod.landAnyStep === true ? {landAnyStep: true} : {}), ...(pod && pod.takeBackLand === true ? {takeBackLand: true} : {}),
         ...(pod && pod.askAimed === true ? {askAimed: true} : {})};
       passEmpty = beats.passEmpty === true; endWhenNoPerson = beats.endWhenNoPerson === true; resolveAll = beats.resolveAll === true; passAfterCast = beats.passAfterCast === true; endAsks = beats.endAsks === true; untapMana = beats.untapMana === true; undoLastPlay = beats.houseRules?.undoLastPlay === true; resultRecords = beats.resultRecords === true;
@@ -1025,11 +1026,13 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       landAnyStep = beats.landAnyStep === true; takeBackLand = beats.takeBackLand === true; askAimed = beats.askAimed === true;
       /* The people at the table, by seat, who may play a land in any step of their own turn (`landAnyStep`). */
       const anyStep = landAnyStep ? {landAnyStep: seats.flatMap((s, seat) => (s.pilot === "house" ? [] : [seat]))} : {};
+      /* And the people whose mana made in their upkeep or draw step stays for the turn (`keepStepMana`, rules/turn.mjs; Rob, 2026-10-28): a house rule, for people. */
+      const keepMana = beats.keepStepMana === true ? {keepStepMana: seats.flatMap((s, seat) => (s.pilot !== "house" ? [seat] : []))} : {};
       /* And whether a cast tapped for tops up floating mana and taps a source for all it makes (`pooledTaps`, rules/actions.mjs):
          a match launched before it lacks the key, and so offers what it offered then. */
       const pooled = {...(pod && pod.pooledTaps === true ? {pooledTaps: true} : {}), ...(pod && pod.xTaps === true ? {xTaps: true} : {}), ...(pod?.preparedTaps === true ? {preparedTaps: true} : {})};
       pilotPicks = beats.pilotPicks === true;
-      try {state = createState({matchId, seed, players: seats.map((s) => ({name: s.name})), ...rules, ...(beats.drawBeat ? {drawBeat: true} : {}), ...pooled, ...anyStep});}
+      try {state = createState({matchId, seed, players: seats.map((s) => ({name: s.name})), ...rules, ...(beats.drawBeat ? {drawBeat: true} : {}), ...pooled, ...anyStep, ...keepMana});}
       catch (error) {throw new RoomError(400, error.message);}
       seats.forEach((s, seat) => {
         for (const name of s.commander) addObject(state, {...look(name), card: name, owner: seat, controller: seat, commander: true}, "command", seat);
