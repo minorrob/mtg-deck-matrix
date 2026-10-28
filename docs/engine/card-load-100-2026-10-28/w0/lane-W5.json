@@ -17,5 +17,35 @@
     "| Convoke with Phyrexian or {2/W} symbols left to the pool | `rules/mana.mjs`:483 | W5 |",
     "| Ways to pay capped: 24 tap choices, 12 payments | `rules/actions.mjs`:1703; `rules/mana.mjs`:254 | W5 |"
   ],
-  "status": "queued; prerequisite PR 834 verification in progress"
+  "status": "Checkpoint: Saga exact cost, convoke alternatives and full-pool dealer implemented; V8 review and consolidated gates pending",
+  "checkpoint": {
+    "cardsAdded": 0,
+    "cardsPromoted": 0,
+    "cardsCorrected": [{"name": "Urza's Saga", "scenariosBefore": 1, "scenariosNow": 3}],
+    "proven": [
+      {"item": "Saga III searches actual printed {0}/{1}, excluding colored, X and absent costs", "rules": ["202.1", "202.1b", "202.3"], "evidence": "A red selector regression offered four invalid fixtures before the fix; 3 Saga scenarios now pass, including choosing zero and failing to find"},
+      {"item": "Convoke can pay Phyrexian colored and monohybrid colored/generic alternatives", "rules": ["107.4e", "107.4f", "601.2b", "702.51"], "evidence": "Played {W/P}, {2/W} with one white or two colorless helpers, mixed {1}{W/P} with life, and both explicit mana-vs-life answers; existing engine-convoke's 43 checks remain green"},
+      {"item": "library-engine-index --pool", "evidence": "Real CLI proof: 25616 of 25616 compiler-universe names exactly once; 857 lanes at most 30 including reviews; 116 freshly compiled candidates; no personal collection dependency; sentence-reuse estimates labeled as potential, not measured gains"}
+    ],
+    "commands": [
+      "node --stack-size=4000 tests/engine-load100-mana.mjs: 36 checks passed",
+      "node tests/library-engine-pool.mjs: 16 checks passed",
+      "node --stack-size=4000 tests/engine-convoke.mjs: 43 checks passed",
+      "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w5-mana.py: final full sweep, 20 caught; missed: []",
+      "node --stack-size=4000 game/tools/batch/check-cards.mjs: running at checkpoint preparation",
+      "tests/engine-mana, engine-saga, engine-lands-and-mana, engine-mana-abilities, engine-restricted-mana, engine-costs, engine-costs-activations-4b, engine-cost-more, engine-cost-targets, engine-mana-provenance, engine-mana-withheld, engine-pay-mana-play: passed",
+      "node tests/engine-breaks-anchors.mjs: 57 inherited stale anchors; W5's 20 anchors found once. The inherited requirement-checked combat anchor is also missing on original origin/main; no combat edit by W5"
+    ],
+    "queued": [
+      "Token shock-land entry life choice (shared permanents/replacement scope)",
+      "Exile and alternative-cost casts before mana is floated",
+      "Effect-paid X and additional costs",
+      "Delve with X",
+      "Complete payment and tap choices beyond the 12/24 caps; current assertions and caps deliberately remain unchanged"
+    ],
+    "routed": [{"item": "Wayfarer's Bauble calibration", "owner": "W4", "finding": "Held-out translation selects Artifact instead of Land because repeated TYPE slots alias; the hand definition is correct"}],
+    "pending": ["V8 independent review", "Root's single regeneration of definitions/coverage/inventory", "Consolidated wave checks, games, CI and staging"],
+    "ignoresAdded": [],
+    "sources": ["Local Comprehensive Rules text, rule numbers only", "https://api.scryfall.com/cards/named?exact=Urza%27s%20Saga and its public rulings URI"]
+  }
 }

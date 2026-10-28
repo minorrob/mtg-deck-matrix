@@ -490,7 +490,10 @@ function costChoice(state, awaiting) {
         options: ways.map((way, index) => ({index, label: paymentWords(way), key: paymentKey(way)}))};
     }
     const cost = convokeCost(state, player, action), creatures = convokers(state, player, action.objectId);
-    const symbols = cost.generic + cost.symbols.filter((s) => (s.kind === "colored" && s.color !== "C") || s.kind === "hybrid").length;
+    /* Hybrid/Phyrexian alternatives precede the total cost (CR 601.2b): a {2/W} may take two generic helpers,
+       and {W/P}'s colored choice may take one. This is only the maximum; convokeWays validates the chosen assignment. */
+    const symbols = cost.generic + cost.symbols.reduce((n, s) => n + (s.kind === "monohybrid" ? s.amount
+      : (["colored", "phyrexian"].includes(s.kind) && s.color !== "C") || s.kind === "hybrid" ? 1 : 0), 0);
     const alone = automaticPayment(poolFor(state, player, {spell: action.objectId}), cost, {life: state.players[player].life}) !== null;
     return {id: `choose-cost:${action.objectId}`, title: hasConvoke(state, action.objectId) ? `${name}: tap creatures to convoke it` : `${name}: tap artifacts to improvise it`, mode: "many", min: alone ? 0 : 1, max: Math.min(creatures.length, symbols),
       cost: "convoke", options: named(creatures.map((c) => c.id))};
@@ -1955,7 +1958,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
        convoke asking for one creature of none could not be answered. */
     const helpers = (X === null || !lifeX) && !freely && !back && !fled && !way && !variant.escalateTap && helpsCast(state, player, id) ? convokers(state, player, id) : [];
     const convoking = X === null ? cost : xCounted(cost, X);
-    const convokes = helpers.length > 0 && convokeCanPay(pool, {...convoking, generic: convoking.generic + x}, helpers);
+    const convokes = helpers.length > 0 && convokeCanPay(pool, {...convoking, generic: convoking.generic + x}, helpers, {life: lifeLeft});
     /* DELVE (CR 702.66a): cards of its caster's graveyard help pay its generic mana, and the pool the rest -- one offer
        (`convoke` "delve" here, `delve` on the offer), beside any the pool or its sources pay alone, when the pool could pay
        what the most cards it may exile leave; which cards, picked once it is taken (castCostChoice). With flashback or an
