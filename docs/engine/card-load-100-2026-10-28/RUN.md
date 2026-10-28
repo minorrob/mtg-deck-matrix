@@ -7,14 +7,17 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 - **Holder:** Codex, started October 28, 2026, for Rob; Linear ROB-199 (run), ROB-200 (wave 0), under ROB-85.
 - **Main at the start:** `39a45706`.
-- **Wave and step:** wave 0, baseline and prerequisite reconciliation; no new cards.
+- **Wave and step:** wave 0, baseline complete; prerequisite regression and first debt batch in progress; no new cards.
 - **Integration:** `codex/engine-load100-w0`, worktree `C:\Users\robmi\CrankMagic\worktrees\load100\w0-integrate`.
-  Package #911 merged locally; eight debt lane files committed at `c9d31c40`.
+  Package #911 and prerequisite #834 merged locally; eight debt lane files committed at `c9d31c40`.
+  Draft integration PR #912: https://github.com/minorrob/mtg-deck-matrix/pull/912.
 - **Prerequisite:** original #834 remains open and conflicted on GitHub. Isolated reconciliation branch
-  `codex/engine-load100-pr834` at `e800f4d1` merges main and preserves paragraph boundaries alongside current
-  castable-card spell segmentation. Focused suites and mutation checks must pass before integration.
-- **Lanes:** V8 `codex/engine-load100-w0-v8-verify` is independently auditing the harness; edits wait for the
-  prerequisite. W4 combat and W5 mana worktrees are prepared; other roles queued. This session has three subagent
+  `codex/engine-load100-pr834` at pushed `ae3bfd6f` merges main and preserves paragraph boundaries alongside current
+  castable-card spell segmentation. Integrated through `50b1623c`. Full backstop validation exposed its inherited
+  assertion that Gemstone Caverns must never be sampled; fixed to require sampling and successful scenario execution,
+  with a mutation restoring the exclusion. Selected backstop breaks are running; do not mark the prerequisite complete.
+- **Lanes:** V8 `codex/engine-load100-w0-v8-verify` is building the independent harness. W4 combat and W5 mana
+  are implementing their first bounded fixes in isolated worktrees; other roles queued. This session has three subagent
   slots, so all eight roles remain separate and run in batches. No lane is complete.
 - **Ownership:** the primary checkout has another session's unresolved merge and remains untouched. The old standing
   engine table predates Rob's direct October 28 assignment; current open PRs were checked. No active engine-rule PR
@@ -22,8 +25,11 @@ Newest wave first. Each line names its command's result line, never a summary of
 - **Toolchain:** Node `v22.23.3`; required dependency junctions created. Git Bash is
   `C:\Program Files\Git\bin\bash.exe`; Windows blocks its named-object initialization inside the sandbox, so the
   authorized scan runs with escalation. Network fetch/gh also requires escalation. No approval review rejection.
-- **Next:** finish compiler calibration baseline; complete #834's focused checks, re-anchor and prove breaks;
-  integrate it, then start the wave-0 fixes and proof harness. Do not claim a passed gate from package history.
+- **Next:** complete #834's corrected backstop checks and selected breaks; integrate the follow-up; route W4/W5/V8
+  findings and continue the remaining five roles. Do not claim a passed gate from package history.
+- **Decision pending from Rob:** journals/history do not record static-ability application or distinguish all mana
+  abilities. May V8 supplement journal evidence with an in-memory counterfactual scenario proof? Existing journal-only
+  G-3 is unmet. The proposed proof method has not been implemented or credited while the answer is pending.
 
 ## Wave 0 evidence so far
 
@@ -32,10 +38,19 @@ Fresh baseline on main `39a45706`, before engine changes:
 - `node --stack-size=4000 game/tools/batch/check-cards.mjs` (exit 0): `6430 definitions`; `11023 scenarios, 0 failed`.
 - `node game/tools/card-compiler.mjs` (exit 0): `card-compiler: 25616 undefined Commander cards; 116 candidates,
   0 refused, 2 blocked, 0 vetoed, 24429 with an unknown sentence (12080 one short), 1069 another layout (62.7 s)`.
-- `node game/tools/sentence-library.mjs`: running; no completed calibration result yet.
+- `node game/tools/sentence-library.mjs` (exit 0): `sentence-library: 8048 templates from 6353 cards; 4165 of 6430
+  translated with themselves held out, 4161 passed (99.9%); minimum count 1`.
 - Prerequisite focused `node tests/sentence-library.mjs` (exit 0): `sentence-library: 77 checks passed`;
   8,048 templates, 4,165 held out, 4,161 passed. This is a green suite with four calibration failures, not G-4 passed.
-- Pre-push scan at `f25d7d82`: `local-ci: SCAN PASS`; later commits need their own scan before push.
+- `node tests/sentence-paragraphs.mjs`: `sentence-paragraphs: 11 checks passed`.
+- `python -u game/tools/batch/breaks.py game/tools/batch/breaks-sentence-paragraphs.py`: all five caught, `missed: []`.
+- `node tests/card-waves.mjs`: `card-waves: 22 checks passed`.
+- `node tests/feature-wiring.mjs`: `feature-wiring: 131 checks passed`.
+- `python game/tools/batch/anchors.py`: main baseline 57 stale anchors; prerequisite 57; no new anchor problem.
+  The global anchor gate remains red; none is called caught. Gameplay debt still needs resolution or a named ignore.
+- `tests/data-integrity.mjs` initially found README missing the pre-existing `engine-mana-upkeep` and the new
+  `sentence-paragraphs` suite names. Both names added; validation pending.
+- Pre-push scans at `08e6c900` (integration) and `ae3bfd6f` (prerequisite): `local-ci: SCAN PASS`.
 - Evidence logs live in `C:\Users\robmi\CrankMagic\worktrees\load100\scratch`; result lines are recorded here so the
   checkout is resumable without those scratch files.
 - No pool games, independent card reviews, ability ledger, exercise totals, staging release, or Rob sign-off yet.
