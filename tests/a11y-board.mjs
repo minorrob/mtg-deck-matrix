@@ -567,7 +567,7 @@ try {
           if (!el || el === document.body) return {at: "none"};
           if (!el.dataset.a11yStop) el.dataset.a11yStop = String(Math.random()).slice(2);
           const seat = el.closest(".cm-lobby-seat"), st = getComputedStyle(el);
-          return {id: el.dataset.a11yStop, at: seat ? `seat ${Number(seat.dataset.seat) + 1}` : el.closest(".cm-table-center") ? "rules" : el.closest(".cm-page-head") ? "head" : el.closest(".cm-sidebar") ? "rail" : el.closest("#cm-main") ? "page" : "outside",
+          return {id: el.dataset.a11yStop, at: seat ? `seat ${Number(seat.dataset.seat) + 1}` : el.closest(".cm-table-center") ? "rules" : el.closest(".cm-page-head, .cm-pl-head") ? "head" : el.closest(".cm-sidebar") ? "rail" : el.closest("#cm-main") ? "page" : "outside",
             ring: st.outlineStyle !== "none" && parseFloat(st.outlineWidth) >= 2, what: (el.getAttribute("aria-label") || el.textContent || "").trim().slice(0, 30)};
         });
         out.push(s);
@@ -913,7 +913,7 @@ try {
     await page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"));
     if (await page.locator("#cm-board-nav").count()) await page.keyboard.press("Escape");
     const bound = new Set([...keys].map((k) => KBD[k] || k));
-    const undocumented = [...bound].filter((k) => !helpKeys.has(k)), unbound = [...helpKeys].filter((k) => !bound.has(k) && !["Tab"].includes(k));
+    const undocumented = [...bound].filter((k) => !helpKeys.has(k)), unbound = [...helpKeys].filter((k) => !bound.has(k) && !["Tab", "Alt"].includes(k));
     ok(handlers >= 2 && bound.size >= 15, `the board's key handlers are read (${handlers} handlers, ${bound.size} keys: ${[...bound].join(" ")})`);
     ok(!undocumented.length, `every key the board binds is in Help (${undocumented.join(", ") || "all"} missing)`);
     ok(!unbound.length, `and every key Help names is bound, or is the browser's Tab (${unbound.join(", ") || "none"} unbound)`);

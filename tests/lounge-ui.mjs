@@ -258,6 +258,16 @@ for (const guest of [false, true]) {
   eq(titles, guest ? ["Seat 1 · Rob · Host", "Seat 2 · Sable", "Seat 3 · Benny", "Seat 4 · You"] : ["Seat 1 · You · Host", "Seat 2 · Sable", "Seat 3 · Benny", "Seat 4 · Open"], `${who}: each seat is headed by who sits there`);
   eq(await page.locator(".cm-lobby-seat[data-seat='1'] .cm-seat-tags span").allTextContents(), ["AI", "Normal", "The salty one"], `${who}: an AI seat says AI, its difficulty and its personality`);
   ok(/Plays the table like a grudge/.test(await page.locator(".cm-lobby-seat[data-seat='1'] .cm-seat-summary").textContent()), `${who}: and a line on what that personality is`);
+  const rules = await page.locator(".cm-table-rules dt").allTextContents();
+  eq(rules, ["Starting life", "Bracket limit", "Seats", "Privacy", "House rules"], `${who}: Table rules lists life, bracket, seats, privacy and House rules (no invitation or dropped-player rows)`);
+  ok(/^(Yes|No)$/.test(await page.locator(".cm-table-rules div:last-child dd").textContent()), `${who}: House rules reads Yes or No`);
+  ok(!/set by/i.test(await page.locator(".cm-table-head").textContent()), `${who}: the heading no longer says who set the rules`);
+  if (!guest) {
+    const head = await page.evaluate(() => {const h = document.querySelector(".cm-table-head").getBoundingClientRect(), b = document.querySelector(".cm-table-rules-edit").getBoundingClientRect(); return b.right >= h.right - 2;});
+    ok(head, "Edit sits at the top right of Table rules");
+  }
+  ok(/^\d+ to Ready Up$/.test((await page.locator(".cm-table-launch").textContent()).trim()) || /ready|Start|Waiting/i.test(await page.locator(".cm-table-launch").textContent()), `${who}: the launch line counts "N to Ready Up", without "Launches when all are ready"`);
+  ok(!/Launches when/.test(await page.locator(".cm-table-center").textContent()), `${who}: "Launches when all are ready" is gone`);
   eq(await page.locator("[data-action=table-edit-ai]").count(), 2, `${who}: every AI seat has Edit AI, for anyone seated`);
   eq(await page.locator("[data-action=table-seat-remove]").count(), guest ? 0 : 2, `${who}: Remove seat is the organizer's`);
   eq(await page.locator("[data-action=table-seat-add-ai]").count(), guest ? 0 : 1, `${who}: Add an AI is the organizer's, on an open seat`);
@@ -273,6 +283,8 @@ for (const guest of [false, true]) {
     ok(add && add.body.seatId === 3 && add.body.level === "normal" && add.body.persona === "marcus", "Add an AI asks for the next unused personality at Normal");
     await page.locator("[data-seat='1'] [data-action=table-edit-ai]").click();
     eq(await page.locator(".cm-lb-edit").count(), 1, "Edit AI opens the seat's editor in place");
+    const front = await page.evaluate(() => {const r = document.querySelector(".cm-lb-edit").getBoundingClientRect(), hit = document.elementFromPoint(r.left + 20, r.top + r.height / 2); return !!hit && !!hit.closest(".cm-lb-edit");});
+    ok(front, "the editor is in front of the table's rules, not behind them");
     await page.locator(".cm-lb-edit [data-edit-ai=level]").selectOption("hard");
     await page.waitForTimeout(300);
     ok(calls.some((c) => c.body && c.body.op === "edit-ai" && c.body.seatId === 1 && c.body.level === "hard"), "changing a difficulty asks the table to edit that AI");

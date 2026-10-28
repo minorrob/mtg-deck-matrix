@@ -1587,7 +1587,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-lb-grid .cm-lobby-seat[data-pos=bl]>header,#matrix-v2 .cm-lb-grid .cm-lobby-seat[data-pos=br]>header{bottom:12px}
 #matrix-v2 .cm-lb-grid .cm-lobby-seat[data-pos=tr]>header,#matrix-v2 .cm-lb-grid .cm-lobby-seat[data-pos=br]>header{flex-direction:row-reverse}
 #matrix-v2 .cm-lb-grid .cm-lobby-seat h3{margin:0;flex:0 1 auto;font:700 17px/1.5 Lato,system-ui,sans-serif;letter-spacing:0;text-transform:none;color:#f3f1ee;padding:1px 8px;border-radius:5px;background:rgba(12,12,16,.62);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-#matrix-v2 .cm-lb-grid .cm-lobby-seat h3 sup.cm-ai{margin-left:2px;font-size:11px;color:#3f7ae6}
+#matrix-v2 .cm-lb-grid .cm-lobby-seat h3 sup.cm-ai{margin-left:2px;font-size:11px;color:#9dbcff}
 #matrix-v2 .cm-lb-grid .cm-seat-pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;background:rgba(12,12,16,.72);color:#f3f1ee;font:700 12px/1.5 Lato,system-ui,sans-serif;flex:0 0 auto;backdrop-filter:none}
 #matrix-v2 .cm-lb-grid .cm-seat-pill i{width:8px;height:8px;border-radius:50%}
 #matrix-v2 .cm-lb-grid .cm-seat-pill[data-state=deck] i,#matrix-v2 .cm-lb-grid .cm-seat-pill[data-state=pending] i{background:#00a4b1}
@@ -1629,7 +1629,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-lb-edit-note{font-size:12px;color:#5f5a51;margin-top:-2px!important}
 /* the middle panel */
 #matrix-v2 .cm-lb-grid .cm-table-center{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:5;width:292px;min-width:0;max-height:none;box-sizing:border-box;background:var(--table-panel);color:var(--table-ink);border-radius:12px;border:1px solid rgba(31,28,24,.14);box-shadow:0 18px 48px -20px rgb(0 0 0 / .55);padding:14px;display:flex;flex-direction:column;justify-content:flex-start;gap:8px;overflow:hidden}
-#matrix-v2 .cm-lb-grid .cm-table-head{position:relative;display:flex;align-items:baseline;gap:10px}
+#matrix-v2 .cm-lb-grid .cm-table-head{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px}
 #matrix-v2 .cm-lb-grid .cm-table-center h2{margin:0;font:700 22px/1.5 Lato,system-ui,sans-serif;letter-spacing:0;text-transform:none;color:var(--table-ink)}
 #matrix-v2 .cm-lb-grid .cm-table-rules-edit{padding:1px 8px;border-radius:6px;border:1px solid rgba(31,28,24,.3);background:var(--table-panel);color:var(--table-ink);font:700 12px/1.6 Lato,system-ui,sans-serif;cursor:pointer}
 #matrix-v2 .cm-lb-grid .cm-table-setby-top{margin-left:auto;font-size:12px;color:#5f5a51;text-align:right}
@@ -1641,7 +1641,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-lb-grid .cm-table-launch,#matrix-v2 .cm-lb-grid .cm-table-count{flex:1 1 auto;margin:0;min-height:40px;padding:6px 10px;box-sizing:border-box;border-radius:8px;background:#efece6;font-size:12px;font-weight:700;text-align:center;display:flex;align-items:center;justify-content:center;color:var(--table-ink)}
 #matrix-v2 .cm-lb-grid .cm-table-launch-row .v-button{height:40px;min-width:80px;padding:0 14px;border-radius:8px;border:1px solid #cfcabf;background:#e9e4da;color:#858076;font:700 13px/1 Lato,system-ui,sans-serif}
 #matrix-v2 .cm-lb-grid .cm-table-launch-row .v-button.primary{border:0;background:#1043a8;color:#fff}
-#matrix-v2 .cm-lb-grid .cm-table-launch-row .v-button[disabled]{cursor:not-allowed}
+#matrix-v2 .cm-lb-grid .cm-table-launch-row .v-button[disabled],#matrix-v2 .cm-lb-grid .cm-table-launch-row .v-button[aria-disabled=true]{cursor:not-allowed}
 #matrix-v2 .cm-lb-end{height:32px;border-radius:8px;border:1px solid rgba(139,0,11,.45);background:var(--table-panel);color:#8b000b;font:700 13px/1 Lato,system-ui,sans-serif;cursor:pointer;position:relative}
 #matrix-v2 .cm-lb-end:hover{background:#fbf0f0}
 #matrix-v2 .cm-lb-confirm{position:relative;display:flex;flex-direction:column;gap:8px;padding:10px;border-radius:8px;background:#fff3dd;border:1px solid #c19f66;color:#4c2e00}
@@ -1729,3 +1729,9 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 .cm-chat-input:disabled{opacity:.6}
 .cm-stage-watching{gap:8px}
 .cm-stage-watching small{color:var(--color-muted);font-size:11px}
+
+/* The lobby, as Rob asked (2026-10-28): an AI seat's editor is in front of the table's rules, not behind them; a focus ring in two tones
+   stands out on any sea, mat or panel; the Pre-lobby's links read on the dark themes. */
+#matrix-v2 .cm-lb-grid .cm-seat-q:has(.cm-lb-edit){z-index:8}
+#matrix-v2 .cm-lb .cm-lb-grid :is(button,a,input,select):focus-visible{outline:2px solid #11161f;outline-offset:2px;box-shadow:0 0 0 2px #ffffff}
+#matrix-v2 .cm-lb .cm-lb-leave{color:var(--color-ink);text-decoration:underline;text-underline-offset:3px}

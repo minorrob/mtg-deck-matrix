@@ -303,20 +303,20 @@
       launch = `<p class="cm-table-count" aria-live="polite">Starting in <strong id="cm-table-seconds">${Math.max(0, Math.ceil((t.countdownAt - tableNow()) / 1000))}</strong></p>`;
       button = t.youAreHost ? b("Cancel", "table-cancel", {}, false, {cls: "compact"}) : "";
     } else if (t.phase === "selecting") {
-      /* "Launches when all are ready · n to go" (the brief, 2026-10-12): the count of seats still to go, then the one
-         reason that is not a seat's, if any. The host's Start begins the ten-second countdown; it never launches outright. */
-      const why = t.blockers.length ? `Launches when all are ready · ${waiting ? `${waiting} seat${waiting === 1 ? "" : "s"} to go` : t.blockers[0].reason}.` : t.youAreHost ? "Everyone is ready. Start when you like." : "Everyone is ready. Waiting on the host.";
+      /* "n to Ready Up" (Rob, 2026-10-28; was "Launches when all are ready · n to go"): the count of seats still to go, else the one
+         reason that is not a seat's. The host's Start begins the ten-second countdown; it never launches outright. */
+      const why = t.blockers.length ? (waiting ? `${waiting} to Ready Up` : `${t.blockers[0].reason}.`) : t.youAreHost ? "Everyone is ready. Start when you like." : "Everyone is ready. Waiting on the host.";
       launch = `<p class="cm-table-launch${t.launchError ? " is-error" : ""}" data-tour="launch">${e(t.launchError || why)}</p>`;
-      button = t.youAreHost ? `<button type="button" class="v-button compact${t.blockers.length ? "" : " primary"}" data-action="table-start" data-tour="start"${t.blockers.length ? " disabled" : ""}>Start</button>` : "";
+      button = t.youAreHost ? `<button type="button" class="v-button compact${t.blockers.length ? "" : " primary"}" data-action="table-start" data-tour="start"${t.blockers.length ? ' aria-disabled="true"' : ""}>Start</button>` : "";
     } else launch = `<p class="cm-table-launch">${e(t.phase === "playing" ? "The game is on." : t.phase === "rematch" ? "The game is over." : "Starting…")}</p>`;
     const privacy = t.privacy === "public" ? "Public" : t.privacy === "private" ? "Private" : "";
-    const rows = [["Starting life", r.startingLife], ["Bracket limit", r.bracketLimit ? `${r.bracketLimit} or lower` : "Any"], ["Seats", `${seated} of 4`], ...(privacy ? [["Privacy", privacy]] : []), ...(r.houseRules ? [["House rules", "On"]] : []), ["Invitations last", "a day"], ["A dropped player has", "5 minutes"]];
+    const rows = [["Starting life", r.startingLife], ["Bracket limit", r.bracketLimit ? `${r.bracketLimit} or lower` : "Any"], ["Seats", `${seated} of 4`], ...(privacy ? [["Privacy", privacy]] : []), ["House rules", t.houseRules === false ? "No" : "Yes"]];
     const editing = lobbyUi.rules && t.youAreHost && t.phase === "selecting";
     const editor = editing ? `<form class="cm-lb-rules" id="cm-table-rules-form">
       <label>Starting life<input type="number" name="startingLife" min="1" max="999" step="1" inputmode="numeric" value="${r.startingLife}" required></label>
       <label>Bracket limit<select name="bracketLimit"><option value="">Any</option>${[1, 2, 3, 4, 5].map((n) => `<option value="${n}"${r.bracketLimit === n ? " selected" : ""}>${n} or lower</option>`).join("")}</select></label>
       <label>Privacy<select name="privacy"><option value="private"${t.privacy !== "public" ? " selected" : ""}>Private</option><option value="public"${t.privacy === "public" ? " selected" : ""}>Public</option></select></label>
-      <label>House rules<select name="houseRules"><option value="">Off</option><option value="1"${r.houseRules ? " selected" : ""}>On</option></select></label>
+      <label>House rules<select name="houseRules"><option value="1">Yes</option><option value="0"${t.houseRules === false ? " selected" : ""}>No</option></select></label>
       ${lobbyUi.rulesError ? `<p class="cm-lb-rules-error" role="alert">${e(lobbyUi.rulesError)}</p>` : ""}
       <button type="button" class="v-button compact" data-action="table-rules-cancel">Cancel</button><button type="button" class="v-button compact primary" data-action="table-rules-save">Save rules</button></form>` : "";
     const end = t.youAreHost && (t.phase === "selecting" || t.phase === "countdown")
@@ -324,7 +324,7 @@
         : `<button type="button" class="cm-lb-end" data-action="table-end-ask" data-tour="end">End game</button>`) : "";
     return `<section class="cm-table-center" aria-label="Table rules">
       <img class="cm-table-stamp" src="assets/crankmagic/crankmagic-logo-gear-v4-256.webp" alt="" aria-hidden="true">
-      <div class="cm-table-head"><h2>Table rules</h2>${t.youAreHost && t.phase === "selecting" && !editing ? `<button type="button" class="cm-table-rules-edit" data-action="table-rules" data-tour="rules" aria-label="Edit the table rules">Edit</button>` : ""}<span class="cm-table-setby-top">${t.youAreHost ? "set by you, the host" : "set by the host"}</span></div>
+      <div class="cm-table-head"><h2>Table rules</h2>${t.youAreHost && t.phase === "selecting" && !editing ? `<button type="button" class="cm-table-rules-edit" data-action="table-rules" data-tour="rules" aria-label="Edit the table rules">Edit</button>` : ""}</div>
       ${editing ? editor : `<dl class="cm-table-rules">${rows.map(([k, v]) => `<div><dt>${e(k)}</dt><dd>${e(String(v))}</dd></div>`).join("")}</dl>`}
       ${editing || lobbyUi.confirmEnd ? "" : `<div class="cm-table-launch-row" id="cm-table-launch">${launch}${button}</div>`}${editing ? "" : end}
     </section>`;
@@ -345,7 +345,7 @@
   actions["table-rules-save"] = async () => {
     const form = document.getElementById("cm-table-rules-form"), v = Object.fromEntries(new FormData(form));
     try {
-      await lobbyCall("rules", {startingLife: Number(v.startingLife), bracketLimit: v.bracketLimit ? Number(v.bracketLimit) : null, houseRules: v.houseRules === "1", privacy: v.privacy});
+      await lobbyCall("rules", {startingLife: Number(v.startingLife), bracketLimit: v.bracketLimit ? Number(v.bracketLimit) : null, houseRules: v.houseRules !== "0", privacy: v.privacy});
       lobbyUi.rules = false; lobbyUi.rulesError = "";
       await refresh(current.tableId);
     } catch (error) {
@@ -1074,7 +1074,10 @@
 
   /* ---- ready, start, cancel ---- */
   actions["table-ready"] = async (el) => {await api("POST", `${tableUrl(current.tableId)}/ready`, {ready: el.dataset.ready === "1"}); await refresh(current.tableId);};
-  actions["table-start"] = async () => {await api("POST", `${tableUrl(current.tableId)}/start`); await refresh(current.tableId);};
+  actions["table-start"] = async () => {
+    /* Not disabled but aria-disabled, so the keyboard can reach it and hear why: it starts once everyone has readied up. */
+    if (current.blockers.length) throw Error(current.blockers.some((x) => x.seatId !== null) ? "Everyone has to Ready Up first." : current.blockers[0].reason);
+    await api("POST", `${tableUrl(current.tableId)}/start`); await refresh(current.tableId);};
   actions["table-cancel"] = async () => {await api("POST", `${tableUrl(current.tableId)}/cancel`); await refresh(current.tableId);};
   /* What the lounge's pieces (crankmagic-lounge.js: the New game pop-up, the lobby's tour) need of this page. */
   C.tableTools = {MATS, rememberMat: (m) => {try {localStorage.setItem(MAT_KEY, m);} catch {/* this page only */}}, rememberedMat, api, tableUrl, libraryDecks, deckForTable, keepSeat, seatKept, autoDeckAI, finishTableSetup, refresh, readiness, identityOf, rulesOf, current: () => current, cloudPlay};
