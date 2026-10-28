@@ -1027,7 +1027,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       /* The people at the table, by seat, who may play a land in any step of their own turn (`landAnyStep`). */
       const anyStep = landAnyStep ? {landAnyStep: seats.flatMap((s, seat) => (s.pilot === "house" ? [] : [seat]))} : {};
       /* And the people whose mana made in their upkeep or draw step stays for the turn (`keepStepMana`, rules/turn.mjs; Rob, 2026-10-28): a house rule, for people. */
-      const keepMana = beats.keepStepMana === true ? {keepStepMana: seats.flatMap((s, seat) => (s.pilot === "house" ? [] : [seat]))} : {};
+      const keepMana = beats.keepStepMana === true ? {keepStepMana: seats.flatMap((s, seat) => (s.pilot !== "house" ? [seat] : []))} : {};
       /* And whether a cast tapped for tops up floating mana and taps a source for all it makes (`pooledTaps`, rules/actions.mjs):
          a match launched before it lacks the key, and so offers what it offered then. */
       const pooled = {...(pod && pod.pooledTaps === true ? {pooledTaps: true} : {}), ...(pod && pod.xTaps === true ? {xTaps: true} : {}), ...(pod?.preparedTaps === true ? {preparedTaps: true} : {})};
