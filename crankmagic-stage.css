@@ -1701,7 +1701,6 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 
 /* THE DRAWERS ARE THE TOP LAYER (Rob, 2026-10-28: "when a drawer opens, the table and hand of cards shifts. They shouldn't. The drawers should not affect the canvas. They should sit as the top layer"): the stage and the hand are the window's whole width whatever is open, and a drawer lies over them. The flat views keep their boards clear of where the drawers lie (--gut-l, --gut-r: the same whether a drawer is open or not), so nothing moves when one opens. */
 .cm-board[data-shell=shared]>:is(.cm-stage-region,.cm-stage-hand){margin-left:0;margin-right:0}
-.cm-board[data-shell=shared]:not([data-stage=on])>.cm-stage-hand{padding-left:var(--gut-l,0px);padding-right:var(--gut-r,0px)}
 
 /* THE MAT'S EDGES AND ITS PILES (Rob, 2026-10-28): the divider between the lands and the battlefield moves only those two; Commander and Exile stay at the top right of the mat, Library and Graveyard at the bottom right, whatever the divider does, and the mat has almost no margin round it (it kept 62px above, for a card of you that is no longer there, and 48px below). */
 #matrix-v2 .cm-board .cm-stage-front .cm-mat .cm-board-pile[data-zone="command"],
@@ -1771,3 +1770,8 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 /* On a card this small the power/toughness and counts take less room, so they stay on it. */
 #matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-bcard-pt{padding:0 2px;border-radius:3px;font-size:max(7px,calc(var(--bc) * .3))}
 #matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-bcard-count{padding:0 2px;font-size:max(8px,calc(var(--bc) * .4))}
+/* A FLAT TABLE TOO LARGE FOR THE WINDOW SCROLLS (Rob, 2026-10-28: "add a minimum board size so the page scrolls instead of shrinking the boards"): the stage takes the height its boards need (CrankStage.flatGeometry's contentH) and the board scrolls under a header, drawers, hand, turn box and action pop-up that stay in the window. */
+.cm-board[data-shell=shared]:is([data-view=table],[data-view=focus]){overflow-y:auto;overflow-x:hidden}
+.cm-board[data-shell=shared]:is([data-view=table],[data-view=focus])>.cm-stage-top{position:sticky;top:0}
+.cm-board[data-shell=shared]:is([data-view=table],[data-view=focus])>:is(.cm-stage-rail,.cm-stage-side,.cm-stage-hand),.cm-board[data-shell=shared]:is([data-view=table],[data-view=focus]) .cm-stage-handle{position:fixed}
+.cm-board[data-shell=shared]:is([data-view=table],[data-view=focus]) .cm-stage-region :is(.cm-stage-caption,.cm-stage-actions){position:fixed;top:calc(var(--hud-top,58px) + 12px)}

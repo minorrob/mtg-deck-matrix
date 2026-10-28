@@ -8,6 +8,9 @@
  *   3. Table: every seat's board the same 16:9, none under a drawer, none over another. Focus: the board looked at 16:9 with the others behind it.
  *   4. The 3D view's zoom and pan move the flat boards: the wheel zooms, a drag across the table pans, Camera's slider zooms.
  *   5. Chat is a default module of the right drawer.
+ *   6. No dial at Table's center (Rob: the top left box has the life, names and priority); the boards meet with a hair between them.
+ *   7. A minimum board size: where the boards would be drawn smaller, the page scrolls instead -- header, drawers, hand, turn box and action
+ *      pop-up stay in the window, the wheel scrolls (Ctrl and the wheel zooms), and nothing is cut off at the foot of the stage.
  * Needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure. */
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
@@ -92,6 +95,9 @@ for (const mode of ["table", "focus", "full"]) {
     for (const b of g.slots) ok(b.x >= left && b.x + b.w <= right, `${mode}: a board lies between the drawers (${b.x}..${b.x + b.w} within ${left}..${right})`);
     if (mode === "table") {
       eq(g.slots.length, 4, "table: four boards for four seats");
+      eq(await page.locator(".cm-board-pie, .cm-board-center").count(), 0, "table: no dial at the center");
+      const xs = g.slots.map((b) => b.x).sort((a, b) => a - b), ys = g.slots.map((b) => b.y).sort((a, b) => a - b);
+      ok(xs[2] - (xs[0] + g.slots[0].w) <= 12 && ys[2] - (ys[0] + g.slots[0].h) <= 12, `table: the boards meet with a hair between them (${xs[2] - (xs[0] + g.slots[0].w)}px across, ${ys[2] - (ys[0] + g.slots[0].h)}px down)`);
       for (const b of g.slots) {
         ok(Math.abs(b.w * 9 / 16 - b.h) <= 1.5, `table: a board is 16:9 (${b.w}x${b.h})`);
         ok(Math.abs(b.w - g.slots[0].w) <= 1 && Math.abs(b.h - g.slots[0].h) <= 1, "table: every board is the same size");
@@ -115,6 +121,33 @@ eq(results.focus.modules, results.full.modules, "the same drawer modules in Focu
 eq(results.table.headerText.replace(/\s+/g, " "), results.full.headerText.replace(/\s+/g, " "), "the header reads the same in Table and 3D");
 eq(results.focus.headerText.replace(/\s+/g, " "), results.full.headerText.replace(/\s+/g, " "), "the header reads the same in Focus and 3D");
 eq(results.table.popup.replace(/\s+/g, " "), results.full.popup.replace(/\s+/g, " "), "the action pop-up reads the same in Table and 3D");
+
+/* a minimum board size: a window too small for it scrolls */
+for (const mode of ["table", "focus"]) {
+  const {page, context} = await open(mode, 1280, mode === "table" ? 720 : 560);
+  const m = await page.evaluate(() => {const b = document.getElementById("cm-board"), r = document.querySelector(".cm-stage-region"); return {scrolls: b.scrollHeight > b.clientHeight + 1, overflow: getComputedStyle(b).overflowY, stageH: r.offsetHeight, windowH: innerHeight,
+    boards: [...document.querySelectorAll(".cm-stage-slot")].map((s) => Math.round(s.getBoundingClientRect().width))};});
+  ok(m.scrolls && m.overflow === "auto" && m.stageH > m.windowH, `${mode}: at 1280x${mode === "table" ? 720 : 560} the board is too small to draw at the least size, so the page scrolls (stage ${m.stageH} in a ${m.windowH} window)`);
+  ok(Math.min(...m.boards) >= (mode === "table" ? 355 : 555), `${mode}: no board is drawn under its least size (${m.boards.join(", ")})`);
+  const still = () => page.evaluate(() => {const R = (s) => {const e = document.querySelector(s); if (!e) return null; const b = e.getBoundingClientRect(); return [Math.round(b.left), Math.round(b.top), Math.round(b.width), Math.round(b.height)];};
+    return {top: R(".cm-stage-top"), rail: R(".cm-stage-rail.is-open"), side: R(".cm-stage-side.is-open"), hand: R(".cm-stage-hand"), caption: R(".cm-stage-caption"), actions: R(".cm-stage-actions")};});
+  const before = await still();
+  await page.evaluate(() => {document.getElementById("cm-board").scrollTop = 99999;}); await page.waitForTimeout(500);
+  eq(await still(), before, `${mode}: the header, drawers, hand, turn box and action pop-up stay in the window as the page scrolls`);
+  const end = await page.evaluate(() => {const b = document.getElementById("cm-board"), hand = document.querySelector(".cm-stage-hand").getBoundingClientRect();
+    return [...document.querySelectorAll(".cm-stage-slot")].map((s) => s.getBoundingClientRect()).filter((r) => r.bottom > hand.top + 20 && r.top < hand.top).length;});
+  eq(end, 0, `${mode}: scrolled to the end, no board lies under the hand`);
+  /* the wheel scrolls where the page does; Ctrl and the wheel zooms */
+  await page.evaluate(() => {document.getElementById("cm-board").scrollTop = 0;}); await page.waitForTimeout(300);
+  const w0 = await page.evaluate(() => document.querySelector(".cm-stage-slot").getBoundingClientRect().width);
+  const at = await page.evaluate(() => {const r = document.querySelector(".cm-stage-region").getBoundingClientRect(); return [r.left + r.width / 2, r.top + 260];});
+  await page.mouse.move(at[0], at[1]); await page.mouse.wheel(0, 300); await page.waitForTimeout(400);
+  const scrolled = await page.evaluate(() => [document.getElementById("cm-board").scrollTop, document.querySelector(".cm-stage-slot").getBoundingClientRect().width]);
+  ok(scrolled[0] > 50 && Math.abs(scrolled[1] - w0) < 1, `${mode}: the wheel over the stage scrolls the page and does not zoom (${scrolled[0]}px down)`);
+  await page.keyboard.down("Control"); await page.mouse.wheel(0, -400); await page.keyboard.up("Control"); await page.waitForTimeout(400);
+  ok(await page.evaluate((w) => document.querySelector(".cm-stage-slot").getBoundingClientRect().width > w * 1.05, w0), `${mode}: Ctrl and the wheel zoom it`);
+  await context.close();
+}
 
 /* zoom and pan, the 3D view's, on the flat boards */
 for (const mode of ["table", "focus"]) {

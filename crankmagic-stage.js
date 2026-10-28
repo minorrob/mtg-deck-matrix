@@ -67,8 +67,10 @@
      stay sharp. TABLE: every seat's board the same 16:9, two across and two down (side by side for two; two over one for three), the largest that fits above the
      hand. FOCUS: the others' boards in a row across the back, and the seat looked at the largest 16:9 that fits between them and the hand. `reserve` is the foot of
      the stage the hand's tray covers; `gapX` and `gapY` what lies between boards (Table's life counter sits over the crossing). */
-  const GRID_MARGIN=10, GRID_GAP=12;
-  function flatGeometry(width, height, {mode = "table", zoom = 100, pan = null, seats = 4, reserve = 0, top = 0, gapX = GRID_GAP, gapY = GRID_GAP, padL = 0, capB = 0, stripMin = 0, inL = 0, inR = 0, gapWide = 0} = {}) {
+  /* The least a board may be drawn (Rob, 2026-10-28: "add a minimum board size so the page scrolls instead of shrinking the boards"): below it the stage grows taller
+     than the window (contentH) and the board scrolls, and a Table too narrow for two across puts the boards in one column. */
+  const GRID_MARGIN=10, GRID_GAP=12, MIN_TABLE_W=360, MIN_FOCUS_W=560;
+  function flatGeometry(width, height, {mode = "table", zoom = 100, pan = null, seats = 4, reserve = 0, top = 0, gapX = GRID_GAP, gapY = GRID_GAP, padL = 0, capB = 0, stripMin = 0, inL = 0, inR = 0, gapWide = 0, gapMid = 0} = {}) {
     const w=Math.max(1,width), h=Math.max(1,height), n=clamp(seats,1,4), z=clamp(zoom,60,200)/100;
     const roomW=w-GRID_MARGIN*2-padL-inL-inR, roomH=Math.max(60,h-top-reserve-GRID_MARGIN*2);
     const cx=w/2, cy=top+(h-top-reserve)/2, at={x:clamp(pan?.x,-w,w),y:clamp(pan?.y,-h,h)};
@@ -79,29 +81,31 @@
         quad:[ox,oy,ox+r.width*z,oy,ox+r.width*z,oy+r.height*z,ox,oy+r.height*z]};
     }
     const unproject=(px,py)=>{const x=(px-cx)/z+cx+at.x,y=(py-cy)/z+cy+at.y;return {x,y,world:[x-w/2,0,-(y-h/2)]};};
-    const common={flat:true,width:w,height:h,planeHeight:h,base:h,cy:h/2,reach:0,reachMost:0,sx:z,sy:z,angle:0,yaw:0,distance:1,focal:1,screenY:cy,pan:at,center:[cx,cy],
+    const common={flat:true,width:w,height:h,contentH:h,planeHeight:h,base:h,cy:h/2,reach:0,reachMost:0,sx:z,sy:z,angle:0,yaw:0,distance:1,focal:1,screenY:cy,pan:at,center:[cx,cy],
       camera:{eye:[0,1,0],yaw:0,pitch:Math.PI/2,right:[1,0,0],up:[0,0,1],ahead:[0,-1,0]},project:view,unproject,quad:[...view(0,0),...view(w,0),...view(w,h),...view(0,h)]};
     if(mode==="focus"){
       /* The others go across the back, or -- where the window is wide and not tall -- in a column at the right, whichever lets the board looked at be larger. */
       const others=Math.max(0,n-1), x1=GRID_MARGIN+padL+inL, between=others?GRID_GAP:0;
       const stripH=others?Math.round(Math.max(clamp(roomH*.15,80,112),Math.min(stripMin,roomH*.55))):0;
-      const availStrip=Math.max(60,roomH-stripH-between), stripY=top+GRID_MARGIN, bigY=stripY+stripH+between;
-      /* the caption (top left) is cleared by the strip, and by the board looked at only where it reaches down to it */
-      const bigPad=(bigY>=capB?0:padL)+inL, bigW=w-GRID_MARGIN*2-bigPad-inR, bwStrip=Math.max(120,Math.floor(Math.min(bigW,availStrip*16/9)));
+      let availStrip=Math.max(60,roomH-stripH-between), bigY=top+GRID_MARGIN+stripH+between, bigPad=(bigY>=capB?0:padL)+inL;
+      const stripY=top+GRID_MARGIN, wide=(pad)=>w-GRID_MARGIN*2-pad-inR;
+      /* the caption (top left) is cleared by the strip, and by the board looked at only where it reaches down to it -- or, if that would draw it under its least size, the board starts below it */
+      if(bigPad>inL&&Math.min(wide(bigPad),availStrip*16/9)<MIN_FOCUS_W){bigY=Math.max(bigY,capB);bigPad=inL;availStrip=Math.max(60,top+GRID_MARGIN+roomH-bigY);}
+      const bigW=wide(bigPad), bwStrip=Math.max(120,Math.min(MIN_FOCUS_W,bigW),Math.floor(Math.min(bigW,availStrip*16/9)));
       const colW=others?Math.floor(Math.min((w-x1-inR-GRID_MARGIN)*.27,(roomH-GRID_GAP*(others-1))/others/.62)):0;
-      const bwCol=others?Math.max(120,Math.floor(Math.min(w-x1-inR-GRID_MARGIN-colW-between,roomH*16/9))):0;
+      const colRoom=w-x1-inR-GRID_MARGIN-colW-between, bwCol=others?Math.max(120,Math.min(MIN_FOCUS_W,colRoom),Math.floor(Math.min(colRoom,roomH*16/9))):0;
       if(others&&bwCol>bwStrip*1.08){
         const bh=Math.round(bwCol*9/16), usedW=bwCol+between+colW, left=Math.round(x1+Math.max(0,(w-x1-inR-GRID_MARGIN-usedW)/2));
         const rh=Math.round(colW*.62), usedH=rh*others+GRID_GAP*(others-1), y0=Math.round(top+GRID_MARGIN+Math.max(0,(roomH-usedH)/2));
         const rear=Array.from({length:others},(_,i)=>surface({x:left+bwCol+between,y:y0+i*(rh+GRID_GAP),width:colW,height:rh}));
         const big={x:left,y:Math.round(top+GRID_MARGIN+Math.max(0,(roomH-bh)/2)),width:bwCol,height:bh};
-        return {...common,focus:true,column:true,rear,front:surface(big),board:{width:bwCol,height:bh,column:colW}};
+        return {...common,contentH:Math.max(h,Math.max(big.y+bh,y0+usedH)+GRID_MARGIN+reserve),focus:true,column:true,rear,front:surface(big),board:{width:bwCol,height:bh,column:colW}};
       }
       const bw=bwStrip, bh=Math.round(bw*9/16);
       const big={x:Math.round(bigPad+GRID_MARGIN+(bigW-bw)/2),y:Math.round(bigY+Math.max(0,(availStrip-bh)/2)),width:bw,height:bh};
       const rw=others?Math.floor(Math.min((roomW-GRID_GAP*(others-1))/others,stripH*2.4)):0, usedW=rw*others+GRID_GAP*Math.max(0,others-1), x0=Math.round(padL+inL+GRID_MARGIN+(roomW-usedW)/2);
       const rear=Array.from({length:others},(_,i)=>surface({x:x0+i*(rw+GRID_GAP),y:top+GRID_MARGIN,width:rw,height:stripH}));
-      return {...common,focus:true,rear,front:surface(big),board:{width:bw,height:bh,strip:stripH}};
+      return {...common,contentH:Math.max(h,big.y+bh+GRID_MARGIN+reserve),focus:true,rear,front:surface(big),board:{width:bw,height:bh,strip:stripH}};
     }
     const cols=n===1?1:2, rows=n<=2?1:2;
     /* The turn box (top left) is cleared the way that leaves the larger boards: they start to its right, or below it. The action pop-up stands over
@@ -114,14 +118,29 @@
     }
     /* the first is the plain way; another is taken only for 5% more */
     const best=choices.reduce((a,c)=>c.fit>a.fit*1.05?c:a,choices[0]);
-    const fit=best.fit, shift=best.left, ceil=best.up, gapUsed=best.gx;
+    let fit=best.fit, shift=best.left, ceil=best.up, gapUsed=best.gx;
+    const usableW=w-GRID_MARGIN*2-inL-inR;
+    if(fit<MIN_TABLE_W) {
+      shift=0; gapUsed=gapX; ceil=Math.max(top,padL?capB:0);
+      if(cols>1&&usableW>=2*MIN_TABLE_W+gapUsed) fit=MIN_TABLE_W;
+      else {
+        /* too narrow for two across: one column, the dial in the gap at the middle, the page scrolling */
+        const bw1=Math.floor(Math.max(Math.min(usableW,MIN_TABLE_W),Math.min(usableW,MIN_TABLE_W*1.5))), bh1=Math.round(bw1*9/16);
+        const above=Math.floor(n/2), mid=gapMid||GRID_GAP, x1=Math.round(inL+GRID_MARGIN+(usableW-bw1)/2);
+        const ys=Array.from({length:n},(_,i)=>Math.round(ceil+GRID_MARGIN+i*(bh1+gapY)+(i>=above&&above>0?mid-gapY:0)));
+        const order={a:0,b:1,c:2,d:3};
+        const rect1=area=>({x:x1,y:ys[Math.min(order[area]??0,n-1)],width:bw1,height:bh1});
+        const end=ys[n-1]+bh1, midY=above>0?ys[above-1]+bh1+(ys[above]-ys[above-1]-bh1)/2:ys[0]-GRID_MARGIN;
+        return {...common,contentH:Math.max(h,end+GRID_MARGIN+reserve),grid:true,column:true,rear:[],front:null,board:{width:bw1,height:bh1,gapX:0,gapY,x:x1,y:ys[0],cols:1,rows:n,usedW:bw1,usedH:end-ys[0]},rect:rect1,surface,slot:area=>surface(rect1(area)),mid:view(x1+bw1/2,midY)};
+      }
+    }
     const roomW2=w-GRID_MARGIN*2-shift-inL-inR, roomH2=Math.max(60,h-ceil-reserve-GRID_MARGIN*2);
     const bw=fit, bh=Math.round(fit*9/16), usedW=bw*cols+gapUsed*(cols-1), usedH=bh*rows+gapY*(rows-1);
     const x0=Math.round(shift+inL+GRID_MARGIN+(roomW2-usedW)/2), y0=Math.round(ceil+GRID_MARGIN+Math.max(0,(roomH2-usedH)/2));
     /* where each seat sits, by its area letter (a top left, b top right, c bottom left, d bottom right; three seats put the third across the foot) */
     const cell={a:[0,0],b:[1,0],c:n===3?[.5,1]:[0,1],d:[1,1]};
     const rect=area=>{const [c,r]=cell[area]||cell.a;return {x:Math.round(x0+c*(bw+gapUsed)),y:Math.round(y0+r*(bh+gapY)),width:bw,height:bh};};
-    return {...common,grid:true,rear:[],front:null,board:{width:bw,height:bh,gapX:gapUsed,gapY,x:x0,y:y0,cols,rows,usedW,usedH},rect,surface,slot:area=>surface(rect(area)),mid:view(x0+usedW/2,y0+(n===3?bh/2:usedH/2))};
+    return {...common,contentH:Math.max(h,y0+usedH+GRID_MARGIN+reserve),grid:true,rear:[],front:null,board:{width:bw,height:bh,gapX:gapUsed,gapY,x:x0,y:y0,cols,rows,usedW,usedH},rect,surface,slot:area=>surface(rect(area)),mid:view(x0+usedW/2,y0+(n===3?bh/2:usedH/2))};
   }
   /* The backdrops: each video at up to three heights, 720, 1080 and 1440 lines, never more than its source (environment,
      backdropLines). The list between the markers is written by tools/stage-backdrops.mjs from a folder of videos. */
@@ -343,7 +362,7 @@
   /* The flat stage (Table and Focus): the boards laid out by flatGeometry, set by one matrix each. A board's own layout is computed at the size it is drawn (--row-w, --mat-w). */
   function placeFlat(s) {
     const o=s.opts, cards=1+.8*(clamp(o.cards??100,70,200)-100)/100, seatsN=(o.mats||[]).length;
-    const g=flatGeometry(s.box.width,s.box.height,{mode:o.grid?"table":"focus",zoom:o.zoom,pan:o.pan,seats:seatsN,reserve:o.reserve||0,top:o.top||0,gapX:o.gapX,gapY:o.gapY,padL:o.padL||0,capB:o.capB||0,stripMin:o.stripMin||0,inL:o.inL||0,inR:o.inR||0,gapWide:o.gapWide||0});
+    const g=flatGeometry(s.box.width,s.box.height,{mode:o.grid?"table":"focus",zoom:o.zoom,pan:o.pan,seats:seatsN,reserve:o.reserve||0,top:o.top||0,gapX:o.gapX,gapY:o.gapY,padL:o.padL||0,capB:o.capB||0,stripMin:o.stripMin||0,inL:o.inL||0,inR:o.inR||0,gapWide:o.gapWide||0,gapMid:o.gapMid||0});
     s.view=g;
     const size=(el,r)=>{
       el.style.setProperty('--row-w',`${r.width}px`);el.style.setProperty('--mat-w',`${r.width}px`);el.style.setProperty('--mat-h',`${r.height}px`);el.style.setProperty('--board-scale',String(cards));

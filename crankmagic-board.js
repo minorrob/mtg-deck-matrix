@@ -1247,27 +1247,7 @@ globalThis.CrankBoard = Object.seal({
      horizontally, thereby increasing play surface for each board on a landscape screen"); three put you across the foot. The
      boards are 16:9 tracks sized to the window (fit()), alike in a row; the bar between the rows shares the height
      (item 4), identical boards until it is moved. At the true center, the life counter (item 9). */
-  /* THE LIFE COUNTER at the true center (item 9; wireframe 2e's counter()): a slice per seat in its color, on the side
-     its board sits -- four quarters, three thirds, two halves -- its life on it, and the logo in the middle, which
-     opens Table vitals. Degrees run clockwise from twelve o'clock, as a conic gradient draws them. */
-  const SLICES = {4: {b: [0, 90], d: [90, 180], c: [180, 270], a: [270, 360]}, 3: {b: [0, 120], c: [120, 240], a: [240, 360]}, 2: {b: [0, 180], a: [180, 360]}};
-  function counter() {
-    const ps = players(), cut = SLICES[ps.length] || SLICES[4];
-    const parts = ps.map((p) => ({p, at: cut[areaOf(p.playerId)]})).filter((x) => x.at).sort((x, y) => x.at[0] - y.at[0]);
-    const pct = (deg) => `${Math.round(deg / 3.6 * 100) / 100}%`, tint = (p) => `color-mix(in srgb,${seatColor(p.playerId)} 78%,var(--mat-ink))`;
-    /* a slice past twelve o'clock (two seats' top half) is drawn in two pieces, the first from zero */
-    const stops = parts.flatMap(({p, at}) => at[1] > 360 ? [`${tint(p)} ${pct(at[0])} 100%`] : [`${tint(p)} ${pct(at[0])} ${pct(at[1])}`]);
-    const over = parts.find(({at}) => at[1] > 360);
-    if (over) stops.unshift(`${tint(over.p)} 0% ${pct(over.at[1] - 360)}`);
-    const totals = parts.map(({p, at}) => {
-      const mid = ((at[0] + at[1]) / 2) * Math.PI / 180, x = 50 + (ps.length===2?25:40) * Math.sin(mid), y = ps.length===2?15:Math.cos(mid)>0?15:85;
-      return `<span class="cm-board-pie-life${p.playerId===view.state.turnPlayerId?' is-active':''}" data-seat="${p.playerId}" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%"><b>${p.health.life}</b><small>${e(isYou(p.playerId)?'You':p.name)}</small></span>`;
-    }).join("");
-    const said = ps.map((p) => `${isYou(p.playerId) ? "You" : p.name} ${p.health.life}`).join(", ");
-    const active=parts.find(({p})=>p.playerId===view.state.turnPlayerId),glow=active?`<i class="cm-board-pie-turn" data-seat="${active.p.playerId}" aria-hidden="true" style="background:conic-gradient(from ${active.at[0]}deg,var(--color-aether) 0deg ${active.at[1]-active.at[0]}deg,transparent ${active.at[1]-active.at[0]}deg 360deg)"></i>`:'';
-    return `<div class="cm-board-pie" role="group" aria-label="Life: ${e(said)}" style="background:conic-gradient(${stops.join(",")})">${glow}${totals}
-      <button type="button" class="cm-board-center" data-action="board-vitals" aria-label="Table vitals"><img src="${LOGO}" alt=""></button><span class="cm-board-pie-priority">Priority: ${e(view.state.priorityPlayerId==null?'—':isYou(view.state.priorityPlayerId)?'you':nameOf(view.state.priorityPlayerId))}</span></div>`;
-  }
+  /* The life counter that sat at the true center is gone (Rob, 2026-10-28: the top left box has the life, names and priority; Table vitals are in the Table menu), so the boards meet with only a hair between them. */
   /* A tile past MINI_AT wide is a miniature of that seat's board (item 15): the same playmat at its smallest, only to
      look at (inert), the tile's own button over it. */
   function tile(p) {
@@ -1292,7 +1272,7 @@ globalThis.CrankBoard = Object.seal({
   }
   /* TABLE'S BOARDS (Rob, 2026-10-28: "revisit my original instruction on the Table view, where each mat had a specific aspect ratio"): a board for every seat, each
      the same 16:9 -- two across and two down, side by side for two seats, two over one for three -- the largest the room above the hand allows (CrankStage.gridGeometry),
-     yours with no card of you and the others' with theirs and a Focus; the life counter at the true center. */
+     yours with no card of you and the others' with theirs and a Focus; nothing at the center. */
   function gridSlots() {
     const ps = players();
     const slots = ps.map((p) => {
@@ -1300,7 +1280,7 @@ globalThis.CrankBoard = Object.seal({
       return `<div class="cm-board-slot cm-stage-slot${you ? " is-you" : ""}" data-area="${area}" data-seat="${p.playerId}" style="--seat:${seatColor(p.playerId)}">${mat(p, {size: "table", head: you ? "none" : "top", focusButton: !you})}</div>`;
     }).sort((x, y) => x.match(/data-area="(\w)"/)[1].localeCompare(y.match(/data-area="(\w)"/)[1])).join("");
     const active = view.state.turnPlayerId;
-    return `<div class="cm-board-table cm-stage-flat" data-seats="${ps.length}">${active === null ? "" : fan(active)}${slots}${counter()}</div>`;
+    return `<div class="cm-board-table cm-stage-flat" data-seats="${ps.length}">${active === null ? "" : fan(active)}${slots}</div>`;
   }
   /* FOCUS'S BOARD: the seat looked at, the largest 16:9 that fits between the others across the back and the hand, in the board's own layout: Battlefield and Lands, the
      piles card-sized at the right with the History between them. */
@@ -1571,6 +1551,8 @@ globalThis.CrankBoard = Object.seal({
     const big = mode === "table" ? players()[view.seat] : (players()[focus] || players()[view.seat]);
     /* Table and Focus are this stage without the canvas (`flat`); Table's boards are a grid, above the hand's tray. */
     const flat = !stageEnabled();
+    /* The stage's own height is the window's; a flat table too large for it sets its own below (the page scrolls), measured again each fit. */
+    if (flat) region.style.minHeight = "";
     /* The turn box keeps beside the left drawer, as the tab does; the drawers move nothing else. */
     const drawerL = host.querySelector(":scope > .cm-stage-rail.is-open")?.offsetWidth || 0;
     host.style.setProperty("--drawer-l", `${drawerL}px`);
@@ -1592,7 +1574,7 @@ globalThis.CrankBoard = Object.seal({
     } else {host.style.removeProperty("--gut-l"); host.style.removeProperty("--gut-r");}
     if (flat) fitFan(host);   /* the tray's height first: the boards are fitted above it */
     const tray = host.querySelector(":scope > .cm-stage-hand");
-    const opts = {flat, grid: flat && mode === "table", reserve: flat ? Math.round(tray?.getBoundingClientRect().height || 0) : 0, tilt: cameraTilt(), zoom: camera.zoom, pan: camera.pan, reach: camera.reach, rearMin:0, live: !!stretch, rotation: 0, cards: camera.cards, reduced: globalThis.CrankMotion?.reduced() ?? false,
+    const opts = {flat, grid: flat && mode === "table", reserve: flat ? Math.round((tray?.getBoundingClientRect().height || 0) + 14) : 0, tilt: cameraTilt(), zoom: camera.zoom, pan: camera.pan, reach: camera.reach, rearMin:0, live: !!stretch, rotation: 0, cards: camera.cards, reduced: globalThis.CrankMotion?.reduced() ?? false,
       background: table?.appearance?.background || appearance.background, table: tableDesignId(table?.appearance?.table || appearance.table),
       mats: (mode === "table" ? players() : [big, ...players().filter((p) => p.playerId !== big.playerId)]).map((p) => matOf(p.playerId)),
       combat: view.state.phase?.startsWith("COMBAT_") ?? false, instant: view.state.stack.some((s) => /Instant/i.test(typeLineOf(s))),
@@ -1600,23 +1582,20 @@ globalThis.CrankBoard = Object.seal({
       onError(message) {stageError = message; const el = document.querySelector(".cm-stage-error"); if (el) el.textContent = `${message} Use Focus view in Camera if graphics are unavailable.`;}};
     if (flat) {
       opts.background = ""; opts.table = "";
-      /* Table's life counter lies over the crossing of the four boards, so they leave it room; and the turn box top left is not drawn over a board's name. */
-      const pie = Math.round(144 * hudScale() / 100);
-      host.style.setProperty("--pie", `${pie}px`);
-      /* ...and clear of it side to side: the boards on a row leave the dial the gap between them (it covers no board), and start below the action pop-up. */
-      const barW = host.querySelector(":scope .cm-stage-actions")?.offsetWidth || 0;
-      opts.gapWide = players().length >= 2 ? barW + 28 : 0;
-      opts.gapX = players().length >= 2 ? Math.min(pie + 8, Math.round((region.clientWidth - gutter.left - gutter.right) * .25)) : 22; opts.gapY = 22;
+      /* The boards meet with only a hair between them (no dial at the center now); they start below the action pop-up, and the turn box top left is not drawn over a board's name. */
+      opts.gapX = 8; opts.gapY = 8; opts.gapWide = 0; opts.gapMid = 0;
       const caption = host.querySelector(":scope .cm-stage-caption"), at = region.getBoundingClientRect();
       /* Focus's boards start under the action pop-up (the 3D view's others are far enough back to lie under it); Table's have it in the gap between them. */
       const barEl = host.querySelector(":scope .cm-stage-actions");
-      opts.top = barEl ? Math.ceil(barEl.getBoundingClientRect().bottom - at.top + 6) : Math.round(76 * hudScale() / 100);
+      const scrolled = host.scrollTop;   /* the bar and the turn box stay in the window as the page scrolls; the stage does not */
+      opts.top = barEl ? Math.ceil(barEl.getBoundingClientRect().bottom - at.top - scrolled + 6) : Math.round(76 * hudScale() / 100);
       opts.inL = gutter.left; opts.inR = gutter.right;
       opts.padL = caption ? Math.ceil(caption.getBoundingClientRect().width + 54) : 0;
-      opts.stripMin = Math.ceil(Math.max(0, ...[...region.querySelectorAll(".cm-stage-rear")].map((el) => el.scrollHeight)) + 6);
-      opts.capB = caption ? Math.ceil(caption.getBoundingClientRect().bottom - at.top + 6) : 0;
+      opts.stripMin = Math.ceil(Math.max(0, ...[...region.querySelectorAll(".cm-stage-rear")].map((el) => {const label = el.querySelector(".cm-stage-seat-label"); if (!label) return 0; const top = label.getBoundingClientRect().top; return Math.max(label.offsetHeight, ...[...label.children].map((c) => c.getBoundingClientRect().bottom - top));})) + 6);   /* the seat label's own height, not the miniature under it */
+      opts.capB = caption ? Math.ceil(caption.getBoundingClientRect().bottom - at.top - scrolled + 6) : 0;
     }
     CrankStage.mount(region, opts); stageGeom = CrankStage.layout(region.getBoundingClientRect(), opts) || null;
+    if (flat && stageGeom && stageGeom.contentH > region.clientHeight + 1) region.style.minHeight = `${Math.ceil(stageGeom.contentH)}px`;
     // A scaled seat label must leave a complete card row on its rear mat. Keep the original
     // projection unless the measured label and raster cannot fit their allocated rear surface.
     const rearMin=Math.max(0,...[...region.querySelectorAll('.cm-stage-rear')].map(rear=>{
@@ -1625,7 +1604,7 @@ globalThis.CrankBoard = Object.seal({
       const raster=Math.max(0,...[...grid.querySelectorAll('.cm-bcard')].map(card=>card.offsetHeight));
       return (label?.offsetHeight||0)+gap+raster+(parseFloat(css.paddingTop)||0)+(parseFloat(css.paddingBottom)||0)+4;
     }));
-    if(stageGeom?.rear.some(rear=>rear.height<rearMin)){opts.rearMin=rearMin;stageGeom=CrankStage.layout(region.getBoundingClientRect(),opts)||stageGeom;}
+    if(!flat&&stageGeom?.rear.some(rear=>rear.height<rearMin)){opts.rearMin=rearMin;stageGeom=CrankStage.layout(region.getBoundingClientRect(),opts)||stageGeom;}
     for (const h of region.querySelectorAll(".cm-stage-corner")) {const i = Number(h.dataset.corner), q = stageGeom?.quad; h.hidden = !q; if (q) {h.style.left = `${q[i * 2].toFixed(1)}px`; h.style.top = `${q[i * 2 + 1].toFixed(1)}px`;}}
     const length = host.querySelector("[data-stage-length]");
     if (stageGeom && length) {const most = 100 + Math.floor(stageGeom.reachMost / stageGeom.base * 100), v = 100 + Math.round(stageGeom.reach / stageGeom.base * 100); length.max = String(most); length.value = String(v); length.setAttribute("aria-valuetext", `${v}%`); length.parentElement.querySelector("output").textContent = `${v}%`;}
@@ -3884,6 +3863,11 @@ globalThis.CrankBoard = Object.seal({
     const region = event.target.closest?.("#cm-board .cm-stage-region");
     if (event.defaultPrevented || !region || !view || !hud() || !globalThis.CrankStage || event.target.closest(OVERLAYS)) return;
     if (event.target.closest("[data-zone-scroll]") && !event.ctrlKey && !event.metaKey) return;
+    /* Where a flat table is taller than the window the wheel scrolls the page (⌘ or Ctrl and the wheel, Camera's Zoom, still zoom it). */
+    if (region.style.minHeight && !event.ctrlKey && !event.metaKey) {   /* (a mat's own scroll area holds the wheel, so the page is scrolled here) */
+      const page = region.closest("#cm-board"), unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? page.clientHeight : 1;
+      event.preventDefault(); page.scrollTop += event.deltaY * unit; return;
+    }
     event.preventDefault();
     const host = region.closest("#cm-board"), unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? region.clientHeight : 1;
     const next = Math.max(60, Math.min(CAMERA_MAX, camera.zoom * Math.exp(-(event.deltaY || event.deltaX) * unit * .0015)));
