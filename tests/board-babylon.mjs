@@ -105,6 +105,8 @@ try{
     await align('re-entry');
   }
   await page.goto(`${base}/index.html#game`);await page.locator('#cm-play-home').waitFor();
+  await page.route(`${base}/api/tables/live`,r=>r.fulfill({json:{games:[{tableId:'open01',location:'lobby',organizer:'Avery',commander:'Krenko, Mob Boss',privacy:'public',ai:1,human:1,open:1,roster:[]}]}}));
+  await page.reload();await page.locator('#cm-play-home').waitFor();
   await page.getByRole('button',{name:'Join existing game',exact:true}).click();
   await page.locator('#cm-play-invite').fill('https://evil.example/api/join/tablepreview01/token');
   await page.getByRole('button',{name:'Open invitation',exact:true}).click();

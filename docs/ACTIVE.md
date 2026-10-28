@@ -1,5 +1,16 @@
 # Who holds the work
 
+## Play: the Pre-lobby (first of three screens), the top-left box, History, 2026-10-27 (a Claude cloud session, for Rob; `claude/gifted-ride-w6xoa3`)
+
+Rob sent three Claude Design screens (Pre-lobby, New game pop-up, Lobby with walkthrough) and asked for screenshots that look exactly like them. This push is the first screen and four of his notes.
+
+- **Pre-lobby** (`views.playHome`, `crankmagic-table.js`; styles `.cm-pl-*` at the end of `crankmagic-stage.css`): hero, then Live games (2.5x) beside Start a game, Leaderboard (sortable) and the chat's Coming soon. Join existing game opens a pop-up (open lobbies, or the invitation link); it is greyed while no lobby has a seat, as in the design.
+- **Asked of the engine lane, not built here** (nothing is made up; each part reads empty and says so until its door answers): `GET /api/tables/live` (games: `tableId, location live|lobby, organizer, commander, mechanic, privacy, ai, human, open, startedAt, roster[{name,ai,commander,mechanic}], mine`; private games only to their seats and the admin), `GET /api/leaderboard` (`rows[{name,wins,losses,ties,unfinished,you}]`), and `POST /api/tables/:id/request-join|quit`, `GET /api/tables/:id/watch|log` (spectator: no hands or libraries).
+- **Top-left box** (3D): Turn row with a fold arrow (kept on the device); each life row has a blue dot at the right where priority sits; no Priority text; what the table waits on, when it is not a question in Actions, is in the ribbon.
+- **Combat tile**: the empty-blocks box stays inside its tile. **History** (module and pop-up): lines scroll sideways, never an ellipsis.
+- **Proven**: `table-board` 320, `table-lobby` 154, `board-babylon` 90, `board-r5-visual` 68, `board-r4-caption-fit` 171, `board-r4-views` 129, `board-combat-display`, `board-r4-decisions` 119, `board-r4-input` 62, `board-r4-layout` 90, `board-r4-shell` 111, `board-r4-combat` 99, `board-drawer-sizes` 47, `board-choices` 47, `board-battlefield-rows` 8, `board-settings-window` 114, `feature-wiring` 131, `board-hand-table` 111, `a11y-board` (one place: the white-sanctum card ring, 89%, as before). `board-3d-camera` (105) and `board-r4-views` each failed once on timing and passed on rerun; `board-3d-camera` does the same on main.
+- **Not done**: the New game pop-up and the Lobby with its walkthrough (the old `#table?new=1` page is still what Start a new game opens); in-game chat and the log.
+
 ## Play screen, batch 4 (a Claude cloud session, for Rob; `claude/gifted-ride-w6xoa3`, PR 902), 2026-10-27
 
 Rob's list after batch 3: dropdown verbs and direct rows, library-search stacks, scrollbars, tilt 0 at the floor's slope, the Camera menu, Turn and Priority out of the ribbon,
