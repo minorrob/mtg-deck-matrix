@@ -298,7 +298,6 @@
 .cm-stage-camera .cm-board-views{display:flex;width:100%;gap:4px}
 .cm-stage-camera .cm-board-views button{flex:1;min-width:0;padding:0 4px!important;font-size:11px;white-space:normal}
 .cm-stage-camera .cm-board-views .cm-view-word{min-width:0;white-space:normal}
-.cm-board[data-shell="shared"][data-view="table"]{grid-template-rows:58px var(--tabletop-h,minmax(0,1fr)) auto}
 .cm-stage-top>.cm-board-turnsteps{flex:1;min-width:0}
 .cm-stage-top .cm-board-ribbon-button{width:100%;color:inherit}
 .cm-stage-camera .cm-board-scale{grid-template-columns:1fr 44px;gap:4px;height:auto;padding:6px 8px;border-radius:6px}
@@ -311,7 +310,7 @@
 .cm-profile-menu .cm-board-menu{left:auto;right:0;max-height:calc(100vh - 180px);overflow:auto}
 .cm-board[data-shell="shared"]>.cm-stage-rail:not(.is-open),.cm-board[data-shell="shared"]>.cm-stage-side:not(.is-open){display:none}
 
-.cm-board[data-shell="shared"]:not([data-view="full"]){--stage-side-width:min(var(--panel-w,340px),45vw)}
+.cm-board[data-shell="shared"]:not([data-stage="on"]){--stage-side-width:min(var(--panel-w,340px),45vw)}
 /* The right drawer's resize line on the drawer's edge, not 17px inside it over its modules (Rob, Oct 18; Codex's fix). */
 .cm-stage-side>.cm-board-panelgrip{position:absolute;left:0;top:0;height:100%;width:12px;margin:0}
 .cm-stage-side>.cm-board-panelgrip .cm-board-grip::before{left:0;transform:none}
@@ -337,7 +336,6 @@
 
 /* Confirmed combat gets its own header space; decisions keep the surface below it. */
 .cm-board[data-shell="shared"][data-combat]{grid-template-rows:188px minmax(0,1fr)}
-.cm-board[data-shell="shared"][data-view="table"][data-combat]{grid-template-rows:188px var(--tabletop-h,minmax(0,1fr)) auto}
 .cm-board[data-combat]>.cm-stage-top{position:relative;padding-bottom:135px}
 .cm-board[data-combat]>.cm-stage-rail,.cm-board[data-combat]>.cm-stage-side{top:188px}
 .cm-board[data-combat]>.cm-stage-side{height:calc(100% - 188px)!important}
@@ -568,7 +566,7 @@
 .cm-stage-module[data-module="actions"].has-height>.cm-module-body{display:flex;flex-direction:column;overflow:hidden}
 .cm-stage-module[data-module="actions"].has-height .cm-board-decision{max-height:none;flex:1 1 auto;min-height:0}
 /* The right drawer's width, dragged at its left edge as the left drawer's is at its right (Rob, 2026-10-26). */
-.cm-board[data-view="full"] .cm-stage-side>.cm-board-panelgrip{display:flex;z-index:4}
+.cm-board[data-stage="on"] .cm-stage-side>.cm-board-panelgrip{display:flex;z-index:4}
 .cm-stage-side>.cm-board-panelgrip [data-drag]{width:12px;height:100%;cursor:col-resize}
 /* The way back from one card's actions: a small chevron link at the left, not a button the width of a word. */
 .cm-board-back{align-self:flex-start;display:inline-flex;align-items:center;gap:2px;margin:0 0 -4px;padding:2px 6px 2px 0;border:0;background:none;color:#b6cbbf;font:600 12px/1.3 system-ui,sans-serif;cursor:pointer}
@@ -715,9 +713,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-drawer{transition:none}
 
 /* The HUD reserves its measured row at both ends of the scale. The steps menu retains the full turn. */
 #matrix-v2 .cm-board[data-shell=shared]{--hud-top:calc(28px + 30px * var(--hud-scale,1));grid-template-rows:var(--hud-top) minmax(0,1fr)}
-#matrix-v2 .cm-board[data-shell=shared][data-view=table]{grid-template-rows:var(--hud-top) var(--tabletop-h,minmax(0,1fr)) auto}
 #matrix-v2 .cm-board[data-shell=shared][data-combat]{grid-template-rows:calc(var(--hud-top) + 130px) minmax(0,1fr)}
-#matrix-v2 .cm-board[data-shell=shared][data-view=table][data-combat]{grid-template-rows:calc(var(--hud-top) + 130px) var(--tabletop-h,minmax(0,1fr)) auto}
 #matrix-v2 .cm-board .cm-stage-top{height:var(--hud-top,58px);min-height:var(--hud-top,58px);background:var(--color-panel);color:var(--color-ink);border-color:var(--color-line-strong)}
 #matrix-v2 .cm-board .cm-stage-priority,#matrix-v2 .cm-board .cm-board-turn{color:var(--color-ink)}
 #matrix-v2 .cm-board .cm-stage-self .cm-seat-header{background:var(--mat-scrim);padding:5px;border-radius:var(--radius-control)}
@@ -861,7 +857,6 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-target-stack>img{animation:non
 /* r4 B: one private attacker row, one binding Send, and a desk per attacker. */
 #matrix-v2 .cm-board[data-combat]{--combat-h:calc(72px + 104px*var(--hud-scale,1));--rail-top:calc(var(--hud-top,58px) + var(--combat-h))}
 #matrix-v2 .cm-board[data-shell=shared][data-combat]{grid-template-rows:var(--rail-top) minmax(0,1fr)}
-#matrix-v2 .cm-board[data-shell=shared][data-view=table][data-combat]{grid-template-rows:var(--rail-top) var(--tabletop-h,minmax(0,1fr)) auto}
 #matrix-v2 .cm-board[data-combat]>.cm-stage-top{padding-bottom:var(--combat-h)}
 #matrix-v2 .cm-board[data-combat]>.cm-stage-rail,#matrix-v2 .cm-board[data-combat]>.cm-stage-side,#matrix-v2 .cm-board[data-combat]>#cm-card-inspector{top:var(--rail-top)}
 #matrix-v2 .cm-board[data-combat]>.cm-stage-side{height:calc(100% - var(--rail-top))!important}
@@ -979,7 +974,6 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-board-pie-life.is-active{filter:drop-shadow(0 0 5px var(--color-accent))}
 #matrix-v2 .cm-board .cm-board-pie-priority{position:absolute;top:58%;left:50%;transform:translateX(-50%);font-size:calc(15px*var(--hud-scale,1));white-space:nowrap;color:var(--mat-ink);background:var(--mat-scrim);padding:2px 4px;border-radius:3px;pointer-events:none}
 #matrix-v2 .cm-board .cm-hand-legend{font-size:calc(15px*var(--hud-scale,1));white-space:normal}
-#matrix-v2 .cm-board[data-view=table]>.cm-board-hand{--hc:max(79px,calc(112px*var(--hand-scale,1)))}
 #matrix-v2 .cm-board .cm-stage-module>header>h3{display:flex;flex:1;margin:0;min-width:0}
 #matrix-v2 .cm-board .cm-module-toggle{display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;min-height:28px;margin:0;padding:0 4px;border:0;background:transparent;color:inherit;font:700 15px/1.2 var(--font-body);text-align:left;cursor:pointer}
 #matrix-v2 .cm-board .cm-stage-module[data-module=coach]>.cm-module-body{overflow:visible}
@@ -1116,15 +1110,15 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-board-pile figcaption{min-width:0;max-width:100%}
 #matrix-v2 .cm-board[data-shell=shared] .cm-stage-camera{right:calc(var(--play-inspector,0px) + var(--stage-side-offset,0px) + 16px)}
 #matrix-v2 .cm-board[data-shell=shared] .cm-table-menu{right:calc(var(--play-inspector,0px) + var(--stage-side-offset,0px) + 126px)}
-#matrix-v2 .cm-board[data-view=full] .cm-stage-top{flex-wrap:wrap}
-#matrix-v2 .cm-board[data-view=full] .cm-stage-top>.cm-stage-camera,#matrix-v2 .cm-board[data-view=full] .cm-stage-top>.cm-table-menu{position:relative;top:auto;right:auto;bottom:auto;flex:none}
-#matrix-v2 .cm-board[data-view=full] .cm-stage-top .cm-stage-camera>div,#matrix-v2 .cm-board[data-view=full] .cm-stage-top .cm-table-menu>div{top:calc(100% + 6px);bottom:auto}
-#matrix-v2 .cm-board[data-view=full]{--full-pane-top:calc(var(--hud-top,58px) + var(--combat-h,0px));--full-clear-top:calc(var(--full-pane-top) + var(--full-action-h,0px) + 24px)}
-#matrix-v2 .cm-board[data-view=full]>.cm-stage-rail,#matrix-v2 .cm-board[data-view=full]>.cm-stage-side,#matrix-v2 .cm-board[data-view=full]>#cm-card-inspector{top:var(--full-pane-top)}
-#matrix-v2 .cm-board[data-view=full]>.cm-stage-side{height:calc(100% - var(--full-pane-top))!important}
-#matrix-v2 .cm-board[data-view=full]>.cm-board-panegrip{top:var(--full-pane-top);height:calc(100% - var(--full-pane-top))}
-#matrix-v2 .cm-board[data-view=full] .cm-stage-region>.cm-decision-slot{top:calc(var(--full-action-h,0px) + 24px);max-height:calc(100% - var(--full-action-h,0px) - 36px)}
-#matrix-v2 .cm-board[data-view=full] .cm-stage-region>.cm-decision-slot>#cm-board-decision{max-height:min(65dvh,650px,calc(100dvh - var(--full-clear-top) - 20px))}
+#matrix-v2 .cm-board[data-stage=on] .cm-stage-top{flex-wrap:wrap}
+#matrix-v2 .cm-board[data-stage=on] .cm-stage-top>.cm-stage-camera,#matrix-v2 .cm-board[data-stage=on] .cm-stage-top>.cm-table-menu{position:relative;top:auto;right:auto;bottom:auto;flex:none}
+#matrix-v2 .cm-board[data-stage=on] .cm-stage-top .cm-stage-camera>div,#matrix-v2 .cm-board[data-stage=on] .cm-stage-top .cm-table-menu>div{top:calc(100% + 6px);bottom:auto}
+#matrix-v2 .cm-board[data-stage=on]{--full-pane-top:calc(var(--hud-top,58px) + var(--combat-h,0px));--full-clear-top:calc(var(--full-pane-top) + var(--full-action-h,0px) + 24px)}
+#matrix-v2 .cm-board[data-stage=on]>.cm-stage-rail,#matrix-v2 .cm-board[data-stage=on]>.cm-stage-side,#matrix-v2 .cm-board[data-stage=on]>#cm-card-inspector{top:var(--full-pane-top)}
+#matrix-v2 .cm-board[data-stage=on]>.cm-stage-side{height:calc(100% - var(--full-pane-top))!important}
+#matrix-v2 .cm-board[data-stage=on]>.cm-board-panegrip{top:var(--full-pane-top);height:calc(100% - var(--full-pane-top))}
+#matrix-v2 .cm-board[data-stage=on] .cm-stage-region>.cm-decision-slot{top:calc(var(--full-action-h,0px) + 24px);max-height:calc(100% - var(--full-action-h,0px) - 36px)}
+#matrix-v2 .cm-board[data-stage=on] .cm-stage-region>.cm-decision-slot>#cm-board-decision{max-height:min(65dvh,650px,calc(100dvh - var(--full-clear-top) - 20px))}
 #matrix-v2 .cm-board .cm-stage-actions .v-button{font-size:calc(15px*var(--hud-scale,1));min-height:42px}
 @media(max-width:1100px){#matrix-v2 .cm-board .cm-stage-actions .v-button{min-height:38px}}
 #matrix-v2 .cm-board .cm-stage-actions small,#matrix-v2 .cm-board :is(.cm-stage-caption,.cm-stage-life-list,.cm-stage-life){font-size:calc(15px*var(--hud-scale,1))}
@@ -1266,7 +1260,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 /* Scrolling something into view in a drawer (a focused box, a card) leaves a margin instead of landing flush on the edge. */
 #matrix-v2 .cm-board :is(.cm-stage-rail,.cm-stage-side){scroll-padding:var(--drawer-inset)}
 /* In the 3D view the tabs hang from the top of the drawers; in the flat views the seat labels run along the top, so there they stay where they were, at the middle. */
-#matrix-v2 .cm-board[data-view=full]:not([data-phone]) .cm-drawer-tab{top:var(--full-pane-top)}
+#matrix-v2 .cm-board[data-stage=on]:not([data-phone]) .cm-drawer-tab{top:var(--full-pane-top)}
 /* The right tab stands at the right drawer's outer edge: past the inspector or Coach panel when one is open, and past the drawer's own width. */
 #matrix-v2 .cm-board[data-shell=shared]:not([data-phone])>.cm-stage-right{right:calc(var(--play-inspector,0px) + var(--stage-side-offset,0px))}
 /* The ribbon is the HUD's height whatever its text (two lines or three), and while the combat band hangs from it, that plus the band. */
@@ -1309,7 +1303,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 /* THE TABLE MENU'S PAGES, A DRAWER AT ITS SIDE (Rob, 2026-10-27: "when I select an option it should have a drawer that pops out the side of the menu with that selection's options. Currently it puts it at the bottom"): CrankMagic Pages is the menu's last item; its list opens beside the menu, to its left, never under it. */
 #matrix-v2 .cm-board .cm-table-menu>div{width:240px;min-width:0;box-sizing:border-box}
 #matrix-v2 .cm-board .cm-table-menu>.cm-table-flyout{position:absolute;right:248px;top:46px;width:220px;box-sizing:border-box;padding:12px;background:var(--color-panel);border:1px solid var(--color-line-strong);border-radius:var(--radius-card);box-shadow:var(--shadow-pop);max-height:70dvh;overflow:auto;z-index:1}
-#matrix-v2 .cm-board[data-view=full] .cm-stage-top .cm-table-menu>.cm-table-flyout{top:calc(100% + 6px)}
+#matrix-v2 .cm-board[data-stage=on] .cm-stage-top .cm-table-menu>.cm-table-flyout{top:calc(100% + 6px)}
 #matrix-v2 .cm-board .cm-table-flyout .cm-board-nav{position:static;width:auto;border:0;box-shadow:none;background:none;padding:0}
 #matrix-v2 .cm-board .cm-table-flyout .cm-board-nav a{color:var(--color-ink)}
 #matrix-v2 .cm-board[data-phone] .cm-table-menu>.cm-table-flyout{position:fixed;left:8px;right:8px;top:auto;bottom:8px;width:auto}
@@ -1741,3 +1735,25 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
    of the backdrop does not take it. */
 #matrix-v2 .cm-lb :is(button,a,input,select){scroll-margin:14px}
 #matrix-v2 .cm-board .cm-seatboard [data-action=board-focus]:focus-visible{outline:2px solid #11161f;outline-offset:2px;box-shadow:0 0 0 2px #ffffff}
+
+/* TABLE AND FOCUS ARE THE 3D VIEW'S STAGE WITHOUT ITS CANVAS (Rob, 2026-10-28): the flat ground under the boards, in the 3D view's own dark green. */
+.cm-board[data-stage="on"]:not([data-3d="on"]){background:#071719}
+.cm-stage-region[data-renderer="flat"]{background:radial-gradient(ellipse at 50% 18%,#315847,#071719 74%)}
+/* The boards of the flat stage are set by CrankStage.flatGeometry, one matrix each, like the 3D view's. */
+.cm-stage-slot{position:absolute;z-index:1;min-width:0;min-height:0}
+.cm-stage-slot>*{zoom:var(--mat-zoom,1)}
+.cm-stage-slot>.cm-mat{width:100%;height:100%}
+#matrix-v2 .cm-stage-region>.cm-board-table.cm-stage-flat{position:absolute;inset:0;display:block;padding:0;margin:0;gap:0;isolation:isolate;pointer-events:none}
+.cm-stage-flat>*{pointer-events:auto}
+.cm-stage-flat>.cm-board-fan{pointer-events:none}
+
+/* THE FLAT STAGE'S BOARDS (Rob, 2026-10-28; the Focus board, as he asked it): the four piles are the size of a playing card -- Command and Exile at the top, Library and Graveyard at
+   the foot -- with the History between them, not a pane along the bottom; and no board's cards are larger than its height can hold. */
+#matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=table]{--bc:min(var(--bc-cap,60px),max(calc(clamp(30px,var(--row-w,620px)*.074,60px)*var(--board-scale,1)),var(--caption-card-min,0px)))}
+#matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=focus]{--bc:min(var(--bc-cap,136px),max(calc(clamp(60px,var(--mat-w,1060px)*.078,136px)*var(--board-scale,1)),var(--caption-card-min,0px)))}
+#matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=focus]>.cm-mat-grid{grid-template-rows:var(--field-px) 8px var(--lands-px)}
+#matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=focus] .cm-board-pile{grid-row:1 / -1;height:var(--pile-row)}
+#matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=focus] .cm-board-pile:is([data-zone=command],[data-zone=exile]){align-self:start}
+#matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=focus] .cm-board-pile:is([data-zone=library],[data-zone=graveyard]){align-self:end}
+#matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=focus]>.cm-mat-grid>.cm-board-band{grid-column:2 / -1;grid-row:1 / -1;min-height:0;margin-block:calc(var(--pile-row) + 6px);align-self:stretch;overflow:auto}
+#matrix-v2 .cm-board .cm-tab-count.cm-tab-chat{background:var(--color-money,#2f8f6b)}

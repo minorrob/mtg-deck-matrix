@@ -3284,7 +3284,6 @@ html[data-motion=reduce] *,html[data-motion=reduce] *::before,html[data-motion=r
 .cm-board{position:fixed;inset:0;z-index:50;display:grid;grid-template-rows:48px minmax(0,1fr);background:var(--v-bg);color:var(--v-ink);overflow-x:hidden;overflow-y:auto;--board-scale:var(--card-scale,1);--hand-scale:var(--card-scale,1);--back-img:url(assets/crankmagic/card-back-tan.webp);--bc:calc(78px * var(--board-scale,1));--hc:calc(112px * var(--hand-scale,1))}
 /* The tabletop keeps the room fit() gives it (--tabletop-h), and a hand larger than the table's card size runs on below,
    the board scrolling to it (Rob, 2026-10-09). The strip stays at the top. */
-.cm-board[data-view="table"]{grid-template-rows:48px var(--tabletop-h,minmax(0,1fr)) auto}
 .cm-board-strip{position:sticky;top:0}
 .cm-board-loading{padding:40px;text-align:center;color:var(--v-muted)}
 /* THE STRIP, one 48px line that never wraps. */
@@ -3574,8 +3573,6 @@ button.cm-vitals{cursor:pointer}
 .cm-board-hand-cards{flex:1 1 auto;min-width:0;align-items:flex-start;gap:8px}
 .cm-board-hand .cm-bcard{--bc:var(--hc);cursor:pointer;transform-origin:50% 100%}
 .cm-board-hand .cm-bcard:hover{transform:translateY(-22%);z-index:3}
-.cm-board[data-view="table"] .cm-board-hand{margin:0 14px;--hc:calc(74px * var(--hand-scale,1))}
-.cm-board[data-view="table"]>.cm-board-hand{align-self:start}   /* its own height, not the row's: what fit() reserves for it */
 /* THE FOCUS VIEW: the seat pane, then the mat, the largest 16:9 that fits, the fan behind it, the tray over its foot. */
 .cm-board-body{position:relative;display:grid;grid-template-columns:var(--pane-w,168px) minmax(0,1fr);min-height:0;min-width:0}
 /* The divider between the pane and the mat (item 15): a bar along the pane's edge, dragged sideways. */
@@ -3638,9 +3635,9 @@ button.cm-vitals{cursor:pointer}
    the table and the side column alike; the other seats are smaller boards at the far sides and the back (grid areas
    left · back · right); the big board, bare, takes what is left and the hand its foot. The rail and the side column
    lie on a near-opaque dark, so their words read over any art. */
-.cm-board[data-view="full"]{grid-template-rows:minmax(0,1fr);grid-template-columns:44px minmax(0,1fr) 210px;gap:8px;padding:8px;background:var(--mat-felt-edge)}   /* no overflow:hidden: a hand made larger runs on below, the board scrolling to it (Rob, 2026-10-09) */
-.cm-board[data-view="full"]>.cm-full-center,.cm-board[data-view="full"]>.cm-full-side{position:relative;z-index:1}
-.cm-board[data-view="full"]>.cm-full-rail{position:relative;z-index:3}   /* its menus open over the table */
+.cm-board[data-stage="on"]{grid-template-rows:minmax(0,1fr);grid-template-columns:44px minmax(0,1fr) 210px;gap:8px;padding:8px;background:var(--mat-felt-edge)}   /* no overflow:hidden: a hand made larger runs on below, the board scrolling to it (Rob, 2026-10-09) */
+.cm-board[data-stage="on"]>.cm-full-center,.cm-board[data-stage="on"]>.cm-full-side{position:relative;z-index:1}
+.cm-board[data-stage="on"]>.cm-full-rail{position:relative;z-index:3}   /* its menus open over the table */
 .cm-full-ground{position:absolute;inset:0;z-index:0;overflow:hidden;background:radial-gradient(ellipse at 50% 30%,var(--mat-felt),var(--mat-felt-edge) 78%);--horizon-px:300px}
 .cm-full-wall,.cm-full-floor{display:none}
 /* THE 3D TABLE (data-3d=on): the ground in two parts of the one picture, the wall beyond the horizon standing, the floor
@@ -3739,15 +3736,11 @@ button.cm-vitals{cursor:pointer}
 /* DOCKED (Rob's note 10): a column beside the mat in Focus and in the Table view, the mat giving it its width; its edge
    is a divider. In Full screen, where the side column already holds the same, it stays a slide-over. */
 .cm-board-panel{position:relative;z-index:6;display:flex;flex-direction:column;gap:12px;padding:12px 14px 12px 18px;background:var(--v-panel);color:var(--v-ink);border-left:1px solid var(--v-line-strong);overflow:hidden;min-width:0;min-height:0}
-.cm-board[data-view="full"] .cm-board-panel{position:fixed;top:0;right:0;bottom:0;z-index:74;width:min(360px,100vw);box-shadow:-24px 0 48px -24px rgb(0 0 0 / .6)}
+.cm-board[data-stage="on"] .cm-board-panel{position:fixed;top:0;right:0;bottom:0;z-index:74;width:min(360px,100vw);box-shadow:-24px 0 48px -24px rgb(0 0 0 / .6)}
 .cm-board-body.has-panel{grid-template-columns:var(--pane-w,168px) minmax(0,1fr) var(--panel-w,340px)}
 .cm-board-body.has-panel:has(.cm-board-pane.is-shut){grid-template-columns:44px minmax(0,1fr) var(--panel-w,340px)}
-.cm-board[data-view="table"].has-panel{grid-template-columns:minmax(0,1fr) var(--panel-w,340px)}
-.cm-board[data-view="table"].has-panel>.cm-board-strip{grid-column:1 / 3}
-.cm-board[data-view="table"].has-panel>.cm-board-panel{grid-column:2;grid-row:2 / 4}
-.cm-board[data-view="table"].has-panel>.cm-board-tabletop,.cm-board[data-view="table"].has-panel>.cm-board-hand{grid-column:1}
 .cm-board-panelgrip{position:absolute;top:0;bottom:0;left:-6px;width:12px;z-index:7;display:flex}
-.cm-board[data-view="full"] .cm-board-panelgrip{display:none}
+.cm-board[data-stage="on"] .cm-board-panelgrip{display:none}
 .cm-panel-tabs{display:flex;gap:4px;flex:1 1 auto;min-width:0;padding:3px;border-radius:10px;background:color-mix(in srgb,var(--v-ink) 6%,transparent)}
 .cm-panel-tab{flex:1 1 auto;min-width:0;height:28px;padding:0 8px;border:0;border-radius:8px;background:transparent;color:var(--v-ink);font:inherit;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
 .cm-panel-tab:hover{background:var(--v-raised)}
@@ -3838,7 +3831,7 @@ button.cm-vitals{cursor:pointer}
 .cm-board-coach{position:fixed;top:0;right:0;bottom:0;z-index:75;width:min(400px,100vw);display:flex;flex-direction:column;background:var(--v-panel);color:var(--v-ink);border-left:1px solid var(--v-line-strong);box-shadow:-24px 0 48px -24px rgb(0 0 0 / .6)}
 .cm-board-coach[hidden]{display:none}
 /* In Full screen the Coach takes the side column's lower half, under the log (item 22); fit() measures the column. */
-.cm-board[data-view="full"][data-coach="open"] .cm-full-side{align-self:start;height:calc(50% - 3px)}
+.cm-board[data-stage="on"][data-coach="open"] .cm-full-side{align-self:start;height:calc(50% - 3px)}
 .cm-board-coach.is-docked{top:var(--dock-y,50%);left:var(--dock-x,auto);right:auto;bottom:auto;width:var(--dock-w,210px);height:var(--dock-h,50%);border:1px solid var(--v-line-strong);border-radius:8px;box-shadow:none;overflow:hidden}
 .cm-board-coach.is-docked .cm-coach-head{gap:6px;padding:8px 10px}
 #matrix-v2 .cm-board-coach.is-docked .cm-coach-head h2{font-size:14px;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -4027,7 +4020,7 @@ button.cm-vitals{cursor:pointer}
    gold value, violet fade. The line under each sits on a dark backing at 4.5:1. The Overlay level (--level, 0 to 1)
    scales the size and the glow. The layer is beside the board, above it, and takes no pointer. */
 .cm-board-callouts{position:fixed;left:50%;top:72px;z-index:58;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;max-width:min(720px,90vw)}
-.cm-board[data-view="full"]~.cm-board-callouts{top:16%}
+.cm-board[data-stage="on"]~.cm-board-callouts{top:16%}
 .cm-board-callouts.is-hidden{visibility:hidden}
 .cm-board[data-phone]~.cm-board-callouts{z-index:61;top:30%}
 .cm-callout{display:grid;justify-items:center;gap:2px;--glow:var(--v-accent);--size:calc(38px + 26px * var(--level,.6));color:var(--tone);filter:drop-shadow(0 0 calc(6px + 10px * var(--level,.6)) var(--glow))}

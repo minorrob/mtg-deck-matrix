@@ -62,6 +62,54 @@
     return {width:w,height:h,planeHeight,base,cy,reach:reachPx,reachMost,sx,sy,ox,oy,angle,yaw,distance,focal,screenY,pan:at,
       camera:{eye,yaw:turn,pitch,right,up,ahead},project,unproject,quad,rear,front};
   }
+  /* THE FLAT TABLE (Rob, 2026-10-28: Table and Focus are the 3D view's HUD and functions without the canvas). Both lay their boards on a plane at no tilt and
+     set them as the 3D view's are -- one matrix each -- so the same zoom (the wheel, Camera's slider) and pan (a drag across the table) move them and the cards
+     stay sharp. TABLE: every seat's board the same 16:9, two across and two down (side by side for two; two over one for three), the largest that fits above the
+     hand. FOCUS: the others' boards in a row across the back, and the seat looked at the largest 16:9 that fits between them and the hand. `reserve` is the foot of
+     the stage the hand's tray covers; `gapX` and `gapY` what lies between boards (Table's life counter sits over the crossing). */
+  const GRID_MARGIN=10, GRID_GAP=12;
+  function flatGeometry(width, height, {mode = "table", zoom = 100, pan = null, seats = 4, reserve = 0, top = 0, gapX = GRID_GAP, gapY = GRID_GAP, padL = 0} = {}) {
+    const w=Math.max(1,width), h=Math.max(1,height), n=clamp(seats,1,4), z=clamp(zoom,60,200)/100;
+    const roomW=w-GRID_MARGIN*2-padL, roomH=Math.max(60,h-top-reserve-GRID_MARGIN*2);
+    const cx=w/2, cy=top+(h-top-reserve)/2, at={x:clamp(pan?.x,-w,w),y:clamp(pan?.y,-h,h)};
+    const view=(x,y)=>[cx+(x-cx-at.x)*z,cy+(y-cy-at.y)*z];
+    function surface(r) {
+      const [ox,oy]=view(r.x,r.y);
+      return {...r,matrix:[z,0,0,0,0,z,0,0,0,0,1,0,ox,oy,0,1],
+        quad:[ox,oy,ox+r.width*z,oy,ox+r.width*z,oy+r.height*z,ox,oy+r.height*z]};
+    }
+    const unproject=(px,py)=>{const x=(px-cx)/z+cx+at.x,y=(py-cy)/z+cy+at.y;return {x,y,world:[x-w/2,0,-(y-h/2)]};};
+    const common={flat:true,width:w,height:h,planeHeight:h,base:h,cy:h/2,reach:0,reachMost:0,sx:z,sy:z,angle:0,yaw:0,distance:1,focal:1,screenY:cy,pan:at,center:[cx,cy],
+      camera:{eye:[0,1,0],yaw:0,pitch:Math.PI/2,right:[1,0,0],up:[0,0,1],ahead:[0,-1,0]},project:view,unproject,quad:[...view(0,0),...view(w,0),...view(w,h),...view(0,h)]};
+    if(mode==="focus"){
+      /* The others go across the back, or -- where the window is wide and not tall -- in a column at the right, whichever lets the board looked at be larger. */
+      const others=Math.max(0,n-1), x1=GRID_MARGIN+padL, between=others?GRID_GAP:0;
+      const stripH=others?Math.round(clamp(roomH*.15,80,112)):0;
+      const availStrip=Math.max(60,roomH-stripH-between), bwStrip=Math.max(120,Math.floor(Math.min(roomW,availStrip*16/9)));
+      const colW=others?Math.floor(Math.min((w-x1-GRID_MARGIN)*.27,(roomH-GRID_GAP*(others-1))/others/.62)):0;
+      const bwCol=others?Math.max(120,Math.floor(Math.min(w-x1-GRID_MARGIN-colW-between,roomH*16/9))):0;
+      if(others&&bwCol>bwStrip*1.08){
+        const bh=Math.round(bwCol*9/16), usedW=bwCol+between+colW, left=Math.round(x1+Math.max(0,(w-x1-GRID_MARGIN-usedW)/2));
+        const rh=Math.round(colW*.62), usedH=rh*others+GRID_GAP*(others-1), y0=Math.round(top+GRID_MARGIN+Math.max(0,(roomH-usedH)/2));
+        const rear=Array.from({length:others},(_,i)=>surface({x:left+bwCol+between,y:y0+i*(rh+GRID_GAP),width:colW,height:rh}));
+        const big={x:left,y:Math.round(top+GRID_MARGIN+Math.max(0,(roomH-bh)/2)),width:bwCol,height:bh};
+        return {...common,focus:true,column:true,rear,front:surface(big),board:{width:bwCol,height:bh,column:colW}};
+      }
+      const bw=bwStrip, bh=Math.round(bw*9/16);
+      const big={x:Math.round(w/2-bw/2),y:Math.round(top+GRID_MARGIN+stripH+between+Math.max(0,(availStrip-bh)/2)),width:bw,height:bh};
+      const rw=others?Math.floor(Math.min((roomW-GRID_GAP*(others-1))/others,stripH*2.4)):0, usedW=rw*others+GRID_GAP*Math.max(0,others-1), x0=Math.round(padL+GRID_MARGIN+(roomW-usedW)/2);
+      const rear=Array.from({length:others},(_,i)=>surface({x:x0+i*(rw+GRID_GAP),y:top+GRID_MARGIN,width:rw,height:stripH}));
+      return {...common,focus:true,rear,front:surface(big),board:{width:bw,height:bh,strip:stripH}};
+    }
+    const cols=n===1?1:2, rows=n<=2?1:2;
+    const fit=Math.max(60,Math.floor(Math.min((roomW-gapX*(cols-1))/cols,(roomH-gapY*(rows-1))/rows*16/9)));
+    const bw=fit, bh=Math.round(fit*9/16), usedW=bw*cols+gapX*(cols-1), usedH=bh*rows+gapY*(rows-1);
+    const x0=Math.round(padL+GRID_MARGIN+(roomW-usedW)/2), y0=Math.round(top+GRID_MARGIN+Math.max(0,(roomH-usedH)/2));
+    /* where each seat sits, by its area letter (a top left, b top right, c bottom left, d bottom right; three seats put the third across the foot) */
+    const cell={a:[0,0],b:[1,0],c:n===3?[.5,1]:[0,1],d:[1,1]};
+    const rect=area=>{const [c,r]=cell[area]||cell.a;return {x:Math.round(x0+c*(bw+gapX)),y:Math.round(y0+r*(bh+gapY)),width:bw,height:bh};};
+    return {...common,grid:true,rear:[],front:null,board:{width:bw,height:bh,gapX,gapY,x:x0,y:y0,cols,rows,usedW,usedH},rect,surface,slot:area=>surface(rect(area)),mid:view(x0+usedW/2,y0+usedH/2)};
+  }
   /* The backdrops: each video at up to three heights, 720, 1080 and 1440 lines, never more than its source (environment,
      backdropLines). The list between the markers is written by tools/stage-backdrops.mjs from a folder of videos. */
   /* THE FLOOR EACH BACKDROP SITS ON (Rob, 2026-10-27: "I want true 0 degree angle to the slope of the floor that it sits on ... the
@@ -167,6 +215,7 @@
     return lines.find(n=>n>=need)??lines.at(-1);
   }
   function environment(s) {
+    if(s.opts.flat){s.environment?.remove();s.video?.pause();return;}
     const list=appearances.backgrounds,scene=list.find(x=>x.id===s.opts.background)||list[0], board=s.host.closest('.cm-board');
     s.host.classList.toggle('has-video',!!scene?.video);
     /* THE BACKDROP WHOLE (Rob, 2026-10-25: "The lava background shouldn't be so zoomed in by default ... use much more of
@@ -195,8 +244,13 @@
     s.opts.onError?.(`${message} Your cards and decisions are still available.`);
   }
   function mount(host, opts={}) {
+    /* A stage that was a canvas and is now flat (or the other way) is a new stage. */
+    if (current && !!current.opts.flat !== !!opts.flat) unmount();
     if (current) {current.host=host;current.opts=opts;if(current.canvas&&current.engine&&!current.lostContext)host.prepend(current.canvas);environment(current);return current.ready;}
-    const s=current={host,opts};environment(s);
+    const s=current={host,opts};
+    /* FLAT (Table and Focus): the geometry and the DOM surfaces of the 3D view, no canvas, no backdrop video -- the board's own flat ground shows. */
+    if (opts.flat) {s.ready=Promise.resolve();s.host.dataset.renderer='flat';s.host.dataset.engine='flat';return s.ready;}
+    environment(s);
     s.unhear=root.CrankMotion?.onChange(()=>{s.opts.reduced=root.CrankMotion.reduced();environment(s);});
     s.ready=load().then(()=>{
       if(current!==s)return;
@@ -264,6 +318,7 @@
   }
   /* The DOM surfaces and the Babylon camera, from one geometry: at every layout, and at every frame of a camera motion. */
   function place(s) {
+    if(s.opts.flat)return placeFlat(s);
     root.CrankTables?.hold?.();
     const g=geometry(s.box.width,s.box.height,{...s.opts,look:s.pose,seats:Math.max(0,(s.opts.mats||[]).length-1)});
     s.view=g;
@@ -271,6 +326,27 @@
     position(s.host.querySelector('.cm-stage-front'),g.front);
     s.host.style.setProperty('--stage-card',`${Math.floor(clamp((g.front.height-64)/5.5,24,112)*1.3*(1+.8*(clamp(s.opts.cards??100,70,200)-100)/100))}px`);
     if(s.engine&&!s.lostContext){if(s.host.firstChild!==s.canvas)s.host.prepend(s.canvas);paint(s,g);}return g;
+  }
+  /* The flat stage (Table and Focus): the boards laid out by flatGeometry, set by one matrix each. A board's own layout is computed at the size it is drawn (--row-w, --mat-w). */
+  function placeFlat(s) {
+    const o=s.opts, cards=1+.8*(clamp(o.cards??100,70,200)-100)/100, seatsN=(o.mats||[]).length;
+    const g=flatGeometry(s.box.width,s.box.height,{mode:o.grid?"table":"focus",zoom:o.zoom,pan:o.pan,seats:seatsN,reserve:o.reserve||0,top:o.top||0,gapX:o.gapX,gapY:o.gapY,padL:o.padL||0});
+    s.view=g;
+    const size=(el,r)=>{
+      el.style.setProperty('--row-w',`${r.width}px`);el.style.setProperty('--mat-w',`${r.width}px`);el.style.setProperty('--mat-h',`${r.height}px`);el.style.setProperty('--board-scale',String(cards));
+      el.style.setProperty('--rear-card',`${Math.max(18,(r.height-28)/4.8)}px`);
+      /* A board's cards are no larger than its two pairs of piles can stand in its height: a pile is a card (5:7) and its caption, and Focus keeps a band of History between the pairs. */
+      const head=el.querySelector('.cm-mat-head')?.offsetHeight||0, band=el.querySelector('.cm-board-band')?64:0;
+      el.style.setProperty('--bc-cap',`${Math.max(24,Math.floor(((r.height-head-14-band)/2-26)/1.4))}px`);
+    };
+    if(g.grid){
+      for(const el of s.host.querySelectorAll('.cm-stage-slot')){const r=g.slot(el.dataset.area);position(el,r);size(el,r);}
+      s.host.style.setProperty('--mid-x',`${g.mid[0]}px`);s.host.style.setProperty('--mid-y',`${g.mid[1]}px`);
+    } else {
+      for(const [i,el] of [...s.host.querySelectorAll('.cm-stage-rear')].entries()){if(g.rear[i]){position(el,g.rear[i]);size(el,g.rear[i]);}}
+      const front=s.host.querySelector('.cm-stage-slot');if(front){position(front,g.front);size(front,g.front);}
+    }
+    return g;
   }
   function paint(s,given) {
     if(current!==s||!s.engine||!s.box)return;
@@ -369,7 +445,7 @@
   }
   /** Start the head look at a viewport point. Returns the motion's length and reach, or null off the table's plane. */
   function look(clientX,clientY) {
-    const s=current;if(!s?.box)return null;
+    const s=current;if(!s?.box||s.opts.flat)return null;
     const box=s.host.getBoundingClientRect(),g=geometry(s.box.width,s.box.height,{...s.opts,look:null});
     const hit=g.unproject(clientX-box.left,clientY-box.top);if(!hit)return null;
     const target=aim(g,hit.world),now=performance.now(),L=s.look;
@@ -401,7 +477,8 @@
   const planeOf=(g,P)=>{const c=Math.cos(g.yaw),q=Math.sin(g.yaw),Y=-P[2];return [c*P[0]+q*Y+g.width/2,-q*P[0]+c*Y+g.cy];};
   // Presentation diagnostics only: no cards, decisions, credentials, or room state.
   function diagnostics() {
-    const s=current;if(!s?.engine||!s.geometry)return {renderer:s?.host.dataset.renderer||'unmounted'};
+    const s=current;if(s?.opts.flat)return {renderer:'flat',grid:!!s.view?.grid,focus:!!s.view?.focus,board:s.view?.board||null,pan:s.view?{...s.view.pan}:null,view:s.view};
+    if(!s?.engine||!s.geometry)return {renderer:s?.host.dataset.renderer||'unmounted'};
     const B=root.BABYLON,g=s.geometry,world=s.table.root.computeWorldMatrix(true);
     /* The corners of the table top as it was built (its own size, before any stretch), through the transform Babylon
        draws it with: where the mesh really is, against where the DOM's plane is. */
@@ -430,6 +507,6 @@
     if(s.canvas){s.canvas.removeEventListener('webglcontextlost',s.lost);s.canvas.remove();}
     s.scene?.dispose();s.engine?.dispose();
   }
-  root.CrankStage=Object.freeze({geometry,floorTilt,TILT_LIMIT,carousel,appearances,backdropLines,tableDesign,DEFAULT_TABLE,mount,layout,unmount,diagnostics,look,steer,unlook,headPose,pick,
+  root.CrankStage=Object.freeze({geometry,flatGeometry,floorTilt,TILT_LIMIT,carousel,appearances,backdropLines,tableDesign,DEFAULT_TABLE,mount,layout,unmount,diagnostics,look,steer,unlook,headPose,pick,
     resolution,previewResolution,setResolution,RESOLUTION:Object.freeze({key:RES_KEY,min:RES_MIN,max:RES_MAX,default:RES_DEFAULT})});
 })(globalThis);
