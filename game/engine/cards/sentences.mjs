@@ -399,8 +399,8 @@ export function segment(text, name, library, except = null, {spells = true} = {}
  * every span `keep` accepts, and the sentences left, each with its place in the text. A spell is never half written:
  * when anything is left, its sentences are left too, so the writer writes the whole spell.
  *
- * NOR IS ANY ABILITY (CR 113.2c: each paragraph of a card's text is one ability, but for keywords strung on one line,
- * 702.1c). A paragraph the library knows only in part is left whole, its known sentences with it, and asked of the writer
+ * NOR IS ANY ABILITY (CR 113.2c: each paragraph of a card's text is one ability, aside from keywords strung on one line).
+ * A paragraph the library knows only in part is left whole, its known sentences with it, and asked of the writer
  * as one piece -- Gemstone Caverns' "{T}: Add {C}." is a sentence the library knows, and "If Gemstone Caverns has a luck
  * counter on it, instead add one mana of any color." the rest of that same mana ability: written apart, they would be two
  * mana abilities, and the luck counter's "instead" no option of the {C} one (library load L4, 2026-10-21). A keyword
