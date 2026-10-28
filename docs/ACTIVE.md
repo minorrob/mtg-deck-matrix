@@ -30,12 +30,20 @@ one change of the day (the AI-seat controls are for every seated person). Nothin
   game's history lines carry no wall-clock) and `turn`; lobby lines have a real `at`. (7) `request-join` answers `201 {request: {requestId, name, status}}`; a person
   who asked and is not seated yet reads `403 {error, request: {requestId, status: open|declined}}` from `GET /:id`. (8) `GET /:id?watch=1` is added so a spectator
   can read a public table's lobby. (9) A person's name for requests and chat comes from their profile or invitation name, else "A player". (10) `tests/game-table.mjs`
-  had one assertion that only the host chooses an AI's deck; it now says a stranger cannot (Rob's Lobby change, 2026-10-28).
-- **Proven** (Node, cloud container; `NODE_PATH=/opt/node-tools/node_modules GEOMETRY_REQUIRED=1 node tests/<name>.mjs`): `lounge-registry` 53, `lounge-lobby` 67,
+  had one assertion that only the host chooses an AI's deck; it now says a stranger cannot (Rob's Lobby change, 2026-10-28). (11) **An AI seat's mat is chosen for it**
+  (Rob, same day): at `create`, at `add-ai` and for Observe AI game, a hash of tableId + seatId over `AI_MATS` (the art mats and the drawn ones except felt), moved on
+  to one no other seat holds; stored in `record.mats[seatId]`, so `seats[].mat` carries it; `edit-ai` leaves it, `remove` clears it, people start on felt. (12) Hard is
+  refused (422) at the table object's routes, not inside `tableOn`, which still reads an unknown level as Normal (`tests/room-seat-pilots.mjs` creates one). (13) Other
+  tests changed for the contract, none weakened: `tests/coach.mjs` (`/api/ai-seat` is `{open, levels}`), `tests/feedback-store.mjs` (0009 is followed only by 0010),
+  `tests/game-table.mjs` ("every person starts on felt", was every seat), `README.md` names the five suites and says 639.
+- **Proven** (Node, cloud container; `NODE_PATH=/opt/node-tools/node_modules GEOMETRY_REQUIRED=1 node tests/<name>.mjs`): `lounge-registry` 53, `lounge-lobby` 78,
   `lounge-watch` (about 500; a spectator is sent none of 200 hands' card names, and an action frame is refused and not applied; red when the projection is made to
   leak), `lounge-chat` 21, `lounge-results` 34 (an AI-only game plays to its end in 41 alarms; the mid-slice quit path is exercised), plus the existing
-  `game-table` 182, `game-room` 531, `room-ending` 34, `cloud-worker` 155, `release-pages` 230 and `node --test game/tests/*.test.mjs` 262. `ai-door` fails at "and the
-  refusal says who may" on the base commit too (not from this work).
+  `game-table` 182, `game-room` 531, `room-ending` 34, `cloud-worker` 155, `release-pages` 230, `feedback-store` 135, `data-integrity`, `room-seat-pilots` 15, the other
+  `room-*` suites, `agent-seat-table`, `card-demand`, `advisor`, `engine-room-games`, `game-history/leave/replay`, `table-basics/candidates/game-record/rematch`, and
+  `node --test game/tests/*.test.mjs` 262. **Failing on the base commit too, not from this work:** `ai-door` ("and the refusal says who may"), `table-record` ("the seed is
+  nowhere in it"), `coach` (its browser half: `page.click` times out; its Worker half now passes). **Failing at the base commit's HEAD:** `feature-wiring` counts one UK
+  spelling, "greys" in `docs/ui-lane/lounge-contract.md` line 78 (the Play lane's file; one word to change).
 - **Not proven:** nothing here ran against a real Durable Object, D1 or a browser: the sockets are recorded stand-ins and D1 is Node's SQLite with the real
   migrations. The registry's `storage.list` on a real object, the 15-second report throttle, hibernation of a watcher's socket, and the migration on a real D1 are
   unproven until staging. A spectator's `chat`/`quit` frames are pushed to every socket but the board does not read them yet (the Play lane's half).
