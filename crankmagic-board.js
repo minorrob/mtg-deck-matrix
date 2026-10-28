@@ -158,6 +158,7 @@ globalThis.CrankBoard = Object.seal({
      answers in a sentence or three. `shown` is the cards an answer's Show me lights on the board for a few seconds. */
   let coachShown = new Set(), coachShownTimer = null;
 
+  let spectating = false, chatLog = [], chatDraft = "", chatSending = false;
   let tableId = null, table = null, view = null, socket = null, status = "idle", retry = 0, retryTimer = null;
   let focus = null, picked = [], amounts = [], sending = false, tools = false, confirmEnd = false, closedByUs = false;
   const away = new Map();   /* seat number -> until, from the table and from the room's "away" frames */
@@ -347,6 +348,7 @@ globalThis.CrankBoard = Object.seal({
   function connect() {
     clearTimeout(retryTimer);
     const url = new URL(`/api/tables/${encodeURIComponent(tableId)}/connect`, location.href);
+    if (spectating) url.searchParams.set("watch", "1");
     url.protocol = location.protocol === "https:" ? "wss:" : "ws:";
     const s = new WebSocket(url);
     blockPending = null; blockResult = null;
@@ -370,6 +372,8 @@ globalThis.CrankBoard = Object.seal({
     let frame;
     try {frame = JSON.parse(data);} catch {return;}
     if (frame.type === "view") adopt(frame.view);
+    else if (frame.type === "chat") heardChat(frame.message);
+    else if (frame.type === "quit") {C.notice(frame.by ? `${frame.by} ended the game.` : "The game was ended.", false);}
     else if (frame.type === "checked" || (frame.type === "refused" && frame.of === "check")) checkedBlocks(frame);
     else if (frame.type === "receipt") {sending = false; draw();}
     /* A way of playing the room did not take (the AI seats were playing on) is sent again once the game moves (prefer). */
@@ -383,6 +387,8 @@ globalThis.CrankBoard = Object.seal({
     if (!force && view && next.revision < view.revision) return;
     const before = view && view.decision && view.decision.id, was = view, priorBlocks = blockContext();
     offeredPending=null;
+    /* A spectator's view has no seat: it is read as seat 0's table with nobody being "you" (isYou), and nothing to decide. */
+    if (next.spectator === true && (next.seat === null || next.seat === undefined)) next = {...next, seat: 0};
     view = next;
     if (was?.revision !== next.revision || was?.matchId !== next.matchId || was?.seat !== next.seat) {targetPage=0;targetReviewing=false;targetCycles.clear();cardMenu=null;firstCardClick=null;document.getElementById("cm-card-menu")?.remove();picked = []; amounts = []; draftRevision = null; actionCard = null;}
     if (inspection?.automatic && was?.revision !== next.revision) inspection = null;
@@ -420,7 +426,7 @@ globalThis.CrankBoard = Object.seal({
      (`play.stepByStep`) and told to the room whenever a view says otherwise. Once for each wish and revision: a refused
      wish's view has the revision it was sent at, so it is sent again only when the game moves on. */
   function prefer() {
-    if (!view || view.status === "finished" || view.continuing || !socket || socket.readyState !== 1) return;
+    if (!view || view.spectator === true || view.status === "finished" || view.continuing || !socket || socket.readyState !== 1) return;
     const want = (((C.state.preferences || {}).play || {}).stepByStep) === true, ask = !skipEmpty();
     if (want === (view.stepByStep === true) && ask === (view.askStack === true)) return;
     const key = `${view.matchId}:${want}:${ask}`;
@@ -451,7 +457,7 @@ globalThis.CrankBoard = Object.seal({
   };
   const yieldHelp = () => `Yield this turn passes all your priority for the rest of ${nameOf(view.state.turnPlayerId)}'s turn, including new spells and abilities. You still choose targets, blockers, payments and other required decisions. Stop yielding affects future passes after the room acknowledges it; it cannot undo a pass.`;
   function skipControl(short = false, size = "compact") {
-    if (view.state.turnPlayerId === view.seat) return b(skipWords(short), "board-skip", {}, false,
+    if (isYou(view.state.turnPlayerId)) return b(skipWords(short), "board-skip", {}, false,
       {cls: `${size}${skipping === null ? "" : " is-on"}`, disabled: view.status === "finished"});
     if (view.status === "finished" || (!view.mayYield && !view.yielding)) return "";
     const active = view.yielding === true, waiting = yieldPending !== null;
@@ -466,7 +472,7 @@ globalThis.CrankBoard = Object.seal({
   function skip() {
     if (skipping === null) return;
     const d = view.decision;
-    if (view.status === "finished" || view.state.turnPlayerId !== view.seat || view.state.turn !== skipping || (d && d.kind !== "priority") || view.state.stack.length) {skipping = null; return;}
+    if (view.status === "finished" || !isYou(view.state.turnPlayerId) || view.state.turn !== skipping || (d && d.kind !== "priority") || view.state.stack.length) {skipping = null; return;}
     if (d && d.kind === "priority" && !sending) {
       const pass = d.options.find((o) => o.label === "Pass priority");
       if (pass) setTimeout(() => {if (skipping !== null && view.decision === d && !sending) send({indices: [pass.index]});}, 120);
@@ -572,7 +578,9 @@ globalThis.CrankBoard = Object.seal({
   /* ---- reading the view ---- */
   const players = () => (view ? view.state.players : []);
   const seatName = (seatId) => ((view.seats.find((s) => s.seatId === seatId) || {}).name || seatId);
-  const nameOf = (i) => (i === view.seat ? "You" : (players()[i] || {}).name || `Seat ${i + 1}`);
+  /* Whether a seat is the person looking: a spectator (Watch, Observe) holds no seat, so nobody is "you" and the board reads as everyone's. */
+  const isYou = (i) => !!view && view.spectator !== true && i === view.seat;
+  const nameOf = (i) => (isYou(i) ? "You" : (players()[i] || {}).name || `Seat ${i + 1}`);
   /* The game's turn counts every player's; on your own the strip adds which of yours it is (Rob, 2026-10-11: "It says we
      are on turn 3, but I only played one land"). The room counts them (game/room/room.mjs, `yourTurn`). */
   const ordinal = (n) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? "th" : ["th", "st", "nd", "rd"][n % 10] || "th"}`;
@@ -625,15 +633,15 @@ globalThis.CrankBoard = Object.seal({
     /* Poison is read in Table vitals (Rob, 2026-10-27: "Keep poisons in table vitals"), not on every pill; a reader of the
        screen is still told when a seat has some. */
     const inner = `<b>${h.life}</b>${bars}`, cls = `cm-vitals${big ? " is-big" : ""}${danger ? " is-danger" : ""}`;
-    const label = `${p.playerId === view.seat ? "You" : p.name}: ${h.life} life${h.poison > 0 ? `, ${h.poison} poison` : ""}`;
+    const label = `${isYou(p.playerId) ? "You" : p.name}: ${h.life} life${h.poison > 0 ? `, ${h.poison} poison` : ""}`;
     return button ? `<button type="button" class="${cls}" data-action="board-vitals" aria-label="${e(label)}; open Table vitals">${inner}</button>`
       : `<span class="${cls}" aria-label="${e(label)}">${inner}</span>`;
   }
   function seatState(p) {
     const flag=seatFlag(p),i=p.playerId;
     if(departed(i) || p.health.status==='lost' || away.get(i))return flag;
-    if(flag==='Deciding' || (view.decision && i===view.seat))return 'Deciding';
-    return view.state.turnPlayerId===i?(i===view.seat?'Your turn':`${p.name}'s turn`):'Waiting';
+    if(flag==='Deciding' || (view.decision && isYou(i)))return 'Deciding';
+    return view.state.turnPlayerId===i?(isYou(i)?'Your turn':`${p.name}'s turn`):'Waiting';
   }
   /* A seat's state is a colored dot with its word on hover (Rob, 2026-10-27: "Colored dot with the word on hover"): the key
      picks the color, the word stays in the page for a screen reader and for the suites. */
@@ -812,7 +820,7 @@ globalThis.CrankBoard = Object.seal({
     if (d && sending) return "Sent…";
     if (d && d.kind === "priority") {
       const at = stepAt(s.phase);
-      if (s.turnPlayerId !== view.seat && at >= 0) return `${nameOf(s.turnPlayerId)}'s ${THEIR_STEP[STEPS[at][0]]} · you may respond`;
+      if (!isYou(s.turnPlayerId) && at >= 0) return `${nameOf(s.turnPlayerId)}'s ${THEIR_STEP[STEPS[at][0]]} · you may respond`;
       return s.stack.length ? "You may respond" : "";
     }
     if (d) return d.kind === "draw" || ribbon ? "" : d.title;
@@ -835,7 +843,7 @@ globalThis.CrankBoard = Object.seal({
     if (top) return top.name ? `Resolve ${top.name}` : "Let it resolve";
     const d = view.decision, pass = d && d.kind === "priority" ? d.options.find((o) => o.act === "pass") : null;
     if (pass && pass.endsTurn) return "End turn";
-    return s.turnPlayerId === view.seat ? "Next step" : "Pass";
+    return isYou(s.turnPlayerId) ? "Next step" : "Pass";
   }
   function passButton(cls = "compact") {
     const d = view.decision;
@@ -889,7 +897,7 @@ globalThis.CrankBoard = Object.seal({
       : b("End game", "board-end", {}, false, {disabled: over});
     const [lo, hi] = C.cardScaleRange();
     /* Hold remains a separate cast preference; explicit Yield belongs to the room (ROB-28). */
-    const yours = view.state.turnPlayerId === view.seat;
+    const yours = isYou(view.state.turnPlayerId);
     const priority = `<div class="cm-actions">${skipControl()}</div>
       <label class="cm-board-hold"><input type="checkbox" data-board-hold${stored(HOLD_KEY) === "on" ? " checked" : ""}><span>Hold priority after I cast</span></label>
       <label class="cm-board-hold"><input type="checkbox" data-board-skip-empty${skipEmpty() ? " checked" : ""}><span>Skip my priority if no response possible</span></label>
@@ -899,6 +907,7 @@ globalThis.CrankBoard = Object.seal({
     const tabs = [
       {id: "general", icon: "⚙", label: "General", html: `
         <div class="cm-actions cm-board-menu-row">${b("Set Side Drawer Modules", "board-modules-settings")}</div>
+        ${matPicker()}
         <div class="cm-actions cm-board-menu-row">${gb(COACH, "Recommended actions", "board-coach", {}, {cls: ""})}${b("Table vitals", "board-vitals", {})}${b("AI Coach settings…", "ai-settings", {})}</div>
         <div class="cm-actions cm-board-menu-row">${b("Try the callouts", "board-callout-demo", {}, false, {cls: "compact"})}<span class="cm-muted">Overlay ${overlay()}% · set in Settings › Play</span></div>`},
       {id: "video", icon: "🖥", label: "Video", html: `
@@ -929,7 +938,14 @@ globalThis.CrankBoard = Object.seal({
      (Concede, Recommended actions, …) put back what was set when it opened. */
   const SETTINGS_LEAVE = new Set(["board-skip", "board-coach", "board-callout-demo", "board-concede", "board-vitals", "ai-settings", "board-modules-settings"]);
   let settingsExit=null;
-  const settingsKeys = () => [HOLD_KEY, SKIP_KEY, SCALE_KEY.board, SCALE_KEY.hand, "cm-card-scale:board", "cm-stage-resolution"];
+  const settingsKeys = () => ["cm-mat", HOLD_KEY, SKIP_KEY, SCALE_KEY.board, SCALE_KEY.hand, "cm-card-scale:board", "cm-stage-resolution"];
+  /* PLAY MAT, in Settings (Rob, 2026-10-28): the mat your seat plays on, changed here as well as in the lobby. */
+  function matPicker() {
+    const mats = C.tableTools?.MATS;
+    if (!mats || !view || view.seat === null || view.seat === undefined || !table?.seats?.[view.seat]) return "";
+    const now = matOf(view.seat);
+    return `<div class="cm-board-menu-row cm-board-matpick"><label class="cm-settings-slider">Play mat <select data-board-mat aria-label="Play mat">${mats.map(([k, name]) => `<option value="${e(k)}"${k === now ? " selected" : ""}>${e(name)}</option>`).join("")}</select></label><span class="cm-muted">Everyone at the table sees it. Save keeps it, for this table and your next ones.</span></div>`;
+  }
   function settingsNow() {
     const a = sound();
     return {kept: Object.fromEntries(settingsKeys().map((k) => [k, stored(k)])), sound: a ? a.volumes() : null};
@@ -941,6 +957,7 @@ globalThis.CrankBoard = Object.seal({
     if (skipEmpty() !== skipWas) prefer();
     C.setCardScale(C.cardScale(), {save: false});
     globalThis.CrankStage?.previewResolution?.(null);
+    if (matPreview !== null) {matPreview = null; draw();}
     document.dispatchEvent(new CustomEvent("cm-card-scale", {detail: {live: false}}));
     const a = sound(), v = before.sound;
     if (a && v) {
@@ -984,7 +1001,20 @@ globalThis.CrankBoard = Object.seal({
       if (!a || a === document.body || d.contains(a)) document.querySelector("#cm-board [data-action=board-camera]")?.focus({preventScroll: true});
       const after=session.afterClose;session.afterClose=null;if(settingsExit===session)settingsExit=null;after?.();
     }, {once: true});
-    actions["board-settings-save"] = () => {saved = true; d.close();};
+    actions["board-settings-save"] = async () => {
+      saved = true;
+      const mat = matPreview;
+      if (mat !== null && table?.tableId) {
+        try {
+          const T = C.tableTools;
+          await T.api("POST", `${T.tableUrl(table.tableId)}/mat`, {mat});
+          T.rememberMat(mat);
+          if (table.seats?.[view.seat]) table.seats[view.seat].mat = mat;
+        } catch (error) {C.notice(`Your mat did not change: ${error.message}`, true, {undo: false});}
+        matPreview = null; draw();
+      }
+      d.close();
+    };
   }
 
   /* The sound (B8; the pack's three ui rows): the effects and the music, each a slider, and a mute. */
@@ -999,8 +1029,10 @@ globalThis.CrankBoard = Object.seal({
      table  the Table view's four: the same frames at a small size, the header on the outer edge, ⤢ Focus
      full   Full screen's big board, and `opp` its opponents: full bleed, no frames, zones implied by placement
      phone  the phone's one board */
-  const matOf = (i) => ((table && table.seats && table.seats[i]) || {}).mat || "felt";
-  const seatLabel = (p) => (p.playerId === view.seat ? `You · ${p.name}` : p.name);
+  /* Your mat while Settings has one chosen and not yet saved: seen at once, put back by Cancel, sent to the table by Save. */
+  let matPreview = null;
+  const matOf = (i) => (matPreview !== null && view && isYou(i)) ? matPreview : ((table && table.seats && table.seats[i]) || {}).mat || "felt";
+  const seatLabel = (p) => (isYou(p.playerId) ? `You · ${p.name}` : p.name);
   function seatFlag(p) {
     const i = p.playerId, gone = departed(i), dropped = away.get(i);
     return gone ? (gone === "timed-out" ? "Timed out · not finished" : "Conceded")
@@ -1012,7 +1044,7 @@ globalThis.CrankBoard = Object.seal({
      the strip's Turn (Rob, 2026-10-09: "Needs more clear indication of who's turn it is on. Icon on the Card in the
      left or right side pane"). */
   const TURN_ICON = `<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 4.5v7l5.5-3.5z" fill="currentColor"/></svg>`;
-  const turnMark = (i) => view.state.turnPlayerId !== i ? "" : `<span class="cm-board-turn-mark" role="img" aria-label="${i === view.seat ? "Your turn" : `${e(nameOf(i))}'s turn`}" title="${i === view.seat ? "Your turn" : `${e(nameOf(i))}'s turn`}">${TURN_ICON}<b>${i === view.seat ? "Your turn" : "Turn"}</b></span>`;
+  const turnMark = (i) => view.state.turnPlayerId !== i ? "" : `<span class="cm-board-turn-mark" role="img" aria-label="${isYou(i) ? "Your turn" : `${e(nameOf(i))}'s turn`}" title="${isYou(i) ? "Your turn" : `${e(nameOf(i))}'s turn`}">${TURN_ICON}<b>${isYou(i) ? "Your turn" : "Turn"}</b></span>`;
   function ribbon(active, at = stepAt(view.state.phase)) {
     return `<ol class="cm-board-ribbon" aria-label="Steps">${STEPS.map(([label], i) => `<li class="${!active ? "" : i < at ? "is-done" : i === at ? "is-now" : ""}">${e(label)}</li>`).join("")}</ol>`;
   }
@@ -1162,7 +1194,7 @@ globalThis.CrankBoard = Object.seal({
     cardOrders.set(key,order);keep(key,JSON.stringify(order));
   }
   function mat(p, {size = "focus", head = "top", focusButton = false} = {}) {
-    const i = p.playerId, you = i === view.seat, z = p.zones, field = controlledCards(i);
+    const i = p.playerId, you = isYou(i), z = p.zones, field = controlledCards(i);
     const ghosts = z.Battlefield.cards.filter(foreignControl);
     const lands = field.filter((c) => c.types.includes("Land"));
     const leadsBattlefield = c => c.types.includes("Creature") || c.types.includes("Planeswalker");
@@ -1232,12 +1264,12 @@ globalThis.CrankBoard = Object.seal({
     if (over) stops.unshift(`${tint(over.p)} 0% ${pct(over.at[1] - 360)}`);
     const totals = parts.map(({p, at}) => {
       const mid = ((at[0] + at[1]) / 2) * Math.PI / 180, x = 50 + (ps.length===2?25:40) * Math.sin(mid), y = ps.length===2?15:Math.cos(mid)>0?15:85;
-      return `<span class="cm-board-pie-life${p.playerId===view.state.turnPlayerId?' is-active':''}" data-seat="${p.playerId}" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%"><b>${p.health.life}</b><small>${e(p.playerId===view.seat?'You':p.name)}</small></span>`;
+      return `<span class="cm-board-pie-life${p.playerId===view.state.turnPlayerId?' is-active':''}" data-seat="${p.playerId}" style="left:${x.toFixed(1)}%;top:${y.toFixed(1)}%"><b>${p.health.life}</b><small>${e(isYou(p.playerId)?'You':p.name)}</small></span>`;
     }).join("");
-    const said = ps.map((p) => `${p.playerId === view.seat ? "You" : p.name} ${p.health.life}`).join(", ");
+    const said = ps.map((p) => `${isYou(p.playerId) ? "You" : p.name} ${p.health.life}`).join(", ");
     const active=parts.find(({p})=>p.playerId===view.state.turnPlayerId),glow=active?`<i class="cm-board-pie-turn" data-seat="${active.p.playerId}" aria-hidden="true" style="background:conic-gradient(from ${active.at[0]}deg,var(--color-aether) 0deg ${active.at[1]-active.at[0]}deg,transparent ${active.at[1]-active.at[0]}deg 360deg)"></i>`:'';
     return `<div class="cm-board-pie" role="group" aria-label="Life: ${e(said)}" style="background:conic-gradient(${stops.join(",")})">${glow}${totals}
-      <button type="button" class="cm-board-center" data-action="board-vitals" aria-label="Table vitals"><img src="${LOGO}" alt=""></button><span class="cm-board-pie-priority">Priority: ${e(view.state.priorityPlayerId==null?'—':view.state.priorityPlayerId===view.seat?'you':nameOf(view.state.priorityPlayerId))}</span></div>`;
+      <button type="button" class="cm-board-center" data-action="board-vitals" aria-label="Table vitals"><img src="${LOGO}" alt=""></button><span class="cm-board-pie-priority">Priority: ${e(view.state.priorityPlayerId==null?'—':isYou(view.state.priorityPlayerId)?'you':nameOf(view.state.priorityPlayerId))}</span></div>`;
   }
   /* THE FOCUS VIEW: the seat pane, then the board on the mat, the largest 16:9 that fits; the hand docked over its
      bottom edge. */
@@ -1245,7 +1277,7 @@ globalThis.CrankBoard = Object.seal({
      look at (inert), the tile's own button over it. */
   function tile(p) {
     const i = p.playerId, commander = commanderOf(p), mini = paneWidth() >= MINI_AT;
-    return `<div class="cm-board-tile${mini ? ' is-mini' : ''}${focus === i ? ' is-focus' : ''}${i === view.seat ? ' is-you' : ''}${view.state.turnPlayerId === i ? ' is-turn' : ''}" data-seat="${i}" style="--seat:${seatColor(i)}">
+    return `<div class="cm-board-tile${mini ? ' is-mini' : ''}${focus === i ? ' is-focus' : ''}${isYou(i) ? ' is-you' : ''}${view.state.turnPlayerId === i ? ' is-turn' : ''}" data-seat="${i}" style="--seat:${seatColor(i)}">
       ${mini ? `<div class="cm-board-mini" inert>${mat(p, {size:'mini',head:'none'})}</div>` : ''}<button type="button" class="cm-board-tile-main" data-action="board-focus" data-seat="${i}" aria-pressed="${focus === i}">${seatHeader(p,{interactive:false})}</button></div>`;
   }
   function focusView() {
@@ -1263,9 +1295,10 @@ globalThis.CrankBoard = Object.seal({
   function fullView() {
     const s = view.state, me = players()[view.seat], big = players()[focus] || me, others = players().filter((p) => p.playerId !== big.playerId);
     /* The big board's corner, at the pill's head: whose it is and their vitals; when it is not yours, ⟳ and My board too. */
-    const viewing = big.playerId !== view.seat;
-    const corner = `<div class="cm-full-corner${viewing ? " cm-full-viewing" : ""}">${seatHeader(big)}<span class="cm-full-corner-name">${viewing ? `Viewing ${e(big.name)}` : e(seatLabel(big))}</span>
-      ${viewing ? `${ib("⟳", "board-rotate", "Rotate: the next seat's board", {by: "1"})}${b("My board", "board-focus", {seat: String(view.seat)}, false, {cls: "compact"})}` : ""}</div>`;
+    const viewing = !isYou(big.playerId);
+    /* Your own mat carries no card of you (Rob, 2026-10-28: "We already have this information in multiple places"); another seat's board keeps its. */
+    const corner = !viewing ? "" : `<div class="cm-full-corner cm-full-viewing">${seatHeader(big)}<span class="cm-full-corner-name">Viewing ${e(big.name)}</span>
+      ${ib("⟳", "board-rotate", "Rotate: the next seat's board", {by: "1"})}${b("My board", "board-focus", {seat: String(view.seat)}, false, {cls: "compact"})}</div>`;
     return stageView({corner, big, others});
   }
 
@@ -1285,7 +1318,7 @@ globalThis.CrankBoard = Object.seal({
   function lifeList() {
     const ps = players(), mine = ps[view.seat], rows = [mine, ...ps.filter((p) => p && p !== mine)].filter(Boolean);
     return rows.map((p) => {const now = view.state.turnPlayerId === p.playerId;
-      return `<span class="cm-stage-life${now ? " is-turn" : ""}"${now ? ` aria-current="true" title="${p.playerId === view.seat ? "Your turn" : `${e(p.name)}'s turn`}"` : ""}>${now ? `<span class="cm-stage-life-turn" aria-hidden="true">${TURN_ICON}</span>` : ""}${e(seatLabel(p))} · <b>${p.health.life}</b>${view.state.priorityPlayerId === p.playerId ? `<i class="cm-stage-life-prio" role="img" aria-label="${p.playerId === view.seat ? "You hold" : `${e(p.name)} holds`} priority" title="${p.playerId === view.seat ? "Priority is with you" : `Priority is with ${e(p.name)}`}"></i>` : `<i class="cm-stage-life-prio is-off" aria-hidden="true"></i>`}${now ? `<span class="cm-sr-only">, ${p.playerId === view.seat ? "your" : "their"} turn</span>` : ""}</span>`;}).join("");
+      return `<span class="cm-stage-life${now ? " is-turn" : ""}"${now ? ` aria-current="true" title="${isYou(p.playerId) ? "Your turn" : `${e(p.name)}'s turn`}"` : ""}>${now ? `<span class="cm-stage-life-turn" aria-hidden="true">${TURN_ICON}</span>` : ""}${e(seatLabel(p))} · <b>${p.health.life}</b>${view.state.priorityPlayerId === p.playerId ? `<i class="cm-stage-life-prio" role="img" aria-label="${isYou(p.playerId) ? "You hold" : `${e(p.name)} holds`} priority" title="${isYou(p.playerId) ? "Priority is with you" : `Priority is with ${e(p.name)}`}"></i>` : `<i class="cm-stage-life-prio is-off" aria-hidden="true"></i>`}${now ? `<span class="cm-sr-only">, ${isYou(p.playerId) ? "your" : "their"} turn</span>` : ""}</span>`;}).join("");
   }
   function stageView({corner, big, others}) {
     const rear = others.map((p) => `<section class="cm-stage-rear" data-seat="${p.playerId}" style="--seat:${seatColor(p.playerId)}">
@@ -1309,6 +1342,7 @@ globalThis.CrankBoard = Object.seal({
      question comes to you (`barSeen`: once a question, not at every redraw); while it is not yours, the pass is off. */
   let barSeen = null;
   function actionBar() {
+    if (view.spectator === true) return "";
     const live = !!view.decision && view.status !== "finished", key = live ? `${view.matchId}:${view.decision.id}` : null;
     const fresh = key !== null && key !== barSeen;
     barSeen = key;
@@ -1323,7 +1357,10 @@ globalThis.CrankBoard = Object.seal({
     const me=players()[view.seat];
     const pill=`<div class="cm-full-pill">${stageEnabled() ? "" : `${passButton()}${resolveAllButton()}${skipControl(true)}`}</div>`;
     const conn=status === "open" ? "" : `<span class="cm-board-conn">${status === "reconnecting" ? "Reconnecting…" : "Connecting…"}</span>`;
-    return `<header class="cm-stage-top"><span class="cm-stage-self" role="group" aria-label="${e(seatLabel(me))}, your seat" title="${e(seatLabel(me))}">${seatHeader(me)}</span><span class="cm-board-tools cm-board-turnsteps">${turnRibbon()}${stepsOpen ? stepsMenu() : ""}</span>${stageEnabled() ? ribbonNote() : ""}
+    const self = view.spectator === true
+      ? `<span class="cm-stage-self cm-stage-watching" role="group" aria-label="Watching this game" title="You are watching; you hold no seat"><b>Watching</b>${table?.watching > 1 ? `<small>${table.watching} watching</small>` : ""}</span>`
+      : `<span class="cm-stage-self" role="group" aria-label="${e(seatLabel(me))}, your seat" title="${e(seatLabel(me))}">${seatHeader(me)}</span>`;
+    return `<header class="cm-stage-top">${self}<span class="cm-board-tools cm-board-turnsteps">${turnRibbon()}${stepsOpen ? stepsMenu() : ""}</span>${stageEnabled() ? ribbonNote() : ""}
       ${stageEnabled() ? conn : legacyPriority(conn)}${alsoButton()}${stageEnabled() ? (stageRail && !actionsShut ? "" : opens(ib("▸", "board-actions-open", "Open decision drawer", {}, {cls:"compact"}), false)) : opens(ib(stageRail && !actionsShut ? "◂" : "▸", "board-actions-open", "Open decision drawer", {}, {cls:"compact"}), stageRail && !actionsShut)}${pill}${stageEnabled()?cameraMenu():""}${stageProfile(me)}${combatStrip()}</header>`;
   }
   function boardDrawers() {
@@ -1447,13 +1484,48 @@ globalThis.CrankBoard = Object.seal({
       <div class="cm-mana-colors" role="group" aria-label="Available by color">${MANA_SIX.map(cell).join("")}</div>
       ${known ? "" : `<p class="cm-muted">From your basic lands only: this table does not say what your other cards tap for.</p>`}</section>`;
   }
+  /* THE TABLE'S CHAT (Rob, 2026-10-28; docs/ui-lane/lounge-contract.md §5): what the table said, newest at the bottom, and a line to
+     say something. The server keeps it with the game's log; a reconnect reads the last 50 from the table. A spectator's lines
+     carry "Watching: <name>". Text only; voice is a later piece. */
+  function heardChat(message) {
+    if (!message || typeof message.text !== "string") return;
+    if (chatLog.some((m) => m.id === message.id)) return;
+    chatLog = [...chatLog, message].slice(-200);
+    if (document.getElementById("cm-board")) {
+      const list = document.querySelector(".cm-chat-list");
+      if (list) {const stick = list.scrollHeight - list.scrollTop - list.clientHeight < 40; draw(); const again = document.querySelector(".cm-chat-list"); if (again && stick) again.scrollTop = again.scrollHeight;}
+    }
+  }
+  const chatSaid = (m) => `<li class="cm-chat-line${m.seatId !== null && m.seatId === table?.yourSeat ? " is-mine" : ""}"><b>${e(m.name || "A player")}</b> <span>${e(m.text)}</span></li>`;
+  function chatBody() {
+    const may = !(view?.spectator === true && table?.youAreAdmin !== true), can = may && status === "open" && !chatSending;
+    return `<section class="cm-chat" aria-label="Table chat"><ol class="cm-chat-list" role="log" aria-live="polite" aria-label="Messages">${chatLog.length ? chatLog.map(chatSaid).join("") : `<li class="cm-chat-empty cm-muted">No messages yet.</li>`}</ol>
+      <form class="cm-chat-form" data-chat-form><input class="cm-chat-input" type="text" maxlength="300" autocomplete="off" enterkeyhint="send" aria-label="Message to the table" placeholder="${may ? "Message the table" : "Only the players chat"}" value="${e(chatDraft)}"${may ? "" : " disabled"}><button type="submit" class="v-button compact"${can ? "" : " disabled"}>Send</button></form></section>`;
+  }
+  document.addEventListener("input", (event) => {if (event.target?.matches?.(".cm-chat-input")) chatDraft = event.target.value;});
+  document.addEventListener("submit", async (event) => {
+    if (!event.target.matches || !event.target.matches("[data-chat-form]")) return;
+    event.preventDefault();
+    const text = chatDraft.trim();
+    if (!text || chatSending || !tableId) return;
+    chatSending = true;
+    try {
+      const T = tableApi();
+      const answer = await T.api("POST", `${T.tableUrl(tableId)}/chat`, {text});
+      chatDraft = "";
+      if (answer && answer.message) heardChat(answer.message);
+    } catch (error) {C.notice(error.message || "The chat did not take that.", true);}
+    chatSending = false;
+    if (document.getElementById("cm-board")) draw();
+    document.querySelector(".cm-chat-input")?.focus({preventScroll: true});
+  });
   function stageModules(side="right") {
     const ids = paneModules(side);
     if(side === "left" && !ids.length) return "";
     const bodies = {
       coach: () => coach.open ? `<div class="cm-module-coach-host"></div>` : `<p class="cm-muted">Ask about your board, hand, or table.</p>${b("Open AI Coach", "board-coach", {}, false, {cls:"compact"})}`,
       recommended: () => `<p class="cm-muted">Recommendations use your AI Coach conversation and its privacy settings.</p>${b("Recommend actions", "board-recommend", {}, false, {cls:"compact"})}`,
-      chat: () => `<p class="cm-muted">Game chat is not connected yet. Shared messages and voice chat are coming in a later update.</p>`,
+      chat: () => chatBody(),
       actions: () => !stageRail || actionsShut || /^mulligan:/.test(view.decision?.id || "") ? "" : `${decision() || `<p class="cm-muted">${e(waitingText() || "Choose a card or continue your turn.")}</p>`}`,
       table: () => `<div class="cm-full-vitals">${players().map(p => `<div class="${view.state.turnPlayerId === p.playerId ? "is-turn" : ""}" data-seat="${p.playerId}" style="--seat:${seatColor(p.playerId)}"><span>${e(seatLabel(p))}${turnMark(p.playerId)}</span>${vitals(p, {big:true})}</div>`).join("")}</div>`,
       inspect: () => `<div id="cm-full-pick">${pickPanel()}</div>`,
@@ -1475,7 +1547,7 @@ globalThis.CrankBoard = Object.seal({
     }).join("")}</div>`;
   }
   function stageHand(p) {
-    const own = p.playerId === view.seat, cards = own ? p.zones.Hand.cards : [], n = own ? cards.length : p.zones.Hand.count;
+    const own = isYou(p.playerId), cards = own ? p.zones.Hand.cards : [], n = own ? cards.length : p.zones.Hand.count;
     const limit = Math.max(1, handFit), indices = CrankStage.carousel(n, n>limit ? handStarts.get(p.playerId) || 0 : 0, limit), count = indices.length;
     const label = own ? "Your hand" : `${p.name}'s hand, ${n} cards`;
     const arrow = (direction) => `<button type="button" class="cm-stage-hand-arrow" data-action="board-hand-cycle" data-by="${direction}" data-seat="${p.playerId}" aria-label="${direction<0?"Previous":"Next"} hand card">${direction<0?"‹":"›"}</button>`;
@@ -1550,7 +1622,7 @@ globalThis.CrankBoard = Object.seal({
   /* TABLE VITALS (the handoff's 560px dialog): every seat's life and poison, and every commander's damage to
      every other seat, "n / 21" with its bar; the commander's own seat reads "—". */
   function tableVitals() {
-    const ps = players(), head = `<div role="row" class="is-head"><span role="columnheader"></span>${ps.map((p) => `<span role="columnheader">${e(p.playerId === view.seat ? "You" : p.name)}</span>`).join("")}</div>`;
+    const ps = players(), head = `<div role="row" class="is-head"><span role="columnheader"></span>${ps.map((p) => `<span role="columnheader">${e(isYou(p.playerId) ? "You" : p.name)}</span>`).join("")}</div>`;
     /* a heart for life, a skull and crossbones for poison, nothing for commander damage (item 9) */
     const row = (label, cells, name = "") => `<div role="row"><span role="rowheader"${name ? ` class="cm-vitals-icon" aria-label="${e(name)}" title="${e(name)}"` : ""}>${e(label)}</span>${cells.map((c) => `<span role="cell">${c}</span>`).join("")}</div>`;
     const rows = [row("♥", ps.map((p) => `<b>${p.health.life}</b>`), "Life"), row("☠", ps.map((p) => `${p.health.poison} / 10`), "Poison")];
@@ -1615,9 +1687,9 @@ globalThis.CrankBoard = Object.seal({
     for (const o of d.options) {
       if (o.cardId === undefined || out.has(o.cardId)) continue;
       const at = whereIs(o.cardId);
-      if (at && (at.zone === "Battlefield" || (at.zone === "Hand" && at.p.playerId === view.seat))) continue;
+      if (at && (at.zone === "Battlefield" || (at.zone === "Hand" && isYou(at.p.playerId)))) continue;
       const c = at && findCard(o.cardId), name = c ? (c.faceDown ? "" : c.name || "") : String(o.label || "").replace(/ \([^)]*\)$/, "");
-      const whose = at ? (at.p.playerId === view.seat ? "Your" : `${at.p.name}'s`) : "Your";
+      const whose = at ? (isYou(at.p.playerId) ? "Your" : `${at.p.name}'s`) : "Your";
       out.set(o.cardId, {cardId: o.cardId, name, where: at ? `${whose} ${ZONE_WORD[at.zone] || at.zone.toLowerCase()}` : "Hidden"});
     }
     return [...out.values()];
@@ -1730,7 +1802,7 @@ globalThis.CrankBoard = Object.seal({
   const targetController = t => t.controllerId ?? abilityTarget(t)?.playerId;
   const targetCard = t => t.kind === "player" ? null : t.kind === "ability" ? namedFace(findCard(abilityTarget(t)?.cardId)) : namedFace(findCard(t.affected ?? t.id)) || visibleSpell(t.affected ?? t.id);
   const targetName = t => t.kind === "player" ? nameOf(t.controllerId ?? t.id) : t.kind === "ability" ? (abilityTarget(t)?.name && !abilityTarget(t).faceDown ? `${abilityTarget(t).name} ability` : "ability") : targetCard(t)?.name || "face-down creature";
-  const controllerName = id => id === view.seat ? "You" : players().find(p=>p.playerId === id)?.name || "Unknown controller";
+  const controllerName = id => isYou(id) ? "You" : players().find(p=>p.playerId === id)?.name || "Unknown controller";
   const possessive = (t,source) => t.kind === "player" ? targetName(t) : `${t.kind!=="ability" && (t.affected ?? t.id) === source?.cardId ? "this" : targetController(t) === view.seat ? "your" : controllerName(targetController(t)) + "'s"} ${targetName(t)}`;
   let targetPage = 0, targetReviewing = false;
   const reviewReady = d => picked.length && (d.kind === "priority" || targetReviewing);
@@ -1860,7 +1932,7 @@ globalThis.CrankBoard = Object.seal({
       if(stacks.some(ss=>choiceTargets(ss[0]).reduce((n,g)=>n+g.targets.length,0)>1))return `<div class="cm-target-options" data-wf="W15">${landGroup(stacks)}</div>`;
       const by=new Map();
       for(const stack of stacks.filter(ss=>!ss[0].decline)) {const id=stack[0].controllerId ?? stack[0].targetGroups?.[0]?.targets?.[0]?.controllerId; if(!by.has(id))by.set(id,[]);by.get(id).push(stack);}
-      return `<div class="cm-target-options" data-wf="W15">${[...by].sort(([a],[b])=>(a===view.seat)-(b===view.seat)).map(([id,ss])=>`<section class="cm-target-controller"><h3>${e(controllerName(id))}</h3>${landGroup(ss)}</section>`).join("")}</div>`;
+      return `<div class="cm-target-options" data-wf="W15">${[...by].sort(([a],[b])=>(isYou(a))-(isYou(b))).map(([id,ss])=>`<section class="cm-target-controller"><h3>${e(controllerName(id))}</h3>${landGroup(ss)}</section>`).join("")}</div>`;
     };
     let body = "", foot = "";
     if (d.kind === "priority") {
@@ -1949,7 +2021,7 @@ globalThis.CrankBoard = Object.seal({
       const said = shown.length ? shown.map(e).join(" · ") : "Nothing happened";
       return `<li><strong>${e(t.head)}</strong><span>${said}${more > 0 ? ` · and ${more} more in the History` : ""}</span></li>`;
     }).join("");
-    const now = view.state.turnPlayerId === view.seat ? `Turn ${w.now} is yours.` : `Turn ${w.now} · ${e(nameOf(view.state.turnPlayerId))}`;
+    const now = isYou(view.state.turnPlayerId) ? `Turn ${w.now} is yours.` : `Turn ${w.now} · ${e(nameOf(view.state.turnPlayerId))}`;
     return `<section class="cm-board-decision cm-board-went" aria-label="${e(span)}"><h3>${e(span)}</h3>
       <ol class="cm-board-went-list">${rows}</ol><div class="cm-board-decision-foot"><span class="cm-muted">${now}</span>${b("OK", "board-went-close", {}, false, {cls: "compact"})}</div></section>`;
   }
@@ -2175,7 +2247,7 @@ globalThis.CrankBoard = Object.seal({
      Camera has no view switch and no Tilt. Codex's design, ported from its Oct 18 prototype (ui-prototypes/phone-focus). */
   const phone = () => Math.min(innerWidth, innerHeight) <= 500;
   function phoneView() {
-    const s = view.state, me = players()[view.seat], p = players()[focus] || me, mine = p.playerId === view.seat;
+    const s = view.state, me = players()[view.seat], p = players()[focus] || me, mine = isYou(p.playerId);
     const {step, next} = stepInfo();
     const icon = (glyph, action, label, extra = "") => `<button type="button" class="cm-phone-icon" data-action="${action}" aria-label="${e(label)}" title="${e(label)}">${glyph}${extra}</button>`;
     const rail = `<nav class="cm-phone-rail" aria-label="Board">
@@ -2185,9 +2257,9 @@ globalThis.CrankBoard = Object.seal({
       <span class="cm-board-tools">${stageProfile(me)}</span></nav>`;
     const pill = mine
       ? `<div class="cm-phone-pill"><b>T${s.turn}</b><span class="cm-board-step">${e(step)}</span>${next ? `<span class="cm-board-next">Next: ${e(next)}</span>` : ""}
-          ${passButton()}${view.state.turnPlayerId !== view.seat ? skipControl(true) : ""}</div>`
-      : `<div class="cm-phone-pill"><span>Viewing ${e(p.name)}</span>${b("My board", "board-focus", {seat: String(view.seat)}, false, {cls: "compact"})}${view.state.turnPlayerId !== view.seat ? skipControl(true) : ""}</div>`;
-    const seats = [me, ...players().filter((x) => x.playerId !== view.seat)];
+          ${passButton()}${!isYou(view.state.turnPlayerId) ? skipControl(true) : ""}</div>`
+      : `<div class="cm-phone-pill"><span>Viewing ${e(p.name)}</span>${b("My board", "board-focus", {seat: String(view.seat)}, false, {cls: "compact"})}${!isYou(view.state.turnPlayerId) ? skipControl(true) : ""}</div>`;
+    const seats = [me, ...players().filter((x) => !isYou(x.playerId))];
     const strip = `<aside class="cm-phone-seats" aria-label="Seats">
       ${seats.map((x) => `<button type="button" class="cm-phone-seat${x.playerId === p.playerId ? " is-focus" : ""}" data-action="board-focus" data-seat="${x.playerId}" aria-pressed="${x.playerId === p.playerId}" style="--seat:${seatColor(x.playerId)}">
         ${seatHeader(x,{interactive:false})}</button>`).join("")}
@@ -2699,7 +2771,7 @@ globalThis.CrankBoard = Object.seal({
     if (departed(view.seat)) return {key: "left", text: LEFT};
     if (wentBy) {
       const w = wentBy, span = w.from === w.to ? `Turn ${w.from} went by.` : `Turns ${w.from} to ${w.to} went by.`;
-      return {key: `went:${w.from}:${w.to}`, text: `${span} ${view.state.turnPlayerId === view.seat ? `Turn ${w.now} is yours.` : `Turn ${w.now}, ${nameOf(view.state.turnPlayerId)}.`}`};
+      return {key: `went:${w.from}:${w.to}`, text: `${span} ${isYou(view.state.turnPlayerId) ? `Turn ${w.now} is yours.` : `Turn ${w.now}, ${nameOf(view.state.turnPlayerId)}.`}`};
     }
     const d = view.decision;
     if (d && sending) return {key: saidKey, text: ""};   /* an answer on its way: nothing new to say until the table's */
@@ -3224,7 +3296,11 @@ globalThis.CrankBoard = Object.seal({
     /** The table is playing (or just finished): draw the board in the page, and keep the socket open. `asked` is
         when the page asked for this read of the table (performance.now()). */
     show(t, asked) {
-      if (tableId !== t.tableId) {C.board.close(); tableId = t.tableId; view = null; focus = null; away.clear();}
+      if (tableId !== t.tableId) {C.board.close(); tableId = t.tableId; view = null; focus = null; away.clear(); chatLog = []; chatDraft = "";}
+      if (spectating !== (t.spectating === true)) {spectating = t.spectating === true; if (socket) {disconnect(); view = null;}}
+      /* What the table has said so far: the last 50 come with the table; the room's chat frames add to them. */
+      for (const m of t.chat || []) if (!chatLog.some((x) => x.id === m.id)) chatLog.push(m);
+      chatLog.sort((a, b) => a.id - b.id);
       attached = true;
       /* The table's list of who is away is the truth; the room's "away" frames only say it sooner. What it says
          of each seat (away, its mat) is redrawn when it changes. */
@@ -3398,7 +3474,7 @@ globalThis.CrankBoard = Object.seal({
     if(event.defaultPrevented || event.ctrlKey || event.metaKey || event.target.closest?.('.cm-bcard,button,a,input,select,textarea,[role=separator],#cm-card-menu'))return;
     const mat=event.target.closest?.('#cm-board .cm-mat[data-seat]');if(!mat || !view)return;
     const seat=Number(mat.dataset.seat);focus=seat;
-    if(seat===view.seat && mode==='focus')focus=view.seat;
+    if(isYou(seat) && mode==='focus')focus=view.seat;
     if(mode==='table' && !phone())setMode('focus');else draw();
   });
   /* All at one player, and None (the attack question's own shortcuts, above): picks only, as a press on each would be. */
@@ -3444,7 +3520,7 @@ globalThis.CrankBoard = Object.seal({
   actions["board-mute"] = () => {const a = sound(); if (!a) return; a.setMuted(!a.volumes().muted); if (!a.volumes().muted && view) {const bed = CrankAudio.bedFor(view, view.seat); if (bed) a.startBgm(bed);} draw(); refreshSettings();};
   actions["board-skip"] = () => {
     if (!view || view.status === "finished") return;
-    if (view.state.turnPlayerId !== view.seat) {
+    if (!isYou(view.state.turnPlayerId)) {
       if (yieldPending || !yieldReady || sending || view.continuing || !socket || socket.readyState !== 1 || (!view.mayYield && !view.yielding)) return;
       yieldPending = {on: view.yielding !== true, matchId: view.matchId, turn: view.state.turn};
       socket.send(JSON.stringify({type: "yield", on: yieldPending.on}));
@@ -4442,6 +4518,11 @@ globalThis.CrankBoard = Object.seal({
   };
   actions["board-rematch"] = (el) => answerRematch(el.dataset.accept === "yes");
   actions["board-leave"] = async () => {const id = tableId; C.board.close(); await tableApi().refresh(id);};
+  /* Play mat (Settings): seen at once; Save sends it to the table. */
+  document.addEventListener("change", (event) => {
+    if (!event.target?.matches?.("#cm-board-tools [data-board-mat]") || !view) return;
+    matPreview = event.target.value; draw();
+  });
   /* Hold priority after I cast (Tools): kept on this device, and the Tools' words follow it. */
   document.addEventListener("change", (event) => {
     if (!event.target || !event.target.matches || !event.target.matches("#cm-board-tools [data-board-hold]")) return;

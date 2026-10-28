@@ -4328,3 +4328,15 @@ button.cm-vitals{cursor:pointer}
 #cm-dialog .cm-admin-status+h3{margin-top:10px}
 
 #cm-dialog .cm-admin-section-links{display:flex;flex-wrap:wrap;gap:8px}
+
+/* THE HELP DRAWER WITH TABS (Rob, 2026-10-28): twice as wide, the tab bar across its top, the text scrolling beneath it, and the foot clear of the text. */
+#matrix-v2 dialog#cm-dialog.cm-slideover.cm-help-tabbed[open]{width:min(920px,100vw)}
+#cm-dialog.cm-slideover .cm-help-body{overflow:auto;padding-right:6px}
+#cm-dialog .cm-help-foot{flex:0 0 auto;margin-top:12px;background:var(--v-panel,inherit)}
+#cm-dialog .cm-help-foot-btns{display:flex;gap:8px}
+#cm-dialog .cm-help-tabs{display:flex;gap:4px;flex:0 0 auto;margin:6px 0 12px;border-bottom:1px solid var(--v-line,#cfcabf);overflow-x:auto}
+#cm-dialog .cm-help-tabs [role=tab]{appearance:none;border:0;border-bottom:3px solid transparent;background:none;color:var(--v-muted,#5f5a51);font:inherit;font-weight:700;padding:10px 16px;margin-bottom:-1px;cursor:pointer;white-space:nowrap;border-radius:8px 8px 0 0}
+#cm-dialog .cm-help-tabs [role=tab]:hover{color:var(--v-ink,#11161f);background:var(--v-bg,transparent)}
+#cm-dialog .cm-help-tabs [role=tab][aria-selected=true]{color:var(--v-ink,#11161f);border-bottom-color:var(--v-accent,#1043a8)}
+#cm-dialog .cm-help-panel[hidden]{display:none}
+#cm-dialog .cm-help-panel h3:first-child{margin-top:0}

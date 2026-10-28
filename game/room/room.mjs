@@ -1100,6 +1100,33 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       };
     },
 
+    /**
+     * WHAT A SPECTATOR MAY SEE (the lounge's Watch, docs/ui-lane/lounge-contract.md §4): the game as nobody in it sees it. Built
+     * from the public projection alone (projection.mjs, viewer null: no hand, no library, a count each) and listed field by
+     * field, so a field added to a seat's view later is not a field a watcher gets by accident: no decision, no mana
+     * sources, no undo, no way of playing, and the events with no card a seat was told in secret.
+     */
+    watch({after} = {}) {
+      const over = ended ? {winner: null, reason: ended.why === "no-person" ? NO_PERSON_REASON : "ended early"} : gameOver(state);
+      return {
+        schema: VIEW_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seatId: null, seat: null, spectator: true,
+        revision: controller.revision,
+        status: over ? "finished" : "playing",
+        result: over ? {winner: over.winner === null ? null : seats[over.winner].seatId, reason: over.reason, ...(ended ? {endedBy: ended.by} : {}),
+          ending: endingOf({over, ended, seats, players: state.players, departures, outs})} : null,
+        departures: structuredClone(departures),
+        seats: api.seats,
+        waitingOn: pendingSeat === null ? null : seats[pendingSeat].seatId,
+        decision: null,
+        state: projectFor(state, null),
+        manaSources: [],
+        history: history.slice(-HISTORY_VIEW).map(({turn, text, mark}) => ({turn, text, ...(mark ? {mark} : {})})),
+        ...((said) => ({eventsSchema: EVENTS_SCHEMA, events: said.events, ...(said.reset ? {eventsReset: true} : {})}))(
+          eventsFor(tableEvents, null, {...(after !== undefined && after !== null ? {after, floor: eventsFloor} : {from: `event:${eventsMark}`}), knows: () => false})),
+        ...(api.continuing ? {continuing: true} : {}),
+      };
+    },
+
     /** Play on from where a slice stopped, to the next person's decision, the end, or the next slice. */
     async resume() {
       if (!api.continuing) return api;

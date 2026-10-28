@@ -327,14 +327,16 @@
      the offset over the focal length), across for yaw and down for pitch, so what was under the pointer comes toward where
      it was pressed. It follows with a head's lag (`steerMs`, 80 ms), never past 34 degrees aside or the near horizon above,
      nor past straight down; letting go takes it home with the rest of the motion. */
-  const LOOK={turn:[0,.6],rise:[0,.35,.9],lean:[.2,.8],pitch:[.4,1],read:[.6,1],strength:.5,riseBy:.02,readBy:1.3,steerMs:80,steerYaw:.6,steerLow:.17};
+  const LOOK={turn:[0,.6],rise:[0,.35,.9],lean:[.2,.8],pitch:[.4,1],read:[.6,1],strength:.5,riseBy:.02,readBy:1.3,steerMs:80,steerYaw:.6,steerLow:.17,forward:.12,dropBy:.06};
   /* Admin › General carries the strength (0 to 1, kept on the device as cm-look-strength); unset, the half Rob chose. */
   const lookStrength=()=>{try{const v=localStorage.getItem('cm-look-strength'),n=Number(v);return v!==null&&v!==''&&n>=0&&n<=1?n:LOOK.strength;}catch{return LOOK.strength;}};
   const ease=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
   const phase=(t,[a,b])=>ease(clamp((t-a)/(b-a),0,1));
   function aim(g,P) {
     const eye=g.camera.eye, u=clamp((P[0]-g.pan.x)/(g.width/2),-1,1), v=clamp((-P[2]-g.pan.y)/(g.base/2),-1,1), r=Math.min(1,Math.hypot(u,v));
-    const lean=[.3*(P[0]-eye[0]),-.06*eye[1]*r,.25*(P[2]+g.pan.y)], leaned=eye.map((n,i)=>n+lean[i]);
+    /* LEANING OVER THE TABLE (Rob, 2026-10-28: "the camera should move forward over the table a bit, leaning over the table, to look down at the held spot"):
+       the eye goes forward toward the place held, whatever side of the table it is on, by `LOOK.forward` of the way (more for a far place), and drops with it. */
+    const lean=[.3*(P[0]-eye[0]),-(.06+LOOK.dropBy*r)*eye[1],LOOK.forward*(.5+.5*r)*(P[2]-eye[2])], leaned=eye.map((n,i)=>n+lean[i]);
     const k=(.06+.1*r)*LOOK.readBy, read=leaned.map((n,i)=>k*(P[i]-n)), d=P.map((n,i)=>n-leaned[i]-read[i]);
     const f=lookStrength();
     return {lean:lean.map(n=>n*f),read:read.map(n=>n*f),yaw:f*Math.atan2(d[0],d[2]),pitch:f*(Math.atan2(-d[1],Math.hypot(d[0],d[2]))-g.camera.pitch),rise:LOOK.riseBy*eye[1]*(.5+.5*r),r,ms:250+400*r,point:P};
