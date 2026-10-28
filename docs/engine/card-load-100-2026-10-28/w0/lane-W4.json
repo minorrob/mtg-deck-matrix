@@ -24,15 +24,16 @@
     "Goblin Piledriver: a teacher's implicit times 1 is learned as the printed multiplier slot",
     "Wayfarer's Bauble (routed from W5): an effect's selector binds after the activated cost",
     "Contagion Clasp: each target binds its own printed noun, distinct from the entering artifact",
-    "CR 702.19b: excess damage against one blocker is assigned by the attacker controller"
+    "CR 702.19b: excess damage against one blocker is assigned by the attacker controller",
+    "V8 saved-depth finding: Glorious Anthem now has a scenario proving another own creature is boosted and an opponent's is not",
+    "V8 saved-depth finding: Serra Angel now has a scenario proving a ground Bear is not offered as a blocker and attacking leaves Serra Angel untapped"
   ],
   "queued": [
     "CR 702.19c trample over planeswalkers: distinct keyword and loyalty-aware assignment absent",
     "Departed-source protection: reproduced 3 damage instead of 0 with lastKnown colors R; snapshot must flow through damage and prevention",
     "Damage replacements outside an askable resolution still choose leastFirst",
     "Tokens entering attacking outside a resolution still choose the first player",
-    "Blocker-side requirements need a joint maximum-requirements solver (ROB-149)",
-    "V8 independent depth finding: Serra Angel's saved scenarios do not behaviorally exercise Flying or Vigilance. Add saved scenarios proving no ground blocker can block it and that attacking leaves it untapped; keyword-list presence is not behavior proof."
+    "Blocker-side requirements need a joint maximum-requirements solver (ROB-149)"
   ],
   "ignores": [],
   "proof": {
@@ -41,6 +42,7 @@
     "focused": ["sentence-load100-w0: 14 checks passed, including V8's independent two-target/count counterexample", "engine-load100-w0-combat: 17 checks passed", "30 original scenarios in eight edited card files passed", "all 29 engine suites directly naming rules/combat.mjs passed", "sentence-paragraphs: 11 checks passed", "data-integrity and feature-wiring passed"],
     "mutation": "eleven breaks caught, missed: []; anchors remain 57 existing problems, with no new problem on changed files",
     "fullCheck": "Final check-cards: 6430 definitions; 11023 scenarios, 0 failed; exit 0. Seven initially unanswered scenario inputs were repaired without changing expectations. Final sentence-library suite exit 0.",
+    "additionalDepth": "After the full checkpoint, two behavior scenarios were appended to Glorious Anthem and Serra Angel, retaining all old scenarios/assertions. Both cards' four saved scenarios pass; removing Anthem's runtime static, Serra's runtime Flying, or runtime Vigilance makes the corresponding new scenario fail. Independent V8 selected-ledger verification pending. No whole-suite rerun for these two scenario additions; full counts above belong to code checkpoint 8e0f3a2f.",
     "generated": "engine-definitions --check: current; engine-candidates --check: current; data-inventory --check: matches the repository, 60 artifacts",
     "scan": "tools/local-ci.sh HEAD 0: SCAN PASS on code checkpoint 8e0f3a2f; record updates are scanned separately before push",
     "limitations": "No new cards or definitions changed; queued debt is open, not waived; independent V8 review, consolidated gate and staging not done"
