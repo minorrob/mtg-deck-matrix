@@ -164,6 +164,13 @@ ok(isOwner({OWNER_EMAIL: " Rob@Example.com "}, {id: 9, email: OWNER}) && !isOwne
   eq((await call("GET", "/api/admin/feedback", {jwt: await person(KIM), env: {INVITE_ADMIN_ID: undefined, OWNER_EMAIL: "SAM@example.com"}})).status, 403, "and refuses everyone else there");
 }
 
+/* ---- 3a. a database without the table: "not switched on", never a 500 (Rob, 2026-10-28: the sheet said "the cloud library had a problem" on staging) ---- */
+{
+  const bare = {...DB, prepare: (sql) => {if (/\bfeedback\b/i.test(sql)) throw new Error("D1_ERROR: no such table: feedback: SQLITE_ERROR"); return DB.prepare(sql);}};
+  const r = await call("POST", "/api/feedback", {jwt: await person(SAM), body: FULL, env: {DB: bare}});
+  eq([r.status, r.json.error], [503, "Feedback is not switched on here yet."], "3a. where migration 0009 has not been applied, the sheet is told it is not switched on yet, not that the library had a problem");
+}
+
 /* ---- 3. POST /api/feedback ---- */
 {
   const r = await call("POST", "/api/feedback", {jwt: await person(SAM), body: FULL});

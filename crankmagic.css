@@ -4127,6 +4127,7 @@ button.cm-vitals{cursor:pointer}
 .cm-flow-canvas{display:grid;gap:12px;align-content:start;min-width:0}
 .cm-flow-canvas h3{margin:6px 0 0}
 .cm-flow-field{display:grid;gap:6px}
+.cm-flow-restrict-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 16px}.cm-flow-lifted{margin:4px 0 0;font-size:12px}
 .cm-flow-field.is-missing select{outline:2px solid var(--v-accent)}
 .cm-flow-row{display:flex;flex-wrap:wrap;gap:10px}
 .cm-flow-row .cm-flow-field{min-width:120px}
@@ -4340,3 +4341,10 @@ button.cm-vitals{cursor:pointer}
 #cm-dialog .cm-help-tabs [role=tab][aria-selected=true]{color:var(--v-ink,#11161f);border-bottom-color:var(--v-accent,#1043a8)}
 #cm-dialog .cm-help-panel[hidden]{display:none}
 #cm-dialog .cm-help-panel h3:first-child{margin-top:0}
+
+/* THE TICK UNDER THE STATUS (Rob, 2026-10-28: the checkbox was hidden behind Play it): on a deck's tile it sits at the left, under the status
+   pill; the ⋯ stays at the right and drops below Play it where a tile has one. A shared tile keeps its corner. */
+#matrix-v2 .cm-deck-tile:not(.cm-deck-shared) .cm-tile-tools{display:contents}
+#matrix-v2 .cm-deck-tile:not(.cm-deck-shared) .cm-tile-pick{position:absolute;left:14px;top:52px;z-index:3}
+#matrix-v2 .cm-deck-tile:not(.cm-deck-shared) .cm-tile-menu-btn{position:absolute;right:14px;top:48px;z-index:3}
+#matrix-v2 .cm-deck-tile:not(.cm-deck-shared):has(>.cm-tile-play) .cm-tile-menu-btn{top:88px}

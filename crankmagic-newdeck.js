@@ -103,7 +103,17 @@ const SECTIONS=[['general','General'],['gameplay','Gameplay'],['mechanics','Mech
 const PILOT=['Beginner','Intermediate','Advanced'];
 const WEIGHTS=[['Balanced','Balanced'],['Offense','Offense'],['Defense','Defense'],['Response','Response'],['Value','Value'],['Combo','Combo']];
 const SOURCE_LABELS=[['bench','Bench only'],['buy','Bench and cards to buy'],['decks','Bench, cards to buy and cards in other decks']];
-const FLAGS=[['massLandDenial','No mass land denial'],['extraTurns','No chained extra turns'],['lateCombos','Two-card infinites only as late finishers'],['gameChangerCap','The bracket’s Game Changer cap']];
+/* THE RESTRICTIONS ARE THE BRACKET'S (Rob, 2026-10-28: "Max 3 Game Changers in B3 but in B4 that's lifted"): each flag is offered with the words that fit the
+   bracket chosen, and not at all where that bracket lifts it (Brackets 4 and 5 have no restriction; Bracket 1 and 2 allow no Game Changers). */
+const FLAGS=['massLandDenial','extraTurns','lateCombos','gameChangerCap'];
+const RESTRICT={
+  massLandDenial:{upTo:3,label:()=>'No mass land denial'},
+  extraTurns:{upTo:3,label:()=>'No chained extra turns'},
+  lateCombos:{upTo:3,label:b=>b<3?'No two-card infinite combos':'Two-card infinites only as late finishers'},
+  gameChangerCap:{upTo:3,label:b=>b<3?'No Game Changers':'At most 3 Game Changers'}};
+const bracketNow=x=>Number(x.bracket)||M.defaultDefinition().baseBracket;
+const restrictionsFor=b=>FLAGS.filter(k=>b<=RESTRICT[k].upTo);
+const liftedAt=b=>FLAGS.filter(k=>b>RESTRICT[k].upTo);
 function defFrom(d){const x=d.definition;return {mode:null,bracket:'',sources:x.cardSources||'buy',budget:x.budget??'',restrictions:x.restrictions||'',flags:{massLandDenial:true,extraTurns:true,lateCombos:true,gameChangerCap:true,...(x.restrictionFlags||{})},
   saltiness:x.saltiness,speed:x.speed,competitiveness:x.competitiveness,pilot:x.pilot||'',primary:x.composition?.primary||'',tribe:x.composition?.tribe||'',secondary:x.composition?.secondary||'',
   mechanics:[...(x.mechanicIds||[])],fromCommander:x.fromCommander||{styles:[],mechanics:[]},cards:'',weighting:'Balanced',group:'',missing:[]};}
@@ -122,7 +132,7 @@ function defineCanvas(){const x=F.def,s=F.section,on=(a,b2)=>a===b2?' checked':'
     +field('Bracket',sel('bracket',[['',`Default (B${M.defaultDefinition().baseBracket})`],...[1,2,3,4,5].map(n=>[n,`Bracket ${n}`])],x.bracket))
     +`<fieldset class="cm-flow-field"><legend>Card sources</legend>${SOURCE_LABELS.map(([k,l])=>`<label class="cm-checkbox"><input type="radio" name="sources" value="${k}"${on(x.sources,k)}>${e(l)}</label>`).join('')}</fieldset>`
     +field('Budget ($)',`<input name="budget" type="number" min="0" step="1" value="${e(x.budget)}">`)
-    +`<fieldset class="cm-flow-field"><legend>Restrictions</legend>${FLAGS.map(([k,l])=>`<label class="cm-checkbox"><input type="checkbox" name="flag-${k}"${x.flags[k]?' checked':''}>${e(l)}</label>`).join('')}<input name="restrictions" maxlength="300" value="${e(x.restrictions)}" aria-label="Other restrictions"></fieldset>`;
+    +(()=>{const b=bracketNow(x),on2=restrictionsFor(b);return `<fieldset class="cm-flow-field cm-flow-restrict"><legend>Restrictions · Bracket ${b}</legend>${on2.length?`<div class="cm-flow-restrict-grid">${on2.map(k=>`<label class="cm-checkbox"><input type="checkbox" name="flag-${k}"${x.flags[k]?' checked':''}>${e(RESTRICT[k].label(b))}</label>`).join('')}</div>`:''}${liftedAt(b).length?`<p class="cm-muted cm-flow-lifted">Bracket ${b} lifts these: Game Changers, mass land denial, chained extra turns and two-card infinites are all allowed.</p>`:''}</fieldset>`;})();
   if(s==='gameplay'){const fits=poolFits(),styles=(index?.styles||[]).filter(st=>!fits||fits.find(f=>f.id===st.id)?.fits);
     const tribes=x.primary==='tribal'&&F.graph?V.tribes(F.graph.cards,identity()):[];
     const scale=(name,label)=>field(label,sel(name,[1,2,3,4,5].map(n=>[n,String(n)]),x[name]));
@@ -147,17 +157,20 @@ function keepDefine(d){const f=d.querySelector('#cm-flow-canvas');if(!f)return;c
     if(['saltiness','speed','competitiveness'].includes(n)){x[n]=Number(el.value);continue;}
     x[n]=el.value;}}
 function drawDefine(){const x=F.def,marks=new Map(x.missing.map(m=>[m.section.toLowerCase(),'Needs a choice']));
-  const d=frame('Define the Deck',x.mode==='define'?SECTIONS.map(([id,l])=>[id,l,marks.get(id)]):[],F.section,defineCanvas(),{label:'Create deck',action:'flow-create',disabled:!x.mode},{back:{label:'Back',action:'flow-back'}});
+  const last=x.mode!=='define'||F.section===SECTIONS.at(-1)[0];
+  const d=frame('Define the Deck',x.mode==='define'?SECTIONS.map(([id,l])=>[id,l,marks.get(id)]):[],F.section,defineCanvas(),last?{label:'Create deck',action:'flow-create',disabled:!x.mode}:{label:'Next',action:'flow-next',disabled:!x.mode},{back:{label:'Back',action:'flow-back'}});
   const missing=x.missing.length;
   if(missing)d.querySelector('.cm-flow-foot').insertAdjacentHTML('afterbegin',`<span class="cm-error" role="status">${e(x.missing[0].says)} · ${missing} field${missing===1?'':'s'} left</span>`);
   d.querySelector('[aria-invalid=true]')?.focus();
   d.querySelector('#cm-flow-canvas').addEventListener('change',()=>{keepDefine(d);x.missing=x.missing.filter(m=>m.field==='name'?!F.name:m.field==='budget'?(!Number.isFinite(Number(x.budget))||Number(x.budget)<0):false);draw();});}
+/* NEXT goes to the next section; the last one, Cards, is where Create deck is (Rob, 2026-10-28). */
+actions['flow-next']=()=>{const dlg=document.querySelector('.cm-flow-dialog');if(dlg)keepDefine(dlg);const at=SECTIONS.findIndex(([id])=>id===F.section);F.section=SECTIONS[Math.min(SECTIONS.length-1,at+1)][0];draw();};
 actions['flow-def-mech']=el=>{keepDefine(document.querySelector('.cm-flow-dialog'));F.def.mechanics=toggle(F.def.mechanics,el.dataset.id);draw();};
 /* BACK (DEF-7): Start from with the commander still selected; a different commander then recomputes what came from it. */
 actions['flow-back']=()=>{keepDefine(document.querySelector('.cm-flow-dialog'));F.step='start';F.fitCache=null;draw();};
 const definitionOf=()=>{const d=M.deck(C.state,F.deckId),x=F.def,base=x.bracket?Number(x.bracket):d.definition.baseBracket;
   const styles=[x.primary,x.secondary].filter(v=>v&&v!=='auto');
-  return {...d.definition,baseBracket:base,bracketCeiling:Math.max(base,d.definition.bracketCeiling),budget:x.budget===''||x.budget===null?null:Number(x.budget),restrictions:x.restrictions||'',restrictionFlags:{...x.flags},cardSources:x.sources,
+  return {...d.definition,baseBracket:base,bracketCeiling:Math.max(base,d.definition.bracketCeiling),budget:x.budget===''||x.budget===null?null:Number(x.budget),restrictions:x.restrictions||'',restrictionFlags:{...x.flags,...Object.fromEntries(liftedAt(base).map(k=>[k,false]))},cardSources:x.sources,
     saltiness:x.saltiness,speed:x.speed,competitiveness:x.competitiveness,...(x.pilot?{pilot:x.pilot}:{}),composition:{primary:x.primary||'',tribe:x.tribe||'',secondary:x.secondary||''},
     styles:styles.length?styles:d.definition.styles||[],mechanicIds:x.mechanics,mechanics:x.mechanics.map(id=>(index?.mechanics||[]).find(m=>m.id===id)?.label).filter(Boolean),
     playStyle:(A.WEIGHTINGS.find(([w])=>w===x.weighting)||A.WEIGHTINGS[0])[1]};};

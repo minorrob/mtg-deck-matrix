@@ -32,7 +32,8 @@
  *   HAPPEN. Running them anyway looks harmless and is not — every "at the beginning of the declare
  *   blockers step" trigger would fire on a turn nobody attacked.
  *
- *   CR 500.4: mana pools empty at the end of every step and phase, not at end of turn.
+ *   CR 500.4: mana pools empty at the end of every step and phase, not at end of turn -- except what a player makes in their upkeep or
+ *   draw step, which stays until the turn ends (Rob, 2026-10-28; emptyManaPools).
  */
 
 import {cardsIn, moveObject, eventCard, recordDraw, recordDrawStepDraw, recordDiscard, mergedOrderChoice, finishMergedOrder} from "../state/index.mjs";
@@ -252,6 +253,17 @@ function emptyManaPools(state, events) {
     /* And mana its player does not lose until end of turn (Birgi, God of Storytelling; script/effects/resources.mjs): kept as
        each step of the turn it was made in ends, of what the pool holds beyond the combat's -- lost as the next turn's untap
        step ends, in which nobody can spend it (CR 502.4). */
+    /* MANA MADE IN THE UPKEEP OR THE DRAW STEP STAYS (Rob, 2026-10-28: "if I tap mana during the Upkeep or Draw phase and it wasn't
+       used to cast something at instant speed, it should remain in my mana pool until used or end of turn"): a house rule over
+       CR 500.4 for the two steps in which nothing sorcery-speed can be cast, kept as Birgi's is -- as this turn's `turnMana` -- so
+       it is still there for the main phase and goes with the turn. */
+    if (state.phase === "UPKEEP" || state.phase === "DRAW") {
+      const held = Object.entries(player.manaPool).filter(([, n]) => n > 0);
+      if (held.length) {
+        if (player.turnMana?.turn !== state.turn) player.turnMana = {turn: state.turn, mana: {}};
+        for (const [color, n] of held) player.turnMana.mana[color] = Math.max(player.turnMana.mana[color] ?? 0, n);
+      }
+    }
     const turnKept = player.turnMana?.turn === state.turn
       ? Object.fromEntries(Object.entries(player.turnMana.mana).map(([color, n]) => [color, Math.min(n, player.manaPool[color] - (combatKept[color] ?? 0))]).filter(([, n]) => n > 0)) : {};
     if (Object.keys(turnKept).length) player.turnMana = {turn: state.turn, mana: turnKept};
