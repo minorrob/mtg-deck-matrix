@@ -1,7 +1,7 @@
 /* THE LOUNGE'S LISTS AND THE WAYS TO MAKE A TABLE (docs/ui-lane/lounge-contract.md §1 and §2), through the Worker's real front door.
  *
  *   live      public tables in their lobby or being played, the caller's private ones, every one for the admin; newest first;
- *             a roster of public facts only; finished and cancelled tables are not listed; an entry a day old is gone
+ *             a roster of public facts only; finished and canceled tables are not listed; an entry a day old is gone
  *   mine      the caller's own unfinished tables, on any device
  *   create    privacy (default private), Observe AI game (the admin's alone, AI seats only), a person's seat by email or name,
  *             an AI seat's persona and level (Hard is not open), houseRules and privacy in the rules
@@ -57,7 +57,7 @@ const noAddress = (value, message) => ok(![...everyString(value)].some((s) => /[
   eq((await w.call("GET", "/api/tables/mine", {as: SAM})).json.tables.map((t) => t.tableId).sort(), [newer.id, pub.id].sort(), "a seat held at a table puts it on that person's list, from any device");
   noAddress(mine, "no address in Resume game");
 
-  /* A cancelled or ended table leaves both lists; a day of silence drops an entry. */
+  /* A canceled or ended table leaves both lists; a day of silence drops an entry. */
   await w.call("POST", `/api/tables/${hidden.id}/quit`, {as: MAYA, body: {}});
   eq((await w.call("GET", "/api/tables/mine", {as: MAYA})).json.tables.map((t) => t.tableId), [pub.id], "an ended table is not on the list");
   w.clock.t += 24 * 3600 * 1000 + 1;
