@@ -60,14 +60,14 @@ const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1;};
   const t = tableOn(memoryStorage(), {cards, random});
   const ROB = "rob@example.com", now = Date.parse("2026-10-10T20:00:00Z");
   const made = await t.create({tableId: "tablelevels", host: ROB, hostName: "Rob", seats: [{kind: "ai", name: "Easy", level: "easy"}, {kind: "ai", name: "Hard", level: "hard"}, {kind: "ai", name: "Odd", level: "expert"}]});
-  eq(made.seats.map((s) => [s.kind, s.level ?? null]), [["human", null], ["ai", "easy"], ["ai", "normal"], ["ai", "normal"]],
-    "the table keeps the host's Easy; Hard, held back until the bench clears it, and a setting it does not know are Normal");
+  eq(made.seats.map((s) => [s.kind, s.level ?? null]), [["human", null], ["ai", "easy"], ["ai", "hard"], ["ai", "normal"]],
+    "the table keeps the host's Easy and Hard, and an AI seat with a setting it does not know is Normal");
   for (const seat of [0, 1, 2, 3]) await t.deck(ROB, seat, deckFor(`t${seat}`), now);
   await t.ready(ROB, true, now);
   await t.start(ROB, now);
   await t.tick(now + 10000);
   const room = await t.currentRoom();
-  eq(room.seats.map((s) => s.level ?? null), [null, "easy", "normal", "normal"], "and launches the game with each AI seat at its setting");
+  eq(room.seats.map((s) => s.level ?? null), [null, "easy", "hard", "normal"], "and launches the game with each AI seat at its setting");
 }
 
 /* ---- A game of L1 seats replays, and plays the same reopened mid-game ---- */

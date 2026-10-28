@@ -146,10 +146,10 @@ rationalized into that hand-off. **Nothing here is merged; the hand-off is the d
   `chains.mjs`; a joint defender plan per creature) and **PR 4, the Veteran** (Hard, with a Haiku 5.5 consult on close calls;
   `veteran-skill.md` as the cached system prompt, generated into `cloud/veteran-skill.mjs`; the brief shaped by seat words only, no
   kind, level or other persona), and the persona half of **PR 5** (`roster.mjs`, `data/ai-players/roster.json`, four avatars under
-  `assets/personas/`). **Hard is built and held back** (`available: false` in `roster.mjs`): the bench has it at 37-45% against
+  `assets/personas/`). **Hard is offered at Rob's word** (*"Push hard anyway ... And Veteran ... We're working with the staging environment and I will test them also"*; `available: true` in `roster.mjs`), though the bench has it at 37-45% against
   Normal in two seats and about 20% in a pod of four (a fair share 25%) with its features on, 50-52% with them off, so a table
-  that offers it would offer a weaker seat than Normal. `tools/pilot-bench.mjs` gains `--off` (ablate a feature) and `--seats 4`
-  (a pod); the flip is one word once a pod bench clears 25%. The Veteran stands on Hard and is gated by the AI door (owner and
+  that offers it offers a weaker seat than Normal, for Rob to test on staging. `tools/pilot-bench.mjs` gains `--off` (ablate a
+  feature) and `--seats 4` (a pod); `available: false` takes it back out of every lobby. The Veteran stands on Hard and is gated by the AI door (owner and
   insiders only). **For the Play lane** (Requests row 14, the session on the lobby): read `data/ai-players/roster.json`
   (`CrankAiRoster@1`; only `available` levels are offered; the seat is `{kind: "ai", level, persona}`), label `llm` as "Veteran".
   Not started: the deck matrix (5.5), Normal tuning (PR 3), game logs (PR 7), the politics read.

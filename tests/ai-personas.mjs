@@ -48,7 +48,7 @@ const ROOT = new URL("../", import.meta.url);
   ok(by.benny.disposition.friendliness === 2 && by.benny.overrides.saltCap < 0 && by.benny.overrides.politics === "avoid", "Benny is the group hug: friendliest, kindest cap, stays out of pile-ons");
   ok(by.marcus.disposition.competitiveness === 2 && by.marcus.overrides.saltCap === 1, "Marcus is the competitor");
   ok(by.june.overrides.temperatureDelta === 1 && by.june.disposition.competitiveness < 0, "June is the casual: she takes the fun line");
-  eq([levelOf("hard").available, LEVELS.filter((l) => l.available).map((l) => l.id)], [false, ["easy", "normal", "llm"]], "Hard is built but held back until the bench shows it beating Normal (tools/pilot-bench.mjs --seats 4)");
+  eq([levelOf("hard").available, LEVELS.filter((l) => l.available).map((l) => l.id)], [true, ["easy", "normal", "hard", "llm"]], "Hard is offered, at Rob's word, though the pod bench has it under a fair share (tools/pilot-bench.mjs --seats 4)");
 }
 
 /* ---- 2. What the validator refuses ---- */
