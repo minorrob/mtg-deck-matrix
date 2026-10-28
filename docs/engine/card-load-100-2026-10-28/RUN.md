@@ -59,14 +59,14 @@ Fresh baseline on main `39a45706`, before engine changes:
 
 | Gate (README, "What 100% means") | At the start (2026-10-28, main `39a45706`) | Now |
 | --- | --- | --- |
-| G-1 Commander cards final | 6,430 defined of about 32,046; 25,616 undefined | |
-| G-2 Candidates outstanding | 116 (compiler, live); 100 in the committed `candidates.json` | |
-| G-3 `check-cards` | 6,430 definitions, 11,023 scenarios, 0 failed | |
-| G-4 Calibration failures | 4 of 4,165 (Blackblade Reforged, Contagion Clasp, Goblin Piledriver, Wayfarer's Bauble) | |
-| G-5 Pool fuzz, clean of games | the harness has no pool mode yet; library 3 of 3, staging decks 1 of 1 clean | |
-| G-6 Final cards exercised in a clean game | not measured (no ledger yet) | |
-| G-7 Gameplay-gap list open items | section 4: 21 open, 5 unsure; section 5: 10 open; section 7: 10 open; section 8: 10 rows open, 4 partial (`README.md`, "Open accuracy debt") | |
-| G-8 Rob's playtest sign-off | none | |
+| G-1 Commander cards final | 6,430 defined of about 32,046; 25,616 undefined | Main baseline: 6,424 nonbasic pool finals of 32,040 raw pool cards, plus 6 basic definitions; 25,616 undefined. Wish exemptions not subtracted from raw counts. Unmet. |
+| G-2 Candidates outstanding | 116 (compiler, live); 100 in the committed `candidates.json` | Main baseline reproduced: 116 candidates, 2 blocked. Unmet. |
+| G-3 `check-cards` | 6,430 definitions, 11,023 scenarios, 0 failed | Main baseline reproduced. Ability coverage remains unproved; journal observability decision pending. Unmet. |
+| G-4 Calibration failures | 4 of 4,165 (Blackblade Reforged, Contagion Clasp, Goblin Piledriver, Wayfarer's Bauble) | Main baseline reproduced. W4 reports 1 failure after its unintegrated fixes; integration and independent review pending. Unmet. |
+| G-5 Pool fuzz, clean of games | the harness has no pool mode yet; library 3 of 3, staging decks 1 of 1 clean | V8 harness in progress; no final integrated pool-game result yet. Unmet. |
+| G-6 Final cards exercised in a clean game | not measured (no ledger yet) | No measured clean-game coverage yet. Unmet. |
+| G-7 Gameplay-gap list open items | section 4: 21 open, 5 unsure; section 5: 10 open; section 7: 10 open; section 8: 10 rows open, 4 partial (`README.md`, "Open accuracy debt") | Debt fixes in progress. Main's 57 pre-existing stale break anchors are named in `w0/preexisting-break-anchors.json`. Unmet. |
+| G-8 Rob's playtest sign-off | none | None; only Rob can close this gate. |
 
 ## Waves
 

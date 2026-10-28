@@ -1,0 +1,407 @@
+{
+  "files": 196,
+  "breaks": 3630,
+  "problems": [
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-a11y-tabletop.py",
+      "label": "the profile menu not a named group",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-board-fullscreen-notes.py",
+      "label": "a click in Full screen only shows the card",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-board-fullscreen-notes.py",
+      "label": "a double-click playing twice",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-board-fullscreen-notes.py",
+      "label": "the double-click taking nothing back",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-board-fullscreen-notes.py",
+      "label": "the single click not waiting",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-board-fullscreen-notes.py",
+      "label": "the actions small",
+      "target": "crankmagic-stage.css",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-board-fullscreen-notes.py",
+      "label": "the Boards pane is omitted from the preview gap",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-board-yield.py",
+      "label": "phone loses its visible yield",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-combat-display.py",
+      "label": "face-down identity is exposed",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-combat-display.py",
+      "label": "missing blockers make an attacker unblocked",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-combat-display.py",
+      "label": "planeswalker endpoint becomes its controller",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-combat-display.py",
+      "label": "private picks appear as confirmed assignments",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-combat-journey.py",
+      "label": "real combat is missing from the board",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-combat-words.py",
+      "label": "the seat's view keeps the engine's words",
+      "target": "game/room/room.mjs",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-deck-stages.py",
+      "label": "Defined needs 101",
+      "target": "collection-model.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-deck-stages.py",
+      "label": "the commander is no seat",
+      "target": "collection-model.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-deck-stages.py",
+      "label": "Boxed ignores substitutes",
+      "target": "collection-model.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-decks-hub.py",
+      "label": "favorite star hides without hover",
+      "target": "crankmagic.css",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-decks-hub.py",
+      "label": "the deck page drops its table line on a redraw",
+      "target": "crankmagic-decks.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-direct-blocking.py",
+      "label": "mat click no longer selects blocker",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-direct-blocking.py",
+      "label": "only first room reason displayed",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-direct-blocking.py",
+      "label": "multiple attackers silently reduced to one",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-direct-blocking.py",
+      "label": "new match leaves old validation valid",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-direct-blocking.py",
+      "label": "changed legal pairs retain old draft",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-direct-blocking.py",
+      "label": "No blocks sends without confirmation",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-first-draw-step.py",
+      "label": "the host's choice not saved",
+      "target": "game/room/table.mjs",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-libload-l4-combat.py",
+      "label": "requirement checked",
+      "target": "game/engine/rules/combat.mjs",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-loss-reason.py",
+      "label": "no ending in the result",
+      "target": "game/room/room.mjs",
+      "found": 2
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-loss-reason.py",
+      "label": "the room's departures not read for the ending",
+      "target": "game/room/room.mjs",
+      "found": 2
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-loss-reason.py",
+      "label": "the room's own end not read for the ending",
+      "target": "game/room/room.mjs",
+      "found": 2
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-pass-stack.py",
+      "label": "a new table's rules have it off",
+      "target": "game/room/table.mjs",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-play-shared-a11y.py",
+      "label": "closed previews mark every played card selected",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-play-shared-focus.py",
+      "label": "switching views loses Camera focus",
+      "target": "crankmagic-board.js",
+      "found": 2
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-play-tabletop.py",
+      "label": "the kept Camera not read back",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-play-ui-rest.py",
+      "label": "the launch line says Waiting again",
+      "target": "crankmagic-table.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-play-ui.py",
+      "label": "no step lit in the ribbon",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-play-ui.py",
+      "label": "3D never on the board",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-public-precons.py",
+      "label": "a bundled deck when nothing is shared",
+      "target": "crankmagic-table.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-r4-foundation.py",
+      "label": "wordmark loses its Oxanium mark",
+      "target": "crankmagic-design.css",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-r4-workshop-flows.py",
+      "label": "AI decks before configured rules",
+      "target": "crankmagic-table.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-r4-workshop-flows.py",
+      "label": "repeat setup creates another table",
+      "target": "crankmagic-table.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-table-candidates.py",
+      "label": "the front door's report route missing",
+      "target": "cloud/tables.mjs",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-table-events.py",
+      "label": "a reconnect never told to start over",
+      "target": "game/room/room.mjs",
+      "found": 2
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-train-d-c.py",
+      "label": "each option's controller",
+      "target": "game/engine/script/bind.mjs",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-turn-flow-board.py",
+      "label": "your turn not said",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-why-not.py",
+      "label": "a click on the card not saying why",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "tools/a11y-app-breaks.py",
+      "label": "the fill not darkened in light themes",
+      "target": "crankmagic-design.css",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "tools/ai-clock-breaks.py",
+      "label": "the meter's log on the machine's clock",
+      "target": "cloud/worker.mjs",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "tools/ai-clock-breaks.py",
+      "label": "the AI routes' log on the machine's clock",
+      "target": "cloud/worker.mjs",
+      "found": 2
+    },
+    {
+      "kind": "not once",
+      "file": "tools/ai-everyone-breaks.py",
+      "label": "everyone signed in still held to the allowlist",
+      "target": "cloud/ai.mjs",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "tools/ai-everyone-breaks.py",
+      "label": "a service token let in as everyone",
+      "target": "cloud/ai.mjs",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "tools/ai-everyone-breaks.py",
+      "label": "the advisor's offer ignores the switch",
+      "target": "cloud/worker.mjs",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "tools/ai-everyone-breaks.py",
+      "label": "the settings' meter ignores the switch",
+      "target": "cloud/worker.mjs",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "tools/ai-everyone-breaks.py",
+      "label": "the AI routes ignore the switch",
+      "target": "cloud/worker.mjs",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "tools/ai-everyone-breaks.py",
+      "label": "the table's AI seat ignores the switch",
+      "target": "cloud/game-room.mjs",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "tools/breaks-play-r2.py",
+      "label": "a new revision keeps an obsolete draft",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "tools/table-away-breaks.py",
+      "label": "the read is timed when it lands",
+      "target": "crankmagic-table.js",
+      "found": 0
+    }
+  ],
+  "source": "main 39a45706, measured before wave-0 engine changes",
+  "status": "pre-existing failures; global anchor gate remains unmet"
+}

@@ -15,9 +15,10 @@ No new cards until wave 0 closes. No provider API calls, production changes, mig
 
 | To | Request | State |
 | --- | --- | --- |
-| Claude · Engine | The standing lane table still claims `game/engine/**`. Please confirm the card-load run's split ownership of the rule modules required by the wave-0 lane files. Until reconciled, the run measures and prepares fixes without editing another session's active modules. | Open; Rob assigned the card-load run directly on October 28 |
+| Claude · Engine | The standing lane table predates Rob's direct October 28 card-load assignment. Current open PRs were checked: no separate active rule-module PR besides prerequisite #834 was listed. The run owns its debt modules and coordinates narrow shared-file scopes between its roles. | Resolved by the later direct assignment; no other session's active files are edited |
 | Play | Show the monarch already present in the room view on the board; keep a one-press card reference where applicable. | Open; Play owns the board |
 | Lounge owner | Wave-0 W2 needs only the named wish-card refusal in `game/room/table.mjs` `readDeck`; confirm any current overlap before editing. | Open; lounge changes already on the baseline |
+| Play, Workshop, Engine | Main already has 57 stale mutation anchors across 31 breaks files; exact names, targets, and labels are in `docs/engine/card-load-100-2026-10-28/w0/preexisting-break-anchors.json`. Re-anchor only to the original behavior and prove each caught. The global anchor gate stays red until resolved. | Measured before wave-0 changes; no new prerequisite anchor failure |
 
 ## Card load to 100%: the package for an OpenAI orchestrator, 2026-10-28 (Claude Code on Personal-HP, for Rob; `claude/engine-loading-orchestration-dd4c7f`)
 
