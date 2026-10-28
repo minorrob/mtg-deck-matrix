@@ -59,7 +59,8 @@ const lib = libraryFrom();
     Bolt: card("Instant", ["R"]), Nope: card("Instant", ["R"]), Rock: card("Artifact"), Plaza: card("Land"), Swamp: card("Basic Land — Swamp", ["B"]), Doom: card("Sorcery", ["B"])};
   for (let i = 0; i < 14; i += 1) made[`Ruin ${i}`] = card("Land");
   /* "Nope" is a card the table does not play: never in a deck. */
-  const library = Object.keys(made), oracle = (n) => made[n], cards = (n) => (n in made && n !== "Nope" ? {} : null);
+  const library = Object.keys(made), oracle = (n) => made[n], cards = (n) => (n in made && n !== "Nope"
+    ? {types: made[n].type.includes("Creature") ? ["Creature"] : [], supertypes: made[n].type.includes("Legendary") ? ["Legendary"] : []} : null);
   const decks = decksFromLibrary(7, {library, oracle, cards, count: 2});
   const of = (name) => decks.find((d) => d.name === name);
   eq(decks.map((d) => d.name).sort(), ["Colorless", "Red"], "the two legendary creatures lead");
