@@ -365,7 +365,7 @@
       const chip=el.querySelector('.cm-board-chip')?.offsetHeight||0, piles=Math.floor(((r.height-head-14-band-chip)/2-26)/1.4), rows=Math.floor((r.height-head-24-84-chip)/3.44);
       /* A board this small has no room for its zones' captions: the cards and piles keep the height. */
       el.toggleAttribute('data-tight',r.height<200);
-      el.style.setProperty("--bc-cap",`${Math.max(16,Math.min(piles,rows))}px`);
+      el.style.setProperty("--bc-cap",`${Math.max(16,Math.min(piles,rows)*Math.min(1,cards))}px`);   /* Camera's Cards below 100% shrinks a board's cards under that cap too */
     };
     if(g.grid){
       for(const el of s.host.querySelectorAll('.cm-stage-slot')){const r=g.slot(el.dataset.area);position(el,r);size(el,r);}

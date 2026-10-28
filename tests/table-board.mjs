@@ -227,7 +227,7 @@ try {
   await maya.page.locator("#cm-board .cm-stage-top").waitFor({timeout: 30000});
   ok(routes[ROB].length === 1 && routes[MAYA].length === 1, "the lobby hands each page to the board, and each opens one socket to the table");
   eq([heardBy[ROB].length, heardBy[MAYA].length], [0, 0], "and nothing of the sound is fetched before the first press on the board (a browser would refuse to play it)");
-  eq([...await rob.page.locator(".cm-stage-top .cm-seat-header .cm-mat-name").allInnerTexts(), ...await rob.page.locator(".cm-stage-rear .cm-seat-header .cm-mat-name").allInnerTexts()], ["You · Rob", "Maya"], "the page holds every seat, yours first here: yours in the header over the board looked at, the other seat's tile behind it");
+  eq([...await rob.page.locator(".cm-stage-top .cm-seat-header .cm-mat-name").allInnerTexts(), ...await rob.page.locator(".cm-stage-rear .cm-stage-boardname").allInnerTexts()], ["You · Rob", "Maya"], "the page holds every seat, yours first here: yours in the header over the board looked at, the other seat's board (its name above it) behind it");
   /* Found rendering B1's fixture: the library holds only your own cards, so everyone else's were fetched from Scryfall one
      request each, and a full board is refused faster than it is answered. The shipped card records draw them. */
   const pic = await rob.page.evaluate(() => {const C = globalThis.__cm, mine = new Set(C.cards().map((c) => c.name)), other = C.catalog.all().map((c) => C.catalog.exact(c.name)).find((c) => c && c.image && c.image.startsWith("https://cards.scryfall.io/") && !mine.has(c.name)); return other ? {name: other.name, image: other.image, drawn: C.board.pictureOf(other.name)} : null;});
@@ -656,9 +656,9 @@ try {
   eq((await sizes()).outs, ["100%", "100%"], "and back to 100%, all three agree");
   await boardSlider.fill("100");
   await rob.page.locator('[data-action=board-camera]').click();
-  await rob.page.locator(".cm-seatboard:not(.is-you) [data-action=board-focus]").click();
-  await rob.page.locator(".cm-board-mat").waitFor();
-  ok((await text(rob.page, ".cm-board-mat .cm-seat-header .cm-mat-name")).trim() === "Maya" && /^\d+ in hand$/.test((await text(rob.page, ".cm-board-mat .cm-seat-hand")).trim()) && await rob.page.getAttribute("#cm-board", "data-view") === "focus", "⤢ Focus on Maya's board puts it on the mat, in the Focus view");
+  await rob.page.locator(".cm-stage-slot:not(.is-you) .cm-seatboard").first().dblclick({position: {x: 4, y: 4}});   /* a double click on a board focuses it (Rob, 2026-10-28; the Focus button is gone) */
+  await rob.page.locator(".cm-stage-big").waitFor();
+  ok((await text(rob.page, ".cm-stage-big .cm-stage-boardname")).trim() === "Maya" && /^\d+ in hand$/.test((await text(rob.page, ".cm-board-tile:not(.is-you) .cm-seat-hand")).trim()) && await rob.page.getAttribute("#cm-board", "data-view") === "focus", "a double click on Maya's board puts it on the mat in the Focus view, her name above it and her hand count in the Boards module");
   await lookAt(rob.page, 0);
 
   /* B7, item 15: THE PANE'S DIVIDER. Dragged wider, the tiles grow with it, and past 400px each is a miniature of that
@@ -1839,11 +1839,11 @@ console.log(`table-board: ${checks} checks passed — a real game between two br
 async function dismissAccount(page) {
   if (await page.locator('#cm-user-menu:popover-open').count()) await page.keyboard.press('Escape');
 }
-/* The seat the page is looking at is the big board in Focus; each of the others is a tile behind it. Press its seat label to look at it (a seat
+/* The seat the page is looking at is the big board in Focus; each of the others is a tile behind it. Double click it to look at it (a seat
    already looked at has no tile to press, as it has no pane tile in the old pane). */
 async function lookAt(page, seat) {
   if (await page.locator(`.cm-stage-big[data-seat='${seat}']`).count()) return;
-  await page.click(`.cm-stage-rear[data-seat='${seat}'] [data-action=board-focus]`);
+  await page.locator(`.cm-stage-rear[data-seat='${seat}'] .cm-mat`).dblclick({position: {x: 4, y: 4}});   /* a double click on a board focuses it (Rob, 2026-10-28) */
 }
 /* Actions is the left drawer; the old row's "board-actions-open" toggle opened and shut it. */
 async function rail(page, open) {

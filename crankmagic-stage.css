@@ -1769,7 +1769,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-mat[data-fit=table] .cm-seat-portrait{display:none}
 /* On a card this small the power/toughness and counts take less room, so they stay on it. */
 #matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-bcard-pt{padding:0 2px;border-radius:3px;font-size:max(7px,calc(var(--bc) * .3))}
-#matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-bcard-count{padding:0 2px;font-size:max(8px,calc(var(--bc) * .4))}
+#matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-bcard-count{padding:0 2px;font-size:max(10px,calc(var(--bc) * .4))}
 /* THE QUICK ACTION TAB (Rob, 2026-10-28): the undo drawer under a card, holding Tap, Cast, Play and Undo, each once; the same in Table, Focus and 3D. */
 #matrix-v2 .cm-board .cm-quick-drawer{display:flex;align-items:center;justify-content:center;gap:6px;padding:2px 4px}
 #matrix-v2 .cm-board .cm-quick-do{flex:none;min-height:0;height:auto;padding:2px 5px;border:1px solid color-mix(in srgb,var(--mat-ink) 40%,transparent);border-radius:4px;background:rgb(0 0 0 / .5);color:var(--mat-ink);font:700 calc(13px*var(--hud-scale,1))/1.15 var(--font-body);cursor:pointer;white-space:nowrap}
@@ -1789,3 +1789,5 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-stage-max:hover{background:#142e32}
 #matrix-v2 .cm-board .cm-stage-max.is-on{background:var(--color-aether,#4aa8ff);border-color:var(--color-aether,#4aa8ff);color:#06161a}
 .cm-stage-hand.is-hidden .cm-stage-hand-label{top:auto;bottom:0}
+/* A pile's count never reads under 10px, however small its card (the boards fit the window). */
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-bcard-count{font-size:max(10px,calc(var(--bc) * .3))}
