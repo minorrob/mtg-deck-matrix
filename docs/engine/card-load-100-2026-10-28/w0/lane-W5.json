@@ -17,7 +17,7 @@
     "| Convoke with Phyrexian or {2/W} symbols left to the pool | `rules/mana.mjs`:483 | W5 |",
     "| Ways to pay capped: 24 tap choices, 12 payments | `rules/actions.mjs`:1703; `rules/mana.mjs`:254 | W5 |"
   ],
-  "status": "Checkpoint: Saga exact cost, convoke alternatives and full-pool dealer implemented; V8 review and consolidated gates pending",
+  "status": "Checkpoint proved and draft PR 915 published: Saga exact cost, convoke alternatives and full-pool dealer; remaining W5 debt queued; consolidated gates pending",
   "checkpoint": {
     "cardsAdded": 0,
     "cardsPromoted": 0,
@@ -32,9 +32,14 @@
       "node tests/library-engine-pool.mjs: 16 checks passed",
       "node --stack-size=4000 tests/engine-convoke.mjs: 43 checks passed",
       "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w5-mana.py: final full sweep, 20 caught; missed: []",
-      "node --stack-size=4000 game/tools/batch/check-cards.mjs: running at checkpoint preparation",
+      "node --stack-size=4000 game/tools/batch/check-cards.mjs: 6430 definitions; 11025 scenarios, 0 failed; exit 0",
       "tests/engine-mana, engine-saga, engine-lands-and-mana, engine-mana-abilities, engine-restricted-mana, engine-costs, engine-costs-activations-4b, engine-cost-more, engine-cost-targets, engine-mana-provenance, engine-mana-withheld, engine-pay-mana-play: passed",
-      "node tests/engine-breaks-anchors.mjs: 57 inherited stale anchors; W5's 20 anchors found once. The inherited requirement-checked combat anchor is also missing on original origin/main; no combat edit by W5"
+      "node tests/engine-breaks-anchors.mjs: 57 inherited stale anchors; W5's 20 anchors found once. The inherited requirement-checked combat anchor is also missing on original origin/main; no combat edit by W5",
+      "node tests/feature-wiring.mjs: 131 checks passed",
+      "node tests/table-basics.mjs initially caught the stale generated Saga definition; after node game/tools/engine-definitions.mjs --write, 6 checks passed and all 11025 card scenarios passed with the table lookup and room basics. Only definitions.mjs was regenerated, verified clean beforehand, then restored exactly to HEAD; no assertion changed",
+      "node tools/data-inventory.mjs --check: generated inventory drift, queued for root's consolidated regeneration",
+      "node tests/data-integrity.mjs: inherited missing README entries engine-mana-upkeep and sentence-paragraphs; root reports those entries added on integration",
+      "bash tools/local-ci.sh HEAD 0: SCAN PASS on code commit 8e6f5b5e28150be930c2ed0285b0199bbcf3e56e"
     ],
     "queued": [
       "Token shock-land entry life choice (shared permanents/replacement scope)",
@@ -44,7 +49,10 @@
       "Complete payment and tap choices beyond the 12/24 caps; current assertions and caps deliberately remain unchanged"
     ],
     "routed": [{"item": "Wayfarer's Bauble calibration", "owner": "W4", "finding": "Held-out translation selects Artifact instead of Land because repeated TYPE slots alias; the hand definition is correct"}],
-    "pending": ["V8 independent review", "Root's single regeneration of definitions/coverage/inventory", "Consolidated wave checks, games, CI and staging"],
+    "review": "V8 independently reviewed the bounded code commit 8e6f5b5e and extra mixed {2/W}{B/P} branches; root reports no new finding. This does not close the queued W5 debt or any program gate",
+    "pullRequest": "https://github.com/minorrob/mtg-deck-matrix/pull/915",
+    "codeCommit": "8e6f5b5e28150be930c2ed0285b0199bbcf3e56e",
+    "pending": ["Root's single regeneration of definitions/coverage/inventory", "Consolidated wave checks, games, CI and staging"],
     "ignoresAdded": [],
     "sources": ["Local Comprehensive Rules text, rule numbers only", "https://api.scryfall.com/cards/named?exact=Urza%27s%20Saga and its public rulings URI"]
   }
