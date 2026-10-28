@@ -32,6 +32,7 @@ Measured on main `39a45706`, 2026-10-28.
 | Command | What it does | Time |
 | --- | --- | ---: |
 | `python game/tools/batch/oracle-show.py "<Name>" ...` | A card's type line, cost, P/T and oracle text from `data/engine/oracle.json` | 1 s |
+| `node game/tools/engine-compile.mjs --plan --cards "<A>,<B>"` | **Free, no key, spends nothing:** what the sentence library already writes of each card (its trusted abilities, arriving written) and the gap sentences only a writer must add. **Every card starts here.** | seconds |
 | `node game/tools/batch/held-alone.mjs "<Name>"` | Which most-played cards one missing construct alone holds back | seconds |
 | `grep -l '"<Name>": {' game/engine/cards/*/*.scenarios.json` | **Before defining any card:** another card's scenario fixture of that name. Rename it `Smoke <name>` in its own file, or `tests/engine-cards.mjs` fails | 1 s |
 | `node --stack-size=4000 game/tools/batch/check-cards.mjs` | Every definition: schema, fidelity to its oracle text, its smoke game, every scenario. Baseline: 6,430 definitions, 11,023 scenarios, 0 failed | 95 s |
@@ -50,8 +51,13 @@ Measured on main `39a45706`, 2026-10-28.
 | `node tests/<suite>.mjs` | One suite | varies |
 | `bash tools/local-ci.sh HEAD 0` | The secrets and personal-address scan and the merge with `main`. **Must report SCAN PASS before any push** | a minute |
 
-**Never run** `game/tools/engine-compile.mjs` (the old API backstop: it spends money on a provider key and is not this
-run's). You are the writer.
+**No API endpoint, ever.** Rob, 2026-10-28: the run uses no API of his beyond the plan he is paying for. So: never
+`engine-compile.mjs --yes` (it spends on a provider key; `--plan` is free and is the only form you run); never the AI door
+or an LLM seat (`tools/fuzz-live.mjs --level` stays `easy` or `normal`, the house pilots; nothing sets an `AI_*`,
+`ANTHROPIC_*` or `OPENAI_*` variable; `cloud/ai.mjs` is never called); never a model API from any script you write. The
+one outside call allowed is Scryfall's public rulings endpoint (no key; send a `User-Agent`; at most 10 requests a
+second; cache what you fetch in your scratch space). You and the other subagents are the writers; nothing else writes
+a card.
 
 ## The roles
 
@@ -96,7 +102,15 @@ lane's theme owns it, stop on the card and name the construct; the orchestrator 
 - **A card you cannot make exactly right** without a construct another lane owns, or a construct too large for the
   wave: stop on it and say exactly what it needs. Never ship a card that is almost right.
 - **Read narrowly:** grep and line ranges, never a whole generated file (`definitions.mjs`, `candidates.mjs`) or data
-  file (`oracle.json`, `candidates.json`); cut output to what you need.
+  file (`oracle.json`, `candidates.json`); cut output to what you need. Write cards in batches with one generator run,
+  not one card at a time; read a scenarios file only to edit it; keep command output to its result lines.
+- **Every verb is a primitive.** Each verb of a card's oracle text is a CR 701 keyword action or an effect primitive in
+  `game/engine/vocabulary.mjs`, implemented once, in one module, and used by every card that says it. A card never gets
+  a branch of its own in an engine module; a verb the engine lacks is built as a primitive with its own scenario family
+  (two or three cards that use it), then the cards. That is what keeps the data model one grammar as it grows.
+- **Every ability is reached.** A card is complete when `check-cards` proves every oracle sentence maps to an ability
+  (fidelity) **and** every ability has at least one scenario that makes it fire or apply. Until V8's ability ledger
+  (wave 0) reports the second, your PR body lists, per ability, the scenario that reaches it.
 - **Never touch** `data/live-load.json`, `data/live-state.json`, `release/`, the wrangler config, `cloud/migrations/`,
   `docs/ACTIVE.md`, Linear, another role's cards, or a file outside your worktree. American English, US formats.
 - **Commits** end with your own attribution line. Push your branch; open a **draft** PR into the integration branch.
@@ -114,8 +128,12 @@ lane's theme owns it, stop on the card and name the construct; the orchestrator 
    `engine-candidates`, all `--write`). **Every promoted card then gets scenarios written for each of its abilities**:
    the observed smoke game alone is not enough (a known ignore of the old waves, now closed).
 2. **Write your `cards` list in its order** (the orchestrator's order: wanted first, then the sentence that completes
-   the most other cards), per `game/tools/batch/README.md`: `oracle-show.py`, the fixture grep, a generator importing
-   `cardlib.py` **in your scratch space, not the repository**, `check-cards.mjs` until 0 failed.
+   the most other cards), per `game/tools/batch/README.md`: `oracle-show.py`, the fixture grep, then
+   **`engine-compile.mjs --plan --cards "<your batch>"`** for what the library already writes of each card. Take those
+   abilities as they are (they are calibrated at 99.9%) and write only the gap sentences, in a generator importing
+   `cardlib.py` **in your scratch space, not the repository**; `check-cards.mjs` until 0 failed. A gap sentence you write
+   is learned by the library on merge and completes every other card that shares it: prefer the exact oracle wording in
+   your ability's `text` so the template matches widely.
 3. **The wave's quota** is the orchestrator's (about 30 cards). Stop at a clean point rather than rush: everything
    committed passes its checks.
 4. **Fix what V8 reports** on your cards, on your branch, before the orchestrator merges you. Each finding is answered
@@ -153,6 +171,15 @@ reports. You never edit a card or a rule; you find, prove and report.
    scenario red is a finding for the card's theme lane, not a change you make to the card.
 5. **Findings** go to the orchestrator as they appear, each as: card or rule · what a table does · what the engine does ·
    the scenario or seed that shows it · the theme lane that owns it.
+
+## Any model may pick up any lane
+
+Rob hands lanes between OpenAI's subagents, Claude, Codex, Cursor and Grok as his plan limits allow. So a lane never
+depends on a conversation: **everything it knows lives in four places**: its lane file (`w<N>/lane-<role>.json`), its
+branch, its draft PR body (the report below, kept current at every push) and `RUN.md`. A session that picks a lane up
+reads those four and continues. Branches carry the model's prefix (`codex/` for OpenAI, `claude/`, `cursor/`, `grok/`);
+a lane changing hands starts `<prefix>/engine-load100-w<N>-<suffix>-2` from the old head, and the PR says so. Push at
+every clean point, never only at the end: an unpushed branch is work nobody else can continue.
 
 ## Done means (writers)
 

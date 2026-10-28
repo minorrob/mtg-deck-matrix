@@ -52,8 +52,9 @@ THE ENGINE LOADER (BRIEF.md has every command, measured)
 - tools/library-engine-index.mjs --out/--top/--check-lane: deals the unloaded cards into themed lane files.
 - game/tools/sentence-library.mjs: the compiler's calibration. tools/fuzz-live.mjs: seeded whole games through the room.
 - game/tools/batch/breaks.py: proves each engine change is caught by a suite. tools/local-ci.sh HEAD 0: the scan.
-- Never run game/tools/engine-compile.mjs (an API backstop that spends money on a provider key). The subagents are
-  the writers.
+- game/tools/engine-compile.mjs --plan --cards "A,B": FREE and keyless; shows what the library already writes of each
+  card and the gap sentences a writer must add. Every card starts from it. Never run it with --yes (that spends on a
+  provider key). The subagents are the writers.
 
 BEFORE ANYTHING
 1. Read, in this order: AGENTS.md; docs/ACTIVE.md (the top sections and the lanes table); the package's README.md,
@@ -66,6 +67,9 @@ THE WAVES (ORCHESTRATION.md is the procedure; follow it step by step)
 - Wave 0 is the debt wave: land PR #834 first, then the eight roles fix the open accuracy debt the README lists, and the
   verifier builds the pool fuzz and the exercised ledger and plays every final card. No new cards until wave 0 merges.
 - From wave 1: T1 Rob's library, T2 the 1,247 unloaded most-played cards, T3 every other Commander card, sentence first.
+- Deal each wave for the flywheel: the cards whose missing sentences are shared by the most other undefined cards go
+  first, so each sentence written completes many cards as candidates. Record candidates gained per sentence in RUN.md.
+- Pipeline: once a wave's local checks pass, start the next wave's lanes from its integration head while Actions runs.
 - Each wave: plan and deal (about 30 cards a writer) -> spawn the eight in parallel, each in its own worktree and branch
   codex/engine-load100-w<N>-<role>, with the subagent prompt in ORCHESTRATION.md step 2 -> route stopped cards and the
   verifier's findings -> integrate into codex/engine-load100-w<N> with merge commits, regenerating generated files once
@@ -87,8 +91,16 @@ STANDING RULES (AGENTS.md has the rest; they bind you)
 - A test that cannot fail is a comment: every engine change has a break that a suite catches (`missed: []`).
 - The whole suite runs once, on GitHub Actions (`suites`); the Workers Builds checks always fail and do not gate.
   Re-check head, base and mergeable right before every merge. Merge commits, never squashes, never force-pushes.
+- NO API ENDPOINT OF ROB'S, EVER: no provider key, no AI door, no LLM seat (fuzz --level stays easy or normal), no
+  ANTHROPIC_*/OPENAI_*/AI_* variable set, no model called from any script. The only outside call is Scryfall's public
+  rulings endpoint. The run spends nothing beyond the plan you run on.
 - Staging only. Production is Rob's go, every time. No D1 migrations, no spending, no deleting anything you did not
   create, no credential printed or worked around.
+- The run outlives you. Rob moves it between you and Claude as each plan's limit allows, and Codex, Cursor or Grok may
+  take a lane. So every lane lives in its lane file, its branch and its draft PR body, and RUN.md's "Where the run
+  stands" is the hand-back block, kept current at every step. When your budget nears its end: finish a short step or
+  have every lane push with its report, write the hand-back, update docs/ACTIVE.md and Linear, and stop. Never leave
+  an unpushed branch.
 - American English and US formats everywhere. Your own attribution line on commits.
 - Stop and ask Rob when: the same defect fails twice after a fix; a gate would pass only by weakening it; a rules
   question the CR and the card's rulings do not settle; anything costing money, touching production or a shared
@@ -102,6 +114,10 @@ Start now: read, claim, baseline, then wave 0.
 ```
 
 ## 3. What Rob decides before or during the run
+
+- **Who holds the run.** The package is model-agnostic: when OpenAI's limit is reached, Claude resumes from `RUN.md`'s
+  hand-back block and the open branches with the same prompt (its branches take the `claude/` prefix); when Claude's is,
+  OpenAI resumes the same way. Nothing lives in a conversation.
 
 - **Pace.** Each wave's merge waits on one GitHub Actions run (about 45 to 60 minutes) after the lanes finish. The
   prompt continues wave after wave; tell the orchestrator a number of waves or a date if you want a stop.

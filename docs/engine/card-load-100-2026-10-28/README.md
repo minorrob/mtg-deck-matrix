@@ -70,8 +70,8 @@ wave.
 | --- | --- | --- | --- |
 | **G-1** | every card | `card-compiler.mjs` reports **0 undefined** Commander cards (the pool is `deckCard` and not banned, in `data/engine/oracle.json`) | 25,616 undefined |
 | **G-2** | none refused | 0 candidates outstanding, 0 provisional, 0 blocked; no card refused at a table for a missing rule | 116 candidates, 2 blocked |
-| **G-3** | 0 error rate on a mechanic | `check-cards` 0 failed, and **every** card has scenarios of its own for each ability and its edges (a promoted candidate's observed smoke game is not enough) | 0 failed; promoted candidates' scenario depth unaudited |
-| **G-4** | 100% accuracy | Calibration with **0 failures**; every card read by the verifier, independent of its writer, against its oracle text, rulings and the CR | 4 failures; no independent review of past loads |
+| **G-3** | 0 error rate on a mechanic | `check-cards` 0 failed; every oracle sentence maps to an ability (fidelity); **every ability is reached by at least one scenario** (the ability ledger, built in wave 0); a promoted candidate's observed smoke game is not enough | 0 failed; no ability ledger; promoted candidates' scenario depth unaudited |
+| **G-4** | 100% accuracy | Calibration with **0 failures**; every oracle verb is a CR 701 keyword action or a vocabulary primitive (`game/engine/vocabulary.mjs`), never a card-special branch; every card read by the verifier, independent of its writer, against its oracle text, rulings and the CR | 4 failures; no independent review of past loads |
 | **G-5** | 0 errors when played | **5,000** pool-fuzz games with a person seat, every one clean: finished, 0 refusals, 0 exceptions, replayed identically, 0 leaks; plus Rob's library (50 seeds) and staging decks | no pool mode |
 | **G-6** | any given card is played | every final card cast or played and resolved in at least one clean game, and every ability fired there or in a scenario (the exercised ledger) | not measured |
 | **G-7** | played as at a table | the gameplay-gap list has **no open item**: no card that plays differently, no choice made for a player, no check stepping around a card, no ignore outstanding | open items below |
@@ -80,6 +80,23 @@ wave.
 A finite number of games and scenarios proves the absence of the errors they look for, not of every error. That is why
 G-3, G-4, G-6 and G-7 sit beside G-5, why Rob's playtests (and every "report a wrong card" from a playtest table) stay
 the last word, and why each finding afterward reopens the gate it belongs to.
+
+## The strategy, and why it is shaped this way
+
+- **The compiler writes first, people write the rest.** `engine-compile.mjs --plan` (free, no key) shows for any card what
+  the sentence library already writes of it; a writer adds only the gap sentences. Across the undefined pool that is
+  about 1.9 sentences a card, and 12,080 cards need one. Every sentence written is learned on merge and completes the
+  other cards that share it, so the pool of candidates grows faster than the writers' hands. Waves are dealt to maximize
+  that: the sentences shared by the most cards first.
+- **No API endpoint.** The run spends nothing beyond the plans Rob already pays for: no provider key, no AI door, no LLM
+  seat, no model called from a script. The house pilots play every game.
+- **Three independent proofs of every card:** its scenarios (every sentence an ability, every ability reached), a
+  verifier reading it cold against the oracle text and rulings, and clean played games that exercised it. One proof is
+  a claim; three are evidence.
+- **One grammar.** Every verb is a primitive implemented once; a card is data in that grammar, never code. That is what
+  makes 32,000 cards a data model rather than 32,000 programs, and what a later model can pick up.
+- **Resumable by any model.** Lanes live in files, branches and PR bodies; `RUN.md` is the hand-back. Rob moves the run
+  between OpenAI and Claude as his limits allow.
 
 ## The scale, honestly
 

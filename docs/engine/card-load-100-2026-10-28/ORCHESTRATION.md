@@ -60,6 +60,10 @@ repository alone.
      After each wave's merge the compiler recompiles, and every card those sentences now complete arrives as a
      candidate for the next wave's review lists. This is the program's flywheel; it is what makes 25,000 cards
      reachable.
+- **Deal for the flywheel, not for the count.** Among a tier's cards, prefer the ones whose gap sentences are shared by the
+  most other undefined cards (`card-compiler.mjs --report`'s missing-sentence ranking; `engine-compile.mjs --plan` per
+  card), so each hand-written sentence completes many cards as candidates for the next wave's review. Record in `RUN.md`
+  the ratio **candidates gained per sentence written**; it is the number that decides how long T3 takes.
 - Each writer gets its theme's lane file(s), about 30 cards (`cards`) plus its theme's candidates (`review`). A writer
   with nothing left in its theme takes the next `spells` cards. Copy the wave's lane files into this folder as
   `w<N>/lane-<role>.json` and commit them on the integration branch before spawning.
@@ -133,6 +137,10 @@ The whole suite runs once, on GitHub (Rob, 2026-10-01: never twice). The Workers
 seconds with no log, on `main` too), `bash tools/local-ci.sh HEAD 2` is the gate instead and its PASS block goes on the PR
 as a comment; say so in the merge report.
 
+**Pipeline the waves.** Once checks 1 to 8 pass on wave N's integration head, deal wave N+1 and start its lanes from
+that head (not from `main`) while Actions runs check 9. If the run fails, the fix lands on wave N's branch and wave N+1
+merges it in. That saves the hour of each Actions run; the record says which head a wave started from.
+
 ### 6. Confirm and merge
 
 Right before merging, re-check: the green run's `headSha` is the PR's head; `origin/main` is an ancestor of the head
@@ -202,7 +210,7 @@ rows (copy them into `w0/lane-<role>.json` as `debt`, with the evidence). In sho
 | W5 | Urza's Saga's "mana cost {0} or {1}"; token shock lands asked; casts from exile and alternative costs with mana not yet in the pool; {X} and additional costs by an effect; delve with {X}; convoke with Phyrexian and {2/W}; the 24/12 payment caps complete or lifted; **Wayfarer's Bauble**; and **`tools/library-engine-index.mjs --pool`** (every undefined Commander card, dealt by theme, sentence first) with its suite |
 | W6 | Counter, token and entering replacements asked, not ordered in code; Plumb the Forbidden's copies by last known information; **Contagion Clasp**; Incubator copies (if V8 confirms) |
 | W7 | Alms Collector and dredge asked (CR 616.1); "each player draws" from the active player; draw replacements asked; dice modifiers and "whenever you roll"; the compiler's gate: a candidate's smoke game must have **played** the card, and the minimum template count raised to what the calibration supports (`game/tools/card-compiler.mjs`) |
-| V8 | The pool fuzz and the exercised ledger; the scenario runner's `settle` / `optional` / `targets: "any"`; `fuzz-live`'s silent throw and legendary-only commanders; `engine-room-games`' skipped seeds and frozen deal; `engine-x11-leave-questions`' replaced answers; coverage's partial constructs; the five unsure section-4 items settled by scenario. Then the first pool fuzz over **all 6,430 final cards**: the baseline of what still errors |
+| V8 | The pool fuzz and the exercised ledger; the **ability ledger** in the scenario runner (`cards/scenario.mjs`): which abilities of each card no scenario ever makes fire or apply, reported by `check-cards.mjs` so a card with an unreached ability fails; the scenario runner's `settle` / `optional` / `targets: "any"`; `fuzz-live`'s silent throw and legendary-only commanders; `engine-room-games`' skipped seeds and frozen deal; `engine-x11-leave-questions`' replaced answers; coverage's partial constructs; the five unsure section-4 items settled by scenario. Then the first pool fuzz over **all 6,430 final cards**: the baseline of what still errors |
 
 The monarch on the board is the Play lane's: put it in the Requests table of `docs/ACTIVE.md`. **Cunning Wish and
 Extrapolate the Impossible are ruled** (Rob, 2026-10-28): W2 makes a deck holding either illegal in Play, refused by name
@@ -216,6 +224,22 @@ while, and `RUN.md` says so.
 
 Wave 0's done: every row fixed or a named ignore Rob can read; V8's first pool fuzz over every final card run, its
 findings routed and fixed. Only then does wave 1 start. Wave 0 may take more than one wave's length; that is expected.
+
+## Hand-back: the run outlives any one model
+
+Rob moves this run between OpenAI and Claude as each plan's limit allows, and Codex, Cursor or Grok may take a lane. The
+run must be resumable from the repository alone, at any point, by any of them:
+
+- `RUN.md`'s "Where the run stands" is the hand-back block: holder and model, the wave and step in progress, the
+  integration branch and head, each open lane branch with its state (pushed, PR number, done or stopped where), and the
+  next action. Keep it current at every step of a wave, not only at the end.
+- Every lane's state is on its branch and in its draft PR body; nothing lives in a conversation. A subagent pushes at
+  every clean point.
+- Branch prefixes are the model's (`codex/` here; `claude/` when Claude holds the run). A resuming model continues an
+  open integration branch as it is and starts new lanes with its own prefix.
+- **When your own budget nears its end:** finish the step you are in if it is short; otherwise have every lane push with
+  its report, write the hand-back block, update `docs/ACTIVE.md`'s section and the wave's Linear issue, and stop. Never
+  leave an unpushed branch.
 
 ## Stop and ask Rob (and record why in `RUN.md`)
 
