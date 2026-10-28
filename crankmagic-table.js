@@ -466,7 +466,7 @@
         <button type="button" class="cm-pl-ibtn" data-action="send-feedback" aria-label="Send feedback" title="Send feedback">${PL_MAIL}</button>
         <button type="button" class="cm-pl-btn" data-action="lobby-tour"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 14V2.5"></path><path d="M3.5 3h8l-1.6 2.75L11.5 8.5h-8"></path></svg>Lobby tour</button>
         <a class="cm-lb-leave" href="#game" data-lobby-leave>Leave lobby</a></header>
-        <p class="cm-lb-sub">${t.youAreHost ? "Your table." : "You were invited to this table."} Four seats at most; it starts when everyone is ready.</p>
+        <p class="cm-lb-sub">${t.spectating ? "You are watching this table; the game opens here when it starts." : t.youAreHost ? "Your table." : "You were invited to this table."} Four seats at most; it starts when everyone is ready.</p>
         ${t.phase === "rematch" ? gamePanel(t) : ""}
         <div class="cm-lb-frame"><div class="cm-cloud-table cm-lb-grid" data-phase="${e(t.phase)}">${seats}${centerPanel(t)}</div></div></div>`;
     });
@@ -482,10 +482,10 @@
     if (mat && mine.mat === "felt" && mat !== "felt") api("POST", `${tableUrl(t.tableId)}/mat`, {mat}).catch(() => {});
   }
   /* `live` says whether the page still wants this table: a read that lands after the person left draws nothing. */
-  async function refresh(id, live = () => true) {
+  async function refresh(id, live = () => true, watch = false) {
     const owner=C.signedInAs?.()||null;
     const asked = performance.now();   /* the board weighs the read against the room's newer frames by when it was asked */
-    const {table, now} = await api("GET", tableUrl(id));
+    const {table, now} = await api("GET", tableUrl(id) + (watch ? "?watch=1" : ""));
     if (!live()||owner!==(C.signedInAs?.()||null)) return table;
     if (Number.isFinite(now)) skew = now - Date.now();
     await fileResult(table.gameRecord,{account:owner,tableId:id,matchId:table.gameRecord?.matchId,seatId:table.gameRecord?.seatId});
@@ -499,7 +499,7 @@
       C.main.innerHTML = C.pageHead("Play", "", "", "") + `<section class="v-panel"><h2>Coming Soon</h2><p class="cm-muted">Play in the cloud is not switched on here yet.</p><div class="cm-actions">${b("Go to your decks", "home")}</div></section>`;
       return;
     }
-    const id = params.get("id"), code = params.get("code");
+    const id = params.get("id"), code = params.get("code"), watch = params.get("watch") === "1";
     lobbyUi = {edit: null, rules: false, confirmEnd: false, rulesError: ""};
     /* Play, with a game of yours on (item 19): straight back to it, in place of this page in the history. */
     const live = !id && !params.has('new') && C.board && C.board.live && C.board.live();
@@ -515,7 +515,7 @@
     };
     const loop = async () => {
       if (stop) return;
-      try {await refresh(id, () => !stop);} catch (error) {if (!stop) showError(error, id); return;}
+      try {await refresh(id, () => !stop, watch);} catch (error) {if (!stop) showError(error, id); return;}
       timer = setTimeout(loop, POLL_MS);
     };
     const clock = setInterval(tick, 250);
@@ -692,8 +692,14 @@
         case "invite": actions["play-join"](); break;
         case "resume": if (st.resume) C.go("table", {id: st.resume.id}); break;
         case "join": try {await api("POST", `${tableUrl(g.id)}/request-join`, {}); closeLayer(); say(`Request sent to ${g.organizer}.`);} catch (error) {closeLayer(); failure(error, "Requesting a seat");} break;
-        case "watch": try {await api("GET", `${tableUrl(g.id)}/watch`); C.go("table", {id: g.id, watch: "1"});} catch (error) {failure(error, "Watching a table");} break;
-        case "logs": try {const {log} = await api("GET", `${tableUrl(g.id)}/log`); st.open = null; render(); C.modal(`Game log · ${g.organizer}'s table`, `<pre class="cm-muted" style="white-space:pre-wrap;max-height:60vh;overflow:auto">${e(Array.isArray(log) ? log.map((l) => l.text || String(l)).join("\n") : String(log || ""))}</pre><div class="cm-form-footer">${b("Close", "close", {}, true)}</div>`);} catch (error) {failure(error, "The game log");} break;
+        case "watch": try {await api("GET", `${tableUrl(g.id)}?watch=1`); C.go("table", {id: g.id, watch: "1"});} catch (error) {failure(error, "Watching a table");} break;
+        case "logs": try {
+          const {log, chat} = await api("GET", `${tableUrl(g.id)}/log`);
+          /* The game's lines, then what the table said (Rob, 2026-10-28: the chat is attached to the game log). */
+          const lines = (Array.isArray(log) ? log : []).map((l) => (l.turn ? `T${l.turn}  ` : "") + (l.text || String(l))), said = (Array.isArray(chat) ? chat : []).map((m) => `${m.name}: ${m.text}`);
+          st.open = null; render();
+          C.modal(`Game log · ${g.organizer}'s table`, `<pre class="cm-muted cm-pl-logtext" style="white-space:pre-wrap;max-height:60vh;overflow:auto">${e(lines.join("\n") || "Nothing has been played yet.")}${said.length ? `\n\n— Chat —\n${e(said.join("\n"))}` : ""}</pre><div class="cm-form-footer">${b("Close", "close", {}, true)}</div>`);
+        } catch (error) {failure(error, "The game log");} break;
         case "quit": C.modal(`Quit ${g.organizer}'s game?`, `<p>The game ends for everyone at the table. Its record is kept.</p><div class="cm-form-footer">${b("Cancel", "close")}${b("Quit game", "play-quit-confirm", {table: g.id}, true)}</div>`); break;
         default:
       }

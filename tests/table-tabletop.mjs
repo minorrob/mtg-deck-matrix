@@ -496,7 +496,8 @@ try {
   await page.waitForFunction(()=>!document.querySelector('dialog[open]')&&document.querySelector('.cm-stage-side .cm-module-coach-host #cm-board-coach'));
   assert.equal(await page.locator('#cm-board-coach .cm-coach-input').inputValue(),'Keep this draft while moving modules','moving the Coach through Settings preserves its draft');
   assert.equal(await page.evaluate(()=>document.querySelector('#cm-board-coach .cm-coach-input')===globalThis.__coachDraftInput),true,'the same native Coach input survives its move between drawers');
-  assert.match(await page.locator('.cm-stage-module[data-module="chat"]').innerText(),/not connected yet/,'Chat does not pretend to send shared messages');
+  assert.match(await page.locator('.cm-stage-module[data-module="chat"]').innerText(),/No messages yet/,'Chat is the table\'s chat: it starts empty and has a line to write on');
+  assert.equal(await page.locator('.cm-stage-module[data-module="chat"] .cm-chat-input').count(),1,'Chat has its message line');
   await page.getByRole('button',{name:'Close the Coach',exact:true}).click();
   await openDrawerSettings();
   for(const title of ['AI Coach','Chat']) await page.getByRole('radio',{name:`${title}: None`,exact:true}).check();

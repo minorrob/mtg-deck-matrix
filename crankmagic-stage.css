@@ -1716,3 +1716,16 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-stage-front>.cm-mat{padding-bottom:2px}
 #matrix-v2 .cm-board .cm-stage-front:not(:has(>.cm-full-corner))>.cm-mat{padding-top:2px}
 #matrix-v2 .cm-board .cm-stage-front .cm-mat-grid{padding:2px}
+
+/* THE TABLE'S CHAT and the watcher's label (Rob, 2026-10-28; docs/ui-lane/lounge-contract.md §4-5). */
+.cm-chat{display:flex;flex-direction:column;gap:8px;min-width:0}
+.cm-chat-list{list-style:none;margin:0;padding:0;max-height:min(40vh,320px);min-height:96px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;font-size:13px;line-height:1.35;overflow-wrap:anywhere}
+.cm-chat-line b{color:var(--color-ink);font-weight:700;margin-right:4px}
+.cm-chat-line span{color:var(--color-ink)}
+.cm-chat-line.is-mine b{color:var(--v-accent,var(--color-aether))}
+.cm-chat-empty{margin:auto 0}
+.cm-chat-form{display:flex;gap:6px}
+.cm-chat-input{flex:1;min-width:0;height:32px;padding:0 8px;border:1px solid var(--color-field-line,var(--color-line-strong));border-radius:var(--radius-control);background:var(--color-bg);color:var(--color-ink);font:inherit;font-size:13px}
+.cm-chat-input:disabled{opacity:.6}
+.cm-stage-watching{gap:8px}
+.cm-stage-watching small{color:var(--color-muted);font-size:11px}
