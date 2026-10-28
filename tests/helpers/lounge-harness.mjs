@@ -99,7 +99,7 @@ export async function world({db = false, migrations, owner = ROB, start = Date.p
 const T = (id, path = "") => `/api/tables/${id}${path}`;
 /* A table through its lobby to a running game: the host and any named people ready, then the countdown, then the alarm. */
 export async function running(w, host, {privacy, people = [], ai = 1} = {}) {
-  const made = await w.make(host, {hostName: "Host", privacy, seats: [...people.map((p) => ({kind: "human", name: p.name})), ...Array.from({length: ai}, (_, i) => ({kind: "ai", name: `Ember${i}`}))]});
+  const made = await w.make(host, {hostName: host.split("@")[0].replace(/^./, (c) => c.toUpperCase()), privacy, seats: [...people.map((p) => ({kind: "human", name: p.name})), ...Array.from({length: ai}, (_, i) => ({kind: "ai", name: `Ember${i}`}))]});
   const id = made.id;
   for (const [i, p] of people.entries()) {
     const code = (await w.call("POST", T(id, "/invite"), {as: host, body: {seatId: i + 1}})).json.invite.code;
@@ -121,3 +121,26 @@ export async function running(w, host, {privacy, people = [], ai = 1} = {}) {
   }};
 }
 
+
+/** Past the opening hands: each named person connects and keeps (answers the first option) until the game's first turn. */
+export async function begun(w, id, emails) {
+  const object = w.objects.get(id), headers = {upgrade: "websocket", origin: "https://crankmagic.test"};
+  const mine = [];
+  for (const email of emails) {
+    const seat = (await w.call("GET", `/api/tables/${id}`, {as: email})).json.table.yourSeat;
+    await w.call("GET", `/api/tables/${id}/connect`, {as: email, headers});
+    mine.push(w.socketsOf(id).findLast((s) => s.tags[0] === `s${seat}`));
+  }
+  for (let round = 0; round < 40; round += 1) {
+    let moved = false;
+    for (const sock of mine) {
+      const latest = sock.frames.filter((f) => f.type === "view").at(-1)?.view;
+      if (latest?.decision && latest.state.turn === 0) {
+        moved = true;
+        await object.webSocketMessage(sock, JSON.stringify({type: "act", actionId: crypto.randomUUID(), revision: latest.revision, kind: "answer", choiceId: latest.decision.id, indices: [0]}));
+      }
+    }
+    if (!moved) break;
+  }
+  return mine;
+}

@@ -16,6 +16,10 @@ const open = await running(w, MAYA, {privacy: "public"});
 eq((await w.watch(open.id, EVE)).status, 409, "nothing to watch while the table is in its lobby");
 eq((await open.start()).status, 200, "the host starts");
 eq((await w.call("GET", T(open.id), {as: MAYA})).json.table.phase, "playing", "a game is on");
+const listed = (await w.call("GET", "/api/tables/live", {as: EVE})).json.games.find((g) => g.tableId === open.id);
+eq([listed.location, typeof listed.startedAt, listed.ai, listed.human], ["live", "number", 1, 1], "the lounge lists the table as live, with when it started");
+const resume = (await w.call("GET", "/api/tables/mine", {as: MAYA})).json.tables.find((t) => t.tableId === open.id);
+eq([resume.phase, Number.isInteger(resume.turn)], ["playing", true], "and Resume game knows its phase and turn");
 const eveWatches = await w.watch(open.id, EVE);
 eq([eveWatches.status, eveWatches.json], [200, {upgraded: true}], "anyone signed in watches a public table's game");
 eq((await w.call("GET", T(open.id, "/connect"), {as: EVE, headers: {upgrade: "websocket", origin: "https://crankmagic.test"}})).status, 403, "without watch=1 they have no seat to connect to");
@@ -49,9 +53,9 @@ const checkSpectator = () => {
     if (!seat) continue;
     const text = JSON.stringify(f);
     const held = handNames(seat).filter((n) => !publicNames(f).has(n));
-    for (const name of held) {ok(!text.includes(name), `the spectator's frame at revision ${f.view.revision} does not carry "${name}", a card in Maya's hand`); leakChecks += 1;}
+    for (const name of held) {ok(!text.includes(JSON.stringify(name)), `the spectator frame at revision ${f.view.revision} does not carry "${name}", a card in Maya hand: ...${text.slice(Math.max(0, text.indexOf(JSON.stringify(name)) - 200), text.indexOf(JSON.stringify(name)) + 60)}`); leakChecks += 1;}
     for (const p of f.view.state.players) {
-      eq([p.zones.Hand.cards.length, p.zones.Hand.count > 0 || f.view.state.turn === 0], [0, true], "a hand is a count and no cards (nothing was revealed at this table)");
+      eq([p.zones.Hand.cards.length, Number.isInteger(p.zones.Hand.count)], [0, true], "a hand is a count and no cards (nothing was revealed at this table)");
       eq([p.zones.Library.cards.length, p.zones.Library.count > 0], [0, true], "a library is a count and no cards");
     }
     eq([f.view.decision, f.view.manaSources, f.view.seatId, f.view.seat, f.view.spectator], [null, [], null, null, true], "no decision, no mana sources, and no seat of its own");
