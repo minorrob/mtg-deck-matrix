@@ -59,7 +59,7 @@ async function localSite(){const {build,worktreeSource}=await import('../../tool
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));return {base:`http://crankmagic.localhost:${server.address().port}`,close:()=>new Promise(resolve=>server.close(resolve))};
 }
 async function restore(page,base,copy){await page.goto(`${base}/index.html#decks`);await page.getByRole('heading',{name:'Decks',level:1,exact:true}).waitFor({timeout:60000});
-  await page.getByRole('button',{name:'Menu',exact:true}).click();await page.getByRole('button',{name:'Restore from a backup file',exact:true}).click();
+  await page.evaluate(()=>{location.hash='#settings';});await page.getByRole('heading',{name:'Settings',level:1}).waitFor();await page.getByRole('button',{name:'Restore from a backup file',exact:true}).click();
   await page.getByLabel('CrankMagic JSON backup').setInputFiles(copy);await page.getByRole('button',{name:'Validate backup',exact:true}).click();
   await page.getByLabel('Type RESTORE to replace the library').fill('RESTORE');await page.getByRole('button',{name:'Restore reviewed backup',exact:true}).click();
   await page.getByRole('dialog').waitFor({state:'hidden'});

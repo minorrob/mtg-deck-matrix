@@ -158,13 +158,13 @@ function keepDefine(d){const f=d.querySelector('#cm-flow-canvas');if(!f)return;c
     x[n]=el.value;}}
 function drawDefine(){const x=F.def,marks=new Map(x.missing.map(m=>[m.section.toLowerCase(),'Needs a choice']));
   const last=x.mode!=='define'||F.section===SECTIONS.at(-1)[0];
-  const d=frame('Define the Deck',x.mode==='define'?SECTIONS.map(([id,l])=>[id,l,marks.get(id)]):[],F.section,defineCanvas(),last?{label:'Create deck',action:'flow-create',disabled:!x.mode}:{label:'Next',action:'flow-next',disabled:!x.mode},{back:{label:'Back',action:'flow-back'}});
+  const d=frame('Define the Deck',x.mode==='define'?SECTIONS.map(([id,l])=>[id,l,marks.get(id)]):[],F.section,defineCanvas(),last?{label:'Create deck',action:'flow-create',disabled:!x.mode}:{label:'Next',action:'flow-def-next',disabled:!x.mode},{back:{label:'Back',action:'flow-back'}});
   const missing=x.missing.length;
   if(missing)d.querySelector('.cm-flow-foot').insertAdjacentHTML('afterbegin',`<span class="cm-error" role="status">${e(x.missing[0].says)} · ${missing} field${missing===1?'':'s'} left</span>`);
   d.querySelector('[aria-invalid=true]')?.focus();
   d.querySelector('#cm-flow-canvas').addEventListener('change',()=>{keepDefine(d);x.missing=x.missing.filter(m=>m.field==='name'?!F.name:m.field==='budget'?(!Number.isFinite(Number(x.budget))||Number(x.budget)<0):false);draw();});}
 /* NEXT goes to the next section; the last one, Cards, is where Create deck is (Rob, 2026-10-28). */
-actions['flow-next']=()=>{const dlg=document.querySelector('.cm-flow-dialog');if(dlg)keepDefine(dlg);const at=SECTIONS.findIndex(([id])=>id===F.section);F.section=SECTIONS[Math.min(SECTIONS.length-1,at+1)][0];draw();};
+actions['flow-def-next']=()=>{const dlg=document.querySelector('.cm-flow-dialog');if(dlg)keepDefine(dlg);const at=SECTIONS.findIndex(([id])=>id===F.section);F.section=SECTIONS[Math.min(SECTIONS.length-1,at+1)][0];draw();};
 actions['flow-def-mech']=el=>{keepDefine(document.querySelector('.cm-flow-dialog'));F.def.mechanics=toggle(F.def.mechanics,el.dataset.id);draw();};
 /* BACK (DEF-7): Start from with the commander still selected; a different commander then recomputes what came from it. */
 actions['flow-back']=()=>{keepDefine(document.querySelector('.cm-flow-dialog'));F.step='start';F.fitCache=null;draw();};

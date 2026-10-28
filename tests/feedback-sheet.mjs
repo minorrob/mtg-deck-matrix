@@ -84,11 +84,11 @@ if (browser) try {
   await shot(page, "feedback-sheet-1400");
   await page.keyboard.press("Escape");
   await page.locator("#cm-dialog[open]").waitFor({state: "detached", timeout: 5000}).catch(() => {});
+  /* The Menu no longer has Send Feedback (Rob, 2026-10-28): the glyph on the page's head is the door. */
   await page.getByRole("button", {name: "Menu", exact: true}).click();
   await page.locator("#cm-user-menu:popover-open").waitFor();
-  await page.getByRole("button", {name: "Send Feedback", exact: true}).click();
-  await sheet.waitFor({timeout: 10000});
-  ok(await sheet.count() === 1, "the Menu's Send Feedback opens the same sheet");
+  ok(await page.locator("#cm-user-menu [data-action=send-feedback]").count() === 0, "the Menu has no Send Feedback; the page's glyph opens the sheet");
+  await page.keyboard.press("Escape");
   await page.keyboard.press("Escape");
 
   /* ---- 2. The report ---- */

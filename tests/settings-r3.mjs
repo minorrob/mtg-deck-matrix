@@ -29,7 +29,7 @@ const eq = (a, b, msg) => { checks++; assert.deepEqual(a, b, msg); };
 
 const {browser, base, stub, close} = await openBrowser({name: "settings-r3", flag: "GEOMETRY_REQUIRED"});
 const openMenu = async (page) => { await page.getByRole("button", {name: "Menu", exact: true}).click(); await page.locator("#cm-user-menu:popover-open").waitFor(); };
-const toSettings = async (page) => { await openMenu(page); await page.locator("#cm-user-menu").getByRole("button", {name: "Settings"}).click(); await page.locator(".cm-settings").waitFor({timeout: 30000}); };
+const toSettings = async (page) => { await page.evaluate(() => {location.hash = "#settings";}); await page.locator(".cm-settings").waitFor({timeout: 30000}); };
 const entries = (page) => page.$$eval("#cm-user-menu button, #cm-user-menu a", (els) => els.map((el) => el.textContent.replace(/^[^\p{L}]+/u, "").trim()));
 
 try {
@@ -42,8 +42,9 @@ try {
   await openMenu(page);
   /* Rob, 2026-09-29: Switch theme under Help, a glossary switch in Help, no Share CrankMagic by email (tests/menu-help.mjs).
      Rob, 2026-10-03: Reset All beside the backups (tests/reset-all.mjs). */
-  eq(await entries(page), ["Settings", "Reload with newest files", "Save a backup file", "Restore from a backup file", "Sapphire & Obsidian", "Bronze & Basalt", "Chalk & Coal", "Dark", "Light", "System",
-    "Help & glossary", "Term definitions on hover: Off", "Take a Tour", "Send Feedback", "Show a QR code", "Reset All"], "the Menu retains its actions in the approved r4 AccountMenu groups");
+  /* Rob, 2026-10-28: the menu holds Your Profile, the skin, and two Help entries; the rest is in Settings. */
+  eq(await entries(page), ["Your Profile", "Sapphire & Obsidian", "Bronze & Basalt", "Chalk & Coal", "Dark", "Light", "System",
+    "Help & glossary", "Term definitions on hover: Off"], "the Menu holds Your Profile, the skin and the two Help entries");
   for (const moved of ["Share CrankMagic by email", "Export as Excel", "Email the export…", "See every change…", "Undo last change", "Confirmations…", "Clear all data", "Reset comparison picks", "Publish your To Trade list"])
     ok(!(await entries(page)).includes(moved), `${moved} has left the Menu`);
   ok(!(await page.$("#cm-user-menu #cm-data-dates")), "and so have the card data ages");

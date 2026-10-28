@@ -37,10 +37,11 @@ const fail = async (message) => {
   console.error(`tour-walk: ${message}`);
   process.exit(1);
 };
-/* Take a Tour is in the Menu, at the foot of the rail. */
+/* Take a tour is in the Help dialog's foot, opened from the Menu's Help & glossary (Rob, 2026-10-28: the Menu has no Take a Tour). */
 const openTours = async () => {
   await page.locator("#cm-user-functions").click();
-  await page.locator("#cm-user-menu [data-action=tour]").click();
+  await page.locator("#cm-user-menu [data-action=menu-help]").click();
+  await page.locator("#cm-dialog [data-action=tour]").click();
 };
 
 try {

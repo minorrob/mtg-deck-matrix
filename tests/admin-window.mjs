@@ -90,7 +90,7 @@ try {
     const {page, context, errors} = await signedIn(friend);
     await openMenu(page);
     eq(await page.locator("#cm-user-menu [data-action=open-admin]").count(), 0, "a player who is not the administrator has no Admin in the Menu");
-    eq(await page.locator("#cm-user-menu").getByRole("button",{name:"Settings",exact:true}).count(), 1, "and keeps the shared menu’s single Settings door");
+    eq(await page.locator("#cm-user-menu").getByRole("button",{name:"Your Profile",exact:true}).count(), 1, "and keeps the shared menu’s single door to the account (Your Profile)");
     eq(await page.evaluate(async () => (await fetch("/api/social/admin")).status), 403, "and the Worker refuses Admin to them");
     eq(errors, [], `no page error (${errors.join(" | ")})`);
     await context.close();

@@ -114,6 +114,8 @@ try {
   await a.getByRole("button", {name: "Menu", exact: true}).click();
   ok(/Signed in as rob@e2e\.test/.test(await a.locator("#cm-account").innerText()), "the Menu says who is signed in");
   await shot(a, "menu-signed-in");
+  await a.keyboard.press("Escape");
+  await a.evaluate(() => {location.hash = "#settings";}); await a.getByRole("heading", {name: "Settings", level: 1}).waitFor();
   await a.getByRole("button", {name: "Restore from a backup file", exact: true}).click();
   await a.getByLabel("CrankMagic JSON backup").setInputFiles(path.join(ROOT, "data", "live-state.json"));
   await a.getByRole("button", {name: "Validate backup", exact: true}).click();

@@ -104,6 +104,11 @@ try {
   await page.fill('input[name=name]', '   ');
   await page.locator('input[name=name]').dispatchEvent('change');
   const beforeInvalid = await page.evaluate(() => globalThis.__cm.state.revision);
+  eq(await page.locator('.cm-flow-foot .v-button.primary').innerText(), 'Next', 'the primary button is Next on General (Rob, 2026-10-28)');
+  await page.click('[data-action=flow-def-next]');
+  eq(await page.locator('.cm-flow-nav button[aria-pressed=true]').innerText(), 'Gameplay', 'Next goes to the next section');
+  await page.click('[data-action=flow-def-next]'); await page.click('[data-action=flow-def-next]');
+  eq(await page.locator('.cm-flow-foot .v-button.primary').innerText(), 'Create deck', 'on Cards the primary button is Create deck');
   await page.click('[data-action=flow-create]');
   await page.locator('[name=name][aria-invalid=true]').waitFor();
   eq(await page.locator('#cm-flow-name-error').textContent(), 'Name the deck.', 'a blank name has an error at its field');
@@ -112,7 +117,19 @@ try {
   eq(await page.locator('.cm-flow-nav .cm-flow-mark').count(), 0, 'validation is not a dot on a tab');
   await page.fill('input[name=name]', savedName);
   await page.locator('input[name=name]').dispatchEvent('change');
+  /* THE RESTRICTIONS ARE THE BRACKET'S: Game Changers none in B1-2, three in B3, lifted from B4; two columns; no free-text box. */
+  const restrictions = async () => page.$$eval(".cm-flow-restrict .cm-checkbox", (ls) => ls.map((l) => l.textContent.trim()));
   await page.selectOption("select[name=bracket]", "3");
+  eq(await restrictions(), ["No mass land denial", "No chained extra turns", "Two-card infinites only as late finishers", "At most 3 Game Changers"], "Bracket 3: three Game Changers, and the rest");
+  await page.selectOption("select[name=bracket]", "2");
+  eq((await restrictions()).at(-1), "No Game Changers", "Bracket 2 allows no Game Changer");
+  await page.selectOption("select[name=bracket]", "4");
+  eq(await restrictions(), [], "Bracket 4 lifts every restriction");
+  ok(/lifts these/.test(await page.locator(".cm-flow-lifted").innerText()), "and says so");
+  eq(await page.locator("input[name=restrictions]").count(), 0, "the free-text box under Restrictions is gone");
+  await page.selectOption("select[name=bracket]", "3");
+  const grid = await page.$eval(".cm-flow-restrict-grid", (g) => getComputedStyle(g).gridTemplateColumns.split(" ").length);
+  eq(grid, 2, "the restrictions sit in two columns");
   await page.fill("input[name=budget]", "150");await page.locator("input[name=budget]").dispatchEvent("change");
   await page.locator(".cm-flow-nav button", {hasText: "Cards"}).click();
   await page.check("input[name=cards][value=later]");

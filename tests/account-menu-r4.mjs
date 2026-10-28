@@ -25,12 +25,14 @@ try{
     const trigger=page.locator('#cm-user-functions'),menu=page.locator('#cm-user-menu');
     await trigger.click();await page.locator('#cm-user-menu:popover-open').waitFor();
     await page.waitForFunction(()=>document.getElementById('cm-user-menu').scrollTop===0&&document.getElementById('cm-user-menu').contains(document.activeElement));
-    eq(await menu.locator(':scope > .cm-menu-group').evaluateAll(groups=>groups.filter(g=>!g.hidden).map(g=>g.getAttribute('aria-label'))),test.signed?['You','This device','Your data','Skin','Help','Careful','Sign out']:['You','This device','Your data','Skin','Help','Careful'],test.name+' has ordered visible groups');
+    eq(await menu.locator(':scope > .cm-menu-group').evaluateAll(groups=>groups.filter(g=>!g.hidden).map(g=>g.getAttribute('aria-label'))),test.signed?['You','Skin','Help','Sign out']:['You','Skin','Help'],test.name+' has ordered visible groups (no This device, Your data or Careful: Rob, 2026-10-28)');
     eq(await menu.getAttribute('role'),null,'native account controls do not claim an unimplemented ARIA menu role');
     eq(await menu.locator('[role=menuitem]').count(),0,'buttons retain native keyboard semantics');
-    eq(await menu.getByRole('button',{name:'Settings',exact:true}).count(),1,'Settings appears once');
+    eq(await menu.getByRole('button',{name:'Settings',exact:true}).count(),0,'Settings is not in the menu');
+    eq(await menu.getByRole('button',{name:'Your Profile',exact:true}).count(),1,'Your Profile appears once, in You');
+    eq(await menu.locator('[aria-label=Help] button').evaluateAll(bs=>bs.map(b=>b.textContent.replace(/\s+/g,' ').trim().replace(/: (On|Off)$/,''))),['?Help & glossary','ⓘTerm definitions on hover'],'Help holds Help & glossary and Term definitions on hover alone');
     eq(await menu.locator('[data-action=account-sign-in]').count(),test.signed?0:1,'sign-in follows account state');
-    eq(await menu.locator('[data-action=account-sync]').count(),test.signed?1:0,'manual sync is offered only to signed-in accounts');
+    eq(await menu.locator('[data-action=account-sync]').count(),0,'manual sync is in Settings, Account, not the menu');
     eq(await menu.locator('[data-action=account-sign-out]').count(),test.signed?1:0,'Sign out follows account state');
     eq(await menu.locator('[data-admin-link]').count(),test.admin?1:0,'Admin follows the verified administrator flag');
     eq(await menu.locator('[data-action=invite-crankmagic]').count(),0,'Invite is reached through Admin Share without a duplicate menu action; its separate gate is covered by admin-window');
@@ -68,21 +70,13 @@ try{
     await trigger.click();
     eq(await menu.locator('[data-theme-skin=bronze-basalt]').getAttribute('aria-pressed'),'true','Skin selection remains accessible and functional');
     eq(await menu.locator('[data-theme-mode=light]').getAttribute('aria-pressed'),'true','register selection remains accessible and functional');
-    await menu.locator('[data-action=reset-all]').click();await page.locator('#cm-dialog form.cm-destructive').waitFor();
-    ok(await page.getByLabel('Type RESET to confirm').count()===1,'Careful invokes the existing typed RESET confirmation');
+    eq(await menu.locator('[data-action=reset-all]').count(),0,'Reset All is not in the menu: it is in Settings, Danger zone (Rob, 2026-10-28)');
     eq(writes.filter(p=>p!=='/api/library'),[],'opening/canceling menu controls writes no account, mail, Admin or AI state');
-    await page.locator('#cm-dialog [data-action=close]').first().click();
-    await page.evaluate(async theme=>{await __menuC.actions['set-theme']({dataset:{themeChoice:theme}});},test.theme==='dark'?'sapphire-obsidian':test.theme==='light'?'sapphire-obsidian-light':'bronze-basalt');
-    await trigger.click();await page.locator('#cm-user-menu:popover-open').waitFor();
-    const contrast=await menu.locator('[data-action=reset-all]').evaluate(n=>{const c=document.createElement('canvas').getContext('2d'),rgb=css=>{c.clearRect(0,0,1,1);c.fillStyle=css;c.fillRect(0,0,1,1);return [...c.getImageData(0,0,1,1).data];},lum=a=>a.slice(0,3).map(v=>{v/=255;return v<=.04045?v/12.92:((v+.055)/1.055)**2.4;}).reduce((s,v,i)=>s+v*[.2126,.7152,.0722][i],0),group=n.closest('.cm-menu-group'),ground=lum(rgb(getComputedStyle(group).backgroundColor));return Math.min(...[n,group.querySelector('.cm-menu-label')].map(node=>{const L=[lum(rgb(getComputedStyle(node).color)),ground].sort((a,b)=>b-a);return (L[0]+.05)/(L[1]+.05);}));});
-    ok(contrast>=4.5,'Careful text has 4.5:1 contrast on its actual group background');
-    const dangerColors=await menu.locator('[data-action=reset-all]').evaluate(n=>{const c=document.createElement('canvas').getContext('2d'),normal=value=>{c.clearRect(0,0,1,1);c.fillStyle=value;c.fillRect(0,0,1,1);return [...c.getImageData(0,0,1,1).data];};return {actual:normal(getComputedStyle(n).color),required:normal(getComputedStyle(n).getPropertyValue('--color-required'))};});
-    eq(dangerColors.actual,dangerColors.required,'Careful action uses actual required ink rather than the historical global danger mix');
     if(shots){await page.screenshot({path:path.join(shots,'account-menu-'+test.name+'.png')});await menu.evaluate(n=>{n.scrollTop=n.scrollHeight;});await page.screenshot({path:path.join(shots,'account-menu-'+test.name+'-foot.png')});}
     await context.close();
   }
   // Both entry documents ship the same static groups; runtime account slots preserve their gates.
-  for(const entry of ['index.html','crankmagic.html']){const html=readFileSync(path.join(ROOT,entry),'utf8');ok(html.includes('class="cm-menu cm-account-menu" popover="auto"')&&html.includes('aria-label="Careful"')&&html.includes('id="cm-account-device"'),entry+' contains the canonical native menu structure');}
+  for(const entry of ['index.html','crankmagic.html']){const html=readFileSync(path.join(ROOT,entry),'utf8');ok(html.includes('class="cm-menu cm-account-menu" popover="auto"')&&!html.includes('aria-label="Careful"')&&!html.includes('aria-label="Your data"')&&!html.includes('aria-label="This device"')&&html.includes('data-action="open-profile"'),entry+' contains the canonical native menu structure');}
   const menuMarkup=entry=>{const html=readFileSync(path.join(ROOT,entry),'utf8'),start=html.indexOf('<div id="cm-user-menu"');return html.slice(start,html.indexOf('\n    </div>',start));};
   eq(menuMarkup('index.html'),menuMarkup('crankmagic.html'),'both entry documents ship exactly the same account-menu controls/groups');
 }finally{await close();}

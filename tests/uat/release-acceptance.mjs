@@ -81,14 +81,10 @@ try {
     if (await page.evaluate(() => document.querySelector('meta[name="crankmagic-accounts"]')?.content === "on")) {
       await page.locator("#cm-account").waitFor({timeout: 15000});
       ok(/Sign In \(Save to Cloud\)/.test(await page.locator("#cm-account").innerText()), "signed out, the Menu offers the cloud library, and the workshop is otherwise the same");
-      ok(await page.locator('#cm-user-menu [aria-label="This device"] [data-action=app-refresh]').count() === 1, "with Reload with newest files in the shared This device group");
     }
     ok(!(await page.locator("#cm-share-mail").count()), "the Menu has no Share CrankMagic by email (Rob, 2026-09-29)");
     await shot("01b-menu");
-    const home = await page.evaluate(() => new URL("./", document.querySelector('link[rel="canonical"]').href).href);
-    await page.locator("#cm-user-menu").getByRole("button", {name: "Show a QR code"}).click();
-    await page.locator("#cm-dialog .cm-qr-link a").waitFor({timeout: 15000});
-    ok((await page.locator("#cm-dialog .cm-qr-link a").innerText()) === home, `the QR code carries the published address, ${home}`);
+    ok((await page.locator("#cm-user-menu").innerText()).indexOf("QR") < 0, "the Menu no longer offers a QR code (Rob, 2026-10-28)");
     await page.keyboard.press("Escape");
     await page.keyboard.press("Escape");
 

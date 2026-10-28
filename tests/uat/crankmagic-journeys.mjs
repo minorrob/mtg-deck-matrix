@@ -30,6 +30,7 @@ const lab=async()=>{await page.evaluate(()=>{location.hash='#lab';});await page.
 const click=label=>page.getByRole('button',{name:label,exact:true}).click(),nav=label=>page.getByRole('link',{name:label,exact:true}).click();
 /* Explore with no card, deck or commander in the address is the chooser; the graph is a card away. */
 const DISCOVER=BASE+'/'+ENTRY+'#discover?card='+encodeURIComponent('Sol Ring');
+const settingsItem=async label=>{await page.evaluate(()=>{location.hash='#settings';});await page.locator('.cm-settings').waitFor();if(label)await click(label);};
 const menuItem=async label=>{await click('Menu');await page.locator('#cm-user-menu:popover-open').waitFor();await page.locator('#cm-user-menu').getByRole('button',{name:label,exact:true}).click();};
 const state=()=>page.evaluate(async()=>{const r=await CrankRepository.open();try{return await r.getState();}finally{r.close();}});
 const waitDialog=()=>page.getByRole('dialog').waitFor({state:'hidden'});
@@ -83,8 +84,7 @@ try{
  const APP_URL='https://crankmagic.com/';
  await click('Menu');await page.locator('#cm-user-menu:popover-open').waitFor();
  eq(await page.locator('#cm-share-subscribe').count(),0,'Subscribe has left the Menu');eq(await page.locator('#cm-share-mail').count(),0,'Share by email has left the Menu (Rob, 2026-09-29)');
- await page.locator('#cm-user-menu').getByRole('button',{name:'Show a QR code'}).click();await page.getByRole('dialog').waitFor();ok(await page.locator('#cm-dialog .cm-qr-code svg').count()===1);eq(await page.locator('#cm-dialog .cm-qr-link a').innerText(),APP_URL);ok(!(await page.locator('#cm-user-menu').evaluate(m=>m.matches(':popover-open'))));
- await page.keyboard.press('Escape');await page.getByRole('dialog').waitFor({state:'hidden'});
+ ok(!(await page.locator('#cm-user-menu').innerText()).includes('QR code'),'the Menu has no QR code (Rob, 2026-10-28)');await page.keyboard.press('Escape');
  await newDeck();let current=await state();eq(current.decks[0].status,'final');eq(current.lots.length,0);ok(current.decks[0].slots.reduce((n,r)=>n+r.quantity,0)===100);
  /* The deck page opens on Overview; the hundred is its Cards tab, and the full table with actions is one button from there. */
  await page.getByRole('tab',{name:/^The hundred/}).click();await page.locator('.cm-deck-list').first().waitFor();eq(await page.locator('.cm-deck-list li').count()>0,true,'The hundred tab lists the hundred');await click('View deck cards');await page.getByRole('table').waitFor();ok((await page.locator('.cm-chip').innerText()).startsWith('Deck: Journey Goblins'));
@@ -152,10 +152,10 @@ try{
  /* BACKUP, EXCEL, CLEAR, RESTORE. The Menu keeps Settings, Save and Restore (R3.3a); Excel and Clear all
     data moved into Settings › Data, which carries Save and Restore as well -- so a Menu entry is
     pressed inside the Menu, where the same words cannot also mean the Settings page's button. */
- const backupDownload=page.waitForEvent('download');await menuItem('Save a backup file');const backupFile=await (await backupDownload).path(),backup=JSON.parse(await fs.readFile(backupFile,'utf8'));eq(backup.format,'crankmagic-backup');ok(backup.checksum.length===64);const expected=backup.payload.state;
- await menuItem('Settings');await page.locator('.cm-settings').waitFor();const xlsxDownload=page.waitForEvent('download');await click('Export as Excel');const xlsxPath=await (await xlsxDownload).path();ok((await fs.stat(xlsxPath)).size>5000);
- await menuItem('Settings');await page.locator('.cm-settings').waitFor();await click('Clear all data');await page.getByLabel('Type CLEAR to confirm').fill('CLEAR');await click('Clear local data');await waitDialog();eq((await state()).lots.length,0);
- await menuItem('Restore from a backup file');await page.getByLabel('CrankMagic JSON backup').setInputFiles(backupFile);await click('Validate backup');await page.getByLabel('Type RESTORE to replace the library').fill('RESTORE');await click('Restore reviewed backup');await waitDialog();current=await state();eq(current.lots,expected.lots);eq(current.decks,expected.decks);eq(current.groups,expected.groups);
+ const backupDownload=page.waitForEvent('download');await settingsItem('Save a backup file');const backupFile=await (await backupDownload).path(),backup=JSON.parse(await fs.readFile(backupFile,'utf8'));eq(backup.format,'crankmagic-backup');ok(backup.checksum.length===64);const expected=backup.payload.state;
+ await settingsItem(null);const xlsxDownload=page.waitForEvent('download');await click('Export as Excel');const xlsxPath=await (await xlsxDownload).path();ok((await fs.stat(xlsxPath)).size>5000);
+ await settingsItem(null);await click('Clear all data');await page.getByLabel('Type CLEAR to confirm').fill('CLEAR');await click('Clear local data');await waitDialog();eq((await state()).lots.length,0);
+ await settingsItem('Restore from a backup file');await page.getByLabel('CrankMagic JSON backup').setInputFiles(backupFile);await click('Validate backup');await page.getByLabel('Type RESTORE to replace the library').fill('RESTORE');await click('Restore reviewed backup');await waitDialog();current=await state();eq(current.lots,expected.lots);eq(current.decks,expected.decks);eq(current.groups,expected.groups);
  await lab();await page.locator('#cm-lab-form').waitFor({timeout:45000});
  /* Deck Lab's sections collapse now and Deck Definition starts closed, so the deck-name
     field is in the DOM but not fillable until it is opened. Opened here rather than right

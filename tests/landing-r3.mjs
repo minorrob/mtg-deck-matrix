@@ -71,7 +71,7 @@ try {
     await page.locator("#cm-user-menu:popover-open").waitFor({timeout: 10000});
     const menuAt = await page.evaluate(() => {const m = document.getElementById("cm-user-menu").getBoundingClientRect(), c = document.querySelector(".cm-landing-chip").getBoundingClientRect(); const hit = document.elementFromPoint(m.left + m.width / 2, m.top + 20); return {seen: !!hit && !!hit.closest("#cm-user-menu"), under: m.top >= c.bottom && m.top <= c.bottom + 16 && m.right >= c.left && m.left <= c.right && m.right <= innerWidth};});
     ok(menuAt.seen && menuAt.under, "and it opens the rail's own menu under the chip, seen though the rail is hidden");
-    ok(await page.locator("#cm-user-menu [data-action=open-settings]").isVisible(), "the menu with Settings in it");
+    ok(await page.locator("#cm-user-menu [data-action=open-profile]").isVisible(), "the menu with Your Profile in it");
     await page.keyboard.press("Escape");
     eq(await page.$$eval(".cm-landing-door", (ds) => ds.map((d) => d.querySelector(".cm-landing-door-top").innerText.replace(/\s+/g, " ").trim())),
       ["DECKS", "LIBRARY", "EXPLORE", "PLAY Coming soon"], "four doors, and Play is Coming soon (M1·5)");
@@ -226,7 +226,7 @@ try {
       eq((await page.locator(".cm-landing-chip .cm-landing-chip-name").innerText()).trim(), "reader@example.test", "signed in, the header's chip shows who is signed in");
       ok(await leftOfWayIn(), "to the left of Open my decks, on its line");
       const account = await openMenu();
-      ok(/^Signed in as reader@example\.test/.test(account) && await page.locator("#cm-account-device [data-action=account-sync]").isVisible(), `and opens the shared menu: You identifies the account, This device has Sync now (${account.slice(0, 60)})`);
+      ok(/^Signed in as reader@example\.test/.test(account) && await page.locator("#cm-user-menu [data-action=account-sign-out]").isVisible(), `and opens the shared menu: You identifies the account, and Sign out is at its foot (${account.slice(0, 60)})`);
       await shot(page, "landing-chip-signed-in-1400");
     } else {
       await landing(page);
