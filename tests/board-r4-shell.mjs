@@ -64,18 +64,29 @@ async function wholeRows(page,label,scope='#cm-board') {
   eq(clipped,[],`${label}: every battlefield/land card is wholly scroll-reachable`);
 }
 
-/* Focus: the others' boards are the rear tiles (.cm-stage-rear, a seat-label button and a .cm-stage-mini preview); a seat's board is the big one once its label is
-   pressed, so every seat is looked at in turn and its own board's cards must be wholly reachable there. (The tiles' previews are checked in place as well, below.) */
+/* Focus: the others' boards are the flat rear boards (.cm-stage-rear.cm-flat-rear: a plain-text name above a 16:9 .cm-stage-mini mat). They carry no seat-label button and
+   no Focus button any more (Rob, 2026-10-28), so a seat is looked at the way a player does it: a double click on its board (here on its name, which focuses it as the board does). Every seat is looked at in turn and its own
+   board's cards must be wholly reachable there. (The tiles' previews are checked in place as well, below.) */
 async function wholeRowsEachSeat(page,label) {
-  const seats=await page.locator('.cm-stage-rear [data-action=board-focus]').evaluateAll(es=>es.map(el=>el.dataset.seat));
-  ok(seats.length>0,`${label}: there are rear tiles to focus`);
+  const first=await page.evaluate(()=>document.querySelector('.cm-stage-big')?.dataset.seat);
+  const seats=await page.locator('.cm-stage-rear.cm-flat-rear').evaluateAll(es=>es.map(el=>el.dataset.seat));
+  ok(seats.length>0,`${label}: there are rear boards to focus`);
+  const focusBy=async n=>{
+    /* A real double click where the name can be hit; at 200% with the left drawer folded the decision pop-up (the folded Actions) lies over the rear boards, so
+       there the same double click is dispatched on the name (the way a pointer's second click would arrive), as the retired seat-label's click was. */
+    const name=page.locator(`.cm-stage-rear.cm-flat-rear[data-seat="${n}"] > .cm-stage-boardname`),box=await name.boundingBox();
+    const hit=await page.evaluate(([x,y,n])=>document.elementFromPoint(x,y)?.closest('.cm-stage-rear')?.dataset.seat===n,[box.x+box.width/2,box.y+box.height/2,n]);
+    if(hit)await page.mouse.dblclick(box.x+box.width/2,box.y+box.height/2);
+    else await name.dispatchEvent('dblclick');
+    await page.waitForFunction(n=>document.querySelector('.cm-stage-big')?.dataset.seat===n,n);
+    await page.waitForTimeout(500);
+  };
   for(const seat of seats) {
-    await page.evaluate(n=>document.querySelector(`.cm-stage-rear [data-action=board-focus][data-seat="${n}"]`).click(),seat);
-    await page.waitForFunction(n=>document.querySelector('.cm-stage-big')?.dataset.seat===n,seat);
+    await focusBy(seat);
     await wholeRows(page,`${label}/seat ${seat} looked at`,'.cm-stage-big');
   }
-  await page.evaluate(()=>document.querySelector('.cm-stage-rear [data-action=board-focus][data-seat="0"]')?.click());
-  await page.waitForFunction(()=>document.querySelector('.cm-stage-big')?.dataset.seat==='0');
+  if(first!==undefined&&await page.evaluate(()=>document.querySelector('.cm-stage-big')?.dataset.seat)!==first)await focusBy(first);
+  eq(await page.evaluate(()=>document.querySelector('.cm-stage-big')?.dataset.seat),first,`${label}: the seat first looked at is looked at again`);
 }
 
 try {
