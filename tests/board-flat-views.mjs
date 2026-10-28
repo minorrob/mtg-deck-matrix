@@ -13,8 +13,8 @@
  *      with only their name above them.
  *   9. The quick action tab under a card of yours (Tap, Cast, Play, Undo) in all three views; the card pop-up is 20 percent smaller.
  *  10. The peek: the right button held on a board moves the view over it and zooms in, and letting go puts the view back.
- *   7. A minimum board size: where the boards would be drawn smaller, the page scrolls instead -- header, drawers, hand, turn box and action
- *      pop-up stay in the window, the wheel scrolls (Ctrl and the wheel zooms), and nothing is cut off at the foot of the stage.
+ *   7. THE GAME FITS THE WINDOW: at small windows, in every view, nothing scrolls; the boards shrink to fit.
+ *  11. Table's Max (the boards out to the open drawers, the hand put away) and the hand's tab.
  * Needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure. */
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
@@ -189,30 +189,43 @@ for (const mode of ["table", "focus"]) {
   await context.close();
 }
 
-/* a minimum board size: a window too small for it scrolls */
-for (const mode of ["table", "focus"]) {
-  const {page, context} = await open(mode, 1280, mode === "table" ? 720 : 560);
-  const m = await page.evaluate(() => {const b = document.getElementById("cm-board"), r = document.querySelector(".cm-stage-region"); return {scrolls: b.scrollHeight > b.clientHeight + 1, overflow: getComputedStyle(b).overflowY, stageH: r.offsetHeight, windowH: innerHeight,
-    boards: [...document.querySelectorAll(".cm-stage-slot")].map((s) => Math.round(s.getBoundingClientRect().width))};});
-  ok(m.scrolls && m.overflow === "auto" && m.stageH > m.windowH, `${mode}: at 1280x${mode === "table" ? 720 : 560} the board is too small to draw at the least size, so the page scrolls (stage ${m.stageH} in a ${m.windowH} window)`);
-  ok(Math.min(...m.boards) >= (mode === "table" ? 315 : 555), `${mode}: no board is drawn under its least size (${m.boards.join(", ")})`);
-  const still = () => page.evaluate(() => {const R = (s) => {const e = document.querySelector(s); if (!e) return null; const b = e.getBoundingClientRect(); return [Math.round(b.left), Math.round(b.top), Math.round(b.width), Math.round(b.height)];};
-    return {top: R(".cm-stage-top"), rail: R(".cm-stage-rail.is-open"), side: R(".cm-stage-side.is-open"), hand: R(".cm-stage-hand"), caption: R(".cm-stage-caption"), actions: R(".cm-stage-actions")};});
-  const before = await still();
-  await page.evaluate(() => {document.getElementById("cm-board").scrollTop = 99999;}); await page.waitForTimeout(500);
-  eq(await still(), before, `${mode}: the header, drawers, hand, turn box and action pop-up stay in the window as the page scrolls`);
-  const end = await page.evaluate(() => {const b = document.getElementById("cm-board"), hand = document.querySelector(".cm-stage-hand").getBoundingClientRect();
-    return [...document.querySelectorAll(".cm-stage-slot")].map((s) => s.getBoundingClientRect()).filter((r) => r.bottom > hand.top + 20 && r.top < hand.top).length;});
-  eq(end, 0, `${mode}: scrolled to the end, no board lies under the hand`);
-  /* the wheel scrolls where the page does; Ctrl and the wheel zooms */
-  await page.evaluate(() => {document.getElementById("cm-board").scrollTop = 0;}); await page.waitForTimeout(300);
-  const w0 = await page.evaluate(() => document.querySelector(".cm-stage-slot").getBoundingClientRect().width);
-  const at = await page.evaluate(() => {const r = document.querySelector(".cm-stage-region").getBoundingClientRect(); return [r.left + r.width / 2, r.top + 260];});
-  await page.mouse.move(at[0], at[1]); await page.mouse.wheel(0, 300); await page.waitForTimeout(400);
-  const scrolled = await page.evaluate(() => [document.getElementById("cm-board").scrollTop, document.querySelector(".cm-stage-slot").getBoundingClientRect().width]);
-  ok(scrolled[0] > 50 && Math.abs(scrolled[1] - w0) < 1, `${mode}: the wheel over the stage scrolls the page and does not zoom (${scrolled[0]}px down)`);
-  await page.keyboard.down("Control"); await page.mouse.wheel(0, -400); await page.keyboard.up("Control"); await page.waitForTimeout(400);
-  ok(await page.evaluate((w) => document.querySelector(".cm-stage-slot").getBoundingClientRect().width > w * 1.05, w0), `${mode}: Ctrl and the wheel zoom it`);
+/* THE GAME FITS THE WINDOW (Rob, 2026-10-28, a standing rule): in every view, at small windows, nothing scrolls -- the board and the stage are the window, and the boards shrink to fit */
+for (const mode of ["table", "focus", "full"]) for (const [w, h] of [[1280, 720], [1100, 640], [1440, 560]]) {
+  const {page, context} = await open(mode, w, h);
+  const m = await page.evaluate(() => {const b = document.getElementById("cm-board"), r = document.querySelector(".cm-stage-region").getBoundingClientRect(), hand = document.querySelector(".cm-stage-hand").getBoundingClientRect();
+    return {over: b.scrollHeight - b.clientHeight, overX: b.scrollWidth - b.clientWidth, overflow: getComputedStyle(b).overflowY, regionBottom: r.bottom, windowH: innerHeight, handBottom: hand.bottom,
+      slots: [...document.querySelectorAll(".cm-stage-slot, .cm-stage-rear")].map((e) => {const q = e.getBoundingClientRect(); return [q.top, q.bottom, q.left, q.right];})};});
+  ok(m.over <= 1 && m.overX <= 1 && m.overflow !== "auto" && m.overflow !== "scroll", `${mode} at ${w}x${h}: the board does not scroll (${m.over}px over, overflow ${m.overflow})`);
+  ok(m.regionBottom <= m.windowH + 1 && m.handBottom <= m.windowH + 1, `${mode} at ${w}x${h}: the stage and the hand end at the window's foot`);
+  if (mode !== "full") ok(m.slots.every(([t, b, l, r]) => t >= 0 && b <= m.windowH && l >= 0 && r <= w), `${mode} at ${w}x${h}: every board lies inside the window`);
+  await context.close();
+}
+
+/* Table's Max, and the hand's tab */
+{
+  const {page, context} = await open("table", 1440, 900);
+  const state = () => page.evaluate(() => {const R = (s) => {const e = document.querySelector(s); if (!e) return null; const b = e.getBoundingClientRect(); return {x: b.left, y: b.top, w: b.width, h: b.height};};
+    const rail = R(".cm-stage-rail.is-open"), side = R(".cm-stage-side.is-open"), you = R(".cm-stage-slot.is-you"), others = [...document.querySelectorAll(".cm-stage-slot:not(.is-you)")].map((e) => e.getBoundingClientRect());
+    const all = [...document.querySelectorAll(".cm-stage-slot")].map((e) => e.getBoundingClientRect());
+    return {rail, side, you, left: Math.min(...all.map((r) => r.left)), right: Math.max(...all.map((r) => r.right)), hand: R(".cm-stage-hand"), fan: document.querySelector(".cm-stage-fan")?.hidden === false, tab: R(".cm-stage-hand-label"), bc: document.querySelector(".cm-stage-slot.is-you .cm-bcard")?.getBoundingClientRect().width || 0,
+      on: document.querySelector(".cm-stage-max")?.getAttribute("aria-pressed"), windowH: innerHeight};});
+  const base = await state();
+  eq(base.on, "false", "table: Max is off to begin with");
+  ok(base.fan && base.hand.h > 100, "table: the hand is shown to begin with");
+  await page.click('[data-action="board-table-max"]'); await page.waitForTimeout(800);
+  const max = await state();
+  eq(max.on, "true", "table: Max pressed once is on");
+  ok(Math.abs(max.left - (max.rail.x + max.rail.w)) <= 2 && Math.abs(max.right - max.side.x) <= 2, `table: with Max the boards run out to the open drawers (${Math.round(max.left)} to ${Math.round(max.right)} between ${Math.round(max.rail.x + max.rail.w)} and ${Math.round(max.side.x)})`);
+  ok(max.you.w > base.you.w * 1.15 && max.bc > base.bc * 1.15, `table: the boards and their cards scale up together (${Math.round(base.you.w)} to ${Math.round(max.you.w)}, cards ${Math.round(base.bc)} to ${Math.round(max.bc)})`);
+  ok(!max.fan && max.tab && max.tab.y + max.tab.h <= max.windowH + 1 && max.tab.y > max.windowH - 80, "table: Max puts the hand away, its tab left at the foot of the window");
+  await page.click('[data-action="board-table-max"]'); await page.waitForTimeout(800);
+  const back = await state();
+  ok(back.on === "false" && back.fan && Math.abs(back.you.w - base.you.w) <= 2, "table: Max pressed again returns to the default, the hand shown");
+  await page.click('[data-action="board-hand-toggle"]'); await page.waitForTimeout(600);
+  const hid = await state();
+  ok(!hid.fan && hid.tab.y > hid.windowH - 80, "table: the hand's tab puts the hand away");
+  await page.click('[data-action="board-hand-toggle"]'); await page.waitForTimeout(600);
+  ok((await state()).fan, "table: and shows it again");
   await context.close();
 }
 

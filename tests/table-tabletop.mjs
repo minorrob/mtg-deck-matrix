@@ -32,9 +32,8 @@ for (const [w, h] of [[1280, 720], [1440, 900], [1863, 902]]) for (const seats o
   for (const r of rects) {
     assert.ok(Math.abs(r.width * 9 / 16 - r.height) <= 1.5, `a Table board is 16:9 (${r.width}x${r.height} at ${w}x${h}, ${seats} seats)`);
     assert.ok(r.x >= opts.inL && r.x + r.width <= w - opts.inR + 1, "a Table board lies between the drawers' gutters");
-    assert.ok(r.y >= 0 && r.y + r.height <= g.contentH - opts.reserve + 1, "a Table board lies above the hand's tray (in the stage's own height, which is the window's or, below the least board size, taller)");
-    assert.ok(r.width >= Math.min(320, w - opts.inL - opts.inR - 20), `a Table board is never drawn under the least size (${r.width} at ${w}x${h}, ${seats} seats)`);
-    assert.ok(g.contentH <= h || r.width <= 320 + 1 || g.column, "the stage grows past the window only where a board is at its least size");
+    assert.ok(r.y >= 0 && r.y + r.height <= h - opts.reserve + 1, "a Table board lies above the hand's tray");
+    assert.ok(r.y + r.height <= h, "a Table board is inside the window: the game fits it, whatever its size");
   }
   for (const [i, a] of rects.entries()) for (const b of rects.slice(i + 1)) assert.ok(a.x + a.width <= b.x || b.x + b.width <= a.x || a.y + a.height <= b.y || b.y + b.height <= a.y, "Table boards do not overlap");
   const open = scope.CrankStage.flatGeometry(w, h, opts), again = scope.CrankStage.flatGeometry(w, h, {...opts});
@@ -43,8 +42,7 @@ for (const [w, h] of [[1280, 720], [1440, 900], [1863, 902]]) for (const seats o
   assert.ok(Math.abs(zoomed.slot("a").matrix[0] - 1.5) < 1e-9, "the 3D view's zoom scales a flat board by one matrix");
   const focus = scope.CrankStage.flatGeometry(w, h, {...opts, mode: "focus"});
   assert.ok(Math.abs(focus.front.width * 9 / 16 - focus.front.height) <= 1, "the board looked at in Focus is 16:9");
-  assert.ok(focus.front.x >= opts.inL && focus.front.x + focus.front.width <= w - opts.inR + 1 && focus.front.y + focus.front.height <= focus.contentH - opts.reserve + 1, "Focus's board lies between the gutters and above the hand");
-  assert.ok(focus.front.width >= Math.min(560, w - opts.inL - opts.inR - 20) && (focus.contentH <= h || focus.front.width <= 561), "Focus's board is never under its least size, and the stage grows only where it is at it");
+  assert.ok(focus.front.x >= opts.inL && focus.front.x + focus.front.width <= w - opts.inR + 1 && focus.front.y + focus.front.height <= h - opts.reserve + 1, "Focus's board lies between the gutters and above the hand");
   for (const r of focus.rear) assert.ok(r.x >= opts.inL && r.x + r.width <= w - opts.inR + 1 && r.y + r.height <= focus.front.y + 1, "the others in Focus lie between the gutters and behind the board looked at");
 }
 console.log("table-tabletop: flat Table and Focus geometry passed");

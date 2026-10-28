@@ -1770,11 +1770,6 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 /* On a card this small the power/toughness and counts take less room, so they stay on it. */
 #matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-bcard-pt{padding:0 2px;border-radius:3px;font-size:max(7px,calc(var(--bc) * .3))}
 #matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-bcard-count{padding:0 2px;font-size:max(8px,calc(var(--bc) * .4))}
-/* A FLAT TABLE TOO LARGE FOR THE WINDOW SCROLLS (Rob, 2026-10-28: "add a minimum board size so the page scrolls instead of shrinking the boards"): the stage takes the height its boards need (CrankStage.flatGeometry's contentH) and the board scrolls under a header, drawers, hand, turn box and action pop-up that stay in the window. */
-.cm-board[data-shell=shared]:is([data-view=table],[data-view=focus]){overflow-y:auto;overflow-x:hidden}
-.cm-board[data-shell=shared]:is([data-view=table],[data-view=focus])>.cm-stage-top{position:sticky;top:0}
-.cm-board[data-shell=shared]:is([data-view=table],[data-view=focus])>:is(.cm-stage-rail,.cm-stage-side,.cm-stage-hand),.cm-board[data-shell=shared]:is([data-view=table],[data-view=focus]) .cm-stage-handle{position:fixed}
-.cm-board[data-shell=shared]:is([data-view=table],[data-view=focus]) .cm-stage-region :is(.cm-stage-caption,.cm-stage-actions){position:fixed;top:calc(var(--hud-top,58px) + 12px)}
 /* THE QUICK ACTION TAB (Rob, 2026-10-28): the undo drawer under a card, holding Tap, Cast, Play and Undo, each once; the same in Table, Focus and 3D. */
 #matrix-v2 .cm-board .cm-quick-drawer{display:flex;align-items:center;justify-content:center;gap:6px;padding:2px 4px}
 #matrix-v2 .cm-board .cm-quick-do{flex:none;min-height:0;height:auto;padding:2px 5px;border:1px solid color-mix(in srgb,var(--mat-ink) 40%,transparent);border-radius:4px;background:rgb(0 0 0 / .5);color:var(--mat-ink);font:700 calc(13px*var(--hud-scale,1))/1.15 var(--font-body);cursor:pointer;white-space:nowrap}
@@ -1786,3 +1781,11 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 .cm-stage-rear.cm-flat-rear{display:block}
 .cm-flat-rear>.cm-stage-mini{position:absolute;inset:0}
 .cm-stage-region.is-peeking{cursor:zoom-in}
+/* TABLE'S MAX and the hand's tab (Rob, 2026-10-28). */
+.cm-stage-fan[hidden]{display:none}
+.cm-stage-hand-label{pointer-events:auto;cursor:pointer;border:0;font-family:inherit}
+.cm-stage-hand.is-hidden{overflow:visible}
+#matrix-v2 .cm-board .cm-stage-max{height:22px;margin-left:4px;padding:0 8px;border:1px solid #4a7770;border-radius:6px;background:#0a1d20e6;color:#e4efe6;font:700 11px/1 var(--font-body);letter-spacing:.04em;cursor:pointer}
+#matrix-v2 .cm-board .cm-stage-max:hover{background:#142e32}
+#matrix-v2 .cm-board .cm-stage-max.is-on{background:var(--color-aether,#4aa8ff);border-color:var(--color-aether,#4aa8ff);color:#06161a}
+.cm-stage-hand.is-hidden .cm-stage-hand-label{top:auto;bottom:0}
