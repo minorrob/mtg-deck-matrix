@@ -285,7 +285,7 @@ try {
   const redrawn = await sea();
   ok(redrawn.probe !== after.probe && redrawn.t >= drawnAt, `and a sea drawn afresh carries on from the same moment, never from the beginning (${redrawn.t.toFixed(1)}s)`);
   eq(await rob.page.locator(".cm-cloud-table .cm-seat-q").count(), 3, "three quadrants, one a seat");
-  ok(/Table rules/.test(await pageText(rob.page, ".cm-table-center")) && /5 minutes/.test(await pageText(rob.page, ".cm-table-center")), "the table's rules sit in the middle, the five minutes among them");
+  ok(/Table rules/.test(await pageText(rob.page, ".cm-table-center")) && /House rules\s*(Yes|No)/.test(await pageText(rob.page, ".cm-table-center")) && !/5 minutes|Invitations/.test(await pageText(rob.page, ".cm-table-center")), "the table's rules sit in the middle, House rules Yes or No among them (Rob, 2026-10-28: no invitation or dropped-player rows)");
   const wide = await panelReading(rob.page);
   ok(wide.worst >= 4.5 && wide.inside && wide.apart, `the rules read at 1400: contrast ${wide.worst}, inside ${wide.inside}, apart ${wide.apart}`);
   await shot(rob.page, "lobby-new-1400");
