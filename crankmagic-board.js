@@ -219,6 +219,7 @@ globalThis.CrankBoard = Object.seal({
     if (w < DRAWER_FULL) host.dataset[which === "pane" ? "narrowPane" : "narrowPanel"] = "on"; else delete host.dataset[which === "pane" ? "narrowPane" : "narrowPanel"];
   }
   const splitOf = (k) => {const raw = stored(SPLIT_KEY[k]), v = Number(raw); return raw !== null && v >= SPLIT[0] && v <= SPLIT[1] ? v : SPLIT_AT[k];};
+  let drawerW = {left: 270, right: 340}, gutter = {left: 310, right: 380};
   let stageSide = false, stageRail = true, cameraOpen = false, stageError = "";
   let tableMenuOpen = false;
   const foldedModules = new Set();
@@ -1109,7 +1110,7 @@ globalThis.CrankBoard = Object.seal({
     const fieldMin=Math.ceil(row+outer(field.querySelector(':scope>.cm-mat-label'))+outer(field.querySelector('.cm-board-group>h3'))+padding(field));
     const landMin=Math.ceil(row+outer(lands.querySelector(':scope>.cm-mat-label'))+padding(lands));
     const chip=grid.querySelector(':scope>.cm-board-chip'),history=grid.querySelector(':scope>.cm-board-band'),gap=number(grid,'rowGap');
-    const historyMin=history?number(history,'minHeight'):0,rows=history||mat.dataset.fit==='phone'?5:4;
+    const historyMin=history&&!mat.closest('.cm-stage-slot')?number(history,'minHeight'):0,rows=history||mat.dataset.fit==='phone'?5:4;
     const extra=padding(grid)+8+outer(chip)+historyMin+gap*(rows-1);
     const head=mat.querySelector('.cm-mat-head');
     // A constrained grid can squeeze the header to its padding before its first fit. Its actual
@@ -1120,7 +1121,7 @@ globalThis.CrankBoard = Object.seal({
   function fitBoardZones(host) {
     for(const grid of host.querySelectorAll('.cm-mat-grid')) {
       const mat=grid.closest('.cm-mat'),{fieldMin,landMin,extra,header}=zoneMetrics(mat);
-      const total=Math.max((fieldMin+landMin)*1.2,mat.dataset.fit==='phone'?innerHeight*.65:mat.clientHeight-header-extra),share=zoneShare(Number(mat.dataset.seat));
+      const total=Math.max((fieldMin+landMin)*(mat.closest('.cm-stage-slot')?1:1.2),mat.dataset.fit==='phone'?innerHeight*.65:mat.clientHeight-header-extra),share=zoneShare(Number(mat.dataset.seat));
       const field=Math.max(fieldMin,Math.min(total-landMin,total*share));
       grid.style.setProperty('--field-px',`${field}px`);grid.style.setProperty('--lands-px',`${total-field}px`);
       grid.dataset.zoneTotal=String(total);grid.dataset.fieldMin=String(fieldMin);grid.dataset.landMin=String(landMin);
@@ -1571,9 +1572,16 @@ globalThis.CrankBoard = Object.seal({
     const big = mode === "table" ? players()[view.seat] : (players()[focus] || players()[view.seat]);
     /* Table and Focus are this stage without the canvas (`flat`); Table's boards are a grid, above the hand's tray. */
     const flat = !stageEnabled();
-    /* A flat table is not under a drawer (the 3D one runs on beneath): it keeps clear of the open ones and of the tabs on the edges. */
-    if (flat) {region.style.marginRight = `calc(var(--play-inspector,0px) + ${stageSide ? "var(--stage-side-width,330px) + " : ""}40px)`; if (!stageRail) region.style.marginLeft = "40px"; else region.style.removeProperty("margin-left");}
-    else {region.style.removeProperty("margin-right"); region.style.removeProperty("margin-left");}
+    /* The turn box keeps beside the left drawer, as the tab does; the drawers move nothing else. */
+    host.style.setProperty("--drawer-l", `${host.querySelector(":scope > .cm-stage-rail.is-open")?.offsetWidth || 0}px`);
+    /* Drawers lie over the stage and the hand and move neither: a flat table keeps its boards clear of where they lie, open or not (the 40px is the tab on each edge). */
+    if (flat) {
+      const railW = host.querySelector(":scope > .cm-stage-rail.is-open")?.offsetWidth, sideW = host.querySelector(":scope > .cm-stage-side.is-open")?.offsetWidth;
+      if (railW) drawerW.left = railW; if (sideW) drawerW.right = sideW;
+      const room = host.clientWidth * .4;
+      gutter = {left: Math.round(Math.min(drawerW.left, room) + 40), right: Math.round(Math.min(drawerW.right, room) + 40)};
+      host.style.setProperty("--gut-l", `${gutter.left}px`); host.style.setProperty("--gut-r", `${gutter.right}px`);
+    } else {host.style.removeProperty("--gut-l"); host.style.removeProperty("--gut-r");}
     if (flat) fitFan(host);   /* the tray's height first: the boards are fitted above it */
     const tray = host.querySelector(":scope > .cm-stage-hand");
     const opts = {flat, grid: flat && mode === "table", reserve: flat ? Math.round(tray?.getBoundingClientRect().height || 0) : 0, tilt: cameraTilt(), zoom: camera.zoom, pan: camera.pan, reach: camera.reach, rearMin:0, live: !!stretch, rotation: 0, cards: camera.cards, reduced: globalThis.CrankMotion?.reduced() ?? false,
@@ -1589,11 +1597,15 @@ globalThis.CrankBoard = Object.seal({
       host.style.setProperty("--pie", `${pie}px`);
       /* ...and the action pop-up, which stands over the middle, has the gap between the boards to itself. */
       const bar = host.querySelector(":scope .cm-stage-actions")?.offsetWidth || 0;
-      opts.gapX = players().length === 2 ? 22 : Math.max(pie + 8, bar + 28); opts.gapY = 22;
+      opts.gapX = players().length === 2 ? 22 : Math.min(Math.max(pie + 8, bar + 28), Math.round((region.clientWidth - gutter.left - gutter.right) * .16)); opts.gapY = 22;
       const caption = host.querySelector(":scope .cm-stage-caption"), at = region.getBoundingClientRect();
       /* Focus's boards start under the action pop-up (the 3D view's others are far enough back to lie under it); Table's have it in the gap between them. */
-      opts.top = mode === "focus" || players().length === 2 ? Math.round(76 * hudScale() / 100) : 0;
-      opts.padL = caption ? Math.max(0, Math.ceil(caption.getBoundingClientRect().right - at.left + 14)) : 0;
+      const barEl = host.querySelector(":scope .cm-stage-actions");
+      opts.top = mode === "focus" || players().length === 2 ? (barEl ? Math.ceil(barEl.getBoundingClientRect().bottom - at.top + 6) : Math.round(76 * hudScale() / 100)) : 0;
+      opts.inL = gutter.left; opts.inR = gutter.right;
+      opts.padL = caption ? Math.ceil(caption.getBoundingClientRect().width + 54) : 0;
+      opts.stripMin = Math.ceil(Math.max(0, ...[...region.querySelectorAll(".cm-stage-rear")].map((el) => el.scrollHeight)) + 6);
+      opts.capB = caption ? Math.ceil(caption.getBoundingClientRect().bottom - at.top + 6) : 0;
     }
     CrankStage.mount(region, opts); stageGeom = CrankStage.layout(region.getBoundingClientRect(), opts) || null;
     // A scaled seat label must leave a complete card row on its rear mat. Keep the original
@@ -1620,7 +1632,7 @@ globalThis.CrankBoard = Object.seal({
     const tray = host.querySelector(".cm-stage-hand"), fan = tray?.querySelector(".cm-stage-fan");
     if (!tray || !fan) return;
     /* Table and Focus keep their boards above the hand, so their hand is the smaller (the Hand cards slider makes it larger). */
-    const flatHand = !stageEnabled(), k = scaleOf("hand") / 100, base = flatHand ? Math.max(170, Math.min(250, innerHeight * .25)) : Math.max(220, Math.min(330, innerHeight * .34)), wide = tray.clientWidth;
+    const flatHand = !stageEnabled(), k = scaleOf("hand") / 100, base = flatHand ? Math.max(170, Math.min(250, innerHeight * .25)) : Math.max(220, Math.min(330, innerHeight * .34)), wide = tray.clientWidth - (flatHand ? gutter.left + gutter.right : 0);
     const room = host.clientHeight - (host.querySelector(".cm-stage-top")?.offsetHeight || 58), count = Math.max(1, Number(fan.style.getPropertyValue("--fan-count")) || 1);
     const rest = Math.min(190, (base - 24) * 5 / 7, (wide - 110) / 6.1), spread = (count - 1) / 2;
     const tallest = (room * .6 - 24) * 5 / 7, widest = (wide / 2 - 60) / (spread * .4 + .77);

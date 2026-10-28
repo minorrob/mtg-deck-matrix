@@ -68,9 +68,9 @@
      hand. FOCUS: the others' boards in a row across the back, and the seat looked at the largest 16:9 that fits between them and the hand. `reserve` is the foot of
      the stage the hand's tray covers; `gapX` and `gapY` what lies between boards (Table's life counter sits over the crossing). */
   const GRID_MARGIN=10, GRID_GAP=12;
-  function flatGeometry(width, height, {mode = "table", zoom = 100, pan = null, seats = 4, reserve = 0, top = 0, gapX = GRID_GAP, gapY = GRID_GAP, padL = 0} = {}) {
+  function flatGeometry(width, height, {mode = "table", zoom = 100, pan = null, seats = 4, reserve = 0, top = 0, gapX = GRID_GAP, gapY = GRID_GAP, padL = 0, capB = 0, stripMin = 0, inL = 0, inR = 0} = {}) {
     const w=Math.max(1,width), h=Math.max(1,height), n=clamp(seats,1,4), z=clamp(zoom,60,200)/100;
-    const roomW=w-GRID_MARGIN*2-padL, roomH=Math.max(60,h-top-reserve-GRID_MARGIN*2);
+    const roomW=w-GRID_MARGIN*2-padL-inL-inR, roomH=Math.max(60,h-top-reserve-GRID_MARGIN*2);
     const cx=w/2, cy=top+(h-top-reserve)/2, at={x:clamp(pan?.x,-w,w),y:clamp(pan?.y,-h,h)};
     const view=(x,y)=>[cx+(x-cx-at.x)*z,cy+(y-cy-at.y)*z];
     function surface(r) {
@@ -83,28 +83,34 @@
       camera:{eye:[0,1,0],yaw:0,pitch:Math.PI/2,right:[1,0,0],up:[0,0,1],ahead:[0,-1,0]},project:view,unproject,quad:[...view(0,0),...view(w,0),...view(w,h),...view(0,h)]};
     if(mode==="focus"){
       /* The others go across the back, or -- where the window is wide and not tall -- in a column at the right, whichever lets the board looked at be larger. */
-      const others=Math.max(0,n-1), x1=GRID_MARGIN+padL, between=others?GRID_GAP:0;
-      const stripH=others?Math.round(clamp(roomH*.15,80,112)):0;
-      const availStrip=Math.max(60,roomH-stripH-between), bwStrip=Math.max(120,Math.floor(Math.min(roomW,availStrip*16/9)));
-      const colW=others?Math.floor(Math.min((w-x1-GRID_MARGIN)*.27,(roomH-GRID_GAP*(others-1))/others/.62)):0;
-      const bwCol=others?Math.max(120,Math.floor(Math.min(w-x1-GRID_MARGIN-colW-between,roomH*16/9))):0;
+      const others=Math.max(0,n-1), x1=GRID_MARGIN+padL+inL, between=others?GRID_GAP:0;
+      const stripH=others?Math.round(Math.max(clamp(roomH*.15,80,112),Math.min(stripMin,roomH*.3))):0;
+      const availStrip=Math.max(60,roomH-stripH-between), stripY=top+GRID_MARGIN, bigY=stripY+stripH+between;
+      /* the caption (top left) is cleared by the strip, and by the board looked at only where it reaches down to it */
+      const bigPad=(bigY>=capB?0:padL)+inL, bigW=w-GRID_MARGIN*2-bigPad-inR, bwStrip=Math.max(120,Math.floor(Math.min(bigW,availStrip*16/9)));
+      const colW=others?Math.floor(Math.min((w-x1-inR-GRID_MARGIN)*.27,(roomH-GRID_GAP*(others-1))/others/.62)):0;
+      const bwCol=others?Math.max(120,Math.floor(Math.min(w-x1-inR-GRID_MARGIN-colW-between,roomH*16/9))):0;
       if(others&&bwCol>bwStrip*1.08){
-        const bh=Math.round(bwCol*9/16), usedW=bwCol+between+colW, left=Math.round(x1+Math.max(0,(w-x1-GRID_MARGIN-usedW)/2));
+        const bh=Math.round(bwCol*9/16), usedW=bwCol+between+colW, left=Math.round(x1+Math.max(0,(w-x1-inR-GRID_MARGIN-usedW)/2));
         const rh=Math.round(colW*.62), usedH=rh*others+GRID_GAP*(others-1), y0=Math.round(top+GRID_MARGIN+Math.max(0,(roomH-usedH)/2));
         const rear=Array.from({length:others},(_,i)=>surface({x:left+bwCol+between,y:y0+i*(rh+GRID_GAP),width:colW,height:rh}));
         const big={x:left,y:Math.round(top+GRID_MARGIN+Math.max(0,(roomH-bh)/2)),width:bwCol,height:bh};
         return {...common,focus:true,column:true,rear,front:surface(big),board:{width:bwCol,height:bh,column:colW}};
       }
       const bw=bwStrip, bh=Math.round(bw*9/16);
-      const big={x:Math.round(w/2-bw/2),y:Math.round(top+GRID_MARGIN+stripH+between+Math.max(0,(availStrip-bh)/2)),width:bw,height:bh};
-      const rw=others?Math.floor(Math.min((roomW-GRID_GAP*(others-1))/others,stripH*2.4)):0, usedW=rw*others+GRID_GAP*Math.max(0,others-1), x0=Math.round(padL+GRID_MARGIN+(roomW-usedW)/2);
+      const big={x:Math.round(bigPad+GRID_MARGIN+(bigW-bw)/2),y:Math.round(bigY+Math.max(0,(availStrip-bh)/2)),width:bw,height:bh};
+      const rw=others?Math.floor(Math.min((roomW-GRID_GAP*(others-1))/others,stripH*2.4)):0, usedW=rw*others+GRID_GAP*Math.max(0,others-1), x0=Math.round(padL+inL+GRID_MARGIN+(roomW-usedW)/2);
       const rear=Array.from({length:others},(_,i)=>surface({x:x0+i*(rw+GRID_GAP),y:top+GRID_MARGIN,width:rw,height:stripH}));
       return {...common,focus:true,rear,front:surface(big),board:{width:bw,height:bh,strip:stripH}};
     }
     const cols=n===1?1:2, rows=n<=2?1:2;
-    const fit=Math.max(60,Math.floor(Math.min((roomW-gapX*(cols-1))/cols,(roomH-gapY*(rows-1))/rows*16/9)));
+    /* The turn box (top left) is cleared the way that leaves the larger boards: they start to its right, or below it. */
+    const fitFor=(left,above)=>Math.max(60,Math.floor(Math.min((w-GRID_MARGIN*2-left-inL-inR-gapX*(cols-1))/cols,(Math.max(60,h-above-reserve-GRID_MARGIN*2)-gapY*(rows-1))/rows*16/9)));
+    const below=padL&&capB>top?capB:top, side=fitFor(padL,top), under=fitFor(0,below), useUnder=padL>0&&under>side*1.05;
+    const fit=useUnder?under:side, shift=useUnder?0:padL, ceil=useUnder?below:top;
+    const roomW2=w-GRID_MARGIN*2-shift-inL-inR, roomH2=Math.max(60,h-ceil-reserve-GRID_MARGIN*2);
     const bw=fit, bh=Math.round(fit*9/16), usedW=bw*cols+gapX*(cols-1), usedH=bh*rows+gapY*(rows-1);
-    const x0=Math.round(padL+GRID_MARGIN+(roomW-usedW)/2), y0=Math.round(top+GRID_MARGIN+Math.max(0,(roomH-usedH)/2));
+    const x0=Math.round(shift+inL+GRID_MARGIN+(roomW2-usedW)/2), y0=Math.round(ceil+GRID_MARGIN+Math.max(0,(roomH2-usedH)/2));
     /* where each seat sits, by its area letter (a top left, b top right, c bottom left, d bottom right; three seats put the third across the foot) */
     const cell={a:[0,0],b:[1,0],c:n===3?[.5,1]:[0,1],d:[1,1]};
     const rect=area=>{const [c,r]=cell[area]||cell.a;return {x:Math.round(x0+c*(bw+gapX)),y:Math.round(y0+r*(bh+gapY)),width:bw,height:bh};};
@@ -330,14 +336,18 @@
   /* The flat stage (Table and Focus): the boards laid out by flatGeometry, set by one matrix each. A board's own layout is computed at the size it is drawn (--row-w, --mat-w). */
   function placeFlat(s) {
     const o=s.opts, cards=1+.8*(clamp(o.cards??100,70,200)-100)/100, seatsN=(o.mats||[]).length;
-    const g=flatGeometry(s.box.width,s.box.height,{mode:o.grid?"table":"focus",zoom:o.zoom,pan:o.pan,seats:seatsN,reserve:o.reserve||0,top:o.top||0,gapX:o.gapX,gapY:o.gapY,padL:o.padL||0});
+    const g=flatGeometry(s.box.width,s.box.height,{mode:o.grid?"table":"focus",zoom:o.zoom,pan:o.pan,seats:seatsN,reserve:o.reserve||0,top:o.top||0,gapX:o.gapX,gapY:o.gapY,padL:o.padL||0,capB:o.capB||0,stripMin:o.stripMin||0,inL:o.inL||0,inR:o.inR||0});
     s.view=g;
     const size=(el,r)=>{
       el.style.setProperty('--row-w',`${r.width}px`);el.style.setProperty('--mat-w',`${r.width}px`);el.style.setProperty('--mat-h',`${r.height}px`);el.style.setProperty('--board-scale',String(cards));
       el.style.setProperty('--rear-card',`${Math.max(18,(r.height-28)/4.8)}px`);
       /* A board's cards are no larger than its two pairs of piles can stand in its height: a pile is a card (5:7) and its caption, and Focus keeps a band of History between the pairs. */
       const head=el.querySelector('.cm-mat-head')?.offsetHeight||0, band=el.querySelector('.cm-board-band')?64:0;
-      el.style.setProperty('--bc-cap',`${Math.max(24,Math.floor(((r.height-head-14-band)/2-26)/1.4))}px`);
+      /* ...nor larger than the field and the lands can each stand a row of in what is left (two rows of 1.72 cards, and their labels, about 84px). */
+      const chip=el.querySelector('.cm-board-chip')?.offsetHeight||0, piles=Math.floor(((r.height-head-14-band-chip)/2-26)/1.4), rows=Math.floor((r.height-head-24-84-chip)/3.44);
+      /* A board this small has no room for its zones' captions: the cards and piles keep the height. */
+      el.toggleAttribute('data-tight',r.height<200);
+      el.style.setProperty("--bc-cap",`${Math.max(16,Math.min(piles,rows))}px`);
     };
     if(g.grid){
       for(const el of s.host.querySelectorAll('.cm-stage-slot')){const r=g.slot(el.dataset.area);position(el,r);size(el,r);}
