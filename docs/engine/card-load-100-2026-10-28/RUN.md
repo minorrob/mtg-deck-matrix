@@ -18,9 +18,9 @@ Newest wave first. Each line names its command's result line, never a summary of
   with a mutation restoring the exclusion. The corrected full backstop suite passes in the mutation runner's baseline;
   both selected backstop breaks are caught, `missed: []`. The five paragraph breaks were also rerun and caught.
 - **Lanes:** V8 `codex/engine-load100-w0-v8-verify` at pushed `8acb3213` (draft #913) is adding the approved proof
-  supplement after its initial harness checkpoint. W4 combat at pushed `8e0f3a2f` (draft #914) and W5 mana at pushed
-  `8e6f5b5e` (draft #915) have bounded fixes, with final evidence being completed. W1/W2/W3/W6/W7 remain queued;
-  W6's worktree is prepared. This session has three subagent
+  supplement and measuring initial full-directory coverage. W4 combat at pushed `9177d29b` (draft #914) and W5 mana at
+  pushed `79fe06c7` (draft #915) are clean bounded checkpoints with their remaining debts explicitly queued.
+  W1 faces and W6 tokens are active in their own worktrees; W2/W3/W7 remain queued. This session has three subagent
   slots, so all eight roles remain separate and run in batches. No lane is complete.
 - **Ownership:** the primary checkout has another session's unresolved merge and remains untouched. The old standing
   engine table predates Rob's direct October 28 assignment; current open PRs were checked. No active engine-rule PR
@@ -28,8 +28,9 @@ Newest wave first. Each line names its command's result line, never a summary of
 - **Toolchain:** Node `v22.23.3`; required dependency junctions created. Git Bash is
   `C:\Program Files\Git\bin\bash.exe`; Windows blocks its named-object initialization inside the sandbox, so the
   authorized scan runs with escalation. Network fetch/gh also requires escalation. No approval review rejection.
-- **Next:** complete #834's corrected backstop checks and selected breaks; integrate the follow-up; route W4/W5/V8
-  findings and continue the remaining five roles. Do not claim a passed gate from package history.
+- **Next:** complete W1/W6 and V8's approved coverage measurement, then start W2/W3/W7 with fresh roles as slots free.
+  Finish the remaining W4/W5 debts. Merge writers W1 through W7, then V8, into integration; regenerate once and run
+  the consolidated gates. No writer branch is merged into integration yet. Do not claim a gate from package history.
 - **Rob's decision, October 28:** "Allow the additional harness proof." V8 may supplement journal evidence with an
   in-memory ability-removal scenario proof; the safeguards and limits are in `BRIEF.md`. G-3 remains unmet until the
   evidence is measured. No saved card/rule instrumentation or schema/fidelity-only failure earns coverage.
@@ -78,16 +79,21 @@ Fresh baseline on main `39a45706`, before engine changes:
 - **V8 proof method:** two guard mutation attempts were interrupted and restored after invalid difficulty testing
   could enter standalone room setup. The harness had no provider transport and made no model API call. Invalid-level
   CLI tests were removed; an exported pure validator is now tested without any game creation. Safe rerun: 28 caught.
-- **W4:** pushed `8e0f3a2f`, draft #914. Sentence-slot fixes, single-blocker trample choice, explicit scenario inputs;
+- **W4:** pushed final checkpoint `9177d29b`, draft #914. Sentence-slot fixes, single-blocker trample choice, explicit scenario inputs;
   11 mutation breaks caught, 29 combat reader suites plus data-integrity/feature-wiring pass. Fresh full check-cards:
-  `6430 definitions`; `11023 scenarios, 0 failed`. All four original calibration cases pass the focused 14-check suite;
-  final full calibration pending. V8 independently reproduced its two-target counterexample fixed, without denominator
-  exclusions, and reviewed chosen trample overassignment/lethal constraints. Five other W4 debts remain queued.
-- **W5:** pushed `8e6f5b5e`, draft #915. Saga exact-cost selector, Phyrexian/monohybrid convoke, full-pool dealer;
+  `6430 definitions`; `11023 scenarios, 0 failed`. Full `tests/sentence-library.mjs` on code checkpoint `8e0f3a2f`:
+  `77 checks passed`; `4165` held out, `4165` passed original scenarios, with no denominator exclusion. V8 independently
+  reproduced its two-target counterexample fixed and reviewed chosen trample overassignment/lethal constraints.
+  Later commit `ae4d6ba6` adds two actual behavior scenarios, retaining all old expectations. V8's independent selected
+  ledger: Thran Dynamo, Glorious Anthem, Serra Angel; 3 definitions, 5 scenarios, 0 failed; 4/4 abilities reached by
+  runtime removal, 0 unreached. No clean-game exercises credited by that proof. Artifact is committed on W4 at
+  `w0/ability-depth-W4-sample.json`; both changed cards' held-out calibrations pass. Five other W4 debts remain queued.
+- **W5:** pushed final evidence `79fe06c7` (code `8e6f5b5e`), draft #915. Saga exact-cost selector, Phyrexian/monohybrid convoke, full-pool dealer;
   20 mutation breaks caught, focused mana 36, pool 16, existing convoke 43, selected engine suites pass. Fresh full
   check-cards: `6430 definitions`; `11025 scenarios, 0 failed`. V8 independently probed mixed convoke/life, snow and
   insufficient-life cases; no new finding in this bounded scope. Generated Saga definitions and inventory remain for
-  consolidated regeneration; local regenerated table-basics proof/restoration pending. Other W5 debt remains queued.
+  consolidated regeneration. Local-only regenerated table-basics: 6 checks and all 11,025 scenarios passed, followed
+  by exact restoration of the previously clean generated file. Other W5 debt remains queued.
 - **W5 approval review:** its first push/draft creation was rejected as an unverified code export. Root verified the
   exact HTTPS remote (no embedded credentials), all 12 authorized card-load paths, the full commit SHA, Rob's attached
   push/draft instruction, and independently reran SCAN PASS on that SHA. Root's bounded publish then succeeded:
@@ -114,3 +120,4 @@ Fresh baseline on main `39a45706`, before engine changes:
 
 | Wave | Integration PR | Written | Promoted | Stopped | Checks (result lines) | Merged | Staging | Ignores added |
 | --- | --- | ---: | ---: | ---: | --- | --- | --- | --- |
+| 0, in progress | #912 | 0 | 0 | 0 | Prerequisite and bounded lane evidence above; consolidated gates not run | No | No | 0; queued debt is not waived |
