@@ -358,7 +358,7 @@
     s.view=g;
     const size=(el,r)=>{
       el.style.setProperty('--row-w',`${r.width}px`);el.style.setProperty('--mat-w',`${r.width}px`);el.style.setProperty('--mat-h',`${r.height}px`);el.style.setProperty('--board-scale',String(cards));
-      el.style.setProperty('--rear-card',`${Math.max(18,(r.height-28)/4.8)}px`);
+      el.style.setProperty('--rear-card',`${Math.max(12,(r.height-16)/3.6)}px`);   /* a rear board is a whole mat in its own 16:9: two card rows and the divider stand in it, none cut off */
       /* A board's cards are no larger than its two pairs of piles can stand in its height: a pile is a card (5:7) and its caption, and Focus keeps a band of History between the pairs. */
       const head=el.querySelector('.cm-mat-head')?.offsetHeight||0, band=el.querySelector('.cm-board-band')?64:0;
       /* ...nor larger than the field and the lands can each stand a row of in what is left (two rows of 1.72 cards, and their labels, about 84px). */

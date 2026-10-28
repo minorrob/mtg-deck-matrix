@@ -1770,6 +1770,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 /* On a card this small the power/toughness and counts take less room, so they stay on it. */
 #matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-bcard-pt{padding:0 2px;border-radius:3px;font-size:max(7px,calc(var(--bc) * .3))}
 #matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-bcard-count{padding:0 2px;font-size:max(10px,calc(var(--bc) * .4))}
+#matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-bcard-tax{top:2px;padding:0 3px}
 /* THE QUICK ACTION TAB (Rob, 2026-10-28): the undo drawer under a card, holding Tap, Cast, Play and Undo, each once; the same in Table, Focus and 3D. */
 #matrix-v2 .cm-board .cm-quick-drawer{display:flex;align-items:center;justify-content:center;gap:6px;padding:2px 4px}
 #matrix-v2 .cm-board .cm-quick-do{flex:none;min-height:0;height:auto;padding:2px 5px;border:1px solid color-mix(in srgb,var(--mat-ink) 40%,transparent);border-radius:4px;background:rgb(0 0 0 / .5);color:var(--mat-ink);font:700 calc(13px*var(--hud-scale,1))/1.15 var(--font-body);cursor:pointer;white-space:nowrap}
@@ -1800,3 +1801,25 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-lb-grid .cm-table-action-row .v-button{flex:1 1 auto;width:100%}
 #matrix-v2 .cm-pl-head .cm-lb-end-top{height:40px;padding:0 16px;margin-left:auto;font-size:14px}
 #matrix-v2 .cm-pl-head .cm-lb-end-top + .cm-lb-leave{margin-left:16px}
+
+/* THE PILES ARE THE SHAPE OF A CARD (Rob, 2026-10-28: "The commander, exile, graveyard and library squares on the mat should be the aspect ratio of the card"): on the flat Table and Focus a pile's frame is one card, 5:7, its top card filling it, its count (and name, where they fit) along the foot of it. Command and Exile stand at the top right of the mat, Library and Graveyard at the bottom right, whatever the divider does. */
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit]>.cm-mat-grid{--pile-row:calc(var(--bc) * 7 / 5);grid-template-columns:minmax(0,1fr) var(--bc) var(--bc)}
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit] .cm-board-pile{position:relative;display:block;grid-row:1 / -1;width:var(--bc);height:var(--pile-row);padding:0;border-radius:calc(var(--bc) * .07);overflow:hidden}
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit] .cm-board-pile:is([data-zone=command],[data-zone=exile]){align-self:start}
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit] .cm-board-pile:is([data-zone=library],[data-zone=graveyard]){align-self:end}
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit] .cm-board-pile>:is(.cm-bcard,.cm-board-partners){position:absolute;inset:0;width:100%;height:100%;margin:0}
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit] .cm-board-pile>.cm-board-partners>.cm-bcard{--bc:inherit}
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit] .cm-board-pile figcaption{position:absolute;left:0;right:0;bottom:0;z-index:3;width:auto;padding:0 2px;background:#091b1dd9;pointer-events:none}
+
+/* THE LAYERS, bottom to top (Rob, 2026-10-28: "cards shouldn't cut off at the edge of the mat ... background > table > mat > cards > card HUD > game HUD"): the mat, its grid and its zones clip nothing, so a card lies over the edge of its zone and of the mat as it would on a table (a tapped one's turned corners too); the card's own HUD -- power and toughness, counts, the quick tab -- stands over the cards beside it, and the game's HUD (drawers, header, pop-ups) over all. A row or zone clips only while its cards really outgrow it and it scrolls them (is-scrolling, is-scrolling-zone). */
+#matrix-v2 .cm-board .cm-stage-region :is(.cm-stage-front,.cm-stage-mini,.cm-mat,.cm-mat-grid){overflow:visible}
+#matrix-v2 .cm-board .cm-stage-region .cm-mat-zone:is(.cm-board-field,.cm-board-lands):not(.is-scrolling-zone){overflow:visible}
+#matrix-v2 .cm-board .cm-stage-region .cm-board-cards:not(.is-scrolling){overflow:visible}
+#matrix-v2 .cm-board .cm-stage-region .cm-card-slot:is(:hover,:focus-within){z-index:7}
+#matrix-v2 .cm-board .cm-stage-region :is(.cm-bcard-pt,.cm-bcard-tax,.cm-bcard-count,.cm-bcard-marks){z-index:3}
+#matrix-v2 .cm-board .cm-flat-rear .cm-stage-mini>.cm-mat{--bc:var(--rear-card)}
+/* A rear board in Focus is a whole mat in its own 16:9: its two rows share its height, so nothing of it is cut off. */
+#matrix-v2 .cm-board .cm-flat-rear .cm-stage-mini .cm-mat[data-fit]>.cm-mat-grid{grid-template-rows:minmax(0,1fr) 8px minmax(0,1fr);min-height:0}
+#matrix-v2 .cm-board .cm-flat-rear .cm-board-empty{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}   /* read, not seen: a thumbnail has no room for it */
+/* The 3D view's far boards are drawn on the table's plane, small and behind: they keep their edge (the near board and Table and Focus lay their cards over theirs). */
+#matrix-v2 .cm-board .cm-stage-region .cm-stage-rear:not(.cm-flat-rear) .cm-stage-mini{overflow:hidden}

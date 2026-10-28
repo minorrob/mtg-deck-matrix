@@ -75,8 +75,8 @@ try {
     /* ---- the commander tax and partners ---- */
     {
       const {page, context, frames, errors} = await fixture(commanderView(), width, height, mode);
-      const pile = `[data-zone="command"]`, tymna = `${pile} [data-card="${TYMNA}"]`, kraum = `${pile} [data-card="${KRAUM}"]`;
-      ok(await page.locator(tymna).count() === 1 && await page.locator(kraum).count() === 1 && await page.locator(tymna).evaluate((el, k) => !!el.closest('[data-zone="command"]').querySelector(`[data-card="${k}"]`), KRAUM), `${where}: both partners are drawn, together in the command zone`);
+      const pile = `[data-zone="command"]`, tymna = `${pile} .cm-bcard[data-card="${TYMNA}"]`, kraum = `${pile} .cm-bcard[data-card="${KRAUM}"]`;
+      ok(await page.locator(tymna).count() === 1 && await page.locator(kraum).count() === 1 && await page.locator(tymna).evaluate((el, k) => !!el.closest('[data-zone="command"]').querySelector(`.cm-bcard[data-card="${k}"]`), KRAUM), `${where}: both partners are drawn, together in the command zone`);
       ok((await page.locator(`${tymna} .cm-bcard-tax`).innerText()).trim() === "+2", `${where}: Tymna's tax badge says +2`);
       ok((await page.locator(`${kraum} .cm-bcard-tax`).innerText()).trim() === "+0", `${where}: Kraum's tax badge says +0`);
       ok(/commander tax 2/.test(await page.locator(tymna).getAttribute("aria-label")), `${where}: the tax is said with Tymna's name`);
@@ -91,7 +91,7 @@ try {
       const k = await reach(page, kraum), t = await reach(page, tymna, [0.3, 0.15]);
       ok(k.ok, `${where}: Kraum takes the pointer`);
       ok(t.ok, `${where}: Tymna's uncovered top takes the pointer`);
-      /* Current native path: the card menu stages Cast; W14's one primary commits it. Neither opening nor staging sends. */
+      /* Current native path (Rob, 2026-10-27): the card, then its row -- two presses -- and a row that asks nothing more is sent at once. */
       await page.mouse.click(k.x, k.y);
       const cast = '#cm-card-menu [data-action="board-card-menu-do"][data-index="1"]';
       await page.locator(cast).waitFor();
@@ -99,12 +99,6 @@ try {
       const castAt = await reach(page, cast);
       ok(castAt.ok, `${where}: Kraum's Cast offer takes the pointer`);
       await page.mouse.click(castAt.x, castAt.y);
-      const primary = '#cm-board-decision[data-wf="W14"] [data-action="board-direct"][data-index="1"]';
-      await page.locator(primary).waitFor();
-      ok(acts(frames).length === 0, `${where}: staging Kraum still sends no action`);
-      const bindAt = await reach(page, primary);
-      ok(bindAt.ok, `${where}: W14's cast primary takes the pointer`);
-      await page.mouse.click(bindAt.x, bindAt.y);
       await page.waitForTimeout(100);
       ok(acts(frames).length === 1 && acts(frames)[0].choiceId === "priority:25:3:900" && JSON.stringify(acts(frames)[0].indices) === "[1]", `${where}: exactly one action casts Kraum from the command zone (${JSON.stringify(acts(frames))})`);
       ok(!errors.length, `${where}: no page error (${errors.join(" | ")})`);
@@ -113,7 +107,7 @@ try {
     /* ---- why Tymna can't be cast now (ROB-24): shown where her options would be, once she is picked ---- */
     {
       const {page, context, errors} = await fixture(commanderView(), width, height, mode);
-      const t = await reach(page, `[data-zone="command"] [data-card="${TYMNA}"]`, [0.3, 0.15]);
+      const t = await reach(page, `[data-zone="command"] .cm-bcard[data-card="${TYMNA}"]`, [0.3, 0.15]);
       await page.mouse.click(t.x, t.y);
       await page.waitForTimeout(400);
       await page.locator('#cm-card-menu .cm-card-menu-none').waitFor();

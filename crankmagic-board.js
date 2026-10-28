@@ -3120,6 +3120,7 @@ globalThis.CrankBoard = Object.seal({
       fitPileCaptions(host);
       applySpacing(host);
       overlap(host);
+      markScrollingZones(host);
       fitBoardZones(host);
       fitCardRows(host);
       fitZoneNavigation(host);
@@ -3161,6 +3162,13 @@ globalThis.CrankBoard = Object.seal({
     el.style.setProperty("--dock-y", `${top}px`);
     el.style.setProperty("--dock-w", `${Math.round(s.width)}px`);
     el.style.setProperty("--dock-h", `${Math.max(120, Math.round(h.bottom - 8 - top))}px`);
+  }
+  /* A zone clips and scrolls only while its cards really overflow it, measured in layout (a tapped card's turn is no overflow): otherwise its cards lie over its edge and the mat's, as on a table (Rob, 2026-10-28). */
+  function markScrollingZones(host) {
+    for (const zone of host.querySelectorAll(".cm-stage-region .cm-mat-zone.cm-board-field, .cm-stage-region .cm-mat-zone.cm-board-lands")) {
+      const need = Math.max(0, ...[...zone.children].map((k) => k.offsetTop + k.offsetHeight));
+      zone.classList.toggle("is-scrolling-zone", need > zone.clientHeight + 1);
+    }
   }
   /* A ROW TOO FULL FOR ITS CARDS OVERLAPS THEM, each over the one before, using their unchanged slot widths and margins
      (EX17: tapping rotates in the same slot; Rob, 2026-10-11: five lands, "cards cutting off on the right side").
