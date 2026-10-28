@@ -6,7 +6,7 @@ are there so the orchestrator has the procedure in hand before it opens a file.
 ## 1. Attach these five files
 
 From `C:\Users\robmi\CrankMagic\repo\.claude\worktrees\engine-loading-orchestration-dd4c7f\` (the branch
-`claude/engine-loading-orchestration-dd4c7f`, pushed; PR #PR_NUMBER), in this order:
+`claude/engine-loading-orchestration-dd4c7f`, pushed; PR #911), in this order:
 
 | # | File | Why it is attached |
 | --- | --- | --- |
@@ -41,7 +41,7 @@ WHERE EVERYTHING IS
   never commit or quote it).
 - Wrangler for the staging release: C:\Users\robmi\CrankMagic\workbench\cloudflare\node_modules\wrangler\bin\wrangler.js
 - This run's package: docs/engine/card-load-100-2026-10-28/ on branch claude/engine-loading-orchestration-dd4c7f
-  (PR #PR_NUMBER). Until it is on main, read it with `git show origin/claude/engine-loading-orchestration-dd4c7f:<path>`;
+  (PR #911). Until it is on main, read it with `git show origin/claude/engine-loading-orchestration-dd4c7f:<path>`;
   wave 0's integration merges that branch in.
 - Linear: team ROB. The card load program is ROB-85; the constructs backlog ROB-83; releases are recorded in ROB-11.
 
