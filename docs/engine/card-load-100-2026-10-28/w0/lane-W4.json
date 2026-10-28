@@ -16,5 +16,32 @@
     "| Two damage replacements where nobody can be asked | `rules/replacement.mjs`:34 | W4 |",
     "| A token put onto the battlefield attacking attacks the first player in turn order | `script/effects/permanents.mjs`:270 | W4 |"
   ],
-  "status": "queued; prerequisite PR 834 verification in progress"
+  "status": "first bounded implementation: sentence calibration and single-blocker trample; remaining debt queued",
+  "completed": [
+    "Blackblade Reforged: held-out translation counts Land after for each, not the equipped Creature",
+    "Goblin Piledriver: a teacher's implicit times 1 is learned as the printed multiplier slot",
+    "Wayfarer's Bauble (routed from W5): an effect's selector binds after the activated cost",
+    "Contagion Clasp: each target binds its own printed noun, distinct from the entering artifact",
+    "CR 702.19b: excess damage against one blocker is assigned by the attacker controller"
+  ],
+  "queued": [
+    "CR 702.19c trample over planeswalkers: distinct keyword and loyalty-aware assignment absent",
+    "Departed-source protection: reproduced 3 damage instead of 0 with lastKnown colors R; snapshot must flow through damage and prevention",
+    "Damage replacements outside an askable resolution still choose leastFirst",
+    "Tokens entering attacking outside a resolution still choose the first player",
+    "Blocker-side requirements need a joint maximum-requirements solver (ROB-149)"
+  ],
+  "ignores": [],
+  "proof": {
+    "red": "sentence-load100-w0: three original held-out scenario families failed before the fix; engine-load100-w0-combat: single-blocker choice false before fix",
+    "calibration": "Intermediate before combat prompts: 4164 of 4165 passed. Per-target binding then repaired Clasp; all four original failure families pass in focused checks. Full final calibration pending; no G-4 claim.",
+    "focused": ["sentence-load100-w0: 14 checks passed, including V8's independent two-target/count counterexample", "engine-load100-w0-combat: 17 checks passed", "30 original scenarios in eight edited card files passed", "all 29 engine suites directly naming rules/combat.mjs passed", "sentence-paragraphs: 11 checks passed", "data-integrity and feature-wiring passed"],
+    "mutation": "eleven breaks caught, missed: []; anchors remain 57 existing problems, with no new problem on changed files",
+    "fullCheck": "The initial post-prompt check-cards found seven scenarios needing explicit damage input; all are repaired without changing any expectation. Final check-cards and sentence-library are running.",
+    "limitations": "No new cards or definitions changed; queued debt is open, not waived; independent V8 review, consolidated gate and staging not done"
+  },
+  "rulings": [
+    "https://api.scryfall.com/cards/240448cd-c308-49ae-9e4b-0c35adc59fba/rulings",
+    "https://api.scryfall.com/cards/4b332e3d-dcf4-4f62-8130-124ec5d23b90/rulings"
+  ]
 }

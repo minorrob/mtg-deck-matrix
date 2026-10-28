@@ -676,14 +676,17 @@ const dealsIn = (state, id, step) => {
 };
 
 export const combatDamage = {
-  /* Only an attacker that deals damage in this step (CR 510.4) and faces more than one blocker still in combat has a
-     decision: with one blocker its damage goes there (trample pushing past lethal), and with none it goes to the player
-     with trample (CR 702.19d) or nowhere. Asked once in each damage step it deals damage in. */
+  /* CR 510.1c, 702.19b: multiple blockers permit a division, and a trampler facing one blocker may put excess on that
+     blocker instead of the defender. With no excess and one recipient there is only one legal assignment. */
   open(state, step = damageStep(state)) {
     if (!state.combat) return false;
     const dealsNow = (id) => dealsIn(state, id, step);
-    const attack = state.combat.attacks.find((a) => a.assignment?.step !== step && onBattlefield(state, a.attacker) && dealsNow(a.attacker)
-      && power(state, a.attacker) > 0 && a.blockers.filter((id) => onBattlefield(state, id)).length > 1);
+    const attack = state.combat.attacks.find((a) => {
+      if (a.assignment?.step === step || !onBattlefield(state, a.attacker) || !dealsNow(a.attacker) || power(state, a.attacker) <= 0) return false;
+      const standing = a.blockers.filter((id) => onBattlefield(state, id));
+      return standing.length > 1 || (standing.length === 1 && hasNow(state, a.attacker, "Trample")
+        && toAttacked(state, a, 1) !== null && power(state, a.attacker) > lethalNeededFrom(state, a.attacker, standing[0]));
+    });
     if (!attack) return false;
     state.awaiting = {kind: "assign-combat-damage", player: state.combat.attackingPlayerId, attacker: attack.attacker, step};
     return true;
@@ -700,7 +703,7 @@ export const combatDamage = {
       defender: false,
     }));
     /* CR 702.19b: a trampler's damage may go on to the player it attacks, once every blocker has lethal. */
-    if (hasNow(state, awaiting.attacker, "Trample"))
+    if (hasNow(state, awaiting.attacker, "Trample") && toAttacked(state, attack, 1) !== null)
       options.push({index: options.length, label: `${attack.planeswalker !== undefined ? `${state.objects[attack.planeswalker]?.card ?? "The planeswalker"} (${state.players[attack.defender].name})` : state.players[attack.defender].name}, once every blocker has lethal damage`,
         lethal: 0, defender: true, playerId: attack.defender, ...(attack.planeswalker !== undefined ? {planeswalkerId: attack.planeswalker} : {})});
     return {
@@ -778,17 +781,10 @@ export const combatDamage = {
                none (CR 510.1c). */
             const hit = trampleOver(state, attack.attacker, 0) > 0 ? toAttacked(state, attack, attackPower) : null;
             if (hit) pending.push(hit);
-          } else if (standing.length === 1) {
-            /* CR 702.19b: with trample, only LETHAL has to be assigned to the blocker and the rest
-               may be pushed through. Without it the excess is simply lost, which is the whole point
-               of chump blocking. Lethal is asked of the SOURCE as well as the target, because
-               deathtouch makes one damage lethal (CR 702.2c). */
-            const lethal = Math.min(attackPower, lethalNeededFrom(state, attack.attacker, standing[0]));
-            const over = trampleOver(state, attack.attacker, lethal);
-            const toBlocker = over > 0 ? lethal : attackPower;
-            if (toBlocker > 0) pending.push({toCard: standing[0], amount: toBlocker, source: attack.attacker});
-            const hit = over > 0 ? toAttacked(state, attack, over) : null;
-            if (hit) pending.push(hit);
+          } else if (standing.length === 1 && attack.assignment?.step !== step) {
+            /* No division was needed: one blocker, and either no trample, no excess, or no attacked recipient left
+               (CR 510.1c, 702.19b). A real choice was asked by open and uses its assignment below. */
+            pending.push({toCard: standing[0], amount: attackPower, source: attack.attacker});
           } else {
             /* Divided as its controller chose for this step (open, resolve). */
             const assignment = attack.assignment?.step === step ? attack.assignment : {toBlockers: {}, toDefender: 0};

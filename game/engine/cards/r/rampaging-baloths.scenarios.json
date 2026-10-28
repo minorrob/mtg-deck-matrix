@@ -140,6 +140,19 @@
         {
           "to": {
             "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "answer": [],
+          "amounts": [
+            4,
+            2
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
             "phase": "MAIN2"
           }
         }
