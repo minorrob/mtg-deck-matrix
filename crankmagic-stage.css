@@ -1735,3 +1735,10 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-lb-grid .cm-seat-q:has(.cm-lb-edit){z-index:8}
 #matrix-v2 .cm-lb .cm-lb-grid :is(button,a,input,select):focus-visible{outline:2px solid #11161f;outline-offset:2px;box-shadow:0 0 0 2px #ffffff}
 #matrix-v2 .cm-lb .cm-lb-leave{color:var(--color-ink);text-decoration:underline;text-underline-offset:3px}
+
+/* Focus rings that stand on any ground (a11y-board): a keyboard's focus is scrolled into view with room for its ring, and where the
+   ring is the accent alone (a seat's focus button, a bright card) a dark line is drawn outside it, so a pale mat or a bright patch
+   of the backdrop does not take it. */
+#matrix-v2 .cm-lb :is(button,a,input,select){scroll-margin:14px}
+#matrix-v2 .cm-board .cm-seatboard [data-action=board-focus]:focus-visible{outline:2px solid #11161f;outline-offset:2px;box-shadow:0 0 0 2px #ffffff}
+#matrix-v2 .cm-board .cm-bcard.is-bright:not(.is-picked):focus-visible{outline-color:#0b1213;outline-offset:7px}
