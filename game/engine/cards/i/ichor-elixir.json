@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ichor Elixir",
+    "oracleId": "81b06e8d-ed30-4f90-b729-0aa93b0d870f",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "If you would roll one or more planar dice, instead roll that many planar dice plus one and ignore one.\n{T}: Add {C}{C}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "text": "If you would roll one or more planar dice, instead roll that many planar dice plus one and ignore one.",
+      "watches": {
+        "event": "roll-planar-die",
+        "who": "you"
+      },
+      "change": {
+        "extraDice": 1,
+        "ignore": "one"
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}{C}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 2
+          }
+        }
+      ]
+    }
+  ]
+}

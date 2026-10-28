@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Screeching Harpy",
+    "oracleId": "58bbd316-e22c-4c23-8024-364122d1e9a2",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Harpy",
+      "Beast"
+    ],
+    "manaCost": "{2}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying\n{1}{B}: Regenerate this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{B}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "regenerate",
+          "targets": "self"
+        }
+      ],
+      "text": "{1}{B}: Regenerate this creature."
+    }
+  ]
+}

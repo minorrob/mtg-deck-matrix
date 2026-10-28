@@ -1,0 +1,35 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thousand Moons Infantry",
+    "oracleId": "f064a39e-ebb3-47b5-bd06-f39b02b95eaf",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Soldier"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Untap this creature during each other player's untap step.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "untap-during-others",
+      "affects": {
+        "self": true
+      },
+      "text": "Untap this creature during each other player's untap step."
+    }
+  ]
+}

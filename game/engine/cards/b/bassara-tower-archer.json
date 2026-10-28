@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bassara Tower Archer",
+    "oracleId": "39daa265-8d02-4449-9c45-ae8ec2b13e5b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Archer"
+    ],
+    "manaCost": "{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Reach, hexproof",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "reach",
+      "text": "Reach"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "hexproof",
+      "text": "hexproof"
+    }
+  ]
+}

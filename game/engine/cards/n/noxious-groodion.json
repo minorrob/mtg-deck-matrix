@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Noxious Groodion",
+    "oracleId": "aed587bf-c6e5-4850-baeb-2715cb27bf4c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Beast"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Deathtouch",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "deathtouch",
+      "text": "Deathtouch"
+    }
+  ]
+}

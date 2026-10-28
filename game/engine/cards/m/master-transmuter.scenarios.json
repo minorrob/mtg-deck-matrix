@@ -1,0 +1,250 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Master Transmuter",
+  "fixtures": {
+    "Smoke Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Smoke Engine": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{7}",
+      "colors": []
+    },
+    "Smoke Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A Relic returned: the Engine from Rob's hand onto the battlefield",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Smoke Relic",
+            "Master Transmuter",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Smoke Engine"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Master Transmuter"
+              },
+              "count": 2,
+              "costs": [
+                [
+                  "Smoke Relic"
+                ],
+                [
+                  "Master Transmuter"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Master Transmuter"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Smoke Engine",
+                  "Smoke Relic"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Smoke Engine"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Island",
+            "Master Transmuter",
+            "Smoke Engine"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Smoke Relic"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Its only artifact is itself: returned, and it may put itself back -- a new object",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Master Transmuter",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Smoke Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "activate": "Master Transmuter"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Master Transmuter"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Master Transmuter"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Island",
+            "Master Transmuter"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Smoke Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "It may put nothing; and tapped, it can't pay {T} again",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Smoke Relic",
+            "Master Transmuter",
+            "Island",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Smoke Engine"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "activate": "Master Transmuter"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Master Transmuter"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Smoke Engine",
+            "Smoke Relic"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Master Transmuter"
+        }
+      ]
+    }
+  ]
+}

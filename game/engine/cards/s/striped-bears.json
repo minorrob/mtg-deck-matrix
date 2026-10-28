@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Striped Bears",
+    "oracleId": "ac856e91-1b88-464b-9420-dc311ce814ea",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bear"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "text": "When this creature enters, draw a card."
+    }
+  ]
+}

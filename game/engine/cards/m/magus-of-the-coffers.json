@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Magus of the Coffers",
+    "oracleId": "23dd895c-92bd-4af0-8b1a-7d76ca49178f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{4}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "{2}, {T}: Add {B} for each Swamp you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "B": {
+              "count": {
+                "controller": "you",
+                "types": [
+                  "Land"
+                ],
+                "subtypes": [
+                  "Swamp"
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "text": "{2}, {T}: Add {B} for each Swamp you control."
+    }
+  ]
+}

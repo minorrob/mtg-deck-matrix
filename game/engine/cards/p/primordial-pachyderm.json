@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Primordial Pachyderm",
+    "oracleId": "5ebdc1a5-e678-444b-abb8-8753558a39de",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elephant",
+      "Avatar"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Reach, trample\nWhen this creature enters, you gain 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "reach",
+      "text": "Reach"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "trample"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 2
+        }
+      ],
+      "text": "When this creature enters, you gain 2 life."
+    }
+  ]
+}

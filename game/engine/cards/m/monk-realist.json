@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Monk Realist",
+    "oracleId": "8df64d89-64ee-4388-826d-dd091db4510a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Monk",
+      "Cleric"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "When this creature enters, destroy target enchantment.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Enchantment"
+          ]
+        }
+      ],
+      "text": "When this creature enters, destroy target enchantment."
+    }
+  ]
+}

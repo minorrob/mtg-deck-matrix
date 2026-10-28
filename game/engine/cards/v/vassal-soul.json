@@ -1,0 +1,33 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vassal Soul",
+    "oracleId": "ae2329a1-e37b-44aa-8766-077910fa1197",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit"
+    ],
+    "manaCost": "{1}{W/U}{W/U}",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    }
+  ]
+}

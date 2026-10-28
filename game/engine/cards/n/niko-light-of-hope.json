@@ -1,0 +1,131 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Niko, Light of Hope",
+    "oracleId": "f153e369-1d5b-4d8b-a2f6-d93b849cabb5",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{2}{W}{U}",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "When Niko enters, create two Shard tokens. (They're enchantments with \"{2}, Sacrifice this token: Scry 1, then draw a card.\")\n{2}, {T}: Exile target nonlegendary creature you control. Shards you control become copies of it until the next end step. Return it to the battlefield under its owner's control at the beginning of the next end step.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Niko enters, create two Shard tokens.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 2,
+          "token": {
+            "name": "Shard",
+            "types": [
+              "Enchantment"
+            ],
+            "subtypes": [
+              "Shard"
+            ],
+            "colors": [],
+            "abilities": [
+              {
+                "id": "shard",
+                "kind": "activated",
+                "text": "{2}, Sacrifice this token: Scry 1, then draw a card.",
+                "cost": [
+                  {
+                    "atom": "mana",
+                    "cost": "{2}"
+                  },
+                  {
+                    "atom": "sacrifice",
+                    "self": true
+                  }
+                ],
+                "effects": [
+                  {
+                    "effect": "scry",
+                    "count": 1
+                  },
+                  {
+                    "effect": "draw",
+                    "count": 1
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{2}, {T}: Exile target nonlegendary creature you control. Shards you control become copies of it until the next end step. Return it to the battlefield under its owner's control at the beginning of the next end step.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "nonSupertypes": [
+            "Legendary"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile",
+          "andReturn": "end step",
+          "remember": true
+        },
+        {
+          "effect": "becomeCopy",
+          "selector": {
+            "what": "permanent",
+            "subtypes": [
+              "Shard"
+            ],
+            "controller": "you"
+          },
+          "targets": "remembered",
+          "until": "next-end-step"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Formidable Speaker",
+    "oracleId": "5bd06f9e-9a42-455d-ad26-24bc04e51c7c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Druid"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "When this creature enters, you may discard a card. If you do, search your library for a creature card, reveal it, put it into your hand, then shuffle.\n{1}, {T}: Untap another target permanent.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, you may discard a card. If you do, search your library for a creature card, reveal it, put it into your hand, then shuffle.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "discard",
+          "count": 1,
+          "remember": true
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          },
+          "reveal": true,
+          "shuffle": true,
+          "to": "hand",
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          }
+        }
+      ],
+      "optional": true
+    },
+    {
+      "kind": "activated",
+      "text": "{1}, {T}: Untap another target permanent.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "untap",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "another": true
+        }
+      ]
+    }
+  ]
+}

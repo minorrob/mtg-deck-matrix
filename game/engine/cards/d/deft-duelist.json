@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Deft Duelist",
+    "oracleId": "2b6aaa8b-b90d-459f-95d4-9e00ee134f8e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Rogue"
+    ],
+    "manaCost": "{W}{U}",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "First strike\nShroud (This creature can't be the target of spells or abilities.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "first strike",
+      "text": "First strike"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "shroud",
+      "text": "Shroud (This creature can't be the target of spells or abilities.)"
+    }
+  ]
+}

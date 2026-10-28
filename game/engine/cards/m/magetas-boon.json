@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mageta's Boon",
+    "oracleId": "e3e5b12c-2103-4b40-83d8-6d5449179b6f",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Flash\nEnchant creature\nEnchanted creature gets +1/+2.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flash",
+      "text": "Flash"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      },
+      "text": "Enchant creature"
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 2
+      },
+      "text": "Enchanted creature gets +1/+2."
+    }
+  ]
+}

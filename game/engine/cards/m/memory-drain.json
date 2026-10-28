@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Memory Drain",
+    "oracleId": "1a61929e-14bd-4f21-b173-00818d49743d",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Counter target spell. Scry 2.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Counter target spell. Scry 2.",
+      "targets": [
+        {
+          "what": "spell"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "counterSpell",
+          "spells": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "scry",
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

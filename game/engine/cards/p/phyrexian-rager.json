@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Phyrexian Rager",
+    "oracleId": "e409c9be-0c9a-43c3-adb4-8c47afc1d551",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Horror"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, you draw a card and you lose 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "loseLife",
+          "amount": 1
+        }
+      ],
+      "text": "When this creature enters, you draw a card and you lose 1 life."
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Drake Umbra",
+    "oracleId": "2b143ef1-afbb-499c-9189-1009105b406b",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{4}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature\nEnchanted creature gets +3/+3 and has flying.\nUmbra armor (If enchanted creature would be destroyed, instead remove all damage from it and destroy this Aura.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      },
+      "text": "Enchant creature"
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 3,
+        "toughness": 3
+      },
+      "text": "Enchanted creature gets +3/+3 and has flying."
+    },
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addKeywords": [
+          "Flying"
+        ]
+      },
+      "text": "Enchanted creature gets +3/+3 and has flying."
+    },
+    {
+      "kind": "keyword",
+      "keyword": "umbra armor",
+      "text": "Umbra armor (If enchanted creature would be destroyed, instead remove all damage from it and destroy this Aura.)"
+    }
+  ]
+}

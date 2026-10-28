@@ -1,0 +1,116 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Marwyn, the Nurturer",
+  "fixtures": {
+    "Elf Scout": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{C}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Marwyn: another Elf entering gives it a +1/+1 counter; it taps for {G} equal to its power",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Marwyn, the Nurturer",
+            "Wastes",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Elf Scout",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Elf Scout"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Bear"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Marwyn, the Nurturer",
+                "counter": "+1/+1",
+                "count": 1
+              }
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Marwyn, the Nurturer",
+                "power": 2,
+                "toughness": 2
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Marwyn, the Nurturer"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "G": 2
+          }
+        }
+      ]
+    }
+  ]
+}

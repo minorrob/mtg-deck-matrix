@@ -1,0 +1,143 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vraska, Relic Seeker",
+    "oracleId": "3c037103-5af0-40a8-bbbe-7f3f5958b6e9",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Planeswalker"
+    ],
+    "subtypes": [
+      "Vraska"
+    ],
+    "manaCost": "{4}{B}{G}",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "colorIdentity": [
+      "B",
+      "G"
+    ],
+    "power": null,
+    "toughness": null,
+    "loyalty": 6
+  },
+  "oracleText": "+2: Create a 2/2 black Pirate creature token with menace.\n−3: Destroy target artifact, creature, or enchantment. Create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")\n−10: Target player's life total becomes 1.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "+2: Create a 2/2 black Pirate creature token with menace.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": 2
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Pirate",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Pirate"
+            ],
+            "colors": [
+              "B"
+            ],
+            "power": 2,
+            "toughness": 2,
+            "keywords": [
+              "Menace"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−3: Destroy target artifact, creature, or enchantment. Create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -3
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "predefined": "Treasure"
+          }
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Enchantment"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "−10: Target player's life total becomes 1.",
+      "cost": [
+        {
+          "atom": "loyalty",
+          "amount": -10
+        }
+      ],
+      "effects": [
+        {
+          "effect": "loseLife",
+          "who": {
+            "target": 0
+          },
+          "amount": {
+            "lifeTotal": {
+              "target": 0
+            },
+            "plus": -1
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "player"
+        }
+      ]
+    }
+  ]
+}

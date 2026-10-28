@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Trapjaw Kelpie",
+    "oracleId": "0d6fccd5-ec14-4da6-972e-b2f5502818a4",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Beast"
+    ],
+    "manaCost": "{4}{G/U}{G/U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Flash\nPersist (When this creature dies, if it had no -1/-1 counters on it, return it to the battlefield under its owner's control with a -1/-1 counter on it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flash",
+      "text": "Flash"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "dies",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "that card",
+          "to": "battlefield",
+          "withCounter": "-1/-1"
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "countersOn": "self",
+            "counter": "-1/-1"
+          },
+          "atMost": 0
+        }
+      },
+      "text": "Persist (When this creature dies, if it had no -1/-1 counters on it, return it to the battlefield under its owner's control with a -1/-1 counter on it.)"
+    }
+  ]
+}

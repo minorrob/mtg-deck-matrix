@@ -1,0 +1,162 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Erdwal Ripper",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Cast and attacking at once (haste): two damage to Maya, then a +1/+1 counter, a 3/2",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Erdwal Ripper"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Erdwal Ripper"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "Erdwal Ripper"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Erdwal Ripper",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Erdwal Ripper",
+            "power": 3,
+            "toughness": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Blocked by a Bear, it deals no damage to a player and gets no counter",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Erdwal Ripper"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Erdwal Ripper"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Bear",
+              "Erdwal Ripper"
+            ]
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Erdwal Ripper"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ]
+    }
+  ]
+}

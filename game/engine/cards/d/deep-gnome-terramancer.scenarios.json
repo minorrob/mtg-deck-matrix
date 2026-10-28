@@ -1,0 +1,463 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Deep Gnome Terramancer",
+  "fixtures": {
+    "Smoke Ramp": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "spell": {
+        "id": "s",
+        "text": "Put a land card from your hand onto the battlefield.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "chooseCard",
+            "zone": "hand",
+            "selector": {
+              "types": [
+                "Land"
+              ]
+            },
+            "to": "battlefield"
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A land put onto an opponent's battlefield without being played: a tapped Plains from your library",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Deep Gnome Terramancer"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "cards": [
+            "Plains",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Smoke Ramp",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Smoke Ramp",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Deep Gnome Terramancer",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Plains"
+        }
+      ]
+    },
+    {
+      "name": "Declined: no Plains",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Deep Gnome Terramancer"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "cards": [
+            "Plains",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Smoke Ramp",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Smoke Ramp",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            1
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Deep Gnome Terramancer"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Once each turn: a second land put onto the battlefield the same turn fetches nothing more",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Deep Gnome Terramancer"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Smoke Ramp",
+            "Smoke Ramp",
+            "Forest",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Smoke Ramp",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Smoke Ramp",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ],
+          "optional": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Deep Gnome Terramancer",
+            "Plains"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A land the opponent plays is no trigger",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Deep Gnome Terramancer"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "cards": [
+            "Plains",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "play": "Forest",
+          "seat": 1
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Deep Gnome Terramancer"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Your own land put onto the battlefield is no trigger either",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Deep Gnome Terramancer",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "cards": [
+            "Plains",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Smoke Ramp",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Smoke Ramp"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "Flash: it can be cast on the opponent's turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Deep Gnome Terramancer"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Plains",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "cast": "Deep Gnome Terramancer",
+          "seat": 0
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Deep Gnome Terramancer",
+            "Plains",
+            "Wastes"
+          ]
+        }
+      ]
+    }
+  ]
+}

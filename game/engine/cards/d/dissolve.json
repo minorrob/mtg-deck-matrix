@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dissolve",
+    "oracleId": "2f0741f9-802b-4761-8094-7b1f3ea1a424",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Counter target spell. Scry 1. (Look at the top card of your library. You may put that card on the bottom.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Counter target spell. Scry 1. (Look at the top card of your library. You may put that card on the bottom.)",
+      "targets": [
+        {
+          "what": "spell"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "counterSpell",
+          "spells": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "scry",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

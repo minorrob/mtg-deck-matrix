@@ -1,0 +1,126 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Six",
+    "oracleId": "dbcbdf37-c40f-4068-b4a7-a849cab1056c",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Treefolk"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Reach\nWhenever Six attacks, mill three cards. You may put a land card from among them into your hand.\nDuring your turn, nonland permanent cards in your graveyard have retrace. (You may cast permanent cards from your graveyard by discarding a land card in addition to paying their other costs.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Reach",
+      "keyword": "reach"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Six attacks, mill three cards. You may put a land card from among them into your hand.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "mill",
+          "count": 3,
+          "remember": true
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "graveyard",
+          "among": "remembered",
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          },
+          "upTo": true,
+          "to": "hand"
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "During your turn, nonland permanent cards in your graveyard have retrace.",
+      "rule": "play-from",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "zone": "graveyard",
+      "spells": {
+        "anyOf": [
+          {
+            "types": [
+              "Artifact"
+            ],
+            "nonTypes": [
+              "Land"
+            ]
+          },
+          {
+            "types": [
+              "Battle"
+            ],
+            "nonTypes": [
+              "Land"
+            ]
+          },
+          {
+            "types": [
+              "Creature"
+            ],
+            "nonTypes": [
+              "Land"
+            ]
+          },
+          {
+            "types": [
+              "Enchantment"
+            ],
+            "nonTypes": [
+              "Land"
+            ]
+          },
+          {
+            "types": [
+              "Planeswalker"
+            ],
+            "nonTypes": [
+              "Land"
+            ]
+          }
+        ]
+      },
+      "yourTurn": true,
+      "additionalCost": [
+        {
+          "atom": "discard",
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

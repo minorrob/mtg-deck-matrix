@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Madcap Skills",
+    "oracleId": "4a9dc9ef-a603-467a-aeed-32cc111394b0",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature\nEnchanted creature gets +3/+0 and has menace.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      },
+      "text": "Enchant creature"
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 3,
+        "toughness": 0
+      },
+      "sublayer": "c",
+      "text": "Enchanted creature gets +3/+0 and has menace."
+    },
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addKeywords": [
+          "Menace"
+        ]
+      },
+      "text": "Enchanted creature gets +3/+0 and has menace."
+    }
+  ]
+}

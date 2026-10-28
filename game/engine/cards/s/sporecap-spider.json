@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sporecap Spider",
+    "oracleId": "e9b5d4f3-b98a-463a-b628-289c2df81204",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spider"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 5
+  },
+  "oracleText": "Reach",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "reach",
+      "text": "Reach"
+    }
+  ]
+}

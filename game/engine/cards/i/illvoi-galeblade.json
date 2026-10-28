@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Illvoi Galeblade",
+    "oracleId": "d6273621-c36c-491b-85ca-37445ed30097",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Jellyfish",
+      "Warrior"
+    ],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Flash\nFlying\n{2}, Sacrifice this creature: Draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flash",
+      "text": "Flash"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "text": "{2}, Sacrifice this creature: Draw a card."
+    }
+  ]
+}

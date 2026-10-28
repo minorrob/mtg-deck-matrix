@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Orochi Sustainer",
+    "oracleId": "d3039b42-25d5-4fe2-955a-0d910d7395bd",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Snake",
+      "Shaman"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "{T}: Add {G}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "G": 1
+          }
+        }
+      ],
+      "text": "{T}: Add {G}."
+    }
+  ]
+}

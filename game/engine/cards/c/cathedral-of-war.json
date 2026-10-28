@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cathedral of War",
+    "oracleId": "5ff647e4-730a-498f-8f2c-5bd64d5a9780",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This land enters tapped.\nExalted (Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn.)\n{T}: Add {C}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      },
+      "text": "This land enters tapped."
+    },
+    {
+      "kind": "keyword",
+      "keyword": "exalted",
+      "text": "Exalted (Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn.)"
+    },
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ],
+      "text": "{T}: Add {C}."
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rograkh, Son of Rohgahh",
+    "oracleId": "584cee10-f18c-4633-95cc-f2e7a11841ac",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Kobold",
+      "Warrior"
+    ],
+    "manaCost": "{0}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 0,
+    "toughness": 1
+  },
+  "oracleText": "First strike, menace, trample\nPartner (You can have two commanders if both have partner.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "first strike",
+      "text": "First strike"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "menace",
+      "text": "menace"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "trample"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "partner",
+      "text": "Partner (You can have two commanders if both have partner.)"
+    }
+  ]
+}

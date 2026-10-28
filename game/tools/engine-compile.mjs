@@ -6,7 +6,7 @@
  * by Rob, so that everything he owns is playable before any table needs it" -- and `docs/engine/PLAN.md` §3.4's model
  * compiler. For each card: the writer (Claude Sonnet 5.5, medium effort) writes its abilities from the oracle text;
  * the four checks in `game/engine/cards/compile.mjs` decide whether it is the card (schema, fidelity by code and by a
- * Claude Haiku 4.5 read-back, a smoke game, rules flagged for a ruling); what passes is written to
+ * Claude Haiku 5.5 read-back, a smoke game, rules flagged for a ruling); what passes is written to
  * `data/engine/scripts/<oracle-id prefix>/<oracle-id>.json`, and every card's outcome to the ledger,
  * `data/engine/onboarding-ledger.json`, which is read before a single token is spent.
  *
@@ -51,9 +51,9 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO = path.resolve(HERE, "..", "..");
 
 export const WRITER_MODEL = "claude-sonnet-5-5";
-export const READER_MODEL = "claude-haiku-4-5-20251001";
+export const READER_MODEL = "claude-haiku-5-5";
 /* List prices, US dollars per million tokens [input, output]; a cache read is a tenth of input. */
-export const PRICES = Object.freeze({"claude-sonnet-5-5": [2, 10], "claude-haiku-4-5-20251001": [1, 5]});
+export const PRICES = Object.freeze({"claude-sonnet-5-5": [2, 10], "claude-haiku-5-5": [0.1, 0.5]});
 export const CREDENTIAL = "crankmagic_anthropic_api";
 const LEARNED = ["provisional", "blocked", "confirmed"];
 
@@ -145,9 +145,11 @@ export async function compileCards(job) {
     };
     if (checked.stage) { row("failed", {stage: checked.stage, problems: checked.problems}); continue; }
 
-    /* The read-back: a second model's checklist against the oracle text. A mismatch is a refusal to store. */
+    /* The read-back: a second model's checklist against the oracle text. A mismatch is a refusal to store. Thinking
+       off, as Haiku 4.5 read it (Rob, 2026-10-25, "switch the compiler's check step to Haiku 5.5"): Haiku 5.5 thinks by
+       default, and its thinking would spend the 2000 tokens the checklist is given. */
     const reading = await call({
-      model: READER_MODEL, max_tokens: 2000, system: READBACK_SYSTEM,
+      model: READER_MODEL, max_tokens: 2000, system: READBACK_SYSTEM, thinking: {type: "disabled"},
       messages: [{role: "user", content: readBackRequest(card, checked.script)}],
       output_config: {format: {type: "json_schema", schema: READBACK_SCHEMA}},
     });

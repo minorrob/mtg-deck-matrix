@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wolf Cove Villager",
+    "oracleId": "549a3f53-f90e-4af0-bbc5-2c4b9df30008",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Peasant"
+    ],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "This creature enters tapped.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      },
+      "text": "This creature enters tapped."
+    }
+  ]
+}

@@ -1,0 +1,130 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Memorial to Folly",
+  "fixtures": {
+    "Moss Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Played, it enters tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Memorial to Folly"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Memorial to Folly"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Memorial to Folly"
+        }
+      ]
+    },
+    {
+      "name": "Taps for {B}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Memorial to Folly"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Memorial to Folly"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sacrificed: a creature card back to hand",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Memorial to Folly",
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Moss Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Memorial to Folly",
+          "targets": [
+            {
+              "card": "Moss Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Moss Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Memorial to Folly"
+          ]
+        }
+      ]
+    }
+  ]
+}

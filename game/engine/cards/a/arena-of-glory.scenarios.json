@@ -1,0 +1,268 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Arena of Glory",
+  "fixtures": {
+    "Goblin": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Goblin"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Exerted for {R}{R}: the creature that mana casts has haste",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Arena of Glory",
+            "Mountain",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Goblin"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Arena of Glory",
+          "mana": {
+            "R": 2
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "pool": {
+                "R": 2
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Goblin"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Goblin",
+            "has": [
+              "Haste"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Exerted, it stays tapped through its controller's next untap step, and untaps the one after",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Arena of Glory",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Arena of Glory",
+          "mana": {
+            "R": 2
+          }
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Arena of Glory"
+            },
+            {
+              "seat": 0,
+              "tapped": "Mountain",
+              "is": false
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Arena of Glory",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "Its plain {R} gives no haste, and it untaps as usual",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Arena of Glory",
+            "Mountain",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Goblin"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Arena of Glory",
+          "mana": {
+            "R": 1
+          }
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Goblin"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Goblin",
+                "lacks": [
+                  "Haste"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Arena of Glory",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "With a Mountain, it enters untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Arena of Glory"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Arena of Glory"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Arena of Glory",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "Without one, tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Arena of Glory"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Arena of Glory"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Arena of Glory"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Basilica Screecher",
+    "oracleId": "752ebcba-97fb-43a3-8811-d244164b3e16",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bat"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "Flying\nExtort (Whenever you cast a spell, you may pay {W/B}. If you do, each opponent loses 1 life and you gain that much life.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "extort",
+      "text": "Extort (Whenever you cast a spell, you may pay {W/B}. If you do, each opponent loses 1 life and you gain that much life.)"
+    }
+  ]
+}

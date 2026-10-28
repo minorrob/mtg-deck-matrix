@@ -1,0 +1,73 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Expunge",
+    "oracleId": "4b1fee86-360d-41d8-9238-eff216376732",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy target nonartifact, nonblack creature. It can't be regenerated.\nCycling {2} ({2}, Discard this card: Draw a card.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "nonTypes": [
+            "Artifact"
+          ],
+          "nonColors": [
+            "B"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          },
+          "noRegenerate": true
+        }
+      ],
+      "text": "Destroy target nonartifact, nonblack creature. It can't be regenerated."
+    },
+    {
+      "kind": "activated",
+      "zone": "hand",
+      "cycling": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "discard",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "text": "Cycling {2} ({2}, Discard this card: Draw a card.)"
+    }
+  ]
+}

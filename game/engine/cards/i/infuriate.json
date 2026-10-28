@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Infuriate",
+    "oracleId": "d23119ca-73d1-4a48-a8d0-dab8919d891f",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature gets +3/+2 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 3,
+          "toughness": 2
+        }
+      ],
+      "text": "Target creature gets +3/+2 until end of turn."
+    }
+  ]
+}

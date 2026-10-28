@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Harmonious Grovestrider",
+    "oracleId": "0ebec97e-3cb1-41e2-a693-0febb5623016",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Beast"
+    ],
+    "manaCost": "{3}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Ward {2} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {2}.)\nHarmonious Grovestrider's power and toughness are each equal to the number of lands you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "ward",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ],
+      "text": "Ward {2} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {2}.)"
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "a",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": {
+          "count": {
+            "controller": "you",
+            "types": [
+              "Land"
+            ]
+          }
+        },
+        "setToughness": {
+          "count": {
+            "controller": "you",
+            "types": [
+              "Land"
+            ]
+          }
+        }
+      },
+      "text": "Harmonious Grovestrider's power and toughness are each equal to the number of lands you control."
+    }
+  ]
+}

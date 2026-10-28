@@ -1,0 +1,72 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lulu, Stern Guardian",
+    "oracleId": "969fa9b9-161f-461e-8878-9ebcff5a2669",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Whenever an opponent attacks you, choose target creature attacking you. Put a stun counter on that creature.\n{3}{U}: Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever an opponent attacks you, choose target creature attacking you. Put a stun counter on that creature.",
+      "trigger": {
+        "on": "attackers declared",
+        "attacker": "opponent"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "stun",
+          "count": 1
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "attacking": "you directly"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{3}{U}: Proliferate.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{U}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "proliferate"
+        }
+      ]
+    }
+  ]
+}

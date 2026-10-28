@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Consuming Aetherborn",
+    "oracleId": "4d472308-5bc7-4a3c-81b5-0a757f00d9e2",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Aetherborn",
+      "Vampire"
+    ],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Backup 1 (When this creature enters, put a +1/+1 counter on target creature. If that's another creature, it gains the following ability until end of turn.)\nLifelink",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "backup",
+      "amount": 1,
+      "text": "Backup 1 (When this creature enters, put a +1/+1 counter on target creature. If that's another creature, it gains the following ability until end of turn.)"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "lifelink",
+      "text": "Lifelink"
+    }
+  ]
+}

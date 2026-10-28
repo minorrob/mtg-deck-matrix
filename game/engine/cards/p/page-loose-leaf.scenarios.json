@@ -16,7 +16,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Study": {
+    "Smoke Study": {
       "types": [
         "Sorcery"
       ],
@@ -36,7 +36,7 @@
         ]
       }
     },
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -92,8 +92,8 @@
       "library": [
         "Bear",
         "Forest",
-        "Study",
-        "Tidings"
+        "Smoke Study",
+        "Smoke Tidings"
       ],
       "setup": [
         {
@@ -136,7 +136,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Study"
+            "Smoke Study"
           ]
         },
         {
@@ -178,7 +178,7 @@
           "zone": "hand",
           "cards": [
             "Bear",
-            "Study"
+            "Smoke Study"
           ]
         }
       ],
@@ -196,7 +196,7 @@
     {
       "name": "No {T} in its cost: activated the turn Page arrives, when its mana ability cannot be",
       "library": [
-        "Tidings"
+        "Smoke Tidings"
       ],
       "setup": [
         {
@@ -240,7 +240,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         }
       ]

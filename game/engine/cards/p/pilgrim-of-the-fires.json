@@ -1,0 +1,33 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pilgrim of the Fires",
+    "oracleId": "53390f91-a159-482f-9f64-f5adc812680b",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Golem"
+    ],
+    "manaCost": "{7}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 6,
+    "toughness": 4
+  },
+  "oracleText": "First strike, trample",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "first strike",
+      "text": "First strike"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "trample"
+    }
+  ]
+}

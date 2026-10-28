@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rune-Sealed Wall",
+    "oracleId": "74d31e99-ab48-483a-a62e-5b424b27d017",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Wall"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 0,
+    "toughness": 6
+  },
+  "oracleText": "Defender\n{T}: Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "defender",
+      "text": "Defender"
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "surveil",
+          "count": 1
+        }
+      ],
+      "text": "{T}: Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)"
+    }
+  ]
+}

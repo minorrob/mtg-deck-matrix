@@ -1,0 +1,32 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cystbearer",
+    "oracleId": "81704164-bad9-4e52-9b69-3d49e92fe284",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Beast"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Infect (This creature deals damage to creatures in the form of -1/-1 counters and to players in the form of poison counters.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "infect",
+      "text": "Infect (This creature deals damage to creatures in the form of -1/-1 counters and to players in the form of poison counters.)"
+    }
+  ]
+}

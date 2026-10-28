@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sterling Hound",
+    "oracleId": "3178c1f9-f644-4926-ac9a-d40e4db79955",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Dog"
+    ],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "surveil",
+          "count": 2
+        }
+      ],
+      "text": "When this creature enters, surveil 2. (Look at the top two cards of your library, then put any number of them into your graveyard and the rest on top of your library in any order.)"
+    }
+  ]
+}

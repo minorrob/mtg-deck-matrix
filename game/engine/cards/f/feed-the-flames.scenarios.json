@@ -30,7 +30,7 @@
       "power": 7,
       "toughness": 7
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -153,7 +153,7 @@
           "zone": "hand",
           "cards": [
             "Feed the Flames",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -202,7 +202,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Giant"
@@ -247,7 +247,7 @@
           "zone": "hand",
           "cards": [
             "Feed the Flames",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -296,7 +296,7 @@
           "seat": 0
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "seat": 0,
           "targets": [
             {

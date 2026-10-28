@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Storm Fleet Aerialist",
+    "oracleId": "b128d0cf-77d9-4751-99c6-0f3bc3660318",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Pirate"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "Flying\nRaid — This creature enters with a +1/+1 counter on it if you attacked this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "+1/+1",
+          "count": {
+            "creaturesAttackedWithThisTurn": "you",
+            "atMost": 1
+          }
+        }
+      },
+      "text": "Raid — This creature enters with a +1/+1 counter on it if you attacked this turn."
+    }
+  ]
+}

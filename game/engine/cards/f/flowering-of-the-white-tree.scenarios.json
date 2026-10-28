@@ -1,0 +1,105 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Flowering of the White Tree",
+  "fixtures": {
+    "Legend": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human"
+      ],
+      "manaCost": "{2}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "supertypes": [
+        "Legendary"
+      ]
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Flowering of the White Tree: legendary creatures you control +2/+1 and ward {1}, the rest +1/+1; not the opponent's",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Flowering of the White Tree",
+            "Legend",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Legend"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Legend",
+            "power": 4,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Legend",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Legend",
+            "has": [
+              "Ward"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bear",
+            "lacks": [
+              "Ward"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

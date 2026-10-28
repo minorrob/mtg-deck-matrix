@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Jewel-Eyed Cobra",
+    "oracleId": "bbfee53c-30a6-4ed0-beef-5c254be75fc5",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Snake"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 1
+  },
+  "oracleText": "Deathtouch\nWhen this creature dies, create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "deathtouch",
+      "text": "Deathtouch"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "dies",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "predefined": "Treasure"
+          }
+        }
+      ],
+      "text": "When this creature dies, create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")"
+    }
+  ]
+}

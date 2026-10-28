@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thirst for Knowledge",
+    "oracleId": "939e6f71-185e-41f2-9d54-72cce06f1dce",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Draw three cards. Then discard two cards unless you discard an artifact card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Draw three cards. Then discard two cards unless you discard an artifact card.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 3
+        },
+        {
+          "effect": "unlessPays",
+          "who": "you",
+          "discard": {
+            "types": [
+              "Artifact"
+            ]
+          },
+          "effects": [
+            {
+              "effect": "discard",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

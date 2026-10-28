@@ -1,0 +1,869 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Hedron-Field Purists",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Level 0: a 0/3, and Maya's Lightning Bolt deals Rob all 3",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hedron-Field Purists"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Lightning Bolt",
+          "seat": 1,
+          "targets": [
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 37
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Hedron-Field Purists",
+            "power": 0,
+            "toughness": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "Level up once: a 1/4, and 1 of each damage to Rob or his creatures prevented -- Maya's Bolt deals him 2, and her other Bolt the Purists 2",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hedron-Field Purists",
+            "Plains",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt",
+            "Lightning Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Hedron-Field Purists",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Hedron-Field Purists",
+                "power": 1,
+                "toughness": 4
+              }
+            },
+            {
+              "seat": 0,
+              "counters": {
+                "card": "Hedron-Field Purists",
+                "counter": "level",
+                "count": 1
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Lightning Bolt",
+          "seat": 1,
+          "targets": [
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Lightning Bolt",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Hedron-Field Purists",
+              "seat": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Hedron-Field Purists",
+            "Plains",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Level 5: a 2/5, and 2 of each damage prevented -- Maya's Bolt deals Rob 1",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hedron-Field Purists",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Plains",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Hedron-Field Purists",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Hedron-Field Purists",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Hedron-Field Purists",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Hedron-Field Purists",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Hedron-Field Purists",
+                "power": 1,
+                "toughness": 4
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Hedron-Field Purists",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Lightning Bolt",
+          "seat": 1,
+          "targets": [
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Hedron-Field Purists",
+            "power": 2,
+            "toughness": 5
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Hedron-Field Purists",
+            "counter": "level",
+            "count": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "With Ajani Steadfast's emblem too, Rob's two preventions leave Maya's Bolt nothing: all but 1, then 1 more (CR 616.1: Rob orders them)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hedron-Field Purists",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Ajani Steadfast"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Hedron-Field Purists",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Ajani Steadfast",
+          "ability": "a0",
+          "targets": [
+            []
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Ajani Steadfast",
+          "ability": "a0",
+          "targets": [
+            []
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Ajani Steadfast",
+          "ability": "a0",
+          "targets": [
+            []
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 7,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Ajani Steadfast",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 8,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Lightning Bolt",
+          "seat": 1,
+          "targets": [
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Hedron-Field Purists first: 1 damage",
+                  "Ajani Steadfast emblem first: 0 damage"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            1
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Asked, the order waits on Rob: the game as it stands then is one a room can save",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hedron-Field Purists",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Ajani Steadfast"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Hedron-Field Purists",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Ajani Steadfast",
+          "ability": "a0",
+          "targets": [
+            []
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Ajani Steadfast",
+          "ability": "a0",
+          "targets": [
+            []
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Ajani Steadfast",
+          "ability": "a0",
+          "targets": [
+            []
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 7,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Ajani Steadfast",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 8,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Lightning Bolt",
+          "seat": 1,
+          "targets": [
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "asks": {
+            "seat": 0,
+            "options": [
+              "Hedron-Field Purists first: 1 damage",
+              "Ajani Steadfast emblem first: 0 damage"
+            ]
+          }
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "The other order is Rob's to choose too: the Purists' 1 first, then all but 1 of the 2 -- he takes 1",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hedron-Field Purists",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Ajani Steadfast"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Hedron-Field Purists",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "activate": "Ajani Steadfast",
+          "ability": "a0",
+          "targets": [
+            []
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Ajani Steadfast",
+          "ability": "a0",
+          "targets": [
+            []
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Ajani Steadfast",
+          "ability": "a0",
+          "targets": [
+            []
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 7,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Ajani Steadfast",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 8,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Lightning Bolt",
+          "seat": 1,
+          "targets": [
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 39
+        }
+      ]
+    },
+    {
+      "name": "Level up only as a sorcery: on Maya's turn, with the mana, it is not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hedron-Field Purists",
+            "Plains",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1,
+          "seat": 1
+        },
+        {
+          "tap": "Plains",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Hedron-Field Purists",
+            "seat": 0
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

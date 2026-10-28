@@ -3,7 +3,7 @@
  "cards": {
   "c9d8c983-2845-42e6-b6b8-bf7cf2729b23": {
    "name": "Shore Up",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "27076455cc358575",
    "attempts": 1,
    "model": "x10-session",
@@ -11,11 +11,14 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:05.932Z"
+   "at": "2026-10-06T16:16:05.932Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/s/shore-up.json"
   },
   "92301066-8904-41bc-84bd-4aa286cbab9c": {
    "name": "Liliana of the Dark Realms",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "3ff6ba4bdde0fe18",
    "attempts": 1,
    "model": "x10-session",
@@ -26,11 +29,14 @@
    "at": "2026-10-06T16:16:05.954Z",
    "crFlags": [
     "CR 613.4c: the -3's +X/+X or -X/-X is a layer 7c change, X counted once as it resolves (CR 608.2h)"
-   ]
+   ],
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/l/liliana-of-the-dark-realms.json"
   },
   "1b3fb20a-e090-4286-9c03-6b71c27c45be": {
    "name": "Mortuary Mire",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "c3d9154afab920f1",
    "attempts": 1,
    "model": "x10-session",
@@ -38,11 +44,14 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:05.980Z"
+   "at": "2026-10-06T16:16:05.980Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/m/mortuary-mire.json"
   },
   "80686908-abb5-4728-a5f6-71baca27f467": {
    "name": "Curious Altisaur",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "8b6a5144db2f2cbc",
    "attempts": 1,
    "model": "x10-session",
@@ -50,11 +59,14 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.021Z"
+   "at": "2026-10-06T16:16:06.021Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/c/curious-altisaur.json"
   },
   "f7907327-4df3-4bb2-a274-03d9e266af2f": {
    "name": "Venser's Journal",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "3797b81dc1d4c31b",
    "attempts": 1,
    "model": "x10-session",
@@ -62,11 +74,14 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.073Z"
+   "at": "2026-10-06T16:16:06.073Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/v/vensers-journal.json"
   },
   "8e7b31eb-7a91-4992-b24a-d81173e1dbc8": {
    "name": "Deeproot Waters",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "b67ea1b2b439569c",
    "attempts": 1,
    "model": "x10-session",
@@ -74,11 +89,14 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.093Z"
+   "at": "2026-10-06T16:16:06.093Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/d/deeproot-waters.json"
   },
   "1ebf2142-f171-40cd-8143-15f50084b707": {
    "name": "Koma, World-Eater",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "88f40ca9f8908bdd",
    "attempts": 1,
    "model": "x10-session",
@@ -86,11 +104,14 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.108Z"
+   "at": "2026-10-06T16:16:06.108Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/k/koma-world-eater.json"
   },
   "be094704-5232-4b10-beeb-aa9bbfae063d": {
    "name": "Feldon of the Third Path",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "550b125b6c667edb",
    "attempts": 1,
    "model": "x10-session",
@@ -98,11 +119,14 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.133Z"
+   "at": "2026-10-06T16:16:06.133Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/f/feldon-of-the-third-path.json"
   },
   "3bba3b36-f8d7-4fd6-892a-797226210b6e": {
    "name": "Malcolm, Alluring Scoundrel",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "fa12d63868331ced",
    "attempts": 1,
    "model": "x10-session",
@@ -110,11 +134,14 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.148Z"
+   "at": "2026-10-06T16:16:06.148Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/m/malcolm-alluring-scoundrel.json"
   },
   "777b8ec4-a783-4297-96b7-4f200d0eb734": {
    "name": "Return to Nature",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "7938d69954ae353a",
    "attempts": 1,
    "model": "x10-session",
@@ -122,11 +149,14 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.170Z"
+   "at": "2026-10-06T16:16:06.170Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/r/return-to-nature.json"
   },
   "e90a1381-c9c1-4f57-928c-5d19dc065274": {
    "name": "Shivan Gorge",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "cfabcbe562d38144",
    "attempts": 1,
    "model": "x10-session",
@@ -134,11 +164,14 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.174Z"
+   "at": "2026-10-06T16:16:06.174Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/s/shivan-gorge.json"
   },
   "556dd333-4066-41f7-98f6-41794754de71": {
    "name": "Vile Entomber",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "ef63c1efa753339f",
    "attempts": 1,
    "model": "x10-session",
@@ -146,11 +179,14 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.184Z"
+   "at": "2026-10-06T16:16:06.184Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/v/vile-entomber.json"
   },
   "7522f7fd-6fda-4ed3-9131-21bf91616a73": {
    "name": "Chocobo Racetrack",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "63e433b64ca34958",
    "attempts": 1,
    "model": "x10-session",
@@ -158,11 +194,14 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.206Z"
+   "at": "2026-10-06T16:16:06.206Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/c/chocobo-racetrack.json"
   },
   "f43d1ea5-8127-4b64-a87b-ee5cc9b9e9fa": {
    "name": "Squirrel Sovereign",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "b0458da1f3abe0ba",
    "attempts": 1,
    "model": "x10-session",
@@ -170,11 +209,14 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.230Z"
+   "at": "2026-10-06T16:16:06.230Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/s/squirrel-sovereign.json"
   },
   "d5b9d250-92f5-40d8-b962-4ae4adb466c8": {
    "name": "Flicker of Fate",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "694e11031775da11",
    "attempts": 1,
    "model": "x10-session",
@@ -182,11 +224,14 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.243Z"
+   "at": "2026-10-06T16:16:06.243Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/f/flicker-of-fate.json"
   },
   "0c26ab0d-80f6-4e5b-9d0e-af17c1519583": {
    "name": "March of the Multitudes",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "8b3a37313eee87ad",
    "attempts": 1,
    "model": "x10-session",
@@ -194,11 +239,14 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.253Z"
+   "at": "2026-10-06T16:16:06.253Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/m/march-of-the-multitudes.json"
   },
   "99c2d3ef-e5b4-48cd-b3f5-de9b02c7c36a": {
    "name": "Ureni of the Unwritten",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "300893310b563e4e",
    "attempts": 1,
    "model": "x10-session",
@@ -206,11 +254,14 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.282Z"
+   "at": "2026-10-06T16:16:06.282Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/u/ureni-of-the-unwritten.json"
   },
   "7b0767b8-b504-456e-93bd-218502f73b3d": {
    "name": "Palladium Myr",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "ff95105bcf0c7017",
    "attempts": 1,
    "model": "x10-session",
@@ -218,11 +269,14 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.288Z"
+   "at": "2026-10-06T16:16:06.288Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/p/palladium-myr.json"
   },
   "aedcde3b-3ed5-443c-a81c-03d785153e55": {
    "name": "Agent Frank Horrigan",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "52ce99e97a596ee4",
    "attempts": 1,
    "model": "x10-session",
@@ -230,11 +284,14 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.342Z"
+   "at": "2026-10-06T16:16:06.342Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/a/agent-frank-horrigan.json"
   },
   "16f75a65-d067-4f79-81b9-833c373cf4d2": {
    "name": "Cryptbreaker",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "e586d92e1062c15d",
    "attempts": 1,
    "model": "x10-session",
@@ -242,11 +299,14 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.368Z"
+   "at": "2026-10-06T16:16:06.368Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/c/cryptbreaker.json"
   },
   "cc6a83c7-e645-4a53-9550-be79b42cd851": {
    "name": "Loyal Warhound",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "120a63c4b4050d1f",
    "attempts": 1,
    "model": "x10-session",
@@ -254,7 +314,10 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.392Z"
+   "at": "2026-10-06T16:16:06.392Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/l/loyal-warhound.json"
   },
   "16629f59-bae8-4c19-bf50-443eb0ed6856": {
    "name": "Felidar Retreat",
@@ -288,7 +351,7 @@
   },
   "c22cc70a-9533-4bfc-b3ce-b2d43a73f0c1": {
    "name": "Bladewing the Risen",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "0a637e00fa8acfe8",
    "attempts": 1,
    "model": "x10-session",
@@ -296,11 +359,14 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.437Z"
+   "at": "2026-10-06T16:16:06.437Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/b/bladewing-the-risen.json"
   },
   "a69a24d0-ca58-4a44-8af1-a3bd1608d2f9": {
    "name": "Raise the Past",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "9fde702e9cc75f19",
    "attempts": 1,
    "model": "x10-session",
@@ -308,11 +374,14 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.444Z"
+   "at": "2026-10-06T16:16:06.444Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/r/raise-the-past.json"
   },
   "da785227-cf8a-4d44-9e7c-fc909ea868f2": {
    "name": "Prosperous Innkeeper",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "9730722e1338e949",
    "attempts": 1,
    "model": "x10-session",
@@ -320,11 +389,14 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.450Z"
+   "at": "2026-10-06T16:16:06.450Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/p/prosperous-innkeeper.json"
   },
   "d0a1f39b-cda4-4925-83f8-2161f575edfb": {
    "name": "Argentum Armor",
-   "status": "provisional",
+   "status": "confirmed",
    "oracleHash": "36c24a62e77330eb",
    "attempts": 1,
    "model": "x10-session",
@@ -332,7 +404,10 @@
    "inputTokens": 0,
    "outputTokens": 0,
    "cost": 0,
-   "at": "2026-10-06T16:16:06.461Z"
+   "at": "2026-10-06T16:16:06.461Z",
+   "confirmedAt": "2026-10-23",
+   "confirmedBy": "hand-authored",
+   "definition": "game/engine/cards/a/argentum-armor.json"
   },
   "6c2c8bf3-9bf8-4a86-89d3-3bb36260dc51": {
    "name": "Azusa, Lost but Seeking",

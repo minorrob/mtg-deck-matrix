@@ -1,0 +1,72 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Crystal Grotto",
+    "oracleId": "f15fb0cc-8e96-4f03-94d0-b51410415afd",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "When this land enters, scry 1.\n{T}: Add {C}.\n{1}, {T}: Add one mana of any color.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "scry",
+          "count": 1
+        }
+      ],
+      "text": "When this land enters, scry 1."
+    },
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ],
+      "text": "{T}: Add {C}."
+    },
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true
+        }
+      ],
+      "text": "{1}, {T}: Add one mana of any color."
+    }
+  ]
+}

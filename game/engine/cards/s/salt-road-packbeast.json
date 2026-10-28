@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Salt Road Packbeast",
+    "oracleId": "50261b9d-48f2-4bad-a35b-14f13b3cdd32",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Beast"
+    ],
+    "manaCost": "{5}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 4,
+    "toughness": 3
+  },
+  "oracleText": "Affinity for creatures (This spell costs {1} less to cast for each creature you control.)\nWhen this creature enters, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "affinity",
+      "of": {
+        "types": [
+          "Creature"
+        ]
+      },
+      "text": "Affinity for creatures (This spell costs {1} less to cast for each creature you control.)"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "text": "When this creature enters, draw a card."
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Chill of Foreboding",
+    "oracleId": "cd1677e4-c356-43cd-9766-5fb8a1e64249",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each player mills five cards.\nFlashback {7}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "mill",
+          "who": "each",
+          "count": 5
+        }
+      ],
+      "text": "Each player mills five cards."
+    },
+    {
+      "kind": "keyword",
+      "keyword": "flashback",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{7}{U}"
+        }
+      ],
+      "text": "Flashback {7}{U} (You may cast this card from your graveyard for its flashback cost. Then exile it.)"
+    }
+  ]
+}

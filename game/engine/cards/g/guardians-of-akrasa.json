@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Guardians of Akrasa",
+    "oracleId": "7ef8df9f-3fab-44fd-b5a9-f57e54dbc38e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Soldier"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 0,
+    "toughness": 4
+  },
+  "oracleText": "Defender (This creature can't attack.)\nExalted (Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "defender",
+      "text": "Defender (This creature can't attack.)"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "exalted",
+      "text": "Exalted (Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn.)"
+    }
+  ]
+}

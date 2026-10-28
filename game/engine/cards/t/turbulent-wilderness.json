@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Turbulent Wilderness",
+    "oracleId": "bd8adca6-4f16-45f8-994a-fe55bd573bd0",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Forest",
+      "Island"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "({T}: Add {G} or {U}.)\nThis land enters tapped unless your opponents control eight or more lands.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "G": 1
+            },
+            {
+              "U": 1
+            }
+          ]
+        }
+      ],
+      "text": "({T}: Add {G} or {U}.)"
+    },
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self",
+        "unless": {
+          "opponentsControl": {
+            "what": "permanent",
+            "types": [
+              "Land"
+            ]
+          },
+          "min": 8
+        }
+      },
+      "change": {
+        "entersTapped": true
+      },
+      "text": "This land enters tapped unless your opponents control eight or more lands."
+    }
+  ]
+}

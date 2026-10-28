@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Force Void",
+    "oracleId": "469bdca3-d373-4420-9266-921b6605f327",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Counter target spell unless its controller pays {1}.\nDraw a card at the beginning of the next turn's upkeep.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Counter target spell unless its controller pays {1}.\nDraw a card at the beginning of the next turn's upkeep.",
+      "targets": [
+        {
+          "what": "spell"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": {
+            "controllerOf": {
+              "target": 0
+            }
+          },
+          "amount": 1,
+          "effects": [
+            {
+              "effect": "counterSpell",
+              "spells": {
+                "target": 0
+              }
+            }
+          ]
+        },
+        {
+          "effect": "delayedTrigger",
+          "at": "upkeep",
+          "text": "Draw a card at the beginning of the next turn's upkeep.",
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

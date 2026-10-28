@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mage-Ring Bully",
+    "oracleId": "a0b4fa95-4c61-40ff-b645-a1dbe8825750",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Warrior"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)\nThis creature attacks each combat if able.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "prowess",
+      "text": "Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)"
+    },
+    {
+      "kind": "static",
+      "rule": "attacks-each-combat",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature attacks each combat if able."
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Neurok Commando",
+    "oracleId": "48936751-429b-4c40-88f5-72acde6278cc",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Rogue"
+    ],
+    "manaCost": "{1}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Shroud (This creature can't be the target of spells or abilities.)\nWhenever this creature deals combat damage to a player, you may draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "shroud",
+      "text": "Shroud (This creature can't be the target of spells or abilities.)"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "damage dealt",
+        "to": "player",
+        "combat": true
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "optional": true,
+      "text": "Whenever this creature deals combat damage to a player, you may draw a card."
+    }
+  ]
+}

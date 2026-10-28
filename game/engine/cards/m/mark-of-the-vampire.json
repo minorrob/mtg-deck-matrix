@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mark of the Vampire",
+    "oracleId": "af942d30-a191-4306-846d-6c26755ca3e6",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature\nEnchanted creature gets +2/+2 and has lifelink.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      },
+      "text": "Enchant creature"
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 2,
+        "toughness": 2
+      },
+      "sublayer": "c",
+      "text": "Enchanted creature gets +2/+2 and has lifelink."
+    },
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addKeywords": [
+          "Lifelink"
+        ]
+      },
+      "text": "Enchanted creature gets +2/+2 and has lifelink."
+    }
+  ]
+}

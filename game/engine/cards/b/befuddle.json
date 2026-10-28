@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Befuddle",
+    "oracleId": "664c1219-acfa-41da-b811-503a63fc8d84",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature gets -4/-0 until end of turn.\nDraw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Target creature gets -4/-0 until end of turn.\nDraw a card.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": -4,
+          "toughness": 0
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Justice Strike",
+    "oracleId": "bc63e7ca-e62a-4026-803d-eecdbbedf3c6",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature deals damage to itself equal to its power.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "from": {
+            "target": 0
+          },
+          "targets": {
+            "target": 0
+          },
+          "amount": {
+            "powerOf": {
+              "target": 0
+            }
+          }
+        }
+      ],
+      "text": "Target creature deals damage to itself equal to its power."
+    }
+  ]
+}

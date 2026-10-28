@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mire Triton",
+  "scenarios": [
+    {
+      "name": "Enters: two cards milled, 2 life gained",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Mire Triton"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Mire Triton"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "count": 2
+        },
+        {
+          "seat": 0,
+          "life": 42
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Mire Triton",
+            "has": [
+              "Deathtouch"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

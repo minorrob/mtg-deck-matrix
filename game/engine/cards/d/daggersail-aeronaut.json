@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Daggersail Aeronaut",
+    "oracleId": "7c0ef3b7-b368-4a5b-8cbe-bf1f47610f74",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "During your turn, this creature has flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Flying"
+        ]
+      },
+      "condition": {
+        "yourTurn": true
+      },
+      "text": "During your turn, this creature has flying."
+    }
+  ]
+}

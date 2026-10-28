@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vulshok Battlegear",
+    "oracleId": "708df587-3b13-42cb-8341-f476ab4cbe45",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Equipped creature gets +3/+3.\nEquip {3} ({3}: Attach to target creature you control. Equip only as a sorcery.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 3,
+        "toughness": 3
+      },
+      "text": "Equipped creature gets +3/+3."
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}"
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "Equip {3} ({3}: Attach to target creature you control. Equip only as a sorcery.)"
+    }
+  ]
+}

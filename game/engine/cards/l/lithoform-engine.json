@@ -1,0 +1,155 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lithoform Engine",
+    "oracleId": "0bf299da-1854-4153-baea-3cee2eb01ee8",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{2}, {T}: Copy target activated or triggered ability you control. You may choose new targets for the copy.\n{3}, {T}: Copy target instant or sorcery spell you control. You may choose new targets for the copy.\n{4}, {T}: Copy target permanent spell you control. (The copy becomes a token.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{2}, {T}: Copy target activated or triggered ability you control. You may choose new targets for the copy.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "ability",
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "copySpell",
+          "stack": {
+            "target": 0
+          },
+          "newTargets": true
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{3}, {T}: Copy target instant or sorcery spell you control. You may choose new targets for the copy.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "spell",
+              "types": [
+                "Instant"
+              ],
+              "controller": "you"
+            },
+            {
+              "what": "spell",
+              "types": [
+                "Sorcery"
+              ],
+              "controller": "you"
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "copySpell",
+          "spells": {
+            "target": 0
+          },
+          "newTargets": true
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{4}, {T}: Copy target permanent spell you control. (The copy becomes a token.)",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "spell",
+              "types": [
+                "Artifact"
+              ],
+              "controller": "you"
+            },
+            {
+              "what": "spell",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you"
+            },
+            {
+              "what": "spell",
+              "types": [
+                "Enchantment"
+              ],
+              "controller": "you"
+            },
+            {
+              "what": "spell",
+              "types": [
+                "Planeswalker"
+              ],
+              "controller": "you"
+            },
+            {
+              "what": "spell",
+              "types": [
+                "Battle"
+              ],
+              "controller": "you"
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "copySpell",
+          "spells": {
+            "target": 0
+          }
+        }
+      ]
+    }
+  ]
+}

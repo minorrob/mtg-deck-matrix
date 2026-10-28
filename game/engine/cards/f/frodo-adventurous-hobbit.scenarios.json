@@ -1,0 +1,572 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Frodo, Adventurous Hobbit",
+  "fixtures": {
+    "Heal Three": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "You gain 3 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 3
+          }
+        ]
+      }
+    },
+    "Heal Two": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "You gain 2 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 2
+          }
+        ]
+      }
+    },
+    "Heal One": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "You gain 1 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    "Tempting Trinket": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "The Ring tempts you.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "ringTempts"
+          }
+        ]
+      }
+    },
+    "Spare Pup": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Dog"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob gained 3 life and Frodo attacks: the Ring tempts him (Frodo his Ring-bearer), once only -- no card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Frodo, Adventurous Hobbit",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Heal Three"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Heal Three"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "Frodo, Adventurous Hobbit"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Frodo, Adventurous Hobbit"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Frodo, Adventurous Hobbit"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "The Ring"
+          ]
+        },
+        {
+          "event": "GameEventRingTempts",
+          "where": {
+            "player": {
+              "playerId": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vigilance: Frodo attacks and stays untapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Frodo, Adventurous Hobbit"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Frodo, Adventurous Hobbit"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Frodo, Adventurous Hobbit",
+          "is": false
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Only 2 life gained this turn: no trigger (an intervening if, CR 603.4)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Frodo, Adventurous Hobbit",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Heal Two"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Heal Two"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "Frodo, Adventurous Hobbit"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "1 and 2 life gained this turn make 3: it triggers",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Frodo, Adventurous Hobbit",
+            "Plains",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Heal Two",
+            "Heal One"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Heal Two"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Heal One"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "Frodo, Adventurous Hobbit"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Frodo, Adventurous Hobbit"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "The Ring"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tempted once before (the Pup his Ring-bearer), then Frodo attacks: the second temptation, Frodo chosen -- a card drawn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Frodo, Adventurous Hobbit",
+            "Spare Pup",
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Heal Three",
+            "Tempting Trinket"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Tempting Trinket"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Spare Pup"
+          ]
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Heal Three"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "Frodo, Adventurous Hobbit"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Frodo, Adventurous Hobbit",
+                  "Spare Pup"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Frodo, Adventurous Hobbit"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "Tempted twice, but Rob keeps the Pup as his Ring-bearer: Frodo is not, and no card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Frodo, Adventurous Hobbit",
+            "Spare Pup",
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Heal Three",
+            "Tempting Trinket"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Tempting Trinket"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Spare Pup"
+          ]
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Heal Three"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "Frodo, Adventurous Hobbit"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Spare Pup"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Frodo enters: Rob may search for Sam, and does",
+      "library": [
+        "Wastes",
+        "Sam, Loyal Attendant"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Frodo, Adventurous Hobbit"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Frodo, Adventurous Hobbit"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Rob"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Search",
+                  "Don't search"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Search"
+          ]
+        },
+        {
+          "choose": [
+            "Sam, Loyal Attendant"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sam, Loyal Attendant"
+          ]
+        },
+        {
+          "stack": 0
+        }
+      ]
+    }
+  ]
+}

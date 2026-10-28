@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Inordinate Rage",
+    "oracleId": "50402103-14ea-49b0-8e66-d2b7f7a69a41",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature gets +3/+2 until end of turn. Scry 1.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Target creature gets +3/+2 until end of turn. Scry 1.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 3,
+          "toughness": 2
+        },
+        {
+          "effect": "scry",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

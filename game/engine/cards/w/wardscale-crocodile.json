@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wardscale Crocodile",
+    "oracleId": "86f725f6-b48b-4dcc-9a02-e258a226e31c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Crocodile"
+    ],
+    "manaCost": "{4}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 5,
+    "toughness": 3
+  },
+  "oracleText": "Hexproof (This creature can't be the target of spells or abilities your opponents control.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "hexproof",
+      "text": "Hexproof (This creature can't be the target of spells or abilities your opponents control.)"
+    }
+  ]
+}

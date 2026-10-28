@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Moat Piranhas",
+    "oracleId": "40057917-4a88-4316-bc5b-efc0ada1ddff",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Fish"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Defender (This creature can't attack.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "defender",
+      "text": "Defender (This creature can't attack.)"
+    }
+  ]
+}

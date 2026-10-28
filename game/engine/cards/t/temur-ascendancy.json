@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Temur Ascendancy",
+    "oracleId": "e68dc47c-692f-4420-9799-eee104017273",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{G}{U}{R}",
+    "colors": [
+      "G",
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "R",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creatures you control have haste.\nWhenever a creature you control with power 4 or greater enters, you may draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Creatures you control have haste.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Haste"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature you control with power 4 or greater enters, you may draw a card.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "power": {
+            "min": 4
+          }
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

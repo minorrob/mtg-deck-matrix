@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sabertooth Nishoba",
+    "oracleId": "ce82aa79-bb50-47bc-84f5-eae30249c7a5",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Cat",
+      "Beast",
+      "Warrior"
+    ],
+    "manaCost": "{4}{G}{W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Trample, protection from blue and from red",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "U",
+          "R"
+        ]
+      },
+      "text": "protection from blue and from red"
+    }
+  ]
+}

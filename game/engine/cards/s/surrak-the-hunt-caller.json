@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Surrak, the Hunt Caller",
+    "oracleId": "fa56a5fa-ef96-404c-8fb6-d1f5fcebb52e",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Warrior"
+    ],
+    "manaCost": "{2}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 5,
+    "toughness": 4
+  },
+  "oracleText": "Formidable — At the beginning of combat on your turn, if creatures you control have total power 8 or greater, target creature you control gains haste until end of turn. (It can attack and {T} no matter when it came under your control.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Formidable — At the beginning of combat on your turn, if creatures you control have total power 8 or greater, target creature you control gains haste until end of turn. (It can attack and {T} no matter when it came under your control.)",
+      "trigger": {
+        "on": "step",
+        "step": "COMBAT_BEGIN",
+        "yours": true
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Haste"
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "totalPower": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you"
+            }
+          },
+          "atLeast": 8
+        }
+      }
+    }
+  ]
+}

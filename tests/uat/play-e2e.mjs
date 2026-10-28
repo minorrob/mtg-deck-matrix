@@ -6,7 +6,7 @@
  * does), and put on every request -- the table's WebSocket included -- by a small proxy in front of the Worker, as
  * Access does at the edge: a page cannot set a header on a WebSocket. Then, as Rob:
  *
- *   1. the Play tab is the table's page, not Coming Soon, and the local game host's modules are not in the page
+ *   1. the Play tab opens the lounge and explicit table setup; the local game host's modules are not in the page
  *   2. a table with an AI seat: it is a playtest table (staging's PLAYTEST_TABLES); decks the engine can play
  *      today (basic lands: every other card waits on M4's definitions, and is refused by name); ready; start
  *   3. the countdown ends on the object's alarm and the game is on; the board opens over the table's WebSocket
@@ -32,6 +32,7 @@ import {build, worktreeSource, commitSource} from "../../tools/release-pages.mjs
 import {replayTape} from "../../game/room/replay.mjs";
 import {tableCards} from "../../cloud/game-room.mjs";
 import {NO_PERSON_REASON} from "../../game/room/room.mjs";
+import {createGame, openNewGame} from "./new-game.mjs";
 
 const require = createRequire(import.meta.url);
 const playwright = require(process.env.UAT_PLAYWRIGHT || "playwright");
@@ -135,12 +136,15 @@ try {
 
   /* 1. The Play tab. */
   await page.goto(`${BASE}/index.html#game`);
-  await page.locator("#cm-main").getByText(/table/i).first().waitFor({timeout: 60000});
+  await page.locator("#cm-play-home").waitFor({timeout: 60000});
   const text = await page.locator("#cm-main").evaluate((el) => el.textContent);
   ok(!/Coming Soon/.test(text), "the Play tab is not Coming Soon on staging");
-  ok(await page.locator(".cm-cloud-table, [data-action^=table-]").count() > 0, `it is the table's page: ${text.replace(/\s+/g, " ").trim().slice(0, 90)}…`);
+  ok(await page.getByRole("heading", {name: "A place at the table"}).count() === 1 && await page.locator(".cm-ng-dialog").count() === 0, `it is the Commander lounge: ${text.replace(/\s+/g, " ").trim().slice(0, 90)}…`);
   eq(await page.evaluate(() => [...document.scripts].map((s) => s.src).filter((s) => /crankmagic-(game|lobby|online)\.js|collection-lobby-draft/.test(s))), [], "and the local game host's modules are not in the page");
   await shot(page, "tab-1400");
+  await page.getByRole("button", {name: "Start a new game", exact: true}).click();
+  await page.locator(".cm-ng-dialog").waitFor();
+  ok(await page.getByRole("heading", {name: "New game", exact: true}).count() === 1, "New game explicitly opens the pop-up over the lounge");
 
   /* 2. A table, an AI seat, decks the engine can play today. */
   const made = await api("POST", "/api/tables", {hostName: "Rob", seats: [{kind: "ai", name: "Bot"}]});
@@ -186,6 +190,14 @@ try {
     throw error;
   });
   ok(true, "the board opens over the table's WebSocket, through the Worker to the object");
+  /* Opening hands have no phase yet. The live renderer must mount before turn one as well. */
+  await page.locator("[data-action=board-camera]").click();
+  await page.locator('[data-action=board-view][data-view=full]').click();
+  await page.locator('[data-engine=babylon][data-renderer=webgl]').waitFor({timeout: 30000});
+  const scene = await page.evaluate(() => CrankStage.diagnostics());
+  ok(scene.renderer === "babylon" && ["top", "side", "leg"].every((part) => scene.parts.includes(part)), "Full screen mounts the Babylon table during opening hands, before turn one");
+  await page.locator("[data-action=board-camera]").click();
+  await page.locator('[data-action=board-view][data-view=focus]').click();
   const whale = await page.evaluate(async () => {
     const mat = document.querySelector('.cm-board-mat[data-mat="star-whale"]'), bg = mat && getComputedStyle(mat).backgroundImage;
     const src = bg && (/url\("?([^")]+star-whale\.webp)"?\)/.exec(bg) || [])[1];
@@ -225,8 +237,8 @@ try {
       const o = oracle.find((x) => x.name === name);
       return C.normalize({name, typeLine: o.type, manaCost: o.mana ?? "", oracleText: o.text ?? "", colors: o.colors ?? [], colorIdentity: o.ci ?? [], legalities: {commander: "legal"}, price: null});
     };
-    /* One red card the engine has yet to define, for the deck that is not whole: the first of these still waiting. */
-    const gap = ["Shared Animosity", "Purphoros, God of the Forge", "Wheel of Fortune", "Chaos Warp"].find((name) => !playable(name));
+    /* Select from the current catalog: card loads can make a fixed shortlist fully playable. */
+    const gap = oracle.find((card) => card.ci?.length === 1 && card.ci[0] === "R" && !playable(card.name))?.name;
     ok(Boolean(gap), `a red card the table cannot play yet, for the deck that is not whole (${gap})`);
     const card = Object.fromEntries(["Krenko, Mob Boss", "Mountain", "Ezuri, Renegade Leader", "Forest", gap].map((name) => [name, fact(name)]));
     let library = M.empty(), serial = 0;
@@ -295,15 +307,7 @@ try {
       eq(sharedDeck.body.settings.publicRole,'reviewer','the shared deck is playable without edit permission');
 
       /* The host's table: a person's seat and an AI's. */
-      await page.goto(`${BASE}/index.html#table`);
-      const form = page.locator("#cm-table-new");
-      await form.waitFor({timeout: 30000});
-      await form.locator("input[name=hostName]").fill("Rob");
-      await form.locator("select[name=kind2]").selectOption("human");
-      await form.locator("input[name=name2]").fill("Newcomer");
-      await form.locator("select[name=kind3]").selectOption("ai");
-      await form.locator("input[name=name3]").fill("Bot");
-      await page.locator("[data-action=table-create]").click();
+      await createGame(page, BASE, {host: "Rob", humans: [{name: "Newcomer"}], ai: [{name: "Bot"}]}, "#table");
       await page.locator(".cm-cloud-table .cm-lobby-seat").nth(2).waitFor({timeout: 30000});
       const tableId = (/id=([^&]+)/.exec(new URL(page.url()).hash) || [])[1], turl = `/api/tables/${tableId}`;
       await page.locator(`.cm-lobby-seat[data-seat="1"]`).getByRole("button", {name: /^Invite$/}).click();
@@ -333,8 +337,8 @@ try {
       await newcomer.locator('.cm-lobby-seat[data-seat="1"]').getByRole('button', {name: /^(Choose|Change).*deck$/}).click();
       const rows = newcomer.locator("#cm-dialog .cm-table-deck[data-action=table-use-deck]");
       await rows.first().waitFor({timeout: 15000});
-      await until("the dialog's known counts", async () => newcomer.locator("#cm-dialog [data-known-for]").evaluateAll((els) => els.length > 0 && els.every((el) => el.textContent.trim())), 30000);
-      const known = Object.fromEntries(await rows.evaluateAll((els) => els.map((el) => [el.querySelector("strong").textContent.trim(), el.querySelector("[data-known-for]").textContent.trim()])));
+      await until("the dialog's known counts", async () => newcomer.locator("#cm-dialog [data-known-for]").evaluateAll((els) => els.length > 0 && els.every((el) => el.dataset.ok !== "pending")), 30000);
+      const known = Object.fromEntries(await rows.evaluateAll((els) => els.map((el) => [el.querySelector("strong").textContent.trim(), el.querySelector("[data-known-for]").dataset.text])));
       eq([known["Elves (e2e)"], known["Goblins with a gap (e2e)"]], ["All 100 cards known", "99 of 100 known · 1 to learn"], "the deck dialog says which decks the table can play, before one is chosen");
       await newcomer.locator("#cm-dialog [data-action=table-use-shared-deck]").filter({hasText:"Krenko"}).click();
       await newcomer.locator(`.cm-lobby-seat[data-seat="1"] .cm-seat-line`, {hasText: "Goblins (e2e)"}).waitFor({timeout: 15000});
@@ -369,9 +373,13 @@ try {
         const d = p.locator("#cm-board-decision:not(.is-also)").first();
         if (await d.count()) {
           assert.ok(!/cannot answer/.test((await d.textContent()) || ""), "the board can answer what it is asked");
-          const confirm = d.locator("[data-action=board-confirm]"), opts = d.locator("[data-action=board-option]:enabled");
+          /* A stack of the same card (×N) is a choice to press as well (Rob, 2026-10-25); where a question needs more of it
+             than one, its how-many is set to as many as it allows. */
+          const confirm = d.locator("[data-action=board-confirm]"), opts = d.locator("[data-action=board-option]:enabled, [data-action=board-option-same]:enabled");
           if (await confirm.count()) {
             for (let i = 0; i < await opts.count() && !(await enabled(confirm)); i++) await opts.nth(i).click({timeout:2000});
+            const counts = d.locator(".cm-board-same-count:enabled");
+            for (let i = 0; i < await counts.count() && !(await enabled(confirm)); i++) {const c = counts.nth(i); await c.fill(String(await c.getAttribute("max")), {timeout:2000});}
             if (await enabled(confirm)) await confirm.click({timeout:2000});
           } else if (await opts.count()) await opts.first().click({timeout:2000});
           return;
@@ -397,6 +405,7 @@ try {
       /* The host ends it for everyone; the record replays with the table's own cards. */
       await page.locator("[data-action=board-profile]").click();
       await page.locator(".cm-profile-menu [data-action=board-tools]").click();
+      await page.locator("#cm-dialog [role=tab][data-tab=gameplay]").click();
       await page.locator("[data-action=board-end]").click();
       await page.locator("[data-action=board-end][data-confirm]").click();
       for (const p of [page, newcomer]) await p.locator(".cm-board-over").waitFor({timeout: 30000});

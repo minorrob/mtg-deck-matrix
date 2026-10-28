@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ravenous Lindwurm",
+    "oracleId": "3583ec24-4f26-45ea-8fb4-a45bdd7bfc79",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Wurm"
+    ],
+    "manaCost": "{4}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "When this creature enters, you gain 4 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 4
+        }
+      ],
+      "text": "When this creature enters, you gain 4 life."
+    }
+  ]
+}

@@ -25,11 +25,12 @@ page.on('pageerror',error=>errors.push(error.message));
    removed before it so that step stays honest. */
 const {stubNetwork}=await import('./scryfall-stub.mjs');const scryfallCalls=[];await stubNetwork(page,scryfallCalls);
 /* A deck tile's first button is its ⋯ menu (since the deck-page redesign); Open deck is inside it. */
-const openDeck=async name=>{await page.locator('.cm-deck-tile').filter({hasText:name}).first().getByRole('button').first().click();await page.getByRole('button',{name:'Open deck',exact:true}).click();};
+const openDeck=async name=>{await page.locator('.cm-deck-tile').filter({hasText:name}).first().getByRole('button',{name:/^Deck options for /}).click();await page.getByRole('button',{name:'Open deck',exact:true}).click();};
 const lab=async()=>{await page.evaluate(()=>{location.hash='#lab';});await page.waitForTimeout(400);};
 const click=label=>page.getByRole('button',{name:label,exact:true}).click(),nav=label=>page.getByRole('link',{name:label,exact:true}).click();
 /* Explore with no card, deck or commander in the address is the chooser; the graph is a card away. */
 const DISCOVER=BASE+'/'+ENTRY+'#discover?card='+encodeURIComponent('Sol Ring');
+const settingsItem=async label=>{await page.evaluate(()=>{location.hash='#settings';});await page.locator('.cm-settings').waitFor();if(label)await click(label);};
 const menuItem=async label=>{await click('Menu');await page.locator('#cm-user-menu:popover-open').waitFor();await page.locator('#cm-user-menu').getByRole('button',{name:label,exact:true}).click();};
 const state=()=>page.evaluate(async()=>{const r=await CrankRepository.open();try{return await r.getState();}finally{r.close();}});
 const waitDialog=()=>page.getByRole('dialog').waitFor({state:'hidden'});
@@ -39,7 +40,7 @@ const waitDialog=()=>page.getByRole('dialog').waitFor({state:'hidden'});
    Loading (the deck's, not in its box yet), Substitute, Bench, Sell, Trade, or an Upgrade it owns -- an ordered copy
    for a deck is Reserved with "Ordered" beside it, and a card being looked at is Watch. The old words stay in the
    family for any screen still saying them. */
-const FAMILY={Owned:['Own','Owned','Final','Loading','Substitute','Bench','Sell','Trade','Upgrade Own','Target','To add','Physical deck'],Ordered:['Ordered','Reserved Ordered','Upgrade Ordered'],'To buy':['To buy','Reserved To buy','Upgrade To buy'],Watched:['Watch','Watching','Watched','Upgrade Watch']};
+const FAMILY={Owned:['Own','Owned','Final','Loading','Substitute','Bench','Sell','Trade','Upgrade Own','Target','To add','Physical deck'],Ordered:['To Buy · Ordered','Reserved Ordered','Upgrade Ordered'],'To buy':['To buy','Reserved To buy','Upgrade To buy'],Watched:['Watch','Watching','Watched','Upgrade Watch']};
 const row=(name,source)=>page.locator('tbody tr').filter({has:page.getByRole('button',{name,exact:true})}).filter({has:page.locator('td').filter({hasText:new RegExp('^\\s*('+(FAMILY[source]||[source]).map(s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')(\\s|$)')})});
 async function actionsFor(name,source){await row(name,source).getByRole('button',{name:'Actions',exact:true}).click();}
 /* Status is one column now: an owned copy reads as where it is, and the cell also carries the
@@ -70,11 +71,11 @@ async function rung(label,n){await page.locator('#cm-status-submenu-toggle').hov
    on naming the old button. It had been unrunnable since someone left an absolute container path
    in scryfall-stub.mjs, so nothing ever said so: a gate that cannot start cannot rot loudly. The
    wizard path is taken by its data-action, which is stable where the visible label was not. */
-async function newDeck(){await nav('Decks');await click('New deck');await page.locator('#cm-dialog [data-action=wizard-create]').click();await page.getByLabel('Card name or a Scryfall link').fill('Krenko, Mob Boss');await page.locator('[data-pick-card]').filter({has:page.getByText('Krenko, Mob Boss',{exact:true})}).click();/* Build a deck (R3.11): Strategy, Budget, then Review names it. */await click('Next: Budget');await click('Next: Review');await page.locator('#cm-dialog [name=name]').fill('Journey Goblins');await click('Create draft');await waitDialog();await click('Edit card list');await page.getByLabel('Cards (one per line, with quantity)').fill('1 Krenko, Mob Boss\n98 Mountain\n1 Lightning Bolt');await click('Resolve & save draft');await waitDialog();await click('Lock list');await click('Confirm change');await waitDialog();}
+async function newDeck(){await nav('Decks');await click('New deck');await page.locator('#cm-dialog [data-action=start-from]').click();/* Start from (2026-10-23): the name, the commander, Next, then Leave undefined. */await page.locator('#cm-flow-name').fill('Journey Goblins');await page.locator('#cm-flow-query').fill('Krenko, Mob Boss');await page.locator('.cm-flow-results [data-name="Krenko, Mob Boss"]').click();await page.locator('[data-action=flow-next]').click();await page.locator('#cm-dialog[open] #cm-dialog-title',{hasText:'Define the Deck'}).waitFor({timeout:60000});await page.check('input[name=mode][value=undefined]');await page.locator('[data-action=flow-create]').click();await waitDialog();await click('Edit card list');await page.getByLabel('Cards (one per line, with quantity)').fill('1 Krenko, Mob Boss\n98 Mountain\n1 Lightning Bolt');await click('Resolve & save draft');await waitDialog();await click('Lock list');await click('Confirm change');await waitDialog();}
 try{
  await page.goto(BASE+'/'+ENTRY+'#decks');await page.getByRole('heading',{name:'Decks',level:1}).waitFor({timeout:45000});eq((await state()).lots.length,0);
- /* HOW A DECK COMES TOGETHER: a plain link on Decks opens the six-step map; each step's title opens where that step begins. */
- await page.locator('#cm-main').getByRole('link',{name:'How a deck comes together'}).click();await page.locator('.cm-how-flow').waitFor();eq(await page.locator('.cm-how-step').count(),6);eq(await page.locator('.cm-how-rungs li').count(),8);
+ /* ABOUT DECK BUILDING (renamed 2026-10-23 from How a deck comes together): a plain link on Decks opens the six-step map; each step's title opens where that step begins. */
+ await page.locator('#cm-main').getByRole('link',{name:'About Deck Building'}).click();await page.locator('.cm-how-flow').waitFor();ok(page.url().endsWith('#about-deck-building'));eq(await page.locator('.cm-how-step').count(),6);eq(await page.locator('#cm-how-ladder li').count(),9);eq(await page.locator('#cm-how-stages li').count(),4);
  await page.locator('.cm-how-title',{hasText:'Acquire'}).click();await page.locator('#cm-roster-table').waitFor();ok(page.url().endsWith('#cards?tab=buy'));eq(await page.getByRole('tab',{selected:true}).innerText().then(s=>s.split(/\s/)[0]),'To');
  /* SHARE. Two ways out of the rail's Menu: a share draft with the To line blank, and a QR code drawn
     in the page. The subscription draft to the maintainer left the Menu with the first-look list
@@ -83,20 +84,20 @@ try{
  const APP_URL='https://crankmagic.com/';
  await click('Menu');await page.locator('#cm-user-menu:popover-open').waitFor();
  eq(await page.locator('#cm-share-subscribe').count(),0,'Subscribe has left the Menu');eq(await page.locator('#cm-share-mail').count(),0,'Share by email has left the Menu (Rob, 2026-09-29)');
- await page.locator('#cm-user-menu').getByRole('button',{name:'Show a QR code'}).click();await page.getByRole('dialog').waitFor();ok(await page.locator('#cm-dialog .cm-qr-code svg').count()===1);eq(await page.locator('#cm-dialog .cm-qr-link a').innerText(),APP_URL);ok(!(await page.locator('#cm-user-menu').evaluate(m=>m.matches(':popover-open'))));
- await page.keyboard.press('Escape');await page.getByRole('dialog').waitFor({state:'hidden'});
+ ok(!(await page.locator('#cm-user-menu').innerText()).includes('QR code'),'the Menu has no QR code (Rob, 2026-10-28)');await page.keyboard.press('Escape');
  await newDeck();let current=await state();eq(current.decks[0].status,'final');eq(current.lots.length,0);ok(current.decks[0].slots.reduce((n,r)=>n+r.quantity,0)===100);
  /* The deck page opens on Overview; the hundred is its Cards tab, and the full table with actions is one button from there. */
  await page.getByRole('tab',{name:/^The hundred/}).click();await page.locator('.cm-deck-list').first().waitFor();eq(await page.locator('.cm-deck-list li').count()>0,true,'The hundred tab lists the hundred');await click('View deck cards');await page.getByRole('table').waitFor();ok((await page.locator('.cm-chip').innerText()).startsWith('Deck: Journey Goblins'));
- await actionsFor('Mountain','To buy');await rung('Ordered',40);await page.waitForTimeout(700);current=await state();eq(current.lots[0].quantity,40);eq(current.lots[0].source,'ordered');
- await actionsFor('Mountain','Ordered');await rung('Own',10);await page.waitForTimeout(700);current=await state();eq(current.lots.filter(l=>l.source==='owned').reduce((n,l)=>n+l.quantity,0),10);eq(current.lots.filter(l=>l.source==='ordered').reduce((n,l)=>n+l.quantity,0),30);
- /* THE PULL SHEET. Ten owned Mountains sit on the bench, reserved: the sheet lists them under
-    Add from the Bench, one tick puts the lot in the box, the row stays, grayed, and the deck's
-    In box figure moves by the lot. Then back to the Collection where the journey was. */
- const rosterURL=page.url();await page.goto(BASE+'/'+ENTRY+'#pull?deck='+encodeURIComponent(current.decks[0].id));await page.locator('.cm-pull').waitFor({timeout:45000});
- eq(await page.locator('.cm-pull-group[data-group=bench] .cm-pull-row').count(),1);eq(await page.locator('.cm-pull-group[data-group=bench] .cm-pull-n').innerText(),'10');/* Select all sits beside the count while anything is left in the group, and goes when nothing is. */eq(await page.locator('.cm-pull-group[data-group=bench] .cm-pull-select-all').count(),1);
- await page.locator('[data-pull-tick]').first().check();await page.locator('.cm-pull-row.is-done').waitFor({timeout:8000});current=await state();eq(current.lots.find(l=>l.source==='owned').location.kind,'deck');eq(CrankReadiness(current).inBox,10);
- eq(await page.locator('.cm-pull-group[data-group=bench] .cm-pull-n').innerText(),'0');eq(await page.locator('.cm-pull-group[data-group=bench] .cm-pull-select-all').count(),0);
+ await actionsFor('Mountain','To buy');await rung('To Buy · Ordered',40);await page.waitForTimeout(700);current=await state();eq(current.lots[0].quantity,40);eq(current.lots[0].source,'ordered');
+ await actionsFor('Mountain','To Buy · Ordered');await rung('Own',10);await page.waitForTimeout(700);current=await state();eq(current.lots.filter(l=>l.source==='owned').reduce((n,l)=>n+l.quantity,0),10);eq(current.lots.filter(l=>l.source==='ordered').reduce((n,l)=>n+l.quantity,0),30);
+ /* PLANNED CHANGES (once the pull sheet; Rob, C1–C8). Ten owned Mountains sit on the bench, reserved: the page lists
+    each copy to add as Owned - Final (the thirty ordered as To Buy · Ordered - Final); a tick only selects, Swap asks and puts them in, one change, and the deck's In box
+    figure moves by the lot. Then back to the Collection where the journey was. */
+ const rosterURL=page.url();await page.goto(BASE+'/'+ENTRY+'#pull?deck='+encodeURIComponent(current.decks[0].id));await page.locator('.cm-plan').waitFor({timeout:45000});
+ {const mountains=page.locator('.cm-plan-side.is-in',{hasText:'Mountain'}).filter({hasText:'Owned - Final'});eq(await mountains.count(),10);eq(await page.locator('.cm-plan-side.is-in',{hasText:'Mountain'}).filter({hasText:'To Buy · Ordered - Final'}).count(),30);
+  const rev=(await state()).revision;for(let i=0;i<10;i++)await mountains.nth(i).locator('.cm-plan-tick').check();eq((await state()).revision,rev);
+  await page.locator('[data-action=plan-swap]').click();await page.getByRole('button',{name:'Confirm change'}).click();await page.waitForTimeout(900);current=await state();eq(current.revision,rev+1);
+  eq(current.lots.filter(l=>l.source==='owned'&&l.location.kind==='deck').reduce((n,l)=>n+l.quantity,0),10);eq(CrankReadiness(current).inBox,10);eq(await page.locator('.cm-plan-side.is-in',{hasText:'Mountain'}).filter({hasText:'Owned - Final'}).count(),0);}
  await page.goto(rosterURL);await page.getByRole('table').waitFor();
  /* The row's own verb: the owned, reserved, benched Mountains go into the box in one tap. */
  await page.reload();await page.getByRole('table').waitFor();await page.evaluate(async()=>{const r=await CrankRepository.open();try{const s=await r.getState();const l=s.lots.find(l=>l.source==='owned');await r.commit({id:crypto.randomUUID(),type:'place',lotId:l.id,quantity:l.quantity,confirmed:true},s.revision);}finally{r.close();}});await page.reload();await page.getByRole('table').waitFor();
@@ -109,7 +110,7 @@ try{
  await actionsFor('Mountain','Owned');await click('Flag as option (first to swap out)');await page.locator('#cm-dialog [name=why]').fill('Trim one');await click('Flag as option');await waitDialog();await page.waitForTimeout(500);current=await state();
  ok(current.decks[0].slots.some(r=>r.option&&r.optionWhy==='Trim one'));ok((await page.locator('.cm-badge-option').count())>0);
  await actionsFor('Mountain','Owned');await click('Clear option flag');await page.waitForTimeout(500);current=await state();ok(!current.decks[0].slots.some(r=>r.option));eq(await page.locator('.cm-badge-option').count(),0);
- await actionsFor('Mountain','Owned');await page.locator('#cm-status-submenu-toggle').hover();await page.locator('#cm-status-submenu').getByRole('button',{name:'Ordered',exact:true}).click();await page.getByLabel('Copies affected').fill('2');await click('Confirm change');await waitDialog();await page.waitForTimeout(700);current=await state();eq(current.lots.filter(l=>l.source==='owned').reduce((n,l)=>n+l.quantity,0),8);eq(current.lots.filter(l=>l.source==='ordered').reduce((n,l)=>n+l.quantity,0),32);
+ await actionsFor('Mountain','Owned');await page.locator('#cm-status-submenu-toggle').hover();await page.locator('#cm-status-submenu').getByRole('button',{name:'To Buy · Ordered',exact:true}).click();await page.getByLabel('Copies affected').fill('2');await click('Confirm change');await waitDialog();await page.waitForTimeout(700);current=await state();eq(current.lots.filter(l=>l.source==='owned').reduce((n,l)=>n+l.quantity,0),8);eq(current.lots.filter(l=>l.source==='ordered').reduce((n,l)=>n+l.quantity,0),32);
  await page.reload();await page.getByRole('table').waitFor();eq((await state()).lots.filter(l=>l.source==='owned')[0].quantity,8);
  /* Columns is one reorderable list now (R3.6), and its button says Done rather than Apply columns. */
  await click('Clear filters');await page.locator('.cm-chip').waitFor({state:'detached'});eq(await page.locator('.cm-chip').count(),0);await click('Columns');await page.getByLabel('Color',{exact:true}).check();await page.getByLabel('Source',{exact:true}).uncheck();await click('Done');await waitDialog();ok((await state()).preferences.columns.includes('color'));eq(await page.getByRole('columnheader',{name:'Source'}).count(),0);eq(await page.locator('th, td').evaluateAll(els=>els.every(el=>getComputedStyle(el).textAlign==='left')),true);
@@ -132,7 +133,7 @@ try{
   ok(await help.locator('li').count()>=12,'and reads as bullets rather than paragraphs');
   eq(await help.locator('.cm-def').count(),12,'every state the Status column can show is defined, and the sitting beside them');
   const named=await help.locator('.cm-def > b').allTextContents().then(t=>t.map(x=>x.trim()));
-  for(const term of ['Watched','Suggestion','Planned','Draft list','Reserved','Ordered','To buy','Physical deck','Substitute','Bench'])ok(named.includes(term),`${term} is defined`);
+  for(const term of ['Watched','Suggestion','Planned','Draft list','Reserved','To Buy · Ordered','To buy','Physical deck','Substitute','Bench'])ok(named.includes(term),`${term} is defined`);
   ok(await help.locator('.cm-def > span').first().innerText().then(t=>/filed in that deck/.test(t)),'the definition is the glossary\'s, not a second copy of it');
   const flow=help.locator('.cm-flow svg');await flow.waitFor();
   eq(await flow.locator('g text:nth-child(2)').allTextContents().then(t=>t.map(x=>x.trim())).then(t=>t.filter(x=>x==='Reserved').length),1,'Reserved is drawn once');
@@ -151,10 +152,10 @@ try{
  /* BACKUP, EXCEL, CLEAR, RESTORE. The Menu keeps Settings, Save and Restore (R3.3a); Excel and Clear all
     data moved into Settings › Data, which carries Save and Restore as well -- so a Menu entry is
     pressed inside the Menu, where the same words cannot also mean the Settings page's button. */
- const backupDownload=page.waitForEvent('download');await menuItem('Save a backup file');const backupFile=await (await backupDownload).path(),backup=JSON.parse(await fs.readFile(backupFile,'utf8'));eq(backup.format,'crankmagic-backup');ok(backup.checksum.length===64);const expected=backup.payload.state;
- await menuItem('Settings');await page.locator('.cm-settings').waitFor();const xlsxDownload=page.waitForEvent('download');await click('Export as Excel');const xlsxPath=await (await xlsxDownload).path();ok((await fs.stat(xlsxPath)).size>5000);
- await menuItem('Settings');await page.locator('.cm-settings').waitFor();await click('Clear all data');await page.getByLabel('Type CLEAR to confirm').fill('CLEAR');await click('Clear local data');await waitDialog();eq((await state()).lots.length,0);
- await menuItem('Restore from a backup file');await page.getByLabel('CrankMagic JSON backup').setInputFiles(backupFile);await click('Validate backup');await page.getByLabel('Type RESTORE to replace the library').fill('RESTORE');await click('Restore reviewed backup');await waitDialog();current=await state();eq(current.lots,expected.lots);eq(current.decks,expected.decks);eq(current.groups,expected.groups);
+ const backupDownload=page.waitForEvent('download');await settingsItem('Save a backup file');const backupFile=await (await backupDownload).path(),backup=JSON.parse(await fs.readFile(backupFile,'utf8'));eq(backup.format,'crankmagic-backup');ok(backup.checksum.length===64);const expected=backup.payload.state;
+ await settingsItem(null);const xlsxDownload=page.waitForEvent('download');await click('Export as Excel');const xlsxPath=await (await xlsxDownload).path();ok((await fs.stat(xlsxPath)).size>5000);
+ await settingsItem(null);await click('Clear all data');await page.getByLabel('Type CLEAR to confirm').fill('CLEAR');await click('Clear local data');await waitDialog();eq((await state()).lots.length,0);
+ await settingsItem('Restore from a backup file');await page.getByLabel('CrankMagic JSON backup').setInputFiles(backupFile);await click('Validate backup');await page.getByLabel('Type RESTORE to replace the library').fill('RESTORE');await click('Restore reviewed backup');await waitDialog();current=await state();eq(current.lots,expected.lots);eq(current.decks,expected.decks);eq(current.groups,expected.groups);
  await lab();await page.locator('#cm-lab-form').waitFor({timeout:45000});
  /* Deck Lab's sections collapse now and Deck Definition starts closed, so the deck-name
     field is in the DOM but not fillable until it is opened. Opened here rather than right
@@ -714,8 +715,8 @@ try{
  await actionsFor('Wastes','Bench');await moveToGroup('Journey Goblins');await page.waitForTimeout(900);current=await state();
  {const l=current.lots.find(l=>l.cardId===wastesKey);eq(l.location.deckId,journey.id);eq(l.allocation,null);eq(CrankReadiness(current).standIns,1);}
  await nav('Decks');/* The tile's caption shortens it to "1 sub". */{const tile=await page.locator('.cm-deck-tile').filter({hasText:'Journey Goblins'}).first().innerText();ok(/\b1 sub\b/.test(tile),tile);}
- await openDeck('Journey Goblins');await page.getByRole('button',{name:/^Ready to add/}).click();
- await page.locator('.cm-pull-group[data-group=standin]').waitFor();/* A substitute that "stays for now" (nothing real is ready for its seat) is left alone by Select all, as Mark all added leaves it; one that can come out (a real copy is ready, as the journey's deck has one now) is offered to it. Either way the row's own tick moves it. */{const out=/Substitute → Bench/.test(await page.locator('.cm-pull-group[data-group=standin] .cm-pull-row').first().innerText());eq(await page.locator('.cm-pull-group[data-group=standin] .cm-pull-select-all').count(),out?1:0,'Select all offers only a substitute that can come out');}await page.locator('.cm-pull-group[data-group=standin] [data-pull-tick]').first().check();await page.waitForTimeout(900);current=await state();
+ await openDeck('Journey Goblins');await page.getByRole('button',{name:/^Planned Changes/}).click();
+ /* The substitute is a take-out, "Substitute"; its tick and Swap send it to the Bench. */{const sub=page.locator('.cm-plan-side.is-out',{hasText:'Wastes'});await sub.waitFor();eq(await sub.locator('.cm-plan-role').textContent(),'Substitute');await sub.locator('.cm-plan-tick').check();}await page.locator('[data-action=plan-swap]').click();await page.getByRole('button',{name:'Confirm change'}).click();await page.waitForTimeout(900);current=await state();
  eq(current.lots.find(l=>l.cardId===wastesKey).location.kind,'bench');eq(CrankReadiness(current).standIns,0);
  /* MAKE THE CHANGE (Rob, 14 September). The deck page's hero offers the change list for a final
     deck: four readings held to the mana formula and the floors, one physical swap per row with

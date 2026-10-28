@@ -1,0 +1,209 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Challenger Troll",
+  "fixtures": {
+    "Brute": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{3}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 4,
+      "toughness": 4
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Their Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Their Other Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob's 2/2 Bear has power under 4: both of Maya's Bears may block it, and it dies",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Challenger Troll",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Bear",
+            "Their Other Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Their Bear",
+              "Bear"
+            ],
+            [
+              "Their Other Bear",
+              "Bear"
+            ]
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "answer": [],
+          "amounts": [
+            2,
+            0
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Their Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Their Other Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The Troll and Rob's 4/4 attack; Maya blocks each with one Bear, and both Bears die",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Challenger Troll",
+            "Brute"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Bear",
+            "Their Other Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Challenger Troll",
+            "Brute"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Their Bear",
+              "Challenger Troll"
+            ],
+            [
+              "Their Other Bear",
+              "Brute"
+            ]
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Their Bear",
+            "Their Other Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Brute",
+            "Challenger Troll"
+          ]
+        }
+      ]
+    }
+  ]
+}

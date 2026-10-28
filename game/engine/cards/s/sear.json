@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sear",
+    "oracleId": "23b11fdc-61b5-4f5e-ad80-f81b729fc91d",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Sear deals 4 damage to target creature or planeswalker.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 4,
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "Sear deals 4 damage to target creature or planeswalker."
+    }
+  ]
+}

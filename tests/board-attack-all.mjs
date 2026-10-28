@@ -68,7 +68,8 @@ async function press(page, selector) {
   await page.mouse.click(at.x, at.y);
   await page.waitForTimeout(150);
 }
-const pickedAt = (page) => page.evaluate(() => [...document.querySelectorAll('#cm-board [data-action="board-option"][aria-pressed="true"]')].map((el) => el.textContent.trim()).sort());
+/* An option's own words: without its risk mark (☠ / ⊘, crankmagic-board.js attackRisk), which says what the attack risks. */
+const pickedAt = (page) => page.evaluate(() => [...document.querySelectorAll('#cm-board [data-action="board-option"][aria-pressed="true"]')].map((el) => {const c = el.cloneNode(true); c.querySelectorAll(".cm-risk").forEach((r) => r.remove()); return c.textContent.trim();}).sort());
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1;};
 try {
@@ -79,7 +80,7 @@ try {
     const {page, context, frames, errors} = await fixture(view, width, height, mode);
     /* In Full the question may sit in a drawer: open it where the board says it is asked. */
     if (!(await page.locator('[data-action="board-attack-all"]').count())) {
-      const open = page.locator('[data-action="board-decision-open"], [data-module-open="actions"], [data-action="board-also"]').first();
+      const open = page.locator('[data-action="board-decision-open"], [data-module-open="actions"], [data-action="board-actions-open"]').first();
       if (await open.count()) {await open.click(); await page.waitForTimeout(200);}
     }
     const buttons = await page.locator('[data-action="board-attack-all"]').allInnerTexts();

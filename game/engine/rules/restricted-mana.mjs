@@ -294,10 +294,12 @@ export function colorlessPool(state, player, kept = {}) {
 }
 
 /** Empty it with the pool (CR 500.4), the riders of the pool's mana too. @returns {number} how much there was */
-export function emptyRestricted(player) {
+/* `keep`: the kinds of mana its player does not lose (Leyline Tyrant's red; rules/turn.mjs) -- those entries stay, as they were. */
+export function emptyRestricted(player, keep = []) {
   const had = player.restrictedMana?.length ?? 0;
-  if (had) player.restrictedMana = [];
-  if (player.manaRiders?.length) player.manaRiders = [];
-  if (player.withheldMana?.length) player.withheldMana = [];
+  const kept = (list) => list.filter((entry) => keep.includes(entry.key));
+  if (had) player.restrictedMana = kept(player.restrictedMana);
+  if (player.manaRiders?.length) player.manaRiders = kept(player.manaRiders);
+  if (player.withheldMana?.length) player.withheldMana = kept(player.withheldMana);
   return had;
 }

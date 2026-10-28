@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Horizon Drake",
+    "oracleId": "9c724912-5afd-4813-affb-4dbda64fd4ee",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Drake"
+    ],
+    "manaCost": "{1}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 1
+  },
+  "oracleText": "Flying, protection from lands",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "types": [
+          "Land"
+        ]
+      },
+      "text": "protection from lands"
+    }
+  ]
+}

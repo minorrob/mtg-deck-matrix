@@ -1,0 +1,32 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Border Patrol",
+    "oracleId": "fa5e2575-51bb-448e-9aaf-0e0f5956ac98",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Nomad"
+    ],
+    "manaCost": "{4}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 6
+  },
+  "oracleText": "Vigilance",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "vigilance",
+      "text": "Vigilance"
+    }
+  ]
+}

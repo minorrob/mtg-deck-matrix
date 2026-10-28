@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sharlayan, Nation of Scholars",
+    "oracleId": "564bdbdd-8392-4ee1-a132-1a17a67b2110",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Town"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This land enters tapped.\n{T}: Add {W} or {U}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      },
+      "text": "This land enters tapped."
+    },
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "W": 1
+            },
+            {
+              "U": 1
+            }
+          ]
+        }
+      ],
+      "text": "{T}: Add {W} or {U}."
+    }
+  ]
+}

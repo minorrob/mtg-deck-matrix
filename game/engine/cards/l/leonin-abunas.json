@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Leonin Abunas",
+    "oracleId": "10064324-34a0-47eb-a58e-01db10234ed9",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Cat",
+      "Cleric"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 5
+  },
+  "oracleText": "Artifacts you control have hexproof. (They can't be the targets of spells or abilities your opponents control.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Artifact"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "addKeywords": [
+          "Hexproof"
+        ]
+      },
+      "text": "Artifacts you control have hexproof. (They can't be the targets of spells or abilities your opponents control.)"
+    }
+  ]
+}

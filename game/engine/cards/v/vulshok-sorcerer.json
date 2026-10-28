@@ -1,0 +1,81 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vulshok Sorcerer",
+    "oracleId": "6f858405-dfe4-4ca2-b2e3-80ce8cda5522",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Shaman",
+      "Sorcerer"
+    ],
+    "manaCost": "{1}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Haste\n{T}: This creature deals 1 damage to any target.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "haste",
+      "text": "Haste"
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Battle"
+              ]
+            },
+            {
+              "what": "player"
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "targets": {
+            "target": 0
+          },
+          "who": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "{T}: This creature deals 1 damage to any target."
+    }
+  ]
+}

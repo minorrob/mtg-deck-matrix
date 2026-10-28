@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dungrove Elder",
+    "oracleId": "32083c9f-04c6-4b6f-9e24-cc8f3cae3e3e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Treefolk"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Hexproof (This creature can't be the target of spells or abilities your opponents control.)\nDungrove Elder's power and toughness are each equal to the number of Forests you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Hexproof (This creature can't be the target of spells or abilities your opponents control.)",
+      "keyword": "hexproof"
+    },
+    {
+      "kind": "static",
+      "text": "Dungrove Elder's power and toughness are each equal to the number of Forests you control.",
+      "layer": 7,
+      "sublayer": "a",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": {
+          "count": {
+            "what": "permanent",
+            "subtypes": [
+              "Forest"
+            ],
+            "controller": "you"
+          }
+        },
+        "setToughness": {
+          "count": {
+            "what": "permanent",
+            "subtypes": [
+              "Forest"
+            ],
+            "controller": "you"
+          }
+        }
+      }
+    }
+  ]
+}

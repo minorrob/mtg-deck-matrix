@@ -180,3 +180,13 @@ deck screen then:
 In the Library, filtered to that commander, each such card's row has a faint, transparent red fill and a red outline.
 
 **Why it waits.** Rob is taking it up later. The production error is the part not to leave long.
+
+---
+
+## 10 · A drawn card flips off the Library and into your hand
+
+**What Rob asked (2026-10-28).** "I want an animation when drawing a card watching the card flip off the top of the Library and into my hand."
+
+**What it would take.** In the 3D table the Library is a pile of card backs on the mat and the hand is a fan along the screen's foot. When the room's view says a card arrived in your hand, the card is drawn once on the Library, lifts, turns face up as it travels a short arc to the hand's slot, and settles into the fan. Only your own draw shows its face (an opponent's shows the back going to the other hand); the history line already says what was drawn. It honors the reduced-motion setting by showing the card arrive with no travel.
+
+**Why it waits.** It touches the Babylon scene (`crankmagic-stage.js`) and the hand's layout together, and the draw step often passes by itself in the same second as the untap and the upkeep, so how the sequence reads when steps pass quickly is worth deciding first.

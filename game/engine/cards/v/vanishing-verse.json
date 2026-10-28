@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vanishing Verse",
+    "oracleId": "5b8f0cdf-572d-4025-b930-79291f7c35be",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{W}{B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Exile target monocolored permanent.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Exile target monocolored permanent.",
+      "targets": [
+        {
+          "what": "permanent",
+          "monocolored": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile"
+        }
+      ]
+    }
+  ]
+}

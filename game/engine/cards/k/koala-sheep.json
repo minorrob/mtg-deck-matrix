@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Koala-Sheep",
+    "oracleId": "2e0226eb-20a3-488c-8f2b-f99a5b4d0cf4",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bear",
+      "Sheep"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, you gain 3 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 3
+        }
+      ],
+      "text": "When this creature enters, you gain 3 life."
+    }
+  ]
+}

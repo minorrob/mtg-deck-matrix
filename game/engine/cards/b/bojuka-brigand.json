@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bojuka Brigand",
+    "oracleId": "a1d82070-3198-4ead-9431-d90661e29741",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Warrior",
+      "Ally"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "This creature can't block.\nWhenever this creature or another Ally you control enters, you may put a +1/+1 counter on this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "cant-block",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature can't block."
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "anyOf": [
+            {
+              "self": true
+            },
+            {
+              "subtypes": [
+                "Ally"
+              ],
+              "controller": "you"
+            }
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "optional": true,
+      "text": "Whenever this creature or another Ally you control enters, you may put a +1/+1 counter on this creature."
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Zodiac Tiger",
+    "oracleId": "79aba9a7-b957-4139-8d50-f1c91fa17793",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Cat"
+    ],
+    "manaCost": "{2}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Forestwalk (This creature can't be blocked as long as defending player controls a Forest.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "forestwalk",
+      "text": "Forestwalk (This creature can't be blocked as long as defending player controls a Forest.)"
+    }
+  ]
+}

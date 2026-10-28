@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Feebleness",
+    "oracleId": "a1a7757f-7e9b-4b5b-b9df-e98d8918caac",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Flash\nEnchant creature\nEnchanted creature gets -2/-1.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flash",
+      "text": "Flash"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      },
+      "text": "Enchant creature"
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": -2,
+        "toughness": -1
+      },
+      "text": "Enchanted creature gets -2/-1."
+    }
+  ]
+}

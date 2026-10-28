@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gohn, Town of Ruin",
+    "oracleId": "13fbd525-c9ee-4bd6-b269-94fb264024b6",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Town"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "B",
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This land enters tapped.\n{T}: Add {B} or {G}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      },
+      "text": "This land enters tapped."
+    },
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "B": 1
+            },
+            {
+              "G": 1
+            }
+          ]
+        }
+      ],
+      "text": "{T}: Add {B} or {G}."
+    }
+  ]
+}

@@ -1,0 +1,149 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Spire Golem",
+  "scenarios": [
+    {
+      "name": "Four Islands: {6} less four, paid with two Wastes",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Spire Golem"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Spire Golem"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Spire Golem",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Island",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "Six Islands: free",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Spire Golem"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "cast": "Spire Golem"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Spire Golem",
+            "has": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Three Islands and two Wastes: {3} more is too much",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Island",
+            "Island",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Spire Golem"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Spire Golem"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": []
+    }
+  ]
+}

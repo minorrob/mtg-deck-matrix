@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mindstatic",
+    "oracleId": "880e0177-f1d2-4bdc-83b4-cae6a0706ef9",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Counter target spell unless its controller pays {6}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "spell"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": {
+            "controllerOf": {
+              "target": 0
+            }
+          },
+          "amount": 6,
+          "effects": [
+            {
+              "effect": "counterSpell",
+              "spells": {
+                "target": 0
+              }
+            }
+          ]
+        }
+      ],
+      "text": "Counter target spell unless its controller pays {6}."
+    }
+  ]
+}

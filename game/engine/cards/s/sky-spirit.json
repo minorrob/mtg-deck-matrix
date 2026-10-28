@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sky Spirit",
+    "oracleId": "fc7e288f-ade2-4997-b3fe-f873c26990b0",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit"
+    ],
+    "manaCost": "{1}{W}{U}",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying, first strike",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "first strike",
+      "text": "first strike"
+    }
+  ]
+}

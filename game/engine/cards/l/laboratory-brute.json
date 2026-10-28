@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Laboratory Brute",
+    "oracleId": "dc92bbee-a445-4927-932b-15985bb93f19",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie",
+      "Horror"
+    ],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "When this creature enters, mill four cards.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "mill",
+          "count": 4
+        }
+      ],
+      "text": "When this creature enters, mill four cards."
+    }
+  ]
+}

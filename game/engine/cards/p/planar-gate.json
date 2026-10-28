@@ -1,0 +1,32 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Planar Gate",
+    "oracleId": "632f1034-d2ad-432a-a79a-4bd1307be24a",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{6}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creature spells you cast cost {2} less to cast.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "types": [
+          "Creature"
+        ]
+      },
+      "amount": 2,
+      "text": "Creature spells you cast cost {2} less to cast."
+    }
+  ]
+}

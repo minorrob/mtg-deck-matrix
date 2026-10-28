@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Jade-Cast Sentinel",
+    "oracleId": "985192cd-ceb6-48ad-80b9-e10fc544260e",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Ape",
+      "Snake"
+    ],
+    "manaCost": "{4}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 1,
+    "toughness": 5
+  },
+  "oracleText": "Reach\n{2}, {T}: Put target card from a graveyard on the bottom of its owner's library.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "reach",
+      "text": "Reach"
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "library"
+        }
+      ],
+      "text": "{2}, {T}: Put target card from a graveyard on the bottom of its owner's library."
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Maraleaf Pixie",
+    "oracleId": "013e4281-4e3e-47c2-ac9a-f570668bcb16",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Faerie"
+    ],
+    "manaCost": "{G}{U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying\n{T}: Add {G} or {U}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "G": 1
+            },
+            {
+              "U": 1
+            }
+          ]
+        }
+      ],
+      "text": "{T}: Add {G} or {U}."
+    }
+  ]
+}

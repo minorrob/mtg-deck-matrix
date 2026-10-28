@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Murmuring Phantasm",
+    "oracleId": "35e684fd-69e3-4137-bf15-94f705191f5e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 0,
+    "toughness": 5
+  },
+  "oracleText": "Defender",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "defender",
+      "text": "Defender"
+    }
+  ]
+}

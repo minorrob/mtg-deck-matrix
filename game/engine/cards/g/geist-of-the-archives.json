@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Geist of the Archives",
+    "oracleId": "345964ea-12b6-44be-b1a6-50178768b8f4",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 0,
+    "toughness": 4
+  },
+  "oracleText": "Defender\nAt the beginning of your upkeep, scry 1. (Look at the top card of your library. You may put that card on the bottom.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "defender",
+      "text": "Defender"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "scry",
+          "count": 1
+        }
+      ],
+      "text": "At the beginning of your upkeep, scry 1. (Look at the top card of your library. You may put that card on the bottom.)"
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Open the Graves",
+    "oracleId": "28778958-a1f9-4fea-b551-c193d1257f18",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever a nontoken creature you control dies, create a 2/2 black Zombie creature token.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever a nontoken creature you control dies, create a 2/2 black Zombie creature token.",
+      "trigger": {
+        "on": "dies",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "token": false
+        }
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Zombie",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Zombie"
+            ],
+            "colors": [
+              "B"
+            ],
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    }
+  ]
+}

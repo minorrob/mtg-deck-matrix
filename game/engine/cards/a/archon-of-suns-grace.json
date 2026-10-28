@@ -1,0 +1,93 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Archon of Sun's Grace",
+    "oracleId": "48a99dce-0aa9-4aac-81df-cec5f94c639d",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Archon"
+    ],
+    "manaCost": "{2}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Flying\nLifelink (Damage dealt by this creature also causes you to gain that much life.)\nPegasus creatures you control have lifelink.\nConstellation — Whenever an enchantment you control enters, create a 2/2 white Pegasus creature token with flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "Lifelink",
+      "keyword": "lifelink"
+    },
+    {
+      "kind": "static",
+      "text": "Pegasus creatures you control have lifelink.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "controller": "you",
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Pegasus"
+        ]
+      },
+      "apply": {
+        "addKeywords": [
+          "Lifelink"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Constellation — Whenever an enchantment you control enters, create a 2/2 white Pegasus creature token with flying.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Enchantment"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Pegasus",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Pegasus"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 2,
+            "toughness": 2,
+            "keywords": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

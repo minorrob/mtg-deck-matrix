@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Scourge of the Throne",
+    "oracleId": "06496a05-7f1a-402c-9594-304cd82bfefd",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dragon"
+    ],
+    "manaCost": "{4}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Flying\nDethrone (Whenever this creature attacks the player with the most life or tied for most life, put a +1/+1 counter on it.)\nWhenever this creature attacks for the first time each turn, if it's attacking the player with the most life or tied for most life, untap all attacking creatures. After this phase, there is an additional combat phase.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "Dethrone",
+      "keyword": "dethrone"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks for the first time each turn, if it's attacking the player with the most life or tied for most life, untap all attacking creatures. After this phase, there is an additional combat phase.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self",
+        "firstTime": true
+      },
+      "effects": [
+        {
+          "effect": "untapAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "attacking": true
+          }
+        },
+        {
+          "effect": "addPhase",
+          "phases": [
+            "combat"
+          ]
+        }
+      ],
+      "condition": {
+        "attackingMostLife": true
+      }
+    }
+  ]
+}

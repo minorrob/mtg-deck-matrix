@@ -22,7 +22,7 @@
         ]
       }
     },
-    "Peek": {
+    "Smoke Peek": {
       "types": [
         "Instant"
       ],
@@ -139,7 +139,7 @@
           "zone": "hand",
           "cards": [
             "Glimpse",
-            "Peek"
+            "Smoke Peek"
           ]
         }
       ],
@@ -170,7 +170,7 @@
           "seat": 0
         },
         {
-          "cast": "Peek",
+          "cast": "Smoke Peek",
           "seat": 0
         },
         {

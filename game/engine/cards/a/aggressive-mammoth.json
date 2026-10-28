@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Aggressive Mammoth",
+    "oracleId": "032b5fc4-5aca-41b6-9bf6-2c1ed0018968",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elephant"
+    ],
+    "manaCost": "{3}{G}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 8,
+    "toughness": 8
+  },
+  "oracleText": "Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)\nOther creatures you control have trample.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)"
+    },
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "another": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Trample"
+        ]
+      },
+      "text": "Other creatures you control have trample."
+    }
+  ]
+}

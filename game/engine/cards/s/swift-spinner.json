@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Swift Spinner",
+    "oracleId": "91585b64-f10d-47c6-a563-384ceb944710",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spider"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Flash (You may cast this spell any time you could cast an instant.)\nReach (This creature can block creatures with flying.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flash",
+      "text": "Flash (You may cast this spell any time you could cast an instant.)"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "reach",
+      "text": "Reach (This creature can block creatures with flying.)"
+    }
+  ]
+}

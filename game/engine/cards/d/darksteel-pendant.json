@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Darksteel Pendant",
+    "oracleId": "431838a8-f020-4e4e-a6f4-2d4ca27c56df",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Indestructible (Effects that say \"destroy\" don't destroy this artifact.)\n{1}, {T}: Scry 1. (Look at the top card of your library. You may put that card on the bottom.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "indestructible",
+      "text": "Indestructible (Effects that say \"destroy\" don't destroy this artifact.)"
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "scry",
+          "count": 1
+        }
+      ],
+      "text": "{1}, {T}: Scry 1. (Look at the top card of your library. You may put that card on the bottom.)"
+    }
+  ]
+}

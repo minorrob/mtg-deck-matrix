@@ -1,0 +1,87 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cloudbound Moogle",
+    "oracleId": "f718b520-d79d-4b91-9d85-de1f1c90c176",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Moogle"
+    ],
+    "manaCost": "{3}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Flying\nWhen this creature enters, put a +1/+1 counter on target creature.\nPlainscycling {2} ({2}, Discard this card: Search your library for a Plains card, reveal it, put it into your hand, then shuffle.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "text": "When this creature enters, put a +1/+1 counter on target creature."
+    },
+    {
+      "kind": "activated",
+      "zone": "hand",
+      "cycling": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "discard",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "subtypes": [
+              "Plains"
+            ]
+          },
+          "to": "hand",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "text": "Plainscycling {2} ({2}, Discard this card: Search your library for a Plains card, reveal it, put it into your hand, then shuffle.)"
+    }
+  ]
+}

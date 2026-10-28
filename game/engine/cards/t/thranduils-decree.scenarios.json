@@ -16,7 +16,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Study": {
+    "Smoke Study": {
       "types": [
         "Instant"
       ],
@@ -266,7 +266,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Study"
+            "Smoke Study"
           ]
         }
       ],
@@ -276,7 +276,7 @@
           "seat": 1
         },
         {
-          "cast": "Study",
+          "cast": "Smoke Study",
           "seat": 1
         },
         {
@@ -311,7 +311,7 @@
           "seat": 0,
           "targets": [
             {
-              "card": "Study"
+              "card": "Smoke Study"
             }
           ]
         },
@@ -329,7 +329,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Study",
+                "card": "Smoke Study",
                 "seat": 0
               },
               "count": 0
@@ -342,7 +342,7 @@
           "seat": 1,
           "zone": "graveyard",
           "cards": [
-            "Study"
+            "Smoke Study"
           ]
         },
         {

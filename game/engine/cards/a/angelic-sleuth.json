@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Angelic Sleuth",
+    "oracleId": "2579e9e0-b00f-4a1b-8fce-15d06bb7fe5a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel",
+      "Advisor"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Flying\nWhenever another permanent you control leaves the battlefield, if it had counters on it, investigate. (Create a Clue token. It's an artifact with \"{2}, Sacrifice this token: Draw a card.\")",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another permanent you control leaves the battlefield, if it had counters on it, investigate. (Create a Clue token. It's an artifact with \"{2}, Sacrifice this token: Draw a card.\")",
+      "trigger": {
+        "on": "leaves",
+        "who": "another",
+        "filter": {
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "investigate"
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "countersOn": "that card",
+            "counter": "any"
+          },
+          "atLeast": 1
+        }
+      }
+    }
+  ]
+}

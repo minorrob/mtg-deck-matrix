@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Jeskai Brushmaster",
+    "oracleId": "eff690a7-c2c7-4750-894c-0667d3151165",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Orc",
+      "Monk"
+    ],
+    "manaCost": "{1}{U}{R}{W}",
+    "colors": [
+      "R",
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "U",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Double strike\nProwess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "double strike",
+      "text": "Double strike"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "prowess",
+      "text": "Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Stomper Cub",
+    "oracleId": "9d448c85-9c93-4e9e-8aa0-0035fc94112e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Beast"
+    ],
+    "manaCost": "{3}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 5,
+    "toughness": 3
+  },
+  "oracleText": "Trample",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample"
+    }
+  ]
+}

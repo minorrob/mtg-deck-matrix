@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Goblin Outlander",
+    "oracleId": "3cc99034-6eaf-4e45-9bff-57b74847343e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Scout"
+    ],
+    "manaCost": "{B}{R}",
+    "colors": [
+      "B",
+      "R"
+    ],
+    "colorIdentity": [
+      "B",
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Protection from white",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "W"
+        ]
+      },
+      "text": "Protection from white"
+    }
+  ]
+}

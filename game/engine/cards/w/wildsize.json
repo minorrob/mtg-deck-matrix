@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wildsize",
+    "oracleId": "e1f439c7-217f-4b20-a77d-b9014c5de8c0",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature gets +2/+2 and gains trample until end of turn.\nDraw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Target creature gets +2/+2 and gains trample until end of turn.\nDraw a card.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 2,
+          "toughness": 2,
+          "keywords": [
+            "Trample"
+          ]
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

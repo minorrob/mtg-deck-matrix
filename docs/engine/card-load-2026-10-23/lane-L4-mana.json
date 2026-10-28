@@ -1,0 +1,809 @@
+{
+ "schema": "library-load-lane@1",
+ "lane": "L4-mana",
+ "theme": "mana",
+ "label": "Lands and mana: land abilities and land types, mana abilities and rituals, mana doubling, extra land drops",
+ "source": {
+  "collection": "collection-2026-10-21.json",
+  "workbook": "Backup_Load_-_CrankMagic_-_2026-10-21.xlsx",
+  "decks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7",
+   "S1-D1",
+   "S1-D2",
+   "S1-D3",
+   "S1-D4",
+   "S1-D5",
+   "S1-D6",
+   "S2-D1",
+   "S2-D2",
+   "S2-D3",
+   "S2-D4",
+   "S2-D5",
+   "S2-D6",
+   "G0-D1",
+   "G0-D2",
+   "G0-D3",
+   "G0-D4",
+   "G1-D1",
+   "G1-D2",
+   "G1-D3",
+   "G1-D4",
+   "CJ1",
+   "CJ2",
+   "CJ3",
+   "CJ4",
+   "CJ5",
+   "HG1",
+   "HG2"
+  ],
+  "liveDecks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7"
+  ],
+  "top": 185,
+  "candidates": {
+   "pool": 29551,
+   "candidate": 2643,
+   "refused": 0,
+   "blocked": 6,
+   "vetoed": 18,
+   "unknown": 25793,
+   "structure": 1091,
+   "oneSentenceShort": 12544
+  }
+ },
+ "cards": [
+  {
+   "name": "Arena of Glory",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 397,
+   "type": "Land",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{R}, {T}, Exert this land: Add {R}{R}.",
+    "If any of that mana is spent on a creature spell, it gains haste until end of turn. (An exerted permanent won't untap during your next untap step.)"
+   ],
+   "needs": []
+  },
+  {
+   "name": "Simian Spirit Guide",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 625,
+   "type": "Creature — Ape Spirit",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Exile this card from your hand: Add {R}."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Culling the Weak",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 698,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "As an additional cost to cast this spell, sacrifice a creature.",
+    "Add {B}{B}{B}{B}."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Urza's Tower",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 707,
+   "type": "Land — Urza's Tower",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "If you control an Urza's Mine and an Urza's Power-Plant, add {C}{C}{C} instead."
+   ],
+   "needs": [
+    "count:UrzaLands"
+   ]
+  },
+  {
+   "name": "Urza's Mine",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 711,
+   "type": "Land — Urza's Mine",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "If you control an Urza's Power-Plant and an Urza's Tower, add {C}{C} instead."
+   ],
+   "needs": [
+    "count:UrzaLands"
+   ]
+  },
+  {
+   "name": "Urza's Power Plant",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 712,
+   "type": "Land — Urza's Power-Plant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "If you control an Urza's Mine and an Urza's Tower, add {C}{C} instead."
+   ],
+   "needs": [
+    "count:UrzaLands"
+   ]
+  },
+  {
+   "name": "Elves of Deep Shadow",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 727,
+   "type": "Creature — Elf Druid",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "This creature deals 1 damage to you."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Pyretic Ritual",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 745,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Add {R}{R}{R}."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Archway of Innovation",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 756,
+   "type": "Land",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{U}, {T}: The next spell you cast this turn has improvise. (Your artifacts can help cast that spell. Each artifact you tap after you're done activating mana abilities pays for {1}.)"
+   ],
+   "needs": []
+  },
+  {
+   "name": "Gyre Sage",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 799,
+   "type": "Creature — Elf Druid",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{T}: Add {G} for each +1/+1 counter on this creature."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Gavony Township",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 801,
+   "type": "Land",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{2}{G}{W}, {T}: Put a +1/+1 counter on each creature you control."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Minamo, School at Water's Edge",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 818,
+   "type": "Legendary Land",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{U}, {T}: Untap target legendary permanent."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Prismatic Vista",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 827,
+   "type": "Land",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{T}, Pay 1 life, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield, then shuffle."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Loot, Exuberant Explorer",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 838,
+   "type": "Legendary Creature — Beast Noble",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{4}{G}{G}, {T}: Look at the top six cards of your library.",
+    "You may reveal a creature card with mana value less than or equal to the number of lands you control from among them and put it onto the battlefield.",
+    "Put the rest on the bottom in a random order."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Rishkar, Peema Renegade",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 846,
+   "type": "Legendary Creature — Elf Druid",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When Rishkar enters, put a +1/+1 counter on each of up to two target creatures.",
+    "Each creature you control with a counter on it has \"{T}: Add {G}.\""
+   ],
+   "needs": []
+  },
+  {
+   "name": "Gilded Goose",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 856,
+   "type": "Creature — Bird",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, create a Food token. (It's an artifact with \"{2}, {T}, Sacrifice this token: You gain 3 life.\")",
+    "{1}{G}, {T}: Create a Food token.",
+    "{T}, Sacrifice a Food: Add one mana of any color."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Spinerock Knoll",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 869,
+   "type": "Land",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{R}, {T}: You may play the exiled card without paying its mana cost if an opponent was dealt 7 or more damage this turn."
+   ],
+   "needs": [
+    "count:MaxOppDamageThisTurn"
+   ]
+  },
+  {
+   "name": "Forgotten Cave",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 876,
+   "type": "Land",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Cycling {R} ({R}, Discard this card: Draw a card.)"
+   ],
+   "needs": []
+  },
+  {
+   "name": "Dragon's Hoard",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 889,
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever a Dragon you control enters, put a gold counter on this artifact.",
+    "{T}, Remove a gold counter from this artifact: Draw a card."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Glaring Fleshraker",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 916,
+   "type": "Creature — Eldrazi Drone",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever you cast a colorless spell, create a 0/1 colorless Eldrazi Spawn creature token with \"Sacrifice this token: Add {C}.\"",
+    "Whenever another colorless creature you control enters, this creature deals 1 damage to each opponent."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Mahadi, Emporium Master",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 933,
+   "type": "Legendary Creature — Devil",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "At the beginning of your end step, create a Treasure token for each creature that died this turn. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")"
+   ],
+   "needs": [
+    "count:ThisTurnEntered"
+   ]
+  },
+  {
+   "name": "Opposition Agent",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 935,
+   "type": "Creature — Human Rogue",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "You control your opponents while they're searching their libraries.",
+    "While an opponent is searching their library, they exile each card they find.",
+    "You may play those cards for as long as they remain exiled, and you may spend mana as though it were mana of any color to cast them."
+   ],
+   "needs": [
+    "option:MayPlay",
+    "option:RememberObjects"
+   ]
+  },
+  {
+   "name": "Dryad Arbor",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 942,
+   "type": "Land Creature — Forest Dryad",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "(This land isn't a spell, it's affected by summoning sickness, and it has \"{T}: Add {G}.\")"
+   ],
+   "needs": []
+  },
+  {
+   "name": "Strip Mine",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 950,
+   "type": "Land",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{T}, Sacrifice this land: Destroy target land."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Heraldic Banner",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 955,
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Creatures you control of the chosen color get +1/+0."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Desperate Ritual",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 956,
+   "type": "Instant — Arcane",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Add {R}{R}{R}.",
+    "Splice onto Arcane {1}{R} (As you cast an Arcane spell, you may reveal this card from your hand and pay its splice cost. If you do, add this card's effects to that spell.)"
+   ],
+   "needs": [
+    "keyword:Splice"
+   ]
+  },
+  {
+   "name": "Patriar's Seal",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 982,
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{1}, {T}: Untap target legendary creature you control."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Imprisoned in the Moon",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1006,
+   "type": "Enchantment — Aura",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "land",
+    "or planeswalker",
+    "Enchanted permanent is a colorless land with \"{T}: Add {C}\" and loses all other card types and abilities."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Cascading Cataracts",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1009,
+   "type": "Land",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{5}, {T}: Add five mana in any combination of colors."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Fiery Islet",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1027,
+   "type": "Land",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{T}, Pay 1 life: Add {U} or {R}."
+   ],
+   "needs": []
+  }
+ ],
+ "review": [
+  {
+   "name": "Palladium Myr",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 708,
+   "type": "Artifact Creature — Myr",
+   "layout": "normal"
+  },
+  {
+   "name": "Charcoal Diamond",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 743,
+   "type": "Artifact",
+   "layout": "normal"
+  },
+  {
+   "name": "Cryptolith Rite",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 792,
+   "type": "Enchantment",
+   "layout": "normal"
+  },
+  {
+   "name": "Worn Powerstone",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 832,
+   "type": "Artifact",
+   "layout": "normal"
+  },
+  {
+   "name": "Razortide Bridge",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 852,
+   "type": "Artifact Land",
+   "layout": "normal"
+  },
+  {
+   "name": "Springleaf Drum",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 859,
+   "type": "Artifact",
+   "layout": "normal"
+  },
+  {
+   "name": "Sky Diamond",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 900,
+   "type": "Artifact",
+   "layout": "normal"
+  },
+  {
+   "name": "Silverbluff Bridge",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1028,
+   "type": "Artifact Land",
+   "layout": "normal"
+  },
+  {
+   "name": "Rustvale Bridge",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1056,
+   "type": "Artifact Land",
+   "layout": "normal"
+  },
+  {
+   "name": "Iron Myr",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1082,
+   "type": "Artifact Creature — Myr",
+   "layout": "normal"
+  },
+  {
+   "name": "Silver Myr",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1148,
+   "type": "Artifact Creature — Myr",
+   "layout": "normal"
+  },
+  {
+   "name": "Gold Myr",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1225,
+   "type": "Artifact Creature — Myr",
+   "layout": "normal"
+  },
+  {
+   "name": "Radiant Fountain",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1280,
+   "type": "Land",
+   "layout": "normal"
+  },
+  {
+   "name": "Marble Diamond",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1354,
+   "type": "Artifact",
+   "layout": "normal"
+  },
+  {
+   "name": "Tree of Tales",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1382,
+   "type": "Artifact Land",
+   "layout": "normal"
+  },
+  {
+   "name": "Snow-Covered Forest",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1587,
+   "type": "Basic Snow Land — Forest",
+   "layout": "normal"
+  },
+  {
+   "name": "Prosperous Innkeeper",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1630,
+   "type": "Creature — Halfling Citizen",
+   "layout": "normal"
+  },
+  {
+   "name": "Valgavoth's Lair",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1645,
+   "type": "Enchantment Land",
+   "layout": "normal"
+  },
+  {
+   "name": "Mistvault Bridge",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1680,
+   "type": "Artifact Land",
+   "layout": "normal"
+  },
+  {
+   "name": "Leaden Myr",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1683,
+   "type": "Artifact Creature — Myr",
+   "layout": "normal"
+  },
+  {
+   "name": "Snow-Covered Island",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1756,
+   "type": "Basic Snow Land — Island",
+   "layout": "normal"
+  },
+  {
+   "name": "Dreamstone Hedron",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1766,
+   "type": "Artifact",
+   "layout": "normal"
+  },
+  {
+   "name": "Secluded Steppe",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1788,
+   "type": "Land",
+   "layout": "normal"
+  },
+  {
+   "name": "Pirate's Pillage",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1795,
+   "type": "Sorcery",
+   "layout": "normal"
+  },
+  {
+   "name": "Shivan Gorge",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1829,
+   "type": "Legendary Land",
+   "layout": "normal"
+  },
+  {
+   "name": "Guildless Commons",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1853,
+   "type": "Land",
+   "layout": "normal"
+  }
+ ]
+}

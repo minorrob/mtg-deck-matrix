@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Toxic Scorpion",
+    "oracleId": "612ea70d-f4f2-4909-a025-218161ae1059",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Scorpion"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Deathtouch\nWhen this creature enters, another target creature you control gains deathtouch until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "deathtouch",
+      "text": "Deathtouch"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Deathtouch"
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you",
+          "another": true
+        }
+      ],
+      "text": "When this creature enters, another target creature you control gains deathtouch until end of turn."
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Spark Spray",
+    "oracleId": "c37f1921-7ac3-4185-8579-1dfdfe647ea2",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Spark Spray deals 1 damage to any target.\nCycling {R} ({R}, Discard this card: Draw a card.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Battle"
+              ]
+            },
+            {
+              "what": "player"
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "targets": {
+            "target": 0
+          },
+          "who": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "Spark Spray deals 1 damage to any target."
+    },
+    {
+      "kind": "activated",
+      "zone": "hand",
+      "cycling": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{R}"
+        },
+        {
+          "atom": "discard",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "text": "Cycling {R} ({R}, Discard this card: Draw a card.)"
+    }
+  ]
+}

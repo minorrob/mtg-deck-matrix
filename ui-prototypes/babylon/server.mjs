@@ -28,7 +28,7 @@ async function cardArt(name){
 const files = new Map(['index.html','table.js','tables.js','table.css'].map(n=>['/'+n,path.join(HERE,n)]));
 files.set('/',path.join(HERE,'index.html'));
 files.set('/engine.js',path.join(HERE,'node_modules/babylonjs/babylon.js'));
-for(const n of ['volcano.webm','volcano-poster.jpg']) files.set('/assets/environments/'+n,path.join(ROOT,'assets/environments',n));
+for(const n of ['dwarven-king-1080.webm','dwarven-king-poster.jpg']) files.set('/assets/environments/'+n,path.join(ROOT,'assets/environments',n));
 for(const n of ['falls-tree','cloud-wolf','sand-lion','ember-serpent']) files.set('/assets/playmats/'+n+'.webp',path.join(ROOT,'assets/playmats',n+'.webp'));
 const mime={'.html':'text/html','.js':'text/javascript','.css':'text/css','.webm':'video/webm','.jpg':'image/jpeg','.webp':'image/webp'};
 export function previewServer() {

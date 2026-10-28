@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rhox Charger",
+    "oracleId": "e1b7db10-58a1-46fc-ac6c-287393ed96c2",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Rhino",
+      "Soldier"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Trample\nExalted (Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "exalted",
+      "text": "Exalted (Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn.)"
+    }
+  ]
+}

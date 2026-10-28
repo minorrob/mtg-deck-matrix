@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Steadfast Cathar",
+    "oracleId": "00895741-f94f-4d80-8ca4-c436bf3c8d56",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Soldier"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Whenever this creature attacks, it gets +0/+2 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 0,
+          "toughness": 2,
+          "until": "end-of-turn"
+        }
+      ],
+      "text": "Whenever this creature attacks, it gets +0/+2 until end of turn."
+    }
+  ]
+}

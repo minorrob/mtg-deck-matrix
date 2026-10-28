@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wrecking Crew",
+    "oracleId": "533c4956-87f8-4bae-8924-166fc2e9ec1f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Warrior"
+    ],
+    "manaCost": "{4}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Reach (This creature can block creatures with flying.)\nTrample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "reach",
+      "text": "Reach (This creature can block creatures with flying.)"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)"
+    }
+  ]
+}

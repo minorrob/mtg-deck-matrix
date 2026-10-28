@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Highland Game",
+    "oracleId": "0e0d40a6-e0a4-4fb2-be72-314f7d66b7eb",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elk"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "When this creature dies, you gain 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "dies"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 2
+        }
+      ],
+      "text": "When this creature dies, you gain 2 life."
+    }
+  ]
+}

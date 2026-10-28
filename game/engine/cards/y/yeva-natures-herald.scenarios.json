@@ -1,0 +1,202 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Yeva, Nature's Herald",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Gray Ox": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ox"
+      ],
+      "manaCost": "{2}",
+      "colors": [],
+      "power": 2,
+      "toughness": 2
+    },
+    "Growth": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "You gain 1 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 1
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "On Maya's turn Rob casts his green Bear; not his colorless Ox, nor a green sorcery",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Yeva, Nature's Herald",
+            "Forest",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Gray Ox",
+            "Growth"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Forest",
+          "seat": 0
+        },
+        {
+          "tap": "Forest",
+          "seat": 0
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Gray Ox",
+                "seat": 0
+              },
+              "count": 0
+            },
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Growth",
+                "seat": 0
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "cast": "Bear",
+          "seat": 0
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Bear",
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Yeva, Nature's Herald"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Flash: Yeva herself on Maya's turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Yeva, Nature's Herald"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Forest",
+          "seat": 0
+        },
+        {
+          "tap": "Forest",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "cast": "Yeva, Nature's Herald",
+          "seat": 0
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Yeva, Nature's Herald",
+            "power": 4,
+            "toughness": 4
+          }
+        }
+      ]
+    }
+  ]
+}

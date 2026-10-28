@@ -1,0 +1,105 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "The Mind Stone",
+    "oracleId": "b175e826-09e8-4fae-9f2e-b902f95b282d",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Infinity",
+      "Stone"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Indestructible\n{T}: Add {W}.\n{5}{W}, {T}: Harness The Mind Stone. (Once harnessed, its ∞ ability is active.)\n∞ — At the beginning of your end step, exile up to one other target nonland permanent you control, then return that card to the battlefield under its owner's control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Indestructible",
+      "keyword": "indestructible"
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Add {W}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "W": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{5}{W}, {T}: Harness The Mind Stone.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{5}{W}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "alterAttribute",
+          "targets": "self",
+          "attribute": "harnessed"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "∞ — At the beginning of your end step, exile up to one other target nonland permanent you control, then return that card to the battlefield under its owner's control.",
+      "trigger": {
+        "on": "end step"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile",
+          "andReturn": "now"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "nonTypes": [
+            "Land"
+          ],
+          "controller": "you",
+          "another": true,
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ],
+      "harnessed": true
+    }
+  ]
+}

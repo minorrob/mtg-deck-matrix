@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Barkhide Mauler",
+    "oracleId": "84a18b1f-5f9f-4e2b-87cd-c437bdf4d278",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Beast"
+    ],
+    "manaCost": "{4}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Cycling {2} ({2}, Discard this card: Draw a card.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "zone": "hand",
+      "cycling": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "discard",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "text": "Cycling {2} ({2}, Discard this card: Draw a card.)"
+    }
+  ]
+}

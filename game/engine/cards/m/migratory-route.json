@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Migratory Route",
+    "oracleId": "f6a74582-62b6-48d1-89d6-e26059229840",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{W}{U}",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Create four 1/1 white Bird creature tokens with flying.\nBasic landcycling {2} ({2}, Discard this card: Search your library for a basic land card, reveal it, put it into your hand, then shuffle.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 4,
+          "token": {
+            "name": "Bird",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Bird"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 1,
+            "toughness": 1,
+            "keywords": [
+              "Flying"
+            ]
+          }
+        }
+      ],
+      "text": "Create four 1/1 white Bird creature tokens with flying."
+    },
+    {
+      "kind": "activated",
+      "zone": "hand",
+      "cycling": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "discard",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "to": "hand",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "text": "Basic landcycling {2} ({2}, Discard this card: Search your library for a basic land card, reveal it, put it into your hand, then shuffle.)"
+    }
+  ]
+}

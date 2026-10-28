@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Strangle",
+    "oracleId": "1f570526-7fb0-4fe5-8014-b5793eb65f87",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Strangle deals 3 damage to target creature or planeswalker.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 3,
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "Strangle deals 3 damage to target creature or planeswalker."
+    }
+  ]
+}

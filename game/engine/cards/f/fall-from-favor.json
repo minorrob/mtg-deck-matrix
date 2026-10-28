@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fall from Favor",
+    "oracleId": "e89e1fae-bac3-4cc0-a233-24b9e08a5290",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature\nWhen this Aura enters, tap enchanted creature and you become the monarch.\nEnchanted creature doesn't untap during its controller's untap step unless that player is the monarch.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Enchant creature",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      },
+      "hostile": true
+    },
+    {
+      "kind": "triggered",
+      "text": "When this Aura enters, tap enchanted creature and you become the monarch.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "tap",
+          "targets": "enchanted"
+        },
+        {
+          "effect": "becomeMonarch"
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted creature doesn't untap during its controller's untap step unless that player is the monarch.",
+      "rule": "doesnt-untap",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self",
+        "monarch": false
+      }
+    }
+  ]
+}

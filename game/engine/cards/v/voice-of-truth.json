@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Voice of Truth",
+    "oracleId": "33435856-ea24-4d10-84d5-6872b35b63a3",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying, protection from white",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "W"
+        ]
+      },
+      "text": "protection from white"
+    }
+  ]
+}

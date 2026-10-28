@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Humble the Brute",
+    "oracleId": "bea6606c-ea9a-4199-a8cd-b35d7c47fd7b",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy target creature with power 4 or greater.\nInvestigate.(Create a Clue token. It's an artifact with \"{2}, Sacrifice this token: Draw a card.\")",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Destroy target creature with power 4 or greater.\nInvestigate.(Create a Clue token. It's an artifact with \"{2}, Sacrifice this token: Draw a card.\")",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "power": {
+            "min": 4
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "investigate"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Battle Rampart",
+    "oracleId": "ec187304-4c05-44da-8ad5-7c56f6b05212",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Wall"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Defender\n{T}: Target creature gains haste until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "defender",
+      "text": "Defender"
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Haste"
+          ]
+        }
+      ],
+      "text": "{T}: Target creature gains haste until end of turn."
+    }
+  ]
+}

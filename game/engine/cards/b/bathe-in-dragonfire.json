@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bathe in Dragonfire",
+    "oracleId": "72d793e8-1d19-4ca1-894c-8851a2ebecde",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Bathe in Dragonfire deals 4 damage to target creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 4,
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "Bathe in Dragonfire deals 4 damage to target creature."
+    }
+  ]
+}

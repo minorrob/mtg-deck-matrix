@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wildfire Emissary",
+    "oracleId": "8fb44b03-017f-4cf3-a79b-8f6cc33570ca",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Efreet"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Protection from white\n{1}{R}: This creature gets +1/+0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "W"
+        ]
+      },
+      "text": "Protection from white"
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{R}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": 0
+        }
+      ],
+      "text": "{1}{R}: This creature gets +1/+0 until end of turn."
+    }
+  ]
+}

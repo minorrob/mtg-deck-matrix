@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Daring Leap",
+    "oracleId": "10bc00f7-d501-46e3-9f23-af1ddc3f6c4c",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{W}{U}",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature gets +1/+1 and gains flying and first strike until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 1,
+          "toughness": 1,
+          "keywords": [
+            "Flying",
+            "First Strike"
+          ]
+        }
+      ],
+      "text": "Target creature gets +1/+1 and gains flying and first strike until end of turn."
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sage of Epityr",
+    "oracleId": "ef893585-246c-4028-bd2b-14ac51ce29be",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "When this creature enters, look at the top four cards of your library, then put them back in any order.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "rearrangeTop",
+          "count": 4
+        }
+      ],
+      "text": "When this creature enters, look at the top four cards of your library, then put them back in any order."
+    }
+  ]
+}

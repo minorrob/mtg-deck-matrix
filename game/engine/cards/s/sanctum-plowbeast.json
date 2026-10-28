@@ -1,0 +1,94 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sanctum Plowbeast",
+    "oracleId": "ff3fae6e-d8a1-46b3-a6cc-fb4e8800ee68",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Beast"
+    ],
+    "manaCost": "{4}{W}{U}",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 6
+  },
+  "oracleText": "Defender\nPlainscycling {2}, islandcycling {2} ({2}, Discard this card: Search your library for a Plains or Island card, reveal it, put it into your hand, then shuffle.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "defender",
+      "text": "Defender"
+    },
+    {
+      "kind": "activated",
+      "zone": "hand",
+      "cycling": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "discard",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "subtypes": [
+              "Plains"
+            ]
+          },
+          "to": "hand",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "text": "Plainscycling {2}"
+    },
+    {
+      "kind": "activated",
+      "zone": "hand",
+      "cycling": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "discard",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "subtypes": [
+              "Island"
+            ]
+          },
+          "to": "hand",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "text": "islandcycling {2} ({2}, Discard this card: Search your library for a Plains or Island card, reveal it, put it into your hand, then shuffle.)"
+    }
+  ]
+}

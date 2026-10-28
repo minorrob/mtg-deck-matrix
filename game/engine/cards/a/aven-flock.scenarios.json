@@ -1,0 +1,104 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Aven Flock",
+  "scenarios": [
+    {
+      "name": "Flying; {W} twice: a 2/5 until end of turn, a 2/3 again on the next turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Aven Flock",
+            "Plains",
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "activate": "Aven Flock"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "activate": "Aven Flock"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Aven Flock",
+                "power": 2,
+                "toughness": 5
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Aven Flock",
+                "has": [
+                  "Flying"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Aven Flock",
+            "power": 2,
+            "toughness": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "Red mana does not pay {W}: nothing is offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Aven Flock",
+            "Mountain"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Aven Flock"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

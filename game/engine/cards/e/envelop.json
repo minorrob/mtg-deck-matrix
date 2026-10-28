@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Envelop",
+    "oracleId": "30062dd0-c049-4872-8011-8b4810a3fa26",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Counter target sorcery spell.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "spell",
+          "types": [
+            "Sorcery"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "counterSpell",
+          "spells": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "Counter target sorcery spell."
+    }
+  ]
+}

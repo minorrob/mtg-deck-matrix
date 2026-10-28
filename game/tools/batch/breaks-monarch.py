@@ -29,6 +29,7 @@ SCENARIO = 'game/engine/cards/scenario.mjs'
 PLAN = 'docs/engine/PLAN.md'
 
 GAIN = '''    if (object.controller !== to) {
+      clearRingBearer(state, id);
       object.controlledSinceTurn = state.turn;
       removeFromCombat(state, id);
     }

@@ -56,7 +56,9 @@ const overSea = (page) => page.evaluate(() => {
   for (const sea of document.querySelectorAll(".cm-cloud-table .cm-seat-sea")) {
     const art = sea.parentElement;
     for (const el of art.querySelectorAll("*")) {
-      if (el.closest(".cm-sr-only, svg, canvas") || ![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) continue;
+      /* Two things are not measured: an inactive control (WCAG 1.4.3 exempts it: Ready before there is a deck), and the little "ai" mark,
+         decorative and aria-hidden, legible by its own light outline, which the seat's AI tag says again in a pill that is measured. */
+      if (el.closest(".cm-sr-only, svg, canvas") || el.matches(".cm-ai, [disabled]") || ![...el.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim())) continue;
       const r = el.getBoundingClientRect(), st = getComputedStyle(el);
       if (!r.width || !r.height || st.visibility === "hidden") continue;
       const chain = [];
@@ -169,6 +171,7 @@ const {browser, base, stub, close} = await openBrowser({name: "table-lobby", fla
 async function person(email, viewport, {play = true, library = true} = {}) {
   const context = await browser.newContext({viewport, serviceWorkers: "block"});
   const page = await context.newPage();
+  await page.addInitScript(() => (globalThis.CrankFeatures ||= []).push(C => {globalThis.__tableC=C;}));
   if (stub) await stub(page);
   if (library) await loadLiveState(page, base);   /* a real library to bring decks from, restored before the account is on */
   await page.route(`${base}/index.html*`, (r) => r.fulfill({contentType: "text/html; charset=utf-8", body: html(play)}));
@@ -200,33 +203,71 @@ try {
   const rob = await person("rob@example.com", {width: 1400, height: 900});
   const maya = await person("maya@example.com", {width: 390, height: 844});
 
+  /* THE NEW GAME POP-UP (Rob, 2026-10-28), driven by its own controls: it replaced the New table page. */
+  const openNewGame = async (page, hash = "#game") => {
+    await page.goto(`${base}/index.html${hash}`);
+    await page.locator("#cm-play-home").waitFor({timeout: 30000});
+    if (!(await page.locator(".cm-ng-dialog").count())) await page.getByRole("button", {name: "Start a new game", exact: true}).click();
+    await page.locator(".cm-ng-dialog").waitFor({timeout: 30000});
+  };
+  const fillNewGame = async (page, {host, humans = [], ai = [{}]}) => {
+    const hostInput = page.locator("[data-ng-field=host]");
+    if (host !== undefined && await hostInput.count()) await hostInput.fill(host);
+    await page.locator(`[data-ng=humans][data-n="${1 + humans.length}"]`).click();
+    for (const [i, h] of humans.entries()) {
+      await page.locator(`[data-ng-field=kind][data-row="${i}"]`).selectOption("new");
+      await page.locator(`[data-ng-field=name][data-row="${i}"]`).fill(h.name);
+      await page.locator(`[data-ng-field=email][data-row="${i}"]`).fill(h.email || `${h.name.toLowerCase()}@example.com`);
+    }
+    await page.locator(`[data-ng=ai][data-n="${ai.length}"]`).click();
+    for (const [i, a] of ai.entries()) {
+      if (a.name) await page.locator(`[data-ng-field=ainame][data-row="${i}"]`).fill(a.name);
+      if (a.level) {await page.locator(`[data-ng=toggle-diff][data-row="${i}"]`).click(); await page.locator(`[data-ng=pick-diff][data-row="${i}"][data-id="${a.level}"]`).click();}
+    }
+  };
+  const submitNewGame = async (page) => {await page.locator("[data-ng=submit]").click();};
+
   /* THE PLAY TAB, marked for Play in the cloud: the table's page, not the local game host's (staging's Play release). */
   await rob.page.goto(`${base}/index.html#game`);
-  await rob.page.locator("#cm-table-new").waitFor({timeout: 30000});
-  ok(!/Coming Soon/.test(await pageText(rob.page, "#cm-main")), "with the cloud-Play mark, the Play tab opens a new table");
+  await rob.page.locator("#cm-play-home").waitFor({timeout: 30000});
+  ok(await rob.page.locator("#cm-table-new").count() === 0, "Play opens the lounge without creating a table");
+  ok(await rob.page.getByRole('heading',{name:'Live games'}).count()===1 && await rob.page.getByRole('heading',{name:'Leaderboard'}).count()===1 && /Coming soon/.test(await rob.page.locator('.cm-pl-chathead').innerText()),"the Pre-lobby has Live games, the Leaderboard and the chat's Coming soon");
+  await rob.page.goto(`${base}/index.html#table?new=1&ai=1`);
+  await rob.page.locator(".cm-ng-dialog").waitFor({timeout: 30000});
+  eq(await rob.page.locator("[data-ng-field=ainame]").count(), 1, "the AI shortcut stages one AI seat in the New game pop-up");
+  ok(rob.page.url().includes("ai=1"), "AI setup has a restorable navigation URL");
+  await openNewGame(rob.page);
+  ok(!/Coming Soon/.test(await pageText(rob.page, "#cm-main")), "New game is an explicit action from the lounge");
+  ok(await rob.page.locator(".cm-ng-sec").count() === 4 && await rob.page.locator(".cm-ng-row.is-ai").count() === 3 && await rob.page.locator("[data-ng=privacy]").count() === 2, "the pop-up has Human players, AI players, Game rules and Game privacy");
+  ok(await rob.page.locator("#cm-table-new").count() === 0, "and the New table page is gone");
+  await rob.page.keyboard.press("Escape");
+  await rob.page.locator(".cm-ng-dialog").waitFor({state: "detached"});
 
   /* HOST: a new table. */
-  /* The AI door not open to Rob (GET /api/ai-seat says so): no AI on Claude is offered. */
-  await rob.page.route("**/api/ai-seat", (r) => r.fulfill({json: {open: false}}));
-  await rob.page.goto(`${base}/index.html#table`);
-  await rob.page.locator("#cm-table-new").waitFor({timeout: 30000});
+  /* The AI door not open to Rob (GET /api/ai-seat says so): the Veteran is not offered. */
+  await rob.page.route("**/api/ai-seat", (r) => r.fulfill({json: {open: false, levels: ["easy", "normal"]}}));
+  await openNewGame(rob.page, "#table");
+  await rob.page.locator("[data-ng=toggle-diff][data-row='0']").click();
+  ok(await rob.page.locator("[data-ng=pick-diff][data-id=Veteran]").isDisabled() && await rob.page.locator("[data-ng=pick-diff][data-id=Hard]").isDisabled() && !(await rob.page.locator("[data-ng=pick-diff][data-id=Easy]").isDisabled()), "with the AI door shut, Veteran (and Hard, not open here) are greyed and Easy is not");
+  await rob.page.keyboard.press("Escape");
   /* The accessibility pass: the page's "?" opens the table's help, the board's keys among it. */
+  await rob.page.keyboard.press("Escape");
+  await rob.page.locator(".cm-ng-dialog").waitFor({state: "detached"});
   await rob.page.click('#cm-main [data-action="page-help"][data-help="table"]');
+  await rob.page.locator("#cm-dialog [data-action=help-tab][data-tab=keys]").click();
   await rob.page.locator("#cm-dialog[open] .cm-help-keys").waitFor();
-  ok((await rob.page.locator("#cm-dialog-title").textContent()) === "Help — Play: the table and the board" && /Space/.test(await pageText(rob.page, "#cm-dialog .cm-help-keys")), "New table's ? opens Play's help, the board's keys among it");
+  ok((await rob.page.locator("#cm-dialog-title").textContent()) === "Help — Play: the table and the board" && /Space/.test(await pageText(rob.page, "#cm-dialog .cm-help-keys")), "the Pre-lobby's ? opens Play's help, the board's keys among it");
   await rob.page.click("#cm-dialog [data-action=close]");
   await rob.page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"), null, {timeout: 5000});
-  await rob.page.fill("#cm-table-new [name=hostName]", "Rob");
-  await rob.page.fill("#cm-table-new [name=name2]", "Maya");
-  eq(await rob.page.locator("#cm-table-new [name=kind3] option").allTextContents(), ["A person I will invite", "An AI · Normal", "An AI · Easy", "Nobody"],
-    "an AI seat is offered at Normal or Easy (AI-2)");
-  await rob.page.selectOption("#cm-table-new [name=kind3]", "ai-easy");
-  await rob.page.fill("#cm-table-new [name=name3]", "Shadrix");
-  await rob.page.click("[data-action=table-create]");
+  await openNewGame(rob.page);
+  ok(await rob.page.locator("[data-ng=submit]").isDisabled() && /Give your name at the table/.test(await rob.page.locator(".cm-ng-foot p").textContent()), "a missing host name is explained in the footer, and Submit waits");
+  await fillNewGame(rob.page, {host: "Rob", humans: [{name: "Maya"}], ai: [{name: "Shadrix", level: "Easy"}]});
+  await submitNewGame(rob.page);
   await rob.page.waitForFunction(() => /#table\?id=table\d+/.test(location.hash), null, {timeout: 20000});
   await rob.page.locator(".cm-cloud-table .cm-lobby-seat").first().waitFor({state: "attached"});
-  eq(await rob.page.locator(".cm-cloud-table .cm-lobby-seat h3").allTextContents(), ["Seat 1 · You", "Seat 2 · Maya", "Seat 3 · AI · Easy"], "the lobby: you in seat 1, Maya to invite, an AI at Easy, as chosen; seat 4 left out");
-  eq(await rob.page.locator('#cm-main .cm-page-head [data-action="page-help"]').getAttribute("data-help"), "table", "and its head carries the same ?, to the table's help");
+  eq((await rob.page.locator(".cm-cloud-table .cm-lobby-seat h3").allTextContents()).map((t) => t.replace(/ai$/, "")), ["Seat 1 · You · Host", "Seat 2 · Maya", "Seat 3 · Shadrix"], "the lobby: you in seat 1, Maya to invite, an AI at Easy, as chosen; seat 4 left out");
+  eq(await rob.page.locator(".cm-lobby-seat[data-seat='2'] .cm-seat-tags span").allTextContents(), ["AI", "Easy", "The salty one"], "an AI seat says AI, its difficulty and its persona");
+  ok(await rob.page.locator('#cm-main [data-action="page-help"]').first().getAttribute("data-help") === "table", "and its head carries the same ?, to the table's help");
   const seaWords = await overSea(rob.page), seaLow = seaWords.filter((w) => w.ratio < 4.5);
   ok(seaWords.length >= 6 && !seaLow.length, `every word over a seat's sea reads at 4.5:1 or better over a white sea (${seaWords.length} read; ${(seaLow.length ? seaLow : seaWords.slice(0, 3)).map((w) => `"${w.text}" (${w.cls}) ${w.ratio}`).join(", ")})`);
   /* THE SEAS DO NOT JUMP (Rob, 2026-09-29: the background played "for about a second then jumping back to the
@@ -244,14 +285,14 @@ try {
   const redrawn = await sea();
   ok(redrawn.probe !== after.probe && redrawn.t >= drawnAt, `and a sea drawn afresh carries on from the same moment, never from the beginning (${redrawn.t.toFixed(1)}s)`);
   eq(await rob.page.locator(".cm-cloud-table .cm-seat-q").count(), 3, "three quadrants, one a seat");
-  ok(/Table rules/.test(await pageText(rob.page, ".cm-table-center")) && /5 minutes/.test(await pageText(rob.page, ".cm-table-center")), "the table's rules sit in the middle, the five minutes among them");
+  ok(/Table rules/.test(await pageText(rob.page, ".cm-table-center")) && /House rules\s*(Yes|No)/.test(await pageText(rob.page, ".cm-table-center")) && !/5 minutes|Invitations/.test(await pageText(rob.page, ".cm-table-center")), "the table's rules sit in the middle, House rules Yes or No among them (Rob, 2026-10-28: no invitation or dropped-player rows)");
   const wide = await panelReading(rob.page);
   ok(wide.worst >= 4.5 && wide.inside && wide.apart, `the rules read at 1400: contrast ${wide.worst}, inside ${wide.inside}, apart ${wide.apart}`);
   await shot(rob.page, "lobby-new-1400");
 
   /* THE TABLE'S RULES (Rob, 2026-09-30, B3): the host's small Edit beside the heading; starting life and a bracket limit; a
      deck above the limit refused with what to do instead. */
-  const sizes = await rob.page.evaluate(() => {const e = document.querySelector(".cm-table-center .cm-table-rules-edit"), other = document.querySelector(".cm-lobby-seat [data-action=table-deck]"), h = document.querySelector(".cm-table-head h2"); if (!e || !other) return null; const r = e.getBoundingClientRect(), o = other.getBoundingClientRect(), hr = h.getBoundingClientRect(); return {edit: Math.round(r.height), other: Math.round(o.height), beside: r.left >= hr.right && Math.abs((r.top + r.bottom) / 2 - (hr.top + hr.bottom) / 2) < 8};});
+  const sizes = await rob.page.evaluate(() => {const e = document.querySelector(".cm-table-center .cm-table-rules-edit"), other = document.querySelector(".cm-lobby-seat [data-action=table-deck]"), h = document.querySelector(".cm-table-head h2"); if (!e || !other) return null; const r = e.getBoundingClientRect(), o = other.getBoundingClientRect(), hr = h.getBoundingClientRect(); return {edit: Math.round(r.height), other: Math.round(o.height), beside: r.left >= hr.right - 1 && (r.top + r.bottom) / 2 >= hr.top && (r.top + r.bottom) / 2 <= hr.bottom};});
   ok(sizes && sizes.beside && sizes.edit < sizes.other * 0.75, `the host sees a small Edit beside Table rules (${sizes && sizes.edit}px, the page's buttons ${sizes && sizes.other}px)`);
   /* THE LOBBY'S MUSIC (Rob, 2026-10-09: "Lobby music."): nothing of the sound before a press in the lobby -- a browser would
      refuse to play it -- and the pack's lobby bed from the first one. */
@@ -268,6 +309,8 @@ try {
   await waitText(rob.page, ".cm-table-rules", /Starting life\s*30/);
   ok(/Bracket limit\s*2 or lower/.test(await pageText(rob.page, ".cm-table-rules")), "Save puts 30 life and a bracket limit of 2 on the table's rules");
   await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-deck]");
+  ok(await rob.page.getByLabel('Only table-legal decks',{exact:true}).isChecked(), 'Only table-legal decks defaults on in a fresh profile');
+  await rob.page.uncheck('[data-table-deck-playable]'); // Explicitly show the rejected row to exercise the server guard.
   await rob.page.locator("[data-action=table-use-deck]").first().waitFor();
   await rob.page.locator("[data-action=table-use-deck]").first().click();
   await rob.page.locator("#cm-table-deck-error").waitFor({state: "visible", timeout: 10000});
@@ -287,13 +330,69 @@ try {
   ok(deckCount >= 5, `Choose a deck lists the decks in your own library (${deckCount})`);
   /* M5 (the plan review's C4): each deck says how much of it the table can play before it is chosen -- here every card
      but Sol Ring. */
-  await rob.page.waitForFunction(() => [...document.querySelectorAll(".cm-table-deck-known")].every((el) => el.textContent));
-  const counts = await rob.page.locator(".cm-table-deck-known").allInnerTexts();
-  await rob.page.waitForFunction(()=>[...document.querySelectorAll('[data-shared-status]')].every(el=>!el.textContent.includes('Checking')));
-  ok(await rob.page.locator('[data-action=table-use-shared-deck]:disabled').count()>0,"the shared catalog refuses decks when this server deliberately lacks Sol Ring");
+  await rob.page.waitForFunction(() => [...document.querySelectorAll("[data-known-for]")].every((el) => el.dataset.ok !== "pending"));
+  const counts = await rob.page.locator("[data-known-for]").evaluateAll((els) => els.map((el) => el.dataset.text));
+  /* PUBLIC PRECONS, AND NOTHING SHARED THAT WAS NOT (Rob, 2026-10-25): the six New from Wizards decks are offered to
+     everyone; Rob's own decks were bundled into this list for every player until then, and are gone from it. */
+  await rob.page.waitForFunction(()=>document.querySelectorAll('[data-precon-status]').length===6&&[...document.querySelectorAll('[data-precon-status]')].every(el=>el.dataset.ok!=='pending'));
+  eq(await rob.page.locator('[data-action=table-use-precon]:disabled').count(),6,"the six precons are offered, and each is refused while this server deliberately lacks Sol Ring, which every one plays");
+  eq(await rob.page.locator('[data-action=table-use-shared-deck]').count(),0,"no deck is listed as shared: nothing is shared with this player, and no deck is bundled for everyone any more");
   ok(counts.some((t) => /^\d+ of \d+ known · \d+ to learn$/.test(t)) && counts.some((t) => /^All \d+ cards known$/.test(t)),
     `each deck says how much of it the table can play: "${counts.find((t) => /to learn/.test(t))}", "${counts.find((t) => /^All/.test(t))}"`);
   eq(await rob.page.locator("[data-action=table-use-test-deck]").count(), 0, "this table is not a playtest table, so the basic lands test deck is not offered (staging's are: tests/uat/play-e2e.mjs)");
+  /* Each row keeps commander details; R24 defaults the labeled server/legal filter on,
+     with an explicit opt-out remembered on the device. */
+  const rows = await rob.page.$$eval("[data-action=table-use-deck]", (bs) => bs.map((b) => ({pips: b.querySelectorAll(".cm-table-deck-cmdr .cm-pip, .cm-table-deck-cmdr .cm-color").length, about: (b.querySelector(".cm-table-deck-about")?.textContent || "").trim()})));
+  ok(rows.every((r) => r.pips > 0 && r.about.length > 20), `each library deck's row shows its commanders' colors and a line on what it does (${rows.length} rows; "${rows[0] && rows[0].about.slice(0, 60)}…")`);
+  const preconRows = await rob.page.$$eval("[data-action=table-use-precon]", (bs) => bs.map((b) => ({name: b.querySelector("strong").textContent, pips: b.querySelectorAll(".cm-table-deck-cmdr .cm-pip, .cm-table-deck-cmdr .cm-color").length, about: (b.querySelector(".cm-table-deck-about")?.textContent || "").trim()})));
+  /* A precon's line is its commander's rules text: from the records the app ships where they hold it; the rest the card
+     catalog fetches from Scryfall, which this sandbox answers only for the shipped records (scryfall-stub.mjs), so those wait. */
+  const shippedText = new Set(JSON.parse(readFileSync(path.join(ROOT, "data", "cards.json"), "utf8")).cards.filter((c) => c.oracleText).map((c) => c.name));
+  const latest = JSON.parse(readFileSync(path.join(ROOT, "data", "precons-latest.json"), "utf8")).decks;
+  const shippable = latest.filter((d) => d.commander.every((c) => shippedText.has(c.name))).map((d) => d.name);
+  const told = preconRows.filter((r) => shippable.includes(r.name));
+  ok(preconRows.every((r) => r.pips > 0) && shippable.length >= 1 && told.length === shippable.length && told.every((r) => r.about.length > 20),
+    `and each precon's colors, and what its commander does wherever its text is to be had (${told.map((r) => r.name).join(", ")}; waiting: ${preconRows.filter((r) => !r.about).map((r) => r.name).join(", ")})`);
+  const visible = () => rob.page.$$eval(".cm-table-deck", (bs) => bs.filter((b) => b.offsetParent !== null).length);
+  ok(!await rob.page.getByLabel('Only table-legal decks',{exact:true}).isChecked(), 'reopening preserves the explicit filter opt-out');
+  const allRows = await visible();
+  ok(!(await rob.page.isChecked("[data-table-deck-playable]")), "the filter can be explicitly turned off");
+  await rob.page.check("[data-table-deck-playable]");
+  const playableRows = await visible(), unplayable = await rob.page.locator(".cm-table-deck.is-unknown, .cm-table-deck[data-precon]:disabled").count();
+  ok(unplayable > 0 && playableRows === allRows - unplayable && await rob.page.$$eval(".cm-table-deck.is-unknown, .cm-table-deck[data-precon]:disabled", (bs) => bs.every((b) => b.offsetParent === null)),
+    `ticked, Playable puts away the ${unplayable} decks the table cannot play every card of (${playableRows} of ${allRows} left)`);
+  eq(await rob.page.evaluate(() => localStorage.getItem("cm-table-deck-playable")), "on", "and it is remembered on the device");
+  await rob.page.uncheck("[data-table-deck-playable]");
+  eq(await visible(), allRows, "unticked, every deck is back");
+  /* Exact shared contents use the canonical local Decks name; different revisions stay shared.
+     These injected already-authorized list responses never write a share or import a deck. */
+  const chooserFixture=await rob.page.evaluate(()=>{
+    const C=__tableC,d=C.state.decks.find(d=>!d.archived&&d.commanders.length),commanders=new Set(d.commanders),names=ids=>ids.map(id=>C.card(id).name);
+    const commander=names([...commanders]),cards=d.slots.filter(s=>s.purpose==='main'&&!commanders.has(s.cardId)).flatMap(s=>Array(s.quantity||1).fill(C.card(s.cardId).name));
+    const changed=[...cards];changed[0]=changed[0]==='Plains'?'Mountain':'Plains';
+    globalThis.__chooserRestore={available:C.sharingAvailable,decks:C.sharedDecks};
+    C.sharingAvailable=()=>true;C.sharedDecks=async()=>[
+      {id:'fixture-stale-name',name:'Stale snapshot name',commander:[...commander].reverse(),cards:[...cards].reverse()},
+      {id:'fixture-different-contents',name:d.name,commander,cards:changed}
+    ];
+    return {id:d.id,name:d.name};
+  });
+  await rob.page.locator('#cm-dialog [data-action=close]').first().click();
+  await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-deck]");
+  await rob.page.locator('[data-shared-deck="fixture-different-contents"]').waitFor();
+  eq(await rob.page.locator('[data-action=table-use-deck]').count(),deckCount,'canonical library rows are retained without name-based merging');
+  eq(await rob.page.locator(`[data-action=table-use-deck][data-deck="${chooserFixture.id}"] strong`).textContent(),chooserFixture.name,'Your decks uses the current Decks-page name');
+  eq(await rob.page.locator('[data-shared-deck="fixture-stale-name"]').count(),0,'same serialized shared contents with a stale name produce no duplicate row');
+  eq(await rob.page.locator('[data-shared-deck="fixture-different-contents"]').count(),1,'a genuinely different shared version remains even when its name matches the local deck');
+  eq(await rob.page.locator('section[aria-label="Shared with the table"] h3').textContent(),'Shared with the table','shared-only versions have the required separate heading');
+  eq(await rob.page.locator('.cm-table-precon-catalog summary').textContent(),'Public precons','public precons remain a distinct catalog disclosure');
+  eq(await rob.page.locator('[data-action=table-use-precon]').count(),6,'deduplicating account lists does not remove public precons');
+  ok(!await rob.page.getByLabel('Only table-legal decks',{exact:true}).isChecked(),'reopening remembers the explicit filter opt-out');
+  if(SHOTS)await shot(rob.page,'chooser-canonical-shared-1400');
+  await rob.page.evaluate(()=>{__tableC.sharingAvailable=__chooserRestore.available;__tableC.sharedDecks=__chooserRestore.decks;delete globalThis.__chooserRestore;});
+  await rob.page.locator('#cm-dialog [data-action=close]').first().click();
+  await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-deck]");
+  await rob.page.waitForFunction(()=>[...document.querySelectorAll('[data-known-for]')].every(el=>el.dataset.ok!=='pending'));
   /* Find a deck with the refused card by trying them in turn until one is refused, then one that is not. */
   let refusedSeen = false, chosen = null;
   for (let i = 0; i < deckCount && (!refusedSeen || !chosen); i += 1) {
@@ -324,11 +423,18 @@ try {
   }
   await waitText(rob.page, ".cm-lobby-seat[data-seat='2'] header", /Ready/);
   ok(true, "the host chose the AI's deck, and the AI is ready");
-  /* With a seat ready the rules are refused, saying how to change them. */
+  /* An AI seat is ready from its deck and does not hold the rules; a person's Ready does, saying how to change them. */
   await rob.page.click(".cm-table-rules-edit");
-  await waitText(rob.page, "#cm-notice", /The rules can't change once a seat is ready.*Take back Ready.*choose AI decks after the rules/);
-  eq(await rob.page.locator("#cm-table-rules-form").count(), 0, "with the AI ready, Edit is refused, saying how to change the rules; no dialog opens");
-
+  await rob.page.locator("#cm-table-rules-form").waitFor();
+  ok(true, "with only the AI ready, Edit still opens the rules");
+  await rob.page.click("[data-action=table-rules-cancel]");
+  await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-ready][data-ready='1']");
+  await waitText(rob.page, ".cm-lobby-seat[data-seat='0'] header", /Ready/);
+  await rob.page.click(".cm-table-rules-edit");
+  await waitText(rob.page, "#cm-notice", /The rules can't change once a seat is ready.*Take back Ready, then edit the rules/);
+  eq(await rob.page.locator("#cm-table-rules-form").count(), 0, "with Rob ready, Edit is refused, saying how to change the rules; no dialog opens");
+  await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-ready][data-ready='']");
+  await rob.page.locator(".cm-lobby-seat[data-seat='0'] [data-action=table-ready][aria-pressed=false]").waitFor({timeout: 10000});
   /* CHOOSE MAT: a strip of the app's mats, the zones previewed over the one picked; everyone sees the choice. */
   await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-mat]");
   await rob.page.locator("#cm-mat-preview").waitFor();
@@ -415,122 +521,15 @@ try {
   ok(await maya.page.getAttribute(".cm-lobby-seat[data-seat='0']", "data-mat") === "forge" && !(await maya.page.locator(".cm-lobby-seat[data-seat='0'] [data-action=table-mat]").count()) && await maya.page.locator(".cm-lobby-seat[data-seat='1'] [data-action=table-mat]").count() === 1, "she sees Rob's mat, and chooses only her own");
   /* PLAY, BEFORE THE GAME, LEADS BACK TO HER SEAT (the readiness checks of 2026-10-04): she leaves for her library and
      comes back by Play. New table says her seat is waiting, and takes her to it. */
-  await maya.page.goto(`${base}/index.html#table`);
-  await maya.page.locator("#cm-table-back").waitFor({timeout: 30000});
-  ok(/Your seat is waiting/.test(await pageText(maya.page, "#cm-table-back")) && /Rob's table, and its game has not started yet/.test(await pageText(maya.page, "#cm-table-back")) && await maya.page.locator("#cm-table-new").count() === 1,
-    "Play, before the game, says her seat at Rob's table is waiting, above New table");
-  await maya.page.click("#cm-table-back [data-action=table-back]");
+  await maya.page.goto(`${base}/index.html#game`);
+  await maya.page.locator("#cm-play-home").waitFor({timeout: 30000});
+  const mayaResume = maya.page.getByRole("button", {name: "Resume game", exact: true});
+  await maya.page.waitForFunction(() => [...document.querySelectorAll("#cm-play-home button")].some((x) => x.textContent === "Resume game" && !x.disabled), null, {timeout: 30000});
+  ok(/^Saved: /.test(await maya.page.locator(".cm-pl-card.is-start .cm-pl-muted").innerText()), "Play, before the game, says her seat is saved and Resume game is on: it takes her to it");
+  await mayaResume.click();
   await maya.page.waitForFunction(() => /#table\?id=/.test(location.hash), null, {timeout: 30000});
   await maya.page.locator(".cm-cloud-table .cm-lobby-seat").first().waitFor({timeout: 30000});
-  eq((await maya.page.locator(".cm-lobby-seat[data-seat='1'] h3").textContent()).trim(), "Seat 2 · You", "and Back to your table puts her in it again");
-  const sideways = await maya.page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-  eq(sideways, 0, "at 390 the lobby does not scroll sideways");
-  await maya.page.click(".cm-lobby-seat[data-seat='1'] [data-action=table-deck]");
-  await maya.page.locator("[data-action=table-use-deck]").first().waitFor();
-  eq([await maya.page.locator(".cm-table-rules-edit").count(), /Starting life\s*30/.test(await pageText(maya.page, ".cm-table-rules"))], [0, true], "a guest sees the host's rules, 30 life, and no Edit");
-  for (let i = 0; i < 40; i += 1) {
-    await maya.page.locator("[data-action=table-use-deck]").nth(i).click();
-    await maya.page.waitForTimeout(300);
-    if (!(await maya.page.locator("#cm-dialog[open]").count())) break;
-  }
-  /* Her seat has a deck now, so Change deck, Choose mat and Ready: each in reach in a window not maximized, and on her phone.
-     A window 1024 wide is the one that cut Ready off; there the seats stack rather than lose a button. */
-  for (const [width, height] of [[1024, 768], [1100, 700], [390, 844]]) {
-    await maya.page.setViewportSize({width, height});
-    await maya.page.waitForTimeout(400);
-    const seen = await inReach(maya.page);
-    ok(seen.controls.some((c) => c.label === "Ready") && allInReach(seen),
-      `at ${width}x${height} every control of the lobby is in reach, Ready among them, none over a seat's label, and the table no wider than itself (${reachWords(seen)})`);
-  }
-  /* A seat clips 10px inside its quadrant. A longer reading -- here a spacer at its head, standing in for a deck's long
-     name -- that brings her buttons into that band, inside the quadrant and cut off all the same, stacks the table. */
-  await maya.page.setViewportSize({width: 1400, height: 900});
-  await maya.page.waitForTimeout(400);
-  const band = await maya.page.evaluate(() => {
-    const q = document.querySelector(".cm-cloud-table .cm-seat-q.is-you"), detail = q.querySelector(".cm-seat-detail");
-    const seat = q.querySelector(".cm-lobby-seat").getBoundingClientRect(), quad = q.getBoundingClientRect(), d = detail.getBoundingClientRect();
-    const grows = getComputedStyle(detail).alignSelf === "flex-start" ? "down" : "up";
-    const spacer = document.createElement("div");
-    spacer.className = "cm-test-spacer";
-    spacer.style.height = `${seat.bottom + 9 - d.bottom}px`;
-    detail.prepend(spacer);
-    /* The reading's own gap between its lines comes with the spacer: measured, and taken off, so it ends 9px in. */
-    spacer.style.height = `${parseFloat(spacer.style.height) - (detail.getBoundingClientRect().bottom - (seat.bottom + 9))}px`;
-    return {grows, room: Math.round(quad.bottom - seat.bottom), into: Math.round(detail.getBoundingClientRect().bottom - seat.bottom),
-      stacked: document.querySelector(".cm-cloud-table").classList.contains("is-stacked")};
-  });
-  await maya.page.evaluate(() => window.dispatchEvent(new Event("resize")));
-  await maya.page.waitForTimeout(500);
-  const inBand = await inReach(maya.page);
-  ok(band.grows === "down" && band.room === 10 && band.into === 9 && !band.stacked && inBand.stacked && allInReach(inBand),
-    `at 1400x900 her reading, grown 9px into the 10px band the seat clips inside its quadrant, stacks the table, every control in reach (her reading grows ${band.grows}, ${band.into}px into a ${band.room}px band; ${reachWords(inBand)})`);
-  await maya.page.evaluate(() => {document.querySelector(".cm-test-spacer")?.remove(); window.dispatchEvent(new Event("resize"));});
-  await maya.page.waitForTimeout(500);
-  ok(!(await inReach(maya.page)).stacked, "and with her reading as it was, the 2x2 is back");
-  await maya.page.setViewportSize({width: 390, height: 844});
-  /* Where the 2x2 holds every seat it is kept, and no seat reaches under the rules panel: at 1240 wide the table is under
-     1025px, so the panel's 246px floor is wider than its 24% share, and the seats keep clear of the floor. */
-  for (const [width, height] of [[1240, 900], [1920, 1080]]) {
-    await rob.page.setViewportSize({width, height});
-    await rob.page.waitForTimeout(400);
-    const seen = await inReach(rob.page);
-    const under = await rob.page.evaluate(() => {
-      const p = document.querySelector(".cm-cloud-table .cm-table-center").getBoundingClientRect();
-      return [...document.querySelectorAll(".cm-cloud-table .cm-seat-figure")].filter((f) => {const r = f.getBoundingClientRect(); return r.left < p.right - 1 && p.left < r.right - 1 && r.top < p.bottom - 1 && p.top < r.bottom - 1;}).length;
-    });
-    ok(!seen.stacked && under === 0 && allInReach(seen),
-      `at ${width}x${height} the host's table keeps its 2x2, no seat under the rules panel (${under}), every control in reach (${reachWords(seen)})`);
-  }
-  /* A seat clips 10px inside its quadrant: at 920x560 the host's Choose mat sat in that band, inside the quadrant and cut
-     off all the same. */
-  await rob.page.setViewportSize({width: 920, height: 560});
-  await rob.page.waitForTimeout(400);
-  const host920 = await inReach(rob.page);
-  ok(allInReach(host920), `at 920x560 every control of the host's lobby is in reach too (${reachWords(host920)})`);
-  await rob.page.setViewportSize({width: 1400, height: 900});
-  await maya.page.locator(".cm-lobby-seat[data-seat='1'] [data-action=table-ready]").click();
-  await waitText(maya.page, ".cm-lobby-seat[data-seat='1'] header", /Ready/);
-  const narrow = await panelReading(maya.page);
-  ok(narrow.worst >= 4.5 && narrow.inside && narrow.apart, `and at 390: contrast ${narrow.worst}, heading, rules and launch row inside the panel and apart (${narrow.inside}, ${narrow.apart})`);
-  await shot(maya.page, "lobby-guest-390");
-
-  /* THE LAUNCH LINE AND THE FANS (the brief, 2026-10-12): with Maya ready and Rob not, the panel says what it waits on
-     and how many; a seat with a deck wears its commander's colors as a fan from its inner corner. */
-  await waitText(rob.page, "#cm-table-launch", /Launches when all are ready · 1 seat to go\./);
-  const fans = await rob.page.evaluate(() => [0, 1].map((i) => document.querySelectorAll(`.cm-seat-q:has(.cm-lobby-seat[data-seat='${i}']) .cm-seat-fan path`).length));
-  ok(fans[0] >= 1 && fans[1] >= 1, `each seated deck's quadrant wears its commander's color fan (${fans.join(" and ")} wedges)`);
-  /* START: Rob readies, starts; the countdown; Cancel; Start; the game is on. */
-  await rob.page.locator(".cm-lobby-seat[data-seat='0'] [data-action=table-ready]").click();
-  await waitText(rob.page, ".cm-lobby-seat[data-seat='1'] header", /Ready/);
-  await waitText(rob.page, "#cm-table-launch", /Everyone is ready/);
-  await rob.page.click("[data-action=table-start]");
-  await rob.page.locator("#cm-table-seconds").waitFor();
-  const seconds = Number(await rob.page.innerText("#cm-table-seconds"));
-  ok(seconds >= 1 && seconds <= 10, `Start shows the countdown's number (${seconds})`);
-  await waitText(maya.page, "#cm-table-launch", /Starting in/);
-  ok(!(await maya.page.locator("[data-action=table-cancel]").count()), "Maya sees the countdown; only the host has Cancel");
-  await shot(rob.page, "countdown-1400");
-  const seatsReady = await overSea(rob.page), readyLow = seatsReady.filter((w) => w.ratio < 4.5);
-  ok(seatsReady.length >= 6 && !readyLow.length, `and with the decks chosen and the seats ready, still 4.5:1 or better over a white sea (${seatsReady.length} read; ${(readyLow.length ? readyLow : seatsReady.slice(0, 3)).map((w) => `"${w.text}" (${w.cls}) ${w.ratio}`).join(", ")})`);
-  await rob.page.click("[data-action=table-cancel]");
-  await waitText(rob.page, "#cm-table-launch", /Everyone is ready/);
-  ok(true, "Cancel stops it");
-  await rob.page.click("[data-action=table-start]");
-  await rob.page.locator("#cm-table-seconds").waitFor();
-  clock += 10000;
-  await tableFor(id).alarm();
-  await rob.page.locator("#cm-board").waitFor({timeout: 20000});
-  await maya.page.locator("#cm-board").waitFor({timeout: 20000});
-  ok(!(await rob.page.locator(".cm-cloud-table").count()), "when the countdown ends the lobby hands both pages to the board (tests/table-board.mjs plays it)");
-
-  /* AFTER: the game ended (by End game on the board, played in table-board), the lobby says it is over. */
-  await tableFor(id).fetch(new Request("https://table.internal/table/end", {method: "POST", headers: {"content-type": "application/json", "x-crankmagic-email": "maya@example.com"}, body: "{}"}));
-  await waitText(maya.page, "#cm-table-game", /Play again\?|The game is over/);
-  await waitText(rob.page, "#cm-table-game", /Play again\?|The game is over/);
-  ok(/record is kept/.test(await pageText(rob.page, "#cm-table-game")), "once it is over, the lobby says so, and that its record is kept");
-  eq(await maya.page.evaluate(() => localStorage.getItem("crankmagic-play-seat")), null, "and her device forgets the seat: Play no longer leads back to a game that is over");
-  await shot(maya.page, "over-390");
-
+  eq((await maya.page.locator(".cm-lobby-seat[data-seat='1'] h3").textContent()).trim(), "Seat 2 · You", "and Resume game puts her in it again");
   /* AN EMPTY LIBRARY (the readiness checks of 2026-10-04): a person new to CrankMagic, at a table before restoring any
      decks, is told how to bring one, and Restore opens from the dialog itself, so the seat stays theirs. */
   {
@@ -538,38 +537,38 @@ try {
     const nina = await person("nina@example.com", {width: 1400, height: 900}, {library: false});
     /* Where the AI door is open to her (GET /api/ai-seat, stood in for here), New table offers an AI on Claude too. */
     await nina.page.route("**/api/ai-seat", (r) => r.fulfill({json: {open: true}}));
-    await nina.page.goto(`${base}/index.html#table`);
-    const form = nina.page.locator("#cm-table-new");
-    await form.waitFor({timeout: 30000});
-    await form.locator("select[name=kind2] option[value=ai-llm]").waitFor({state: "attached", timeout: 10000});
-    eq(await form.locator("select[name=kind2] option").allTextContents(), ["A person I will invite", "An AI · Normal", "An AI · Easy", "An AI · Claude", "Nobody"],
-      "with the AI door open to her, New table offers an AI on Claude beside Normal and Easy (AI-2)");
-    await form.locator("input[name=hostName]").fill("Nina");
-    await form.locator("select[name=kind2]").selectOption("ai");
-    await nina.page.click("[data-action=table-create]");
+    await nina.page.route("**/api/ai-seat", (r) => r.fulfill({json: {open: true, levels: ["easy", "normal"]}}));
+    await openNewGame(nina.page, "#table");
+    await nina.page.locator("[data-ng=toggle-diff][data-row='0']").click();
+    ok(!(await nina.page.locator("[data-ng=pick-diff][data-id=Veteran]").isDisabled()), "with the AI door open to her, the New game pop-up offers a Veteran (the AI on Claude) beside Easy and Normal (AI-2)");
+    await nina.page.keyboard.press("Escape");
+    await fillNewGame(nina.page, {host: "Nina", ai: [{}]});
+    await submitNewGame(nina.page);
     await nina.page.locator(".cm-lobby-seat[data-seat='0'] [data-action=table-deck]").click();
     await nina.page.locator("#cm-dialog .cm-table-deck-empty").waitFor({timeout: 15000});
-    ok(/without adding anything/.test(await pageText(nina.page, "#cm-dialog .cm-table-deck-empty")), "a new player is directed to shared decks, without restoring anyone's library");
-    await nina.page.waitForFunction(()=>document.querySelectorAll('[data-action=table-use-shared-deck]:enabled').length===6);
+    ok(/without adding anything/.test(await pageText(nina.page, "#cm-dialog .cm-table-deck-empty")), "a new player is directed to the precons, without restoring anyone's library");
+    await nina.page.waitForFunction(()=>document.querySelectorAll('[data-action=table-use-precon]:enabled').length===6);
+    eq(await nina.page.locator('[data-action=table-use-shared-deck]').count(),0,"and to none of Rob's decks: nothing of his is shared with her");
     eq(await nina.page.locator('[data-action=table-use-deck]').count(),0,"the tester starts with no personal decks");
-    const sharedNames=await nina.page.locator('[data-action=table-use-shared-deck] strong').allTextContents();
-    eq(sharedNames.length,6,"all six verified staging decks are available to a fresh signed-in player");
+    const sharedNames=await nina.page.locator('[data-action=table-use-precon] strong').allTextContents();
+    eq(sharedNames,JSON.parse(readFileSync(path.join(ROOT,'data/precons-latest.json'),'utf8')).decks.map(d=>d.name),"the six New from Wizards precons are open to a fresh signed-in player");
     if(SHOTS) {
-      await nina.page.locator('[data-action=table-use-shared-deck]').evaluateAll(els=>els.forEach((el,i)=>{const tag=document.createElement('b');tag.textContent=`D${i+1}`;el.style.position='relative';tag.style.cssText='position:absolute;right:8px;top:8px;background:#ffdb6b;color:#151a19;padding:3px;font:11px monospace';el.prepend(tag);}));
-      await shot(nina.page,'shared-decks-1400');
+      await nina.page.locator('[data-action=table-use-precon]').evaluateAll(els=>els.forEach((el,i)=>{const tag=document.createElement('b');tag.textContent=`D${i+1}`;el.style.position='relative';tag.style.cssText='position:absolute;right:8px;top:8px;background:#ffdb6b;color:#151a19;padding:3px;font:11px monospace';el.prepend(tag);}));
+      await shot(nina.page,'precons-1400');
     }
     for(let i=0;i<6;i++) {
-      if(i) {await nina.page.locator(".cm-lobby-seat[data-seat='0'] [data-action=table-deck]").click();await nina.page.waitForFunction(()=>document.querySelectorAll('[data-action=table-use-shared-deck]:enabled').length===6);}
-      await nina.page.locator('[data-action=table-use-shared-deck]').nth(i).click();
+      if(i) {await nina.page.locator(".cm-lobby-seat[data-seat='0'] [data-action=table-deck]").click();await nina.page.waitForFunction(()=>document.querySelectorAll('[data-action=table-use-precon]:enabled').length===6);}
+      await nina.page.locator('[data-action=table-use-precon]').nth(i).click();
       await nina.page.waitForFunction(()=>!document.querySelector('#cm-dialog[open]'));
       await nina.page.waitForFunction(name=>document.querySelector(".cm-lobby-seat[data-seat='0']")?.textContent.includes(name),sharedNames[i]);
       ok((await pageText(nina.page,".cm-lobby-seat[data-seat='0']")).includes(sharedNames[i]),`the real table accepts ${sharedNames[i]} for the tester`);
       const payload=deckBodies.at(-1).deck;
-      eq(payload.cards.length+payload.commander.length,100,'a shared deck submits the full hundred');
-      const published=JSON.parse(readFileSync(path.join(ROOT,'tests/fixtures/shared-staging-decks.json'),'utf8')).decks.find(d=>d.name===sharedNames[i]);
-      const expected={name:published.name,commander:published.commander,cards:published.cards};
-      eq({name:payload.name,commander:payload.commander,cards:payload.cards},expected,'the selected list exactly matches the saved deck, with no stand-ins');
-      ok(!('source' in payload),'a shared deck never attributes the guest result to the owner library');
+      eq(payload.cards.length+payload.commander.length,100,'a precon submits the full hundred');
+      const published=JSON.parse(readFileSync(path.join(ROOT,'data/precons.json'),'utf8')).decks.find(d=>d.name===sharedNames[i]);
+      const commander=published.commander.map(c=>c.name);
+      const expected={name:published.name,commander,cards:published.cards.filter(([n])=>!commander.includes(n)).flatMap(([n,q])=>Array(q).fill(n))};
+      eq({name:payload.name,commander:payload.commander,cards:payload.cards},expected,"the selected list is exactly Wizards' published decklist, with no stand-ins");
+      ok(!('source' in payload),"a precon's result is filed to no one's library");
     }
     useConfirmedCards = false;
     await nina.context.close();
@@ -595,7 +594,22 @@ try {
     eq(tiles.map(([id, text, good]) => [id, text, good]).sort(),
       listed.map((d) => {const n = refused.get(d.id); return [d.id, n ? `${n} card${n === 1 ? "" : "s"} to learn for the table` : "Playable at the table", !n];}).sort(),
       "each deck's tile says whether the table can play it: Playable at the table, or how many of its cards are still to learn");
+    /* The summary under Decks counts the same: playable means playable on Play (Rob, 2026-10-22), and it names no cost to
+       finish them all. */
+    await olu.page.waitForFunction(() => document.getElementById("cm-decks-playable")?.textContent, null, {timeout: 10000});
+    const summary = (await olu.page.textContent(".cm-decks-summary")).replace(/\s+/g, " ").trim(), n = playableIds.length;
+    const nWord = n <= 10 ? ["no", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"][n] : String(n);
+    ok(summary.includes(`, ${nWord} playable.`) && !/\$|to finish/.test(summary), `the summary under Decks counts the decks the table plays whole, ${nWord}, and no cost to finish them all ("${summary}")`);
     eq(asked, ["POST"], "and the hub asked the table once, for every deck at once (POST /api/tables/known)");
+    /* The Playable chip, with Boxed (the Decks requirements' FLT-1, 2026-10-23: All · Boxed · Defined · Building · Playable ·
+       Shared): the Defined decks the table plays whole, the rest put away once it has answered. Every deck here is 100. */
+    eq(await olu.page.$$eval(".cm-decks-stages a", (as) => as.map((a) => a.getAttribute("aria-label"))).then((t) => t.filter((x) => /Playable|Boxed/.test(x))), ["Boxed", "Playable"],
+      "the hub offers Boxed (the box) and Playable (in the app)");
+    await olu.page.locator(".cm-decks-stages a", {hasText: "Playable"}).click();
+    await olu.page.waitForFunction((n) => document.querySelectorAll("[data-deck-tile]:not([hidden])").length === n && [...document.querySelectorAll("[data-deck-tile]")].some((t) => t.hidden), playableIds.length, {timeout: 15000});
+    eq((await olu.page.$$eval("[data-deck-tile]:not([hidden])", (ts) => ts.map((t) => t.dataset.deckTile))).sort(), [...playableIds].sort(),
+      `Playable shows exactly the ${playableIds.length} decks the table plays every card of`);
+    await olu.page.goto(`${base}/index.html#decks`);
     await shot(olu.page, "decks-playable-1400");
     /* The deck page: the line, and Play this deck only where the table plays every card. */
     const deckLine = async (id) => {
@@ -606,6 +620,7 @@ try {
     const whole = await deckLine(playableIds[0]);
     await shot(olu.page, "deck-playable-1400");
     const part = await deckLine(learning.id);
+    eq(await olu.page.locator('.cm-deck-blocked').textContent(),await olu.page.locator('#cm-deck-next .cm-bento-next-line').textContent(),'the header and Next band prioritize the same unplayable-card state');
     await shot(olu.page, "deck-to-learn-1400");
     const total = (d) => {const i = listed.indexOf(d); return named[i].commander.length + named[i].cards.length;};
     const first = listed.find((d) => d.id === playableIds[0]);
@@ -615,14 +630,14 @@ try {
     /* Play this deck: a new table, the deck said above the seats, and at seat 1 once the table is made. */
     await olu.page.goto(`${base}/index.html#decks?deck=${encodeURIComponent(first.id)}`);
     await olu.page.locator(`#cm-deck-play[data-deck="${first.id}"] [data-action=deck-play]`).click();
-    await olu.page.locator("#cm-table-new-deck:not([hidden])").waitFor({timeout: 30000});
-    eq(await olu.page.evaluate(() => location.hash), `#table?deck=${encodeURIComponent(first.id)}`, "Play this deck opens a new table, carrying the deck");
-    eq((await olu.page.locator("#cm-table-new-deck").innerText()).trim(), `You bring ${first.name} to seat 1.`, "which says the deck comes with you to seat 1");
+    await olu.page.locator(".cm-ng-dialog").waitFor({timeout: 30000});
+    eq(await olu.page.evaluate(() => location.hash), `#table?deck=${encodeURIComponent(first.id)}`, "Play this deck opens the New game pop-up, carrying the deck");
+    await olu.page.waitForFunction((name) => document.querySelector(".cm-ng-you")?.textContent.includes(`bringing ${name}`), first.name, {timeout: 30000});
+    ok(true, "which says the deck comes with you to seat 1");
     await shot(olu.page, "table-bring-1400");
-    await olu.page.fill("#cm-table-new [name=hostName]", "Olu");
-    await olu.page.selectOption("#cm-table-new [name=kind2]", "ai");
+    await fillNewGame(olu.page, {host: "Olu", ai: [{}]});
     const before = deckBodies.length;
-    await olu.page.click("[data-action=table-create]");
+    await submitNewGame(olu.page);
     await olu.page.waitForFunction(() => /#table\?id=table\d+/.test(location.hash), null, {timeout: 20000});
     await waitText(olu.page, ".cm-lobby-seat[data-seat='0'] .cm-seat-line", new RegExp(first.name));
     const sent = deckBodies.slice(before);
@@ -632,18 +647,18 @@ try {
     const second = listed.find((d) => d.id === playableIds[1]);
     await olu.page.goto(`${base}/index.html#decks?deck=${encodeURIComponent(second.id)}`);
     await olu.page.locator(`#cm-deck-play[data-deck="${second.id}"] [data-action=deck-play]`).click();
-    await olu.page.locator("#cm-table-back [data-action=table-bring]").waitFor({timeout: 30000});
-    eq((await olu.page.locator("#cm-table-back [data-action=table-bring]").innerText()).trim(), `Bring ${second.name} there`, "seated at a table whose game has not begun, Play this deck offers to bring the deck there");
+    await olu.page.locator(".cm-ng-there [data-ng=bring-there]").waitFor({timeout: 30000});
+    eq((await olu.page.locator(".cm-ng-there [data-ng=bring-there]").innerText()).trim(), `Bring ${second.name} there`, "seated at a table whose game has not begun, Play this deck offers to bring the deck there");
     await shot(olu.page, "table-bring-there-1400");
-    await olu.page.click("#cm-table-back [data-action=table-bring]");
+    await olu.page.click(".cm-ng-there [data-ng=bring-there]");
     await olu.page.waitForFunction((t) => location.hash === `#table?id=${t}`, oluTable, {timeout: 20000});
     await waitText(olu.page, ".cm-lobby-seat[data-seat='0'] .cm-seat-line", new RegExp(second.name));
     ok(true, "and brought, it is the deck at your seat there");
     /* A deck the table cannot play whole is not brought: the new table says which cards, and you choose another there. */
     await olu.page.goto(`${base}/index.html#table?deck=${encodeURIComponent(learning.id)}`);
-    await olu.page.locator("#cm-table-new-deck:not([hidden])").waitFor({timeout: 30000});
-    const warn = (await olu.page.locator("#cm-table-new-deck").innerText()).trim();
-    ok(warn.startsWith(`${learning.name} cannot be played at the table yet`) && /\(Sol Ring\)/.test(warn) && !(await olu.page.locator("#cm-table-new [name=deck]").count()),
+    await olu.page.locator(".cm-ng-warn").waitFor({timeout: 30000});
+    const warn = (await olu.page.locator(".cm-ng-warn").innerText()).trim();
+    ok(warn.startsWith(`${learning.name} cannot be played at the table yet`) && /\(Sol Ring\)/.test(warn) && !(await olu.page.locator("[data-ng=bring-there]").count()),
       `a deck it cannot play whole is named with its cards, and not brought (${warn})`);
     /* New from Wizards' Play it: the precon comes in through the import, becomes a deck, and goes on to a new table. */
     await olu.page.goto(`${base}/index.html#decks`);
@@ -658,11 +673,12 @@ try {
     await olu.page.getByRole("heading", {name: `New deck from ${preconName}`, exact: true}).waitFor({timeout: 60000});
     await olu.page.getByRole("button", {name: "Create draft", exact: true}).click();
     await olu.page.waitForFunction(() => /^#table\?deck=/.test(location.hash), null, {timeout: 30000});
-    await olu.page.locator("#cm-table-new-deck:not([hidden])").waitFor({timeout: 30000});
+    await olu.page.locator(".cm-ng-dialog").waitFor({timeout: 30000});
     const made = await olu.page.evaluate(async () => {const r = await CrankRepository.open(); try {const st = await r.getState(); const id = decodeURIComponent(location.hash.split("deck=")[1]); const d = st.decks.find((x) => x.id === id); return d ? {name: d.name, precon: d.precon || null} : null;} finally {r.close();}});
     ok(made && made.precon && made.precon.name === preconName && !("play" in made.precon), `Play it makes the precon a deck of the library, marked as the precon (and nothing more), and goes on to a new table with it (${made && made.name})`);
-    const said = (await olu.page.locator("#cm-table-new-deck").innerText()).trim();
-    ok(said === `You bring ${made.name} to seat 1.` || said.startsWith(`${made.name} cannot be played at the table yet`),
+    await olu.page.waitForFunction((n) => /bringing|cannot be played/.test(document.querySelector(".cm-ng-you")?.textContent || "") && (document.querySelector(".cm-ng-you")?.textContent || "").includes(n), made.name, {timeout: 30000});
+    const said = (await olu.page.locator(".cm-ng-you").innerText()).replace(/\s+/g, " ").trim();
+    ok(said.includes(`bringing ${made.name}`) || said.includes(`${made.name} cannot be played at the table yet`),
       `where the new table says whether the deck comes with you, as Play this deck's does (${said})`);
     await olu.context.close();
   }
@@ -694,17 +710,16 @@ try {
     for (let i = 0; i < 40 && !held["rob@example.com"].waiting; i += 1) await new Promise((r) => setTimeout(r, 250));
     ok(held["rob@example.com"].waiting > 0, "a read of his table is in flight");
     await rob.page.goto(`${base}/index.html#table`);
-    await rob.page.locator("#cm-table-new").waitFor({timeout: 30000});
+    await rob.page.locator(".cm-ng-dialog").waitFor({timeout: 30000});
     delete held["rob@example.com"]; release();
     await new Promise((r) => setTimeout(r, 1500));
-    ok(await rob.page.locator("#cm-table-new").count() === 1 && !(await rob.page.locator(".cm-cloud-table").count()), "when it lands after he left, the new-table page stays: the old table is not drawn over it");
+    ok(await rob.page.locator(".cm-ng-dialog").count() === 1 && !(await rob.page.locator(".cm-cloud-table").count()), "when it lands after he left, the New game pop-up stays: the old table is not drawn over it");
   }
 
   /* The mat is remembered on the device: at Rob's next table his seat is on the forge without his asking. */
-  await rob.page.goto(`${base}/index.html#table`);
-  await rob.page.locator("#cm-table-new").waitFor({timeout: 30000});
-  await rob.page.fill("#cm-table-new [name=hostName]", "Rob");
-  await rob.page.click("[data-action=table-create]");
+  await openNewGame(rob.page, "#table");
+  await fillNewGame(rob.page, {host: "Rob", humans: [{name: "Maya"}], ai: []});
+  await submitNewGame(rob.page);
   await rob.page.waitForFunction(() => document.querySelector(".cm-lobby-seat[data-seat='0']")?.dataset.mat === "forge", null, {timeout: 15000});
   ok(true, "at his next table, Rob's seat is on the mat he chose last, without his asking");
 

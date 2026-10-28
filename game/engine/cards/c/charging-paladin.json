@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Charging Paladin",
+    "oracleId": "6cccf44e-c05e-4239-b643-54b559c98552",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Knight"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Whenever this creature attacks, it gets +0/+3 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 0,
+          "toughness": 3,
+          "until": "end-of-turn"
+        }
+      ],
+      "text": "Whenever this creature attacks, it gets +0/+3 until end of turn."
+    }
+  ]
+}

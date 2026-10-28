@@ -1,0 +1,32 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dragon Moose",
+    "oracleId": "4a678c6f-5a93-4a3b-80fd-4c0d0f9040c9",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dragon",
+      "Elk"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Haste (This creature can attack and {T} as soon as it comes under your control.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "haste",
+      "text": "Haste (This creature can attack and {T} as soon as it comes under your control.)"
+    }
+  ]
+}

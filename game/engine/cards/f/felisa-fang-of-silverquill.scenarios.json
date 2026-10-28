@@ -45,7 +45,7 @@
         ]
       }
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -155,7 +155,7 @@
           "cards": [
             "Grow",
             "Grow",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -192,7 +192,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Bear"
@@ -270,8 +270,8 @@
           "zone": "hand",
           "cards": [
             "Wither",
-            "Murder",
-            "Murder"
+            "Smoke Murder",
+            "Smoke Murder"
           ]
         }
       ],
@@ -294,7 +294,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Bear"
@@ -327,7 +327,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Bear"
@@ -374,7 +374,7 @@
           "cards": [
             "Bear Maker",
             "Grow",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -406,7 +406,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Bear Token"
@@ -450,7 +450,7 @@
           "zone": "hand",
           "cards": [
             "Grow",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -473,7 +473,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Felisa, Fang of Silverquill"
@@ -503,7 +503,7 @@
           "cards": [
             "Felisa, Fang of Silverquill",
             "Grow",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ]
@@ -525,7 +525,7 @@
           "zone": "hand",
           "cards": [
             "Grow",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -555,7 +555,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Bear"

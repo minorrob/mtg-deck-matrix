@@ -1,0 +1,35 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Mesmeric Orb",
+    "oracleId": "03efb4f3-b8e2-4441-824f-886dc40712c4",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever a permanent becomes untapped, that permanent's controller mills a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever a permanent becomes untapped, that permanent's controller mills a card.",
+      "trigger": {
+        "on": "becomes untapped",
+        "who": "any"
+      },
+      "effects": [
+        {
+          "effect": "mill",
+          "who": "that card's controller",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

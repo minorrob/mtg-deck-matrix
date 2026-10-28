@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Orcish Oriflamme",
+    "oracleId": "0b16a650-68b0-44dc-a9e1-15b7966e0b18",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Attacking creatures you control get +1/+0.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "attacking": true
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 0
+      },
+      "text": "Attacking creatures you control get +1/+0."
+    }
+  ]
+}

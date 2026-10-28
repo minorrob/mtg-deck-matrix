@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wormhole Serpent",
+    "oracleId": "6eb21aca-116e-427b-9e75-8adaee0cc62a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Serpent"
+    ],
+    "manaCost": "{4}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 5
+  },
+  "oracleText": "{3}{U}: Target creature can't be blocked this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{U}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "targets": {
+            "target": 0
+          },
+          "rule": "cant-be-blocked",
+          "until": "end-of-turn"
+        }
+      ],
+      "text": "{3}{U}: Target creature can't be blocked this turn."
+    }
+  ]
+}

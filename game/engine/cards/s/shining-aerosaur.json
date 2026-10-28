@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shining Aerosaur",
+    "oracleId": "a7520962-46e0-4abd-bb19-569334913a05",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dinosaur"
+    ],
+    "manaCost": "{4}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Flying",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    }
+  ]
+}

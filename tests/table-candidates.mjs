@@ -50,8 +50,12 @@ const byName = new Map(oracle.cards.map((c) => [c.name, c]));
   const backstop = backstopScripts();
   eq(CANDIDATE_SOURCE, {oracle: file.oracle, cards: file.cards.length + backstop.length, compiler: file.cards.length, backstop: backstop.length},
     `all ${file.cards.length} of the compiler's candidates, from the same oracle data, and the backstop's ${backstop.length} provisional cards the directory lacks`);
-  ok(backstop.length >= 1 && backstop.every((b) => JSON.stringify(candidateDefinition(b.identity.name)) === JSON.stringify(compileScript(b).definition) && !tableDefinition(b.identity.name)),
-    `each backstop card (${backstop.slice(0, 3).map((b) => b.identity.name).join(", ")}, ...) as it compiles, none a directory card`);
+  /* None once every learned definition is confirmed (wave 4d confirmed the last 22, 2026-10-23): then no ledger row is
+     provisional, and the next check still shows which of the backstop's cards are taken. */
+  const provisional = Object.values(JSON.parse(readFileSync(new URL("../data/engine/onboarding-ledger.json", import.meta.url), "utf8")).cards)
+    .filter((row) => row.status === "provisional").length;
+  ok((backstop.length >= 1 || provisional === 0) && backstop.every((b) => JSON.stringify(candidateDefinition(b.identity.name)) === JSON.stringify(compileScript(b).definition) && !tableDefinition(b.identity.name)),
+    `each backstop card (${backstop.length ? `${backstop.slice(0, 3).map((b) => b.identity.name).join(", ")}, ...` : provisional ? `none, yet ${provisional} provisional in the ledger` : "none, and no provisional row"}) as it compiles, none a directory card`);
   const bolt = {schema: "CrankCardScript@1", identity: {name: "Lightning Bolt"}, abilities: []}, odd = {...bolt, identity: {name: "Test Backstop Card"}};
   eq(backstopScripts([{status: "provisional", script: bolt}, {status: "blocked", script: odd}, {status: "provisional", script: odd}]).map((s) => s.identity.name),
     ["Test Backstop Card"], "of the backstop's cards, only a provisional one the directory does not define");
@@ -61,9 +65,12 @@ const byName = new Map(oracle.cards.map((c) => [c.name, c]));
   eq(sample.filter((c) => JSON.stringify(candidateDefinition(c.name)) !== JSON.stringify(compileScript(scriptOf(c, byName.get(c.name))).definition)).map((c) => c.name), [],
     `${sample.length} of them, one in 50: the definition its abilities and oracle record compile to`);
   eq(file.cards.filter((c) => tableDefinition(c.name)).map((c) => c.name), [], "none a card the directory defines");
-  const one = candidateDefinition(file.cards[0].name);
+  /* A candidate with abilities of its own to empty: an instant's are its `spell`, so the first candidate by name (Annul, once
+     the precon load of 2026-10-25 made it one) would leave nothing to show. */
+  const held = file.cards.find((c) => candidateDefinition(c.name).abilities.length > 0).name;
+  const one = candidateDefinition(held);
   one.abilities.length = 0;
-  ok(candidateDefinition(file.cards[0].name).abilities.length > 0, "fresh each call: one table's object is not another's");
+  ok(candidateDefinition(held).abilities.length > 0, `fresh each call: one table's object is not another's (${held})`);
   eq(["Forest", "Llanowar Elves", "No Such Card"].map(candidateDefinition), [null, null, null], "a basic land, a directory card and no card at all: none");
   eq(candidateDefinition(file.cards[0].name.toUpperCase()), candidateDefinition(file.cards[0].name), "found however the name is spelled");
   eq(tableCandidates(file.cards[0].name), candidateDefinition(file.cards[0].name), "the Worker's table plays them from this module");
@@ -184,7 +191,9 @@ const objectCall = (table) => async (method, path, email, body) => {
   const object = new GameTable(objectCtx(), {PLAYTEST_TABLES: "on"}, {random, now: () => now}), staging = objectCall(object);
   await staging("POST", "/table/create", ROB, {tableId: "candstage1", hostName: "Rob", seats: [{kind: "ai"}]});
   eq((await staging("POST", "/table/known", ROB, {names: picks})).json.unknown, [], "on staging, every table a playtest table, a candidate is known");
-  const general = file.cards.find((c) => /Legendary Creature/.test(byName.get(c.name)?.type || "")).name;
+  /* A candidate commander while the store holds one; the load of 2026-10-24 promoted the last, so then a defined one. */
+  const candidateGeneral = file.cards.find((c) => /Legendary Creature/.test(byName.get(c.name)?.type || ""))?.name;
+  const general = candidateGeneral ?? "Atraxa, Praetors' Voice";
   const real = (tag) => ({name: tag, commander: [general],
     cards: [...Array.from({length: 38}, () => "Forest"), ...Array.from({length: 61}, (_, i) => picks[i % picks.length])]});
   await staging("POST", "/table/deck", ROB, {seatId: 0, deck: real("sa")}); await staging("POST", "/table/deck", ROB, {seatId: 1, deck: real("sb")});
@@ -192,7 +201,7 @@ const objectCall = (table) => async (method, path, email, body) => {
   now += 10000; await object.alarm();
   const live = (await object.table.currentRoom()).view("s0").state.players[0].zones.Hand.cards.find((c) => c.candidate === true);
   const sent = await staging("POST", "/table/report", ROB, {cardId: live.cardId, note: "wrong"});
-  eq([sent.status, sent.json.report.card], [201, live.name], "and POST /table/report takes a report of one, with a commander that is a candidate too");
+  eq([sent.status, sent.json.report.card], [201, live.name], `and POST /table/report takes a report of one, with ${candidateGeneral ? "a commander that is a candidate too" : `${general} commanding`}`);
   const prod = objectCall(new GameTable(objectCtx(), {}, {random, now: () => now}));
   await prod("POST", "/table/create", ROB, {tableId: "candprod1", hostName: "Rob", seats: [{kind: "ai"}]});
   eq((await prod("POST", "/table/known", ROB, {names: picks})).json.unknown, [...picks].sort(), "elsewhere it is not");

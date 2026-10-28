@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thought Courier",
+    "oracleId": "06ea02f5-f296-4334-bb6f-9cb018e1e150",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "{T}: Draw a card, then discard a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "discard",
+          "count": 1
+        }
+      ],
+      "text": "{T}: Draw a card, then discard a card."
+    }
+  ]
+}

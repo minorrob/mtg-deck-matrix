@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Burn Bright",
+    "oracleId": "ed14c7fa-632c-47ee-9db0-8c492771121a",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creatures you control get +2/+0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": 2,
+          "toughness": 0
+        }
+      ],
+      "text": "Creatures you control get +2/+0 until end of turn."
+    }
+  ]
+}

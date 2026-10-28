@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Larger Than Life",
+    "oracleId": "96e8210a-a547-431d-8146-7399ec20c591",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature gets +4/+4 and gains trample until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 4,
+          "toughness": 4,
+          "keywords": [
+            "Trample"
+          ]
+        }
+      ],
+      "text": "Target creature gets +4/+4 and gains trample until end of turn."
+    }
+  ]
+}

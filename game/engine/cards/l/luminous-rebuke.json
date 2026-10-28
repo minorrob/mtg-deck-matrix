@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Luminous Rebuke",
+    "oracleId": "d96141af-313f-4ea9-a249-d9eb22cd2431",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This spell costs {3} less to cast if it targets a tapped creature.\nDestroy target creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": 3,
+      "targeting": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "tapped": true
+      },
+      "text": "This spell costs {3} less to cast if it targets a tapped creature."
+    },
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "Destroy target creature."
+    }
+  ]
+}

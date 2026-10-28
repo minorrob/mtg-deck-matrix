@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Grey Havens Navigator",
+    "oracleId": "14291205-1ac2-4804-b365-4f65377d5803",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Pilot"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "Flash\nWhen this creature enters, scry 1.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flash",
+      "text": "Flash"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "scry",
+          "count": 1
+        }
+      ],
+      "text": "When this creature enters, scry 1."
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rubblebelt Recluse",
+    "oracleId": "3ef0fff2-6010-42de-a7ce-e4cac295a481",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Ogre",
+      "Berserker"
+    ],
+    "manaCost": "{4}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 6,
+    "toughness": 5
+  },
+  "oracleText": "This creature attacks each combat if able.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "attacks-each-combat",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature attacks each combat if able."
+    }
+  ]
+}

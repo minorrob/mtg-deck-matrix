@@ -30,7 +30,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -118,7 +118,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -130,7 +130,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Goblin Pal"
@@ -164,7 +164,7 @@
           "zone": "graveyard",
           "cards": [
             "Goblin Pal",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ]
@@ -186,7 +186,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -198,7 +198,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Goblin Pal"
@@ -246,7 +246,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -265,7 +265,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Goblin Pal"
@@ -415,8 +415,8 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Murder",
-            "Murder"
+            "Smoke Murder",
+            "Smoke Murder"
           ]
         },
         {
@@ -435,7 +435,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Bear"
@@ -459,7 +459,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Goblin Pal"

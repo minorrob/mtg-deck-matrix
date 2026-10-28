@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hit the Mother Lode",
+    "oracleId": "a49900b3-cc34-428f-806d-71861dc8059d",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{R}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Discover 10. If the discovered card's mana value is less than 10, create a number of tapped Treasure tokens equal to the difference. (To discover 10, exile cards from the top of your library until you exile a nonland card with mana value 10 or less. Cast it without paying its mana cost or put it into your hand. Put the rest on the bottom in a random order.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Discover 10. If the discovered card's mana value is less than 10, create a number of tapped Treasure tokens equal to the difference.",
+      "effects": [
+        {
+          "effect": "digUntil",
+          "exile": true,
+          "selector": {
+            "nonTypes": [
+              "Land"
+            ]
+          },
+          "manaValueBelow": 11,
+          "count": 1,
+          "rest": "bottom",
+          "remember": true
+        },
+        {
+          "effect": "play",
+          "from": "targets",
+          "targets": "remembered",
+          "free": true,
+          "manaValueAtMost": 10,
+          "rememberCast": true,
+          "otherwise": [
+            {
+              "effect": "moveZone",
+              "targets": "remembered",
+              "to": "hand",
+              "remember": true
+            }
+          ]
+        },
+        {
+          "effect": "createToken",
+          "count": {
+            "manaValueOf": "remembered",
+            "times": -1,
+            "plus": 10
+          },
+          "token": {
+            "predefined": "Treasure"
+          },
+          "tapped": true,
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          }
+        }
+      ]
+    }
+  ]
+}

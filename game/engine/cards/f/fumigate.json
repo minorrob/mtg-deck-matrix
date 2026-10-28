@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fumigate",
+    "oracleId": "b17ea905-0696-4e58-b564-557e87236e27",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy all creatures. You gain 1 life for each creature destroyed this way.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Destroy all creatures. You gain 1 life for each creature destroyed this way.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "destroyAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          },
+          "remember": true
+        },
+        {
+          "effect": "gainLife",
+          "amount": {
+            "rememberedCount": true
+          }
+        }
+      ]
+    }
+  ]
+}

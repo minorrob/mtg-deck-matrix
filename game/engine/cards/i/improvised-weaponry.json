@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Improvised Weaponry",
+    "oracleId": "fa5dad0b-8e23-4b88-b383-849f7318e01f",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Improvised Weaponry deals 2 damage to any target. Create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Improvised Weaponry deals 2 damage to any target. Create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Battle"
+              ]
+            },
+            {
+              "what": "player"
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 2,
+          "targets": {
+            "target": 0
+          },
+          "who": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "predefined": "Treasure"
+          }
+        }
+      ]
+    }
+  ]
+}

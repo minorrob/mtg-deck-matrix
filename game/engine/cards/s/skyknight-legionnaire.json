@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Skyknight Legionnaire",
+    "oracleId": "61178a6c-70b7-447d-87ee-a8d9369c3d15",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Knight"
+    ],
+    "manaCost": "{1}{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying, haste",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "haste",
+      "text": "haste"
+    }
+  ]
+}

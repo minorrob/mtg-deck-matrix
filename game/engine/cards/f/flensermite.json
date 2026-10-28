@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Flensermite",
+    "oracleId": "4b63bf36-cd0e-41d8-b0ca-aac459d91f3f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Gremlin"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Infect (This creature deals damage to creatures in the form of -1/-1 counters and to players in the form of poison counters.)\nLifelink (Damage dealt by this creature also causes you to gain that much life.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "infect",
+      "text": "Infect (This creature deals damage to creatures in the form of -1/-1 counters and to players in the form of poison counters.)"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "lifelink",
+      "text": "Lifelink (Damage dealt by this creature also causes you to gain that much life.)"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Index",
+    "oracleId": "613b824e-39d1-4c6e-a19c-c915abdc860b",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Look at the top five cards of your library, then put them back in any order.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "rearrangeTop",
+          "count": 5
+        }
+      ],
+      "text": "Look at the top five cards of your library, then put them back in any order."
+    }
+  ]
+}

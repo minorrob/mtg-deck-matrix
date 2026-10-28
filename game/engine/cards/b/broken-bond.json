@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Broken Bond",
+    "oracleId": "858e12e9-3eaa-40cf-9e22-f9ccdfe485b3",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy target artifact or enchantment. You may put a land card from your hand onto the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Destroy target artifact or enchantment. You may put a land card from your hand onto the battlefield.",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Enchantment"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "hand",
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          },
+          "upTo": true,
+          "to": "battlefield"
+        }
+      ]
+    }
+  ]
+}

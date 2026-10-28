@@ -16,7 +16,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -145,7 +145,7 @@
           "zone": "hand",
           "cards": [
             "Loot",
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ],
@@ -161,7 +161,7 @@
         },
         {
           "choose": [
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {
@@ -178,7 +178,7 @@
               "seat": 0,
               "zone": "exile",
               "cards": [
-                "Shock"
+                "Smoke Shock"
               ]
             }
           ]
@@ -187,7 +187,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "player": 1
@@ -208,7 +208,7 @@
           "zone": "graveyard",
           "cards": [
             "Loot",
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ]
@@ -233,7 +233,7 @@
           "zone": "hand",
           "cards": [
             "Loot",
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ],
@@ -249,7 +249,7 @@
         },
         {
           "choose": [
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {
@@ -268,7 +268,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Shock"
+                "card": "Smoke Shock"
               },
               "count": 0
             }
@@ -281,7 +281,7 @@
           "zone": "graveyard",
           "cards": [
             "Loot",
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ]

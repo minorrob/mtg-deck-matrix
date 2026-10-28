@@ -1,86 +1,97 @@
-/* READY TO ADD (the pull sheet): one deck, grouped by where its cards are sitting right now.
+/* PLANNED CHANGES (Rob, 2026-10-25, C1–C8; the list once called Ready to add, reached from the deck page as before).
  *
- * The deck page is organized by what the list asks for; the Collection by copy. Neither
- * answers the question at the table, which is "go and get these": the ones on the bench,
- * the ones in another deck's box, and the ones in this box that no longer belong. So this
- * is the deck's reserved copies cut by location -- color, then name inside each group,
- * the way a binder is walked -- with a tick per row that records the walk as it happens.
+ * One deck's changes as pairs: what to TAKE OUT OF BOX beside what to ADD TO BOX, one copy a side, from
+ * crankmagic-change.js `planned` -- the model's own pairs (a Substitute and the Reserved card whose seat it holds; an
+ * Upgrade and the Final it names), every Owned card that could go in, and the To Buy ones in the chain Rob set out
+ * (To Buy · Not purchased > To Buy · Ordered > Owned), each saying what it is for (Final, Upgrade, Substitute, Bench).
  *
- * A tick is one `place`: the lot moves into the box, the model recomputes readiness, and
- * the row stays where it was, greyed, so a reader looking down at the cards does not lose
- * their place on the screen. Done rows are remembered only for this sitting; leave the
- * page and the sheet is simply what is left. Print gets black on white with boxes to tick.
+ *   C1  A tick only selects. Nothing changes until Swap.
+ *   C2  Swap asks "Confirm additions and removals?" (C.review: the change previewed, then made on Confirm), one batch,
+ *       one undo.
+ *   C4  Two column groups; each side a tick, the card's thumbnail (its picture on a hover), its name, its colors and
+ *       what it is under the name.
+ *   C5  Take out says the card's role in the deck (Substitute, Final); Add the chain and the use ("To Buy - Upgrade").
+ *   C6  Above: removed, added, and the deck's total after (the box now, less removed, plus added): green at exactly 100,
+ *       red otherwise; a warning, never a block.
+ *   C7  Any adds and any take-outs may be ticked, in any rows. An add whose own partner is not ticked is paired with a
+ *       ticked take-out left over (crankmagic-change.js `pairUp`), and both wear the same colored dot.
+ *   C8  Counts that do not match still swap, after the confirmation; the counter says so.
  *
- * SUBSTITUTES are the copies in this box that the list does not call for: they fill seats while
- * the real cards are bought or on their way. They are listed, not marked for removal -- the
- * first `remove` of them (a real copy is ready to take the seat, or the box holds more
- * substitutes than empty seats) read "→ bench"; the rest read "stays for now". Any of them can
- * be ticked out; the split only says which the library would choose.
- *
- * Reads readiness from collection-model.js (inBox, pullFromBench, pullFromOtherBox, standIns,
- * remove) and commits through the same commands the Collection uses. */
-(globalThis.CrankFeatures ||= []).push(function(C){const {M,esc:e,button:b,note,commit,go,actions,views,$}=C;
-const PILE=['White','Blue','Black','Red','Green','Multiple','Colorless'],NAME={W:'White',U:'Blue',B:'Black',R:'Red',G:'Green'};
-const pile=c=>{const ci=c.colorIdentity||[];return ci.length===0?'Colorless':ci.length>1?'Multiple':NAME[ci[0]]||'Colorless';};
-const order=(a,b)=>PILE.indexOf(pile(a.card))-PILE.indexOf(pile(b.card))||a.card.name.localeCompare(b.card.name);
-/* This sitting's ticks, per deck: lot id -> the row as it read when it was ticked. */
-let done={deckId:'',rows:new Map()};
-window.addEventListener('hashchange',()=>{if(C.route().view!=='pull')done={deckId:'',rows:new Map()};});
-function sheet(d){
-  const s=C.state,main=new Set(d.slots.filter(r=>r.purpose==='main').map(r=>r.id));
-  const reserved=s.lots.filter(l=>l.source==='owned'&&l.allocation?.deckId===d.id&&main.has(l.allocation.slotId));
-  const row=(l,group)=>({lotId:l.id,cardId:l.cardId,card:s.cards[l.cardId],quantity:l.quantity,group,box:l.location?.box||'',fromDeck:l.location?.kind==='deck'?M.deck(s,l.location.deckId):null});
-  const groups={bench:[],other:[],standin:[]};
-  for(const l of reserved){if(l.location?.kind==='deck'&&l.location.deckId===d.id)continue;if(l.location?.kind==='deck')groups.other.push(row(l,'other'));else groups.bench.push(row(l,'bench'));}
-  for(const l of s.lots.filter(l=>l.source==='owned'&&l.location?.kind==='deck'&&l.location.deckId===d.id&&l.allocation?.deckId!==d.id))groups.standin.push(row(l,'standin'));
-  /* Rows ticked this sitting stay in their group, greyed, at their old place in the order. */
-  if(done.deckId===d.id)for(const r of done.rows.values()){if(!groups[r.group].some(x=>x.lotId===r.lotId))groups[r.group].push({...r,done:true});}
-  for(const k of Object.keys(groups))groups[k].sort(order);
-  const ready=M.readiness(s,d);let out=ready.remove;for(const x of groups.standin){if(x.done)continue;x.stay=out<=0;out-=x.quantity;}
-  const waiting={ordered:s.lots.filter(l=>l.source==='ordered'&&l.allocation?.deckId===d.id&&main.has(l.allocation.slotId)).reduce((n,l)=>n+l.quantity,0),toBuy:M.readiness(s,d).toBuy};
-  return {groups,waiting,ready};
+ * Every Add can be ticked (Rob, 2026-10-26), and an add needs no take-out: a To Buy Final ticked is recorded as in hand and
+ * goes in, an Ordered one arrives and goes in, and an Upgrade naming nothing joins the list. A Substitute whose card went in
+ * stays as a Substitute with no live card, or takes a Reserved seat left without one (crankmagic-change.js swapCommands).
+ * The deck may pass 100: it reads Building, cannot be boxed and Play will not take it until it is back. Ordered cards are
+ * To Buy · Ordered here, not a separate Waiting list (Rob, 2026-10-25). */
+(globalThis.CrankFeatures ||= []).push(function(C){const {M,esc:e,button:b,note,commit,actions,views,$}=C;
+const CH=()=>globalThis.CrankChange;
+/* This sitting's ticks, per deck; leaving the page lets them go. */
+let sel={deckId:'',in:new Set(),out:new Set()};
+window.addEventListener('hashchange',()=>{if(C.route().view!=='pull')sel={deckId:'',in:new Set(),out:new Set()};});
+const deckName=id=>{const d=C.state.decks.find(x=>x.id===id);return d?d.name:'another deck';};
+const planOf=d=>CH().planned(C.state,d,{M,cardOf:C.card,deckName});
+/* The colored dot of a re-paired pair (C7): a few hues that read on both themes, the same on both halves. */
+const MARKS=['#e0a030','#4fa3e0','#d95fd0','#45c08a','#e0603f','#8f7be8'];
+const picture=(u,size)=>{const c=C.card(u.cardId)||u.card||{},src=String(c.image||'');return size==='small'?src.replace('/normal/','/small/'):src;};
+function cell(u,side){
+  if(!u)return `<div class="cm-plan-side is-${side} is-empty" role="cell"></div>`;
+  const c=C.card(u.cardId)||u.card||{},picked=sel[side].has(u.id),label=side==='out'?u.role:u.label,ordered=side==='in'&&u.chain==='ordered';
+  const why=!u.selectable?'No copy to move':'';
+  return `<div class="cm-plan-side is-${side}${picked?' is-picked':''}${u.selectable?'':' is-fixed'}" role="cell" data-plan-unit="${e(u.id)}">
+    <input type="checkbox" class="cm-plan-tick" data-plan-pick="${e(u.id)}" data-side="${side}"${picked?' checked':''}${u.selectable?'':' disabled'} aria-label="${e(side==='out'?'Take out':'Add')} ${e(u.name)}${why?` (${e(why)})`:''}"${why?` title="${e(why)}"`:''}>
+    <span class="cm-plan-mark" aria-hidden="true"></span>
+    <button type="button" class="cm-plan-thumb" data-action="card" data-card="${e(u.cardId)}" data-peek="${e(picture(u,'normal'))}" aria-label="Open ${e(u.name)}">${picture(u,'small')?`<img src="${e(picture(u,'small'))}" alt="" loading="lazy" referrerpolicy="no-referrer">`:''}</button>
+    <span class="cm-plan-text"><button type="button" class="cm-card-name cm-plan-name" data-action="card" data-card="${e(u.cardId)}">${e(u.name)}</button>
+      <span class="cm-plan-sub">${C.colors(c.colorIdentity||[])}<span class="cm-plan-role">${e(label)}${ordered?'':''}</span>${u.where?`<span class="cm-plan-where">${e(u.where)}</span>`:''}${side==='in'&&u.chain!=='owned'?'<span class="cm-plan-wait" aria-hidden="true" title="Ticked, it is recorded as in hand">⏳</span>':''}</span></span></div>`;
 }
-/* A reserved copy waiting outside its box is a Target "to add" (docs/card-states.md); the Bench, or its box label, says where to find it. */
-const GROUPS=[['bench','Add from the Bench',r=>C.pill(`Loading · ${r.box?e(r.box):'Bench'}`,'pull'),'Add','place'],['other','Move from another deck',r=>C.pill(`${e(r.fromDeck?r.fromDeck.name:'Another deck')}`,'pull'),'Move here','place'],['standin','Substitutes in this deck',r=>C.pill(r.stay?'Substitute · stays for now':'Substitute → Bench',r.stay?'standin':'remove'),'To bench','bench']];
-const live=rows=>rows.filter(r=>!r.done);
-function rowHTML(r,[,,where,label,op]){const n=live([r]).length?r.quantity:0;
-  return `<li class="cm-pull-row${r.done?' is-done':''}${r.stay?' is-stay':''}" data-lot="${e(r.lotId)}"><label class="cm-pull-tick"><input type="checkbox" data-pull-tick="${e(r.lotId)}" data-op="${op}" ${r.done?'checked disabled':''} aria-label="Found ${e(r.card.name)}"></label><span class="cm-pull-color">${C.colors(r.card.colorIdentity)}</span><button type="button" class="cm-card-name cm-pull-name" data-action="card" data-card="${e(r.cardId)}">${e(r.card.name)}${r.quantity>1?` <em>×${r.quantity}</em>`:''}</button><span class="cm-pull-where">${where(r)}</span>${r.done?'<span class="cm-pull-done">Done</span>':`<button type="button" class="v-button compact" data-action="pull-one" data-lot="${e(r.lotId)}" data-op="${op}">${label}</button>`}</li>`;}
-views.pull=async params=>{const d=M.deck(C.state,params.get('deck')||'');if(done.deckId!==d.id)done={deckId:d.id,rows:new Map()};
-  const {groups,waiting,ready:r}=sheet(d),left=Object.values(groups).reduce((n,g)=>n+live(g).reduce((k,x)=>k+x.quantity,0),0);
-  C.main.innerHTML=`<div class="cm-pull"><header class="cm-page-head cm-pull-head"><div><a class="cm-crumb" href="#decks">Decks</a><a class="cm-crumb" href="#decks?deck=${e(d.id)}">${e(d.name)}</a><h1>Ready to add</h1><p class="cm-pull-counts"><span>${r.sleeved} in the physical deck${r.standIns?` (${r.inBox} of the list)`:''}</span> · <span>${live(groups.bench).reduce((n,x)=>n+x.quantity,0)} from bench</span> · <span>${live(groups.other).reduce((n,x)=>n+x.quantity,0)} from other decks</span> · <span>${r.standIns} substitute${r.standIns===1?'':'s'}${r.remove?` (${r.remove} to take out now)`:''}</span> · <span>${waiting.ordered} ordered</span> · <span>${waiting.toBuy} to buy</span></p></div><div class="cm-actions">${b('Open deck','deck',{deck:d.id})}${b('Print','pull-print')}${b('Export','pull-export',{deck:d.id})}${left?b('Mark all added','pull-all',{deck:d.id},true):''}</div></header>`
-    +freeOnBench(d)
-    +(left||Object.values(groups).some(g=>g.length)||M.benchFree(C.state,d).copies?'':note('Nothing to add: every owned copy reserved to this deck is already in it.'))
-    +GROUPS.map(g=>{const rows=groups[g[0]];if(!rows.length)return '';const n=live(rows).reduce((k,x)=>k+x.quantity,0);const why=g[0]==='standin'?`<p class="cm-pull-stay-note">${r.remove?`${r.remove} can come out now: ${r.swapReady?`${r.swapReady} real cop${r.swapReady===1?'y is':'ies are'} ready to go in`:''}${r.swapReady&&r.surplus?', ':''}${r.surplus?`${r.surplus} more than the list has seats for`:''}. `:''}${r.covered-r.swapReady>0?`${r.covered-r.swapReady} fill seats until their cards arrive.`:''}</p>`:'';const all=live(rows).filter(x=>!x.stay);return `<section class="cm-pull-group" data-group="${g[0]}"><h2>${e(g[1])} <span class="cm-pull-n">${n}</span>${all.length?`<button type="button" class="cm-text-button cm-pull-select-all" data-action="pull-group" data-group="${g[0]}" data-deck="${e(d.id)}" aria-label="Select all: ${e(g[1])}">Select all</button>`:''}</h2>${why}<ul class="cm-pull-list">${rows.map(x=>rowHTML(x,g)).join('')}</ul></section>`;}).join('')
-    +`<section class="cm-pull-group cm-pull-waiting"><h2>Waiting</h2><p>${waiting.ordered} ordered · ${waiting.toBuy} to buy. ${b('Buy list for this deck','deck-buy-list',{deck:d.id})}</p></section></div>`;
-  $('.cm-pull').addEventListener('change',ev=>{const tick=ev.target.closest('[data-pull-tick]');if(!tick||!tick.checked)return;tick.disabled=true;one(d,tick.dataset.pullTick,tick.dataset.op).catch(err=>{tick.checked=false;tick.disabled=false;C.notice(err.message,true);});});
+/* C6: removed, added and the total after, from this sitting's ticks. A To Buy or Ordered Upgrade ticked records the plan
+   and puts nothing in the box yet, so it is not counted as added. */
+function counts(p){const ins=new Map(p.rows.filter(r=>r.in).map(r=>[r.in.id,r.in])),removed=sel.out.size,added=[...sel.in].filter(id=>{const u=ins.get(id);return !u||!(u.kind==='upgrade'&&u.chain!=='owned');}).length,total=p.boxTotal-removed+added;return {removed,added,total};}
+function counterHTML(p){const {removed,added,total}=counts(p);
+  return `<div class="cm-plan-counter${total===100?' is-right':' is-off'}" role="status" aria-live="polite"><span><b data-plan-n="removed">${removed}</b> Removed</span><span><b data-plan-n="added">${added}</b> Added</span><span class="cm-plan-total"><b data-plan-n="total">${total}</b> Total Deck Cards</span></div>`;}
+views.pull=async params=>{const d=M.deck(C.state,params.get('deck')||'');if(!CH())throw Error('The Planned Changes module is not loaded.');
+  if(sel.deckId!==d.id)sel={deckId:d.id,in:new Set(),out:new Set()};
+  const p=planOf(d),ids=new Set(p.rows.flatMap(r=>[r.in&&r.in.id,r.out&&r.out.id].filter(Boolean)));
+  for(const k of ['in','out'])for(const id of [...sel[k]])if(!ids.has(id))sel[k].delete(id);
+  const boxDone=!p.rows.length&&M.deckStatus(C.state,d).boxed;
+  C.main.innerHTML=`<div class="cm-pull cm-plan" data-deck="${e(d.id)}"><header class="cm-page-head cm-pull-head"><div><a class="cm-crumb" href="#decks">Decks</a><a class="cm-crumb" href="#decks?deck=${e(d.id)}">${e(d.name)}</a><h1>Planned Changes</h1></div><div class="cm-actions">${b('Open deck','deck',{deck:d.id})}${b('Print','pull-print')}${b('Export','pull-export',{deck:d.id})}${boxDone?'':b('Swap','plan-swap',{deck:d.id},true)}</div></header>
+    ${boxDone?`<section class="v-panel cm-box-done" aria-label="Box ready"><h2>The box is ready</h2><p>All 100 cards are in the physical deck. Nothing is waiting to go in.</p><div class="cm-actions">${C.play?.open()?`<a class="v-button primary" href="#table?deck=${e(encodeURIComponent(d.id))}">Take it to the table</a>`:b('Log a game','log-game',{deck:d.id},true)}</div></section>`:''}
+    ${counterHTML(p)}
+    ${p.rows.length?`<div class="cm-plan-table" role="table" aria-label="Planned changes for ${e(d.name)}"><div class="cm-plan-head" role="row"><div role="columnheader">Take out of Box</div><div role="columnheader">Add to Box</div></div>
+      ${p.rows.map(r=>`<div class="cm-plan-row" role="row" data-plan-row="${r.row}">${cell(r.out,'out')}${cell(r.in,'in')}</div>`).join('')}</div>`:note('Nothing planned: the box holds the list, and nothing is waiting to go in.')}</div>`;
+  paint(p);
+  $('.cm-plan').addEventListener('change',ev=>{const t=ev.target.closest('[data-plan-pick]');if(!t)return;const set=sel[t.dataset.side];if(t.checked)set.add(t.dataset.planPick);else set.delete(t.dataset.planPick);t.closest('.cm-plan-side').classList.toggle('is-picked',t.checked);paint(planOf(d));});
 };
-/* ALSO ON YOUR BENCH (Rob, 2026-10-01: "It should be every available bench card that matches a required card in the
-   deck"). Free copies on the Bench that fill a seat this deck has not reserved yet -- a deck made before it reserved kept
-   copies, or the Bench grew since -- are listed with one button to reserve them all, after which they are Add from the
-   Bench rows like any other. */
-function freeOnBench(d){const f=M.benchFree(C.state,d);if(!f.copies)return '';
-  const rows=f.rows.map(x=>({...x,card:C.state.cards[x.cardId]})).filter(x=>x.card).sort((a,b)=>order({card:a.card},{card:b.card}));
-  return `<section class="cm-pull-group cm-pull-free" id="cm-pull-free"><h2>Also on your Bench <span class="cm-pull-n">${f.copies}</span></h2><p>${f.copies} cop${f.copies===1?'y':'ies'} on your Bench ${f.copies===1?'fills a seat':'fill seats'} this deck has not reserved yet${f.kept?` (${f.kept} marked to be used last)`:''}. Reserve them and they join Add from the Bench. ${b('Reserve them','fulfill',{deck:d.id},true)}</p>
-    <ul class="cm-pull-rows">${rows.map(x=>`<li class="cm-pull-row"><span class="cm-pull-tick" aria-hidden="true"></span><span class="cm-pull-color">${C.colors(x.card.colorIdentity)}</span><button type="button" class="cm-card-name cm-pull-name" data-action="card" data-card="${e(x.cardId)}">${e(x.card.name)}${x.quantity>1?` <em>×${x.quantity}</em>`:''}</button><span class="cm-pull-where">${C.pill(`Free · ${x.box?e(x.box):'Bench'}${x.keepBench?' · used last':''}`,'pull')}</span><span></span></li>`).join('')}</ul></section>`;}
-/* One tick, one lot, one revision. The row is remembered before the commit so it can be
-   drawn greyed in its old place after the page re-renders. */
-async function one(d,lotId,op){const l=M.lot(C.state,lotId),{groups}=sheet(d),row=Object.values(groups).flat().find(x=>x.lotId===lotId);if(row)done.rows.set(lotId,{...row,done:false});
-  await commit(op==='bench'?{type:'place',lotId,quantity:l.quantity,confirmed:true}:{type:'place',lotId,deckId:d.id,quantity:l.quantity,confirmed:true});}
-actions['pull-one']=el=>{const d=M.deck(C.state,C.route().params.get('deck'));return one(d,el.dataset.lot,el.dataset.op);};
-/* SELECT ALL, ONE GROUP. The link beside a group's count ticks every remaining row in that
-   group in one revision: the bench's cards into the physical deck, another deck's cards
-   moved here, the substitutes that can come out to the bench. A substitute marked "stays
-   for now" is left alone, as Mark all added leaves it. One undo takes the whole group back. */
-actions['pull-group']=el=>{const d=M.deck(C.state,el.dataset.deck),{groups}=sheet(d),g=GROUPS.find(x=>x[0]===el.dataset.group),rows=g?live(groups[g[0]]).filter(x=>!x.stay):[];
-  if(!rows.length)throw Error('Nothing left to add in this group.');
-  for(const x of rows)done.rows.set(x.lotId,{...x,done:false});
-  const lotIds=rows.map(x=>x.lotId);return commit(g[4]==='bench'?{type:'bulk',op:'bench',lotIds,confirmed:true}:{type:'bulk',op:'place',deckId:d.id,lotIds,confirmed:true});};
-actions['pull-all']=el=>{const d=M.deck(C.state,el.dataset.deck),{groups}=sheet(d),into=[...live(groups.bench),...live(groups.other)].map(x=>x.lotId),out=live(groups.standin).filter(x=>!x.stay).map(x=>x.lotId);
-  if(!into.length&&!out.length)throw Error('Nothing left to add.');
-  const commands=[];if(into.length)commands.push({type:'bulk',op:'place',deckId:d.id,lotIds:into,confirmed:true});if(out.length)commands.push({type:'bulk',op:'bench',lotIds:out,confirmed:true});
-  for(const x of [...live(groups.bench),...live(groups.other),...live(groups.standin).filter(x=>!x.stay)])done.rows.set(x.lotId,{...x,done:false});
-  C.review(`Mark all found in ${d.name}’s physical deck`,note(`${into.length} record${into.length===1?'':'s'} go into the physical deck${out.length?` and ${out.length} come out to the bench`:''}. Reservations do not change; this records where the cards are.`),commands.length===1?commands[0]:{type:'batch',commands,summary:`Assembled ${d.name}: ${into.length} in, ${out.length} out`});};
+/* The counter and the C7 dots, drawn again on every tick without drawing the page again. */
+function paint(p){const root=$('.cm-plan');if(!root)return;
+  const {removed,added,total}=counts(p),counter=root.querySelector('.cm-plan-counter');
+  if(counter){counter.classList.toggle('is-right',total===100);counter.classList.toggle('is-off',total!==100);counter.querySelector('[data-plan-n=removed]').textContent=removed;counter.querySelector('[data-plan-n=added]').textContent=added;counter.querySelector('[data-plan-n=total]').textContent=total;}
+  for(const m of root.querySelectorAll('.cm-plan-mark')){m.style.removeProperty('--mark');m.closest('.cm-plan-side').classList.remove('is-repaired');m.removeAttribute('title');}
+  let k=0;for(const pr of CH().pairUp(p.rows,sel.in,sel.out)){if(!pr.repaired)continue;const color=MARKS[k++%MARKS.length];
+    for(const u of [pr.in,pr.out]){const side=root.querySelector(`[data-plan-unit="${CSS.escape(u.id)}"]`);if(!side)continue;side.classList.add('is-repaired');const m=side.querySelector('.cm-plan-mark');m.style.setProperty('--mark',color);m.title=`Paired with ${u===pr.in?pr.out.name:pr.in.name}`;}}
+  const swap=root.querySelector('[data-action=plan-swap]');if(swap)swap.disabled=!(sel.in.size||sel.out.size);}
+/* C2: Swap asks first, with what goes where; the model previews the whole batch before it is made. */
+actions['plan-swap']=el=>{const d=M.deck(C.state,el.dataset.deck),p=planOf(d),pairs=CH().pairUp(p.rows,sel.in,sel.out);
+  if(!pairs.length)throw Error('Tick what to take out and what to add, then Swap.');
+  const commands=CH().swapCommands(d,pairs,p.rows),{removed,added,total}=counts(p);
+  const line=pr=>`<li>${pr.out?`<span class="cm-plan-confirm-out">${e(pr.out.name)}</span>`:'<span class="cm-muted">—</span>'} ⇄ ${pr.in?`<span class="cm-plan-confirm-in">${e(pr.in.name)}</span>`:'<span class="cm-muted">—</span>'}${pr.repaired?' <span class="cm-plan-confirm-mark" aria-label="re-paired">●</span>':''}</li>`;
+  const bought=pairs.filter(pr=>pr.in&&pr.in.kind==='final'&&pr.in.chain!=='owned').map(pr=>pr.in.name),grows=pairs.filter(pr=>pr.in&&pr.in.kind==='upgrade'&&!pr.in.named).map(pr=>pr.in.name),holds=commands.filter(c=>c.type==='holdSeat');
+  const warn=(total>100?`<p class="cm-plan-confirm-warn">${total} cards in the deck after this: over 100 it reads Building, can't be boxed and can't be played until it is back to 100.</p>`:total!==100?`<p class="cm-plan-confirm-warn">${total} cards in the deck after this; a Commander deck is 100.</p>`:'')
+    +(bought.length?`<p>Recorded as in hand: ${e(bought.join(', '))}.</p>`:'')+(grows.length?`<p>Added to the list: ${e(grows.join(', '))}.</p>`:'')
+    +(holds.length?`<p>${holds.filter(h=>h.slotId).length?`${holds.filter(h=>h.slotId).length} Substitute${holds.filter(h=>h.slotId).length===1?' takes':'s take'} a Reserved seat left without one; `:''}${holds.filter(h=>!h.slotId).length?`${holds.filter(h=>!h.slotId).length} stay${holds.filter(h=>!h.slotId).length===1?'s':''} as Substitute${holds.filter(h=>!h.slotId).length===1?'':'s'} with no live card.`:''}</p>`:'');
+  return C.review('Confirm additions and removals?',`<p>${removed} out · ${added} in</p><ul class="cm-plan-confirm">${pairs.map(line).join('')}</ul>${warn}`,commands.length===1?commands[0]:{type:'batch',commands,summary:`${d.name}: ${removed} out, ${added} in`});};
+/* THE PICTURE ON A HOVER (C4): the thumbnail's card, large, beside the pointer and inside the window. */
+let peekEl=null;
+function peek(btn,x,y){const src=btn&&btn.dataset.peek;if(!src){peekEl?.remove();peekEl=null;return;}
+  if(!peekEl){peekEl=document.createElement('div');peekEl.className='cm-plan-peek';peekEl.setAttribute('aria-hidden','true');document.body.append(peekEl);}
+  if(peekEl.dataset.src!==src){peekEl.dataset.src=src;peekEl.innerHTML=`<img src="${e(src)}" alt="" referrerpolicy="no-referrer">`;}
+  const w=244,h=340,left=x+w+24<innerWidth?x+16:Math.max(8,x-w-16),top=Math.min(Math.max(8,y-h/2),innerHeight-h-8);peekEl.style.left=`${left}px`;peekEl.style.top=`${top}px`;}
+document.addEventListener('pointerover',ev=>{const t=ev.target.closest?.('.cm-plan .cm-plan-thumb');if(t)peek(t,ev.clientX,ev.clientY);});
+document.addEventListener('pointerout',ev=>{const t=ev.target.closest?.('.cm-plan .cm-plan-thumb');if(t&&!t.contains(ev.relatedTarget))peek(null);});
+document.addEventListener('focusin',ev=>{const t=ev.target.closest?.('.cm-plan .cm-plan-thumb');if(t){const r=t.getBoundingClientRect();peek(t,r.right,r.top+r.height/2);}});
+document.addEventListener('focusout',ev=>{if(ev.target.closest?.('.cm-plan .cm-plan-thumb'))peek(null);});
+window.addEventListener('hashchange',()=>peek(null));
 actions['pull-print']=()=>print();
-actions['pull-export']=el=>{const d=M.deck(C.state,el.dataset.deck),{groups}=sheet(d);const rows=GROUPS.flatMap(g=>live(groups[g[0]]).map(x=>({group:g[1],name:x.card.name,color:pile(x.card),quantity:x.quantity,from:g[0]==='standin'?'This deck':x.fromDeck?x.fromDeck.name:x.box?'Bench · '+x.box:'Bench',action:x.stay?'Keep for now':g[3]})));
-  C.download(d.name.replace(/[^\w-]+/g,'-')+'-ready-to-add.csv',C.E.csv(rows,[['group','Group'],['name','Card'],['color','Color'],['quantity','Copies'],['from','Where it is'],['action','Do']].map(([key,label])=>({key,label}))),'text/csv');};
+actions['pull-export']=el=>{const d=M.deck(C.state,el.dataset.deck),p=planOf(d);
+  const rows=p.rows.map(r=>({out:r.out?r.out.name:'',role:r.out?r.out.role:'',in:r.in?r.in.name:'',category:r.in?r.in.label:'',where:r.in?r.in.where:''}));
+  C.download(d.name.replace(/[^\w-]+/g,'-')+'-planned-changes.csv',C.E.csv(rows,[['out','Take out of Box'],['role','Role'],['in','Add to Box'],['category','Category'],['where','Where it is']].map(([key,label])=>({key,label}))),'text/csv');};
 });

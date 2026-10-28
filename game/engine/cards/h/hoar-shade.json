@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hoar Shade",
+    "oracleId": "23c74c42-11bd-4fba-b1cb-93b96f5a11fb",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Shade"
+    ],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "{B}: This creature gets +1/+1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{B}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": 1
+        }
+      ],
+      "text": "{B}: This creature gets +1/+1 until end of turn."
+    }
+  ]
+}

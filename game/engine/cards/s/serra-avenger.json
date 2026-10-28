@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Serra Avenger",
+    "oracleId": "b91b65b3-b35c-460e-a49b-333000a9a519",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "You can't cast Serra Avenger during your first, second, or third turns of the game.\nFlying, vigilance",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "You can't cast Serra Avenger during your first, second, or third turns of the game.",
+      "rule": "cant-cast-self",
+      "affects": {
+        "what": "card",
+        "self": true
+      },
+      "unless": {
+        "pastYourFirstTurns": 3
+      }
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "vigilance",
+      "keyword": "vigilance"
+    }
+  ]
+}

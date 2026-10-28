@@ -44,7 +44,7 @@
       "power": 3,
       "toughness": 3
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -121,7 +121,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -142,7 +142,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Reveillark"
@@ -189,7 +189,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Murder",
+            "Smoke Murder",
             "Ogre",
             "Reveillark"
           ]
@@ -212,7 +212,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -232,7 +232,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Reveillark"
@@ -265,7 +265,7 @@
           "zone": "graveyard",
           "cards": [
             "Bear",
-            "Murder",
+            "Smoke Murder",
             "Reveillark"
           ]
         }
@@ -464,7 +464,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -483,7 +483,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Reveillark"
@@ -509,7 +509,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Murder",
+            "Smoke Murder",
             "Ogre",
             "Reveillark"
           ]

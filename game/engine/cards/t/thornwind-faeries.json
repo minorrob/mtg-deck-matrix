@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thornwind Faeries",
+    "oracleId": "941a0e8d-c407-476b-9d0e-cffc1f8c6003",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Faerie"
+    ],
+    "manaCost": "{1}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Flying\n{T}: This creature deals 1 damage to any target.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Battle"
+              ]
+            },
+            {
+              "what": "player"
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "targets": {
+            "target": 0
+          },
+          "who": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "{T}: This creature deals 1 damage to any target."
+    }
+  ]
+}

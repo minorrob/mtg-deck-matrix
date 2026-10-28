@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Elves of Deep Shadow",
+  "scenarios": [
+    {
+      "name": "{B} and 1 damage to its controller, off the stack",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elves of Deep Shadow"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Elves of Deep Shadow"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1
+          }
+        },
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "stack": 0
+        }
+      ]
+    },
+    {
+      "name": "Summoning sick: no mana",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elves of Deep Shadow"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Elves of Deep Shadow"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

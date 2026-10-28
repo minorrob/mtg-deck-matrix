@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gilacorn",
+    "oracleId": "1551cd95-1e68-404f-be1d-cc9c7f447210",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Lizard"
+    ],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Deathtouch (Any amount of damage this deals to a creature is enough to destroy it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "deathtouch",
+      "text": "Deathtouch (Any amount of damage this deals to a creature is enough to destroy it.)"
+    }
+  ]
+}

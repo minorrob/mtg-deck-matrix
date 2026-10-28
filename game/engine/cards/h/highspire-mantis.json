@@ -1,0 +1,38 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Highspire Mantis",
+    "oracleId": "6adff11d-5126-4a4b-b182-e2700d406995",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Insect"
+    ],
+    "manaCost": "{2}{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Flying, trample",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "trample"
+    }
+  ]
+}

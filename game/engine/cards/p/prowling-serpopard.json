@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Prowling Serpopard",
+    "oracleId": "4bdfd718-f474-4223-88d8-7fa9fb0c86b4",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Cat",
+      "Snake"
+    ],
+    "manaCost": "{1}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 3
+  },
+  "oracleText": "This spell can't be countered.\nCreature spells you control can't be countered.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "cant-be-countered",
+      "affects": {
+        "what": "spell",
+        "self": true
+      },
+      "text": "This spell can't be countered."
+    },
+    {
+      "kind": "static",
+      "rule": "cant-be-countered",
+      "affects": {
+        "what": "spell",
+        "controller": "you",
+        "types": [
+          "Creature"
+        ]
+      },
+      "text": "Creature spells you control can't be countered."
+    }
+  ]
+}

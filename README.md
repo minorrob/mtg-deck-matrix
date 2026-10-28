@@ -1,19 +1,25 @@
 # CrankMagic
 
-**An Intelligent MtG: Commander Deck Creator & Card Libary**
+**An Intelligent MtG: Commander Deck Creator & Card Library**
 
 A private Commander deck workshop and card library. Plan a deck, review its composition
 and commander, track exactly which prints you own, reserve copies, receive orders,
 assemble physical decks, explore card relationships, and manage Sell / Trade records.
 
-Dark blue/graphite, Satoshi, a local wand/gear logo and animated aether mist. Semantic
-left-aligned tables support sorting, filtering, grouping, chosen columns and compact
-Actions menus. Navigation remains reachable while scrolling and on a phone.
+The r4 system uses Sapphire & Obsidian, Bronze & Basalt and Chalk & Coal, each with dark
+and light registers. Cinzel names decks, Lato carries the interface, and the CrankMagic
+wordmark stays unchanged. Semantic tables support sorting, filtering, grouping, chosen
+columns and compact Actions menus. Navigation remains reachable on a phone.
 
-Plain HTML, CSS and JavaScript. No package.json, build step, runtime framework,
-application server or account. User records live in transactional browser IndexedDB;
-full JSON backups, reviewed CSV/text/XLSX imports and enriched Excel exports give the
-user control of their data. Loading a plan never asserts ownership.
+The interface is plain HTML, CSS and JavaScript, without a runtime framework or build
+step. User records live in transactional browser IndexedDB. Cloud release profiles add
+account sync and the authoritative online rules host through Workers. JSON backups,
+reviewed CSV/text/XLSX imports and enriched Excel exports give the user control of their
+data. Loading a plan never asserts ownership.
+
+The current [r4 execution record](docs/r4-execution/README.md) links the approved decisions,
+requirements, source packets and evidence. Read [docs/ACTIVE.md](docs/ACTIVE.md) before
+working in a lane; the execution handoff distinguishes integrated work from release proof.
 
 ## Run
 
@@ -99,7 +105,7 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   are reserved than sleeved). Click a number and type the new one: a plain raise of Own or
   Ordered saves on the spot, and anything that takes a copy from somewhere goes through the
   review dialog first. A raised *T* reserves free copies and takes reserved ones from other
-  decks (they stay in their boxes until pulled, and those decks' Ready to add lists say so); an *A*
+  decks (they stay in their boxes until pulled, and those decks' Planned Changes lists say so); an *A*
   typed to 1 releases the copy from wherever it was, reserves it here and puts it in this
   box, recording a new owned copy when the library holds none. The copies rule holds
   throughout: one of a card per deck except basics and the cards whose text allows more.
@@ -196,7 +202,7 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   row's Status ladder and the ticked-rows bar),
   stamping the sheet price as what was paid (marked *catalog* until a receipt says
   otherwise). Export carries price, cap, vendor and the subtotals; *Print buy list* prints
-  it by deck. **Ready to add** opens a deck's Ready to add list. Tick rows and **Ordered…** takes
+  it by deck. **Planned Changes** opens a deck's Planned Changes list. Tick rows and **Ordered…** takes
   one dialog (vendor, reference, shipping spread across the lines, expected date) for the
   whole order; **Bought in store** does the same with the store as vendor and the copies
   arriving at once; **Arrived** lands ticked ordered copies. The **Orders** tab
@@ -205,17 +211,23 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   *Arrived → bench* (one change, one undo, reservations kept), *Paste receipt* (an order
   confirmation or CSV, matched by name, applied to the lines it names and marked *receipt*;
   also Import list → *Order confirmation*), *Edit* and *Lines*.
-- **Ready to add** (`#pull?deck=`): one deck's reserved copies grouped by where they are —
-  pull from bench, move from another deck — plus the **substitutes** in this deck, color then
-  name inside each, with *In box* / *Move here* / *To bench* per row, a tick that records
-  the walk as it happens, *Select all* beside a group's count (the whole group in one
-  revision), *Mark all added*, Print (black on white, boxes to tick) and
-  Export. A substitute is any owned copy physically in a deck that the list does not call
+- **Planned Changes** (`#pull?deck=`, once *Ready to add*): one deck's changes as pairs in two column
+  groups, **Take out of Box** beside **Add to Box**, one copy a side, each with a tick, its thumbnail
+  (the card large on a hover), its name, its colors and what it is under the name. Take-outs say their
+  role (*Substitute*, *Final*); adds say the chain and the use — *Owned - Final · Substitute · Bench ·
+  Upgrade*, *To Buy · Ordered - …*, *To Buy - …* (To Buy · Not purchased > To Buy · Ordered > Owned).
+  The pairs are the model's own: a Substitute beside the card whose seat it holds, an Upgrade beside the
+  Final it names. A tick only selects; **Swap** asks *Confirm additions and removals?* and makes the
+  whole of it one change, one undo. Any adds and take-outs may be ticked in any rows: an add whose own
+  partner is not ticked pairs with a ticked take-out left over, and both wear the same colored dot.
+  Above the list: *Removed*, *Added* and *Total Deck Cards* after the swap, green at exactly 100, red
+  otherwise — a warning, never a block. A To Buy Upgrade swapped is recorded as the plan (its Final
+  stays in the box as its Substitute until it arrives); a To Buy Final is already planned and waits
+  beside its Substitute. Print and Export (CSV of the pairs).
+  A substitute is any owned copy physically in a deck that the list does not call
   for: it fills a seat while the real card is bought or on its way, so the deck is playable
   before it is finished. Nothing marks it; being in the box without a reservation is what it
-  is. The sheet says how many can come out now (a real copy is ready to take the seat, or the
-  deck holds more substitutes than empty seats) and which fill seats until their cards arrive;
-  *Mark all found* puts the ready copies in and takes exactly that many substitutes out. The
+  is. The
   Collection puts a copy in as a substitute from **Actions → Put in a physical deck as a substitute**
   (a copy the list does call for is reserved on the way in instead). Both substitute paths — that
   one and the table's drop — ask **which seat it is standing in for**, offering the cards the deck
@@ -228,8 +240,8 @@ definitions** (deck page More menu, card pop-up) turns them on for the library.
   hundred, and the readiness bar hatches the seats substitutes cover. Tiles wear their stage
   as a border: green while *Defining*, blue while *Building*, purple once *Playable*, gold
   when *Complete*. The deck page's Overview shows In
-  physical deck · Substitutes · Ready to add · Ordered · To buy and $ to finish against the cap,
-  with a readiness bar and the *Next:* line; *Ready to add (n)* leads the action row when there is
+  physical deck · Substitutes · Planned Changes · Ordered · To buy and $ to finish against the cap,
+  with a readiness bar and the *Next:* line; *Planned Changes (n)* leads the action row when there is
   anything ready to add. The **Upgrade Path** panel on the Upgrades tab lists the deck's linked upgrades
   as *Add · Replaces · Tier · Price · Why · Promote* with *Tuned only* and *Under $2*
   (D5–D6: $1.50) filters, `$X to Max` and `GC k / 2` in its header; *Promote* is the
@@ -943,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 556 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 647 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -956,6 +968,9 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `card-link` — `tests/card-link.mjs`
 - `card-resolve` — `tests/card-resolve.mjs`
 - `card-demand` — `tests/card-demand.mjs`
+- `feedback-sheet` — `tests/feedback-sheet.mjs`
+- `feedback-store` — `tests/feedback-store.mjs`
+- `feedback-triage` — `tests/feedback-triage.mjs`
 - `card-compiler` — `tests/card-compiler.mjs`
 - `card-waves` — `tests/card-waves.mjs`
 - `cloud-sync` — `tests/cloud-sync.mjs`
@@ -1005,6 +1020,11 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `script-encoding` — `tests/script-encoding.mjs`
 - `wireframe-conformance` — `tests/wireframe-conformance.mjs`
 - `deck-sources` — `tests/deck-sources.mjs`
+- `deck-autocreate` — `tests/deck-autocreate.mjs`
+- `deck-stages` — `tests/deck-stages.mjs`
+- `new-deck-flow` — `tests/new-deck-flow.mjs`
+- `deck-writeups` — `tests/deck-writeups.mjs`
+- `deck-writeups-screens` — `tests/deck-writeups-screens.mjs`
 - `docx-writer` — `tests/docx-writer.mjs`
 - `edhrec-client` — `tests/edhrec-client.mjs`
 - `engine-actions` — `tests/engine-actions.mjs`
@@ -1120,6 +1140,12 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-house-pilot` — `tests/engine-house-pilot.mjs`
 - `agent-seat-table` — `tests/agent-seat-table.mjs` (an AI on Claude at the table: seated only through the AI door, asked on the table's alarm, held to its game's cap)
 - `engine-scored-pilot` — `tests/engine-scored-pilot.mjs` (the house pilot's L1: draw odds, exact combat, its choices scored, Easy and Normal)
+- `ai-personas` — `tests/ai-personas.mjs` (the AI roster: four difficulties and four personas on three dials, each persona within its limits and none able to touch information or person bias; a seat names a level and a persona and a table carries the persona from the lobby to the launched room)
+- `veteran-agent` — `tests/veteran-agent.mjs` (the Veteran: Hard reasoned over by a model that is told how to read Hard's numbers and nothing of how any other seat is built; its brief carries Hard's plans in the decision's own indices and cannot tell a person from an AI)
+- `pilot-urgency` — `tests/pilot-urgency.mjs` (response urgency: three tiers from a card's role, its controller's links and my life; what an answer nets; the mana an instant answer holds)
+- `pilot-roles` — `tests/pilot-roles.mjs` (which cards double, loop, drain or are salty and how dangerous a commander is: a few kilobytes of the corpus held equal to their sources and handed to every pilot with a card's other public facts)
+- `engine-hard-pilot` — `tests/engine-hard-pilot.mjs` (Hard: a preferred defender for each creature, and the blockers a trampler or a flyer needs held home; the reserve's weighted probability and the absorbing-defender model behind it)
+- `engine-threat` — `tests/engine-threat.mjs` (the threat table every difficulty reads: life, hitters, growth and ramp off the seat's view; Easy's rank, Normal's weighted mean; a person and an AI the same row; L1 attacks where threat × effect is highest; the floor under an attack that dies for nothing)
 - `engine-pilot-picks` — `tests/engine-pilot-picks.mjs` (the AI seats take what an "up to" or a search is for: the lands of the colors they lack, proliferate's good counters, their own side; old matches answered as before)
 - `engine-ingest` — `tests/engine-ingest.mjs`
 - `engine-learned` — `tests/engine-learned.mjs`
@@ -1187,6 +1213,13 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `room-refused-answer` — `tests/room-refused-answer.mjs`
 - `room-g1-terms` — `tests/room-g1-terms.mjs`
 - `game-table` — `tests/game-table.mjs`
+- `lounge-registry` — `tests/lounge-registry.mjs` (the Pre-lobby's lists: `live` and `mine` from the registry object, private tables kept to their seats, the organizer and the owner; the new create fields; `users/search`; `ai-seat`'s levels; no address anywhere)
+- `lounge-lobby` — `tests/lounge-lobby.mjs` (the Lobby's seat operations, an AI seat's mat chosen for it, AI decks by anyone seated, requests to join seen by the organizer alone, quit, the log)
+- `lounge-watch` — `tests/lounge-watch.mjs` (`connect?watch=1`: a spectator is sent the public view alone, none of a seat's hand, and its action frames are refused)
+- `lounge-chat` — `tests/lounge-chat.mjs` (chat in the lobby and the game: rate limit, push to every connection, the last 50 in the view)
+- `lounge-ui` — `tests/lounge-ui.mjs` (the Pre-lobby, the New game pop-up and the Lobby with its tour, in Chromium against a stood-in server: each control asks the server what docs/ui-lane/lounge-contract.md says)
+- `lounge-board` — `tests/lounge-board.mjs` (the board for a watcher: Watching, no actions or hand, no hidden card in a frame; the table's chat in the Chat module)
+- `lounge-results` — `tests/lounge-results.mjs` (a row per person's seat when a game ends, the leaderboard, migration 0010, Observe AI game)
 - `game-leave` — `tests/game-leave.mjs`
 - `table-rematch` — `tests/table-rematch.mjs` (Play again once a table's game is over: the next game with the same seats, decks and rules as a new match, a No releasing the seat, silence a No at two minutes on the alarm, and the table's games over when the host goes or too few stay)
 - `table-lobby` — `tests/table-lobby.mjs`
@@ -1201,6 +1234,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `room-why-not` — `tests/room-why-not.mjs` (why a card can't be played now, from the engine's facts; said by the room on a seat's own cards while it holds priority)
 - `room-yield-turn` — `tests/room-yield-turn.mjs`
 - `room-blocks-none` — `tests/room-blocks-none.mjs` (Declare blockers made for a person with no creature that could block, the history saying why; new matches only, `blocksNone`)
+- `room-lands-and-aims` — `tests/room-lands-and-aims.mjs` (Rob's fullscreen notes, new matches only: a person's land in any step of their own turn, `landAnyStep`; a land taken back with nothing since, `takeBackLand`; asked about what is aimed at them, `askAimed`; and Skip my priority if no response possible, the way of playing `askStack`)
 - `room-draw-card` — `tests/room-draw-card.mjs`
 - `room-events` — `tests/room-events.mjs`
 - `room-ending` — `tests/room-ending.mjs`
@@ -1219,6 +1253,39 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `board-attack-all` — `tests/board-attack-all.mjs` ("All at <player>" and None on Declare attackers: picks only, a swarm sent at one player in one press)
 - `board-callouts-place` — `tests/board-callouts-place.mjs` (callouts never over a question asked of you: below it, above it or out of sight, back in place once it is answered, and seen on the phone)
 - `board-ending-rematch` — `tests/board-ending-rematch.mjs`
+- `board-r3-zone-navigation` — `tests/board-r3-zone-navigation.mjs` (100 cards per seat; independent zone wheel, keyboard and blank-space drag; preserved scroll positions; no game actions)
+- `board-r2-actions-inspection` — `tests/board-r2-actions-inspection.mjs` (shared Actions/Boards, read-only card inspection, 3D defaults and saved preferences, draft continuity and expired private reveals)
+- `board-fullscreen-notes` — `tests/board-fullscreen-notes.mjs` (a card played by its click in every view, a land just played taken back by its double-click, the actions large over the table in Full screen, the others' plays held up for ten seconds, the two priority choices, the tabletop to 200%, the commander tax below the title bar)
+- `board-choice-stacks` — `tests/board-choice-stacks.mjs` (Rob, 2026-10-25: in a question for one or many, the same card is one stack, ×N, a click taking one and taking it back, with how many beside it where more than one may be chosen, never past the stack or the question's most; a tapped Goblin no twin of an untapped one; and the cards another seat plays held up beside the question, never over its controls, in Focus, Full screen and Table at three window sizes; `breaks-choice-stacks.py`)
+- `board-r4-combat` — `tests/board-r4-combat.mjs`
+- `board-offer-context` — `tests/board-offer-context.mjs` (actual offer identity, revision, card and duplicate-send guards)
+- `board-r4-input` — `tests/board-r4-input.mjs` (native double click and touch card menus, sibling Undo overlay, stale action refusal)
+- `board-land-identity` — `tests/board-land-identity.mjs` (public land identity, original IDs, tap/printing equivalence)
+- `board-r4-layout` — `tests/board-r4-layout.mjs` (physical stack activation, divider and device spacing controls)
+- `board-r4-views` — `tests/board-r4-views.mjs` (Table/Focus public summaries, Coach availability, node/draft/caret continuity and actual Help)
+- `board-coach-context` — `tests/board-coach-context.mjs` (async replies bound to account/table/match, stale answer never displayed or announced)
+- `board-account-keyboard` — `tests/board-account-keyboard.mjs` (actual board hotkey handler ignores open shared/native account menu, positive held-card control)
+- `board-seat-lifecycle` — `tests/board-seat-lifecycle.mjs` (shared header preserves authoritative conceded/timeout/dropped/returned state)
+- `board-r4-caption-fit` — `tests/board-r4-caption-fit.mjs` (actual game-state text and card reach at 100/200%, every view and desktop/phone)
+- `board-r4-folded-slot` — `tests/board-r4-folded-slot.mjs` (actual target binding and way-back hit targets after drawer/module fold, 100/200% desktop/phone)
+- `board-seat-lifecycle` — `tests/board-seat-lifecycle.mjs` (authoritative lifecycle labels in the shared seat header, including a returned seat)
+- `board-settings-window` — `tests/board-settings-window.mjs` (Camera ▾ closed by a press outside it; Settings a window sized to the browser, ✕ at its top right, Cancel and Save at its bottom right, Save keeps and Cancel puts back; its sections — General, Video, Audio, Gameplay — down the left, each fitting without scrolling and using the window's full width)
+- `admin-window` — `tests/admin-window.mjs` (Admin in the Menu for the administrator alone, refused to anyone else by the Worker; a window with General and Share down its left; General shows the setup and keeps the 3D camera glance; Share admits an invitee to staging and production Access, confirms each, then emails an HTML invitation, and a refusal sends nothing)
+- `board-babylon` — `tests/board-babylon.mjs` (live Babylon/DOM projection alignment, scene resource disposal, graphics fallback, re-entry, and the Play lounge)
+- `board-3d-camera` — `tests/board-3d-camera.mjs` (the 3D camera by hand: the wheel zooms toward the pointer except over a row that scrolls, a mat dragged moves the view while the bare table still tilts, a held right button looks at the place and back on the motion's own clock with the DOM cards on the Babylon table every frame; a card's right-click menu of the room's offers in shorthand, from the keyboard too, in every view)
+- `board-stack-choices` — `tests/board-stack-choices.mjs` (Rob, 2026-10-25: a card a question offers from out of sight -- a scry, a library search, a graveyard target -- in front of On the Stack, ◇, ahead of the ability that asked, its pile carouseling through several; permanents and priority add nothing)
+- `board-attack-risk` — `tests/board-attack-risk.mjs` (Rob, 2026-10-25: on Declare attackers an option is red, ☠, when a creature that could block it could kill it, and yellow, ⊘, when it could kill none of them alone; flying, reach, deathtouch, indestructible and tapped blockers)
+- `board-mana-symbols` — `tests/board-mana-symbols.mjs` (Rob, 2026-10-25: a land's mana abilities one row of mana-symbol buttons, in Actions and in Card Preview, each named in full for a reader; a way that is more than mana alone stays words)
+- `board-graphics` — `tests/board-graphics.mjs` (Rob, 2026-10-25: the 3D table drawn at 150% of the screen's pixels by default, 50% to 200% in Settings, previewed, put back by Cancel and kept; the backdrop covering the stage edge to edge, cropped top and bottom on a wide screen, at the height the kept setting calls for, 720 to 1440 lines (2K at most), from `tools/stage-backdrops.mjs`; every design's skins painted in a worker at 2048 or 4096, 32-bit, mipmapped, with relief and inked edges)
+- `board-r5-visual` — `tests/board-r5-visual.mjs` (Rob, 2026-10-27: the 3D table at 1863 × 902 with both drawers open; the drawers from the ribbon's foot, no poison pill on the ribbon, a table label or a seat card, a seat's state a dot with its word on hover, two-row seat cards of one height with plain life, corner handles that draw nothing and keep their cursors, one ribbon height, drawer tabs hung from the top with their labels inside, no sideways scrolling and no bar on the Actions body while it fits, a pop-up as wide as its form, the action buttons 42px high with 15px type; six deliberate breaks caught; then the ribbon without the turn or the priority, which stand in the top-left caption; the Camera menu's first row and unlapped sliders; the land and battlefield divider resizing without moving the table; zero tilt at each backdrop's floor; no scrollbar on a tall Actions module around a short list)
+- `board-battlefield-rows` — `tests/board-battlefield-rows.mjs` (Rob, 2026-10-27: the battlefield's two rows are defaults; a creature dragged to the artifacts row and an artifact to the creatures row stay there through the next view and a reload; a land stays in the lands)
+- `board-hover-during-choice` — `tests/board-hover-during-choice.mjs` (Rob, 2026-10-25: with a card's question open -- what to tap for it -- the card asked about is read in Actions, and the hover still pops up any card, on the table or named in an option, by pointer or keyboard, in 3D, Focus and Table)
+- `board-card-sharpness` — `tests/board-card-sharpness.mjs` (Rob, 2026-10-25: in 3D, at 100% and at the camera's closest zoom, the cards on the mats keep their picture's fine print as the hand's do: measured against the same picture drawn flat at the same size)
+- `board-target-lands` — `tests/board-target-lands.mjs` (Rob, 2026-10-25: in a question of targets, lands after every other option in a Lands group shut by default, open while one is picked; all-land targets and a cost's question shown as they are)
+- `board-drawer-sizes` — `tests/board-drawer-sizes.mjs` (Rob, 2026-10-26, urgent: declaring attackers in 3D with a card open on the Actions desk, every one of nine choices can be reached (the old board left the options 6px); the card's size dragged by a bar under it; each drawer module's height dragged by a bar under it, kept through a reload, given back by a double click; the right drawer's width dragged at its left edge like the left drawer's)
+- `planned-changes` — `tests/planned-changes.mjs` (Rob, 2026-10-25, C1–C8: Planned Changes on the live library — every Substitute paired with the card whose seat it holds, Upgrades with the Finals they name, To Buy Finals planned, labeled by the chain To Buy · Not purchased > To Buy · Ordered > Owned; `pairUp` re-pairs lonely adds with spare take-outs and lets counts differ; every kind of swap applied as one batch, a To Buy Upgrade recorded as the plan)
+- `planned-changes-ui` — `tests/planned-changes-ui.mjs` (Rob, 2026-10-25, C1–C8 on the page: two column groups with thumbnails (large on a hover), colors and roles; a tick only selects; the counter green at 100, red otherwise; a re-pair wears one dot on both halves; Swap asks "Confirm additions and removals?" and makes one change; a mismatched count swaps after the warning; the deck page's button is Planned Changes)
+- `board-hand-table` — `tests/board-hand-table.mjs` (the wheel over your own hand sizes its cards through Hand cards in 3D, Focus, Table and on the phone, its sliders following, kept on the device once the wheel stops and after a reload, held between the slider's ends with no word under 10px and the largest inside the window, while the wheel elsewhere still zooms and Shift + wheel still turns or scrolls a hand too wide; Ctrl/⌘ + drag lengthens your side of the 3D table down to 8px above the screen's foot and back to its old length, your mat with it and the far seats unchanged, the DOM table on the Babylon one every frame, kept after a reload and put back by Ctrl/⌘ + double-click or ↕ at 100%, with plain drags, the head look and the right-click menu as before)
 - `crankmagic-audio` — `tests/crankmagic-audio.mjs`
 - `advice-contract` — `tests/advice-contract.mjs` (preparation-only AI requests, evidence references and stale-result rejection)
 - `advise-brief` — `tests/advise-brief.mjs`
@@ -1367,6 +1434,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-card-choice-memory` - `tests/engine-card-choice-memory.mjs`
 - `engine-enter-transformed` - `tests/engine-enter-transformed.mjs`
 - `engine-power-comparison` - `tests/engine-power-comparison.mjs`
+- `engine-libload-l1` - `tests/engine-libload-l1.mjs`: the library load's L1 (2026-10-21) -- what the compiler and schema refuse of an emblem's abilities (CR 114.4), a static that works everywhere but the battlefield (CR 113.6c), a process repeated again, "prevent all but N" and "prevent N" (CR 615.10) and an exchange of zones (CR 701.12d); an emblem as the board shows it; and Teferi, Time Raveler's hold on each opponent (CR 307.5), with its words
 - `engine-x11-permissions` - `tests/engine-x11-permissions.mjs`
 - `engine-x11-leave` - `tests/engine-x11-leave.mjs`
 - `engine-x11-leave-questions` - `tests/engine-x11-leave-questions.mjs`
@@ -1476,6 +1544,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-counters-put` - `tests/engine-counters-put.mjs`: counters put on players and on a creature you control (Ezuri, Claw of Progress; Simic Ascendancy; CR 122.1, 122.6, 701.34a) -- "you get an experience counter", each player named, doubled as Innkeeper's Talent doubles them, counted as "the number of experience counters you have" for its controller alone; "whenever one or more +1/+1 counters are put on a creature you control", about the creature and that many, not another player's creature, a noncreature or another kind; the compiler refusing a player's counters of no kind, chosen, +1/+1 or poison
 - `engine-ability-loss` - `tests/engine-ability-loss.mjs`: "loses all abilities" switching off a permanent's own static abilities and replacement effects (Song of the Dryads, Infinite Coursework, Oko, Thief of Crowns, Retro-Mutation; CR 613.1f, 613.6, 613.8a) -- an anthem and a grant gone from layers 6 and 7 whatever the timestamps, an effect begun in layer 4 carried on in 7b, Humility made a creature keeping its own one ability; every rule a static changes and every replacement effect, each reader before and after its permanent loses its abilities; a board's rules read with nothing derived when nothing takes abilities away; a layer-4 change of creature types only (CR 205.1a); control of two permanents exchanged, both or nothing (CR 701.12a-b)
 - `engine-explore` - `tests/engine-explore.mjs`: explore (CR 701.44) and the Map token (CR 111.10s; Restless Anchorage) -- a land to its hand, a nonland's +1/+1 counter and the graveyard asked, an empty library, the exploring permanent's controller's library, one gone told by its last known information (701.44c), the revealed card in every seat's view while it is asked, a player who left
+- `engine-precons-b` - `tests/engine-precons-b.mjs`: the precon load's lane B (Keen Engineering) -- the `monarch`, `controllerDealtCombatDamageBy` and `duringStep` grammar and Duplicant's `linkedCreature` refusing what they do not mean, a reselection (CR 508.7) with nothing attacking, and the vocabulary
 - `engine-different-opponents` - `tests/engine-different-opponents.mjs`: a different opponent for each permanent given away (Dack Fayden, Helping Hand) -- its controller asked permanent by permanent, the last forced, the rest kept when no opponent is left, the gone and the repeated left out, each for good, refused run directly; a goad for the rest of the game (CR 701.15a); the greatest power or mana value among what a player chooses, a tie theirs (End of the Hunt; CR 608.2d); and where the schema lets each be said
 - `engine-train-e-f1` - `tests/engine-train-e-f1.mjs`: morph (Akroma, Angel of Fury; CR 702.37) cast face down for {3} as a 2/2 with no text and no ward, turned face up for its morph cost alone, a manifested card with morph either way, and the table's words for each; "behold a Goblin and exile it" (Champion of the Weird; CR 701.4a, 607.2q), the card exiled with the cost and linked to the permanent the spell becomes, only in a spell's own additional cost; "another instant or sorcery spell" cast this turn (Burrog Barrage), a copy's count; "that creature's power" with the creature gone (Arni, Renowned Champion; CR 608.2h); a target's power as it now is; and April O'Neil's blockers
 - `engine-replicate-first-strike` - `tests/engine-replicate-first-strike.mjs`: replicate (Lose Focus; CR 702.56a) -- a mana cost on an instant or sorcery, once; each number of times paid its own cast, and no cast claiming more copies than it paid for -- and first strike read as the combat damage step begins (Interjection; CR 510.4): given after blocks, the first-strike step happens; in the second step, those that had neither as the first began, and double strikers; a first striker gone before it, not counted. Also a triggered ability's "for each opponent, up to one target ... that player controls" (Hapatra, the Desert Fang), the greatest mana value among cards (a land 0, a double-faced card its front face, CR 712.8a), and a card found "under your control" (Jhoira, Weatherlight Corsair)
@@ -1486,6 +1555,11 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-train-e-g1` - `tests/engine-train-e-g1.mjs`: "each opponent can't draw more than one card each turn" (Narset, Parter of Veils; CR 121.2b) -- an effect's draws, the draw step's, no draw from an empty library, and a "you may draw" its chooser can't take (CR 121.3); "choose up to four, the same mode more than once" (Moment of Reckoning; CR 700.2d), none to four modes offered as picks, each target its own and picked once the offer is taken, and the table's words for no modes; "the first time this ability has resolved this turn" (Nissa, Leyline Tamer), counted by the object its ability came from -- that object gone, or a new one -- and a branch's too; and where the schema lets each be said
 - `engine-wave4a-h3` - `tests/engine-wave4a-h3.mjs`: an object an effect remembers, referred to later by the same card (wave 4a, lane h3) -- Spark Double's copy and its counters by what it entered as, a planeswalker copied with its loyalty (CR 707.2, 306.5b; Clever Impersonator too); Hunter's Insight's delayed trigger waiting on a damage source; Koma's "its activated abilities can't be activated", mana abilities and unasked payments included (CR 602.5, 605.1a); the replacements a resolution remembers -- "that creature enters with an additional +1/+1 counter" (Summon: Fenrir), "it deals double that damage" to that player and what they control (Lightning, Army of One), each its own and ordered as any is (CR 614.5, 616.1); Ziatora's sacrificed creature's power as it last was (CR 608.2h); shadow (CR 702.28) and its counter; each player's chosen color (Selective Obliteration); Goblin Welder's "in that player's graveyard" and "if both targets are still legal" (CR 608.2b); the creature with the greatest power, a negative power as it is; and the table playing all nineteen of the lane's cards
 - `engine-tokens-counters-4a` - `tests/engine-tokens-counters-4a.mjs`: replacements on creating tokens and putting counters (wave 4a; CR 614.1a, 614.12, 616.1, 122.6) -- the token event in groups, "one of each" (Academy Manufactor) by a token's subtype, the order among the effects that apply as the event stands (Divine Visitation and Queen Allenal, Manufactor, Xorn and Anointed Procession), each option saying what it makes when counts agree, every token made as the effect says (an Aura attached, a Food beside it not), a predefined token compiled in; counters on yourself alone, an effect's and not a cost's (Doubling Season), a permanent entering with counters not seeing its own effect at each place it enters; "whenever you put" told by the counters event; four seats; the schema; the credits; the table playing all nineteen
+- `engine-w4d-tokens` - `tests/engine-w4d-tokens.mjs`: the card load of 2026-10-23, lane L5 -- counters divided at activation only where the targets fix the division (The Earth Crystal; CR 601.2d), a target gone keeping its share (CR 608.2b); a round repeated X times only where it asks, each opponent in turn order at three players (Torment of Hailfire); "not chosen this turn" a trigger's (Monument to Endurance); the amounts `dividedAmong` and `mostSharingName`.
+- `engine-roblists-p3` - `tests/engine-roblists-p3.mjs`: the card load of Rob's four priority lists (2026-10-24), lane P3 -- every scenario of the lane's 33 cards; the guards of a selector's `nonCounters` and `controlsAny`, the condition `counterPutThisTurn`, "choose one at random" and a counted target in its mode; the question "move any number of counters" asks.
+- `engine-precons-d` - `tests/engine-precons-d.mjs`: the precon load of 2026-10-25, lane D (Tramplesaurus Rex) -- every scenario of the lane's 26 cards; two blockers refused on a creature of power 4 or greater beside Challenger Troll; the attackers and blockers Rhonas the Indomitable allows; a total divided among any number of targets (Monstrous Onslaught, CR 601.2d): the targets capped, the question, a division refused with what to do, a copy keeping it; each fighter asked which creature it fights (Ezuri's Predation); a commander spell's X in the greatest mana value among your commanders; the guards of `commanderManaValue`, a fight's `against` and `divided`.
+- `engine-precons-a` - `tests/engine-precons-a.mjs`: the card load of the six precons on the Decks screen (2026-10-25), lane A (Calling All Angels) -- every scenario of the lane's 35 cards; a block tax (Archangel of Tithes; CR 509.1d-f) asked, refused with what to do, budgeted in the record and kept to by the house and scored pilots; lifelink's gain as the turn's first (Vanguard Seraph); "an opponent" with more life and opponents with more cards in hand, among the players still in the game; Serra Avenger's turns of the game; Sephara's alternative cost of tapped fliers, in words, a wrong set refused.
+- `engine-precons-c` - `tests/engine-precons-c.mjs`: the precon card load (2026-10-25), lane C (Reign of Dragons) -- every scenario of the lane's 27 cards (dethrone, pack tactics, behold as an effect, read ahead, red mana kept between steps, discover's "or put it into your hand"); the guards of the conditions `attackingMostLife` and `attackedWithPowerAtLeast`, an amount's `still`, `play`'s `otherwise` and `rememberCast`, and read ahead only on a Saga; the most life among the players still in the game.
 - `engine-play-from-zones` - `tests/engine-play-from-zones.mjs`: "you may play / cast that card" from another zone in the forms the most-played cards ask (wave 4a, lane h1) -- a permission kept by permanent type (Muldrotha, the Gravetide), one offer for each type a card has and a forged one refused, one land whatever the land drops; a permission's additional cost (Exploration Broodship), no additional cost of the spell's own; "mana of any type can be spent" (Tinybones, Bauble Burglar; CR 118.14) for colored and hybrid symbols, a Phyrexian one still its color or 2 life, and more than one way to pay asked; an effect's permission for a zone's cards (Chainer, Nightmare Adept), spent only when nothing unlimited would do, each permission that does something different its own offer; life for mana (Demon of Fate's Design) within its player's life; an effect on a spell that follows it onto the battlefield (CR 400.7a) and a rule about it that does not; "if you didn't cast it from your hand"; a Case's solved designation (CR 719.3b); the nontoken permanents sacrificed this turn; a card exiled with counters; what the schema lets each be said; and the scenario runner's blockers
 - `engine-wave4b-j1` - `tests/engine-wave4b-j1.mjs`: remembered and moved objects, and the rules beside them that the lane's most-played cards needed (wave 4b, lane j1) -- Animate Dead's Aura attached to a creature card in a graveyard (CR 303.4a, 704.5m), chosen as it enters without being cast (CR 303.4f), its Enchant then that one creature alone and "that creature" kept for its leaving, moved off it or the creature no longer one; a land given a basic land type has that type's mana ability (CR 305.6; Urborg, Tomb of Yawgmoth), once, and lost with its abilities; protection from each color over the creatures a spell named and no player (Akroma's Will; CR 702.16, 611.2c); "if you cast it" (The One Ring); an additional mana of the chosen color (Utopia Sprawl; CR 605.1b), none with none chosen; "creatures your opponents control attack this turn if able" for every creature that is theirs this turn (Bident of Thassa; CR 508.1d, 611.2c); a move of all under its controller's control (Rise of the Dark Realms; CR 110.2a); what the schema lets each be said; and the table playing all twenty-six of the lane's cards
 - `engine-rearrange-copies-4b` - `tests/engine-rearrange-copies-4b.mjs`: the top of a library looked at and put back in any order (rearrangeTop; Ponder, Sensei's Divining Top; wave 4b, lane j2) -- one question, an order of them all, a library of one card or none, another player's library, a card gone before the answer, a looker who left, and what each seat then sees; a spell's mana value on the stack with X as chosen (CR 202.3e; Mana Drain's amount); "lose hexproof" (Shadowspear) against a keyword counter put on since and a "hexproof from" given before; a basic land type given bringing its mana ability once (CR 305.7; Dryad of the Ilysian Grove), lost with all abilities; a token entering tapped by a replacement (CR 111.1, 614.12), not by its own for others; the catalog's credits
@@ -1495,11 +1569,23 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-wave4c-k3` - `tests/engine-wave4c-k3.mjs`: tokens and counters, Classes and dice (wave 4c, lane k3) -- a die rolled (CR 706; Ancient Copper Dragon), every face of a d20 reached from the game's random stream, its result kept for what follows and said in the history; "when this Class becomes level 2" (CR 716.2a), its own level from below and no other Class's; offspring's two offers and a cast claiming it unpaid refused (CR 702.175a); copies of what an effect moved, halved (Saw in Half); a mana ability with no {T} of its own tapping an artifact, its source among them (Urza, Lord High Artificer); +1/+1 and -1/-1 counters annihilating on a creature that lives (CR 704.5q); what the schema and the compiler refuse; and the table playing the lane's eighteen cards
 
 - `engine-spells-draws-4c` - `tests/engine-spells-draws-4c.mjs`: spells, draws and discards (wave 4c, lane k4) -- the lane's twenty cards at a table and through their scenarios; affinity (CR 702.41a) as the spell's own reduction; a cast or a copy of an instant or sorcery making a trigger trigger again (Veyran, Voice of Duality; CR 603.2d); draws replaced (CR 614.11) -- "you win the game instead" from an empty library (Laboratory Maniac), "draw two cards instead" but the draw step's first (Teferi's Ageless Insight), two of them making four (CR 614.5), a draw Narset forbids no event to replace; a mana choice among some colors as a spell resolves (Culling Ritual); a hand looked at (Gitaxian Probe; CR 701.20e) shown to its looker alone, hand by hand in turn order, an empty hand or the looker's own not asked, a looker who concedes, a spectator; "each player who can't" after a sacrifice that must be made (Plaguecrafter); "pay 5 life or pay {2}" (Redirect Lightning; CR 119.4) beside Phyrexian mana, and an offer changed to skip the life refused; a sacrificed creature's power as it last was (CR 608.2h)
+- `engine-spells-w4d` - `tests/engine-spells-w4d.mjs`: spells, draws and discards (the card load of 2026-10-23, lane L6) -- what the lane's scenarios cannot reach: more-life-loss twice or more (Bloodletter of Aclazotz), and life paid doubled under it; kicker's script on a kicker card only, its cost mana; repeatFor over the remembered cards (Sylvan Library); improvise asking for artifacts (CR 702.126a); convoke with {X} asking for the creatures X leaves the pool short of; an opponent who draws nothing not counted (Cut a Deal; CR 121.4)
 - `engine-wave4c-k2` - `tests/engine-wave4c-k2.mjs`: the graveyard and combat (wave 4c, lane k2) -- delve (CR 702.66a), the cards of the caster's graveyard picked once the cast is taken, never the spell itself, refused when too few or not the graveyard's, with flashback given, and the words a player is offered; dredge (CR 702.52a), each player of "each player draws a card" asked in turn, Alms Collector's single draws, never under Narset, the draw step's question never the beat's one button, and both pilots answering it; the rest on the bottom of a library in any order (CR 401.4), the order asked and kept; protection from the colors outside the commander's color identity (Commander's Plate), damage prevented and read for the Plate's controller as it now is; a flashback cost that sacrifices (Dread Return); fabricate's two modes; a creature tapped for mana without {T} (Relic of Legends); subtypes that go with a card type lost (CR 205.3d, Darksteel Mutation); a dig's card put on top (Thassa's Oracle); what the schema and compiler refuse; the credits; and the table playing the lane's nineteen cards
+- `engine-libload-l5` - `tests/engine-libload-l5.mjs`: tokens, counters and sacrifice (the library card load of 2026-10-21, lane L5) -- the lane's sixteen cards through their scenarios; "you may sacrifice one or more creatures" as an additional cost (Plumb the Forbidden; CR 601.2b, 601.2h) and its reflexive trigger (CR 603.12), never a permanent that can't be sacrificed nor another player's; cumulative upkeep paid by an opponent's life (Wall of Shards; CR 702.24a), each age counter's opponent asked; plot (CR 702.170) paid with life too, and its words; a prime number of lands; the compiler's refusals
 - `engine-libload-l4-combat` - `tests/engine-libload-l4-combat.mjs`: the library load's combat lane (L4, 2026-10-21) -- Leyline Axe begun on the battlefield from any opening hand (CR 103.6a); "must be blocked if able" (CR 509.1c), the most that can be blocked at once required -- a menace attacker by two -- refused short of it with what to do, and met by every pilot; "can't be blocked by more than one creature" (CR 509.1b); {Q} and summoning sickness (CR 107.6, 302.6); saddle not helped by crewing "as though" (CR 702.171) and what the compiler refuses of saddle and bushido; Revenge of Ravens on a planeswalker; and the lane's twenty cards' scenarios.
 - `engine-libload-graveyard` - `tests/engine-libload-graveyard.mjs`: the graveyard (the library card load of 2026-10-21, lane L3) -- the lane's fourteen cards defined and playable; manifest dread (CR 701.62a) as a dig of two, one manifested and the rest into the graveyard, its question and its refusals; exile-until remembering what it exiled and a permission cast with mana of any type (Hostage Taker, CR 609.4b); several conditions together (`allOf`, Happily Ever After); card types among permanents and graveyard cards (CR 205.2a), through the layers; the starting life total (CR 103.4), kept off a game at 40
-- `engine-libload-l6` - `tests/engine-libload-l6.mjs`: spells, draws and discards (the library card load of 2026-10-21, lane L6) -- the lane's twenty-two cards at a table and through their scenarios, Ichor Elixir (planar dice) at none; a player's hexproof from a color (Veil of Summer; CR 702.11d) stopping only an opponent's targets from a source of that color, never a player chosen without targeting; an effect's hexproof from over players only when it names no permanents; "each opponent who didn't" (Kynaios and Tiro of Meletis) and a chooseCard's `did` said beside `remember`
+- `engine-libload-l6` - `tests/engine-libload-l6.mjs`: spells, draws and discards (the library card load of 2026-10-21, lane L6) -- the lane's twenty-three cards and Fractured Powerstone at a table and through their scenarios; "roll the planar die" with no effect outside a Planechase game (CR 901.3a, 706.7; the card's ruling), nothing rolled for Ichor Elixir to replace; a player's hexproof from a color (Veil of Summer; CR 702.11d) stopping only an opponent's targets from a source of that color, never a player chosen without targeting; an effect's hexproof from over players only when it names no permanents; "each opponent who didn't" (Kynaios and Tiro of Meletis) and a chooseCard's `did` said beside `remember`
+- `engine-ring` - `tests/engine-ring.mjs`: Boromir, the Ring emblem, all four abilities, bearer choices, control changes, legend rule, and save/resume.
+- `engine-w4d-combat` - `tests/engine-w4d-combat.mjs`: the card load of 2026-10-23, lane L3 (combat and equipment): its cards through their scenarios, two added combats (Moraug), deathtouch over Ram Through, two Bludgeon Brawls in a dependency loop, modified, one kind of counter doubled, Gisela both ways, and the refusals.
+- `engine-mutate` - `tests/engine-mutate.mjs`: Nethroi, mutate costs and targets, merged cards, commander choices, copying, flickering, ordering, and the total power limit.
+- `engine-w4d-stack` - `tests/engine-w4d-stack.mjs`: the card load of 2026-10-23, lane L1: boast compiled, the history's lines for an ability copied and a number chosen at random, Tibalt's Trickery rolling no die, and Liliana, Dreadhorde General's -9 at three seats.
+- `engine-w4d-graveyard` - `tests/engine-w4d-graveyard.mjs`: the card load of 2026-10-23, lane L2: Dauthi Voidwalker's exile on every route to an opponent's graveyard, Mox Diamond's held arrival, retrace, skipped draws, untap triggers, and the lane's cards through their scenarios.
 - `engine-libload-stack` - `tests/engine-libload-stack.mjs`: the stack and control (library load L2, 2026-10-21) -- spree (CR 702.172a), each set of modes its own cast with their costs added; "as though it had flash if it targets a commander" (Timely Ward) and its guards; a spell that targets a permanent you control (Rebuff the Wicked) and creatures attacking you (Mangara, the Diplomat) in the selector grammar; Silence at a table of four
+- `engine-lands-and-mana` - `tests/engine-lands-and-mana.mjs`: lands and mana (the card load of 2026-10-23, lane L4) -- Simian Spirit Guide and Arena of Glory's exert are plays in response, the damage each player was dealt this turn (Spinerock Knoll), and two Opposition Agents, the latest controlling the search
+- `engine-roblists-food` - `tests/engine-roblists-food.mjs`: Rob's priority lists, lane P2 (2026-10-24) -- descend counted for a card's owner this turn, the Ring's temptations counted, a life adder for its controller alone, a leftover reduction taking off X (affinity), sacrifice X, that many Squirrels, devour, a linked card played free, damage by a name, skulk, what the schema refuses of each new key, and the lane's cards through their scenarios.
+- `engine-roblists-p1` - `tests/engine-roblists-p1.mjs`: Rob's priority lists, lane P1 (blink, 2026-10-24): a Phyrexian added as a card returns, Preston's 0/1 white Illusion, third from the top, an airbended card its owner's to cast, a permanent's own entering trigger when it is gone again in the same resolution (Panharmonicon, Elesh Norn), Y'shtola Rhul's additional end step each turn, and myriad at four seats.
+- `engine-precons-e` - `tests/engine-precons-e.mjs`: the precon load, lane E (Wretched Ranks, 2026-10-25) -- Kalitas's death replacement for each opponent at a table of three, an opponent's Kalitas, Kalitas beside Liesa (the game goes on), Josu Vess's kicked read off the permanent, a sacrifice remembered for every player (Syphon Flesh), what the schema refuses of each new key, and the deck's 40 cards through their scenarios.
+- `engine-deck-load-1027` - `tests/engine-deck-load-1027.mjs`: the card load of Rob's Orzhov deck (2026-10-27), the 25 cards the engine lacked -- every card of the list playable and the 25 through their scenarios, the choice of Agadeem's Awakening held to a different mana value for each card (refused with what to do), monocolored, the Blood token and the decayed Zombie, and what the schema refuses of the new key.
 
 ## Design and execution record
 
@@ -1546,3 +1632,42 @@ The `table-tabletop` suite checks the preview geometry and its browser interacti
 
 - `sharing` - `tests/sharing.mjs`: live deck/library permissions, public access, revocation, concurrent edits, privacy, notifications, owner-only invitations and verified email identity changes.
 - `sharing-ui` - `tests/sharing-ui.mjs`: keyboard user selection, sharing menus, email controls, profile saving and mobile layout with labeled screenshots.
+
+- `engine-decision-facts` — `tests/engine-decision-facts.mjs`
+
+- `room-undo-play` — `tests/room-undo-play.mjs`
+
+- `admin-ui` — `tests/admin-ui.mjs`
+
+- `board-r4-shell` — `tests/board-r4-shell.mjs`
+
+- `room-prepared` — `tests/room-prepared.mjs`
+
+- `table-game-record` — `tests/table-game-record.mjs`
+
+- `admin-ui-browser` — `tests/admin-ui-browser.mjs`
+
+- `lock-feedback` — `tests/lock-feedback.mjs`
+
+- `table-setup` — `tests/table-setup.mjs`
+
+- `board-result-bridge` — `tests/board-result-bridge.mjs`
+
+
+- `coach-layout` — `tests/coach-layout.mjs`: Coach keyboard, geometry, contrast and unchanged composer layout across all themes.
+
+- `crankmagic-coach` — `tests/crankmagic-coach.mjs`: Escaped Coach rendering and honest capability states.
+
+- `table-tabletop` — `tests/table-tabletop.mjs`: Play tabletop interaction and rendering contract.
+
+- `board-r4-decisions` — `tests/board-r4-decisions.mjs`: r4 behavior regression coverage.
+
+- `board-target-presentation` — `tests/board-target-presentation.mjs`: r4 behavior regression coverage.
+
+- `r4-density-safety` — `tests/r4-density-safety.mjs`: isolated density-harness network and fixture safety.
+
+- `account-menu-r4` — `tests/account-menu-r4.mjs`: r4 behavior regression coverage.
+
+- `board-mana-pool` — `tests/board-mana-pool.mjs`: Mana Pool drawer geometry, source counts and opponent-targeted card outlines.
+
+- `room-mana-pool` — `tests/room-mana-pool.mjs`: Seat-private mana sources and floating Signet mana payment.

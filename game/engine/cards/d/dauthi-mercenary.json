@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dauthi Mercenary",
+    "oracleId": "1b57c480-e2c5-44cd-820f-e208041bfd18",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dauthi",
+      "Knight",
+      "Mercenary"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Shadow (This creature can block or be blocked by only creatures with shadow.)\n{1}{B}: This creature gets +1/+0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "shadow",
+      "text": "Shadow (This creature can block or be blocked by only creatures with shadow.)"
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{B}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": 0
+        }
+      ],
+      "text": "{1}{B}: This creature gets +1/+0 until end of turn."
+    }
+  ]
+}

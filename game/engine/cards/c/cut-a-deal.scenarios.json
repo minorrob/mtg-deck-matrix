@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Cut a Deal",
+  "scenarios": [
+    {
+      "name": "Three opponents each draw one; Rob draws three (beside his draw step's card: four players, CR 103.8)",
+      "seats": 4,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Cut a Deal"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Cut a Deal"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 4
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 2,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 3,
+          "zone": "hand",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

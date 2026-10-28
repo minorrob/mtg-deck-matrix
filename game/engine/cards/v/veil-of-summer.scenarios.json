@@ -16,7 +16,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Cancel": {
+    "Smoke Cancel": {
       "types": [
         "Instant"
       ],
@@ -42,7 +42,7 @@
         ]
       }
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -128,7 +128,7 @@
         ]
       }
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -188,7 +188,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Cancel"
+            "Smoke Cancel"
           ]
         }
       ],
@@ -210,7 +210,7 @@
           "seat": 1
         },
         {
-          "cast": "Cancel",
+          "cast": "Smoke Cancel",
           "seat": 1,
           "targets": [
             {
@@ -262,7 +262,7 @@
           "seat": 1,
           "zone": "graveyard",
           "cards": [
-            "Cancel"
+            "Smoke Cancel"
           ]
         },
         {
@@ -303,10 +303,10 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Murder",
+            "Smoke Murder",
             "Agony",
             "Bolt",
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ],
@@ -365,7 +365,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Murder",
+                "card": "Smoke Murder",
                 "seat": 1
               },
               "count": 0
@@ -386,7 +386,7 @@
             {
               "offers": {
                 "kind": "cast",
-                "card": "Shock",
+                "card": "Smoke Shock",
                 "seat": 1
               },
               "count": 2,
@@ -429,7 +429,7 @@
         {
           "offers": {
             "kind": "cast",
-            "card": "Murder",
+            "card": "Smoke Murder",
             "seat": 1
           },
           "count": 1,
@@ -489,8 +489,8 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Cancel",
-            "Murder"
+            "Smoke Cancel",
+            "Smoke Murder"
           ]
         }
       ],
@@ -521,7 +521,7 @@
           "seat": 1
         },
         {
-          "cast": "Cancel",
+          "cast": "Smoke Cancel",
           "seat": 1,
           "targets": [
             {
@@ -556,7 +556,7 @@
           "seat": 1
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "seat": 1,
           "targets": [
             {
@@ -581,8 +581,8 @@
           "seat": 1,
           "zone": "graveyard",
           "cards": [
-            "Cancel",
-            "Murder"
+            "Smoke Cancel",
+            "Smoke Murder"
           ]
         }
       ]
@@ -603,7 +603,7 @@
           "zone": "hand",
           "cards": [
             "Veil of Summer",
-            "Cancel"
+            "Smoke Cancel"
           ]
         },
         {
@@ -655,7 +655,7 @@
           "seat": 0
         },
         {
-          "cast": "Cancel",
+          "cast": "Smoke Cancel",
           "seat": 0,
           "targets": [
             {
@@ -684,7 +684,7 @@
           "zone": "graveyard",
           "cards": [
             "Veil of Summer",
-            "Cancel"
+            "Smoke Cancel"
           ]
         },
         {

@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Desert of the Indomitable",
+    "oracleId": "852d4dc3-404d-4565-99e9-1eac8f6eca5e",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Desert"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This land enters tapped.\n{T}: Add {G}.\nCycling {1}{G} ({1}{G}, Discard this card: Draw a card.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      },
+      "text": "This land enters tapped."
+    },
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "G": 1
+          }
+        }
+      ],
+      "text": "{T}: Add {G}."
+    },
+    {
+      "kind": "activated",
+      "zone": "hand",
+      "cycling": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{G}"
+        },
+        {
+          "atom": "discard",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "text": "Cycling {1}{G} ({1}{G}, Discard this card: Draw a card.)"
+    }
+  ]
+}

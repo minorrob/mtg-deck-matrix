@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Copper Myr",
+    "oracleId": "8b52f30c-5e38-4333-88ab-901b37105b36",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Myr"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "{T}: Add {G}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "G": 1
+          }
+        }
+      ],
+      "text": "{T}: Add {G}."
+    }
+  ]
+}

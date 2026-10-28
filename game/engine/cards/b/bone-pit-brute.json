@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bone Pit Brute",
+    "oracleId": "6de38910-8d0d-4fac-b9db-c80ffd1850ea",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Cyclops"
+    ],
+    "manaCost": "{4}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Menace (This creature can't be blocked except by two or more creatures.)\nWhen this creature enters, target creature gets +4/+0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "menace",
+      "text": "Menace (This creature can't be blocked except by two or more creatures.)"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 4,
+          "toughness": 0
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "text": "When this creature enters, target creature gets +4/+0 until end of turn."
+    }
+  ]
+}

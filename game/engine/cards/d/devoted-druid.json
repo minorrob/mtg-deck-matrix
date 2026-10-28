@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Devoted Druid",
+    "oracleId": "cb814e16-acf7-41d5-a357-1323dcc369f3",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Druid"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 0,
+    "toughness": 2
+  },
+  "oracleText": "{T}: Add {G}.\nPut a -1/-1 counter on this creature: Untap this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "text": "{T}: Add {G}.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "G": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Put a -1/-1 counter on this creature: Untap this creature.",
+      "cost": [
+        {
+          "atom": "addCounters",
+          "self": true,
+          "counter": "-1/-1",
+          "count": 1
+        }
+      ],
+      "effects": [
+        {
+          "effect": "untap",
+          "targets": "self"
+        }
+      ]
+    }
+  ]
+}

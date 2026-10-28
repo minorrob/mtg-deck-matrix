@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cleansing Nova",
+    "oracleId": "aff34f28-f707-4458-8af3-1bd5b13a6b10",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Destroy all creatures.\n• Destroy all artifacts and enchantments.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Choose one —\n• Destroy all creatures.\n• Destroy all artifacts and enchantments.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Destroy all creatures.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "destroyAll",
+                  "selector": {
+                    "what": "permanent",
+                    "types": [
+                      "Creature"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Destroy all artifacts and enchantments.",
+              "targets": [],
+              "effects": [
+                {
+                  "effect": "destroyAll",
+                  "selector": {
+                    "what": "permanent",
+                    "anyOf": [
+                      {
+                        "types": [
+                          "Artifact"
+                        ]
+                      },
+                      {
+                        "types": [
+                          "Enchantment"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

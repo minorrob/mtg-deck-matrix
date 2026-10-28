@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Skillful Lunge",
+    "oracleId": "bc730e60-b9c2-4c49-b97b-2878be105b04",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature gets +2/+0 and gains first strike until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 2,
+          "toughness": 0,
+          "keywords": [
+            "First Strike"
+          ]
+        }
+      ],
+      "text": "Target creature gets +2/+0 and gains first strike until end of turn."
+    }
+  ]
+}

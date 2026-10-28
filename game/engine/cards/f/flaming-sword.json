@@ -1,0 +1,70 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Flaming Sword",
+    "oracleId": "05c62f91-2a5b-4cba-8e66-78fb370ea409",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Flash\nEnchant creature\nEnchanted creature gets +1/+0 and has first strike.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flash",
+      "text": "Flash"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      },
+      "text": "Enchant creature"
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 0
+      },
+      "sublayer": "c",
+      "text": "Enchanted creature gets +1/+0 and has first strike."
+    },
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addKeywords": [
+          "First Strike"
+        ]
+      },
+      "text": "Enchanted creature gets +1/+0 and has first strike."
+    }
+  ]
+}

@@ -24,7 +24,7 @@
       "manaCost": "{2}",
       "colors": []
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -129,7 +129,7 @@
           "zone": "graveyard",
           "cards": [
             "Bear",
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ],
@@ -187,7 +187,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {

@@ -1,0 +1,69 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sarcomite Myr",
+    "oracleId": "e78fd8f6-eca9-4107-aee7-a65689cee2f4",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Myr"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "{2}: This creature gains flying until end of turn.\n{2}, Sacrifice this creature: Draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Flying"
+          ]
+        }
+      ],
+      "text": "{2}: This creature gains flying until end of turn."
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "text": "{2}, Sacrifice this creature: Draw a card."
+    }
+  ]
+}

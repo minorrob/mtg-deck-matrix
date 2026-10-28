@@ -1,0 +1,32 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ridgetop Raptor",
+    "oracleId": "600a8c9e-e158-4fff-8c4d-c3a1bfd006e8",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dinosaur",
+      "Beast"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Double strike (This creature deals both first-strike and regular combat damage.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "double strike",
+      "text": "Double strike (This creature deals both first-strike and regular combat damage.)"
+    }
+  ]
+}

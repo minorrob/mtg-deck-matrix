@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Conclave Naturalists",
+    "oracleId": "cb5de977-d420-41cc-85f0-6ffee8bbeff1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dryad"
+    ],
+    "manaCost": "{4}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "When this creature enters, you may destroy target artifact or enchantment.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "optional": true,
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Enchantment"
+              ]
+            }
+          ]
+        }
+      ],
+      "text": "When this creature enters, you may destroy target artifact or enchantment."
+    }
+  ]
+}

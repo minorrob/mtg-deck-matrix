@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tawnos's Wand",
+    "oracleId": "2138533a-d33c-477a-9765-7369d1ec30b0",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{2}, {T}: Target creature with power 2 or less can't be blocked this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "power": {
+            "max": 2
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "targets": {
+            "target": 0
+          },
+          "rule": "cant-be-blocked",
+          "until": "end-of-turn"
+        }
+      ],
+      "text": "{2}, {T}: Target creature with power 2 or less can't be blocked this turn."
+    }
+  ]
+}

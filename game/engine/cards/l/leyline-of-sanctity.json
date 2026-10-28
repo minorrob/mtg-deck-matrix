@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Leyline of Sanctity",
+    "oracleId": "492e0e6c-8c27-4376-938b-f8a8b6205810",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "If this card is in your opening hand, you may begin the game with it on the battlefield.\nYou have hexproof. (You can't be the target of spells or abilities your opponents control.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "opening-hand",
+      "affects": {
+        "what": "card",
+        "self": true
+      },
+      "begin": "battlefield",
+      "text": "If this card is in your opening hand, you may begin the game with it on the battlefield."
+    },
+    {
+      "kind": "static",
+      "rule": "player-hexproof",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "text": "You have hexproof. (You can't be the target of spells or abilities your opponents control.)"
+    }
+  ]
+}

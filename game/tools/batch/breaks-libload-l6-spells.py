@@ -1,7 +1,8 @@
 # Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE.
 """The library card load of 2026-10-21, lane L6: spells, draws and discards -- a player's hexproof from a color and "spells
 you control can't be countered this turn" (Veil of Summer; CR 702.11d), and "each player may put a land card ..., then each
-opponent who didn't draws a card" (Kynaios and Tiro of Meletis; CR 101.4). One break for each engine change -- each guard,
+opponent who didn't draws a card" (Kynaios and Tiro of Meletis; CR 101.4), and "roll the planar die" outside a Planechase
+game (Fractured Powerstone, Ichor Elixir). One break for each engine change -- each guard,
 each branch -- and the suite that catches it:
 
     python3 game/tools/batch/breaks.py game/tools/batch/breaks-libload-l6-spells.py
@@ -18,6 +19,7 @@ STATICS = 'game/engine/rules/statics.mjs'
 BIND = 'game/engine/script/bind.mjs'
 ASKING = 'game/engine/script/effects/asking.mjs'
 INDEX = 'game/engine/cards/index.mjs'
+RESOURCES = 'game/engine/script/effects/resources.mjs'
 
 BREAKS = [
     # ---- a player's hexproof from a color (Veil of Summer; CR 702.11d) ----
@@ -86,6 +88,10 @@ BREAKS = [
     ('did: said beside remember', INDEX,
      'if (effect.effect === "chooseCard" && effect.did !== undefined && !(effect.did === true && effect.remember))',
      'if (false)'),
+    # ---- "roll the planar die" outside Planechase (Fractured Powerstone; Ichor Elixir has nothing to replace; ROB-187) ----
+    ('planar die: no effect outside Planechase', RESOURCES,
+     '  if (params.planar === true) return [];\n',
+     ''),
     ('did: true, not any value', INDEX,
      'effect.did !== undefined && !(effect.did === true && effect.remember))',
      'effect.did !== undefined && !(effect.remember))'),

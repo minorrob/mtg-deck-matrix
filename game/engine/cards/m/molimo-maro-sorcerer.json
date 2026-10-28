@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Molimo, Maro-Sorcerer",
+    "oracleId": "b87a2d20-4e9f-4256-9d24-80c38515119e",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental",
+      "Sorcerer"
+    ],
+    "manaCost": "{4}{G}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)\nMolimo's power and toughness are each equal to the number of lands you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)"
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "a",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": {
+          "count": {
+            "controller": "you",
+            "types": [
+              "Land"
+            ]
+          }
+        },
+        "setToughness": {
+          "count": {
+            "controller": "you",
+            "types": [
+              "Land"
+            ]
+          }
+        }
+      },
+      "text": "Molimo's power and toughness are each equal to the number of lands you control."
+    }
+  ]
+}

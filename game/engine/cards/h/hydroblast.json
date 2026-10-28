@@ -1,0 +1,84 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hydroblast",
+    "oracleId": "b94c0336-2ca8-4bb1-bb1f-e9babd1826ad",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Choose one —\n• Counter target spell if it's red.\n• Destroy target permanent if it's red.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "modes": [
+            {
+              "text": "Counter target spell if it's red.",
+              "targets": [
+                {
+                  "what": "spell"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "counterSpell",
+                  "spells": {
+                    "target": 0
+                  },
+                  "condition": {
+                    "about": "target",
+                    "is": {
+                      "colors": [
+                        "R"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Destroy target permanent if it's red.",
+              "targets": [
+                {
+                  "what": "permanent"
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "destroy",
+                  "targets": {
+                    "target": 0
+                  },
+                  "condition": {
+                    "about": "target",
+                    "is": {
+                      "colors": [
+                        "R"
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "text": "Choose one —\n• Counter target spell if it's red.\n• Destroy target permanent if it's red."
+    }
+  ]
+}

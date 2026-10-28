@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Adaptive Shimmerer",
+    "oracleId": "8003ca2d-0c1d-47c1-bcd1-4609615c7a82",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Insect"
+    ],
+    "manaCost": "{5}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 0,
+    "toughness": 0
+  },
+  "oracleText": "Flash\nThis creature enters with three +1/+1 counters on it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flash",
+      "text": "Flash"
+    },
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "+1/+1",
+          "count": 3
+        }
+      },
+      "text": "This creature enters with three +1/+1 counters on it."
+    }
+  ]
+}

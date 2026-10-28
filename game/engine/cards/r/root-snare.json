@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Root Snare",
+    "oracleId": "cbf743a5-123f-4747-826d-7f8bb929a52c",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Prevent all combat damage that would be dealt this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "rule": "prevent-damage",
+          "apply": {
+            "combat": true,
+            "all": true
+          },
+          "until": "end-of-turn"
+        }
+      ],
+      "text": "Prevent all combat damage that would be dealt this turn."
+    }
+  ]
+}

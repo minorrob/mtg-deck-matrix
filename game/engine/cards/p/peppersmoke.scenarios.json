@@ -57,7 +57,7 @@
         "U"
       ]
     },
-    "Zap": {
+    "Smoke Zap": {
       "types": [
         "Instant"
       ],
@@ -263,7 +263,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Zap"
+            "Smoke Zap"
           ]
         }
       ],
@@ -310,7 +310,7 @@
           "seat": 1
         },
         {
-          "cast": "Zap",
+          "cast": "Smoke Zap",
           "seat": 1,
           "targets": [
             {
@@ -336,7 +336,7 @@
           "zone": "graveyard",
           "cards": [
             "Squire",
-            "Zap"
+            "Smoke Zap"
           ]
         },
         {

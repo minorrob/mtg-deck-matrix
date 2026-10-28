@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Diregraf Ghoul",
+    "oracleId": "6048fc70-0dcc-4b54-977d-16e240225f82",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie"
+    ],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "This creature enters tapped.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      },
+      "text": "This creature enters tapped."
+    }
+  ]
+}

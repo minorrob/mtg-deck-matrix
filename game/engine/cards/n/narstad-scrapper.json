@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Narstad Scrapper",
+    "oracleId": "16acd858-dba6-401e-bbfb-cabdd6d0120e",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Construct"
+    ],
+    "manaCost": "{5}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "{2}: This creature gets +1/+0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": 0
+        }
+      ],
+      "text": "{2}: This creature gets +1/+0 until end of turn."
+    }
+  ]
+}

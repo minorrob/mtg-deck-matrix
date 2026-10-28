@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Snow Villiers",
+    "oracleId": "01cdaf69-f53a-4735-92f2-ef149de4d5c9",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Rebel",
+      "Monk"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": 3
+  },
+  "oracleText": "Vigilance\nSnow Villiers's power is equal to the number of creatures you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "vigilance",
+      "text": "Vigilance"
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "a",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": {
+          "count": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          }
+        }
+      },
+      "text": "Snow Villiers's power is equal to the number of creatures you control."
+    }
+  ]
+}

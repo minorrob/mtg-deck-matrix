@@ -1,0 +1,28 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ebony Rhino",
+    "oracleId": "3d2b5201-c2bf-4753-89ad-543795740216",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Rhino"
+    ],
+    "manaCost": "{7}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Trample",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample"
+    }
+  ]
+}

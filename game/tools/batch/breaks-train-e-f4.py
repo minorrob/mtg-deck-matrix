@@ -84,8 +84,8 @@ BREAKS = [
     # Hapatra: "for each opponent ... up to one target creature that player controls" on a triggered ability (script/schema.mjs).
     # Left in the selector, which the selector grammar refuses; still named, so the guard below it runs rather than throws.
     ('forEach: an ability target may say it', SCHEMA,
-     'const {count, distinctFrom, onlyIf, differentControllers, share, forEach, ownedByControllerOf, ...selector} = spec && typeof spec === "object" ? spec : {};',
-     'const {count, distinctFrom, onlyIf, differentControllers, share, ownedByControllerOf, ...selector} = spec && typeof spec === "object" ? spec : {}, {forEach} = selector;'),
+     'const {totalPowerAtMost, count, distinctFrom, onlyIf, differentControllers, differentManaValues, share, forEach, ownedByControllerOf, ...selector} = spec && typeof spec === "object" ? spec : {};',
+     'const {totalPowerAtMost, count, distinctFrom, onlyIf, differentControllers, differentManaValues, share, ownedByControllerOf, ...selector} = spec && typeof spec === "object" ? spec : {}, {forEach} = selector;'),
     ('forEach: a triggered ability\'s', SCHEMA, FOR_EACH, FOR_EACH.replace('ability.kind === "triggered" && ', '')),
     ('forEach: for each opponent', SCHEMA, FOR_EACH, FOR_EACH.replace('forEach === "opponent" && ', '')),
     ('forEach: up to', SCHEMA, FOR_EACH, FOR_EACH.replace('(count?.min ?? 0) === 0 && ', '')),

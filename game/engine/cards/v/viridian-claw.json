@@ -1,0 +1,78 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Viridian Claw",
+    "oracleId": "11ba27f4-decf-4447-9808-0d58844655cf",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Equipped creature gets +1/+0 and has first strike.\nEquip {1}",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 0
+      },
+      "text": "Equipped creature gets +1/+0 and has first strike."
+    },
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addKeywords": [
+          "First Strike"
+        ]
+      },
+      "text": "Equipped creature gets +1/+0 and has first strike."
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "Equip {1}"
+    }
+  ]
+}

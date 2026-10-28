@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Farfinder",
+    "oracleId": "7d306de8-a93b-429b-9436-0501be97dc8d",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Fox"
+    ],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Vigilance\nWhen this creature enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "vigilance",
+      "text": "Vigilance"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "to": "hand",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "optional": true,
+      "text": "When this creature enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle."
+    }
+  ]
+}

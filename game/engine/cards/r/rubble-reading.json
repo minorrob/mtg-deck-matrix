@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rubble Reading",
+    "oracleId": "894d96b1-c82a-4141-a2f3-76da505bd5e5",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy target land. Scry 2.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Destroy target land. Scry 2.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Land"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "scry",
+          "count": 2
+        }
+      ]
+    }
+  ]
+}

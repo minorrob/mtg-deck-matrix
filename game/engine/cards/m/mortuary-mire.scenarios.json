@@ -1,0 +1,140 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Mortuary Mire",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Mortuary Mire: enters tapped, the Bear goes on top and is drawn next turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Mortuary Mire"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Mortuary Mire"
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "pass": 2
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        },
+        {
+          "settle": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Mortuary Mire"
+            },
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": []
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Mortuary Mire: may decline, the Bear stays in the graveyard",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Mortuary Mire"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Mortuary Mire"
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "pass": 2
+        },
+        {
+          "choose": [
+            "No"
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Mortuary Mire"
+        }
+      ]
+    }
+  ]
+}

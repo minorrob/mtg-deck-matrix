@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Altered Ego",
+    "oracleId": "7c35f3fd-c64e-4944-a4d5-37ce916d23c3",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Shapeshifter"
+    ],
+    "manaCost": "{X}{2}{G}{U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": 0,
+    "toughness": 0
+  },
+  "oracleText": "This spell can't be countered.\nYou may have this creature enter as a copy of any creature on the battlefield, except it enters with X additional +1/+1 counters on it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This spell can't be countered.",
+      "rule": "cant-be-countered",
+      "affects": {
+        "what": "spell",
+        "self": true
+      }
+    },
+    {
+      "kind": "replacement",
+      "text": "You may have this creature enter as a copy of any creature on the battlefield, except it enters with X additional +1/+1 counters on it.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "copyOf": {
+          "types": [
+            "Creature"
+          ]
+        },
+        "except": {
+          "entersWithCounters": [
+            {
+              "counter": "+1/+1",
+              "count": "X"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

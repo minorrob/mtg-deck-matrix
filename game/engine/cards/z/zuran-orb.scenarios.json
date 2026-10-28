@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Zuran Orb",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Zuran Orb: sacrifice a land, gain 2 life; only a land pays",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Zuran Orb",
+            "Forest",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Zuran Orb",
+                "seat": 0
+              },
+              "count": 1,
+              "costs": [
+                [
+                  "Forest"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Zuran Orb",
+          "sacrifice": "Forest"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 42
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Zuran Orb",
+            "Bear"
+          ]
+        }
+      ]
+    }
+  ]
+}

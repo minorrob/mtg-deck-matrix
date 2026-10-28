@@ -1,0 +1,101 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Nettlecyst",
+    "oracleId": "04c7f4fe-2098-4311-866d-6733c08d5178",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Living weapon (When this Equipment enters, create a 0/0 black Phyrexian Germ creature token, then attach this to it.)\nEquipped creature gets +1/+1 for each artifact and/or enchantment you control.\nEquip {2}",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Living weapon (When this Equipment enters, create a 0/0 black Phyrexian Germ creature token, then attach this to it.)",
+      "keyword": "living weapon"
+    },
+    {
+      "kind": "static",
+      "text": "Equipped creature gets +1/+1 for each artifact and/or enchantment you control.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": {
+          "count": {
+            "controller": "you",
+            "anyOf": [
+              {
+                "types": [
+                  "Artifact"
+                ]
+              },
+              {
+                "types": [
+                  "Enchantment"
+                ]
+              }
+            ]
+          }
+        },
+        "toughness": {
+          "count": {
+            "controller": "you",
+            "anyOf": [
+              {
+                "types": [
+                  "Artifact"
+                ]
+              },
+              {
+                "types": [
+                  "Enchantment"
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "Equip {2}",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ]
+    }
+  ]
+}

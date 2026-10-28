@@ -1,0 +1,91 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dream Trawler",
+    "oracleId": "661b2159-4040-4a44-b182-46085416ebd9",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Sphinx"
+    ],
+    "manaCost": "{2}{W}{W}{U}{U}",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 5
+  },
+  "oracleText": "Flying, lifelink\nWhenever you draw a card, this creature gets +1/+0 until end of turn.\nWhenever this creature attacks, draw a card.\nDiscard a card: This creature gains hexproof until end of turn. Tap it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "lifelink",
+      "keyword": "lifelink"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you draw a card, this creature gets +1/+0 until end of turn.",
+      "trigger": {
+        "on": "drawn"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": 0
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this creature attacks, draw a card.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Discard a card: This creature gains hexproof until end of turn. Tap it.",
+      "cost": [
+        {
+          "atom": "discard"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Hexproof"
+          ]
+        },
+        {
+          "effect": "tap",
+          "targets": "self"
+        }
+      ]
+    }
+  ]
+}

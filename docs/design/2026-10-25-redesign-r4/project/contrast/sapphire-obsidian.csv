@@ -1,0 +1,75 @@
+skin,register,pair,kind,fg,bg,fg_hex,bg_hex,ratio,target,pass
+sapphire-obsidian,dark,Ink on ground,text,ink,bg,#f3f0e9,#090c12,17.20,4.5,yes
+sapphire-obsidian,dark,Ink on panel,text,ink,panel,#f3f0e9,#15181f,15.61,4.5,yes
+sapphire-obsidian,dark,Ink on raised control,text,ink,raised,#f3f0e9,#2b2f36,11.81,4.5,yes
+sapphire-obsidian,dark,Ink on hover fill,text,ink,hover,#f3f0e9,#23262d,13.31,4.5,yes
+sapphire-obsidian,dark,Ink on accent soft (selected row),text,ink,accent_soft,#f3f0e9,#1b273e,13.12,4.5,yes
+sapphire-obsidian,dark,Muted on ground,text,muted,bg,#b1b6bf,#090c12,9.61,4.5,yes
+sapphire-obsidian,dark,Muted on panel,text,muted,panel,#b1b6bf,#15181f,8.72,4.5,yes
+sapphire-obsidian,dark,Muted on raised,text,muted,raised,#b1b6bf,#2b2f36,6.60,4.5,yes
+sapphire-obsidian,dark,On-accent on accent (primary button),text,on_accent,accent,#ffffff,#3066d1,5.32,4.5,yes
+sapphire-obsidian,dark,On-accent on accent hover,text,on_accent,accent_hover,#ffffff,#2157c0,6.58,4.5,yes
+sapphire-obsidian,dark,On-required on required (danger fill),text,on_required,required,#090b0f,#ed4546,5.20,4.5,yes
+sapphire-obsidian,dark,"Ground on ink (selected chip, tab, checkbox)",text,bg,ink,#090c12,#f3f0e9,17.20,4.5,yes
+sapphire-obsidian,dark,Money on ground,text,money,bg,#f2bb3b,#090c12,11.13,4.5,yes
+sapphire-obsidian,dark,Money on panel,text,money,panel,#f2bb3b,#15181f,10.10,4.5,yes
+sapphire-obsidian,dark,Required on ground,text,required,bg,#ed4546,#090c12,5.16,4.5,yes
+sapphire-obsidian,dark,Required on panel,text,required,panel,#ed4546,#15181f,4.69,4.5,yes
+sapphire-obsidian,dark,Aether on ground,text,aether,bg,#69d6ef,#090c12,11.62,4.5,yes
+sapphire-obsidian,dark,Aether on panel,text,aether,panel,#69d6ef,#15181f,10.54,4.5,yes
+sapphire-obsidian,dark,Decision ink on decision ground,text,decision_ink,decision_bg,#f8e6c3,#2a200d,13.04,4.5,yes
+sapphire-obsidian,dark,To buy on panel,text,needed,panel,#f2bb3b,#15181f,10.10,4.5,yes
+sapphire-obsidian,dark,Remove on panel,text,out,panel,#ed4546,#15181f,4.69,4.5,yes
+sapphire-obsidian,dark,"Accent on ground (icons, large text)",mark,accent,bg,#3066d1,#090c12,3.68,3,yes
+sapphire-obsidian,dark,Accent on panel (the primary button edge),mark,accent,panel,#3066d1,#15181f,3.34,3,yes
+sapphire-obsidian,dark,In box glyph and bar on panel,mark,owned,panel,#4ed275,#15181f,9.13,3,yes
+sapphire-obsidian,dark,Ordered glyph and bar on panel,mark,coming,panel,#00a4b1,#15181f,5.87,3,yes
+sapphire-obsidian,dark,Field line on panel (input edge),mark,field_line,panel,#7c8089,#15181f,4.49,3,yes
+sapphire-obsidian,dark,Field line on raised,mark,field_line,raised,#7c8089,#2b2f36,3.40,3,yes
+sapphire-obsidian,dark,Aether focus ring on panel,mark,aether,panel,#69d6ef,#15181f,10.54,3,yes
+sapphire-obsidian,dark,Aether focus ring on raised,mark,aether,raised,#69d6ef,#2b2f36,7.98,3,yes
+sapphire-obsidian,dark,Pull step on panel,mark,owned2,panel,#a8eeba,#15181f,13.20,3,yes
+sapphire-obsidian,dark,Stand-in step on panel,mark,needed2,panel,#f7e0a0,#15181f,13.64,3,yes
+sapphire-obsidian,dark,Faint (disabled) on panel,mark,faint,panel,#82868f,#15181f,4.87,3,yes
+sapphire-obsidian,dark,Strong line on panel,plane,line_strong,panel,#4e535a,#15181f,2.29,2,yes
+sapphire-obsidian,dark,Line on ground,plane,line,bg,#373b42,#090c12,1.74,1.3,yes
+sapphire-obsidian,dark,Line on panel,plane,line,panel,#373b42,#15181f,1.58,1.3,yes
+sapphire-obsidian,dark,Panel on ground (plane 2),plane,panel,bg,#15181f,#090c12,1.10,1.1,yes
+sapphire-obsidian,dark,Raised on panel (plane 3),plane,raised,panel,#2b2f36,#15181f,1.32,1.3,yes
+sapphire-obsidian,light,Ink on ground,text,ink,bg,#11161f,#f2ece1,15.42,4.5,yes
+sapphire-obsidian,light,Ink on panel,text,ink,panel,#11161f,#fffaee,17.40,4.5,yes
+sapphire-obsidian,light,Ink on raised control,text,ink,raised,#11161f,#ffffff,18.13,4.5,yes
+sapphire-obsidian,light,Ink on hover fill,text,ink,hover,#11161f,#f0ece1,15.36,4.5,yes
+sapphire-obsidian,light,Ink on accent soft (selected row),text,ink,accent_soft,#11161f,#e6e8e9,14.75,4.5,yes
+sapphire-obsidian,light,Muted on ground,text,muted,bg,#5f5a51,#f2ece1,5.82,4.5,yes
+sapphire-obsidian,light,Muted on panel,text,muted,panel,#5f5a51,#fffaee,6.57,4.5,yes
+sapphire-obsidian,light,Muted on raised,text,muted,raised,#5f5a51,#ffffff,6.85,4.5,yes
+sapphire-obsidian,light,On-accent on accent (primary button),text,on_accent,accent,#ffffff,#1043a8,8.79,4.5,yes
+sapphire-obsidian,light,On-accent on accent hover,text,on_accent,accent_hover,#ffffff,#013397,10.93,4.5,yes
+sapphire-obsidian,light,On-required on required (danger fill),text,on_required,required,#ffffff,#8b000b,9.99,4.5,yes
+sapphire-obsidian,light,"Ground on ink (selected chip, tab, checkbox)",text,bg,ink,#f2ece1,#11161f,15.42,4.5,yes
+sapphire-obsidian,light,Money on ground,text,money,bg,#905c00,#f2ece1,4.81,4.5,yes
+sapphire-obsidian,light,Money on panel,text,money,panel,#905c00,#fffaee,5.42,4.5,yes
+sapphire-obsidian,light,Required on ground,text,required,bg,#8b000b,#f2ece1,8.49,4.5,yes
+sapphire-obsidian,light,Required on panel,text,required,panel,#8b000b,#fffaee,9.59,4.5,yes
+sapphire-obsidian,light,Aether on ground,text,aether,bg,#006c97,#f2ece1,4.97,4.5,yes
+sapphire-obsidian,light,Aether on panel,text,aether,panel,#006c97,#fffaee,5.61,4.5,yes
+sapphire-obsidian,light,Decision ink on decision ground,text,decision_ink,decision_bg,#4c2e00,#fff3dd,11.26,4.5,yes
+sapphire-obsidian,light,To buy on panel,text,needed,panel,#905c00,#fffaee,5.42,4.5,yes
+sapphire-obsidian,light,Remove on panel,text,out,panel,#8b000b,#fffaee,9.59,4.5,yes
+sapphire-obsidian,light,"Accent on ground (icons, large text)",mark,accent,bg,#1043a8,#f2ece1,7.47,3,yes
+sapphire-obsidian,light,Accent on panel (the primary button edge),mark,accent,panel,#1043a8,#fffaee,8.43,3,yes
+sapphire-obsidian,light,In box glyph and bar on panel,mark,owned,panel,#007f38,#fffaee,4.93,3,yes
+sapphire-obsidian,light,Ordered glyph and bar on panel,mark,coming,panel,#0698a4,#fffaee,3.34,3,yes
+sapphire-obsidian,light,Field line on panel (input edge),mark,field_line,panel,#858076,#fffaee,3.77,3,yes
+sapphire-obsidian,light,Field line on raised,mark,field_line,raised,#858076,#ffffff,3.93,3,yes
+sapphire-obsidian,light,Aether focus ring on panel,mark,aether,panel,#006c97,#fffaee,5.61,3,yes
+sapphire-obsidian,light,Aether focus ring on raised,mark,aether,raised,#006c97,#ffffff,5.85,3,yes
+sapphire-obsidian,light,Pull step on panel,mark,owned2,panel,#409f61,#fffaee,3.18,3,yes
+sapphire-obsidian,light,Stand-in step on panel,mark,needed2,panel,#b5820c,#fffaee,3.27,3,yes
+sapphire-obsidian,light,Faint (disabled) on panel,mark,faint,panel,#858076,#fffaee,3.77,3,yes
+sapphire-obsidian,light,Strong line on panel,plane,line_strong,panel,#b3ada3,#fffaee,2.14,2,yes
+sapphire-obsidian,light,Line on ground,plane,line,bg,#cfcabf,#f2ece1,1.39,1.3,yes
+sapphire-obsidian,light,Line on panel,plane,line,panel,#cfcabf,#fffaee,1.57,1.3,yes
+sapphire-obsidian,light,Panel on ground (plane 2),plane,panel,bg,#fffaee,#f2ece1,1.13,1.1,yes
+sapphire-obsidian,light,Raised on panel (plane 3),plane,raised,panel,#ffffff,#fffaee,1.04,n/a,yes

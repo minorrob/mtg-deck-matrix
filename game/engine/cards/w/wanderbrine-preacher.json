@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wanderbrine Preacher",
+    "oracleId": "4b4dcdb1-0017-494f-8d83-6706b188e575",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Merfolk",
+      "Cleric"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Whenever this creature becomes tapped, you gain 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "becomes tapped"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 2
+        }
+      ],
+      "text": "Whenever this creature becomes tapped, you gain 2 life."
+    }
+  ]
+}

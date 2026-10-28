@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Scrap Mastery",
+    "oracleId": "62dac700-49f7-4745-af67-37d2a81dcebc",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each player exiles all artifact cards from their graveyard, then sacrifices all artifacts they control, then puts all cards they exiled this way onto the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "card",
+            "zone": "graveyard",
+            "types": [
+              "Artifact"
+            ]
+          },
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "sacrificeAll",
+          "who": "each",
+          "selector": {
+            "types": [
+              "Artifact"
+            ]
+          }
+        },
+        {
+          "effect": "moveZone",
+          "targets": "remembered",
+          "to": "battlefield"
+        }
+      ],
+      "text": "Each player exiles all artifact cards from their graveyard, then sacrifices all artifacts they control, then puts all cards they exiled this way onto the battlefield."
+    }
+  ]
+}

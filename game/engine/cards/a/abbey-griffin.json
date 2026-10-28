@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Abbey Griffin",
+    "oracleId": "6eb74f6e-1c9d-4caf-a0d8-fa472d435346",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Griffin"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying, vigilance",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "vigilance",
+      "text": "vigilance"
+    }
+  ]
+}

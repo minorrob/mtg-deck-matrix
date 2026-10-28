@@ -55,7 +55,7 @@
       "manaCost": "{2}",
       "colors": []
     },
-    "Omen": {
+    "Smoke Omen": {
       "types": [
         "Sorcery"
       ],
@@ -211,7 +211,7 @@
             "Cathartic Pyre",
             "Rock",
             "Charm",
-            "Omen"
+            "Smoke Omen"
           ]
         },
         {
@@ -247,7 +247,7 @@
                 "options": [
                   "Rock",
                   "Charm",
-                  "Omen"
+                  "Smoke Omen"
                 ]
               }
             }
@@ -274,7 +274,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Omen",
+            "Smoke Omen",
             "Wastes",
             "Wastes"
           ]

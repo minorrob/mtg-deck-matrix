@@ -1,0 +1,188 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Loot, Exuberant Explorer",
+  "fixtures": {
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{5}",
+      "colors": [
+        "R"
+      ],
+      "power": 6,
+      "toughness": 6
+    },
+    "Wurm": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wurm"
+      ],
+      "manaCost": "{7}",
+      "colors": [
+        "G"
+      ],
+      "power": 7,
+      "toughness": 7
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Six lands: the Ogre (3) or the Giant (5) may come, not the Wurm (7); the Ogre does",
+      "library": [
+        "Wurm",
+        "Ogre",
+        "Giant",
+        "Wastes",
+        "Wastes",
+        "Wastes",
+        "Wastes"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Loot, Exuberant Explorer",
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Loot, Exuberant Explorer"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Giant",
+                  "Ogre"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Ogre"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Forest",
+            "Loot, Exuberant Explorer",
+            "Ogre",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Two lands played in one turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Loot, Exuberant Explorer"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest",
+            "Mountain",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Forest"
+        },
+        {
+          "play": "Mountain"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "play-land",
+                "card": "Wastes"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Loot, Exuberant Explorer",
+            "Mountain"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,182 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Shizo, Death's Storehouse",
+  "fixtures": {
+    "Legend": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "supertypes": [
+        "Legendary"
+      ]
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Their Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Black Wall": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wall"
+      ],
+      "manaCost": "{1}{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 0,
+      "toughness": 4
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{B}, {T}: the legendary creature gains fear -- Maya's green Bear cannot block it, her black Wall can",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Shizo, Death's Storehouse",
+            "Swamp",
+            "Legend"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Bear",
+            "Black Wall"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "activate": "Shizo, Death's Storehouse",
+          "targets": [
+            {
+              "card": "Legend"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Legend",
+                "has": [
+                  "Fear"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Legend"
+          ]
+        },
+        {
+          "block": [],
+          "blockers": [
+            "Black Wall"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        }
+      ]
+    },
+    {
+      "name": "Only a legendary creature is a target; {T}: Add {B}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Shizo, Death's Storehouse",
+            "Swamp",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Shizo, Death's Storehouse"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "tap": "Shizo, Death's Storehouse"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 2
+          }
+        }
+      ]
+    }
+  ]
+}

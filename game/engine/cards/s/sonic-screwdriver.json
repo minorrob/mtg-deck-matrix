@@ -1,0 +1,116 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sonic Screwdriver",
+    "oracleId": "cd68cc31-12fd-48ff-b37b-bccfe4172974",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add one mana of any color.\n{1}, {T}: Untap another target artifact.\n{2}, {T}: Scry 1. (Look at the top card of your library. You may put that card on the bottom.)\n{3}, {T}: Target creature can't be blocked this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true
+        }
+      ],
+      "text": "{T}: Add one mana of any color."
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Artifact"
+          ],
+          "another": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "untap",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "{1}, {T}: Untap another target artifact."
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "scry",
+          "count": 1
+        }
+      ],
+      "text": "{2}, {T}: Scry 1. (Look at the top card of your library. You may put that card on the bottom.)"
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "targets": {
+            "target": 0
+          },
+          "rule": "cant-be-blocked",
+          "until": "end-of-turn"
+        }
+      ],
+      "text": "{3}, {T}: Target creature can't be blocked this turn."
+    }
+  ]
+}

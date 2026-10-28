@@ -1,0 +1,230 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Merry, Warden of Isengard",
+  "fixtures": {
+    "Food Maker": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Create a Food token.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": 1,
+            "token": {
+              "predefined": "Food"
+            }
+          }
+        ]
+      }
+    },
+    "Two Foods": {
+      "types": [
+        "Sorcery"
+      ],
+      "manaCost": "{C}",
+      "colors": [],
+      "spell": {
+        "id": "s",
+        "text": "Create two Food tokens.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "createToken",
+            "count": 2,
+            "token": {
+              "predefined": "Food"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Two Foods at once: one Soldier with lifelink",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Merry, Warden of Isengard",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Two Foods"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Two Foods"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Merry, Warden of Isengard",
+            "Food",
+            "Food",
+            "Soldier",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Soldier",
+            "has": [
+              "Lifelink"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Only once each turn: a second Food this turn makes no Soldier",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Merry, Warden of Isengard",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Food Maker",
+            "Two Foods"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Food Maker"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Two Foods"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Merry, Warden of Isengard",
+            "Food",
+            "Food",
+            "Food",
+            "Soldier",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Maya's artifact: nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Merry, Warden of Isengard"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Food Maker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes",
+          "seat": 1
+        },
+        {
+          "cast": "Food Maker",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Merry, Warden of Isengard"
+          ]
+        }
+      ]
+    }
+  ]
+}

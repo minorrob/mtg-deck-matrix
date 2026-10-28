@@ -1,0 +1,84 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pillar of Flame",
+    "oracleId": "468cfc88-a493-44dc-9d0a-63d9cc89c114",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Pillar of Flame deals 2 damage to any target. If a creature dealt damage this way would die this turn, exile it instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Battle"
+              ]
+            },
+            {
+              "what": "player"
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 2,
+          "targets": {
+            "target": 0
+          },
+          "who": {
+            "target": 0
+          },
+          "remember": true
+        },
+        {
+          "effect": "effectUntil",
+          "rule": "exile-if-dies",
+          "targets": {
+            "target": 0
+          },
+          "until": "end-of-turn",
+          "condition": {
+            "about": "remembered",
+            "is": {
+              "types": [
+                "Creature"
+              ]
+            }
+          }
+        }
+      ],
+      "text": "Pillar of Flame deals 2 damage to any target. If a creature dealt damage this way would die this turn, exile it instead."
+    }
+  ]
+}

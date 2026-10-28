@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Midnight Assassin",
+    "oracleId": "f394d2bf-89aa-44c1-b473-8c7a8874a9a3",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire",
+      "Assassin"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "Flying\nDeathtouch (Any amount of damage this deals to a creature is enough to destroy it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "deathtouch",
+      "text": "Deathtouch (Any amount of damage this deals to a creature is enough to destroy it.)"
+    }
+  ]
+}

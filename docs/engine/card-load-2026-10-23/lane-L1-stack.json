@@ -1,0 +1,755 @@
+{
+ "schema": "library-load-lane@1",
+ "lane": "L1-stack",
+ "theme": "stack",
+ "label": "The stack and control: counterspells, \"can't cast\", timing restrictions, flash grants, copies of spells and abilities, storm, phasing, morph, surge, spree, gaining control, cards from outside the game; Planeswalkers and loyalty: walker abilities, loyalty counters, planeswalker triggers, sagas and battles; Cards with more than one face (split, adventure, modal double-faced, transform, flip, meld) and mutate",
+ "source": {
+  "collection": "collection-2026-10-21.json",
+  "workbook": "Backup_Load_-_CrankMagic_-_2026-10-21.xlsx",
+  "decks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7",
+   "S1-D1",
+   "S1-D2",
+   "S1-D3",
+   "S1-D4",
+   "S1-D5",
+   "S1-D6",
+   "S2-D1",
+   "S2-D2",
+   "S2-D3",
+   "S2-D4",
+   "S2-D5",
+   "S2-D6",
+   "G0-D1",
+   "G0-D2",
+   "G0-D3",
+   "G0-D4",
+   "G1-D1",
+   "G1-D2",
+   "G1-D3",
+   "G1-D4",
+   "CJ1",
+   "CJ2",
+   "CJ3",
+   "CJ4",
+   "CJ5",
+   "HG1",
+   "HG2"
+  ],
+  "liveDecks": [
+   "D1",
+   "D2",
+   "D3",
+   "D4",
+   "D5",
+   "D6",
+   "D7"
+  ],
+  "top": 185,
+  "candidates": {
+   "pool": 29551,
+   "candidate": 2643,
+   "refused": 0,
+   "blocked": 6,
+   "vetoed": 18,
+   "unknown": 25793,
+   "structure": 1091,
+   "oneSentenceShort": 12544
+  }
+ },
+ "cards": [
+  {
+   "name": "Cunning Wish",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "You may reveal an instant card you own from outside the game and put it into your hand."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Extrapolate the Impossible",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "You may reveal exactly two cards you own with different names from outside the game.",
+    "An opponent chooses one of them.",
+    "You put that card into your hand."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Teferi, Mage of Zhalfir",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Legendary Creature — Human Wizard",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Creature cards you own that aren't on the battlefield have flash."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Birgi, God of Storytelling // Harnfel, Horn of Bounty",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 483,
+   "type": "Legendary Creature — God // Legendary Artifact",
+   "layout": "modal_dfc",
+   "compiler": "structure",
+   "needs": [
+    "static:Activations",
+    "option:MayPlay",
+    "option:RememberChanged",
+    "option:RememberObjects"
+   ]
+  },
+  {
+   "name": "Tibalt's Trickery",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 643,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Choose 1, 2, or 3 at random.",
+    "Its controller mills that many cards, then exiles cards from the top of their library until they exile a nonland card with a different name than that spell.",
+    "They may cast that card without paying its mana cost.",
+    "Then they put the exiled cards on the bottom of their library in a random order."
+   ],
+   "needs": [
+    "api:ChooseNumber",
+    "count:ChosenNumber"
+   ]
+  },
+  {
+   "name": "Return the Favor",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 644,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "+ {1} — Copy target instant spell, sorcery spell, activated ability, or triggered ability.",
+    "You may choose new targets for the copy.",
+    "+ {1} — Change the target of target spell or ability with a single target."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Etali, Primal Conqueror // Etali, Primal Sickness",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 693,
+   "type": "Legendary Creature — Elder Dinosaur // Legendary Creature — Phyrexian Elder Dinosaur",
+   "layout": "transform",
+   "compiler": "structure",
+   "needs": []
+  },
+  {
+   "name": "Strionic Resonator",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 697,
+   "type": "Artifact",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{2}, {T}: Copy target triggered ability you control.",
+    "You may choose new targets for the copy. (A triggered ability uses the words \"when,\" \"whenever,\" or \"at.\")"
+   ],
+   "needs": []
+  },
+  {
+   "name": "Valakut Awakening // Valakut Stoneforge",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 700,
+   "type": "Instant // Land",
+   "layout": "modal_dfc",
+   "compiler": "structure",
+   "needs": [
+    "option:RememberChanged",
+    "count:RememberedSize"
+   ]
+  },
+  {
+   "name": "Mental Misstep",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 722,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "({U/P} can be paid with either {U} or 2 life.)",
+    "Counter target spell with mana value 1."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Reprieve",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 723,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "candidate",
+   "needs": []
+  },
+  {
+   "name": "Voice of Victory",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 733,
+   "type": "Creature — Human Bard",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Mobilize 2 (Whenever this creature attacks, create two tapped and attacking 1/1 red Warrior creature tokens. Sacrifice them at the beginning of the next end step.)"
+   ],
+   "needs": [
+    "keyword:Mobilize"
+   ]
+  },
+  {
+   "name": "Liliana, Dreadhorde General",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 774,
+   "type": "Legendary Planeswalker — Liliana",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever a creature you control dies, draw a card.",
+    "+1: Create a 2/2 black Zombie creature token.",
+    "−4: Each player sacrifices two creatures of their choice.",
+    "−9: Each opponent chooses a permanent they control of each permanent type and sacrifices the rest."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Ripples of Potential",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 802,
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Proliferate, then choose any number of permanents you control that had a counter put on them this way.",
+    "Those permanents phase out. (To proliferate, choose any number of permanents and/or players, then give each another counter of each kind already there. Treat phased-out permanents and anything attached to them as though they don't exist until their controller's next turn.)"
+   ],
+   "needs": []
+  },
+  {
+   "name": "Arasta of the Endless Web",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 830,
+   "type": "Legendary Enchantment Creature — Spider",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever an opponent casts an instant or sorcery spell, create a 1/2 green Spider creature token with reach."
+   ],
+   "needs": []
+  },
+  {
+   "name": "Mindbreak Trap",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 844,
+   "type": "Instant — Trap",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "If an opponent cast three or more spells this turn, you may pay {0} rather than pay this spell's mana cost.",
+    "Exile any number of target spells."
+   ],
+   "needs": [
+    "count:ValidStack"
+   ]
+  },
+  {
+   "name": "Ugin, the Ineffable",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 847,
+   "type": "Legendary Planeswalker — Ugin",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Colorless spells you cast cost {2} less to cast.",
+    "+1: Exile the top card of your library face down and look at it.",
+    "Create a 2/2 colorless Spirit creature token.",
+    "When that token leaves the battlefield, put the exiled card into your hand.",
+    "−3: Destroy target permanent that's one or more colors."
+   ],
+   "needs": [
+    "option:RememberChanged",
+    "option:RememberObjects"
+   ]
+  },
+  {
+   "name": "Sea Gate Restoration // Sea Gate, Reborn",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 886,
+   "type": "Sorcery // Land",
+   "layout": "modal_dfc",
+   "compiler": "structure",
+   "needs": []
+  },
+  {
+   "name": "Decimate",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 909,
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Destroy target artifact, target creature, target enchantment, and target land. (You can't cast this spell unless you have legal choices for all its targets.)"
+   ],
+   "needs": []
+  },
+  {
+   "name": "Bridgeworks Battle // Tanglespan Bridgeworks",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 947,
+   "type": "Sorcery // Land",
+   "layout": "modal_dfc",
+   "compiler": "structure",
+   "needs": []
+  },
+  {
+   "name": "Wear // Tear",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 962,
+   "type": "Instant // Instant",
+   "layout": "split",
+   "compiler": "structure",
+   "needs": [
+    "keyword:Fuse"
+   ]
+  },
+  {
+   "name": "Blightstep Pathway // Searstep Pathway",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 975,
+   "type": "Land // Land",
+   "layout": "modal_dfc",
+   "compiler": "structure",
+   "needs": []
+  },
+  {
+   "name": "Clearwater Pathway // Murkwater Pathway",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 999,
+   "type": "Land // Land",
+   "layout": "modal_dfc",
+   "compiler": "structure",
+   "needs": []
+  },
+  {
+   "name": "Ojer Taq, Deepest Foundation // Temple of Civilization",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1024,
+   "type": "Legendary Creature — God // Land",
+   "layout": "transform",
+   "compiler": "structure",
+   "needs": [
+    "api:ReplaceToken",
+    "replacement:CreateToken"
+   ]
+  }
+ ],
+ "review": [
+  {
+   "name": "Absorb",
+   "scope": "live",
+   "liveDecks": [
+    "D7"
+   ],
+   "decks": [
+    "D7"
+   ],
+   "owned": 1,
+   "rank": null,
+   "type": "Instant",
+   "layout": "normal"
+  },
+  {
+   "name": "Hydroblast",
+   "scope": "library",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 1,
+   "rank": null,
+   "type": "Instant",
+   "layout": "normal"
+  },
+  {
+   "name": "Krosan Grip",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 978,
+   "type": "Instant",
+   "layout": "normal"
+  },
+  {
+   "name": "Darksteel Forge",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1313,
+   "type": "Artifact",
+   "layout": "normal"
+  },
+  {
+   "name": "Essence Warden",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1323,
+   "type": "Creature — Elf Shaman",
+   "layout": "normal"
+  },
+  {
+   "name": "Cloud of Faeries",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1564,
+   "type": "Creature — Faerie",
+   "layout": "normal"
+  },
+  {
+   "name": "Murder",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1596,
+   "type": "Instant",
+   "layout": "normal"
+  },
+  {
+   "name": "Satyr Enchanter",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1613,
+   "type": "Creature — Satyr Druid",
+   "layout": "normal"
+  },
+  {
+   "name": "Grim Tutor",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1622,
+   "type": "Sorcery",
+   "layout": "normal"
+  },
+  {
+   "name": "Eureka Moment",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1733,
+   "type": "Instant",
+   "layout": "normal"
+  },
+  {
+   "name": "Loyal Warhound",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1836,
+   "type": "Creature — Dog",
+   "layout": "normal"
+  },
+  {
+   "name": "Verduran Enchantress",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1852,
+   "type": "Creature — Human Druid",
+   "layout": "normal"
+  },
+  {
+   "name": "Festering Thicket",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1888,
+   "type": "Land — Swamp Forest",
+   "layout": "normal"
+  },
+  {
+   "name": "Helpful Hunter",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1921,
+   "type": "Creature — Cat",
+   "layout": "normal"
+  },
+  {
+   "name": "Liliana of the Dark Realms",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 1987,
+   "type": "Legendary Planeswalker — Liliana",
+   "layout": "normal"
+  },
+  {
+   "name": "Lórien Revealed",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2028,
+   "type": "Sorcery",
+   "layout": "normal"
+  },
+  {
+   "name": "Flicker of Fate",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2080,
+   "type": "Instant",
+   "layout": "normal"
+  },
+  {
+   "name": "Urabrask the Hidden",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2171,
+   "type": "Legendary Creature — Phyrexian Praetor",
+   "layout": "normal"
+  },
+  {
+   "name": "Stock Up",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2183,
+   "type": "Sorcery",
+   "layout": "normal"
+  },
+  {
+   "name": "Concordant Crossroads",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2277,
+   "type": "World Enchantment",
+   "layout": "normal"
+  },
+  {
+   "name": "Survivors' Encampment",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2316,
+   "type": "Land — Desert",
+   "layout": "normal"
+  },
+  {
+   "name": "Kinjalli's Sunwing",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2381,
+   "type": "Creature — Dinosaur",
+   "layout": "normal"
+  },
+  {
+   "name": "Blur",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2444,
+   "type": "Instant",
+   "layout": "normal"
+  },
+  {
+   "name": "Strix Serenade",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2515,
+   "type": "Instant",
+   "layout": "normal"
+  },
+  {
+   "name": "Vampire of the Dire Moon",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2731,
+   "type": "Creature — Vampire",
+   "layout": "normal"
+  },
+  {
+   "name": "Harmonized Crescendo",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2750,
+   "type": "Instant",
+   "layout": "normal"
+  },
+  {
+   "name": "Holdout Settlement",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2818,
+   "type": "Land",
+   "layout": "normal"
+  },
+  {
+   "name": "Virulent Emissary",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2864,
+   "type": "Creature — Elf Assassin",
+   "layout": "normal"
+  },
+  {
+   "name": "Hinterland Sanctifier",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 2940,
+   "type": "Creature — Rabbit Cleric",
+   "layout": "normal"
+  },
+  {
+   "name": "Starnheim Courser",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 3035,
+   "type": "Creature — Pegasus",
+   "layout": "normal"
+  },
+  {
+   "name": "Careful Study",
+   "scope": "top",
+   "liveDecks": [],
+   "decks": [],
+   "owned": 0,
+   "rank": 3098,
+   "type": "Sorcery",
+   "layout": "normal"
+  }
+ ]
+}

@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Leonin Sun Standard",
+    "oracleId": "e235f988-55d2-421b-9cfd-0d30d2727aed",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{1}{W}: Creatures you control get +1/+1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{W}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": 1,
+          "toughness": 1,
+          "until": "end-of-turn"
+        }
+      ],
+      "text": "{1}{W}: Creatures you control get +1/+1 until end of turn."
+    }
+  ]
+}

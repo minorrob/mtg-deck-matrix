@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Serra Angel",
+    "oracleId": "4b7ac066-e5c7-43e6-9e7e-2739b24a905d",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{3}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Flying\nVigilance (Attacking doesn't cause this creature to tap.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "vigilance",
+      "text": "Vigilance (Attacking doesn't cause this creature to tap.)"
+    }
+  ]
+}

@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Alela, Cunning Conqueror",
   "fixtures": {
-    "Zap": {
+    "Smoke Zap": {
       "types": [
         "Instant"
       ],
@@ -79,8 +79,8 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Zap",
-            "Zap"
+            "Smoke Zap",
+            "Smoke Zap"
           ]
         }
       ],
@@ -99,7 +99,7 @@
           "seat": 0
         },
         {
-          "cast": "Zap",
+          "cast": "Smoke Zap",
           "seat": 0,
           "targets": [
             {
@@ -121,7 +121,7 @@
           "seat": 0
         },
         {
-          "cast": "Zap",
+          "cast": "Smoke Zap",
           "seat": 0,
           "targets": [
             {

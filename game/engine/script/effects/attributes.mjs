@@ -28,6 +28,7 @@
 import {addObject, removeObject} from "../../state/index.mjs";
 import {event, cardRef} from "./zones.mjs";
 import {addCounters} from "./resources.mjs";
+import {amountOf, isCounted} from "../amount.mjs";
 import {controllerOf} from "../../rules/layers.mjs";
 
 /** The designations `alterAttribute` gives or takes. */
@@ -85,7 +86,10 @@ export function alterAttribute(state, params, context) {
     if (object?.zone !== "battlefield") continue;
     if (params.attribute === "monstrous") {
       if (params.value === false || object.monstrous === true) continue;
-      const n = Number.isInteger(params.counters) ? Math.max(0, params.counters) : null;
+      /* "Monstrosity X, where X is the number of counters among creatures you control" (Maester Seymour; CR 701.37a, 701.37c):
+         an amount, counted as the ability resolves -- what the counters are then, not when it was activated. */
+      const n = Number.isInteger(params.counters) ? Math.max(0, params.counters)
+        : isCounted(params.counters) ? Math.max(0, amountOf(state, params.counters, context)) : null;
       if (n) addCounters(state, id, "+1/+1", n, events, context.controller);
       object.monstrous = true;
       if (n !== null) object.monstrosityX = n;
@@ -97,6 +101,14 @@ export function alterAttribute(state, params, context) {
       if (object.solved === true) continue;
       object.solved = true;
       events.push(changed(state, id, "solved", true));
+    }
+    /* HARNESSED (The Mind Stone: "{5}{W}, {T}: Harness The Mind Stone. (Once harnessed, its ∞ ability is active.)"): a
+       designation kept until it leaves the battlefield (CR 400.7) -- given once, never taken; its ∞ abilities are active only
+       while it has it (rules/trigger.mjs). */
+    if (params.attribute === "harnessed") {
+      if (object.harnessed === true) continue;
+      object.harnessed = true;
+      events.push(changed(state, id, "harnessed", true));
     }
     if (params.attribute === "prepared") {
       if (params.value === false) unprepare(state, id, events);

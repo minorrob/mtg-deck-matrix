@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Guidelight Synergist",
+    "oracleId": "c0bc3704-9bf9-4039-b3f8-205c1e5eb6e9",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Robot",
+      "Artificer"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 0,
+    "toughness": 4
+  },
+  "oracleText": "Flying\nThis creature gets +1/+0 for each artifact you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "power": {
+          "count": {
+            "what": "permanent",
+            "types": [
+              "Artifact"
+            ],
+            "controller": "you"
+          }
+        }
+      },
+      "text": "This creature gets +1/+0 for each artifact you control."
+    }
+  ]
+}

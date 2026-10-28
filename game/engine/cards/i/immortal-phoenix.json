@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Immortal Phoenix",
+    "oracleId": "1d8bd391-b133-4c8b-95ad-7f7ab99137c7",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Phoenix"
+    ],
+    "manaCost": "{4}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 5,
+    "toughness": 3
+  },
+  "oracleText": "Flying (This creature can't be blocked except by creatures with flying or reach.)\nWhen this creature dies, return it to its owner's hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying (This creature can't be blocked except by creatures with flying or reach.)"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "dies"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "that card",
+          "to": "hand"
+        }
+      ],
+      "text": "When this creature dies, return it to its owner's hand."
+    }
+  ]
+}

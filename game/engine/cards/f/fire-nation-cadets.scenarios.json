@@ -25,7 +25,7 @@
         ]
       }
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -267,7 +267,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ],

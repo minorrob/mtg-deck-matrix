@@ -1,0 +1,111 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Linvala, the Preserver",
+    "oracleId": "64f5689d-504d-40e9-bdb5-36dcefd257e2",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{4}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Flying\nWhen Linvala enters, if an opponent has more life than you, you gain 5 life.\nWhen Linvala enters, if an opponent controls more creatures than you, create a 3/3 white Angel creature token with flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "When Linvala enters, if an opponent has more life than you, you gain 5 life.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 5
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "lifeTotal": "an opponent"
+          },
+          "moreThan": {
+            "lifeTotal": "you"
+          }
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "When Linvala enters, if an opponent controls more creatures than you, create a 3/3 white Angel creature token with flying.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Angel",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Angel"
+            ],
+            "colors": [
+              "W"
+            ],
+            "power": 3,
+            "toughness": 3,
+            "keywords": [
+              "Flying"
+            ]
+          }
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "mostAmongOpponents": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you"
+            }
+          },
+          "moreThan": {
+            "count": {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "controller": "you"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

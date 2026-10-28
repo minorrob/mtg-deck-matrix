@@ -1,0 +1,255 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Tenured Tethermage",
+  "scenarios": [
+    {
+      "name": "Rob sacrifices a Forest: two Heartwoods enter tapped; on his next turn they untap and pay for two +1/+1 counters",
+      "library": [
+        "Wastes",
+        "Wastes",
+        "Wastes"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Forest",
+            "Wastes",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tenured Tethermage"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Tenured Tethermage"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Forest"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Heartwood"
+            },
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Forest"
+              ]
+            },
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Tenured Tethermage"
+              },
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Tenured Tethermage"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Tenured Tethermage",
+            "counter": "+1/+1",
+            "count": 2
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Tenured Tethermage",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Heartwood"
+        }
+      ]
+    },
+    {
+      "name": "A Heartwood taps for red or green",
+      "library": [
+        "Wastes",
+        "Wastes",
+        "Wastes"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Forest",
+            "Wastes",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tenured Tethermage"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Tenured Tethermage"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Forest"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Heartwood"
+          },
+          "count": 4,
+          "mana": [
+            {
+              "R": 1
+            },
+            {
+              "G": 1
+            },
+            {
+              "R": 1
+            },
+            {
+              "G": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Declined: no land sacrificed, no Heartwoods",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Forest",
+            "Wastes",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Tenured Tethermage"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Tenured Tethermage"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Mountain",
+            "Forest",
+            "Wastes",
+            "Forest",
+            "Tenured Tethermage"
+          ]
+        }
+      ]
+    }
+  ]
+}

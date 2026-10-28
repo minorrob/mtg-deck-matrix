@@ -1,0 +1,142 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ripples of Potential",
+  "scenarios": [
+    {
+      "name": "Both Lilianas proliferated; only his may phase out, and it does",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ripples of Potential"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Liliana of the Dark Realms",
+            "Island",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Liliana of the Dark Realms"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Ripples of Potential"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0,
+            1
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Liliana of the Dark Realms"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "counters": {
+            "card": "Liliana of the Dark Realms",
+            "counter": "loyalty",
+            "count": 4
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "None chosen to phase out: his Liliana stays, with one more counter",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ripples of Potential"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Liliana of the Dark Realms",
+            "Island",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Ripples of Potential"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "answer": []
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Liliana of the Dark Realms",
+            "counter": "loyalty",
+            "count": 4
+          }
+        }
+      ]
+    }
+  ]
+}

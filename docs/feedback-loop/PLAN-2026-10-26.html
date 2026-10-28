@@ -1,0 +1,165 @@
+<title>CrankMagic Feedback Loop Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column (72ch) with full-width tables; felt green accent on warm paper, the same system as the AI players plan. */
+:root {
+  --bg: #f7f5ef; --surface: #ffffff; --fg: #1f231f; --muted: #5e655c; --line: #d9d7cc;
+  --accent: #1f5f49; --accent-ink: #ffffff; --gold: #9a6b14; --soft: #e9f0ea; --warn: #8a2f1a; --warn-soft: #f6e6e1;
+  --display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+  --mono: "IBM Plex Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #15191a; --surface: #1d2224; --fg: #e8e6dd; --muted: #a7ad9f; --line: #333a38;
+  --accent: #6fbf9a; --accent-ink: #0f1a14; --gold: #d9ab4c; --soft: #1f2d27; --warn: #e3907a; --warn-soft: #3a2420; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #15191a; --surface: #1d2224; --fg: #e8e6dd; --muted: #a7ad9f; --line: #333a38;
+  --accent: #6fbf9a; --accent-ink: #0f1a14; --gold: #d9ab4c; --soft: #1f2d27; --warn: #e3907a; --warn-soft: #3a2420; color-scheme: dark; }
+body { background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.55;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 0 64px; }
+main { max-width: 980px; margin: 0 auto; }
+header.top { padding-block: 40px 20px; border-bottom: 2px solid var(--accent); margin-bottom: 28px; }
+.eyebrow { font-family: var(--display); text-transform: uppercase; letter-spacing: .08em; font-size: 12px; color: var(--muted); font-weight: 600; }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(30px, 5vw, 46px); line-height: 1.05; margin: 6px 0 10px; text-wrap: balance; }
+h2 { font-family: var(--display); font-weight: 700; font-size: 26px; margin: 48px 0 10px; text-wrap: balance; padding-top: 8px; border-top: 1px solid var(--line); }
+h3 { font-family: var(--display); font-weight: 600; font-size: 19px; margin: 26px 0 8px; text-wrap: balance; }
+p, li { max-width: 72ch; }
+.lede { font-size: 18px; color: var(--muted); max-width: 72ch; margin: 0; }
+nav.toc { display: flex; flex-wrap: wrap; gap: 6px 14px; font-family: var(--display); font-size: 14px; margin: 18px 0 0; }
+nav.toc a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; }
+nav.toc a:hover, nav.toc a:focus-visible { border-bottom-color: var(--accent); outline: none; }
+a { color: var(--accent); }
+code, .mono { font-family: var(--mono); font-size: .9em; }
+code { background: var(--soft); padding: 1px 5px; border-radius: 3px; }
+pre { background: var(--surface); border: 1px solid var(--line); padding: 12px 14px; overflow-x: auto; font-family: var(--mono); font-size: 13px; line-height: 1.5; }
+pre code { background: none; padding: 0; }
+pre.mermaid { background: var(--surface); }
+.wrap { overflow-x: auto; margin: 12px 0 18px; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; background: var(--surface); }
+th, td { text-align: left; vertical-align: top; padding: 9px 10px; border: 1px solid var(--line); }
+th { font-family: var(--display); font-weight: 600; background: var(--soft); font-size: 13.5px; letter-spacing: .02em; }
+td.k { font-family: var(--display); font-weight: 600; white-space: nowrap; }
+.num { font-variant-numeric: tabular-nums; }
+.pill { display: inline-block; font-family: var(--display); font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; background: var(--soft); color: var(--accent); margin-right: 4px; }
+.pill.rob { background: var(--warn-soft); color: var(--warn); }
+.callout { background: var(--soft); border-left: 4px solid var(--accent); padding: 10px 14px; margin: 14px 0; max-width: 78ch; }
+.callout.rob { background: var(--warn-soft); border-left-color: var(--warn); }
+.callout p { margin: 4px 0; }
+@media (max-width: 560px) { td.k { white-space: normal; } }
+footer { margin-top: 56px; color: var(--muted); font-size: 13.5px; border-top: 1px solid var(--line); padding-top: 14px; }
+</style>
+
+<main>
+<header class="top">
+  <div class="eyebrow">CrankMagic · for a new session · Oct 26, 2026 · planned on <span class="mono">claude/sharp-hawking-8lbwy9</span></div>
+  <h1>The feedback loop: from any page to a fix in production, and a thank-you back</h1>
+  <p class="lede">Every person in every access group can report a bug or ask for an enhancement from wherever they are, including mid-game. The report lands in CrankMagic's own storage with enough metadata to act on, an agent turns it into a Linear issue and a recommendation for Rob, Rob approves from wherever he is, a session executes and ships, and the person who asked gets an email with a link when it is live.</p>
+  <nav class="toc">
+    <a href="#loop">The loop</a><a href="#capture">1 Capture</a><a href="#store">2 Store</a><a href="#triage">3 Triage agent</a><a href="#approve">4 Approve</a><a href="#execute">5 Execute and ship</a><a href="#notify">6 Notify</a><a href="#plan">Execution plan</a><a href="#decisions">Rob's calls</a><a href="#kickoff">Kick-off brief</a>
+  </nav>
+</header>
+
+<h2 id="loop">The loop</h2>
+<pre class="mermaid">
+flowchart LR
+  A[Person on any page<br/>or mid-game] -->|Feedback control| B[Report + metadata<br/>CrankFeedback@1]
+  B -->|POST /api/feedback| C[(D1 feedback table)]
+  C -->|hourly| D[Triage agent<br/>GitHub Actions + Claude Agent SDK]
+  D -->|creates| E[Linear issue<br/>lane label, severity, project]
+  D -->|digest| F[Rob: email, or<br/>Claude on the phone]
+  F -->|approve in Linear<br/>or by reply| G[Execution session<br/>Claude Code or Codex]
+  G -->|branch, PR, tests,<br/>merge, staging, production| H[Release]
+  H -->|release workflow| I[Email to the reporter<br/>with a link to the app]
+  G -->|status| E
+</pre>
+<p>Two principles hold the loop together. <strong>Nothing leaves CrankMagic's own storage without a record</strong>: the report is a row in D1 before anything else sees it, and every later step writes its state back to that row (issue id, approval, PR, release, notified). <strong>Rob approves, agents propose</strong>: no issue is executed without his word, and his word is recorded on the issue, not in an inbox.</p>
+
+<h2 id="capture">1 · Capture: one control on every page and in the game</h2>
+<p>Today "Send feedback" is a <code>mailto:</code> link in <code>crankmagic-app.js</code> with no metadata. It becomes a control in the app shell (a glyph in the header, per the symbols-first rule) and in the board's rail during a game. One press opens a small sheet: what happened (free text), what kind (bug or enhancement, two glyphs), an optional screenshot (the browser's own capture of the page, where supported, else an upload), and Send. Everything else is gathered by the sheet, not typed.</p>
+<div class="wrap"><table>
+<tr><th>Field</th><th>Filled from</th><th>Why the agent needs it</th></tr>
+<tr><td class="k">page, route, view</td><td>The hash route, the active screen and mode (Full, Table, Focus, 3D).</td><td>Where to look, and which lane owns it.</td></tr>
+<tr><td class="k">build</td><td><code>version.json</code>: commit, profile (staging or production).</td><td>Whether it is already fixed on main.</td></tr>
+<tr><td class="k">game context</td><td>When in a game: table id, match id, turn, step, seat, the current decision id, the last history line. Never another seat's hand.</td><td>Reproduce from the record (the admin game-log detail in the AI players plan).</td></tr>
+<tr><td class="k">deck context</td><td>When on a deck page: deck id and name, the card under the pointer if any.</td><td>Which list to load.</td></tr>
+<tr><td class="k">device</td><td>Viewport, pixel ratio, pointer type, browser family, reduced-motion, theme.</td><td>Phone against desktop, and the graphics path.</td></tr>
+<tr><td class="k">person</td><td>Email from <code>/api/me</code>, group (owner, insider, general).</td><td>Who to thank, and whose feedback it is.</td></tr>
+<tr><td class="k">recent console</td><td>The last 20 console errors, if any, captured by the shell's error handler.</td><td>A stack trace is most of a bug fix.</td></tr>
+</table></div>
+<p>The schema is <code>CrankFeedback@1</code>, bounded by construction (text 2,000 characters, screenshot 1 MB as WebP, console lines 20), validated by a suite, and shared between the sheet and the Worker.</p>
+
+<h2 id="store">2 · Store: a Worker route and a D1 table</h2>
+<p>CrankMagic already runs on Cloudflare Workers and D1 with signed-in people behind Access. Adding a store there costs one migration and one route; adding Supabase would add a second vendor, a second identity and a second place secrets live. Recommendation: <strong>D1, not Supabase</strong>.</p>
+<ul>
+<li><code>POST /api/feedback</code>: any signed-in person, any group; rate-limited to 10 an hour a person; the screenshot stored in R2 under the row's id when R2 is on, else dropped with a note on the row.</li>
+<li><code>GET /api/admin/feedback?since=&amp;state=</code>: the owner, and the triage agent with a service token (an Access service token for the agent's application, never a person's session).</li>
+<li><code>PATCH /api/admin/feedback/:id</code>: the agent and the release workflow write state: <code>new → triaged → approved → in-progress → released → notified</code>, with the Linear issue id, PR number, release commit and the notification's message id.</li>
+<li>Migration: <code>feedback</code> table with those columns; the number is the next free one at build time (the engine lane numbers migrations).</li>
+</ul>
+
+<h2 id="triage">3 · The triage agent</h2>
+<p>Runs on GitHub Actions in this repository on a schedule (hourly, and on demand), as the card-load and game-log compile workflows already do; it needs no server of its own. It is a Claude Agent SDK script on Claude Haiku 5.5 by default (Rob's lowest-cost rule), with the repository checked out so it can read the code the report points at.</p>
+<ol>
+<li>Reads rows in state <code>new</code> through the admin route with its service token.</li>
+<li>Groups duplicates (same route, same build, similar text) and links them to one issue.</li>
+<li>For each group: classifies bug or enhancement, picks the lane from the charter's file table (<code>docs/program/README.md</code> §3) by the route and files involved, sets a severity (1 blocks play, 2 wrong result, 3 friction, 4 wish), drafts a title in Rob's wording style and a body with the reproduction, the metadata and the files it believes are involved.</li>
+<li>Creates the Linear issue in the matching project under the north star, with the Lane label and a new <code>feedback</code> label, and writes the issue id back to the rows.</li>
+<li>Writes a digest: one line per issue with its recommendation (fix now, batch, decline with a reason), and sends it to Rob by the route in section 4.</li>
+</ol>
+<p>The agent never executes a fix. Its only writes are Linear issues and the feedback rows' state.</p>
+
+<h2 id="approve">4 · Approve: the email is optional, Linear is the record</h2>
+<p>Rob asked for an email with the recommendations he can reply to, or better, for it to come straight to Claude or Codex on his phone. Both are built on one mechanism: <strong>approval is a label on the Linear issue</strong> (<code>approved</code>, <code>declined</code>, or a comment with changes). Everything that reads approvals reads Linear, so it does not matter where Rob was when he decided.</p>
+<ul>
+<li><strong>Email digest</strong> (Resend, through <code>cloud/mail.mjs</code>, sender already set up): each line links to its Linear issue. Rob approves by tapping through to Linear, or by replying with the issue keys and a word. Replies are read by the same hourly workflow through a Gmail label, parsed for issue keys and approve, decline or change, and applied as labels and comments. Reply parsing is kept simple on purpose; ambiguous replies become a comment on the issue and a line in the next digest.</li>
+<li><strong>Straight to Claude on the phone</strong>: the digest is also delivered as a scheduled task that opens a Claude Code cloud session with the digest as its prompt (<code>create_trigger</code> with <code>create_new_session_on_fire</code>), so Rob opens the app and the recommendations are waiting with the code in reach. Approving there is the same Linear label, applied by the session.</li>
+<li>Codex and GPT on the phone read Linear directly; no second channel is built for them.</li>
+</ul>
+<div class="callout"><p><strong>Skipping the email entirely:</strong> turn off the digest email once the scheduled session proves itself. The loop does not depend on it.</p></div>
+
+<h2 id="execute">5 · Execute and ship</h2>
+<p>An approved issue is picked up by whichever session Rob is in, or by a scheduled execution session, one issue per branch named by lane (<code>claude/engine-feedback-&lt;key&gt;</code>, <code>codex/workshop-feedback-&lt;key&gt;</code>). The session follows AGENTS.md as it stands: branch, fix, a test that goes red under a break, <code>tools/local-ci.sh</code>, a draft PR naming the Linear issue and the feedback ids, ready when green, merged on one green run, staging by the engine lane's release owner, production on Rob's go. Linear moves with it: in progress on the branch, in review on the PR, done on the merge. Nothing in this step is new process; the loop plugs into what the repository already does.</p>
+
+<h2 id="notify">6 · Notify the person who asked</h2>
+<p>When production is released (<code>tools/release-production.sh</code> already records the commit), a step in the release workflow asks the Worker which feedback rows reached state <code>released</code> by that commit (the PR's feedback ids, carried in the merge commit's message), and sends each reporter one email through Resend: thank you for the feedback; what was fixed or added, in one plain sentence from the issue's title; a link to crankmagic.com at the page they reported from. The row moves to <code>notified</code> with the message id, so nobody is thanked twice and the owner's admin view shows who was told what. A reporter who sent five reports fixed in one release gets one email listing them.</p>
+
+<h2 id="plan">The execution plan</h2>
+<div class="wrap"><table>
+<tr><th style="width:5%">#</th><th style="width:22%">PR</th><th>Builds</th><th style="width:28%">Proof</th><th style="width:9%">Lane</th></tr>
+<tr><td class="num">1</td><td class="k">Schema, migration, routes</td><td><code>CrankFeedback@1</code>; the <code>feedback</code> table; <code>POST /api/feedback</code>, the admin GET and PATCH; the rate limit; the service-token audience for the agent.</td><td>Cloud-worker suite: a report is stored with its metadata and state; a general user may post and may not read; the agent's token reads and patches; the 11th report in an hour is refused with the named reason.</td><td>Engine (routes), Workshop (none yet)</td></tr>
+<tr><td class="num">2</td><td class="k">The control and the sheet</td><td>The header glyph and the board-rail glyph; the sheet; metadata gathering; the console-error ring buffer; screenshot capture with upload fallback.</td><td>A browser suite opens the sheet on three pages and mid-game, sends, and reads the row back with every field; symbols-first checked by <code>feature-wiring</code>.</td><td>Workshop (shell), Play (the rail)</td></tr>
+<tr><td class="num">3</td><td class="k">Triage agent</td><td><code>.github/workflows/feedback-triage.yml</code>; <code>tools/feedback-triage.mjs</code> on the Agent SDK; dedup; lane and severity rules; Linear creation; the digest.</td><td>A dry run on fixture rows produces the expected issues and digest; a live run on staging creates one issue Rob reviews; secrets by name only.</td><td>Deck intelligence (tools) with the engine lane's token</td></tr>
+<tr><td class="num">4</td><td class="k">Approval channels</td><td>The Resend digest; the Gmail-label reply reader; the scheduled Claude session with the digest as its prompt; approval labels in Linear.</td><td>A reply with two keys and "approve" labels both issues; an ambiguous reply becomes a comment; the scheduled session opens with the digest.</td><td>Deck intelligence</td></tr>
+<tr><td class="num">5</td><td class="k">Release notification</td><td>The feedback ids carried on PRs; the release workflow's step; the reporter email; state <code>notified</code>.</td><td>A staged release with two feedback ids sends two emails once and marks the rows; a re-run sends nothing.</td><td>Engine (release tooling)</td></tr>
+<tr><td class="num">6</td><td class="k">Admin feedback view</td><td>The owner's list in the admin panel: state, group, issue, PR, release, notified; filters.</td><td>Owner sees every row; insider and general are refused.</td><td>Workshop</td></tr>
+</table></div>
+<p>Order: 1, 2, 3, 4, 5, 6. PR 1 unblocks everything; PR 2 and 3 can run in parallel in their lanes once the schema is on main. The whole loop is live after PR 5; PR 6 is the view Rob asked for and can follow.</p>
+
+<h2 id="decisions">Rob's calls</h2>
+<ul>
+<li><span class="pill rob">decision</span> <strong>D1 over Supabase</strong> for the store, and GitHub Actions over a hosted runtime for the agent (section 2 and 3). Both keep the stack to what already runs.</li>
+<li><span class="pill rob">decision</span> <strong>Approval by Linear label</strong> as the record, with email and the scheduled phone session as two ways to set it.</li>
+<li><span class="pill rob">decision</span> <strong>Which Linear project</strong> feedback issues file under: the outcome project the route maps to (default), or one "Feedback" project with the lane label.</li>
+<li><span class="pill rob">decision</span> <strong>Screenshots</strong>: keep them (R2) or drop them until R2 is on.</li>
+<li><span class="pill rob">decision</span> <strong>The sender</strong> for reporter emails: the invite sender already configured, or a new <code>feedback@</code> address.</li>
+</ul>
+
+<h2 id="kickoff">Kick-off brief for the new session</h2>
+<p>This is the prompt the new session starts from; it is also what the session that planned this will send when it creates the session.</p>
+<pre><code>Read AGENTS.md and docs/ACTIVE.md first. Then read docs/feedback-loop/PLAN-2026-10-26.html
+(fetch branch claude/sharp-hawking-8lbwy9 if it is not on main yet).
+
+Build the feedback loop in the order the plan gives, PR 1 first, on a branch of your own
+named by lane. Start with PR 1 (schema, migration, routes): the migration number is the
+next free one in docs/ACTIVE.md's engine section; every route is gated as the plan says;
+every proof goes red under a break before it is called a proof. Run tools/local-ci.sh
+&lt;ref&gt; 0 before the push, open a draft PR, mark it ready when green.
+
+Record yourself in docs/ACTIVE.md (your own section; the Requests table for anything you
+need from another lane). Rob's calls are listed in the plan; proceed on the defaults and
+name each assumption in the PR. Do not build Supabase; do not send any email to a real
+address from a test.</code></pre>
+
+<footer>Written 2026-10-26 beside <span class="mono">docs/ai-players/PLAN-2026-10-26.html</span>. The game-log admin detail that section 1 relies on is specified there, in section 10.</footer>
+</main>

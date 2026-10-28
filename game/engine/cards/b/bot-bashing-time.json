@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bot Bashing Time",
+    "oracleId": "14079f05-fbc1-401c-9008-da678656b4c6",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Bot Bashing Time deals 6 damage to target creature. If that creature would die this turn, exile it instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 6,
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "effectUntil",
+          "rule": "exile-if-dies",
+          "targets": {
+            "target": 0
+          },
+          "until": "end-of-turn"
+        }
+      ],
+      "text": "Bot Bashing Time deals 6 damage to target creature. If that creature would die this turn, exile it instead."
+    }
+  ]
+}

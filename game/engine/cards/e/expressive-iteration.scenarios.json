@@ -1,0 +1,283 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Expressive Iteration",
+  "fixtures": {
+    "Alpha": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Bravo": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Charlie": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Delta": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Alpha to hand, Charlie exiled and cast this turn, Bravo to the bottom",
+      "library": [
+        "Alpha",
+        "Bravo",
+        "Charlie",
+        "Delta"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Mountain",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Expressive Iteration"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Expressive Iteration"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Alpha",
+                  "Bravo",
+                  "Charlie"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Alpha"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Bravo",
+                  "Charlie"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Charlie"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": [
+                "Alpha"
+              ]
+            },
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Charlie"
+              ]
+            },
+            {
+              "seat": 0,
+              "zone": "library",
+              "count": 18
+            }
+          ]
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Charlie"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Island",
+            "Mountain",
+            "Forest",
+            "Wastes",
+            "Charlie"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Next turn Delta is drawn (Bravo went to the bottom), and the exiled card may no longer be cast",
+      "library": [
+        "Alpha",
+        "Bravo",
+        "Charlie",
+        "Delta"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Mountain",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Expressive Iteration"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Expressive Iteration"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Alpha"
+          ]
+        },
+        {
+          "choose": [
+            "Charlie"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Charlie",
+                "seat": 0
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Alpha",
+            "Delta"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Charlie"
+          ]
+        }
+      ]
+    }
+  ]
+}

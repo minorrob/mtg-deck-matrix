@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "General Kreat, the Boltbringer",
   "fixtures": {
-    "Goblin Raider": {
+    "Smoke Goblin Raider": {
       "types": [
         "Creature"
       ],
@@ -26,14 +26,14 @@
           "zone": "battlefield",
           "cards": [
             "General Kreat, the Boltbringer",
-            "Goblin Raider"
+            "Smoke Goblin Raider"
           ]
         }
       ],
       "steps": [
         {
           "attack": [
-            "Goblin Raider"
+            "Smoke Goblin Raider"
           ]
         },
         {

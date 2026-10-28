@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Armored Griffin",
+    "oracleId": "ad3d6003-66d3-486d-aa54-ddce1adb5ff1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Griffin"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Flying, vigilance",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "vigilance",
+      "text": "vigilance"
+    }
+  ]
+}

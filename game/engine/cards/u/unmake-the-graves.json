@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Unmake the Graves",
+    "oracleId": "d9b99c58-8e2e-496c-8288-eda934f49162",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)\nReturn up to two target creature cards from your graveyard to your hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "convoke",
+      "text": "Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for {1} or one mana of that creature's color.)"
+    },
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard",
+          "controller": "you",
+          "types": [
+            "Creature"
+          ],
+          "count": {
+            "min": 0,
+            "max": 2
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        }
+      ],
+      "text": "Return up to two target creature cards from your graveyard to your hand."
+    }
+  ]
+}

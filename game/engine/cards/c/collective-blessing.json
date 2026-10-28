@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Collective Blessing",
+    "oracleId": "7f7049e8-49ed-46da-89f7-1e40aefb3b0c",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{G}{G}{W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creatures you control get +3/+3.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 7,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "power": 3,
+        "toughness": 3
+      },
+      "sublayer": "c",
+      "text": "Creatures you control get +3/+3."
+    }
+  ]
+}

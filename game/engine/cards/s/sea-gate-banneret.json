@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sea Gate Banneret",
+    "oracleId": "ddf12758-b356-4ff8-b0ce-547083498335",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Kor",
+      "Warrior"
+    ],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "{4}{W}: Creatures you control get +1/+1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}{W}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": 1,
+          "toughness": 1,
+          "until": "end-of-turn"
+        }
+      ],
+      "text": "{4}{W}: Creatures you control get +1/+1 until end of turn."
+    }
+  ]
+}

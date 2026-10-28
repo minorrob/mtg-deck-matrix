@@ -1,0 +1,187 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Interplanar Beacon",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{1},{T}: two mana of different colors, ten ways, none of one color twice",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Interplanar Beacon",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Interplanar Beacon"
+          },
+          "count": 11
+        }
+      ]
+    },
+    {
+      "name": "Rob casts Ajani, the Greathearted with the Beacon's {G}{W} and two Wastes: he gains 1 life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Interplanar Beacon",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ajani, the Greathearted"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Interplanar Beacon",
+          "mana": {
+            "W": 1,
+            "G": 1
+          }
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Ajani, the Greathearted"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Interplanar Beacon",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Ajani, the Greathearted"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 41
+        }
+      ]
+    },
+    {
+      "name": "The Beacon's two colors can't pay for a creature spell",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Interplanar Beacon",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Interplanar Beacon",
+          "mana": {
+            "W": 1,
+            "G": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Bear"
+          },
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "{T}: Add {C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Interplanar Beacon"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Interplanar Beacon",
+          "mana": {
+            "C": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        }
+      ]
+    }
+  ]
+}

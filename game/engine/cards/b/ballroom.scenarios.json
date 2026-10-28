@@ -1,0 +1,202 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ballroom",
+  "scenarios": [
+    {
+      "name": "Four mana and a tap: Rob investigates, and Ballroom is tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ballroom",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Ballroom",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ballroom",
+            "Clue",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Ballroom",
+          "is": true
+        }
+      ]
+    },
+    {
+      "name": "The Clue it made: two mana and sacrificed, it draws Rob a card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ballroom",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Ballroom",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Clue"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ballroom",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "It enters tapped, so it cannot pay for its own investigate the turn it is played",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ballroom"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Ballroom"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Ballroom",
+          "is": true
+        },
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Ballroom"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Untapped, it taps for black",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ballroom"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Ballroom",
+          "mana": {
+            "B": 1
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1
+          }
+        }
+      ]
+    }
+  ]
+}

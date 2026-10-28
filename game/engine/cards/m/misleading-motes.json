@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Misleading Motes",
+    "oracleId": "09eec5a2-7835-4b24-9dd1-594612ee9152",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature's owner puts it on their choice of the top or bottom of their library.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "modal",
+          "chooser": {
+            "ownerOf": {
+              "target": 0
+            }
+          },
+          "choose": 1,
+          "modes": [
+            {
+              "text": "On the top",
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": {
+                    "target": 0
+                  },
+                  "to": "library",
+                  "top": true
+                }
+              ]
+            },
+            {
+              "text": "On the bottom",
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": {
+                    "target": 0
+                  },
+                  "to": "library"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "text": "Target creature's owner puts it on their choice of the top or bottom of their library."
+    }
+  ]
+}

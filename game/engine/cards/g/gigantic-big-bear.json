@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gigantic Big Bear",
+    "oracleId": "88d7bd11-7b1d-426c-8552-01448531c6ad",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bear"
+    ],
+    "manaCost": "{5}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 10,
+    "toughness": 7
+  },
+  "oracleText": "This spell can't be countered.\nHexproof, haste",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "cant-be-countered",
+      "affects": {
+        "what": "spell",
+        "self": true
+      },
+      "text": "This spell can't be countered."
+    },
+    {
+      "kind": "keyword",
+      "keyword": "hexproof",
+      "text": "Hexproof"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "haste",
+      "text": "haste"
+    }
+  ]
+}

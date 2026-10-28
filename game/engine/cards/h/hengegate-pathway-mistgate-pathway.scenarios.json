@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Hengegate Pathway // Mistgate Pathway",
+  "scenarios": [
+    {
+      "name": "Played as Hengegate Pathway: {W}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Hengegate Pathway // Mistgate Pathway"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Hengegate Pathway"
+        },
+        {
+          "tap": "Hengegate Pathway"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Hengegate Pathway"
+          ]
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "W": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Played as Mistgate Pathway: {U}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Hengegate Pathway // Mistgate Pathway"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Mistgate Pathway"
+        },
+        {
+          "tap": "Mistgate Pathway"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Mistgate Pathway"
+          ]
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "U": 1
+          }
+        }
+      ]
+    }
+  ]
+}

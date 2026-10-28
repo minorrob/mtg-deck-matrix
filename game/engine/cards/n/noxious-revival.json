@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Noxious Revival",
+    "oracleId": "97cabeda-9fe3-490d-99b4-4c8d87c17157",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{G/P}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "({G/P} can be paid with either {G} or 2 life.)\nPut target card from a graveyard on top of its owner's library.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Put target card from a graveyard on top of its owner's library.",
+      "targets": [
+        {
+          "what": "card",
+          "zone": "graveyard"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "library",
+          "top": true
+        }
+      ]
+    }
+  ]
+}

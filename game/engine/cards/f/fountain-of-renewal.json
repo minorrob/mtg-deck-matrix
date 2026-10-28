@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fountain of Renewal",
+    "oracleId": "df024c55-c008-48ec-a1a5-02ce336e3de6",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "At the beginning of your upkeep, you gain 1 life.\n{3}, Sacrifice this artifact: Draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "upkeep",
+        "yours": true
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 1
+        }
+      ],
+      "text": "At the beginning of your upkeep, you gain 1 life."
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "text": "{3}, Sacrifice this artifact: Draw a card."
+    }
+  ]
+}

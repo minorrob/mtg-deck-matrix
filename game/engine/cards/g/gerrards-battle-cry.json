@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gerrard's Battle Cry",
+    "oracleId": "12ef651c-5a86-49c4-a512-292e9d135a76",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{2}{W}: Creatures you control get +1/+1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{W}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": 1,
+          "toughness": 1,
+          "until": "end-of-turn"
+        }
+      ],
+      "text": "{2}{W}: Creatures you control get +1/+1 until end of turn."
+    }
+  ]
+}

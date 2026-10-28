@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Crossbow Ambush",
+    "oracleId": "c10fd7a6-360f-43d6-a4ef-d990c97cb2f6",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creatures you control gain reach until end of turn. (They can block creatures with flying.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Reach"
+          ],
+          "until": "end-of-turn"
+        }
+      ],
+      "text": "Creatures you control gain reach until end of turn. (They can block creatures with flying.)"
+    }
+  ]
+}

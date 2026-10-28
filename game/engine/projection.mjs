@@ -93,6 +93,13 @@ function cardFor(state, id, canSeeFace, viewer = null) {
     tapped: object.tapped,
     damage: object.damage,
     counters: {...object.counters},
+    /* Physical battlefield facts are public even when a face is hidden. Keep current reciprocal attachments only:
+       a zone change makes a new object, and an Aura in a hidden zone must never gain an identity through its old host. */
+    ...(object.zone === "battlefield" ? {
+      ...(object.token === true ? {token: true} : {}),
+      attachments: (object.attachments ?? []).filter(id => state.objects[id]?.zone === "battlefield" && state.objects[id].attachedTo === object.id),
+    } : {}),
+
     /* CURRENT characteristics for anything on the battlefield, so the board draws the creature a
        player is actually looking at rather than what was printed on the card. Elsewhere there is
        nothing to derive: a card in a graveyard is its printed self. */
@@ -100,14 +107,25 @@ function cardFor(state, id, canSeeFace, viewer = null) {
     power: shown ? current.power : null,
     toughness: shown ? current.toughness : null,
     keywords: shown ? [...current.keywords] : [],
+    ...(object.zone === "battlefield" && object.merged ? {components: object.merged.map(part => ({
+      name: part.faceDown && viewer !== controller ? null : part.physical.card, faceDown: part.faceDown === true,
+      commander: part.physical.commander === true})), mutations: object.mutations ?? 0,
+      text: (current.abilities ?? object.abilities ?? []).map(a => a.text).filter(Boolean).join("\n")} : {}),
+    ...(object.zone === "battlefield" && state.players.some(p => p.ring?.bearer === id && p.id === controller) ? {ringBearer: true} : {}),
     /* A Class's level (CR 716.2a), a designation anyone can see (716.2b); none is level 1 (716.2d). */
     ...(Number.isInteger(object.level) ? {level: object.level} : {}),
     /* Monstrous (CR 701.37b) and prepared (CR 722.3a): designations, which anyone can see (script/effects/attributes.mjs). */
     ...(object.monstrous === true ? {monstrous: true} : {}),
     ...(object.prepared === true ? {prepared: true} : {}),
+    /* The inset spell is a distinct copy in public exile, not another activation of the creature (CR 722.3c).
+       Its identity lets the board associate that legal cast with the prepared card without inventing an action. */
+    ...(named && object.prepared === true && state.objects[object.preparedCopy]?.zone === "exile" && !state.objects[object.preparedCopy].faceDown
+      ? {preparedSpell: {cardId: object.preparedCopy, name: state.objects[object.preparedCopy].card, manaCost: state.objects[object.preparedCopy].manaCost ?? null}} : {}),
     /* Solved (CR 719.3b): a Case's designation, which anyone can see. */
     ...(object.solved === true ? {solved: true} : {}),
     commander: object.commander === true,
+    /* An emblem (CR 114), public in the command zone: what it does, its abilities' words, for the board to show. */
+    ...(object.emblem === true ? {emblem: true, text: (object.abilities ?? []).map((a) => a.text).filter(Boolean).join("\n")} : {}),
     /* A candidate (card load step 5, Rob's decision 2): written by the card compiler, not yet reviewed, so the board labels
        it and offers "report a wrong card". Said only of a card this seat can name, as its name is. */
     ...(named && object.candidate === true ? {candidate: true} : {}),

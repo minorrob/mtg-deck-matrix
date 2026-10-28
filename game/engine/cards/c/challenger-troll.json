@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Challenger Troll",
+    "oracleId": "78cb1f05-edad-4430-9095-f3eabd80bf41",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Troll"
+    ],
+    "manaCost": "{4}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 6,
+    "toughness": 5
+  },
+  "oracleText": "Each creature you control with power 4 or greater can't be blocked by more than one creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Each creature you control with power 4 or greater can't be blocked by more than one creature.",
+      "rule": "blocked-by-one-at-most",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "power": {
+          "min": 4
+        }
+      }
+    }
+  ]
+}

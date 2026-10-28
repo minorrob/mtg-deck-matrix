@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Natural Connection",
+    "oracleId": "dc85c659-f2ed-4b13-807c-d853f74de410",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "to": "battlefield",
+          "tapped": true,
+          "shuffle": true
+        }
+      ],
+      "text": "Search your library for a basic land card, put it onto the battlefield tapped, then shuffle."
+    }
+  ]
+}

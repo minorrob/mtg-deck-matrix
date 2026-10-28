@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Obelisk of Naya",
+    "oracleId": "02e81bb8-ba80-4483-9b9f-973dcae0fc9d",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [
+      "G",
+      "R",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {R}, {G}, or {W}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "R": 1
+            },
+            {
+              "G": 1
+            },
+            {
+              "W": 1
+            }
+          ]
+        }
+      ],
+      "text": "{T}: Add {R}, {G}, or {W}."
+    }
+  ]
+}

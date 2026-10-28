@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pegasus Charger",
+    "oracleId": "81a5ac8d-b904-4755-a5bc-650e95f4138f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Pegasus"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Flying (This creature can't be blocked except by creatures with flying or reach.)\nFirst strike (This creature deals combat damage before creatures without first strike.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying (This creature can't be blocked except by creatures with flying or reach.)"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "first strike",
+      "text": "First strike (This creature deals combat damage before creatures without first strike.)"
+    }
+  ]
+}

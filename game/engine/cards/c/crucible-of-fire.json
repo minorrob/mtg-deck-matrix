@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Crucible of Fire",
+    "oracleId": "0c572396-4e53-4c86-9b04-f41341dcea05",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Dragon creatures you control get +3/+3.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Dragon creatures you control get +3/+3.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dragon"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "power": 3,
+        "toughness": 3
+      }
+    }
+  ]
+}

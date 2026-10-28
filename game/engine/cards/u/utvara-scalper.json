@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Utvara Scalper",
+    "oracleId": "58e754ad-88b4-47c5-b105-8b50e54143c8",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Scout"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "Flying\nThis creature attacks each combat if able.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "static",
+      "rule": "attacks-each-combat",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature attacks each combat if able."
+    }
+  ]
+}

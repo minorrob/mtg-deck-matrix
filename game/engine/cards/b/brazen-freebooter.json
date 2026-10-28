@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Brazen Freebooter",
+    "oracleId": "13e8d063-eece-4f38-83f6-02403130defa",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Pirate"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "When this creature enters, create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "predefined": "Treasure"
+          }
+        }
+      ],
+      "text": "When this creature enters, create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")"
+    }
+  ]
+}

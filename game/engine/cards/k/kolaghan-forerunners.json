@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kolaghan Forerunners",
+    "oracleId": "07b6fbd3-03f9-4aef-929e-514c799d75b9",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Berserker"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": 3
+  },
+  "oracleText": "Trample\nKolaghan Forerunners's power is equal to the number of creatures you control.\nDash {2}{R} (You may cast this spell for its dash cost. If you do, it gains haste, and it's returned from the battlefield to its owner's hand at the beginning of the next end step.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample"
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "a",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": {
+          "count": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          }
+        }
+      },
+      "text": "Kolaghan Forerunners's power is equal to the number of creatures you control."
+    },
+    {
+      "kind": "keyword",
+      "keyword": "dash",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{R}"
+        }
+      ],
+      "text": "Dash {2}{R} (You may cast this spell for its dash cost. If you do, it gains haste, and it's returned from the battlefield to its owner's hand at the beginning of the next end step.)"
+    }
+  ]
+}

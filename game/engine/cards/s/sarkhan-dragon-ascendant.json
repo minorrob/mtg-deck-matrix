@@ -1,0 +1,107 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sarkhan, Dragon Ascendant",
+    "oracleId": "71cb48e2-2328-471c-a04a-7b6461f378f4",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Druid"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "When Sarkhan enters, you may behold a Dragon. If you do, create a Treasure token. (To behold a Dragon, choose a Dragon you control or reveal a Dragon card from your hand.)\nWhenever a Dragon you control enters, put a +1/+1 counter on Sarkhan. Until end of turn, Sarkhan becomes a Dragon in addition to his other types and gains flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When Sarkhan enters, you may behold a Dragon. If you do, create a Treasure token.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "battlefield",
+          "behold": true,
+          "selector": {
+            "subtypes": [
+              "Dragon"
+            ],
+            "controller": "you"
+          },
+          "upTo": true,
+          "to": "stay",
+          "remember": true
+        },
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "predefined": "Treasure"
+          },
+          "condition": {
+            "about": "remembered",
+            "is": {}
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a Dragon you control enters, put a +1/+1 counter on Sarkhan. Until end of turn, Sarkhan becomes a Dragon in addition to his other types and gains flying.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "subtypes": [
+            "Dragon"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        },
+        {
+          "effect": "effectUntil",
+          "targets": "self",
+          "layer": 4,
+          "apply": {
+            "addSubtypes": [
+              "Dragon"
+            ]
+          },
+          "until": "end-of-turn"
+        },
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Flying"
+          ]
+        }
+      ]
+    }
+  ]
+}

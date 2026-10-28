@@ -1,0 +1,166 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Blessed Wine",
+  "scenarios": [
+    {
+      "name": "Rob gains 1 life now, and draws a card at the beginning of Maya's upkeep, not before",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blessed Wine"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Blessed Wine"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 41
+            },
+            {
+              "seat": 0,
+              "zone": "hand",
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Blessed Wine"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "The delayed draw happens once: nothing more at Rob's own next upkeep, only his draw step's card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Blessed Wine"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Blessed Wine"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            },
+            {
+              "seat": 0,
+              "zone": "hand",
+              "count": 1
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "seat": 0,
+          "life": 41
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Marshaling Cry",
+    "oracleId": "0dc30c06-3900-44e8-9e63-c232e42c1b5c",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Creatures you control get +1/+1 and gain vigilance until end of turn.\nCycling {2} ({2}, Discard this card: Draw a card.)\nFlashback {3}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": 1,
+          "toughness": 1,
+          "keywords": [
+            "Vigilance"
+          ],
+          "until": "end-of-turn"
+        }
+      ],
+      "text": "Creatures you control get +1/+1 and gain vigilance until end of turn."
+    },
+    {
+      "kind": "activated",
+      "zone": "hand",
+      "cycling": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "discard",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "text": "Cycling {2} ({2}, Discard this card: Draw a card.)"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "flashback",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{W}"
+        }
+      ],
+      "text": "Flashback {3}{W} (You may cast this card from your graveyard for its flashback cost. Then exile it.)"
+    }
+  ]
+}

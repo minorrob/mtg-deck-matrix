@@ -1,0 +1,233 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ruric Thar, Biomagus",
+  "fixtures": {
+    "Ping": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Tap target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "tap",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Heal": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "You gain 3 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 3
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A noncreature spell: both prowess trigger, a 6/8 until end of turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ruric Thar, Biomagus",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Heal"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Heal"
+        },
+        {
+          "answer": [
+            0,
+            1
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Ruric Thar, Biomagus",
+            "power": 6,
+            "toughness": 8
+          }
+        },
+        {
+          "seat": 0,
+          "life": 43
+        }
+      ]
+    },
+    {
+      "name": "Maya's spell targets it: Rob draws a card",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ruric Thar, Biomagus"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Ping"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Ping",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Ruric Thar, Biomagus",
+              "seat": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "tapped": "Ruric Thar, Biomagus"
+        }
+      ]
+    },
+    {
+      "name": "Rob's own spell targeting it draws nothing (but prowess, twice)",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ruric Thar, Biomagus",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ping"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Ping",
+          "targets": [
+            {
+              "card": "Ruric Thar, Biomagus"
+            }
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Ruric Thar, Biomagus",
+            "power": 6,
+            "toughness": 8
+          }
+        }
+      ]
+    }
+  ]
+}

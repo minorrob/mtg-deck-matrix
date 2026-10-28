@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shambling Ghoul",
+    "oracleId": "2acc1657-d716-41d7-aedf-9b080a58ec83",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "This creature enters tapped.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      },
+      "text": "This creature enters tapped."
+    }
+  ]
+}

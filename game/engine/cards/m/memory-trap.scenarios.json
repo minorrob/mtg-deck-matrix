@@ -16,7 +16,7 @@
       "manaCost": "{2}",
       "colors": []
     },
-    "Shatter": {
+    "Smoke Shatter": {
       "types": [
         "Instant"
       ],
@@ -55,7 +55,7 @@
           "zone": "hand",
           "cards": [
             "Memory Trap",
-            "Shatter"
+            "Smoke Shatter"
           ]
         },
         {
@@ -136,7 +136,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Shatter",
+          "cast": "Smoke Shatter",
           "targets": [
             {
               "card": "Memory Trap"
@@ -161,7 +161,7 @@
           "zone": "graveyard",
           "cards": [
             "Memory Trap",
-            "Shatter"
+            "Smoke Shatter"
           ]
         }
       ]

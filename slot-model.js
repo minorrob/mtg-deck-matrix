@@ -483,7 +483,7 @@
    * Money spent is not a card in hand. One key replaces `found` + `boughtQuantities`
    * and adds the state that was missing: ordered and in transit.
    */
-  const ACQ = {NONE: "Not in hand", ORDERED: "Ordered", PARTIAL: "Partly here", HAND: "In hand"};
+  const ACQ = {NONE: "Not in hand", ORDERED: "To Buy · Ordered", PARTIAL: "Partly here", HAND: "In hand"};
 
   /* Where a card physically is. Owning a card and having it sleeved in this deck's
      box are different facts: there are six boxes, and one copy sits in exactly one

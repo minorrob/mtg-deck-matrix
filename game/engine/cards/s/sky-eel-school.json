@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sky-Eel School",
+    "oracleId": "c90ea9d5-82f7-4b92-8cb1-10d0a7378e8c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Fish"
+    ],
+    "manaCost": "{3}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Flying\nWhen this creature enters, draw a card, then discard a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "discard",
+          "count": 1
+        }
+      ],
+      "text": "When this creature enters, draw a card, then discard a card."
+    }
+  ]
+}

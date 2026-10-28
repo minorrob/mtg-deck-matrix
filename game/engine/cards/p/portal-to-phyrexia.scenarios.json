@@ -1,0 +1,246 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Portal to Phyrexia",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Elk": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elk"
+      ],
+      "manaCost": "{2}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Big": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Beast"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Enters: each opponent sacrifices three creatures of their choice -- Trey, with two, sacrifices both",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Portal to Phyrexia"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Elk",
+            "Big",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 2,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Elk"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Portal to Phyrexia"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 1
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Bear",
+            "Elk",
+            "Big"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 2
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Bear",
+            "Elk"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Big",
+            "Elk"
+          ]
+        },
+        {
+          "seat": 2,
+          "zone": "battlefield",
+          "cards": []
+        },
+        {
+          "seat": 2,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Elk"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Your upkeep: Maya's Elk from her graveyard onto the battlefield under your control, a Phyrexian besides an Elk",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Portal to Phyrexia"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Elk"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "choose": [
+            "Elk"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Elk",
+            "Portal to Phyrexia"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": []
+        }
+      ]
+    }
+  ]
+}

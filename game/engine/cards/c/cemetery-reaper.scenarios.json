@@ -1,0 +1,238 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Cemetery Reaper",
+  "fixtures": {
+    "Grave Zombie": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Zombie"
+      ],
+      "manaCost": "{1}{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Moss Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Other Zombies Rob controls get +1/+1; not the Reaper, not Maya's Zombie, not a Bear",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cemetery Reaper",
+            "Grave Zombie",
+            "Moss Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Grave Zombie"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Grave Zombie",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Cemetery Reaper",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Moss Bear",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Grave Zombie",
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Exiles a creature card from Maya's graveyard and makes a Zombie, which the Reaper pumps",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cemetery Reaper",
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Moss Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Cemetery Reaper",
+          "targets": [
+            {
+              "card": "Moss Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "count": 0
+        },
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Moss Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Zombie",
+            "power": 3,
+            "toughness": 3
+          }
+        }
+      ]
+    },
+    {
+      "name": "Its own graveyard too; a noncreature card is no target",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cemetery Reaper",
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Grave Zombie",
+            "Bad Moon"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Cemetery Reaper"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Grave Zombie"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Cemetery Reaper",
+          "targets": [
+            {
+              "card": "Grave Zombie"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bad Moon"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cemetery Reaper",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Zombie"
+          ]
+        }
+      ]
+    }
+  ]
+}

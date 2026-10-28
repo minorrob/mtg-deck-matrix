@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Princess Lucrezia",
+    "oracleId": "dd1d21f5-f5cd-43e4-8155-3cca85da80a9",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Wizard"
+    ],
+    "manaCost": "{3}{U}{U}{B}",
+    "colors": [
+      "B",
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "power": 5,
+    "toughness": 4
+  },
+  "oracleText": "{T}: Add {U}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "U": 1
+          }
+        }
+      ],
+      "text": "{T}: Add {U}."
+    }
+  ]
+}

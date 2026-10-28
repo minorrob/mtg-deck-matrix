@@ -1,0 +1,249 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Isochron Scepter",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Lightning Bolt imprinted; {2}, {T}: a copy cast free, 3 to Maya -- and again next turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Isochron Scepter",
+            "Lightning Bolt",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Isochron Scepter"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Lightning Bolt"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Lightning Bolt"
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Isochron Scepter"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Lightning Bolt → Maya"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 37
+            },
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Lightning Bolt"
+              ]
+            },
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "count": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Isochron Scepter"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Lightning Bolt → Maya"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 34
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Lightning Bolt"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "He may imprint nothing (a Bear is no instant); then {2}, {T} has nothing to copy",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Isochron Scepter",
+            "Bear",
+            "Lightning Bolt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Isochron Scepter"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Lightning Bolt"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "answer": []
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Isochron Scepter"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Lightning Bolt"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "count": 0
+        },
+        {
+          "stack": 0
+        },
+        {
+          "seat": 1,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,175 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Decimate",
+  "fixtures": {
+    "Smoke Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{2}"
+    },
+    "Smoke Charm": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{2}"
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Her artifact, creature, enchantment and land, all four destroyed",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Decimate"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Smoke Relic",
+            "Bear",
+            "Smoke Charm",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Decimate",
+          "targets": [
+            {
+              "card": "Smoke Relic",
+              "seat": 1
+            },
+            {
+              "card": "Bear",
+              "seat": 1
+            },
+            {
+              "card": "Smoke Charm",
+              "seat": 1
+            },
+            {
+              "card": "Forest",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": []
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Forest",
+            "Smoke Charm",
+            "Smoke Relic"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "No enchantment anywhere: it cannot be cast at all",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Decimate"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Smoke Relic",
+            "Bear",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Decimate"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

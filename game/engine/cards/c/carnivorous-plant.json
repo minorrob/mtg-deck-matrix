@@ -1,0 +1,32 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Carnivorous Plant",
+    "oracleId": "3a7478d7-b33e-4227-8cc3-b30643624d56",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Plant",
+      "Wall"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Defender",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "defender",
+      "text": "Defender"
+    }
+  ]
+}

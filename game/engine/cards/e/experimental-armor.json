@@ -1,0 +1,83 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Experimental Armor",
+    "oracleId": "f7ed3cd6-d138-4c12-93bb-91629492a5fa",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Equipped creature gets +1/+1 and has flying and haste. (It can't be blocked except by creatures with flying or reach. It can attack and {T} as soon as it comes under your control.)\nEquip {2} ({2}: Attach to target creature you control. Equip only as a sorcery.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      },
+      "text": "Equipped creature gets +1/+1 and has flying and haste. (It can't be blocked except by creatures with flying or reach. It can attack and {T} as soon as it comes under your control.)"
+    },
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addKeywords": [
+          "Flying",
+          "Haste"
+        ]
+      },
+      "text": "Equipped creature gets +1/+1 and has flying and haste. (It can't be blocked except by creatures with flying or reach. It can attack and {T} as soon as it comes under your control.)"
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "Equip {2} ({2}: Attach to target creature you control. Equip only as a sorcery.)"
+    }
+  ]
+}

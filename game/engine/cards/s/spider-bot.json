@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Spider-Bot",
+    "oracleId": "e4bb33b2-adde-4176-9274-7598b559aa6a",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Spider",
+      "Robot",
+      "Scout"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Reach\nWhen this creature enters, you may search your library for a basic land card, reveal it, then shuffle and put that card on top.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "reach",
+      "text": "Reach"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "to": "top",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "optional": true,
+      "text": "When this creature enters, you may search your library for a basic land card, reveal it, then shuffle and put that card on top."
+    }
+  ]
+}

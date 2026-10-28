@@ -30,7 +30,7 @@
       "power": 3,
       "toughness": 3
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -147,7 +147,7 @@
           "cards": [
             "Bear",
             "Forest",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -181,7 +181,7 @@
               "Forest"
             ],
             [
-              "Murder"
+              "Smoke Murder"
             ]
           ]
         }
@@ -211,7 +211,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -233,7 +233,7 @@
           "cast": "Regrowth",
           "targets": [
             {
-              "card": "Murder"
+              "card": "Smoke Murder"
             }
           ]
         },
@@ -247,7 +247,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Ogre"
@@ -270,7 +270,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Murder",
+            "Smoke Murder",
             "Regrowth"
           ]
         }

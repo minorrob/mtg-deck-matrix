@@ -1,0 +1,78 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Chitinous Cloak",
+    "oracleId": "d5487098-fd24-49af-9634-4827a5c2eac4",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Equipped creature gets +2/+2 and has menace. (It can't be blocked except by two or more creatures.)\nEquip {3}",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 2,
+        "toughness": 2
+      },
+      "text": "Equipped creature gets +2/+2 and has menace. (It can't be blocked except by two or more creatures.)"
+    },
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addKeywords": [
+          "Menace"
+        ]
+      },
+      "text": "Equipped creature gets +2/+2 and has menace. (It can't be blocked except by two or more creatures.)"
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}"
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "Equip {3}"
+    }
+  ]
+}

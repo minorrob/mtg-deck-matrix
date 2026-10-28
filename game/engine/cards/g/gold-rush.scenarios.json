@@ -1,0 +1,211 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Gold Rush",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Hoard": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [
+        "Treasure"
+      ],
+      "manaCost": null,
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "One Treasure already, one made: the Bear gets +4/+4, a 6/6",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Bear",
+            "Hoard"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Gold Rush"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Gold Rush",
+          "targets": "any"
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Forest",
+            "Wastes",
+            "Bear",
+            "Hoard",
+            "Treasure"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 6,
+            "toughness": 6
+          }
+        }
+      ]
+    },
+    {
+      "name": "Maya's Treasures are not Rob's: aimed at her Bear, it gets +2/+2 for his one",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Gold Rush"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Hoard",
+            "Hoard"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Gold Rush",
+          "targets": "any"
+        },
+        {
+          "choose": [
+            "Bear (Maya's)"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Bear",
+            "power": 4,
+            "toughness": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "Up to one: with no target, a Treasure all the same",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Gold Rush"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Gold Rush",
+          "targets": "any"
+        },
+        {
+          "answer": []
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Forest",
+            "Wastes",
+            "Bear",
+            "Treasure"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -63,10 +63,10 @@ READS = '  "play-from", "cast-self-from",\n'
 WITH_COUNTERS = '["battlefield", "exile"].includes(effect.to) && effect.withCounters'
 MAY_PLAY_ZONES = 'if (!["graveyard", "library-top"].includes(effect.from)) errors.push'
 NAMES_NONE = '    if (effect.targets !== undefined || effect.zone !== undefined || effect.onlyIf !== undefined)\n'
-FROM_ONLY = '["spells", "payLife", "count"].some((key) => effect[key] !== undefined)'
+FROM_ONLY = '["spells", "payLife", ...(effect.linked === true ? [] : ["count"])].some((key) => effect[key] !== undefined)'
 CANT_CAST_SCHEMA = '((effect.named === undefined) === (effect.allSpells !== true) || effect.who === undefined\n    || (effect.allSpells !== undefined && effect.allSpells !== true)))'
 TRUE_KEYS = '["free", "graveyardToLibraryBottom", "perType", "anyMana"]'
-EXTRA_SHAPE = 'Array.isArray(ability.additionalCost) && ability.additionalCost.length && ability.additionalCost.every((a) => a?.atom === "sacrifice" && a.count === undefined)'
+EXTRA_SHAPE = 'Array.isArray(ability.additionalCost) && ability.additionalCost.length && ability.additionalCost.every((a) => ["sacrifice", "discard"].includes(a?.atom) && a.count === undefined)'
 
 BREAKS = [
     # "During each of your turns, you may play a land and cast a permanent spell of each permanent type from your graveyard"
@@ -124,7 +124,7 @@ BREAKS = [
     ('any type: paid', ACTIONS, '    const {x} = reckoned, cost = anyTypeCost(reckoned.cost, permission);\n', '    const {x} = reckoned, cost = reckoned.cost;\n'),
 
     # "By sacrificing a land in addition to paying its other costs" (Exploration Broodship).
-    ("permission's cost: asked", ACTIONS, ', ...(back?.extra ?? []), ...(permit?.ability.additionalCost ?? [])])) {', ', ...(back?.extra ?? [])])) {'),
+    ("permission's cost: asked", ACTIONS, ', ...(back?.extra ?? []), ...(permit?.ability.additionalCost ?? [])]);\n  for (const grant of lifeForLess', ', ...(back?.extra ?? [])]);\n  for (const grant of lifeForLess'),
     ("permission's cost: not the spell's own", ACTIONS, OWN_EXTRA, ')'),
     ('station: the land drop at 3+', ACTIONS, LAND_DROPS, '\n    .reduce('),
 
@@ -202,7 +202,7 @@ BREAKS = [
     ('schema: mayPlay count', SCHEMA, '    if (effect.count !== undefined && !(Number.isInteger(effect.count) && effect.count >= 1)) errors.push', '    if (false) errors.push'),
     ('schema: spells only from a zone', SCHEMA, FROM_ONLY, FROM_ONLY.replace('"spells", ', '')),
     ('schema: life only from a zone', SCHEMA, FROM_ONLY, FROM_ONLY.replace('"payLife", ', '')),
-    ('schema: count only from a zone', SCHEMA, FROM_ONLY, FROM_ONLY.replace(', "count"', '')),
+    ('schema: count only from a zone', SCHEMA, FROM_ONLY, FROM_ONLY.replace(', ...(effect.linked === true ? [] : ["count"])', '')),
     ("schema: can't cast every spell", SCHEMA, CANT_CAST_SCHEMA, '((effect.named === undefined) || effect.who === undefined\n    || (effect.allSpells !== undefined && effect.allSpells !== true)))'),
     ("schema: can't cast allSpells true", SCHEMA, CANT_CAST_SCHEMA, '((effect.named === undefined) === (effect.allSpells !== true) || effect.who === undefined))'),
     ('schema: solved', SCHEMA, '!["monstrous", "prepared", "solved"].includes(effect.attribute)', '!["monstrous", "prepared"].includes(effect.attribute)'),
@@ -212,7 +212,7 @@ BREAKS = [
     ('schema: anyMana true', SCHEMA, TRUE_KEYS, '["free", "graveyardToLibraryBottom", "perType"]'),
     ('schema: perType alone', SCHEMA, '      if (ability.perType === true && ability.limit !== undefined) errors.push', '      if (false) errors.push'),
     ("schema: permission's cost a list", SCHEMA, EXTRA_SHAPE, EXTRA_SHAPE.replace('ability.additionalCost.length && ', '')),
-    ("schema: permission's cost a sacrifice", SCHEMA, EXTRA_SHAPE, EXTRA_SHAPE.replace('a?.atom === "sacrifice" && ', '')),
+    ("schema: permission's cost a sacrifice", SCHEMA, EXTRA_SHAPE, EXTRA_SHAPE.replace('["sacrifice", "discard"].includes(a?.atom) && ', '')),
     ("schema: permission's cost one each", SCHEMA, EXTRA_SHAPE, EXTRA_SHAPE.replace(' && a.count === undefined', '')),
     ("schema: permission's cost's selector", SCHEMA, '        else ability.additionalCost.forEach(', '        else [].forEach('),
     ("schema: permission's cost not a land's", SCHEMA, '        if (ability.lands) errors.push({path: `${path}.additionalCost`', '        if (false) errors.push({path: `${path}.additionalCost`'),

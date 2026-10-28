@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rancor",
+    "oracleId": "9d2d6479-531c-4ce1-b52b-00e36fa63b64",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature\nEnchanted creature gets +2/+0 and has trample.\nWhen this Aura is put into a graveyard from the battlefield, return it to its owner's hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Enchant creature",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted creature gets +2/+0 and has trample.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 2,
+        "toughness": 0
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Enchanted creature gets +2/+0 and has trample.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addKeywords": [
+          "Trample"
+        ]
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "When this Aura is put into a graveyard from the battlefield, return it to its owner's hand.",
+      "trigger": {
+        "on": "leaves",
+        "to": "graveyard"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "that card",
+          "to": "hand"
+        }
+      ]
+    }
+  ]
+}

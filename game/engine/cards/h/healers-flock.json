@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Healer's Flock",
+    "oracleId": "0b3b2fb1-d5fe-4d14-985a-85f13cd60d9c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bird"
+    ],
+    "manaCost": "{W}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Flying, lifelink",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "lifelink",
+      "text": "lifelink"
+    }
+  ]
+}

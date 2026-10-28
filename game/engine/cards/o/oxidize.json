@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Oxidize",
+    "oracleId": "0ff78353-a26e-4b5a-948d-1c3b41d2dd1f",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy target artifact. It can't be regenerated.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Artifact"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          },
+          "noRegenerate": true
+        }
+      ],
+      "text": "Destroy target artifact. It can't be regenerated."
+    }
+  ]
+}

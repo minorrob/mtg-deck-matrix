@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sabretooth Tiger",
+    "oracleId": "8ea35158-1c1a-46da-b466-0eafb376e464",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Cat"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "First strike",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "first strike",
+      "text": "First strike"
+    }
+  ]
+}

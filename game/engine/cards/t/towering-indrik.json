@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Towering Indrik",
+    "oracleId": "78bc8b7c-ca94-485c-b7bf-53c3724b7339",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Beast"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Reach (This creature can block creatures with flying.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "reach",
+      "text": "Reach (This creature can block creatures with flying.)"
+    }
+  ]
+}

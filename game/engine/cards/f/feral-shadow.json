@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Feral Shadow",
+    "oracleId": "cf26dcb4-e181-4ba5-bc03-b56f57032b85",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Nightstalker"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Flying",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Giltgrove Stalker",
+    "oracleId": "2be3969b-a427-47be-a49c-47b98e3d6b5f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Merfolk",
+      "Warrior"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "This creature can't be blocked by creatures with power 2 or less.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "cant-be-blocked-by",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "by": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "power": {
+          "max": 2
+        }
+      },
+      "text": "This creature can't be blocked by creatures with power 2 or less."
+    }
+  ]
+}

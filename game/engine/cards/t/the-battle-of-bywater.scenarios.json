@@ -1,0 +1,168 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "The Battle of Bywater",
+  "fixtures": {
+    "Spare Pup": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Dog"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Brown Bear Cub": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Hill Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "The Ogres die; Rob's Pup and Bears remain: two Foods",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "The Battle of Bywater"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Spare Pup",
+            "Brown Bear Cub",
+            "Hill Ogre",
+            "Plains",
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Hill Ogre",
+            "Spare Pup"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "The Battle of Bywater"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Spare Pup",
+            "Brown Bear Cub",
+            "Food",
+            "Food",
+            "Plains",
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Spare Pup"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "No creature of Rob's left: no Food",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "The Battle of Bywater"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hill Ogre",
+            "Plains",
+            "Plains",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "The Battle of Bywater"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Plains",
+            "Wastes"
+          ]
+        }
+      ]
+    }
+  ]
+}

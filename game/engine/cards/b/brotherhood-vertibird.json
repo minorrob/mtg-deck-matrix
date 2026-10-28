@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Brotherhood Vertibird",
+    "oracleId": "3b000071-3768-44cf-8957-180d0e94c988",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Vehicle"
+    ],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": 4
+  },
+  "oracleText": "Flying\nBrotherhood Vertibird's power is equal to the number of artifacts you control.\nCrew 2 (Tap any number of creatures you control with total power 2 or greater: This Vehicle becomes an artifact creature until end of turn.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "a",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": {
+          "count": {
+            "what": "permanent",
+            "types": [
+              "Artifact"
+            ],
+            "controller": "you"
+          }
+        }
+      },
+      "text": "Brotherhood Vertibird's power is equal to the number of artifacts you control."
+    },
+    {
+      "kind": "keyword",
+      "keyword": "crew",
+      "amount": 2,
+      "text": "Crew 2 (Tap any number of creatures you control with total power 2 or greater: This Vehicle becomes an artifact creature until end of turn.)"
+    }
+  ]
+}

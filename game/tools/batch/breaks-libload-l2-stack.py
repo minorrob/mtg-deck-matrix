@@ -55,8 +55,8 @@ BREAKS = [
      '      : attack.defender === context.controller))) return false;',
      '      : true))) return false;'),
     ('attacking grammar', FILTER,
-     '  if (selector.attacking !== undefined && ![true, "you"].includes(selector.attacking)) throw',
-     '  if (false) throw'),
+     '  if (selector.attacking !== undefined && ![true, "you", "you directly"].includes(selector.attacking))\n    throw',
+     '  if (false)\n    throw'),
     # Spree (CR 702.172a): each set of modes a cast of its own, their costs added.
     ('spree costs added', ACTIONS,
      'mana: v.mana + modes.map((i) => costs[i]).join(""), spree: modes',

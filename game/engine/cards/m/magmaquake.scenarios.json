@@ -1,0 +1,291 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Magmaquake",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Bird": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bird"
+      ],
+      "manaCost": "{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "keywords": [
+        "Flying"
+      ]
+    },
+    "Walker": {
+      "types": [
+        "Planeswalker"
+      ],
+      "subtypes": [
+        "Smoke"
+      ],
+      "manaCost": "{3}",
+      "colors": [],
+      "loyalty": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "X is 2: the Bears die, the Ogre lives, the flying Bird is untouched, Maya's planeswalker loses 2 loyalty; no player is dealt damage",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Magmaquake"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Ogre",
+            "Bird",
+            "Walker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Magmaquake",
+          "x": 2
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Magmaquake"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Bird",
+            "Ogre",
+            "Walker"
+          ]
+        },
+        {
+          "seat": 1,
+          "counters": {
+            "card": "Walker",
+            "counter": "loyalty",
+            "count": 1
+          }
+        },
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 1,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "X is 3: the Ogre dies and the planeswalker with it; the Bird lives",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Magmaquake"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre",
+            "Bird",
+            "Walker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Magmaquake",
+          "x": 3
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Ogre",
+            "Walker"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Bird"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "X is 0: nothing happens",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Magmaquake"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Walker"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Magmaquake",
+          "x": 0
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Bear",
+            "Walker"
+          ]
+        },
+        {
+          "seat": 1,
+          "counters": {
+            "card": "Walker",
+            "counter": "loyalty",
+            "count": 3
+          }
+        }
+      ]
+    }
+  ]
+}

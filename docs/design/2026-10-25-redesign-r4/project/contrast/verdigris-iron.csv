@@ -1,0 +1,73 @@
+skin,register,pair,kind,fg,bg,fg_hex,bg_hex,ratio,target,pass
+verdigris-iron,dark,Ink on ground,text,ink,bg,#ebf1f4,#080e11,17.04,4.5,yes
+verdigris-iron,dark,Ink on panel,text,ink,panel,#ebf1f4,#141b1e,15.28,4.5,yes
+verdigris-iron,dark,Ink on raised control,text,ink,raised,#ebf1f4,#2b3236,11.43,4.5,yes
+verdigris-iron,dark,Ink on hover fill,text,ink,hover,#ebf1f4,#22292c,12.96,4.5,yes
+verdigris-iron,dark,Ink on accent soft (selected row),text,ink,accent_soft,#ebf1f4,#223839,10.88,4.5,yes
+verdigris-iron,dark,Muted on ground,text,muted,bg,#aeb7bc,#080e11,9.53,4.5,yes
+verdigris-iron,dark,Muted on panel,text,muted,panel,#aeb7bc,#141b1e,8.55,4.5,yes
+verdigris-iron,dark,Muted on raised,text,muted,raised,#aeb7bc,#2b3236,6.39,4.5,yes
+verdigris-iron,dark,On-accent on accent (primary button),text,on_accent,accent,#0a1014,#61d4ca,10.74,4.5,yes
+verdigris-iron,dark,On-accent on accent hover,text,on_accent,accent_hover,#0a1014,#73e4da,12.61,4.5,yes
+verdigris-iron,dark,On-accent on required (danger fill),text,on_accent,required,#0a1014,#f46f64,6.66,4.5,yes
+verdigris-iron,dark,"Ground on ink (selected chip, tab, checkbox)",text,bg,ink,#080e11,#ebf1f4,17.04,4.5,yes
+verdigris-iron,dark,Money on ground,text,money,bg,#f1c364,#080e11,11.77,4.5,yes
+verdigris-iron,dark,Money on panel,text,money,panel,#f1c364,#141b1e,10.56,4.5,yes
+verdigris-iron,dark,Required on ground,text,required,bg,#f46f64,#080e11,6.76,4.5,yes
+verdigris-iron,dark,Required on panel,text,required,panel,#f46f64,#141b1e,6.06,4.5,yes
+verdigris-iron,dark,Aether on ground,text,aether,bg,#b6abf9,#080e11,9.42,4.5,yes
+verdigris-iron,dark,Aether on panel,text,aether,panel,#b6abf9,#141b1e,8.45,4.5,yes
+verdigris-iron,dark,Decision ink on decision ground,text,decision_ink,decision_bg,#f6e6c7,#29200f,13.05,4.5,yes
+verdigris-iron,dark,In box on panel,text,owned,panel,#5cc678,#141b1e,8.13,4.5,yes
+verdigris-iron,dark,Ordered on panel,text,coming,panel,#70aff4,#141b1e,7.57,4.5,yes
+verdigris-iron,dark,To buy on panel,text,needed,panel,#f1c364,#141b1e,10.56,4.5,yes
+verdigris-iron,dark,Remove on panel,text,out,panel,#f46f64,#141b1e,6.06,4.5,yes
+verdigris-iron,dark,"Accent on ground (icons, large text)",mark,accent,bg,#61d4ca,#080e11,10.89,3,yes
+verdigris-iron,dark,Field line on panel (input edge),mark,field_line,panel,#798286,#141b1e,4.44,3,yes
+verdigris-iron,dark,Field line on raised,mark,field_line,raised,#798286,#2b3236,3.32,3,yes
+verdigris-iron,dark,Aether focus ring on panel,mark,aether,panel,#b6abf9,#141b1e,8.45,3,yes
+verdigris-iron,dark,Aether focus ring on raised,mark,aether,raised,#b6abf9,#2b3236,6.32,3,yes
+verdigris-iron,dark,Pull step on panel,mark,owned2,panel,#abe9bf,#141b1e,12.56,3,yes
+verdigris-iron,dark,Stand-in step on panel,mark,needed2,panel,#f8e3b0,#141b1e,13.78,3,yes
+verdigris-iron,dark,Faint (disabled) on panel,mark,faint,panel,#7f888c,#141b1e,4.81,3,yes
+verdigris-iron,dark,Strong line on panel,plane,line_strong,panel,#4c5458,#141b1e,2.25,2,yes
+verdigris-iron,dark,Line on ground,plane,line,bg,#343c40,#080e11,1.73,1.3,yes
+verdigris-iron,dark,Line on panel,plane,line,panel,#343c40,#141b1e,1.55,1.3,yes
+verdigris-iron,dark,Panel on ground (plane 2),plane,panel,bg,#141b1e,#080e11,1.11,1.1,yes
+verdigris-iron,dark,Raised on panel (plane 3),plane,raised,panel,#2b3236,#141b1e,1.34,1.3,yes
+verdigris-iron,light,Ink on ground,text,ink,bg,#16191a,#e8eef1,15.09,4.5,yes
+verdigris-iron,light,Ink on panel,text,ink,panel,#16191a,#f6fbfe,16.96,4.5,yes
+verdigris-iron,light,Ink on raised control,text,ink,raised,#16191a,#ffffff,17.68,4.5,yes
+verdigris-iron,light,Ink on hover fill,text,ink,hover,#16191a,#e8edf0,14.98,4.5,yes
+verdigris-iron,light,Ink on accent soft (selected row),text,ink,accent_soft,#16191a,#dbe9eb,14.20,4.5,yes
+verdigris-iron,light,Muted on ground,text,muted,bg,#575c5e,#e8eef1,5.79,4.5,yes
+verdigris-iron,light,Muted on panel,text,muted,panel,#575c5e,#f6fbfe,6.50,4.5,yes
+verdigris-iron,light,Muted on raised,text,muted,raised,#575c5e,#ffffff,6.78,4.5,yes
+verdigris-iron,light,On-accent on accent (primary button),text,on_accent,accent,#ffffff,#006c6a,6.26,4.5,yes
+verdigris-iron,light,On-accent on accent hover,text,on_accent,accent_hover,#ffffff,#005957,8.18,4.5,yes
+verdigris-iron,light,On-accent on required (danger fill),text,on_accent,required,#ffffff,#971316,8.68,4.5,yes
+verdigris-iron,light,"Ground on ink (selected chip, tab, checkbox)",text,bg,ink,#e8eef1,#16191a,15.09,4.5,yes
+verdigris-iron,light,Money on ground,text,money,bg,#8e5b00,#e8eef1,4.92,4.5,yes
+verdigris-iron,light,Money on panel,text,money,panel,#8e5b00,#f6fbfe,5.53,4.5,yes
+verdigris-iron,light,Required on ground,text,required,bg,#971316,#e8eef1,7.41,4.5,yes
+verdigris-iron,light,Required on panel,text,required,panel,#971316,#f6fbfe,8.32,4.5,yes
+verdigris-iron,light,Aether on ground,text,aether,bg,#6451ac,#e8eef1,5.41,4.5,yes
+verdigris-iron,light,Aether on panel,text,aether,panel,#6451ac,#f6fbfe,6.08,4.5,yes
+verdigris-iron,light,Decision ink on decision ground,text,decision_ink,decision_bg,#4c2e02,#fff5e1,11.42,4.5,yes
+verdigris-iron,light,In box on panel,text,owned,panel,#1d7d3e,#f6fbfe,4.97,4.5,yes
+verdigris-iron,light,Ordered on panel,text,coming,panel,#2769b7,#f6fbfe,5.32,4.5,yes
+verdigris-iron,light,To buy on panel,text,needed,panel,#8e5b00,#f6fbfe,5.53,4.5,yes
+verdigris-iron,light,Remove on panel,text,out,panel,#971316,#f6fbfe,8.32,4.5,yes
+verdigris-iron,light,"Accent on ground (icons, large text)",mark,accent,bg,#006c6a,#e8eef1,5.35,3,yes
+verdigris-iron,light,Field line on panel (input edge),mark,field_line,panel,#7c8184,#f6fbfe,3.78,3,yes
+verdigris-iron,light,Field line on raised,mark,field_line,raised,#7c8184,#ffffff,3.94,3,yes
+verdigris-iron,light,Aether focus ring on panel,mark,aether,panel,#6451ac,#f6fbfe,6.08,3,yes
+verdigris-iron,light,Aether focus ring on raised,mark,aether,raised,#6451ac,#ffffff,6.34,3,yes
+verdigris-iron,light,Pull step on panel,mark,owned2,panel,#3f9b65,#f6fbfe,3.31,3,yes
+verdigris-iron,light,Stand-in step on panel,mark,needed2,panel,#b88722,#f6fbfe,3.09,3,yes
+verdigris-iron,light,Faint (disabled) on panel,mark,faint,panel,#7c8184,#f6fbfe,3.78,3,yes
+verdigris-iron,light,Strong line on panel,plane,line_strong,panel,#aaafb1,#f6fbfe,2.13,2,yes
+verdigris-iron,light,Line on ground,plane,line,bg,#c6cbce,#e8eef1,1.40,1.3,yes
+verdigris-iron,light,Line on panel,plane,line,panel,#c6cbce,#f6fbfe,1.57,1.3,yes
+verdigris-iron,light,Panel on ground (plane 2),plane,panel,bg,#f6fbfe,#e8eef1,1.12,1.1,yes
+verdigris-iron,light,Raised on panel (plane 3),plane,raised,panel,#ffffff,#f6fbfe,1.04,n/a,yes

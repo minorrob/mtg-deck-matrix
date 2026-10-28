@@ -1,0 +1,153 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Essence Flux",
+  "fixtures": {
+    "Spirit": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Spirit"
+      ],
+      "manaCost": "{1}{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Essence Flux: a Spirit flickers back with a +1/+1 counter",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Spirit",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Essence Flux"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Essence Flux",
+          "targets": [
+            {
+              "card": "Spirit"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Spirit",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Spirit",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Essence Flux"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Essence Flux: a creature that is no Spirit returns untapped, with no counter",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Essence Flux"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Essence Flux",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Bear",
+            "counter": "+1/+1",
+            "count": 0
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Bear",
+          "is": false
+        }
+      ]
+    }
+  ]
+}

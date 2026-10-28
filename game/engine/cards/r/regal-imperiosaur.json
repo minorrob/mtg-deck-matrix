@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Regal Imperiosaur",
+    "oracleId": "83a76601-ef59-4888-af70-5088dd1f504c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dinosaur"
+    ],
+    "manaCost": "{1}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 5,
+    "toughness": 4
+  },
+  "oracleText": "Other Dinosaurs you control get +1/+1.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Other Dinosaurs you control get +1/+1.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "subtypes": [
+          "Dinosaur"
+        ],
+        "controller": "you",
+        "another": true
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      }
+    }
+  ]
+}

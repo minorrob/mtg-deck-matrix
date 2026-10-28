@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Jagwasp Swarm",
+    "oracleId": "376d90f6-2ceb-4d9e-a04d-3dd5bafd1e8b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Insect"
+    ],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "Flying",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    }
+  ]
+}

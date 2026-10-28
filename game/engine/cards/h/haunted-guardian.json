@@ -1,0 +1,33 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Haunted Guardian",
+    "oracleId": "20b9bc53-7f6d-4616-a2df-5783ab577707",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Construct"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Defender, first strike",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "defender",
+      "text": "Defender"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "first strike",
+      "text": "first strike"
+    }
+  ]
+}

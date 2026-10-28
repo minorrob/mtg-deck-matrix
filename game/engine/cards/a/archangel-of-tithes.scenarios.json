@@ -1,0 +1,419 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Archangel of Tithes",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Big Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{3}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Sky Pal": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Angel"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "keywords": [
+        "Flying"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Untapped, it taxes Maya {1} to attack Rob with her Bear: her Wastes pays",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Archangel of Tithes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "tapped": "Wastes"
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 38
+        }
+      ]
+    },
+    {
+      "name": "Two attackers: {2}, both her lands tapped to pay it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Archangel of Tithes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Big Bear",
+            "Wastes",
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Bear",
+            "Big Bear"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "tapped": "Wastes"
+            },
+            {
+              "seat": 1,
+              "tapped": "Forest"
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 33
+        }
+      ]
+    },
+    {
+      "name": "Tapped from attacking on his turn, it taxes nothing on hers",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Archangel of Tithes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Archangel of Tithes"
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Archangel of Tithes"
+            }
+          ]
+        },
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "seat": 1,
+          "tapped": "Wastes",
+          "is": false
+        },
+        {
+          "seat": 1,
+          "life": 37
+        }
+      ]
+    },
+    {
+      "name": "Attacking, it taxes Maya {1} to block it with her flier",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Archangel of Tithes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Sky Pal",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Archangel of Tithes"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Sky Pal",
+              "Archangel of Tithes"
+            ]
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "tapped": "Wastes"
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Sky Pal"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "Attacking beside his Bear, it taxes a block of the Bear too",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Archangel of Tithes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Big Bear",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Archangel of Tithes",
+            "Bear"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Big Bear",
+              "Bear"
+            ]
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "tapped": "Wastes"
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 37
+        }
+      ]
+    },
+    {
+      "name": "Not attacking, it taxes no block: his Bear attacks alone and Maya blocks for free",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Archangel of Tithes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Big Bear",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Big Bear",
+              "Bear"
+            ]
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "tapped": "Wastes",
+              "is": false
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ]
+    }
+  ]
+}

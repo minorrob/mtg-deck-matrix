@@ -16,10 +16,11 @@ const current = () => {
   // Explicit synthetic crowded-hand fixture for the browser suite; never used by the default preview.
   if(process.env.PREVIEW_HAND_SIZE){const hand=v.state.players[v.seat].zones.Hand,target=Number(process.env.PREVIEW_HAND_SIZE);while(hand.cards.length<target)hand.cards.push({...hand.cards[0],cardId:90000+hand.cards.length});hand.count=hand.cards.length;}
   // Explicit synthetic long-decision fixture for the browser suite: a search across most of a library, as Diabolic Tutor
-  // makes in Rob's D5 (Teysa Karlov), its options that deck's own card names.
+  // makes in Rob's D5 (Teysa Karlov), its options that deck's own card names. Each a different name: the board stacks the
+  // same card into one button (Rob, 2026-10-25), and this list is here to be long. Past the deck's 74 names, numbered.
   if(process.env.PREVIEW_OPTIONS&&v.decision?.options?.length){
-    const names=JSON.parse(readFileSync(path.join(ROOT,"tests/fixtures/shared-staging-decks.json"),"utf8")).decks.find(d=>d.id==="shared:D5").cards;
-    v.decision.options=Array.from({length:Number(process.env.PREVIEW_OPTIONS)},(_,i)=>({index:i,label:names[i%names.length],cardId:91000+i}));
+    const names=[...new Set(JSON.parse(readFileSync(path.join(ROOT,"tests/fixtures/shared-staging-decks.json"),"utf8")).decks.find(d=>d.id==="shared:D5").cards)];
+    v.decision.options=Array.from({length:Number(process.env.PREVIEW_OPTIONS)},(_,i)=>({index:i,label:i<names.length?names[i]:`${names[i%names.length]} ${Math.floor(i/names.length)+1}`,cardId:91000+i}));
   }
   return v;
 };

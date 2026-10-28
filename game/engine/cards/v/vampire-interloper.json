@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vampire Interloper",
+    "oracleId": "b753d7dd-4c6b-4472-a009-671572f927eb",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire",
+      "Scout"
+    ],
+    "manaCost": "{1}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Flying\nThis creature can't block.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "static",
+      "rule": "cant-block",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature can't block."
+    }
+  ]
+}

@@ -655,8 +655,9 @@ Tier 0 (the seven decks), grouped, with the Forge ruler in parentheses only to s
   flip), `phaseOut`, `exchangeControl` (control of two permanents exchanged, CR 701.12b: both still there and controlled by
   different players, or nothing happens; Train D, 2026-10-12), `incubate` (an Incubator token, a double-faced token that
   transforms for {2} into a 0/0 Phyrexian artifact creature, entering with N +1/+1 counters, CR 701.53, 111.10i; Train E,
-  2026-10-12).
-- Modifiers: `pump`, `pumpAll`, `alterAttribute`, `effectUntil` (a temporary static), `grantKeyword`, `regenerate` (a regeneration shield, CR 701.19a; added in M4 phase 3, batch 28).
+  2026-10-12), `mergePermanent`, `ringTempts` (the Ring emblem and its bearer, CR 701.54), `emblem` ("you get an emblem with ...", CR 114: an object in its player's command zone, neither a card nor a
+  permanent, whose triggered, replacement and player-rule abilities function there; the library load's L1, 2026-10-21).
+- Modifiers: `pump`, `pumpAll`, `alterAttribute`, `effectUntil` (a temporary static), `grantKeyword`, `regenerate` (a regeneration shield, CR 701.19a; added in M4 phase 3, batch 28), `removeFromCombat` (CR 506.4; added in wave 4d L3 for Reconnaissance), `reselectAttack` (what an attacking creature attacks, reselected, CR 508.7; added in the precon load's lane B for Misleading Signpost).
 - Flow: `modal` (Charm), `sequence`, `repeatFor` (RepeatEach), `branch`, `delayedTrigger`, `immediateTrigger`,
   `counterSpell`, `copySpell`, `addTurn`, `chooseCard`, `chooseType`, `chooseColor` (a color chosen as it resolves, CR
   105.1; Train C phase 2), `genericChoice`, `twoPiles`, `connive`,
@@ -679,7 +680,7 @@ Tier 0 (the seven decks), grouped, with the Forge ruler in parentheses only to s
 - Cost atoms: mana, generic, `{T}`, `{Q}`, sacrifice (with selector), remove counters, add counters, discard, exile
   from graveyard, tap X untapped of a type, reveal, pay life, remove any counter, blight (a Forge-only term;
   ours names the actual card effect), mill, draw, return to hand.
-- Keywords (53): flying, defender, flash, vigilance, lifelink, equip, haste, flashback, first strike, trample,
+- Keywords (53): flying, defender, flash, vigilance, lifelink, equip, haste, flashback, mutate, first strike, trample,
   enters with counters, overload, reach, enchant, deathtouch, indestructible, enters-the-battlefield replacements,
   alternate additional cost, menace, changeling, class, cycling, echo, crew, hexproof, partner, double strike,
   escape, protection, unearth, rebound, evoke, hideaway, landwalk, living weapon, escalate, multikicker, evolve,

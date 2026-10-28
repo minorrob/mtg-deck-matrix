@@ -1,0 +1,117 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Stoneforge Mystic",
+  "fixtures": {
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}"
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters: Rob finds Colossus Hammer; then {1}{W}, {T} puts it onto the battlefield from his hand",
+      "library": [
+        "Rock",
+        "Colossus Hammer"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Stoneforge Mystic"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Stoneforge Mystic"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "choose": [
+            "Colossus Hammer"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Stoneforge Mystic"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Colossus Hammer"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Colossus Hammer"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Colossus Hammer",
+            "Plains",
+            "Plains",
+            "Stoneforge Mystic",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ]
+    }
+  ]
+}

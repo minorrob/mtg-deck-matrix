@@ -1,0 +1,292 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Liliana of the Dark Realms",
+  "fixtures": {
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    }
+  },
+  "scenarios": [
+    {
+      "name": "+1: a Swamp from the library to the hand",
+      "library": [
+        "Swamp"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Liliana of the Dark Realms"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Liliana of the Dark Realms",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Swamp"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Liliana of the Dark Realms",
+            "counter": "loyalty",
+            "count": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "-3, -X/-X with two Swamps: her 3/3 Ogre survives as a 1/1",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Liliana of the Dark Realms",
+            "Swamp",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Liliana of the Dark Realms",
+          "ability": "a1",
+          "targets": [
+            {
+              "card": "Ogre",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            1
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "-3, -X/-X with three Swamps: her Ogre dies",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Liliana of the Dark Realms",
+            "Swamp",
+            "Swamp",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Liliana of the Dark Realms",
+          "ability": "a1",
+          "targets": [
+            {
+              "card": "Ogre",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            1
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Ogre"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "-6: the emblem; a Swamp played after it taps for {B}{B}{B}{B} too, and an Island does not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Liliana of the Dark Realms",
+            "Swamp",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Swamp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Liliana of the Dark Realms",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Liliana of the Dark Realms",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        },
+        {
+          "to": {
+            "turn": 5,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Liliana of the Dark Realms",
+          "ability": "a0"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        },
+        {
+          "to": {
+            "turn": 7,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Liliana of the Dark Realms",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "play": "Swamp"
+        },
+        {
+          "tap": "Swamp",
+          "mana": {
+            "B": 4
+          }
+        },
+        {
+          "tap": "Swamp",
+          "mana": {
+            "B": 4
+          }
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Island"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 8,
+            "U": 1
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Liliana of the Dark Realms"
+          ]
+        }
+      ]
+    }
+  ]
+}

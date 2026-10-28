@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Runeboggle",
+    "oracleId": "22000392-99e9-4927-a488-1bcb576f6275",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Counter target spell unless its controller pays {1}.\nDraw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Counter target spell unless its controller pays {1}.\nDraw a card.",
+      "targets": [
+        {
+          "what": "spell"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": {
+            "controllerOf": {
+              "target": 0
+            }
+          },
+          "amount": 1,
+          "effects": [
+            {
+              "effect": "counterSpell",
+              "spells": {
+                "target": 0
+              }
+            }
+          ]
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

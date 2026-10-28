@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vithian Renegades",
+    "oracleId": "78fa248d-7f45-4d43-b3e3-c726db938b0f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Shaman"
+    ],
+    "manaCost": "{1}{R}{G}",
+    "colors": [
+      "G",
+      "R"
+    ],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, destroy target artifact.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Artifact"
+          ]
+        }
+      ],
+      "text": "When this creature enters, destroy target artifact."
+    }
+  ]
+}

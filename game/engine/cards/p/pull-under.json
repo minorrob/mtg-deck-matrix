@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pull Under",
+    "oracleId": "b99ddb27-a59a-4cd3-88b1-97c759ddbd93",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [
+      "Arcane"
+    ],
+    "manaCost": "{5}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature gets -5/-5 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": -5,
+          "toughness": -5
+        }
+      ],
+      "text": "Target creature gets -5/-5 until end of turn."
+    }
+  ]
+}

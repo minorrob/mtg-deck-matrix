@@ -1,0 +1,112 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gix, Yawgmoth Praetor",
+    "oracleId": "928d977e-cff0-4e0e-83bb-16d73a754f35",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Praetor"
+    ],
+    "manaCost": "{1}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Whenever a creature deals combat damage to one of your opponents, its controller may pay 1 life. If they do, they draw a card.\n{4}{B}{B}{B}, Discard X cards: Exile the top X cards of target opponent's library. You may play lands and cast spells from among cards exiled this way without paying their mana costs.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature deals combat damage to one of your opponents, its controller may pay 1 life. If they do, they draw a card.",
+      "trigger": {
+        "on": "damage dealt",
+        "who": "any",
+        "combat": true,
+        "to": "opponent",
+        "filter": {
+          "types": [
+            "Creature"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "modal",
+          "chooser": "that card's controller",
+          "title": "Gix: pay 1 life to draw a card?",
+          "modes": [
+            {
+              "text": "Pay 1 life and draw a card",
+              "effects": [
+                {
+                  "effect": "loseLife",
+                  "amount": 1,
+                  "who": "that card's controller"
+                },
+                {
+                  "effect": "draw",
+                  "count": 1,
+                  "who": "that card's controller"
+                }
+              ]
+            },
+            {
+              "text": "No",
+              "effects": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{4}{B}{B}{B}, Discard X cards: Exile the top X cards of target opponent's library. You may play lands and cast spells from among cards exiled this way without paying their mana costs.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}{B}{B}{B}"
+        },
+        {
+          "atom": "discard",
+          "count": "X"
+        }
+      ],
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "fromTop": "X",
+          "who": {
+            "target": 0
+          },
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "play",
+          "from": "targets",
+          "targets": "remembered",
+          "free": true,
+          "anyNumber": true,
+          "lands": true
+        }
+      ]
+    }
+  ]
+}

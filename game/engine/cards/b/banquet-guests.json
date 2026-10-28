@@ -1,0 +1,91 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Banquet Guests",
+    "oracleId": "7f2579ef-0422-4cb1-a0f8-6ad0d942515b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Halfling",
+      "Citizen"
+    ],
+    "manaCost": "{X}{G}{W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": 0,
+    "toughness": 0
+  },
+  "oracleText": "Affinity for Foods (This spell costs {1} less to cast for each Food you control.)\nTrample\nThis creature enters with twice X +1/+1 counters on it.\n{2}, Sacrifice a Food: This creature gains indestructible until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "affinity",
+      "of": {
+        "subtypes": [
+          "Food"
+        ]
+      },
+      "text": "Affinity for Foods (This spell costs {1} less to cast for each Food you control.)"
+    },
+    {
+      "kind": "keyword",
+      "text": "Trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "replacement",
+      "text": "This creature enters with twice X +1/+1 counters on it.",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "+1/+1",
+          "count": {
+            "x": true,
+            "times": 2
+          }
+        }
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "{2}, Sacrifice a Food: This creature gains indestructible until end of turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "subtypes": [
+              "Food"
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Indestructible"
+          ],
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

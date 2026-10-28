@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Elenda, the Dusk Rose",
   "fixtures": {
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -84,9 +84,9 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Murder",
-            "Murder",
-            "Murder"
+            "Smoke Murder",
+            "Smoke Murder",
+            "Smoke Murder"
           ]
         }
       ],
@@ -95,7 +95,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Bear"
@@ -112,7 +112,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Their Bear"
@@ -150,7 +150,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Elenda, the Dusk Rose"

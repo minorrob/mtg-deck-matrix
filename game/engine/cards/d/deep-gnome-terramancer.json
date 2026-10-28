@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Deep Gnome Terramancer",
+    "oracleId": "d4e3440d-4e34-40d7-8a42-c673225c0332",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Gnome",
+      "Wizard"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flash\nMold Earth — Whenever one or more lands enter under an opponent's control without being played, you may search your library for a Plains card, put it onto the battlefield tapped, then shuffle. Do this only once each turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flash",
+      "keyword": "flash"
+    },
+    {
+      "kind": "triggered",
+      "text": "Mold Earth — Whenever one or more lands enter under an opponent's control without being played, you may search your library for a Plains card, put it onto the battlefield tapped, then shuffle. Do this only once each turn.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "played": false,
+        "filter": {
+          "types": [
+            "Land"
+          ],
+          "controller": "opponent"
+        }
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "subtypes": [
+              "Plains"
+            ]
+          },
+          "to": "battlefield",
+          "tapped": true,
+          "shuffle": true,
+          "condition": {
+            "firstResolution": true
+          }
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

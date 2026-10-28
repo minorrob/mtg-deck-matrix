@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Inescapable Blaze",
+    "oracleId": "5fcc057e-e6c2-4e37-a786-9a5ef94926e1",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This spell can't be countered.\nInescapable Blaze deals 6 damage to any target.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "cant-be-countered",
+      "affects": {
+        "what": "spell",
+        "self": true
+      },
+      "text": "This spell can't be countered."
+    },
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Planeswalker"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Battle"
+              ]
+            },
+            {
+              "what": "player"
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 6,
+          "targets": {
+            "target": 0
+          },
+          "who": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "Inescapable Blaze deals 6 damage to any target."
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Obelisk of Jund",
+    "oracleId": "eb0be178-55f9-4743-8128-34bc86f134ec",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [
+      "B",
+      "G",
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {B}, {R}, or {G}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "B": 1
+            },
+            {
+              "R": 1
+            },
+            {
+              "G": 1
+            }
+          ]
+        }
+      ],
+      "text": "{T}: Add {B}, {R}, or {G}."
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bastion Mastodon",
+    "oracleId": "48a01671-da1f-4875-bcd5-ca99566ff399",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Elephant"
+    ],
+    "manaCost": "{5}",
+    "colors": [],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "{W}: This creature gains vigilance until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{W}: This creature gains vigilance until end of turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{W}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Vigilance"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -112,21 +112,20 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   ok(/paidSource==='catalog'\),/.test(decks), "and the deck's Paid so far counts it as an estimate");
 }
 
-/* Track V.1b, r3, and since A1 (Rob, 2026-09-28) four themes: the theme is a saved preference the shell applies as a
-   palette and a face on <html> and #matrix-v2, and the Menu's Switch theme offers all four. */
+/* r4: three color-only skins and a dark/light/system register, with legacy values read through a map. */
 {
   const app = read("crankmagic-app.js");
-  ok(/function applyTheme\(\)\{const choice=themeChoice\(\),\[palette,face\]=THEME_FACE\[choice\]/.test(app) && /for\(const el of \[root,app\]\)\{if\(el\.dataset\.palette!==palette\)el\.dataset\.palette=palette;/.test(app), "applyTheme sets the palette and face from the saved choice, on <html> and #matrix-v2");
+  ok(/function applyTheme\(\)\{const choice=themeChoice\(\),\[palette,face\]=THEME_FACE\[choice\]/.test(app) && /for\(const el of \[root,app\]\)\{if\(el\.dataset\.palette!==palette\)el\.dataset\.palette=palette;/.test(app), "applyTheme sets the palette and face on html and matrix-v2");
   ok(/describeData\(\);applyTheme\(\);/.test(app), "render applies it");
-  ok(/t==='dark'\?'brass-slate':t==='light'\?'felt-cream':'moss-iron'/.test(app), "a value saved before A1 reads as its theme, and nothing or Match system as Moss & Iron");
-  ok(!/lightQuery|prefers-color-scheme: light/.test(app), "and nothing follows the device's light or dark setting any more");
-  ok(/actions\['set-theme'\]/.test(app) && !/actions\['toggle-theme'\]/.test(app), "the Menu sets a theme rather than flipping one");
+  for (const old of ["moss-iron", "brass-slate", "felt-cream", "steel-cobalt"]) ok(app.includes(`'${old}':`), `r4 reads the saved ${old} choice through the legacy map`);
+  ok(/prefers-color-scheme: dark/.test(app) && /themeQuery.addEventListener\('change'/.test(app), "System appearance follows device changes");
+  ok(/actions\['set-theme'\]/.test(app) && /actions\['set-theme-skin'\]/.test(app) && /actions\['set-theme-mode'\]/.test(app), "themes, skins and registers are bound actions");
   for (const f of ["index.html", "crankmagic.html"]) {
-    for (const choice of ["moss-iron", "brass-slate", "felt-cream", "steel-cobalt"])
-      ok(new RegExp(`data-action="set-theme" data-theme-choice="${choice}" aria-pressed=`).test(read(f)), `${f}: the menu offers the ${choice} theme`);
-    ok(/<div id="matrix-v2"[^>]*data-palette="moss-iron"/.test(read(f)), `${f}: before any script runs, the page is Moss & Iron`);
+    for (const skin of ["sapphire-obsidian", "bronze-basalt", "chalk-coal"]) ok(read(f).includes(`data-theme-skin="${skin}"`), `${f}: the menu offers ${skin}`);
+    for (const mode of ["dark", "light", "system"]) ok(read(f).includes(`data-theme-mode="${mode}"`), `${f}: the menu offers ${mode}`);
+    ok(/<div id="matrix-v2"[^>]*data-palette="sapphire-obsidian"/.test(read(f)), `${f}: the first paint is Sapphire & Obsidian`);
   }
-  ok(!/--v-[a-z]+:light-dark\(/.test(read("crankmagic-design.css")), "no legacy token carries its own colors; all read the Gallery tokens");
+  ok(!/--v-[a-z]+:light-dark\(/.test(read("crankmagic-design.css")), "legacy names read the shared tokens");
 }
 
 /* Track V.1c: the mana pips are read from the tokens, not hard-coded in JavaScript (revision 2
@@ -276,13 +275,17 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   const {execFileSync} = await import("node:child_process");
   const UK = /\b(colour|colours|coloured|centre|centred|recognise|recognised|recognises|normalise|normalised|honour|honours|favour|favourite|grey|licence|organise|organised|analyse|cancelled|behaviour|catalogue|towards|defence|programme|artefact|artefacts|initialise|serialise|customise|minimise|optimise|summarise|visualise|prioritise|realise|utilise|authorise|neighbour|flavour|labour|humour|theatre|metre|litre|manoeuvre|jewellery|travelling|modelling|labelled|signalling|fulfil|enrol|instalment|skilful|ageing|judgement|acknowledgement|amongst|whilst)\b/gi;
   const tracked = execFileSync("git", ["ls-files", "--", "*.md", "*.mjs", "*.js", "*.css", "*.html"], {cwd: ROOT, encoding: "utf8"}).split(/\r?\n/).filter((f) => f && !f.startsWith("vendor/") && !f.includes("design_handoff_") && !(f.startsWith("docs/uat/") && f.split("/").length > 3) && f !== "tests/feature-wiring.mjs" /* the word list lives here */ && f !== "docs/design/BRIEF.md" /* and the designers' "never write" column */ && f !== "game/engine/cards/definitions.mjs" /* generated from the card JSON, which this does not read: printed names and Oracle text (The Grey Havens) */ && f !== "game/engine/cards/candidates.mjs" /* generated the same way from the oracle data: printed names (Grey Havens Navigator) */
+    && f !== "game/engine/pilots/roles-data.mjs" /* generated from the card corpus, keyed by folded printed names (gandalf the grey) */
     && f !== "cloud/advise-cards.mjs" /* generated from data/cards.json, which this does not read: printed names and type lines */);
   let total = 0; const byFile = [];
   /* Two event names the Java engine adapter emits (ForgeBrowserBridge.java) keep their spelling: they are
      protocol, not prose, and a journal written before today carries them. Nothing else is exempt. */
   const PROTOCOL = /browser-cast-cancelled|cancelled-model-request/g;
+  /* A card's printed name is its name, not prose: "Long-Bodied Grey Dog" is spelled as Wizards printed it, in the deck
+     write-ups (docs/design/2026-10-23-decks-screen/) as on the card. Only printed names are listed here. */
+  const PRINTED = /Long-Bodied Grey Dog/g;
   const EMAIL = /\be-mails?\b|\be-mailed\b/gi;   // US usage is "email"
-  for (const f of tracked) { const text = readFileSync(path.join(ROOT, f), "utf8").replace(PROTOCOL, ""); const n = (text.match(UK) || []).length + (text.match(EMAIL) || []).length; if (n) { total += n; byFile.push(`${f} (${n})`); } }
+  for (const f of tracked) { const text = readFileSync(path.join(ROOT, f), "utf8").replace(PROTOCOL, "").replace(PRINTED, ""); const n = (text.match(UK) || []).length + (text.match(EMAIL) || []).length; if (n) { total += n; byFile.push(`${f} (${n})`); } }
   /* 586 on the day the rule landed; 563 after V.1c, which rewrote enough stylesheet and deck-file
      prose to take twenty-three with it; 530 after the pass before the first production release
      (2026-09-24), which took every UK spelling in the app's own on-screen words away -- "Colour

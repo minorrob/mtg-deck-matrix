@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Explosive Vegetation",
+    "oracleId": "a0abd957-01a0-4aa9-8fc8-0e6840d21606",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "count": 2,
+          "upTo": true,
+          "to": "battlefield",
+          "tapped": true,
+          "shuffle": true
+        }
+      ],
+      "text": "Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle."
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Faithbearer Paladin",
+    "oracleId": "725dc451-cae4-4345-9741-6c58e5a1a1dc",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Knight"
+    ],
+    "manaCost": "{4}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Lifelink (Damage dealt by this creature also causes you to gain that much life.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "lifelink",
+      "text": "Lifelink (Damage dealt by this creature also causes you to gain that much life.)"
+    }
+  ]
+}

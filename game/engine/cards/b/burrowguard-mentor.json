@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Burrowguard Mentor",
+    "oracleId": "f293da27-e42d-4e87-8b61-d3c27e4c6d71",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Rabbit",
+      "Soldier"
+    ],
+    "manaCost": "{G}{W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Trample\nBurrowguard Mentor's power and toughness are each equal to the number of creatures you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample"
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "a",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": {
+          "count": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          }
+        },
+        "setToughness": {
+          "count": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          }
+        }
+      },
+      "text": "Burrowguard Mentor's power and toughness are each equal to the number of creatures you control."
+    }
+  ]
+}

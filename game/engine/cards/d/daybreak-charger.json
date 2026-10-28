@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Daybreak Charger",
+    "oracleId": "d3de6b36-c631-4b52-b16b-0749a347d73d",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Unicorn"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 1
+  },
+  "oracleText": "When this creature enters, target creature gets +2/+0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, target creature gets +2/+0 until end of turn.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 2,
+          "toughness": 0
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Beloved Chaplain",
+    "oracleId": "a07406b7-faa1-4ed3-ab84-314c40f3f7f1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Cleric"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Protection from creatures",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "types": [
+          "Creature"
+        ]
+      },
+      "text": "Protection from creatures"
+    }
+  ]
+}

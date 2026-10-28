@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Minamo, School at Water's Edge",
+  "scenarios": [
+    {
+      "name": "Untaps a legendary land; a basic land is no target",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Minamo, School at Water's Edge",
+            "Island",
+            "Shivan Gorge",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Shivan Gorge"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Minamo, School at Water's Edge"
+              },
+              "count": 2,
+              "targets": [
+                [
+                  "Minamo, School at Water's Edge"
+                ],
+                [
+                  "Shivan Gorge"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "activate": "Minamo, School at Water's Edge",
+          "targets": [
+            {
+              "card": "Shivan Gorge"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Shivan Gorge",
+          "is": false
+        },
+        {
+          "seat": 0,
+          "tapped": "Wastes"
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "C": 2
+          }
+        }
+      ]
+    }
+  ]
+}

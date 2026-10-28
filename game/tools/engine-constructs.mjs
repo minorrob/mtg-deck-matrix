@@ -66,6 +66,7 @@ export const FORGE_API = {
   /* BecomeMonarch ("you become the monarch", Ginger, Queen of Sweets; Train E): the game's designation, one player's at a time
      (CR 725.3), its two triggers the game's own (725.2; rules/trigger.mjs), passed on as its player leaves (725.4; rules/sba.mjs). */
   BecomeMonarch: "becomeMonarch",
+  RingTemptsYou: "ringTempts",
   /* Earthbend (batch 65): the land a creature with haste, its counters, its return. */
   Earthbend: "earthbend",
   /* Clone ("becomes a copy of target land", batch 58): a permanent becoming a copy, for a turn or for good. */
@@ -228,14 +229,25 @@ export const DECK_RULE_KEYWORDS = {Partner: "room/table.mjs", "Choose a Backgrou
 /* Affinity (CR 702.41a; Thought Monitor, wave 4c) -- "this spell costs {1} less to cast for each [text] you control": the
      spell's own `this-costs-less` (cards/index.mjs), read as it is cast (rules/statics.mjs, costReduction) -- for artifacts,
      tokens, or anything a selector says. */
-export const CAST_RULE_KEYWORDS = {AlternateAdditionalCost: "rules/actions.mjs", ETBReplacement: "rules/replacement.mjs", Overload: "rules/actions.mjs",
-  Affinity: "rules/statics.mjs",
+/* Kicker (CR 702.33a; Tear Asunder, wave 4d L6) -- "you may pay an additional [cost] as you cast this spell": the cast without it
+     and with it (rules/actions.mjs, additionalVariants), the spell kicked, and what it does then when its card says it differs
+     -- other targets and effects, its spell ability's `kicked` script (cards/index.mjs, rules/stack.mjs). Named, not built: a
+     kicker cost that is not mana, and a spell with two kicker costs. */
+export const CAST_RULE_KEYWORDS = {AlternateAdditionalCost: "rules/actions.mjs", ETBReplacement: "rules/replacement.mjs", Overload: "rules/actions.mjs", Mutate: "keywords/mutate.mjs",
+  Affinity: "rules/statics.mjs", Kicker: "rules/actions.mjs",
   Gift: "rules/actions.mjs", MayEffectFromOpeningHand: "rules/mulligan.mjs"};
 
 export const ABILITY_KEYWORDS = {Equip: "attach", Cycling: "draw", TypeCycling: "chooseCard", Enchant: "attach",
   /* Hideaway (Train B, CR 702.75a): dig links a face-down exile, shuffles the rest to the bottom,
      and preserves each entitled controller's permission to look (CR 406.3). */
   Hideaway: "dig",
+  /* Cascade (CR 702.85a; Apex Devastator, wave 4d L6): a cast trigger -- cards exiled from the top until a nonland card of lesser
+     mana value, that card cast free or not, and every card exiled to the bottom in a random order (cards/index.mjs). */
+  Cascade: "digUntil",
+  /* Myriad (CR 702.116a; Battle Angels of Tyr, Rob's lists P1): an attack trigger -- for each opponent other than the defending
+     player, a "you may" token copy tapped and attacking that player or a planeswalker of theirs, the tokens exiled at end of
+     combat (cards/index.mjs). */
+  Myriad: "copyPermanent",
   /* Ninjutsu (batch 54): an ability of the card in hand, returning an unblocked attacker, the Ninja put onto the battlefield
      tapped and attacking (cards/index.mjs). */
   Ninjutsu: "moveZone",

@@ -1,0 +1,34 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Goblin Deathraiders",
+    "oracleId": "d5142292-446a-413b-85a0-be8a59cec1f8",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Warrior"
+    ],
+    "manaCost": "{B}{R}",
+    "colors": [
+      "B",
+      "R"
+    ],
+    "colorIdentity": [
+      "B",
+      "R"
+    ],
+    "power": 3,
+    "toughness": 1
+  },
+  "oracleText": "Trample",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample"
+    }
+  ]
+}

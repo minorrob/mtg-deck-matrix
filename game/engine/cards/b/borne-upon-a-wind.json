@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Borne Upon a Wind",
+    "oracleId": "ce19962d-94f9-4b2b-b668-963c0acce308",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You may cast spells this turn as though they had flash.\nDraw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "You may cast spells this turn as though they had flash.\nDraw a card.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "rule": "cast-as-though-flash",
+          "spells": true,
+          "until": "end-of-turn"
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

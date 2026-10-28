@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Spirit Away",
+    "oracleId": "15b618f0-281f-4745-8504-bd70e7b4a267",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{5}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature\nYou control enchanted creature.\nEnchanted creature gets +2/+2 and has flying.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      },
+      "text": "Enchant creature"
+    },
+    {
+      "kind": "static",
+      "rule": "control-enchanted",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "text": "You control enchanted creature."
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 2,
+        "toughness": 2
+      },
+      "text": "Enchanted creature gets +2/+2 and has flying."
+    },
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addKeywords": [
+          "Flying"
+        ]
+      },
+      "text": "Enchanted creature gets +2/+2 and has flying."
+    }
+  ]
+}

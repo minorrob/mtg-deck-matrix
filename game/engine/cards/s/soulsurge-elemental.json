@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Soulsurge Elemental",
+    "oracleId": "a98764e2-3cf6-40a4-aba5-34e2411623ab",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": 1
+  },
+  "oracleText": "First strike\nSoulsurge Elemental's power is equal to the number of creatures you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "first strike",
+      "text": "First strike"
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "a",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": {
+          "count": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          }
+        }
+      },
+      "text": "Soulsurge Elemental's power is equal to the number of creatures you control."
+    }
+  ]
+}

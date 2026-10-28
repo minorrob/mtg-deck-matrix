@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sledding Otter-Penguin",
+    "oracleId": "1b115051-a3c8-4c5f-9ad2-82b5a6897c51",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Otter",
+      "Bird"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "{3}: Put a +1/+1 counter on this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "text": "{3}: Put a +1/+1 counter on this creature."
+    }
+  ]
+}

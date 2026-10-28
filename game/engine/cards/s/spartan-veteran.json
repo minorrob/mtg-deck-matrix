@@ -1,0 +1,62 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Spartan Veteran",
+    "oracleId": "b255d1ec-49ac-49a2-9af8-21915bbcd224",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Soldier"
+    ],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "During your turn, this creature has first strike. (It deals combat damage before creatures without first strike.)\n{2}: This creature gets +1/+0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "addKeywords": [
+          "First Strike"
+        ]
+      },
+      "condition": {
+        "yourTurn": true
+      },
+      "text": "During your turn, this creature has first strike. (It deals combat damage before creatures without first strike.)"
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": 0
+        }
+      ],
+      "text": "{2}: This creature gets +1/+0 until end of turn."
+    }
+  ]
+}

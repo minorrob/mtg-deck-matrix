@@ -1,0 +1,93 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Dramatic Reversal",
+  "fixtures": {
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "abilities": [
+        {
+          "id": "m",
+          "kind": "mana",
+          "tapSelf": true,
+          "produces": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob's tapped Rock and Bear untap; his lands and Maya's Rock stay tapped",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Rock",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Dramatic Reversal"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Rock"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "cast": "Dramatic Reversal"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Island",
+          "is": true
+        },
+        {
+          "seat": 0,
+          "tapped": "Rock",
+          "is": false
+        }
+      ]
+    }
+  ]
+}

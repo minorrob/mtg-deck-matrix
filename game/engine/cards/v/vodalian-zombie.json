@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vodalian Zombie",
+    "oracleId": "58e4f299-bb32-4727-8498-a364166adc38",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Merfolk",
+      "Zombie"
+    ],
+    "manaCost": "{U}{B}",
+    "colors": [
+      "B",
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Protection from green",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "G"
+        ]
+      },
+      "text": "Protection from green"
+    }
+  ]
+}

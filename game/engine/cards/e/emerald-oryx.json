@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Emerald Oryx",
+    "oracleId": "4c26c796-26ec-41f7-b9ca-58f4eb935c47",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Antelope"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Forestwalk (This creature can't be blocked as long as defending player controls a Forest.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "forestwalk",
+      "text": "Forestwalk (This creature can't be blocked as long as defending player controls a Forest.)"
+    }
+  ]
+}

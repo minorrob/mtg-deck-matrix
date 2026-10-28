@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Brass Gnat",
+    "oracleId": "7f6ddfa2-31ba-4cb7-83e7-1f099e3e8dc3",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Insect"
+    ],
+    "manaCost": "{1}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Flying\nThis creature doesn't untap during your untap step.\nAt the beginning of your upkeep, you may pay {1}. If you do, untap this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "static",
+      "rule": "doesnt-untap",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature doesn't untap during your untap step."
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": "you",
+          "amount": 1,
+          "ifPaid": true,
+          "effects": [
+            {
+              "effect": "untap",
+              "targets": "self"
+            }
+          ]
+        }
+      ],
+      "text": "At the beginning of your upkeep, you may pay {1}. If you do, untap this creature."
+    }
+  ]
+}

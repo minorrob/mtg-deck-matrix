@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Teeterpeak Ambusher",
+    "oracleId": "fe769071-3f99-411b-878a-57a2200649a0",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Warrior"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "{2}{R}: This creature gets +2/+0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{R}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 2,
+          "toughness": 0
+        }
+      ],
+      "text": "{2}{R}: This creature gets +2/+0 until end of turn."
+    }
+  ]
+}

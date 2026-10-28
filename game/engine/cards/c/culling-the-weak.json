@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Culling the Weak",
+    "oracleId": "6385fd0d-256d-4400-9319-afa8170024db",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As an additional cost to cast this spell, sacrifice a creature.\nAdd {B}{B}{B}{B}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "As an additional cost to cast this spell, sacrifice a creature.\nAdd {B}{B}{B}{B}.",
+      "additionalCost": [
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "B": 4
+          }
+        }
+      ]
+    }
+  ]
+}

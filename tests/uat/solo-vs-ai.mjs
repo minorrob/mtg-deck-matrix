@@ -3,7 +3,7 @@
 /* ONE PERSON AGAINST THREE AIs, THROUGH THE REAL BOARD (Rob's play test, Oct 19-20, 2026; Linear ROB-163, ROB-164).
  *
  * One browser user at 1280x720 sets up New table with seats 2-4 as "An AI · Normal", chooses every seat's deck from the
- * lobby's Shared decks (Rob's six staging decks, tests/fixtures/shared-staging-decks.json), presses Ready and Start, and
+ * lobby's Precons (the six New from Wizards decks, data/precons-latest.json, open to everyone since 2026-10-25), presses Ready and Start, and
  * plays to the end. The person takes the house pilot's suggestions, exclusively through the board's own controls
  * (board-person.mjs). A reload mid-game must return the same revision and the same pending question; no frame may name
  * an AI's hand or library; no AI answer may be refused over the whole match. When the person loses, the room ends the
@@ -12,7 +12,7 @@
  * Adapted from tests/uat/real-deck-game.mjs: the same in-process GameTable carrier (it does not prove workerd, Access
  * or network latency), and outside the regular suite inventory, like it.
  *
- *   node tests/uat/solo-vs-ai.mjs     three tables: D1 v D2 D3 D4, D5 v D6 D1 D2, D6 v D3 D4 D5 (the person first)
+ *   node tests/uat/solo-vs-ai.mjs     three tables of precons (PODS, below; the person first)
  *   GAMES=1  VIEWPORT=1400x900  SHOTS=<dir>  REAL_DECKS_REQUIRED=1 (refuses a missing browser)
  */
 import assert from "node:assert/strict";
@@ -24,6 +24,7 @@ import {build, worktreeSource} from "../../tools/release-pages.mjs";
 import {boardPerson} from "./board-person.mjs";
 import {replayRecord} from "../../tools/playtest-triage.mjs";
 import {checkLeaks} from "../../tools/fuzz-live.mjs";
+import {createGame, openNewGame} from "./new-game.mjs";
 const REPO = ROOT;
 
 let checks = 0;
@@ -32,10 +33,14 @@ const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1; console.log(`  
 const SHOTS = process.env.SHOTS || "";
 if (SHOTS) mkdirSync(SHOTS, {recursive: true});
 const [VW, VH] = (process.env.VIEWPORT || "1280x720").split("x").map(Number);
-const PODS = [["shared:D1", "shared:D2", "shared:D3", "shared:D4"], ["shared:D5", "shared:D6", "shared:D1", "shared:D2"], ["shared:D6", "shared:D3", "shared:D4", "shared:D5"]]
+/* The precons, by their ids in data/precons.json (Rob, 2026-10-25: the lobby offers them to everyone, and no longer his decks). */
+const P = (id) => `precon:${id}`;
+const PODS = [[P("CallingAllAngels_FDC"), P("KeenEngineering_FDC"), P("MultiverseReforged_FRC"), P("ReignOfDragons_FDC")],
+  [P("TramplesaurusRex_FDC"), P("WretchedRanks_FDC"), P("CallingAllAngels_FDC"), P("KeenEngineering_FDC")],
+  [P("WretchedRanks_FDC"), P("MultiverseReforged_FRC"), P("ReignOfDragons_FDC"), P("TramplesaurusRex_FDC")]]
   .slice(0, Number(process.env.GAMES || 3));
-const shared = JSON.parse(readFileSync(path.join(REPO, "tests/fixtures/shared-staging-decks.json"), "utf8")).decks;
-const nameOf = (id) => shared.find((d) => `shared:${d.id}` === id || d.id === id)?.name ?? id;
+const precons = JSON.parse(readFileSync(path.join(REPO, "data/precons-latest.json"), "utf8")).decks;
+const nameOf = (id) => precons.find((d) => P(d.id) === id)?.name ?? id;
 
 const ROB = "rob@example.com";
 let clock = Date.parse("2026-10-19T20:00:00Z");
@@ -97,12 +102,12 @@ async function person(email, viewport) {
 }
 const waitText = (page, sel, re, timeout = 20000) => page.waitForFunction(([s, src]) => {const el = document.querySelector(s); if (!el) return false; const st = document.createElement("style"); st.textContent = "*{text-transform:none!important}"; document.head.append(st); const t = el.innerText; st.remove(); return new RegExp(src).test(t);}, [sel, re.source], {timeout});
 
-/* Choose one of Rob's Shared decks in the lobby's dialog, once the table has said it can play every card. */
+/* Choose one of the Precons in the lobby's dialog, once the table has said it can play every card. */
 async function chooseShared(page, seat, sharedId) {
   await page.click(`.cm-lobby-seat[data-seat='${seat}'] [data-action=table-deck]`);
-  const button = page.locator(`.cm-table-deck[data-shared-deck="${sharedId}"]`);
+  const button = page.locator(`.cm-table-deck[data-precon="${sharedId}"]`);
   await button.waitFor({timeout: 15000});
-  await page.waitForFunction((id) => {const b = document.querySelector(`.cm-table-deck[data-shared-deck="${id}"]`); return b && !b.disabled && /Ready to play/.test(b.textContent);}, sharedId, {timeout: 20000});
+  await page.waitForFunction((id) => {const b = document.querySelector(`.cm-table-deck[data-precon="${id}"]`); return b && !b.disabled && b.querySelector("[data-precon-status]")?.dataset.text === "Ready to play";}, sharedId, {timeout: 20000});
   await button.click();
   await page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"), null, {timeout: 15000}).catch(async () => {
     throw Error(`choosing ${sharedId} left the dialog open: ${await page.locator("#cm-table-deck-error").innerText().catch(() => "")}`);
@@ -112,14 +117,7 @@ async function chooseShared(page, seat, sharedId) {
 async function journey(n, rob, pod) {
   const names = pod.map(nameOf);
   console.log(`solo-vs-ai: table ${n} -- Rob ${names[0]} v AI ${names.slice(1).join(", ")}`);
-  await rob.page.goto(`${base}/index.html#table`);
-  await rob.page.locator("#cm-table-new").waitFor({timeout: 30000});
-  await rob.page.fill("#cm-table-new [name=hostName]", "Rob");
-  for (const [seat, who] of [[2, "Nina"], [3, "Theo"], [4, "Ivy"]]) {
-    await rob.page.selectOption(`#cm-table-new [name=kind${seat}]`, "ai");
-    await rob.page.fill(`#cm-table-new [name=name${seat}]`, who);
-  }
-  await rob.page.click("[data-action=table-create]");
+  await createGame(rob.page, base, {host: "Rob", ai: [{name: "Nina"}, {name: "Theo"}, {name: "Ivy"}]}, "#table");
   await rob.page.waitForFunction(() => /#table\?id=solo\d+/.test(location.hash), null, {timeout: 20000});
   const id = /#table\?id=(solo\d+)/.exec(await rob.page.evaluate(() => location.hash))[1];
   await rob.page.locator(".cm-cloud-table .cm-lobby-seat[data-seat='3']").waitFor({timeout: 20000});

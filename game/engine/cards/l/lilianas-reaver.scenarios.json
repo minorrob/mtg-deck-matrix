@@ -1,0 +1,141 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Liliana's Reaver",
+  "fixtures": {
+    "Moss Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Combat damage to Maya: she discards a card, and Rob gets a tapped Zombie",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Liliana's Reaver"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Moss Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Liliana's Reaver"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 1,
+                "options": [
+                  "Moss Bear"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Moss Bear"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 36
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Moss Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Zombie"
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Liliana's Reaver",
+            "has": [
+              "Deathtouch"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Maya with no cards: she discards nothing, the Zombie still comes",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Liliana's Reaver"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Liliana's Reaver"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Liliana's Reaver",
+            "Zombie"
+          ]
+        }
+      ]
+    }
+  ]
+}

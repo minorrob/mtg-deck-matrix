@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Skyline Predator",
+    "oracleId": "9bc6d4ac-6fca-4574-9cd8-10a5528575b3",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Drake"
+    ],
+    "manaCost": "{4}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Flash (You may cast this spell any time you could cast an instant.)\nFlying",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flash",
+      "text": "Flash (You may cast this spell any time you could cast an instant.)"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    }
+  ]
+}

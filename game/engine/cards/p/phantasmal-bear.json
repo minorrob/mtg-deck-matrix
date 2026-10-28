@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Phantasmal Bear",
+    "oracleId": "780da643-8d14-4f1a-a298-5b7454e9c4df",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bear",
+      "Illusion"
+    ],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "When this creature becomes the target of a spell or ability, sacrifice it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "becomes target",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "sacrifice": true
+        }
+      ],
+      "text": "When this creature becomes the target of a spell or ability, sacrifice it."
+    }
+  ]
+}

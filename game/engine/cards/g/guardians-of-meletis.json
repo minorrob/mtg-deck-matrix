@@ -1,0 +1,28 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Guardians of Meletis",
+    "oracleId": "7604aac7-82ae-4f5b-888d-a008754f716a",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Golem"
+    ],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 0,
+    "toughness": 6
+  },
+  "oracleText": "Defender (This creature can't attack.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "defender",
+      "text": "Defender (This creature can't attack.)"
+    }
+  ]
+}

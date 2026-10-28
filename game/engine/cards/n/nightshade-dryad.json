@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Nightshade Dryad",
+    "oracleId": "f8263274-8cb4-4eab-b541-c7655b555830",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dryad"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "Deathtouch\n{T}: Add {C}.\n{T}: Add one mana of any color.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "deathtouch",
+      "text": "Deathtouch"
+    },
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ],
+      "text": "{T}: Add {C}."
+    },
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true
+        }
+      ],
+      "text": "{T}: Add one mana of any color."
+    }
+  ]
+}

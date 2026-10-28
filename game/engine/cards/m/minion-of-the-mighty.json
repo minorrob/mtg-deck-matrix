@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Minion of the Mighty",
+    "oracleId": "058062c7-071b-4b14-903d-ae8d2876b37f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Kobold"
+    ],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 0,
+    "toughness": 1
+  },
+  "oracleText": "Menace\nPack tactics — Whenever this creature attacks, if you attacked with creatures with total power 6 or greater this combat, you may put a Dragon creature card from your hand onto the battlefield tapped and attacking.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Menace",
+      "keyword": "menace"
+    },
+    {
+      "kind": "triggered",
+      "text": "Pack tactics — Whenever this creature attacks, if you attacked with creatures with total power 6 or greater this combat, you may put a Dragon creature card from your hand onto the battlefield tapped and attacking.",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "hand",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Dragon"
+            ]
+          },
+          "upTo": true,
+          "to": "battlefield",
+          "tapped": true,
+          "attacking": true
+        }
+      ],
+      "condition": {
+        "attackedWithPowerAtLeast": 6
+      }
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fractured Powerstone",
+    "oracleId": "af4f192a-9565-4377-b359-835fe4396e85",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {C}.\n{T}: Roll the planar die. Activate only as a sorcery.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}: Roll the planar die. Activate only as a sorcery.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "timing": "sorcery",
+      "effects": [
+        {
+          "effect": "rollDie",
+          "planar": true,
+          "sides": 6
+        }
+      ]
+    }
+  ]
+}

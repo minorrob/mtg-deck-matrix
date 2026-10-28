@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Leaden Myr",
+    "oracleId": "f62cabf0-df0d-4c4f-a93a-9340967d1775",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Myr"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "{T}: Add {B}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "B": 1
+          }
+        }
+      ],
+      "text": "{T}: Add {B}."
+    }
+  ]
+}

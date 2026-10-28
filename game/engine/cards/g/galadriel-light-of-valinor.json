@@ -1,0 +1,98 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Galadriel, Light of Valinor",
+    "oracleId": "faf44683-339d-4fc0-8029-1e867c69de0e",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Noble"
+    ],
+    "manaCost": "{2}{G}{W}{U}",
+    "colors": [
+      "G",
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "U",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Alliance — Whenever another creature you control enters, choose one that hasn't been chosen this turn —\n• Add {G}{G}{G}.\n• Put a +1/+1 counter on each creature you control.\n• Scry 2, then draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Alliance — Whenever another creature you control enters, choose one that hasn't been chosen this turn —\n• Add {G}{G}{G}.\n• Put a +1/+1 counter on each creature you control.\n• Scry 2, then draw a card.",
+      "trigger": {
+        "on": "enters",
+        "who": "another",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "unchosen": "turn",
+          "modes": [
+            {
+              "text": "Add {G}{G}{G}.",
+              "effects": [
+                {
+                  "effect": "addMana",
+                  "mana": {
+                    "G": 3
+                  }
+                }
+              ]
+            },
+            {
+              "text": "Put a +1/+1 counter on each creature you control.",
+              "effects": [
+                {
+                  "effect": "putCounterAll",
+                  "selector": {
+                    "what": "permanent",
+                    "types": [
+                      "Creature"
+                    ],
+                    "controller": "you"
+                  },
+                  "counter": "+1/+1",
+                  "count": 1
+                }
+              ]
+            },
+            {
+              "text": "Scry 2, then draw a card.",
+              "effects": [
+                {
+                  "effect": "scry",
+                  "count": 2
+                },
+                {
+                  "effect": "draw",
+                  "count": 1
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

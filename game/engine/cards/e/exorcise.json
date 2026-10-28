@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Exorcise",
+    "oracleId": "58916455-844c-4d97-908f-8205bdc117c0",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Exile target artifact, enchantment, or creature with power 4 or greater.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Exile target artifact, enchantment, or creature with power 4 or greater.",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "permanent",
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Enchantment"
+              ]
+            },
+            {
+              "what": "permanent",
+              "types": [
+                "Creature"
+              ],
+              "power": {
+                "min": 4
+              }
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile"
+        }
+      ]
+    }
+  ]
+}

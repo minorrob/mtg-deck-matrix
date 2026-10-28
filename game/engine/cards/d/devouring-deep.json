@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Devouring Deep",
+    "oracleId": "e0f18302-5ccf-47d2-a8a1-bb7aeaca9a53",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Fish"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "Islandwalk (This creature can't be blocked as long as defending player controls an Island.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "islandwalk",
+      "text": "Islandwalk (This creature can't be blocked as long as defending player controls an Island.)"
+    }
+  ]
+}

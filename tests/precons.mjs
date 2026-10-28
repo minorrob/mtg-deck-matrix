@@ -47,7 +47,7 @@ try {
   {
     const {context, page, fetched} = await fresh();
     await page.goto(`${base}/index.html`);
-    await page.locator(".cm-landing [data-action=start-precon]").waitFor({timeout: 60000});
+    await page.locator(".cm-landing [data-action=new-deck]").waitFor({timeout: 60000});
     await page.waitForTimeout(800);
     eq(fetched.length, 0, "the precon list is not fetched until the picker opens");
 
@@ -69,7 +69,8 @@ try {
     fetched.length = 0;
 
     /* 1. The picker. */
-    await page.locator(".cm-landing [data-action=start-precon]").click();
+    await page.locator(".cm-landing [data-action=new-deck]").click();
+    await page.locator("#cm-dialog [data-action=start-precon]").click();
     await page.locator("#cm-precon-list .cm-precon").first().waitFor({timeout: 30000});
     eq((await page.locator("#cm-dialog[open] h2").first().textContent()).trim(), "Start from a precon", "the landing page's Start from a precon opens the picker");
     eq((await page.locator("#cm-precon-n").innerText()).trim(), `${data.decks.length} of ${data.decks.length} Commander precons, newest first`, "it says how many there are");
@@ -103,7 +104,8 @@ try {
     /* 4. A card banned since it was printed. */
     const banned = data.decks.find((d) => d.notInUniverse && d.notInUniverse.includes("Dockside Extortionist"));
     ok(banned, "the committed list has a precon holding a card banned since (Dockside Extortionist)");
-    await page.locator(".cm-landing [data-action=start-precon]").click();
+    await page.locator(".cm-landing [data-action=new-deck]").click();
+    await page.locator("#cm-dialog [data-action=start-precon]").click();
     await page.locator("#cm-precon-list .cm-precon").first().waitFor({timeout: 30000});
     await search(page, banned.name);
     await page.locator(`#cm-precon-list [data-precon="${banned.id}"]`).click();

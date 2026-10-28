@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Willow Dryad",
+    "oracleId": "19d5eb29-2d35-44e7-afa1-3ba8d812ed41",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dryad"
+    ],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Forestwalk (This creature can't be blocked as long as defending player controls a Forest.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "forestwalk",
+      "text": "Forestwalk (This creature can't be blocked as long as defending player controls a Forest.)"
+    }
+  ]
+}

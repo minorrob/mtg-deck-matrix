@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dramatic Rescue",
+    "oracleId": "a5386844-ea24-48ee-9337-ae10bcfddfb9",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{W}{U}",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Return target creature to its owner's hand. You gain 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Return target creature to its owner's hand. You gain 2 life.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        },
+        {
+          "effect": "gainLife",
+          "amount": 2
+        }
+      ]
+    }
+  ]
+}

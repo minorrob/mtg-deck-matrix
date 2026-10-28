@@ -10,7 +10,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Darksteel Myr": {
+    "Smoke Darksteel Myr": {
       "types": [
         "Artifact",
         "Creature"
@@ -47,7 +47,7 @@
           "zone": "battlefield",
           "cards": [
             "Grizzly Bears",
-            "Darksteel Myr"
+            "Smoke Darksteel Myr"
           ]
         }
       ],

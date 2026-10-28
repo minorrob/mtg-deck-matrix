@@ -38,10 +38,10 @@ CATALOG = 'game/tools/engine-catalog.mjs'
 
 APPLYING = '''const applying = (rest, event) => rest.filter(({ability}) => live(event).some((g) => (ability.rule === "more-tokens" ? true
   : ability.rule === "tokens-each" ? Boolean(kindOf(ability, g.token)) : describes(ability.affects, g.token))));'''
-DOUBLES = 'if (ability.rule === "more-tokens") return event.map((g) => ({...g, count: g.count * ability.times}));'
+DOUBLES = 'if (ability.rule === "more-tokens") return event.map((g) => (multiplies(ability, g.token) ? {...g, count: g.count * ability.times} : g));'
 INSTEAD = 'if (ability.rule === "tokens-instead") return event.map((g) => (g.count > 0 && describes(ability.affects, g.token) ? {token: ability.token, count: g.count} : g));'
 EACH = 'return kind ? [g, ...ability.each.filter((k) => k !== kind).map((k) => ({token: k, count: g.count}))] : [g];'
-ADDS = '  return [...event, {token: ability.token, count: 1}];\n}'
+ADDS = '  return [...event, {token: ability.token, count: ability.thatMany === true ? tokensIn(live(event)) : 1}];\n}'
 MAKES = '''  for (const g of live(event)) by.set(nameOf(g.token) ?? "token", (by.get(nameOf(g.token) ?? "token") ?? 0) + g.count);
   return [...by].map(([name, n]) => `${n} ${name}`).sort().join(", ");'''
 ASKED = 'if (now.length > 1 && tokenEnds(rest, event).size > 1) {'
@@ -88,14 +88,14 @@ BREAKS = [
     ('tokens: one of each only once one of its kinds is made', STATICS, APPLYING, APPLYING.replace('? Boolean(kindOf(ability, g.token)) :', '? true :')),
     ('tokens: an adder only while a token it describes is made', STATICS, APPLYING, APPLYING.replace(': describes(ability.affects, g.token))));', ': true)));')),
     ('tokens: only tokens being made, one or more', STATICS, APPLYING, APPLYING.replace('live(event).some(', 'event.some(')),
-    ('tokens: a doubler doubles every group', STATICS, DOUBLES, 'if (ability.rule === "more-tokens") return event.map((g) => (g.own ? {...g, count: g.count * ability.times} : g));'),
+    ('tokens: a doubler doubles every group', STATICS, DOUBLES, 'if (ability.rule === "more-tokens") return event.map((g) => (g.own && multiplies(ability, g.token) ? {...g, count: g.count * ability.times} : g));'),
     ('tokens: that many made instead', STATICS, INSTEAD, INSTEAD.replace('{token: ability.token, count: g.count}', '{token: ability.token, count: 1}')),
     ('tokens: instead only of what it describes', STATICS, INSTEAD, INSTEAD.replace('g.count > 0 && describes(ability.affects, g.token) ?', 'g.count > 0 ?')),
     ('tokens: made instead, no longer the effect\'s own', STATICS, INSTEAD, INSTEAD.replace('{token: ability.token, count: g.count}', '{...g, token: ability.token, count: g.count}')),
     ('tokens: one of each beside its kind', STATICS, EACH, 'return kind ? [g] : [g];'),
     ('tokens: one of each, that many', STATICS, EACH, EACH.replace('({token: k, count: g.count})', '({token: k, count: 1})')),
     ('tokens: one of each, its own kind not again', STATICS, EACH, EACH.replace('ability.each.filter((k) => k !== kind)', 'ability.each')),
-    ('tokens: an adder adds one', STATICS, ADDS, '  return [...event, {token: ability.token, count: 2}];\n}'),
+    ('tokens: an adder adds one', STATICS, ADDS, '  return [...event, {token: ability.token, count: ability.thatMany === true ? tokensIn(live(event)) : 2}];\n}'),
     ('tokens: ends told by what they make', STATICS, MAKES, MAKES.replace('by.set(nameOf(g.token) ?? "token", (by.get(nameOf(g.token) ?? "token") ?? 0) + g.count)', 'by.set("token", (by.get("token") ?? 0) + g.count)')),
     ('tokens: a name\'s tokens told together', STATICS, MAKES,
      '  for (const g of live(event)) by.set(`${by.size}`, `${g.count} ${nameOf(g.token) ?? "token"}`);\n  return [...by.values()].sort().join(", ");'),

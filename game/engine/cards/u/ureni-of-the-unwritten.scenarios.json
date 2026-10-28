@@ -1,0 +1,189 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Ureni of the Unwritten",
+  "fixtures": {
+    "Giant": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{4}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Old Dragon": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Dragon"
+      ],
+      "manaCost": "{4}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 4,
+      "toughness": 4
+    },
+    "Dragon Egg": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [
+        "Dragon"
+      ],
+      "manaCost": "{2}"
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Ureni enters: of the top eight, only the Dragon creature card is offered (not the Giant, not the Dragon artifact), and it comes in",
+      "library": [
+        "Wastes",
+        "Giant",
+        "Dragon Egg",
+        "Old Dragon",
+        "Wastes"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Island",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Ureni of the Unwritten"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Ureni of the Unwritten"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Old Dragon"
+                ],
+                "min": 0
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Old Dragon"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ureni of the Unwritten",
+            "Old Dragon",
+            "Forest",
+            "Island",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 19
+        }
+      ]
+    },
+    {
+      "name": "Ureni attacks: up to one -- the player may take nothing, and all eight go to the bottom",
+      "library": [
+        "Old Dragon",
+        "Wastes"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ureni of the Unwritten"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Ureni of the Unwritten"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": []
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Ureni of the Unwritten"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "library",
+          "count": 20
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Court Archers",
+    "oracleId": "cc1cb63e-5811-44ab-af50-37a96f79fc78",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Archer"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Reach (This creature can block creatures with flying.)\nExalted (Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "reach",
+      "text": "Reach (This creature can block creatures with flying.)"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "exalted",
+      "text": "Exalted (Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn.)"
+    }
+  ]
+}

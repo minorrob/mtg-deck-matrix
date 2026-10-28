@@ -1,0 +1,85 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bloodghast",
+    "oracleId": "e97f9c2b-b41e-4f36-9245-77c0ac125647",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire",
+      "Spirit"
+    ],
+    "manaCost": "{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "This creature can't block.\nThis creature has haste as long as an opponent has 10 or less life.\nLandfall — Whenever a land you control enters, you may return this card from your graveyard to the battlefield.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "This creature can't block.",
+      "rule": "cant-block",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      }
+    },
+    {
+      "kind": "static",
+      "text": "This creature has haste as long as an opponent has 10 or less life.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Haste"
+        ]
+      },
+      "condition": {
+        "compare": {
+          "count": {
+            "count": {
+              "what": "player",
+              "who": "opponent",
+              "lifeAtMost": 10
+            }
+          },
+          "atLeast": 1
+        }
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Landfall — Whenever a land you control enters, you may return this card from your graveyard to the battlefield.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "battlefield"
+        }
+      ],
+      "optional": true,
+      "zone": "graveyard"
+    }
+  ]
+}

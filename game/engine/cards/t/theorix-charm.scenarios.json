@@ -60,7 +60,7 @@
       "power": 5,
       "toughness": 5
     },
-    "Omen": {
+    "Smoke Omen": {
       "types": [
         "Sorcery"
       ],
@@ -453,7 +453,7 @@
       "name": "Mill three, then draw a card: the fourth",
       "library": [
         "Bear",
-        "Omen",
+        "Smoke Omen",
         "Rock",
         "Troll"
       ],
@@ -497,7 +497,7 @@
           "zone": "graveyard",
           "cards": [
             "Bear",
-            "Omen",
+            "Smoke Omen",
             "Rock",
             "Theorix Charm"
           ]

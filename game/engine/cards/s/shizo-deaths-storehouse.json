@@ -1,0 +1,79 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shizo, Death's Storehouse",
+    "oracleId": "008f2698-1721-45a3-8353-10f2f400dc8f",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Land"
+    ],
+    "subtypes": [],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {B}.\n{B}, {T}: Target legendary creature gains fear until end of turn. (It can't be blocked except by artifact creatures and/or black creatures.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {B}.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "B": 1
+          }
+        }
+      ],
+      "mana": true
+    },
+    {
+      "kind": "activated",
+      "text": "{B}, {T}: Target legendary creature gains fear until end of turn. (It can't be blocked except by artifact creatures and/or black creatures.)",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{B}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "keywords": [
+            "Fear"
+          ],
+          "until": "end-of-turn"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "supertypes": [
+            "Legendary"
+          ]
+        }
+      ]
+    }
+  ]
+}

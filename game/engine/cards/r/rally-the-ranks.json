@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rally the Ranks",
+    "oracleId": "eeb07c8a-21d1-43fa-a5f3-ee3fe328a671",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As this enchantment enters, choose a creature type.\nCreatures you control of the chosen type get +1/+1.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "choose": "creature type"
+      },
+      "text": "As this enchantment enters, choose a creature type."
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "subtypes": [
+          "$chosen"
+        ]
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      },
+      "text": "Creatures you control of the chosen type get +1/+1."
+    }
+  ]
+}

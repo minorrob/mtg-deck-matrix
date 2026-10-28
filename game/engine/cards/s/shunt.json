@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shunt",
+    "oracleId": "e714bcfb-b451-4b7b-ab60-4cb845c75647",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Change the target of target spell with a single target.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "spell",
+          "singleTarget": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "changeTargets",
+          "spells": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "Change the target of target spell with a single target."
+    }
+  ]
+}

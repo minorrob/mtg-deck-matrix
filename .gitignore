@@ -48,3 +48,7 @@ tests/ai-advise-eval/results/
 
 # Python bytecode from the batch helpers (game/tools/batch/*.py import cardlib)
 __pycache__/
+
+# Rob's backdrop clips (Drive: "Backdrop videos"): tools/stage-backdrops.mjs reads them here; only its output ships.
+design/art-source/backdrops/*
+!design/art-source/backdrops/README.md

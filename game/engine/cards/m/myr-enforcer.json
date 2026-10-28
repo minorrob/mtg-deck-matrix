@@ -1,0 +1,33 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Myr Enforcer",
+    "oracleId": "2d8e1054-654f-42e8-8c29-12c3cf13a3eb",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Myr"
+    ],
+    "manaCost": "{7}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "affinity",
+      "of": {
+        "types": [
+          "Artifact"
+        ]
+      },
+      "text": "Affinity for artifacts (This spell costs {1} less to cast for each artifact you control.)"
+    }
+  ]
+}

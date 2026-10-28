@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cold-Water Snapper",
+    "oracleId": "457e4a49-c8fe-4e1d-a4b4-7a880a47f58d",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Turtle"
+    ],
+    "manaCost": "{5}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Hexproof (This creature can't be the target of spells or abilities your opponents control.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "hexproof",
+      "text": "Hexproof (This creature can't be the target of spells or abilities your opponents control.)"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Giant Cindermaw",
+    "oracleId": "bd0c0e85-ff24-46c9-a547-4f633355c131",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dinosaur",
+      "Beast"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 3
+  },
+  "oracleText": "Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)\nPlayers can't gain life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)"
+    },
+    {
+      "kind": "static",
+      "rule": "cant-gain-life",
+      "affects": {
+        "what": "player"
+      },
+      "text": "Players can't gain life."
+    }
+  ]
+}

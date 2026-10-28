@@ -1,0 +1,96 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Sterling Grove",
+  "fixtures": {
+    "Charm": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{C}"
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Sterling Grove: other enchantments you control have shroud; sacrificed, it puts an enchantment on top",
+      "library": [
+        "Wastes",
+        "Wastes",
+        "Charm"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Sterling Grove",
+            "Charm",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Charm",
+                "has": [
+                  "Shroud"
+                ]
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Sterling Grove",
+                "lacks": [
+                  "Shroud"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Sterling Grove"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Charm"
+          ]
+        },
+        {
+          "settle": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Charm"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Sterling Grove"
+          ]
+        }
+      ]
+    }
+  ]
+}

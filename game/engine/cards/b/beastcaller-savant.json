@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Beastcaller Savant",
+    "oracleId": "e28227eb-b3b5-42fa-b597-1fefd2a70186",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Shaman",
+      "Ally"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Haste\n{T}: Add one mana of any color. Spend this mana only to cast a creature spell.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "haste",
+      "text": "Haste"
+    },
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true,
+          "spendOnly": {
+            "spell": {
+              "types": [
+                "Creature"
+              ]
+            }
+          }
+        }
+      ],
+      "text": "{T}: Add one mana of any color. Spend this mana only to cast a creature spell."
+    }
+  ]
+}

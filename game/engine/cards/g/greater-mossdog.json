@@ -1,0 +1,33 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Greater Mossdog",
+    "oracleId": "aedc3e69-3163-4b8d-97b2-0ad92f28a6dc",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Plant",
+      "Dog"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Dredge 3 (If you would draw a card, you may mill three cards instead. If you do, return this card from your graveyard to your hand.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "dredge",
+      "amount": 3,
+      "text": "Dredge 3 (If you would draw a card, you may mill three cards instead. If you do, return this card from your graveyard to your hand.)"
+    }
+  ]
+}

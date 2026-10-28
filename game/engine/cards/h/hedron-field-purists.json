@@ -1,0 +1,156 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hedron-Field Purists",
+    "oracleId": "ecc3e2ac-6534-4350-92f4-2c1f578d854e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Cleric"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 0,
+    "toughness": 3
+  },
+  "oracleText": "Level up {2}{W} ({2}{W}: Put a level counter on this. Level up only as a sorcery.)\nLEVEL 1-4\n1/4\nIf a source would deal damage to you or a creature you control, prevent 1 of that damage.\nLEVEL 5+\n2/5\nIf a source would deal damage to you or a creature you control, prevent 2 of that damage.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "Level up {2}{W}",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{W}"
+        }
+      ],
+      "timing": "sorcery",
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "level",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "text": "LEVEL 1-4\n1/4",
+      "layer": 7,
+      "sublayer": "b",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": 1,
+        "setToughness": 4
+      },
+      "condition": {
+        "compare": {
+          "count": {
+            "countersOn": "self",
+            "counter": "level"
+          },
+          "atLeast": 1,
+          "atMost": 4
+        }
+      }
+    },
+    {
+      "kind": "replacement",
+      "text": "If a source would deal damage to you or a creature you control, prevent 1 of that damage.",
+      "watches": {
+        "event": "damage",
+        "anyOf": [
+          {
+            "toPlayer": "you"
+          },
+          {
+            "toCard": {
+              "types": [
+                "Creature"
+              ],
+              "controller": "you"
+            }
+          }
+        ]
+      },
+      "change": {
+        "prevent": 1
+      },
+      "condition": {
+        "compare": {
+          "count": {
+            "countersOn": "self",
+            "counter": "level"
+          },
+          "atLeast": 1,
+          "atMost": 4
+        }
+      }
+    },
+    {
+      "kind": "static",
+      "text": "LEVEL 5+\n2/5",
+      "layer": 7,
+      "sublayer": "b",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": 2,
+        "setToughness": 5
+      },
+      "condition": {
+        "compare": {
+          "count": {
+            "countersOn": "self",
+            "counter": "level"
+          },
+          "atLeast": 5
+        }
+      }
+    },
+    {
+      "kind": "replacement",
+      "text": "If a source would deal damage to you or a creature you control, prevent 2 of that damage.",
+      "watches": {
+        "event": "damage",
+        "anyOf": [
+          {
+            "toPlayer": "you"
+          },
+          {
+            "toCard": {
+              "types": [
+                "Creature"
+              ],
+              "controller": "you"
+            }
+          }
+        ]
+      },
+      "change": {
+        "prevent": 2
+      },
+      "condition": {
+        "compare": {
+          "count": {
+            "countersOn": "self",
+            "counter": "level"
+          },
+          "atLeast": 5
+        }
+      }
+    }
+  ]
+}

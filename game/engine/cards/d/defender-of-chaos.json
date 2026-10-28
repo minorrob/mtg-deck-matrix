@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Defender of Chaos",
+    "oracleId": "e5f04e8a-e9ae-4f00-8ada-f63b3454ed30",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Knight"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Flash\nProtection from white",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flash",
+      "text": "Flash"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "W"
+        ]
+      },
+      "text": "Protection from white"
+    }
+  ]
+}

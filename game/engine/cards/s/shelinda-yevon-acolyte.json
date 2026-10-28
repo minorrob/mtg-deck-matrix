@@ -1,0 +1,82 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shelinda, Yevon Acolyte",
+    "oracleId": "b06c9a4b-f309-45b3-ae5b-0ce3f067a5cb",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Cleric"
+    ],
+    "manaCost": "{G}{W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Lifelink\nWhenever another creature you control enters, put a +1/+1 counter on that creature if its power is less than Shelinda's power. Otherwise, put a +1/+1 counter on Shelinda.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Lifelink",
+      "keyword": "lifelink"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another creature you control enters, put a +1/+1 counter on that creature if its power is less than Shelinda's power. Otherwise, put a +1/+1 counter on Shelinda.",
+      "trigger": {
+        "on": "enters",
+        "who": "another",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "branch",
+          "if": {
+            "compare": {
+              "count": {
+                "powerOf": "that card"
+              },
+              "fewerThan": {
+                "powerOf": "self"
+              }
+            }
+          },
+          "then": [
+            {
+              "effect": "putCounter",
+              "targets": "that card",
+              "counter": "+1/+1",
+              "count": 1
+            }
+          ],
+          "otherwise": [
+            {
+              "effect": "putCounter",
+              "targets": "self",
+              "counter": "+1/+1",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

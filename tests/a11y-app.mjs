@@ -28,7 +28,7 @@ const PROBES = [
   ["the landing's closing panel", `<div class="cm-landing-close">Start building</div>`, ".cm-landing-close"],
   ["the build's current step", `<ol class="cm-build-steps"><li aria-current="step">Commander</li></ol>`, "li"],
 ];
-const THEMES = ["moss-iron", "brass-slate", "felt-cream", "steel-cobalt"];
+const THEMES = ["sapphire-obsidian", "sapphire-obsidian-light", "bronze-basalt", "bronze-basalt-light", "chalk-coal", "chalk-coal-light"];
 
 const {browser, base, stub, close} = await openBrowser({name: "a11y-app", flag: "GEOMETRY_REQUIRED"});
 try {
@@ -65,6 +65,19 @@ try {
       ok(ratio >= 4.5 && !/rgba\([^)]*,\s*0\)|transparent/.test(r.alpha), `${theme}: ${r.label} reads ${ratio.toFixed(2)}:1 (ink ${r.ink}, ground ${r.ground}), short of 4.5:1`);
     }
     ok(read.length === PROBES.length + 1, `${theme}: every rule that sets words on the accent was read, and the skip link (${read.length} of ${PROBES.length + 1})`);
+    const edges = await page.evaluate(() => {
+      const canvas=document.createElement('canvas');canvas.width=canvas.height=1;const ctx=canvas.getContext('2d',{willReadFrequently:true});
+      const rgb=value=>{ctx.clearRect(0,0,1,1);ctx.fillStyle=value;ctx.fillRect(0,0,1,1);return [...ctx.getImageData(0,0,1,1).data].slice(0,3);};
+      return ['.cm-settings-cap input[name=budget]','[data-action=backup]','[data-action=confirm-skips]'].map(selector=>{
+        const el=document.querySelector(selector),st=getComputedStyle(el);let parent=el.parentElement;
+        while(parent&&getComputedStyle(parent).backgroundColor==='rgba(0, 0, 0, 0)')parent=parent.parentElement;
+        return {selector,edge:rgb(st.borderTopColor),fill:rgb(st.backgroundColor),panel:rgb(getComputedStyle(parent).backgroundColor),width:parseFloat(st.borderTopWidth),height:el.getBoundingClientRect().height};
+      });
+    });
+    for(const field of edges){
+      ok(field.width>=1&&contrast(field.edge,field.fill)>=3&&contrast(field.edge,field.panel)>=3,`${theme}: rendered ${field.selector} border distinguishes both its fill and surrounding panel at3:1`);
+      ok(field.height>=(field.selector.includes('input')?42:40),`${theme}: rendered ${field.selector} meets its field/control height`);
+    }
     /* The page's own: the Decks page's primary buttons, as drawn. */
     await page.evaluate(() => {location.hash = "#decks";});
     await page.locator("#matrix-v2 .v-button.primary").first().waitFor({timeout: 20000});
@@ -96,4 +109,4 @@ function contrast(a, b) {
 }
 
 assert.deepEqual(failures, [], `words on the accent fall short at ${failures.length} place(s):\n  ` + failures.join("\n  "));
-console.log(`a11y-app: ${checks} checks passed — every rule that sets words on the accent, and the Decks page's primary buttons, at 4.5:1 in all four themes.`);
+console.log(`a11y-app: ${checks} checks passed — every rule that sets words on the accent, and the Decks page's primary buttons, at 4.5:1 in every skin and register.`);

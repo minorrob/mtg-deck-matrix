@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Josu Vess, Lich Knight",
+    "oracleId": "974a46f9-aa84-4b34-bee5-c635166e5841",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie",
+      "Knight"
+    ],
+    "manaCost": "{2}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Kicker {5}{B} (You may pay an additional {5}{B} as you cast this spell.)\nMenace\nWhen Josu Vess enters, if he was kicked, create eight 2/2 black Zombie Knight creature tokens with menace.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Kicker {5}{B}",
+      "keyword": "kicker",
+      "cost": "{5}{B}"
+    },
+    {
+      "kind": "keyword",
+      "text": "Menace",
+      "keyword": "menace"
+    },
+    {
+      "kind": "triggered",
+      "text": "When Josu Vess enters, if he was kicked, create eight 2/2 black Zombie Knight creature tokens with menace.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 8,
+          "token": {
+            "name": "Zombie Knight",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Zombie",
+              "Knight"
+            ],
+            "colors": [
+              "B"
+            ],
+            "power": 2,
+            "toughness": 2,
+            "keywords": [
+              "Menace"
+            ]
+          }
+        }
+      ],
+      "condition": {
+        "kicked": true
+      }
+    }
+  ]
+}

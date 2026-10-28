@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Savannah Sage",
+    "oracleId": "7e6cfec7-3b54-43db-853a-27c164776a5f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Cat",
+      "Cleric"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, you gain 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 2
+        }
+      ],
+      "text": "When this creature enters, you gain 2 life."
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blight Mamba",
+    "oracleId": "e11a856c-31d3-4f4b-a517-8a5134b88517",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Snake"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Infect (This creature deals damage to creatures in the form of -1/-1 counters and to players in the form of poison counters.)\n{1}{G}: Regenerate this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Infect (This creature deals damage to creatures in the form of -1/-1 counters and to players in the form of poison counters.)",
+      "keyword": "infect"
+    },
+    {
+      "kind": "activated",
+      "text": "{1}{G}: Regenerate this creature.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{G}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "regenerate",
+          "targets": "self"
+        }
+      ]
+    }
+  ]
+}

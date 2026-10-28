@@ -1,0 +1,97 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lathliss, Dragon Queen",
+    "oracleId": "15fef45d-f1a9-49b2-abaa-fe77bb9d1afd",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dragon"
+    ],
+    "manaCost": "{4}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Flying\nWhenever another nontoken Dragon you control enters, create a 5/5 red Dragon creature token with flying.\n{1}{R}: Dragons you control get +1/+0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another nontoken Dragon you control enters, create a 5/5 red Dragon creature token with flying.",
+      "trigger": {
+        "on": "enters",
+        "who": "another",
+        "filter": {
+          "subtypes": [
+            "Dragon"
+          ],
+          "controller": "you",
+          "token": false
+        }
+      },
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "name": "Dragon",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Dragon"
+            ],
+            "colors": [
+              "R"
+            ],
+            "power": 5,
+            "toughness": 5,
+            "keywords": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{1}{R}: Dragons you control get +1/+0 until end of turn.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{R}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "controller": "you",
+            "subtypes": [
+              "Dragon"
+            ]
+          },
+          "power": 1,
+          "toughness": 0,
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

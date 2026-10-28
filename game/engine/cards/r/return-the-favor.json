@@ -1,0 +1,102 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Return the Favor",
+    "oracleId": "30377bd5-99ab-4888-9ea7-e5a069b527e8",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Spree (Choose one or more additional costs.)\n+ {1} — Copy target instant spell, sorcery spell, activated ability, or triggered ability. You may choose new targets for the copy.\n+ {1} — Change the target of target spell or ability with a single target.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Spree",
+      "keyword": "spree"
+    },
+    {
+      "kind": "spell",
+      "text": "+ {1} — Copy target instant spell, sorcery spell, activated ability, or triggered ability. You may choose new targets for the copy.\n+ {1} — Change the target of target spell or ability with a single target.",
+      "effects": [
+        {
+          "effect": "modal",
+          "choose": 1,
+          "chooseUpTo": 2,
+          "modes": [
+            {
+              "text": "+ {1} — Copy target instant spell, sorcery spell, activated ability, or triggered ability. You may choose new targets for the copy.",
+              "cost": "{1}",
+              "targets": [
+                {
+                  "anyOf": [
+                    {
+                      "what": "spell",
+                      "types": [
+                        "Instant"
+                      ]
+                    },
+                    {
+                      "what": "spell",
+                      "types": [
+                        "Sorcery"
+                      ]
+                    },
+                    {
+                      "what": "ability"
+                    }
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "copySpell",
+                  "stack": {
+                    "target": 0
+                  },
+                  "newTargets": true
+                }
+              ]
+            },
+            {
+              "text": "+ {1} — Change the target of target spell or ability with a single target.",
+              "cost": "{1}",
+              "targets": [
+                {
+                  "anyOf": [
+                    {
+                      "what": "spell",
+                      "singleTarget": true
+                    },
+                    {
+                      "what": "ability",
+                      "singleTarget": true
+                    }
+                  ]
+                }
+              ],
+              "effects": [
+                {
+                  "effect": "changeTargets",
+                  "stack": {
+                    "target": 0
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

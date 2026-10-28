@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Crimson Operative",
+    "oracleId": "d8863742-6c1c-415a-ad27-7def6d119c6a",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Villain"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)\nWhen this creature enters, exile the top card of your library. Until the end of your next turn, you may play that card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "prowess",
+      "text": "Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "fromTop": 1,
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "mayPlay",
+          "targets": "remembered",
+          "until": "your-next-end"
+        }
+      ],
+      "text": "When this creature enters, exile the top card of your library. Until the end of your next turn, you may play that card."
+    }
+  ]
+}

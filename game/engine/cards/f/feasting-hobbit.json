@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Feasting Hobbit",
+    "oracleId": "cca33482-0bc5-4fe4-89dc-ba33b2e93831",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Halfling",
+      "Citizen"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Devour Food 3 (As this creature enters, you may sacrifice any number of Foods. It enters with three times that many +1/+1 counters on it.)\nCreatures with power less than this creature's power can't block it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "devour",
+      "amount": 3,
+      "of": {
+        "subtypes": [
+          "Food"
+        ]
+      },
+      "text": "Devour Food 3"
+    },
+    {
+      "kind": "static",
+      "text": "Creatures with power less than this creature's power can't block it.",
+      "rule": "cant-be-blocked-by",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "byPowerBelowSource": true
+    }
+  ]
+}

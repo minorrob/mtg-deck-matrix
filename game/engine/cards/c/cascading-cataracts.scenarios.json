@@ -1,0 +1,98 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Cascading Cataracts",
+  "scenarios": [
+    {
+      "name": "{5}, {T}: five mana in any combination of colors",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cascading Cataracts",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Cascading Cataracts",
+          "mana": {
+            "R": 3,
+            "G": 2
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "R": 3,
+            "G": 2,
+            "C": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "{C} without the five",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cascading Cataracts"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Cascading Cataracts"
+              },
+              "count": 1,
+              "mana": [
+                {
+                  "C": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Cascading Cataracts"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        }
+      ]
+    }
+  ]
+}

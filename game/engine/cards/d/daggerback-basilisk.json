@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Daggerback Basilisk",
+    "oracleId": "ea4d30c7-7c39-46d5-9b71-a7ebc3e219a1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Basilisk"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Deathtouch (Any amount of damage this deals to a creature is enough to destroy it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "deathtouch",
+      "text": "Deathtouch (Any amount of damage this deals to a creature is enough to destroy it.)"
+    }
+  ]
+}

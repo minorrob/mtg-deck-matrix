@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Force of Virtue",
+    "oracleId": "4262893c-8cbe-4854-9762-b3b6b75c0e35",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "If it's not your turn, you may exile a white card from your hand rather than pay this spell's mana cost.\nFlash\nCreatures you control get +1/+1.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "alternative-cost",
+      "affects": {
+        "what": "card",
+        "self": true
+      },
+      "cost": [
+        {
+          "atom": "exileFromHand",
+          "selector": {
+            "colors": [
+              "W"
+            ]
+          }
+        }
+      ],
+      "condition": {
+        "notYourTurn": true
+      },
+      "text": "If it's not your turn, you may exile a white card from your hand rather than pay this spell's mana cost."
+    },
+    {
+      "kind": "keyword",
+      "keyword": "flash",
+      "text": "Flash"
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      },
+      "sublayer": "c",
+      "text": "Creatures you control get +1/+1."
+    }
+  ]
+}

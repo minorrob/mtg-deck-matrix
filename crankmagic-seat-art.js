@@ -18,7 +18,7 @@
   /* 2b's status pill: a dot in the state's color and one word for it, at the end of the label
      bar. The words are the wireframe's -- Ready, Pending deck, Invite sent -- so the table
      says the same thing the design says. */
-  const STATE_WORD = {empty: 'Open', invited: 'Invite sent', pending: 'Pending', deck: 'Pending deck', ready: 'Ready', error: 'Blocked'};
+  const STATE_WORD = {empty: 'Open', invited: 'Invite sent', pending: 'Pending', deck: 'Deck chosen', ready: 'Ready', error: 'Blocked'};
   function statusPill(state, ready, check) {
     const word = (check && !check.ok) ? 'Blocked' : (STATE_WORD[state] || 'Open');
     return `<span class="cm-seat-pill" data-state="${e(state)}"><i aria-hidden="true"></i>${e(word)}</span>`;

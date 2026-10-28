@@ -1,0 +1,63 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bard, King of Dale",
+    "oracleId": "d05db2c1-a19a-4803-8e8a-fa2f9b798181",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Noble",
+      "Archer"
+    ],
+    "manaCost": "{4}{W}{U}",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 5
+  },
+  "oracleText": "Reach, vigilance\nIf you would draw a card except the first one you draw in each of your draw steps, draw two cards instead.\nIf one or more tokens would be created under your control, twice that many of those tokens are created instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "reach",
+      "text": "Reach"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "vigilance",
+      "text": "vigilance"
+    },
+    {
+      "kind": "static",
+      "rule": "draws-more",
+      "affects": {
+        "what": "player",
+        "who": "you"
+      },
+      "count": 2,
+      "exceptFirstInDrawStep": true,
+      "text": "If you would draw a card except the first one you draw in each of your draw steps, draw two cards instead."
+    },
+    {
+      "kind": "static",
+      "rule": "more-tokens",
+      "affects": {
+        "who": "you"
+      },
+      "times": 2,
+      "text": "If one or more tokens would be created under your control, twice that many of those tokens are created instead."
+    }
+  ]
+}

@@ -191,7 +191,8 @@ export async function geometryPass({browser, base, widths = WIDTHS, pages = PAGE
            belongs in the report with its width, not as a thrown timeout that hides every width
            after it. */
         await page.locator(".cm-rail-menu").first().click({timeout: 8000});
-        await page.locator('[data-action="tour"]').first().click({timeout: 8000});
+        await page.locator('[data-action="menu-help"]').first().click({timeout: 8000});
+        await page.locator('#cm-dialog [data-action="tour"]').first().click({timeout: 8000});
         await page.locator("#cm-dialog[open]").waitFor({timeout: 10000});
         const dialog = await page.evaluate(() => { const d = document.querySelector("#cm-dialog"); return {sideways: d.scrollWidth - d.clientWidth, top: d.scrollTop}; });
         if (dialog.sideways > 1) fail(`at ${width}px: the dialog scrolls sideways by ${dialog.sideways}px with nothing to scroll`);

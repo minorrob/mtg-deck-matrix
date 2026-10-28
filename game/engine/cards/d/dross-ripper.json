@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dross Ripper",
+    "oracleId": "bf3b7489-e9d6-4b3c-9fb8-3bb727584db9",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Dog"
+    ],
+    "manaCost": "{4}",
+    "colors": [],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "{2}{B}: This creature gets +1/+1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{B}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": 1
+        }
+      ],
+      "text": "{2}{B}: This creature gets +1/+1 until end of turn."
+    }
+  ]
+}

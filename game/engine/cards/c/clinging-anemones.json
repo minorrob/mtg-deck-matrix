@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Clinging Anemones",
+    "oracleId": "7058e7c3-b704-47f6-85f8-ee584f76a1fe",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Jellyfish"
+    ],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 4
+  },
+  "oracleText": "Defender\nEvolve (Whenever a creature you control enters, if that creature has greater power or toughness than this creature, put a +1/+1 counter on this creature.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "defender",
+      "text": "Defender"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "evolve",
+      "text": "Evolve (Whenever a creature you control enters, if that creature has greater power or toughness than this creature, put a +1/+1 counter on this creature.)"
+    }
+  ]
+}

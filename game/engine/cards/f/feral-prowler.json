@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Feral Prowler",
+    "oracleId": "5bebba2d-867f-4ed1-a308-904fac32c8b6",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Cat"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "When this creature dies, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "dies"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "text": "When this creature dies, draw a card."
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Nourish",
+    "oracleId": "9d5e82d3-79ac-4dbe-80e8-1db6dd6c8767",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You gain 6 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 6
+        }
+      ],
+      "text": "You gain 6 life."
+    }
+  ]
+}

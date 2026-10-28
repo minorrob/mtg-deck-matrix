@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sauroform Hybrid",
+    "oracleId": "559c9949-faaf-41bc-9349-b6738b4763a2",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Lizard",
+      "Warrior"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "{4}{G}{G}: Adapt 4. (If this creature has no +1/+1 counters on it, put four +1/+1 counters on it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}{G}{G}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 4,
+          "condition": {
+            "present": {
+              "self": true,
+              "countersAtLeast": {
+                "counter": "+1/+1",
+                "count": 1
+              }
+            },
+            "atMost": 0
+          }
+        }
+      ],
+      "text": "{4}{G}{G}: Adapt 4. (If this creature has no +1/+1 counters on it, put four +1/+1 counters on it.)"
+    }
+  ]
+}

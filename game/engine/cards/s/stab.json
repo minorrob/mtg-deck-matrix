@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Stab",
+    "oracleId": "b4ee6843-bb79-4665-9763-83f656863dc5",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature gets -2/-2 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": -2,
+          "toughness": -2
+        }
+      ],
+      "text": "Target creature gets -2/-2 until end of turn."
+    }
+  ]
+}

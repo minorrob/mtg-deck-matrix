@@ -47,7 +47,7 @@ async function session(viewport, tag) {
   return {context, page, errors, shot};
 }
 async function restore(page) {
-  await page.getByRole("button", {name: "Menu", exact: true}).click();
+  await page.evaluate(() => {location.hash = "#settings";}); await page.getByRole("heading", {name: "Settings", level: 1}).waitFor();
   await page.getByRole("button", {name: "Restore from a backup file", exact: true}).click();
   await page.getByLabel("CrankMagic JSON backup").setInputFiles(BACKUP);
   await page.getByRole("button", {name: "Validate backup", exact: true}).click();

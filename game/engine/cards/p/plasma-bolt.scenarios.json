@@ -16,7 +16,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -158,7 +158,7 @@
           "zone": "hand",
           "cards": [
             "Plasma Bolt",
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {
@@ -174,7 +174,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "card": "Bear"
@@ -355,7 +355,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Shock",
+            "Smoke Shock",
             "Plasma Bolt"
           ]
         },
@@ -372,7 +372,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "card": "Bear"

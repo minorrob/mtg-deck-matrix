@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dalkovan Packbeasts",
+    "oracleId": "cdd1a043-bd47-4197-be26-e2f7d3f1d209",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Ox"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 0,
+    "toughness": 4
+  },
+  "oracleText": "Vigilance\nMobilize 3 (Whenever this creature attacks, create three tapped and attacking 1/1 red Warrior creature tokens. Sacrifice them at the beginning of the next end step.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "vigilance",
+      "text": "Vigilance"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "mobilize",
+      "amount": 3,
+      "text": "Mobilize 3 (Whenever this creature attacks, create three tapped and attacking 1/1 red Warrior creature tokens. Sacrifice them at the beginning of the next end step.)"
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Green Sun's Zenith",
+    "oracleId": "0d96b60b-a060-48ee-bb83-93f1c4a10669",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{X}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Search your library for a green creature card with mana value X or less, put it onto the battlefield, then shuffle. Shuffle Green Sun's Zenith into its owner's library.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Search your library for a green creature card with mana value X or less, put it onto the battlefield, then shuffle. Shuffle Green Sun's Zenith into its owner's library.",
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "colors": [
+              "G"
+            ],
+            "manaValue": {
+              "max": "X"
+            }
+          },
+          "to": "battlefield",
+          "shuffle": true
+        },
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "to": "library",
+          "shuffle": true
+        }
+      ]
+    }
+  ]
+}

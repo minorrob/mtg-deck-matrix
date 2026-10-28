@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Plated Spider",
+    "oracleId": "15163c99-9388-4225-b707-4e057b2adfbc",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spider"
+    ],
+    "manaCost": "{4}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Reach (This creature can block creatures with flying.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "reach",
+      "text": "Reach (This creature can block creatures with flying.)"
+    }
+  ]
+}

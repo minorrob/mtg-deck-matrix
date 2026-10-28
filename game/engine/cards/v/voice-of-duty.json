@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Voice of Duty",
+    "oracleId": "b5d5b9c9-accc-4dbe-aaf4-c806f3e1c61c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{3}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Flying, protection from green",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "G"
+        ]
+      },
+      "text": "protection from green"
+    }
+  ]
+}

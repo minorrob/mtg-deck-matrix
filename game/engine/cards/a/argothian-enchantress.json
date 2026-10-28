@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Argothian Enchantress",
+    "oracleId": "11f17f85-ca97-4551-838f-7cb32f0e5f10",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Druid"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 0,
+    "toughness": 1
+  },
+  "oracleText": "Shroud (This creature can't be the target of spells or abilities.)\nWhenever you cast an enchantment spell, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Shroud (This creature can't be the target of spells or abilities.)",
+      "keyword": "shroud"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you cast an enchantment spell, draw a card.",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "types": [
+            "Enchantment"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

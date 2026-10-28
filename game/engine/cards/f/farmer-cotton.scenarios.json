@@ -1,0 +1,116 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Farmer Cotton",
+  "scenarios": [
+    {
+      "name": "X=2: two Halflings and two Foods",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Farmer Cotton"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Plains",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Farmer Cotton",
+          "x": 2
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Farmer Cotton",
+            "Halfling",
+            "Halfling",
+            "Food",
+            "Food",
+            "Forest",
+            "Plains",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "X=0: nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Farmer Cotton"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Farmer Cotton",
+          "x": 0
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Farmer Cotton",
+            "Forest",
+            "Plains"
+          ]
+        }
+      ]
+    }
+  ]
+}

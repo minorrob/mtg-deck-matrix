@@ -1,0 +1,606 @@
+{
+ "written": [
+  {
+   "item": 1,
+   "sentence": "This creature attacks each combat if able.",
+   "cardsSharing": 25,
+   "card": "Ashen Monstrosity",
+   "scenarios": 3
+  },
+  {
+   "item": 3,
+   "sentence": "{R}: This creature gets +1/+0 until end of turn.",
+   "cardsSharing": 23,
+   "card": "Angelfire Crusader",
+   "scenarios": 2
+  },
+  {
+   "item": 4,
+   "sentence": "This creature can block only creatures with flying.",
+   "cardsSharing": 20,
+   "card": "Battlefield Percher",
+   "scenarios": 3
+  },
+  {
+   "item": 5,
+   "sentence": "Shroud (This creature can't be the target of spells or abilities.)",
+   "cardsSharing": 18,
+   "card": "Argothian Enchantress",
+   "scenarios": 3
+  },
+  {
+   "item": 6,
+   "sentence": "When this creature enters, it explores. (Reveal the top card of your library. Put that card into your hand if it's a land. Otherwise, put a +1/+1 counter on this creature, then put the card back or put it into your graveyard.)",
+   "cardsSharing": 15,
+   "card": "Brazen Buccaneers",
+   "scenarios": 4
+  },
+  {
+   "item": 7,
+   "sentence": "{B}: Regenerate this creature.",
+   "cardsSharing": 15,
+   "card": "Darkling Stalker",
+   "scenarios": 3
+  },
+  {
+   "item": 9,
+   "sentence": "When this creature becomes the target of a spell or ability, sacrifice it.",
+   "cardsSharing": 13,
+   "card": "Frost Walker",
+   "scenarios": 3
+  },
+  {
+   "item": 10,
+   "sentence": "When this creature enters, put a +1/+1 counter on target creature.",
+   "cardsSharing": 12,
+   "card": "Backup Agent",
+   "scenarios": 3
+  },
+  {
+   "item": 13,
+   "sentence": "{4}, {T}: Investigate. (Create a Clue token. It's an artifact with \"{2}, Sacrifice this token: Draw a card.\")",
+   "cardsSharing": 11,
+   "card": "Ballroom",
+   "scenarios": 4
+  },
+  {
+   "item": 17,
+   "sentence": "{W}, {T}: Tap target creature.",
+   "cardsSharing": 10,
+   "card": "Akroan Mastiff",
+   "scenarios": 3
+  },
+  {
+   "item": 18,
+   "sentence": "When this creature enters, draw a card, then discard a card.",
+   "cardsSharing": 10,
+   "card": "Bellowing Crier",
+   "scenarios": 2
+  },
+  {
+   "item": 21,
+   "sentence": "Return target permanent to its owner's hand.",
+   "cardsSharing": 9,
+   "card": "Aether Helix",
+   "scenarios": 3
+  },
+  {
+   "item": 23,
+   "sentence": "{W}: This creature gets +0/+1 until end of turn.",
+   "cardsSharing": 9,
+   "card": "Aven Flock",
+   "scenarios": 2
+  },
+  {
+   "item": 24,
+   "sentence": "Whenever this creature or another Ally you control enters, you may put a +1/+1 counter on this creature.",
+   "cardsSharing": 9,
+   "card": "Hada Freeblade",
+   "scenarios": 4
+  },
+  {
+   "item": 25,
+   "sentence": "As an additional cost to cast this spell, sacrifice a creature.",
+   "cardsSharing": 9,
+   "card": "Demon of Catastrophes",
+   "scenarios": 3
+  },
+  {
+   "item": 26,
+   "sentence": "Undying (When this creature dies, if it had no +1/+1 counters on it, return it to the battlefield under its owner's control with a +1/+1 counter on it.)",
+   "cardsSharing": 9,
+   "card": "Butcher Ghoul",
+   "scenarios": 2
+  },
+  {
+   "item": 29,
+   "sentence": "{1}{G}: Regenerate this creature.",
+   "cardsSharing": 8,
+   "card": "Blight Mamba",
+   "scenarios": 4
+  },
+  {
+   "item": 30,
+   "sentence": "Whenever this creature attacks, it gets +2/+0 until end of turn.",
+   "cardsSharing": 8,
+   "card": "Borderland Marauder",
+   "scenarios": 3
+  },
+  {
+   "item": 31,
+   "sentence": "Return target creature card from your graveyard to your hand.",
+   "cardsSharing": 8,
+   "card": "Disentomb",
+   "scenarios": 2
+  },
+  {
+   "item": 33,
+   "sentence": "Put target creature on top of its owner's library.",
+   "cardsSharing": 7,
+   "card": "Anchor to the Aether",
+   "scenarios": 3
+  },
+  {
+   "item": 34,
+   "sentence": "If a creature dealt damage this way would die this turn, exile it instead.",
+   "cardsSharing": 7,
+   "card": "Annihilating Fire",
+   "scenarios": 5
+  },
+  {
+   "item": 35,
+   "sentence": "If that spell is countered this way, exile it instead of putting it into its owner's graveyard.",
+   "cardsSharing": 7,
+   "card": "Assert Authority",
+   "scenarios": 2
+  },
+  {
+   "item": 36,
+   "sentence": "Whenever you draw your second card each turn, put a +1/+1 counter on this creature.",
+   "cardsSharing": 7,
+   "card": "Atlantean Cavalry",
+   "scenarios": 4
+  },
+  {
+   "item": 37,
+   "sentence": "Investigate. (Create a Clue token. It's an artifact with \"{2}, Sacrifice this token: Draw a card.\")",
+   "cardsSharing": 7,
+   "card": "Auspicious Arrival",
+   "scenarios": 3
+  },
+  {
+   "item": 38,
+   "sentence": "Create a Food token. (It's an artifact with \"{2}, {T}, Sacrifice this token: You gain 3 life.\")",
+   "cardsSharing": 7,
+   "card": "Bake into a Pie",
+   "scenarios": 3
+  },
+  {
+   "item": 39,
+   "sentence": "Draw a card at the beginning of the next turn's upkeep.",
+   "cardsSharing": 7,
+   "card": "Blessed Wine",
+   "scenarios": 2
+  },
+  {
+   "item": 40,
+   "sentence": "{G}: Regenerate this creature.",
+   "cardsSharing": 7,
+   "card": "Charging Troll",
+   "scenarios": 3
+  },
+  {
+   "item": 41,
+   "sentence": "Whenever this creature deals combat damage to a player, put a +1/+1 counter on it.",
+   "cardsSharing": 7,
+   "card": "Erdwal Ripper",
+   "scenarios": 2
+  },
+  {
+   "item": 42,
+   "sentence": "Persist (When this creature dies, if it had no -1/-1 counters on it, return it to the battlefield under its owner's control with a -1/-1 counter on it.)",
+   "cardsSharing": 7,
+   "card": "Gravelgill Axeshark",
+   "scenarios": 2
+  },
+  {
+   "item": 43,
+   "sentence": "When this creature enters, destroy target artifact.",
+   "cardsSharing": 7,
+   "card": "Keldon Vandals",
+   "scenarios": 3
+  },
+  {
+   "item": 44,
+   "sentence": "When this creature enters, it connives. (Draw a card, then discard a card. If you discarded a nonland card, put a +1/+1 counter on this creature.)",
+   "cardsSharing": 6,
+   "card": "A.I.M. Scientists",
+   "scenarios": 3
+  },
+  {
+   "item": 45,
+   "sentence": "When this creature enters, return target instant or sorcery card from your graveyard to your hand.",
+   "cardsSharing": 6,
+   "card": "Archaeomancer",
+   "scenarios": 4
+  },
+  {
+   "item": 47,
+   "sentence": "Bloodthirst 1 (If an opponent was dealt damage this turn, this creature enters with a +1/+1 counter on it.)",
+   "cardsSharing": 6,
+   "card": "Blood Ogre",
+   "scenarios": 3
+  },
+  {
+   "item": 50,
+   "sentence": "When this creature enters, target creature can't block this turn.",
+   "cardsSharing": 6,
+   "card": "Crossway Vampire",
+   "scenarios": 3
+  },
+  {
+   "item": 52,
+   "sentence": "{R}: This creature gets +1/-1 until end of turn.",
+   "cardsSharing": 6,
+   "card": "Flowstone Crusher",
+   "scenarios": 2
+  },
+  {
+   "item": 53,
+   "sentence": "When this creature dies, put a +1/+1 counter on target creature you control.",
+   "cardsSharing": 6,
+   "card": "Goblin Assault Team",
+   "scenarios": 3
+  },
+  {
+   "item": 54,
+   "sentence": "Whenever this creature deals combat damage to a player, draw a card.",
+   "cardsSharing": 6,
+   "card": "Jhessian Thief",
+   "scenarios": 3
+  },
+  {
+   "item": 56,
+   "sentence": "Destroy target artifact, enchantment, or creature with flying.",
+   "cardsSharing": 5,
+   "card": "Airship Crash",
+   "scenarios": 3
+  },
+  {
+   "item": 57,
+   "sentence": "Heroic — Whenever you cast a spell that targets this creature, put a +1/+1 counter on this creature.",
+   "cardsSharing": 5,
+   "card": "Akroan Skyguard",
+   "scenarios": 3
+  },
+  {
+   "item": 59,
+   "sentence": "Whenever this creature attacks, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+   "cardsSharing": 5,
+   "card": "Appendage Amalgam",
+   "scenarios": 3
+  },
+  {
+   "item": 62,
+   "sentence": "Metalcraft — This creature gets +2/+2 as long as you control three or more artifacts.",
+   "cardsSharing": 5,
+   "card": "Ardent Recruit",
+   "scenarios": 3
+  },
+  {
+   "item": 63,
+   "sentence": "Forestcycling {2} ({2}, Discard this card: Search your library for a Forest card, reveal it, put it into your hand, then shuffle.)",
+   "cardsSharing": 5,
+   "card": "Balamb T-Rexaur",
+   "scenarios": 3
+  },
+  {
+   "item": 64,
+   "sentence": "{W}: This creature gains vigilance until end of turn.",
+   "cardsSharing": 5,
+   "card": "Bastion Mastodon",
+   "scenarios": 2
+  },
+  {
+   "item": 68,
+   "sentence": "Destroy target attacking creature.",
+   "cardsSharing": 5,
+   "card": "Bright Reprisal",
+   "scenarios": 2
+  },
+  {
+   "item": 70,
+   "sentence": "When this creature enters, you may search your library for a basic land card, reveal it, then shuffle and put that card on top.",
+   "cardsSharing": 5,
+   "card": "Campus Guide",
+   "scenarios": 2
+  },
+  {
+   "item": 71,
+   "sentence": "Cycling {U} ({U}, Discard this card: Draw a card.)",
+   "cardsSharing": 5,
+   "card": "Lonely Sandbar",
+   "scenarios": 3
+  },
+  {
+   "item": 72,
+   "sentence": "Creatures you control get +1/+1 until end of turn.",
+   "cardsSharing": 5,
+   "card": "Charge",
+   "scenarios": 2
+  },
+  {
+   "item": 74,
+   "sentence": "You control enchanted creature.",
+   "cardsSharing": 5,
+   "card": "Control Magic",
+   "scenarios": 3
+  },
+  {
+   "item": 75,
+   "sentence": "Creatures you control get +2/+1 until end of turn.",
+   "cardsSharing": 5,
+   "card": "Coordinated Charge",
+   "scenarios": 2
+  },
+  {
+   "item": 76,
+   "sentence": "{T}: Target creature with power 2 or less can't be blocked this turn.",
+   "cardsSharing": 5,
+   "card": "Crafty Pathmage",
+   "scenarios": 3
+  },
+  {
+   "item": 77,
+   "sentence": "When this land enters, sacrifice it unless you return a non-Lair land you control to its owner's hand.",
+   "cardsSharing": 5,
+   "card": "Crosis's Catacombs",
+   "scenarios": 4
+  },
+  {
+   "item": 78,
+   "sentence": "Activate only if this land entered this turn or if you control a basic land.",
+   "cardsSharing": 5,
+   "card": "Dark Fortress",
+   "scenarios": 3
+  },
+  {
+   "item": 79,
+   "sentence": "Destroy target nonblack creature.",
+   "cardsSharing": 5,
+   "card": "Dark Offering",
+   "scenarios": 2
+  },
+  {
+   "item": 80,
+   "sentence": "When this creature enters, target creature gets +2/+0 until end of turn.",
+   "cardsSharing": 5,
+   "card": "Daybreak Charger",
+   "scenarios": 2
+  },
+  {
+   "item": 82,
+   "sentence": "{U}: This creature gains flying until end of turn.",
+   "cardsSharing": 5,
+   "card": "Dukhara Peafowl",
+   "scenarios": 2
+  },
+  {
+   "item": 84,
+   "sentence": "When this creature dies, return it to its owner's hand.",
+   "cardsSharing": 5,
+   "card": "Endless Cockroaches",
+   "scenarios": 2
+  },
+  {
+   "item": 87,
+   "sentence": "At the beginning of your upkeep, this creature deals 1 damage to you.",
+   "cardsSharing": 5,
+   "card": "Fledgling Djinn",
+   "scenarios": 1
+  },
+  {
+   "item": 88,
+   "sentence": "Raid — This creature enters with a +1/+1 counter on it if you attacked this turn.",
+   "cardsSharing": 5,
+   "card": "Goblin Boarders",
+   "scenarios": 3
+  },
+  {
+   "item": 89,
+   "sentence": "Target creature deals damage to itself equal to its power.",
+   "cardsSharing": 5,
+   "card": "Inner Struggle",
+   "scenarios": 3
+  },
+  {
+   "item": 91,
+   "sentence": "{4}, {T}: Surveil 1. (Look at the top card of your library. You may put it into your graveyard.)",
+   "cardsSharing": 5,
+   "card": "Ominous Asylum",
+   "scenarios": 3
+  }
+ ],
+ "stopped": [
+  {
+   "item": 2,
+   "sentence": "Swampwalk (This creature can't be blocked as long as defending player controls a Swamp.)",
+   "cardsSharing": 23,
+   "needs": "Swampwalk is not a built landwalk: keywords/combat.mjs LANDWALKS and the evasion list hold only Forestwalk and Islandwalk (plus Nonbasic Landwalk); add Swampwalk -> \"Swamp\" there (CR 702.14)."
+  },
+  {
+   "item": 8,
+   "sentence": "Mountainwalk (This creature can't be blocked as long as defending player controls a Mountain.)",
+   "cardsSharing": 13,
+   "needs": "Mountainwalk keyword: keywords/combat.mjs LANDWALKS has only Forestwalk and Islandwalk (CR 702.14c); add Mountainwalk: \"Mountain\" there, to KEYWORD_FAMILIES.evasion and vocabulary.mjs"
+  },
+  {
+   "item": 11,
+   "sentence": "Horsemanship (This creature can't be blocked except by creatures with horsemanship.)",
+   "cardsSharing": 12,
+   "needs": "The horsemanship keyword (CR 702.31): not in vocabulary.mjs KEYWORDS, and no blocking rule for it in keywords/combat.mjs (canBlockAttacker's evasion list)."
+  },
+  {
+   "item": 12,
+   "sentence": "Wither (This deals damage to creatures in the form of -1/-1 counters.)",
+   "cardsSharing": 12,
+   "needs": "Wither keyword (CR 702.80): damage to a creature from a source with wither becomes -1/-1 counters; script/effects/resources.mjs dealDamage and rules/combat.mjs handle only Infect (`infects`), nothing reads Wither"
+  },
+  {
+   "item": 14,
+   "sentence": "Unleash (You may have this creature enter with a +1/+1 counter on it. It can't block as long as it has a +1/+1 counter on it.)",
+   "cardsSharing": 11,
+   "needs": "An unleash keyword: an optional enters-with-a-+1/+1-counter question (riot's ask in rules/entering.mjs without the haste branch; entersWithCounters has no \"you may\") plus a can't-block static conditioned on the creature having a +1/+1 counter (CR 702.98)."
+  },
+  {
+   "item": 15,
+   "sentence": "Myriad (Whenever this creature attacks, for each opponent other than defending player, you may create a token copy that's tapped and attacking that player or a planeswalker they control. Exile the tokens at end of combat.)",
+   "cardsSharing": 11,
+   "needs": "The myriad keyword (CR 702.116): an attack trigger creating, for each other opponent, a tapped-and-attacking token copy aimed at that player or their planeswalker, exiled at end of combat. Nothing in cards/index.mjs or the vocabulary builds it."
+  },
+  {
+   "item": 16,
+   "sentence": "This land enters tapped unless a player has 13 or less life.",
+   "cardsSharing": 10,
+   "needs": "a player-life clause in an enters replacement's `unless`: rules/replacement.mjs unlessHolds reads only controls/opponents/opponentsControl, and `condition` is skipped for a self arrival (holder null); needs e.g. unless {players: {lifeAtMost: 13}} or a condition evaluated for who:self"
+  },
+  {
+   "item": 19,
+   "sentence": "This land doesn't untap during your next untap step.",
+   "cardsSharing": 10,
+   "needs": "An effect primitive 'this permanent doesn't untap during its controller's next untap step' usable after addMana in a mana ability (only the exert COST atom sets object.exerted, rules/actions.mjs). And since the sentence follows a different '{T}: Add {X} or {Y}.' on each land, the compiler would also have to attach a learned sentence to the preceding mana ability; as one combined ability it would teach only lands with the same color pair."
+  },
+  {
+   "item": 20,
+   "sentence": "This creature can block an additional creature each combat.",
+   "cardsSharing": 10,
+   "needs": "a static letting a creature block more than one attacker (CR 509.1a): rules/combat.mjs blockers.check refuses any creature picked twice, and damage assignment for one blocker of several attackers is unbuilt"
+  },
+  {
+   "item": 22,
+   "sentence": "This creature can't attack unless defending player controls an Island.",
+   "cardsSharing": 9,
+   "needs": "A cant-attack `unless` condition about the defending player: rules/statics.mjs cantAttack evaluates `unless` with only the holder's controller in context (no defender), and no condition names \"defending player controls\" (CR 508.1c)."
+  },
+  {
+   "item": 27,
+   "sentence": "{T}: Prevent the next 1 damage that would be dealt to any target this turn.",
+   "cardsSharing": 8,
+   "needs": "A prevention shield of N damage that depletes (CR 615.7): effectUntil prevent-damage's `next` shield prevents ALL of the next damage (rules/replacement.mjs shieldAbility, change.prevent: true), with no amount, and none for a targeted player or creature 'any target'."
+  },
+  {
+   "item": 28,
+   "sentence": "Banding (Any creatures with banding, and up to one without, can attack in a band. Bands are blocked as a group. If any creatures with banding you control are blocking or being blocked by a creature, you divide that creature's combat damage, not its controller, among any of the creatures it's being blocked by or is blocking.)",
+   "cardsSharing": 8,
+   "needs": "Banding keyword (CR 702.22): attacking in bands, blocking of a band as a group, and the banding player's division of combat damage; nothing in the engine"
+  },
+  {
+   "item": 32,
+   "sentence": "Renown 1 (When this creature deals combat damage to a player, if it isn't renowned, put a +1/+1 counter on it and it becomes renowned.)",
+   "cardsSharing": 7,
+   "needs": "Renown keyword (CR 702.112) and the renowned designation (a condition `renowned: false` and an effect making it renowned); neither exists in keywords/designations.mjs, cards/index.mjs or script/condition.mjs"
+  },
+  {
+   "item": 46,
+   "sentence": "Enlist (As this creature attacks, you may tap a nonattacking creature you control without summoning sickness. When you do, add its power to this creature's until end of turn.)",
+   "cardsSharing": 6,
+   "needs": "An enlist keyword: an optional cost chosen as attackers are declared (tap a nonattacking, non-summoning-sick creature) and the reflexive trigger adding its power (CR 702.154); nothing in rules/combat.mjs offers an \"as this creature attacks\" choice."
+  },
+  {
+   "item": 48,
+   "sentence": "This creature can't attack or block alone.",
+   "cardsSharing": 6,
+   "needs": "a static restriction on the whole declaration (CR 506.5, 508.1c, 509.1b): rules/combat.mjs checks no 'can't attack/block alone' rule for the attackers or blockers declared"
+  },
+  {
+   "item": 49,
+   "sentence": "Retrace (You may cast this card from your graveyard by discarding a land card in addition to paying its other costs.)",
+   "cardsSharing": 6,
+   "needs": "A card's own retrace (CR 702.81a): rule 'cast-self-from' (rules/actions.mjs playableElsewhere) carries no additionalCost, and 'play-from' statics with additionalCost (Six) are read only from permanents on the battlefield (allPlayPermissions). Needs a retrace keyword or cast-self-from with an additionalCost (discard a land card)."
+  },
+  {
+   "item": 51,
+   "sentence": "You may have this creature assign its combat damage as though it weren't blocked.",
+   "cardsSharing": 6,
+   "needs": "A static rule letting a blocked attacker assign its combat damage to the player or planeswalker it attacks (CR 510.1c-d option); rules/combat.mjs and rules/statics.mjs have none."
+  },
+  {
+   "item": 55,
+   "sentence": "Intimidate (This creature can't be blocked except by artifact creatures and/or creatures that share a color with it.)",
+   "cardsSharing": 5,
+   "needs": "The intimidate keyword (CR 702.13) in keywords/combat.mjs; a cant-be-blocked-by static cannot stand in, as the selector grammar has no negated sharesColor (only sharesColor: 'self')."
+  },
+  {
+   "item": 58,
+   "sentence": "Buyback {3} (You may pay an additional {3} as you cast this spell. If you do, put this card into your hand as it resolves.)",
+   "cardsSharing": 5,
+   "needs": "A buyback keyword: an optional additional cost and the resolved spell going to its owner's hand instead of the graveyard (CR 702.27); no buyback anywhere in game/engine."
+  },
+  {
+   "item": 60,
+   "sentence": "Activate only during your turn, before attackers are declared.",
+   "cardsSharing": 5,
+   "needs": "an activation condition for 'during your turn, before the declare attackers step' (CR 602.5b): script/condition.mjs has yourTurn and yourMainPhase but nothing that is true in the beginning phase, precombat main and beginning of combat and false after attackers are declared"
+  },
+  {
+   "item": 61,
+   "sentence": "Learn. (You may reveal a Lesson card you own from outside the game and put it into your hand, or discard a card to draw a card.)",
+   "cardsSharing": 5,
+   "needs": "A learn effect primitive (CR 701.48): fetching a Lesson from outside the game (CR 400.11b, no sideboard model; the same gap that stopped Cunning Wish) or the discard-to-draw alternative. Nothing in game/engine mentions learn."
+  },
+  {
+   "item": 66,
+   "sentence": "All creatures able to block this creature do so.",
+   "cardsSharing": 5,
+   "needs": "A Lure block requirement: every creature able to block this attacker must (CR 509.1c). rules/combat.mjs blockRequirements has only \"must-be-blocked\" (at least one blocker), not a per-blocker requirement."
+  },
+  {
+   "item": 67,
+   "sentence": "Phasing (This phases in or out before you untap during each of your untap steps. While it's phased out, it's treated as though it doesn't exist.)",
+   "cardsSharing": 5,
+   "needs": "The phasing keyword (CR 702.26): the untap step only phases permanents IN (rules/turn.mjs untap, phaseIn); nothing phases out a permanent that has phasing."
+  },
+  {
+   "item": 69,
+   "sentence": "Provoke (Whenever this creature attacks, you may have target creature defending player controls untap and block it if able.)",
+   "cardsSharing": 5,
+   "needs": "A blocking requirement on a named blocker for a named attacker (CR 702.39a, 509.1c: 'target creature blocks this creature this turn if able'). The engine has only 'must-be-blocked' on the attacker (Vinebred Brawler); no provoke keyword."
+  },
+  {
+   "item": 73,
+   "sentence": "Jump-start (You may cast this card from your graveyard by discarding a card in addition to paying its other costs. Then exile this card.)",
+   "cardsSharing": 5,
+   "needs": "A jump-start keyword (CR 702.133a): cast from the graveyard for its mana cost plus a discard (not an alternative cost), then exiled. flashbackCost (rules/actions.mjs) needs a literal cost on the card's own static, and modeling it as flashback would bake one card's mana cost into the template."
+  },
+  {
+   "item": 81,
+   "sentence": "When this creature enters, open an Attraction. (Put the top card of your Attraction deck onto the battlefield.)",
+   "cardsSharing": 5,
+   "needs": "Attractions: an Attraction deck, opening an Attraction, and visiting (Unfinity rules). Nothing in game/engine mentions Attractions."
+  },
+  {
+   "item": 83,
+   "sentence": "Whenever this creature deals damage, you gain that much life.",
+   "cardsSharing": 5,
+   "needs": "A trigger 'this deals damage' to any recipient (player, creature or planeswalker), once per damage event with its total: cards/index.mjs damageDealt only builds to: player/opponent/you (GameEventPlayerDamaged) or damage dealt TO self/creature/enchanted."
+  },
+  {
+   "item": 85,
+   "sentence": "Creatures without flying can't block this turn.",
+   "cardsSharing": 5,
+   "needs": "nonKeywords in the layers' affects matcher (rules/layers.mjs affects(), read by ruleChanged via staticAffects): a live rule-changing effectUntil over 'creatures without flying' silently ignores nonKeywords (Falter's draft let no creature block, a flier included). The fixed-at-resolution selector form would miss creatures that arrive later (CR 611.2c applies only to characteristics). Falter's two files were deleted."
+  },
+  {
+   "item": 86,
+   "sentence": "You may pay {1} and return a basic land you control to its owner's hand rather than pay this spell's mana cost.",
+   "cardsSharing": 5,
+   "needs": "cards/index.mjs (alternative-cost validation, ~line 2021) refuses a printed alternative cost with a returnToHand atom (\"nothing pays yet\") though rules/actions.mjs alternativeCosts already pays it for sneak; allow returnToHand with a selector there. Fieldmist Borderpost was written and its files removed."
+  },
+  {
+   "item": 90,
+   "sentence": "{0}: The next 1 damage that would be dealt to this creature this turn is dealt to target creature you control instead.",
+   "cardsSharing": 5,
+   "needs": "A redirection shield effect: \"the next N damage that would be dealt to X this turn is dealt to target creature instead\" (CR 614.9, 615-style used-up shield). rules/replacement.mjs redirects only \"enchanted\" (Pariah) statics; no effectUntil redirect with an amount."
+  }
+ ]
+}

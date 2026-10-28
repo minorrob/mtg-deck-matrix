@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Grim Tutor",
+    "oracleId": "e62f8d69-a559-4f13-a5c9-5fb750b4af2c",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Search your library for a card, put that card into your hand, then shuffle. You lose 3 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Search your library for a card, put that card into your hand, then shuffle. You lose 3 life.",
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {},
+          "shuffle": true,
+          "to": "hand"
+        },
+        {
+          "effect": "loseLife",
+          "amount": 3
+        }
+      ]
+    }
+  ]
+}

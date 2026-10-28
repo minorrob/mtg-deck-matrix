@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Thought Scour",
+    "oracleId": "83101ba8-a569-4827-8c53-9ca0dfcd59a7",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target player mills two cards.\nDraw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Target player mills two cards.\nDraw a card.",
+      "targets": [
+        {
+          "what": "player"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "mill",
+          "who": {
+            "target": 0
+          },
+          "count": 2
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

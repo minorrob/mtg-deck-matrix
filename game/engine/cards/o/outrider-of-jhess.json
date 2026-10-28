@@ -1,0 +1,32 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Outrider of Jhess",
+    "oracleId": "ccfe72b2-8a9a-4ad6-ab1d-676bb376b0ac",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Knight"
+    ],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Exalted (Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "exalted",
+      "text": "Exalted (Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn.)"
+    }
+  ]
+}

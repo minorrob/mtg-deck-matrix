@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Basalt Gargoyle",
+    "oracleId": "83a38c8d-e2f6-404b-83be-9cfce037d6e2",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Gargoyle"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "Flying\nEcho {2}{R} (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.)\n{R}: This creature gets +0/+1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "echo",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{R}"
+        }
+      ],
+      "text": "Echo {2}{R} (At the beginning of your upkeep, if this came under your control since the beginning of your last upkeep, sacrifice it unless you pay its echo cost.)"
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{R}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 0,
+          "toughness": 1
+        }
+      ],
+      "text": "{R}: This creature gets +0/+1 until end of turn."
+    }
+  ]
+}

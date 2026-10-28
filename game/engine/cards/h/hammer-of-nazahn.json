@@ -1,0 +1,117 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Hammer of Nazahn",
+    "oracleId": "e3955573-3db5-490e-903e-65e0172a9202",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Equipment"
+    ],
+    "manaCost": "{4}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Whenever Hammer of Nazahn or another Equipment you control enters, you may attach that Equipment to target creature you control.\nEquipped creature gets +2/+0 and has indestructible.\nEquip {4}",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever Hammer of Nazahn or another Equipment you control enters, you may attach that Equipment to target creature you control.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Artifact"
+          ],
+          "subtypes": [
+            "Equipment"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "attach",
+          "source": "that card",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ],
+      "optional": true
+    },
+    {
+      "kind": "static",
+      "text": "Equipped creature gets +2/+0 and has indestructible.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "power": 2,
+        "toughness": 0
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Equipped creature gets +2/+0 and has indestructible.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "apply": {
+        "addKeywords": [
+          "Indestructible"
+        ]
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "Equip {4}",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{4}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "attach",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      ]
+    }
+  ]
+}

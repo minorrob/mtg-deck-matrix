@@ -26,9 +26,10 @@ const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1;};
 {
   const easy = seatPilot({seat: 1, cards: () => null, deck: ["Forest"], level: "easy", seed: "s"});
   const normal = seatPilot({seat: 1, cards: () => null, level: "normal"});
+  const hard = seatPilot({seat: 1, cards: () => null, level: "hard"});
   const none = seatPilot({seat: 1, cards: () => null});
-  eq([[easy.id, easy.setting], [normal.id, normal.setting], none.id], [[SCORED_PILOT_ID, "easy"], [SCORED_PILOT_ID, "normal"], HOUSE_PILOT_ID],
-    "a setting makes L1 at it; none, L0");
+  eq([[easy.id, easy.setting], [normal.id, normal.setting], [hard.id, hard.setting], none.id], [[SCORED_PILOT_ID, "easy"], [SCORED_PILOT_ID, "normal"], [SCORED_PILOT_ID, "hard"], HOUSE_PILOT_ID],
+    "a setting makes L1 at it, Hard among them; none, L0");
 }
 
 /* ---- The room keeps the setting with the seat, and hands the pilot its deck and the seed ---- */
@@ -39,7 +40,7 @@ const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1;};
   const room = await startRoom({storage: memoryStorage(), matchId: "levels", seed: "levels-seed", pilot: spy, pod: {seats: [
     {seatId: "rob", name: "Rob", pilot: "human", level: "easy", commander: [], cards: deck("Forest")},
     {seatId: "easy", name: "Easy", pilot: "house", level: "easy", commander: [], cards: deck("Island")},
-    {seatId: "odd", name: "Odd", pilot: "house", level: "hard", commander: [], cards: deck("Swamp")},
+    {seatId: "odd", name: "Odd", pilot: "house", level: "expert", commander: [], cards: deck("Swamp")},
     {seatId: "old", name: "Old", pilot: "house", commander: [], cards: deck("Plains")}]}});
   eq(room.seats.map((s) => [s.seatId, s.level ?? null]), [["rob", null], ["easy", "easy"], ["odd", null], ["old", null]],
     "a house seat keeps easy; a person's seat has no setting, and one the room does not know is none");
@@ -58,15 +59,15 @@ const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1;};
   const random = (n) => {seq += 1; return new Uint8Array(n).map((_, i) => (seq * 31 + i * 7) % 256);};
   const t = tableOn(memoryStorage(), {cards, random});
   const ROB = "rob@example.com", now = Date.parse("2026-10-10T20:00:00Z");
-  const made = await t.create({tableId: "tablelevels", host: ROB, hostName: "Rob", seats: [{kind: "ai", name: "Easy", level: "easy"}, {kind: "ai", name: "Plain"}, {kind: "ai", name: "Odd", level: "hard"}]});
-  eq(made.seats.map((s) => [s.kind, s.level ?? null]), [["human", null], ["ai", "easy"], ["ai", "normal"], ["ai", "normal"]],
-    "the table keeps the host's Easy, and an AI seat without a setting, or with one it does not know, is Normal");
+  const made = await t.create({tableId: "tablelevels", host: ROB, hostName: "Rob", seats: [{kind: "ai", name: "Easy", level: "easy"}, {kind: "ai", name: "Hard", level: "hard"}, {kind: "ai", name: "Odd", level: "expert"}]});
+  eq(made.seats.map((s) => [s.kind, s.level ?? null]), [["human", null], ["ai", "easy"], ["ai", "hard"], ["ai", "normal"]],
+    "the table keeps the host's Easy and Hard, and an AI seat with a setting it does not know is Normal");
   for (const seat of [0, 1, 2, 3]) await t.deck(ROB, seat, deckFor(`t${seat}`), now);
   await t.ready(ROB, true, now);
   await t.start(ROB, now);
   await t.tick(now + 10000);
   const room = await t.currentRoom();
-  eq(room.seats.map((s) => s.level ?? null), [null, "easy", "normal", "normal"], "and launches the game with each AI seat at its setting");
+  eq(room.seats.map((s) => s.level ?? null), [null, "easy", "hard", "normal"], "and launches the game with each AI seat at its setting");
 }
 
 /* ---- A game of L1 seats replays, and plays the same reopened mid-game ---- */

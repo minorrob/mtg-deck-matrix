@@ -32,7 +32,7 @@
       "manaCost": "{1}",
       "colors": []
     },
-    "Study": {
+    "Smoke Study": {
       "types": [
         "Sorcery"
       ],
@@ -177,7 +177,7 @@
             "Charm",
             "Relic",
             "Forest",
-            "Study"
+            "Smoke Study"
           ]
         }
       ],

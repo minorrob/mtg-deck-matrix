@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lava Coil",
+    "oracleId": "fa71db44-5181-4c51-8b24-7fbedf36e3ca",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Lava Coil deals 4 damage to target creature. If that creature would die this turn, exile it instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 4,
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "effectUntil",
+          "rule": "exile-if-dies",
+          "targets": {
+            "target": 0
+          },
+          "until": "end-of-turn"
+        }
+      ],
+      "text": "Lava Coil deals 4 damage to target creature. If that creature would die this turn, exile it instead."
+    }
+  ]
+}

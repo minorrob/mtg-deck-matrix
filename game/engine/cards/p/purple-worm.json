@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Purple Worm",
+    "oracleId": "179cc807-5150-4513-88b2-73cb05009b7d",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Worm"
+    ],
+    "manaCost": "{5}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 8,
+    "toughness": 7
+  },
+  "oracleText": "This spell costs {2} less to cast if a creature died this turn.\nWard {2} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {2}.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "this-costs-less",
+      "affects": {
+        "self": true
+      },
+      "amount": {
+        "creaturesDiedThisTurn": "any",
+        "atMost": 1,
+        "times": 2
+      },
+      "text": "This spell costs {2} less to cast if a creature died this turn."
+    },
+    {
+      "kind": "keyword",
+      "keyword": "ward",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        }
+      ],
+      "text": "Ward {2} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {2}.)"
+    }
+  ]
+}

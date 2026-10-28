@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Scalding Cauldron",
+    "oracleId": "dceb96a4-d3c5-43a2-93f6-50316e1e7a1b",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{3}, {T}, Sacrifice this artifact: It deals 3 damage to target creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 3,
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "{3}, {T}, Sacrifice this artifact: It deals 3 damage to target creature."
+    }
+  ]
+}

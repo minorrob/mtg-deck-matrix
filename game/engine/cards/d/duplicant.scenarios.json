@@ -1,0 +1,814 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Duplicant",
+  "fixtures": {
+    "Smoke Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    },
+    "Smoke Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant",
+        "Warrior"
+      ],
+      "manaCost": "{4}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 5,
+      "toughness": 5
+    },
+    "Smoke Giant Lord": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Smoke"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "W"
+      ],
+      "power": 0,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "lord",
+          "kind": "static",
+          "text": "Giants you control get +1/+1.",
+          "layer": 7,
+          "sublayer": "c",
+          "affects": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Giant"
+            ],
+            "controller": "you"
+          },
+          "apply": {
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    "Smoke Shifter Lord": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Smoke"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "W"
+      ],
+      "power": 0,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "lord",
+          "kind": "static",
+          "text": "Shapeshifters you control get +0/+1.",
+          "layer": 7,
+          "sublayer": "c",
+          "affects": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Shapeshifter"
+            ],
+            "controller": "you"
+          },
+          "apply": {
+            "power": 0,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    "Smoke Grove Lord": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Smoke"
+      ],
+      "manaCost": "{1}",
+      "colors": [
+        "W"
+      ],
+      "power": 0,
+      "toughness": 1,
+      "abilities": [
+        {
+          "id": "lord",
+          "kind": "static",
+          "text": "Forests you control get +1/+1.",
+          "layer": 7,
+          "sublayer": "c",
+          "affects": {
+            "what": "permanent",
+            "subtypes": [
+              "Forest"
+            ],
+            "controller": "you"
+          },
+          "apply": {
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    "Smoke Mimic": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Shapeshifter"
+      ],
+      "manaCost": "{3}{U}",
+      "colors": [
+        "U"
+      ],
+      "power": 3,
+      "toughness": 3,
+      "keywords": [
+        "Changeling"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya's 5/5 Giant Warrior exiled: Duplicant is a 5/5 Giant Warrior Shapeshifter -- both of Rob's lords count it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Smoke Giant Lord",
+            "Smoke Shifter Lord"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Duplicant"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Smoke Giant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Duplicant"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Duplicant",
+                  "Smoke Giant",
+                  "Smoke Giant Lord",
+                  "Smoke Shifter Lord"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Smoke Giant"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Smoke Giant"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Duplicant",
+            "power": 6,
+            "toughness": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "\"You may\": he declines -- the Giant stays, and Duplicant is a 2/4 Shapeshifter",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Smoke Shifter Lord"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Duplicant"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Smoke Giant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Duplicant"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Smoke Giant"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "No"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Smoke Giant"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Duplicant",
+            "power": 2,
+            "toughness": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "A star creature card: Darksteel Juggernaut's power and toughness read in exile, where it counts its owner Maya's two artifacts -- a 2/2",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Duplicant"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Darksteel Juggernaut",
+            "Smoke Relic",
+            "Smoke Relic"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Duplicant"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Darksteel Juggernaut"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Darksteel Juggernaut"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Duplicant",
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "A crewed Vehicle exiled is no creature card in exile: Duplicant stays a 2/4",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Thopter Fabricator",
+            "Smoke Giant"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Duplicant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Thopter Fabricator"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Duplicant"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Thopter Fabricator"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": [
+            "Thopter Fabricator"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Duplicant",
+            "power": 2,
+            "toughness": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dryad Arbor exiled: a 1/1 Dryad Shapeshifter -- its creature types, not its land type Forest",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Smoke Grove Lord"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Duplicant"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Dryad Arbor"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Duplicant"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Dryad Arbor"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Dryad Arbor"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Duplicant",
+            "power": 1,
+            "toughness": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "A changeling card exiled: Duplicant is every creature type -- Rob's Giant lord counts it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Smoke Giant Lord"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Duplicant"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Smoke Mimic"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Duplicant"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Smoke Mimic"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Duplicant",
+            "power": 4,
+            "toughness": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "A token is no target: Maya's Thopters are not offered",
+      "at": {
+        "turn": 2,
+        "phase": "MAIN1"
+      },
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Duplicant"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Foundry of the Consuls",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Foundry of the Consuls",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Duplicant"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Duplicant"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Thopter",
+            "Thopter",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ]
+    }
+  ]
+}

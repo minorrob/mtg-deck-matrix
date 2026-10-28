@@ -4,8 +4,8 @@
  *
  * The commander tax: a commander in the command zone carries the room's `commanderTax` (game/engine/projection.mjs),
  * and the board shows it at the card's top-right, as Rob asked, and says it with the card's name. Partners: the command
- * zone draws every card in it, so the second partner can be seen, inspected and cast from the pile, not only from
- * "You can also". A castable commander is lit like a castable card in hand, and a click casts it.
+ * zone draws every card in it, so the second partner can be seen, inspected and cast from the pile. A castable commander
+ * is lit like a castable card in hand; its native menu stages Cast, then W14's primary binds the single offered action.
  *
  * A look at another player's hand (the `handLook` decision, mode `ack`, game/engine/script/effects/asking.mjs): the
  * cards it is about are drawn above OK, each opens Card zoom, and OK answers it with nothing chosen.
@@ -91,29 +91,22 @@ try {
       const k = await reach(page, kraum), t = await reach(page, tymna, [0.3, 0.15]);
       ok(k.ok, `${where}: Kraum takes the pointer`);
       ok(t.ok, `${where}: Tymna's uncovered top takes the pointer`);
-      /* A click on the lit commander casts it: at once, or through the one option its pick or zoom offers. */
+      /* Current native path: the card menu stages Cast; W14's one primary commits it. Neither opening nor staging sends. */
       await page.mouse.click(k.x, k.y);
-      await page.waitForTimeout(300);
-      if (!acts(frames).length) {
-        /* The one way to use it, where it shows (Card zoom, the hand's pop-up; in Full, where a click only selects, "You can
-           also"): pressed where a person sees it. */
-        const visibleOption = () => page.evaluate(() => {
-          for (const el of document.querySelectorAll('[data-action="board-zoom-do"][data-index="1"], [data-action="board-option"][data-index="1"], [data-action="board-hand-do"][data-index="1"]')) {
-            const r = el.getBoundingClientRect(), x = r.x + r.width / 2, y = r.y + r.height / 2;
-            if (r.width && r.height && x >= 0 && y >= 0 && x < innerWidth && y < innerHeight && el.contains(document.elementFromPoint(x, y))) return {x, y};
-          }
-          return null;
-        });
-        let at = await visibleOption();
-        if (!at) {
-          const also = await reach(page, '[data-action="board-also"]');
-          if (also.ok) {await page.mouse.click(also.x, also.y); await page.waitForTimeout(300); at = await visibleOption();}
-        }
-        ok(!!at, `${where}: Kraum's cast is offered where a person can press it`);
-        await page.mouse.click(at.x, at.y);
-        await page.waitForTimeout(300);
-      }
-      ok(acts(frames).some((f) => f.choiceId === "priority:25:3:900" && JSON.stringify(f.indices) === "[1]"), `${where}: the click casts Kraum from the command zone (${JSON.stringify(acts(frames))})`);
+      const cast = '#cm-card-menu [data-action="board-card-menu-do"][data-index="1"]';
+      await page.locator(cast).waitFor();
+      ok(acts(frames).length === 0, `${where}: opening Kraum's native menu sends no action`);
+      const castAt = await reach(page, cast);
+      ok(castAt.ok, `${where}: Kraum's Cast offer takes the pointer`);
+      await page.mouse.click(castAt.x, castAt.y);
+      const primary = '#cm-board-decision[data-wf="W14"] [data-action="board-direct"][data-index="1"]';
+      await page.locator(primary).waitFor();
+      ok(acts(frames).length === 0, `${where}: staging Kraum still sends no action`);
+      const bindAt = await reach(page, primary);
+      ok(bindAt.ok, `${where}: W14's cast primary takes the pointer`);
+      await page.mouse.click(bindAt.x, bindAt.y);
+      await page.waitForTimeout(100);
+      ok(acts(frames).length === 1 && acts(frames)[0].choiceId === "priority:25:3:900" && JSON.stringify(acts(frames)[0].indices) === "[1]", `${where}: exactly one action casts Kraum from the command zone (${JSON.stringify(acts(frames))})`);
       ok(!errors.length, `${where}: no page error (${errors.join(" | ")})`);
       await context.close();
     }
@@ -123,9 +116,9 @@ try {
       const t = await reach(page, `[data-zone="command"] [data-card="${TYMNA}"]`, [0.3, 0.15]);
       await page.mouse.click(t.x, t.y);
       await page.waitForTimeout(400);
-      /* Card zoom or the hand's pop-up (Table, Focus, the phone); in Full, where a click selects, a notice too. */
-      const said = await page.evaluate(() => [...document.querySelectorAll(".cm-hand-why, #cm-notice")].filter((el) => el.getBoundingClientRect().width > 0).map((el) => el.textContent.trim()));
-      ok(said.includes(TYMNA_WHY), `${where}: Tymna picked, the reason she can't be cast is shown where her options would be (${JSON.stringify(said)})`);
+      await page.locator('#cm-card-menu .cm-card-menu-none').waitFor();
+      const said = await page.locator('#cm-card-menu .cm-card-menu-none').innerText();
+      ok(said.endsWith(TYMNA_WHY), `${where}: Tymna's native menu gives the authoritative reason she can't be cast (${JSON.stringify(said)})`);
       ok(errors.length === 0, `${where}: no page errors`);
       await context.close();
     }
@@ -138,10 +131,10 @@ try {
       ok((await reach(page, `${shown} [data-card="91002"]`)).ok, `${where}: a shown card takes the pointer`);
       const zoomAt = await reach(page, `${shown} [data-card="91001"]`);
       await page.mouse.click(zoomAt.x, zoomAt.y);
-      await page.locator("#cm-dialog[open]").waitFor({timeout: 5000});
-      ok(/Lightning Bolt/.test(await page.locator("#cm-dialog[open]").innerText()), `${where}: a shown card opens Card zoom`);
+      await page.locator("#cm-card-inspector").waitFor({timeout: 5000});
+      ok(/Lightning Bolt/.test(await page.locator("#cm-card-inspector").innerText()), `${where}: a shown card opens read-only inspection`);
       await page.keyboard.press("Escape");
-      await page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"), null, {timeout: 5000});
+      await page.waitForFunction(() => !document.querySelector("#cm-card-inspector"), null, {timeout: 5000});
       const okAt = await reach(page, '#cm-board-decision [data-action="board-confirm"]');
       ok(okAt.ok, `${where}: OK takes the pointer`);
       await page.mouse.click(okAt.x, okAt.y);

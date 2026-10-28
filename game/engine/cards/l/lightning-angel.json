@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lightning Angel",
+    "oracleId": "2be85439-4606-4e1e-8be7-56d9e31f77c4",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{1}{U}{R}{W}",
+    "colors": [
+      "R",
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "U",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Flying, vigilance, haste",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "vigilance",
+      "text": "vigilance"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "haste",
+      "text": "haste"
+    }
+  ]
+}

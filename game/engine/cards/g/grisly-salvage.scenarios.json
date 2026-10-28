@@ -1,0 +1,159 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Grisly Salvage",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "The Bear taken, the other four into the graveyard",
+      "library": [
+        "Rock",
+        "Bear",
+        "Forest",
+        "Rock",
+        "Rock"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Grisly Salvage"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Grisly Salvage"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Bear"
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Forest",
+            "Grisly Salvage",
+            "Rock",
+            "Rock",
+            "Rock"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "No creature or land among them: all five into the graveyard",
+      "library": [
+        "Rock",
+        "Rock",
+        "Rock",
+        "Rock",
+        "Rock"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Grisly Salvage"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "cast": "Grisly Salvage"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": []
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Grisly Salvage",
+            "Rock",
+            "Rock",
+            "Rock",
+            "Rock",
+            "Rock"
+          ]
+        }
+      ]
+    }
+  ]
+}

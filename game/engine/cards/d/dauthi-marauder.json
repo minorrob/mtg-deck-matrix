@@ -1,0 +1,32 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dauthi Marauder",
+    "oracleId": "cb754749-a769-4c9c-b62b-4972dfc5069f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dauthi",
+      "Minion"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 1
+  },
+  "oracleText": "Shadow (This creature can block or be blocked by only creatures with shadow.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "shadow",
+      "text": "Shadow (This creature can block or be blocked by only creatures with shadow.)"
+    }
+  ]
+}

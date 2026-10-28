@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cloud of Faeries",
+    "oracleId": "adc1f3b4-cce7-42c9-a208-dbab1d1924f5",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Faerie"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Flying\nWhen this creature enters, untap up to two lands.\nCycling {2} ({2}, Discard this card: Draw a card.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "battlefield",
+          "selector": {
+            "types": [
+              "Land"
+            ]
+          },
+          "count": 2,
+          "upTo": true,
+          "to": "stay",
+          "remember": true
+        },
+        {
+          "effect": "untap",
+          "targets": "remembered"
+        }
+      ],
+      "text": "When this creature enters, untap up to two lands."
+    },
+    {
+      "kind": "activated",
+      "zone": "hand",
+      "cycling": true,
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}"
+        },
+        {
+          "atom": "discard",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ],
+      "text": "Cycling {2} ({2}, Discard this card: Draw a card.)"
+    }
+  ]
+}

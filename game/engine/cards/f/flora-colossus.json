@@ -1,0 +1,58 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Flora Colossus",
+    "oracleId": "04dce348-be42-443a-a88d-c47436ba2ec4",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Treefolk"
+    ],
+    "manaCost": "{5}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Hexproof (This creature can't be the target of spells or abilities your opponents control.)\nFlora Colossus's power and toughness are each equal to the number of lands you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "hexproof",
+      "text": "Hexproof (This creature can't be the target of spells or abilities your opponents control.)"
+    },
+    {
+      "kind": "static",
+      "layer": 7,
+      "sublayer": "a",
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "setPower": {
+          "count": {
+            "controller": "you",
+            "types": [
+              "Land"
+            ]
+          }
+        },
+        "setToughness": {
+          "count": {
+            "controller": "you",
+            "types": [
+              "Land"
+            ]
+          }
+        }
+      },
+      "text": "Flora Colossus's power and toughness are each equal to the number of lands you control."
+    }
+  ]
+}

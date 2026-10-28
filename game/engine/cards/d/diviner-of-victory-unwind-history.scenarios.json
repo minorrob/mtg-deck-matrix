@@ -82,7 +82,7 @@
         ]
       }
     },
-    "Peek": {
+    "Smoke Peek": {
       "types": [
         "Sorcery"
       ],
@@ -320,7 +320,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Peek"
+            "Smoke Peek"
           ]
         },
         {
@@ -334,7 +334,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Peek"
+            "Smoke Peek"
           ]
         }
       ],
@@ -343,7 +343,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Peek"
+          "cast": "Smoke Peek"
         },
         {
           "resolve": true
@@ -384,7 +384,7 @@
           "seat": 1
         },
         {
-          "cast": "Peek",
+          "cast": "Smoke Peek",
           "seat": 1
         },
         {
@@ -410,7 +410,7 @@
           "seat": 1,
           "zone": "graveyard",
           "cards": [
-            "Peek"
+            "Smoke Peek"
           ]
         }
       ]

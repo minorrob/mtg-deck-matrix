@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kederekt Creeper",
+    "oracleId": "0f8e0b2c-f1a5-40ad-b8d8-7c06a012e909",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Horror"
+    ],
+    "manaCost": "{U}{B}{R}",
+    "colors": [
+      "B",
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "R",
+      "U"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Menace (This creature can't be blocked except by two or more creatures.)\nDeathtouch (Any amount of damage this deals to a creature is enough to destroy it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "menace",
+      "text": "Menace (This creature can't be blocked except by two or more creatures.)"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "deathtouch",
+      "text": "Deathtouch (Any amount of damage this deals to a creature is enough to destroy it.)"
+    }
+  ]
+}

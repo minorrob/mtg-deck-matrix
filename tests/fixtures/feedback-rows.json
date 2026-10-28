@@ -1,0 +1,65 @@
+[
+  {
+    "id": "00000000-0000-4000-8000-000000000001", "state": "new", "reporter": "sam@example.com", "group": "general", "schema": "CrankFeedback@1", "kind": "bug",
+    "text": "I can't confirm my attackers. The Confirm button is below the bottom of the window and nothing happens when I scroll.",
+    "page": {"route": "#table/abc123de/game", "screen": "Play", "view": "Table"}, "build": {"commit": "c567c581", "profile": "cloud-staging"},
+    "game": {"tableId": "abc123de", "matchId": "abc123deg2", "turn": 7, "step": "Declare attackers", "seat": "Sam", "decisionId": "declare-attackers:7", "lastLine": "Sam's declare attackers step."},
+    "device": {"viewport": {"width": 1366, "height": 768}, "pixelRatio": 1, "pointer": "fine", "browser": "Chrome", "reducedMotion": false, "theme": "moss-iron"},
+    "console": ["TypeError: Cannot read properties of undefined (reading 'options') @ crankmagic-board.js:2411"],
+    "screenshot": null, "issue": null, "pr": null, "release": null, "messageId": null, "createdAt": "2026-10-26T18:02:00.000Z", "updatedAt": "2026-10-26T18:02:00.000Z"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000002", "state": "new", "reporter": "kim@example.com", "group": "general", "schema": "CrankFeedback@1", "kind": "bug",
+    "text": "Cannot confirm attackers: the confirm button is off the bottom of the window, scrolling does nothing.",
+    "page": {"route": "#table/zz99yy88/game", "screen": "Play", "view": "Table"}, "build": {"commit": "c567c581", "profile": "cloud-staging"},
+    "game": {"tableId": "zz99yy88", "matchId": "zz99yy88g1", "turn": 4, "step": "Declare attackers", "seat": "Kim", "decisionId": "declare-attackers:4", "lastLine": "Kim's declare attackers step."},
+    "device": {"viewport": {"width": 1366, "height": 768}, "pixelRatio": 1.25, "pointer": "fine", "browser": "Edge", "reducedMotion": false, "theme": "brass-slate"},
+    "screenshot": null, "issue": null, "pr": null, "release": null, "messageId": null, "createdAt": "2026-10-26T18:40:00.000Z", "updatedAt": "2026-10-26T18:40:00.000Z"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000003", "state": "new", "reporter": "rob@example.com", "group": "owner", "schema": "CrankFeedback@1", "kind": "bug",
+    "text": "Rhystic Study's trigger never asked the other players to pay. The rules say each opponent may pay 1; the engine just drew me the card.",
+    "page": {"route": "#table/abc123de/game", "screen": "Play", "view": "3D"}, "build": {"commit": "c567c581", "profile": "cloud-staging"},
+    "game": {"tableId": "abc123de", "matchId": "abc123deg2", "turn": 9, "step": "Main 1", "seat": "Rob", "lastLine": "Maya cast Cultivate."},
+    "device": {"viewport": {"width": 2560, "height": 1440}, "pixelRatio": 1, "pointer": "fine", "browser": "Chrome", "reducedMotion": false, "theme": "moss-iron"},
+    "screenshot": "dropped", "issue": null, "pr": null, "release": null, "messageId": null, "createdAt": "2026-10-26T19:10:00.000Z", "updatedAt": "2026-10-26T19:10:00.000Z"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000004", "state": "new", "reporter": "sam@example.com", "group": "general", "schema": "CrankFeedback@1", "kind": "enhancement",
+    "text": "The deck page could show the commander's color identity larger, next to the name.",
+    "page": {"route": "#decks?deck=deck%3Alive%3AD1", "screen": "Decks"}, "build": {"commit": "c567c581", "profile": "cloud-production"},
+    "deck": {"id": "deck:live:D1", "name": "Krenko's Horde", "card": "Krenko, Mob Boss"},
+    "device": {"viewport": {"width": 390, "height": 844}, "pixelRatio": 3, "pointer": "coarse", "browser": "Safari", "reducedMotion": true, "theme": "felt-cream"},
+    "screenshot": null, "issue": null, "pr": null, "release": null, "messageId": null, "createdAt": "2026-10-26T19:30:00.000Z", "updatedAt": "2026-10-26T19:30:00.000Z"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000005", "state": "new", "reporter": "kim@example.com", "group": "general", "schema": "CrankFeedback@1", "kind": "bug",
+    "text": "Sorting the Library by price shows a blank table until I change the filter.",
+    "page": {"route": "#cards", "screen": "Library"}, "build": {"commit": "c567c581", "profile": "cloud-production"},
+    "device": {"viewport": {"width": 1400, "height": 900}, "pixelRatio": 1, "pointer": "fine", "browser": "Firefox", "reducedMotion": false, "theme": "moss-iron"},
+    "console": ["RangeError: Invalid array length @ collection-model.js:812"],
+    "screenshot": null, "issue": null, "pr": null, "release": null, "messageId": null, "createdAt": "2026-10-26T19:45:00.000Z", "updatedAt": "2026-10-26T19:45:00.000Z"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000006", "state": "new", "reporter": "sam@example.com", "group": "general", "schema": "CrankFeedback@1", "kind": "enhancement",
+    "text": "The simulation in the Lab should let me pick how many games it plays; a hundred takes too long on my phone.",
+    "page": {"route": "#lab?deck=deck%3Alive%3AD3", "screen": "Lab"}, "build": {"commit": "c567c581", "profile": "cloud-production"},
+    "deck": {"id": "deck:live:D3", "name": "Atraxa's Council"},
+    "device": {"viewport": {"width": 390, "height": 844}, "pixelRatio": 3, "pointer": "coarse", "browser": "Safari", "reducedMotion": false, "theme": "moss-iron"},
+    "screenshot": null, "issue": null, "pr": null, "release": null, "messageId": null, "createdAt": "2026-10-26T20:00:00.000Z", "updatedAt": "2026-10-26T20:00:00.000Z"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000007", "state": "new", "reporter": "kim@example.com", "group": "general", "schema": "CrankFeedback@1", "kind": "enhancement",
+    "text": "Please add Oathbreaker decks, my group plays it on Thursdays.",
+    "page": {"route": "#decks", "screen": "Decks"}, "build": {"commit": "c567c581", "profile": "cloud-production"},
+    "device": {"viewport": {"width": 1400, "height": 900}, "pixelRatio": 1, "pointer": "fine", "browser": "Chrome", "reducedMotion": false, "theme": "moss-iron"},
+    "screenshot": null, "issue": null, "pr": null, "release": null, "messageId": null, "createdAt": "2026-10-26T20:15:00.000Z", "updatedAt": "2026-10-26T20:15:00.000Z"
+  },
+  {
+    "id": "00000000-0000-4000-8000-000000000008", "state": "triaged", "reporter": "sam@example.com", "group": "general", "schema": "CrankFeedback@1", "kind": "bug",
+    "text": "The theme switch took two clicks.",
+    "page": {"route": "#settings", "screen": "Settings"}, "build": {"commit": "9ca99e53", "profile": "cloud-production"},
+    "device": {"viewport": {"width": 1400, "height": 900}, "pixelRatio": 1, "pointer": "fine", "browser": "Chrome", "reducedMotion": false, "theme": "moss-iron"},
+    "screenshot": null, "issue": "ROB-250", "pr": null, "release": null, "messageId": null, "createdAt": "2026-10-25T10:00:00.000Z", "updatedAt": "2026-10-25T11:00:00.000Z"
+  }
+]

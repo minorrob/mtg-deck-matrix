@@ -31,7 +31,7 @@ for (const f of ["data/live-state.json", "data/live-load.json"]) ok(NEVER.test(f
 ok(!/load-live|live-state\.json|treycmload/.test(built.get("crankmagic-exchange-ui.js").toString("utf8")), "and nothing in the release offers to fetch it");
 eq(files.filter((f) => /^(AGENTS|CLAUDE|BACKLOG|README|HOTFIX-SUMMARY)\.md$|\.(ps1|sh)$/.test(f)), [], "and none of the repository's own working files");
 for (const f of profile.leaveOut) ok(!built.has(f), `${f} is Play, and is not in the release`);
-ok(mentions.every((m) => / names (tools|data\/archive)\/| names data\/live-(state|load)\.json$/.test(m)), `the names it declined to follow are tools, the archive and the owner's collection, named as provenance: ${mentions.join("; ")}`);
+ok(mentions.every((m) => / names (tools|data\/archive|data\/source)\/| names data\/live-(state|load)\.json$/.test(m)), `the names it declined to follow are tools, the archive, the source workbooks and the owner's collection, named as provenance: ${mentions.join("; ")}`);
 
 /* Play says Coming Soon, and nothing left can reach a game host. */
 for (const p of PAGES) {
@@ -141,7 +141,9 @@ ok(broken((m) => m.set("crankmagic-app.js", Buffer.from(m.get("crankmagic-app.js
 
 /* PRODUCTION HAS ACCOUNTS since Rob approved them on staging (2026-09-24: "Everything looks good!"), on its
    own database and its own Access application; STAGING KEEPS ITS OWN of both. */
-for (const f of ["cloud-sync.js", "crankmagic-account.js", "cloud/worker.mjs", "cloud/access.mjs", "cloud/library.mjs"]) ok(built.has(f), `${f} is in the production release`);
+for (const f of ["cloud-sync.js", "crankmagic-account.js", "cloud/worker.mjs", "cloud/access.mjs", "cloud/library.mjs", "cloud/feedback.mjs", "feedback-schema.js", "cloud/migrations/0009_feedback.sql"]) ok(built.has(f), `${f} is in the production release`);
+/* The feedback loop's schema is a module outside cloud/ that the Worker imports: the release carries what the Worker bundles. */
+ok(verify(new Map([...built].filter(([f]) => f !== "feedback-schema.js")), profile).includes("feedback-schema.js is imported by the Worker and is not in the commit"), "a release missing a module the Worker imports is refused, naming it");
 ok(PAGES.every((p) => built.get(p).toString("utf8").includes('<meta name="crankmagic-accounts" content="on">')), "and both production pages are marked accounts-on");
 const pw = JSON.parse(built.get("wrangler.jsonc").toString("utf8"));
 eq([pw.name, pw.main, pw.assets, pw.routes], ["crankmagic", "cloud/worker.mjs", {directory: "./", binding: "ASSETS", run_worker_first: ["/api/*"]}, [{pattern: "crankmagic.com", custom_domain: true}]],
@@ -151,7 +153,7 @@ eq(pw.vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: 
   "and it trusts the CrankMagic accounts application (crankmagic.com/api/*, the invite list), read from its sign-in redirect");
 const staging = build({source: worktreeSource(), profileName: "cloud-staging"});
 eq(staging.problems, [], "the staging build is complete, its Access application's team and audience included");
-eq(JSON.parse(staging.built.get("wrangler.jsonc").toString("utf8")).vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5", PLAYTEST_TABLES: "on", SERVICE_SEATS: "on", SHARING_ENABLED: "on", INVITE_ADMIN_ID: "1", CLOUDFLARE_ACCOUNT_ID: "02e7ae6d703281008f546c63378c6ddb", ACCESS_INVITE_APP_IDS: "16fef6e1-0437-4bbd-b7fe-a81419dc09fa", ACCESS_INVITE_POLICY_ID: "8b802602-b991-4986-b8a1-d2c16b3cf5c3",
+eq(JSON.parse(staging.built.get("wrangler.jsonc").toString("utf8")).vars, {ACCESS_TEAM_DOMAIN: "crankmagic.cloudflareaccess.com", ACCESS_AUD: "213cb6b10352e5ed5525d6337f355cd5190dec402e86debd30971d3bd5bda1f5", PLAYTEST_TABLES: "on", SERVICE_SEATS: "on", SHARING_ENABLED: "on", INVITE_ADMIN_ID: "1", CLOUDFLARE_ACCOUNT_ID: "02e7ae6d703281008f546c63378c6ddb", ACCESS_INVITE_APP_IDS: "16fef6e1-0437-4bbd-b7fe-a81419dc09fa,23915d70-d40d-4f6f-9170-d43b3bf412d8", ACCESS_INVITE_POLICY_ID: "8b802602-b991-4986-b8a1-d2c16b3cf5c3,c59874d0-8ba7-4e99-ab80-2e11de62cfa8", INVITE_LINK_ORIGIN: "https://crankmagic.com",
   AI_ACCESS_AUD: "d3e7b5812c81536cb707c64cca2196e1ee7854cbca6791f4d7bd2ef4b649f6db", AI_CAP_TOTAL_CENTS: "300", AI_CAP_PERSON_CENTS: "300", AI_MODEL: "claude-haiku-5-5", AI_COACH: "on", AI_CAP_COACH_CENTS: "150", AI_PILOT: "on", AI_CAP_PILOT_GAME_CENTS: "25", AI_ADVISE: "on", AI_EVERYONE: "on"},
   "and the Worker trusts that team's keys for that application only (read from the sign-in redirect's kid, and confirmed by Rob from the dashboard); its tables are playtest tables (M8b)");
 const sb = staging.built, sw2 = JSON.parse(sb.get("wrangler.jsonc").toString("utf8"));
@@ -167,8 +169,8 @@ ok(verify(new Map([...sb, ["wrangler.jsonc", Buffer.from(JSON.stringify({...sw2,
   "a release that would hand the Worker its own signing keys is refused");
 /* PLAY IN THE CLOUD, ON STAGING (Rob, 2026-09-29: "execute the play release and merge to staging"). */
 const stagingProfile = PROFILES["cloud-staging"];
-ok(["crankmagic-stage.js", "crankmagic-stage.css", "vendor/pixi.min.js", "vendor/pixi-csp.min.js", "vendor/PIXI-LICENSE.txt"].every(f => sb.has(f)), "staging carries the tabletop renderer, CSP adapter and upstream license");
-ok(![...built.keys()].some(f => f.startsWith("vendor/pixi") || f === "vendor/PIXI-LICENSE.txt"), "the non-Play profile does not include the tabletop renderer");
+ok(["crankmagic-stage.js", "crankmagic-stage.css", "crankmagic-stage-tables.js", "crankmagic-stage-paint.js", "vendor/babylon.js", "vendor/BABYLON-LICENSE.txt"].every(f => sb.has(f)), "staging carries the live Babylon renderer, table geometry, its skins' painter and upstream license");
+ok(![...built.keys()].some(f => f === "vendor/babylon.js" || f === "vendor/BABYLON-LICENSE.txt" || f === "crankmagic-stage-tables.js" || f === "crankmagic-stage-paint.js"), "the non-Play profile does not include the tabletop renderer");
 
 eq([sw2.durable_objects, sw2.migrations], [{bindings: [{name: "TABLES", class_name: "GameTable"}]}, [{tag: "tables-v1", new_sqlite_classes: ["GameTable"]}]], "staging binds TABLES to the table's Durable Object, made once by a SQLite-class migration");
 ok(PAGES.every((p) => sb.get(p).toString("utf8").includes('<meta name="crankmagic-play" content="cloud">')), "both staging pages are marked Play in the cloud");
@@ -186,7 +188,7 @@ ok(["crankmagic-game.js", "crankmagic-lobby.js", "crankmagic-online.js", "crankm
 const engine = workerModules(worktreeSource());
 eq(engine.problems, [], "Play's Worker imports only modules in this tree, and nothing a Worker cannot bundle");
 eq([...sb.keys()].filter((f) => /^game\//.test(f)).sort(), engine.files.filter((f) => /^game\//.test(f)), `the engine the table carries is in the tree for wrangler to bundle (${engine.files.length - 2} modules of game/), and nothing else of game/`);
-ok(engine.files.every((f) => /\.mjs$/.test(f) || ['collection-model.js','collection-exchange.js'].includes(f)) && !engine.files.some((f) => /^data\//.test(f)), "modules only: no card data, no JSON");
+ok(engine.files.every((f) => /\.mjs$/.test(f) || ['collection-model.js','collection-exchange.js','feedback-schema.js'].includes(f)) && !engine.files.some((f) => /^data\//.test(f)), "modules only: no card data, no JSON");
 ok(engine.files.includes("game/engine/cards/definitions.mjs") && sb.has("game/engine/cards/definitions.mjs"),
   "and the cards the table plays are one of them (M5): every definition in the directory, generated as a module and bundled with the engine");
 ok(sb.get(".assetsignore").toString("utf8").split("\n").includes("game/"), "and none of it is published as a file");

@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sprite Dragon",
+    "oracleId": "a9d8ab76-70a4-475e-b87e-4737c090553a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Faerie",
+      "Dragon"
+    ],
+    "manaCost": "{U}{R}",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Flying, haste\nWhenever you cast a noncreature spell, put a +1/+1 counter on this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "haste",
+      "text": "haste"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "spell cast",
+        "caster": "you",
+        "filter": {
+          "nonTypes": [
+            "Creature"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "text": "Whenever you cast a noncreature spell, put a +1/+1 counter on this creature."
+    }
+  ]
+}

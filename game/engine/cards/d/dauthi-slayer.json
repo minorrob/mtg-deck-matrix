@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Dauthi Slayer",
+    "oracleId": "c1d0537b-954f-4d3b-b9fe-1dd7ffaa1197",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dauthi",
+      "Soldier"
+    ],
+    "manaCost": "{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Shadow (This creature can block or be blocked by only creatures with shadow.)\nThis creature attacks each combat if able.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "shadow",
+      "text": "Shadow (This creature can block or be blocked by only creatures with shadow.)"
+    },
+    {
+      "kind": "static",
+      "rule": "attacks-each-combat",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature attacks each combat if able."
+    }
+  ]
+}

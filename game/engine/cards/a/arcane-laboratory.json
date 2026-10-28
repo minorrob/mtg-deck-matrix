@@ -1,0 +1,33 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Arcane Laboratory",
+    "oracleId": "f5e3c26c-c28c-455f-a682-2597e4b92d10",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each player can't cast more than one spell each turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "cant-cast",
+      "affects": {
+        "what": "player"
+      },
+      "moreThan": 1,
+      "text": "Each player can't cast more than one spell each turn."
+    }
+  ]
+}

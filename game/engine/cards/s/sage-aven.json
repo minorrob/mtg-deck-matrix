@@ -1,0 +1,45 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sage Aven",
+    "oracleId": "f57c6bfb-8dd4-429d-8ced-65145e2f7adb",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bird",
+      "Wizard"
+    ],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Flying (This creature can't be blocked except by creatures with flying or reach.)\nWhen this creature enters, look at the top four cards of your library, then put them back in any order.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying (This creature can't be blocked except by creatures with flying or reach.)"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "rearrangeTop",
+          "count": 4
+        }
+      ],
+      "text": "When this creature enters, look at the top four cards of your library, then put them back in any order."
+    }
+  ]
+}

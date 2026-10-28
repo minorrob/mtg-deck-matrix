@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Crow of Dark Tidings",
+    "oracleId": "a4ffe297-5e82-43f9-91a4-7aa3d8dd3b4a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie",
+      "Bird"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Flying\nWhen this creature enters or dies, mill two cards. (Put the top two cards of your library into your graveyard.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "mill",
+          "count": 2
+        }
+      ],
+      "text": "When this creature enters or dies, mill two cards. (Put the top two cards of your library into your graveyard.)"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "dies"
+      },
+      "effects": [
+        {
+          "effect": "mill",
+          "count": 2
+        }
+      ],
+      "text": "When this creature enters or dies, mill two cards. (Put the top two cards of your library into your graveyard.)"
+    }
+  ]
+}

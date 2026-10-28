@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Akroma, Angel of Wrath",
+    "oracleId": "107f204c-9fd3-490d-8887-be63d14fc6a4",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{5}{W}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Flying, first strike, vigilance, trample, haste, protection from black and from red",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "first strike",
+      "text": "first strike"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "vigilance",
+      "text": "vigilance"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "trample"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "haste",
+      "text": "haste"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "B",
+          "R"
+        ]
+      },
+      "text": "protection from black and from red"
+    }
+  ]
+}

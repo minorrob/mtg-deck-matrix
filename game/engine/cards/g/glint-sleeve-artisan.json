@@ -1,0 +1,33 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Glint-Sleeve Artisan",
+    "oracleId": "b5f35577-3d94-4835-bfca-3090cb0c63ff",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dwarf",
+      "Artificer"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Fabricate 1 (When this creature enters, put a +1/+1 counter on it or create a 1/1 colorless Servo artifact creature token.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "fabricate",
+      "amount": 1,
+      "text": "Fabricate 1 (When this creature enters, put a +1/+1 counter on it or create a 1/1 colorless Servo artifact creature token.)"
+    }
+  ]
+}

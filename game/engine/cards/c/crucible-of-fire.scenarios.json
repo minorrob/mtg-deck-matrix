@@ -1,0 +1,180 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Crucible of Fire",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Whelpling": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Dragon"
+      ],
+      "manaCost": "{1}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "keywords": [
+        "Flying"
+      ]
+    },
+    "Wyrm": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Dragon"
+      ],
+      "manaCost": "{1}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3,
+      "keywords": [
+        "Flying"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob's Dragon gets +3/+3; his Bear and Maya's Dragon do not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Crucible of Fire",
+            "Whelpling",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Whelpling"
+          ]
+        }
+      ],
+      "steps": [],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Whelpling",
+            "power": 5,
+            "toughness": 5
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bear",
+            "power": 2,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Whelpling",
+            "power": 2,
+            "toughness": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Cast, it pumps a Dragon already there and one cast after it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Whelpling",
+            "Mountain",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Mountain",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Crucible of Fire",
+            "Wyrm"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Crucible of Fire"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Wyrm"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Whelpling",
+            "power": 5,
+            "toughness": 5
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Wyrm",
+            "power": 6,
+            "toughness": 6
+          }
+        }
+      ]
+    }
+  ]
+}

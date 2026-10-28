@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gongaga, Reactor Town",
+    "oracleId": "ac4e1818-4873-4143-9b99-46f205d006d9",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Town"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This land enters tapped.\n{T}: Add {R} or {G}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      },
+      "text": "This land enters tapped."
+    },
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "R": 1
+            },
+            {
+              "G": 1
+            }
+          ]
+        }
+      ],
+      "text": "{T}: Add {R} or {G}."
+    }
+  ]
+}

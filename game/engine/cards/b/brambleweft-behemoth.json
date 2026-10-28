@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Brambleweft Behemoth",
+    "oracleId": "f5070528-cc4c-4910-8047-1ed17efd6496",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental"
+    ],
+    "manaCost": "{4}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)"
+    }
+  ]
+}

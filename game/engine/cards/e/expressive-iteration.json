@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Expressive Iteration",
+    "oracleId": "c7aecca5-2f67-4245-ab2d-e723d8b23a67",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{U}{R}",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Look at the top three cards of your library. Put one of them into your hand, put one of them on the bottom of your library, and exile one of them. You may play the exiled card this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Look at the top three cards of your library. Put one of them into your hand, put one of them on the bottom of your library, and exile one of them. You may play the exiled card this turn.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "dig",
+          "count": 3,
+          "take": 1,
+          "to": "hand",
+          "rest": "stay"
+        },
+        {
+          "effect": "dig",
+          "count": 2,
+          "take": 1,
+          "to": "exile",
+          "rest": "bottom",
+          "remember": true
+        },
+        {
+          "effect": "mayPlay",
+          "targets": "remembered",
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

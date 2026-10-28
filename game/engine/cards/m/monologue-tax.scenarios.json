@@ -16,7 +16,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -150,9 +150,9 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Shock",
-            "Shock",
-            "Shock"
+            "Smoke Shock",
+            "Smoke Shock",
+            "Smoke Shock"
           ]
         }
       ],
@@ -168,7 +168,7 @@
           "seat": 1
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "seat": 1,
           "targets": [
             {
@@ -191,7 +191,7 @@
           "seat": 1
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "seat": 1,
           "targets": [
             {
@@ -217,7 +217,7 @@
           "seat": 1
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "seat": 1,
           "targets": [
             {
@@ -266,8 +266,8 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Shock",
-            "Shock"
+            "Smoke Shock",
+            "Smoke Shock"
           ]
         }
       ],
@@ -276,7 +276,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "player": 1
@@ -290,7 +290,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "player": 1

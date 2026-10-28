@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Inkfathom Infiltrator",
+    "oracleId": "2b43c7de-8c21-4137-b6b8-45965e4bb558",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Merfolk",
+      "Rogue"
+    ],
+    "manaCost": "{U/B}{U/B}",
+    "colors": [
+      "B",
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "This creature can't block and can't be blocked.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "cant-block",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature can't block and can't be blocked."
+    },
+    {
+      "kind": "static",
+      "rule": "cant-be-blocked",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature can't block and can't be blocked."
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shriekdiver",
+    "oracleId": "f51e1660-e1c8-4122-8c43-321c820a1fc1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie",
+      "Bird",
+      "Warrior"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Flying\n{1}: This creature gains haste until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Haste"
+          ]
+        }
+      ],
+      "text": "{1}: This creature gains haste until end of turn."
+    }
+  ]
+}

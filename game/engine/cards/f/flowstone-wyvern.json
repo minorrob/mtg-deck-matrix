@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Flowstone Wyvern",
+    "oracleId": "13459bf3-fcdc-4838-9669-918f97113054",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Drake"
+    ],
+    "manaCost": "{3}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Flying\n{R}: This creature gets +2/-2 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{R}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 2,
+          "toughness": -2
+        }
+      ],
+      "text": "{R}: This creature gets +2/-2 until end of turn."
+    }
+  ]
+}

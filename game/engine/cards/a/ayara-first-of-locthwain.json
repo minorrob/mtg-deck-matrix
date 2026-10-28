@@ -1,0 +1,85 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ayara, First of Locthwain",
+    "oracleId": "388168b3-ec68-4af2-b88c-6a5ec88c15f6",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Noble"
+    ],
+    "manaCost": "{B}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Whenever Ayara or another black creature you control enters, each opponent loses 1 life and you gain 1 life.\n{T}, Sacrifice another black creature: Draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever Ayara or another black creature you control enters, each opponent loses 1 life and you gain 1 life.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "colors": [
+            "B"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "amount": 1,
+          "who": "opponent"
+        },
+        {
+          "effect": "gainLife",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{T}, Sacrifice another black creature: Draw a card.",
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Creature"
+            ],
+            "colors": [
+              "B"
+            ],
+            "another": true
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

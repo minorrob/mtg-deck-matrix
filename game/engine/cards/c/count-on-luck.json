@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Count on Luck",
+    "oracleId": "73ad7bcd-4ffc-442c-b6b5-d935b9ccaaaf",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "At the beginning of your upkeep, exile the top card of your library. You may play that card this turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, exile the top card of your library. You may play that card this turn.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "fromTop": 1,
+          "to": "exile",
+          "remember": true
+        },
+        {
+          "effect": "mayPlay",
+          "targets": "remembered",
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Rule of Law",
+    "oracleId": "53e88e64-6f82-4154-a66e-6aeb0154b368",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each player can't cast more than one spell each turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "cant-cast",
+      "affects": {
+        "what": "player"
+      },
+      "moreThan": 1,
+      "text": "Each player can't cast more than one spell each turn."
+    }
+  ]
+}

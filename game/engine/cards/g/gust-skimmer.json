@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gust-Skimmer",
+    "oracleId": "3f49dfa6-d0d4-4b58-8417-ed11c062e220",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Insect"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "{U}: This creature gains flying until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{U}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Flying"
+          ]
+        }
+      ],
+      "text": "{U}: This creature gains flying until end of turn."
+    }
+  ]
+}

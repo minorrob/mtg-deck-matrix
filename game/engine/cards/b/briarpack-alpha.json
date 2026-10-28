@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Briarpack Alpha",
+    "oracleId": "5604c475-6e01-4e9d-b4e6-8e8d72874581",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Wolf"
+    ],
+    "manaCost": "{3}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Flash (You may cast this spell any time you could cast an instant.)\nWhen this creature enters, target creature gets +2/+2 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flash",
+      "text": "Flash (You may cast this spell any time you could cast an instant.)"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 2,
+          "toughness": 2
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "text": "When this creature enters, target creature gets +2/+2 until end of turn."
+    }
+  ]
+}

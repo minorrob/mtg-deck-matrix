@@ -1,0 +1,123 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Malakir Familiar",
+  "fixtures": {
+    "Smoke Heal": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "spell": {
+        "id": "s",
+        "text": "You gain 2 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 2
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Gaining life makes it 3/2 until end of turn; it has flying and deathtouch",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Malakir Familiar",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Smoke Heal"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Malakir Familiar",
+                "power": 2,
+                "toughness": 1
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Smoke Heal"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 42
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Malakir Familiar",
+            "power": 3,
+            "toughness": 2
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Malakir Familiar",
+            "has": [
+              "Flying",
+              "Deathtouch"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "An opponent gaining life does not trigger it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Malakir Familiar",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Malakir Familiar",
+            "power": 2,
+            "toughness": 1
+          }
+        }
+      ]
+    }
+  ]
+}

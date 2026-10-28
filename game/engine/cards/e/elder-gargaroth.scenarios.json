@@ -1,0 +1,271 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Elder Gargaroth",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Hawk": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bird"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "keywords": [
+        "Flying"
+      ]
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It attacks: Rob chooses a 3/3 Beast; vigilance leaves it untapped and Maya takes 6",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elder Gargaroth"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Elder Gargaroth"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Create a 3/3 green Beast creature token."
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Elder Gargaroth",
+            "Beast"
+          ]
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Beast",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "tapped": "Elder Gargaroth",
+          "is": false
+        },
+        {
+          "seat": 1,
+          "life": 34
+        }
+      ]
+    },
+    {
+      "name": "It attacks: Rob chooses to draw a card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elder Gargaroth"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Elder Gargaroth"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Draw a card."
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "It blocks Maya's Bear: Rob gains 3 life, and the Bear dies",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elder Gargaroth"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Bear"
+          ],
+          "seat": 1
+        },
+        {
+          "block": [
+            [
+              "Elder Gargaroth",
+              "Bear"
+            ]
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "You gain 3 life."
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 43
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Reach: it may block a flier",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Elder Gargaroth"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Hawk"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Hawk"
+          ],
+          "seat": 1
+        },
+        {
+          "block": [
+            [
+              "Elder Gargaroth",
+              "Hawk"
+            ]
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Draw a card."
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Hawk"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

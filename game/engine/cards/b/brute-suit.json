@@ -1,0 +1,33 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Brute Suit",
+    "oracleId": "bc64e396-7fa1-4a4e-a528-352737714a9c",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Vehicle"
+    ],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 4,
+    "toughness": 3
+  },
+  "oracleText": "Vigilance\nCrew 1 (Tap any number of creatures you control with total power 1 or more: This Vehicle becomes an artifact creature until end of turn.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "vigilance",
+      "text": "Vigilance"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "crew",
+      "amount": 1,
+      "text": "Crew 1 (Tap any number of creatures you control with total power 1 or more: This Vehicle becomes an artifact creature until end of turn.)"
+    }
+  ]
+}

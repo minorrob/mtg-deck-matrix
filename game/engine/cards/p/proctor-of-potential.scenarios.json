@@ -16,7 +16,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -65,7 +65,7 @@
         ]
       }
     },
-    "Peek": {
+    "Smoke Peek": {
       "types": [
         "Sorcery"
       ],
@@ -308,7 +308,7 @@
           "zone": "hand",
           "cards": [
             "Glimpse",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -376,7 +376,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Proctor of Potential"
@@ -400,7 +400,7 @@
           "zone": "graveyard",
           "cards": [
             "Glimpse",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ]
@@ -428,7 +428,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Peek"
+            "Smoke Peek"
           ]
         }
       ],
@@ -437,7 +437,7 @@
           "tap": "Island"
         },
         {
-          "cast": "Peek"
+          "cast": "Smoke Peek"
         },
         {
           "resolve": true

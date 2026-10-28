@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Drowned",
+    "oracleId": "3da87e58-6a4b-48c3-873c-bc654277d4df",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "{B}: Regenerate this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{B}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "regenerate",
+          "targets": "self"
+        }
+      ],
+      "text": "{B}: Regenerate this creature."
+    }
+  ]
+}

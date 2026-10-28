@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Snow-Covered Mountain",
+    "oracleId": "ca9f660b-e07d-4f42-a46e-abd0ca72510c",
+    "supertypes": [
+      "Basic",
+      "Snow"
+    ],
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Mountain"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "({T}: Add {R}.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "R": 1
+          }
+        }
+      ],
+      "text": "({T}: Add {R}.)"
+    }
+  ]
+}

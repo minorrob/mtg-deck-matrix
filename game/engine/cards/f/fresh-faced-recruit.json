@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fresh-Faced Recruit",
+    "oracleId": "14319020-faf2-49c4-a808-c39650203383",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Soldier"
+    ],
+    "manaCost": "{1}{R/W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "During your turn, this creature has first strike.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "apply": {
+        "addKeywords": [
+          "First Strike"
+        ]
+      },
+      "condition": {
+        "yourTurn": true
+      },
+      "text": "During your turn, this creature has first strike."
+    }
+  ]
+}

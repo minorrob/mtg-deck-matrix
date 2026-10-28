@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Feral Abomination",
+    "oracleId": "1bf06342-0d76-433b-9912-8af03b7e3bc3",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Thrull"
+    ],
+    "manaCost": "{5}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Deathtouch (Any amount of damage this deals to a creature is enough to destroy it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "deathtouch",
+      "text": "Deathtouch (Any amount of damage this deals to a creature is enough to destroy it.)"
+    }
+  ]
+}

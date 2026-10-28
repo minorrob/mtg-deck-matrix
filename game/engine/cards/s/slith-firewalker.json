@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Slith Firewalker",
+    "oracleId": "ea1af948-686d-4b40-ad4e-cb48a0258269",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Slith"
+    ],
+    "manaCost": "{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Haste\nWhenever this creature deals combat damage to a player, put a +1/+1 counter on it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "haste",
+      "text": "Haste"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "damage dealt",
+        "who": "self",
+        "to": "player",
+        "combat": true
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "text": "Whenever this creature deals combat damage to a player, put a +1/+1 counter on it."
+    }
+  ]
+}

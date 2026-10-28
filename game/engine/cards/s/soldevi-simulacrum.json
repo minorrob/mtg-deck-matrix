@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Soldevi Simulacrum",
+    "oracleId": "227ed0b7-7a9a-41f1-a190-1d1b85a44720",
+    "types": [
+      "Artifact",
+      "Creature"
+    ],
+    "subtypes": [
+      "Soldier"
+    ],
+    "manaCost": "{4}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Cumulative upkeep {1} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)\n{1}: This creature gets +1/+0 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "cumulative upkeep",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        }
+      ],
+      "text": "Cumulative upkeep {1} (At the beginning of your upkeep, put an age counter on this permanent, then sacrifice it unless you pay its upkeep cost for each age counter on it.)"
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": 0
+        }
+      ],
+      "text": "{1}: This creature gets +1/+0 until end of turn."
+    }
+  ]
+}

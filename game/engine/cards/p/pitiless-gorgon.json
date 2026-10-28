@@ -1,0 +1,33 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pitiless Gorgon",
+    "oracleId": "4704ce78-b287-4038-abdd-ddb20116874d",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Gorgon"
+    ],
+    "manaCost": "{1}{B/G}{B/G}",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "colorIdentity": [
+      "B",
+      "G"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Deathtouch",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "deathtouch",
+      "text": "Deathtouch"
+    }
+  ]
+}

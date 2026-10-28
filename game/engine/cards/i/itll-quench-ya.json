@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "It'll Quench Ya!",
+    "oracleId": "cb184995-700f-4900-994a-4ce7fd12f942",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [
+      "Lesson"
+    ],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Counter target spell unless its controller pays {2}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "spell"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": {
+            "controllerOf": {
+              "target": 0
+            }
+          },
+          "amount": 2,
+          "effects": [
+            {
+              "effect": "counterSpell",
+              "spells": {
+                "target": 0
+              }
+            }
+          ]
+        }
+      ],
+      "text": "Counter target spell unless its controller pays {2}."
+    }
+  ]
+}

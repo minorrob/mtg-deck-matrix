@@ -38,9 +38,10 @@ const fresh = async () => {
 };
 const openMenu = async (page) => { await page.getByRole("button", {name: "Menu", exact: true}).click(); await page.locator("#cm-user-menu:popover-open").waitFor(); };
 const entries = (page) => page.$$eval("#cm-user-menu button, #cm-user-menu a", (els) => els.map((el) => el.textContent.replace(/^[^\p{L}]+/u, "").trim()));
+/* Reset All is in Settings, in the Danger zone (Rob, 2026-10-28: the account menu no longer carries it). */
 const resetDialog = async (page) => {
-  await openMenu(page);
-  await page.locator("#cm-user-menu").getByRole("button", {name: "Reset All", exact: true}).click();
+  await page.goto(`${base}/index.html#settings`);
+  await page.getByRole("button", {name: "Reset All…", exact: true}).click();
   await page.getByLabel("Type RESET to confirm").waitFor();
 };
 const submit = (page) => page.locator("#cm-dialog [type=submit]").click();
@@ -86,20 +87,20 @@ try {
   const {context, page} = await fresh();
   await loadLiveState(page, base);
   await openMenu(page);
-  await page.locator("#cm-user-menu [data-theme-choice=brass-slate]").click();
-  await page.waitForFunction(() => document.querySelector("[data-theme-choice=brass-slate]")?.getAttribute("aria-pressed") === "true");
+  await page.locator("#cm-user-menu [data-theme-skin=bronze-basalt]").click();
+  await page.waitForFunction(() => document.querySelector("[data-theme-skin=bronze-basalt]")?.getAttribute("aria-pressed") === "true");
   await seed(page);
   const before = await library(page);
   ok(before.decks > 0 && before.lots > 1000, `the committed library is in: ${before.decks} decks, ${before.lots} card records`);
-  ok(before.preferences.theme === "brass-slate", "and a theme of the reader's own is chosen, saved with the library");
+  ok(before.preferences.theme === "bronze-basalt", "and a theme of the reader's own is chosen, saved with the library");
 
-  /* 1. The Menu entry and its dialog. */
+  /* 1. The Settings entry and its dialog. */
   await openMenu(page);
-  const items = await entries(page);
-  eq(items.slice(0, 4), ["Settings", "Save a backup file", "Restore from a backup file", "Reset All"], "the Menu offers Reset All beside the backups");
-  ok(await page.locator("#cm-user-menu [data-action=reset-all]").evaluate((b) => b.classList.contains("cm-danger") && getComputedStyle(b).color !== getComputedStyle(b.previousElementSibling).color), "in red, unlike the entries beside it");
-  await shot(page, "reset-all-menu");
+  eq(await page.locator("#cm-user-menu [data-action=reset-all]").count(), 0, "the account menu no longer carries Reset All");
   await page.keyboard.press("Escape");
+  await page.goto(`${base}/index.html#settings`);
+  eq(await page.locator(".cm-settings-danger [data-action=reset-all]").evaluate((b) => b.classList.contains("cm-danger")), true, "Reset All is in Settings' Danger zone, as a danger action, retaining its existing confirmation");
+  await shot(page, "reset-all-settings");
   await resetDialog(page);
   eq((await page.locator("#cm-dialog[open] h2").first().textContent()).trim(), "Reset All", "it opens a dialog named Reset All");
   const words = await page.locator("#cm-dialog").innerText();
@@ -208,7 +209,7 @@ try {
   eq((await p.locator(".cm-landing-chip .cm-landing-chip-name").innerText()).trim(), "reader@example.test", "the reader is still signed in: the landing page's chip names them");
   await p.locator(".cm-landing-chip").click();
   await p.locator("#cm-user-menu:popover-open").waitFor();
-  ok((await entries(p)).includes("Sign out") && (await entries(p)).includes("Sync now"), "and its Menu offers Sync now and Sign out");
+  ok((await entries(p)).includes("Sign out") && !(await entries(p)).includes("Reset All"), "and its Menu offers Sign out (Sync now is in Settings, Account)");
   await p.keyboard.press("Escape");
 
   /* 6. A cloud save that fails after the library has emptied: the next sync saves the empty library. */

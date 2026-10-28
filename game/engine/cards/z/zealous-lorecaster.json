@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Zealous Lorecaster",
+    "oracleId": "f82265fd-e772-4347-a27f-37b00ccd416b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Giant",
+      "Sorcerer"
+    ],
+    "manaCost": "{5}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "When this creature enters, return target instant or sorcery card from your graveyard to your hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "types": [
+                "Instant"
+              ]
+            },
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "types": [
+                "Sorcery"
+              ]
+            }
+          ]
+        }
+      ],
+      "text": "When this creature enters, return target instant or sorcery card from your graveyard to your hand."
+    }
+  ]
+}

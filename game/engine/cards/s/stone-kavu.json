@@ -1,0 +1,64 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Stone Kavu",
+    "oracleId": "01565f61-a3c8-42ca-99f3-07cfc64034a2",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Kavu"
+    ],
+    "manaCost": "{4}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G",
+      "R",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "{R}: This creature gets +1/+0 until end of turn.\n{W}: This creature gets +0/+1 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{R}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 1,
+          "toughness": 0
+        }
+      ],
+      "text": "{R}: This creature gets +1/+0 until end of turn."
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{W}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 0,
+          "toughness": 1
+        }
+      ],
+      "text": "{W}: This creature gets +0/+1 until end of turn."
+    }
+  ]
+}

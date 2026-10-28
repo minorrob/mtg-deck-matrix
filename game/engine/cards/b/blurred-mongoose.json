@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blurred Mongoose",
+    "oracleId": "588a5bac-dcad-410e-8878-0230500c2e3a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Mongoose"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "This spell can't be countered.\nShroud (This creature can't be the target of spells or abilities.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "cant-be-countered",
+      "affects": {
+        "what": "spell",
+        "self": true
+      },
+      "text": "This spell can't be countered."
+    },
+    {
+      "kind": "keyword",
+      "keyword": "shroud",
+      "text": "Shroud (This creature can't be the target of spells or abilities.)"
+    }
+  ]
+}

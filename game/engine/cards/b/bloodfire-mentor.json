@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bloodfire Mentor",
+    "oracleId": "2c47319a-4062-4aec-b68a-e8e8f023cf86",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Efreet",
+      "Shaman"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": 0,
+    "toughness": 5
+  },
+  "oracleText": "{2}{U}, {T}: Draw a card, then discard a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{U}"
+        },
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        },
+        {
+          "effect": "discard",
+          "count": 1
+        }
+      ],
+      "text": "{2}{U}, {T}: Draw a card, then discard a card."
+    }
+  ]
+}

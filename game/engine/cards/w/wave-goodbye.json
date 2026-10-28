@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wave Goodbye",
+    "oracleId": "06ef46c6-00ba-40e6-b866-d0095ab83749",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Return each creature without a +1/+1 counter on it to its owner's hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Return each creature without a +1/+1 counter on it to its owner's hand.",
+      "effects": [
+        {
+          "effect": "moveZoneAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "nonCounters": "+1/+1"
+          },
+          "to": "hand"
+        }
+      ]
+    }
+  ]
+}

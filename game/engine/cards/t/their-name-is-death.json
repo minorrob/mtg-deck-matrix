@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Their Name Is Death",
+    "oracleId": "97f9aa5e-e34d-4029-9213-b32ebaf9859c",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}{B}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy all nonartifact creatures.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "destroyAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "nonTypes": [
+              "Artifact"
+            ]
+          }
+        }
+      ],
+      "text": "Destroy all nonartifact creatures."
+    }
+  ]
+}

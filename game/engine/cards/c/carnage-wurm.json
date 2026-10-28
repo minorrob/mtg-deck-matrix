@@ -1,0 +1,55 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Carnage Wurm",
+    "oracleId": "007161cb-a44b-4443-a53a-dfaacc6cfb86",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Wurm"
+    ],
+    "manaCost": "{6}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Bloodthirst 3 (If an opponent was dealt damage this turn, this creature enters with three +1/+1 counters on it.)\nTrample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "+1/+1",
+          "count": {
+            "if": {
+              "compare": {
+                "count": {
+                  "damageTakenThisTurn": "an opponent"
+                },
+                "moreThan": 0
+              }
+            },
+            "then": 3
+          }
+        }
+      },
+      "text": "Bloodthirst 3 (If an opponent was dealt damage this turn, this creature enters with three +1/+1 counters on it.)"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Repentant Blacksmith",
+    "oracleId": "a83073a2-e63d-4105-8bad-9612e411fc85",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "Protection from red",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "R"
+        ]
+      },
+      "text": "Protection from red"
+    }
+  ]
+}

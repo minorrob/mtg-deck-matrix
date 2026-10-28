@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blood Glutton",
+    "oracleId": "065b8e5e-874e-4de3-9f12-41e4b1604561",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire"
+    ],
+    "manaCost": "{4}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 4,
+    "toughness": 3
+  },
+  "oracleText": "Lifelink (Damage dealt by this creature also causes you to gain that much life.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "lifelink",
+      "text": "Lifelink (Damage dealt by this creature also causes you to gain that much life.)"
+    }
+  ]
+}

@@ -107,7 +107,7 @@ BREAKS = [
     ('schema: life a spells-cost-more static\'s', SCHEMA, '!(ability.rule === "spells-cost-more" && ability.amount === undefined', '!(ability.amount === undefined'),
 
     # Toxic Deluge: X paid in life (rules/actions.mjs, lifeXAtom).
-    ('x life: one offer for each X', ACTIONS, 'lifeX ? Array.from({length: lifeLeft + 1}, (_, i) => i) : xValues(pool, cost, x)', 'xValues(pool, cost, x)'),
+    ('x life: one offer for each X', ACTIONS, 'lifeX ? Array.from({length: lifeLeft + 1}, (_, i) => i) : xValues(pool, cost, x, reckoned.less)', 'xValues(pool, cost, x, reckoned.less)'),
     ('x life: not a cost to pick', ACTIONS, ' && a !== beholds && a !== lifeX);', ' && a !== beholds);'),
     ('x life: its lands tapped for it', ACTIONS, ': poolSize(pool) === 0) && (xMana === null || tapsForX) && !freely', ': poolSize(pool) === 0) && (X === null || tapsForX) && !freely'),
     ('x life: tap plans for it', ACTIONS, '(action.x === undefined || action.payLifeX === true || xTaps(state))', '(action.x === undefined || xTaps(state))'),
@@ -174,6 +174,6 @@ BREAKS = [
     ('controller: as it last existed', BIND, '    return Number.isInteger(was) ? [was] : [];', '    return [];'),
 
     # Command Beacon: the command zone is public.
-    ('command: no failing to find', ASKING, ' || zone === "exile" || zone === "command";', ' || zone === "exile";'),
+    ('command: no failing to find', ASKING, ' || zone === "exile" || zone === "command" || (zone', ' || zone === "exile" || (zone'),
     ('command: asked in its words', ASKING, '        : awaiting.zone === "command" ? "Choose a card in your command zone"\n', ''),
 ]

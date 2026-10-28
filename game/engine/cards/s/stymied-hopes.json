@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Stymied Hopes",
+    "oracleId": "b081726f-0ed6-4ab0-833e-f510ac6fbeaa",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Counter target spell unless its controller pays {1}. Scry 1. (Look at the top card of your library. You may put that card on the bottom.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Counter target spell unless its controller pays {1}. Scry 1. (Look at the top card of your library. You may put that card on the bottom.)",
+      "targets": [
+        {
+          "what": "spell"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": {
+            "controllerOf": {
+              "target": 0
+            }
+          },
+          "amount": 1,
+          "effects": [
+            {
+              "effect": "counterSpell",
+              "spells": {
+                "target": 0
+              }
+            }
+          ]
+        },
+        {
+          "effect": "scry",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

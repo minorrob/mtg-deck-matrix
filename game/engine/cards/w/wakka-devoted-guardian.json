@@ -1,0 +1,104 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Wakka, Devoted Guardian",
+    "oracleId": "fbd37284-35ff-4409-b6d5-f813c06c4931",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Warrior"
+    ],
+    "manaCost": "{2}{G}{W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "Reach, trample\nWhenever Wakka deals combat damage to a player, destroy up to one target artifact that player controls and put a +1/+1 counter on Wakka.\nBlitzball Captain — At the beginning of your end step, if a counter was put on Wakka this turn, put a +1/+1 counter on each other creature you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Reach",
+      "keyword": "reach"
+    },
+    {
+      "kind": "keyword",
+      "text": "trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever Wakka deals combat damage to a player, destroy up to one target artifact that player controls and put a +1/+1 counter on Wakka.",
+      "trigger": {
+        "on": "damage dealt",
+        "who": "self",
+        "to": "player",
+        "combat": true
+      },
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Artifact"
+          ],
+          "controller": "that player",
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Blitzball Captain — At the beginning of your end step, if a counter was put on Wakka this turn, put a +1/+1 counter on each other creature you control.",
+      "trigger": {
+        "on": "end step"
+      },
+      "effects": [
+        {
+          "effect": "putCounterAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you",
+            "another": true
+          },
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "condition": {
+        "counterPutThisTurn": true
+      }
+    }
+  ]
+}

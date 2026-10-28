@@ -1,0 +1,240 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Appendage Amalgam",
+  "fixtures": {
+    "Spark": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Spark deals 2 damage to any target.",
+        "targets": [
+          {
+            "anyOf": [
+              {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ]
+              },
+              {
+                "what": "player"
+              }
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "amount": 2,
+            "targets": {
+              "target": 0
+            },
+            "who": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It attacks: surveil 1, the Island put into Rob's graveyard",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Appendage Amalgam"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Appendage Amalgam"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Island"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Island"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Surveil 1, kept on top: nothing in the graveyard, and Rob draws it next turn",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Appendage Amalgam"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Appendage Amalgam"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": []
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Flash: Rob casts it in answer to Maya's Spark",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Appendage Amalgam"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Spark"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Spark",
+          "seat": 1,
+          "targets": [
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Swamp",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "tap": "Wastes",
+          "seat": 0
+        },
+        {
+          "cast": "Appendage Amalgam",
+          "seat": 0
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Appendage Amalgam"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 38
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Goblin Raider",
+    "oracleId": "7f11c830-fced-40db-8c02-b3c54f3e4372",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Goblin",
+      "Warrior"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "This creature can't block.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "cant-block",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature can't block."
+    }
+  ]
+}

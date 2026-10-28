@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shatterstorm",
+    "oracleId": "96ce2403-4607-440a-92ae-80aceb458c5d",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy all artifacts. They can't be regenerated.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "destroyAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Artifact"
+            ]
+          },
+          "noRegenerate": true
+        }
+      ],
+      "text": "Destroy all artifacts. They can't be regenerated."
+    }
+  ]
+}

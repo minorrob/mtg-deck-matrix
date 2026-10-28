@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Witherbloom, the Balancer",
+    "oracleId": "fbb04a21-e513-4317-aac8-fa6df91c3438",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elder",
+      "Dragon"
+    ],
+    "manaCost": "{6}{B}{G}",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "colorIdentity": [
+      "B",
+      "G"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Affinity for creatures (This spell costs {1} less to cast for each creature you control.)\nFlying, deathtouch\nInstant and sorcery spells you cast have affinity for creatures.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "affinity",
+      "of": {
+        "types": [
+          "Creature"
+        ]
+      },
+      "text": "Affinity for creatures (This spell costs {1} less to cast for each creature you control.)"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "deathtouch",
+      "text": "deathtouch"
+    },
+    {
+      "kind": "static",
+      "rule": "spells-cost-less",
+      "affects": {
+        "anyOf": [
+          {
+            "types": [
+              "Instant"
+            ]
+          },
+          {
+            "types": [
+              "Sorcery"
+            ]
+          }
+        ]
+      },
+      "amount": {
+        "count": {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "controller": "you"
+        }
+      },
+      "text": "Instant and sorcery spells you cast have affinity for creatures."
+    }
+  ]
+}

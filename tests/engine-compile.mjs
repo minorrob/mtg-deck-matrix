@@ -57,12 +57,20 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
      creature dealt damage this turn (Mirrodin Avenged), a white or black spell to counter (Precise Redaction), a tapped
      creature for the modes its mana pays (Cloud's Limit Break) or at all (Eriette's Lullaby), a red or white creature or
      planeswalker of an opponent's (Flourishing Grapple), a spell that targets a permanent its caster controls (Rebuff the
-     Wicked), the {2} a mode adds to its mana cost, which spree's one or more modes always do (Explosive Derailment;
-     CR 702.172a) -- or for want of seven cards in its player's graveyard, without which it can't be cast at all (Proft,
-     Sinister Mastermind). Named, so a card that stops being played in its smoke game is found, not counted. */
+     Wicked), a spell of mana value 1 to counter (Mental Misstep), the {2} a mode adds to its mana cost, which spree's one
+     or more modes always do (Explosive Derailment, Getaway Glamer of Rob's lists, and Return the Favor's {1}; CR 702.172a) -- or for want of seven cards in its player's graveyard, without which it can't be cast at all (Proft,
+     Sinister Mastermind). The card load of 2026-10-24 added 23 for the same wants, and an artifact card in its player's
+     graveyard to return (Refurbish); each has scenarios of its own that cast it. The precon load of 2026-10-25 added one
+     that can't be cast during its player's first three turns of the game, where a smoke game casts it (Serra Avenger; its
+     scenarios cast it on the fourth). Named, so a card that stops being played in its smoke game is found, not
+     counted. */
   const unplayed = smoked.filter((r) => !r.played).map((r) => r.name).sort();
-  eq(unplayed, ["Cloud's Limit Break", "Condemn", "Eriette's Lullaby", "Explosive Derailment", "Flourishing Grapple", "Mirrodin Avenged", "Precise Redaction",
-    "Proft, Sinister Mastermind", "Rebuff the Wicked"], `and the other ${scripts.length - unplayed.length} of ${scripts.length} were actually played or cast in it`);
+  eq(unplayed, ["Argivian Restoration", "Artifact Blast", "Assassinate", "Blue Elemental Blast", "Bright Reprisal",
+    "Cloud's Limit Break", "Condemn", "Death Stroke", "Devout Decree", "Eriette's Lullaby", "Explosive Derailment",
+    "Flashfreeze", "Flourishing Grapple", "Getaway Glamer", "Halt Order", "Immolating Glare", "Keep Safe", "Kill Shot",
+    "Mental Misstep", "Mirrodin Avenged", "Precise Redaction", "Proft, Sinister Mastermind", "Rebuff the Wicked",
+    "Rebuke", "Reconstruction", "Refurbish", "Return the Favor", "Ritual of Restoration", "Serra Avenger", "Silverstrike",
+    "Spell Snare", "Swift Response", "Take Vengeance", "Turn Aside", "Vengeance", "You Are Already Dead"], `and the other ${scripts.length - unplayed.length} of ${scripts.length} were actually played or cast in it`);
   /* Batch 30: a card aimed at its controller's own creature spell answers the Smoke Whelp its player casts first. */
   ok(smoked.find((r) => r.name === "Double Major")?.played === true, "Double Major (\"copy target creature spell you control\") is cast in its smoke game, at its player's own creature spell");
   /* A creature whose ACTIVATED ability copies its controller's spells is cast as any creature is: no spell of its own put on
@@ -146,8 +154,8 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
   const req = JSON.parse(writerRequest(ORACLE.get("Lightning Bolt"), ["abilities[0].text: missing"]));
   eq([req.card.oracleText, req.yourLastAnswerWasRefused], ["Lightning Bolt deals 3 damage to any target.", ["abilities[0].text: missing"]], "a retry carries what was wrong");
   eq(checkAnswer(ORACLE.get("Lightning Bolt"), {abilitiesJson: "[{oops"}).stage, "schema", "abilities that are not JSON are a schema refusal");
-  ok(Math.abs(costOf(WRITER_MODEL, {input_tokens: 1e6, output_tokens: 1e6}) - 12) < 1e-9 && Math.abs(costOf(READER_MODEL, {input_tokens: 1e6, cache_read_input_tokens: 1e6}) - 1.1) < 1e-9,
-    "costs at list prices: Sonnet 5.5 $2 in and $10 out, Haiku 4.5 $1 in, a cache read a tenth");
+  ok(Math.abs(costOf(WRITER_MODEL, {input_tokens: 1e6, output_tokens: 1e6}) - 12) < 1e-9 && Math.abs(costOf(READER_MODEL, {input_tokens: 1e6, cache_read_input_tokens: 1e6}) - 0.11) < 1e-9,
+    "costs at list prices: Sonnet 5.5 $2 in and $10 out, Haiku 5.5 $0.10 in, a cache read a tenth");
 }
 
 /* ---- 2. a run, against a stub of the API ---- */
@@ -177,8 +185,8 @@ const job = (names, call, ledger = {cards: {}}, extra = {}) => {
   const id = ORACLE.get("Lightning Bolt").id;
   eq([results[0].outcome, ledger.cards[id].status, written[id].status, written[id].schema], ["provisional", "provisional", "provisional", COMPILED_SCHEMA],
     "a right answer passes all four checks and is stored provisional, until a playtest or Rob confirms it");
-  eq([calls.map((c) => c.model), calls[0].output_config.effort, calls[1].output_config.effort], [[WRITER_MODEL, READER_MODEL], "medium", undefined],
-    "Sonnet 5.5 at medium effort writes it and Haiku 4.5 reads it back, with no effort sent to Haiku");
+  eq([calls.map((c) => c.model), calls[0].output_config.effort, calls[1].output_config.effort, calls[1].thinking], [[WRITER_MODEL, READER_MODEL], "medium", undefined, {type: "disabled"}],
+    "Sonnet 5.5 at medium effort writes it and Haiku 5.5 reads it back, with no effort sent to Haiku and its thinking off");
   ok(calls[0].system[0].cache_control?.type === "ephemeral", "the writer's standing instructions are cached");
   eq([written[id].crFlags, written[id].script.identity.oracleId, written[id].oracleHash], [["CR 120.3: damage to a creature is marked"], id, oracleHash(ORACLE.get("Lightning Bolt"))],
     "with the rules it relied on, the printed facts from the oracle data, and the hash of the text it was learned from");
@@ -241,7 +249,9 @@ const job = (names, call, ledger = {cards: {}}, extra = {}) => {
   eq(plan.status, 0, "--plan exits cleanly");
   ok(/cards asked for; \d+ hand-authored, \d+ not in the oracle data, \d+ still to learn/.test(plan.stdout) && /spends money/.test(plan.stdout), `and says what a run would take, for free: ${plan.stdout.split("\n")[0]}`);
   const asked = path.join(mkdtempSync(path.join(tmpdir(), "demand-")), "demand.json");
-  writeFileSync(asked, JSON.stringify({schema: "CrankCardDemand@1", cards: [{name: "Lightning Bolt", demand: {decks: 2, asked: 3}}, {name: "A.I.M. Bot"}, {name: "Grim Lavamancer"}]}));
+  /* A candidate as the store holds it today: A.I.M. Bot was one until the load of 2026-10-24 promoted it. */
+  const candidate = JSON.parse(readFileSync(path.join(ROOT, "data/engine/candidates.json"), "utf8")).cards[0].name;
+  writeFileSync(asked, JSON.stringify({schema: "CrankCardDemand@1", cards: [{name: "Lightning Bolt", demand: {decks: 2, asked: 3}}, {name: candidate}, {name: "Grim Lavamancer"}]}));
   const demanded = spawnSync(process.execPath, ["game/tools/engine-compile.mjs", "--plan", "--demand", asked], {cwd: ROOT, encoding: "utf8", env});
   ok(demanded.status === 0 && /^engine-compile: 3 cards asked for; 1 hand-authored/.test(demanded.stdout) && /1 are the card compiler's candidates and cost nothing/.test(demanded.stdout),
     `the demand list is a run's cards, its candidates free: ${demanded.stdout.split("\n").slice(0, 2).join(" ")}`);
@@ -329,14 +339,35 @@ const trust = trustOf(library, calibrate({scripts, library, scenarios, definitio
   };
   const bad = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: wrong, examples: [], n: 3});
   ok(bad.passed < 3 && bad.results.filter((r) => r.outcome === "failed").every((r) => /^fidelity: /.test(r.why)), "a writer that leaves a sentence out fails, at fidelity");
+  /* A sentence left out beside a keyword it mentions is still unclaimed: Gandalf the White's Flash does not claim "You may
+     cast legendary spells and artifact spells as though they had flash" (Rob's lists P2, 2026-10-24, sampled it). */
+  const gandalf = handOf("Gandalf the White");
+  ok(gandalf !== undefined && !checkFidelity({...gandalf, abilities: gandalf.abilities.filter((a) => !/as though they had flash/.test(a.text))}).ok,
+    "Gandalf the White without its flash-granting sentence is refused at fidelity, its Flash beside it");
+  /* A miscount only shows where a missing ability has a number to get wrong, so three evenly spaced cards may hold none
+     (Rob's lists P3, 2026-10-24: 33 more cards moved the pick onto +2 Mace, Gather the Townsfolk and Realmwalker). The
+     writer answers free, so the sample is wide enough to hold such cards, and the claim is made of the ones miscounted. */
+  const changed = new Set();
   const miscounted = async (body) => {
     const a = right(body);
-    return {answer: {...a, abilitiesJson: a.abilitiesJson.replace(/"count":1\b/g, "\"count\":2")}, usage: {}};
+    /* Every count, amount, power and toughness one more (lane P1): a wrong number wherever the card says one. */
+    const wrongly = a.abilitiesJson.replace(/"(count|amount|power|toughness)":(\d+)\b/g, (_, key, n) => `"${key}":${Number(n) + 1}`);
+    if (wrongly !== a.abilitiesJson) changed.add(JSON.parse(body.messages[0].content).card.name);
+    return {answer: {...a, abilitiesJson: wrongly}, usage: {}};
   };
-  const played = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: miscounted, examples: [], n: 3});
-  ok(played.results.some((r) => r.outcome === "failed" && /^plays: /.test(r.why)), `one that writes every sentence with a wrong number passes every check but its scenarios: "${played.results.find((r) => r.outcome === "failed")?.why}"`);
+  const played = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: miscounted, examples: [], n: 40});
+  const caught = played.results.filter((r) => changed.has(r.name) && r.outcome === "failed" && /^plays: /.test(r.why));
+  ok(changed.size >= 3 && caught.length >= 1, `one that writes every sentence with a wrong number passes every check but its scenarios: ${changed.size} miscounted, caught in play: ${caught.map((r) => r.name).join(", ")}`);
   const capped = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: writer, examples: [], n: 3, maxCost: 0});
   ok(capped.tried === 0 && /cap/.test(capped.stopped), "the sample stops at its cap");
+  /* Every card the sample may take, asked of a writer that answers nothing (free, and refused at fidelity): never one the
+     library writes half an ability of -- Gemstone Caverns' "{T}: Add {C}." -- however the evenly spaced pick falls as the
+     directory grows (the library load's L1, 2026-10-22: sixteen more cards moved the pick off it). */
+  ok(handOf("Gemstone Caverns") !== undefined, "Gemstone Caverns is defined, a card the library writes half an ability of");
+  const asked = [];
+  const silent = async (body) => { asked.push(JSON.parse(body.messages[0].content).card.name); return {answer: {abilitiesJson: "[]", notes: "", crFlags: []}, usage: {}}; };
+  await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: silent, examples: [], n: scripts.length, maxCost: 1});
+  ok(asked.length > 3 && !asked.includes("Gemstone Caverns"), `the whole pool asked (${asked.length} cards), Gemstone Caverns never among them`);
 }
 
 console.log(`engine-compile: ${checks} checks passed — the loader's four checks held against ${scripts.length} hand definitions, every refusal at its stage, a card learned once for its text, and nothing spent without --yes.`);

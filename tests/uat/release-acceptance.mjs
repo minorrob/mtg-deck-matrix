@@ -70,8 +70,7 @@ try {
        not whatever address this copy happens to be open on. */
     /* The version moved from the Menu to Settings › About in R3.3 (INTAKE §4.7); the Menu's Settings
        entry is how a reader gets there. */
-    await click("Menu");
-    await click("Settings");
+    await page.evaluate(() => {location.hash = "#settings";});   /* the Menu has Your Profile, not Settings (Rob, 2026-10-28) */
     await page.locator(".cm-settings .cm-version").waitFor({timeout: 15000});
     const version = (await page.locator(".cm-settings .cm-version").innerText()).replace(/\s+/g, " ").trim();
     ok(/[0-9a-f]{7} · \d{4}-\d{2}-\d{2}/.test(version), `Settings names this release: ${version}`);
@@ -81,23 +80,25 @@ try {
     if (await page.evaluate(() => document.querySelector('meta[name="crankmagic-accounts"]')?.content === "on")) {
       await page.locator("#cm-account").waitFor({timeout: 15000});
       ok(/Sign In \(Save to Cloud\)/.test(await page.locator("#cm-account").innerText()), "signed out, the Menu offers the cloud library, and the workshop is otherwise the same");
-      ok(await page.locator("#cm-account [data-action=app-refresh]").count() === 1, "with Refresh under it (Rob, 2026-09-29)");
     }
     ok(!(await page.locator("#cm-share-mail").count()), "the Menu has no Share CrankMagic by email (Rob, 2026-09-29)");
     await shot("01b-menu");
-    const home = await page.evaluate(() => new URL("./", document.querySelector('link[rel="canonical"]').href).href);
-    await page.locator("#cm-user-menu").getByRole("button", {name: "Show a QR code"}).click();
-    await page.locator("#cm-dialog .cm-qr-link a").waitFor({timeout: 15000});
-    ok((await page.locator("#cm-dialog .cm-qr-link a").innerText()) === home, `the QR code carries the published address, ${home}`);
+    ok((await page.locator("#cm-user-menu").innerText()).indexOf("QR") < 0, "the Menu no longer offers a QR code (Rob, 2026-10-28)");
     await page.keyboard.press("Escape");
     await page.keyboard.press("Escape");
 
-    /* Play is Coming Soon -- or, on a release with Play in the cloud (staging since 2026-09-29), the table's page. */
+    /* Cloud Play opens the lounge; making a new table is an explicit action there. */
     await nav("Play");
     if (await page.getAttribute('meta[name="crankmagic-play"]', "content") === "cloud") {
-      await page.getByRole("heading", {name: "New table"}).waitFor({timeout: 20000});
-      ok(!/Coming Soon/.test(await page.locator("#cm-main").textContent()), "Play is the table's page: New table, not Coming Soon");
+      await page.locator("#cm-play-home").waitFor({timeout: 20000});
+      ok(await page.getByRole("heading", {name: "A place at the table"}).count() === 1 && await page.locator(".cm-ng-dialog").count() === 0, "Play opens the Commander lounge before table setup");
+      await shot("02-play-lounge");
+      await page.getByRole("button", {name: "Start a new game", exact: true}).click();
+      await page.locator(".cm-ng-dialog").waitFor({timeout: 20000});
+      ok(await page.getByRole("heading", {name: "New game", exact: true}).count() === 1, "New game opens the pop-up from the lounge");
       await shot("02-play-new-table");
+      await page.keyboard.press("Escape");   /* a pop-up holds the page: Escape puts it away */
+      await page.locator(".cm-ng-dialog").waitFor({state: "detached", timeout: 10000});
       await nav("Decks");
       await page.waitForFunction(() => location.hash.startsWith("#decks"));
     } else {

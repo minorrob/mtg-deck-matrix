@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Luminous Bonds",
+    "oracleId": "2c006a63-0550-4a87-a5fe-f4247857271c",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Enchant creature\nEnchanted creature can't attack or block.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      },
+      "text": "Enchant creature"
+    },
+    {
+      "kind": "static",
+      "rule": "cant-attack",
+      "affects": {
+        "attachedBy": "self"
+      },
+      "text": "Enchanted creature can't attack or block."
+    },
+    {
+      "kind": "static",
+      "rule": "cant-block",
+      "affects": {
+        "attachedBy": "self"
+      },
+      "text": "Enchanted creature can't attack or block."
+    }
+  ]
+}

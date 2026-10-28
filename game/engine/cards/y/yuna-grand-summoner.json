@@ -1,0 +1,117 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Yuna, Grand Summoner",
+    "oracleId": "ba72d4a9-6f36-4796-bd71-2342fa9b4a30",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Cleric"
+    ],
+    "manaCost": "{1}{G}{W}{U}",
+    "colors": [
+      "G",
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "U",
+      "W"
+    ],
+    "power": 1,
+    "toughness": 5
+  },
+  "oracleText": "Grand Summon — {T}: Add one mana of any color. When you next cast a creature spell this turn, that creature enters with two additional +1/+1 counters on it.\nWhenever another permanent you control is put into a graveyard from the battlefield, if it had one or more counters on it, you may put that number of +1/+1 counters on target creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "text": "Grand Summon — {T}: Add one mana of any color. When you next cast a creature spell this turn, that creature enters with two additional +1/+1 counters on it.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true
+        },
+        {
+          "effect": "delayedTrigger",
+          "when": {
+            "on": "spell cast",
+            "caster": "you",
+            "filter": {
+              "types": [
+                "Creature"
+              ]
+            }
+          },
+          "thisTurn": true,
+          "once": true,
+          "text": "When you next cast a creature spell this turn, that creature enters with two additional +1/+1 counters on it.",
+          "effects": [
+            {
+              "effect": "effectUntil",
+              "targets": "that card",
+              "rule": "enters-with-counters",
+              "counter": "+1/+1",
+              "count": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever another permanent you control is put into a graveyard from the battlefield, if it had one or more counters on it, you may put that number of +1/+1 counters on target creature.",
+      "trigger": {
+        "on": "leaves",
+        "who": "another",
+        "to": "graveyard",
+        "filter": {
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "+1/+1",
+          "count": {
+            "countersOn": "that card",
+            "counter": "any"
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "optional": true,
+      "condition": {
+        "compare": {
+          "count": {
+            "countersOn": "that card",
+            "counter": "any"
+          },
+          "atLeast": 1
+        }
+      }
+    }
+  ]
+}

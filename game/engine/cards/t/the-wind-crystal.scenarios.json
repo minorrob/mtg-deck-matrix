@@ -1,0 +1,171 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "The Wind Crystal",
+  "fixtures": {
+    "Knight": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Knight"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A {1}{W} Knight for {W}; Soul's Attendant's 1 life is 2",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "The Wind Crystal",
+            "Soul's Attendant",
+            "Plains"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Knight"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Knight"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 42
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "The Wind Crystal",
+            "Soul's Attendant",
+            "Plains",
+            "Knight"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "{4}{W}{W}, {T}: Rob's creatures gain flying and lifelink until end of turn",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "The Wind Crystal",
+            "Bear",
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "The Wind Crystal"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Bear",
+                "has": [
+                  "Flying",
+                  "Lifelink"
+                ],
+                "lacks": []
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Bear",
+            "has": [],
+            "lacks": [
+              "Flying",
+              "Lifelink"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

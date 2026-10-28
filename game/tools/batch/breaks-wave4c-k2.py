@@ -90,7 +90,7 @@ BREAKS = [
     ('dredge: the keyword needs its number', INDEX, '      if (!(Number.isInteger(ability.amount) && ability.amount >= 1)) problems.push(`${ability.text}: dredge needs its number, 1 or more`);\n', ''),
     ('dredge: a rule of the closed list', STATICS, '  "dredge": "script/effects/zones.mjs",\n', ''),
     ('dredge: built', TIMING, '"Unearth", "Suspend", "Dredge"]),', '"Unearth", "Suspend"]),'),
-    ('dredge: declared', VOCAB, '  "dredge"];', '  ];'),
+    ('dredge: declared', VOCAB, '  "dredge",\n', ''),
     # ---- delve (CR 702.66a) ----
     ('delve: offered', ACTIONS, '    const delves = delvers.length > 0 && cost.generic + x > 0 && canPay(', '    const delves = false && canPay('),
     ('delve: a card to exile', ACTIONS, '    const delves = delvers.length > 0 && cost.generic + x > 0 && canPay(', '    const delves = cost.generic + x > 0 && canPay('),
@@ -120,7 +120,7 @@ BREAKS = [
     ('delve: picked from a range', ACTIONS, '["convoke", "tapAny", "waterbend", "delve"].includes(choice.cost)', '["convoke", "tapAny", "waterbend"].includes(choice.cost)'),
     ('delve: the picks carried', ACTIONS, ': choice.cost === "delve" ? {delveExile: ids} :', ':'),
     ('delve: the total cost\'s generic', MANA, '  return {...cost, generic: cost.generic + extra - n};', '  return {...cost, generic: cost.generic - n};'),
-    ('delve: built', TIMING, '"Warp", "Sneak", "Delve"]),', '"Warp", "Sneak"]),'),
+    ('delve: built', TIMING, '"Warp", "Sneak", "Delve", "Improvise"]),', '"Warp", "Sneak", "Improvise"]),'),
     ('delve: declared', VOCAB, '  "delve",\n', ''),
     ('delve: the scenario step', SCENARIO, '    found = found.filter((a) => (a.delve ?? false) === (step.delve ?? false));\n', ''),
     ('delve: said to the player', ROOM, '    if (a.delve) parts.push("delving, exiling cards you choose from your graveyard");\n', ''),

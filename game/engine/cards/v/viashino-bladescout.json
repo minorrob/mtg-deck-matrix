@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Viashino Bladescout",
+    "oracleId": "e23d88c4-8c9c-41cb-b4ff-ebb3f880ab63",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Lizard",
+      "Scout"
+    ],
+    "manaCost": "{1}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Flash (You may cast this spell any time you could cast an instant.)\nWhen this creature enters, target creature gains first strike until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flash",
+      "text": "Flash (You may cast this spell any time you could cast an instant.)"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "First Strike"
+          ]
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "text": "When this creature enters, target creature gains first strike until end of turn."
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tranquil Path",
+    "oracleId": "a9595011-8ddb-403a-ba35-5a79d346557e",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{4}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy all enchantments.\nDraw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Destroy all enchantments.\nDraw a card.",
+      "effects": [
+        {
+          "effect": "destroyAll",
+          "selector": {
+            "types": [
+              "Enchantment"
+            ]
+          }
+        },
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,398 @@
+{
+ "schema": "library-load-lane@1",
+ "lane": "P3-counters",
+ "theme": "counters",
+ "label": "Counters and the Final Fantasy list: Alliance's \"choose one that hasn't been chosen this turn\"; moving counters; monstrosity X; becoming a copy with exceptions (Kimahri, Altered Ego); creature Sagas (Summon:); Classes; attack taxes; counters put on creatures you don't control; man-lands; reveal-until; mana from removing counters",
+ "source": {
+  "list": "Rob's priority lists, 2026-10-24 (README.md here)",
+  "oracle": "data/engine/oracle.json"
+ },
+ "cards": [
+  {
+   "name": "Altered Ego",
+   "scope": "rob-list",
+   "type": "Creature - Shapeshifter",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "You may have this creature enter as a copy of any creature on the battlefield, except it enters with X additional +1/+1 counters on it."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Auron, Venerated Guardian",
+   "scope": "rob-list",
+   "type": "Legendary Creature - Human Spirit Samurai",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Shooting Star — Whenever Auron attacks, put a +1/+1 counter on it.",
+    "When you do, exile target creature defending player controls with power less than Auron's power until Auron leaves the battlefield."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Celestial Colonnade",
+   "scope": "rob-list",
+   "type": "Land",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{3}{W}{U}: Until end of turn, this land becomes a 4/4 white and blue Elemental creature with flying and vigilance.",
+    "It's still a land."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Clifftop Lookout",
+   "scope": "rob-list",
+   "type": "Creature - Frog Scout",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, reveal cards from the top of your library until you reveal a land card.",
+    "Put that card onto the battlefield tapped and the rest on the bottom of your library in a random order."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Crystalline Crawler",
+   "scope": "rob-list",
+   "type": "Artifact Creature - Construct",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Remove a +1/+1 counter from this creature: Add one mana of any color.",
+    "{T}: Put a +1/+1 counter on this creature."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Devoted Druid",
+   "scope": "rob-list",
+   "type": "Creature - Elf Druid",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Put a -1/-1 counter on this creature: Untap this creature."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Dusk Legion Duelist",
+   "scope": "rob-list",
+   "type": "Creature - Vampire Soldier",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever one or more +1/+1 counters are put on this creature, draw a card.",
+    "This ability triggers only once each turn."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Duskshell Crawler",
+   "scope": "rob-list",
+   "type": "Creature - Insect",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Each creature you control with a +1/+1 counter on it has trample. (It can deal excess combat damage to the player or planeswalker it's attacking.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Fight Rigging",
+   "scope": "rob-list",
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Then if you control a creature with power 7 or greater, you may play the exiled card without paying its mana cost."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Formidable Speaker",
+   "scope": "rob-list",
+   "type": "Creature - Elf Druid",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "When this creature enters, you may discard a card.",
+    "If you do, search your library for a creature card, reveal it, put it into your hand, then shuffle.",
+    "{1}, {T}: Untap another target permanent."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Gala Greeters",
+   "scope": "rob-list",
+   "type": "Creature - Elf Druid",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Alliance — Whenever another creature you control enters",
+    "choose one that hasn't been chosen this turn —",
+    "• Put a +1/+1 counter on this creature.",
+    "• Create a tapped Treasure token.",
+    "• You gain 2 life."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Galadriel, Light of Valinor",
+   "scope": "rob-list",
+   "type": "Legendary Creature - Elf Noble",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Alliance — Whenever another creature you control enters",
+    "choose one that hasn't been chosen this turn —",
+    "• Add {G}{G}{G}.",
+    "• Put a +1/+1 counter on each creature you control.",
+    "• Scry 2, then draw a card."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Generous Patron",
+   "scope": "rob-list",
+   "type": "Creature - Elf Advisor",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever you put one or more counters on a creature you don't control, draw a card."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Hunter's Talent",
+   "scope": "rob-list",
+   "type": "Enchantment - Class",
+   "layout": "class",
+   "compiler": "structure",
+   "gaps": [],
+   "needs": null
+  },
+  {
+   "name": "Kimahri, Valiant Guardian",
+   "scope": "rob-list",
+   "type": "Legendary Creature - Cat Warrior",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Ronso Rage — At the beginning of combat on your turn, put a +1/+1 counter on Kimahri and tap target creature an opponent controls.",
+    "Then you may have Kimahri become a copy of that creature, except its name is Kimahri, Valiant Guardian and it has vigilance and this ability."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Lulu, Stern Guardian",
+   "scope": "rob-list",
+   "type": "Legendary Creature - Human Wizard",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever an opponent attacks you, choose target creature attacking you.",
+    "Put a stun counter on that creature."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Maester Seymour",
+   "scope": "rob-list",
+   "type": "Legendary Creature - Human Elf Cleric",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "At the beginning of combat on your turn, put a number of +1/+1 counters equal to Maester Seymour's power on another target creature you control.",
+    "{3}{G}{G}: Monstrosity X, where X is the number of counters among creatures you control. (If this creature isn't monstrous, put X +1/+1 counters on it and it becomes monstrous.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Path of Discovery",
+   "scope": "rob-list",
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever a creature you control enters, it explores. (Reveal the top card of your library. Put that card into your hand if it's a land. Otherwise, put a +1/+1 counter on the creature, then put the card back or put it into your graveyard.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Protection Magic",
+   "scope": "rob-list",
+   "type": "Instant",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Put a shield counter on each of up to three target creatures. (If a creature with a shield counter would be dealt damage or destroyed, remove a shield counter from it instead.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Resourceful Defense",
+   "scope": "rob-list",
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever a permanent you control leaves the battlefield, if it had counters on it, put those counters on target permanent you control.",
+    "{4}{W}: Move any number of counters from target permanent you control onto a second target permanent you control."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Rikku, Resourceful Guardian",
+   "scope": "rob-list",
+   "type": "Legendary Creature - Human Artificer",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever you put one or more counters on a creature, until end of turn, that creature can't be blocked by creatures your opponents control.",
+    "Steal — {1}, {T}: Move a counter from target creature an opponent controls onto target creature you control.",
+    "Activate only as a sorcery."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Shelinda, Yevon Acolyte",
+   "scope": "rob-list",
+   "type": "Legendary Creature - Human Cleric",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever another creature you control enters, put a +1/+1 counter on that creature if its power is less than Shelinda's power.",
+    "Otherwise, put a +1/+1 counter on Shelinda."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Skycat Sovereign",
+   "scope": "rob-list",
+   "type": "Creature - Elemental Cat",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "This creature gets +1/+1 for each other creature you control with flying.",
+    "{2}{W}{U}: Create a 1/1 white Cat Bird creature token with flying."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Sphere Grid",
+   "scope": "rob-list",
+   "type": "Enchantment",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever a creature you control deals combat damage to a player, put a +1/+1 counter on that creature.",
+    "Unlock Ability — Creatures you control with +1/+1 counters on them have reach and trample."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Summon: Ixion",
+   "scope": "rob-list",
+   "type": "Enchantment Creature - Saga Unicorn",
+   "layout": "saga",
+   "compiler": "structure",
+   "gaps": [],
+   "needs": null
+  },
+  {
+   "name": "Summon: Magus Sisters",
+   "scope": "rob-list",
+   "type": "Enchantment Creature - Saga Faerie",
+   "layout": "saga",
+   "compiler": "structure",
+   "gaps": [],
+   "needs": null
+  },
+  {
+   "name": "Summon: Yojimbo",
+   "scope": "rob-list",
+   "type": "Enchantment Creature - Saga Samurai",
+   "layout": "saga",
+   "compiler": "structure",
+   "gaps": [],
+   "needs": null
+  },
+  {
+   "name": "Sunscorch Regent",
+   "scope": "rob-list",
+   "type": "Creature - Dragon",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever an opponent casts a spell, put a +1/+1 counter on this creature and you gain 1 life."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Tromell, Seymour's Butler",
+   "scope": "rob-list",
+   "type": "Legendary Creature - Elf Advisor",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Each other nontoken creature you control enters with an additional +1/+1 counter on it.",
+    "{1}, {T}: Proliferate X times, where X is the number of nontoken creatures you control that entered this turn. (To proliferate, choose any number of permanents and/or players, then give each another counter of each kind already there.)"
+   ],
+   "needs": null
+  },
+  {
+   "name": "Tyrite Sanctum",
+   "scope": "rob-list",
+   "type": "Land",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "{2}, {T}: Target legendary creature becomes a God in addition to its other types.",
+    "Put a +1/+1 counter on it.",
+    "{4}, {T}, Sacrifice this land: Put an indestructible counter on target God."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Wakka, Devoted Guardian",
+   "scope": "rob-list",
+   "type": "Legendary Creature - Human Warrior",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Whenever Wakka deals combat damage to a player, destroy up to one target artifact that player controls and put a +1/+1 counter on Wakka.",
+    "Blitzball Captain — At the beginning of your end step, if a counter was put on Wakka this turn, put a +1/+1 counter on each other creature you control."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Wave Goodbye",
+   "scope": "rob-list",
+   "type": "Sorcery",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Return each creature without a +1/+1 counter on it to its owner's hand."
+   ],
+   "needs": null
+  },
+  {
+   "name": "Yuna, Grand Summoner",
+   "scope": "rob-list",
+   "type": "Legendary Creature - Human Cleric",
+   "layout": "normal",
+   "compiler": "unknown",
+   "gaps": [
+    "Grand Summon — {T}: Add one mana of any color.",
+    "When you next cast a creature spell this turn, that creature enters with two additional +1/+1 counters on it.",
+    "Whenever another permanent you control is put into a graveyard from the battlefield, if it had one or more counters on it, you may put that number of +1/+1 counters on target creature."
+   ],
+   "needs": null
+  }
+ ],
+ "review": []
+}

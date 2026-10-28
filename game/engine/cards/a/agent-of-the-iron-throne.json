@@ -1,0 +1,77 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Agent of the Iron Throne",
+    "oracleId": "325032d5-c452-4454-8976-82f86fee5ab8",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Background"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Commander creatures you own have \"Whenever an artifact or creature you control is put into a graveyard from the battlefield, each opponent loses 1 life.\"",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Commander creatures you own have \"Whenever an artifact or creature you control is put into a graveyard from the battlefield, each opponent loses 1 life.\"",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "commander": true,
+        "owner": "you"
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "triggered",
+            "text": "Whenever an artifact or creature you control is put into a graveyard from the battlefield, each opponent loses 1 life.",
+            "trigger": {
+              "on": "leaves",
+              "who": "any",
+              "to": "graveyard",
+              "filter": {
+                "anyOf": [
+                  {
+                    "types": [
+                      "Artifact"
+                    ]
+                  },
+                  {
+                    "types": [
+                      "Creature"
+                    ]
+                  }
+                ],
+                "controller": "you"
+              }
+            },
+            "effects": [
+              {
+                "effect": "loseLife",
+                "who": "opponent",
+                "amount": 1
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Goldvein Hydra",
   "fixtures": {
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -38,7 +38,7 @@
           "zone": "hand",
           "cards": [
             "Goldvein Hydra",
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {
@@ -89,7 +89,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Goldvein Hydra"

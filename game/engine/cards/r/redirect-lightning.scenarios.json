@@ -30,7 +30,7 @@
       "power": 3,
       "toughness": 3
     },
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -293,7 +293,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ],
@@ -309,7 +309,7 @@
           "seat": 1
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "seat": 1,
           "targets": [
             {
@@ -329,7 +329,7 @@
           "seat": 0,
           "targets": [
             {
-              "card": "Shock"
+              "card": "Smoke Shock"
             }
           ],
           "extraMana": ""
@@ -376,7 +376,7 @@
           "seat": 1,
           "zone": "graveyard",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {
@@ -523,7 +523,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Shock",
+            "Smoke Shock",
             "Drain36"
           ]
         }
@@ -560,7 +560,7 @@
           "seat": 1
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "seat": 1,
           "targets": [
             {
@@ -600,7 +600,7 @@
           "seat": 0,
           "targets": [
             {
-              "card": "Shock"
+              "card": "Smoke Shock"
             }
           ],
           "extraMana": "{2}"

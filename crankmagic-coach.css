@@ -1,0 +1,18 @@
+/* CH-52, loaded after crankmagic.css and crankmagic-stage.css. Geometry stays in the board's module. */
+#matrix-v2 #cm-board-coach{container-type:inline-size}
+#matrix-v2 #cm-board-coach .cm-coach-head{box-sizing:border-box;flex:0 0 36px;height:36px;min-height:36px;gap:4px;padding:3px 8px;border-bottom:1px solid var(--v-line);align-items:center}
+#matrix-v2 #cm-board-coach .cm-coach-head h2.cm-section-title{flex:1 1 auto;min-width:0;margin:0;font-family:var(--font-body);font-weight:700;letter-spacing:.06em;font-size:clamp(12px,4.5cqi,16px);line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#matrix-v2 #cm-board-coach .cm-coach-head>button,#matrix-v2 #cm-board-coach .cm-coach-more>summary{box-sizing:border-box;display:grid;place-items:center;flex:0 0 28px;width:28px;height:28px;min-height:28px;padding:0;margin:0;line-height:1;font-size:16px;list-style:none;border-radius:var(--v-radius,4px);cursor:pointer}
+#matrix-v2 #cm-board-coach .cm-coach-more{flex:0 0 28px}
+#matrix-v2 #cm-board-coach summary::-webkit-details-marker{display:none}
+#matrix-v2 #cm-board-coach .cm-coach-thread{min-height:0;padding:8px 10px;overscroll-behavior:contain}
+#matrix-v2 #cm-board-coach .cm-coach-context{flex:0 0 auto;margin:0;padding:4px 10px;font-size:12px;line-height:1.35}
+#matrix-v2 #cm-board-coach .cm-coach-questions{position:relative;flex:0 0 22px;height:22px;margin:0;padding:0;overflow:visible}
+#matrix-v2 #cm-board-coach .cm-coach-questions>summary{box-sizing:border-box;height:22px;min-height:22px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;font-size:13px;line-height:1;list-style:none;cursor:pointer;color:var(--v-ink)}
+#matrix-v2 #cm-board-coach .cm-coach-question-list{position:absolute;bottom:100%;inset-inline:0;z-index:4;max-height:min(240px,50dvh);overflow:auto;overscroll-behavior:contain;padding:4px;background:var(--v-panel);border:1px solid var(--v-line-strong);box-shadow:0 -8px 24px rgb(0 0 0 / .25)}
+#matrix-v2 #cm-board-coach .cm-coach-question-list>button{box-sizing:border-box;display:block;width:100%;height:30px;min-height:30px;margin:0;padding:0 8px;text-align:start;font:inherit;font-size:12px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--v-ink);background:transparent;border:0;border-radius:0;cursor:pointer}
+#matrix-v2 #cm-board-coach .cm-coach-question-list>button:hover{background:var(--v-bg)}
+#matrix-v2 #cm-board-coach .cm-coach-question-list>button:focus-visible,#matrix-v2 #cm-board-coach summary:focus-visible{outline:2px solid var(--v-aether);outline-offset:-2px}
+#matrix-v2 #cm-board-coach .cm-coach-compose{flex:0 0 auto;margin:0;gap:6px;padding:8px 10px 10px}
+#matrix-v2 #cm-board-coach .cm-coach-unavailable{padding:10px;font-size:14px;line-height:1.5}
+#matrix-v2 #cm-board-coach .cm-coach-unavailable p{margin:0 0 10px}

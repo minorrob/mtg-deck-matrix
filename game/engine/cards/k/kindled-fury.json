@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kindled Fury",
+    "oracleId": "ebeee06e-3345-4f02-896f-cb0b2cfa5548",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature gets +1/+0 and gains first strike until end of turn. (It deals combat damage before creatures without first strike.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 1,
+          "toughness": 0,
+          "keywords": [
+            "First Strike"
+          ]
+        }
+      ],
+      "text": "Target creature gets +1/+0 and gains first strike until end of turn. (It deals combat damage before creatures without first strike.)"
+    }
+  ]
+}

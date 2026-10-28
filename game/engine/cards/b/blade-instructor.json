@@ -1,0 +1,32 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blade Instructor",
+    "oracleId": "77cff683-013c-4568-8ae0-f86ef0590fe1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Soldier"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 1
+  },
+  "oracleText": "Mentor (Whenever this creature attacks, put a +1/+1 counter on target attacking creature with lesser power.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "mentor",
+      "text": "Mentor (Whenever this creature attacks, put a +1/+1 counter on target attacking creature with lesser power.)"
+    }
+  ]
+}

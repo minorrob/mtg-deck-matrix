@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Cursebreak",
+    "oracleId": "ac5a13b1-0725-4978-8c93-cebd76be58ba",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy target enchantment. You gain 2 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Destroy target enchantment. You gain 2 life.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Enchantment"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "gainLife",
+          "amount": 2
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Nacatl Outlander",
+    "oracleId": "333555d6-3fcc-4021-ab60-afc36d723877",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Cat",
+      "Scout"
+    ],
+    "manaCost": "{R}{G}",
+    "colors": [
+      "G",
+      "R"
+    ],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Protection from blue",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "U"
+        ]
+      },
+      "text": "Protection from blue"
+    }
+  ]
+}

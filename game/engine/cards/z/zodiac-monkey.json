@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Zodiac Monkey",
+    "oracleId": "47dd7ef4-7645-4878-ab91-261aa8fcf834",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Monkey"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Forestwalk (This creature can't be blocked as long as defending player controls a Forest.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "forestwalk",
+      "text": "Forestwalk (This creature can't be blocked as long as defending player controls a Forest.)"
+    }
+  ]
+}

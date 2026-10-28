@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Oraxid",
+    "oracleId": "7d086ae5-738c-4685-80ae-66bd9379d8f7",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Crab",
+      "Beast"
+    ],
+    "manaCost": "{3}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Protection from red",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "R"
+        ]
+      },
+      "text": "Protection from red"
+    }
+  ]
+}

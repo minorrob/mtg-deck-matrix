@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gravelgill Axeshark",
+    "oracleId": "2141b48d-5a04-40dd-a76b-457ac06b56c2",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Merfolk",
+      "Soldier"
+    ],
+    "manaCost": "{4}{U/B}",
+    "colors": [
+      "B",
+      "U"
+    ],
+    "colorIdentity": [
+      "B",
+      "U"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Persist (When this creature dies, if it had no -1/-1 counters on it, return it to the battlefield under its owner's control with a -1/-1 counter on it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Persist (When this creature dies, if it had no -1/-1 counters on it, return it to the battlefield under its owner's control with a -1/-1 counter on it.)",
+      "trigger": {
+        "on": "dies",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "that card",
+          "to": "battlefield",
+          "withCounter": "-1/-1"
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "countersOn": "self",
+            "counter": "-1/-1"
+          },
+          "atMost": 0
+        }
+      }
+    }
+  ]
+}

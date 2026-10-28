@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Uruk-hai Berserker",
+    "oracleId": "0e353a41-b523-4c22-9bda-d10460ba99c7",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Orc",
+      "Berserker"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, the Ring tempts you.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "ringTempts"
+        }
+      ],
+      "text": "When this creature enters, the Ring tempts you."
+    }
+  ]
+}

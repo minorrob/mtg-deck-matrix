@@ -16,7 +16,7 @@ BREAKS = [
      '${view.yourTurn ? ` (your ${ordinal(view.yourTurn)})` : ""}',
      ''),
     ('the way of playing never told to the room', 'crankmagic-board.js',
-     '    socket.send(JSON.stringify({type: "prefer", stepByStep: want}));\n',
+     '    socket.send(JSON.stringify({type: "prefer", stepByStep: want, askStack: ask}));\n',
      ''),
     ('the way of playing told again at the same point of the game', 'crankmagic-board.js',
      '    if (preferSaid && preferSaid.key === key && preferSaid.revision >= view.revision) return;\n',

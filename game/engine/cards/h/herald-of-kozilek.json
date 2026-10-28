@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Herald of Kozilek",
+    "oracleId": "e1890cbc-b15b-44bc-b1c0-ca3d9fd6028a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Eldrazi",
+      "Drone"
+    ],
+    "manaCost": "{1}{U}{R}",
+    "colors": [],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": 2,
+    "toughness": 4
+  },
+  "oracleText": "Devoid (This card has no color.)\nColorless spells you cast cost {1} less to cast.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "devoid",
+      "text": "Devoid (This card has no color.)"
+    },
+    {
+      "kind": "static",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "colorless": true
+      },
+      "amount": 1,
+      "text": "Colorless spells you cast cost {1} less to cast."
+    }
+  ]
+}

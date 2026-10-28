@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Goliath Sphinx",
+    "oracleId": "73115500-4468-43b3-9151-13e3da9050c5",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Sphinx"
+    ],
+    "manaCost": "{5}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 8,
+    "toughness": 7
+  },
+  "oracleText": "Flying",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    }
+  ]
+}

@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Valakut Exploration",
   "fixtures": {
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -61,7 +61,7 @@
     {
       "name": "A land played: the top card exiled; Shock cast from exile; at the end step nothing is left, so nothing happens",
       "library": [
-        "Shock",
+        "Smoke Shock",
         "Wastes"
       ],
       "setup": [
@@ -93,7 +93,7 @@
               "seat": 0,
               "zone": "exile",
               "cards": [
-                "Shock"
+                "Smoke Shock"
               ]
             }
           ]
@@ -102,7 +102,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "player": 1

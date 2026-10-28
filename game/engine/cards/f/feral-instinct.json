@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Feral Instinct",
+    "oracleId": "f8f3fc11-25b4-4a23-9d79-f380a14f0420",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature gets +1/+1 until end of turn.\nDraw a card at the beginning of the next turn's upkeep.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Target creature gets +1/+1 until end of turn.\nDraw a card at the beginning of the next turn's upkeep.",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 1,
+          "toughness": 1
+        },
+        {
+          "effect": "delayedTrigger",
+          "at": "upkeep",
+          "text": "Draw a card at the beginning of the next turn's upkeep.",
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

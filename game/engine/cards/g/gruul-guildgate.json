@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Gruul Guildgate",
+    "oracleId": "d38476e9-2e47-4c0c-8129-483c0bd09ec0",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Gate"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "This land enters tapped.\n{T}: Add {R} or {G}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersTapped": true
+      },
+      "text": "This land enters tapped."
+    },
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "R": 1
+            },
+            {
+              "G": 1
+            }
+          ]
+        }
+      ],
+      "text": "{T}: Add {R} or {G}."
+    }
+  ]
+}

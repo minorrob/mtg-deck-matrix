@@ -1,0 +1,132 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Lathliss, Dragon Queen",
+  "fixtures": {
+    "Whelp": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Dragon"
+      ],
+      "manaCost": "{C}",
+      "colors": [
+        "R"
+      ],
+      "power": 1,
+      "toughness": 1
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Lathliss: another nontoken Dragon makes a 5/5 flying Dragon; {1}{R} pumps every Dragon you control",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Lathliss, Dragon Queen",
+            "Wastes",
+            "Mountain",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Whelp"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Whelp"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "battlefield",
+              "cards": [
+                "Lathliss, Dragon Queen",
+                "Whelp",
+                "Dragon",
+                "Wastes",
+                "Mountain",
+                "Wastes"
+              ]
+            },
+            {
+              "stack": 0
+            },
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Dragon",
+                "power": 5,
+                "toughness": 5
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Dragon",
+                "has": [
+                  "Flying"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Lathliss, Dragon Queen"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Lathliss, Dragon Queen",
+            "power": 7,
+            "toughness": 6
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Dragon",
+            "power": 6,
+            "toughness": 5
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Whelp",
+            "power": 2,
+            "toughness": 1
+          }
+        }
+      ]
+    }
+  ]
+}

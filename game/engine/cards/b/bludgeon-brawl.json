@@ -1,0 +1,112 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bludgeon Brawl",
+    "oracleId": "a9aa3bc7-db5a-4792-a53a-40acb6ca4b20",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Each noncreature, non-Equipment artifact is an Equipment with equip {X} and \"Equipped creature gets +X/+0,\" where X is that artifact's mana value.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Each noncreature, non-Equipment artifact is an Equipment with equip {X} and \"Equipped creature gets +X/+0,\" where X is that artifact's mana value.",
+      "layer": 4,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Artifact"
+        ],
+        "nonTypes": [
+          "Creature"
+        ],
+        "nonSubtypes": [
+          "Equipment"
+        ]
+      },
+      "apply": {
+        "addSubtypes": [
+          "Equipment"
+        ]
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Each noncreature, non-Equipment artifact is an Equipment with equip {X} and \"Equipped creature gets +X/+0,\" where X is that artifact's mana value.",
+      "layer": 6,
+      "affects": {
+        "continued": true
+      },
+      "apply": {
+        "addAbilities": [
+          {
+            "kind": "activated",
+            "text": "Equip {X}",
+            "cost": [
+              {
+                "atom": "mana",
+                "cost": "{X}"
+              }
+            ],
+            "timing": "sorcery",
+            "targets": [
+              {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ],
+                "controller": "you"
+              }
+            ],
+            "effects": [
+              {
+                "effect": "attach",
+                "targets": {
+                  "target": 0
+                }
+              }
+            ]
+          }
+        ],
+        "manaValueX": true
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Each noncreature, non-Equipment artifact is an Equipment with equip {X} and \"Equipped creature gets +X/+0,\" where X is that artifact's mana value.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ]
+      },
+      "apply": {
+        "power": {
+          "totalManaValue": {
+            "what": "permanent",
+            "types": [
+              "Artifact"
+            ],
+            "attachedTo": "it",
+            "affectedBy": "self"
+          }
+        },
+        "toughness": 0
+      }
+    }
+  ]
+}

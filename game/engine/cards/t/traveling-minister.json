@@ -1,0 +1,59 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Traveling Minister",
+    "oracleId": "1d789ccd-8192-41b1-a5bb-1e2174657698",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Cleric"
+    ],
+    "manaCost": "{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "{T}: Target creature gets +1/+0 until end of turn. You gain 1 life. Activate only as a sorcery.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Target creature gets +1/+0 until end of turn. You gain 1 life. Activate only as a sorcery.",
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "timing": "sorcery",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 1,
+          "toughness": 0
+        },
+        {
+          "effect": "gainLife",
+          "amount": 1
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Disciple of the Vault",
+    "oracleId": "c8625113-0ce4-4454-83a1-25c31b8bfb9a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Cleric"
+    ],
+    "manaCost": "{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Whenever an artifact is put into a graveyard from the battlefield, you may have target opponent lose 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "Whenever an artifact is put into a graveyard from the battlefield, you may have target opponent lose 1 life.",
+      "trigger": {
+        "on": "leaves",
+        "who": "any",
+        "to": "graveyard",
+        "filter": {
+          "types": [
+            "Artifact"
+          ]
+        }
+      },
+      "effects": [
+        {
+          "effect": "loseLife",
+          "who": {
+            "target": 0
+          },
+          "amount": 1
+        }
+      ],
+      "targets": [
+        {
+          "what": "player",
+          "who": "opponent"
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

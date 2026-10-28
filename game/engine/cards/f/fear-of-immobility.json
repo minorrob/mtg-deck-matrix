@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fear of Immobility",
+    "oracleId": "fb2600a8-0ba6-4888-ac8a-f206469d4c71",
+    "types": [
+      "Enchantment",
+      "Creature"
+    ],
+    "subtypes": [
+      "Nightmare"
+    ],
+    "manaCost": "{4}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "When this creature enters, tap up to one target creature. If an opponent controls that creature, put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, tap up to one target creature. If an opponent controls that creature, put a stun counter on it.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "tap",
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "putCounter",
+          "targets": {
+            "target": 0
+          },
+          "counter": "stun",
+          "count": 1,
+          "condition": {
+            "about": "target",
+            "is": {
+              "controller": "opponent"
+            }
+          }
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "count": {
+            "max": 1
+          }
+        }
+      ]
+    }
+  ]
+}

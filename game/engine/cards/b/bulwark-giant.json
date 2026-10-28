@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Bulwark Giant",
+    "oracleId": "f606bd15-b380-447f-b147-72f811266593",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Giant",
+      "Soldier"
+    ],
+    "manaCost": "{5}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 6
+  },
+  "oracleText": "When this creature enters, you gain 5 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 5
+        }
+      ],
+      "text": "When this creature enters, you gain 5 life."
+    }
+  ]
+}

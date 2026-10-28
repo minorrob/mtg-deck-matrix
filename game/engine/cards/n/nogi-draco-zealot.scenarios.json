@@ -1,0 +1,282 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Nogi, Draco-Zealot",
+  "fixtures": {
+    "Whelpling": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Dragon"
+      ],
+      "manaCost": "{1}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "keywords": [
+        "Flying"
+      ]
+    },
+    "Wyrm": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Dragon"
+      ],
+      "manaCost": "{1}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3,
+      "keywords": [
+        "Flying"
+      ]
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A Dragon spell costs {1} less: the Whelpling for {R}; a Bear costs full",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Nogi, Draco-Zealot",
+            "Mountain",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Whelpling",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Whelpling"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Bear"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Nogi, Draco-Zealot",
+            "Mountain",
+            "Forest",
+            "Whelpling"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Attacking with three Dragons beside him: until end of turn a 5/5 flying Dragon -- no longer a Kobold, Crucible of Fire makes him 8/8; next turn a 3/3 again",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Nogi, Draco-Zealot",
+            "Whelpling",
+            "Whelpling",
+            "Wyrm"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Nogi, Draco-Zealot"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "stats": {
+                "card": "Nogi, Draco-Zealot",
+                "power": 5,
+                "toughness": 5
+              }
+            },
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Nogi, Draco-Zealot",
+                "has": [
+                  "Flying"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 35
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Nogi, Draco-Zealot",
+            "power": 3,
+            "toughness": 3
+          }
+        },
+        {
+          "seat": 0,
+          "keywords": {
+            "card": "Nogi, Draco-Zealot",
+            "lacks": [
+              "Flying"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Two Dragons: no trigger",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Nogi, Draco-Zealot",
+            "Whelpling",
+            "Wyrm"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Nogi, Draco-Zealot"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 0
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 37
+        }
+      ]
+    },
+    {
+      "name": "As a Dragon he is one: with Crucible of Fire he is 8/8 -- and three Dragons are counted when it resolves too",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Nogi, Draco-Zealot",
+            "Whelpling",
+            "Whelpling",
+            "Wyrm",
+            "Crucible of Fire"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Nogi, Draco-Zealot"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Nogi, Draco-Zealot",
+            "power": 8,
+            "toughness": 8
+          }
+        }
+      ]
+    }
+  ]
+}

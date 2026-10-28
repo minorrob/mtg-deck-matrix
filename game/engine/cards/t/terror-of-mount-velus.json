@@ -1,0 +1,61 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Terror of Mount Velus",
+    "oracleId": "8161248c-16a3-47db-a3ae-cdfd878d49e0",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dragon"
+    ],
+    "manaCost": "{5}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Flying\nDouble strike (This creature deals both first-strike and regular combat damage.)\nWhen this creature enters, creatures you control gain double strike until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "Double strike",
+      "keyword": "double strike"
+    },
+    {
+      "kind": "triggered",
+      "text": "When this creature enters, creatures you control gain double strike until end of turn.",
+      "trigger": {
+        "on": "enters"
+      },
+      "effects": [
+        {
+          "effect": "pumpAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ],
+            "controller": "you"
+          },
+          "power": 0,
+          "toughness": 0,
+          "keywords": [
+            "Double Strike"
+          ],
+          "until": "end-of-turn"
+        }
+      ]
+    }
+  ]
+}

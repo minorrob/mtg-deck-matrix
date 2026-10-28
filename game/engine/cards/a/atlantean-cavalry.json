@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Atlantean Cavalry",
+    "oracleId": "e929b730-9aa2-49e1-9a65-50afc0fbe3e0",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Merfolk",
+      "Soldier"
+    ],
+    "manaCost": "{2}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "Vigilance\nWhenever you draw your second card each turn, put a +1/+1 counter on this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Vigilance",
+      "keyword": "vigilance"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever you draw your second card each turn, put a +1/+1 counter on this creature.",
+      "trigger": {
+        "on": "drawn",
+        "drawer": "you",
+        "nthThisTurn": 2
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

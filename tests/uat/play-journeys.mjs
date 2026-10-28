@@ -41,6 +41,7 @@ import {GameTable, tableCards} from "../../cloud/game-room.mjs";
 import {boardPerson} from "./board-person.mjs";
 import {build, worktreeSource} from "../../tools/release-pages.mjs";
 import {joinLocation} from "../../cloud/worker.mjs";
+import {createGame, openNewGame} from "./new-game.mjs";
 
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1; console.log(`  ok  ${m}`);};
@@ -142,16 +143,8 @@ async function chooseDeck(page, seat, name) {
 /* ---- one table, end to end ---- */
 async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
   console.log(`play-journeys: table ${n} -- ${[robDeck, mayaDeck, ninaDeck, theoDeck].map((d) => d.name).join(" · ")}`);
-  /* LOBBY: New table, a person and two AIs. */
-  await rob.page.goto(`${base}/index.html#table`);
-  await rob.page.locator("#cm-table-new").waitFor({timeout: 30000});
-  await rob.page.fill("#cm-table-new [name=hostName]", "Rob");
-  await rob.page.fill("#cm-table-new [name=name2]", "Maya");
-  await rob.page.selectOption("#cm-table-new [name=kind3]", "ai");
-  await rob.page.fill("#cm-table-new [name=name3]", "Nina");
-  await rob.page.selectOption("#cm-table-new [name=kind4]", "ai");
-  await rob.page.fill("#cm-table-new [name=name4]", "Theo");
-  await rob.page.click("[data-action=table-create]");
+  /* LOBBY: New game, a person and two AIs. */
+  await createGame(rob.page, base, {host: "Rob", humans: [{name: "Maya"}], ai: [{name: "Nina"}, {name: "Theo"}]}, "#table");
   await rob.page.waitForFunction(() => /#table\?id=journey\d+/.test(location.hash), null, {timeout: 20000});
   const id = /#table\?id=(journey\d+)/.exec(await rob.page.evaluate(() => location.hash))[1];
   await rob.page.locator(".cm-cloud-table .cm-lobby-seat[data-seat='3']").waitFor({timeout: 20000});
@@ -302,6 +295,7 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
   if (conceding) {
     await maya.page.click(".cm-phone-rail [data-action=board-profile]");
     await maya.page.click(".cm-profile-menu [data-action=board-tools]");
+    await maya.page.click("#cm-dialog [role=tab][data-tab=gameplay]");
     await maya.page.click("#cm-board-tools [data-action=board-concede]");
     await waitText(maya.page, ".cm-board-banner", /You have left this game; the others play on/);
     for (let i = 0; i < 100 && viewsAt(ROB, id).at(-1)?.departures?.s1 !== "conceded"; i += 1) await rob.page.waitForTimeout(50);
@@ -312,6 +306,7 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
   /* END, and THE RECORD. */
   await rob.page.click("[data-action=board-profile]");
   await rob.page.click(".cm-profile-menu [data-action=board-tools]");
+  await rob.page.click("#cm-dialog [role=tab][data-tab=gameplay]");
   await rob.page.click("#cm-board-tools [data-action=board-end]");
   await rob.page.click("#cm-board-tools [data-action=board-end][data-confirm='1']");
   await waitText(rob.page, ".cm-board-over", /ended early/).catch(async (e) => {console.log("ROB AT END", (await text(rob.page, "#cm-main")).slice(0, 500).replace(/\n+/g, " | ")); throw e;});

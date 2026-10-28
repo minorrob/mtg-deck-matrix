@@ -1,0 +1,140 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Etali, Primal Conqueror // Etali, Primal Sickness",
+    "oracleId": "7514e401-7aa1-405d-9f7a-312b4e630cc2",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elder",
+      "Dinosaur"
+    ],
+    "manaCost": "{5}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "power": 7,
+    "toughness": 7
+  },
+  "oracleText": "Trample\nWhen Etali enters, each player exiles cards from the top of their library until they exile a nonland card. You may cast any number of spells from among the nonland cards exiled this way without paying their mana costs.\n{9}{G/P}: Transform Etali. Activate only as a sorcery.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Trample",
+      "keyword": "trample"
+    },
+    {
+      "kind": "triggered",
+      "text": "When Etali enters, each player exiles cards from the top of their library until they exile a nonland card. You may cast any number of spells from among the nonland cards exiled this way without paying their mana costs.",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "digUntil",
+          "who": "each",
+          "exile": true,
+          "selector": {
+            "nonTypes": [
+              "Land"
+            ]
+          },
+          "rest": "exile",
+          "found": {},
+          "remember": true
+        },
+        {
+          "effect": "play",
+          "from": "targets",
+          "targets": "remembered",
+          "free": true,
+          "anyNumber": true
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{9}{G/P}: Transform Etali. Activate only as a sorcery.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{9}{G/P}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "setState",
+          "targets": "self",
+          "transform": true
+        }
+      ],
+      "timing": "sorcery"
+    }
+  ],
+  "layout": "transform",
+  "back": {
+    "identity": {
+      "name": "Etali, Primal Sickness",
+      "supertypes": [
+        "Legendary"
+      ],
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Phyrexian",
+        "Elder",
+        "Dinosaur"
+      ],
+      "manaCost": null,
+      "colors": [
+        "G",
+        "R"
+      ],
+      "power": 11,
+      "toughness": 11
+    },
+    "oracleText": "Trample, indestructible\nWhenever Etali deals combat damage to a player, they get that many poison counters. (A player with ten or more poison counters loses the game.)",
+    "abilities": [
+      {
+        "kind": "keyword",
+        "text": "Trample",
+        "keyword": "trample"
+      },
+      {
+        "kind": "keyword",
+        "text": "indestructible",
+        "keyword": "indestructible"
+      },
+      {
+        "kind": "triggered",
+        "text": "Whenever Etali deals combat damage to a player, they get that many poison counters.",
+        "trigger": {
+          "on": "damage dealt",
+          "who": "self",
+          "to": "player",
+          "combat": true
+        },
+        "effects": [
+          {
+            "effect": "poison",
+            "who": "that player",
+            "count": {
+              "damageDealt": true
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pale Bears",
+    "oracleId": "0acb070b-6e81-4e0e-925d-14da9b931355",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bear"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Islandwalk (This creature can't be blocked as long as defending player controls an Island.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "islandwalk",
+      "text": "Islandwalk (This creature can't be blocked as long as defending player controls an Island.)"
+    }
+  ]
+}

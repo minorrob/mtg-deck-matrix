@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Outland Boar",
+    "oracleId": "fdb109f6-d185-4d1e-92b9-768e77562f55",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Boar"
+    ],
+    "manaCost": "{2}{R}{G}",
+    "colors": [
+      "G",
+      "R"
+    ],
+    "colorIdentity": [
+      "G",
+      "R"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "This creature can't be blocked by creatures with power 2 or less.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "cant-be-blocked-by",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "by": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "power": {
+          "max": 2
+        }
+      },
+      "text": "This creature can't be blocked by creatures with power 2 or less."
+    }
+  ]
+}

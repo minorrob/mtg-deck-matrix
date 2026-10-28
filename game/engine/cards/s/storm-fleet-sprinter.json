@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Storm Fleet Sprinter",
+    "oracleId": "8d244f4a-1d62-4697-81c7-fbc4de874add",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Pirate"
+    ],
+    "manaCost": "{1}{U}{R}",
+    "colors": [
+      "R",
+      "U"
+    ],
+    "colorIdentity": [
+      "R",
+      "U"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "Haste\nThis creature can't be blocked.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "haste",
+      "text": "Haste"
+    },
+    {
+      "kind": "static",
+      "rule": "cant-be-blocked",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature can't be blocked."
+    }
+  ]
+}

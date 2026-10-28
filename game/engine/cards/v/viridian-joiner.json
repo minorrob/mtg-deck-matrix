@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Viridian Joiner",
+    "oracleId": "84244aa6-11be-4940-b102-e029f955fc9a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Druid"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "{T}: Add an amount of {G} equal to this creature's power.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "G": {
+              "powerOf": "self"
+            }
+          }
+        }
+      ],
+      "text": "{T}: Add an amount of {G} equal to this creature's power."
+    }
+  ]
+}

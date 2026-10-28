@@ -1,0 +1,67 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kitchen Finks",
+    "oracleId": "5470dcfa-4eff-43da-abf7-19922841f719",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Ouphe"
+    ],
+    "manaCost": "{1}{G/W}{G/W}",
+    "colors": [
+      "G",
+      "W"
+    ],
+    "colorIdentity": [
+      "G",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, you gain 2 life.\nPersist (When this creature dies, if it had no -1/-1 counters on it, return it to the battlefield under its owner's control with a -1/-1 counter on it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 2
+        }
+      ],
+      "text": "When this creature enters, you gain 2 life."
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "dies",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "that card",
+          "to": "battlefield",
+          "withCounter": "-1/-1"
+        }
+      ],
+      "condition": {
+        "compare": {
+          "count": {
+            "countersOn": "self",
+            "counter": "-1/-1"
+          },
+          "atMost": 0
+        }
+      },
+      "text": "Persist (When this creature dies, if it had no -1/-1 counters on it, return it to the battlefield under its owner's control with a -1/-1 counter on it.)"
+    }
+  ]
+}

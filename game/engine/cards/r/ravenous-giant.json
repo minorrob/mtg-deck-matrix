@@ -1,0 +1,40 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ravenous Giant",
+    "oracleId": "46c7a552-4a98-4e1a-8651-8fb0e7153aec",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Giant"
+    ],
+    "manaCost": "{2}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "At the beginning of your upkeep, this creature deals 1 damage to you.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 1,
+          "who": "you"
+        }
+      ],
+      "text": "At the beginning of your upkeep, this creature deals 1 damage to you."
+    }
+  ]
+}

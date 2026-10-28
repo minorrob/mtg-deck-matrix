@@ -1,0 +1,35 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ironhoof Ox",
+    "oracleId": "1871af55-f7cd-4b8e-affb-5d010df811b1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Ox"
+    ],
+    "manaCost": "{3}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "This creature can't be blocked by more than one creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "blocked-by-one-at-most",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature can't be blocked by more than one creature."
+    }
+  ]
+}

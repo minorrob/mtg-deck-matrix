@@ -16,7 +16,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Shatter": {
+    "Smoke Shatter": {
       "types": [
         "Instant"
       ],
@@ -136,7 +136,7 @@
           "zone": "hand",
           "cards": [
             "Frostcliff Siege",
-            "Shatter"
+            "Smoke Shatter"
           ]
         }
       ],
@@ -187,7 +187,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Shatter",
+          "cast": "Smoke Shatter",
           "targets": [
             {
               "card": "Frostcliff Siege"
@@ -224,7 +224,7 @@
           "zone": "graveyard",
           "cards": [
             "Frostcliff Siege",
-            "Shatter"
+            "Smoke Shatter"
           ]
         }
       ]

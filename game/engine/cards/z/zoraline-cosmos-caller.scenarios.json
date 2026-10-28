@@ -1,0 +1,310 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Zoraline, Cosmos Caller",
+  "fixtures": {
+    "Test Bat": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bat"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "keywords": [
+        "Flying"
+      ]
+    },
+    "Grizzly Bears": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "power": 2,
+      "toughness": 2
+    },
+    "Three Drop": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Four Drop": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{2}{G}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 4,
+      "toughness": 4
+    },
+    "Smoke Spell": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "You gain 1 life.",
+        "targets": [],
+        "effects": [
+          {
+            "effect": "gainLife",
+            "amount": 1
+          }
+        ]
+      }
+    },
+    "Ancient Ruin": {
+      "types": [
+        "Land"
+      ],
+      "manaCost": null,
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It enters: pay {W}{B} and 2 life, and a creature card of mana value 3 returns with a finality counter",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Swamp",
+            "Wastes",
+            "Plains",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Zoraline, Cosmos Caller"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Three Drop"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Zoraline, Cosmos Caller"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "choose": [
+            "Three Drop"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Three Drop",
+            "counter": "finality",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mana value 4 is too much, and a land card is not a permanent to return: nothing to aim at",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Swamp",
+            "Wastes",
+            "Plains",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Zoraline, Cosmos Caller"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Four Drop",
+            "Ancient Ruin",
+            "Smoke Spell"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Zoraline, Cosmos Caller"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Four Drop",
+            "Ancient Ruin",
+            "Smoke Spell"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "Whenever a Bat you control attacks, you gain 1 life: Zoraline and a Bat, 2 life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Zoraline, Cosmos Caller",
+            "Test Bat",
+            "Grizzly Bears"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Zoraline, Cosmos Caller",
+            "Test Bat",
+            "Grizzly Bears"
+          ]
+        },
+        {
+          "answer": [
+            0,
+            1,
+            2
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 3
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "expect": [
+            {
+              "stack": 2
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "stack": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 42
+        }
+      ]
+    }
+  ]
+}

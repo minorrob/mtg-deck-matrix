@@ -1,0 +1,75 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ruthless Knave",
+    "oracleId": "00225c40-27ff-410f-a591-5c788c6a2bd6",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Orc",
+      "Pirate"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "{2}{B}, Sacrifice a creature: Create two Treasure tokens. (They're artifacts with \"{T}, Sacrifice this token: Add one mana of any color.\")\nSacrifice three Treasures: Draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{2}{B}, Sacrifice a creature: Create two Treasure tokens. (They're artifacts with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{2}{B}"
+        },
+        {
+          "atom": "sacrifice",
+          "selector": {
+            "types": [
+              "Creature"
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 2,
+          "token": {
+            "predefined": "Treasure"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "Sacrifice three Treasures: Draw a card.",
+      "cost": [
+        {
+          "atom": "sacrifice",
+          "count": 3,
+          "selector": {
+            "subtypes": [
+              "Treasure"
+            ]
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

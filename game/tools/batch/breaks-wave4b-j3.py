@@ -72,7 +72,7 @@ BREAKS = [
     ('gift: a kind there is', INDEX, '''      if (!given) problems.push(`${ability.text}: a gift is one of ${Object.keys(GIFTS).join(", ")} (CR 702.174d-i)`);''', ''),
     ('gift: one to a card', INDEX, '''      if (gift !== null) problems.push(`${ability.text}: one gift to a card`);''', ''),
     ('gift: no modes chosen as cast', INDEX, '    if (fleeting && (!spell || spell.modal)) problems.push(', '    if (fleeting && !spell) problems.push('),
-    ('gift: first, on an instant', INDEX, '''effects: [...given, ...(spell.effects ?? [])]};''', '''effects: [...(spell.effects ?? []), ...given]};'''),
+    ('gift: first, on an instant', INDEX, '''effects: [...given, ...(spell.effects ?? [])],''', '''effects: [...(spell.effects ?? []), ...given],'''),
     ('gift: an instant\'s additional cost', INDEX, '''    else if (fleeting) spell = {...spell, additionalCost: [...(spell.additionalCost ?? []), {atom: "gift"}],''',
      '''    else if (fleeting) spell = {...spell, additionalCost: [...(spell.additionalCost ?? [])],'''),
     ('gift: only if promised', INDEX, '''    const given = gift.effects.map((effect) => ({...effect, condition: {giftPromised: true}}));''', '''    const given = gift.effects.map((effect) => ({...effect}));'''),

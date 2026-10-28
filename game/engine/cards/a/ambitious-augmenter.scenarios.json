@@ -31,7 +31,7 @@
         ]
       }
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -98,7 +98,7 @@
           "cards": [
             "Two",
             "Grow",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -148,7 +148,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Ambitious Augmenter"
@@ -186,7 +186,7 @@
             "Ambitious Augmenter",
             "Two",
             "Grow",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ]
@@ -206,7 +206,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -215,7 +215,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Ambitious Augmenter"

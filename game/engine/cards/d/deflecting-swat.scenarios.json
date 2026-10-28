@@ -215,7 +215,7 @@
         }
       ]
     },
-    "Tidings": {
+    "Smoke Tidings": {
       "types": [
         "Instant"
       ],
@@ -724,7 +724,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Tidings"
+            "Smoke Tidings"
           ]
         }
       ],
@@ -734,7 +734,7 @@
           "seat": 1
         },
         {
-          "cast": "Tidings",
+          "cast": "Smoke Tidings",
           "seat": 1
         },
         {
@@ -754,7 +754,7 @@
           "seat": 0,
           "targets": [
             {
-              "card": "Tidings"
+              "card": "Smoke Tidings"
             }
           ]
         },

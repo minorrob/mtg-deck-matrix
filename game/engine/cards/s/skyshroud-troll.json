@@ -1,0 +1,43 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Skyshroud Troll",
+    "oracleId": "2e6d3120-d41d-4e48-b33f-0f73c876fe69",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Troll",
+      "Giant"
+    ],
+    "manaCost": "{2}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "{1}{G}: Regenerate this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{G}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "regenerate",
+          "targets": "self"
+        }
+      ],
+      "text": "{1}{G}: Regenerate this creature."
+    }
+  ]
+}

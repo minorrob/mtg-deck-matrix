@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ascended Lawmage",
+    "oracleId": "4317f4f1-d339-4940-b46e-659641035595",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vedalken",
+      "Wizard"
+    ],
+    "manaCost": "{2}{W}{U}",
+    "colors": [
+      "U",
+      "W"
+    ],
+    "colorIdentity": [
+      "U",
+      "W"
+    ],
+    "power": 3,
+    "toughness": 2
+  },
+  "oracleText": "Flying\nHexproof (This creature can't be the target of spells or abilities your opponents control.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "hexproof",
+      "text": "Hexproof (This creature can't be the target of spells or abilities your opponents control.)"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Jhovall Rider",
+    "oracleId": "84750c9a-ddf7-4ee1-b93b-3dc9ab73e4d5",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Rebel"
+    ],
+    "manaCost": "{4}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Trample",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample"
+    }
+  ]
+}

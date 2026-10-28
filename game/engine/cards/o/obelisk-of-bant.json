@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Obelisk of Bant",
+    "oracleId": "3f96dfd3-975a-4595-95c1-d2f04a86cb37",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [
+      "G",
+      "U",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {G}, {W}, or {U}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "G": 1
+            },
+            {
+              "W": 1
+            },
+            {
+              "U": 1
+            }
+          ]
+        }
+      ],
+      "text": "{T}: Add {G}, {W}, or {U}."
+    }
+  ]
+}

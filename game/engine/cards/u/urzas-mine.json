@@ -1,0 +1,74 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Urza's Mine",
+    "oracleId": "33e85a8a-86df-4cdc-a9cc-8cbabe92c3c0",
+    "types": [
+      "Land"
+    ],
+    "subtypes": [
+      "Urza's",
+      "Mine"
+    ],
+    "manaCost": "",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {C}. If you control an Urza's Power-Plant and an Urza's Tower, add {C}{C} instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}: Add {C}. If you control an Urza's Power-Plant and an Urza's Tower, add {C}{C} instead.",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "mana": {
+            "C": {
+              "if": {
+                "allOf": [
+                  {
+                    "present": {
+                      "what": "permanent",
+                      "controller": "you",
+                      "types": [
+                        "Land"
+                      ],
+                      "subtypes": [
+                        "Urza's",
+                        "Power-Plant"
+                      ]
+                    }
+                  },
+                  {
+                    "present": {
+                      "what": "permanent",
+                      "controller": "you",
+                      "types": [
+                        "Land"
+                      ],
+                      "subtypes": [
+                        "Urza's",
+                        "Tower"
+                      ]
+                    }
+                  }
+                ]
+              },
+              "then": 2,
+              "else": 1
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

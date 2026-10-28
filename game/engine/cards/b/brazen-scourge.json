@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Brazen Scourge",
+    "oracleId": "422ef4ec-863a-450e-9577-a0707bc16532",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Gremlin"
+    ],
+    "manaCost": "{1}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Haste (This creature can attack and {T} as soon as it comes under your control.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "haste",
+      "text": "Haste (This creature can attack and {T} as soon as it comes under your control.)"
+    }
+  ]
+}

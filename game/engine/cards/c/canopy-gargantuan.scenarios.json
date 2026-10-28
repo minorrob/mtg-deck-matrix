@@ -44,7 +44,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -191,7 +191,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -225,7 +225,7 @@
           "seat": 1
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "seat": 1,
           "targets": [
             {
@@ -324,7 +324,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -334,7 +334,7 @@
           "seat": 1
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "seat": 1,
           "targets": [
             {
@@ -364,7 +364,7 @@
           "seat": 1,
           "zone": "graveyard",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         },
         {

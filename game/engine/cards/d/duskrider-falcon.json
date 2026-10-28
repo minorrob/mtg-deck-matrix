@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Duskrider Falcon",
+    "oracleId": "d87ab916-5d49-4840-8d5b-805af800a83c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bird"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Flying, protection from black",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "B"
+        ]
+      },
+      "text": "protection from black"
+    }
+  ]
+}

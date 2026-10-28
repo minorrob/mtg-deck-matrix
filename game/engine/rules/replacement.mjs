@@ -50,6 +50,7 @@ import {amountOf, isCounted} from "../script/amount.mjs";
 import {chosenFor, namesChosen} from "../script/chosen.mjs";
 import {protectedFrom} from "./protection.mjs";
 import {controllerOf, staticAbilities} from "./layers.mjs";
+import {conditionHolds} from "../script/condition.mjs";
 
 /* "This land enters tapped unless you control a Forest or a Plains" (a check land), "... unless you control two or
    fewer other lands" (a fast land): the arrival's `unless`, read as the land is about to enter -- so the land itself,
@@ -78,6 +79,14 @@ function unlessHolds(state, unless, player) {
 
 /* The replacement effect finality counters make (CR 122.1h): the counted permanent's own, never an ability it could lose. */
 const FINALITY = Object.freeze({id: "finality-counter", kind: "replacement", watches: {event: "zone-change", from: "battlefield", to: "graveyard"}, change: {to: "exile"}});
+
+/* A SHIELD COUNTER (CR 122.1c): one or more on a permanent make one prevention effect, "if damage would be dealt to this
+   permanent, prevent that damage and remove a shield counter from it" (Protection Magic, Summon: Magus Sisters) -- its
+   own, ordered with the others that apply as any is (CR 616.1). Damage dealt to it at once by several sources (combat
+   damage from two blockers, `batch`) is all prevented, and one counter removed (the card's ruling): the counter is removed
+   once for the batch, and the effect still applies to the rest of it (applyOne). */
+const SHIELD = Object.freeze({id: "shield-counter", kind: "replacement", text: "Prevent that damage and remove a shield counter from it",
+  watches: {event: "damage"}, change: {prevent: true, shieldCounter: true}});
 
 /* "IF THAT CREATURE WOULD DIE THIS TURN, EXILE IT INSTEAD" (Essence Burn, Combustion Technique; CR 614.1a, 700.4): a spell's
    effect with a duration (effectUntil's `rule: "exile-if-dies"`, gone at the turn's cleanup) about the objects it named as it
@@ -118,6 +127,9 @@ const appliedKey = (holderId, ability) => `${holderId ?? "self"}:${ability.id}`;
 /* Whether this effect applies to this proposal, given what has already applied to it. */
 function applies(state, ability, holder, proposal) {
   if (ability.kind !== "replacement") return false;
+  /* A permanent's replacement effect while its condition holds: "LEVEL 1-4 ... If a source would deal damage to you or a
+     creature you control, prevent 1 of that damage" (Hedron-Field Purists; CR 711.2a), as many level counters as it says. */
+  if (ability.condition !== undefined && holder && !conditionHolds(state, ability.condition, {controller: holder.controller, source: holder.id})) return false;
   /* CR 614.5: once per event, whatever else is true. */
   if ((proposal.appliedBy ?? []).includes(appliedKey(holder?.id ?? null, ability))) return false;
   const watches = ability.watches ?? {};
@@ -152,6 +164,14 @@ function applies(state, ability, holder, proposal) {
     if (watches.to && watches.to !== proposal.to) return false;
     /* "If a creature an opponent controls would die" (Liesa): what is moving, as it is now, "you" the holder's controller. */
     if (watches.filter && !(holder && compileSelector(watches.filter)(state, proposal.objectId, {controller: holder.controller, source: holder.id}))) return false;
+    /* "If a CARD would be put into an OPPONENT'S graveyard from anywhere" (Dauthi Voidwalker): from any zone, a card its
+       owner -- whose graveyard it goes to (CR 400.3) -- is an opponent of the holder's controller. A token or a copy of a
+       spell is no card (CR 108.2b, 707.10), so it goes where it was going. */
+    if (watches.card === true) {
+      const moving = state.objects[proposal.objectId];
+      if (!holder || !moving || moving.token === true || moving.copy === true) return false;
+      if (watches.owner === "opponent" && moving.owner === holder.controller) return false;
+    }
     return true;
   }
 
@@ -180,6 +200,12 @@ function applies(state, ability, holder, proposal) {
    - `combat` true or false: combat damage only, or noncombat only. */
 function damageWatched(state, watches, holder, proposal) {
   if (!holder) return false;
+  /* "To you or a planeswalker you control" (Ajani Steadfast's emblem): `anyOf`, any one of these, each read with the rest
+     of what the effect watches. */
+  if (Array.isArray(watches.anyOf)) {
+    const {anyOf, ...rest} = watches;
+    return anyOf.some((one) => damageWatched(state, {...rest, ...one}, holder, proposal));
+  }
   const you = holder.controller, context = {controller: you, source: holder.id};
   if (watches.combat === true && proposal.combat !== true) return false;
   if (watches.combat === false && proposal.combat === true) return false;
@@ -205,6 +231,8 @@ function damageAfter(ability, amount) {
   if (Number.isInteger(ability.prevent)) return Math.max(0, amount - ability.prevent);
   const change = ability.change ?? {};
   if (change.prevent === true) return 0;
+  if (Number.isInteger(change.preventAllBut)) return Math.min(amount, change.preventAllBut);
+  if (Number.isInteger(change.prevent)) return Math.max(0, amount - change.prevent);
   if (Number.isInteger(change.multiply)) return amount * change.multiply;
   if (Number.isInteger(change.add)) return amount + change.add;
   return amount;
@@ -244,6 +272,10 @@ function applicable(state, proposal) {
      that apply as any is (CR 616.1). */
   const moving = proposal.event === "zone-change" ? state.objects[proposal.objectId] : null;
   if ((moving?.counters?.finality ?? 0) > 0 && applies(state, FINALITY, moving, proposal)) found.push({holderId: proposal.objectId, ability: FINALITY});
+  /* A shield counter's prevention (SHIELD), on the permanent damage would be dealt to. */
+  const shielded = proposal.event === "damage" && proposal.toCard !== undefined && proposal.toCard !== null ? state.objects[proposal.toCard] : null;
+  if (shielded?.zone === "battlefield" && ((shielded.counters?.shield ?? 0) > 0 || (proposal.batch !== undefined && shielded.shieldBatch === proposal.batch))
+    && applies(state, SHIELD, shielded, proposal)) found.push({holderId: proposal.toCard, ability: SHIELD});
   /* And "if it would die this turn, exile it instead" about it (EXILE_IF_DIES). */
   if ((state.effects ?? []).some((effect) => effect.rule === "exile-if-dies" && effect.affects.ids.includes(proposal.objectId))
     && applies(state, EXILE_IF_DIES, moving, proposal)) found.push({holderId: proposal.objectId, ability: EXILE_IF_DIES});
@@ -263,6 +295,13 @@ function applicable(state, proposal) {
         if (applies(state, ability, holder, proposal)) found.push({holderId: id, ability});
       }
     }
+  }
+  /* And an emblem's, from the command zone, where its abilities function (CR 114.4): "if a source would deal damage to you
+     or a planeswalker you control, prevent all but 1 of that damage" (Ajani Steadfast's), "you" the player who got it. */
+  for (const id of (state.zones.command ?? []).flat()) {
+    const holder = state.objects[id];
+    if (holder?.emblem !== true) continue;
+    for (const ability of holder.abilities ?? []) if (applies(state, ability, holder, proposal)) found.push({holderId: id, ability});
   }
   /* And the prevention effects with a duration, once a shield with more to it is among them (preventionsFor, below): each a
      candidate like any, so the player dealt the damage orders them with the rest (CR 616.1). */
@@ -293,6 +332,9 @@ function preventionsFor(state, proposal) {
     const how = effect.apply ?? {};
     if (how.combat === true && proposal.combat !== true) return false;
     if (Array.isArray(effect.sources) && !effect.sources.includes(proposal.sourceId)) return false;
+    /* "Prevent all combat damage that would be dealt this turn" (Fog; wave 4d L3, CR 615.1a): `apply.all`, to any player or
+       permanent, by any source. */
+    if (how.all === true) return true;
     if (Array.isArray(effect.players)) return proposal.toPlayer !== undefined && proposal.toPlayer !== null && effect.players.includes(proposal.toPlayer);
     return (how.to !== false && proposal.toCard !== undefined && proposal.toCard !== null && among(proposal.toCard))
       || (how.by === true && proposal.sourceId !== undefined && proposal.sourceId !== null && among(proposal.sourceId));
@@ -346,6 +388,18 @@ function applyOne(state, {holderId, ability, effect = null}, proposal, dry = fal
   const next = {...proposal, applied: [...(proposal.applied ?? []), ability.id], appliedBy: [...(proposal.appliedBy ?? []), appliedKey(holderId, ability)]};
 
   if (ability.change?.to) next.to = ability.change.to;
+  /* "IF A NONTOKEN CREATURE AN OPPONENT CONTROLS WOULD DIE, INSTEAD EXILE THAT CARD AND CREATE A 2/2 BLACK ZOMBIE CREATURE TOKEN"
+     (Kalitas, Traitor of Ghet; CR 614.1a, 614.6): what the replacement does beside the move is part of the same event, done
+     by its holder's controller once the card has moved (`followUps`, run by the routes that move it: effects/zones.mjs
+     moveOne, rules/sba.mjs's lethal creatures) -- not a trigger, so nothing can respond between the two. */
+  if (proposal.event === "zone-change" && Array.isArray(ability.change?.then) && state.objects[holderId])
+    next.followUps = [...(next.followUps ?? []), {effects: structuredClone(ability.change.then), context: {controller: controllerOf(state, holderId), source: holderId}}];
+  /* "Instead exile it with a void counter on it" (Dauthi Voidwalker; CR 614.1a, 122.1): counters the card is given as it
+     arrives in exile (placeReplacedCounters). A later effect that sends it elsewhere leaves them behind. */
+  if (ability.change?.withCounters) {
+    next.withCounters = {...(next.withCounters ?? {})};
+    for (const [counter, n] of Object.entries(ability.change.withCounters)) next.withCounters[counter] = (next.withCounters[counter] ?? 0) + n;
+  }
 
   /* CR 614.12: modifying how a permanent ENTERS, rather than where a card goes. The permanent is
      not on the battlefield yet, so these land on the proposal and the caller applies them as part
@@ -357,6 +411,10 @@ function applyOne(state, {holderId, ability, effect = null}, proposal, dry = fal
   if (ability.change?.unlessPay) next.asks = [...(next.asks ?? []), {...ability.change.unlessPay}];
   /* "As this land enters, you may reveal an Island or Swamp card from your hand. If you don't, it enters tapped." */
   if (ability.change?.unlessReveal) next.asks = [...(next.asks ?? []), {reveal: structuredClone(ability.change.unlessReveal)}];
+  /* "If this artifact would enter, you may discard a land card instead. If you do, put this artifact onto the battlefield. If
+     you don't, put it into its owner's graveyard" (Mox Diamond; CR 614.1c, 614.12): a question for its controller, its arrival
+     held until it is answered, as a copy's is (rules/entering.mjs). */
+  if (ability.change?.discardInstead) next.asks = [...(next.asks ?? []), {discardInstead: structuredClone(ability.change.discardInstead)}];
   /* "As this artifact enters, choose a creature type", "choose Khans or Dragons": a question for its controller once it is
      there, the answer kept as the permanent's `chosen` (rules/entering.mjs). */
   if (ability.change?.choose) next.asks = [...(next.asks ?? []), {choose: structuredClone(ability.change.choose)}];
@@ -364,10 +422,22 @@ function applyOne(state, {holderId, ability, effect = null}, proposal, dry = fal
      don't, it gains haste" -- its controller's choice, asked once it is there (rules/entering.mjs); each instance its own
      (702.136b), as each effect applies once (CR 614.5). */
   if (ability.change?.riot === true) next.asks = [...(next.asks ?? []), {riot: true}];
+  /* READ AHEAD (CR 702.155a; The Elder Dragon War): how many lore counters it enters with, from one to its final chapter -- its
+     controller's choice, asked once it is there, its arrival held for the answer (rules/entering.mjs). */
+  if (Number.isInteger(ability.change?.readAhead) && ability.change.readAhead >= 1) next.asks = [...(next.asks ?? []), {readAhead: ability.change.readAhead}];
+  /* DEVOUR (CR 702.82a, 702.82c; Feasting Hobbit): which permanents to sacrifice, asked once it is there (rules/entering.mjs). */
+  if (ability.change?.devour) next.asks = [...(next.asks ?? []), {devour: structuredClone(ability.change.devour)}];
   /* "You may have this creature enter as a copy of any creature on the battlefield" (CR 614.1c, 707.9): which one is asked
      once it is there, its arrival waiting for the answer (rules/entering.mjs) -- "except", "until end of turn", "tapped". */
-  if (ability.change?.copyOf) next.asks = [...(next.asks ?? []), {copyOf: structuredClone(ability.change.copyOf),
-    copy: {except: structuredClone(ability.change.except ?? {}), keep: [...(ability.change.keep ?? [])], until: ability.change.until ?? null, tapped: ability.change.tapped === true}}];
+  /* "Except it enters with X additional +1/+1 counters on it" (Altered Ego; CR 107.3m, 707.9a): a count of the exception's
+     counted now, with the X paid to cast it, as its own "enters with X counters" is. */
+  if (ability.change?.copyOf) {
+    const except = structuredClone(ability.change.except ?? {});
+    if (Array.isArray(except.entersWithCounters)) except.entersWithCounters = except.entersWithCounters.map((extra) => (isCounted(extra.count)
+      ? {...extra, count: amountOf(state, extra.count, {controller: proposal.player, source: proposal.objectId, x: proposal.x ?? 0, kicked: proposal.kicked ?? 0})} : extra));
+    next.asks = [...(next.asks ?? []), {copyOf: structuredClone(ability.change.copyOf),
+      copy: {except, keep: [...(ability.change.keep ?? [])], until: ability.change.until ?? null, tapped: ability.change.tapped === true}}];
+  }
   /* "This creature enters prepared" (Goblin Glasswright; CR 614.1c, 722.3a): a designation it enters with, given as it
      arrives (effects/attributes.mjs, prepare) -- and with it the copy of its prepare spell in exile (722.3c). */
   if (ability.change?.entersPrepared === true) next.designations = [...new Set([...(next.designations ?? []), "prepared"])];
@@ -409,9 +479,26 @@ function applyOne(state, {holderId, ability, effect = null}, proposal, dry = fal
       next.followUps = [...(next.followUps ?? []), {effects: structuredClone(ability.change.then), context: {controller: holder.controller, source: holderId,
         about: {...(proposal.toCard !== undefined && proposal.toCard !== null ? {card: proposal.toCard} : {}), ...(proposal.toPlayer !== undefined && proposal.toPlayer !== null ? {player: proposal.toPlayer} : {}), amount: next.amount}}}];
     }
+    /* A shield counter (SHIELD): removed as it prevents damage -- once for damage dealt to it at once (`batch`), never by an
+       order tried dry -- immediately afterward, with what follows any prevention (runFollowUps). */
+    if (ability.change.shieldCounter === true && next.amount > 0 && !dry && state.objects[holderId]
+      && (proposal.batch === undefined || state.objects[holderId].shieldBatch !== proposal.batch)) {
+      if (proposal.batch !== undefined) state.objects[holderId].shieldBatch = proposal.batch;
+      next.followUps = [...(next.followUps ?? []), {effects: [{effect: "removeCounter", targets: "self", counter: "shield", count: 1}],
+        context: {controller: controllerOf(state, holderId), source: holderId}}];
+    }
     /* "The next time ...": used up once it has prevented damage (CR 615.8) -- never by an order tried dry. */
     if (effect?.next === true && next.amount > 0 && !dry) state.effects = state.effects.filter((e) => e !== effect);
     if (ability.change.prevent === true) next.amount = 0;
+    /* "Prevent all but 1 of that damage" (Ajani Steadfast's emblem; CR 615.1a): a prevention effect that leaves that much of
+       each damage event it applies to, and prevents the rest. */
+    if (Number.isInteger(ability.change.preventAllBut) && next.amount > ability.change.preventAllBut) next.amount = ability.change.preventAllBut;
+    /* "Prevent 1 of that damage" (Hedron-Field Purists; CR 615.10): a static's prevention of that much of each damage event it
+       applies to, never used up -- not a shield (`prevent` on the ability, below). */
+    if (Number.isInteger(ability.change.prevent)) next.amount = Math.max(0, next.amount - ability.change.prevent);
+    /* "Prevent half that damage, rounded up" (Gisela, Blade of Goldnight; wave 4d L3, CR 615.1a): of each damage event it
+       applies to, as it now is, the greater half is prevented and the rest dealt. */
+    if (ability.change.preventHalf === true) next.amount = Math.floor(next.amount / 2);
     /* REDIRECTION (CR 614.9): "all damage that would be dealt to you is dealt to enchanted creature instead" (Pariah) -- the
        same damage, to the permanent its holder enchants, while it enchants one; the rest of the replacements then look
        at the damage as it now is. */
@@ -507,6 +594,24 @@ export function applyReplacements(state, proposal, {orders = [], askable = false
   return {proposal: current, applied: current.applied, awaiting: false};
 }
 
+/* The counters an exile replacement gives the card it sends there ("with a void counter on it", Dauthi Voidwalker), put on
+   the card it became (CR 400.7) once it is in exile -- by every route that asks applyReplacements of a zone change. */
+export function placeReplacedCounters(state, movedId, proposal) {
+  const moved = state.objects[movedId];
+  if (!proposal?.withCounters || !moved) return;
+  moved.counters ??= {};
+  for (const [counter, n] of Object.entries(proposal.withCounters)) moved.counters[counter] = (moved.counters[counter] ?? 0) + n;
+}
+
+/* A card bound for its owner's graveyard by a route that is no effect's move -- a spell finishing on the stack (CR 608.2n),
+   a discard (CR 701.9a), the cleanup's discard (CR 514.1) -- asked of the replacement effects as every other route is
+   ("if a card would be put into an opponent's graveyard from anywhere", Dauthi Voidwalker; CR 614.1a). The proposal, its
+   `to` where the card goes. */
+export function graveyardBound(state, id) {
+  const object = state.objects[id];
+  return applyReplacements(state, {event: "zone-change", objectId: id, from: object.zone, to: "graveyard", player: object.controller}).proposal;
+}
+
 /**
  * How a permanent about to enter the battlefield is modified (CR 614.12).
  *
@@ -564,9 +669,12 @@ export function ownEntering(state, {objectId, player, types, abilities}) {
 
 /* How an event ends under every order of the effects that apply to it (CR 616.1f: each applied, then what still applies),
    and whether that is one way. Tried dry, so trying each order spends nothing. A damage event ends in how much, to whom,
-   and how much a prevention that counts it stopped ("mills that many"). */
+   and how much a prevention that counts it stopped ("mills that many"). A zone change ends where the card goes: what a
+   replacement does beside the move (Kalitas's token) is not compared -- NAMED: Kalitas and another "exile it instead" on one
+   death (Liesa, Dauthi Voidwalker, a second Kalitas) end alike here, and the first found applies, unasked; a zone change
+   whose orders end differently is asked, but its move does not yet pause for the answer (applyReplacements). */
 const endOf = (p) => JSON.stringify({to: p.to ?? null, tapped: p.tapped === true, counters: p.counters ?? {}, asks: p.asks ?? [], designations: p.designations ?? [],
-  amount: p.amount ?? null, toPlayer: p.toPlayer ?? null, toCard: p.toCard ?? null, counted: (p.followUps ?? []).map((f) => f.context.about?.amount ?? null)});
+  amount: p.amount ?? null, toPlayer: p.toPlayer ?? null, toCard: p.toCard ?? null, counted: p.event === "damage" ? (p.followUps ?? []).map((f) => f.context.about?.amount ?? null) : []});
 function ends(state, proposal, out = new Set(), depth = 0) {
   const candidates = depth < 8 ? applicable(state, proposal) : [];
   if (!candidates.length) { out.add(endOf(proposal)); return out; }

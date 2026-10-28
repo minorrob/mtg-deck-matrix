@@ -1,0 +1,39 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Moldering Karok",
+    "oracleId": "5d95db27-53bb-4a20-9fb8-24998b03e767",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Zombie",
+      "Crocodile"
+    ],
+    "manaCost": "{2}{B}{G}",
+    "colors": [
+      "B",
+      "G"
+    ],
+    "colorIdentity": [
+      "B",
+      "G"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Trample, lifelink",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "lifelink",
+      "text": "lifelink"
+    }
+  ]
+}

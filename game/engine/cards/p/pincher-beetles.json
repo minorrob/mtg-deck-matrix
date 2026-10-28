@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Pincher Beetles",
+    "oracleId": "0fae1c73-fd34-433e-8989-fbd80e3b1c70",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Insect"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 1
+  },
+  "oracleText": "Shroud (This creature can't be the target of spells or abilities.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "shroud",
+      "text": "Shroud (This creature can't be the target of spells or abilities.)"
+    }
+  ]
+}

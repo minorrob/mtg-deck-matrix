@@ -1,5 +1,5 @@
 /* ROB-99: exercise the shared desktop shell through the recorded public fixture.
- * A missing Camera, duplicate header, unreachable control, or a drawer that moves
+ * A missing Camera, duplicate header, unreachable control, or an Actions drawer that obscures
  * its board must fail. Phone is recorded as the unchanged baseline for ROB-18.
  * GEOMETRY_REQUIRED=1 makes missing Chromium a failure; no live account is used.
  */
@@ -25,6 +25,7 @@ try {
     if(!await page.locator('.cm-stage-camera [data-action=board-view]').count()) await page.locator('[data-action=board-camera]').click();
     await page.locator(`.cm-stage-camera [data-action=board-view][data-view=${view}]`).focus();
     await page.keyboard.press('Enter');
+    await page.evaluate(async()=>{await document.fonts.ready;await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));});
     assert.ok(await page.locator('[data-action=board-camera]').evaluate(el=>el===document.activeElement),'switching view returns keyboard focus to Camera');
     assert.equal(await page.locator('#cm-board > header').count(),1,'one shared header');
     assert.equal(await page.locator('.cm-stage-top [data-action=board-profile]').count(),1,'one profile control');
@@ -33,12 +34,16 @@ try {
     assert.equal(await page.locator('[data-stage-camera=tilt]').count(),view==='full'?1:0,'Tilt only in Full');
     if(width===1280) await screenshot(page,view+'-camera');
     await page.locator('[data-action=board-camera]').click();
+    if(await page.locator('.cm-stage-rail').isVisible()) await page.locator('.cm-stage-left').click();
     const surface=page.locator(view==='full'?'.cm-stage-region':view==='table'?'.cm-board-table':'.cm-board-stage');
     const before=await surface.boundingBox();assert.ok(before.width>0&&before.height>0,'board has visible area');
     for(const [control,drawer] of [['.cm-stage-left','.cm-stage-rail'],['.cm-stage-right','.cm-stage-side']]) {
       await page.locator(control).click();
       assert.ok(await page.locator(drawer).isVisible(),'drawer opens');
-      assert.deepEqual(await surface.boundingBox(),before,'drawers never change the board geometry');
+      if(drawer==='.cm-stage-rail') {
+        const after=await surface.boundingBox(),rail=await page.locator(drawer).boundingBox();
+        assert.ok(after.width<=before.width+1&&after.x>=rail.x+rail.width-1,'Actions reserves space beside the board');
+      } else assert.deepEqual(await surface.boundingBox(),before,'optional right drawer keeps board geometry');
       if(width===1280) await screenshot(page,`${view}-${drawer==='.cm-stage-side'?'right':'left'}-drawer`);
       if(drawer==='.cm-stage-side' && view!=='full') {
         const grip=page.locator('.cm-stage-side [data-drag=panelw]'),old=await page.locator(drawer).boundingBox();
@@ -67,21 +72,35 @@ try {
     }
     const header=await page.locator('.cm-stage-top').boundingBox();assert.ok(header.x>=0&&header.x+header.width<=width+1,'header fits');
     for(const action of ['board-menu','board-history','board-tools']) {
-      await page.locator('[data-action=board-profile]').click();
-      await page.locator(`.cm-profile-menu [data-action=${action}]`).click();
-      const menu=page.locator('.cm-profile-menu .cm-board-menu'),box=await menu.boundingBox();
-      assert.ok(box.x>=0&&box.x+box.width<=width+1,'profile pop-ups fit without sideways scrolling');
-      await page.keyboard.press('Escape');await page.keyboard.press('Escape');
+      const settings=action==='board-tools';
+      if(settings){
+        await page.locator('[data-action=board-camera]').click();
+        await page.locator('.cm-stage-camera [data-action=board-tools]').click();
+      }else{
+        await page.locator('[data-action=board-table-menu]').click();
+        await page.locator(`#cm-table-menu [data-action=${action}]`).click();
+      }
+      /* r4 places Pages/History under Table and the game settings window under Camera.
+         The shared account Settings action navigates to the app Settings page. */
+      const menu=page.locator(settings?'#cm-dialog[open]':action==='board-menu'?'#cm-board-nav':'#cm-board-history');
+      await menu.waitFor({state:'visible'});const box=await menu.boundingBox();
+      assert.ok(box.x>=0&&box.x+box.width<=width+1,'utility pop-ups fit without sideways scrolling');
+      if(settings) assert.ok(box.y>=0&&box.y+box.height<=721,'the Settings window fits the browser top to bottom');
+      await page.keyboard.press('Escape');
+      await menu.waitFor({state:'hidden'});
+      if(settings&&await page.locator('[data-action=board-camera]').getAttribute('aria-expanded')==='true')await page.locator('[data-action=board-camera]').click();
     }
     assert.equal(await page.locator('#cm-board').evaluate(el=>el.scrollLeft),0,'opening utilities never scrolls the shell sideways');
     if(view==='focus') {
       await page.locator('[data-action=board-profile]').click();
+      await page.locator('#cm-user-menu:popover-open').waitFor();
+      await page.keyboard.press('Escape');
+      assert.ok(await page.locator('[data-action=board-profile]').evaluate(el=>el===document.activeElement),'account Escape restores the actual board invoker');
       await page.locator('.cm-board-showhand').focus();await page.keyboard.press('Enter');
       await page.locator('.cm-hand-show').waitFor();
       await page.keyboard.press('Escape');
       await page.locator('.cm-hand-show').waitFor({state:'detached',timeout:2000});
-      assert.ok(await page.locator('.cm-board-showhand').evaluate(el=>el===document.activeElement),'hand closes before the profile behind it and returns focus');
-      await page.keyboard.press('Escape');
+      assert.ok(await page.locator('.cm-board-showhand').evaluate(el=>el===document.activeElement),'hand Escape closes the drawer and returns focus');
     }
     await screenshot(page,view+(width===1280?'':`-${width}`));
   }
@@ -93,7 +112,7 @@ try {
   assert.deepEqual(errors,[],'no page errors');
   console.log('table-shared-shell: shared headers, Camera, Tilt, overlay drawers and phone boundary passed');
 } catch(error) {
-  if(page){mkdirSync('work',{recursive:true});await page.screenshot({path:'work/shared-shell-failure.png'});console.error(await page.locator('#cm-board').evaluate(el=>({rect:el.getBoundingClientRect().toJSON(),html:el.innerHTML.slice(0,500)})));}
+  if(page){mkdirSync('work',{recursive:true});await page.screenshot({path:'work/shared-shell-failure.png'});console.error({url:page.url(),board:await page.locator('#cm-board').count()?await page.locator('#cm-board').evaluate(el=>({rect:el.getBoundingClientRect().toJSON(),html:el.innerHTML.slice(0,500)})):null});}
   throw error;
 } finally {server.kill();await close();}
 async function screenshot(page,name) {

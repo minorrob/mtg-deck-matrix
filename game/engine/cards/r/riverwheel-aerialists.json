@@ -1,0 +1,37 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Riverwheel Aerialists",
+    "oracleId": "f9221367-24a5-41a3-8943-c6a3cb5d605d",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Djinn",
+      "Monk"
+    ],
+    "manaCost": "{5}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 4,
+    "toughness": 5
+  },
+  "oracleText": "Flying\nProwess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "prowess",
+      "text": "Prowess (Whenever you cast a noncreature spell, this creature gets +1/+1 until end of turn.)"
+    }
+  ]
+}

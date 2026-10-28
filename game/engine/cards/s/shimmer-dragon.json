@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Shimmer Dragon",
+    "oracleId": "de1316f2-1cca-4ac4-aead-0fd8b4036d88",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Dragon"
+    ],
+    "manaCost": "{4}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 5,
+    "toughness": 6
+  },
+  "oracleText": "Flying\nAs long as you control four or more artifacts, this creature has hexproof. (It can't be the target of spells or abilities your opponents control.)\nTap two untapped artifacts you control: Draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "static",
+      "text": "As long as you control four or more artifacts, this creature has hexproof. (It can't be the target of spells or abilities your opponents control.)",
+      "layer": 6,
+      "affects": {
+        "self": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Hexproof"
+        ]
+      },
+      "condition": {
+        "present": {
+          "what": "permanent",
+          "types": [
+            "Artifact"
+          ],
+          "controller": "you"
+        },
+        "atLeast": 4
+      }
+    },
+    {
+      "kind": "activated",
+      "text": "Tap two untapped artifacts you control: Draw a card.",
+      "cost": [
+        {
+          "atom": "tapCreature",
+          "selector": {
+            "types": [
+              "Artifact"
+            ],
+            "controller": "you"
+          },
+          "count": 2
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

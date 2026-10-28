@@ -1,0 +1,159 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Cephalid Coliseum",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "{T}: {U} and 1 damage to you",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cephalid Coliseum"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Cephalid Coliseum"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "U": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Threshold: seven cards in the graveyard, an opponent draws three and discards three",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cephalid Coliseum",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Bear",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "activate": "Cephalid Coliseum",
+          "ability": "a1",
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "hand",
+          "count": 2
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "count": 3
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "count": 8
+        }
+      ]
+    },
+    {
+      "name": "Six cards in the graveyard: no threshold",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Cephalid Coliseum",
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Cephalid Coliseum"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

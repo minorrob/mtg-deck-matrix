@@ -1,0 +1,34 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Angel's Mercy",
+    "oracleId": "6b232bb7-d372-4174-a049-5f8d620810e6",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "You gain 7 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 7
+        }
+      ],
+      "text": "You gain 7 life."
+    }
+  ]
+}

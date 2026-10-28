@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Frontline Rebel",
+    "oracleId": "7471e445-4655-4336-9769-3debd197b77c",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Warrior"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "This creature attacks each combat if able.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "attacks-each-combat",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature attacks each combat if able."
+    }
+  ]
+}

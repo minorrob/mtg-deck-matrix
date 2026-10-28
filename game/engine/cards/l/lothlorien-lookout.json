@@ -1,0 +1,41 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lothlórien Lookout",
+    "oracleId": "ed839fae-3429-4ac5-997c-286d8e8cf05f",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Scout"
+    ],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Whenever this creature attacks, scry 1.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "attacks",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "scry",
+          "count": 1
+        }
+      ],
+      "text": "Whenever this creature attacks, scry 1."
+    }
+  ]
+}

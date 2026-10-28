@@ -1,0 +1,131 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Bristly Bill, Spine Sower",
+  "fixtures": {
+    "Giant": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Giant"
+      ],
+      "manaCost": "{4}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 5,
+      "toughness": 5
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Bristly Bill: landfall puts a +1/+1 counter on target creature; {3}{G}{G} doubles the +1/+1 counters on your creatures only",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bristly Bill, Spine Sower",
+            "Forest",
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Forest",
+            "Forest"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Giant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Forest"
+        },
+        {
+          "choose": [
+            "Bristly Bill, Spine Sower"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "play": "Forest"
+        },
+        {
+          "choose": [
+            "Giant"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Bristly Bill, Spine Sower"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Bristly Bill, Spine Sower",
+            "counter": "+1/+1",
+            "count": 2
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Bristly Bill, Spine Sower",
+            "power": 4,
+            "toughness": 4
+          }
+        },
+        {
+          "seat": 1,
+          "counters": {
+            "card": "Giant",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        }
+      ]
+    }
+  ]
+}

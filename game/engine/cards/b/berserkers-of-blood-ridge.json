@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Berserkers of Blood Ridge",
+    "oracleId": "9e8a2d53-3145-421a-aad1-8f2b2f6eaec8",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Berserker"
+    ],
+    "manaCost": "{4}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 4,
+    "toughness": 4
+  },
+  "oracleText": "This creature attacks each combat if able.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "attacks-each-combat",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "text": "This creature attacks each combat if able."
+    }
+  ]
+}

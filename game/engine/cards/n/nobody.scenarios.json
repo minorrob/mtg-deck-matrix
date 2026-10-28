@@ -9,7 +9,7 @@
       "manaCost": "{1}",
       "colors": []
     },
-    "Smash": {
+    "Smoke Smash": {
       "types": [
         "Instant"
       ],
@@ -350,7 +350,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Smash"
+            "Smoke Smash"
           ]
         }
       ],
@@ -383,7 +383,7 @@
           "seat": 1
         },
         {
-          "cast": "Smash",
+          "cast": "Smoke Smash",
           "seat": 1,
           "targets": [
             {

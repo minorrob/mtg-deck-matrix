@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Nimbus of the Isles",
+    "oracleId": "3d529824-8e82-4c44-8e28-ed3419740c11",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental"
+    ],
+    "manaCost": "{4}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "Flying (This creature can't be blocked except by creatures with flying or reach.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying (This creature can't be blocked except by creatures with flying or reach.)"
+    }
+  ]
+}

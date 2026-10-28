@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Soltari Priest",
+    "oracleId": "f8c9cb9f-3a37-4004-9cde-f51ca5579e1a",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Soltari",
+      "Cleric"
+    ],
+    "manaCost": "{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Protection from red\nShadow (This creature can block or be blocked by only creatures with shadow.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "R"
+        ]
+      },
+      "text": "Protection from red"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "shadow",
+      "text": "Shadow (This creature can block or be blocked by only creatures with shadow.)"
+    }
+  ]
+}

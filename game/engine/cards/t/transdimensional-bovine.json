@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Transdimensional Bovine",
+    "oracleId": "eaa6b294-ac66-4fe2-b694-97b0a04f7be1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Ox",
+      "Avatar"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 0,
+    "toughness": 4
+  },
+  "oracleText": "Flying\n{T}: Add two mana of any one color.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "anyColor": true,
+          "count": 2
+        }
+      ],
+      "text": "{T}: Add two mana of any one color."
+    }
+  ]
+}

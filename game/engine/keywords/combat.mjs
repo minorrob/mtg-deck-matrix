@@ -31,7 +31,7 @@
  */
 
 import {keywordsOf, characteristicsOf, controllerOf, typesOf, subtypesOf} from "../rules/layers.mjs";
-import {toughnessOf} from "../rules/layers.mjs";
+import {toughnessOf, powerOf} from "../rules/layers.mjs";
 import {combatDamageOf, ruleChanged, cantBeBlockedBy, blocksOnlyOthers} from "../rules/statics.mjs";
 import {protectedFrom} from "../rules/protection.mjs";
 
@@ -39,8 +39,12 @@ import {protectedFrom} from "../rules/protection.mjs";
 export const KEYWORD_FAMILIES = Object.freeze({
   /** Who may block, and whom. */
   evasion: Object.freeze(["Flying", "Reach", "Menace", "Fear", "Forestwalk", "Islandwalk",
+    /* Nonbasic landwalk (CR 702.14a, c; Trailblazer's Boots, wave 4d L3): canBlockAttacker, below. */
+    "Nonbasic Landwalk",
     /* Shadow (CR 702.28; Minas Morgul, Dark Fortress's shadow counter, CR 122.1b): canBlockAttacker, below. */
-    "Shadow"]),
+    "Shadow",
+    /* Skulk (CR 702.118; Gollum, Obsessed Stalker, Rob's lists P2): canBlockAttacker, below. */
+    "Skulk"]),
   /** What happens when damage is dealt. */
   combat: Object.freeze(["Deathtouch", "Trample", "Lifelink", "First Strike", "Double Strike", "Vigilance", "Defender",
     /* Infect (CR 702.90, batch 78): its damage is poison counters to a player and -1/-1 counters to a creature (rules/combat.mjs,
@@ -95,6 +99,13 @@ export function canBlockAttacker(state, blockerId, attackerId) {
     if (state.zones.battlefield.some(id => controllerOf(state, id) === defender
         && typesOf(state, id).includes("Land") && subtypesOf(state, id).includes(type))) return false;
   }
+  /* Nonbasic landwalk (CR 702.14a, c; Trailblazer's Boots): the defending player controls a land without the supertype
+     basic, its supertypes as they are now (CR 205.4a). */
+  if (has(state, attackerId, "Nonbasic Landwalk")) {
+    const defending = state.combat?.attacks?.find((attack) => attack.attacker === attackerId)?.defender ?? controllerOf(state, blockerId);
+    const nonbasic = (id) => typesOf(state, id).includes("Land") && !(characteristicsOf(state, id).supertypes ?? []).includes("Basic");
+    if (state.zones.battlefield.some((id) => controllerOf(state, id) === defending && nonbasic(id))) return false;
+  }
   /* Protection (CR 702.16f): not blocked by a creature with the quality. */
   if (protectedFrom(state, {card: attackerId}, blockerId)) return false;
   /* CR 702.9b: flying can be blocked only by flying or reach (CR 702.17b). Note which way round it
@@ -104,6 +115,8 @@ export function canBlockAttacker(state, blockerId, attackerId) {
   /* CR 702.28b: shadow -- a creature with shadow can block or be blocked by only creatures with shadow; one without it,
      neither (Minas Morgul, Dark Fortress's shadow counter). */
   if (has(state, attackerId, "Shadow") !== has(state, blockerId, "Shadow")) return false;
+  /* CR 702.118b: skulk -- not blocked by a creature with greater power, each power as it is now (Gollum, Obsessed Stalker). */
+  if (has(state, attackerId, "Skulk") && powerOf(state, blockerId) > powerOf(state, attackerId)) return false;
   /* CR 702.36b: fear -- blocked only by an artifact creature or a black creature. */
   if (has(state, attackerId, "Fear")) {
     const blocker = characteristicsOf(state, blockerId);

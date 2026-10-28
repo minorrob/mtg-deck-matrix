@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Crash of Rhinos",
+    "oracleId": "b2d7251e-2848-4b85-8d99-7c43be163dfb",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Rhino"
+    ],
+    "manaCost": "{6}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 8,
+    "toughness": 4
+  },
+  "oracleText": "Trample",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample"
+    }
+  ]
+}

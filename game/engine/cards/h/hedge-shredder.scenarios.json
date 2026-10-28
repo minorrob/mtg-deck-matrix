@@ -1,0 +1,138 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Hedge Shredder",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Crewed and attacking: two milled, the land of them put onto the battlefield tapped",
+      "library": [
+        "Forest",
+        "Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hedge Shredder",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Hedge Shredder",
+          "ability": "a2"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "Hedge Shredder"
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Yes"
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Bear",
+            "Forest",
+            "Hedge Shredder"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Forest"
+        }
+      ]
+    },
+    {
+      "name": "Any mill of lands from the library: Altar of Dementia makes its owner mill, and the lands come in; a discarded land does not",
+      "library": [
+        "Island",
+        "Swamp"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Hedge Shredder",
+            "Altar of Dementia",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Altar of Dementia",
+          "sacrifice": "Bear",
+          "targets": [
+            {
+              "player": 0
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Altar of Dementia",
+            "Hedge Shredder",
+            "Island",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ]
+    }
+  ]
+}

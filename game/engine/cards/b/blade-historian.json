@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blade Historian",
+    "oracleId": "314f0a96-5e91-42a3-9d75-3f641f22a9ee",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Cleric"
+    ],
+    "manaCost": "{R/W}{R/W}{R/W}{R/W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Attacking creatures you control have double strike.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "attacking": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Double Strike"
+        ]
+      },
+      "text": "Attacking creatures you control have double strike."
+    }
+  ]
+}

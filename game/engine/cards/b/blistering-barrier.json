@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blistering Barrier",
+    "oracleId": "8783533d-dd98-4b80-b348-29051e1b5c28",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Wall"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 5,
+    "toughness": 2
+  },
+  "oracleText": "Defender (This creature can't attack.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "defender",
+      "text": "Defender (This creature can't attack.)"
+    }
+  ]
+}

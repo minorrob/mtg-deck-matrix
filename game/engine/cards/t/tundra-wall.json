@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tundra Wall",
+    "oracleId": "68df4c46-513a-4d75-9d4b-ac95d45be255",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Wall"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 0,
+    "toughness": 4
+  },
+  "oracleText": "Defender (This creature can't attack.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "defender",
+      "text": "Defender (This creature can't attack.)"
+    }
+  ]
+}

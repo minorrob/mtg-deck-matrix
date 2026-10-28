@@ -1,0 +1,66 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Ardent Elementalist",
+    "oracleId": "1edd4f50-05ee-43e0-a288-c26666910c8b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Shaman"
+    ],
+    "manaCost": "{3}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "When this creature enters, return target instant or sorcery card from your graveyard to your hand.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        }
+      ],
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "types": [
+                "Instant"
+              ]
+            },
+            {
+              "what": "card",
+              "zone": "graveyard",
+              "controller": "you",
+              "types": [
+                "Sorcery"
+              ]
+            }
+          ]
+        }
+      ],
+      "text": "When this creature enters, return target instant or sorcery card from your graveyard to your hand."
+    }
+  ]
+}

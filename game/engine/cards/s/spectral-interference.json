@@ -1,0 +1,65 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Spectral Interference",
+    "oracleId": "cb5ed146-5079-46ef-a3e0-e584fa4467f6",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Counter target artifact or creature spell unless its controller pays {4}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "anyOf": [
+            {
+              "what": "spell",
+              "types": [
+                "Artifact"
+              ]
+            },
+            {
+              "what": "spell",
+              "types": [
+                "Creature"
+              ]
+            }
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": {
+            "controllerOf": {
+              "target": 0
+            }
+          },
+          "amount": 4,
+          "effects": [
+            {
+              "effect": "counterSpell",
+              "spells": {
+                "target": 0
+              }
+            }
+          ]
+        }
+      ],
+      "text": "Counter target artifact or creature spell unless its controller pays {4}."
+    }
+  ]
+}

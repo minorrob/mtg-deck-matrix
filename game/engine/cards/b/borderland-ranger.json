@@ -1,0 +1,54 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Borderland Ranger",
+    "oracleId": "ffe25048-0bd4-49b5-aecb-2b1b57fb8d8b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Scout",
+      "Ranger"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 2,
+    "toughness": 2
+  },
+  "oracleText": "When this creature enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "chooseCard",
+          "zone": "library",
+          "selector": {
+            "types": [
+              "Land"
+            ],
+            "supertypes": [
+              "Basic"
+            ]
+          },
+          "to": "hand",
+          "reveal": true,
+          "shuffle": true
+        }
+      ],
+      "optional": true,
+      "text": "When this creature enters, you may search your library for a basic land card, reveal it, put it into your hand, then shuffle."
+    }
+  ]
+}

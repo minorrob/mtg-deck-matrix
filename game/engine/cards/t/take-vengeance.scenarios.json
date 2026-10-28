@@ -1,0 +1,218 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Take Vengeance",
+  "fixtures": {
+    "Tapper": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{2}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 3,
+      "toughness": 3,
+      "abilities": [
+        {
+          "id": "t",
+          "kind": "activated",
+          "text": "{T}: You gain 1 life.",
+          "cost": [
+            {
+              "atom": "{T}"
+            }
+          ],
+          "effects": [
+            {
+              "effect": "gainLife",
+              "amount": 1
+            }
+          ]
+        }
+      ]
+    },
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya's Tapper is tapped: destroyed on Rob's next turn; her untapped Bear is no legal target",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Take Vengeance"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Tapper",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "activate": "Tapper",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Take Vengeance"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Tapper"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Take Vengeance",
+          "targets": [
+            {
+              "card": "Tapper"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Tapper"
+          ]
+        },
+        {
+          "seat": 1,
+          "controls": [
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "life": 41
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Take Vengeance"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "No tapped creature: it cannot be cast",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Take Vengeance"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Tapper",
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Take Vengeance"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Bear",
+            "Tapper"
+          ]
+        }
+      ]
+    }
+  ]
+}

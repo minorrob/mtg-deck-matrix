@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Nightwind Glider",
+    "oracleId": "9a642db9-c337-481c-b260-11e01f64e68e",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Rebel"
+    ],
+    "manaCost": "{2}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 2,
+    "toughness": 1
+  },
+  "oracleText": "Flying, protection from black",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "B"
+        ]
+      },
+      "text": "protection from black"
+    }
+  ]
+}

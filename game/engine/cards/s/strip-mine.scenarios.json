@@ -1,0 +1,80 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Strip Mine",
+  "scenarios": [
+    {
+      "name": "Destroys an opponent's land",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Strip Mine"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Forest"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Strip Mine",
+          "targets": [
+            {
+              "card": "Forest",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Strip Mine"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "{C}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Strip Mine"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Strip Mine"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "C": 1
+          }
+        }
+      ]
+    }
+  ]
+}

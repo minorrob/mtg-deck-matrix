@@ -1,0 +1,28 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Consulate Dreadnought",
+    "oracleId": "bc822c9a-633f-4830-9cb3-9af6a80622e4",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Vehicle"
+    ],
+    "manaCost": "{1}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 7,
+    "toughness": 11
+  },
+  "oracleText": "Crew 6 (Tap any number of creatures you control with total power 6 or more: This Vehicle becomes an artifact creature until end of turn.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "crew",
+      "amount": 6,
+      "text": "Crew 6 (Tap any number of creatures you control with total power 6 or more: This Vehicle becomes an artifact creature until end of turn.)"
+    }
+  ]
+}

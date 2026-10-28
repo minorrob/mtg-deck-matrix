@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vampire Envoy",
+    "oracleId": "cfc50aef-b17b-4fc1-af07-fe43b89689b7",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire",
+      "Cleric",
+      "Ally"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 4
+  },
+  "oracleText": "Flying\nWhenever this creature becomes tapped, you gain 1 life.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "becomes tapped"
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 1
+        }
+      ],
+      "text": "Whenever this creature becomes tapped, you gain 1 life."
+    }
+  ]
+}

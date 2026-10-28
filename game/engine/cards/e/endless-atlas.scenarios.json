@@ -1,0 +1,121 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Endless Atlas",
+  "scenarios": [
+    {
+      "name": "Three Plains: {2}, {T}: draw a card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Endless Atlas",
+            "Plains",
+            "Plains",
+            "Plains",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Endless Atlas"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        },
+        {
+          "seat": 0,
+          "tapped": "Endless Atlas"
+        }
+      ]
+    },
+    {
+      "name": "Two Plains and two Islands: not three with the same name, so not offered",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Endless Atlas",
+            "Plains",
+            "Plains",
+            "Island",
+            "Island"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Island"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Endless Atlas"
+          },
+          "count": 0
+        }
+      ]
+    },
+    {
+      "name": "Maya's three Plains are not his",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Endless Atlas",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Plains",
+            "Plains"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        }
+      ],
+      "expect": [
+        {
+          "offers": {
+            "kind": "activate",
+            "card": "Endless Atlas"
+          },
+          "count": 0
+        }
+      ]
+    }
+  ]
+}

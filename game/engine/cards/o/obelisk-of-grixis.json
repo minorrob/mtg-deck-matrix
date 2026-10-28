@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Obelisk of Grixis",
+    "oracleId": "e193ae18-91a0-4870-b8a1-f8dedf744708",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{3}",
+    "colors": [],
+    "colorIdentity": [
+      "B",
+      "R",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}: Add {U}, {B}, or {R}.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "mana": true,
+      "cost": [
+        {
+          "atom": "{T}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "addMana",
+          "choice": [
+            {
+              "U": 1
+            },
+            {
+              "B": 1
+            },
+            {
+              "R": 1
+            }
+          ]
+        }
+      ],
+      "text": "{T}: Add {U}, {B}, or {R}."
+    }
+  ]
+}

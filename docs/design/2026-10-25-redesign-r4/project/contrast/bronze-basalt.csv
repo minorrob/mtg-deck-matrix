@@ -1,0 +1,75 @@
+skin,register,pair,kind,fg,bg,fg_hex,bg_hex,ratio,target,pass
+bronze-basalt,dark,Ink on ground,text,ink,bg,#f4f0e6,#100b08,17.19,4.5,yes
+bronze-basalt,dark,Ink on panel,text,ink,panel,#f4f0e6,#1c1714,15.61,4.5,yes
+bronze-basalt,dark,Ink on raised control,text,ink,raised,#f4f0e6,#332e2a,11.79,4.5,yes
+bronze-basalt,dark,Ink on hover fill,text,ink,hover,#f4f0e6,#2a2522,13.31,4.5,yes
+bronze-basalt,dark,Ink on accent soft (selected row),text,ink,accent_soft,#f4f0e6,#222736,13.07,4.5,yes
+bronze-basalt,dark,Muted on ground,text,muted,bg,#bdb6b1,#100b08,9.77,4.5,yes
+bronze-basalt,dark,Muted on panel,text,muted,panel,#bdb6b1,#1c1714,8.87,4.5,yes
+bronze-basalt,dark,Muted on raised,text,muted,raised,#bdb6b1,#332e2a,6.70,4.5,yes
+bronze-basalt,dark,On-accent on accent (primary button),text,on_accent,accent,#ffffff,#3066d1,5.32,4.5,yes
+bronze-basalt,dark,On-accent on accent hover,text,on_accent,accent_hover,#ffffff,#2157c0,6.58,4.5,yes
+bronze-basalt,dark,On-required on required (danger fill),text,on_required,required,#090b0f,#ed4546,5.20,4.5,yes
+bronze-basalt,dark,"Ground on ink (selected chip, tab, checkbox)",text,bg,ink,#100b08,#f4f0e6,17.19,4.5,yes
+bronze-basalt,dark,Money on ground,text,money,bg,#f2bb3b,#100b08,11.13,4.5,yes
+bronze-basalt,dark,Money on panel,text,money,panel,#f2bb3b,#1c1714,10.11,4.5,yes
+bronze-basalt,dark,Required on ground,text,required,bg,#ed4546,#100b08,5.16,4.5,yes
+bronze-basalt,dark,Required on panel,text,required,panel,#ed4546,#1c1714,4.69,4.5,yes
+bronze-basalt,dark,Aether on ground,text,aether,bg,#69d6ef,#100b08,11.61,4.5,yes
+bronze-basalt,dark,Aether on panel,text,aether,panel,#69d6ef,#1c1714,10.55,4.5,yes
+bronze-basalt,dark,Decision ink on decision ground,text,decision_ink,decision_bg,#f8e6c3,#2a200d,13.04,4.5,yes
+bronze-basalt,dark,To buy on panel,text,needed,panel,#f2bb3b,#1c1714,10.11,4.5,yes
+bronze-basalt,dark,Remove on panel,text,out,panel,#ed4546,#1c1714,4.69,4.5,yes
+bronze-basalt,dark,"Accent on ground (icons, large text)",mark,accent,bg,#3066d1,#100b08,3.68,3,yes
+bronze-basalt,dark,Accent on panel (the primary button edge),mark,accent,panel,#3066d1,#1c1714,3.34,3,yes
+bronze-basalt,dark,In box glyph and bar on panel,mark,owned,panel,#4ed275,#1c1714,9.14,3,yes
+bronze-basalt,dark,Ordered glyph and bar on panel,mark,coming,panel,#00a4b1,#1c1714,5.88,3,yes
+bronze-basalt,dark,Field line on panel (input edge),mark,field_line,panel,#96826c,#1c1714,4.83,3,yes
+bronze-basalt,dark,Field line on raised,mark,field_line,raised,#96826c,#332e2a,3.65,3,yes
+bronze-basalt,dark,Aether focus ring on panel,mark,aether,panel,#69d6ef,#1c1714,10.55,3,yes
+bronze-basalt,dark,Aether focus ring on raised,mark,aether,raised,#69d6ef,#332e2a,7.97,3,yes
+bronze-basalt,dark,Pull step on panel,mark,owned2,panel,#a8eeba,#1c1714,13.20,3,yes
+bronze-basalt,dark,Stand-in step on panel,mark,needed2,panel,#f7e0a0,#1c1714,13.64,3,yes
+bronze-basalt,dark,Faint (disabled) on panel,mark,faint,panel,#8b8581,#1c1714,4.88,3,yes
+bronze-basalt,dark,Strong line on panel,plane,line_strong,panel,#675440,#1c1714,2.47,2,yes
+bronze-basalt,dark,Line on ground,plane,line,bg,#4e3c28,#100b08,1.86,1.3,yes
+bronze-basalt,dark,Line on panel,plane,line,panel,#4e3c28,#1c1714,1.69,1.3,yes
+bronze-basalt,dark,Panel on ground (plane 2),plane,panel,bg,#1c1714,#100b08,1.10,1.1,yes
+bronze-basalt,dark,Raised on panel (plane 3),plane,raised,panel,#332e2a,#1c1714,1.32,1.3,yes
+bronze-basalt,light,Ink on ground,text,ink,bg,#1d140d,#f3e8d8,14.98,4.5,yes
+bronze-basalt,light,Ink on panel,text,ink,panel,#1d140d,#fff6eb,16.95,4.5,yes
+bronze-basalt,light,Ink on raised control,text,ink,raised,#1d140d,#ffffff,18.13,4.5,yes
+bronze-basalt,light,Ink on hover fill,text,ink,hover,#1d140d,#f1e8dd,14.96,4.5,yes
+bronze-basalt,light,Ink on accent soft (selected row),text,ink,accent_soft,#1d140d,#e6e4e6,14.34,4.5,yes
+bronze-basalt,light,Muted on ground,text,muted,bg,#62584b,#f3e8d8,5.75,4.5,yes
+bronze-basalt,light,Muted on panel,text,muted,panel,#62584b,#fff6eb,6.51,4.5,yes
+bronze-basalt,light,Muted on raised,text,muted,raised,#62584b,#ffffff,6.96,4.5,yes
+bronze-basalt,light,On-accent on accent (primary button),text,on_accent,accent,#ffffff,#1043a8,8.79,4.5,yes
+bronze-basalt,light,On-accent on accent hover,text,on_accent,accent_hover,#ffffff,#013397,10.93,4.5,yes
+bronze-basalt,light,On-required on required (danger fill),text,on_required,required,#ffffff,#8b000b,9.99,4.5,yes
+bronze-basalt,light,"Ground on ink (selected chip, tab, checkbox)",text,bg,ink,#f3e8d8,#1d140d,14.98,4.5,yes
+bronze-basalt,light,Money on ground,text,money,bg,#905c00,#f3e8d8,4.67,4.5,yes
+bronze-basalt,light,Money on panel,text,money,panel,#905c00,#fff6eb,5.28,4.5,yes
+bronze-basalt,light,Required on ground,text,required,bg,#8b000b,#f3e8d8,8.25,4.5,yes
+bronze-basalt,light,Required on panel,text,required,panel,#8b000b,#fff6eb,9.34,4.5,yes
+bronze-basalt,light,Aether on ground,text,aether,bg,#006c97,#f3e8d8,4.83,4.5,yes
+bronze-basalt,light,Aether on panel,text,aether,panel,#006c97,#fff6eb,5.47,4.5,yes
+bronze-basalt,light,Decision ink on decision ground,text,decision_ink,decision_bg,#4c2e00,#fff3dd,11.26,4.5,yes
+bronze-basalt,light,To buy on panel,text,needed,panel,#905c00,#fff6eb,5.28,4.5,yes
+bronze-basalt,light,Remove on panel,text,out,panel,#8b000b,#fff6eb,9.34,4.5,yes
+bronze-basalt,light,"Accent on ground (icons, large text)",mark,accent,bg,#1043a8,#f3e8d8,7.26,3,yes
+bronze-basalt,light,Accent on panel (the primary button edge),mark,accent,panel,#1043a8,#fff6eb,8.21,3,yes
+bronze-basalt,light,In box glyph and bar on panel,mark,owned,panel,#007f38,#fff6eb,4.80,3,yes
+bronze-basalt,light,Ordered glyph and bar on panel,mark,coming,panel,#0698a4,#fff6eb,3.25,3,yes
+bronze-basalt,light,Field line on panel (input edge),mark,field_line,panel,#8c765d,#fff6eb,4.04,3,yes
+bronze-basalt,light,Field line on raised,mark,field_line,raised,#8c765d,#ffffff,4.32,3,yes
+bronze-basalt,light,Aether focus ring on panel,mark,aether,panel,#006c97,#fff6eb,5.47,3,yes
+bronze-basalt,light,Aether focus ring on raised,mark,aether,raised,#006c97,#ffffff,5.85,3,yes
+bronze-basalt,light,Pull step on panel,mark,owned2,panel,#409f61,#fff6eb,3.09,3,yes
+bronze-basalt,light,Stand-in step on panel,mark,needed2,panel,#b5820c,#fff6eb,3.19,3,yes
+bronze-basalt,light,Faint (disabled) on panel,mark,faint,panel,#897e71,#fff6eb,3.71,3,yes
+bronze-basalt,light,Strong line on panel,plane,line_strong,panel,#baa38a,#fff6eb,2.26,2,yes
+bronze-basalt,light,Line on ground,plane,line,bg,#dbc3a8,#f3e8d8,1.40,1.3,yes
+bronze-basalt,light,Line on panel,plane,line,panel,#dbc3a8,#fff6eb,1.59,1.3,yes
+bronze-basalt,light,Panel on ground (plane 2),plane,panel,bg,#fff6eb,#f3e8d8,1.13,1.1,yes
+bronze-basalt,light,Raised on panel (plane 3),plane,raised,panel,#ffffff,#fff6eb,1.07,n/a,yes

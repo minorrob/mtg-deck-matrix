@@ -1,0 +1,48 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Take Possession",
+    "oracleId": "112df1e4-01aa-4e01-b56f-b5ae519c87fd",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [
+      "Aura"
+    ],
+    "manaCost": "{5}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.)\nEnchant permanent\nYou control enchanted permanent.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "split second",
+      "text": "Split second (As long as this spell is on the stack, players can't cast spells or activate abilities that aren't mana abilities.)"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "enchant",
+      "target": {
+        "what": "permanent"
+      },
+      "text": "Enchant permanent"
+    },
+    {
+      "kind": "static",
+      "rule": "control-enchanted",
+      "affects": {
+        "what": "permanent",
+        "attachedBy": "self"
+      },
+      "text": "You control enchanted permanent."
+    }
+  ]
+}

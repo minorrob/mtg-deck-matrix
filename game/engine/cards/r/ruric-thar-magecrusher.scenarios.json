@@ -31,7 +31,7 @@
         ]
       }
     },
-    "Cancel": {
+    "Smoke Cancel": {
       "types": [
         "Instant"
       ],
@@ -207,7 +207,7 @@
           "seat": 1,
           "zone": "hand",
           "cards": [
-            "Cancel"
+            "Smoke Cancel"
           ]
         }
       ],
@@ -248,7 +248,7 @@
           "seat": 1
         },
         {
-          "cast": "Cancel",
+          "cast": "Smoke Cancel",
           "seat": 1,
           "targets": [
             {
@@ -281,7 +281,7 @@
           "seat": 1,
           "zone": "graveyard",
           "cards": [
-            "Cancel"
+            "Smoke Cancel"
           ]
         }
       ]

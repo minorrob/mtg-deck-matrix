@@ -1,0 +1,268 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Lae'zel's Acrobatics",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    }
+  },
+  "scenarios": [
+    {
+      "name": "1-9: your nontoken creatures are exiled (a Soldier token stays), and return at the beginning of the next end step (first)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Bear",
+            "Circuit Mender",
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lae'zel's Acrobatics",
+            "Raise the Alarm"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Raise the Alarm"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Lae'zel's Acrobatics"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "event": "GameEventDieRolled",
+              "where": {
+                "sides": 20
+              }
+            },
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Bear",
+                "Circuit Mender"
+              ]
+            },
+            {
+              "seat": 1,
+              "zone": "battlefield",
+              "cards": [
+                "Bear"
+              ]
+            }
+          ]
+        },
+        {
+          "settle": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 40
+            },
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": [
+                "Wastes"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Bear",
+            "Circuit Mender",
+            "Plains",
+            "Plains",
+            "Soldier",
+            "Soldier",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 42
+        }
+      ]
+    },
+    {
+      "name": "10-20: they return at once, are exiled again, and return at the beginning of the next end step (second)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Bear",
+            "Circuit Mender"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Lae'zel's Acrobatics"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Lae'zel's Acrobatics"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Bear",
+                "Circuit Mender"
+              ]
+            }
+          ]
+        },
+        {
+          "settle": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "life": 42
+            },
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": [
+                "Wastes",
+                "Wastes"
+              ]
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "END_OF_TURN"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Bear",
+            "Circuit Mender",
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 44
+        }
+      ]
+    }
+  ]
+}

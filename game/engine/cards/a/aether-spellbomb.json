@@ -1,0 +1,73 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Aether Spellbomb",
+    "oracleId": "4b033a0a-c1ae-44d7-9662-72cbbfda024b",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}",
+    "colors": [],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{U}, Sacrifice this artifact: Return target creature to its owner's hand.\n{1}, Sacrifice this artifact: Draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{U}, Sacrifice this artifact: Return target creature to its owner's hand.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{U}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "hand"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "text": "{1}, Sacrifice this artifact: Draw a card.",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 1
+        }
+      ]
+    }
+  ]
+}

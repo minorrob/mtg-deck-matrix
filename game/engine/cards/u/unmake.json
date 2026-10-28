@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Unmake",
+    "oracleId": "c551ba63-2a74-439d-8996-d566e2efbd5f",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{W/B}{W/B}{W/B}",
+    "colors": [
+      "B",
+      "W"
+    ],
+    "colorIdentity": [
+      "B",
+      "W"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Exile target creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": {
+            "target": 0
+          },
+          "to": "exile"
+        }
+      ],
+      "text": "Exile target creature."
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Enemy of the Guildpact",
+    "oracleId": "e5cf7b75-b59b-4cac-bfd2-13e452457d74",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Spirit"
+    ],
+    "manaCost": "{4}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 4,
+    "toughness": 2
+  },
+  "oracleText": "Protection from multicolored",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "multicolored": true
+      },
+      "text": "Protection from multicolored"
+    }
+  ]
+}

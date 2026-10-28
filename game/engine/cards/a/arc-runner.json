@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Arc Runner",
+    "oracleId": "9bbee1a5-2eb0-4fad-9524-4ad9cc5ca998",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elemental",
+      "Ox"
+    ],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 5,
+    "toughness": 1
+  },
+  "oracleText": "Haste (This creature can attack and {T} as soon as it comes under your control.)\nAt the beginning of the end step, sacrifice this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "haste",
+      "text": "Haste (This creature can attack and {T} as soon as it comes under your control.)"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "end step",
+        "yours": false
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "targets": "self",
+          "sacrifice": true
+        }
+      ],
+      "text": "At the beginning of the end step, sacrifice this creature."
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Vulpine Goliath",
+    "oracleId": "e4c96980-31ed-494e-89db-c0a0f1fd23fd",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Fox"
+    ],
+    "manaCost": "{4}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 6,
+    "toughness": 5
+  },
+  "oracleText": "Trample",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "text": "Trample"
+    }
+  ]
+}

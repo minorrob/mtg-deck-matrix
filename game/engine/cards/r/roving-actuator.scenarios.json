@@ -2,7 +2,7 @@
   "schema": "CrankCardScenarios@1",
   "card": "Roving Actuator",
   "fixtures": {
-    "Shock": {
+    "Smoke Shock": {
       "types": [
         "Instant"
       ],
@@ -117,7 +117,7 @@
           "zone": "hand",
           "cards": [
             "Roving Actuator",
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {
@@ -140,7 +140,7 @@
           "tap": "Mountain"
         },
         {
-          "cast": "Shock",
+          "cast": "Smoke Shock",
           "targets": [
             {
               "card": "Bear"
@@ -174,7 +174,7 @@
               "asks": {
                 "seat": 0,
                 "options": [
-                  "Shock"
+                  "Smoke Shock"
                 ]
               }
             }
@@ -182,7 +182,7 @@
         },
         {
           "choose": [
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {
@@ -194,9 +194,9 @@
               "asks": {
                 "seat": 0,
                 "options": [
-                  "Shock → Maya",
-                  "Shock → Rob",
-                  "Shock → Roving Actuator",
+                  "Smoke Shock → Maya",
+                  "Smoke Shock → Rob",
+                  "Smoke Shock → Roving Actuator",
                   "Don't cast"
                 ]
               }
@@ -205,7 +205,7 @@
         },
         {
           "choose": [
-            "Shock → Maya"
+            "Smoke Shock → Maya"
           ]
         },
         {
@@ -221,7 +221,7 @@
           "seat": 0,
           "zone": "exile",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {
@@ -257,7 +257,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ],
@@ -293,7 +293,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {
@@ -328,7 +328,7 @@
           "seat": 0,
           "zone": "graveyard",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         }
       ],
@@ -366,7 +366,7 @@
         },
         {
           "choose": [
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {
@@ -383,7 +383,7 @@
           "seat": 0,
           "zone": "exile",
           "cards": [
-            "Shock"
+            "Smoke Shock"
           ]
         },
         {

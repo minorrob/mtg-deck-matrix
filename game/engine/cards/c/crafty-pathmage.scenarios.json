@@ -1,0 +1,221 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Crafty Pathmage",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Ogre"
+      ],
+      "manaCost": "{2}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 3,
+      "toughness": 3
+    },
+    "Wall": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Wall"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 0,
+      "toughness": 4
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Any creature with power 2 or less is a target (three here); the Bear can't be blocked this turn, so Maya's Wall may block the Ogre only",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Crafty Pathmage",
+            "Bear",
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wall"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Crafty Pathmage"
+              },
+              "count": 3
+            }
+          ]
+        },
+        {
+          "activate": "Crafty Pathmage",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "Bear",
+            "Ogre"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Wall",
+              "Ogre"
+            ]
+          ],
+          "blockers": [
+            "Wall"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        },
+        {
+          "seat": 0,
+          "tapped": "Crafty Pathmage",
+          "is": true
+        }
+      ]
+    },
+    {
+      "name": "The Ogre has power 3: not a target",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Crafty Pathmage",
+            "Ogre"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate",
+                "card": "Crafty Pathmage"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Crafty Pathmage"
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Crafty Pathmage",
+          "is": false
+        }
+      ]
+    },
+    {
+      "name": "The Bear attacks alone after it: Maya's Wall may not block it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Crafty Pathmage",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Wall"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Crafty Pathmage",
+          "targets": [
+            {
+              "card": "Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "attack": [
+            "Bear"
+          ]
+        },
+        {
+          "block": [],
+          "blockers": []
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        }
+      ]
+    }
+  ]
+}

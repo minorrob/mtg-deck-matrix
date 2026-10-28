@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Universal Solvent",
+    "oracleId": "f34ba913-cf9a-48fe-b5fe-68bf504693b2",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{7}, {T}, Sacrifice this artifact: Destroy target permanent.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{7}"
+        },
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "sacrifice",
+          "self": true
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "destroy",
+          "targets": {
+            "target": 0
+          }
+        }
+      ],
+      "text": "{7}, {T}, Sacrifice this artifact: Destroy target permanent."
+    }
+  ]
+}

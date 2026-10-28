@@ -1,0 +1,50 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Electric Revelation",
+    "oracleId": "c92af0f4-e5f1-4731-a781-b2ca360867a7",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "As an additional cost to cast this spell, discard a card.\nDraw two cards.\nFlashback {3}{R} (You may cast this card from your graveyard for its flashback cost and any additional costs. Then exile it.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "additionalCost": [
+        {
+          "atom": "discard"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 2
+        }
+      ],
+      "text": "As an additional cost to cast this spell, discard a card.\nDraw two cards."
+    },
+    {
+      "kind": "keyword",
+      "keyword": "flashback",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{3}{R}"
+        }
+      ],
+      "text": "Flashback {3}{R} (You may cast this card from your graveyard for its flashback cost and any additional costs. Then exile it.)"
+    }
+  ]
+}

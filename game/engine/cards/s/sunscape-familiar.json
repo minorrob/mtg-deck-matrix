@@ -1,0 +1,52 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sunscape Familiar",
+    "oracleId": "615603bb-3899-4419-9444-e4b64c94a438",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Wall"
+    ],
+    "manaCost": "{1}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 0,
+    "toughness": 3
+  },
+  "oracleText": "Defender (This creature can't attack.)\nGreen spells and blue spells you cast cost {1} less to cast.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "defender",
+      "text": "Defender (This creature can't attack.)"
+    },
+    {
+      "kind": "static",
+      "rule": "spells-cost-less",
+      "affects": {
+        "what": "spell",
+        "anyOf": [
+          {
+            "colors": [
+              "G"
+            ]
+          },
+          {
+            "colors": [
+              "U"
+            ]
+          }
+        ]
+      },
+      "amount": 1,
+      "text": "Green spells and blue spells you cast cost {1} less to cast."
+    }
+  ]
+}

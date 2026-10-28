@@ -1,0 +1,47 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fog of Gnats",
+    "oracleId": "41f58e06-5ce0-4b2d-a280-5bb3b6c56dfe",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Insect"
+    ],
+    "manaCost": "{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Flying\n{B}: Regenerate this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{B}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "regenerate",
+          "targets": "self"
+        }
+      ],
+      "text": "{B}: Regenerate this creature."
+    }
+  ]
+}

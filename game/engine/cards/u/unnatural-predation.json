@@ -1,0 +1,49 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Unnatural Predation",
+    "oracleId": "120446cc-f55b-40db-915d-2669c1083e56",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Target creature gets +1/+1 and gains trample until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": {
+            "target": 0
+          },
+          "power": 1,
+          "toughness": 1,
+          "keywords": [
+            "Trample"
+          ]
+        }
+      ],
+      "text": "Target creature gets +1/+1 and gains trample until end of turn."
+    }
+  ]
+}

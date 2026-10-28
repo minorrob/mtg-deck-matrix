@@ -215,6 +215,123 @@ the rule's shape rather than that feature's:
   grace expiring, a rematch decline or a withdrawn invitation is `released`, and is never refused.
   Only the chair nobody ever accounted for is.
 
+## Symbols first, words last
+
+Rob, 2026-10-25: *"We need to shift the standing instruction on CrankMagic development that we always show as little
+text instruction as possible, always deferring to visual symbols, colors, indicators and short-hand wherever possible.
+This includes in actions. But always enough that the basics, e.g. source/cause > action > target/effect objects and
+events are clear and card references always have a very quick path to viewing and reading the card."*
+
+- **Prefer a glyph, a color, an indicator or shorthand to a sentence**, everywhere: menus, actions, callouts, prompts,
+  status. A paragraph of instruction is a design to replace, not to add to.
+- **The minimum that must stay clear:** the source or cause, the action, and the target or effect of every object and
+  event (*Fauna Shaman* → ⤳ *Rob*), in that order.
+- **Every card reference is one press from the card itself**, to see it large and read it.
+- Words that are an accessible name (`aria-label`, a title) stay whole: a symbol on screen still says what it is to a
+  screen reader. The refusal rule above still names the specific problem and the way out, as briefly as it can.
+
+## Mandatory visual acceptance and budget checkpoints
+
+These rules apply to any change affecting visible UI, layout, typography,
+responsive behavior, animation, or interaction.
+
+### Definition of done
+
+- Passing tests, builds, and CI does not establish visual correctness.
+- Inspect the running application and compare it with the approved
+  wireframes, screenshots, and specifications.
+- Saving screenshots without opening and inspecting them is insufficient.
+- Never claim visual acceptance for a screen or state you did not inspect.
+- If the application cannot be viewed, report visual acceptance as blocked.
+  Do not substitute code inspection for rendered evidence.
+
+### Before implementation
+
+- Extract a short visual acceptance checklist from the existing approved
+  plan. Do not make the user repeat requirements already documented.
+- Identify the authoritative visual references. Surface contradictions
+  before implementing the affected area.
+- Record the current appearance and preserve a recoverable Git checkpoint.
+- Identify existing interactions that must remain working, including
+  dragging, zooming, camera tilt, scrolling, drawers, and card interaction.
+- State the bounded scope, first visible milestone, and budget checkpoint.
+
+### Early visual checkpoint
+
+- Render and inspect the first representative screen within 30 minutes
+  of starting implementation, or after the first meaningful UI change,
+  whichever comes first.
+- If that is not possible, stop implementation at the checkpoint and
+  report the blocker and work completed.
+- Complete one representative screen before propagating a layout or
+  styling pattern throughout the application.
+- Compare the actual implementation with the approved reference before
+  expanding scope. Correct visible deviations first.
+- Request user review when a material design choice lacks an approved
+  reference. Do not invent a replacement design silently.
+
+### Required visual inspection
+
+Inspect the whole screen and affected components using realistic content,
+the user's target viewport, and relevant application states.
+
+Verify:
+- Drawer and panel boundaries, including their top and bottom alignment.
+- Font family, size, weight, line height, baseline alignment, and hierarchy.
+- Readability at the final displayed size after zoom, transforms, and
+  camera projection. CSS font sizes alone are not evidence of readability.
+- Clipping, overflow, truncation, overlap, spacing, and excessive empty space.
+- Long names, populated panels, empty states, and relevant player counts.
+- Reachability of controls and preservation of existing interactions.
+- Relevant viewport sizes and user-controlled display or camera settings.
+
+Use side-by-side comparisons or image overlays when useful. Distinguish
+intentional differences from defects using the approved requirements.
+
+### Budget and progress checkpoints
+
+- Honor the user's stated time, credit, token, and test limits.
+- If no limit is supplied, use a mandatory checkpoint every 30 minutes.
+  This is a review interval, not permission for unlimited work.
+- At each checkpoint, report:
+  1. What is complete and what has been visually verified.
+  2. Remaining defects, uncertainty, and scope.
+  3. Elapsed time and usage when available; never invent usage figures.
+  4. The next bounded increment and its expected cost or duration.
+- Stop and obtain direction before exceeding an explicit budget, materially
+  expanding scope, or continuing after two unsuccessful attempts to fix
+  the same defect.
+- Do not start long test runs before the first visual checkpoint unless
+  they are necessary to render or safely evaluate the application.
+- Do not repeat broad verification without a concrete reason.
+
+### Failure handling and regression protection
+
+- Visible divergence from the approved design blocks completion.
+- Pause dependent work when a shared layout or typography defect appears.
+  Fix the underlying issue before extending the affected pattern.
+- Do not weaken assertions, replace reference images, or redefine
+  acceptance criteria merely to make failing checks pass.
+- Do not rerun failed tests unless an actual defect required a repair.
+  Document timing or flaky failures and existing evidence instead.
+- Following a repair, run the affected verification. Broaden testing only
+  when the change or remaining risk justifies it.
+- Keep changes small and independently reversible. Preserve the rollback
+  checkpoint until acceptance is complete.
+
+### Final acceptance and release
+
+- After integration, inspect the combined application again. Separate
+  component reviews do not establish whole-screen correctness.
+- Provide a concise requirement-to-evidence checklist with actual
+  screenshots, inspected states, and any unresolved deviations.
+- Report functional verification and visual acceptance separately.
+- Do not declare completion, merge, or promote a UI change with unresolved
+  visual acceptance failures unless the user explicitly accepts the named
+  deviations.
+- Visual QA is the implementing agent's responsibility. User review is an
+  additional checkpoint, not a substitute for the agent's inspection.
+
 ## Things no agent does
 
 - Force-push or rewrite history on a branch someone else has pulled.

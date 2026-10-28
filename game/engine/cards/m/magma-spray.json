@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Magma Spray",
+    "oracleId": "fe16f1ab-58b4-4452-abe4-cbd9addd348f",
+    "types": [
+      "Instant"
+    ],
+    "subtypes": [],
+    "manaCost": "{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Magma Spray deals 2 damage to target creature. If that creature would die this turn, exile it instead.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ]
+        }
+      ],
+      "effects": [
+        {
+          "effect": "dealDamage",
+          "amount": 2,
+          "targets": {
+            "target": 0
+          }
+        },
+        {
+          "effect": "effectUntil",
+          "rule": "exile-if-dies",
+          "targets": {
+            "target": 0
+          },
+          "until": "end-of-turn"
+        }
+      ],
+      "text": "Magma Spray deals 2 damage to target creature. If that creature would die this turn, exile it instead."
+    }
+  ]
+}

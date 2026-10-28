@@ -1,0 +1,33 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sky Skiff",
+    "oracleId": "f2c43b85-8c42-4b23-84c2-bec8d6230039",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [
+      "Vehicle"
+    ],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Flying\nCrew 1 (Tap any number of creatures you control with total power 1 or more: This Vehicle becomes an artifact creature until end of turn.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "crew",
+      "amount": 1,
+      "text": "Crew 1 (Tap any number of creatures you control with total power 1 or more: This Vehicle becomes an artifact creature until end of turn.)"
+    }
+  ]
+}

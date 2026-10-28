@@ -1,0 +1,56 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Blood Money",
+    "oracleId": "75f5d372-4ff9-430c-8302-72472439e0d2",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [],
+    "manaCost": "{5}{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Destroy all creatures. For each nontoken creature destroyed this way, you create a tapped Treasure token.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Destroy all creatures. For each nontoken creature destroyed this way, you create a tapped Treasure token.",
+      "targets": [],
+      "effects": [
+        {
+          "effect": "destroyAll",
+          "selector": {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          },
+          "remember": true
+        },
+        {
+          "effect": "createToken",
+          "count": {
+            "movedCount": {
+              "types": [
+                "Creature"
+              ],
+              "token": false
+            }
+          },
+          "token": {
+            "predefined": "Treasure"
+          },
+          "tapped": true
+        }
+      ]
+    }
+  ]
+}

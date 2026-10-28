@@ -80,8 +80,8 @@ let now = Date.parse("2026-09-26T20:00:00Z");
   await refuses(t.join(SAM, late, now + INVITE_TTL + 1), 410, null, "a link used after its day is refused");
   const samLink = (await t.invite(ROB, 2, now)).code;
 
-  /* Mats: every seat starts on felt; a person picks their own from the app's mats, and everyone sees it. */
-  ok((await t.view(MAYA)).seats.every((s) => s.mat === "felt"), "every seat starts on felt");
+  /* Mats: every PERSON starts on felt (an AI seat is given one, Rob 2026-10-28: tests/lounge-lobby.mjs); a person picks their own from the app's mats, and everyone sees it. */
+  ok((await t.view(MAYA)).seats.filter((s) => s.kind === "human").every((s) => s.mat === "felt"), "every person starts on felt");
   eq((await t.mat(MAYA, "sea")).seats[1].mat, "sea", "Maya picks the sea for her own seat");
   eq((await t.view(ROB)).seats[1].mat, "sea", "and Rob sees it on her seat");
   await refuses(t.mat(MAYA, "someone-elses-art"), 400, /no such mat/, "a mat that is not one of the app's is refused");
@@ -93,7 +93,9 @@ let now = Date.parse("2026-09-26T20:00:00Z");
 
   /* Decks. */
   await refuses(t.deck(MAYA, 0, deckFor("maya"), now), 403, null, "a person chooses only their own seat's deck");
-  await refuses(t.deck(MAYA, 3, deckFor("maya"), now), 403, null, "and only the host chooses an AI's");
+  /* Changed with the lounge (Rob's Lobby, 2026-10-28): anyone SEATED brings an AI seat's deck, no longer the host alone;
+     someone with no seat still may not. (tests/lounge-lobby.mjs proves the seated person's side.) */
+  await refuses(t.deck(EVE, 3, deckFor("eve"), now), 403, null, "and only someone seated at the table chooses an AI's");
   const bad = await t.deck(MAYA, 1, {name: "x", commander: ["Krenko, Mob Boss"], cards: ["Mountain", "Sol Ring"]}, now).catch((e) => e);
   eq([bad.status, bad.unsupported], [422, ["Krenko, Mob Boss", "Sol Ring"]], "a deck the engine cannot play is refused, naming each card");
   await t.deck(ROB, 0, {...deckFor("rob"), source: {deckId: "deck:rob:1", deckVersion: 4}}, now);
@@ -268,7 +270,7 @@ function objectCtx() {
   await t.ready(MAYA, false, now);
   eq((await t.rules(ROB, {bracketLimit: null}, now)).rules, {startingLife: 30, bracketLimit: null, skipFirstDraw: true, passStack: true}, "with nobody ready, the host takes the limit off again");
   await t.deck(ROB, 0, deckFor("rob"), now); await t.deck(ROB, 2, deckFor("shadrix"), now);
-  await refuses(t.rules(ROB, {startingLife: 25}, now), 409, /Shadrix is\. Take back Ready \(an AI seat is ready once its deck is chosen, so choose AI decks after the rules\)/, "an AI seat is ready once its deck is chosen, and the refusal says to set the rules first");
+  eq((await t.rules(ROB, {startingLife: 30}, now)).rules.startingLife, 30, "an AI seat is ready once its deck is chosen, and that does not hold the rules: only a person's Ready does (Rob, 2026-10-28: the lobby edits them with the AI seated)");
   await t.ready(ROB, true, now); await t.ready(MAYA, true, now);
   await t.start(ROB, now); const matchId = await t.tick(now + 11000);
   const room = await t.currentRoom();
@@ -298,8 +300,8 @@ for (const off of [false, true]) {
     eq((await t.rules(ROB, {passStack: false}, now)).rules.passStack, false, "the host turns it off");
   }
   await t.deck(ROB, 0, deckFor("rob"), now); await t.deck(ROB, 1, deckFor("shadrix"), now);
-  if (off) await refuses(t.rules(ROB, {skipFirstDraw: true}, now), 409, /^The rules can't change once a seat is ready, and Shadrix is\./, "once a seat is ready it is refused, as every rule is");
   await t.ready(ROB, true, now);
+  if (off) await refuses(t.rules(ROB, {skipFirstDraw: true}, now), 409, /^The rules can't change once a seat is ready, and Rob is\./, "once a person is ready it is refused, as every rule is");
   await t.start(ROB, now); const matchId = await t.tick(now + 11000);
   await t.endGame(ROB, now + 12000);
   const record = await t.record(ROB, matchId);
@@ -313,6 +315,7 @@ for (const off of [false, true]) {
   eq(record.pod.pilotPicks, true, "and its AI seats take what an \"up to\" or a search is for (`pilotPicks`, room.mjs): its pod says so, and the record keeps it");
   eq(record.pod.drawBeat, true, "and its draw step's draw waits for its player's Draw card (`drawBeat`, ROB-102 and ROB-24): its pod says so, and the record keeps it");
   eq(record.pod.blocksNone, true, "and a person with no creature that could block is not asked to declare blockers (`blocksNone`, room.mjs): its pod says so, and the record keeps it");
+  eq([record.pod.landAnyStep, record.pod.takeBackLand, record.pod.askAimed], [true, true, true], "and a person plays a land in any step of their own turn, may take one back, and is asked about what is aimed at them (`landAnyStep`, `takeBackLand`, `askAimed`, room.mjs): its pod says so, and the record keeps it");
 }
 
 /* ONLY A CARD THAT CAN BE A COMMANDER IS ONE (CR 903.3; Rob, 2026-10-01): a legendary creature, or a card that says it

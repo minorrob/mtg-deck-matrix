@@ -1,0 +1,34 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Boros Swiftblade",
+    "oracleId": "377e4dad-866b-4e02-8c10-072bf7f000be",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Human",
+      "Soldier"
+    ],
+    "manaCost": "{R}{W}",
+    "colors": [
+      "R",
+      "W"
+    ],
+    "colorIdentity": [
+      "R",
+      "W"
+    ],
+    "power": 1,
+    "toughness": 2
+  },
+  "oracleText": "Double strike",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "double strike",
+      "text": "Double strike"
+    }
+  ]
+}

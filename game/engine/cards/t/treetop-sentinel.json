@@ -1,0 +1,42 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Treetop Sentinel",
+    "oracleId": "786afd52-0eae-4453-b1bd-cffc21699849",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bird",
+      "Soldier"
+    ],
+    "manaCost": "{2}{U}{U}",
+    "colors": [
+      "U"
+    ],
+    "colorIdentity": [
+      "U"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Flying, protection from green",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "text": "Flying"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "G"
+        ]
+      },
+      "text": "protection from green"
+    }
+  ]
+}

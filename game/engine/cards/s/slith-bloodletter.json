@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Slith Bloodletter",
+    "oracleId": "fbad6038-93ed-4a28-b1f0-ada54608758b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Slith"
+    ],
+    "manaCost": "{B}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "Whenever this creature deals combat damage to a player, put a +1/+1 counter on it.\n{1}{B}: Regenerate this creature.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "damage dealt",
+        "who": "self",
+        "to": "player",
+        "combat": true
+      },
+      "effects": [
+        {
+          "effect": "putCounter",
+          "targets": "self",
+          "counter": "+1/+1",
+          "count": 1
+        }
+      ],
+      "text": "Whenever this creature deals combat damage to a player, put a +1/+1 counter on it."
+    },
+    {
+      "kind": "activated",
+      "cost": [
+        {
+          "atom": "mana",
+          "cost": "{1}{B}"
+        }
+      ],
+      "effects": [
+        {
+          "effect": "regenerate",
+          "targets": "self"
+        }
+      ],
+      "text": "{1}{B}: Regenerate this creature."
+    }
+  ]
+}

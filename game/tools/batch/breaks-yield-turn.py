@@ -11,7 +11,7 @@ Run from the repository root, with nothing else editing the worktree:
 SUITES = ['tests/engine-pass-stack.mjs', 'tests/room-yield-turn.mjs', 'tests/game-table.mjs', 'tests/game-leave.mjs']
 A = 'game/engine/rules/actions.mjs'
 R = 'game/room/room.mjs'
-COSTS = 'const MANA_COSTS = ["sacrifice", "sacrificeSelf", "tapCreature", "payLife", "counterCost", "millCost", "exileFromGraveyard"];'
+COSTS = 'const MANA_COSTS = ["sacrifice", "sacrificeSelf", "tapCreature", "payLife", "counterCost", "millCost", "exileFromGraveyard", "exertSelf", "exileSelf"];'
 BREAKS = [
     # rules/actions.mjs
     ('the stack never passed for anyone', A,
@@ -38,7 +38,7 @@ BREAKS = [
 ] + [
     # game/room/room.mjs: passStack and held priority
     ('the room not passing the stack', R,
-     'nothingToDo(state, seat, actions, {stack: passStack})',
+     'nothingToDo(state, seat, actions, {stack: passStack && prefs[seats[seat].seatId]?.askStack !== true})',
      'nothingToDo(state, seat, actions)'),
     ('the pod\'s passStack not read', R,
      '...(pod && pod.passStack === true ? {passStack: true} : {}), ',

@@ -10,7 +10,7 @@
  *      Cobalt. The Menu's Switch theme lists them, the choice in force is pressed, it is saved, and it recolors the page
  *      at once. A value saved before A1 reads as its theme: dark is Brass & Slate, light Felt & Cream, and Match
  *      system Moss & Iron.
- *   3. A save's toast carries Undo, and Undo takes the save back. A failure that may pass carries Retry,
+ *   3. Substantive saves carry Undo; preference saves are ordinary success receipts. A failure that may pass carries Retry,
  *      which runs the action again; a rule the reader has not met yet does not.
  *   4. Help is a slide-over at the right with the page visible beside it; the glossary is one step on,
  *      and closing the glossary comes back to the help. The Menu's Help opens the page's own help.
@@ -33,7 +33,7 @@ const {browser, base, stub, close} = await openBrowser({name: "shell-r3", flag: 
 const menuButton = (page) => page.getByRole("button", {name: "Menu", exact: true});
 const openMenu = async (page) => { await menuButton(page).click(); await page.locator("#cm-user-menu:popover-open").waitFor(); };
 const theme = (page) => page.evaluate(() => document.getElementById("matrix-v2").dataset.theme);
-const pressed = (page) => page.$$eval("[data-theme-choice]", (bs) => bs.filter((b) => b.getAttribute("aria-pressed") === "true").map((b) => b.dataset.themeChoice));
+const pressed = (page) => page.$$eval("[data-theme-skin]", (bs) => bs.filter((b) => b.getAttribute("aria-pressed") === "true").map((b) => b.dataset.themeSkin));
 const toast = (page) => page.evaluate(() => {
   const el = document.getElementById("cm-notice");
   return {shown: !el.hidden, text: el.querySelector(".cm-toast-text")?.textContent || "", action: el.querySelector(".cm-toast-action")?.textContent || null, error: el.classList.contains("error")};
@@ -61,48 +61,51 @@ try {
   const fitsOut = await page.$eval("#cm-user-functions .cm-chip-status", (el) => [el.scrollWidth, el.clientWidth]);
   ok(fitsOut[0] <= fitsOut[1], `and that line fits the rail without being cut off (${fitsOut.join(" in ")}px)`);
 
-  /* 2. Four themes. */
+  /* 2. Three skins; a register is independent of the skin. */
   const palette = (page) => page.evaluate(() => [document.getElementById("matrix-v2").dataset.palette, document.getElementById("matrix-v2").dataset.theme, document.documentElement.dataset.palette]);
   const bg = (page) => page.evaluate(() => getComputedStyle(document.getElementById("matrix-v2")).backgroundColor);
   await openMenu(page);
-  eq(await page.$$eval("[data-theme-choice]", (bs) => bs.map((b) => b.textContent)), ["Moss & Iron", "Brass & Slate", "Felt & Cream", "Steel & Cobalt"], "the Menu's Switch theme offers the four themes");
-  eq([await pressed(page), await palette(page)], [["moss-iron"], ["moss-iron", "dark", "moss-iron"]], "and Moss & Iron, the default, is the one pressed and drawn");
-  const mossBg = await bg(page);
-  await page.getByRole("button", {name: "Felt & Cream"}).click();
+  eq(await page.$$eval("[data-theme-skin]", (bs) => bs.map((b) => b.textContent)), ["Sapphire & Obsidian", "Bronze & Basalt", "Chalk & Coal"], "the Menu offers the three r4 skins");
+  eq([await pressed(page), await palette(page)], [["sapphire-obsidian"], ["sapphire-obsidian", "dark", "sapphire-obsidian"]], "Sapphire & Obsidian is the default on the app and root");
+  const darkBg = await bg(page);
+  await page.locator('[data-theme-mode="light"]').click();
   await page.waitForFunction(() => document.getElementById("matrix-v2").dataset.theme === "light");
-  eq([await pressed(page), await palette(page)], [["felt-cream"], ["brass-slate", "light", "brass-slate"]], "choosing Felt & Cream draws Brass & Slate's light face and presses Felt & Cream");
-  ok(await bg(page) !== mossBg, "and the page is recolored at once, with no reload");
+  eq([await pressed(page), await palette(page)], [["sapphire-obsidian"], ["sapphire-obsidian", "light", "sapphire-obsidian"]], "Light keeps the selected skin");
+  ok(await bg(page) !== darkBg, "and the page is recolored without a reload");
 
-  /* 3. The save's toast carries Undo, and Undo takes it back. */
+  /* 3. Appearance preferences are ordinary receipts, per the r4 bounded Undo exclusion.
+     The native controls still restore the prior appearance, without a false persistent Undo. */
   const saved = await toast(page);
-  ok(saved.shown && /Felt & Cream theme/.test(saved.text) && saved.action === "Undo" && !saved.error, `the theme's toast carries Undo: ${JSON.stringify(saved)}`);
-  /* Every notice raised while Undo runs, not just the last: the repository announces the new revision
-     to this tab's own listeners before undo() returns, and a listener that took it for another tab's
-     change once posted "refreshed after a change in another tab" on top of "Last change undone" --
-     only sometimes, by timing. Recording them all makes that a certainty rather than a race. */
+  ok(saved.shown && /Light appearance/.test(saved.text) && saved.action === null && !saved.error, `appearance save is an ordinary success without Undo: ${JSON.stringify(saved)}`);
   await page.evaluate(() => { window.__notices = []; new MutationObserver(() => { const t = document.querySelector("#cm-notice .cm-toast-text")?.textContent; if (t) window.__notices.push(t); }).observe(document.getElementById("cm-notice"), {childList: true, subtree: true, characterData: true}); });
-  await page.locator("#cm-notice .cm-toast-action").click();
-  await page.waitForFunction(() => document.getElementById("matrix-v2").dataset.palette === "moss-iron");
+  await openMenu(page);
+  await page.locator('[data-theme-mode="dark"]').click();
+  await page.waitForFunction(() => document.getElementById("matrix-v2").dataset.theme === "dark");
   await page.waitForTimeout(600);
   const during = await page.evaluate(() => window.__notices);
-  ok(!during.some((t) => /another tab/.test(t)), `Undo in this tab is not reported as another tab's change: ${JSON.stringify(during)}`);
+  ok(!during.some((t) => /another tab/.test(t)), `a local appearance change stays local: ${JSON.stringify(during)}`);
   const undone = await toast(page);
-  ok(/Last change undone/.test(undone.text) && undone.action === null, `Undo put Moss & Iron back, and its own toast offers nothing further: ${JSON.stringify(undone)}`);
+  ok(/Dark appearance/.test(undone.text) && undone.action === null, "the native Dark control restores the earlier appearance without a persistent Undo");
 
-  /* The choice is saved; and the values saved before A1 read as their themes, never rewritten. */
   await openMenu(page);
-  await page.getByRole("button", {name: "Steel & Cobalt"}).click();
-  await page.waitForFunction(() => document.getElementById("matrix-v2").dataset.palette === "steel-cobalt");
+  await page.getByRole("button", {name: "Chalk & Coal", exact: true}).click();
+  await page.waitForFunction(() => document.getElementById("matrix-v2").dataset.palette === "chalk-coal");
   await page.reload();
   await page.getByRole("heading", {name: "Decks", level: 1}).waitFor({timeout: 60000});
-  eq([await pressed(page), await palette(page)], [["steel-cobalt"], ["steel-cobalt", "dark", "steel-cobalt"]], "the choice is saved: after a reload Steel & Cobalt is still the one pressed and drawn");
-  for (const [old, want] of [["dark", ["brass-slate", "dark"]], ["light", ["brass-slate", "light"]], ["system", ["moss-iron", "dark"]]]) {
-    await page.evaluate(async (v) => { await globalThis.__cmCommit({type: "preferences", values: {theme: v}}); }, old);
+  eq([await pressed(page), await palette(page)], [["chalk-coal"], ["chalk-coal", "dark", "chalk-coal"]], "the skin is saved across reload");
+  for (const [old, want] of [["dark", ["sapphire-obsidian", "dark"]], ["light", ["sapphire-obsidian", "light"]], ["system", ["sapphire-obsidian", "dark"]], ["moss-iron", ["sapphire-obsidian", "dark"]], ["brass-slate", ["bronze-basalt", "dark"]], ["felt-cream", ["sapphire-obsidian", "light"]], ["steel-cobalt", ["sapphire-obsidian", "dark"]]]) {
+    await page.evaluate(async (v) => { await globalThis.__cmCommit({type: "preferences", values: {theme: v, themeMode: null}}); }, old);
     await page.waitForFunction((w) => document.getElementById("matrix-v2").dataset.palette === w[0] && document.getElementById("matrix-v2").dataset.theme === w[1], want, {timeout: 5000});
     checks += 1;
   }
-  ok(true, "a saved dark reads as Brass & Slate, light as Felt & Cream, and Match system as Moss & Iron");
-  await page.evaluate(async () => { await globalThis.__cmCommit({type: "preferences", values: {theme: "moss-iron"}}); });
+  await page.evaluate(() => document.querySelector('[data-theme-mode="system"]').click());
+  await page.emulateMedia({colorScheme: "light"});
+  await page.waitForFunction(() => document.getElementById("matrix-v2").dataset.theme === "light");
+  eq(await page.locator('[data-theme-mode="system"]').getAttribute("aria-pressed"), "true", "System stays selected when the device changes to light");
+  await page.emulateMedia({colorScheme: "dark"});
+  await page.waitForFunction(() => document.getElementById("matrix-v2").dataset.theme === "dark");
+  ok(true, "System follows a device change back to dark without navigation");
+  await page.evaluate(async () => { await globalThis.__cmCommit({type: "preferences", values: {theme: "sapphire-obsidian", themeMode: "dark"}}); });
 
   /* Retry: only for a failure that may pass. A missing deck cannot be deleted -- a rule,
      so no Retry. Offline, the same press is offered Retry, and Retry runs it again. */
@@ -134,7 +137,7 @@ try {
   await page.getByRole("button", {name: "Open the glossary →"}).click();
   await page.locator("#cm-dialog-title", {hasText: "Glossary"}).waitFor();
   const terms = await page.$$eval("#cm-dialog .cm-gloss-term", (ts) => ts.map((t) => t.textContent));
-  ok(["Physical deck", "Substitute", "Bench", "Reserved", "To buy", "Ordered"].every((t) => terms.includes(t)), `the glossary names the statuses: ${terms.join(", ")}`);
+  ok(["Physical deck", "Substitute", "Bench", "Reserved", "To buy", "To Buy · Ordered"].every((t) => terms.includes(t)), `the glossary names the statuses: ${terms.join(", ")}`);
   ok(await page.$eval("#cm-dialog .cm-gloss-term", (t) => getComputedStyle(t).backgroundColor !== "rgba(0, 0, 0, 0)"), "each status wears its color");
   await page.getByRole("button", {name: "Close", exact: true}).click();
   await page.locator("#cm-dialog-title", {hasText: "Help — Decks"}).waitFor();
@@ -169,16 +172,28 @@ try {
   await page.waitForFunction(() => !document.getElementById("cm-dialog").open);
   const gone = await toast(page);
   ok(gone.action === "Undo", `the deletion's toast offers Undo: ${JSON.stringify(gone)}`);
+  eq(await page.locator('.cm-toast:not([hidden]) .cm-toast-text').allTextContents(),[gone.text], 'deletion has one transaction receipt rather than a duplicate ordinary success');
   await press(page, "delete-deck", {deck: live});
   await page.waitForFunction(() => document.getElementById("cm-notice").classList.contains("error"));
   ok(!(await page.evaluate(() => document.getElementById("cm-dialog").open)), "the deck is gone: deleting it again finds nothing to delete");
-  await page.evaluate(() => { document.getElementById("cm-notice").hidden = true; });
-  await press(page, "undo");
+  await page.getByRole('button',{name:'Dismiss error notice',exact:true}).click();
+  await page.locator('#cm-undo-notice [data-undo-revision]').click();
   await page.waitForFunction(() => /Last change undone/.test(document.getElementById("cm-notice").textContent));
   await press(page, "delete-deck", {deck: live});
   await field.waitFor();
   ok(true, "Undo brought the deck back: it is there, archived, to be deleted again");
   await page.keyboard.press("Escape");
+  await page.goto(`${base}/index.html#decks?deck=${encodeURIComponent(live)}`);
+  await page.locator('.cm-deck-hero h1').waitFor();
+  await press(page,'delete-deck',{deck:live});await field.fill(wanted);await page.locator('#cm-dialog [type=submit]').click();
+  await page.waitForFunction(()=>location.hash==='#decks'&&!document.getElementById('cm-dialog').open);
+  await page.locator('#cm-notice [data-undo-revision]').waitFor();
+  const navigatedDelete=await toast(page);
+  ok(navigatedDelete.action==='Undo','deleting from a deck detail retains its Undo after navigating to the hub');
+  eq(await page.locator('.cm-toast:not([hidden]) .cm-toast-text').allTextContents(),[navigatedDelete.text],'the navigated deletion also has exactly one transaction receipt');
+  await page.locator('#cm-notice [data-undo-revision]').click();
+  await page.waitForFunction(()=>/Last change undone/.test(document.getElementById('cm-notice').textContent));
+  ok(await page.evaluate(async id=>{const r=await CrankRepository.open();try{return (await r.getState()).decks.some(d=>d.id===id&&d.archived);}finally{r.close();}},live),'native post-navigation Undo restores the persisted archived deck');
   await context.close();
 
   /* 1, signed in: a page with accounts on, and a cloud that answers. */
@@ -228,4 +243,4 @@ try {
 } finally {
   await close();
 }
-console.log(`shell-r3: ${checks} checks passed — the Menu chip, four themes that recolor at once and read the old values, toasts with Undo and Retry, help as a slide-over with the glossary, and delete by the deck's name.`);
+console.log(`shell-r3: ${checks} checks passed — the Menu chip, three skins and dark/light/system registers that recolor at once and read legacy values, toasts with Undo and Retry, help as a slide-over with the glossary, and delete by the deck's name.`);

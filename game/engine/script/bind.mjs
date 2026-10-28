@@ -56,6 +56,7 @@ import {valueCostOf, shownName, xOnStack} from "../state/index.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {amountOf, AMOUNT_PARAMS} from "./amount.mjs";
 import {conditionHolds} from "./condition.mjs";
+import {targetFacts, effectForTarget} from "./decision.mjs";
 
 /** More than this many ways to choose a spell's targets, and the card is refused at prepare rather than offered. */
 export const TARGET_CHOICES_MAX = 4096;
@@ -68,6 +69,9 @@ export const TARGET_CHOICES_MAX = 4096;
  *                               main phase, you may exile up to one other target" (Return to Dust, {cast: {mainPhase: true}})
  *   `differentControllers`     a counted target's choices each controlled by a different player ("up to two target
  *                               artifacts and/or enchantments controlled by different players", Protector of the Wastes)
+ *   `differentManaValues`      a counted target's choices each with a different mana value ("any number of target creature cards
+ *                               that each have a different mana value X or less", Agadeem's Awakening): no two of them alike, the
+ *                               option's `manaValue` capped to one apiece (`capped`, as controllers are) and refused with what to do
  *   `share`                    a counted target's choices together: "graveyard", all from a single graveyard ("up to two
  *                               target cards from a single graveyard", Unlicensed Hearse); "creature type", a creature type
  *                               all of them have ("two target creature cards that share a creature type", Unbury)
@@ -82,7 +86,7 @@ export const TARGET_CHOICES_MAX = 4096;
  *                               chosen for target n, as it is chosen and again as the ability resolves (CR 608.2b): that
  *                               permanent gone, or another player's now, and this target is illegal too (relatedLegal)
  * None is part of what a target may be (the selector), so each is set aside beside `count`. */
-export const SPEC_KEYS = Object.freeze(["count", "distinctFrom", "onlyIf", "differentControllers", "share", "forEach", "ownedByControllerOf"]);
+export const SPEC_KEYS = Object.freeze(["totalPowerAtMost", "count", "distinctFrom", "onlyIf", "differentControllers", "differentManaValues", "share", "forEach", "ownedByControllerOf"]);
 /** What a counted target's choices may share (`share`). */
 export const SHARES = Object.freeze(["graveyard", "creature type"]);
 const selectorOf = (spec) => Object.fromEntries(Object.entries(spec && typeof spec === "object" ? spec : {}).filter(([key]) => !SPEC_KEYS.includes(key)));
@@ -104,7 +108,9 @@ export function countOf(spec, context = {}) {
   /* "For each opponent, up to one target" (`forEach`): none at least, and no most but the one of each opponent's (oneOfEach). */
   if (forEachOpponent(spec)) return {min: 0, max: null};
   const count = spec && typeof spec === "object" ? spec.count : undefined;
-  return count && typeof count === "object" ? {min: count.min ?? 0, max: count.max === "X" ? Math.max(0, context?.x ?? 0) : count.max ?? null} : null;
+  /* "Exile X target creatures" (Curse of the Swine; CR 601.2c, X chosen before the targets, 601.2b): `min` "X" too, exactly X. */
+  const x = Math.max(0, context?.x ?? 0);
+  return count && typeof count === "object" ? {min: count.min === "X" ? x : count.min ?? 0, max: count.max === "X" ? x : count.max ?? null} : null;
 }
 /** The placeholder a counted target holds in an offer until its controller picks (rules/turn.mjs, "choose-targets"), and
     how many there are to pick from (`of`): "up to two" with none to pick does nothing, for a pilot weighing the offer. */
@@ -186,6 +192,8 @@ function groupCandidates(state, spec, context, placeholder) {
 }
 /** Why a counted target's choices do not hold together as its `share` says, in words, or null (CR 601.2c). */
 export function shareProblem(state, spec, chosen, name) {
+  if (Number.isFinite(spec?.totalPowerAtMost) && (chosen ?? []).reduce((n, t) => n + (t?.kind === "object" && state.objects[t.id] ? powerOf(state, t.id) : 0), 0) > spec.totalPowerAtMost)
+    return `${name}'s targets exceed total power ${spec.totalPowerAtMost}: choose creature cards with total power ${spec.totalPowerAtMost} or less.`;
   const objects = (chosen ?? []).filter((t) => t?.kind === "object" && state.objects[t.id]).map((t) => t.id);
   if (spec?.share === "graveyard" && new Set(objects.map((id) => state.objects[id].owner)).size > 1)
     return `${name}'s targets must be in a single graveyard: choose them all from one player's graveyard.`;
@@ -246,7 +254,7 @@ export function targetChoices(state, specs, context) {
  * as it allows or there are. Each option is one candidate (`targets: [it]`, `hostile` for a pilot's aim), a permanent said
  * with whose it is when it is not the chooser's, and two that would read alike numbered.
  */
-export function countedChoice(state, spec, context, {id, name, hostile = false, placeholder = null}) {
+export function countedChoice(state, spec, context, {id, name, hostile = false, placeholder = null, effects = [], targetIndex = 0}) {
   const count = countOf(spec, context) ?? {min: 1, max: 1};
   /* Within the group it was offered with (`share`): one graveyard's cards, or those with the creature type. */
   const candidates = groupCandidates(state, spec, context, placeholder);
@@ -254,8 +262,8 @@ export function countedChoice(state, spec, context, {id, name, hostile = false, 
     const whose = c.kind === "object" && state.objects[c.id] && controllerOf(state, c.id) !== context.controller ? ` (${state.players[controllerOf(state, c.id)]?.name}'s)` : "";
     /* "For each opponent ... that player controls" (`forEach`): the opponent each is chosen for, kept with it (stillLegal). */
     const target = forEachOpponent(spec) ? {...c, forPlayer: controllerOf(state, c.id)} : c;
-    return {index, label: `${targetName(state, c)}${whose}`, ...(c.kind === "object" ? {cardId: c.id} : {playerId: c.id}), targets: [target], hostile,
-      ...(oneOfEach(spec) && c.kind === "object" && state.objects[c.id] ? {controllerId: controllerOf(state, c.id)} : {})};
+    return {index, ...(Number.isFinite(spec.totalPowerAtMost) ? {power: powerOf(state, c.id)} : {}), ...(spec.differentManaValues === true && c.kind === "object" ? {manaValue: manaValueOfObject(state, c.id)} : {}), label: `${targetName(state, c)}${whose}`, ...(c.kind === "object" ? {cardId: c.id} : {playerId: c.id}), targets: [target], hostile,
+      ...targetFacts(state, c, effectForTarget(effects, targetIndex))};
   });
   for (const option of options) {
     const alike = options.filter((o) => o.label === option.label);
@@ -263,11 +271,14 @@ export function countedChoice(state, spec, context, {id, name, hostile = false, 
   }
   /* "Controlled by different players" (`differentControllers`), "for each opponent" (`forEach`): at most one of each player's,
      refused with what to do instead (controller.mjs reads `capped`; both pilots keep to it). */
-  const capped = oneOfEach(spec) ? differentControllersCap(state, options, name, forEachOpponent(spec)) : null;
+  const capped = oneOfEach(spec) ? differentControllersCap(state, options, name, forEachOpponent(spec))
+    : spec?.differentManaValues === true ? differentManaValuesCap(options, name) : null;
   const words = forEachOpponent(spec) ? "for each opponent, choose up to one target that player controls"
-    : `choose ${countWords(count)}${placeholder?.groupLabel ? ` ${placeholder.groupLabel}` : ""}${capped ? ", each controlled by a different player" : ""}`;
+    : `choose ${countWords(count)}${placeholder?.groupLabel ? ` ${placeholder.groupLabel}` : ""}${capped ? (spec.differentManaValues === true ? ", each with a different mana value" : ", each controlled by a different player") : ""}`;
   return {id, title: `${name}: ${words}`, mode: "many", min: Math.min(count.min, options.length),
-    max: count.max === null ? options.length : Math.min(count.max, options.length), options, ...(capped ? {capped} : {})};
+    max: count.max === null ? options.length : Math.min(count.max, options.length), options,
+    ...(Number.isFinite(spec.totalPowerAtMost) ? {budget: {by: "power", most: spec.totalPowerAtMost,
+      why: `Choose creature cards with total power ${spec.totalPowerAtMost} or less.`}} : {}), ...(capped ? {capped} : {})};
 }
 
 /* "Controlled by different players" as a cap: no more than one option of each controller's, and the words that say so --
@@ -279,6 +290,15 @@ function differentControllersCap(state, options, name, each = false) {
     why: Object.fromEntries(players.map((p) => [p, each ? `${name} targets up to one of each opponent's: choose no more than one of ${whose(p)}'s.`
       : `${name}'s targets must be controlled by different players: choose no more than one of ${whose(p)}'s, and the others from other players.`]))};
 }
+
+/* "Each with a different mana value" (`differentManaValues`) as a cap: no more than one option of each mana value, and the words
+   that say so. The same cap the controllers have, keyed by the option's `manaValue` (rules/controller.mjs, the pilots). */
+function differentManaValuesCap(options, name) {
+  const values = [...new Set(options.map((o) => o.manaValue).filter((v) => v !== undefined))];
+  return {by: "manaValue", most: Object.fromEntries(values.map((v) => [v, 1])),
+    why: Object.fromEntries(values.map((v) => [v, `${name}'s targets must each have a different mana value: choose no more than one with mana value ${v}.`]))};
+}
+const manaValueOfObject = (state, id) => { const cost = state.objects[id]?.manaCost; return cost ? manaValue(parseManaCost(cost)) : 0; };
 
 /** Why a counted target's choices break "controlled by different players" (`differentControllers`) or "for each opponent"
     (`forEach`), in words, or null. */
@@ -382,14 +402,23 @@ function factValue(value, context, state = null) {
   return key === "powerOf" ? powerOf(state, id) : toughnessOf(state, id);
 }
 
+function thisCardInGraveyard(state, source) {
+  if (source === null || source === undefined) return [];
+  for (const list of Object.values(state.zones.graveyard ?? {})) for (const id of list) if (state.objects[id]?.wasPermanent === source) return [id];
+  return [];
+}
+
 function objectsOf(value, context) {
   if (value === "self") return context.source !== null && context.source !== undefined ? [context.source] : [];
   /* "That spell", "that creature": what the trigger is about (trigger.mjs), while it is still there. */
+  if (value === "that card" && context.about?.cards) return [...context.about.cards];
   if (value === "that card") return context.about?.card !== undefined && context.about.card !== null ? [context.about.card] : [];
   /* "Tap enchanted creature", "untap equipped creature": what the source is attached to as it resolves (stack.mjs). */
   if (value === "enchanted" || value === "equipped") return context.attached !== undefined && context.attached !== null ? [context.attached] : [];
   /* "A copy of it": what an earlier effect of this resolution moved (effects/zones.mjs, `remember`), while it is there. */
   if (value === "remembered") return (context.remembered ?? []).slice();
+  /* "The exiled cards" (Tibalt's Trickery): every card the digUntil before it exiled (`rememberAll`, effects/zones.mjs). */
+  if (value === "the exiled cards") return (context.exiledThisWay ?? []).slice();
   /* "Each creature that convoked this spell" (Lethal Scheme; CR 702.51c): the creatures tapped to pay for it as it was cast
      (rules/actions.mjs) -- each as it was then, one gone since among them, for an effect that reads last known information
      (connive, CR 701.50b). */
@@ -432,6 +461,10 @@ function playersOf(value, context, state = null) {
      (CR 800.4a; effects/zones.mjs, playersFor). */
   if (value === "each opponent who didn't")
     return (state?.players ?? []).filter((p) => p.id !== context.controller && !(context.whoDid ?? []).includes(p.id)).map((p) => p.id);
+  /* "This creature deals 4 damage to each other opponent" (Parapet Thrasher; precon load lane C): its controller's opponents but
+     the one the trigger is about -- "that opponent" -- each still in the game (CR 800.4a; effects/zones.mjs, playersFor). */
+  if (value === "each other opponent")
+    return (state?.players ?? []).map((p) => p.id).filter((id) => id !== context.controller && id !== context.about?.player);
   if (!isRef(value)) return value;
   const chosen = (context.targets ?? [])[value.target];
   if (Array.isArray(chosen)) return chosen.filter((t) => t?.kind === "player").map((t) => t.id);
@@ -470,6 +503,10 @@ export function bindEffect(effect, context, state = null) {
     if (walker === undefined || walker === null) bound.who = "that player";
     else { bound.who = []; bound.targets = !state || state.objects[walker]?.zone === "battlefield" ? [walker] : []; }
   }
+  /* "RETURN THIS CARD TO ITS OWNER'S HAND" (Angelic Destiny, its "when enchanted creature dies"): the card the ability's source
+     became in a graveyard, the new object it is once it was put there from the battlefield (CR 400.7; the Aura, by the
+     state-based action after the creature died, CR 704.5m). Gone from there since, it is nothing. */
+  if (bound.targets === "this card") bound.targets = state ? thisCardInGraveyard(state, context.source ?? context.sourceWas) : [];
   if ("targets" in bound) bound.targets = objectsOf(bound.targets, context);
   /* "Destroy all creatures with power greater than target creature's power" (Fell the Mighty; CR 608.2h): a selector's
      `power.moreThan`, a fact about a target, read as the resolution began -- a number, or null when that target is no
@@ -554,8 +591,13 @@ export function bindEffect(effect, context, state = null) {
 const THIS_WAY = ["rememberedCount", "lifeLostThisWay", "cardTypesAmong"];
 /* An effect's counts of this resolution ("that many" of what the effect before it did), counted now. */
 function thisWayNow(bound, context, state) {
-  for (const key of AMOUNT_PARAMS)
-    if (bound[key] && typeof bound[key] === "object" && THIS_WAY.some((kind) => kind in bound[key])) bound[key] = amountOf(state, bound[key], context);
+  for (const key of AMOUNT_PARAMS) {
+    if (!(bound[key] && typeof bound[key] === "object" && THIS_WAY.some((kind) => kind in bound[key]))) continue;
+    /* "For each of those cards that are STILL exiled" (Dragonhawk, Fate's Tempest; script/amount.mjs, `still`): the cards
+       remembered now, counted as the delayed trigger resolves. */
+    if (bound[key].still === true) bound[key] = {...bound[key], still: [...(context.remembered ?? [])]};
+    else bound[key] = amountOf(state, bound[key], context);
+  }
   return bound;
 }
 /* Each effect, and those nested in it -- a branch's, a repetition's, a modal's modes' -- as `one` makes it. */
@@ -570,10 +612,16 @@ function walkEffects(effects, one) {
   return (effects ?? []).map(walk);
 }
 export function rememberNow(effects, context, {keepThat = false, state = null} = {}) {
+  /* What the delayed trigger's own effects remember as it resolves is its own: "At the beginning of the next end step, untap up
+     to two lands" (Teferi, Hero of Dominaria) -- the lands chosen then (CR 603.7), not what this resolution remembered. An
+     effect after one of its own that remembers keeps "remembered" for that resolution. */
+  let own = false;
   return walkEffects(effects, (effect) => {
     const kept = {};
     if (keepThat) for (const key of ["targets", "spells", "who", "toPlayer", "chooser"])
       if (["that card", "that player", "that card's controller"].includes(effect[key])) kept[key] = effect[key];
+    if (own && effect.targets === "remembered") kept.targets = "remembered";
+    if (effect.remember === true) own = true;
     return thisWayNow({...bindEffect(effect, context), ...kept}, context, state);
   });
 }
@@ -623,6 +671,8 @@ export function targetRefs(effects) {
     if (fact) { found.push(value[fact].target); return; }
     /* A reflexive trigger's targets are its own, chosen as it goes on the stack (CR 603.12; schema.mjs checks them). */
     if (value.effect === "immediateTrigger") return;
+    /* Nor an emblem's abilities' (CR 114.4: they are its own, compiled and checked as a card's are, cards/index.mjs). */
+    if (value.effect === "emblem") return;
     Object.values(value).forEach(walk);
   };
   walk(effects);

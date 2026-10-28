@@ -1,0 +1,46 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Great Sable Stag",
+    "oracleId": "d6dbb83d-3215-4446-8480-8f1bf8cf2938",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elk"
+    ],
+    "manaCost": "{1}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 3,
+    "toughness": 3
+  },
+  "oracleText": "This spell can't be countered.\nProtection from blue and from black (This creature can't be blocked, targeted, dealt damage, or enchanted by anything blue or black.)",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "rule": "cant-be-countered",
+      "affects": {
+        "what": "spell",
+        "self": true
+      },
+      "text": "This spell can't be countered."
+    },
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "from": {
+        "colors": [
+          "U",
+          "B"
+        ]
+      },
+      "text": "Protection from blue and from black (This creature can't be blocked, targeted, dealt damage, or enchanted by anything blue or black.)"
+    }
+  ]
+}

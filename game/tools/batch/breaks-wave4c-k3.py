@@ -77,7 +77,7 @@ BREAKS = [
     ('die: the plan', PLAN, '`rollDie` ("roll a d20"', 'rollDie ("roll a d20"'),
     ('die: its sides, refused', SCHEMA, '''  if (name === "rollDie" && !(Number.isInteger(effect.sides) && effect.sides >= 2))''', '''  if (name === "rollDie" && !(effect.sides !== undefined))'''),
     ('die: the result counted', AMOUNT, '  else if ("dieRolled" in value) n = context.rolled ?? 0;', '  else if ("dieRolled" in value) n = 1;'),
-    ('die: the amount kind', AMOUNT, '''  "dieRolled"]);''', '''  ]);'''),
+    ('die: the amount kind', AMOUNT, '''  "dieRolled",\n''', ''),
     ('die: dieRolled is true', AMOUNT, '''  if ("dieRolled" in value && value.dieRolled !== true) problems.push''', '''  if (false) problems.push'''),
     ('die: the history', HISTORY, '''      return line(`${who(f.player.playerId)} rolled a d${f.sides}: ${f.result}`);''', '''      return [];'''),
 
@@ -94,7 +94,7 @@ BREAKS = [
     ('offspring: asked again with it', STACK, '''...(entry.offspring ? {offspring: true} : {}),''', ''),
     ('offspring: the condition', CONDITION, OFFSPRING_CONDITION, OFFSPRING_CONDITION.replace(' !== condition.offspringPaid) return false;', ' !== condition.offspringPaid) return true;')),
     ('offspring: the condition as it triggered', CONDITION, OFFSPRING_CONDITION, OFFSPRING_CONDITION.replace('(offspring ?? (source', '((source')),
-    ('offspring: the condition key', CONDITION, '''  "giftPromised",\n  /* Offspring's "if its offspring cost was paid" (CR 702.175a; wave 4c). */\n  "offspringPaid"];''', '''  "giftPromised"];'''),
+    ('offspring: the condition key', CONDITION, '''  "giftPromised",\n  /* Offspring's "if its offspring cost was paid" (CR 702.175a; wave 4c). */\n  "offspringPaid",''', '''  "giftPromised",'''),
     ('offspring: offspringPaid is true or false', CONDITION, '''  if ("offspringPaid" in condition && typeof condition.offspringPaid !== "boolean") problems.push''', '''  if (false) problems.push'''),
     ('offspring: a mana cost', INDEX, '''      if (!parsed || !parsed.symbols.length || parsed.variable > 0) problems.push(`${ability.text}: offspring is a mana cost`);''', ''),
     ('offspring: a creature', INDEX, '''      if (!(identity.types ?? []).includes("Creature")) problems.push(`${ability.text}: offspring on a card that is not a creature`);''', ''),

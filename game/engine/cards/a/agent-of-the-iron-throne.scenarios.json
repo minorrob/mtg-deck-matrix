@@ -1,0 +1,451 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Agent of the Iron Throne",
+  "fixtures": {
+    "Iron Captain": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human"
+      ],
+      "manaCost": "{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 1,
+      "toughness": 1,
+      "supertypes": [
+        "Legendary"
+      ]
+    },
+    "Spare Pup": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Dog"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Food": {
+      "types": [
+        "Artifact"
+      ],
+      "subtypes": [
+        "Food"
+      ],
+      "colors": [],
+      "token": true,
+      "abilities": [
+        {
+          "id": "food",
+          "kind": "activated",
+          "text": "{2}, {T}, Sacrifice this artifact: You gain 3 life.",
+          "targets": [],
+          "cost": [
+            {
+              "atom": "mana",
+              "cost": "{2}"
+            },
+            {
+              "atom": "{T}"
+            },
+            {
+              "atom": "sacrifice",
+              "self": true
+            }
+          ],
+          "effects": [
+            {
+              "effect": "gainLife",
+              "amount": 3
+            }
+          ]
+        }
+      ]
+    },
+    "Sparkzap": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{R}",
+      "colors": [
+        "R"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "This spell deals 2 damage to target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "dealDamage",
+            "targets": {
+              "target": 0
+            },
+            "amount": 2
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Rob's commander on the battlefield has it: his Pup dies, then a Food is eaten -- Maya loses 1 each time",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "Iron Captain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Agent of the Iron Throne",
+            "Spare Pup",
+            "Food",
+            "Plains",
+            "Mountain",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sparkzap"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Iron Captain"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Sparkzap",
+          "targets": [
+            {
+              "card": "Spare Pup"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 1,
+              "life": 39
+            }
+          ]
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Food"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 38
+        }
+      ]
+    },
+    {
+      "name": "The commander itself dies: it sees itself go (a leaves-the-battlefield ability, CR 603.10a)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "Iron Captain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Agent of the Iron Throne",
+            "Plains",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sparkzap"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Iron Captain"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Sparkzap",
+          "targets": [
+            {
+              "card": "Iron Captain"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        }
+      ]
+    },
+    {
+      "name": "No commander on the battlefield: nothing has it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Agent of the Iron Throne",
+            "Spare Pup",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sparkzap"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Sparkzap",
+          "targets": [
+            {
+              "card": "Spare Pup"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 1,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "Maya's commander is hers, not Rob's: it does not have the ability, and her Pup dying costs Rob nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Agent of the Iron Throne"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "command",
+          "cards": [
+            "Iron Captain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Mountain",
+            "Spare Pup"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Sparkzap"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 2,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "tap": "Plains",
+          "seat": 1
+        },
+        {
+          "cast": "Iron Captain",
+          "seat": 1
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Mountain",
+          "seat": 1
+        },
+        {
+          "cast": "Sparkzap",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Spare Pup"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "Maya's creature dying is not Rob's",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "Iron Captain"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Agent of the Iron Throne",
+            "Plains",
+            "Mountain"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Spare Pup"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Sparkzap"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "cast": "Iron Captain"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Sparkzap",
+          "targets": [
+            {
+              "card": "Spare Pup"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "stack": 0
+        },
+        {
+          "seat": 1,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}

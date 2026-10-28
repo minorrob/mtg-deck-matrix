@@ -1,0 +1,130 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Way of the Mentor",
+  "scenarios": [
+    {
+      "name": "Cast, it empowers Jace 5: a Jace token with five loyalty",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Way of the Mentor"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Way of the Mentor"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Wastes",
+            "Wastes",
+            "Way of the Mentor",
+            "Jace"
+          ]
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Jace",
+            "counter": "loyalty",
+            "count": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "Rob gains life (Ajani, the Greathearted's +1): a loyalty counter on each of his planeswalkers, Ajani's +1 included; Maya's Elspeth none",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Way of the Mentor",
+            "Ajani, the Greathearted",
+            "Elspeth, Sun's Champion"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Elspeth, Sun's Champion"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "activate": "Ajani, the Greathearted",
+          "ability": "a1"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Ajani, the Greathearted",
+            "counter": "loyalty",
+            "count": 7
+          }
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Elspeth, Sun's Champion",
+            "counter": "loyalty",
+            "count": 5
+          }
+        },
+        {
+          "seat": 1,
+          "counters": {
+            "card": "Elspeth, Sun's Champion",
+            "counter": "loyalty",
+            "count": 4
+          }
+        },
+        {
+          "seat": 0,
+          "life": 43
+        }
+      ]
+    }
+  ]
+}

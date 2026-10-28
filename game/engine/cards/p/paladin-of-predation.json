@@ -1,0 +1,51 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Paladin of Predation",
+    "oracleId": "fb5a02ce-6080-47f9-815a-fef3758d753b",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Phyrexian",
+      "Knight"
+    ],
+    "manaCost": "{5}{G}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 6,
+    "toughness": 7
+  },
+  "oracleText": "Toxic 6 (Players dealt combat damage by this creature also get six poison counters.)\nThis creature can't be blocked by creatures with power 2 or less.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "toxic",
+      "amount": 6,
+      "text": "Toxic 6 (Players dealt combat damage by this creature also get six poison counters.)"
+    },
+    {
+      "kind": "static",
+      "rule": "cant-be-blocked-by",
+      "affects": {
+        "what": "permanent",
+        "self": true
+      },
+      "by": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "power": {
+          "max": 2
+        }
+      },
+      "text": "This creature can't be blocked by creatures with power 2 or less."
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Tajuru Stalwart",
+    "oracleId": "ac87cc33-4a71-471b-917d-6a92721ea0b9",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Elf",
+      "Scout",
+      "Ally"
+    ],
+    "manaCost": "{2}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": 0,
+    "toughness": 1
+  },
+  "oracleText": "Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "replacement",
+      "watches": {
+        "event": "enters",
+        "who": "self"
+      },
+      "change": {
+        "entersWithCounters": {
+          "counter": "+1/+1",
+          "count": {
+            "colorsSpent": "self"
+          }
+        }
+      },
+      "text": "Converge — This creature enters with a +1/+1 counter on it for each color of mana spent to cast it."
+    }
+  ]
+}

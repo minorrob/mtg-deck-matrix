@@ -1,0 +1,36 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Venomous Changeling",
+    "oracleId": "f1929f1f-6aa3-4308-bbff-cab03883ac68",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Shapeshifter"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 1,
+    "toughness": 3
+  },
+  "oracleText": "Changeling (This card is every creature type.)\nDeathtouch",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "changeling",
+      "text": "Changeling (This card is every creature type.)"
+    },
+    {
+      "kind": "keyword",
+      "keyword": "deathtouch",
+      "text": "Deathtouch"
+    }
+  ]
+}

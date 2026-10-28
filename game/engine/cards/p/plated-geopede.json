@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Plated Geopede",
+    "oracleId": "d1efc4fd-2978-4434-8fdf-ddc05484ebb1",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Insect"
+    ],
+    "manaCost": "{1}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 1,
+    "toughness": 1
+  },
+  "oracleText": "First strike\nLandfall — Whenever a land you control enters, this creature gets +2/+2 until end of turn.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "keyword": "first strike",
+      "text": "First strike"
+    },
+    {
+      "kind": "triggered",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "pump",
+          "targets": "self",
+          "power": 2,
+          "toughness": 2
+        }
+      ],
+      "text": "Landfall — Whenever a land you control enters, this creature gets +2/+2 until end of turn."
+    }
+  ]
+}

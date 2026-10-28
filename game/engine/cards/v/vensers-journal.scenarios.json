@@ -1,0 +1,53 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Venser's Journal",
+  "fixtures": {
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}"
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Venser's Journal: three cards in hand at the next upkeep, 3 life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Venser's Journal"
+          ],
+          "sick": true
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rock",
+            "Rock",
+            "Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 43
+        }
+      ]
+    }
+  ]
+}

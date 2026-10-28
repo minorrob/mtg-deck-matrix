@@ -1,0 +1,86 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Lyra Dawnbringer",
+    "oracleId": "592c91fc-6430-4c76-9460-65f047350f67",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Angel"
+    ],
+    "manaCost": "{3}{W}{W}",
+    "colors": [
+      "W"
+    ],
+    "colorIdentity": [
+      "W"
+    ],
+    "power": 5,
+    "toughness": 5
+  },
+  "oracleText": "Flying\nFirst strike (This creature deals combat damage before creatures without first strike.)\nLifelink (Damage dealt by this creature also causes you to gain that much life.)\nOther Angels you control get +1/+1 and have lifelink.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "keyword",
+      "text": "First strike",
+      "keyword": "first strike"
+    },
+    {
+      "kind": "keyword",
+      "text": "Lifelink",
+      "keyword": "lifelink"
+    },
+    {
+      "kind": "static",
+      "text": "Other Angels you control get +1/+1 and have lifelink.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "subtypes": [
+          "Angel"
+        ],
+        "another": true
+      },
+      "apply": {
+        "power": 1,
+        "toughness": 1
+      }
+    },
+    {
+      "kind": "static",
+      "text": "Other Angels you control get +1/+1 and have lifelink.",
+      "layer": 6,
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you",
+        "subtypes": [
+          "Angel"
+        ],
+        "another": true
+      },
+      "apply": {
+        "addKeywords": [
+          "Lifelink"
+        ]
+      }
+    }
+  ]
+}

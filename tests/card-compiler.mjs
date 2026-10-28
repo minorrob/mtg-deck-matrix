@@ -41,7 +41,9 @@ const index = loadCardIndex();
   eq(file.summary.candidate, file.cards.length, `${file.cards.length} candidates, as the summary says`);
   const s = file.summary;
   eq(s.candidate + s.refused + s.blocked + s.vetoed + s.unknown + s.structure, s.pool, "every undefined card counted once");
-  ok(file.cards.length >= 2000, "two thousand or more candidates");
+  /* A wave reviews and promotes candidates, so the store drains (2,731 to 23 in the load of 2026-10-24); it must not be empty
+     here, or the checks below would hold of nothing. */
+  ok(file.cards.length > 0, "candidates to check");
   const names = file.cards.map((c) => c.name);
   eq(names, [...names].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0)), "in name order");
   eq(new Set(names).size, names.length, "each once");
@@ -117,10 +119,14 @@ const recordLike = (name, text, extra = {}) => ({id: `test-${name}`, name, mana:
   const guarded = compileAll({oracle: {...oracle, cards: [recordLike(bannedName, "Trample"), recordLike("Test Token", "Trample", {type: "Token Creature — Bear"}),
     recordLike("Test Bear", "Trample")]}, banned: [...banned], scripts, index, calibration});
   eq(guarded.results.map((r) => [r.name, r.status]), [["Test Bear", "candidate"]], `a card banned in Commander (${bannedName}) and a token stay out of the pool`);
-  /* Black Knight was the example until the library load's combat lane defined it (2026-10-21): an undefined card it is not. */
-  const veteran = compileAll({oracle: {...oracle, cards: [byName.get("Vodalian Zombie")]}, banned: [...banned], scripts, index, calibration});
-  ok(veteran.results[0]?.status === "vetoed" && /failed \d+ of \d+ in calibration/.test(veteran.results[0].why[0]),
-    "a template that failed in calibration (Goblin Piledriver's \"protection from COLOR\") vetoes Vodalian Zombie");
+  /* A failure the calibration recorded, through the compiler's own trust. A real card was the example (Black Knight, then
+     Vodalian Zombie) until the template it rested on passed again: the load of 2026-10-24 taught "protection from COLOR"
+     from thirty more cards and left none vetoed. So the failure is recorded here, on the bear's own template. */
+  const [template] = compileCard(recordLike("Test Bear", "Trample"), {library, trust: trustAll(), definition}).templates;
+  const failing = {...calibration, rates: new Map([...calibration.rates, [template, {tried: 1, passed: 0}]])};
+  const veteran = compileAll({oracle: {...oracle, cards: [recordLike("Test Bear", "Trample")]}, banned: [...banned], scripts, index, calibration: failing});
+  ok(veteran.results[0]?.status === "vetoed" && /failed 1 of 1 in calibration/.test(veteran.results[0].why[0]),
+    `a template that failed in calibration (${template}) vetoes the card that uses it`);
 }
 
 /* ---- 5. the next sentences ---- */

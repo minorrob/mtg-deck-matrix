@@ -1,0 +1,89 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Moraug, Fury of Akoum",
+    "oracleId": "6288c0cb-cf32-4ae9-abf0-104ec71654fa",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Minotaur",
+      "Warrior"
+    ],
+    "manaCost": "{4}{R}{R}",
+    "colors": [
+      "R"
+    ],
+    "colorIdentity": [
+      "R"
+    ],
+    "power": 6,
+    "toughness": 6
+  },
+  "oracleText": "Each creature you control gets +1/+0 for each time it has attacked this turn.\nLandfall — Whenever a land you control enters, if it's your main phase, there's an additional combat phase after this phase. At the beginning of that combat, untap all creatures you control.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "static",
+      "text": "Each creature you control gets +1/+0 for each time it has attacked this turn.",
+      "layer": 7,
+      "sublayer": "c",
+      "affects": {
+        "what": "permanent",
+        "types": [
+          "Creature"
+        ],
+        "controller": "you"
+      },
+      "apply": {
+        "power": {
+          "attacksThisTurn": "it"
+        },
+        "toughness": 0
+      }
+    },
+    {
+      "kind": "triggered",
+      "text": "Landfall — Whenever a land you control enters, if it's your main phase, there's an additional combat phase after this phase. At the beginning of that combat, untap all creatures you control.",
+      "trigger": {
+        "on": "enters",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Land"
+          ],
+          "controller": "you"
+        }
+      },
+      "effects": [
+        {
+          "effect": "addPhase",
+          "phases": [
+            "combat"
+          ],
+          "atBeginning": {
+            "text": "At the beginning of that combat, untap all creatures you control.",
+            "effects": [
+              {
+                "effect": "untapAll",
+                "selector": {
+                  "what": "permanent",
+                  "types": [
+                    "Creature"
+                  ],
+                  "controller": "you"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "condition": {
+        "yourMainPhase": true
+      }
+    }
+  ]
+}

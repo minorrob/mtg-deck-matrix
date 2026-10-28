@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Sylvan Library",
+    "oracleId": "92eed395-62ca-4293-882b-8565c40daab5",
+    "types": [
+      "Enchantment"
+    ],
+    "subtypes": [],
+    "manaCost": "{1}{G}",
+    "colors": [
+      "G"
+    ],
+    "colorIdentity": [
+      "G"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "At the beginning of your draw step, you may draw two additional cards. If you do, choose two cards in your hand drawn this turn. For each of those cards, pay 4 life or put the card on top of your library.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your draw step, you may draw two additional cards. If you do, choose two cards in your hand drawn this turn. For each of those cards, pay 4 life or put the card on top of your library.",
+      "trigger": {
+        "on": "step",
+        "step": "DRAW"
+      },
+      "effects": [
+        {
+          "effect": "draw",
+          "count": 2
+        },
+        {
+          "effect": "chooseCard",
+          "zone": "hand",
+          "selector": {
+            "drawnThisTurn": true
+          },
+          "count": 2,
+          "to": "stay",
+          "remember": true
+        },
+        {
+          "effect": "repeatFor",
+          "each": "remembered",
+          "effects": [
+            {
+              "effect": "unlessPays",
+              "who": "you",
+              "life": 4,
+              "effects": [
+                {
+                  "effect": "moveZone",
+                  "targets": "that card",
+                  "to": "library",
+                  "top": true
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "optional": true
+    }
+  ]
+}

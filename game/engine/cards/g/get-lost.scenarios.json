@@ -1,0 +1,173 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Get Lost",
+  "fixtures": {
+    "Brown Bear Cub": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Bright Charm": {
+      "types": [
+        "Enchantment"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ]
+    },
+    "Old Relic": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{2}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Maya's Bears destroyed: she creates two Maps",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Get Lost"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Brown Bear Cub"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Get Lost",
+          "targets": [
+            {
+              "card": "Brown Bear Cub"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Map",
+            "Map"
+          ]
+        },
+        {
+          "seat": 0,
+          "controls": [
+            "Plains",
+            "Wastes"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "An enchantment too; an artifact is no target",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Get Lost"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bright Charm",
+            "Old Relic"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Get Lost"
+              },
+              "count": 1,
+              "targets": [
+                [
+                  "Bright Charm"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "cast": "Get Lost",
+          "targets": [
+            {
+              "card": "Bright Charm"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "controls": [
+            "Map",
+            "Map",
+            "Old Relic"
+          ]
+        }
+      ]
+    }
+  ]
+}

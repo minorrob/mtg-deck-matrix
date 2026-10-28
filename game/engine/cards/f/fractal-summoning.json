@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Fractal Summoning",
+    "oracleId": "ce690421-db1d-4177-a2db-338f29aab623",
+    "types": [
+      "Sorcery"
+    ],
+    "subtypes": [
+      "Lesson"
+    ],
+    "manaCost": "{X}{G/U}{G/U}",
+    "colors": [
+      "G",
+      "U"
+    ],
+    "colorIdentity": [
+      "G",
+      "U"
+    ],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "Create a 0/0 green and blue Fractal creature token. Put X +1/+1 counters on it.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "spell",
+      "text": "Create a 0/0 green and blue Fractal creature token. Put X +1/+1 counters on it.",
+      "effects": [
+        {
+          "effect": "createToken",
+          "count": 1,
+          "remember": true,
+          "token": {
+            "name": "Fractal",
+            "types": [
+              "Creature"
+            ],
+            "subtypes": [
+              "Fractal"
+            ],
+            "colors": [
+              "G",
+              "U"
+            ],
+            "power": 0,
+            "toughness": 0
+          }
+        },
+        {
+          "effect": "putCounter",
+          "targets": "remembered",
+          "counter": "+1/+1",
+          "count": "X"
+        }
+      ]
+    }
+  ]
+}

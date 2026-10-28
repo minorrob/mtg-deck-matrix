@@ -16,7 +16,7 @@
       "power": 2,
       "toughness": 2
     },
-    "Murder": {
+    "Smoke Murder": {
       "types": [
         "Instant"
       ],
@@ -181,7 +181,7 @@
           "zone": "hand",
           "cards": [
             "Rampart Architect",
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -211,7 +211,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Wall"
@@ -272,7 +272,7 @@
           "seat": 0,
           "zone": "hand",
           "cards": [
-            "Murder"
+            "Smoke Murder"
           ]
         }
       ],
@@ -281,7 +281,7 @@
           "tap": "Wastes"
         },
         {
-          "cast": "Murder",
+          "cast": "Smoke Murder",
           "targets": [
             {
               "card": "Bear"

@@ -1,0 +1,284 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Blight Mamba",
+  "fixtures": {
+    "Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Smoke Murder": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Shielded for {1}{G}, it survives Maya destroying it, tapped (CR 701.19a)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Blight Mamba",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Smoke Murder"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Blight Mamba"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Swamp",
+          "seat": 1
+        },
+        {
+          "cast": "Smoke Murder",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Blight Mamba"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Blight Mamba",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "tapped": "Blight Mamba",
+          "is": true
+        },
+        {
+          "seat": 1,
+          "zone": "graveyard",
+          "cards": [
+            "Smoke Murder"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Without the shield, the Murder destroys it",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Blight Mamba",
+            "Forest",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "hand",
+          "cards": [
+            "Smoke Murder"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "pass": 1
+        },
+        {
+          "tap": "Swamp",
+          "seat": 1
+        },
+        {
+          "cast": "Smoke Murder",
+          "seat": 1,
+          "targets": [
+            {
+              "card": "Blight Mamba"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Blight Mamba"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Infect: unblocked, it gives Maya a poison counter and takes no life",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Blight Mamba"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Blight Mamba"
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 40
+        },
+        {
+          "seat": 1,
+          "poison": 1
+        }
+      ]
+    },
+    {
+      "name": "Infect: blocked by a Bear, it deals its damage as a -1/-1 counter",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Blight Mamba"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Blight Mamba"
+          ]
+        },
+        {
+          "block": [
+            [
+              "Bear",
+              "Blight Mamba"
+            ]
+          ]
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "counters": {
+            "card": "Bear",
+            "counter": "-1/-1",
+            "count": 1
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Blight Mamba"
+          ]
+        }
+      ]
+    }
+  ]
+}
