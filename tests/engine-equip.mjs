@@ -242,10 +242,10 @@ const equipTo = (s, equipment, target) => applyAction(s, 0, offers(s, "activate"
 {
   const s = table();
   main(s);
-  throws(() => runEffects(s, [{effect: "createToken", token: {predefined: "Blood"}}], {controller: 0, source: null}), /No predefined token named Blood/,
+  throws(() => runEffects(s, [{effect: "createToken", token: {predefined: "Powerstone"}}], {controller: 0, source: null}), /No predefined token named Powerstone/,
     "a predefined token the engine does not know is refused, not made blank");
-  eq(Object.keys(PREDEFINED_TOKENS).sort(), ["Clue", "Food", "Incubator", "Jace", "Map", "Mutagen", "Pest", "Royal Role", "Treasure"],
-    "the three the most-played cards make, the Pest (batch 18, Beledros Witherbloom), the Mutagen (CR 111.10v; Splinter, the Mentor), empower Jace's Jace (tests/engine-empower-jace.mjs), the Royal Role (CR 111.10m; Royal Treatment, tests/engine-roles.mjs), the Map (CR 111.10s; Restless Anchorage, tests/engine-explore.mjs), and the Incubator (CR 111.10i; Sunfall, tests/engine-train-e-g3.mjs)");
+  eq(Object.keys(PREDEFINED_TOKENS).sort(), ["Blood", "Clue", "Decayed Zombie", "Food", "Incubator", "Jace", "Map", "Mutagen", "Pest", "Royal Role", "Treasure"],
+    "the three the most-played cards make, the Pest (batch 18, Beledros Witherbloom), the Mutagen (CR 111.10v; Splinter, the Mentor), empower Jace's Jace (tests/engine-empower-jace.mjs), the Royal Role (CR 111.10m; Royal Treatment, tests/engine-roles.mjs), the Map (CR 111.10s; Restless Anchorage, tests/engine-explore.mjs), the Incubator (CR 111.10i; Sunfall, tests/engine-train-e-g3.mjs), the Blood token (CR 111.10: Kamber, the Plunderer, tests/engine-deck-load-1027.mjs) and the decayed Zombie (CR 702.147; Tainted Adversary, the same suite)");
 }
 
 /* ---- a mana ability that sacrifices its source ---- */

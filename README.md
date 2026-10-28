@@ -955,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 639 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 640 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1578,6 +1578,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-roblists-food` - `tests/engine-roblists-food.mjs`: Rob's priority lists, lane P2 (2026-10-24) -- descend counted for a card's owner this turn, the Ring's temptations counted, a life adder for its controller alone, a leftover reduction taking off X (affinity), sacrifice X, that many Squirrels, devour, a linked card played free, damage by a name, skulk, what the schema refuses of each new key, and the lane's cards through their scenarios.
 - `engine-roblists-p1` - `tests/engine-roblists-p1.mjs`: Rob's priority lists, lane P1 (blink, 2026-10-24): a Phyrexian added as a card returns, Preston's 0/1 white Illusion, third from the top, an airbended card its owner's to cast, a permanent's own entering trigger when it is gone again in the same resolution (Panharmonicon, Elesh Norn), Y'shtola Rhul's additional end step each turn, and myriad at four seats.
 - `engine-precons-e` - `tests/engine-precons-e.mjs`: the precon load, lane E (Wretched Ranks, 2026-10-25) -- Kalitas's death replacement for each opponent at a table of three, an opponent's Kalitas, Kalitas beside Liesa (the game goes on), Josu Vess's kicked read off the permanent, a sacrifice remembered for every player (Syphon Flesh), what the schema refuses of each new key, and the deck's 40 cards through their scenarios.
+- `engine-deck-load-1027` - `tests/engine-deck-load-1027.mjs`: the card load of Rob's Orzhov deck (2026-10-27), the 25 cards the engine lacked -- every card of the list playable and the 25 through their scenarios, the choice of Agadeem's Awakening held to a different mana value for each card (refused with what to do), monocolored, the Blood token and the decayed Zombie, and what the schema refuses of the new key.
 
 ## Design and execution record
 

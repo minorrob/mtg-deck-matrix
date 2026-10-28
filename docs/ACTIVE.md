@@ -30,6 +30,21 @@ the do-nothing arrow, the divider dragging the table, free battlefield rows; the
   `table-tabletop` once failed a cards-cycling animation check under load and passed on the rerun.
 - **Not done**: the Actions drawer narrower by default with wrap-then-scale (Rob's notes on wireframes A1/A2), and A3's one-screen target flow (a draft awaiting his call).
 
+## Card load, 2026-10-27: Rob's Orzhov deck, 25 cards (Claude Code on Personal-HP, for Rob; `claude/load-25-cards-deck-2daa2e`, not pushed)
+
+Rob, 2026-10-27: *"There are 25 cards not loaded into the engine in this set of cards. Identify those 25, then load them into the engine so this deck becomes playable."*
+`docs/engine/card-load-deck-2026-10-27/README.md` has the 25, what each needed, what was built, the ignores and the proof.
+
+- **Done:** all 25 written with scenarios (**6,405 definitions became 6,430**). Engine, in the Claude · Engine lane's files: `monocolored`, the
+  Blood token and the decayed Zombie, "without being played", `life-for-less` (Defiler of Faith), "discard X cards" as a cost (Gix),
+  `differentManaValues` (Agadeem's Awakening).
+- **Ignores, named:** Deep Gnome Terramancer's "only once each turn" is the ability's first resolution, so declining the first forfeits the
+  turn; Defiler of Faith does not reduce a hybrid white symbol.
+- **Proof:** `check-cards` 6,430 definitions, 11,000+ scenarios, 0 failed; 436 suites green (`engine-*`, `card-*`, `table-candidates`, `table-basics`,
+  `sentence-*`, `room-*`, `data-integrity`, `feature-wiring`, `asset-versions`) but `engine-breaks-anchors`, which fails on the same 45 stale anchors of
+  other lanes' breaks as before this load; the load's breaks file `missed: []`; two breaks of earlier loads re-anchored and caught again.
+  **Not proven:** a game at a real table with this deck. Not released to staging.
+
 ## The Play screen made consistent: drawers, tabs, seat cards, pop-ups, the land screen, 2026-10-27 (a Claude cloud session, for Rob; `claude/gifted-ride-w6xoa3`)
 
 Rob, 2026-10-27, from screenshots and a list added as the work went: drawers that do not reach the ribbon, a poison counter at the top left, text out of
