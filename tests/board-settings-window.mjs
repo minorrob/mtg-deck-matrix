@@ -69,7 +69,7 @@ const layout = (page) => page.evaluate(() => {
 
 try {
   /* ---- 1. Camera ▾ closes on a press outside it ---- */
-  for (const mode of ["focus", "full"]) {
+  for (const mode of ["table", "focus", "full"]) {
     const {page, context, errors} = await board(mode);
     await page.locator("#cm-board [data-action=board-camera]").click();
     eq(await cameraOpen(page), 1, `${mode}: Camera ▾ opens`);
@@ -212,4 +212,4 @@ try {
 } finally {
   await close();
 }
-console.log(`board-settings-window: ${checks} checks passed -- Camera closes on a press outside it in Focus and Full screen; Settings is a window sized to the browser at three sizes and when made smaller, ✕ at its top right, Cancel and Save at its bottom right, its sections down the left (General, Video, Audio, Gameplay), each fitting without scrolling and using the full width; Save keeps, Cancel, ✕ and Escape put back.`);
+console.log(`board-settings-window: ${checks} checks passed -- Camera closes on a press outside it in Table, Focus and 3D; Settings is a window sized to the browser at three sizes and when made smaller, ✕ at its top right, Cancel and Save at its bottom right, its sections down the left (General, Video, Audio, Gameplay), each fitting without scrolling and using the full width; Save keeps, Cancel, ✕ and Escape put back.`);
