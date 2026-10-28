@@ -1150,6 +1150,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-ingest` — `tests/engine-ingest.mjs`
 - `engine-learned` — `tests/engine-learned.mjs`
 - `engine-mana-abilities` — `tests/engine-mana-abilities.mjs`
+- `engine-mana-upkeep` — `tests/engine-mana-upkeep.mjs`
 - `engine-exile-commanders` — `tests/engine-exile-commanders.mjs` (Quintorius and Maralen linked exile, free casting and owner choices)
 - `engine-faerie-interactions` — `tests/engine-faerie-interactions.mjs` (second-card draws, Spellstutter's live Faerie count and Winnower's unequal power/toughness targets)
 - `engine-chulane-completion` — `tests/engine-chulane-completion.mjs` (Guardian Project, Yavimaya Dryad, Claim Jumper)
@@ -1179,6 +1180,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `shop-export` — `tests/shop-export.mjs`
 - `sim-engine` — `tests/sim-engine.mjs`
 - `sentence-library` — `tests/sentence-library.mjs`
+- `sentence-paragraphs` — `tests/sentence-paragraphs.mjs`: complete unfinished abilities and independent keywords (CR 113.2c, 702.1c)
 - `status-and-groupings` — `tests/status-and-groupings.mjs`
 - `swap-record` — `tests/swap-record.mjs`
 - `slot-model` — `tests/slot-model.mjs`
