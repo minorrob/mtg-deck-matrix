@@ -137,6 +137,8 @@ globalThis.CrankBoard = Object.seal({
   const VIEW_KEY = "cm-board-view";
   let mode = (() => {try {const v = localStorage.getItem(VIEW_KEY); return VIEWS.some(([k]) => k === v) ? v : "full";} catch {return "full";}})();
   let inspection = null, inspectionFrom = null, actionsShut = false;
+  let lifeShut = false;
+  try {lifeShut = localStorage.getItem("cm-board-life-shut") === "1";} catch {/* the list stays open for this page only */}
   let actionCard = null, draftRevision = null;
   let stackSelected = null, stackFor = null, landsOpen = null;
   let selected = null, hover = null;   /* Full screen: the card shown large in the side column (picked, and under the pointer) */
@@ -739,7 +741,7 @@ globalThis.CrankBoard = Object.seal({
       const word=issues.length?"✗ Refused":ready?"✓ Ready":mine?"Needs a choice":a.blocked?"Blocked":"No blocks confirmed";
       return `<li class="cm-combat-row is-${state}" data-combat-attacker="${a.attacker}" data-combat-defender="${a.defender}" data-combat-target="${a.planeswalker ?? `seat:${a.defender}`}"><div class="cm-combat-tile" data-attacker="${a.attacker}"><button type="button" class="cm-combat-open" data-action="${mine?'board-block-attacker':'board-combat-inspect'}" data-attacker="${a.attacker}" data-card="${a.attacker}" data-combat-light="${a.attacker}" aria-label="${e(`${combatName(combatCard(a.attacker))}: ${word}${issues.length?'. '+issues.join('; '):''}`)}"${sending && mine?' disabled':''}></button>
         <strong class="cm-combat-state">${e(word)}</strong><span class="cm-combat-pair">${inspectCombatThumb(a.attacker,'Attacker')}<span class="cm-combat-relation"><span>Attacking</span><span aria-hidden="true">→</span>${a.planeswalker!==undefined ? inspectCombatThumb(a.planeswalker,'Attacked permanent',{label:true}) : `<span>${e(nameOf(a.defender))}</span>`}</span>
-        <span class="cm-combat-blocks">${selected.length?selected.map(id=>inspectCombatThumb(id,'Blocker',{draft:mine})).join(''):`<span class="cm-combat-empty" aria-label="${ready?'No blocks chosen':'No blocks yet'}">${!mine && a.blocked?'Blocked · no blockers remain':!mine?'No blocks confirmed':ready?'No blocks':'—'}</span>`}</span></span>
+        <span class="cm-combat-blocks">${selected.length?selected.map(id=>inspectCombatThumb(id,'Blocker',{draft:mine})).join(''):`<span class="cm-combat-empty" aria-label="${!mine?(a.blocked?'Blocked, no blockers remain':'No blocks confirmed'):ready?'No blocks chosen':'No blocks yet'}" title="${!mine?(a.blocked?'Blocked · no blockers remain':'No blocks confirmed'):ready?'No blocks chosen':'No blocks yet'}">${!mine && a.blocked?'Blocked · no blockers remain':!mine?'—':ready?'No blocks':'—'}</span>`}</span></span>
         ${issues.length?`<small class="cm-combat-reason">${e(issues[0])}</small>`:''}</div></li>`;
     }).join('');
     const missing=own.length-settled,why=missing?`${missing} attacker${missing===1?'':'s'} still need${missing===1?'s':''} a choice`:!blockValid()?'Waiting for a current valid table check':'Stays private until sent';
@@ -804,7 +806,7 @@ globalThis.CrankBoard = Object.seal({
   /* What the strip says (item 12). Priority on another player's turn says whose step it is and that you may
      respond; on your own turn the button's words carry it (item 10) -- with a spell on the stack, that you may
      respond, the button naming the spell -- and the draw's button is its own words. */
-  const waitingText = () => {
+  const waitingText = (ribbon = false) => {
     const d = view.decision, s = view.state;
     if (view.status === "finished") return "The game is over.";
     if (d && sending) return "Sent…";
@@ -813,7 +815,7 @@ globalThis.CrankBoard = Object.seal({
       if (s.turnPlayerId !== view.seat && at >= 0) return `${nameOf(s.turnPlayerId)}'s ${THEIR_STEP[STEPS[at][0]]} · you may respond`;
       return s.stack.length ? "You may respond" : "";
     }
-    if (d) return d.kind === "draw" ? "" : d.title;
+    if (d) return d.kind === "draw" || ribbon ? "" : d.title;
     /* The room plays the AI seats in slices (game/room/room.mjs, `continuing`): nobody is asked until they stop. */
     if (view.continuing) return "The AI players are taking their turns…";
     return view.waitingOn ? `Waiting on ${view.waitingOn === view.seatId ? "you" : seatName(view.waitingOn)}` : "";
@@ -1274,14 +1276,16 @@ globalThis.CrankBoard = Object.seal({
      next to it"): you first, then the table in seat order; the seat whose turn it is in bold, after the turn symbol the
      seat cards use, smaller than the words. */
   /* Who holds priority, under the life totals (Rob, 2026-10-27: out of the top ribbon, which no longer says the turn either). */
-  function priorityNote() {
-    const id = view.state.priorityPlayerId;
-    return `<span class="cm-stage-priority">Priority: ${e(id == null ? '—' : nameOf(id))}<span class="cm-board-waiting" title="${e(waitingText())}">${e(waitingText())}</span></span>`;
+  /* Rob, 2026-10-27: "remove the priority text entirely": who holds priority is a small blue dot at the right of that player's life
+     (lifeList); what the table waits on, when it is not a question in the Actions pane, is said in the top ribbon. */
+  function ribbonNote() {
+    const w = waitingText(true);
+    return w ? `<span class="cm-board-waiting" title="${e(w)}">${e(w)}</span>` : "";
   }
   function lifeList() {
     const ps = players(), mine = ps[view.seat], rows = [mine, ...ps.filter((p) => p && p !== mine)].filter(Boolean);
     return rows.map((p) => {const now = view.state.turnPlayerId === p.playerId;
-      return `<span class="cm-stage-life${now ? " is-turn" : ""}"${now ? ` aria-current="true" title="${p.playerId === view.seat ? "Your turn" : `${e(p.name)}'s turn`}"` : ""}>${now ? `<span class="cm-stage-life-turn" aria-hidden="true">${TURN_ICON}</span>` : ""}${e(seatLabel(p))} · <b>${p.health.life}</b>${now ? `<span class="cm-sr-only">, ${p.playerId === view.seat ? "your" : "their"} turn</span>` : ""}</span>`;}).join("");
+      return `<span class="cm-stage-life${now ? " is-turn" : ""}"${now ? ` aria-current="true" title="${p.playerId === view.seat ? "Your turn" : `${e(p.name)}'s turn`}"` : ""}>${now ? `<span class="cm-stage-life-turn" aria-hidden="true">${TURN_ICON}</span>` : ""}${e(seatLabel(p))} · <b>${p.health.life}</b>${view.state.priorityPlayerId === p.playerId ? `<i class="cm-stage-life-prio" role="img" aria-label="${p.playerId === view.seat ? "You hold" : `${e(p.name)} holds`} priority" title="${p.playerId === view.seat ? "Priority is with you" : `Priority is with ${e(p.name)}`}"></i>` : `<i class="cm-stage-life-prio is-off" aria-hidden="true"></i>`}${now ? `<span class="cm-sr-only">, ${p.playerId === view.seat ? "your" : "their"} turn</span>` : ""}</span>`;}).join("");
   }
   function stageView({corner, big, others}) {
     const rear = others.map((p) => `<section class="cm-stage-rear" data-seat="${p.playerId}" style="--seat:${seatColor(p.playerId)}">
@@ -1289,8 +1293,8 @@ globalThis.CrankBoard = Object.seal({
       <div class="cm-stage-mini">${mat(p, {size: "opp", head: "none"})}</div></section>`).join("");
     return `${boardHeader()}
       <div class="cm-full-mine cm-stage-region" aria-label="Tabletop">
-        <div class="cm-stage-caption"><span class="cm-board-turn" title="Turn ${view.state.turn} of the game, counting every player's${view.yourTurn ? `; your ${ordinal(view.yourTurn)} turn` : ''}">TURN ${view.state.turn}</span><div class="cm-stage-life-list" role="group" aria-label="Player life totals">${lifeList()}</div>${priorityNote()}</div>
         ${rear}<div class="cm-stage-front">${mat(big, {size: "full", head: "none"})}${corner}</div>
+        <div class="cm-stage-caption${lifeShut ? ' is-shut' : ''}"><span class="cm-stage-turnrow"><span class="cm-board-turn" title="Turn ${view.state.turn} of the game, counting every player's${view.yourTurn ? `; your ${ordinal(view.yourTurn)} turn` : ''}">TURN ${view.state.turn}</span><button type="button" class="cm-stage-lifetoggle" data-action="board-life-toggle" aria-expanded="${!lifeShut}" aria-controls="cm-stage-life-list" aria-label="${lifeShut ? 'Show' : 'Hide'} the players' life totals" title="${lifeShut ? 'Show' : 'Hide'} the players' life totals"><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${lifeShut ? 'M6 4l4 4-4 4' : 'M4 6l4 4 4-4'}"/></svg></button></span>${lifeShut ? '' : `<div class="cm-stage-life-list" id="cm-stage-life-list" role="group" aria-label="Player life totals">${lifeList()}</div>`}</div>
         ${stageEnabled() ? [0, 1, 2, 3].map((i) => `<span class="cm-stage-corner" data-corner="${i}" aria-hidden="true"></span>`).join("") : ""}
         ${actionBar()}
         <span class="cm-stage-error" role="status">${e(stageError)}</span>${ask()}
@@ -1319,7 +1323,7 @@ globalThis.CrankBoard = Object.seal({
     const me=players()[view.seat];
     const pill=`<div class="cm-full-pill">${stageEnabled() ? "" : `${passButton()}${resolveAllButton()}${skipControl(true)}`}</div>`;
     const conn=status === "open" ? "" : `<span class="cm-board-conn">${status === "reconnecting" ? "Reconnecting…" : "Connecting…"}</span>`;
-    return `<header class="cm-stage-top"><span class="cm-stage-self" role="group" aria-label="${e(seatLabel(me))}, your seat" title="${e(seatLabel(me))}">${seatHeader(me)}</span><span class="cm-board-tools cm-board-turnsteps">${turnRibbon()}${stepsOpen ? stepsMenu() : ""}</span>
+    return `<header class="cm-stage-top"><span class="cm-stage-self" role="group" aria-label="${e(seatLabel(me))}, your seat" title="${e(seatLabel(me))}">${seatHeader(me)}</span><span class="cm-board-tools cm-board-turnsteps">${turnRibbon()}${stepsOpen ? stepsMenu() : ""}</span>${stageEnabled() ? ribbonNote() : ""}
       ${stageEnabled() ? conn : legacyPriority(conn)}${alsoButton()}${stageEnabled() ? (stageRail && !actionsShut ? "" : opens(ib("▸", "board-actions-open", "Open decision drawer", {}, {cls:"compact"}), false)) : opens(ib(stageRail && !actionsShut ? "◂" : "▸", "board-actions-open", "Open decision drawer", {}, {cls:"compact"}), stageRail && !actionsShut)}${pill}${stageEnabled()?cameraMenu():""}${stageProfile(me)}${combatStrip()}</header>`;
   }
   function boardDrawers() {
@@ -3421,6 +3425,7 @@ globalThis.CrankBoard = Object.seal({
   };
   actions["board-actions-open"] = () => {stageRail = true; actionsShut = false; draw(); document.querySelector("[data-action=board-actions-toggle]")?.focus({preventScroll:true});};
   actions["board-actions-toggle"] = () => {actionsShut = !actionsShut; draw();};
+  actions["board-life-toggle"] = () => {lifeShut = !lifeShut; try {localStorage.setItem("cm-board-life-shut", lifeShut ? "1" : "0");} catch {/* page only */} draw(); document.querySelector("[data-action=board-life-toggle]")?.focus({preventScroll: true});};
   actions["board-pass"] = () => {
     const d = view && view.decision;
     if (!d || d.kind !== "priority") return;

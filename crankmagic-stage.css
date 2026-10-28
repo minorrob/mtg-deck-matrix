@@ -1313,3 +1313,151 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-table-flyout .cm-board-nav{position:static;width:auto;border:0;box-shadow:none;background:none;padding:0}
 #matrix-v2 .cm-board .cm-table-flyout .cm-board-nav a{color:var(--color-ink)}
 #matrix-v2 .cm-board[data-phone] .cm-table-menu>.cm-table-flyout{position:fixed;left:8px;right:8px;top:auto;bottom:8px;width:auto}
+
+/* ===== PLAY HOME, THE PRE-LOBBY (Rob, 2026-10-27, ported from the Claude Design reference "Pre-lobby"). Light values are the reference's own;
+   the dark theme takes the app's tokens for the rest. Selectors carry #matrix-v2 so the app's page rules do not reach in. ===== */
+#matrix-v2 .cm-pl{--pl-hair:#e4dfd4;--pl-rowhover:#f7f2e6;--pl-live-bg:#e3f1e8;--pl-live-ink:var(--st-inbox,#007f38);--pl-lobby-bg:#e2eef3;--pl-lobby-ink:var(--color-aether,#006c97);--pl-shadow:0 1px 2px rgb(0 0 0 / .10),0 8px 24px -16px rgb(0 0 0 / .30);--pl-pop:0 0 0 1px var(--color-line),0 18px 48px -20px rgb(0 0 0 / .35);display:flex;flex-direction:column;gap:20px;font-family:Lato,system-ui,sans-serif;font-size:14px;line-height:1.5;color:var(--color-ink);min-width:0}
+#matrix-v2:not([data-theme="light"]) .cm-pl{--pl-hair:#2a2e35;--pl-rowhover:#1b1f27;--pl-live-bg:#12301f;--pl-lobby-bg:#10303b}
+#matrix-v2 .cm-pl *{box-sizing:border-box}
+#matrix-v2 .cm-pl-head{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#matrix-v2 .cm-pl-title{margin:0;font-family:Cinzel,Georgia,serif;font-weight:600;letter-spacing:.04em;font-size:40px;line-height:1.05;color:var(--color-ink);text-transform:none}
+#matrix-v2 .cm-pl-ibtn{width:40px;height:40px;padding:0;border-radius:8px;border:1px solid var(--color-line-strong);background:var(--color-raised);color:var(--color-ink);font-weight:700;font-size:15px;cursor:pointer;display:grid;place-items:center;transition:background 160ms cubic-bezier(.2,.8,.2,1),border-color 160ms cubic-bezier(.2,.8,.2,1)}
+#matrix-v2 .cm-pl-btn{height:40px;padding:0 16px;border-radius:8px;border:1px solid var(--color-line-strong);background:var(--color-raised);color:var(--color-ink);font-weight:700;font-size:14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;text-decoration:none;transition:background 160ms cubic-bezier(.2,.8,.2,1),border-color 160ms cubic-bezier(.2,.8,.2,1)}
+#matrix-v2 .cm-pl-ibtn:hover,#matrix-v2 .cm-pl-btn:hover{background:var(--color-hover)}
+#matrix-v2 .cm-pl-btn[disabled]{border-color:var(--color-line);background:var(--color-bg);color:var(--color-faint);cursor:not-allowed}
+#matrix-v2 .cm-pl-btn[disabled]:hover{background:var(--color-bg)}
+#matrix-v2 .cm-pl-btn.is-primary{border:0;background:var(--color-accent);color:var(--color-on-accent)}
+#matrix-v2 .cm-pl-btn.is-primary:hover{background:var(--color-accent-hover)}
+#matrix-v2 .cm-pl-btn.is-big{height:44px;font-size:15px}
+#matrix-v2 .cm-pl button:focus-visible,#matrix-v2 .cm-pl a:focus-visible,#matrix-v2 .cm-pl input:focus-visible,#matrix-v2 .cm-pl select:focus-visible{outline:2px solid var(--color-aether);outline-offset:2px}
+#matrix-v2 .cm-pl-hero{position:relative;overflow:hidden;border-radius:16px;min-height:200px;background:#111a1d;color:#f3f1ee;box-shadow:var(--pl-shadow)}
+#matrix-v2 .cm-pl-hero>img{position:absolute;right:0;top:0;height:100%;width:62%;object-fit:cover;object-position:30% 40%;max-width:none}
+#matrix-v2 .cm-pl-hero>i{position:absolute;inset:0;background:linear-gradient(90deg,#111a1d 0%,#111a1d 36%,rgba(17,26,29,.72) 52%,rgba(17,26,29,0) 78%)}
+#matrix-v2 .cm-pl-hero>div{position:relative;padding:36px 32px;max-width:560px;display:flex;flex-direction:column;gap:10px}
+#matrix-v2 .cm-pl-hero p{margin:0}
+#matrix-v2 .cm-pl-hero .cm-pl-hero-eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#d2a973}
+#matrix-v2 .cm-pl-hero h2{margin:0;font-size:30px;font-weight:700;line-height:1.15;color:#f3f1ee;font-family:Lato,system-ui,sans-serif;letter-spacing:0}
+#matrix-v2 .cm-pl-hero .cm-pl-hero-sub{font-size:16px;color:#e6e2da}
+#matrix-v2 .cm-pl-grid{display:grid;grid-template-columns:minmax(0,2.5fr) minmax(0,1fr);gap:20px;align-items:stretch}
+@media (max-width:1000px){#matrix-v2 .cm-pl-grid{grid-template-columns:minmax(0,1fr)}}
+#matrix-v2 .cm-pl-card{background:var(--color-panel);border:1px solid var(--color-line);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0;box-shadow:var(--pl-shadow)}
+#matrix-v2 .cm-pl-side{display:flex;flex-direction:column;gap:20px;min-width:0}
+#matrix-v2 .cm-pl-card.is-start{gap:12px}
+#matrix-v2 .cm-pl-card.is-board{flex:1 1 auto;gap:12px;min-height:0}
+#matrix-v2 .cm-pl-card.is-chat{gap:10px}
+#matrix-v2 .cm-pl-eyebrow{margin:0;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--color-muted)}
+#matrix-v2 .cm-pl-h2{margin:0;font-size:24px;font-weight:700;color:var(--color-ink);font-family:Lato,system-ui,sans-serif;letter-spacing:0;text-transform:none}
+#matrix-v2 .cm-pl-h2.is-small{font-size:18px}
+#matrix-v2 .cm-pl-muted{margin:0;font-size:13px;color:var(--color-muted)}
+#matrix-v2 .cm-pl-cardhead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+#matrix-v2 .cm-pl-cardhead>div{display:flex;flex-direction:column;gap:2px}
+#matrix-v2 .cm-pl-tablewrap{flex:1 1 auto;overflow-x:auto;border:1px solid var(--color-line);border-radius:8px;background:var(--color-raised)}
+#matrix-v2 .cm-pl-games{width:100%;border-collapse:collapse;font-size:14px;min-width:660px}
+#matrix-v2 .cm-pl-games th{padding:10px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--color-muted);border-bottom:1px solid var(--color-line-strong);background:var(--color-panel);text-align:left}
+#matrix-v2 .cm-pl-games th.is-r,#matrix-v2 .cm-pl-games td.is-r{text-align:right}
+#matrix-v2 .cm-pl-games th.is-r{white-space:normal;width:1%;line-height:1.5}
+#matrix-v2 .cm-pl-games td{padding:12px 10px;border-bottom:1px solid var(--pl-hair);vertical-align:middle}
+#matrix-v2 .cm-pl-games tr.cm-pl-row:hover td{background:var(--pl-rowhover)}
+#matrix-v2 .cm-pl-games .cm-pl-sticky{position:sticky;right:0;background:var(--color-raised);box-shadow:-10px 0 10px -10px rgba(17,22,31,.25);width:56px;padding:8px 10px;text-align:right}
+#matrix-v2 .cm-pl-games th.cm-pl-sticky{background:var(--color-panel);padding:10px;width:56px}
+#matrix-v2 .cm-pl-games tr.cm-pl-row:hover td.cm-pl-sticky{background:var(--pl-rowhover)}
+#matrix-v2 .cm-pl-loc{display:inline-flex;align-items:center;gap:6px;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700}
+#matrix-v2 .cm-pl-loc.is-live{background:var(--pl-live-bg);color:var(--pl-live-ink)}
+#matrix-v2 .cm-pl-loc.is-lobby{background:var(--pl-lobby-bg);color:var(--pl-lobby-ink)}
+#matrix-v2 .cm-pl-loc i{width:8px;height:8px;border-radius:50%;box-sizing:border-box;background:var(--pl-live-ink)}
+#matrix-v2 .cm-pl-loc.is-lobby i{background:none;border:2px solid var(--pl-lobby-ink)}
+#matrix-v2 .cm-pl-priv{display:block;margin-top:4px;padding-left:2px;font-size:12px;color:var(--color-muted)}
+#matrix-v2 .cm-pl-you{font-weight:400;color:var(--color-muted)}
+#matrix-v2 .cm-pl-cmd{display:flex;flex-direction:column;align-items:flex-start;gap:4px;line-height:1.3}
+#matrix-v2 .cm-pl-pill{display:block;box-sizing:border-box;max-width:190px;height:24px;line-height:22px;padding:0 10px;border-radius:999px;background:var(--color-bg);border:1px solid var(--color-line);font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--color-ink)}
+#matrix-v2 .cm-pl-count{min-width:34px;height:32px;padding:0 8px;border-radius:8px;border:1px dashed var(--color-line-strong);background:transparent;color:var(--color-ink);font-size:14px;font-weight:700;font-variant-numeric:tabular-nums;cursor:pointer}
+#matrix-v2 .cm-pl-count[aria-expanded="true"]{border:1px solid var(--color-ink);background:var(--color-hover)}
+#matrix-v2 .cm-pl-count:hover{background:var(--color-hover);border-color:var(--color-field-line)}
+#matrix-v2 .cm-pl-open{display:block;font-size:12px;color:var(--color-aether)}
+#matrix-v2 .cm-pl-run{font-variant-numeric:tabular-nums;white-space:normal;width:1%;min-width:76px}
+#matrix-v2 .cm-pl-run.is-idle{color:var(--color-muted)}
+#matrix-v2 .cm-pl-caret{width:36px;height:36px;padding:0;border-radius:8px;border:1px solid var(--color-line-strong);background:var(--color-raised);color:var(--color-ink);cursor:pointer;display:inline-grid;place-items:center}
+#matrix-v2 .cm-pl-caret[aria-expanded="true"]{background:var(--color-hover)}
+#matrix-v2 .cm-pl-caret[aria-expanded="true"] svg{transform:rotate(180deg)}
+#matrix-v2 .cm-pl-caret:hover{background:var(--color-hover)}
+#matrix-v2 .cm-pl-games tr.cm-pl-more>td{padding:0 10px 12px;background:var(--pl-rowhover);border-bottom:1px solid var(--pl-hair)}
+#matrix-v2 .cm-pl-menu{margin-left:auto;width:248px;background:var(--color-raised);border:1px solid var(--color-line);border-radius:12px;box-shadow:var(--pl-pop);padding:6px;display:flex;flex-direction:column}
+#matrix-v2 .cm-pl-mi{line-height:1.25;display:flex;flex-direction:column;align-items:flex-start;text-align:left;border:0;background:transparent;border-radius:8px;padding:8px 10px;cursor:pointer;color:var(--color-ink);font-size:14px;font-weight:700}
+#matrix-v2 .cm-pl-mi:hover{background:var(--color-hover)}
+#matrix-v2 .cm-pl-mi small{font-weight:400;font-size:12px;color:var(--color-muted)}
+#matrix-v2 .cm-pl-mi.is-danger{color:var(--color-required)}
+#matrix-v2 .cm-pl-menu hr{height:1px;border:0;background:var(--color-line);margin:4px 6px}
+#matrix-v2 .cm-pl-menu p{margin:2px 10px 0;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--color-muted)}
+#matrix-v2 .cm-pl-info{margin-left:auto;margin-right:90px;width:100%;max-width:560px;background:var(--color-raised);border:1px solid var(--color-line);border-radius:12px;box-shadow:var(--pl-pop);padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+#matrix-v2 .cm-pl-info-head{display:flex;align-items:center;gap:8px}
+#matrix-v2 .cm-pl-info-head p{margin:0;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--color-muted)}
+#matrix-v2 .cm-pl-info-head button{margin-left:auto;width:32px;height:32px;border:0;border-radius:8px;background:transparent;color:var(--color-muted);cursor:pointer;font-size:18px;line-height:1}
+#matrix-v2 .cm-pl-info table{width:100%;border-collapse:collapse;font-size:14px}
+#matrix-v2 .cm-pl-info th{padding:0 8px 6px 0;font-size:12px;font-weight:700;text-transform:none;letter-spacing:0;background:transparent;color:var(--color-muted);border-bottom:1px solid var(--color-line);text-align:left}
+#matrix-v2 .cm-pl-info td{padding:8px 8px 8px 0;border-bottom:1px solid var(--pl-hair)}
+#matrix-v2 .cm-pl-info td:first-child{font-weight:700;white-space:nowrap}
+#matrix-v2 .cm-pl-info td:last-child{padding-right:0}
+#matrix-v2 .cm-pl-info .cm-pl-pill{display:inline-flex;align-items:center;max-width:none}
+#matrix-v2 .cm-pl-ai,#matrix-v2 .cm-pl sup.cm-ai{margin-left:2px;font-size:11px;font-weight:800;color:var(--color-accent);vertical-align:super;line-height:0;text-shadow:1px 0 0 #c3c9d1,-1px 0 0 #c3c9d1,0 1px 0 #c3c9d1,0 -1px 0 #c3c9d1,1px 1px 0 #c3c9d1,-1px -1px 0 #c3c9d1,1px -1px 0 #c3c9d1,-1px 1px 0 #c3c9d1}
+#matrix-v2 .cm-pl-empty{padding:40px 20px;text-align:center;display:flex;flex-direction:column;gap:6px;align-items:center}
+#matrix-v2 .cm-pl-empty p{margin:0}
+#matrix-v2 .cm-pl-empty p:first-child{font-weight:700;font-size:16px}
+#matrix-v2 .cm-pl-empty p:last-child{color:var(--color-muted)}
+#matrix-v2 .cm-pl-lbwrap{overflow-x:auto}
+#matrix-v2 .cm-pl-lb{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+#matrix-v2 .cm-pl-lb th{padding:0 0 6px;border-bottom:1px solid var(--color-line-strong);vertical-align:bottom;text-align:center;width:34px}
+#matrix-v2 .cm-pl-lb th:first-child{text-align:left;width:auto}
+#matrix-v2 .cm-pl-lb td{padding:7px 4px;border-bottom:1px solid var(--pl-hair);text-align:center}
+#matrix-v2 .cm-pl-lb td:first-child{padding:7px 2px;text-align:left;white-space:nowrap}
+#matrix-v2 .cm-pl-sort{border:0;background:transparent;padding:4px 2px;cursor:pointer;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--color-muted);display:inline-flex;align-items:center;gap:3px;white-space:nowrap;flex-direction:column}
+#matrix-v2 .cm-pl-lb th:first-child .cm-pl-sort{flex-direction:row}
+#matrix-v2 .cm-pl-sort[aria-pressed="true"],#matrix-v2 .cm-pl-sort:hover{color:var(--color-ink)}
+#matrix-v2 .cm-pl-sort span:first-child{writing-mode:vertical-rl;transform:rotate(180deg)}
+#matrix-v2 .cm-pl-lb th:first-child .cm-pl-sort span:first-child{writing-mode:horizontal-tb;transform:none}
+#matrix-v2 .cm-pl-sort span+span{font-size:10px;height:12px;line-height:12px}
+#matrix-v2 .cm-pl-chathead{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+#matrix-v2 .cm-pl-soon{padding:2px 10px;border-radius:999px;border:1px dashed var(--color-field-line);font-size:12px;font-weight:700;color:var(--color-muted)}
+#matrix-v2 .cm-pl-chatrow{display:flex;gap:8px}
+#matrix-v2 .cm-pl-chatrow input{flex:1 1 auto;min-width:0;width:100%;height:40px;border-radius:8px;border:1px solid var(--color-line);background:var(--color-bg);padding:0 12px;font-size:14px;color:var(--color-muted);margin:0}
+#matrix-v2 .cm-pl-chatrow button{height:40px;padding:0 14px;border-radius:8px;border:1px solid var(--color-line);background:var(--color-bg);color:var(--color-faint);font-weight:700;cursor:not-allowed}
+#matrix-v2 .cm-pl-scrim{position:fixed;inset:0;z-index:60;background:rgba(17,22,31,.5);display:flex;flex-direction:row;align-items:flex-start;justify-content:center;padding:160px 16px 16px;overflow:auto}
+#matrix-v2 .cm-pl-dialog{width:100%;max-width:610px;background:var(--color-panel);border-radius:12px;box-shadow:0 0 0 1px var(--color-line),0 18px 48px -20px rgb(0 0 0 / .55);padding:24px;display:flex;flex-direction:column;gap:16px;color:var(--color-ink);font-family:Lato,system-ui,sans-serif;font-size:14px;line-height:1.5}
+#matrix-v2 .cm-pl-dialog h2{margin:0;font-size:24px;font-weight:700;color:var(--color-ink);font-family:Lato,system-ui,sans-serif;letter-spacing:0;text-transform:none}
+#matrix-v2 .cm-pl-dialog p{margin:0}
+#matrix-v2 .cm-pl-dialog p:empty{display:none}
+#matrix-v2 .cm-pl-joinlist{display:flex;flex-direction:column;border:1px solid var(--color-line);border-radius:8px;background:var(--color-raised)}
+#matrix-v2 .cm-pl-joinrow{display:flex;align-items:center;gap:12px;padding:12px 10px;border-bottom:1px solid var(--pl-hair)}
+#matrix-v2 .cm-pl-joinrow:last-child{border-bottom:0}
+#matrix-v2 .cm-pl-joinrow>span{flex:1 1 auto;display:flex;flex-direction:column;line-height:1.35;min-width:0}
+#matrix-v2 .cm-pl-joinrow small{font-size:13px;color:var(--color-muted)}
+#matrix-v2 .cm-pl-dialog label.cm-pl-field{display:flex;flex-direction:column;gap:6px;font-weight:700}
+#matrix-v2 .cm-pl-dialog label.cm-pl-field input{height:42px;border-radius:8px;border:1px solid var(--color-field-line);background:var(--color-raised);padding:0 12px;font-size:14px;font-weight:400;color:var(--color-ink);margin:0;width:100%}
+#matrix-v2 .cm-pl-actions{display:flex;justify-content:flex-end;gap:8px}
+#matrix-v2 .cm-pl-toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);z-index:70;background:var(--color-ink);color:var(--color-bg);padding:12px 18px;border-radius:12px;box-shadow:0 18px 48px -20px rgb(0 0 0 / .55);font-weight:700;display:flex;gap:14px;align-items:center}
+#matrix-v2 .cm-pl-toast button{border:0;background:transparent;color:inherit;cursor:pointer;font-size:16px;padding:4px}
+#matrix-v2 .cm-pl .cm-pl-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* The empty-blocks box stays inside its tile (Rob: the text bled out of the box). The state heading already says "No blocks confirmed", so the box shows a dash and the tooltip; longer words wrap small inside it. */
+#matrix-v2 .cm-board .cm-combat-empty{box-sizing:border-box;min-width:36px;max-width:100%;padding:2px 3px;overflow:hidden;overflow-wrap:anywhere;text-align:center;font-size:calc(12px*var(--hud-scale,1))}
+#matrix-v2 .cm-board .cm-combat-blocks{overflow:hidden}
+
+/* The top-left box (Rob, 2026-10-27): Turn, with an arrow that folds the list; under it each player's life, the priority dot at the right of the row that holds it. */
+#matrix-v2 .cm-board .cm-stage-caption>.cm-stage-turnrow{display:inline-flex;align-items:center;gap:2px;padding:0;background:none;pointer-events:auto}
+#matrix-v2 .cm-board .cm-stage-turnrow>.cm-board-turn{background:#0a1d20e6;padding:2px 7px;border-radius:6px}
+#matrix-v2 .cm-board .cm-stage-lifetoggle{min-width:22px;height:22px;padding:0;border:0;border-radius:6px;background:#0a1d20e6;color:#e4efe6;font-size:12px;line-height:1;cursor:pointer}
+#matrix-v2 .cm-board .cm-stage-lifetoggle:hover{background:#142e32}
+#matrix-v2 .cm-board .cm-stage-life{align-items:center}
+#matrix-v2 .cm-board .cm-stage-life-prio{flex:none;margin-left:auto;width:.62em;height:.62em;border-radius:50%;background:#37a8ff;box-shadow:0 0 0 2px rgba(55,168,255,.28)}
+#matrix-v2 .cm-board .cm-stage-life>span:first-child:not(.cm-stage-life-turn){flex:0 1 auto}
+/* What the table waits on, in the ribbon: small, muted, never wider than the room it has. */
+#matrix-v2 .cm-board .cm-stage-top>.cm-board-waiting{flex:0 1 auto;min-width:0;max-width:24ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:calc(12px*var(--hud-scale,1));color:var(--color-muted)}
+#matrix-v2 .cm-board .cm-stage-life-prio.is-off{visibility:hidden}
+#matrix-v2 .cm-board .cm-stage-caption>.cm-stage-turnrow{overflow:visible}
+
+/* THE HISTORY SCROLLS SIDEWAYS (Rob, 2026-10-27: "scroll left/right in the history to see the full text on each line instead of lines cut off with an ..."): a line is never cut with an ellipsis; the list scrolls, and the line takes its full width. */
+#matrix-v2 .cm-board :is(.cm-board-band ol,.cm-history-list){overflow:auto;flex:1 1 auto;min-height:0}
+#matrix-v2 .cm-board :is(.cm-stage-rail,.cm-stage-side) .cm-board-band{overflow:hidden}
+#matrix-v2 .cm-board :is(.cm-board-band li,.cm-history-list li){width:max-content;min-width:100%;box-sizing:border-box}
+#matrix-v2 .cm-board :is(.cm-board-band li,.cm-history-list li:not(.is-turn)) span:first-child{flex:0 0 auto;overflow:visible;text-overflow:clip;white-space:nowrap}
+#matrix-v2 .cm-board .cm-stage-lifetoggle{display:inline-grid;place-items:center}
+#matrix-v2 .cm-board .cm-stage-turnrow>.cm-board-turn{color:#e4efe6}
