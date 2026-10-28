@@ -297,6 +297,8 @@ export class GameTable extends GameRoom {
       const who = {email, admin: await this.isAdmin(email), name: (request.headers.get("x-crankmagic-name") || "").trim().slice(0, 60)};
       if (route === "POST /table/create") {
         const b = await body();
+        /* Hard is not open yet (lounge-contract §2): refused here, at the route; the table itself still reads an unknown level as Normal. */
+        if (Array.isArray(b.seats) && b.seats.some((s) => s && s.kind === "ai" && s.level === "hard")) return reply(422, {error: "Hard is not open yet. Choose Normal or Easy."});
         /* An AI on Claude is seated only where the AI door would let this host spend on it (AI-2). */
         const llm = Array.isArray(b.seats) && b.seats.some((s) => s && s.kind === "ai" && s.level === "llm");
         return reply(201, {table: await t.create({tableId: b.tableId, host: email, hostName: b.hostName, seats: b.seats, playtest: this.env?.PLAYTEST_TABLES === "on",

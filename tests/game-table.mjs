@@ -80,8 +80,8 @@ let now = Date.parse("2026-09-26T20:00:00Z");
   await refuses(t.join(SAM, late, now + INVITE_TTL + 1), 410, null, "a link used after its day is refused");
   const samLink = (await t.invite(ROB, 2, now)).code;
 
-  /* Mats: every seat starts on felt; a person picks their own from the app's mats, and everyone sees it. */
-  ok((await t.view(MAYA)).seats.every((s) => s.mat === "felt"), "every seat starts on felt");
+  /* Mats: every PERSON starts on felt (an AI seat is given one, Rob 2026-10-28: tests/lounge-lobby.mjs); a person picks their own from the app's mats, and everyone sees it. */
+  ok((await t.view(MAYA)).seats.filter((s) => s.kind === "human").every((s) => s.mat === "felt"), "every person starts on felt");
   eq((await t.mat(MAYA, "sea")).seats[1].mat, "sea", "Maya picks the sea for her own seat");
   eq((await t.view(ROB)).seats[1].mat, "sea", "and Rob sees it on her seat");
   await refuses(t.mat(MAYA, "someone-elses-art"), 400, /no such mat/, "a mat that is not one of the app's is refused");

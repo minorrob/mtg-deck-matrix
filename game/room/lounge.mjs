@@ -33,10 +33,10 @@ export function pickMat(pool, tableId, seatId, taken = []) {
   return pool[start];
 }
 
-/** An AI seat's level as asked: "easy", "normal" or "llm" (gated by the caller); "hard" is refused, saying so; unasked, normal. */
-export function levelAsked(level, fail) {
+/** An AI seat's level as asked: "easy", "normal" or "llm" (gated by the caller); "hard" is refused, saying so (the table object's routes do, cloud/game-room.mjs; the table itself still reads an unknown level as Normal); unasked, none. */
+export function levelAsked(level, fail, refuseHard = true) {
   if (level === undefined || level === null || level === "") return null;
-  if (level === "hard") fail(422, "Hard is not open yet. Choose Normal or Easy.");
+  if (level === "hard" && refuseHard) fail(422, "Hard is not open yet. Choose Normal or Easy.");
   return level === "easy" || level === "llm" || level === "normal" ? level : "normal";
 }
 export function personaAsked(persona, fail) {
@@ -121,7 +121,7 @@ export function loungeOn(h) {
       privacyAsked(privacy, fail);
       for (const s of others) {
         if (!s || typeof s !== "object") continue;
-        if (s.kind === "ai") {levelAsked(s.level, fail); personaAsked(s.persona, fail);}
+        if (s.kind === "ai") {levelAsked(s.level, fail, false); personaAsked(s.persona, fail);}
         else if (s.email !== undefined && s.email !== null && s.email !== "" && !EMAIL.test(String(s.email))) fail(400, "That is not an email address.");
       }
       void admin;
@@ -148,7 +148,7 @@ export function loungeOn(h) {
       if (!admin) fail(403, "Only CrankMagic's owner can observe an AI game.");
       if (!Array.isArray(seats) || seats.length < 2 || seats.length > 4 || seats.some((s) => !s || s.kind !== "ai"))
         fail(400, "An observed game is two to four AI seats and no one else.");
-      for (const s of seats) {levelAsked(s.level, fail); personaAsked(s.persona, fail);}
+      for (const s of seats) {levelAsked(s.level, fail, false); personaAsked(s.persona, fail);}
       const all = seats.map((s, i) => ({kind: "ai", name: clean(s.name) || `AI ${i + 1}`, level: levelOf(s), ...(personaAsked(s.persona, fail) ? {persona: s.persona} : {})}));
       const mats = {};
       all.forEach((_, i) => {mats[i] = pickMat(h.aiMats, tableId, i, Object.values(mats));});
