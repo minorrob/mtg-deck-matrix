@@ -16,6 +16,15 @@
  *   GET  /api/tables/:id/connect             WebSocket to your seat, once the game is on
  *   GET  /api/tables/:id/record?match=<id>   a finished game's record (M8b; what it holds is the table's call)
  *
+ * THE LOUNGE (docs/ui-lane/lounge-contract.md; cloud/lounge.mjs, game/room/lounge.mjs):
+ *   GET  /api/tables/live                    public tables in their lobby or being played, and the caller's private ones -> {games}
+ *   GET  /api/tables/mine                    the caller's own unfinished tables, on any device -> {tables}
+ *   POST /api/tables/:id/seat|request-join|request|quit|chat   a lobby seat operation; asking to join and the host's answer;
+ *                                            ending the table; a chat message
+ *   GET  /api/tables/:id/log                 the host's or the admin's log of the table, and its chat
+ *   GET  /api/tables/:id?watch=1             the table as a spectator sees it (a public table, or the admin)
+ *   GET  /api/tables/:id/connect?watch=1     WebSocket as a spectator: the public view alone, nothing it sends is played
+ *
  * A table's invitation link is `https://<site>/api/join/<id>/<code>` (cloud/worker.mjs): behind Access on every site,
  * it survives Access's sign-in, which keeps a path and drops a fragment, and comes back to the app at
  * `#table/<id>/<code>`, the form the app joins from (and an older link still opens). The code reaches the Worker in
@@ -27,9 +36,14 @@
  * now on the list for the next wave. Names and counts only: never who asked, the table, or the deck.
  */
 import {recordDemand} from "./card-demand.mjs";
+import {groupOf} from "./access.mjs";
+import {REGISTRY, nameOf} from "./lounge.mjs";
 
 const TABLE_ID = /^[a-z0-9]{8,40}$/, MATCH_ID = /^[a-z0-9]{8,40}g[1-9][0-9]{0,5}$/;
-const ACTIONS = new Set(["invite", "uninvite", "join", "deck", "known", "ready", "mat", "rules", "start", "cancel", "rematch", "end", "concede", "report"]);
+const ACTIONS = new Set(["invite", "uninvite", "join", "deck", "known", "ready", "mat", "rules", "start", "cancel", "rematch", "end", "concede", "report",
+  "seat", "request-join", "request", "quit", "chat"]);
+/* Where the person's display name matters to the table (a request to join, a chat line): the Worker looks it up, the table trusts only that. */
+const NAMED = new Set(["request-join", "chat", "connect"]);
 const HEADERS = {"content-type": "application/json; charset=utf-8", "cache-control": "no-store"};
 /* The object that answers "which of these cards can a table play" with no table (AI-5). Every table's object answers it
    from the engine's cards alone (game/room/table.mjs `unknown`), reading no table, so one object answers everyone; its
@@ -41,7 +55,7 @@ const newTableId = () => crypto.randomUUID().replace(/-/g, "");
 /** @returns {?Promise<Response>} null when the path is not Play's */
 export function tables(request, env, who, {newId = newTableId} = {}) {
   const url = new URL(request.url);
-  const match = /^\/api\/tables(?:\/([^/]+)(?:\/([a-z]+))?)?$/.exec(url.pathname);
+  const match = /^\/api\/tables(?:\/([^/]+)(?:\/([a-z-]+))?)?$/.exec(url.pathname);
   if (!match) return null;
   return (async () => {
     if (!env.TABLES) return reply(503, {error: "Play is not switched on here yet."});
@@ -51,6 +65,12 @@ export function tables(request, env, who, {newId = newTableId} = {}) {
       headers.set("x-crankmagic-email", who.email);
       const stub = env.TABLES.get(env.TABLES.idFromName(tableId));
       return stub.fetch(new Request(`https://table.internal${path}`, {method: init.method || "GET", headers, ...(init.body !== undefined ? {body: init.body} : {})}));
+    };
+    const named = async (headers = new Headers()) => {
+      const name = env.DB ? await nameOf(env.DB, who.email) : "";
+      headers.delete("x-crankmagic-name");
+      if (name) headers.set("x-crankmagic-name", name);
+      return headers;
     };
     const json = async () => {const text = await request.text(); if (text.length > 64 * 1024) throw new Error("large"); return text;};
     /* The table's answer, with the names it cannot play counted (card demand): `asks` turns those names into what is
@@ -71,6 +91,14 @@ export function tables(request, env, who, {newId = newTableId} = {}) {
       const tableId = newId();
       return forward(tableId, "/table/create", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({...body, tableId})});
     }
+    /* THE LOUNGE'S LISTS: the registry is one more object of the TABLES binding, named so no table's id can be it. The caller's
+       address goes with the question, and whether they are the owner; the registry never returns an address. */
+    if ((given === "live" || given === "mine") && !action) {
+      if (request.method !== "GET") return reply(405, {error: `Read ${given} with a GET.`});
+      const headers = {};
+      if (given === "live" && (await groupOf(who.email, env, null)) === "owner") headers["x-crankmagic-admin"] = "1";
+      return forward(REGISTRY, `/lounge/${given}`, {headers});
+    }
     /* A DECK'S READINESS, BEFORE ANY TABLE (AI-5): a deck's tile and its page say whether it is playable at the table, or
        how many of its cards are still to learn. Names only go in; only the names a table cannot play come back. */
     if (given === "known" && !action) {
@@ -90,12 +118,18 @@ export function tables(request, env, who, {newId = newTableId} = {}) {
       });
     }
     if (!TABLE_ID.test(given)) return reply(404, {error: "There is no such table."});
-    if (!action) return request.method === "GET" ? forward(given, "/table") : reply(405, {error: "Read a table with a GET."});
+    if (!action) return request.method === "GET" ? forward(given, url.searchParams.get("watch") === "1" ? "/table?watch=1" : "/table") : reply(405, {error: "Read a table with a GET."});
     if (action === "connect") {
       if (request.headers.get("upgrade") !== "websocket") return reply(426, {error: "Connect with a WebSocket."});
       const headers = new Headers(request.headers);
       headers.set("x-crankmagic-email", who.email);
-      return env.TABLES.get(env.TABLES.idFromName(given)).fetch(new Request("https://table.internal/connect", {method: "GET", headers}));
+      const watch = url.searchParams.get("watch") === "1";
+      await named(headers);
+      return env.TABLES.get(env.TABLES.idFromName(given)).fetch(new Request(`https://table.internal/connect${watch ? "?watch=1" : ""}`, {method: "GET", headers}));
+    }
+    if (action === "log") {
+      if (request.method !== "GET") return reply(405, {error: "Read the log with a GET."});
+      return forward(given, "/table/log");
     }
     if (action === "record") {
       if (request.method !== "GET") return reply(405, {error: "Read a record with a GET."});
@@ -106,7 +140,7 @@ export function tables(request, env, who, {newId = newTableId} = {}) {
     if (request.method !== "POST") return reply(405, {error: "That is a POST."});
     let body, asked;
     try {body = await json(); asked = JSON.parse(body || "{}");} catch {return reply(400, {error: "That request is not JSON, or is larger than a table needs."});}
-    const answer = await forward(given, `/table/${action}`, {method: "POST", headers: {"content-type": "application/json"}, body: body || "{}"});
+    const answer = await forward(given, `/table/${action}`, {method: "POST", headers: NAMED.has(action) ? await named(new Headers({"content-type": "application/json"})) : {"content-type": "application/json"}, body: body || "{}"});
     /* A seat's deck refused for cards the table cannot play (game/room/table.mjs, readDeck): one deck, counted. */
     if (action !== "deck" || answer.status !== 422) return answer;
     const deck = asked && asked.deck && typeof asked.deck === "object" ? asked.deck : {};
