@@ -1766,3 +1766,5 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=table] .cm-seat-commander,#matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=table] .cm-seat-state{display:none}
 #matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=table] .cm-seat-portrait{width:24px;height:24px;flex:none}
 #matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-mat :is(.cm-board-field,.cm-board-lands)>.cm-mat-label,#matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-mat .cm-board-group>h3{display:none}
+#matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=table] .cm-seat-identity{flex:0 1 auto;min-width:0;padding-right:8px}
+#matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-mat[data-fit=table] .cm-seat-portrait{display:none}

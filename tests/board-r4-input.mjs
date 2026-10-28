@@ -12,7 +12,11 @@ async function open(mode,width=1440,touch=false,v=fixture()){
  page.on('pageerror',e=>errors.push(e.message));await page.route(`${base}/index.html*`,r=>r.fulfill({contentType:'text/html',body:html}));await page.route(`${base}/api/me`,r=>r.fulfill({json:{email:'input@example.com'}}));await page.route(`${base}/api/library**`,r=>r.fulfill({json:{head:null}}));
  const table={tableId:'r4input01',phase:'playing',matchId:v.matchId,away:[],blockers:[],rules:{},seats:v.state.players.map(p=>({seatId:p.playerId,name:p.name,kind:p.playerId===v.seat?'human':'ai',you:p.playerId===v.seat,occupied:true,ready:true,mat:'felt'}))};
  await page.route(`${base}/api/tables**`,r=>r.fulfill({json:{table,now:Date.now()}}));await page.routeWebSocket(/\/api\/tables\/r4input01\/connect$/,s=>{socket=s;s.onMessage(m=>sent.push(JSON.parse(m)));s.send(JSON.stringify({type:'view',view:v}));});
- await page.goto(`${base}/index.html#table?id=r4input01`);await page.locator('.cm-mat [data-card="9001"]').first().waitFor();
+ await page.route(/\/assets\/environments\/[^/?]+\.webm(\?.*)?$/,r=>r.abort());
+ await page.goto(`${base}/index.html#table?id=r4input01`);await page.locator('.cm-mat [data-card="9001"]').first().waitFor({timeout:60000});await page.waitForTimeout(800);
+ /* The drawers are the top layer (Rob, 2026-10-28). The flat views keep their boards clear of them; the 3D view's mat runs under them, so in 3D a
+  * player shuts a drawer to reach a card beneath it: that is what this suite does (shutting a drawer moves nothing, tests/board-flat-views.mjs). */
+ if(mode==='full'&&width>=500){await page.evaluate(()=>{for(const sel of ['[data-action="board-stage-rail"][aria-expanded="true"]','[data-action="board-stage-side"][aria-expanded="true"]'])document.querySelector(sel)?.click();});await page.waitForTimeout(900);}
  return {page,context,sent,errors,get current(){return current;},feed:async change=>{const next=structuredClone(current);change(next);next.revision++;current=next;socket.send(JSON.stringify({type:'receipt',receipt:{}}));socket.send(JSON.stringify({type:'view',view:next}));await page.waitForTimeout(100);}};
 }
 const card=id=>`.cm-mat[data-seat="0"] .cm-bcard[data-action="board-card"][data-card="${id}"]`;

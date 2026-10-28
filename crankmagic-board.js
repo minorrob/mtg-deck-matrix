@@ -14,17 +14,16 @@
  *   the playmat   ONE component at four sizes (mat()): Battlefield over Lands on the left; Command over Library and
  *                 Exile over Graveyard as card-shaped frames on the right; in Focus the History band between the two
  *                 pairs; the header carries name · vitals · commander · the step ribbon on your own board
- *   Table view    four identical 16:9 boards in a 2×2 (2 · 3 / 4 · 1, you bottom right), each header on its outer
- *                 edge, sized to fit the window; the living mat and the active player's color fan behind them; the
- *                 logo at the true center opens Table vitals; your hand along the foot
- *   Focus view    your board the largest 16:9 that fits beside the 168px seat pane with the hand's slate tray a
- *                 full row beneath it, the cards whole and lifting on hover; the pane ends in My board · Table view ·
- *                 Coach, and collapses
- *   Full screen   a 44px rail; up to three opponents across the top 40%; the big board across the lower 60%, full
- *                 bleed and frameless, zones implied by where cards sit; ⟳ Rotate walks the big board round the
- *                 table (never a hand); your hand whole along its foot; the right column: every seat's vitals, the
- *                 card under the pointer large with what it can do, the log, and the Coach in its lower half. Full
- *                 screen asks the browser for the whole document, so the Coach and the dialogs are seen in it
+ *   Table, Focus and 3D   ONE HUD (Rob, 2026-10-28): the same header, turn box, action pop-up, Camera and Table menus, drawers and hand in all three;
+ *                 only the stage differs. 3D is the Babylon canvas under DOM boards; Table and Focus are the same engine without the canvas
+ *                 (CrankStage.flatGeometry), every board set by one matrix, so the 3D view's zoom (the wheel, Camera's slider) and pan (a
+ *                 drag) move them too. The drawers lie over the stage and the hand and move neither; a flat view keeps its boards clear of
+ *                 where they lie (--gut-l, --gut-r, the same open or shut)
+ *   Table view    four identical 16:9 boards, two across and two down (side by side for two; two over one for three, the dial between
+ *                 the top two), the largest that fit above the hand, the dial and the action pop-up in the gaps; each board's header a line
+ *   Focus view    the seat looked at the largest 16:9 that fits between the others (a row across the back, or a column at the right where
+ *                 the window is wide and not tall) and the hand; Commander and Exile, Library and Graveyard as card-sized piles with the
+ *                 History between them; the page scrolls, there is no scroll of its own
  *   Skip to end   passes priority for you through the rest of this turn, and stops the moment anything is on the
  *                 stack or the room asks you something else. On another player's turn, Yield this turn sends the room's
  *                 turn-scoped policy (ROB-28): spells do not cancel it, required choices remain yours, and the view
@@ -1595,13 +1594,12 @@ globalThis.CrankBoard = Object.seal({
       /* Table's life counter lies over the crossing of the four boards, so they leave it room; and the turn box top left is not drawn over a board's name. */
       const pie = Math.round(144 * hudScale() / 100);
       host.style.setProperty("--pie", `${pie}px`);
-      /* ...and the action pop-up, which stands over the middle, has the gap between the boards to itself. */
-      const bar = host.querySelector(":scope .cm-stage-actions")?.offsetWidth || 0;
-      opts.gapX = players().length === 2 ? 22 : Math.min(Math.max(pie + 8, bar + 28), Math.round((region.clientWidth - gutter.left - gutter.right) * .16)); opts.gapY = 22;
+      /* ...and clear of it side to side: the boards on a row leave the dial the gap between them (it covers no board), and start below the action pop-up. */
+      opts.gapX = players().length >= 2 ? Math.min(pie + 8, Math.round((region.clientWidth - gutter.left - gutter.right) * .25)) : 22; opts.gapY = 22;
       const caption = host.querySelector(":scope .cm-stage-caption"), at = region.getBoundingClientRect();
       /* Focus's boards start under the action pop-up (the 3D view's others are far enough back to lie under it); Table's have it in the gap between them. */
       const barEl = host.querySelector(":scope .cm-stage-actions");
-      opts.top = mode === "focus" || players().length === 2 ? (barEl ? Math.ceil(barEl.getBoundingClientRect().bottom - at.top + 6) : Math.round(76 * hudScale() / 100)) : 0;
+      opts.top = barEl ? Math.ceil(barEl.getBoundingClientRect().bottom - at.top + 6) : Math.round(76 * hudScale() / 100);
       opts.inL = gutter.left; opts.inR = gutter.right;
       opts.padL = caption ? Math.ceil(caption.getBoundingClientRect().width + 54) : 0;
       opts.stripMin = Math.ceil(Math.max(0, ...[...region.querySelectorAll(".cm-stage-rear")].map((el) => el.scrollHeight)) + 6);

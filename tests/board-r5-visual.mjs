@@ -19,7 +19,7 @@
     16. The ribbon's life stands on the player name's baseline, and the step now under way keeps the line of the other steps.
     18. The Turn row has a fold arrow that hides and shows the life box under it; priority is a blue dot at the right of the holder's life.
     19. A history line is read in full by scrolling sideways, never cut with an ellipsis.
-    20. The piles at a mat's right (Commander, Exile, Library, Graveyard) stay put when the divider moves, none cut off, the mat with almost no margin; the hand's center card is the center between the drawers.
+    20. The piles at a mat's right (Commander, Exile, Library, Graveyard) stay put when the divider moves, none cut off, the mat with almost no margin; the hand's center card is the window's center (the drawers lie over it and move nothing).
     17. Alt + the left button dragged up over the battlefield grows the cards, down over the lands shrinks them (Camera's Cards follows); nothing is sent. */
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
@@ -148,8 +148,9 @@ const pilesAfter=await piles();
 eq(pilesAfter.piles,pilesBefore.piles,"and the piles at the mat's right (Commander, Exile, Library, Graveyard) do not move with it");
 ok(Math.max(...Object.values(pilesAfter.piles).map(p=>p[1]))<=pilesAfter.mat[1]+1&&Math.min(...Object.values(pilesAfter.piles).map(p=>p[0]))>=pilesAfter.mat[0]-1,`and none is cut off by the mat's edge, the mat having almost no margin (${JSON.stringify(pilesAfter.piles.library)} in ${pilesAfter.mat.map(Math.round)})`);
 ok(pilesAfter.mat[1]-Math.max(...Object.values(pilesAfter.piles).map(p=>p[1]))<=6&&Math.min(...Object.values(pilesAfter.piles).map(p=>p[0]))-pilesAfter.mat[0]<=6,"the piles sit within 6px of the mat's top and bottom edges");
-const handMid=await page.evaluate(()=>{const mid=[...document.querySelectorAll(".cm-stage-fan-slot")];const m=mid[Math.floor(mid.length/2)].getBoundingClientRect(),rail=document.querySelector(".cm-stage-rail.is-open")?.getBoundingClientRect().right||0,side=document.querySelector(".cm-stage-side.is-open")?.getBoundingClientRect().left||innerWidth;return {mid:(m.left+m.right)/2,seen:(rail+side)/2};});
-near(handMid.mid,handMid.seen,3,"the center card of the hand is the center of the table between the open drawers");
+const handMid=await page.evaluate(()=>{const mid=[...document.querySelectorAll(".cm-stage-fan-slot")];const m=mid[Math.floor(mid.length/2)].getBoundingClientRect();return {mid:(m.left+m.right)/2,seen:innerWidth/2};});
+/* Superseded (Rob, 2026-10-28, later: "the drawers should not affect the canvas. They should sit as the top layer"): the hand no longer centers between the open drawers; it is the window's, whatever is open (tests/board-flat-views.mjs proves it does not move). */
+near(handMid.mid,handMid.seen,3,"the center card of the hand is the center of the window, with the drawers open over it");
 /* 14. */
 const [floor,limit]=await page.evaluate(()=>[CrankStage.appearances.backgrounds.map(b=>CrankStage.floorTilt(b.id)),CrankStage.TILT_LIMIT]);
 ok(floor.length>=1&&floor.every(t=>t>=60&&t<=limit),`every backdrop's floor lies past the seated 45 degrees, within the camera's limit (${floor.join(", ")})`);
