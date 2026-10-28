@@ -295,8 +295,8 @@ export function loungeOn(h) {
         else if (gone === "timed-out") outcome = "unfinished";
         else if (!abandoned && view.result) {
           if (end?.outcome === "won") outcome = "win";
-          else if (end?.outcome === "lost") outcome = "loss";
           else if (view.result.ending?.kind === "draw") outcome = "tie";
+          else if (end?.outcome === "lost") outcome = "loss";
         }
         byPerson.push({email, name: t.seats[n]?.name ?? "A player", seatId: s.seatId, outcome});
       }

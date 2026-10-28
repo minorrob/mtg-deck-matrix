@@ -96,16 +96,28 @@ export async function world({db = false, migrations, owner = ROB, start = Date.p
   return {env, call, watch, clock, objects, contexts, socketsOf, make, db: database};
 }
 
-/** A table through its lobby to a running game, over the Worker: Rob hosts, the others are AI seats unless a person is named. */
-export async function lobbyReady(w, id, people = {}) {
-  const table = (await w.call("GET", `/api/tables/${id}`)).json.table;
+const T = (id, path = "") => `/api/tables/${id}${path}`;
+/* A table through its lobby to a running game: the host and any named people ready, then the countdown, then the alarm. */
+export async function running(w, host, {privacy, people = [], ai = 1} = {}) {
+  const made = await w.make(host, {hostName: "Host", privacy, seats: [...people.map((p) => ({kind: "human", name: p.name})), ...Array.from({length: ai}, (_, i) => ({kind: "ai", name: `Ember${i}`}))]});
+  const id = made.id;
+  for (const [i, p] of people.entries()) {
+    const code = (await w.call("POST", T(id, "/invite"), {as: host, body: {seatId: i + 1}})).json.invite.code;
+    await w.call("POST", T(id, "/join"), {as: p.email, body: {code}});
+  }
+  const table = (await w.call("GET", T(id), {as: host})).json.table;
   for (const s of table.seats) {
-    if (s.kind === "ai") await w.call("POST", `/api/tables/${id}/deck`, {body: {seatId: s.seatId, deck: deckFor(`a${s.seatId}`)}});
+    if (s.kind === "ai") await w.call("POST", T(id, "/deck"), {as: host, body: {seatId: s.seatId, deck: deckFor(`ai${s.seatId}`)}});
+    else {
+      const email = s.seatId === 0 ? host : people[s.seatId - 1].email;
+      await w.call("POST", T(id, "/deck"), {as: email, body: {seatId: s.seatId, deck: deckFor(`p${s.seatId}`)}});
+      await w.call("POST", T(id, "/ready"), {as: email, body: {ready: true}});
+    }
   }
-  await w.call("POST", `/api/tables/${id}/deck`, {body: {seatId: 0, deck: deckFor("r0")}});
-  for (const [email, seatId] of Object.entries(people)) {
-    await w.call("POST", `/api/tables/${id}/deck`, {as: email, body: {seatId, deck: deckFor(`p${seatId}`)}});
-    await w.call("POST", `/api/tables/${id}/ready`, {as: email, body: {ready: true}});
-  }
-  await w.call("POST", `/api/tables/${id}/ready`, {body: {ready: true}});
+  return {id, start: async () => {
+    const r = await w.call("POST", T(id, "/start"), {as: host, body: {}});
+    w.clock.t += 10000; await w.objects.get(id).alarm();
+    return r;
+  }};
 }
+
