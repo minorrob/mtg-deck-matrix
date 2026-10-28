@@ -1,0 +1,373 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Taborax, Hope's Demise",
+  "fixtures": {
+    "Smoke Murder": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{C}",
+      "spell": {
+        "id": "s",
+        "text": "Destroy target creature.",
+        "targets": [
+          {
+            "what": "permanent",
+            "types": [
+              "Creature"
+            ]
+          }
+        ],
+        "effects": [
+          {
+            "effect": "destroy",
+            "targets": {
+              "target": 0
+            }
+          }
+        ]
+      }
+    },
+    "Grizzly Bears": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "power": 2,
+      "toughness": 2
+    },
+    "Their Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "power": 2,
+      "toughness": 2
+    },
+    "Test Cleric": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Human",
+        "Cleric"
+      ],
+      "manaCost": "{1}{W}",
+      "colors": [
+        "W"
+      ],
+      "power": 1,
+      "toughness": 1
+    },
+    "Token Bear": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Bear"
+      ],
+      "manaCost": null,
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2,
+      "token": true
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Another nontoken creature of yours dies: a +1/+1 counter, and no card for a non-Cleric",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Taborax, Hope's Demise",
+            "Grizzly Bears",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Smoke Murder"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Smoke Murder",
+          "targets": [
+            {
+              "card": "Grizzly Bears"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Taborax, Hope's Demise",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    },
+    {
+      "name": "A Cleric: you may draw a card, and if you do, lose 1 life",
+      "library": [
+        "Island"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Taborax, Hope's Demise",
+            "Test Cleric",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Smoke Murder"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Smoke Murder",
+          "targets": [
+            {
+              "card": "Test Cleric"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island"
+          ]
+        },
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Taborax, Hope's Demise",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "A Cleric, and you decline: the counter, no card, no life lost",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Taborax, Hope's Demise",
+            "Test Cleric",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Smoke Murder"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Smoke Murder",
+          "targets": [
+            {
+              "card": "Test Cleric"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            1
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 0
+        },
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Taborax, Hope's Demise",
+            "counter": "+1/+1",
+            "count": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "An opponent's creature, or a token of yours, dying does nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Taborax, Hope's Demise",
+            "Token Bear",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Smoke Murder",
+            "Smoke Murder"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Their Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Smoke Murder",
+          "targets": [
+            {
+              "card": "Token Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Smoke Murder",
+          "targets": [
+            {
+              "card": "Their Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Taborax, Hope's Demise",
+            "counter": "+1/+1",
+            "count": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "With five +1/+1 counters it has lifelink; with four it does not",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Taborax, Hope's Demise"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "keywords": {
+                "card": "Taborax, Hope's Demise",
+                "lacks": [
+                  "Lifelink"
+                ],
+                "has": [
+                  "Flying"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "expect": []
+    }
+  ]
+}

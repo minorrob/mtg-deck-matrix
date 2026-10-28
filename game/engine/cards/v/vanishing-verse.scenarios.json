@@ -1,0 +1,180 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Vanishing Verse",
+  "fixtures": {
+    "Mono Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Gold Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{G}{W}",
+      "colors": [
+        "G",
+        "W"
+      ],
+      "power": 2,
+      "toughness": 2
+    },
+    "Colorless Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{2}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "It exiles a monocolored permanent",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vanishing Verse"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Mono Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Plains"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Vanishing Verse",
+          "targets": [
+            {
+              "card": "Mono Bear"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": []
+        },
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Mono Bear"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A multicolored permanent is no target",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vanishing Verse"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Gold Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Vanishing Verse"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": []
+    },
+    {
+      "name": "A colorless permanent is no target",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Plains",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Vanishing Verse"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Colorless Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "cast",
+                "card": "Vanishing Verse"
+              },
+              "count": 0
+            }
+          ]
+        }
+      ],
+      "expect": []
+    }
+  ]
+}

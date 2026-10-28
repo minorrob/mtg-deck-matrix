@@ -1,0 +1,60 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Darkstar Augur",
+    "oracleId": "67d2a021-a042-4e5f-b6e4-39cb35514794",
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Bat",
+      "Warlock"
+    ],
+    "manaCost": "{2}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 2,
+    "toughness": 3
+  },
+  "oracleText": "Offspring {B} (You may pay an additional {B} as you cast this spell. If you do, when this creature enters, create a 1/1 token copy of it.)\nFlying\nAt the beginning of your upkeep, reveal the top card of your library and put that card into your hand. You lose life equal to its mana value.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Offspring {B} (You may pay an additional {B} as you cast this spell. If you do, when this creature enters, create a 1/1 token copy of it.)",
+      "keyword": "offspring",
+      "cost": "{B}"
+    },
+    {
+      "kind": "keyword",
+      "text": "Flying",
+      "keyword": "flying"
+    },
+    {
+      "kind": "triggered",
+      "text": "At the beginning of your upkeep, reveal the top card of your library and put that card into your hand. You lose life equal to its mana value.",
+      "trigger": {
+        "on": "upkeep"
+      },
+      "effects": [
+        {
+          "effect": "moveZone",
+          "fromTop": 1,
+          "to": "hand",
+          "reveal": true,
+          "remember": true
+        },
+        {
+          "effect": "loseLife",
+          "amount": {
+            "manaValueOf": "remembered"
+          }
+        }
+      ]
+    }
+  ]
+}

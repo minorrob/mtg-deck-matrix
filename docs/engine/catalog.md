@@ -7,7 +7,7 @@ distinct list of actions, triggers, effects, actions, options, etc. that can be 
 rules"). The keyword actions and abilities are the Comprehensive Rules' own list (701, 702); the effects, triggers,
 static abilities, replacement effects and costs are every one used by the 33,821 cards Forge implements.
 
-**The most-played 80% of Commander cards:** 3,238 cards; 1,985 defined and playable today; 2,914 with every
+**The most-played 80% of Commander cards:** 3,238 cards; 1,990 defined and playable today; 2,916 with every
 mechanic built, so only their definitions are left to write.
 
 **Status:** *built* the engine does it; *partial* some forms; *named* in the engine's vocabulary, not built; *missing* not
@@ -36,13 +36,12 @@ The things that alone hold back the most of the most-played cards.
 
 | Kind | Name | Engine | Status | Alone | Holds back |
 | --- | --- | --- | --- | ---: | ---: |
-| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 8 | 45 |
+| option | Remembering an object ("the exiled card", "that creature" later) | — | missing | 8 | 44 |
 | count | What entered or died this turn | — | missing | 8 | 8 |
 | effect | ChoosePlayer | — | missing | 5 | 7 |
 | count | Times this resolved this turn | — | missing | 5 | 7 |
 | count | How many things an effect remembered | — | missing | 5 | 7 |
 | trigger | AbilityCast | — | missing | 5 | 5 |
-| option | Remembering what an effect moved | — | missing | 4 | 45 |
 | count | Your life total | — | missing | 4 | 7 |
 | count | Amount | — | missing | 4 | 7 |
 | option | Imprint (a card exiled with this) | — | missing | 4 | 6 |
@@ -51,6 +50,7 @@ The things that alone hold back the most of the most-played cards.
 | keyword ability | Landwalk | — | named | 4 | 4 |
 | static | CantBeActivated | — | missing | 4 | 4 |
 | option | Unless a player sacrifices a permanent | — | missing | 4 | 4 |
+| option | Remembering what an effect moved | — | missing | 3 | 44 |
 
 ## Keyword abilities (CR 702)
 
@@ -551,7 +551,7 @@ The things that alone hold back the most of the most-played cards.
 | CommitCrime | crime committed | built | 4 | 21 | 0 | 0 |
 | AttackerBlocked | — | missing | 3 | 126 | 3 | 3 |
 | Taps | becomes tapped | built | 3 | 112 | 0 | 0 |
-| Untaps | — | missing | 3 | 30 | 2 | 0 |
+| Untaps | — | missing | 3 | 30 | 1 | 0 |
 | UnlockDoor | — | missing | 3 | 26 | 3 | 2 |
 | CounterAdded | counter added | built | 3 | 19 | 0 | 0 |
 | FullyUnlock | — | missing | 3 | 17 | 1 | 0 |
@@ -826,9 +826,9 @@ The things that alone hold back the most of the most-played cards.
 | You may, decided by a named player | modal (Yes / No) | partial | 176 | 1499 | 0 | 0 |
 | An effect's condition: if a permanent is present | an effect's condition {present ...} | built | 142 | 1292 | 0 | 0 |
 | Fewer targets than the most ("up to", "any number of") | a target's count {min, max} (script/bind.mjs), picked as a pick-several | built | 126 | 1672 | 0 | 0 |
-| Remembering what an effect moved | — | missing | 124 | 1168 | 45 | 4 |
+| Remembering what an effect moved | — | missing | 124 | 1168 | 44 | 3 |
 | More than one target of a kind ("up to N") | a target's count {min, max} (script/bind.mjs); a count that is X is not built | partial | 123 | 1664 | 0 | 0 |
-| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 45 | 8 |
+| Remembering an object ("the exiled card", "that creature" later) | — | missing | 123 | 1460 | 44 | 8 |
 | An intervening "if" or "activate only if": a permanent present | condition {present: selector} | built | 114 | 1200 | 0 | 0 |
 | How long an effect lasts (until end of turn is built; others not) | — | partial | 111 | 1658 | 0 | 0 |
 | An effect's condition: a comparison | a count compared: an arrival's unless {min, max}; a condition's {atLeast, atMost} | built | 104 | 684 | 0 | 0 |

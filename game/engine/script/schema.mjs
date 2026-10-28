@@ -444,7 +444,7 @@ function checkAbility(ability, path, errors, {permanent = false, manaX = false} 
   /* A target is a selector, or `{anyOf: [...]}` for "any target" (script/bind.mjs) -- either with a `count`, `{min, max}`, for
      "up to N", "any number of", "one or two" (CR 115.1, 601.2c). */
   for (const [index, spec] of (ability.targets ?? []).entries()) {
-    const {totalPowerAtMost, count, distinctFrom, onlyIf, differentControllers, share, forEach, ownedByControllerOf, ...selector} = spec && typeof spec === "object" ? spec : {};
+    const {totalPowerAtMost, count, distinctFrom, onlyIf, differentControllers, differentManaValues, share, forEach, ownedByControllerOf, ...selector} = spec && typeof spec === "object" ? spec : {};
     if (totalPowerAtMost !== undefined && !(Number.isInteger(totalPowerAtMost) && totalPowerAtMost >= 0 && count !== undefined))
       errors.push({path: `${path}.targets[${index}].totalPowerAtMost`, message: "A total power limit is a nonnegative integer on a counted target"});
     /* "Each of up to X targets" (Crackle with Power): a spell's X, in its mana cost, is announced before its targets are chosen
@@ -468,6 +468,9 @@ function checkAbility(ability, path, errors, {permanent = false, manaX = false} 
     for (const message of conditionProblems(onlyIf)) errors.push({path: `${path}.targets[${index}].onlyIf`, message});
     if (differentControllers !== undefined && !(differentControllers === true && count !== undefined))
       errors.push({path: `${path}.targets[${index}].differentControllers`, message: "\"Controlled by different players\" is differentControllers: true, on a counted target"});
+    /* "Each with a different mana value" (Agadeem's Awakening; script/bind.mjs, `differentManaValues`): on a counted target. */
+    if (differentManaValues !== undefined && !(differentManaValues === true && count !== undefined))
+      errors.push({path: `${path}.targets[${index}].differentManaValues`, message: "\"Each with a different mana value\" is differentManaValues: true, on a counted target"});
     /* "From a single graveyard", "that share a creature type" (script/bind.mjs, `share`): on a counted target. */
     if (share !== undefined && !(SHARES.includes(share) && count !== undefined))
       errors.push({path: `${path}.targets[${index}].share`, message: `What a counted target's choices share is ${SHARES.map((s) => JSON.stringify(s)).join(" or ")}, on a counted target`});

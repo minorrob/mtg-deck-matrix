@@ -124,7 +124,7 @@ BREAKS = [
     ('any type: paid', ACTIONS, '    const {x} = reckoned, cost = anyTypeCost(reckoned.cost, permission);\n', '    const {x} = reckoned, cost = reckoned.cost;\n'),
 
     # "By sacrificing a land in addition to paying its other costs" (Exploration Broodship).
-    ("permission's cost: asked", ACTIONS, ', ...(back?.extra ?? []), ...(permit?.ability.additionalCost ?? [])])) {', ', ...(back?.extra ?? [])])) {'),
+    ("permission's cost: asked", ACTIONS, ', ...(back?.extra ?? []), ...(permit?.ability.additionalCost ?? [])]);\n  for (const grant of lifeForLess', ', ...(back?.extra ?? [])]);\n  for (const grant of lifeForLess'),
     ("permission's cost: not the spell's own", ACTIONS, OWN_EXTRA, ')'),
     ('station: the land drop at 3+', ACTIONS, LAND_DROPS, '\n    .reduce('),
 

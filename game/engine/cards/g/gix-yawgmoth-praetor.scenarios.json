@@ -1,0 +1,429 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Gix, Yawgmoth Praetor",
+  "fixtures": {
+    "Grizzly Bears": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "power": 2,
+      "toughness": 2
+    },
+    "Opposing Bear": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "power": 2,
+      "toughness": 2
+    },
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{3}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 4,
+      "toughness": 4
+    },
+    "Rock": {
+      "types": [
+        "Artifact"
+      ],
+      "manaCost": "{1}",
+      "colors": []
+    }
+  },
+  "scenarios": [
+    {
+      "name": "A creature of yours deals combat damage to an opponent: you may pay 1 life to draw",
+      "library": [
+        "Island",
+        "Forest"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gix, Yawgmoth Praetor",
+            "Grizzly Bears"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Grizzly Bears"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            0
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Island",
+            "Forest"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Declined: no life, no card",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gix, Yawgmoth Praetor",
+            "Grizzly Bears"
+          ],
+          "sick": true
+        }
+      ],
+      "steps": [
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Grizzly Bears"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "answer": [
+            1
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 40
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "name": "{4}{B}{B}{B}, discard 2: exile the top 2 of an opponent library and play from them for free, a land too",
+      "library": [
+        "Forest",
+        "Ogre",
+        "Opposing Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gix, Yawgmoth Praetor",
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rock",
+            "Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Gix, Yawgmoth Praetor",
+          "x": 2,
+          "discard": [
+            "Rock"
+          ],
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "graveyard",
+              "cards": [
+                "Rock",
+                "Rock"
+              ]
+            },
+            {
+              "seat": 1,
+              "zone": "exile",
+              "cards": [
+                "Forest",
+                "Ogre"
+              ]
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Forest"
+          ]
+        },
+        {
+          "choose": [
+            "Ogre"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Gix, Yawgmoth Praetor",
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Forest",
+            "Ogre"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "X is the number discarded and exiled: with 1, one card, and a spell you decline stays exiled",
+      "library": [
+        "Forest",
+        "Ogre",
+        "Opposing Bear"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gix, Yawgmoth Praetor",
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Rock"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Gix, Yawgmoth Praetor",
+          "x": 1,
+          "discard": [
+            "Rock"
+          ],
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Don't play"
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": [
+            "Forest"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Rock"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "X of 0 discards nothing and exiles nothing",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Gix, Yawgmoth Praetor",
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "activate": "Gix, Yawgmoth Praetor",
+          "x": 0,
+          "targets": [
+            {
+              "player": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "zone": "exile",
+          "cards": []
+        }
+      ]
+    }
+  ]
+}

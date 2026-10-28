@@ -77,6 +77,11 @@ export const STATIC_RULES = Object.freeze({
   "keeps-red-mana": "rules/turn.mjs",
   /** CR 601.2f: "Artifact spells you cast cost {1} less to cast" (the Medallions, Foundry Inspector). actions.mjs. */
   "spells-cost-less": "rules/actions.mjs",
+  /** CR 601.2b, 601.2f: "As an additional cost to cast white permanent spells, you may pay 2 life. Those spells cost {W} less to
+      cast if you paid life this way. This effect reduces only the amount of white mana you pay" (Defiler of Faith): `affects` the
+      spells, `life` what may be paid, `less` the colored mana it takes off. Each spell it fits is cast either way, a variant of
+      the cast of its own (actions.mjs, castOffers; lifeForLess, below). */
+  "life-for-less": "rules/actions.mjs",
   /** CR 601.2f: "Noncreature spells cost {1} more to cast" (Thalia), "spells your opponents cast cost {2} more" (God-
       Pharaoh's Statue): `caster` any (the default), you or opponent; `affects` the spell; `amount`. actions.mjs, castCost.
       "Spells your opponents cast that target this creature cost an additional 3 life to cast" (Terror of the Peaks, wave
@@ -1306,6 +1311,30 @@ export function costReduction(state, player, cardId, targets = null) {
     total += amountOf(state, ability.amount ?? 1, {controller: player, source: cardId});
   }
   return total;
+}
+
+/**
+ * THE LIFE A CASTER MAY PAY FOR A COLORED REDUCTION (CR 601.2b, 601.2f; Defiler of Faith): every `life-for-less` static of a
+ * permanent they control whose `affects` takes the spell in -- how much life it asks (`lifeCost`) and the colored mana it takes
+ * off (`lessMana`, "{W}"). Each is the caster's to pay or not (AGENTS.md: the players decide), so each is one more variant of the
+ * cast (rules/actions.mjs, castOffers).
+ *
+ * @returns {Array<{life: number, less: string}>}
+ */
+export function lifeForLess(state, player, cardId) {
+  const object = state.objects[cardId];
+  if (!object) return [];
+  const held = staticAbilities(state), found = [];
+  for (const holderId of state.zones.battlefield) {
+    const holder = state.objects[holderId];
+    if (holder.controller !== player) continue;
+    for (const own of held(holderId)) {
+      if (own.kind !== "static" || own.rule !== "life-for-less") continue;
+      if (!matchesSelector({...(own.affects ?? {}), what: "card", zone: object.zone}, state, cardId, {controller: holder.controller, source: holderId})) continue;
+      found.push({life: own.lifeCost ?? 0, less: own.lessMana ?? ""});
+    }
+  }
+  return found;
 }
 
 /**

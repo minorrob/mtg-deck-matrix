@@ -1,0 +1,141 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Darkstar Augur",
+  "fixtures": {
+    "Ogre": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{3}{R}",
+      "colors": [
+        "R"
+      ],
+      "power": 4,
+      "toughness": 4
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Each upkeep: the top card revealed into your hand, life lost equal to its mana value",
+      "library": [
+        "Wastes",
+        "Ogre"
+      ],
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Darkstar Augur"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": [
+                "Wastes"
+              ]
+            },
+            {
+              "seat": 0,
+              "life": 40
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "UPKEEP"
+          }
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "hand",
+              "cards": [
+                "Wastes",
+                "Ogre"
+              ]
+            },
+            {
+              "event": "GameEventCardRevealed"
+            }
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "life": 36
+        }
+      ]
+    },
+    {
+      "name": "Offspring {B}: a 1/1 token copy, which also takes the upkeep trigger",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Swamp"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Darkstar Augur"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "cast": "Darkstar Augur",
+          "extraMana": "{B}"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "controls": [
+            "Darkstar Augur",
+            "Darkstar Augur",
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Swamp"
+          ]
+        }
+      ]
+    }
+  ]
+}

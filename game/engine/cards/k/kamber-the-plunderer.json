@@ -1,0 +1,68 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Kamber, the Plunderer",
+    "oracleId": "0b620775-70a5-4423-8453-e403a5b79554",
+    "supertypes": [
+      "Legendary"
+    ],
+    "types": [
+      "Creature"
+    ],
+    "subtypes": [
+      "Vampire",
+      "Rogue"
+    ],
+    "manaCost": "{3}{B}",
+    "colors": [
+      "B"
+    ],
+    "colorIdentity": [
+      "B"
+    ],
+    "power": 3,
+    "toughness": 4
+  },
+  "oracleText": "Partner with Laurine, the Diversion (When this creature enters, target player may put Laurine into their hand from their library, then shuffle.)\nLifelink\nWhenever a creature an opponent controls dies, you gain 1 life and create a Blood token. (It's an artifact with \"{1}, {T}, Discard a card, Sacrifice this token: Draw a card.\")",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "keyword",
+      "text": "Partner with Laurine, the Diversion",
+      "keyword": "partner with",
+      "name": "Laurine, the Diversion"
+    },
+    {
+      "kind": "keyword",
+      "text": "Lifelink",
+      "keyword": "lifelink"
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever a creature an opponent controls dies, you gain 1 life and create a Blood token. (It's an artifact with \"{1}, {T}, Discard a card, Sacrifice this token: Draw a card.\")",
+      "trigger": {
+        "on": "dies",
+        "who": "any",
+        "filter": {
+          "types": [
+            "Creature"
+          ],
+          "controller": "opponent"
+        }
+      },
+      "effects": [
+        {
+          "effect": "gainLife",
+          "amount": 1
+        },
+        {
+          "effect": "createToken",
+          "count": 1,
+          "token": {
+            "predefined": "Blood"
+          }
+        }
+      ]
+    }
+  ]
+}

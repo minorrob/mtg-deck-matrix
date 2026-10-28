@@ -1,0 +1,76 @@
+{
+  "schema": "CrankCardScript@1",
+  "identity": {
+    "name": "Key to the City",
+    "oracleId": "a242c9bf-dab6-4996-bb3a-b4356f9ed0c9",
+    "types": [
+      "Artifact"
+    ],
+    "subtypes": [],
+    "manaCost": "{2}",
+    "colors": [],
+    "colorIdentity": [],
+    "power": null,
+    "toughness": null
+  },
+  "oracleText": "{T}, Discard a card: Up to one target creature can't be blocked this turn.\nWhenever this artifact becomes untapped, you may pay {2}. If you do, draw a card.",
+  "source": "hand",
+  "abilities": [
+    {
+      "kind": "activated",
+      "text": "{T}, Discard a card: Up to one target creature can't be blocked this turn.",
+      "cost": [
+        {
+          "atom": "{T}"
+        },
+        {
+          "atom": "discard"
+        }
+      ],
+      "targets": [
+        {
+          "what": "permanent",
+          "types": [
+            "Creature"
+          ],
+          "count": {
+            "min": 0,
+            "max": 1
+          }
+        }
+      ],
+      "effects": [
+        {
+          "effect": "effectUntil",
+          "targets": {
+            "target": 0
+          },
+          "rule": "cant-be-blocked",
+          "until": "end-of-turn"
+        }
+      ]
+    },
+    {
+      "kind": "triggered",
+      "text": "Whenever this artifact becomes untapped, you may pay {2}. If you do, draw a card.",
+      "trigger": {
+        "on": "becomes untapped",
+        "who": "self"
+      },
+      "effects": [
+        {
+          "effect": "unlessPays",
+          "who": "you",
+          "mana": "{2}",
+          "ifPaid": true,
+          "effects": [
+            {
+              "effect": "draw",
+              "count": 1
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

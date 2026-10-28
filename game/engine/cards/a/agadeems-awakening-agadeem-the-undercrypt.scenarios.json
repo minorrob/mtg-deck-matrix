@@ -1,0 +1,424 @@
+{
+  "schema": "CrankCardScenarios@1",
+  "card": "Agadeem's Awakening // Agadeem, the Undercrypt",
+  "fixtures": {
+    "One Drop": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}",
+      "colors": [],
+      "power": 1,
+      "toughness": 1
+    },
+    "Two Drop": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{2}",
+      "colors": [],
+      "power": 1,
+      "toughness": 1
+    },
+    "Other Two Drop": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{1}{G}",
+      "colors": [],
+      "power": 1,
+      "toughness": 1
+    },
+    "Three Drop": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{3}",
+      "colors": [],
+      "power": 1,
+      "toughness": 1
+    },
+    "Five Drop": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "{5}",
+      "colors": [],
+      "power": 1,
+      "toughness": 1
+    },
+    "Zero Drop": {
+      "types": [
+        "Creature"
+      ],
+      "manaCost": "",
+      "colors": [],
+      "power": 1,
+      "toughness": 1
+    },
+    "Smoke Spell": {
+      "types": [
+        "Instant"
+      ],
+      "manaCost": "{B}",
+      "colors": [
+        "B"
+      ],
+      "spell": {
+        "id": "s",
+        "text": "x",
+        "targets": [],
+        "effects": []
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "X of 3: any number of creature cards with different mana values, 3 or less, return",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Agadeem's Awakening // Agadeem, the Undercrypt"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "One Drop",
+            "Two Drop",
+            "Three Drop",
+            "Five Drop",
+            "Zero Drop"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Agadeem's Awakening",
+          "x": 3,
+          "targets": [
+            [
+              {
+                "card": "One Drop"
+              },
+              {
+                "card": "Two Drop"
+              },
+              {
+                "card": "Three Drop"
+              },
+              {
+                "card": "Zero Drop"
+              }
+            ]
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "One Drop",
+            "Two Drop",
+            "Three Drop",
+            "Zero Drop"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Five Drop",
+            "Agadeem's Awakening"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Any number includes none",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Agadeem's Awakening // Agadeem, the Undercrypt"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "One Drop"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Agadeem's Awakening",
+          "x": 3,
+          "targets": [
+            []
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "One Drop",
+            "Agadeem's Awakening"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Cast with X of 1 it reaches only mana value 1 or less",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Agadeem's Awakening // Agadeem, the Undercrypt"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "One Drop",
+            "Two Drop",
+            "Zero Drop"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Swamp"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Agadeem's Awakening",
+          "x": 1,
+          "targets": "any"
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "options": [
+                  "One Drop",
+                  "Zero Drop"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "One Drop",
+            "Zero Drop"
+          ]
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Swamp",
+            "Swamp",
+            "Swamp",
+            "Wastes",
+            "One Drop",
+            "Zero Drop"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Two Drop",
+            "Agadeem's Awakening"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Its land side, played: pay 3 life and it enters untapped, tapping for {B}",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Agadeem's Awakening // Agadeem, the Undercrypt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Agadeem, the Undercrypt"
+        },
+        {
+          "answer": [
+            0
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "tapped": "Agadeem, the Undercrypt",
+              "is": false
+            },
+            {
+              "seat": 0,
+              "life": 37
+            }
+          ]
+        },
+        {
+          "tap": "Agadeem, the Undercrypt"
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "pool": {
+            "B": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "Not paying: it enters tapped, and no life is lost",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Agadeem's Awakening // Agadeem, the Undercrypt"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Agadeem, the Undercrypt"
+        },
+        {
+          "answer": [
+            1
+          ]
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "tapped": "Agadeem, the Undercrypt",
+          "is": true
+        },
+        {
+          "seat": 0,
+          "life": 40
+        }
+      ]
+    }
+  ]
+}
