@@ -198,6 +198,13 @@ rationalized into that hand-off. **Nothing here is merged; the hand-off is the d
   insiders only). **For the Play lane** (Requests row 14, the session on the lobby): read `data/ai-players/roster.json`
   (`CrankAiRoster@1`; only `available` levels are offered; the seat is `{kind: "ai", level, persona}`), label `llm` as "Veteran".
   Not started: the deck matrix (5.5), Normal tuning (PR 3), game logs (PR 7), the politics read.
+- **Landing, 2026-10-28, on Rob's word** (*"Include the following in your merge ... Orzhov deck card load"*, then *"Complete the push
+  to staging"*): PR #903 carries both pieces: the AI players work above **and** `claude/load-25-cards-deck-2daa2e` (Rob's Orzhov deck,
+  25 cards, 6,405 -> 6,430 definitions), each merged into the branch as a merge commit with `main` (9e5b612e). The generated engine
+  files, the roles table and the data inventory were regenerated after the merge; `check-cards` 6,430 definitions and 11,023
+  scenarios, 0 failed; `engine-deck-load-1027` 184, `engine-cards` 55, `engine-catalog` 41, `pilot-roles` 31. `engine-breaks-anchors`
+  holds at main's 45 stale anchors (three of this branch's own, in `breaks-pilot-picks.py`, were re-anchored on Hard's pilot).
+  The Actions `suites` job was pinned to `ubuntu-24.04` (latest became 26.04, which Playwright 1.56.0 cannot install a browser on).
 
 ## AI players: the plan for Easy, Normal, Hard, the Veteran agent, personas, the deck matrix, access groups and the game-log admin panel, 2026-10-26 (a Claude cloud session, for Rob; `claude/sharp-hawking-8lbwy9`, planning only)
 
