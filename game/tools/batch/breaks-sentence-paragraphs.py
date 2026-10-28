@@ -1,7 +1,7 @@
 # Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE.
 # A paragraph is one ability (CR 113.2c) in what the sentence library writes for the writer to finish: Gemstone Caverns'
 # "{T}: Add {C}." never written without the luck counter's "instead". python3 game/tools/batch/breaks.py <this file>
-SUITES = ['tests/engine-compile.mjs', 'tests/sentence-library.mjs']
+SUITES = ['tests/sentence-paragraphs.mjs']
 
 SENTENCES = 'game/engine/cards/sentences.mjs'
 

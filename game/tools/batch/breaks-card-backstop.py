@@ -5,7 +5,7 @@ Run from the repository root, with nothing else editing the worktree:
 
     python3 game/tools/batch/breaks.py game/tools/batch/breaks-card-backstop.py
 """
-SUITES = ['tests/engine-compile.mjs']
+SUITES = ['tests/sentence-paragraphs.mjs', 'tests/engine-compile.mjs']
 BREAKS = [
     ("the writer not told what is already written", 'game/engine/cards/compile.mjs',
      '  ...(assist ? {alreadyWritten: assist.known, writeOnly: assist.write.map((w) => w.text)} : {}),\n', ''),
