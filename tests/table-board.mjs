@@ -1269,6 +1269,10 @@ try {
   /* SHAPE, at both widths. */
   for (const [who, width] of [[rob, 1400], [maya, 1280]]) {
     await stageSettled(who.page);
+    /* The hand is fixed over the foot of the window and the stage scrolls under it when the board (at least 560px wide in Focus) is taller than the room above the
+       hand: so "under the board" is read at the end of the scroll, where the board has come up clear of the hand. */
+    await who.page.evaluate(() => {const h = document.getElementById("cm-board"); h.scrollTop = h.scrollHeight;});
+    await who.page.waitForTimeout(250);
     const g = await who.page.evaluate(() => {
       const strip = document.querySelector(".cm-stage-top").getBoundingClientRect();
       /* a card's own shape: its layout box (the hand's cards are fanned, turned, so their drawn outline is not 5:7) */
@@ -1284,12 +1288,13 @@ try {
         /* the hand's tray is the stage's whole width at the window's foot; its cards and label (the tray's own box reaches a little up behind them) lie under the board */
         docked: Math.min(...hand.map((c) => c.getBoundingClientRect().top), document.querySelector(".cm-stage-hand-label").getBoundingClientRect().top) >= board.bottom - 0.5 && tray.bottom <= innerHeight + 1 && tray.left === region.left && tray.width === region.width, clear: lands.bottom <= tray.top + 1};
     });
+    await who.page.evaluate(() => {document.getElementById("cm-board").scrollTop = 0;});
     const focusRows=await who.page.evaluate(tableFacts);
     tableGeometryProof.push({...focusRows,proof:'Focus shape'});if(SHOTS)writeFileSync(path.join(SHOTS,'table-row-geometry.json'),JSON.stringify(tableGeometryProof,null,2));
     ok(g.oneRow&&g.strip>=58&&g.sideways===0, `at ${width} the HUD is one aligned measured row (${g.strip}px) and nothing scrolls sideways`);
     ok(focusRows.valid&&Math.abs(g.boardRatio - 16 / 9) < 0.02, `at ${width} Focus keeps the board looked at 16:9 (${g.boardRatio}), with its cards 5:7: ${JSON.stringify(focusRows.boards.map((x) => [Math.round(x.width), Math.round(x.height)]))}`);
     ok(focusRows.largest, `at ${width} the board looked at is the largest on the stage, the other seats behind it smaller (${Math.round(focusRows.boards[0].width)}px against ${JSON.stringify(focusRows.rears)})`);
-    ok(g.docked && g.clear, `at ${width} the hand's tray is the stage's whole width along the window's foot, under the board, and the Lands stay clear of it`);
+    ok(g.docked && g.clear, `at ${width} the hand's tray is the stage's whole width along the window's foot and, the stage scrolled to its end, lies under the board with the Lands clear of it`);
     ok(g.ratios.length && g.ratios.every((r) => Math.abs(r - 5 / 7) < 0.01), `at ${width} every card is 5:7 (${[...new Set(g.ratios)].join(", ")})`);
     ok(g.handWidth > g.matWidth || !g.matWidth, `at ${width} the hand's cards are larger than the mat's (${g.handWidth} > ${g.matWidth})`);
   }

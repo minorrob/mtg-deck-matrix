@@ -1775,3 +1775,14 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 .cm-board[data-shell=shared]:is([data-view=table],[data-view=focus])>.cm-stage-top{position:sticky;top:0}
 .cm-board[data-shell=shared]:is([data-view=table],[data-view=focus])>:is(.cm-stage-rail,.cm-stage-side,.cm-stage-hand),.cm-board[data-shell=shared]:is([data-view=table],[data-view=focus]) .cm-stage-handle{position:fixed}
 .cm-board[data-shell=shared]:is([data-view=table],[data-view=focus]) .cm-stage-region :is(.cm-stage-caption,.cm-stage-actions){position:fixed;top:calc(var(--hud-top,58px) + 12px)}
+/* THE QUICK ACTION TAB (Rob, 2026-10-28): the undo drawer under a card, holding Tap, Cast, Play and Undo, each once; the same in Table, Focus and 3D. */
+#matrix-v2 .cm-board .cm-quick-drawer{display:flex;align-items:center;justify-content:center;gap:6px;padding:2px 4px}
+#matrix-v2 .cm-board .cm-quick-do{flex:none;min-height:0;height:auto;padding:2px 5px;border:1px solid color-mix(in srgb,var(--mat-ink) 40%,transparent);border-radius:4px;background:rgb(0 0 0 / .5);color:var(--mat-ink);font:700 calc(13px*var(--hud-scale,1))/1.15 var(--font-body);cursor:pointer;white-space:nowrap}
+#matrix-v2 .cm-board .cm-quick-do:hover,#matrix-v2 .cm-board .cm-quick-do:focus-visible{background:var(--color-aether,#4aa8ff);color:#06161a}
+#matrix-v2 .cm-board .cm-quick-do:disabled{opacity:.5;cursor:default}
+/* A BOARD'S NAME is plain text above it (Rob, 2026-10-28): no container, no fill; the turn's seat in the accent color. A double click on a board focuses it. */
+.cm-stage-boardname{position:absolute;left:2px;bottom:100%;margin-bottom:2px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 calc(16px*var(--hud-scale,1))/1.2 var(--font-body);color:#eef4ea;text-shadow:0 1px 3px #000d;cursor:default}
+.cm-stage-boardname.is-turn{color:var(--color-aether,#8fd0ff)}
+.cm-stage-rear.cm-flat-rear{display:block}
+.cm-flat-rear>.cm-stage-mini{position:absolute;inset:0}
+.cm-stage-region.is-peeking{cursor:zoom-in}

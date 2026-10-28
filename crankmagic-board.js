@@ -774,9 +774,22 @@ globalThis.CrankBoard = Object.seal({
   function bindOffer(data) {const o=currentOffer(data);if(!o)return false;offeredPending={match:view.matchId,revision:view.revision};send({indices:[o.index]});return true;}
   const undoOffer = id => view?.status==="finished" ? null : view?.decision?.options.find(o=>o.cardId===id && o.act==='undo-play') || view?.decision?.options.find(o=>o.cardId===id && o.act==='undo-land');
   const undoButton = o => `<button type="button" class="cm-undo-drawer" data-action="board-offered-undo" ${offerAttrs(o)}${sending?' disabled':''} aria-label="Undo this play">↶ Undo</button>`;
+  /* THE QUICK ACTION TAB (Rob, 2026-10-28: "the little dropdown under each card as a quick action tab for casting, tapping, and undoing"): under a card of yours on the
+     mat, on hover or focus, one small drawer: Tap, Cast, Play and Undo, each once. A kind the card offers one way is one press (the card menu's own row, which asks for
+     a target in Actions where it needs one); a kind it offers several ways opens the card menu to choose. The same drawer in Table, Focus and 3D. */
+  const QUICK = {"activate-mana": "Tap", cast: "Cast", "play-land": "Play"};
+  function quickTab(c) {
+    const by = new Map();
+    for (const o of optionsFor(c.cardId)) if (QUICK[o.act] && o.cardId === c.cardId) by.set(o.act, [...(by.get(o.act) || []), o]);
+    return [...by].map(([act, list]) => list.length === 1
+      ? `<button type="button" class="cm-quick-do" data-action="board-card-menu-do" ${offerAttrs(list[0])}${sending ? " disabled" : ""} aria-label="${e(sayFor(list[0]))}" title="${e(sayFor(list[0]))}">${QUICK[act]}</button>`
+      : `<button type="button" class="cm-quick-do" data-action="board-card-menu-open" data-card="${c.cardId}"${sending ? " disabled" : ""} aria-label="${e(`${QUICK[act]} ${c.name}: ${list.length} ways`)}" title="${e(`${QUICK[act]}: ${list.length} ways`)}">${QUICK[act]} ▾</button>`).join("");
+  }
   function cardUndo(c,html,where) {
-    const undo=where==='mat'?undoOffer(c.cardId):null;
-    return undo?`<span class="cm-card-slot${c.tapped?' is-tapped':''}" data-card-slot="${c.cardId}" data-wf="W14-undo">${html}${undoButton(undo)}</span>`:html;
+    const mat=where==='mat', undo=mat?undoOffer(c.cardId):null, quick=mat&&c.name&&!foreignControl(c)?quickTab(c):"";
+    if(!quick)return undo?`<span class="cm-card-slot${c.tapped?' is-tapped':''}" data-card-slot="${c.cardId}" data-wf="W14-undo">${html}${undoButton(undo)}</span>`:html;
+    const back=undo?`<button type="button" class="cm-quick-do cm-quick-undo" data-action="board-offered-undo" ${offerAttrs(undo)}${sending?' disabled':''} aria-label="Undo this play">↶ Undo</button>`:"";
+    return `<span class="cm-card-slot${c.tapped?' is-tapped':''}" data-card-slot="${c.cardId}" data-wf="W14-undo">${html}<span class="cm-undo-drawer cm-quick-drawer" role="group" aria-label="${e(c.name)}: quick actions">${quick}${back}</span></span>`;
   }
   /* TARGETED (Rob, 2026-10-26: "I should be able to see which card was targeted of mine (a red highlight outline around the
      card could work)"): a card of yours that another player's spell or ability on the stack targets is outlined in red
@@ -1273,11 +1286,13 @@ globalThis.CrankBoard = Object.seal({
   /* TABLE'S BOARDS (Rob, 2026-10-28: "revisit my original instruction on the Table view, where each mat had a specific aspect ratio"): a board for every seat, each
      the same 16:9 -- two across and two down, side by side for two seats, two over one for three -- the largest the room above the hand allows (CrankStage.gridGeometry),
      yours with no card of you and the others' with theirs and a Focus; nothing at the center. */
+  /* A board's name, plain text above it: no container, no fill (Rob, 2026-10-28); bold in the turn's color for whose turn it is. */
+  const boardName = (p) => `<span class="cm-stage-boardname${view.state.turnPlayerId === p.playerId ? " is-turn" : ""}">${e(seatLabel(p))}</span>`;
   function gridSlots() {
     const ps = players();
     const slots = ps.map((p) => {
       const area = areaOf(p.playerId), you = isYou(p.playerId);
-      return `<div class="cm-board-slot cm-stage-slot${you ? " is-you" : ""}" data-area="${area}" data-seat="${p.playerId}" style="--seat:${seatColor(p.playerId)}">${mat(p, {size: "table", head: you ? "none" : "top", focusButton: !you})}</div>`;
+      return `<div class="cm-board-slot cm-stage-slot${you ? " is-you" : ""}" data-area="${area}" data-seat="${p.playerId}" style="--seat:${seatColor(p.playerId)}">${boardName(p)}${mat(p, {size: "table", head: "none"})}</div>`;
     }).sort((x, y) => x.match(/data-area="(\w)"/)[1].localeCompare(y.match(/data-area="(\w)"/)[1])).join("");
     const active = view.state.turnPlayerId;
     return `<div class="cm-board-table cm-stage-flat" data-seats="${ps.length}">${active === null ? "" : fan(active)}${slots}</div>`;
@@ -1286,7 +1301,7 @@ globalThis.CrankBoard = Object.seal({
      piles card-sized at the right with the History between them. */
   function focusSlot(big) {
     const you = isYou(big.playerId);
-    return `<div class="cm-stage-slot cm-stage-big${you ? " is-you" : ""}" data-seat="${big.playerId}" style="--seat:${seatColor(big.playerId)}">${mat(big, {size: "focus", head: you ? "none" : "top"})}</div>`;
+    return `<div class="cm-stage-slot cm-stage-big${you ? " is-you" : ""}" data-seat="${big.playerId}" style="--seat:${seatColor(big.playerId)}">${boardName(big)}${mat(big, {size: "focus", head: "none"})}</div>`;
   }
 
   /* The latest wireframe: three seats across the back, the viewed seat's upright hand at the foot.
@@ -1308,7 +1323,10 @@ globalThis.CrankBoard = Object.seal({
       return `<span class="cm-stage-life${now ? " is-turn" : ""}"${now ? ` aria-current="true" title="${isYou(p.playerId) ? "Your turn" : `${e(p.name)}'s turn`}"` : ""}>${now ? `<span class="cm-stage-life-turn" aria-hidden="true">${TURN_ICON}</span>` : ""}${e(seatLabel(p))} · <b>${p.health.life}</b>${view.state.priorityPlayerId === p.playerId ? `<i class="cm-stage-life-prio" role="img" aria-label="${isYou(p.playerId) ? "You hold" : `${e(p.name)} holds`} priority" title="${isYou(p.playerId) ? "Priority is with you" : `Priority is with ${e(p.name)}`}"></i>` : `<i class="cm-stage-life-prio is-off" aria-hidden="true"></i>`}${now ? `<span class="cm-sr-only">, ${isYou(p.playerId) ? "your" : "their"} turn</span>` : ""}</span>`;}).join("");
   }
   function stageView({corner, big, others}) {
-    const rear = others.map((p) => `<section class="cm-stage-rear" data-seat="${p.playerId}" style="--seat:${seatColor(p.playerId)}">
+    /* Focus's others are boards, each with only its name above it (Rob, 2026-10-28); 3D's keep their seat label. A double click on one focuses it. */
+    const rear = others.map((p) => mode === "focus"
+      ? `<section class="cm-stage-rear cm-flat-rear" data-seat="${p.playerId}" style="--seat:${seatColor(p.playerId)}">${boardName(p)}<div class="cm-stage-mini">${mat(p, {size: "opp", head: "none"})}</div></section>`
+      : `<section class="cm-stage-rear" data-seat="${p.playerId}" style="--seat:${seatColor(p.playerId)}">
       <button type="button" class="cm-stage-seat-label" data-action="board-focus" data-seat="${p.playerId}" aria-label="View ${e(p.name)}'s board, ${p.health.life} life">${seatHeader(p,{interactive:false})}</button>
       <div class="cm-stage-mini">${mat(p, {size: "opp", head: "none"})}</div></section>`).join("");
     return `${boardHeader()}
@@ -1583,7 +1601,7 @@ globalThis.CrankBoard = Object.seal({
     if (flat) {
       opts.background = ""; opts.table = "";
       /* The boards meet with only a hair between them (no dial at the center now); they start below the action pop-up, and the turn box top left is not drawn over a board's name. */
-      opts.gapX = 8; opts.gapY = 8; opts.gapWide = 0; opts.gapMid = 0;
+      opts.gapX = 8; opts.gapY = 8;
       const caption = host.querySelector(":scope .cm-stage-caption"), at = region.getBoundingClientRect();
       /* Focus's boards start under the action pop-up (the 3D view's others are far enough back to lie under it); Table's have it in the gap between them. */
       const barEl = host.querySelector(":scope .cm-stage-actions");
@@ -1591,7 +1609,9 @@ globalThis.CrankBoard = Object.seal({
       opts.top = barEl ? Math.ceil(barEl.getBoundingClientRect().bottom - at.top - scrolled + 6) : Math.round(76 * hudScale() / 100);
       opts.inL = gutter.left; opts.inR = gutter.right;
       opts.padL = caption ? Math.ceil(caption.getBoundingClientRect().width + 54) : 0;
-      opts.stripMin = Math.ceil(Math.max(0, ...[...region.querySelectorAll(".cm-stage-rear")].map((el) => {const label = el.querySelector(".cm-stage-seat-label"); if (!label) return 0; const top = label.getBoundingClientRect().top; return Math.max(label.offsetHeight, ...[...label.children].map((c) => c.getBoundingClientRect().bottom - top));})) + 6);   /* the seat label's own height, not the miniature under it */
+      const nameEl = region.querySelector(".cm-stage-boardname");
+      opts.labelH = Math.ceil((nameEl?.offsetHeight || Math.round(22 * hudScale() / 100)) + 4);
+      opts.youArea = view.spectator || !isYou(view.seat) ? "" : areaOf(view.seat); opts.youScale = 1.12;
       opts.capB = caption ? Math.ceil(caption.getBoundingClientRect().bottom - at.top - scrolled + 6) : 0;
     }
     CrankStage.mount(region, opts); stageGeom = CrankStage.layout(region.getBoundingClientRect(), opts) || null;
@@ -3456,6 +3476,7 @@ globalThis.CrankBoard = Object.seal({
     firstCardClick=origin;
     openCardMenu(id,el,el,String(el.dataset.landMembers || '').split(',').filter(Boolean).map(Number));
   };
+  actions["board-card-menu-open"] = el => {const id = Number(el.dataset.card), at = el.closest(".cm-card-slot")?.querySelector(".cm-bcard") || el; openCardMenu(id, at);};
   actions["board-offered-undo"] = el => {
     if(!el?.dataset || !['undo-play','undo-land'].includes(el.dataset.act))return;
     bindOffer(el.dataset);
@@ -3464,7 +3485,7 @@ globalThis.CrankBoard = Object.seal({
   document.addEventListener('dblclick',event=>{
     if(cardDoubleHandled){cardDoubleHandled=false;return;}
     if(event.defaultPrevented || event.ctrlKey || event.metaKey || event.target.closest?.('.cm-bcard,button,a,input,select,textarea,[role=separator],#cm-card-menu'))return;
-    const mat=event.target.closest?.('#cm-board .cm-mat[data-seat]');if(!mat || !view)return;
+    const mat=event.target.closest?.('#cm-board .cm-mat[data-seat],#cm-board .cm-stage-slot[data-seat],#cm-board .cm-flat-rear[data-seat]');if(!mat || !view)return;
     const seat=Number(mat.dataset.seat);focus=seat;
     if(isYou(seat) && mode==='focus')focus=view.seat;
     if(mode==='table' && !phone())setMode('focus');else draw();
@@ -3578,7 +3599,15 @@ globalThis.CrankBoard = Object.seal({
   actions["board-target-page"] = el => {targetPage=Math.max(0,targetPage+Number(el.dataset.by));draw();};
   actions["board-reset"] = () => {targetReviewing=false;picked = []; draftRevision = null; draw();};
   actions["board-action-all"] = () => {actionCard = null; picked = []; draftRevision = null; draw();};
-  actions["board-focus"] = (el) => {focus = Number(el.dataset.seat); if (mode === "table" && !phone()) setMode("focus"); else draw();};
+  actions["board-focus"] = (el) => {
+    const seat = Number(el.dataset.seat);
+    /* A board in the Boards module focuses it; pressed again it gives the focus back (Rob, 2026-10-28): Focus returns to Table, 3D to your own board. */
+    if (el.closest(".cm-board-tile") && focus === seat && !phone()) {
+      if (mode === "focus") return setMode("table");
+      if (mode === "full" && seat !== view.seat) {focus = view.seat; return draw();}
+    }
+    focus = seat; if (mode === "table" && !phone()) setMode("focus"); else draw();
+  };
   actions["board-rotate"] = (el) => {
     const n = players().length;
     if (!n) return;
@@ -3880,6 +3909,51 @@ globalThis.CrankBoard = Object.seal({
     if (slider) {slider.value = Math.round(camera.zoom); slider.parentElement.querySelector("output").textContent = `${Math.round(camera.zoom)}%`;}
     clearTimeout(zoomKeep); zoomKeep = setTimeout(() => keep("cm-board-zoom-v2", String(Math.round(camera.zoom))), 250);
   }, {passive: false});
+  /* THE PEEK (Rob, 2026-10-28, Table and Focus's own of 3D's "right-click and hold to look down over a section"): holding the right button on a board moves the view over it,
+     then zooms in; letting go returns the view to where it was. On two planes (across and up the table, then the zoom), the camera's tilt having no place on a flat table. */
+  let peeking = null;
+  const ease = (t) => 1 - Math.pow(1 - t, 3);
+  function tween(from, to, ms, apply, done) {
+    const t0 = performance.now(), quick = globalThis.CrankMotion?.reduced?.() || ms <= 0;
+    const step = (now) => {
+      if (!peeking) return;
+      const t = quick ? 1 : Math.min(1, (now - t0) / ms), k = ease(t);
+      apply(Object.fromEntries(Object.keys(from).map((key) => [key, from[key] + (to[key] - from[key]) * k])));
+      if (t < 1) peeking.frame = requestAnimationFrame(step); else done?.();
+    };
+    peeking.frame = requestAnimationFrame(step);
+  }
+  const setView = (host, v) => {camera.zoom = v.zoom; camera.pan = {x: v.x, y: v.y}; fitStage(host);};
+  document.addEventListener("pointerdown", (event) => {
+    if (event.button !== 2 || peeking || !view || !hud() || stageEnabled() || !globalThis.CrankStage || !stageGeom?.center) return;
+    if (event.target.closest?.(".cm-bcard, button, a, input, select, textarea, [role=separator], #cm-card-menu, .cm-stage-camera, .cm-stage-actions")) return;
+    const region = event.target.closest?.("#cm-board .cm-stage-region"), board = event.target.closest?.(".cm-stage-slot, .cm-stage-rear");
+    if (!region || !board) return;
+    const host = region.closest("#cm-board"), box = board.getBoundingClientRect(), mid = CrankStage.pick(box.left + box.width / 2, box.top + box.height / 2);
+    if (!mid) return;
+    event.preventDefault();
+    const home = {zoom: camera.zoom, x: camera.pan.x, y: camera.pan.y}, [cx, cy] = stageGeom.center;
+    /* the board's own size on the plane, and the room the drawers and the hand leave it */
+    const bw = box.width / (home.zoom / 100), bh = box.height / (home.zoom / 100), rr = region.getBoundingClientRect();
+    const roomW = rr.width - gutter.left - gutter.right, roomH = rr.height - (host.querySelector(":scope > .cm-stage-hand")?.offsetHeight || 0);
+    const target = {zoom: Math.min(CAMERA_MAX, Math.max(home.zoom * 1.6, 100 * Math.min(roomW * .96 / bw, roomH * .96 / bh))), x: 0, y: mid.y - cy};
+    target.x = mid.x - cx - ((gutter.left - gutter.right) / 2) / (target.zoom / 100);   /* centered between the drawers' gutters, not on the window */
+    peeking = {home, host, frame: 0};
+    region.classList.add("is-peeking");
+    /* over first, then in */
+    tween({x: home.x, y: home.y}, {x: target.x, y: target.y}, 180, (v) => setView(host, {zoom: home.zoom, ...v}), () => tween({zoom: home.zoom}, {zoom: target.zoom}, 220, (v) => setView(host, {zoom: v.zoom, x: target.x, y: target.y})));
+  }, true);
+  function endPeek() {
+    if (!peeking) return;
+    const {home, host} = peeking; cancelAnimationFrame(peeking.frame);
+    const now = {zoom: camera.zoom, x: camera.pan.x, y: camera.pan.y};
+    document.querySelector("#cm-board .cm-stage-region")?.classList.remove("is-peeking");
+    const gone = peeking; peeking = {...gone, frame: 0};
+    tween(now, home, 200, (v) => setView(host, v), () => {peeking = null;});
+  }
+  for (const type of ["pointerup", "pointercancel"]) document.addEventListener(type, (event) => {if (event.button === 2 || type === "pointercancel") endPeek();}, true);
+  addEventListener("blur", endPeek);
+  document.addEventListener("contextmenu", (event) => {if (peeking) event.preventDefault();}, true);
   /* A mat dragged with the left button moves the view across the table: the place taken hold of stays under the pointer.
      Empty table still tilts (above); a card, a button or a row that scrolls keeps its own drag. */
   document.addEventListener("pointerdown", (event) => {

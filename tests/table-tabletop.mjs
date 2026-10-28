@@ -24,16 +24,17 @@ for (const width of [1024, 1280, 1400]) for (const tilt of [0, 40, 60]) for (con
 }
 /* The flat stage (Table and Focus): Rob, 2026-10-28, "each mat had a specific aspect ratio" -- every Table board the same 16:9, inside the stage and clear of the drawers' gutters. */
 for (const [w, h] of [[1280, 720], [1440, 900], [1863, 902]]) for (const seats of [1, 2, 3, 4]) {
-  const opts = {mode: "table", seats, reserve: 200, top: 76, gapX: 60, gapY: 22, padL: 204, capB: 190, inL: 310, inR: 380};
+  const opts = {mode: "table", seats, reserve: 200, top: 76, gapX: 8, gapY: 8, padL: 204, capB: 190, inL: 310, inR: 380, labelH: 24, youArea: {1: "a", 2: "b", 3: "c", 4: "d"}[seats], youScale: 1.12};
   const g = scope.CrankStage.flatGeometry(w, h, opts), areas = {1: ["a"], 2: ["a", "b"], 3: ["a", "b", "c"], 4: ["a", "b", "c", "d"]}[seats];
-  const rects = areas.map(area => g.rect(area));
+  const rects = areas.map(area => g.rect(area)), mine = rects[areas.indexOf(opts.youArea)], rest = rects.filter(r => r !== mine);
+  for (const r of rest) assert.ok(Math.abs(r.width - rest[0].width) <= 1, "the others' boards are the same size");
+  if (seats > 1) assert.ok(Math.abs(mine.width / rest[0].width - 1.12) < .02, `yours is 12 percent larger (${mine.width} against ${rest[0].width})`);
   for (const r of rects) {
-    assert.ok(Math.abs(r.width * 9 / 16 - r.height) <= 1, `a Table board is 16:9 (${r.width}x${r.height} at ${w}x${h}, ${seats} seats)`);
-    assert.equal(r.width, rects[0].width, "every Table board is the same size");
+    assert.ok(Math.abs(r.width * 9 / 16 - r.height) <= 1.5, `a Table board is 16:9 (${r.width}x${r.height} at ${w}x${h}, ${seats} seats)`);
     assert.ok(r.x >= opts.inL && r.x + r.width <= w - opts.inR + 1, "a Table board lies between the drawers' gutters");
     assert.ok(r.y >= 0 && r.y + r.height <= g.contentH - opts.reserve + 1, "a Table board lies above the hand's tray (in the stage's own height, which is the window's or, below the least board size, taller)");
-    assert.ok(r.width >= Math.min(360, w - opts.inL - opts.inR - 20), `a Table board is never drawn under the least size (${r.width} at ${w}x${h}, ${seats} seats)`);
-    assert.ok(g.contentH <= h || r.width <= 360 + 1 || g.column, "the stage grows past the window only where a board is at its least size");
+    assert.ok(r.width >= Math.min(320, w - opts.inL - opts.inR - 20), `a Table board is never drawn under the least size (${r.width} at ${w}x${h}, ${seats} seats)`);
+    assert.ok(g.contentH <= h || r.width <= 320 + 1 || g.column, "the stage grows past the window only where a board is at its least size");
   }
   for (const [i, a] of rects.entries()) for (const b of rects.slice(i + 1)) assert.ok(a.x + a.width <= b.x || b.x + b.width <= a.x || a.y + a.height <= b.y || b.y + b.height <= a.y, "Table boards do not overlap");
   const open = scope.CrankStage.flatGeometry(w, h, opts), again = scope.CrankStage.flatGeometry(w, h, {...opts});

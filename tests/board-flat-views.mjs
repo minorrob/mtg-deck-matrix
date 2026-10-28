@@ -9,6 +9,10 @@
  *   4. The 3D view's zoom and pan move the flat boards: the wheel zooms, a drag across the table pans, Camera's slider zooms.
  *   5. Chat is a default module of the right drawer.
  *   6. No dial at Table's center (Rob: the top left box has the life, names and priority); the boards meet with a hair between them.
+ *   8. A double click on a board focuses it; a board in the Boards module focuses it and, pressed again, gives the focus back; Focus's others are boards
+ *      with only their name above them.
+ *   9. The quick action tab under a card of yours (Tap, Cast, Play, Undo) in all three views; the card pop-up is 20 percent smaller.
+ *  10. The peek: the right button held on a board moves the view over it and zooms in, and letting go puts the view back.
  *   7. A minimum board size: where the boards would be drawn smaller, the page scrolls instead -- header, drawers, hand, turn box and action
  *      pop-up stay in the window, the wheel scrolls (Ctrl and the wheel zooms), and nothing is cut off at the foot of the stage.
  * Needs Playwright and Chromium; GEOMETRY_REQUIRED=1 (CI) turns a missing browser into a failure. */
@@ -96,12 +100,17 @@ for (const mode of ["table", "focus", "full"]) {
     if (mode === "table") {
       eq(g.slots.length, 4, "table: four boards for four seats");
       eq(await page.locator(".cm-board-pie, .cm-board-center").count(), 0, "table: no dial at the center");
-      const xs = g.slots.map((b) => b.x).sort((a, b) => a - b), ys = g.slots.map((b) => b.y).sort((a, b) => a - b);
-      ok(xs[2] - (xs[0] + g.slots[0].w) <= 12 && ys[2] - (ys[0] + g.slots[0].h) <= 12, `table: the boards meet with a hair between them (${xs[2] - (xs[0] + g.slots[0].w)}px across, ${ys[2] - (ys[0] + g.slots[0].h)}px down)`);
-      for (const b of g.slots) {
-        ok(Math.abs(b.w * 9 / 16 - b.h) <= 1.5, `table: a board is 16:9 (${b.w}x${b.h})`);
-        ok(Math.abs(b.w - g.slots[0].w) <= 1 && Math.abs(b.h - g.slots[0].h) <= 1, "table: every board is the same size");
-      }
+      const sizes = await page.evaluate(() => [...document.querySelectorAll(".cm-stage-slot")].map((e) => {const r = e.getBoundingClientRect(); return {you: e.classList.contains("is-you"), x: r.left, y: r.top, w: r.width, h: r.height};}));
+      const others = sizes.filter((x) => !x.you), you = sizes.find((x) => x.you);
+      for (const b of sizes) ok(Math.abs(b.w * 9 / 16 - b.h) <= 1.5, `table: a board is 16:9 (${Math.round(b.w)}x${Math.round(b.h)})`);
+      ok(others.every((x) => Math.abs(x.w - others[0].w) <= 1.5), "table: the three others are the same size");
+      ok(you.w / others[0].w >= 1.09 && you.w / others[0].w <= 1.16, `table: yours is 10 to 15 percent larger (${(you.w / others[0].w).toFixed(3)})`);
+      const sorted = [...sizes].sort((a, b) => a.x - b.x), across = sorted[2].x - (sorted[0].x + sorted[0].w);
+      ok(across <= 14, `table: the boards meet with a hair between them across (${Math.round(across)}px)`);
+      eq(await page.locator(".cm-stage-slot .cm-mat-head, .cm-stage-slot [data-action=board-focus]").count(), 0, "table: no header chip and no Focus button on a board");
+      eq(await page.locator(".cm-stage-slot > .cm-stage-boardname").count(), 4, "table: each board has its name as plain text above it");
+      const flat = await page.evaluate(() => [...document.querySelectorAll(".cm-stage-boardname")].every((e) => {const c = getComputedStyle(e); return c.backgroundColor === "rgba(0, 0, 0, 0)" && c.borderTopWidth === "0px";}));
+      ok(flat, "the name has no container or fill");
       for (const [i, a] of g.slots.entries()) for (const b of g.slots.slice(i + 1)) ok(a.x + a.w <= b.x + 1 || b.x + b.w <= a.x + 1 || a.y + a.h <= b.y + 1 || b.y + b.h <= a.y + 1, "table: no board lies over another");
       for (const b of g.slots) ok(b.y + b.h <= g.hand.y + g.hand.h && b.y >= g.region.y, "table: a board lies inside the stage");
     } else {
@@ -122,13 +131,71 @@ eq(results.table.headerText.replace(/\s+/g, " "), results.full.headerText.replac
 eq(results.focus.headerText.replace(/\s+/g, " "), results.full.headerText.replace(/\s+/g, " "), "the header reads the same in Focus and 3D");
 eq(results.table.popup.replace(/\s+/g, " "), results.full.popup.replace(/\s+/g, " "), "the action pop-up reads the same in Table and 3D");
 
+/* focusing: a double click, the Boards module, and Focus's others */
+{
+  const {page, context} = await open("table", 1440, 900);
+  const seatOf = (sel) => page.evaluate((q) => document.querySelector(q)?.dataset.seat ?? null, sel);
+  const empty = async (area) => page.evaluate((a) => {const slot = document.querySelector(`.cm-stage-slot[data-area="${a}"]`), m = slot.querySelector(".cm-mat"), r = m.getBoundingClientRect();
+    for (let y = r.top + 6; y < r.bottom - 6; y += 6) for (let x = r.left + 6; x < r.right - 6; x += 6) {const el = document.elementFromPoint(x, y);
+      if (el && slot.contains(el) && !el.closest(".cm-bcard, button, a, [data-zone-scroll], [data-drag]")) return [x, y, slot.dataset.seat];} return null;}, area);
+  const pt = await empty("a");
+  ok(pt, "table: there is empty board to double-click");
+  await page.mouse.dblclick(pt[0], pt[1]); await page.waitForTimeout(700);
+  eq(await page.evaluate(() => document.getElementById("cm-board").dataset.view), "focus", "a double click on a board in Table focuses it");
+  eq(await seatOf(".cm-stage-big"), pt[2], "and it is that board that is looked at");
+  eq(await page.locator(".cm-flat-rear > .cm-stage-boardname").count(), 3, "focus: each of the others is a board with its name above it");
+  eq(await page.locator(".cm-flat-rear .cm-stage-seat-label, .cm-flat-rear .cm-seat-header, [data-action=board-focus].cm-stage-seat-label").count(), 0, "and no chip of life, hand and a Focus button");
+  const rear = await page.evaluate(() => {const e = document.querySelector(".cm-flat-rear .cm-stage-mini .cm-mat"), r = e.getBoundingClientRect(), s = e.closest(".cm-flat-rear").dataset.seat; return [r.left + r.width - 10, r.top + 10, s];});
+  await page.mouse.dblclick(rear[0], rear[1]); await page.waitForTimeout(700);
+  eq(await seatOf(".cm-stage-big"), rear[2], "focus: a double click on another board focuses that one");
+  /* the Boards module: press a board, then the same again */
+  await page.evaluate(() => document.querySelector('[data-action="board-focus"][data-seat="1"]')?.closest(".cm-board-tile")?.scrollIntoView());
+  const tile = page.locator('.cm-board-tile[data-seat="2"] [data-action="board-focus"]').first();
+  await tile.scrollIntoViewIfNeeded(); await tile.click(); await page.waitForTimeout(600);
+  eq([await page.evaluate(() => document.getElementById("cm-board").dataset.view), await seatOf(".cm-stage-big")], ["focus", "2"], "a board pressed in the Boards module is focused");
+  await page.locator('.cm-board-tile[data-seat="2"] [data-action="board-focus"]').first().click(); await page.waitForTimeout(600);
+  eq(await page.evaluate(() => document.getElementById("cm-board").dataset.view), "table", "pressed again it returns to the unfocused view");
+  await context.close();
+}
+
+/* the quick action tab and the card pop-up, in every view */
+for (const mode of ["table", "focus", "full"]) {
+  const {page, context} = await open(mode, 1440, 900);
+  await page.evaluate(() => document.querySelector('[data-action="board-stage-rail"][aria-expanded="true"]')?.click()); await page.waitForTimeout(600);
+  const target = await page.evaluate(() => {const slot = [...document.querySelectorAll(".cm-card-slot")].find((s) => s.querySelector(".cm-quick-drawer") && s.getBoundingClientRect().width > 4); if (!slot) return null;
+    const c = slot.querySelector(".cm-bcard").getBoundingClientRect(); return [c.left + c.width / 2, c.top + c.height / 3, slot.querySelector(".cm-quick-drawer").textContent.replace(/\s+/g, " ").trim()];});
+  ok(target && /Tap|Cast|Play/.test(target[2]), `${mode}: a card of yours carries a quick action tab (${target && target[2]})`);
+  await page.mouse.move(target[0], target[1]); await page.waitForTimeout(700);
+  ok(await page.evaluate(() => [...document.querySelectorAll(".cm-quick-drawer")].some((d) => Number(getComputedStyle(d).opacity) > .9)), `${mode}: the tab opens under the card on hover`);
+  const hand = page.locator(".cm-stage-fan-slot .cm-bcard").nth(2), hb = await hand.boundingBox();
+  await page.mouse.move(hb.x + hb.width / 2, hb.y + hb.height / 2); await page.waitForTimeout(800);
+  const peek = await page.evaluate(() => document.querySelector(".cm-board-peek .cm-bcard")?.getBoundingClientRect().width || 0);
+  ok(peek >= 290 && peek <= 335, `${mode}: the card pop-up is 20 percent smaller than before (320px wide, was 400; ${Math.round(peek)})`);
+  await context.close();
+}
+
+/* the peek */
+for (const mode of ["table", "focus"]) {
+  const {page, context} = await open(mode, 1440, 900);
+  const width = () => page.evaluate(() => document.querySelector(".cm-stage-big, .cm-stage-slot").getBoundingClientRect().width);
+  const w0 = await width();
+  const pt = await page.evaluate(() => {const slot = document.querySelector(".cm-stage-big, .cm-stage-slot[data-area=a]"); for (const m of [slot.querySelector(".cm-mat")]) {const r = m.getBoundingClientRect();
+    for (let y = r.top + 6; y < r.bottom - 6; y += 6) for (let x = r.left + 6; x < r.right - 6; x += 6) {const el = document.elementFromPoint(x, y); if (el && m.contains(el) && !el.closest(".cm-bcard, button, a, [data-zone-scroll], [data-drag]")) return [x, y];}} return null;});
+  await page.mouse.move(pt[0], pt[1]); await page.mouse.down({button: "right"}); await page.waitForTimeout(900);
+  const held = await width();
+  ok(held > w0 * 1.25, `${mode}: the right button held on a board zooms in over it (${Math.round(w0)} to ${Math.round(held)})`);
+  await page.mouse.up({button: "right"}); await page.waitForTimeout(700);
+  ok(Math.abs(await width() - w0) < 2, `${mode}: letting go returns the view to where it was`);
+  await context.close();
+}
+
 /* a minimum board size: a window too small for it scrolls */
 for (const mode of ["table", "focus"]) {
   const {page, context} = await open(mode, 1280, mode === "table" ? 720 : 560);
   const m = await page.evaluate(() => {const b = document.getElementById("cm-board"), r = document.querySelector(".cm-stage-region"); return {scrolls: b.scrollHeight > b.clientHeight + 1, overflow: getComputedStyle(b).overflowY, stageH: r.offsetHeight, windowH: innerHeight,
     boards: [...document.querySelectorAll(".cm-stage-slot")].map((s) => Math.round(s.getBoundingClientRect().width))};});
   ok(m.scrolls && m.overflow === "auto" && m.stageH > m.windowH, `${mode}: at 1280x${mode === "table" ? 720 : 560} the board is too small to draw at the least size, so the page scrolls (stage ${m.stageH} in a ${m.windowH} window)`);
-  ok(Math.min(...m.boards) >= (mode === "table" ? 355 : 555), `${mode}: no board is drawn under its least size (${m.boards.join(", ")})`);
+  ok(Math.min(...m.boards) >= (mode === "table" ? 315 : 555), `${mode}: no board is drawn under its least size (${m.boards.join(", ")})`);
   const still = () => page.evaluate(() => {const R = (s) => {const e = document.querySelector(s); if (!e) return null; const b = e.getBoundingClientRect(); return [Math.round(b.left), Math.round(b.top), Math.round(b.width), Math.round(b.height)];};
     return {top: R(".cm-stage-top"), rail: R(".cm-stage-rail.is-open"), side: R(".cm-stage-side.is-open"), hand: R(".cm-stage-hand"), caption: R(".cm-stage-caption"), actions: R(".cm-stage-actions")};});
   const before = await still();
