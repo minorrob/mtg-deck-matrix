@@ -33,7 +33,7 @@
  *   blockers step" trigger would fire on a turn nobody attacked.
  *
  *   CR 500.4: mana pools empty at the end of every step and phase, not at end of turn -- except what a player makes in their upkeep or
- *   draw step, which stays until the turn ends (Rob, 2026-10-28; emptyManaPools).
+ *   draw step, which stays until the turn ends for a person at a table with House rules on (Rob, 2026-10-28; emptyManaPools).
  */
 
 import {cardsIn, moveObject, eventCard, recordDraw, recordDrawStepDraw, recordDiscard, mergedOrderChoice, finishMergedOrder} from "../state/index.mjs";
@@ -256,8 +256,8 @@ function emptyManaPools(state, events) {
     /* MANA MADE IN THE UPKEEP OR THE DRAW STEP STAYS (Rob, 2026-10-28: "if I tap mana during the Upkeep or Draw phase and it wasn't
        used to cast something at instant speed, it should remain in my mana pool until used or end of turn"): a house rule over
        CR 500.4 for the two steps in which nothing sorcery-speed can be cast, kept as Birgi's is -- as this turn's `turnMana` -- so
-       it is still there for the main phase and goes with the turn. */
-    if (state.phase === "UPKEEP" || state.phase === "DRAW") {
+       it is still there for the main phase and goes with the turn. For the people at a table whose House rules are on (`keepStepMana`, game/room/table.mjs). */
+    if ((state.phase === "UPKEEP" || state.phase === "DRAW") && Array.isArray(state.keepStepMana) && state.keepStepMana.includes(player.id)) {
       const held = Object.entries(player.manaPool).filter(([, n]) => n > 0);
       if (held.length) {
         if (player.turnMana?.turn !== state.turn) player.turnMana = {turn: state.turn, mana: {}};
