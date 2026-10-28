@@ -340,7 +340,7 @@ try {
   ok(dHold.reached && same(dHold.last, atRest), "held on a card, the camera looks at it, and back");
   eq(await page.locator("#cm-card-menu").count(), 0, "and the card's menu does not open");
   await frames();
-  await proft.click({button: "right"});
+  await page.mouse.click(onProft.x, onProft.y, {button: "right"});   /* at the point the pointer finds on Proft: the drawers are the top layer now, so the card's centre may be under one */
   await page.locator("#cm-card-menu").waitFor({timeout: 2000});
   await page.waitForTimeout(300);
   ok((await frames()).f.every((x) => x.t === null), "a quick right click on a card does not move the camera");
@@ -357,7 +357,24 @@ try {
   await page.keyboard.press("Escape");
   ok(await menu.count() === 0, "Escape closes it");
   const cardOn = (id, where = ".cm-stage-fan") => page.locator(`${where} .cm-bcard[data-card='${id}']`).first();
-  await cardOn(ISLAND).click({button: "right"});
+  /* The drawers are the top layer: a card of yours may lie under one. A player shuts the Actions drawer to reach it, and the pointer
+     then goes only to a point the browser says is that card's (the Actions pop-up may stand over the middle of the stage). */
+  const pointOn = (id, where) => page.evaluate(({id, where}) => {
+    const r = document.querySelector(`${where} .cm-bcard[data-card='${id}']`).getBoundingClientRect();
+    for (let y = r.top + r.height / 2; y < r.bottom; y += 3) for (let x = r.left + r.width / 2; x < r.right; x += 3) if (document.elementFromPoint(x, y)?.closest(".cm-bcard")?.dataset.card === String(id)) return {x, y};
+    for (let y = r.top + 2; y < r.bottom; y += 3) for (let x = r.left + 2; x < r.right; x += 3) if (document.elementFromPoint(x, y)?.closest(".cm-bcard")?.dataset.card === String(id)) return {x, y};
+    return null;
+  }, {id, where});
+  const rightClickCard = async (id, where = ".cm-stage-fan") => {
+    let at = await pointOn(id, where);
+    if (!at) {
+      const rail = page.locator("[data-action=board-stage-rail][aria-expanded=true]");
+      if (await rail.count()) {await rail.click(); await page.waitForTimeout(450); at = await pointOn(id, where);}
+    }
+    ok(at, `a point on card ${id} that the pointer reaches`);
+    await page.mouse.click(at.x, at.y, {button: "right"});
+  };
+  await rightClickCard(ISLAND);
   m = await readMenu();
   eq(m.rows.map((r) => r.index), offered(ISLAND), "the Island's menu lists the one thing the room offers for it");
   eq([m.card, m.rows[0].text, m.rows[0].said, m.focused], ["🔍 Island", "⤓ Play", "Play Island", "Play Island"], "as ⤓ Play under the card's name, said in full, the focus on it");
@@ -370,18 +387,18 @@ try {
   eq(acts(), [[1]], "and plays it at once, once: the card and its row are two presses already (Rob, 2026-10-27)");
   /* The view a played land leaves is not this test's business: the offers come back as they were. */
   await again();
-  await cardOn(RIME).click({button: "right"});
+  await rightClickCard(RIME);
   m = await readMenu();
   eq(m.rows.map((r) => r.index), offered(RIME), "Rime Chill's menu lists only its own offer");
   eq(m.rows[0].text, "✦ Cast → up to two targets · ↷ Island, Access Tunnel", "✦ Cast, then where it goes and what it taps, in shorthand");
   eq(m.rows[0].said, "Cast Rime Chill → up to two targets · tapping Island, Access Tunnel", "and in full to a reader");
   await page.keyboard.press("Escape");
-  await cardOn(TOWER, ".cm-stage-front").click({button: "right"});
+  await rightClickCard(TOWER, ".cm-stage-front");
   m = await readMenu();
   eq(m.rows.map((r) => r.index), offered(TOWER), "the Command Tower's menu lists its two ways of making mana");
   ok(m.rows.every((r) => r.text.startsWith("↷") && r.mana === 1), `each a tap and the mana it makes, as a symbol (${JSON.stringify(m.rows)})`);
   await page.keyboard.press("Escape");
-  await cardOn(CHALICE, ".cm-stage-front").click({button: "right"});
+  await rightClickCard(CHALICE, ".cm-stage-front");
   m = await readMenu();
   eq([m.rows.map((r) => r.index), m.rows[0]?.text], [offered(CHALICE), "↶ Untap"], "the Chalice's: ↶ Untap");
   /* The card, to read, at one press. */
@@ -402,7 +419,7 @@ try {
   await page.mouse.click(5, 5);
   ok(await menu.count() === 0, "a press anywhere else puts it away");
   eq(acts(), [[1]], "opening and reading menus plays nothing more");
-  if (SHOTS) {await cardOn(TOWER, ".cm-stage-front").click({button: "right"}); await page.screenshot({path: path.join(SHOTS, "card-menu-3d.png")}); await page.keyboard.press("Escape");}
+  if (SHOTS) {await rightClickCard(TOWER, ".cm-stage-front"); await page.screenshot({path: path.join(SHOTS, "card-menu-3d.png")}); await page.keyboard.press("Escape");}
   await page.keyboard.press("Escape");
   const menus = await page.evaluate(() => __menus);
   ok(menus.length > 0 && menus.every((m) => !m.open), `the browser's own menu never opens on the 3D table (${menus.length} asked; ${JSON.stringify(menus)})`);

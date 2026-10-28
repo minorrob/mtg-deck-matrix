@@ -352,7 +352,7 @@ try {
   // Another player using this browser must not inherit this account's pane.
   await accountRoutes(page,'other@example.com');await page.reload();await page.locator('.cm-stage-canvas').waitFor();
   await page.locator('.cm-stage-right[data-action=board-stage-side]').click();
-  assert.deepEqual(await moduleOrder(),['stack','history','coach'],'a different profile gets the r4 default without another owner layout');
+  assert.deepEqual(await moduleOrder(),['stack','history','chat','coach'],'a different profile gets the r4 default without another owner layout');
   await accountRoutes(page);await page.reload();await page.locator('.cm-stage-canvas').waitFor();
   await page.locator('[data-action=account-keep-cloud]').click();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
