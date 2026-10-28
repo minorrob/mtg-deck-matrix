@@ -24,10 +24,12 @@ function setup({failRules=false,unknown=[],failDeck=false,cloud=false}={}){
     if(path.endsWith('/deck')&&failDeck)return Response.json({error:'Above this bracket.'},{status:409});
     return Response.json({table});
   }};
-  vm.runInNewContext(source,context);context.CrankFeatures[0](C);return {C,context,requests,notices,navigations,storage,values,table,markup:()=>modalBody};
+  vm.runInNewContext(source,context);context.CrankFeatures[0](C);/* The New game pop-up (crankmagic-lounge.js) makes the table and hands it to the page's own setup: made here the same two steps. */
+  const create=async()=>{const {table:made}=await C.tableTools.api('POST','/api/tables',{hostName:values.hostName,seats:[]});C.tableTools.keepSeat(made.tableId);await C.tableTools.finishTableSetup(made,values);};
+  return {C,context,requests,notices,navigations,storage,values,table,create,markup:()=>modalBody};
 }
 {
-  const x=setup();await x.C.actions['table-create']();
+  const x=setup();await x.create();
   const api=x.requests.filter(r=>r.path.startsWith('/api/'));
   assert.deepEqual(api.map(r=>r.path),['/api/tables','/api/tables/table123456/rules','/api/tables/table123456/known','/api/tables/table123456/deck','/api/tables/table123456/deck']);checks++;
   ok(api[1].body.startingLife===30&&api[1].body.bracketLimit===3,'setup saves the requested rules before verifying or readying AI decks');
@@ -35,7 +37,7 @@ function setup({failRules=false,unknown=[],failDeck=false,cloud=false}={}){
   ok(api.slice(3).every(r=>r.body.deck.cards.length===99&&r.body.deck.commander.length===1),'only complete 100-card lists are assigned');
 }
 {
-  const x=setup({failRules:true});await x.C.actions['table-create']();
+  const x=setup({failRules:true});await x.create();
   ok(x.requests.length===2&&!x.requests.some(r=>r.path.endsWith('/deck')),'a rules failure assigns no auto-ready AI deck');
   ok(x.storage.get('crankmagic-play-seat')==='table123456'&&x.navigations.at(-1).params.id==='table123456','the created table remains recoverable');
   const retry=x.notices.at(-1).options.action;ok(retry.label==='Retry rules','the failure offers the missing operation as its retry');await retry.run();
@@ -43,25 +45,25 @@ function setup({failRules=false,unknown=[],failDeck=false,cloud=false}={}){
   ok(x.requests.filter(r=>r.path.endsWith('/rules')).length===2&&x.requests.filter(r=>r.path.endsWith('/deck')).length===2,'retry saves the rules and finishes the same table setup');
 }
 {
-  const x=setup({unknown:['Basic one','Basic two']});await x.C.actions['table-create']();
+  const x=setup({unknown:['Basic one','Basic two']});await x.create();
   ok(!x.requests.some(r=>r.path.endsWith('/deck')),'unsupported public lists are never assigned');
   ok(x.notices.at(-1).error&&x.notices.at(-1).text.includes('no public precon is fully known'),'an unavailable playable list has an honest persistent explanation');
 }
 {
-  const x=setup({failDeck:true});await x.C.actions['table-create']();
+  const x=setup({failDeck:true});await x.create();
   ok(x.notices.at(-1).error&&x.notices.at(-1).text.includes('Above this bracket.'),'the server bracket refusal stays visible instead of pretending the AI has a deck');
   ok(x.requests.every(r=>!r.path.includes('/ai-seat')&&!r.path.includes('/advise')&&!r.path.includes('/sharing')),'automatic selection spends no AI calls and reads no private deck lists');
 }
 {
-  const x=setup();await Promise.all([x.C.actions['table-create'](),x.C.actions['table-create']()]);
-  ok(x.requests.filter(r=>r.path==='/api/tables').length===1,'a repeated setup activation while its request is pending creates one table');
+  const x=setup();const made={tableId:'table123456'};await Promise.all([x.C.tableTools.finishTableSetup(made,x.values),x.C.tableTools.finishTableSetup(made,x.values)]);
+  ok(x.requests.filter(r=>r.path.endsWith('/rules')).length===1,'a repeated setup of the same table while it is pending runs once');
 }
 {
-  const x=setup();x.table.seats[1].deck={name:'Already chosen'};await x.C.actions['table-create']();
+  const x=setup();x.table.seats[1].deck={name:'Already chosen'};await x.create();
   ok(x.requests.filter(r=>r.path.endsWith('/deck')).every(r=>r.body.seatId===2),'automatic assignment never overwrites a seat that already has a deck');
 }
 {
-  const x=setup({unknown:null});await x.C.actions['table-create']();
+  const x=setup({unknown:null});await x.create();
   ok(!x.requests.some(r=>r.path.endsWith('/deck'))&&x.notices.at(-1).error,'a malformed verification reply is a recoverable failure, never an assumed playable deck');
 }
 {

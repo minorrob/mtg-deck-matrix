@@ -32,6 +32,7 @@ import {build, worktreeSource, commitSource} from "../../tools/release-pages.mjs
 import {replayTape} from "../../game/room/replay.mjs";
 import {tableCards} from "../../cloud/game-room.mjs";
 import {NO_PERSON_REASON} from "../../game/room/room.mjs";
+import {createGame, openNewGame} from "./new-game.mjs";
 
 const require = createRequire(import.meta.url);
 const playwright = require(process.env.UAT_PLAYWRIGHT || "playwright");
@@ -138,12 +139,12 @@ try {
   await page.locator("#cm-play-home").waitFor({timeout: 60000});
   const text = await page.locator("#cm-main").evaluate((el) => el.textContent);
   ok(!/Coming Soon/.test(text), "the Play tab is not Coming Soon on staging");
-  ok(await page.getByRole("heading", {name: "A place at the table"}).count() === 1 && await page.locator("#cm-table-new").count() === 0, `it is the Commander lounge: ${text.replace(/\s+/g, " ").trim().slice(0, 90)}…`);
+  ok(await page.getByRole("heading", {name: "A place at the table"}).count() === 1 && await page.locator(".cm-ng-dialog").count() === 0, `it is the Commander lounge: ${text.replace(/\s+/g, " ").trim().slice(0, 90)}…`);
   eq(await page.evaluate(() => [...document.scripts].map((s) => s.src).filter((s) => /crankmagic-(game|lobby|online)\.js|collection-lobby-draft/.test(s))), [], "and the local game host's modules are not in the page");
   await shot(page, "tab-1400");
   await page.getByRole("button", {name: "Start a new game", exact: true}).click();
-  await page.locator("#cm-table-new").waitFor();
-  ok(await page.getByRole("heading", {name: "New table", exact: true}).count() === 1, "New table explicitly opens table setup");
+  await page.locator(".cm-ng-dialog").waitFor();
+  ok(await page.getByRole("heading", {name: "New game", exact: true}).count() === 1, "New game explicitly opens the pop-up over the lounge");
 
   /* 2. A table, an AI seat, decks the engine can play today. */
   const made = await api("POST", "/api/tables", {hostName: "Rob", seats: [{kind: "ai", name: "Bot"}]});
@@ -306,15 +307,7 @@ try {
       eq(sharedDeck.body.settings.publicRole,'reviewer','the shared deck is playable without edit permission');
 
       /* The host's table: a person's seat and an AI's. */
-      await page.goto(`${BASE}/index.html#table`);
-      const form = page.locator("#cm-table-new");
-      await form.waitFor({timeout: 30000});
-      await form.locator("input[name=hostName]").fill("Rob");
-      await form.locator("select[name=kind2]").selectOption("human");
-      await form.locator("input[name=name2]").fill("Newcomer");
-      await form.locator("select[name=kind3]").selectOption("ai");
-      await form.locator("input[name=name3]").fill("Bot");
-      await page.locator("[data-action=table-create]").click();
+      await createGame(page, BASE, {host: "Rob", humans: [{name: "Newcomer"}], ai: [{name: "Bot"}]}, "#table");
       await page.locator(".cm-cloud-table .cm-lobby-seat").nth(2).waitFor({timeout: 30000});
       const tableId = (/id=([^&]+)/.exec(new URL(page.url()).hash) || [])[1], turl = `/api/tables/${tableId}`;
       await page.locator(`.cm-lobby-seat[data-seat="1"]`).getByRole("button", {name: /^Invite$/}).click();
@@ -344,8 +337,8 @@ try {
       await newcomer.locator('.cm-lobby-seat[data-seat="1"]').getByRole('button', {name: /^(Choose|Change).*deck$/}).click();
       const rows = newcomer.locator("#cm-dialog .cm-table-deck[data-action=table-use-deck]");
       await rows.first().waitFor({timeout: 15000});
-      await until("the dialog's known counts", async () => newcomer.locator("#cm-dialog [data-known-for]").evaluateAll((els) => els.length > 0 && els.every((el) => el.textContent.trim())), 30000);
-      const known = Object.fromEntries(await rows.evaluateAll((els) => els.map((el) => [el.querySelector("strong").textContent.trim(), el.querySelector("[data-known-for]").textContent.trim()])));
+      await until("the dialog's known counts", async () => newcomer.locator("#cm-dialog [data-known-for]").evaluateAll((els) => els.length > 0 && els.every((el) => el.dataset.ok !== "pending")), 30000);
+      const known = Object.fromEntries(await rows.evaluateAll((els) => els.map((el) => [el.querySelector("strong").textContent.trim(), el.querySelector("[data-known-for]").dataset.text])));
       eq([known["Elves (e2e)"], known["Goblins with a gap (e2e)"]], ["All 100 cards known", "99 of 100 known · 1 to learn"], "the deck dialog says which decks the table can play, before one is chosen");
       await newcomer.locator("#cm-dialog [data-action=table-use-shared-deck]").filter({hasText:"Krenko"}).click();
       await newcomer.locator(`.cm-lobby-seat[data-seat="1"] .cm-seat-line`, {hasText: "Goblins (e2e)"}).waitFor({timeout: 15000});

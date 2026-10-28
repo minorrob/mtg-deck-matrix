@@ -899,6 +899,7 @@ globalThis.CrankBoard = Object.seal({
     const tabs = [
       {id: "general", icon: "⚙", label: "General", html: `
         <div class="cm-actions cm-board-menu-row">${b("Set Side Drawer Modules", "board-modules-settings")}</div>
+        ${matPicker()}
         <div class="cm-actions cm-board-menu-row">${gb(COACH, "Recommended actions", "board-coach", {}, {cls: ""})}${b("Table vitals", "board-vitals", {})}${b("AI Coach settings…", "ai-settings", {})}</div>
         <div class="cm-actions cm-board-menu-row">${b("Try the callouts", "board-callout-demo", {}, false, {cls: "compact"})}<span class="cm-muted">Overlay ${overlay()}% · set in Settings › Play</span></div>`},
       {id: "video", icon: "🖥", label: "Video", html: `
@@ -929,7 +930,14 @@ globalThis.CrankBoard = Object.seal({
      (Concede, Recommended actions, …) put back what was set when it opened. */
   const SETTINGS_LEAVE = new Set(["board-skip", "board-coach", "board-callout-demo", "board-concede", "board-vitals", "ai-settings", "board-modules-settings"]);
   let settingsExit=null;
-  const settingsKeys = () => [HOLD_KEY, SKIP_KEY, SCALE_KEY.board, SCALE_KEY.hand, "cm-card-scale:board", "cm-stage-resolution"];
+  const settingsKeys = () => ["cm-mat", HOLD_KEY, SKIP_KEY, SCALE_KEY.board, SCALE_KEY.hand, "cm-card-scale:board", "cm-stage-resolution"];
+  /* PLAY MAT, in Settings (Rob, 2026-10-28): the mat your seat plays on, changed here as well as in the lobby. */
+  function matPicker() {
+    const mats = C.tableTools?.MATS;
+    if (!mats || !view || view.seat === null || view.seat === undefined || !table?.seats?.[view.seat]) return "";
+    const now = matOf(view.seat);
+    return `<div class="cm-board-menu-row cm-board-matpick"><label class="cm-settings-slider">Play mat <select data-board-mat aria-label="Play mat">${mats.map(([k, name]) => `<option value="${e(k)}"${k === now ? " selected" : ""}>${e(name)}</option>`).join("")}</select></label><span class="cm-muted">Everyone at the table sees it. Save keeps it, for this table and your next ones.</span></div>`;
+  }
   function settingsNow() {
     const a = sound();
     return {kept: Object.fromEntries(settingsKeys().map((k) => [k, stored(k)])), sound: a ? a.volumes() : null};
@@ -941,6 +949,7 @@ globalThis.CrankBoard = Object.seal({
     if (skipEmpty() !== skipWas) prefer();
     C.setCardScale(C.cardScale(), {save: false});
     globalThis.CrankStage?.previewResolution?.(null);
+    if (matPreview !== null) {matPreview = null; draw();}
     document.dispatchEvent(new CustomEvent("cm-card-scale", {detail: {live: false}}));
     const a = sound(), v = before.sound;
     if (a && v) {
@@ -984,7 +993,20 @@ globalThis.CrankBoard = Object.seal({
       if (!a || a === document.body || d.contains(a)) document.querySelector("#cm-board [data-action=board-camera]")?.focus({preventScroll: true});
       const after=session.afterClose;session.afterClose=null;if(settingsExit===session)settingsExit=null;after?.();
     }, {once: true});
-    actions["board-settings-save"] = () => {saved = true; d.close();};
+    actions["board-settings-save"] = async () => {
+      saved = true;
+      const mat = matPreview;
+      if (mat !== null && table?.tableId) {
+        try {
+          const T = C.tableTools;
+          await T.api("POST", `${T.tableUrl(table.tableId)}/mat`, {mat});
+          T.rememberMat(mat);
+          if (table.seats?.[view.seat]) table.seats[view.seat].mat = mat;
+        } catch (error) {C.notice(`Your mat did not change: ${error.message}`, true, {undo: false});}
+        matPreview = null; draw();
+      }
+      d.close();
+    };
   }
 
   /* The sound (B8; the pack's three ui rows): the effects and the music, each a slider, and a mute. */
@@ -999,7 +1021,9 @@ globalThis.CrankBoard = Object.seal({
      table  the Table view's four: the same frames at a small size, the header on the outer edge, ⤢ Focus
      full   Full screen's big board, and `opp` its opponents: full bleed, no frames, zones implied by placement
      phone  the phone's one board */
-  const matOf = (i) => ((table && table.seats && table.seats[i]) || {}).mat || "felt";
+  /* Your mat while Settings has one chosen and not yet saved: seen at once, put back by Cancel, sent to the table by Save. */
+  let matPreview = null;
+  const matOf = (i) => (matPreview !== null && view && i === view.seat) ? matPreview : ((table && table.seats && table.seats[i]) || {}).mat || "felt";
   const seatLabel = (p) => (p.playerId === view.seat ? `You · ${p.name}` : p.name);
   function seatFlag(p) {
     const i = p.playerId, gone = departed(i), dropped = away.get(i);
@@ -1264,8 +1288,9 @@ globalThis.CrankBoard = Object.seal({
     const s = view.state, me = players()[view.seat], big = players()[focus] || me, others = players().filter((p) => p.playerId !== big.playerId);
     /* The big board's corner, at the pill's head: whose it is and their vitals; when it is not yours, ⟳ and My board too. */
     const viewing = big.playerId !== view.seat;
-    const corner = `<div class="cm-full-corner${viewing ? " cm-full-viewing" : ""}">${seatHeader(big)}<span class="cm-full-corner-name">${viewing ? `Viewing ${e(big.name)}` : e(seatLabel(big))}</span>
-      ${viewing ? `${ib("⟳", "board-rotate", "Rotate: the next seat's board", {by: "1"})}${b("My board", "board-focus", {seat: String(view.seat)}, false, {cls: "compact"})}` : ""}</div>`;
+    /* Your own mat carries no card of you (Rob, 2026-10-28: "We already have this information in multiple places"); another seat's board keeps its. */
+    const corner = !viewing ? "" : `<div class="cm-full-corner cm-full-viewing">${seatHeader(big)}<span class="cm-full-corner-name">Viewing ${e(big.name)}</span>
+      ${ib("⟳", "board-rotate", "Rotate: the next seat's board", {by: "1"})}${b("My board", "board-focus", {seat: String(view.seat)}, false, {cls: "compact"})}</div>`;
     return stageView({corner, big, others});
   }
 
@@ -4442,6 +4467,11 @@ globalThis.CrankBoard = Object.seal({
   };
   actions["board-rematch"] = (el) => answerRematch(el.dataset.accept === "yes");
   actions["board-leave"] = async () => {const id = tableId; C.board.close(); await tableApi().refresh(id);};
+  /* Play mat (Settings): seen at once; Save sends it to the table. */
+  document.addEventListener("change", (event) => {
+    if (!event.target?.matches?.("#cm-board-tools [data-board-mat]") || !view) return;
+    matPreview = event.target.value; draw();
+  });
   /* Hold priority after I cast (Tools): kept on this device, and the Tools' words follow it. */
   document.addEventListener("change", (event) => {
     if (!event.target || !event.target.matches || !event.target.matches("#cm-board-tools [data-board-hold]")) return;

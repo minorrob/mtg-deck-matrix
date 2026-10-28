@@ -96,11 +96,11 @@ try {
     await nav("Play");
     if (await page.getAttribute('meta[name="crankmagic-play"]', "content") === "cloud") {
       await page.locator("#cm-play-home").waitFor({timeout: 20000});
-      ok(await page.getByRole("heading", {name: "A place at the table"}).count() === 1 && await page.locator("#cm-table-new").count() === 0, "Play opens the Commander lounge before table setup");
+      ok(await page.getByRole("heading", {name: "A place at the table"}).count() === 1 && await page.locator(".cm-ng-dialog").count() === 0, "Play opens the Commander lounge before table setup");
       await shot("02-play-lounge");
       await page.getByRole("button", {name: "Start a new game", exact: true}).click();
-      await page.locator("#cm-table-new").waitFor({timeout: 20000});
-      ok(await page.getByRole("heading", {name: "New table", exact: true}).count() === 1, "New table opens table setup from the lounge");
+      await page.locator(".cm-ng-dialog").waitFor({timeout: 20000});
+      ok(await page.getByRole("heading", {name: "New game", exact: true}).count() === 1, "New game opens the pop-up from the lounge");
       await shot("02-play-new-table");
       await nav("Decks");
       await page.waitForFunction(() => location.hash.startsWith("#decks"));

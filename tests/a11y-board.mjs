@@ -903,6 +903,7 @@ try {
     const page = rob.page;
     await utility(page,"board-menu");
     await page.click("#cm-board-nav [data-action=page-help]");
+    await page.locator("#cm-dialog [data-action=help-tab][data-tab=keys]").click();
     await page.locator("#cm-dialog[open] .cm-help-keys").waitFor();
     const helpKeys = new Set(await page.locator("#cm-dialog[open] .cm-help-keys kbd").allTextContents());
     /* "1–9" in Help is every digit between */

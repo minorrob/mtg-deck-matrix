@@ -14,7 +14,7 @@ organizer is the table's host (seat 1).
 ### `GET /api/tables/live` -> `{games: [...]}`
 
 Every public table that is in its lobby (`selecting`/`countdown`) or being played (`playing`), plus **private** ones the
-caller sits at or organizes; the admin sees every table. Finished and cancelled tables are not listed. Newest first.
+caller sits at or organizes; the admin sees every table. Finished and canceled tables are not listed. Newest first.
 
 ```json
 {"tableId": "abc...", "location": "lobby" | "live", "organizer": "Rob", "commander": "Chulane, Teller of Tales",

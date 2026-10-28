@@ -1377,6 +1377,7 @@ try {
   /* KEYS AND HELP, from the board's menu: the table's help, the keys among it. Escape then steps back out of the menu. */
   await rob.page.evaluate(() => document.activeElement && document.activeElement.blur());
   await utility(rob.page,"board-help");
+  await rob.page.locator("#cm-dialog [data-action=help-tab][data-tab=keys]").click();
   await rob.page.locator("#cm-dialog[open] .cm-help-keys").waitFor();
   const keys = await rob.page.locator("#cm-dialog[open] .cm-help-keys kbd").allTextContents();
   ok((await rob.page.locator("#cm-dialog-title").textContent()) === "Help — Play: the table and the board" && ["Tab", "Space", "Enter", "Escape", "1", "9", "+", "↑", "←"].every((k) => keys.includes(k)),

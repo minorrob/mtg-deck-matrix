@@ -23,6 +23,7 @@ C.settingsPlayCard=card=>{
   return card('play','Play',
       `<div class="cm-settings-row"><button type="button" class="v-button cm-chip-toggle" data-action="set-step-by-step" role="switch" aria-checked="${stepByStep}">Stop at every step of my turn: ${stepByStep?'On':'Off'}</button></div>`
       +`<div class="cm-settings-row">${C.sideDrawerSettings?b('Set Side Drawer Modules','board-modules-settings'):''}</div>`
+      +(C.tableTools?.MATS?(()=>{const mine=C.tableTools.rememberedMat()||'felt';return `<p class="cm-settings-label">Play mat</p><div class="cm-settings-row"><label class="cm-settings-slider">Your play mat<select data-settings-mat aria-label="Your play mat">${C.tableTools.MATS.map(([k,name])=>`<option value="${C.esc(k)}"${k===mine?' selected':''}>${C.esc(name)}</option>`).join('')}</select></label></div><p class="cm-muted">The mat your seat plays on, seen by everyone at the table. This device puts it on your seat at your next table; in a game, Settings changes it for that table too.</p>`;})():'')
       +(()=>{const S=globalThis.CrankStage;if(!S?.resolution)return '';const v=S.resolution(),R=S.RESOLUTION;
         /* Graphics resolution: this device's, handled by crankmagic-stage.js (Rob, 2026-10-25). */
         return `<p class="cm-settings-label">Graphics</p><div class="cm-settings-row"><label class="cm-settings-slider">Graphics resolution<input type="range" min="${R.min}" max="${R.max}" step="10" value="${v}" data-stage-resolution aria-label="Graphics resolution" aria-valuetext="${v}%"><output>${v}%</output></label></div><p class="cm-muted">${R.min}% – ${R.max}% of the screen's pixels for the 3D table · higher is sharper and works the graphics card harder · this device</p>`;})()
@@ -37,5 +38,6 @@ actions['set-step-by-step']=async()=>{const play=(C.state.preferences||{}).play|
 /* THE OVERLAY (the callouts' loudness, 0 off to 100): a slider, previewed as it moves and saved when it is let go, with
    the rest of the Play preferences (crankmagic-board.js reads play.overlay). */
 document.addEventListener('input',ev=>{const el=ev.target.closest?.('[data-settings-overlay]');if(!el)return;const n=Number(el.value);el.setAttribute('aria-valuetext',n===0?'off':n+'%');const out=el.parentElement.querySelector('output');if(out)out.textContent=n===0?'Off':n+'%';});
+document.addEventListener('change',ev=>{const el=ev.target.closest?.('[data-settings-mat]');if(!el||!C.tableTools?.rememberMat)return;C.tableTools.rememberMat(el.value);notice('Your play mat is set. It goes on your seat at your next table.');});
 document.addEventListener('change',async ev=>{const el=ev.target.closest?.('[data-settings-overlay]');if(!el)return;const play=(C.state.preferences||{}).play||{},n=Math.min(100,Math.max(0,Math.round(Number(el.value)||0)));await commit({type:'preferences',values:{play:{...play,overlay:n}}},{renderView:false});notice(n===0?'Callouts off.':`Callouts at ${n}%.`);});
 });

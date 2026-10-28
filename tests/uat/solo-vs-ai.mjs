@@ -24,6 +24,7 @@ import {build, worktreeSource} from "../../tools/release-pages.mjs";
 import {boardPerson} from "./board-person.mjs";
 import {replayRecord} from "../../tools/playtest-triage.mjs";
 import {checkLeaks} from "../../tools/fuzz-live.mjs";
+import {createGame, openNewGame} from "./new-game.mjs";
 const REPO = ROOT;
 
 let checks = 0;
@@ -106,7 +107,7 @@ async function chooseShared(page, seat, sharedId) {
   await page.click(`.cm-lobby-seat[data-seat='${seat}'] [data-action=table-deck]`);
   const button = page.locator(`.cm-table-deck[data-precon="${sharedId}"]`);
   await button.waitFor({timeout: 15000});
-  await page.waitForFunction((id) => {const b = document.querySelector(`.cm-table-deck[data-precon="${id}"]`); return b && !b.disabled && /Ready to play/.test(b.textContent);}, sharedId, {timeout: 20000});
+  await page.waitForFunction((id) => {const b = document.querySelector(`.cm-table-deck[data-precon="${id}"]`); return b && !b.disabled && b.querySelector("[data-precon-status]")?.dataset.text === "Ready to play";}, sharedId, {timeout: 20000});
   await button.click();
   await page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"), null, {timeout: 15000}).catch(async () => {
     throw Error(`choosing ${sharedId} left the dialog open: ${await page.locator("#cm-table-deck-error").innerText().catch(() => "")}`);
@@ -116,14 +117,7 @@ async function chooseShared(page, seat, sharedId) {
 async function journey(n, rob, pod) {
   const names = pod.map(nameOf);
   console.log(`solo-vs-ai: table ${n} -- Rob ${names[0]} v AI ${names.slice(1).join(", ")}`);
-  await rob.page.goto(`${base}/index.html#table`);
-  await rob.page.locator("#cm-table-new").waitFor({timeout: 30000});
-  await rob.page.fill("#cm-table-new [name=hostName]", "Rob");
-  for (const [seat, who] of [[2, "Nina"], [3, "Theo"], [4, "Ivy"]]) {
-    await rob.page.selectOption(`#cm-table-new [name=kind${seat}]`, "ai");
-    await rob.page.fill(`#cm-table-new [name=name${seat}]`, who);
-  }
-  await rob.page.click("[data-action=table-create]");
+  await createGame(rob.page, base, {host: "Rob", ai: [{name: "Nina"}, {name: "Theo"}, {name: "Ivy"}]}, "#table");
   await rob.page.waitForFunction(() => /#table\?id=solo\d+/.test(location.hash), null, {timeout: 20000});
   const id = /#table\?id=(solo\d+)/.exec(await rob.page.evaluate(() => location.hash))[1];
   await rob.page.locator(".cm-cloud-table .cm-lobby-seat[data-seat='3']").waitFor({timeout: 20000});

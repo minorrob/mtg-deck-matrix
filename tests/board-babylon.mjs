@@ -100,7 +100,7 @@ try{
   for(let n=0;n<3;n++){
     await page.goto(`${base}/index.html#game`);await page.locator('#cm-play-home').waitFor();
     ok(await page.evaluate(()=>BABYLON.Engine.Instances.length===0),'leaving the board disposes its engine and listeners');
-    ok(await page.locator('#cm-table-new').count()===0,'Play opens the lounge, not the New table form');
+    ok(await page.locator('.cm-ng-dialog').count()===0,'Play opens the lounge, not the New game pop-up');
     await page.getByRole('button',{name:'Resume game',exact:true}).click();await page.locator('[data-engine=babylon]').waitFor();
     await align('re-entry');
   }
@@ -117,8 +117,8 @@ try{
     ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'lounge fits viewport');
     if(shots)await page.screenshot({path:path.join(shots,`lounge-${viewport.width}.png`),fullPage:true});
   }
-  await page.getByRole('button',{name:'Start a new game',exact:true}).click();await page.locator('#cm-table-new').waitFor();
-  ok(true,'New table remains an explicit action');
+  await page.getByRole('button',{name:'Start a new game',exact:true}).click();await page.locator('.cm-ng-dialog').waitFor();
+  ok(true,'New game remains an explicit action');
   const failed=await browser.newPage({viewport:{width:1280,height:720}});
   await failed.route('**/vendor/babylon.js*',route=>route.abort());
   await failed.goto(`${base}/index.html#table?id=tablepreview01`);await failed.locator('[data-renderer=fallback]').waitFor();

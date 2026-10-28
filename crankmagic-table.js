@@ -23,22 +23,55 @@
   /* HELP: THE TABLE AND THE BOARD, the keys among it (the accessibility pass, docs/plan-to-done-2026-09-30.md Part 6):
      from the lobby's head and from the board's menu. The keys are the ones crankmagic-board.js's handlers bind, saying
      what they do there; tests/a11y-board.mjs reads both and holds them to each other. */
-  C.HELP.table = {title: "Play: the table and the board", body: `<div class="cm-help"><h3>The table</h3>
-    <p>Up to four seats. Invite people by link, QR code or email, or seat an AI. Everyone chooses a precon, a deck shared with them, or a deck from their own library and marks Ready, and the host starts the countdown. The host can change the table's rules (starting life, bracket limit) until a seat is ready.</p>
-    <h3>The board</h3>
-    <p><strong>Table</strong> shows every board at once. <strong>Focus</strong> puts one board on the mat, beside the seats. <strong>3D</strong> puts your cards in an immersive tabletop scene. New desktop players start in 3D; your chosen view is remembered. In 3D the wheel zooms (over your hand it sizes the hand), dragging a mat moves the view across the table, dragging the bare table tilts it, and holding the right button looks at that place until you let go. Right-click a card for what it can do now, in short (🔍 opens it to read); nothing is played until you confirm. Long-press a card on a touch screen to inspect it. Actions and Boards stay together on the left in all three views. Click a card to review its legal actions there. Select an option, review its targets and payment, then Confirm. Clear changes only your local choice. Further target or payment questions stay in Actions; each confirmation submits that step. The pass button says what passing will do: <em>Next step</em>, <em>Resolve</em> and the spell's name, or <em>Pass</em>. Your draw happens by itself, and a spell you cast resolves unless someone responds; to be asked first, turn on <em>Hold priority after I cast</em> in Tools. A step where you have nothing to do passes by itself, and the history says so.</p>
-    <h3>Keys</h3>
-    <ul class="cm-help-keys">
+  /* PLAY'S HELP, IN TABS (Rob, 2026-10-28): Getting started, Cards, Views, Panels (the drawers and the modules in them), Keys. */
+  C.HELP.table = {title: "Play: the table and the board", tabs: [
+    {id: "start", label: "Getting started", body: `<div class="cm-help">
+      <h3>Your first deck</h3>
+      <p>Open <strong>Decks</strong>. <strong>New deck</strong> starts a list from nothing; <strong>Import</strong> takes a pasted list or a file and shows what it found before it adds anything; a <strong>New from Wizards</strong> chip starts a deck from the newest Commander precons. To play a deck at a table it needs its commander and 100 cards, every one of them a card the table can play. A deck's page says how many it can, and <strong>Play this deck</strong> appears once the table can play it whole.</p>
+      <h3>Setting up a game</h3>
+      <p>Open <strong>Play</strong> and press <strong>Start a new game</strong>. Choose how many people and how many AIs (a table seats two to four). Name each person you invite, from CrankMagic's players or by email, and give each AI a name, a difficulty (Easy, Normal, Hard or Veteran) and a personality; hover a choice to read what it means. Then set starting life, a bracket limit, house rules, and whether the game is <strong>Public</strong> (listed in Live games, open to watchers and requests to join) or <strong>Private</strong> (invitation only). <strong>Submit</strong> opens the lobby.</p>
+      <h3>In the lobby</h3>
+      <p>Each person chooses a deck (their own, a shared one or a public precon) and a mat, then presses <strong>Ready</strong>. Anyone at the table can hand an AI seat a different deck or tune it with <strong>Edit AI</strong>. The organizer can edit the rules until a seat is ready, invite a person by link, QR code or email, add an AI to an open seat, remove a seat, or end the game. <strong>Lobby tour</strong> walks through all of it.</p>
+      <h3>Starting a game</h3>
+      <p>When every seat is ready the organizer presses <strong>Start</strong>, and a ten-second countdown begins; <strong>Cancel</strong> stops it. Then the board opens with your opening hand: keep it or take a mulligan. A step in which you have nothing to do passes by itself, and the history says so.</p>
+      <h3>Joining and watching</h3>
+      <p>Open the link a host sent you, or choose <strong>Join existing game</strong> in Play to ask for a seat at a public lobby or paste the invitation. <strong>Watch</strong>, in the menu beside any game in Live games, lets you follow a game from any seat's side without seeing anyone's hand or library. <strong>Resume game</strong> returns you to a game you left.</p></div>`},
+    {id: "cards", label: "Cards", body: `<div class="cm-help">
+      <h3>Playing a card</h3>
+      <p>Click a card to review what it can do now; right-click it for the same list in short (🔍 opens it to read). Nothing happens until you confirm: select an option, review its targets and payment in <strong>Actions</strong>, then <strong>Confirm</strong>. <strong>Clear</strong> changes only your own choice. Further target or payment questions stay in Actions, and each confirmation submits that step. On a touch screen, long-press a card to inspect it.</p>
+      <h3>Passing</h3>
+      <p>The pass button says what passing will do: <em>Next step</em>, <em>Resolve</em> and the spell's name, or <em>Pass</em>. Your draw happens by itself, and a spell you cast resolves unless someone responds; to be asked first, turn on <em>Hold priority after I cast</em> in Tools.</p>
+      <h3>Your rows</h3>
+      <p>Drag a card to the other row of its mat to keep it there; lands stay with the lands. <kbd>Alt</kbd> + drag up or down on a mat makes its cards larger or smaller.</p>
+      <h3>What a screen reader hears</h3>
+      <p>Every card says its name and what is shown on it: tapped, its power and toughness, damage, counters, attacking or blocking, chosen or selected, and what it can do now. A face-down card is said to be one, and nothing more. Each question the table asks you is said as it arrives, and so is the card shown large under the pointer.</p></div>`},
+    {id: "views", label: "Views", body: `<div class="cm-help">
+      <h3>Three ways to see the table</h3>
+      <p><strong>Table</strong> shows every board at once. <strong>Focus</strong> puts one board on the mat, beside the seats. <strong>3D</strong> puts your cards in an immersive tabletop scene. New desktop players start in 3D; your chosen view is remembered.</p>
+      <h3>In 3D</h3>
+      <p>The wheel zooms (over your hand it sizes the hand), dragging a mat moves the view across the table, dragging the bare table tilts it, and holding the right button looks at that place until you let go. <strong>Camera</strong> holds View seats, Tilt, Zoom, card size and Reset; a tilt of 0 is the floor's own slope in the scene behind the table.</p>
+      <h3>The top bar and the corner</h3>
+      <p>The top bar shows you, your life, and the steps of the turn; the step now under way is lit. The box at the table's top left names the turn and each player's life. A blue dot beside a life says who holds priority, and the arrow beside <em>Turn</em> folds the box away.</p>
+      <h3>Sound</h3>
+      <p>Sound starts at your first click on the board, and Tools › Sound sets it.</p></div>`},
+    {id: "panels", label: "Panels", body: `<div class="cm-help">
+      <h3>Two drawers</h3>
+      <p>The tab labeled <strong>Actions</strong>, at the left edge, opens the drawer where the table asks you things and where you review what a card can do; under it, <strong>Boards</strong> lists every seat with its life and cards in hand. The tab at the right edge opens <strong>Stack &amp; history</strong>. Drag a drawer's edge to make it wider or narrower.</p>
+      <h3>The panels inside</h3>
+      <p>Each drawer is built of panels you can keep or put away: <strong>History</strong> (newest first, scroll sideways to read a long line), <strong>On the Stack</strong>, <strong>Card Preview</strong>, <strong>Mana Pool</strong>, <strong>Resources</strong>, <strong>Table Vitals</strong>, <strong>Recommended Actions</strong>, <strong>AI Coach</strong>, <strong>Counter-Intel</strong> and <strong>Chat</strong>. Choose which show, and where, with <strong>Set Side Drawer Modules</strong> in Settings, or the gear in the right drawer's header.</p>
+      <h3>Chat and the log</h3>
+      <p>Messages you send in <strong>Chat</strong> reach everyone at the table, and the chat is kept with the game's log.</p></div>`},
+    {id: "keys", label: "Keys", body: `<div class="cm-help"><ul class="cm-help-keys">
       <li><kbd>Tab</kbd> and <kbd>Shift</kbd>+<kbd>Tab</kbd> move through the board in the order it is laid out: the strip, the seats, the boards, what the table asks you, then your hand. <kbd>Enter</kbd> or <kbd>Space</kbd> presses what has the focus.</li>
       <li><kbd>Space</kbd>, with nothing focused, fans your hand, and in the fanned hand puts it away. While it is fanned, <kbd>1</kbd>–<kbd>9</kbd> holds that card up, and <kbd>Enter</kbd> selects the held card's action for review (or presses the button that has the focus).</li>
       <li><kbd>Escape</kbd> puts away the card shown large, and steps back one thing a press: an open menu (History, Tools, ☰, the steps, You can also); the Coach; a held card, back into the fan; the fanned hand; then the Panel. It does not change your saved view. In a dialog, it closes the dialog.</li>
-      <li><kbd>⌘</kbd>/<kbd>Ctrl</kbd> <kbd>+</kbd> and <kbd>−</kbd> make the cards 10% larger or smaller.</li>
+      <li><kbd>⌘</kbd>/<kbd>Ctrl</kbd> <kbd>+</kbd> and <kbd>−</kbd> make the cards 10% larger or smaller. <kbd>Alt</kbd> + drag up or down on a mat sizes its cards.</li>
       <li>The wheel over your hand: ± its cards (<kbd>Shift</kbd> + wheel scrolls a hand too wide). In 3D, <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + drag the table ↕: your side longer or shorter, your mat with it, down to the screen's foot; <kbd>⌘</kbd>/<kbd>Ctrl</kbd> + double-click: back. Camera ✋ and ↕ are the same two sizes.</li>
-      <li>On a card, <kbd>Shift</kbd>+<kbd>F10</kbd> or the <kbd>Menu</kbd> key opens what it can do now; <kbd>↑</kbd> and <kbd>↓</kbd>, <kbd>Home</kbd> and <kbd>End</kbd> move through it, and <kbd>Escape</kbd> closes it, back to the card.</li>
+      <li>On a card, <kbd>Shift</kbd>+<kbd>F10</kbd> or the <kbd>Menu</kbd> key opens what it can do now; <kbd>↑</kbd> and <kbd>↓</kbd>, <kbd>Home</kbd> and <kbd>End</kbd> move through it, and <kbd>Escape</kbd> closes it, back to the card. <kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>←</kbd> or <kbd>→</kbd> moves the card within its row.</li>
       <li>On a divider (the bar between the rows, the one atop your hand, the Panel's, the side column's), <kbd>↑</kbd> and <kbd>↓</kbd> move it. On the seat pane's edge, and on the bar between two boards side by side, <kbd>←</kbd> and <kbd>→</kbd> move it.</li>
-      <li>In the Coach, <kbd>Enter</kbd> sends your question, and <kbd>Shift</kbd>+<kbd>Enter</kbd> starts a new line.</li>
-    </ul>
-    <p>Every card says its name and what is shown on it to a screen reader: tapped, its power and toughness, damage, counters, attacking or blocking, chosen or selected, and what it can do now; a face-down card is said to be one, and nothing more. Each question the table asks you is said as it arrives, and so is the card shown large under the pointer. Sound starts at your first click on the board, and Tools › Sound sets it.</p></div>`};
+      <li>In the Coach and in Chat, <kbd>Enter</kbd> sends, and <kbd>Shift</kbd>+<kbd>Enter</kbd> starts a new line.</li>
+    </ul></div>`},
+  ]};
   const cloudPlay = () => document.querySelector('meta[name="crankmagic-play"]')?.content === "cloud"
     && document.querySelector('meta[name="crankmagic-accounts"]')?.content === "on";
   const POLL_MS = 2000;
@@ -192,89 +225,167 @@
   actions["deck-play"] = (el) => C.go("table", {deck: el.dataset.deck});
 
   /* ---- the lobby ---- */
+  /* THE LOBBY (Rob, 2026-10-28; the Claude Design screen "Lobby with walkthrough"): the four quadrants as they were, each seat
+     headed by who sits there, its status and, for the organizer, Remove seat; an AI seat says what it is (a line, then AI, its
+     difficulty and its personality); the middle panel holds the table's rules, Start and End game; a Lobby tour walks through it.
+     What a person has open here (an AI seat's editor, the rules' editor, End game's question) is `lobbyUi`; the page is drawn from it. */
+  let lobbyUi = {edit: null, rules: false, confirmEnd: false, rulesError: ""};
+  const LEVEL_WORD = {easy: "Easy", normal: "Normal", hard: "Hard", llm: "Veteran"};
+  const LEVEL_BLURB = {easy: "Plays the turn in front of it. Usually right, sometimes second-best.", normal: "Weighs the whole game lightly and breaks a combo it can see.", hard: "Reads every threat, aims each attacker, keeps the blockers it needs.", llm: "Hard's reads, judged by an AI model at the big moments."};
+  const lounge = () => C.lounge || {PERSONAS: {}, PERSONA_ORDER: [], DIFFICULTY: [], AI_SUP: ""};
+  const POS = ["tl", "tr", "bl", "br"];   /* where seats 1 to 4 sit on the table */
+  const seatOpen = (s) => !s.occupied && !s.invited;
   function seatState(s, t) {
     if (!s.occupied) return s.invited ? "invited" : "empty";
     if ((t.away || []).some((a) => a.seatId === s.seatId)) return "error";
     return s.ready ? "ready" : s.deck ? "deck" : "pending";
   }
+  const lobbyEditable = (t) => t.phase === "selecting" || t.phase === "countdown";
+  function aiEditor(s, t) {
+    const lg = lounge(), level = s.level || "normal";
+    const levels = lg.DIFFICULTY.map((d) => `<option value="${d.level}"${d.level === level ? " selected" : ""}>${d.id === "Veteran" ? "Veteran · uses AI credits" : d.id}</option>`).join("");
+    const personas = lg.PERSONA_ORDER.map((id) => `<option value="${id}"${id === s.persona ? " selected" : ""}>${lg.PERSONAS[id].name} · ${lg.PERSONAS[id].tag.toLowerCase()}</option>`).join("");
+    return `<div class="cm-lb-edit" data-seat="${s.seatId}"><p class="cm-lb-edit-title">Edit AI · seat ${s.seatId + 1}</p>
+      <label>Name<input data-edit-ai="name" data-seat="${s.seatId}" maxlength="40" value="${e(s.name || "")}"></label>
+      <label>Difficulty<select data-edit-ai="level" data-seat="${s.seatId}">${levels}</select></label>
+      <p class="cm-lb-edit-note">${e(LEVEL_BLURB[level] || "")}</p>
+      <label>Personality<select data-edit-ai="persona" data-seat="${s.seatId}">${s.persona && !lg.PERSONAS[s.persona] ? `<option value="${e(s.persona)}" selected>${e(s.persona)}</option>` : ""}${!s.persona ? '<option value="" selected>None</option>' : ""}${personas}</select></label>
+      <button type="button" class="cm-pl-btn is-primary" data-action="table-edit-ai-done" style="height:34px;border-radius:8px">Done</button></div>`;
+  }
   function seatBox(s, t) {
-    const art = C.seatArt;
-    /* An AI seat says its setting (AI-2): Easy or Normal. */
-    const who = `Seat ${s.seatId + 1} · ${s.you ? "You" : s.kind === "ai" ? `AI · ${({easy: "Easy", llm: "Claude"})[s.level] || "Normal"}` : s.name}`;
-    const state = seatState(s, t);
+    const art = C.seatArt, lg = lounge();
+    const state = seatState(s, t), open = seatOpen(s), ai = s.kind === "ai" && !open, persona = ai ? lg.PERSONAS[s.persona] : null;
+    const editable = lobbyEditable(t), seated = (t.seats || []).some((x) => x && x.you) || t.youAreHost;
+    /* A seat the host named but nobody holds yet (a person to invite) keeps its name; one with no name of its own is Open. */
+    const named = open && s.kind === "human" && s.name && !/^Seat \d$/.test(s.name);
+    const title = `Seat ${s.seatId + 1} · ${s.you ? "You" : open && !named ? "Open" : s.name || `AI ${s.seatId + 1}`}${s.seatId === 0 && !ai ? " · Host" : ""}`;
     const pseudo = s.deck ? {name: s.deck.name, commanders: (s.deck.commander || []).map((name) => ({name}))} : null;
     const away = (t.away || []).find((a) => a.seatId === s.seatId);
     const line = away ? `Dropped · back by ${new Date(away.until).toLocaleTimeString("en-US", {hour: "numeric", minute: "2-digit"})}`
       /* The table sends a card count for your own seat only; nobody sees another seat's cards. */
       : s.deck ? `${s.deck.name}${s.cards !== undefined ? ` · ${s.cards + (s.deck.commander || []).length} cards` : ""}`
-      : s.occupied ? (s.you ? "Choose a deck." : s.kind === "ai" ? "Choose an AI deck" : "Choosing a deck")
-      : s.invited ? "Invitation sent · waiting on them" : s.kind === "ai" ? "No deck yet" : "Invite someone";
+      : open ? (named ? (t.youAreHost ? `Invite ${s.name}, or fill the seat with an AI.` : `The host is inviting ${s.name}.`) : t.youAreHost ? "Open seat. Fill it or leave it empty." : "Open seat. The host fills it.")
+      : s.invited && !s.occupied ? "Invitation sent · waiting on them"
+      : s.you ? "Choose a deck." : ai ? "Choose an AI deck" : "Choosing a deck";
     const controls = [];
-    if (t.phase === "selecting" || t.phase === "countdown") {
+    if (editable) {
       if (s.you) {
-        controls.push(b(s.deck ? "Change deck" : "Choose a deck", "table-deck", {seat: String(s.seatId)}, !s.deck, {cls: "compact"}));
-        controls.push(b("Choose mat", "table-mat", {}, false, {cls: "compact"}));
-        if (s.deck) controls.push(b(s.ready ? "Not ready" : "Ready", "table-ready", {ready: s.ready ? "" : "1"}, !s.ready, {cls: "compact"}));
-      } else if (t.youAreHost && s.kind === "ai") {
-        controls.push(b(s.deck ? "Change deck" : "Choose its deck", "table-deck", {seat: String(s.seatId)}, false, {cls: "compact"}));
-      } else if (t.youAreHost && s.kind === "human" && !s.occupied) {
-        controls.push(b(s.invited ? "New link" : "Invite", "table-invite", {seat: String(s.seatId)}, false, {cls: "compact"}));
-        if (s.invited) controls.push(b("Withdraw", "table-uninvite", {seat: String(s.seatId)}, false, {cls: "compact"}));
+        controls.push(b(s.deck ? "Change deck" : "Choose a deck", "table-deck", {seat: String(s.seatId), tour: "you-deck"}, !s.deck, {cls: "compact"}));
+        controls.push(b("Choose mat", "table-mat", {tour: "you-mat"}, false, {cls: "compact"}));
+        controls.push(`<button type="button" class="v-button compact${s.deck && !s.ready ? " primary" : ""}${s.ready ? " is-ready" : ""}" data-action="table-ready" data-ready="${s.ready ? "" : "1"}" data-tour="you-ready" aria-pressed="${!!s.ready}"${s.deck ? "" : " disabled"}>${s.ready ? "Ready ✓" : "Ready"}</button>`);
+      } else if (ai && seated) {
+        controls.push(b(s.deck ? "Change deck" : "Choose its deck", "table-deck", {seat: String(s.seatId), tour: "ai-deck"}, false, {cls: "compact"}));
+        controls.push(b("Edit AI", "table-edit-ai", {seat: String(s.seatId), tour: "ai-edit"}, false, {cls: "compact"}));
+      } else if (t.youAreHost && open) {
+        controls.push(b("Add an AI", "table-seat-add-ai", {seat: String(s.seatId)}, false, {cls: "compact"}));
+        controls.push(b("Invite a player", "table-invite", {seat: String(s.seatId)}, false, {cls: "compact"}));
+      } else if (t.youAreHost && s.kind === "human" && s.invited && !s.occupied) {
+        controls.push(b("New link", "table-invite", {seat: String(s.seatId)}, false, {cls: "compact"}));
+        controls.push(b("Withdraw", "table-uninvite", {seat: String(s.seatId)}, false, {cls: "compact"}));
       }
     }
-    const detail = `${pseudo ? `<p class="cm-seat-name"><span>${e((s.deck.commander || [])[0] || s.deck.name)}</span></p>` : ""}<p class="cm-seat-line"><span>${e(line)}</span></p>`;
-    const inner = `<article class="cm-lobby-seat${s.kind === "ai" ? " is-ai" : " is-human"}${s.ready ? " is-ready" : ""}" data-seat="${s.seatId}" data-mat="${e(s.mat || "felt")}">
-      <header><h3>${e(who)}</h3>${art.statusPill(state, s.ready)}</header>
-      ${art.seatFigure(pseudo, detail, controls.length ? `<div class="cm-actions cm-seat-controls">${controls.join("")}</div>` : "")}
+    const summary = persona ? `<p class="cm-seat-summary">${e(persona.summary)}</p>` : "";
+    const tags = ai ? `<div class="cm-seat-tags"><span class="is-ai">AI</span><span>${e(LEVEL_WORD[s.level] || "Normal")}</span>${persona ? `<span>${e(persona.tag)}</span>` : ""}</div>` : "";
+    const detail = lobbyUi.edit === s.seatId && ai && editable ? aiEditor(s, t)
+      : `${pseudo ? `<p class="cm-seat-name"><span>${e((s.deck.commander || [])[0] || s.deck.name)}</span></p>` : ""}<p class="cm-seat-line"><span>${e(line)}</span></p>${summary}${tags}${controls.length ? `<div class="cm-actions cm-seat-controls">${controls.join("")}</div>` : ""}`;
+    const remove = t.youAreHost && editable && s.seatId !== 0 && (s.occupied || s.invited) && !s.you
+      ? `<button type="button" class="cm-seat-remove" data-action="table-seat-remove" data-seat="${s.seatId}" data-tour="remove" aria-label="Remove ${e(s.name || `seat ${s.seatId + 1}`)}"><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" aria-hidden="true"><path d="M2 2l6 6M8 2 2 8"></path></svg>Remove seat</button>` : "";
+    const inner = `<article class="cm-lobby-seat${ai ? " is-ai" : " is-human"}${s.ready ? " is-ready" : ""}" data-seat="${s.seatId}" data-pos="${POS[s.seatId]}" data-mat="${e(s.mat || "felt")}">
+      <header><h3>${e(title)}${ai ? lg.AI_SUP : ""}</h3>${art.statusPill(state, s.ready)}${remove}</header>
+      ${art.seatFigure(pseudo, `<div class="cm-seat-info">${detail}</div>`, "")}
     </article>`;
     return {state, inner};
   }
   function centerPanel(t) {
-    const waiting = t.blockers.filter((x) => x.seatId !== null).length;
-    let launch;
+    const waiting = t.blockers.filter((x) => x.seatId !== null).length, r = rulesOf(t), seated = t.seats.filter((x) => x && (x.occupied || x.invited)).length;
+    let launch = "", button = "";
     if (t.phase === "countdown") {
-      launch = `<p class="cm-table-count" aria-live="polite">Starting in <strong id="cm-table-seconds">${Math.max(0, Math.ceil((t.countdownAt - tableNow()) / 1000))}</strong></p>${t.youAreHost ? b("Cancel", "table-cancel", {}, false, {cls: "compact"}) : ""}`;
+      launch = `<p class="cm-table-count" aria-live="polite">Starting in <strong id="cm-table-seconds">${Math.max(0, Math.ceil((t.countdownAt - tableNow()) / 1000))}</strong></p>`;
+      button = t.youAreHost ? b("Cancel", "table-cancel", {}, false, {cls: "compact"}) : "";
     } else if (t.phase === "selecting") {
       /* "Launches when all are ready · n to go" (the brief, 2026-10-12): the count of seats still to go, then the one
          reason that is not a seat's, if any. The host's Start begins the ten-second countdown; it never launches outright. */
-      const why = t.blockers.length ? `Launches when all are ready · ${waiting ? `${waiting} seat${waiting === 1 ? "" : "s"} to go` : t.blockers[0].reason}.` : "Everyone is ready.";
-      launch = `<p class="cm-table-launch${t.launchError ? " is-error" : ""}">${e(t.launchError || why)}</p>${t.youAreHost ? b("Start", "table-start", {}, !t.blockers.length, {cls: "compact"}) : ""}${t.blockers.length || t.youAreHost ? "" : `<p class="cm-muted cm-table-launch-note">The host starts the ten-second countdown.</p>`}`;
+      const why = t.blockers.length ? `Launches when all are ready · ${waiting ? `${waiting} seat${waiting === 1 ? "" : "s"} to go` : t.blockers[0].reason}.` : t.youAreHost ? "Everyone is ready. Start when you like." : "Everyone is ready. Waiting on the host.";
+      launch = `<p class="cm-table-launch${t.launchError ? " is-error" : ""}" data-tour="launch">${e(t.launchError || why)}</p>`;
+      button = t.youAreHost ? `<button type="button" class="v-button compact${t.blockers.length ? "" : " primary"}" data-action="table-start" data-tour="start"${t.blockers.length ? " disabled" : ""}>Start</button>` : "";
     } else launch = `<p class="cm-table-launch">${e(t.phase === "playing" ? "The game is on." : t.phase === "rematch" ? "The game is over." : "Starting…")}</p>`;
+    const privacy = t.privacy === "public" ? "Public" : t.privacy === "private" ? "Private" : "";
+    const rows = [["Starting life", r.startingLife], ["Bracket limit", r.bracketLimit ? `${r.bracketLimit} or lower` : "Any"], ["Seats", `${seated} of 4`], ...(privacy ? [["Privacy", privacy]] : []), ...(r.houseRules ? [["House rules", "On"]] : []), ["Invitations last", "a day"], ["A dropped player has", "5 minutes"]];
+    const editing = lobbyUi.rules && t.youAreHost && t.phase === "selecting";
+    const editor = editing ? `<form class="cm-lb-rules" id="cm-table-rules-form">
+      <label>Starting life<input type="number" name="startingLife" min="1" max="999" step="1" inputmode="numeric" value="${r.startingLife}" required></label>
+      <label>Bracket limit<select name="bracketLimit"><option value="">Any</option>${[1, 2, 3, 4, 5].map((n) => `<option value="${n}"${r.bracketLimit === n ? " selected" : ""}>${n} or lower</option>`).join("")}</select></label>
+      <label>Privacy<select name="privacy"><option value="private"${t.privacy !== "public" ? " selected" : ""}>Private</option><option value="public"${t.privacy === "public" ? " selected" : ""}>Public</option></select></label>
+      <label>House rules<select name="houseRules"><option value="">Off</option><option value="1"${r.houseRules ? " selected" : ""}>On</option></select></label>
+      ${lobbyUi.rulesError ? `<p class="cm-lb-rules-error" role="alert">${e(lobbyUi.rulesError)}</p>` : ""}
+      <button type="button" class="v-button compact" data-action="table-rules-cancel">Cancel</button><button type="button" class="v-button compact primary" data-action="table-rules-save">Save rules</button></form>` : "";
+    const end = t.youAreHost && (t.phase === "selecting" || t.phase === "countdown")
+      ? (lobbyUi.confirmEnd ? `<div class="cm-lb-confirm"><p><b>End this game for everyone?</b></p><p>The seats are released and nothing is recorded.</p><div><button type="button" class="v-button compact" data-action="table-end-keep">Keep the game</button><button type="button" class="v-button compact is-danger" data-action="table-end">End game</button></div></div>`
+        : `<button type="button" class="cm-lb-end" data-action="table-end-ask" data-tour="end">End game</button>`) : "";
     return `<section class="cm-table-center" aria-label="Table rules">
       <img class="cm-table-stamp" src="assets/crankmagic/crankmagic-logo-gear-v4-256.webp" alt="" aria-hidden="true">
-      <div class="cm-table-head"><h2>Table rules</h2>${t.youAreHost && t.phase === "selecting" ? `<button type="button" class="cm-table-rules-edit" data-action="table-rules" aria-label="Edit the table rules">Edit</button>` : ""}<span class="cm-table-setby-top">set by the host</span></div>
-      <dl class="cm-table-rules"><div><dt>Starting life</dt><dd>${rulesOf(t).startingLife}</dd></div><div><dt>Bracket limit</dt><dd>${rulesOf(t).bracketLimit ? `${rulesOf(t).bracketLimit} or lower` : "Any"}</dd></div><div><dt>Seats</dt><dd>${t.seats.length}</dd></div><div><dt>Invitations last</dt><dd>a day</dd></div><div><dt>A dropped player has</dt><dd>5 minutes</dd></div></dl>
-      <div class="cm-table-launch-row" id="cm-table-launch">${launch}</div>
+      <div class="cm-table-head"><h2>Table rules</h2>${t.youAreHost && t.phase === "selecting" && !editing ? `<button type="button" class="cm-table-rules-edit" data-action="table-rules" data-tour="rules" aria-label="Edit the table rules">Edit</button>` : ""}<span class="cm-table-setby-top">${t.youAreHost ? "set by you, the host" : "set by the host"}</span></div>
+      ${editing ? editor : `<dl class="cm-table-rules">${rows.map(([k, v]) => `<div><dt>${e(k)}</dt><dd>${e(String(v))}</dd></div>`).join("")}</dl>`}
+      ${editing || lobbyUi.confirmEnd ? "" : `<div class="cm-table-launch-row" id="cm-table-launch">${launch}${button}</div>`}${editing ? "" : end}
     </section>`;
   }
   /* THE TABLE'S RULES (Rob, 2026-09-30): the host edits the starting life and the bracket limit from a small Edit beside
      the panel's heading, and not once any seat is ready -- then the Edit is refused, saying how to change them. */
   const rulesOf = (t) => t.rules || {startingLife: 40, bracketLimit: null};
-  const readyNames = (t) => t.seats.filter((x) => x.ready).map((x) => x.name);
+  const readyNames = (t) => t.seats.filter((x) => x.ready && x.kind !== "ai").map((x) => x.name);
   const namesText = (list) => list.length === 1 ? list[0] : `${list.slice(0, -1).join(", ")} and ${list.at(-1)}`;
   actions["table-rules"] = () => {
     const ready = readyNames(current);
-    if (ready.length) throw Error(`The rules can't change once a seat is ready, and ${namesText(ready)} ${ready.length === 1 ? "is" : "are"}. Take back Ready (an AI seat is ready once its deck is chosen, so choose AI decks after the rules), then edit the rules.`);
-    const r = rulesOf(current);
-    const dialog = C.modal("Table rules", `<form id="cm-table-rules-form" class="cm-table-rules-form">
-      <label>Starting life<input type="number" name="startingLife" min="1" max="999" step="1" inputmode="numeric" value="${r.startingLife}" required></label>
-      <label>Bracket limit<select name="bracketLimit"><option value="">Any</option>${[1, 2, 3, 4, 5].map((n) => `<option value="${n}"${r.bracketLimit === n ? " selected" : ""}>${n} or lower</option>`).join("")}</select></label>
-      <p class="cm-muted">A deck above the limit is refused when it is chosen. The rules can't change once a seat is ready.</p>
-      <div id="cm-table-rules-error" class="cm-note cm-warning" hidden></div>
-      <div class="cm-form-footer">${b("Save the rules", "table-rules-save", {}, true)}</div></form>`);
-    dialog.classList.add("cm-table-rules-dialog");
+    if (ready.length) throw Error(`The rules can't change once a seat is ready, and ${namesText(ready)} ${ready.length === 1 ? "is" : "are"}. Take back Ready, then edit the rules.`);
+    lobbyUi.rulesError = "";
+    lobbyUi.rules = true; lobbyUi.confirmEnd = false;
+    redraw();
   };
+  actions["table-rules-cancel"] = () => {lobbyUi.rules = false; lobbyUi.rulesError = ""; redraw();};
   actions["table-rules-save"] = async () => {
-    const v = Object.fromEntries(new FormData(document.getElementById("cm-table-rules-form")));
+    const form = document.getElementById("cm-table-rules-form"), v = Object.fromEntries(new FormData(form));
     try {
-      await api("POST", `${tableUrl(current.tableId)}/rules`, {startingLife: Number(v.startingLife), bracketLimit: v.bracketLimit ? Number(v.bracketLimit) : null});
-      actions.close();
+      await lobbyCall("rules", {startingLife: Number(v.startingLife), bracketLimit: v.bracketLimit ? Number(v.bracketLimit) : null, houseRules: v.houseRules === "1", privacy: v.privacy});
+      lobbyUi.rules = false; lobbyUi.rulesError = "";
       await refresh(current.tableId);
     } catch (error) {
-      const box = document.getElementById("cm-table-rules-error");
-      if (!box) throw error;
-      box.hidden = false; box.textContent = error.message;
+      lobbyUi.rulesError = error.message; redraw();
     }
+  };
+  /* The lobby drawn again from what the page holds (a seat's editor opened, the rules' editor, End game's question). */
+  const redraw = () => {if (current) {drawnKey = null; draw(current);}};
+  /* A lobby door the server has not opened yet says so, in words, rather than failing silently. */
+  async function lobbyCall(action, body) {
+    try {return await api("POST", `${tableUrl(current.tableId)}/${action}`, body || {});}
+    catch (error) {
+      if (error && (error.status === 404 || error.status === 405)) throw Error("That is not open on this server yet.");
+      throw error;
+    }
+  }
+  actions["table-seat-remove"] = async (el) => {await lobbyCall("seat", {op: "remove", seatId: Number(el.dataset.seat)}); if (lobbyUi.edit === Number(el.dataset.seat)) lobbyUi.edit = null; await refresh(current.tableId);};
+  actions["table-seat-add-ai"] = async (el) => {
+    const lg = lounge(), seatId = Number(el.dataset.seat), used = new Set(current.seats.filter((x) => x && x.kind === "ai" && !seatOpen(x)).map((x) => x.persona));
+    const persona = lg.PERSONA_ORDER.find((id) => !used.has(id)) || lg.PERSONA_ORDER[0];
+    await lobbyCall("seat", {op: "add-ai", seatId, name: persona ? lg.PERSONAS[persona].name : `AI ${seatId + 1}`, level: "normal", ...(persona ? {persona} : {})});
+    const table = await refresh(current.tableId);
+    const failures = await autoDeckAI(table);
+    if (failures.length) C.notice(failures.join(" "), true, {undo: false});
+    await refresh(current.tableId);
+  };
+  actions["table-edit-ai"] = (el) => {lobbyUi.edit = lobbyUi.edit === Number(el.dataset.seat) ? null : Number(el.dataset.seat); redraw(); C.main.querySelector(".cm-lb-edit input")?.focus({preventScroll: true});};
+  actions["table-edit-ai-done"] = () => {lobbyUi.edit = null; redraw();};
+  document.addEventListener("change", async (event) => {
+    const el = event.target.closest?.("[data-edit-ai]"); if (!el || !current) return;
+    const seatId = Number(el.dataset.seat), field = el.dataset.editAi;
+    try {await lobbyCall("seat", {op: "edit-ai", seatId, [field]: el.value.trim()}); await refresh(current.tableId);}
+    catch (error) {C.notice(error.message, true, {undo: false}); await refresh(current.tableId).catch(() => {});}
+  });
+  actions["table-end-ask"] = () => {lobbyUi.confirmEnd = true; lobbyUi.rules = false; redraw();};
+  actions["table-end-keep"] = () => {lobbyUi.confirmEnd = false; redraw();};
+  actions["table-end"] = async () => {
+    lobbyUi.confirmEnd = false;
+    await api("POST", `${tableUrl(current.tableId)}/end`, {});
+    keepSeat(null); C.go("game"); C.notice("The game was ended. Every seat has been released.", false, {undo: false});
   };
   /* After the game: the board is put away and the lobby says so. (While it is on, the page is the board.) */
   /* PLAY AGAIN (ROB-167; the table's `rematch`, docs/ui-lane/gameplay-anchor.md "After the game: Play again"): the same
@@ -336,8 +447,10 @@
     if (C.board && C.board.wants(t)) return C.board.show(t, asked);
     /* The table is read every two seconds; a read that changed nothing leaves the page as it is (Rob, 2026-09-29:
        every redraw restarted the seats' seas, and it loses whatever the reader was pointing at). */
-    const key = JSON.stringify(t);
+    const key = JSON.stringify([t, lobbyUi]);
     if (key === drawnKey && C.main.querySelector(".cm-cloud-table")) return;
+    /* What is being typed in an AI seat's editor is not redrawn under the typist: the next read draws it. */
+    if (C.main.querySelector(".cm-lb-edit") && document.activeElement?.closest?.(".cm-lb-edit") && lobbyUi.edit !== null && drawnKey) return;
     drawnKey = key;
     const art = C.seatArt;
     const seats = ORDER.map(([corner, i]) => {
@@ -348,11 +461,17 @@
     }).join("");
     /* Drawn anew, the lobby keeps the focus on the control the keyboard was on (the accessibility pass). */
     C.keepFocus(C.main, () => {
-      C.main.innerHTML = C.pageHead("Play", "", "table", `<p class="cm-muted">${t.youAreHost ? "Your table." : "You were invited to this table."} Four seats at most; it starts when everyone is ready.</p>`)
-        + (t.phase === "rematch" ? gamePanel(t) : "")
-        + `<div class="cm-lobby-table cm-cloud-table" data-phase="${e(t.phase)}">${seats}${centerPanel(t)}</div>`;
+      C.main.innerHTML = `<div class="cm-pl cm-lb"><header class="cm-pl-head"><h1 class="cm-pl-title">Play</h1>
+        <button type="button" class="cm-pl-ibtn" data-action="page-help" data-help="table" aria-label="About this page" title="About this page">?</button>
+        <button type="button" class="cm-pl-ibtn" data-action="send-feedback" aria-label="Send feedback" title="Send feedback">${PL_MAIL}</button>
+        <button type="button" class="cm-pl-btn" data-action="lobby-tour"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 14V2.5"></path><path d="M3.5 3h8l-1.6 2.75L11.5 8.5h-8"></path></svg>Lobby tour</button>
+        <a class="cm-lb-leave" href="#game" data-lobby-leave>Leave lobby</a></header>
+        <p class="cm-lb-sub">${t.youAreHost ? "Your table." : "You were invited to this table."} Four seats at most; it starts when everyone is ready.</p>
+        ${t.phase === "rematch" ? gamePanel(t) : ""}
+        <div class="cm-lb-frame"><div class="cm-cloud-table cm-lb-grid" data-phase="${e(t.phase)}">${seats}${centerPanel(t)}</div></div></div>`;
     });
     art.startSeas();
+    C.lounge?.tourRefresh?.();
   }
 
   /* Your mat, remembered: the first time this page sees you seated on felt at a table, it puts your last mat there. */
@@ -381,18 +500,18 @@
       return;
     }
     const id = params.get("id"), code = params.get("code");
+    lobbyUi = {edit: null, rules: false, confirmEnd: false, rulesError: ""};
     /* Play, with a game of yours on (item 19): straight back to it, in place of this page in the history. */
     const live = !id && !params.has('new') && C.board && C.board.live && C.board.live();
     if (live) {location.replace(`#table?id=${encodeURIComponent(live.tableId)}`); return;}
-    if (!id) return newTable(params.get("deck"), params.get("ai") === "1");
+    /* A new game is a pop-up over the Pre-lobby (Rob, 2026-10-28: "get rid of that page"); a link to it opens both. */
+    if (!id) {const cleanup = views.playHome(); C.lounge?.newGame({deckId: params.get("deck"), ai: params.get("ai") === "1"}); return cleanup;}
     let stop = false, timer = null;
     const tick = () => {
       const seconds = document.getElementById("cm-table-seconds"), left = current && current.countdownAt ? String(Math.max(0, Math.ceil((current.countdownAt - tableNow()) / 1000))) : null;
       /* written only when it changes: the count is a live region, said each time it is written */
       if (seconds && left !== null && seconds.textContent !== left) seconds.textContent = left;
-      const host=document.querySelector('.cm-cloud-table');if(host&&globalThis.CrankBoard?.countdown){const value=current?.phase==='countdown'?Number(left):null;if(host.dataset.countdownValue!==String(value)){globalThis.CrankBoard.countdown(host,value);host.dataset.countdownValue=String(value);}}
-      /* The way back stays above the shared dimmer, beside its callout, rather than under it. */
-      const cancel=host?.querySelector('[data-action=table-cancel]');if(cancel&&cancel.parentElement!==host){cancel.classList.add('cm-countdown-cancel');host.append(cancel);}
+      /* One count only (Rob, 2026-10-28: "I don't need two counters"): the panel's "Starting in" is it; the large numeral over a dimmed lobby is gone. */
     };
     const loop = async () => {
       if (stop) return;
@@ -408,7 +527,7 @@
       loop();
     })();
     /* Leaving the page is not leaving the game: the board keeps its socket, and the seat is never marked away. */
-    return () => {stop = true; clearTimeout(timer); clearInterval(clock); if (C.board) C.board.detach();};
+    return () => {stop = true; clearTimeout(timer); clearInterval(clock); C.lounge?.tourClose?.(); if (C.board) C.board.detach();};
   };
   function showError(error, id) {
     const signIn = error.signedOut ? b("Sign in", "account-sign-in", {}, true) : "";
@@ -431,16 +550,18 @@
   const PL_MAIL = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="3.5" width="12" height="9" rx="1.5"></rect><path d="M2.5 4.5 8 9l5.5-4.5"></path></svg>';
   const PL_AI = '<sup class="cm-ai" aria-label="AI">ai</sup>';
   /* A table the server lists, as the page reads it. */
-  const plGame = (g, admin) => {
+  const plGame = (g) => {
     const live = g.location === "live", mine = g.mine === true;
     return {id: g.tableId, live, mine, organizer: g.organizer || "A player", commander: g.commander || "No deck yet", mechanic: g.mechanic || "", privacy: g.privacy === "private" ? "Private" : "Public",
       ai: Number(g.ai) || 0, human: Number(g.human) || 0, open: Number(g.open) || 0, startedAt: live && g.startedAt ? Number(g.startedAt) : null, roster: Array.isArray(g.roster) ? g.roster : [],
-      canJoin: !live && Number(g.open) > 0 && !mine, canAdmin: admin || mine, adminLabel: admin && !mine ? "Admin" : "Organizer"};
+      canJoin: !live && Number(g.open) > 0 && !mine};
   };
   views.playHome = () => {
     if(!cloudPlay())return views.table(new URLSearchParams());
     let active = true;
-    const admin = C.adminAllowed?.() === true;
+    let admin = C.adminAllowed?.() === true;
+    /* Whether this person is the admin is read once, a moment after the page opens; the page asks again when it is known. */
+    Promise.resolve(C.adminReady).then(() => {if (active && (C.adminAllowed?.() === true) !== admin) {admin = !admin; render();}});
     const st = {games: [], lb: [], liveKnown: false, lbKnown: false, open: null, sortKey: "wins", sortDir: -1, joinOpen: false, resume: null, resumeChecked: false};
     const root = document.createElement("div");
     root.className = "cm-pl"; root.id = "cm-play-home";
@@ -450,6 +571,7 @@
     const countBtn = (g, kind, n) => `<button type="button" class="cm-pl-count" data-pl="seats" data-game="${e(g.id)}" data-kind="${kind}" aria-expanded="${st.open === `${g.id}:${kind}`}" aria-label="${n} ${kind === "ai" ? "AI" : "human"} seats in ${e(g.organizer)}'s game. Show players.">${n}</button>`;
     const gameRows = () => st.games.map((g) => {
       const menuOpen = st.open === g.id, ai = st.open === `${g.id}:ai`, human = st.open === `${g.id}:human`, label = `Actions for ${g.organizer}'s game`;
+      const canAdmin = admin || g.mine, adminLabel = admin && !g.mine ? "Admin" : "Organizer";
       const people = g.roster.filter((p) => (ai ? p.ai : !p.ai));
       return `<tr class="cm-pl-row" data-game="${e(g.id)}">
         <td><span class="cm-pl-loc ${g.live ? "is-live" : "is-lobby"}"><i aria-hidden="true"></i>${g.live ? "Live" : "Lobby"}</span><span class="cm-pl-priv">${g.privacy}</span></td>
@@ -462,7 +584,7 @@
       ${menuOpen ? `<tr class="cm-pl-more"><td colspan="7"><div class="cm-pl-menu" role="menu" aria-label="${e(label)}">
         ${g.canJoin ? `<button type="button" role="menuitem" class="cm-pl-mi" data-pl="join" data-game="${e(g.id)}">Request to join<small>The organizer approves your seat</small></button>` : ""}
         <button type="button" role="menuitem" class="cm-pl-mi" data-pl="watch" data-game="${e(g.id)}">Watch<small>Spectate any seat. No hands or libraries.</small></button>
-        ${g.canAdmin ? `<hr><p>${g.adminLabel}</p><button type="button" role="menuitem" class="cm-pl-mi" data-pl="logs" data-game="${e(g.id)}">Game logs</button><button type="button" role="menuitem" class="cm-pl-mi is-danger" data-pl="quit" data-game="${e(g.id)}">Quit game</button>` : ""}
+        ${canAdmin ? `<hr><p>${adminLabel}</p><button type="button" role="menuitem" class="cm-pl-mi" data-pl="logs" data-game="${e(g.id)}">Game logs</button><button type="button" role="menuitem" class="cm-pl-mi is-danger" data-pl="quit" data-game="${e(g.id)}">Quit game</button>` : ""}
       </div></td></tr>` : ""}
       ${ai || human ? `<tr class="cm-pl-more"><td colspan="7"><div class="cm-pl-info" role="region" aria-label="${ai ? "AI seats" : "Human seats"} · ${e(g.organizer)}'s game">
         <div class="cm-pl-info-head"><p>${ai ? "AI seats" : "Human seats"} · ${e(g.organizer)}'s game</p><button type="button" data-pl="close-info" aria-label="Close">×</button></div>
@@ -511,10 +633,23 @@
     };
     /* ---- the pop-ups: their own layer, so typing in one is never undone by a redraw of the page ---- */
     let layer = null;
-    const closeLayer = () => {layer?.remove(); layer = null; document.removeEventListener("keydown", escKey, true);};
-    const escKey = (event) => {if (event.key === "Escape") {event.stopPropagation(); closeLayer(); st.joinOpen = false;}};
+    let opener = null;
+    const closeLayer = () => {layer?.remove(); layer = null; document.removeEventListener("keydown", escKey, true); if (opener && opener !== document.body && document.contains(opener)) opener.focus?.({preventScroll: true}); opener = null;};
+    const escKey = (event) => {
+      if (event.key === "Tab" && layer) {
+        /* aria-modal says the page behind is out of reach, so Tab stays inside the window. */
+        const live = [...layer.querySelectorAll("button:not([disabled]),input,select")].filter((x) => x.offsetParent !== null);
+        if (!live.length) return;
+        if (!layer.contains(document.activeElement)) {event.preventDefault(); live[0].focus();}
+        else if (event.shiftKey && document.activeElement === live[0]) {event.preventDefault(); live.at(-1).focus();}
+        else if (!event.shiftKey && document.activeElement === live.at(-1)) {event.preventDefault(); live[0].focus();}
+        return;
+      }
+      if (event.key === "Escape") {event.stopPropagation(); closeLayer(); st.joinOpen = false;}
+    };
     const openLayer = (html) => {
       closeLayer();
+      opener = document.activeElement;
       layer = document.createElement("div"); layer.className = "cm-pl cm-pl-scrim"; layer.innerHTML = html;
       document.getElementById("matrix-v2").append(layer);
       document.addEventListener("keydown", escKey, true);
@@ -551,7 +686,7 @@
         case "seats": {const k = `${g.id}:${el.dataset.kind}`; st.open = st.open === k ? null : k; render(); break;}
         case "close-info": st.open = null; render(); break;
         case "sort": st.sortDir = el.dataset.key === st.sortKey ? -st.sortDir : (el.dataset.key === "name" ? 1 : -1); st.sortKey = el.dataset.key; render(); break;
-        case "new": C.go("table?new=1"); break;
+        case "new": C.lounge.newGame(); break;
         case "open-join": joinDialog(); break;
         case "close-layer": closeLayer(); break;
         case "invite": actions["play-join"](); break;
@@ -569,7 +704,7 @@
     const loadLive = async () => {
       try {
         const {games} = await api("GET", "/api/tables/live");
-        st.games = (games || []).map((g) => plGame(g, admin)); st.liveKnown = true;
+        st.games = (games || []).map(plGame); st.liveKnown = true;
       } catch {st.games = []; st.liveKnown = true;}
       if (active) {if (st.open && !st.games.some((g) => st.open.startsWith(g.id))) st.open = null; render();}
     };
@@ -598,8 +733,8 @@
   };
   actions['play-leave-seat']=el=>C.modal('Leave this table?',`<p>This device will disconnect. Your seat follows the table's normal reconnect window, and its saved shortcut remains available if you want to return.</p><div class="cm-form-footer">${b('Cancel','close')}${b('Leave table','play-leave-confirm',{table:el.dataset.table},true)}</div>`);
   actions['play-leave-confirm']=async el=>{const id=el.dataset.table;C.board?.close();actions.close();await C.render();C.notice('Disconnected from the table on this device.',false,{undo:false,action:{label:'Return to table',run:()=>C.go('table',{id})}});};
-  actions['play-new-table']=()=>C.go('table?new=1');
-  actions['play-ai-table']=()=>C.go('table?new=1&ai=1');
+  actions['play-new-table']=()=>C.lounge.newGame();
+  actions['play-ai-table']=()=>C.lounge.newGame({ai: true});
   actions['play-join']=()=>{
     const input=document.getElementById('cm-play-invite'),error=document.getElementById('cm-play-join-error');
     try{
@@ -613,117 +748,10 @@
     }catch(err){error.textContent=err.message;input.focus();}
   };
 
-  /* ---- a new table ---- */
-  function newTable(deckId = null, ai = false) {
-    const row = (n) => `<div class="cm-table-new-seat" data-seat-position="${n}"><strong>Seat ${n}</strong>
-      <select name="kind${n}" aria-label="Seat ${n}"><option value="human"${n === 2 ? " selected" : ""}>A person I will invite</option><option value="ai">An AI · Normal</option><option value="ai-easy">An AI · Easy</option><option value="none"${n > 2 ? " selected" : ""}>Nobody</option></select>
-      <input name="name${n}" maxlength="60" placeholder="${n === 2 ? "Their name" : "Name (optional)"}" aria-label="Seat ${n} name"></div>`;
-    C.main.innerHTML = C.pageHead("Play", "", "table") + `<section class="v-panel cm-table-new"><h2>New table</h2>
-      <p class="cm-muted">You sit in seat 1 as the host. Each other seat is a person you invite, an AI, or nobody; a table seats two to four.</p>
-      <form id="cm-table-new"><div class="cm-table-new-deck" id="cm-table-new-deck" aria-live="polite"></div><div class="cm-new-table-square"><div class="cm-table-new-seat cm-new-host" data-seat-position="1"><strong>You · Host</strong><label><span>Your name at the table&nbsp;<span aria-hidden="true">*</span></span><input name="hostName" maxlength="60" required aria-describedby="cm-table-host-error"><span class="cm-error cm-table-field-error" id="cm-table-host-error" role="alert"></span></label></div>${row(2)}${row(3)}${row(4)}<span class="cm-new-table-center" aria-hidden="true">COMMANDER</span></div><div class="cm-new-table-rules"><span>Commander</span><span>Invitation-only</span><span>2–4 seats</span><span>Review rules at the table</span></div><label>Your deck<select name="deck" id="cm-new-table-deck"><option value="">Choose at the table</option>${libraryDecks().map(d=>`<option value="${e(d.id)}"${d.id===deckId?' selected':''}>${e(d.name)}</option>`).join('')}</select></label>
-      <p class="cm-error" id="cm-table-new-error" role="alert"></p><fieldset class="cm-table-setup-rules"><legend>Table rules</legend><label>Starting life<input name="startingLife" type="number" min="1" max="999" value="40" required aria-describedby="cm-table-rules-error"><span class="cm-error cm-table-field-error" id="cm-table-rules-error" role="alert"></span></label><label>Bracket limit<select name="bracketLimit"><option value="">Any</option>${[1,2,3,4,5].map(n=>`<option value="${n}"${libraryDecks().find(d=>d.id===deckId)?.definition.baseBracket===n?' selected':''}>${n} or lower</option>`).join('')}</select></label></fieldset>
-      <div class="cm-actions">${b("Set the table", "table-create", {}, true)}</div></form></section>`;
-    try {const last=JSON.parse(localStorage.getItem("cm-table-setup")||"null");if(last && last.owner === (C.signedInAs?.() || null)){const form=document.getElementById("cm-table-new");for(const key of ["hostName","kind2","name2","kind3","name3","kind4","name4"]){if(typeof last[key]==="string" && form.elements[key] && (!key.startsWith("kind") || ["human","ai","ai-easy","none"].includes(last[key])))form.elements[key].value=last[key];}}}catch{}
-    document.querySelector('[name=hostName]').addEventListener('input',event=>{event.target.removeAttribute('aria-invalid');document.getElementById('cm-table-host-error').textContent='';});
-    if(ai){const f=document.getElementById("cm-table-new");f.elements.kind2.value="ai";f.elements.name2.value="AI";f.elements.kind3.value="none";f.elements.kind4.value="none";}
-    document.getElementById("cm-new-table-deck").addEventListener("change",event=>{const deck=libraryDecks().find(d=>d.id===event.target.value);if(deck)bringing(deck);else document.getElementById("cm-table-new-deck").replaceChildren();});
-    recentGames();
-    const bring = deckId ? libraryDecks().find((d) => d.id === deckId) : null;
-    if (bring) bringing(bring);
-    const kept = seatKept();
-    if (kept) waitingSeat(kept, bring);
-    offerClaude();
-  }
-  /* PLAY THIS DECK (AI-5): the deck you came with is said above the seats and goes to your seat once the table is made --
-     only if the table can play every card of it; otherwise the page says which it cannot, and you choose another there. */
-  async function bringing(deck) {
-    let r;
-    try {r = await readiness(deck);} catch {return;}
-    const box = document.getElementById("cm-table-new-deck");
-    const select = document.getElementById("cm-new-table-deck");
-    if (!box || !select || select.value !== deck.id) return;
-    if (r.count) select.value = "";
-    box.innerHTML = r.count
-      ? `<p class="cm-note cm-warning">${e(deck.name)} cannot be played at the table yet: ${r.count} of its cards ${r.count === 1 ? "is" : "are"} not in the rules engine (${e(r.unknown.slice(0, 6).join(", "))}${r.unknown.length > 6 ? ", …" : ""}). Create the table and choose another deck there.</p>`
-      : `<p>You bring <strong>${e(deck.name)}</strong> to seat 1.</p>`;
-    box.hidden = false;
-  }
-  /* AN AI ON CLAUDE (AI-2), offered beside Normal and Easy only where this person may seat one (GET /api/ai-seat). */
-  async function offerClaude() {
-    let open = false;
-    try {({open} = await api("GET", "/api/ai-seat"));} catch {return;}
-    const form = document.getElementById("cm-table-new");
-    if (!open || !form) return;
-    for (const select of form.querySelectorAll("select[name^=kind]")) {
-      if (select.querySelector("option[value=ai-llm]")) continue;
-      select.querySelector("option[value=ai-easy]").insertAdjacentHTML("afterend", `<option value="ai-llm">An AI · Claude</option>`);
-    }
-  }
-  /* RECENT GAMES (Play home, 2026-10-12): the last few results filed in the library, under New table -- the outcome, the
-     deck, the pod and the day -- each a way to its deck's record. Nothing when none is filed yet. */
-  function recentGames() {
-    const games = [...(C.state.games || [])].sort((a, b) => String(b.playedAt || b.at || "").localeCompare(String(a.playedAt || a.at || ""))).slice(0, 5);
-    const form = document.querySelector(".cm-table-new");
-    if (!games.length || !form) return;
-    const deckName = (id) => ((C.state.decks || []).find((d) => d.id === id) || {}).name || "a deck no longer in the library";
-    const WORD = {win: "Won", loss: "Lost", draw: "Drew", unfinished: "Unfinished"};
-    const rows = games.map((g) => `<li class="cm-table-recent-row" data-outcome="${e(g.outcome || "")}"><b>${e(WORD[g.outcome] || g.outcome || "Played")}</b><span>${e(deckName(g.deckId))}</span><span class="cm-muted">${g.pod ? `${g.pod} seats · ` : ""}${g.playedAt || g.at ? e(C.usDate(g.playedAt || g.at)) : ""}</span></li>`).join("");
-    form.insertAdjacentHTML("afterend", `<section class="v-panel cm-table-recent" id="cm-table-recent" aria-label="Recent games"><h2>Recent games</h2><ol class="cm-table-recent-list">${rows}</ol><p class="cm-muted">Every game you finish at a table is filed under the deck you brought. Its record is on the deck's page.</p></section>`);
-  }
-  /* The kept seat, if it is still yours and its game not over: said first, above New table. */
-  async function waitingSeat(id, bring = null) {
-    let table;
-    try {({table} = await api("GET", tableUrl(id)));}
-    catch (error) {if (error.status === 403 || error.status === 404 || error.status === 410) keepSeat(null); return;}
-    const form = document.getElementById("cm-table-new");
-    if (!form || document.getElementById("cm-table-back")) return;
-    if (!table.seats.some((s) => s && s.you) || table.phase === "rematch") {keepSeat(null); return;}
-    const host = table.seats[0];   /* the host sits in seat 1 */
-    const whose = table.youAreHost ? "your table" : host && host.name ? `${e(host.name)}'s table` : "the host's table";
-    form.closest(".cm-table-new").insertAdjacentHTML("beforebegin", `<section class="v-panel cm-table-back" id="cm-table-back"><h2>Your seat is waiting</h2>
-      <p>You have a seat at ${whose}${table.phase === "playing" ? ", and its game is on" : ", and its game has not started yet"}.</p>
-      <div class="cm-actions">${b("Back to your table", "table-back", {table: table.tableId}, true)}</div></section>`);
-    /* With a deck to bring, and the game not yet begun: bring it to your seat there instead of a new table (AI-5). */
-    const mine = table.seats.find((s) => s && s.you);
-    if (!bring || !mine || !["selecting", "countdown"].includes(table.phase)) return;
-    let r;
-    try {r = await readiness(bring);} catch {return;}
-    const actionsRow = document.querySelector("#cm-table-back .cm-actions");
-    if (r.count || !actionsRow) return;
-    actionsRow.insertAdjacentHTML("beforeend", b(`Bring ${bring.name} there`, "table-bring", {table: table.tableId, seat: String(mine.seatId), deck: bring.id}));
-  }
-  actions["table-bring"] = async (el) => {
-    const deck = libraryDecks().find((d) => d.id === el.dataset.deck);
-    if (!deck) throw Error("That deck is not in your library any more.");
-    await api("POST", `${tableUrl(el.dataset.table)}/deck`, {seatId: Number(el.dataset.seat), deck: deckForTable(deck)});
-    C.go("table", {id: el.dataset.table});
-  };
   actions["table-back"] = (el) => C.go("table", {id: el.dataset.table});
-  const creatingTables=new WeakSet();
-  actions["table-create"] = async () => {
-    const form = document.getElementById("cm-table-new");
-    if(creatingTables.has(form))return;
-    const v = Object.fromEntries(new FormData(form));
-    if (!v.hostName.trim()){const input=form.elements.hostName;input.setAttribute('aria-invalid','true');document.getElementById('cm-table-host-error').textContent='Give your name at the table.';input.focus();return;}
-    const life=Number(v.startingLife);if(!Number.isInteger(life)||life<1||life>999){const input=form.elements.startingLife;input.setAttribute('aria-invalid','true');document.getElementById('cm-table-rules-error').textContent='Choose starting life from 1 to 999.';input.focus();return;}
-    /* An AI at Normal or Easy (AI-2): Normal scores its choices; Easy, now and then, takes the second best; Claude asks a
-       model at its close calls. */
-    const seats = [2, 3, 4].filter((n) => v[`kind${n}`] !== "none").map((n) => (v[`kind${n}`].startsWith("ai")
-      ? {kind: "ai", level: ({"ai-easy": "easy", "ai-llm": "llm"})[v[`kind${n}`]] || "normal", name: v[`name${n}`]}
-      : {kind: v[`kind${n}`], name: v[`name${n}`]}));
-    if (!seats.length){document.getElementById('cm-table-new-error').textContent='Choose at least one other seat: a person or an AI.';form.elements.kind2.focus();return;}
-    document.getElementById('cm-table-new-error').textContent='';
-    creatingTables.add(form);
-    try{
-    const {table} = await api("POST", "/api/tables", {hostName: v.hostName, seats});
-    try {localStorage.setItem("cm-table-setup",JSON.stringify({owner:C.signedInAs?.() || null,...Object.fromEntries(["hostName","kind2","name2","kind3","name3","kind4","name4"].map(k=>[k,v[k]]))}));}catch{}
-    keepSeat(table.tableId);
-    await finishTableSetup(table,v);
-    }finally{creatingTables.delete(form);}
-  };
   const settingUp=new Set();
   async function finishTableSetup(table,v){if(settingUp.has(table.tableId))return;settingUp.add(table.tableId);
-    try{await api('POST',`${tableUrl(table.tableId)}/rules`,{startingLife:Number(v.startingLife),bracketLimit:v.bracketLimit?Number(v.bracketLimit):null});}
+    try{await api('POST',`${tableUrl(table.tableId)}/rules`,{startingLife:Number(v.startingLife),bracketLimit:v.bracketLimit?Number(v.bracketLimit):null,...(v.houseRules!==undefined?{houseRules:v.houseRules===true}:{}),...(v.privacy?{privacy:v.privacy}:{})});}
     catch(error){C.go('table',{id:table.tableId});C.notice('Your table was created, but its rules were not saved. '+error.message,true,{action:{label:'Retry rules',run:()=>finishTableSetup(table,v)}});settingUp.delete(table.tableId);return;}
     try{const bring=v.deck?libraryDecks().find(d=>d.id===v.deck):null;
       if(bring){try{await api('POST',`${tableUrl(table.tableId)}/deck`,{seatId:0,deck:deckForTable(bring)});}catch(error){C.notice(`${bring.name} did not take your seat: ${error.message}`,true);}}
@@ -819,7 +847,7 @@
   const aboutOf = (notes, names) => cut(String(notes || "").trim() || names.map(commanderRules).filter(Boolean).join(" · "));
   const deckLines = (name, commanders, notes) => {
     const about = aboutOf(notes, commanders), waiting = !about && commanders.length;
-    return `<strong>${e(name)}</strong><span class="cm-table-deck-cmdr">${colorsOf(commanders)}<span class="cm-muted">${e(commanders.join(" + "))}</span></span><span class="cm-table-deck-about"${waiting ? ` data-about-for="${e(JSON.stringify(commanders))}"` : ""}>${e(about)}</span>`;
+    return `<strong>${e(name)}</strong><span class="cm-table-deck-cmdr">${colorsOf(commanders)}<span class="cm-muted">${e(commanders.join(" + "))}</span></span><span class="cm-table-deck-about" hidden${waiting ? ` data-about-for="${e(JSON.stringify(commanders))}"` : ""}>${e(about)}</span>`;
   };
   /* The rules text no record here holds, fetched once a commander through the card catalog (Scryfall, cached), into each row
      still waiting on it. Nothing is said where it cannot be had. */
@@ -836,7 +864,25 @@
       }
       if (texts.length && el.isConnected) {el.textContent = cut(texts.join(" · ")); el.removeAttribute("data-about-for");}
     }
+    deckTitles();
   }
+  /* A deck is one row, what it does said on hover (Rob, 2026-10-28): the description rides on the row's own title. */
+  function deckTitles() {
+    for (const row of document.querySelectorAll(".cm-table-deck")) {
+      const about = row.querySelector(".cm-table-deck-about")?.textContent.trim();
+      if (about) row.title = about;
+    }
+  }
+  /* Whether the table can play a deck, said by one small mark at the row's far right (Rob, 2026-10-28): a check in a filled
+     circle, green when all 100 cards are known and the deck is legal for this table, red when not, and then, to its left, how many
+     cards are known. The full sentence stays on the mark's hover and for a screen reader (and in data-text). */
+  const DECK_MARK = '<svg class="cm-deck-ic" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="9.25"></circle><path d="M5.6 10.4l2.9 2.9 5.9-6.4" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+  const deckState = (attr) => `<span class="cm-deck-state" ${attr} data-ok="pending" data-text="Checking this server…" role="img" aria-label="Checking this server…" title="Checking this server…"><span class="cm-deck-sub"></span>${DECK_MARK}</span>`;
+  const setDeckState = (el, ok, text, sub = "") => {
+    el.dataset.ok = ok ? "1" : "0"; el.dataset.text = text;
+    el.setAttribute("aria-label", text); el.title = text;
+    const note = el.querySelector(".cm-deck-sub"); if (note) note.textContent = ok ? "" : sub;
+  };
   /* Compare the same expanded commander/card list submitted to the table, never a display name.
      Shared snapshots expose no canonical library source ID. Exact contents can identify an already
      available local list without conflating a different shared revision or two distinct local decks. */
@@ -867,19 +913,20 @@
     const seatId = Number(el.dataset.seat), decks = libraryDecks();
     availableSharedDecks = tableOnlyShared(sharedDecks, decks);
     const test = current && current.playtest
-      ? `<li><button type="button" class="cm-table-deck" data-action="table-use-test-deck" data-seat="${seatId}"><strong>${e(TEST_DECK.name)}</strong><span class="cm-muted">Wastes and 99 basic lands · for trying a game through quickly on this playtest table</span></button></li>`
+      ? `<li><button type="button" class="cm-table-deck" data-action="table-use-test-deck" data-seat="${seatId}"><strong>${e(TEST_DECK.name)}</strong><span class="cm-table-deck-cmdr"><span class="cm-muted">Wastes and 99 basic lands</span></span><span class="cm-table-deck-about" hidden>Wastes and 99 basic lands · for trying a game through quickly on this playtest table</span></button></li>`
       : "";
     const list = decks.length || test
-      ? `<ul class="cm-table-decks">${test}${decks.map((d) => `<li><button type="button" class="cm-table-deck is-unknown" data-action="table-use-deck" data-seat="${seatId}" data-deck="${e(d.id)}">${deckLines(d.name, (d.commanders || []).map((c) => (C.card(c) || {}).name).filter(Boolean), d.notes)}<span class="cm-muted cm-table-deck-known" data-known-for="${e(d.id)}">Checking this server…</span></button></li>`).join("")}</ul>`
+      ? `<ul class="cm-table-decks">${test}${decks.map((d) => `<li><button type="button" class="cm-table-deck is-unknown" data-action="table-use-deck" data-seat="${seatId}" data-deck="${e(d.id)}">${deckLines(d.name, (d.commanders || []).map((c) => (C.card(c) || {}).name).filter(Boolean), d.notes)}${deckState(`data-known-for="${e(d.id)}"`)}</button></li>`).join("")}</ul>`
       : "";
     /* AN EMPTY LIBRARY says how to fill it (the readiness checks of 2026-10-04: a friend new to CrankMagic, invited
        before restoring the host's backup, saw only the test deck). A restore keeps this page, so the seat is still
        theirs when it is done. */
     const empty = decks.length ? "" : `<div class="cm-table-deck-empty"><p>You can play a public precon without adding anything to your library.</p><p class="cm-muted">To use your own deck later, build or import one in Decks.</p></div>`;
-    const precons = `<details class="cm-table-precon-catalog" open><summary>Public precons</summary><p>Wizards' newest Commander decks, open to everyone. Choose one and play; nothing is added to your library.</p>${preconError ? `<p class="cm-note cm-warning">${e(preconError)}</p>` : `<ul class="cm-table-decks">${availablePrecons.map(d => `<li><button type="button" class="cm-table-deck" data-action="table-use-precon" data-precon="${d.id}" data-seat="${seatId}" disabled>${deckLines(d.name, d.commander, d.notes)}<span class="cm-muted" data-precon-status="${d.id}">Checking this server…</span></button></li>`).join("")}</ul>`}</details>`;
-    const shared = availableSharedDecks.length ? `<section aria-label="Shared with the table"><h3>Shared with the table</h3><p>Other shared lists available to your account. Choosing one does not import it or change its access.</p><ul class="cm-table-decks">${availableSharedDecks.map(d => `<li><button type="button" class="cm-table-deck" data-action="table-use-shared-deck" data-shared-deck="${d.id}" data-seat="${seatId}" disabled>${deckLines(d.name, d.commander, d.notes)}<span class="cm-muted" data-shared-status="${d.id}">Checking this server…</span></button></li>`).join("")}</ul></section>` : "";
+    const precons = `<details class="cm-table-precon-catalog" open><summary>Public precons</summary><p>Wizards' newest Commander decks, open to everyone. Choose one and play; nothing is added to your library.</p>${preconError ? `<p class="cm-note cm-warning">${e(preconError)}</p>` : `<ul class="cm-table-decks">${availablePrecons.map(d => `<li><button type="button" class="cm-table-deck" data-action="table-use-precon" data-precon="${d.id}" data-seat="${seatId}" disabled>${deckLines(d.name, d.commander, d.notes)}${deckState(`data-precon-status="${d.id}"`)}</button></li>`).join("")}</ul>`}</details>`;
+    const shared = availableSharedDecks.length ? `<section aria-label="Shared with the table"><h3>Shared with the table</h3><p>Other shared lists available to your account. Choosing one does not import it or change its access.</p><ul class="cm-table-decks">${availableSharedDecks.map(d => `<li><button type="button" class="cm-table-deck" data-action="table-use-shared-deck" data-shared-deck="${d.id}" data-seat="${seatId}" disabled>${deckLines(d.name, d.commander, d.notes)}${deckState(`data-shared-status="${d.id}"`)}</button></li>`).join("")}</ul></section>` : "";
     const only = `<label class="cm-checkbox cm-table-deck-only"><input type="checkbox" data-table-deck-playable${onlyPlayable() ? " checked" : ""}>Only table-legal decks</label><p class="cm-muted">Complete lists supported by this server and within this table's bracket limit. The server checks your choice before seating it.</p>`;
     C.modal(`Choose a deck · Seat ${seatId + 1}`, `<div class="cm-table-deck-choose${onlyPlayable() ? " is-playable-only" : ""}">${only}<section aria-label="Your decks"><h3>Your decks</h3>${list}${empty}</section>${shared}${precons}</div><div id="cm-table-deck-error" class="cm-note cm-warning" hidden></div><div class="cm-form-footer">${b("Cancel", "close")}</div>`);
+    deckTitles();
     knownCounts(decks);
     checkSharedDecks(current.tableId);
     fillAbout();
@@ -898,12 +945,12 @@
         const all = [...d.commander, ...d.cards], missing = all.filter(n => unknown.has(n));
         const bracket = rulesOf(current).bracketLimit, above = bracket && Number(d.bracket) > bracket;
         const reason = all.length !== 100 ? `Needs 100 cards · ${all.length} listed` : above ? `Above this table's bracket limit (${bracket})` : missing.length ? "Not available on this server yet" : "";
-        status.textContent = reason || "Ready to play";
+        setDeckState(status, !reason, reason || "Ready to play", above ? `Bracket limit ${bracket}` : `${all.length - missing.length} of 100 known`);
         status.closest("button").disabled = !!reason;
         if (!reason) sharedReady.add(d.id);
       }
     } catch (error) {
-      for (const status of document.querySelectorAll('[data-shared-status], [data-precon-status]')) status.textContent = "Could not check this deck. Close and reopen to retry.";
+      for (const status of document.querySelectorAll('[data-shared-status], [data-precon-status]')) setDeckState(status, false, "Could not check this deck. Close and reopen to retry.", "Not checked");
     }
   }
   actions["table-use-shared-deck"] = async (el) => {
@@ -951,7 +998,8 @@
       if (!el) continue;
       const all = [...r.deck.commander, ...r.deck.cards], missing = all.filter((n) => unknown.has(n)).length;
       const bracket = rulesOf(current).bracketLimit, above = bracket && Number(r.deck.bracket) > bracket;
-      el.textContent = all.length !== 100 ? `Needs 100 cards · ${all.length} listed` : above ? `Above this table's bracket limit (${bracket})` : missing ? `${all.length - missing} of ${all.length} known · ${missing} to learn` : `All ${all.length} cards known`;
+      const text = all.length !== 100 ? `Needs 100 cards · ${all.length} listed` : above ? `Above this table's bracket limit (${bracket})` : missing ? `${all.length - missing} of ${all.length} known · ${missing} to learn` : `All ${all.length} cards known`;
+      setDeckState(el, !missing && all.length === 100 && !above, text, above ? `Bracket limit ${bracket}` : `${all.length - missing} of 100 known`);
       el.closest(".cm-table-deck")?.classList.toggle("is-unknown", missing > 0 || all.length !== 100 || !!above);
     }
   }
@@ -1022,4 +1070,6 @@
   actions["table-ready"] = async (el) => {await api("POST", `${tableUrl(current.tableId)}/ready`, {ready: el.dataset.ready === "1"}); await refresh(current.tableId);};
   actions["table-start"] = async () => {await api("POST", `${tableUrl(current.tableId)}/start`); await refresh(current.tableId);};
   actions["table-cancel"] = async () => {await api("POST", `${tableUrl(current.tableId)}/cancel`); await refresh(current.tableId);};
+  /* What the lounge's pieces (crankmagic-lounge.js: the New game pop-up, the lobby's tour) need of this page. */
+  C.tableTools = {MATS, rememberMat: (m) => {try {localStorage.setItem(MAT_KEY, m);} catch {/* this page only */}}, rememberedMat, api, tableUrl, libraryDecks, deckForTable, keepSeat, seatKept, autoDeckAI, finishTableSetup, refresh, readiness, identityOf, rulesOf, current: () => current, cloudPlay};
 });
