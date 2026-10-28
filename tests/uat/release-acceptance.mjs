@@ -70,8 +70,7 @@ try {
        not whatever address this copy happens to be open on. */
     /* The version moved from the Menu to Settings › About in R3.3 (INTAKE §4.7); the Menu's Settings
        entry is how a reader gets there. */
-    await click("Menu");
-    await click("Settings");
+    await page.evaluate(() => {location.hash = "#settings";});   /* the Menu has Your Profile, not Settings (Rob, 2026-10-28) */
     await page.locator(".cm-settings .cm-version").waitFor({timeout: 15000});
     const version = (await page.locator(".cm-settings .cm-version").innerText()).replace(/\s+/g, " ").trim();
     ok(/[0-9a-f]{7} · \d{4}-\d{2}-\d{2}/.test(version), `Settings names this release: ${version}`);
@@ -98,6 +97,8 @@ try {
       await page.locator(".cm-ng-dialog").waitFor({timeout: 20000});
       ok(await page.getByRole("heading", {name: "New game", exact: true}).count() === 1, "New game opens the pop-up from the lounge");
       await shot("02-play-new-table");
+      await page.keyboard.press("Escape");   /* a pop-up holds the page: Escape puts it away */
+      await page.locator(".cm-ng-dialog").waitFor({state: "detached", timeout: 10000});
       await nav("Decks");
       await page.waitForFunction(() => location.hash.startsWith("#decks"));
     } else {

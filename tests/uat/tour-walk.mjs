@@ -37,10 +37,10 @@ const fail = async (message) => {
   console.error(`tour-walk: ${message}`);
   process.exit(1);
 };
-/* Take a tour is in the Help dialog's foot, opened from the Menu's Help & glossary (Rob, 2026-10-28: the Menu has no Take a Tour). */
+/* Take a tour is in the foot of a page's Help dialog, opened by the page's ? (Rob, 2026-10-28: the Menu has no Take a Tour). */
 const openTours = async () => {
-  await page.locator("#cm-user-functions").click();
-  await page.locator("#cm-user-menu [data-action=menu-help]").click();
+  if (!(await page.locator("#cm-main [data-action=page-help]").count())) {await page.evaluate(() => {location.hash = "#decks";}); await page.locator("#cm-main [data-action=page-help]").first().waitFor({timeout: 15000});}
+  await page.locator("#cm-main [data-action=page-help]").first().click();
   await page.locator("#cm-dialog [data-action=tour]").click();
 };
 
