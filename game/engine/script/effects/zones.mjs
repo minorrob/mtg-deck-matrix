@@ -75,7 +75,7 @@ const PERMANENT_TYPES = ["Artifact", "Battle", "Creature", "Enchantment", "Land"
 /* `notOnto`: permanents entering the battlefield at the same time as this one (effects/zones.mjs, moveZone's `together`) --
    an Aura among them enchants none of them (CR 303.4f: what it will enchant is chosen as it enters, and they are not yet
    there to be chosen). */
-export function moveOne(state, id, to, events, {owner = null, controller = null, tapped = false, faceDown = false, lookers = null, exiledBy = null, transformed = false, counters = null, notOnto = null, nonCommanderTo = null, commanderKeys = [], orderingPlayer = null} = {}) {
+export function moveOne(state, id, to, events, {owner = null, controller = null, tapped = false, faceDown = false, lookers = null, exiledBy = null, transformed = false, counters = null, notOnto = null, nonCommanderTo = null, commanderKeys = [], orderingPlayer = null, preparedProposal = null, preparedEntering = null, entryPatch = null} = {}) {
   const object = state.objects[id];
   if (!object) return null;
   /* A TOKEN THAT HAS LEFT THE BATTLEFIELD STAYS WHERE IT IS (CR 111.8): it can't move to another zone or come back onto the
@@ -91,9 +91,9 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
      was never a 5/5. */
   const leftBehind = from === "battlefield" ? lastKnown(state, id) : undefined;
 
-  const {proposal} = applyReplacements(state, {
+  const proposal = preparedProposal ?? applyReplacements(state, {
     event: "zone-change", objectId: id, from, to, player: object.controller,
-  });
+  }).proposal;
   /* A spell an effect moves off the stack ("then return it to its owner's hand") is no longer on it: its entry goes too.
      Cast with flashback, it is exiled instead of going anywhere else (CR 702.34a). */
   const leaving = from === "stack" ? state.stack.findIndex((entry) => entry.objectId === id) : -1;
@@ -117,7 +117,7 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
      counter is not put on the creature it becomes. */
   const face = backUp ? object.mdfc.back : object;
   const entering = destination === "battlefield"
-    ? enteringModifications(state, {objectId: id, player: enteringController, types: asDown ? ["Creature"] : face.types, abilities: asDown ? [] : face.abilities})
+    ? preparedEntering ?? enteringModifications(state, {objectId: id, player: enteringController, types: asDown ? ["Creature"] : face.types, abilities: asDown ? [] : face.abilities})
     : null;
 
   /* An Aura put onto the battlefield by an effect, not resolving as a spell (CR 303.4f; Sun Titan returning one): it
@@ -137,6 +137,11 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
   const hidden = faceDown === true && to === "exile" && destination === "exile";
   if (faceDown === true && !asDown && !hidden) card = leavingRef(state, id);
   const moved = moveObject(state, id, destination, PER_PLAYER.includes(destination) ? holder : null, {faceDown: asDown || hidden, transformed: backUp, nonCommanderTo, commanderKeys});
+  /* CR 400.7, 614.12: a pre-entry copy/choice patch belongs to the new permanent before counters and arrival events. */
+  if (destination === "battlefield" && entryPatch) {
+    for (const key of entryPatch.remove ?? []) delete state.objects[moved][key];
+    Object.assign(state.objects[moved], structuredClone(entryPatch.set ?? {}));
+  }
   if (destination === "exile" && orderingPlayer !== null && object.merged && state.mergedOrders?.length)
     state.mergedOrders[state.mergedOrders.length - 1].player = orderingPlayer;
   /* A creature put into a graveyard from the battlefield died (CR 700.4): destroyed, sacrificed, put there -- what left

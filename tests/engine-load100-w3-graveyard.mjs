@@ -4,6 +4,7 @@ import {loadCardIndex} from "../game/tools/engine-cards.mjs";
 import {runScenario} from "../game/engine/cards/scenario.mjs";
 import {runEffect} from "../game/engine/script/effects/index.mjs";
 import {legalActions, applyAction} from "../game/engine/rules/actions.mjs";
+import {pushAbility, resolveTop} from "../game/engine/rules/stack.mjs";
 import {usesThisTurn, addObject} from "../game/engine/state/index.mjs";
 
 let checks = 0;
@@ -20,6 +21,29 @@ const FIX = {
       zone: "graveyard", spells: true, lands: true, limit: 1}))},
 };
 const start = (setup, more = {}) => runScenario({name: "W3 accuracy debt", seats: 3, setup, steps: [], ...more}, index.definition, FIX).state;
+
+/* Outcome identity matters even when unlimited permissions spend no distinct source resource. */
+for (const rider of ["additionalCost", "anyMana"]) {
+  const card = rider === "additionalCost" ? "Smoke Relic" : "Smoke Permit";
+  const state = start([at(0, "graveyard", card), at(0, "battlefield", "Forest")]);
+  for (const special of [false, true]) addObject(state, {card: special ? "Special Gate" : "Normal Gate", types: ["Artifact"], owner: 0, controller: 0,
+    abilities: [{id: "gate", kind: "static", rule: "play-from", affects: {what: "player", who: "you"}, zone: "graveyard", spells: true,
+      ...(special ? rider === "additionalCost" ? {additionalCost: [{atom: "sacrifice", selector: {types: ["Land"]}}]} : {anyMana: true} : {})}]}, "battlefield");
+  state.players[0].manaPool.B = 1;
+  const offers = legalActions(state, 0).filter(a => a.kind === "cast" && a.label === card);
+  eq(offers.map(a => a.viaName).sort(), ["Normal Gate", "Special Gate"], `${rider}: unlimited differing outcomes are distinct explicit offers`);
+  for (const name of ["Normal Gate", "Special Gate"]) {
+    const resumed = JSON.parse(JSON.stringify(state)); applyAction(resumed, 0, offers.find(a => a.viaName === name));
+    eq(resumed.zones.battlefield.some(id => resumed.objects[id].card === "Forest"), rider !== "additionalCost" || name === "Normal Gate",
+      `${rider}: selected permission pays exactly its own land sacrifice after reload`);
+  }
+  if (rider === "anyMana") {
+    const resumed = JSON.parse(JSON.stringify(state)); resumed.players[0].manaPool.B = 0; resumed.players[0].manaPool.C = 1;
+    const colored = legalActions(resumed, 0).filter(a => a.kind === "cast" && a.label === card);
+    eq(colored.map(a => a.viaName), ["Special Gate"], "only the selected any-mana outcome can pay a black symbol with colorless mana");
+    applyAction(resumed, 0, colored[0]); eq(resumed.players[0].manaPool.C, 0, "the any-mana cast actually spends that colorless mana");
+  }
+}
 
 /* CR 601.2a: two limited permissions consume different resources, even when both give the same cast. */
 {
@@ -100,6 +124,40 @@ for (const limited of [false, true]) {
       limited ? [permissions[1 - selected].id] : permissions.map(e => e.id), "only the chosen limited permission is consumed");
     eq(resumed.stack.filter(entry => entry.kind === "spell").length, 1, "the chosen permission casts exactly one spell");
   }
+}
+
+{
+const fresh = () => start([]);
+const spell = (s, zone) => addObject(s, {card: "Smoke Permission Spell", types: ["Instant"], manaCost: "{1}", owner: 0, controller: 0}, zone, 0);
+if (!process.argv[2] || process.argv[2] === "destination") {
+  const s = fresh(), card = spell(s, "graveyard"); s.players[0].manaPool = {C: 5};
+  const gates = [true, false].map((exile, index) => addObject(s, {card: index ? "Normal Gate" : "Exiling Gate", types: ["Artifact"], owner: 0, controller: 0,
+    abilities: [{id: "permission", kind: "static", rule: "play-from", affects: {what: "player", who: "you"}, zone: "graveyard", spells: true,
+      ...(exile ? {graveyardToExile: true} : {})}]}, "battlefield"));
+  const offers = legalActions(s, 0).filter(a => a.kind === "cast" && a.objectId === card);
+  eq(offers.map(a => a.via), gates, "a permission's exile-on-finish rider is an explicit player choice");
+  for (let i = 0; i < 2; i += 1) {
+    const resumed = JSON.parse(JSON.stringify(s)); applyAction(resumed, 0, JSON.parse(JSON.stringify(offers[i])));
+    eq(Boolean(resumed.stack.at(-1).graveyardToExile), i === 0, "the selected permission controls the actual stack rider");
+    resolveTop(resumed);
+    eq(resumed.zones.exile.map(id => resumed.objects[id].card), i === 0 ? ["Smoke Permission Spell"] : [], "the exile rider changes the eventual destination");
+    eq(resumed.zones.graveyard[0].map(id => resumed.objects[id].card), i === 1 ? ["Smoke Permission Spell"] : [], "the ordinary permission keeps the normal graveyard destination");
+  }
+}
+if (!process.argv[2] || process.argv[2] === "timing") {
+  const s = fresh(), card = spell(s, "exile"); s.players[0].manaPool = {C: 5};
+  runEffect(s, {effect: "mayPlay", targets: [card]}, {controller: 0});
+  /* The saved restriction a plot action writes; mayPlay's effect grammar does not itself accept a sorcery field. */
+  s.effects.find(e => e.rule === "may-play").sorcery = true;
+  runEffect(s, {effect: "mayPlay", targets: [card]}, {controller: 0});
+  const normal = s.effects.filter(e => e.rule === "may-play")[1].id;
+  eq(s.effects.filter(e => e.rule === "may-play").map(e => e.sorcery === true), [true, false], "the fixture contains the actual plotted restriction and a separate unrestricted permission");
+  pushAbility(s, {controller: 1, abilityId: "waiting", script: {effects: []}});
+  const offers = legalActions(s, 0).filter(a => a.kind === "cast" && a.objectId === card);
+  eq(offers.map(a => a.via), [normal], "a sorcery-timing permission cannot hide an instant-speed permission while the stack is nonempty");
+  applyAction(s, 0, offers[0]);
+  eq(s.stack.length, 2, "the legal instant-speed permission casts over the existing stack object");
+}
 }
 
 console.log(`engine-load100-w3-graveyard: ${checks} checks passed`);
