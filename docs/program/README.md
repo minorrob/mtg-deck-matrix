@@ -1,5 +1,7 @@
 # The CrankMagic program: north star, workstreams, and how five AI systems build one app without colliding
 
+> **Superseded in part, 2026-10-29 (Rob: one loop for all work, in Linear).** Where this file says to read or update `docs/ACTIVE.md`, a readout feed (`docs/readout/`, `tests/readout-feeds.mjs`) or a handoff file, follow instead `AGENTS.md`, "The work is in Linear: one loop", and the Linear document "How work flows: the one loop" on initiative I-1: pick up the next Todo issue in your lane, claim it, build, then update the PR, the issue and its status. The lanes, file ownership and engineering rules in this file still hold.
+
 *Written October 18, 2026 by the Claude cloud session that held Codex's lane for a day (Fable 5.1), on Rob's
 instruction: translate his outcomes into Linear, divide the work between the AI systems by the architecture, give him
 one readout, and give each system its instructions. This file is the charter. `AGENTS.md` is still the law; where this
@@ -97,8 +99,8 @@ every tracked file not named in another row.
    (exclusive files, acceptance a command proves, the return format), files the Linear issue with the Grok label, and
    Rob relays the coordinator prompt. Grok PRs are reviewed and merged by the workstream that wrote the task.
 
-A blocked workstream does not wait idle: it records the block in its feed (`blocked_on`), takes the next item in its
-lane, and the readout shows the block.
+A blocked workstream does not wait idle: it records the block on the Linear issue (a "blocked by" relation, or a
+Rob's call issue), hands the issue back to Todo with a comment, and takes the next item in its lane.
 
 ## 5. Ownership: decide, or surface to Rob
 
@@ -119,8 +121,8 @@ change you make.
 
 ## 6. The rules every workstream keeps (the short list; `AGENTS.md` is the long one)
 
-- Read `AGENTS.md`, `docs/ACTIVE.md` (top and the lanes table), this file, and your workstream file, in that order,
-  at the start of every session.
+- Read `AGENTS.md`, the Linear document "How work flows: the one loop", this file, and your workstream file, in that
+  order, at the start of every session.
 - Branch `<prefix>-<topic>` from `origin/main`; draft PR at once; `main` merged in before marking ready; a merge
   commit, never a squash, rebase or force-push.
 - Before every push: the suites your change touches, then `tools/local-ci.sh <head> 0` (secrets and addresses scan,
@@ -142,27 +144,12 @@ change you make.
   cache-friendly (stable prefix: `AGENTS.md`, your workstream file, the issue), batch independent tool calls, write
   findings to docs instead of re-deriving them, and pick the cheapest model that can do a mechanical step.
 
-## 7. The readout: how Rob sees the whole picture
+## 7. How Rob sees the whole picture: Linear
 
-`docs/readout/index.html` is one page. It reads `docs/readout/north-star.json` (the outcomes, projects, milestones
-and the launch checklist) and the five feeds, and shows: the launch checklist with each outcome's progress; remaining
-hours per workstream and the one line each is doing now; Rob's queue; each outcome's items by status and owner; what
-is blocked and on whom; and how fresh each feed is.
-
-**The protocol, for every workstream, at the end of every working session and at every PR merge:**
-
-1. Update Linear: the issue's status (Backlog → In Progress → Done only when merged, released where it ships, and the
-   evidence is on the issue), a comment with the proof, the PR linked.
-2. Update your feed (`docs/readout/feeds/<workstream>.json`, schema in `docs/readout/README.md`): `updated`, `now`,
-   each item's `status` and `remaining_hours`, `evidence`, `asks_of_rob`, `blocked_on`. Run
-   `node tests/readout-feeds.mjs`; it fails on a malformed feed.
-3. Commit the feed with the work (or on its own, on your branch) and push. The page reads `main`, so a feed reaches
-   Rob when the PR merges; a draft PR's feed is visible on its branch.
-4. Update your section of `docs/ACTIVE.md` in one paragraph.
-
-Rob opens `docs/readout/index.html` from his clone (double-click; it fetches the feeds from GitHub's `main`) or
-serves it with `node tools/serve-folder.mjs docs/readout 8797`. It is never part of a release (`docs/` is in the
-release's never list).
+Retired on 2026-10-29: the readout page, `north-star.json` and the five feeds. Rob sees the whole picture in Linear:
+initiative I-1 (the roadmap, by project and milestone), its document "How work flows: the one loop" (the process),
+the issues labeled Rob's call (his queue) and each issue's In Progress holder. A session's protocol at every merge is
+that loop's step 4: the PR body current, the issue's link and three-line summary, its status, and release comments.
 
 ## 8. First estimates, and the long pole
 
@@ -191,7 +178,7 @@ stale by design.
 | Instruction set per workstream | `docs/program/workstreams/<workstream>.md` |
 | The kick-off prompts Rob pastes | `docs/program/KICKOFF-PROMPTS.md` |
 | The launch checklist (draft for Rob's approval, ROB-137) | `docs/program/LAUNCH-CHECKLIST.md` |
-| The readout and the feed schema | `docs/readout/index.html`, `docs/readout/README.md` |
+| The process (the one loop) | Linear, initiative I-1, document "How work flows: the one loop" |
 | The handoff of the Play boards back to Astra | `docs/HANDOFF-TO-CODEX-2026-10-18.md` |
 | Grok packages | `docs/grok/` |
-| Linear | initiative I-1; projects P-ROB-1 to P-ROB-11; coordination ROB-11; the readout ROB-138 |
+| Linear | initiative I-1; projects P-ROB-1 to P-ROB-11; the tracks P-ROB-12 to P-ROB-15; Future P-ROB-16 |

@@ -2,20 +2,42 @@
 
 Several AI systems hand work to each other here — Claude Code on Personal-HP, Claude in a cloud
 container, Codex, Cursor, Grok Bot. Two never work the same thing at once: since 2026-10-12 two may work
-at the same time, each in its own lane of files (*Lanes*, below). Read `docs/ACTIVE.md` before doing
-anything else.
+at the same time, each in its own lane of files (*Lanes*, below). This file says how to build;
+Linear says what to build (*The work is in Linear*, below). Read both before doing anything else.
 
-## The baton is a file
+## The work is in Linear: one loop
 
-`docs/ACTIVE.md` says who holds the work, on which branch, since when, and what they are doing.
-A session's first act is to read it; its last act is to update it. It lives in git so a cloud
-container and a local session read the same answer.
+Rob, 2026-10-29: *"I want 1 structure for the organization of work: My input put into either backlog or onto the
+Roadmap, then Roadmap > Epics/Features/Stories/Tasks in Linear > Execution by a GPT or Claude > GitHub update + Linear
+Update + Roadmap and backlog (where applicable) update. Next session is told to pick up next item on the roadmap, it
+looks at roadmap, looks at what's in progress or up next, identifies the associated Linear records, and continues the
+loop. The PR drafts contain the summary of what was done. So yes, you can retire anything that doesn't support that
+end-to-end pattern."* He chose Linear as the roadmap's home.
 
-## The branch is the lock
+- **The roadmap is Linear initiative I-1** ("CrankMagic Commander Experience — the north star"): its projects (epics)
+  in status Planned or In Progress, by priority; milestones are features, issues are stories, sub-issues are tasks.
+  Issues in status **Backlog** are the backlog. **Rob's call** marks his queue. The full rules are the initiative's
+  document **"How work flows: the one loop"**; read it before your first item.
+- **Rob's input is filed before it is built:** an issue in the right project, his words quoted and dated, Backlog
+  unless he says it goes on the roadmap (Todo). Only Rob moves an item between Backlog and Todo or changes the order.
+- **"Pick up the next item"** means: first an issue handed back to Todo with a "Handed off" comment, else the
+  highest-priority Todo issue in your lane (its **Lane** label) that is not blocked and not Rob's call.
+- **The lock is the issue's status.** In Progress means a session holds it; claiming it is setting In Progress with a
+  comment `Held by <platform/session>, branch <branch>, since <date>`. Two sessions never hold the same issue.
+- **Close the loop in the same turn as the push or merge:** the PR body is current; the issue gets the PR link and a
+  three-line summary (done, proven by, outstanding); Done when merged; `On staging at <sha>` / `In production at
+  <sha>` on each issue a release carries; anything new found is a new issue. Stopping early: push, set the issue back
+  to Todo with `Handed off: <state>; next step; branch; PR`.
+- **Retired on 2026-10-29:** `docs/ACTIVE.md` as the lock and the record (kept, frozen, as the archive of what came
+  before), the readout and its feeds (`docs/readout/`, `tests/readout-feeds.mjs`), per-session handoff documents (the
+  draft PR is the handoff), the root `BACKLOG.md` and the roadmap draft under `docs/program/` (their open items are
+  Linear issues now).
 
-Branches are named `<agent>/<topic>` — `claude/`, `codex/`, `cursor/`, `grok/`. One agent owns a branch.
-A branch that is handed off is opened as a **draft PR**, so the next session gets a URL, a CI
-status and a place for the handoff in one object.
+## The branch belongs to one agent
+
+Branches are named `<agent>/<rob-key>-<topic>` (`claude/rob-228-lag-instrumentation`) — `claude/`, `codex/`,
+`cursor/`, `grok/`. One agent owns a branch. Work is opened early as a **draft PR** whose title starts with the issue
+key, so the next session gets a URL, a CI status and the summary of what was done in one object.
 
 ## Lanes: two systems at once, never on the same files
 
@@ -28,29 +50,27 @@ Claude session, Codex (Astra), Cursor, or Grok Bot. Since 2026-10-18 there are f
 | Lane | Its files | Its branches |
 | --- | --- | --- |
 | **Claude · Engine** | `game/**` (the engine and the room), the Worker's routing and rooms (`cloud/worker.mjs`, `play-worker.mjs`, `game-room.mjs`, `tables.mjs`, `ai.mjs`, `access.mjs`, `migrations/**` and every migration's number), `data/engine/**`, the release and CI tooling, the engine and room suites, the release branches | `claude/admiring-franklin-58cxy4`, then `claude/engine-<topic>` |
-| **Claude · Deck intelligence** | The models and data under the screens: the generator, the simulator and its join, the classifier, strategies, loops, the graph's scoring, prices and card data and their tools, `cloud/advise*.mjs`, `sim/**`, `tools/sim/**`, `data/**` except the engine's, `.claude/skills/**`, `docs/program/**`, the readout's page and `north-star.json` | `claude/deck-<topic>` |
+| **Claude · Deck intelligence** | The models and data under the screens: the generator, the simulator and its join, the classifier, strategies, loops, the graph's scoring, prices and card data and their tools, `cloud/advise*.mjs`, `sim/**`, `tools/sim/**`, `data/**` except the engine's, `.claude/skills/**`, `docs/program/**` | `claude/deck-<topic>` |
 | **Codex · Play** | The game screen and the player's interaction with it: `crankmagic-board.js`, `crankmagic-table.js`, `crankmagic-tabletop.js`, `crankmagic-seat-art.js`, `crankmagic-sea.js`, `crankmagic-audio.js`, `crankmagic-stage.js`, `crankmagic-stage.css`, `crankmagic-mats.css`, `crankmagic-online.*`, `crankmagic-lobby.js`, `crankmagic-game.js`, `ui-prototypes/**`, `assets/audio/**`, Settings' Play card (in its own file once extracted), `docs/play-overhaul/**`, `docs/ui-lane/**`, and the browser suites that drive them | `codex/play-<topic>` |
 | **Codex · Workshop** | Every screen outside the boards: the app shell and pages, `crankmagic.css`, `crankmagic-design.css`, Decks, the Lab, Library, Discover, Buy, Settings, accounts, sharing, the tour, the collection model and repository, `cloud/library.mjs`, `cloud/sharing.mjs`, `cloud/access-invites.mjs`, `cloud/mail.mjs`, `design/**`, `docs/design/**`, and their suites | `codex/workshop-<topic>` |
 | **Grok** | Only the files a package under `docs/grok/` names for a task, exclusively | `grok/<task>-<topic>` |
 
 The file-by-file table, the seams between the lanes and the rule for deciding versus surfacing to Rob are in
-`docs/program/README.md` (October 18, 2026). Each lane keeps a feed on the program readout (`docs/readout/`).
+`docs/program/README.md` (October 18, 2026). Each lane's issues carry its Lane label in Linear.
 
-`docs/ACTIVE.md` says who holds each lane now. `docs/program/workstreams/<lane>.md` is each lane's brief; `docs/ui-lane/README.md` is the Play lane's older brief and still holds where they do not differ.
+Linear's In Progress issues say who holds what now. `docs/program/workstreams/<lane>.md` is each lane's brief; `docs/ui-lane/README.md` is the Play lane's older brief and still holds where they do not differ.
 
 - **The room's view is the seam.** The UI lane reads `CrankRoomView@1` (`docs/ui-lane/gameplay-anchor.md`) and never
-  edits `game/` or `cloud/`. A field it needs is asked for in the Requests table of `docs/ACTIVE.md`. The engine lane
+  edits `game/` or `cloud/`. A field it needs is asked for as a Linear issue labeled Shared contract. The engine lane
   adds it in a small PR, merged first, and the UI lane builds against `main`.
 - **Shared files have one rule each:**
   - **Asset versions** (`?v=` in `index.html`, `crankmagic.html`, `crankmagic-sw.js` and `crankmagic-app.js`): the UI
     lane bumps them, and a merge regenerates them with `node tests/asset-versions.mjs --update`, never by hand.
   - **The README's suite count:** whoever merges second sets it to the count.
-  - **`docs/ACTIVE.md`:** each lane writes only in its own section, and in the Requests table.
 - **Merging:** each lane merges `main` into its branch before marking a PR ready. A merge commit, never a rebase or
   force-push of a branch another system has pulled.
 - **One release owner:** the engine lane's session (Claude · Engine) releases staging (`tools/release-staging.sh`), and
-  production on Rob's go. Every other lane merges to `main` and says so in `docs/ACTIVE.md`.
-- **The readout feed:** each lane edits only `docs/readout/feeds/<lane>.json`; `tests/readout-feeds.mjs` validates them.
+  production on Rob's go. Every other lane merges to `main` and says so on its Linear issue.
 - **A concept from a prototyping tool** comes back as an exported folder and a `HANDOFF.md`. The UI lane ports it into
   the board; it does not merge it as it is. A framework for the board is Rob's decision.
 - Every other rule in this file holds in both lanes. That includes breaks, the four things a handoff states, and what
@@ -81,7 +101,8 @@ The definition of done for the online subsystem is in `game/docs/readiness-plan-
 ## A handoff states four things
 
 The branch and commit it describes; what is proven versus assumed; the command that proves each
-claim; and what is outstanding, with the reason. Anything else is narrative.
+claim; and what is outstanding, with the reason. Anything else is narrative. The handoff is the draft
+PR's body, kept current, with a short version on the Linear issue; there is no separate handoff file.
 
 ## Merging to `main`
 
