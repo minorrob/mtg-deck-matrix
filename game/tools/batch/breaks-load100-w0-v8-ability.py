@@ -18,7 +18,7 @@ BREAKS = [
     ('keyword presence does not prove keyword behavior', PROOF, '!["keyword-presence", "step-limit"].includes(assertion)', 'true'),
     ('keyword assertion provenance is retained', RUNNER, 'if (assertion) error.scenarioAssertion = assertion;', ''),
     ('proof requires a green baseline', PROOF, 'proof.baseline?.status !== "passed"', 'false'),
-    ('runtime proof counts toward reachability', EVIDENCE, 'if (proof || (a.resolved > 0 && a.scenarios.length > 0)) scenarioReached += 1;', 'if (a.resolved > 0 && a.scenarios.length > 0) scenarioReached += 1;'),
+    ('runtime proof counts toward reachability', EVIDENCE, 'if (proof || scenarioResolved(a)) scenarioReached += 1;', 'if (scenarioResolved(a)) scenarioReached += 1;'),
     ('passing scenario events reach the ledger', CHECK, 'if (ledger) addExerciseEvidence(ledger, result.events, {scenario: `${file.card}: ${scenario.name}`});', ''),
     ('the supplement is wired into scenario checks', CHECK, 'if (ledger && counterfactual) for (const script of scripts)', 'if (false) for (const script of scripts)'),
     ('unreached abilities fail the requested ledger gate', CHECK, 'return problems + failed + unreached > 0 ? 1 : 0;', 'return problems + failed > 0 ? 1 : 0;'),

@@ -123,6 +123,14 @@ eq(summary.exercised, 2, "only two cards were played and completed");
 ok(!summary.complete && summary.unreached.some((a) => a.card === "Bear"), "unknown applications keep the ability gate unmet");
 ok(!summary.scenarioComplete, "clean-game observations alone do not claim the scenario ability gate");
 ok(summary.scenarioUnreached.some((a) => a.card === "Bolt"), "an ability observed only in a game is still named as unreached by scenarios");
+const mixed = createExerciseLedger([script("Bell", [{kind: "activated"}])]);
+const bellActivation = event("GameEventSpellAbilityCast", {card: {name: "Bell"}, sa: {isSpell: false, abilityId: "a0", stackId: 1}});
+addExerciseEvidence(mixed, [bellActivation], {scenario: "activation without resolution"});
+addExerciseEvidence(mixed, [bellActivation, resolved("Bell", 1, {kind: "ability"})], {game: "resolved in game", clean: true});
+eq([exerciseSummary(mixed).reached, exerciseSummary(mixed).scenarioReached, exerciseSummary(mixed).scenarioComplete], [1, 0, false],
+  "a scenario activation and a game's resolution never combine into a nonexistent scenario resolution");
+addExerciseEvidence(mixed, [bellActivation, resolved("Bell", 1, {kind: "ability"})], {scenario: "actual scenario resolution"});
+eq(exerciseSummary(mixed).scenarioReached, 1, "an actual successful scenario resolution supplies the missing provenance");
 const inferredCast = (name, id) => event("GameEventSpellAbilityCast", {card: {name}, sa: {isSpell: true, abilityId: null, stackId: id}});
 const inferredResolution = (name, id, extra = {}) => resolved(name, id, {abilityId: null, ...extra});
 const unique = createExerciseLedger([script("Bolt", [{kind: "spell"}])]);

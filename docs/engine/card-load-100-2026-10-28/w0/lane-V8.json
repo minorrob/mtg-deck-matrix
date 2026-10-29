@@ -20,10 +20,10 @@
   "checkpoint": {
     "scope": "No saved card or rule module edited. Pool dealing, strict refusal evidence, journal attribution, safe pure level validation, runtime-removal evidence, and opt-in check-cards ability enforcement. Scenario-runner metadata tags preserve all original assertions.",
     "proof": [
-      "tests/fuzz-pool.mjs: 83 checks passed, including real-room journal/replay/leaks, strict seeds, and guarded unique-spell inference",
+      "tests/fuzz-pool.mjs: 85 checks passed, including real-room journal/replay/leaks, strict seeds, guarded unique-spell inference, and mixed-source provenance",
       "tests/ability-proof.mjs: 42 checks passed, including actual mana/static/flying/vigilance behavior; presence, offers, bad baselines, generic exceptions, and over-budget probes excluded",
       "tests/fuzz-library.mjs: 12 checks passed, including real-room seeds 229 and 1193",
-      "breaks-load100-w0-v8-verify.py: 31 caught, missed: []",
+      "breaks-load100-w0-v8-verify.py: 31 caught before provenance follow-up; both added provenance breaks caught, missed: []",
       "breaks-load100-w0-v8-ability.py: 19 caught, missed: []",
       "tests/data-integrity.mjs: Validated 50 variants and 50 connected buy profiles",
       "tests/feature-wiring.mjs: 131 checks passed"
@@ -33,6 +33,8 @@
     "abilityGate": "G-3 remains open. --ability-ledger fails unreached scenario abilities, with optional --counterfactual runtime-only proof. The unchanged default still checks the legacy baseline and does not enforce this ability gate. Default enforcement remains debt; a default green run does not imply G-3.",
     "proofMethod": "w0/V8-PROOF.md; Rob authorized runtime-only one-ability removal on October 28, 2026. Unique simple-spell inference is separately labeled and requires a matched actual cast and successful non-fizzled resolution.",
     "selectedAbilityEvidence": "Original verifier source: 3 cards, 3 passing scenarios, 1/4 reached, exit 1. W4 saved source ae4d6ba6, read-only card-root: same 3 cards, 5 passing scenarios, 4/4 reached by runtime-removal proof, exit 0. Neither is whole-directory coverage.",
+    "initialFullAbilitySweep": "Running on original saved source and original rules, process launched at 0a848bb4. No W4 card-root. Later mixed-source provenance correction does not relabel the code SHA or change its unmixed scenario-only input. Output: scratch/v8-ability-initial.json and .log.",
+    "provenanceCorrection": "Root reproduced an aggregate-source mix: a scenario activation plus a game's resolution incorrectly counted as scenario execution. Fixed by requiring a successful-resolution observation that itself names a scenario, or valid runtime-removal proof. The checker uses the same predicate. Mixed-source tests and both mutations pass.",
     "initialEndingLimit": "Seeds 1 and 3 stopped when the only human was eliminated; seed 2 reached a last-player-standing winner. All were app-finished under the existing room verdict; they were not three completed four-player matches with winners. Historical 47 ability observations are explicit IDs only, before inference/supplement.",
     "proofSafetyCorrection": "An initial guard-removal mutation allowed an llm-valued CLI regression into standalone room setup. It was interrupted; the standalone room has no provider transport, and no provider or cloud AI endpoint was called. A second guarded CLI approach was also interrupted on the orchestrator's instruction. All invalid-level CLI subprocess tests were removed. Final invalid values are direct pure-validator unit inputs only, never options passed to a game or seat. Owned mutation backups were restored and removed.",
     "remaining": [

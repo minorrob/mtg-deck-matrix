@@ -38,7 +38,10 @@ heads when using this option.
   behavior. Unsupported compound representations, ambiguous IDs, redundant abilities, and scenarios that still pass
   remain explicitly unobserved. An activation offer by itself is also excluded. No counterfactual spell removal is used.
 - Scenario evidence never credits a card as exercised in a clean whole game. Game observations alone never close
-  the scenario ability gate; `scenarioUnreached` names those still missing scenario proof.
+  the scenario ability gate; `scenarioUnreached` names those still missing scenario proof. A successful-resolution
+  observation must itself name a scenario: a scenario activation and an unrelated game's resolution cannot combine
+  into scenario reachability. The mixed-source regression was added after the initial sweep started; that initial
+  sweep contains only scenario input and remains anchored to its original `0a848bb4` process.
 
 Probe results taking more than 30 seconds and scenario step-limit failures are not credited. The elapsed-time guard
 records an over-budget probe when it returns; it does not preempt a synchronous engine call. A stuck engine can still

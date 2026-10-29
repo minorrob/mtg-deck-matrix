@@ -35,4 +35,6 @@ BREAKS = [
     ('inferred spell evidence requires its actual cast', EVIDENCE, 'kind !== "resolved" || !matchedSpell || !card.singleFace', 'kind !== "resolved" || !card.singleFace'),
     ('inferred spell evidence excludes compound layouts', EVIDENCE, 'kind !== "resolved" || !matchedSpell || !card.singleFace', 'kind !== "resolved" || !matchedSpell'),
     ('inferred spell evidence retains its method', EVIDENCE, 'method = "inferred-unique-printed-spell";', 'method = "explicit-ability-id";'),
+    ('scenario reachability requires a resolution observation', EVIDENCE, 'o.kind === "resolved"\n  && o.scenario !== null && o.scenario !== undefined', 'o.scenario !== null && o.scenario !== undefined'),
+    ('scenario reachability cannot borrow a game resolution', EVIDENCE, 'o.scenario !== null && o.scenario !== undefined', 'true'),
 ]

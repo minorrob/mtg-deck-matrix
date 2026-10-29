@@ -13,7 +13,7 @@ import {runScenario} from "../../engine/cards/scenario.mjs";
 import {checkFidelity, smokeTest} from "../../engine/cards/compile.mjs";
 import {writeFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
-import {createExerciseLedger, addExerciseEvidence, exerciseSummary} from "../ability-evidence.mjs";
+import {createExerciseLedger, addExerciseEvidence, exerciseSummary, scenarioResolved} from "../ability-evidence.mjs";
 import {proveRuntimeAbility, recordRuntimeProof} from "../ability-proof.mjs";
 
 /** Passing scenarios supply events; the authorized runtime-only supplement supplies explicit counterfactual proofs.
@@ -40,7 +40,7 @@ export function checkScenarios({files, scripts, cards, ledger = null, counterfac
     const name = script.identity.name, file = files.find((f) => f.card === name);
     if (!file) continue;
     for (const ability of ledger.cards[name].abilities) {
-      if (ability.resolved > 0 && ability.scenarios.length > 0) continue;
+      if (scenarioResolved(ability)) continue;
       const proof = proveRuntimeAbility({script, ability, cards, scenarios: file.scenarios, fixtures: file.fixtures ?? {}, baselines});
       if (proof.status === "proved") recordRuntimeProof(ledger, name, ability.path, proof);
       else ability.counterfactualUnobserved = {reason: proof.reason, diagnostics: proof.diagnostics ?? []};

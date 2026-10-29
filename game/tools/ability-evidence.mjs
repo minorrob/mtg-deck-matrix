@@ -94,6 +94,11 @@ export function addExerciseEvidence(ledger, events, {game = null, scenario = nul
   return true;
 }
 
+/* Provenance belongs to the observation, not to aggregate counters: a scenario activation and a game's later
+   resolution must never combine into a scenario resolution that did not happen. Legacy aggregate-only data is unknown. */
+export const scenarioResolved = (ability) => (ability.observations ?? []).some((o) => o.kind === "resolved"
+  && o.scenario !== null && o.scenario !== undefined);
+
 export function exerciseSummary(ledger) {
   const cards = Object.entries(ledger.cards), unreached = [], scenarioUnreached = [];
   let abilities = 0, reached = 0, scenarioReached = 0, counterfactualReached = 0;
@@ -101,7 +106,7 @@ export function exerciseSummary(ledger) {
     abilities += 1;
     const proof = a.counterfactual?.some((p) => p.status === "proved" && p.baseline?.status === "passed" && p.result?.status === "failed") === true;
     if (proof) counterfactualReached += 1;
-    if (proof || (a.resolved > 0 && a.scenarios.length > 0)) scenarioReached += 1;
+    if (proof || scenarioResolved(a)) scenarioReached += 1;
     else scenarioUnreached.push({card: name, path: a.path, kind: a.kind, reason: "no passing scenario has execution or runtime-removal behavior proof"});
     /* Successful resolution is stronger than an activation whose effect never happened. */
     if (a.resolved > 0 || proof) reached += 1;
