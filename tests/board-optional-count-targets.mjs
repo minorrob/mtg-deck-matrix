@@ -14,6 +14,7 @@
      2. Any number (Brago): one pick, several picks, and none at all, each Confirm -> an `act` with exactly those indices.
      3. The count still holds: more than the question's max is refused and sends nothing.
      4. A single required target keeps its steps: Pick, Next, Review, then Confirm; Confirm before Next sends nothing.
+     5. Claim Jumper's own optional 0 to 1 library search (not a target question) confirms with one card or none.
 
    GEOMETRY_REQUIRED=1 refuses a missing browser.
      node tests/board-optional-count-targets.mjs
@@ -25,7 +26,7 @@ import {openBrowser, ROOT} from "./uat/browser-runner.mjs";
 
 const {browser, base, stub, close} = await openBrowser({name: "board-optional-count-targets", flag: "GEOMETRY_REQUIRED"});
 const views = JSON.parse(readFileSync(path.join(ROOT, "docs/reference/replit-sample-views.json"), "utf8")).views;
-const sample = views[13], counted = views[23];
+const sample = views[13], counted = views[23], search = views[15];
 const html = readFileSync(path.join(ROOT, "index.html"), "utf8").replace("</head>", '<meta name="crankmagic-accounts" content="on"><meta name="crankmagic-play" content="cloud"></head>');
 const TABLE = "optcount01";
 const table = {tableId: TABLE, phase: "playing", matchId: sample.matchId, away: [], blockers: [], youAreHost: true, rules: {},
@@ -68,6 +69,12 @@ function single() {
   const v = structuredClone(counted);
   v.matchId = sample.matchId; v.revision = ++rev;
   v.decision = {...v.decision, id: `trigger-targets:453:${rev}`, mode: "one", min: 1, max: 1, title: "Rime Chill: choose a target"};
+  return v;
+}
+/* The library search (views[15]: 0 to 1, 21 Islands) -- Claim Jumper's own "you may search your library for a Plains card". */
+function searching() {
+  const v = structuredClone(search);
+  v.matchId = sample.matchId; v.revision = ++rev; v.decision = {...v.decision, id: `${v.decision.id}:${rev}`};
   return v;
 }
 const pickOption = async (page, index) => page.locator(`#cm-board-decision [data-action=board-option][data-index="${index}"]`).first().click();
@@ -131,6 +138,17 @@ try {
     await confirm(page).click(); await settle(page);
     eq(acts().length, 5, `${mode}: after Review, Confirm sends the single target`);
     eq(acts()[4].indices, [1], `${mode}: the one picked`);
+
+    /* ---- 5. Claim Jumper's own optional search (0 to 1, not a target question) ---- */
+    await show(searching());
+    await page.locator("#cm-board-decision [data-action=board-option-same], #cm-board-decision [data-action=board-option]").first().click();
+    await confirm(page).click(); await settle(page);
+    eq(acts().length, 6, `${mode}: a 0 to 1 library search, one chosen: Confirm sends the answer`);
+    eq(acts()[5].indices.length, 1, `${mode}: one card`);
+    await show(searching());
+    await confirm(page).click(); await settle(page);
+    eq(acts().length, 7, `${mode}: a 0 to 1 library search, none chosen (decline the search): Confirm sends the answer`);
+    eq(acts()[6].indices, [], `${mode}: an empty answer`);
 
     eq(errors, [], `${mode}: no page error`);
     await context.close();
