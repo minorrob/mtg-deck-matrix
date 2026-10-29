@@ -97,5 +97,9 @@ The core ledger's raw SHA-256 is `60bda8067fcb6acaf2e28b7987dbd8807182d40464a95b
 Bounded independent reviews found no new rules conflict in W4's corrected noun/target binding and trample choice,
 W5's printed-cost search and convoke alternatives, W1's copied preparation/emblem behavior, or W6's departure-time
 spell copies and token faces. Extra live probes independently exercised copied-inset casting under another controller
-and a countered original's copied spell after persisted reload. W1 subsequently identified a duplicate emblem text
-rendering and is correcting it; the earlier behavior review does not close that display-data issue or any full theme.
+and a countered original's copied spell after persisted reload. W1's final emblem-text correction at
+`9c4366f7832eb2bc408a4583563a95bc07aee7b0` was independently reviewed: optional nested effect text is validated,
+carried into the emblem object, and preferred by projection, with the legacy repeated-ability fallback preserved.
+`node tests/engine-load100-w1-faces.mjs` passed 79 checks on that W1 head. An extra read-only +4/+4 template probe
+under controller 1 survived JSON persistence/reload: opponent 2 saw the exact sentence and the Bear had power 6.
+No new bounded finding; these reviews do not close a full theme or consolidated gate.

@@ -51,6 +51,7 @@
       "Skipped room seeds and frozen deal; replaced pilot answers in leave-question sweep",
       "Partial-construct coverage credits and five unsure gameplay cases",
       "Independent review of writer PRs and consolidated integration play: 200 pool games, 50 strict library seeds, and 2x25 strict staging-deck seeds"
-    ]
+    ],
+    "independentWriterReview": "Bounded W1/W4/W5/W6 mechanical reviews found no new issue after routed W4 target-selector correction. W1 final emblem text 9c4366f7832eb2bc408a4583563a95bc07aee7b0 independently inspected and engine-load100-w1-faces79 rerun green; extra read-only +4/+4 template/controller1/opponent2/persisted-reload probe had exact text and Bear power6. Repeated-ability fallback retained. No full-theme/G7 claim; all writer PRs remain unmerged for prescribed integration order."
   }
 }
