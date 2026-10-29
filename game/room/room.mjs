@@ -827,7 +827,9 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         pendingActions = null;
         apply(seat, action, "person", answer.hold === true);
       } else {
+        const cancelledProposal = answer.cancel === true && awaitingChoice(state)?.cancellation?.kind === "abandon-action";
         step.acted = true; write(resolveAwaiting(state, answer.indices, answer.amounts, rng, answer));
+        if (cancelledProposal) {castBy = null; heldBy = null; playBack = null;}
         if (playBack?.pending) {
           const previous = playBack;
           playBack = finishPlay(state, playBack, rng.checkpoint());

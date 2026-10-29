@@ -54,6 +54,7 @@
 
 import {cardsIn, moveObject, usesThisTurn, recordUse, showFace, showAdventure, shownFaceDown, shownFaceUp, turnFaceUp, eventCard, commanderKeyOf, recordDiscard, activationsForbidden, valueCostOf} from "../state/index.mjs";
 import {mayLookAt} from "../projection.mjs";
+import {beforeProposal, retainProposal} from "./cancel.mjs";
 import {pushSpell, pushAbility, becameTarget, crimeCommitted} from "./stack.mjs";
 import {spend, parseManaCost, automaticPayment, canPay, chosenPayment, paymentOptions, paymentKey, paymentWords, PAY_CHOICES, manaValue, poolSize, tapPlans, sourceTapPlans, quickTapPlan, convokeCanPay, convokePayments, lessGeneric} from "./mana.mjs";
 import {commanderTax, recordCommanderCast, commanderIdentity} from "./commander.mjs";
@@ -2700,9 +2701,10 @@ function countedProblem(state, player, action) {
  * @returns {Array} events for the caller to journal
  */
 export function applyAction(state, player, action) {
+  const proposal = beforeProposal(state, player, action);
   const events = perform(state, player, action);
   if (ruleOperationPending(state)) { state.passes = 0; state.priorityPlayer = null; return events; }
-  return afterAction(state, player, events);
+  return retainProposal(state, proposal, afterAction(state, player, events));
 }
 
 /** Finish an action's already-performed instructions; a resumed operation supplies its complete trigger batch. */

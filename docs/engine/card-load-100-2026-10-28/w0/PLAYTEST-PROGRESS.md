@@ -45,8 +45,21 @@ Linear ROB-211 is In Progress. Review/integration and exact-head Actions remain 
 ## Remaining intake
 
 ROB-204: root verifies PR932 exact head and CI. ROB-210 remains blocked until that prerequisite is verified.
-ROB-205: next implementation is an explicit server-created reversible proposal marker and an additive cancel contract,
-with full normalized state fingerprints and no journal effects proving the precommit boundary. Mandatory committed
-resolution/operation prompts cannot be silently skipped. W5 owns payment stages; W4 owns saved damage operations.
+ROB-205: Rob explicitly confirmed “Cancel reversible actions; keep committed mandatory choices pending with clear
+guidance (preserves the gates).” The engine candidate implements that policy with a server-created proposal marker,
+normalized full-state fingerprints, zero committed events and no resolving/rule-operation prefix. A real reveal event
+invalidates an unchanged-state proof; silent native mutations fail too. Old unproved pending choices are conservatively
+unavailable. The additive private `CrankDecisionCancel@1` contract is in [CANCEL-CONTRACT.md](CANCEL-CONTRACT.md).
+
+`node tests/engine-cancel-decision.mjs` and `node tests/room-cancel-decision.mjs` prove actual convoke costs, later pool
+payment, target-to-numeric stages, source mutation, actor departure, optional suffix execution, mandatory committed
+life-loss/discard/gain-life resolution, Easy/Normal pilots, reload, retry and stale inputs. Real room cancellation restores
+the full engine state, RNG and journal/history with `passAfterCast` and either Undo configuration. It clears abandoned
+auto-pass bookkeeping, which the actual initial room regression had wrongly advanced from MAIN1 to MAIN2.
+`python game/tools/batch/breaks.py game/tools/batch/breaks-playtest-cancel.py`: sixteen caught mutations, `missed: []`.
+Affected readers pass: controller66, decision-facts34, convoke43, targets-up-to44, precons-d140, copy-spell24,
+W2-stack268, costs32, room-undo23, replay14, room-yield43, plus Salty71/provocation21. Original assertions remain intact.
+W5 owns payment source stages; W4 owns saved damage operations. Shared UI implementation and issue closure remain open.
+
 ROB-209: modes, per-mode targets and payment continuation contract/fixtures remain to implement. UI stays with its owner.
 Universal/shared ROB-205 and ROB-209 are not closed by this checkpoint.
