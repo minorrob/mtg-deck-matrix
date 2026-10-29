@@ -25,7 +25,7 @@ const short=name=>String(name||'').split(',')[0].replace(/\s+(the|of)\s.*$/i,'')
 function frame(title,nav,current,canvas,primary,{back=null,cls='',head=''}={}){
   const d=modal(title,`<div class="cm-flow ${cls}">${head}<div class="cm-flow-body"><nav class="cm-flow-nav" aria-label="${e(title)}">${nav.map(([id,label,mark])=>`<button type="button" data-action="flow-nav" data-to="${e(id)}" aria-pressed="${id===current}"${mark?` data-mark="${e(mark)}"`:''}>${e(label)}</button>`).join('')}</nav><section class="cm-flow-canvas" id="cm-flow-canvas">${canvas}</section></div><footer class="cm-flow-foot">${back?`<button type="button" class="v-button" data-action="${e(back.action)}">${e(back.label)}</button>`:'<span></span>'}<button type="button" class="v-button primary" data-action="${e(primary.action)}"${primary.disabled?' disabled':''}>${e(primary.label)}</button></footer></div>`);
   d.classList.add('cm-flow-dialog');return d;}
-actions['flow-nav']=el=>{if(!F)return;if(F.step==='start')F.method=el.dataset.to;else F.section=el.dataset.to;draw();};
+actions['flow-nav']=el=>{if(!F)return;F.colorAsk=null;if(F.step==='start')F.method=el.dataset.to;else F.section=el.dataset.to;draw();};
 
 /* ── START FROM ─────────────────────────────────────────────────────────────────────────────────────────────── */
 const METHODS=[['pick','Pick a commander'],['colors','Choose colors'],['style','Choose play style'],['mechanics','Choose mechanics']];
@@ -56,7 +56,15 @@ function startCanvas(){
   const chip=(action,id,label,on,extra='')=>`<button type="button" class="cm-chip-toggle v-button" data-action="${action}" data-id="${e(id)}" aria-pressed="${on}"${extra}>${label}</button>`;
   let body='';
   if(m==='pick')body=`<label class="cm-flow-field">Commander name<input id="cm-flow-query" autocomplete="off" value="${e(F.query)}"></label><div id="cm-flow-list"></div>`;
-  if(m==='colors')body=`<div class="cm-flow-colors" role="group" aria-label="Colors">${[...V.COLORS,'C'].map(x=>chip('flow-color',x,`<span class="cm-pip-letter">${x}</span>`,x==='C'?p.colorless:p.colors.includes(x),` aria-label="${COLOR_NAME[x]}" title="${COLOR_NAME[x]}"`)).join('')}</div><label class="cm-checkbox"><input type="checkbox" data-flow-include${p.include?' checked':''}${p.colorless?' disabled':''}>Include more colors</label><div id="cm-flow-list">${p.colors.length||p.colorless?results(matching()):''}</div>`;
+  /* COLORS FOLLOW THE COMMANDER (ROB-216, Luke's playtest of 2026-10-28: "after picking a red commander, Color should lock to
+     red, or warn that changing it disconnects the commander"). Once a commander is chosen the chips show its color identity and
+     a press asks first (`F.colorAsk`): changing the colors lets the commander go, and says so before it does. */
+  if(m==='colors'){
+    const lead=F.commander?String(F.commander.ci||'').split('').filter(Boolean):null;
+    const on=x=>lead?(x==='C'?!lead.length:lead.includes(x)):x==='C'?p.colorless:p.colors.includes(x);
+    const ask=F.colorAsk?`<p class="cm-flow-warn" id="cm-flow-color-ask" role="alert"><strong>${e(F.commander.name)}</strong> will be disconnected: it is not ${e(COLOR_NAME[F.colorAsk])}.<span class="cm-actions">${b('Change colors','flow-color-yes',{},true)}${b(`Keep ${short(F.commander.name)}`,'flow-color-no')}</span></p>`:'';
+    body=`<div class="cm-flow-colors"${lead?' data-locked="commander"':''} role="group" aria-label="Colors${lead?`, from ${e(F.commander.name)}`:''}">${[...V.COLORS,'C'].map(x=>chip('flow-color',x,`<span class="cm-pip-letter">${x}</span>`,on(x),` aria-label="${COLOR_NAME[x]}" title="${COLOR_NAME[x]}${lead?' (set by the commander)':''}"`)).join('')}</div>${ask}<label class="cm-checkbox"><input type="checkbox" data-flow-include${p.include?' checked':''}${p.colorless||lead?' disabled':''}>Include more colors</label><div id="cm-flow-list">${!lead&&(p.colors.length||p.colorless)?results(matching()):''}</div>`;
+  }
   if(m==='style')body=`<div class="cm-flow-chips" role="group" aria-label="Play styles">${(index?.styles||[]).map(s=>chip('flow-style',s.id,e(s.label),p.styles.includes(s.id))).join('')}</div><div id="cm-flow-list">${p.styles.length?results(matching()):''}</div>`;
   if(m==='mechanics')body=`<div class="cm-flow-chips" role="group" aria-label="Mechanics">${(index?.mechanics||[]).map(x=>chip('flow-mech',x.id,e(x.label),p.mechanics.includes(x.id))).join('')}</div><div id="cm-flow-list">${p.mechanics.length?results(matching()):''}</div>`;
   /* STF-9, Q14: a second commander when the first allows one, limited to legal pairs; optional. */
@@ -79,11 +87,15 @@ function drawStart(){
   d.querySelector('#cm-flow-second')?.addEventListener('change',ev=>{const v=ev.target.value.trim();F.second=v?secondChoices(index.rows.find(r=>r.name===F.commander.name).pair).find(r=>r.name===v)||null:null;if(v&&!F.second)ev.target.setCustomValidity('Choose a commander from the list.');else ev.target.setCustomValidity('');});
   d.addEventListener('close',()=>{if(F&&F.step==='start'){const n=d.querySelector('#cm-flow-name')?.value.trim();if(n&&n!==M.deck(C.state,F.deckId).name)commit({type:'editDeck',deckId:F.deckId,name:n},{renderView:false}).catch(()=>{});}},{once:true});}
 const toggle=(list,id)=>list.includes(id)?list.filter(x=>x!==id):[...list,id];
-actions['flow-color']=el=>{const x=el.dataset.id,p=F.picks;if(x==='C'){p.colorless=!p.colorless;if(p.colorless)p.colors=[];}else{p.colorless=false;p.colors=toggle(p.colors,x);}draw();};
+/* A chosen commander sets the colors: pressing one asks first (flow-color-yes / flow-color-no), and only a yes lets the commander go. */
+actions['flow-color-yes']=()=>{const x=F?.colorAsk;if(!x)return;const p=F.picks,lead=String(F.commander.ci||'').split('').filter(Boolean);F.colorAsk=null;F.commander=null;F.second=null;
+  p.colors=x==='C'?[]:lead.includes(x)?lead.filter(c=>c!==x):[...lead,x];p.colorless=x==='C'?!!lead.length:false;draw();};
+actions['flow-color-no']=()=>{if(F){F.colorAsk=null;draw();}};
+actions['flow-color']=el=>{const x=el.dataset.id,p=F.picks;if(F.commander){F.colorAsk=x;draw();return;}if(x==='C'){p.colorless=!p.colorless;if(p.colorless)p.colors=[];}else{p.colorless=false;p.colors=toggle(p.colors,x);}draw();};
 actions['flow-style']=el=>{F.picks.styles=toggle(F.picks.styles,el.dataset.id);draw();};
 actions['flow-mech']=el=>{F.picks.mechanics=toggle(F.picks.mechanics,el.dataset.id);draw();};
 /* The selection survives switching methods (STF-3); a different commander drops a second that no longer pairs. */
-actions['flow-commander']=el=>{const name=el.dataset.name,row=index?.rows.find(r=>r.name===name)||{name,ci:(C.catalog.exact?.(name)?.colorIdentity||[]).join('')};if(F.commander?.name!==name)F.second=null;F.commander=row;draw();};
+actions['flow-commander']=el=>{const name=el.dataset.name,row=index?.rows.find(r=>r.name===name)||{name,ci:(C.catalog.exact?.(name)?.colorIdentity||[]).join('')};if(F.commander?.name!==name)F.second=null;F.colorAsk=null;F.commander=row;draw();};
 /* NEXT (STF-3, REC-1, REC-4): the commander, and only the commander, goes on the deck; its mechanics and play styles go
    into the definition marked as from the commander. Then Define the Deck. */
 actions['flow-next']=async()=>{if(!F?.commander)return;
