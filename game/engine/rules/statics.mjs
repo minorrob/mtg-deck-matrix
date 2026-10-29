@@ -880,7 +880,10 @@ function counterEnds(candidates, n, out = new Set()) {
 function counterCandidates(state, {id = null, player = null}, kind, by, {cost = false, entering = false} = {}) {
   const found = [];
   const held = staticAbilities(state);
-  for (const holderId of state.zones.battlefield) {
+  /* CR 614.12: the prospective entrant may supply a self-only replacement without joining the counted battlefield. */
+  const holders = entering && id !== null && state.objects[id]?.zone === "battlefield" && !state.zones.battlefield.includes(id)
+    ? [...state.zones.battlefield, id] : state.zones.battlefield;
+  for (const holderId of holders) {
     const holder = state.objects[holderId];
     for (const ability of held(holderId)) {
       if (!changesCounters(state, ability, holder, holderId, kind, by, cost)) continue;
@@ -894,7 +897,7 @@ function counterCandidates(state, {id = null, player = null}, kind, by, {cost = 
   return found;
 }
 /** Which effect an answer names: its holder and ability (CR 614.5 is per effect). */
-export const counterEffectKey = ({holderId, ability}) => `${holderId}:${ability.id}`;
+export const counterEffectKey = ({holderId, ability, key}) => key ?? `${holderId}:${ability.id}`;
 
 /**
  * How many counters of `kind` are put on a permanent (`id`) or a player (`player`) when `count` would be, by `by`.
@@ -904,16 +907,20 @@ export const counterEffectKey = ({holderId, ability}) => `${holderId}:${ability.
  *
  * @returns {{count: number, question?: {player: number, options: string[], count: number}}}
  */
-export function placeCounters(state, {id = null, player = null}, kind, count, by = null, {orders = [], askable = false, cost = false, entering = false} = {}) {
+export function placeCounters(state, {id = null, player = null}, kind, count, by = null, {orders = [], askable = false, cost = false, entering = false, extraCandidates = [], applied = [], reportApplied = false} = {}) {
   if (!(count > 0) || (player !== null ? !state.players[player] : !state.objects[id])) return {count};
   const affected = player !== null ? player : controllerOf(state, id);
-  let rest = counterCandidates(state, {id, player}, kind, by, {cost, entering}), n = count, used = 0;
+  let rest = [...counterCandidates(state, {id, player}, kind, by, {cost, entering}), ...extraCandidates]
+    .filter(candidate => !applied.includes(counterEffectKey(candidate))), n = count, used = 0;
+  const appliedNow = [];
+  /* A source can depart while an entry question is saved. A vanished effect cannot consume a later answer. */
+  const liveOrders = entering ? orders.filter(key => rest.some(candidate => counterEffectKey(candidate) === key)) : orders;
   while (rest.length && n > 0) {
     let next = rest[0];
     if (rest.length > 1 && counterEnds(rest, n).size > 1) {
-      const answered = orders[used] === undefined ? undefined : rest.find((c) => counterEffectKey(c) === orders[used]);
+      const answered = liveOrders[used] === undefined ? undefined : rest.find((c) => counterEffectKey(c) === liveOrders[used]);
       if (answered) { used += 1; next = answered; }
-      else if (askable) return {count: n, question: {player: affected, options: rest.map(counterEffectKey), count: n}};
+      else if (askable) return {count: n, ...(reportApplied ? {applied: appliedNow} : {}), question: {player: affected, options: rest.map(counterEffectKey), count: n}};
       else {
         /* Nobody can be asked here: the most for the player putting them on their own, the fewest put by another. */
         const most = by === affected;
@@ -922,9 +929,10 @@ export function placeCounters(state, {id = null, player = null}, kind, count, by
       }
     }
     n = counterChange(next.ability, n);
+    appliedNow.push(counterEffectKey(next));
     rest = rest.filter((c) => c !== next);
   }
-  return {count: Math.max(0, n)};
+  return {count: Math.max(0, n), ...(reportApplied ? {applied: appliedNow} : {})};
 }
 export const countersPlaced = (state, id, kind, count, by = null, orders = []) => placeCounters(state, {id}, kind, count, by, {orders}).count;
 /** The counters a permanent enters with (CR 122.6), put on as it enters by `by` -- its controller, unless an effect says
@@ -941,12 +949,13 @@ export const playerCountersPlaced = (state, player, kind, count, by = null) => p
  */
 export function counterOrderChoice(state, awaiting) {
   const {id, counter: kind, count, by} = awaiting;
-  const candidates = counterCandidates(state, {id}, kind, by);
+  const candidates = [...counterCandidates(state, {id}, kind, by, {entering: awaiting.entering === true}), ...(awaiting.extraCandidates ?? [])];
   const byKey = new Map(candidates.map((c) => [counterEffectKey(c), c]));
   const range = (list) => { const lo = Math.min(...list), hi = Math.max(...list); return lo === hi ? `${lo}` : `${lo} to ${hi}`; };
   /* Two of one name (Rob's Vorinclex and Maya's) are told apart by whose they are. */
-  const names = awaiting.options.map((key) => state.objects[byKey.get(key)?.holderId]?.card);
+  const names = awaiting.options.map((key) => byKey.get(key)?.label ?? state.objects[byKey.get(key)?.holderId]?.card);
   const nameOf = (candidate) => {
+    if (candidate.label) return candidate.label;
     const card = state.objects[candidate.holderId].card;
     return names.filter((n) => n === card).length > 1 ? `${state.players[state.objects[candidate.holderId].controller].name}'s ${card}` : card;
   };

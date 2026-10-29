@@ -29,6 +29,7 @@ RES = 'game/engine/script/effects/resources.mjs'
 ZONES = 'game/engine/script/effects/zones.mjs'
 STACK = 'game/engine/rules/stack.mjs'
 ENTERING = 'game/engine/rules/entering.mjs'
+ENTRY_COUNTERS = 'game/engine/rules/pre-entry.mjs'
 ACTIONS = 'game/engine/rules/actions.mjs'
 TRIGGER = 'game/engine/rules/trigger.mjs'
 CARDS = 'game/engine/cards/index.mjs'
@@ -76,7 +77,7 @@ NOT_COST = '  && !(cost && ability.byEffect === true)\n'
 WHOSE = 'if (player !== null ? !(ability.players === true || (ability.players === "you" && player === holder.controller))'
 ALONE = '        : ability.affects?.what === "player" || !matchesSelector('
 ENTERING_SELF = '      if (entering && holderId === id && ability.affects?.self !== true) continue;\n'
-PASSED_ON = 'let rest = counterCandidates(state, {id, player}, kind, by, {cost, entering}), n = count, used = 0;'
+PASSED_ON = 'let rest = [...counterCandidates(state, {id, player}, kind, by, {cost, entering}), ...extraCandidates]'
 ENTERING_FN = 'export const enteringCountersPlaced = (state, id, kind, count, by = null) => placeCounters(state, {id}, kind, count, by, {entering: true}).count;'
 
 BREAKS = [
@@ -141,12 +142,12 @@ BREAKS = [
     ('counters: a player\'s alone never a permanent\'s', STATICS, ALONE, '        : !matchesSelector('),
     ('counters: entering, not its own effect over a set (CR 614.12)', STATICS, ENTERING_SELF, ''),
     ('counters: entering, its own of itself alone still', STATICS, ENTERING_SELF, '      if (entering && holderId === id) continue;\n'),
-    ('counters: cost and entering passed on', STATICS, PASSED_ON, 'let rest = counterCandidates(state, {id, player}, kind, by), n = count, used = 0;'),
+    ('counters: cost and entering passed on', STATICS, PASSED_ON, PASSED_ON.replace('{cost, entering}', '{}')),
     ('counters: entering counters put as entering', STATICS, ENTERING_FN, ENTERING_FN.replace('{entering: true}', '{}')),
     ('counters: a cost\'s counters said to be one', ACTIONS, 'placeCounters(state, {id}, c.counter, c.count, by, {cost: true}).count', 'placeCounters(state, {id}, c.counter, c.count, by).count'),
-    ('entering: as a spell resolves', STACK, '+ enteringCountersPlaced(state, arrived, counter, count, entry.playerId);', '+ count;'),
+    ('entering: as a spell resolves', ENTRY_COUNTERS, 'frame.counts[counter] = placed.count;', 'frame.counts[counter] = state.objects[frame.objectId]?.zone === "stack" ? frame.counts[counter] : placed.count;'),
     ('entering: impending\'s time counters', STACK, '+ enteringCountersPlaced(state, arrived, "time", entry.impending, entry.playerId);', '+ entry.impending;'),
-    ('entering: put onto the battlefield by an effect', ZONES, '+ enteringCountersPlaced(state, moved, counter, count, state.objects[moved].controller);', '+ count;'),
+    ('entering: put onto the battlefield by an effect', ENTRY_COUNTERS, 'frame.counts[counter] = placed.count;', 'frame.counts[counter] = state.objects[frame.objectId]?.zone !== "stack" ? frame.counts[counter] : placed.count;'),
     ('entering: an additional counter as it returns', ZONES, '+ enteringCountersPlaced(state, id, params.withCounter, 1, state.objects[id].controller);', '+ 1;'),
     ('entering: as a copy', ENTERING, '+ enteringCountersPlaced(state, awaiting.objectId, counter, count, object.controller);', '+ count;'),
     ('entering: riot\'s counter', ENTERING, 'riot.counters["+1/+1"] = was + enteringCountersPlaced(state, awaiting.objectId, "+1/+1", 1, riot.controller);',

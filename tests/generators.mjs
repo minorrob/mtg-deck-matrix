@@ -133,6 +133,7 @@ const CHECKABLE = [
   ["tools/build-pilot-roles.mjs", ["--check"]],
   ["tools/build-ai-roster.mjs", ["--check"]],
   ["tools/build-veteran-skill.mjs", ["--check"]],
+  ["tools/card-load-scope.mjs", ["--check"]],
   /* The refresh runner's --check runs every check above in turn (an hour with the fetching
      ones); here its --plan proves the runner loads and its plan resolves every tool it names.
      tests/refresh.mjs holds the plan to the registry. */

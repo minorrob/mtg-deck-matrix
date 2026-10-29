@@ -66,6 +66,7 @@ registerRuleOperation("move-one", (state, frame) => {
       const down = options.faceDown === true, face = options.transformed === true ? object.mdfc?.back ?? object : object;
       frame.stage = "after-enter";
       return {status: "continue", children: [{kind: "entering", objectId: frame.id, player,
+        additionalCounters: options.counters ?? {},
         types: down ? ["Creature"] : face.types, abilities: down ? [] : face.abilities,
         entryFace: {set: Object.fromEntries(COPY_KEYS.filter(key => face[key] !== undefined).map(key => [key, face[key]])),
           remove: COPY_KEYS.filter(key => face[key] === undefined)}, faceDown: down}]};
@@ -73,6 +74,7 @@ registerRuleOperation("move-one", (state, frame) => {
     frame.stage = "move";
   }
   if (frame.stage === "after-enter") {
+    frame.preparedCounterResult = frame.childResult?.counterResult ?? null;
     frame.entryPatch = frame.childResult?.objectPatch ?? null;
     frame.preparedEntering = frame.childResult?.entering ?? frame.childResult;
     delete frame.childResult; frame.stage = "move";
@@ -83,7 +85,7 @@ registerRuleOperation("move-one", (state, frame) => {
   }
   const events = [];
   const moved = moveOne(state, frame.id, frame.to, events, {...options, preparedProposal: frame.proposal,
-    preparedEntering: frame.preparedEntering ?? null, entryPatch: frame.entryPatch ?? null});
+    preparedEntering: frame.preparedEntering ?? null, preparedCounterResult: frame.preparedCounterResult ?? null, entryPatch: frame.entryPatch ?? null});
   const index = events.findIndex(e => e.kind === "GameEventCardChangeZone" && e.data.fields.card?.cardId === frame.id);
   const zoneEventIndex = index < 0 ? null : state.ruleOperation.events.length + index;
   emitRuleEvents(state, events);

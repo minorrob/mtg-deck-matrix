@@ -84,7 +84,7 @@ BREAKS = [
     ('token frame does not advance after answered entry', P, 'frame.index += 1; frame.stage = null;\n      return {status: "continue"};', 'frame.stage = null;\n      return {status: "continue"};'),
     ('failed token entry is created anyway', P, 'frame.childResult?.entering?.to && frame.childResult.entering.to !== "battlefield" ? null : frame.childResult', 'frame.childResult'),
     ('token field creation loses saved chosen copy patch', P, 'patchEnteringObject(state.objects[id], entry.prepared.objectPatch);', ''),
-    ('tokens count simultaneous siblings as replacement sources', P, 'entry.counters[counter] = placed;', 'entry.counters[counter] = placed + 1;'),
+    ('tokens count simultaneous siblings as replacement sources', P, 'state.objects[id].counters = entry.counters;', 'state.objects[id].counters = Object.fromEntries(Object.entries(entry.counters).map(([counter, count]) => [counter, count + 1]));'),
     ('token creator count is discarded', P, 'state.players[batch.controller].tokensThisTurn = (state.players[batch.controller].tokensThisTurn ?? 0) + 1;', ''),
     ('token operation does not return saved context', P, 'result: {context: frame.context, made}', 'result: {made}'),
     ('Aura token chooses a host automatically', P, 'if (specified === undefined && entry.host === undefined && hosts.length > 1)', 'if (false)'),
