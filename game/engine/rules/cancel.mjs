@@ -25,16 +25,16 @@ export function cancellationFor(state, choice) {
   const base = {schema: "CrankDecisionCancel@1"};
   if (reversible(state)) return {...base, allowed: true, kind: "abandon-action", returnsPriority: true};
   if (proposalChoice(state)) return {...base, allowed: false,
-    reason: "Invalid selection. This saved action has no unchanged reversible proposal. Complete its choice; it cannot be cancelled."};
+    reason: "Invalid selection. This saved action has no unchanged reversible proposal. Complete its choice; it cannot be canceled."};
   if (state.awaiting?.effect === "copySpell" && choice?.maySkip === true)
     return {...base, allowed: true, kind: "keep-targets", returnsPriority: false};
   if (["one", "many", "boolean", "index", "draw", "ack"].includes(choice?.mode) && choice.min === 0)
     return {...base, allowed: true, kind: "choose-none", returnsPriority: false};
   return {...base, allowed: false,
-    reason: "Invalid selection. Complete this required choice to finish the current effect or game step; it cannot be cancelled."};
+    reason: "Invalid selection. Complete this required choice to finish the current effect or game step; it cannot be canceled."};
 }
 export function abandonProposal(state) {
-  if (!reversible(state)) throw new Error("This action changed or has no reversible proposal; it cannot be cancelled. Complete its required choice.");
+  if (!reversible(state)) throw new Error("This action changed or has no reversible proposal; it cannot be canceled. Complete its required choice.");
   const p = state.awaiting.precommit;
   state.awaiting = null; state.passes = p.passes; state.priorityPlayer = p.priorityPlayer;
   return [];

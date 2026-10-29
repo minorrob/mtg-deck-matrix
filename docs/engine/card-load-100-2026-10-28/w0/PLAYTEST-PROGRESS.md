@@ -44,7 +44,7 @@ Linear ROB-211 is In Progress. Review/integration and exact-head Actions remain 
 
 ## Remaining intake
 
-ROB-204: root verified external main merge `0aee1474`, exact-head CI cancelled rather than green; no full-gate credit.
+ROB-204: root verified external main merge `0aee1474`, exact-head CI canceled rather than green; no full-gate credit.
 The merged room optional-count regression passes21 checks. ROB-210 is now In Progress: native actual-card audit113
 checks covers Brago combat provenance, zero/one/several blink targets, Thassa up-to-one, Cloudshift/Ephemerate return
 control, Flickerwisp saved delayed return and real Claim Jumper searches after reentry. Claim Jumper itself has no blink

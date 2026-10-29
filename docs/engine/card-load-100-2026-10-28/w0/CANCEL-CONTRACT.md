@@ -29,7 +29,7 @@ change invalidates the proof; actual actor departure withdraws its proposal thro
 Neither old receipts nor stale Cancel requests resurrect actor/source cards. House-pilot choice options are unchanged;
 Easy and Normal answer actual costs without selecting Cancel or entering retry loops.
 
-The room clears a cancelled proposal's queued auto-pass/held-priority/unfinished Undo bookkeeping before driving the
+The room clears a canceled proposal's queued auto-pass/held-priority/unfinished Undo bookkeeping before driving the
 next decision, so `passAfterCast` cannot advance the actor out of the restored priority window. Cancellation is recorded
 on the input tape and replays deterministically. It appends no game journal event and changes no existing history.
 

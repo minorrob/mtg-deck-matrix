@@ -1,7 +1,7 @@
 # ROB-210 native blink and search audit
 
 Prerequisite: Confirm PR #932 merged externally into main at `0aee1474`. Root verified that its exact-head Actions run
-was **cancelled**, not green; the author merged on touched suites. It receives no full acceptance-gate credit here.
+was **canceled**, not green; the author merged on touched suites. It receives no full acceptance-gate credit here.
 The merged native `room-optional-count-targets` suite passes 21 checks. The coordinated browser audit remains pending.
 
 The saved card definition for **Claim Jumper** has an enters-the-battlefield catch-up Plains search and no blink target.
