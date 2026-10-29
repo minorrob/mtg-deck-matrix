@@ -78,6 +78,13 @@
       "limits": "Selected in-memory proof only, not whole-directory coverage. Journal provenance, strict diagnostics, optional/settle debt and default enforcement remain open.",
       "mutations": "35 new policy/availability/metadata mutations caught;19 retained ability-proof mutations caught;both missed:[]",
       "readers": "engine-combat74,engine-libload-l4-combat57,room-block-check34,data-integrity50variants/50profiles,feature-wiring131"
+    },
+    "followupColdReview": {
+      "report": "V8-REVIEW-2026-10-29.md, exact-source follow-up section",
+      "evidence": "evidence/v8-review-2026-10-29.json, followupColdReview",
+      "w4": "c3923102:9 savedscenarios/4cards/5abilities independently pass; eachFlying fullcombatfinal-life difference, prior scenarios/assertions/fixtures unchanged;5 actualPyrohemia sourcecolor/departure controls pass; protection scope only",
+      "w3": "13ea6a5d:4 realdestruction commander-reapplication/reload cases pass perCR903.9b; prefix/suffix once, oneactualmove, no staleoperation; not wholeconsumer acceptance",
+      "scope": "Cold read-only exact-source probes only. No V8 rule/card/scenario edit or additional global gate credit."
     }
   }
 }
