@@ -1,0 +1,242 @@
+{
+  "schema": "load100-independent-review@1",
+  "reviewer": "V8",
+  "date": "2026-10-29",
+  "sourceSnapshots": {
+    "w2": "2fb6f815da5c7c91c9c9fd75128b9cdad2b5577d",
+    "w3": "63f5b4c83f74f30aebde497839d54d4b72439fe1",
+    "w7": "7b832177b4abc7efe731121849c2e1d00b3ce399",
+    "w2-fixed": "a49b03eab9b1b2a7a0f83796d69fc184a61a6fbd",
+    "w3-fixed": "b66ae95a7ea582dd3e52687feddffb6247103961",
+    "w3-outcomes": "34847ddf1ffcf9952e09a71d56df54546098ba23",
+    "w7-fixed": "625f4f24fea5e625ea261371989e5eda1e619ba7",
+    "w2-joint": "469236c40b0b609df4c5397b04bcc23f4f93ba47",
+    "w7-final": "a6d128e2158339bbed7d78d3b831b90d81572758"
+  },
+  "baseline": "c34022d4e8df01dcb7aca97796b6a6d6f93d7e23",
+  "method": "frozen exact Git source; local current CR references and cached public official rulings; no writer-test acceptance substitute",
+  "findings": [
+    {
+      "id": "R1",
+      "lane": "W2",
+      "witness": "Actual legally cast Monstrous Onslaught A:1 B:2; copy keeps A/B or retargets B to C; reload every answer",
+      "before": {
+        "sha": "2fb6f815da5c7c91c9c9fd75128b9cdad2b5577d",
+        "retargetDamage": [
+          1,
+          0,
+          0
+        ],
+        "expected": [
+          1,
+          0,
+          2
+        ]
+      },
+      "after": {
+        "sha": "469236c40b0b609df4c5397b04bcc23f4f93ba47",
+        "keepDamage": [
+          1,
+          2,
+          0
+        ],
+        "retargetDamage": [
+          1,
+          0,
+          2
+        ],
+        "status": "passed"
+      },
+      "command": "node .v8-review-20261029/probe-monstrous-joint.mjs"
+    },
+    {
+      "id": "R2",
+      "lane": "W3",
+      "witness": "Same exiled card with {2} and {3} permissions; unlimited and finite; each selected after reload and actually paid",
+      "before": {
+        "sha": "63f5b4c83f74f30aebde497839d54d4b72439fe1",
+        "offers": 1,
+        "expected": 2
+      },
+      "after": {
+        "sha": "b66ae95a7ea582dd3e52687feddffb6247103961",
+        "cases": 4,
+        "status": "passed"
+      },
+      "command": "node .v8-review-20261029/probe-permission-fixed.mjs"
+    },
+    {
+      "id": "R3",
+      "lane": "W7",
+      "witness": "Insight then Collector pipeline, repeated replacement source identity and affected player chooses distinct opponents",
+      "before": {
+        "sha": "7b832177b4abc7efe731121849c2e1d00b3ce399",
+        "delta": [
+          2,
+          0,
+          0
+        ],
+        "expected": [
+          1,
+          1,
+          0
+        ]
+      },
+      "after": {
+        "sha": "a6d128e2158339bbed7d78d3b831b90d81572758",
+        "sameControllerMatrixCases": 8,
+        "differentControllerCases": 8,
+        "reloadAtEveryQuestion": true,
+        "status": "passed; both no-dredger choices produce selected opponent card, count2 both orders produce1/1/1"
+      },
+      "commands": [
+        "node .v8-review-20261029/probe-collector-final.mjs",
+        "node .v8-review-20261029/probe-collector-different-final.mjs"
+      ],
+      "intermediate": {
+        "sha": "625f4f24fea5e625ea261371989e5eda1e619ba7",
+        "matrixCases": 8,
+        "matrixStatus": "passed",
+        "differentOpponentNoDredger": "open: silently selects first Collector"
+      }
+    },
+    {
+      "id": "R4",
+      "lane": "W2",
+      "witness": "Nonempty destroy-script runtime fixture, counted [A,B] distinct scalar C can change to [A,C],B; first answer remains provisional across reload",
+      "before": {
+        "sha": "a49b03eab9b1b2a7a0f83796d69fc184a61a6fbd",
+        "retargetQuestion": false
+      },
+      "after": {
+        "sha": "469236c40b0b609df4c5397b04bcc23f4f93ba47",
+        "status": "passed"
+      },
+      "fixtureCorrection": "An initial empty-effects fixture had no spell script; corrected nonempty-effect fixture fails old and passes new.",
+      "command": "node .v8-review-20261029/probe-joint-retarget-fixed.mjs"
+    },
+    {
+      "id": "R5",
+      "lane": "W3",
+      "witness": "Unlimited normal/exile-on-finish graveyard spell permissions chosen after reload; actual effect and eventual destination; saved sorcery-restricted vs unrestricted instant",
+      "before": {
+        "sha": "b66ae95a7ea582dd3e52687feddffb6247103961",
+        "offers": 1,
+        "expected": 2
+      },
+      "after": {
+        "sha": "34847ddf1ffcf9952e09a71d56df54546098ba23",
+        "destinations": [
+          "graveyard",
+          "exile"
+        ],
+        "timing": "unrestricted only on opponent turn",
+        "status": "passed"
+      },
+      "commands": [
+        "node .v8-review-20261029/probe-exiling-permission-fixed.mjs",
+        "node .v8-review-20261029/probe-permission-timing.mjs"
+      ]
+    },
+    {
+      "id": "R6",
+      "lane": "W2",
+      "witness": "Actual Onslaught, only A/B and A shrouded, provisional B first share; explicit cancellation after reload and later copy continues",
+      "before": {
+        "sha": "a49b03eab9b1b2a7a0f83796d69fc184a61a6fbd",
+        "recovery": false
+      },
+      "after": {
+        "sha": "469236c40b0b609df4c5397b04bcc23f4f93ba47",
+        "status": "passed",
+        "resolvedDamage": [
+          0,
+          4
+        ]
+      },
+      "command": "node .v8-review-20261029/probe-retarget-recovery-fixed.mjs"
+    }
+  ],
+  "positiveProbes": [
+    {
+      "subject": "Gandalf Flameshape and actual Akroma morph",
+      "source": "c34022d4e8df01dcb7aca97796b6a6d6f93d7e23",
+      "command": "node .v8-review-20261029/probe-gandalf.mjs",
+      "scope": "three-player visibility exile/stack/battlefield; Wizard condition and unauthorized nonviewer control; actual face-down cast/resolution"
+    },
+    {
+      "subject": "Annul",
+      "source": "c34022d4e8df01dcb7aca97796b6a6d6f93d7e23",
+      "command": "node .v8-review-20261029/probe-annul.mjs",
+      "scope": "actual regenerated candidate smoke; target stack1 countered, Annul stack2 resolves successfully; not two successful resolutions"
+    },
+    {
+      "subject": "Brazen Dwarf",
+      "source": "c34022d4e8df01dcb7aca97796b6a6d6f93d7e23",
+      "command": "node .v8-review-20261029/probe-die.mjs",
+      "scope": "Oracle-trigger in-memory compilation; two separate own rolls trigger twice and damage both opponents; opponent/random-number negative; no saved final/new-card credit"
+    },
+    {
+      "subject": "copy Ward",
+      "source": "469236c40b0b609df4c5397b04bcc23f4f93ba47",
+      "command": "node .v8-review-20261029/probe-copy-ward.mjs",
+      "scope": "actual Hulking Raptor Ward triggers for kept/new copy target in frozen legal stack state; no actual-cast credit"
+    }
+  ],
+  "limits": [
+    "No whole-theme acceptance",
+    "No whole-directory ability coverage claim",
+    "No clean whole-game exercise credit",
+    "No broad games run",
+    "All existing G1-G8 gates retained"
+  ],
+  "flyingProposal": {
+    "source": "37a6c8053420cbc16d8a53228079702b41c5d043",
+    "prototypeOnly": false,
+    "subject": "Zephyr Sprite",
+    "baselineLife": [
+      40,
+      39
+    ],
+    "removedFlyingLife": [
+      40,
+      40
+    ],
+    "bothReach": "MAIN2",
+    "removedGraveyard": [
+      "Zephyr Sprite"
+    ],
+    "failure": "final life assertion",
+    "ledgerCredit": "Selected in-memory test proves one actual loaded ability only; no whole-directory or saved-scenario credit",
+    "status": "implemented as strict runner step with metadata and actual counterfactual test; no saved scenario added"
+  },
+  "diagnostics": "workbench/load100-v8-20261029-diagnostics",
+  "historicalCreditCorrection": {
+    "savedSerraFlying": "old blocker-offer failure rejected; final damage unchanged under explicit no blocks",
+    "thranDynamo": "missing mana action offer rejected; no actual produced-mana outcome after omission",
+    "fullSweep": "previous6079 reached/5557 unreached artifacts remain historical; current strict eligibility requires full remeasurement"
+  },
+  "harness": {
+    "policyChecks": 166,
+    "abilityChecks": 44,
+    "sourceDependency": "98eadc5fa2d01eed3644e5cce582174e478ab829",
+    "savedCardsChanged": 0,
+    "savedScenariosChanged": 0,
+    "ruleModulesChanged": 0,
+    "policyMutations": {
+      "caught": 35,
+      "missed": []
+    },
+    "retainedAbilityMutations": {
+      "caught": 19,
+      "missed": []
+    },
+    "readers": {
+      "engineCombat": 74,
+      "engineLibloadL4Combat": 57,
+      "roomBlockCheck": 34,
+      "dataIntegrity": "50 variants/50 profiles",
+      "featureWiring": 131
+    }
+  }
+}

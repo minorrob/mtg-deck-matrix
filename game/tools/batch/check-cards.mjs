@@ -27,6 +27,7 @@ export function checkScenarios({files, scripts, cards, ledger = null, counterfac
       try {
         const result = runScenario(scenario, cards, file.fixtures ?? {});
         if (counterfactual) baselines.set(scenario, {passed: true, checks: result.passed.length, events: result.events.length});
+        if (counterfactual && result.policies) baselines.get(scenario).policies = structuredClone(result.policies);
         if (ledger) addExerciseEvidence(ledger, result.events, {scenario: `${file.card}: ${scenario.name}`});
       } catch (error) {
         failed += 1; baselines.set(scenario, {error: error.message});
