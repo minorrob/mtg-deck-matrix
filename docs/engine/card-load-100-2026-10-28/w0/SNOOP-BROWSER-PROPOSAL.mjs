@@ -41,18 +41,18 @@ if(process.argv.includes("--prepare-only")){
     const shown=async(id,name)=>{for(const page of pages){const top=library(page,0).locator(`.cm-bcard[data-card="${id}"]`);await top.waitFor({state:"visible",timeout:15000});ok((await top.getAttribute("aria-label")).includes(name),`${mode}: both viewers see the native revealed top ${name}`);eq(await library(page,1).locator("[data-card]").count(),0,`${mode}: the other library stays unseen`);}};
     const waitPacket=async(mark)=>{for(let n=0;n<100&&packets.length===mark;n++)await pages[0].waitForTimeout(50);eq(packets.length,mark+1,"one native UI action produces one socket act");await queue;eq(refusals,[],"the production dispatcher accepts the unchanged browser action");await pages[0].waitForTimeout(250);};
     await shown(first,"Mogg Fanatic");eq(room.watch().state.players[0].zones.Library.cards[0].cardId,first,"spectator projection receives the same public top, never an unseen library");
-    eq(await library(pages[0],0).locator(`[data-card="${first}"]`).getAttribute("data-action"),"board-draw","a revealed own top retains the actual held-draw action");
-    ok((await library(pages[0],0).locator(`[data-card="${first}"]`).getAttribute("aria-label")).startsWith("Draw card: "),"the visible held top still announces its draw action");
-    eq(await library(pages[1],0).locator(`[data-card="${first}"]`).getAttribute("data-action"),"board-card","another viewer can inspect the public top without drawing for its owner");
-    const hand=room.view("p0").state.players[0].zones.Hand.count,mark=packets.length;await library(pages[0],0).locator(`[data-card="${first}"]`).click();await waitPacket(mark);
+    eq(await library(pages[0],0).locator(`.cm-bcard[data-card="${first}"]`).getAttribute("data-action"),"board-draw","a revealed own top retains the actual held-draw action");
+    ok((await library(pages[0],0).locator(`.cm-bcard[data-card="${first}"]`).getAttribute("aria-label")).startsWith("Draw card: "),"the visible held top still announces its draw action");
+    eq(await library(pages[1],0).locator(`.cm-bcard[data-card="${first}"]`).getAttribute("data-action"),"board-card","another viewer can inspect the public top without drawing for its owner");
+    const hand=room.view("p0").state.players[0].zones.Hand.count,mark=packets.length;await library(pages[0],0).locator(`.cm-bcard[data-card="${first}"]`).click();await waitPacket(mark);
     eq(room.view("p0").state.players[0].zones.Hand.count,hand+1,"held-draw click enters the actual native draw handler once");await shown(second,"Goblin Instigator");eq(room.view("p1").state.players[0].zones.Hand.cards,[],"the opponent's hand projection remains hidden after the known top is drawn");
     await mainAndFund(room);host.broadcast();await pages[0].waitForTimeout(250);
-    const top=library(pages[0],0).locator(`[data-card="${second}"]`);eq(await top.getAttribute("data-action"),"board-card","after the draw, a new top uses normal native card actions");
+    const top=library(pages[0],0).locator(`.cm-bcard[data-card="${second}"]`);eq(await top.getAttribute("data-action"),"board-card","after the draw, a new top uses normal native card actions");
     await top.click();const cast=pages[0].locator(`#cm-card-menu [data-action="board-card-menu-do"][data-act="cast"][data-card="${second}"]`);await cast.waitFor({state:"visible",timeout:10000});
     const castMark=packets.length;await cast.click();await waitPacket(castMark);await shown(third,"Mountain");
     ok(room.view("p0").state.players[0].zones.Battlefield.cards.some(c=>c.name==="Goblin Instigator"),"the real top Goblin was cast and resolved using actual funded mana");
     eq((await store.readJournal()).filter(e=>e.kind==="GameEventSpellAbilityCast"&&e.data.fields.card.name==="Goblin Instigator").length,1,"native journal records exactly one actual Goblin cast");
-    await library(pages[0],0).locator(`[data-card="${third}"]`).click();eq(await pages[0].locator('#cm-card-menu [data-action="board-card-menu-do"][data-act="cast"]').count(),0,"Snoop does not make the next Mountain castable");
+    await library(pages[0],0).locator(`.cm-bcard[data-card="${third}"]`).click();eq(await pages[0].locator('#cm-card-menu [data-action="board-card-menu-do"][data-act="cast"]').count(),0,"Snoop does not make the next Mountain castable");
     await pages[0].keyboard.press("Escape");await killSnoop(fixture);host.broadcast();await pages[0].waitForTimeout(350);
     for(const page of pages){eq(await library(page,0).locator("[data-card]").count(),0,"after actual Bolt removes Snoop, the formerly public library becomes a back again");eq(await library(page,1).locator("[data-card]").count(),0,"the other library remains unseen throughout");}
     eq(room.watch().state.players[0].zones.Library.cards,[],"spectator projection also loses top visibility when the actual source dies");eq(errors,[],"the native-backed browser contexts report no page errors");
