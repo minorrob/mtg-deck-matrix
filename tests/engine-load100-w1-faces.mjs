@@ -11,7 +11,7 @@ import {prepare, unprepare} from "../game/engine/script/effects/attributes.mjs";
 import {addObject, moveObject, shownFaceDown} from "../game/engine/state/index.mjs";
 import {legalActions, applyAction} from "../game/engine/rules/actions.mjs";
 import {resolveTop} from "../game/engine/rules/stack.mjs";
-import {afterResolving} from "../game/engine/rules/priority.mjs";
+import {afterResolving, passPriority} from "../game/engine/rules/priority.mjs";
 import {checkStateBasedActions} from "../game/engine/rules/sba.mjs";
 import {lastKnown, characteristicsOf, abilitiesOf} from "../game/engine/rules/layers.mjs";
 import {compileScript} from "../game/engine/cards/index.mjs";
@@ -315,6 +315,67 @@ for (const [types, subtypes, change, lost, mana] of [
   eq(characteristicsOf(s, id).keywords.includes("Flying"), !lost, "rules-text keywords obey the same basic type rule");
   eq(abilitiesOf(s, id).some((a) => a.id === "own"), !lost, "only a set basic land type on a land removes rules-text abilities");
   eq(abilitiesOf(s, id).filter((a) => a.kind === "mana").length, mana, "intrinsic mana follows the new basic types even if the old type was the same");
+}
+
+/* The same generic object-rule emblem applies on opposing turns and a loaded stack (CR 114.4, 606.3). */
+for (const controller of [0, 1]) {
+  const emblemText = "You may activate loyalty abilities of planeswalkers you control on any player's turn any time you could cast an instant.";
+  const script = (name, amount) => ({schema: "CrankCardScript@1", identity: {name, oracleId: `smoke-${name}`, types: ["Planeswalker"],
+    subtypes: [], manaCost: "{1}", colors: [], colorIdentity: [], loyalty: amount === null ? 1 : 3}, source: "hand",
+    oracleText: amount === null ? `-1: You get an emblem with \"${emblemText}\"` : `+1: You gain ${amount} life.`,
+    abilities: [{kind: "activated", text: amount === null ? `-1: You get an emblem with \"${emblemText}\"` : `+1: You gain ${amount} life.`,
+      cost: [{atom: "loyalty", amount: amount === null ? -1 : 1}], effects: amount === null
+        ? [{effect: "emblem", text: emblemText, abilities: [{kind: "static", text: emblemText, rule: "loyalty-at-instant-speed",
+          affects: {what: "permanent", types: ["Planeswalker"], controller: "you"}}]}]
+        : [{effect: "gainLife", amount}]}]});
+  const names = ["Smoke Timing Maker", "Smoke Life Walker", "Smoke Other Walker"];
+  const defs = names.map((name, i) => compileScript(script(name, [null, 3, 5][i])));
+  for (const def of defs) eq(def.problems, [], "generic emblem and loyalty fixtures use the existing grammar");
+  const unsupported = script("Smoke Unsupported Emblem", null);
+  unsupported.abilities[0].effects[0].abilities[0].rule = "untap-others";
+  eq(compileScript(unsupported).problems.some((problem) => /command zone yet/.test(problem)), true,
+    "unrelated object rules with specialized readers remain refused on an emblem");
+  const resolver = (name) => names.includes(name) ? defs[names.indexOf(name)].definition : index.definition(name);
+  const opponent = (controller + 1) % 3;
+  let s = runScenario({name: "A publicly created emblem applies to current planeswalkers after its maker dies", seats: 3,
+    setup: [{seat: controller, zone: "battlefield", cards: names}, {seat: opponent, zone: "battlefield", cards: ["Mountain", "Smoke Life Walker"]},
+      {seat: opponent, zone: "hand", cards: ["Shock"]}],
+    steps: [...(controller === 1 ? [{to: {turn: 2, phase: "MAIN1"}}] : []),
+      {activate: "Smoke Timing Maker", seat: controller}, {resolve: true}, {to: {turn: controller + 2, phase: "UPKEEP"}},
+      {tap: "Mountain", seat: opponent}, {cast: "Shock", seat: opponent, targets: [{player: controller}]}], expect: []}, resolver).state;
+  const own = s.zones.battlefield.find((id) => s.objects[id].card === "Smoke Life Walker" && s.objects[id].controller === controller);
+  const other = s.zones.battlefield.find((id) => s.objects[id].card === "Smoke Other Walker");
+  const enemy = s.zones.battlefield.find((id) => s.objects[id].card === "Smoke Life Walker" && s.objects[id].controller === opponent);
+  const marker = s.zones.command[controller].find((id) => s.objects[id].emblem === true);
+  eq([s.objects[marker].owner, s.objects[marker].controller, s.objects[marker].zone], [controller, controller, "command"],
+    "the actual ultimate creates a command-zone emblem owned and controlled by its player");
+  eq(s.objects[marker].timestamp > s.objects[own].timestamp, true, "the emblem receives its actual creation timestamp after the existing walker");
+  eq((s.effects ?? []).some((effect) => effect.rule === "loyalty-at-instant-speed"), false,
+    "the permission comes from the actual emblem, without an anonymous lasting effect");
+  eq(s.zones.graveyard[controller].some((id) => s.objects[id].card === "Smoke Timing Maker"), true,
+    "the maker dies from its paid loyalty cost while its ability still creates the lasting emblem");
+  eq([s.activePlayer, s.phase, s.stack.length], [opponent, "UPKEEP", 1], "the opponent's actual Shock remains on a nonempty stack outside a main phase");
+  eq(legalActions(s, opponent).some((a) => a.kind === "activate" && a.objectId === enemy), false,
+    "the other player's emblem gives the active opponent no loyalty timing permission");
+  passPriority(s); passPriority(s);
+  s = JSON.parse(JSON.stringify(s));
+  const noMarker = structuredClone(s); noMarker.objects[marker].emblem = false;
+  eq(legalActions(noMarker, controller).some((a) => a.kind === "activate" && a.objectId === own), false,
+    "a card in the command zone with the same text is no emblem and grants no timing permission");
+  const offer = legalActions(s, controller).find((a) => a.kind === "activate" && a.objectId === own);
+  eq(Boolean(offer), true, "the reloaded emblem offers its controller a loyalty activation on the opponent's loaded stack");
+  applyAction(s, controller, offer);
+  eq(s.objects[own].counters.loyalty, 4, "the offered loyalty cost is paid on its actual source permanent");
+  eq(s.stack.at(-1).cardId, own, "the new ability on the stack has the actual planeswalker's source identity");
+  eq(legalActions(s, controller).some((a) => a.kind === "activate" && a.objectId === own), false,
+    "instant timing does not waive the once-per-turn loyalty limit");
+  const second = legalActions(s, controller).find((a) => a.kind === "activate" && a.objectId === other);
+  eq(Boolean(second), true, "another current planeswalker still gets its independent once-per-turn activation");
+  applyAction(s, controller, second);
+  afterResolving(s, resolveTop(s)); afterResolving(s, resolveTop(s));
+  eq([s.players[controller].life, s.stack.length], [48, 1], "both loyalty abilities actually gain their own life while the opponent's Shock remains pending");
+  afterResolving(s, resolveTop(s));
+  eq(s.players[controller].life, 46, "the original opponent spell then resolves against its chosen player");
 }
 
 console.log(`engine-load100-w1-faces: ${checks} checks passed`);
