@@ -13,7 +13,7 @@
  *   - a basic land type given by an effect brings its mana ability (CR 305.7; rules/layers.mjs intrinsicMana): once a type,
  *     however many effects give it, and lost with "loses all abilities";
  *   - a token enters tapped when a replacement says so (Authority of the Consuls; CR 111.1, 614.12): never by its own ability
- *     for others, and not "unless you pay";
+ *     for others; its own "unless you pay" asks before entry;
  *   - "change a target ... to this creature" (Spellskite; effects/asking.mjs changeTargets `to: "self"`) is in its scenarios;
  *   - the catalog's credits (game/tools/engine-constructs.mjs).
  */
@@ -180,12 +180,22 @@ const tokenIds = (s, name) => s.zones.battlefield.filter((id) => s.objects[id].t
   eq(tokenIds(s, "Soldier").filter((id) => s.objects[id].controller === 1).map((id) => s.objects[id].tapped), [false], "Maya's does not");
 }
 {
-  const s = table([]);
   const shock = {...SOLDIER, name: "Vent", abilities: [{id: "v", kind: "replacement", text: "As this enters, you may pay 2 life. If you don't, it enters tapped.", watches: {event: "enters", who: "self"}, change: {entersTapped: true, unlessPay: {life: 2}}}]};
   const tapland = {...SOLDIER, name: "Tapper", abilities: [{id: "t", kind: "replacement", text: "This enters tapped.", watches: {event: "enters", who: "self"}, change: {entersTapped: true}}]};
-  run(s, [{effect: "createToken", count: 1, token: shock}, {effect: "createToken", count: 1, token: tapland}]);
-  eq([tokenIds(s, "Vent").map((id) => s.objects[id].tapped), tokenIds(s, "Tapper").map((id) => s.objects[id].tapped), s.players[0].life], [[false], [true], 40],
-    "its own \"enters tapped\" applies; \"tapped unless you pay\" asks no token yet, and it stays untapped (NAMED)");
+  for (const pay of [false, true]) {
+    let s = table([]);
+    eq(run(s, [{effect: "createToken", count: 1, token: shock}, {effect: "createToken", count: 1, token: tapland}]).status, "waiting", "the native entry operation waits for the life payment");
+    eq([tokenIds(s, "Vent"), tokenIds(s, "Tapper"), s.players[0].life], [[], [], 40], "no token or later instruction is committed before the answer");
+    eq(awaitingChoice(s).options.map(option => option.pay), [true, false], "paying and declining are both explicit legal choices");
+    s = JSON.parse(JSON.stringify(s));
+    const before = structuredClone(s);
+    assert.throws(() => resolveAwaiting(s, [99]), /Select the required rule options/); checks++;
+    eq(s, before, "invalid answer leaves the reloaded state untouched");
+    resolveAwaiting(s, [pay ? 0 : 1]);
+    eq([tokenIds(s, "Vent").map((id) => s.objects[id].tapped), tokenIds(s, "Tapper").map((id) => s.objects[id].tapped), s.players[0].life], [[!pay], [true], pay ? 38 : 40],
+      "the chosen life payment controls Vent's tapped entry; the following Tapper still enters tapped");
+    eq([s.awaiting, s.ruleOperation ?? null, s.resolving ?? null], [null, null, null], "both token instructions finish exactly once");
+  }
 }
 
 /* ---- the catalog's credits ---- */

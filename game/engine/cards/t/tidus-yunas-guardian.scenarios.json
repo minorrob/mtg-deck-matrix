@@ -225,6 +225,24 @@
           "resolve": true
         },
         {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Effect: This creature enters with a +1/+1 counter on it.",
+                  "Effect: This creature enters with a flying counter on it."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Effect: This creature enters with a +1/+1 counter on it."
+          ]
+        },
+        {
           "to": {
             "turn": 1,
             "phase": "COMBAT_BEGIN"
@@ -603,6 +621,24 @@
           "resolve": true
         },
         {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Effect: This creature enters with a +1/+1 counter on it.",
+                  "Effect: This creature enters with a flying counter on it."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Effect: This creature enters with a flying counter on it."
+          ]
+        },
+        {
           "to": {
             "turn": 1,
             "phase": "COMBAT_BEGIN"
@@ -762,6 +798,24 @@
         },
         {
           "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Effect: This creature enters with a +1/+1 counter on it.",
+                  "Effect: This creature enters with a flying counter on it."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Effect: This creature enters with a +1/+1 counter on it."
+          ]
         },
         {
           "to": {

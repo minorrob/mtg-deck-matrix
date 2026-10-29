@@ -17,7 +17,7 @@
     "| Convoke with Phyrexian or {2/W} symbols left to the pool | `rules/mana.mjs`:483 | W5 |",
     "| Ways to pay capped: 24 tap choices, 12 payments | `rules/actions.mjs`:1703; `rules/mana.mjs`:254 | W5 |"
   ],
-  "status": "Resume checkpoint: funded casts and uncapped basic payment questions proved; reveal-none land entry repaired; remaining W5 debt active",
+  "status": "Resume checkpoint 2: delve X, token shock native outcomes, and payment/source/rider cap completeness proved; effect-paid X/additional work active",
   "checkpoint": {
     "cardsAdded": 0,
     "cardsPromoted": 0,
@@ -123,6 +123,34 @@
       "Token shock-land create/copy/reload/pay-life native witnesses; may already be handled by new entry pipeline",
       "Alternative/X affordability interactions with nonmana tap costs; collision checks before claiming every alternative cost closed",
       "Root consolidated generated artifacts, broader card/ability checks, actual fuzz, Actions and wave completion"
+    ],
+    "ignoresAdded": [],
+    "pullRequest": "https://github.com/minorrob/mtg-deck-matrix/pull/928"
+  },
+  "resumeCheckpoint2": {
+    "proven": [
+      "Delve includes announced X before generic payment and reductions; X3 and X5 with two Helms really exile the exact three selected old IDs, pay black, resolve gain3/gain5. Reload and duplicate answer unchanged.",
+      "Native createToken and copyPermanent of actual Breeding Pool characteristics ask before creation. Pay creates exactly one untapped token at life38; decline creates one tapped token at life40; reload/invalid answer unchanged.",
+      "Bundled-source planner has no4000-step cap and visits larger source budgets. All786 seven-source multisets appear in the public question; a late payment really taps its exact seven objects, spends floating mana, resolves gain8.",
+      "Rider16 cap removed: seventeen actual activations yield17 distinct source payments; final offered rider triggers exact chosen source, retains other16, and spell+rider resolve once."
+    ],
+    "commands": [
+      "node --stack-size=4000 tests/engine-load100-mana.mjs: 172 checks passed",
+      "breaks-load100-w0-w5-delve.py: 7 caught; missed: []",
+      "breaks-load100-w0-w5-completeness.py: 4 caught; missed: []",
+      "engine-rearrange-copies-4b:186; engine-wave4c-k2:74; engine-tap-to-cast:70; engine-mana-riders:29; engine-mana-provenance:23 passed",
+      "check-cards --cards Faithless Looting:1 selected definition;1 scenario,0 failed"
+    ],
+    "assertionRationale": [
+      "Faithless Looting old offer0 expected pre-floated flashback. New scenario requires offer1 at pool0 and actually auto-funds flashback, preserving final zones/draw4/discard4; exact4 mana activations and hand/graveyard cast events checked.",
+      "engine-wave4c-k2 old assertion never delves X was the named bug. New witness offers X0..5, really pays X5 with U+CCC and3 Bears and draws5.",
+      "engine-rearrange-copies-4b expected a free untapped unless-pay token at life40, explicitly NAMED old bug. Native operations now require pay -> untapped/life38 or decline -> tapped/life40, preserve unconditional tapped sibling, no premature entries, reload and invalid unchanged."
+    ],
+    "reanchored": "Prepared-room funding; roblistsP2 X tapped/X paid; wave4b-j4 X-life offer/funding; pooled-taps search budget; native token entry/payment; delve totals. Original suite unions preserved; original-union proof pending shared operation diagnostic merge.",
+    "remaining": [
+      "Effect-paid X and additional costs: existing play route excludes them. Reuse full priced cast offers, saved question/zone-payment operations; do not use castNow already-paid shortcut for new costs.",
+      "Alternative/X affordability involving nonmana tap costs: disjoint mana-source/cost-tapper validation before claiming every alternative cost complete.",
+      "Original suite-union reanchored mutations after merging root operation diagnostic2980e8b8; actual easy/normal fuzz; root consolidated generated artifacts/CI/wave gates"
     ],
     "ignoresAdded": []
   }

@@ -1,0 +1,6 @@
+baseline: every suite passes unbroken
+caught funding search cannot hide late legal plans -- tests/engine-load100-mana.mjs
+caught larger source budgets remain choices -- tests/engine-load100-mana.mjs
+caught revisited plans remain unique -- tests/engine-load100-mana.mjs
+caught all rider-source payments remain offered -- tests/engine-load100-mana.mjs
+missed: []
