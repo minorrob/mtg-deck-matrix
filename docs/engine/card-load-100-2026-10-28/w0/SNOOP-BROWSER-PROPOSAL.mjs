@@ -17,7 +17,7 @@ if(process.argv.includes("--prepare-only")){
  const {browser,base,stub,close}=await openBrowser({name:"board-playtest-snoop-proposal",flag:"GEOMETRY_REQUIRED"});
  const candidate=process.argv.includes("--candidate"),html=readFileSync(path.join(ROOT,"index.html"),"utf8").replace("</head>",'<meta name="crankmagic-accounts" content="on"><meta name="crankmagic-play" content="cloud"></head>');
  try{
-  for(const mode of ["table","focus"]){
+  for(const mode of ["table","focus","full"]){
    const fixture=await snoopRoom(),{room,store,first,second,third}=fixture,contexts=[],pages=[],sockets=[],packets=[],errors=[],refusals=[];let queue=Promise.resolve();
    const host=Object.assign(Object.create(GameRoom.prototype),{room,load:async()=>room,ctx:{getTags:s=>[s.seatId],getWebSockets:()=>sockets,storage:{setAlarm:async()=>{}}}});
    try{
@@ -35,12 +35,14 @@ if(process.argv.includes("--prepare-only")){
       ws.send(JSON.stringify({type:"view",view:room.view(seatId)}));
      });
      await page.goto(`${base}/index.html#table?id=snoopui01`);await page.locator("#cm-board .cm-mat").first().waitFor({state:"visible",timeout:20000});
+     if(mode==="full"){await page.locator('[data-engine="babylon"][data-renderer="webgl"]').waitFor({state:"visible",timeout:20000});ok(true,"the shared mat is mounted in the actual Babylon WebGL 3D path");}
     }
     const library=(page,seat)=>page.locator(`#cm-board .cm-mat[data-seat="${seat}"] [data-zone="library"]`).first();
     const shown=async(id,name)=>{for(const page of pages){const top=library(page,0).locator(`.cm-bcard[data-card="${id}"]`);await top.waitFor({state:"visible",timeout:15000});ok((await top.getAttribute("aria-label")).includes(name),`${mode}: both viewers see the native revealed top ${name}`);eq(await library(page,1).locator("[data-card]").count(),0,`${mode}: the other library stays unseen`);}};
     const waitPacket=async(mark)=>{for(let n=0;n<100&&packets.length===mark;n++)await pages[0].waitForTimeout(50);eq(packets.length,mark+1,"one native UI action produces one socket act");await queue;eq(refusals,[],"the production dispatcher accepts the unchanged browser action");await pages[0].waitForTimeout(250);};
     await shown(first,"Mogg Fanatic");eq(room.watch().state.players[0].zones.Library.cards[0].cardId,first,"spectator projection receives the same public top, never an unseen library");
     eq(await library(pages[0],0).locator(`[data-card="${first}"]`).getAttribute("data-action"),"board-draw","a revealed own top retains the actual held-draw action");
+    ok((await library(pages[0],0).locator(`[data-card="${first}"]`).getAttribute("aria-label")).startsWith("Draw card: "),"the visible held top still announces its draw action");
     eq(await library(pages[1],0).locator(`[data-card="${first}"]`).getAttribute("data-action"),"board-card","another viewer can inspect the public top without drawing for its owner");
     const hand=room.view("p0").state.players[0].zones.Hand.count,mark=packets.length;await library(pages[0],0).locator(`[data-card="${first}"]`).click();await waitPacket(mark);
     eq(room.view("p0").state.players[0].zones.Hand.count,hand+1,"held-draw click enters the actual native draw handler once");await shown(second,"Goblin Instigator");eq(room.view("p1").state.players[0].zones.Hand.cards,[],"the opponent's hand projection remains hidden after the known top is drawn");

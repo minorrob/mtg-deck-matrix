@@ -3,7 +3,7 @@ diff --git a/crankmagic-board.js b/crankmagic-board.js
 +++ b/crankmagic-board.js
 @@ -1092 +1092 @@
 -    const face = many ? `<span class="cm-board-partners">${zone.cards.map((c) => card(c)).join("")}</span>` : top ? card(top) : drawing
-+    const face = many ? `<span class="cm-board-partners">${zone.cards.map((c) => card(c)).join("")}</span>` : top ? card(top, {action: drawing ? "board-draw" : "board-card"}) : drawing
+++    const face = many ? `<span class="cm-board-partners">${zone.cards.map((c) => card(c)).join("")}</span>` : top ? (drawing ? card(top, {action: "board-draw"}).replace('aria-label="', 'aria-label="Draw card: ') : card(top)) : drawing
 @@ -1249 +1249 @@
 -        ${pile("Library", z.Library, null, {back: true, draw: you && !!view.decision && view.decision.kind === "draw" && view.status !== "finished"})}${pile("Graveyard", z.Graveyard, z.Graveyard.cards.at(-1))}
 +        ${pile("Library", z.Library, z.Library.cards[0], {back: true, draw: you && !!view.decision && view.decision.kind === "draw" && view.status !== "finished"})}${pile("Graveyard", z.Graveyard, z.Graveyard.cards.at(-1))}

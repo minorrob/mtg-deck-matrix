@@ -16,7 +16,8 @@ It never writes the production file.
 
 The proposed [SNOOP-BROWSER-PROPOSAL.mjs](SNOOP-BROWSER-PROPOSAL.mjs) is deliberately outside the registered suite list
 until the Play owner reviews it. It connects two actual native room views to the real `GameRoom` socket/check dispatcher
-and broadcast. It covers Table and Focus, a revealed own held draw, the other viewer's read-only public top, exactly one
+and broadcast. It covers Table, Focus and actual Babylon WebGL 3D, a revealed own held draw with its accessible draw
+label, the other viewer's read-only public top, exactly one
 draw, next-top refresh, a real paid Goblin Instigator cast from the library, a public but uncastable Mountain, another
 unseen library and the public top disappearing after actual Lightning Bolt removes Snoop. Native spectator projections
 are checked independently; a spectator browser is not claimed. The setup is a bounded native saved-room fixture with
