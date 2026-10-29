@@ -46,8 +46,11 @@ try{
   ok(r.group&&r.last,"then a Lands group, after everything else");
   eq([r.open,r.summary],[false,"Lands 4"],"shut by default, saying how many");
   eq(r.inside.sort(),["Access Tunnel","Command Tower","Island","Island"],"inside, the lands");
-  await page.locator(`${D} .cm-board-lands-group > summary`).click();
-  ok((await read()).open,"a click opens it");
+  await page.locator(`${D} .cm-board-lands-group > summary`).focus();
+  await page.keyboard.press("Enter");
+  ok((await read()).open,"the keyboard opens the Lands group");
+  await page.keyboard.press("Tab");
+  ok(await page.locator(`${D} .cm-board-lands-group [data-action=board-flow-choice]`).first().evaluate(el=>el===document.activeElement),"Tab reaches a land from its summary within the popup");
   await show({id:"choose-targets:900:0",kind:"targets",title:"Choose a target permanent",mode:"one",min:1,max:1,options:options(mixed)});
   ok((await read()).open,"and it stays open as the board redraws the same question");
   await page.locator(`${D} .cm-board-lands-group [data-action=board-flow-choice]`,{hasText:"Command Tower"}).click();

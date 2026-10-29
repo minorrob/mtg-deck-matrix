@@ -169,7 +169,7 @@ globalThis.CrankBoard = Object.seal({
     showing=null;held=null;peek(null);draw();
   }
   function flowDecision(d) {
-    if(flowPaused)return `<section class="cm-board-decision cm-choice-flow" id="cm-board-decision"><h2>${e(d.kind==='priority' ? findCard(actionCard)?.name || d.title : d.title)}</h2>${b('Resume','board-flow-resume')}</section>`;
+    if(flowPaused)return `<section class="cm-board-decision cm-choice-flow" id="cm-board-decision" aria-label="${e(d.title)}"><h2>${e(d.kind==='priority' ? findCard(actionCard)?.name || d.title : d.title)}</h2>${b('Resume','board-flow-resume')}</section>`;
     if(!choiceFlow)choiceFlow=CrankChoiceFlow.create(pathOptions(d.options),flowContext());
     const step=CrankChoiceFlow.step(choiceFlow),source=findCard(attackChoice ?? step.trail.find(n=>n.kind==='source')?.value ?? actionCard ?? d.sourceId),ready=step.status==='confirm';
     const label=node=>e(node.label).replace(/\{[^}]+\}/g,symbol=>C.mana(symbol));
@@ -188,14 +188,14 @@ globalThis.CrankBoard = Object.seal({
       const output=n.kind==='mana-source' && review[i+1]?.key.startsWith('mana-color:') ? review[++i] : null;
       reviewRows.push(`<li data-kind="${e(n.kind)}"${n.automatic?' data-automatic="true"':''}>${visual(n)}<span>${n.key==='mana-payment'?'Pay':label(n)}</span>${output?label(output):n.key==='mana-payment'?label({...n,label:n.reviewLabel ?? n.label}):''}</li>`);
     }
-    return `<section class="cm-board-decision cm-choice-flow" id="cm-board-decision" data-choice-id="${e(d.id)}" data-match-id="${e(view.matchId)}" data-flow-status="${step.status}"><h2>${e(source?.name || (d.kind==='priority' ? d.options.find(o=>o.index===step.index)?.label : d.title) || d.title)}</h2>
+    return `<section class="cm-board-decision cm-choice-flow" id="cm-board-decision" data-choice-id="${e(d.id)}" data-match-id="${e(view.matchId)}" data-flow-status="${step.status}" aria-label="${e(d.title)}"><h2>${e(source?.name || (d.kind==='priority' ? d.options.find(o=>o.index===step.index)?.label : d.title) || d.title)}</h2>
       ${source?.name?`<button class="cm-flow-inspect" type="button" data-action="board-combat-inspect" data-card="${source.cardId}" aria-label="Inspect ${e(source.name)}"><img class="cm-flow-card" src="${e(pictureOf(source.name,source))}" alt=""></button>`:''}
       <div class="cm-board-options">${ready?`<ul class="cm-choice-review">${reviewRows.join('')}</ul>${attackChoice!==null?riskMark(attackRisk(d.options.find(o=>o.index===step.index))):''}`:choices}</div>
       <div class="cm-decide-actions">${ready?b('Confirm','board-flow-confirm',{revision:String(view.revision),choice:d.id,match:view.matchId,index:String(step.index)},true,{disabled:sending}).replace('>Confirm</button>',`>${CHEV_PATH('M3 8l3 3 7-7')}<span>Confirm</span></button>`):''}${choiceFlow.selections.length?b('Back','board-flow-back',{},false,{disabled:sending}).replace('>Back</button>',`>${CHEV_LEFT}<span>Back</span></button>`):''}${attackChoice!==null?b("Don't attack",'board-flow-no-attack',{},false,{disabled:sending}):''}${b('Cancel','board-flow-cancel',{},false,{disabled:sending})}</div></section>`;
   }
   function attackDecision(d) {
     const creatures=[...new Set(d.options.map(o=>o.cardId))],defenders=[...new Set(d.options.filter(o=>o.planeswalkerId===undefined).map(o=>o.defenderId))];
-    return `<section class="cm-board-decision cm-choice-flow" id="cm-board-decision"><h2>${e(d.title)}</h2><div class="cm-board-options">${creatures.map(id=>{
+    return `<section class="cm-board-decision cm-choice-flow" id="cm-board-decision" aria-label="${e(d.title)}"><h2>${e(d.title)}</h2><div class="cm-board-options">${creatures.map(id=>{
       const c=findCard(id),chosen=picked.map(i=>d.options.find(o=>o.index===i)).find(o=>o?.cardId===id);
       const defender=chosen ? findCard(chosen.planeswalkerId)?.name || nameOf(chosen.defenderId) : '',risk=chosen?attackRisk(chosen):null;
       return `<button type="button" class="v-button cm-flow-option${chosen?' is-picked':''}${riskCls(risk)}" data-action="board-flow-attacker" data-card="${id}" data-index="${chosen?.index ?? ''}" aria-pressed="${!!chosen}">${riskMark(risk)}${c?.name?`<img class="cm-flow-thumb" src="${e(pictureOf(c.name,c))}" alt="">`:''}<span>${e(c?.name || 'Creature')}${twinMark(id)?` <small>${e(twinMark(id))}</small>`:''}${chosen?` → ${e(defender)}`:''}</span></button>`;
@@ -486,7 +486,6 @@ globalThis.CrankBoard = Object.seal({
     if (phone() && view.decision && view.decision.id !== before) focus = view.seat;
     if ((view.decision && view.decision.id) !== before) {choiceFlow=null;flowPaused=false;attackChoice=null;actionCard=null;draftRevision=null;picked = []; amounts = []; sending = false; alsoOpen = false; if(view.decision && view.decision.kind !== "priority") {actionsShut = false;}}
     if (priorBlocks !== blockContext()) {blockEpoch++; blockSettled.clear();blockAttacker=null;picked = []; blockSelected = null; blockResult = null; blockListOpen = false;}
-    const source = /^choose-(?:cost|targets?):(\d+)/.exec(view.decision?.id || "");
     // The popup owns its source image; required choices never open an automatic side inspection.
     checkBlocks();
     if (selected !== null && !findCard(selected)) selected = null;
@@ -2893,6 +2892,12 @@ globalThis.CrankBoard = Object.seal({
     const d = view.decision;
     if (d && sending) return {key: saidKey, text: ""};   /* an answer on its way: nothing new to say until the table's */
     if (d) {
+      if(flowPaused)return {key:`flow:${d.id}:paused`,text:`${d.title}. Resume.`};
+      if(choiceFlow){
+        const current=CrankChoiceFlow.step(choiceFlow),labels=current.choices.slice(0,6).map(n=>n.label);
+        const text=current.status==='confirm'?'Confirm':labels.join(', ')+(current.choices.length>labels.length?`, and ${current.choices.length-labels.length} more`:'');
+        return {key:`flow:${d.id}:${flowPaused}:${JSON.stringify(choiceFlow.selections)}`,text:`${d.title}. ${text}.`};
+      }
       if (d.kind === "draw") return {key: `ask:${d.id}`, text: `${stepNow()}. Draw card.`};
       if (d.kind === "priority") {const w = waitingText(); return {key: `ask:${d.id}`, text: `${stepNow()}. ${w || "Your move"}: ${passLabel()}${alsoCount() ? ", or something else you can do" : ""}.`};}
       const opts = d.options || [], shown = opts.slice(0, 6).map((o) => o.label);
@@ -4273,8 +4278,7 @@ globalThis.CrankBoard = Object.seal({
     const o=currentOffer(el.dataset);if(!o)return;
     closeCardMenu(true);
     if(['undo-mana','undo-land','undo-play'].includes(o.act))return bindOffer(el.dataset);
-    /* STANDING RULE (Rob, 2026-10-27): where two clicks already stand between the player and the action -- the card, then its row --
-       there is no third step to confirm. A row that asks nothing more is sent; one that needs a target is staged in Actions for it. */
+    /* ROB-319: priority offers enter the same conditional popup, including a sole answer awaiting confirmation. */
     /* Only an offer of priority: the picks of a many-of question (discard some, sacrifice some) are toggled here, and sent by its own Confirm. */
     if(view.decision?.kind==="priority")return beginChoice(o.cardId,o.act);
     option(o.index);
@@ -4603,7 +4607,7 @@ globalThis.CrankBoard = Object.seal({
     if(popup && !inspection && !coach.open && !cameraOpen && !historyOpen && !profileOpen && !tableMenuOpen && !menuOpen && !tools && !document.querySelector('#cm-card-menu,#cm-dialog[open]')){
       if(event.key==='Escape'){event.preventDefault();actions['board-flow-cancel']();return;}
       if(event.key==='Tab'){
-        const controls=[...popup.querySelectorAll('button:not([disabled]),input:not([disabled]),[tabindex="0"]')].filter(el=>el.getClientRects().length);
+        const controls=[...popup.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex="0"]')].filter(el=>{const r=el.getBoundingClientRect();return r.width>0&&r.height>0&&(el.matches('summary')||!el.closest('details:not([open])'));});
         const at=controls.indexOf(document.activeElement),next=event.shiftKey?at-1:at+1;
         if(at<0 || next<0 || next>=controls.length){event.preventDefault();controls[event.shiftKey?controls.length-1:0]?.focus();}
       }

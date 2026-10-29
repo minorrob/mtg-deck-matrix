@@ -55,6 +55,8 @@ try{
   const buttons=page.locator('[data-action=board-flow-choice]');
   eq(await buttons.count(),3,'exactly three modes, not target/payment products');
   ok(!(await buttons.allTextContents()).some(x=>/Forest|Sunpetal/.test(x)),'mana not shown at mode step');
+  const announcement=await page.locator('#cm-board-said').textContent();
+  ok(announcement.includes('fights')&&!/Forest|Sunpetal/.test(announcement),'screen reader hears the current mode layer only');
   await shot(page,`vigorbloom-modes-${mode}-${width}`);
   await buttons.filter({hasText:'fights'}).click();
   eq(await buttons.count(),2,'fight first asks which of your two creatures');

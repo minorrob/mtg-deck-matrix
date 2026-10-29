@@ -3,16 +3,10 @@
    THE ACTIONS PANE HAS ONE SCROLL REGION PER DECISION (ROB-201, Luke's playtest of 2026-10-28; BUG-03; crankmagic-stage.css).
 
    Luke "couldn't find the scrollable sub-panels inside the Actions pane", and dragging the drawer taller revealed nothing new.
-   Measured on every kind of question: the question sat inside THREE scrolling boxes, the drawer, the decision's own section and
-   its list of options (a target list was 164px tall of 259, scrolling by itself), each capped by a rule of its own. Now the
-   drawer is the one: the question and its options take the height they need and the drawer scrolls them, so a taller drawer
-   shows more, and the row that answers (Confirm, Don't) stays in reach at the foot.
-
-     1. In the pane no box inside the question scrolls, for a target list, a library search, a modal choice, a priority offer,
-        a cost, declare attackers and a scry.
-     2. Nothing between the question and the drawer scrolls either: exactly one region scrolls, the drawer.
-     3. A taller window shows more: at 1000px a question that was cut at 700px is whole, with nothing hidden.
-     4. The answering row stays in view when the question is longer than the drawer.
+   ROB-319 moves required sequences into the popup, while optional offers remain in the drawer.
+   Both surfaces keep one scrolling owner. The popup's choice list scrolls; its source and confirmation
+   remain fixed. Every sample decision checks exclusive routing, no nested scrollers, and containment.
+   Taller windows expose at least as much content and retain reachable confirmation.
 
    GEOMETRY_REQUIRED=1 refuses a missing browser.
      node tests/board-actions-one-scroll.mjs

@@ -110,7 +110,8 @@ try {
   publish({yielding:true,mayYield:undefined});
   await tick(page);
   await page.reload();
-  await button(page).waitFor();
+  await page.locator("#cm-board").waitFor({timeout:15000});
+  await button(page).waitFor().catch(async error=>{console.error("YIELD RELOAD",pageErrors,await page.locator("body").innerText());throw error;});
   assert.equal(await button(page).getAttribute("aria-pressed"),"true","reload restores acknowledged yield");
   const yieldingFrames = incoming.filter(x=>x.type==="yield").length;
   const liveSocket = sockets.findLast(s=>s.page===page && !s.closed);

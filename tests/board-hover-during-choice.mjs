@@ -68,5 +68,5 @@ try{
     eq(errors,[],`${mode}: no page errors`);
     await context.close();
   }
-  console.log(`board-hover-during-choice: ${checks} checks passed — with a card's question open, the card asked about is read in Actions, and the hover pops up any card, on the table or named in an option, in 3D, Focus and Table.`);
+  console.log(`board-hover-during-choice: ${checks} checks passed — required choices keep source inspection and offered-card previews available in 3D, Focus and Table.`);
 }finally{await close();}

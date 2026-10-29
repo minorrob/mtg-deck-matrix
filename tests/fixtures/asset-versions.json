@@ -150,8 +150,8 @@
       "sha": "5dd742bd996b24a6"
     },
     "crankmagic-app.js": {
-      "version": 747,
-      "sha": "596049c68fbfc3ba"
+      "version": 748,
+      "sha": "07a29be375efe13a"
     },
     "crankmagic-assets.js": {
       "version": 36,
@@ -162,8 +162,8 @@
       "sha": "ddab072cfc45df40"
     },
     "crankmagic-board.js": {
-      "version": 171,
-      "sha": "1a5d29cfeb7ab4a2"
+      "version": 172,
+      "sha": "0eb9db00f9ba3df1"
     },
     "crankmagic-brand.js": {
       "version": 6,
@@ -362,8 +362,8 @@
       "sha": "07440b83396bb9e2"
     },
     "crankmagic-sw.js": {
-      "version": 730,
-      "sha": "9efa68a6a87a4032"
+      "version": 731,
+      "sha": "3d5121f7c6c8c43e"
     },
     "crankmagic-table.js": {
       "version": 58,

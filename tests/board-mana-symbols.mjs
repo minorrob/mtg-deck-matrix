@@ -2,12 +2,8 @@
    buttons: "we should show a button for each of the mana options as their mana symbol(s). This should allow ... 4 mana
    symbol buttons in a single row under the image").
 
-   On the sample table, Rob's Access Tunnel offered four ways to tap for mana and one other ability:
-     1. In Actions (a click on the land): the four are one row of symbol buttons, each its symbol and no words on screen,
-        its whole sentence its accessible name; the other ability stays a worded button. One pressed stages it, Confirm
-        sends that one.
-     2. In Card Preview (the land hovered): the same row under the picture.
-     3. A mana ability whose way is not mana alone stays words. */
+   The land first offers its ability, then mana outputs as real symbols. Confirmation sends the original
+   legal index; source inspection preserves the sequence, and life costs remain explicit. */
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import path from "node:path";
