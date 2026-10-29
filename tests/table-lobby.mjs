@@ -433,6 +433,14 @@ try {
   await rob.page.click(".cm-table-rules-edit");
   await waitText(rob.page, "#cm-notice", /The rules can't change once a seat is ready.*Take back Ready, then edit the rules/);
   eq(await rob.page.locator("#cm-table-rules-form").count(), 0, "with Rob ready, Edit is refused, saying how to change the rules; no dialog opens");
+  /* START AND CANCEL (restored: the lobby's rewrite on 2026-10-28 had dropped them): with every seat ready the host's Start, now the full-width button under the launch box, begins the countdown, and Cancel, in the same place, stops it. */
+  await waitText(rob.page, "#cm-table-launch", /Everyone is ready/);
+  const placed = await rob.page.evaluate(() => {const box = document.querySelector("#cm-table-launch").getBoundingClientRect(), go = document.querySelector("[data-action=table-start]").getBoundingClientRect(), panel = document.querySelector(".cm-table-center").getBoundingClientRect(), end = document.querySelector(".cm-pl-head [data-action=table-end-ask]")?.getBoundingClientRect(), leave = document.querySelector(".cm-lb-leave").getBoundingClientRect();
+    return {startUnder: go.top >= box.bottom - 1, startWide: go.width >= panel.width * .8, launchWide: box.width >= panel.width * .8, endTop: !!end && end.bottom <= document.querySelector(".cm-lb-sub").getBoundingClientRect().top + 4 && end.right <= leave.left};});
+  ok(placed.startUnder && placed.startWide && placed.launchWide && placed.endTop, `Start is the full-width button under the launch box, the box runs the panel's width, and End game is at the top beside Leave lobby (${JSON.stringify(placed)})`);
+  await rob.page.click("[data-action=table-start]");
+  await waitText(rob.page, "#cm-notice", /marked as a human but nobody has been invited to it/);
+  ok(!(await rob.page.locator("#cm-table-seconds").count()), "Start is refused, saying why, while a human seat has nobody invited to it: no countdown begins");
   await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-ready][data-ready='']");
   await rob.page.locator(".cm-lobby-seat[data-seat='0'] [data-action=table-ready][aria-pressed=false]").waitFor({timeout: 10000});
   /* CHOOSE MAT: a strip of the app's mats, the zones previewed over the one picked; everyone sees the choice. */
@@ -722,6 +730,33 @@ try {
   await submitNewGame(rob.page);
   await rob.page.waitForFunction(() => document.querySelector(".cm-lobby-seat[data-seat='0']")?.dataset.mat === "forge", null, {timeout: 15000});
   ok(true, "at his next table, Rob's seat is on the mat he chose last, without his asking");
+
+  /* START AND CANCEL (restored: the lobby's rewrite on 2026-10-28 had dropped them): a table of the host and one AI, both with decks and ready; Start, the full-width button under the launch box, begins the countdown, and Cancel, in the same place, stops it. */
+  await openNewGame(rob.page, "#table");
+  await fillNewGame(rob.page, {host: "Rob", ai: [{}]});
+  await submitNewGame(rob.page);
+  await rob.page.locator(".cm-lobby-seat[data-seat='0']").waitFor({timeout: 15000});
+  for (const seat of [0, 1]) {
+    await rob.page.click(`.cm-lobby-seat[data-seat='${seat}'] [data-action=table-deck]`);
+    await rob.page.locator("[data-action=table-use-deck]").first().waitFor();
+    const n = await rob.page.locator("[data-action=table-use-deck]").count();
+    for (let i = 0; i < n; i += 1) {
+      await rob.page.locator("[data-action=table-use-deck]").nth(i).click();
+      await rob.page.waitForTimeout(300);
+      if (!(await rob.page.locator("#cm-dialog[open]").count())) break;
+    }
+  }
+  await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-ready][data-ready='1']");
+  await waitText(rob.page, "#cm-table-launch", /Everyone is ready/);
+  await rob.page.click("[data-action=table-start]");
+  await rob.page.locator("#cm-table-seconds").waitFor({timeout: 15000});
+  const countdown = Number(await rob.page.innerText("#cm-table-seconds"));
+  ok(countdown >= 1 && countdown <= 10, `Start shows the countdown's number (${countdown})`);
+  const cancel = await rob.page.evaluate(() => {const go = document.querySelector("[data-action=table-cancel]").getBoundingClientRect(), box = document.querySelector(".cm-table-count").getBoundingClientRect(); return go.top >= box.bottom - 1;});
+  ok(cancel, "and Cancel stands where Start stood, under the countdown");
+  await rob.page.click("[data-action=table-cancel]");
+  await waitText(rob.page, "#cm-table-launch", /Everyone is ready/);
+  ok(true, "Cancel stops the countdown");
 
   eq(writes.filter((w) => w.header !== "play" || !/^application\/json/.test(w.type || "")), [], `every one of the ${writes.length} writes carried Play's header and JSON`);
   await rob.context.close(); await maya.context.close();

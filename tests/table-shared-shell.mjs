@@ -1,6 +1,7 @@
 /* ROB-99: exercise the shared desktop shell through the recorded public fixture.
- * A missing Camera, duplicate header, unreachable control, or an Actions drawer that obscures
- * its board must fail. Phone is recorded as the unchanged baseline for ROB-18.
+ * A missing Camera, duplicate header, unreachable control, or a drawer that moves the stage or hides a board must fail.
+ * Table and Focus are the 3D view's HUD on a flat stage (Rob, 2026-10-28): the drawers are the TOP LAYER over a stage that is the window's whole
+ * width, so opening either (Actions included) moves nothing, and the flat views keep their boards clear of where the drawers lie. Phone is recorded as the unchanged baseline for ROB-18.
  * GEOMETRY_REQUIRED=1 makes missing Chromium a failure; no live account is used.
  */
 import assert from 'node:assert/strict';
@@ -35,15 +36,21 @@ try {
     if(width===1280) await screenshot(page,view+'-camera');
     await page.locator('[data-action=board-camera]').click();
     if(await page.locator('.cm-stage-rail').isVisible()) await page.locator('.cm-stage-left').click();
-    const surface=page.locator(view==='full'?'.cm-stage-region':view==='table'?'.cm-board-table':'.cm-board-stage');
-    const before=await surface.boundingBox();assert.ok(before.width>0&&before.height>0,'board has visible area');
+    const surface=page.locator('.cm-stage-region');
+    const slots=()=>page.evaluate(()=>[...document.querySelectorAll('.cm-stage-slot,.cm-stage-rear')].map(e=>{const b=e.getBoundingClientRect();return [Math.round(b.x),Math.round(b.y),Math.round(b.width),Math.round(b.height)];}));
+    const before=await surface.boundingBox(),slotsBefore=await slots();assert.ok(before.width>0&&before.height>0,'board has visible area');
+    assert.equal(slotsBefore.length,view==='full'?3:4,'a flat view draws its four boards; 3D its three other seats as tiles over the canvas');
     for(const [control,drawer] of [['.cm-stage-left','.cm-stage-rail'],['.cm-stage-right','.cm-stage-side']]) {
       await page.locator(control).click();
       assert.ok(await page.locator(drawer).isVisible(),'drawer opens');
-      if(drawer==='.cm-stage-rail') {
-        const after=await surface.boundingBox(),rail=await page.locator(drawer).boundingBox();
-        assert.ok(after.width<=before.width+1&&after.x>=rail.x+rail.width-1,'Actions reserves space beside the board');
-      } else assert.deepEqual(await surface.boundingBox(),before,'optional right drawer keeps board geometry');
+      /* Actions used to reserve space beside the board (the stage and the boards moved over for it). Drawers are the top layer now: the stage, the hand and
+         every board stay exactly where they were, the drawer lies over them (a pointer at its edge finds it), and a flat view's boards sit clear of it. */
+      assert.deepEqual(await surface.boundingBox(),before,drawer==='.cm-stage-rail'?'Actions lies over the stage and does not move it':'optional right drawer keeps board geometry');
+      assert.deepEqual(await slots(),slotsBefore,'a drawer moves no board');
+      /* (a point near the drawer's top: the recorded preview's own control bar floats over the foot of the right drawer) */
+      const lies=await page.evaluate(d=>{const r=document.querySelector(d).getBoundingClientRect(),hit=document.elementFromPoint(r.left+r.width/2,r.top+30);return {over:!!hit?.closest(d),left:r.left,right:r.right};},drawer);
+      assert.ok(lies.over,'the drawer is the top layer: it is what a pointer finds over the stage');
+      if(view!=='full'&&drawer==='.cm-stage-rail') assert.ok(slotsBefore.every(b=>b[0]>=lies.right-1),`Actions: the boards keep clear of it (${JSON.stringify(slotsBefore.map(b=>b[0]))} from ${lies.right})`);
       if(width===1280) await screenshot(page,`${view}-${drawer==='.cm-stage-side'?'right':'left'}-drawer`);
       if(drawer==='.cm-stage-side' && view!=='full') {
         const grip=page.locator('.cm-stage-side [data-drag=panelw]'),old=await page.locator(drawer).boundingBox();
@@ -96,11 +103,15 @@ try {
       await page.locator('#cm-user-menu:popover-open').waitFor();
       await page.keyboard.press('Escape');
       assert.ok(await page.locator('[data-action=board-profile]').evaluate(el=>el===document.activeElement),'account Escape restores the actual board invoker');
-      await page.locator('.cm-board-showhand').focus();await page.keyboard.press('Enter');
-      await page.locator('.cm-hand-show').waitFor();
+      /* The Focus row's "Show hand" drawer is gone (the hand is the stage's fan in every view). Its guarantee, that Escape closes what the hand opened and
+         returns the keyboard to where it was, is proved on the fan: Enter on a card opens its menu, Escape closes it and the card has the focus again. */
+      const first=page.locator('.cm-stage-fan .cm-bcard').first();
+      await first.focus();const label=await first.getAttribute('aria-label');
+      await page.keyboard.press('Enter');
+      await page.locator('#cm-card-menu').waitFor();
       await page.keyboard.press('Escape');
-      await page.locator('.cm-hand-show').waitFor({state:'detached',timeout:2000});
-      assert.ok(await page.locator('.cm-board-showhand').evaluate(el=>el===document.activeElement),'hand Escape closes the drawer and returns focus');
+      await page.locator('#cm-card-menu').waitFor({state:'detached',timeout:2000});
+      assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('aria-label')),label,'hand Escape closes the card menu and returns focus to the card');
     }
     await screenshot(page,view+(width===1280?'':`-${width}`));
   }
