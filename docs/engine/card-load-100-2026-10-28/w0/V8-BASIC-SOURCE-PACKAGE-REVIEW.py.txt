@@ -1,0 +1,92 @@
+"""Package every read-only result and fixed eligible samples; never edits saved source."""
+from pathlib import Path
+from collections import Counter
+import ast,gzip,hashlib,json,re,subprocess
+outside=Path.cwd().parent/'scratch'
+source='544d8512d226790498ae5da29087471ab6ba9a29'
+inventory_path=outside/'v8-basic-source-inventory-544d8512.json'
+inventory_raw=inventory_path.read_bytes();inventory=json.loads(inventory_raw)
+results_path=outside/'v8-basic-source-inventory-results-544d8512.jsonl';results_raw=results_path.read_bytes()
+results=[json.loads(line) for line in results_raw.splitlines()]
+summary=json.loads((outside/'v8-basic-source-inventory-results-544d8512-summary.json').read_text())
+structure=json.loads((outside/'v8-basic-source-inventory-544d8512-summary.json').read_text())
+build=json.loads((outside/'v8-basic-source-inventory-worker-build.json').read_text())
+sha=lambda raw:hashlib.sha256(raw).hexdigest()
+assert len(results)==len(inventory['candidates'])==1233 and summary['complete']
+assert summary['inventorySha256']==sha(inventory_raw) and summary['resultsSha256']==sha(results_raw)
+assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==source
+assert not subprocess.check_output(['git','status','--porcelain'],text=True).strip()
+for ordinal,record in enumerate(results):
+    case=inventory['candidates'][ordinal];result=record['result']
+    assert record['ordinal']==ordinal and record['source']==source and record['inventorySha256']==sha(inventory_raw)
+    assert (result['file'],result['scenario'])==(case['file'],case['original']['name'])
+    assert result['inputsUnchanged'] is True and result['originalFieldsPreserved'] is True
+eligible=[record for record in results if record['result']['eligibleForSavedEdit']]
+failures=[]
+def reason(message):
+    if re.search(r'has \d+ matching actions; select its physical source',message):return 'later-ambiguous-action-needs-explicit-selection'
+    match=re.search(r'settle cannot answer ([^;]+);',message)
+    if match:return 'original-settle-needs-explicit-'+match[1]
+    if 'targets: any cannot supply explicit scenario evidence' in message:return 'original-targets-any-forbidden'
+    if 'trigger order needs an explicit answer' in message:return 'original-trigger-order-needs-explicit-answer'
+    return 'other-exact-choice-policy-reason'
+for record in results:
+    if record['result']['eligibleForSavedEdit']:continue
+    case=inventory['candidates'][record['ordinal']];failure=record['result'].get('prefixFailure') or record['result'].get('fullFailure') or record['result'].get('executionFailure')
+    failures.append({'ordinal':record['ordinal'],'file':case['file'],'card':case['card'],'scenarioIndex':case['scenarioIndex'],
+      'scenario':case['original']['name'],'proposedReferences':len(case['additions']),'group':reason(failure['message']),
+      'exactFailure':failure,'unproved':True})
+assert len(eligible)==1072 and len(failures)==161
+assert sum(len(record['result'].get('nativeReceipts',[])) for record in results)==3896
+assert sum(record['result'].get('assertions',0) for record in eligible)==3020
+positions=[i*(len(eligible)-1)//10 for i in range(11)]
+assert len(set(positions))==11
+samples=[]
+for position in positions:
+    record=eligible[position];case=inventory['candidates'][record['ordinal']]
+    samples.append({'eligibleListPosition':position,'candidateOrdinal':record['ordinal'],'file':case['file'],'card':case['card'],
+      'scenarioIndex':case['scenarioIndex'],'scenario':case['original']['name'],'originalScenario':case['original'],
+      'proposedScenario':case['changed'],'fixtures':case['fixtures'],'additions':case['additions'],'existingLiterals':case['existingLiterals'],
+      'fileSha256':case['fileSha256'],'originalScenarioSha256':case['originalScenarioSha256'],
+      'proposedScenarioSha256':case['plannedScenarioSha256'],'fullOriginalAssertionCount':record['result']['assertions'],
+      'nativeReceipts':record['result']['nativeReceipts'],'allOriginalFieldsPreserved':True})
+eligible_records=[{'ordinal':record['ordinal'],'file':inventory['candidates'][record['ordinal']]['file'],
+  'scenarioIndex':inventory['candidates'][record['ordinal']]['scenarioIndex'],'card':record['result']['card'],
+  'scenario':record['result']['scenario'],'additions':inventory['candidates'][record['ordinal']]['additions'],
+  'fullOriginalAssertionCount':record['result']['assertions']} for record in eligible]
+review={'schema':'V8NarrowInventoryReview@1','scope':'read-only proposals for root review; no batch edits or omission evidence authorized',
+  **summary,'originalFieldAuditAllCandidates':True,'inputsUnchangedAllResults':True,'actualNativeTapReceipts':3896,'eligibleOriginalAssertionsPassed':3020,
+  'allScenarioStructuralDispositions':structure['structuralDispositions'],'structuralReasonCountsOverlap':True,
+  'allStructuralReasonCounts':structure['rejectionReasons'],'plannerFileSha256':inventory['plannerFileSha256'],
+  'plannerFunctionSha256':inventory['plannerFunctionSha256'],'nativeChecks':build,
+  'alreadyExplicitScenarios':8,'alreadyExplicitLiteralReferencesPreserved':sum(len(d.get('existingLiterals',[])) for d in inventory['allScenarioDispositions'] if d['disposition']=='already-explicit'),
+  'existingLiteralReferencesInRemainingCandidates':sum(len(c['existingLiterals']) for c in inventory['candidates']),
+  'rejectionGroups':dict(Counter(f['group'] for f in failures)),'all161ExactRejections':failures,'all1072EligibleCandidates':eligible_records,
+  'samplePolicy':'11 fixed positions floor(i*(eligibleCount-1)/10), i=0..10, in the full eligible ordinal list; no substitutions',
+  'eligibleSamplePositions':positions,'eligibleSampleCandidateOrdinals':[sample['candidateOrdinal'] for sample in samples],
+  'sampleFile':'v8-basic-source-inventory-samples-544d8512.json','omissionRuns':0,'newDefinitions':0,'savedEdits':0,'gateChanges':0,'canonicalAcceptance':False}
+(outside/'v8-basic-source-inventory-samples-544d8512.json').write_text(json.dumps({'source':inventory['source'],'inventorySha256':sha(inventory_raw),'policy':review['samplePolicy'],'samples':samples},ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+review_path=outside/'v8-basic-source-inventory-review-544d8512.json';review_path.write_text(json.dumps(review,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+pattern_tree=ast.parse((outside/'scan-pool-368a.py').read_text())
+patterns=next(ast.literal_eval(n.value) for n in pattern_tree.body if isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id=='patterns' for t in n.targets))
+files=[inventory_path.name,results_path.name,review_path.name,'v8-basic-source-inventory-samples-544d8512.json',
+ 'v8-basic-source-inventory-inputs-544d8512.json','v8-basic-source-inventory-544d8512-summary.json',
+ 'v8-basic-source-inventory-worker-build.json','v8-basic-source-inventory-results-544d8512-summary.json',
+ 'v8-basic-source-inventory-checkpoint-544d8512.json','v8-basic-source-inventory-run-544d8512.log',
+ 'v8-basic-source-freeze-inputs.mjs','v8-basic-source-freeze.py','v8-basic-source-build-worker.py',
+ 'v8-basic-source-inventory-worker.mjs','v8-basic-source-inventory-run.mjs','v8-basic-source-package-review.py']
+artifacts=[]
+for name in files:
+    file=outside/name;raw=file.read_bytes()
+    assert not any(re.search(pattern,raw.decode('utf-8-sig'),re.I) for pattern in patterns),'privacy finding in '+name
+    entry={'file':name,'bytes':len(raw),'sha256':sha(raw),'rawPrivacyScanPassed':True}
+    if len(raw)>50000:
+        packed=gzip.compress(raw,mtime=0);assert gzip.decompress(packed)==raw
+        target=file.with_suffix(file.suffix+'.gz');target.write_bytes(packed)
+        entry.update({'gzip':target.name,'gzipBytes':len(packed),'gzipSha256':sha(packed),'roundtripVerified':True})
+    artifacts.append(entry)
+package={'source':inventory['source'],'inventorySha256':sha(inventory_raw),'resultsSha256':sha(results_raw),
+  'scope':'read-only aggregate retained on frozen clean source; no saved batch edits','privacyScanCategories':'same eight credential/personal-address categories as local-ci.sh',
+  'artifacts':artifacts,'summary':{k:review[k] for k in ['candidateCount','eligibleScenarios','eligibleFiles','eligibleReferenceAdditions','prefixFailures','fullStrictFailures','executionFailures','actualNativeTapReceipts','eligibleOriginalAssertionsPassed','eligibleSampleCandidateOrdinals','rejectionGroups']}}
+(outside/'v8-basic-source-inventory-package-544d8512.json').write_text(json.dumps(package,indent=2)+'\n')
+print(json.dumps(package['summary'],indent=2))

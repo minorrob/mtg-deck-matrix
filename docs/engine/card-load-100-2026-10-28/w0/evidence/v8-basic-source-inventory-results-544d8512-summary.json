@@ -1,0 +1,30 @@
+{
+  "schema": "V8RemainingNarrowSourceValidation@1",
+  "source": {
+    "revision": "544d8512d226790498ae5da29087471ab6ba9a29",
+    "tree": "9e997832ab54def362cb2ff722e516c309108389",
+    "dirty": false,
+    "inputs": {
+      "scripts": "17a753fc10b8f105898dccba7b0232ba012966c2aee5b023f3b3c88b998b95ae",
+      "scenarios": "3439905a2cb4daab5376ffda0debee721e1422ab1ca911287db2aa5418aaea09"
+    }
+  },
+  "inventorySha256": "a9be9808449d759e85483653621be7b7457c7bd2086076788dc44119bc2fd7b2",
+  "scope": "read-only native validation; no edits, omissions, family/card credit or canonical acceptance",
+  "candidateCount": 1233,
+  "completed": 1233,
+  "complete": true,
+  "eligibleScenarios": 1072,
+  "eligibleFiles": 700,
+  "eligibleReferenceAdditions": 3430,
+  "prefixFailures": 0,
+  "fullStrictFailures": 161,
+  "executionFailures": 0,
+  "existingLiteralsPreserved": true,
+  "failureKinds": {
+    "choice-policy": 161
+  },
+  "resultsSha256": "316143b74ce21cd1078d57f692843feacfc98aa18861663e6baca612a9a0730c",
+  "elapsedSeconds": 64,
+  "savedFilesChanged": false
+}
