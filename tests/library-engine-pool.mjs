@@ -1,6 +1,6 @@
 /* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
 import assert from "node:assert/strict";
-import {commanderPool, scorePool, dealPoolLanes} from "../tools/library-engine-pool.mjs";
+import {commanderPool, scorePool, dealPoolLanes, loadScopeFilter} from "../tools/library-engine-pool.mjs";
 
 let checks = 0;
 const eq = (a, b, message) => { assert.deepEqual(a, b, message); checks++; };
@@ -13,6 +13,22 @@ const normal = (name, more = {}) => ({name, type: "Creature — Bear", layout: "
     "the compiler's undefined universe: banned, nondeck and final cards excluded; faces included, canonical names once");
 }
 const unknown = (name, gaps, theme = "mana") => ({name, gaps, theme, compiler: "unknown", tier: "unloaded"});
+{
+  const scope = {schema: "CrankCardLoadScope@1", share: 0.95, count: 3,
+    cards: [{name: "Front // Back"}, {name: "Included candidate"}, {name: "Wish", exempt: "not playable"}]};
+  const included = loadScopeFilter(scope, (name) => name === "Front" ? "Front // Back" : name);
+  const rows = [unknown("Front", ["Shared."]), unknown("Least played", ["Shared."]),
+    {name: "Included candidate", tier: "candidate", theme: "mana"}, {name: "Excluded candidate", tier: "candidate", theme: "mana"}, unknown("Wish", ["Shared."])];
+  const lanes = dealPoolLanes(scorePool(rows.filter((c) => included(c.name))), {laneSize: 2,
+    themes: [["mana", "Mana"]], themeOf: (c) => c.theme});
+  eq(lanes.flatMap((l) => l.cards).map((c) => c.name), ["Front"], "library aliases enter only through the included full card identity");
+  eq(lanes.flatMap((l) => l.review).map((c) => c.name), ["Included candidate"], "excluded and exempt names never enter promotion reviews");
+  eq(lanes[0].cards[0].potentialCompletions, 1, "outside-scope cards cannot inflate sentence reuse priority");
+  eq(loadScopeFilter(null)("Least played"), true, "the explicit full-pool diagnostic remains available");
+  for (const invalid of [{...scope,share:0.8}, {...scope,count:2}, {...scope,cards:[{name:"Front"},{name:"Front"},{name:"Wish"}]}, {...scope,schema:"other"}]) {
+    assert.throws(() => loadScopeFilter(invalid), /valid frozen/); checks++;
+  }
+}
 {
   const rows = scorePool([unknown("Shared 1", ["Add  one mana."]), unknown("Shared 2", ["Add one mana."]),
     unknown("Shared 3", ["Add one mana."]), unknown("Rare", ["Rare sentence."]), unknown("Two gaps", ["Add one mana.", "Rare sentence."])]);
