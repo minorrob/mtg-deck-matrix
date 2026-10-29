@@ -1,0 +1,90 @@
+{
+  "source": "50ce44bd9095e2bc9de7d989053fc0d5ed9c6f47",
+  "baseline": [
+    {
+      "suite": "tests/room-view-face.mjs",
+      "exit": 0,
+      "log": "baseline-0.log",
+      "sha256": "35eb689ced67f9eb250e372fc92290b193c31cb497416c34bbdb1715267e1d94"
+    },
+    {
+      "suite": "tests/engine-projection.mjs",
+      "exit": 0,
+      "log": "baseline-1.log",
+      "sha256": "27af35ad17c71ffdf1cdee32664a28d49cfb80bc8306fac55983279e9ba7ebe3"
+    },
+    {
+      "suite": "tests/room-playtest-snoop.mjs",
+      "exit": 0,
+      "log": "baseline-2.log",
+      "sha256": "6ee95e438ca9755a1f17844d4257a69873577a5f5557adedd52c186ed650962c"
+    }
+  ],
+  "mutations": [
+    {
+      "label": "a played back face is omitted from the public view",
+      "reader": {
+        "suite": "tests/room-view-face.mjs",
+        "exit": 1,
+        "log": "mutation-0.log",
+        "sha256": "51e954179a8e8b546d0d5b677735eef18ee5d65c7de6c8dd133d40eee861e6f3"
+      },
+      "directAssertion": true,
+      "beforeSha256": "46e9fd0aebaf687aafc1a6312c4fa691a34737d257cf09f49f055f1eefd23025"
+    },
+    {
+      "label": "a front-face permanent is mislabeled as its back",
+      "reader": {
+        "suite": "tests/room-view-face.mjs",
+        "exit": 1,
+        "log": "mutation-1.log",
+        "sha256": "cdd051a29bdf30bc06842851ec4e305d5b7579f147b2ba998fd385cebc2bd17b"
+      },
+      "directAssertion": true,
+      "beforeSha256": "46e9fd0aebaf687aafc1a6312c4fa691a34737d257cf09f49f055f1eefd23025"
+    }
+  ],
+  "readerHashes": {
+    "tests/room-view-face.mjs": "66ac04c0f330834a2ad6e13b570c16bae1258dea7b5ed914eff8c863f0428049",
+    "tests/engine-projection.mjs": "d6a80c9143d713699eaf907500106f0e54877d262163aa3dc9f6abf7c4f41d92",
+    "tests/room-playtest-snoop.mjs": "2b4a6daf1b4a20bcd356acfa8d64fda0f99968a83eb6261e52145cb32e0e1eaf"
+  },
+  "specSha256": "8b8a14f93a22e8bdf3bae4ffcff3a46595622841bd37e981ce95fb2a221b780f",
+  "restoredSha256": "46e9fd0aebaf687aafc1a6312c4fa691a34737d257cf09f49f055f1eefd23025",
+  "missed": [],
+  "schema": "VisibleBackFaceNativeMutationProof@1",
+  "scope": "Additive native API controls only; no G3 ability, browser or full-gate credit",
+  "baselineChecks": {
+    "roomViewFace": 6,
+    "engineProjection": 93,
+    "roomSnoop": "passed"
+  },
+  "publicLogs": [
+    {
+      "file": "face-view-baseline-0.log",
+      "sha256": "35eb689ced67f9eb250e372fc92290b193c31cb497416c34bbdb1715267e1d94",
+      "capturedRawSha256": "35eb689ced67f9eb250e372fc92290b193c31cb497416c34bbdb1715267e1d94"
+    },
+    {
+      "file": "face-view-baseline-1.log",
+      "sha256": "87727d7b3ae3705bd15be5cf6d8152235b78aa2f08cfde7ba15f8a44b3593fd0",
+      "capturedRawSha256": "27af35ad17c71ffdf1cdee32664a28d49cfb80bc8306fac55983279e9ba7ebe3"
+    },
+    {
+      "file": "face-view-baseline-2.log",
+      "sha256": "6ee95e438ca9755a1f17844d4257a69873577a5f5557adedd52c186ed650962c",
+      "capturedRawSha256": "6ee95e438ca9755a1f17844d4257a69873577a5f5557adedd52c186ed650962c"
+    },
+    {
+      "file": "face-view-mutation-0.log",
+      "sha256": "9e3b42892d3d373494dc31027a4a67bb1c8a407e4e0620fbbcede8c8c0bdfa9c",
+      "capturedRawSha256": "51e954179a8e8b546d0d5b677735eef18ee5d65c7de6c8dd133d40eee861e6f3"
+    },
+    {
+      "file": "face-view-mutation-1.log",
+      "sha256": "b2fa8617c5fa221575bd97650b043e5aff1e9513bbd8cf840590098442bb9383",
+      "capturedRawSha256": "cdd051a29bdf30bc06842851ec4e305d5b7579f147b2ba998fd385cebc2bd17b"
+    }
+  ],
+  "logNormalization": "Captured logs normalized to UTF-8 and local workspace prefix redacted; unmodified captured logs retained outside repository."
+}

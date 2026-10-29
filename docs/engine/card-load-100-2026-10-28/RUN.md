@@ -5,6 +5,16 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Eight source repairs integrated locally, `50ce44bd`:** clean/scanned/pushed draft #958 (`544d8512`) is merged
+  `--no-ff`. Root repeats all eight full strict scenarios:21 original assertions pass. The role's historical selected
+  before/after keeps all17 scenarios:14 to7 failures,0 to4 of14 abilities reached, zero runtime-removal proofs, both
+  checker exits1. Exactly30 source fields in five files; no original field, choice, expectation or definition changes.
+  V8 now validates the remaining narrow basic-only candidate inventory read-only; no larger saved batch is approved.
+- **Additive back-face API controls on `50ce44bd`:** original room-face6/projection93/native-Snoop baseline passes.
+  Two exact field faults fail their direct original assertions (omitted actual back face; falsely tagged front face),
+  no error/timeout credit; source restores byte-exact SHA46e9fd0aebaf687aafc1a6312c4fa691a34737d257cf09f49f055f1eefd23025.
+  No production/browser assertion changes. Full hashed logs and reader/probe inputs: `w0/evidence/face-view-proof.json`.
+  This is native API proof only; current combined browser, a11y/ROB-312, all full wave0 gates and staging remain open.
 - **Drawer-height dependency, source `8abe8752`:** owner main advances to `83f0a8f2` (#957/ROB-206) and V8's
   pre-push scan correctly stops. Root merges `--no-ff`, preserves owner CSS/tests and regenerates shared asset pins.
   README actual714; assets136/integrity/wiring pass. Engine/room bytes are unchanged from `7364caf7`; current browser
