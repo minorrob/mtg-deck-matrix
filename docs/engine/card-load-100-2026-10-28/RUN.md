@@ -5,8 +5,9 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
-- **Holder:** Codex resumed October 28, 2026, for Rob; Linear ROB-199 (run), ROB-200 (wave 0), under ROB-85.
-  Rob requested W2/W3/W7 start, wave-0 completion, then continued loading without weaker gates.
+- **Holder:** Codex context hand-back, October 28, 2026, for Rob; Linear ROB-199 (run), ROB-200 (wave 0), under ROB-85.
+  Rob requested W2/W3/W7 start, wave-0 completion, then continued loading without weaker gates. All three lanes started
+  and have bounded checkpoints below. Wave 0 is still unfinished; do not start final-card loads or claim it complete.
 - **Revised endpoint:** Rob explicitly chose **cards covering 95% of deck appearances**, not 95% of distinct names.
   Frozen `scope-95.json`: 8,514 names, including six basics; 527,373,351/555,122,162 appearances (95.0013%).
   Source graph September 11, played data September 19, Oracle October 4, 2026; exact hashes are in the manifest.
@@ -16,7 +17,7 @@ Newest wave first. Each line names its command's result line, never a summary of
   whole-directory ability gate remain. The least-played remaining appearances need not be loaded.
 - **Main at the start:** `39a45706`.
 - **Wave and step:** wave 0 is unfinished. Baseline, prerequisite reconciliation and five bounded role checkpoints are
-  preserved; no new cards or promotions. W2/W3/W7 are now active in isolated worktrees. No gate or wave completion is claimed.
+  preserved; no new cards or promotions. All eight roles now have bounded isolated checkpoints. No gate or wave completion is claimed.
 - **Integration:** `codex/engine-load100-w0`, worktree `C:\Users\robmi\CrankMagic\worktrees\load100\w0-integrate`.
   Package #911 and prerequisite #834 merged locally; eight debt lane files committed at `c9d31c40`.
   Draft integration PR #912: https://github.com/minorrob/mtg-deck-matrix/pull/912.
@@ -53,7 +54,7 @@ Newest wave first. Each line names its command's result line, never a summary of
   both selected backstop breaks are caught, `missed: []`. The five paragraph breaks were also rerun and caught.
 - **Lanes:** five clean, pushed bounded checkpoints are listed below; their remaining debts are queued, not waived.
   This session has three subagent slots, so the eight roles run in batches. Keep all eight roles separate; start the
-  W2/W3/W7 are the current batch. Do not describe the earlier bounded checkpoints as complete themes.
+  W2/W3/W7 were the resumed batch. Do not describe any bounded checkpoint as a complete theme.
 - **Ownership:** the primary checkout has another session's unresolved merge and remains untouched. The old standing
   engine table predates Rob's direct October 28 assignment. At claim time no other active rule-module PR besides #834
   was listed. Re-check current work before `readDeck` edits. The monarch already has a canonical Engine-to-Play request
@@ -75,23 +76,61 @@ Newest wave first. Each line names its command's result line, never a summary of
 | Role | Branch under `codex/engine-load100-` | Pushed head | Draft PR | State |
 | --- | --- | --- | --- | --- |
 | W1 faces | `w0-w1-faces` | `27182d42e9afa664dfccae8fb5dd878d6079d6a8` | #917 | Source `9c4366f7`; Elspeth and supported preparation copies; battles, undefined emblem cards and permanent-type insets queued |
-| W2 stack | `w0-w2-stack` | Pending | — | Active from `5fc78a95`; copy/effect-cast targets, facedown exile, entry type choices, named wish refusals |
-| W3 graveyard | `w0-w3-graveyard` | Pending | — | Active from `5fc78a95`; permissions, manifest, commander and explicit resumable replacements |
+| W2 stack | `w0-w2-stack` | `2fb6f815da5c7c91c9c9fd75128b9cdad2b5577d` | #920 | Copy/effect-cast targets, facedown exile, named wish refusals; entry/caller continuations and effect-cost edges remain open |
+| W3 graveyard | `w0-w3-graveyard` | `63f5b4c83f74f30aebde497839d54d4b72439fe1` | #918 | Shared operation foundation and limited-permission choice across sources/abilities; other debt open |
 | W4 combat | `w0-w4-combat` | `9177d29baca191ce1bee7773a6851bfabef68df5` | #914 | Clean bounded checkpoint; five debts queued |
 | W5 mana | `w0-w5-mana` | `79fe06c741a2d25f1c7c75ecf20e2810e4d07977` | #915 | Clean bounded checkpoint; five debts queued |
 | W6 tokens | `w0-w6-tokens` | `5c927528f8c26adc3e4e0300001f320331fb9272` | #916 | Clean bounded checkpoint; three replacement-order debts queued |
-| W7 spells | `w0-w7-spells` | Pending | — | Active from `5fc78a95`; draw order/replacements, dice, compiler played-card and trust gates |
+| W7 spells | `w0-w7-spells` | `7b832177b4abc7efe731121849c2e1d00b3ce399` | #919 | Strict compiler actual-play gate/Annul fixture, APNAP/draw replacement order, die watchers; outside-resolution continuations/modifiers open |
 | V8 verifier | `w0-v8-verify` | `1890c72f5bf4aac013d554fe5a9035f688b1df55` | #913 | Clean bounded harness/review checkpoint; coverage, strict-runner and final integration debts remain |
 
 Worktrees are `C:\Users\robmi\CrankMagic\worktrees\load100\<branch suffix>`. Preserve their node_modules junctions;
 do not delete through a junction. Every code/evidence checkpoint is pushed; read each lane JSON and PR body before
 continuing it. A model taking a lane over uses the brief's prefix/suffix hand-off rule; integration stays on its current
 branch. PR #834 and #911 are ancestors of integration only, not yet merged to main.
-Final local audit: all six prerequisite/role worktrees have empty `git status --porcelain` and heads equal their remote
+Prior hand-back audit: all six prerequisite/role worktrees had empty `git status --porcelain` and heads equal their remote
 branches. W5's task-created diagnostics were preserved outside its worktree at
 `C:\Users\robmi\CrankMagic\workbench\load100-w5-79fe06c7-diagnostics`; W1's are at
 `C:\Users\robmi\CrankMagic\workbench\load100-w1-27182d42-diagnostics`. The primary checkout is still on
 `codex/reconcile-893-20261026`, `32109d12`; main remains `39a45706`. No lane process is left running.
+
+## Resumed W2/W3/W7 checkpoint evidence
+
+- **W2 #920:** 57 focused checks; 30 unique mutations caught, plus the moved original w4d-l1 mutation; `missed: []`.
+  Full lane check: 6,430 definitions, 11,023 scenarios, zero failures; 18 bounded readers green. Counted copies retain
+  their original target count, including zero; effect casts ask counted targets; Gandalf's permitted face-down exile
+  casts work; wishes are refused by name. Copies report final targets, including kept targets, so ward triggers.
+  The old reader assertion demanding omitted effect casts was replaced with an exact valid-offer assertion. The
+  explicit privacy guard was retained after auto-review rejected removing it; authorized-viewer denial mutation is
+  caught, with no claimed separate leak fix already prevented by permits(). Entry-type questions still need real
+  pre-entry frames at move/stack/land/token boundaries. Extra choose-cost/division combinations remain unproved.
+  Diagnostics: `C:\Users\robmi\CrankMagic\workbench\load100-w2-2fb6f815-diagnostics` (the lane's old scratch paths moved here).
+- **W3 #918:** reviewed foundation `b2ba9343`, 75 checks/32 caught mutations. First permission checkpoint: eight focused
+  checks/two caught mutations, with play-from20, play-from-zones76, may-play34, actions34, graveyard27, cards55 and
+  costs32 green. Old assertions demanding auto-selection were strengthened to require both explicit permissions and
+  prove only the selected resource is consumed. Root cold review then found the same-source/distinct-ability case;
+  its follow-up `63f5b4c8` now distinguishes source+ability in the existing address only when needed. Focused22 checks
+  and eight domain mutations pass, including spell/land choices after reload, exact selected-use consumption, legacy
+  unambiguous addresses and forged identities refused without mutation. Root read the increment and independently
+  reran22 checks. Touched readers pass; the full cards55/6,430-definition reader belongs to prior `25b3f7d3`.
+  Commander hand/library choice, manifest-dread failed entry,
+  nested destruction, Liesa waits, remembered-object constructs and full MayPlay remain open. Prototype continuation
+  code is **not runtime or proof**: `C:\Users\robmi\CrankMagic\workbench\load100-w3-continuation-wip-20261028` contains its
+  exact patch/modules/test and known defects, including applying an entry patch to the old rather than new object.
+- **W7 #919:** 22 new mutations and six moved legacy mutations caught, `missed: []`; 48 completed readers passed.
+  Compiler29, focused13, card-waves22, table-candidates43, table-basics6 passed. Full lane check before the final
+  smoke-fixture-only change: 6,430 definitions, 11,023 scenarios, zero failures. The strict gate exposed Annul's wrong
+  Sorcery fixture; generic Artifact/Enchantment fixtures now prove Annul actually casts and counters its target.
+  `smoke.resolved: 2` also counts the countered target event; it is not two successful spell resolutions. Collector
+  before dredge is **required**, per current CR121.2a/616.1g and the official ruling; preserved with a regression.
+  A separate doubler-before-dredge choice is fixed. W4-based calibration supports minimumCount1 (band1:512/512;
+  95% lower bound99.2553%); no arbitrary increase or exclusion. Outside-resolution draws, die modifiers/W5's mana
+  caller continuation, Winter/Narset and independent V8 review remain open. Diagnostics:
+  `C:\Users\robmi\CrankMagic\workbench\load100-w7-686d948f-diagnostics`.
+
+No writer or V8 branch is integrated yet. The new drafts need cold V8 review and the eventual consolidated checks.
+Before dealing post-wave-0 cards, restrict W5's full-pool dealer output to `scope-95.json` and score reuse within that
+set. The current `--pool` output still covers all 25,616 undefined names; it must not silently restore the old target.
 
 ## Wave 0 evidence so far
 
