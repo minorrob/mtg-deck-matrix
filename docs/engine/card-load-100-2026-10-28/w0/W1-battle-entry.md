@@ -1,6 +1,9 @@
 # W1 bounded Battle entry checkpoint
 
 Base: exact assembled integration `50f47e22c0a086de529bad09d9d14565df19a901`, merged without a rebase.
+Runtime/source change: `79970ba1`; assembled dependency sync: `310595d2` through merge `246fb797`.
+First published checkpoint: `b924dbb62b099a9968508d814fb52f65ed136543`, exact `HEAD 0` SCAN PASS with
+main `7a8383a0` an ancestor. Draft PR: <https://github.com/minorrob/mtg-deck-matrix/pull/944>.
 The preserved `W1-battle-protector-red.mjs.txt` was restored as `tests/engine-battles.mjs` and failed on that base:
 the Siege resolved without the required pre-entry protector question. No Battle final definition is loaded or promoted.
 
@@ -52,7 +55,8 @@ All three semantic regression probes are caught, `missed: []`; receipt in `evide
 W5's exact reader dependency `1000a25d` is included through root's assembled `310595d2`, merged without rebasing into
 this lane at `246fb797`. After synchronization: Battle 95, transform 46, face-down play 68, Adventure 71,
 payment 410 and room pooled-payment 14 pass independently. The automatic README merge retained an old suite total;
-it is corrected to the actual 686. Data integrity/feature wiring are rechecked after that metadata correction.
+it is corrected to the actual 686. Data integrity passes and feature-wiring passes 131 checks after that correction.
+Final static anchor audit: 33 inherited UI targets remain, zero engine targets. No full-gate acceptance is claimed.
 W5's original browser union has a separate Table-stage visibility failure, remains explicitly red and receives no
 credit from these native reader repairs. Full browser/CI and all other run gates stay open.
 
