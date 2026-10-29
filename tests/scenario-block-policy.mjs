@@ -111,12 +111,14 @@ eq(Object.hasOwn(oldError, "scenarioPolicies"), false, "old errors gain no empty
 const serraScript = JSON.parse(readFileSync(new URL("../game/engine/cards/s/serra-angel.json", import.meta.url), "utf8"));
 const serraFile = JSON.parse(readFileSync(new URL("../game/engine/cards/s/serra-angel.scenarios.json", import.meta.url), "utf8"));
 const serraAbility = createExerciseLedger([serraScript]).cards["Serra Angel"].abilities.find((a) => a.keyword === "flying");
+const historicalSerra = serraFile.scenarios.filter((scenario) => scenario.name === "Flying excludes a ground blocker and vigilance leaves Serra Angel untapped when it attacks (CR 702.9b, 702.20b)");
+eq(historicalSerra.length, 1, "exactly one original offered-blocker scenario supplies the negative fixture; later completed-combat scenarios are outside its scope");
 const rejected = proveRuntimeAbility({script: serraScript, ability: serraAbility, cards: tableCards,
-  scenarios: serraFile.scenarios, fixtures: serraFile.fixtures});
+  scenarios: historicalSerra, fixtures: serraFile.fixtures});
 eq(rejected.status, "unobserved", "historical saved Serra blocker-availability failure earns no Flying credit");
 ok(rejected.diagnostics.some((d) => d.error.includes("the creatures that may block")), "the rejected historical availability evidence remains visible");
 const serraRemoval = runtimeAbilityRemoval(serraScript, serraAbility, tableCards("Serra Angel"));
-const serraFailure = failure(() => runScenario(serraFile.scenarios[1], runtimeCardsWithoutAbility(tableCards, "Serra Angel", serraRemoval.definition), serraFile.fixtures),
+const serraFailure = failure(() => runScenario(historicalSerra[0], runtimeCardsWithoutAbility(tableCards, "Serra Angel", serraRemoval.definition), serraFile.fixtures),
   /the creatures that may block/, "the unchanged saved scenario reproduces its exact availability failure");
 eq(serraFailure.scenarioAssertion, "blocker-offer", "blocker availability has explicit ineligible provenance");
 for (const kind of ["keyword", "static", "triggered", "replacement", "activated", "mana", "spell"]) {
