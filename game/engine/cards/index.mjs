@@ -682,6 +682,8 @@ function compileGivenIn(effects, text, problems) {
        changed for players (rules/statics.mjs, playerRuleChanged), and a static ability in a layer (rules/layers.mjs,
        gatherEffects: Liliana of the Dark Realms' "Swamps you control have ..."). */
     if (effect.effect === "emblem") {
+      if (effect.text !== undefined && (typeof effect.text !== "string" || !effect.text.trim()))
+        problems.push(`${text}: explicit emblem Oracle text is a nonempty string`);
       const list = effect.abilities;
       if (!Array.isArray(list) || !list.length) { problems.push(`${text}: an emblem's abilities are a list, with at least one`); continue; }
       for (const ability of list) if (!(["triggered", "replacement"].includes(ability?.kind) || (ability?.kind === "static" && typeof ability.rule === "string" && ability.affects?.what === "player")

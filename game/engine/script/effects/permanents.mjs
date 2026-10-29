@@ -29,6 +29,7 @@ import {countersPlaced, enteringCountersPlaced, tokensCreated} from "../../rules
 import {clearRingBearer} from "../../keywords/ring.mjs";
 import {removeFromCombat} from "../../rules/combat.mjs";
 import {enteringModifications} from "../../rules/replacement.mjs";
+import {prepare} from "./attributes.mjs";
 import {isCreatureType} from "../../keywords/types.mjs";
 
 /* A continuous effect needs a timestamp to be ordered by (CR 613.7), and it has to be part of the
@@ -205,6 +206,8 @@ function copiable(object, except = {}) {
     ...(Number.isInteger(object.loyalty) ? {loyalty: object.loyalty} : {}),
     ...(object.spell ? {spell: structuredClone(object.spell)} : {}),
     ...(object.enchant ? {enchant: structuredClone(object.enchant)} : {}),
+    /* CR 722.2b: the inset spell is a copiable characteristic, not the prepared designation. */
+    ...(object.preparation ? {preparation: structuredClone(object.preparation)} : {}),
   };
 }
 
@@ -359,6 +362,11 @@ export function makeCopies(state, ids, params, context, events) {
         card: cardRef(state, copy), enteredAs: copy, becomes: copy, ...(state.objects[copy]?.tapped ? {enteredTapped: true} : {}),
         from: {zoneType: null, player: {playerId: controller}}, to: {zoneType: "Battlefield", player: {playerId: controller}}, createdAsToken: true,
       }));
+      /* The copied preparation card's own entering replacement applies (CR 614.12, 722.3a-c). */
+      if (values.preparation) {
+        const entering = enteringModifications(state, {objectId: copy, player: controller, types: values.types, abilities: values.abilities});
+        if ((entering.designations ?? []).includes("prepared")) prepare(state, copy, events);
+      }
     }
   }
   afterwards(state, made, {...params, controller}, context);
@@ -512,6 +520,8 @@ export function emblem(state, params, context) {
   const named = state.objects[context.source]?.card ?? context.lastKnown?.name ?? null;
   const id = addObject(state, {card: named ? `${named} emblem` : "Emblem", emblem: true, owner: player, controller: player,
     abilities: params.abilities ?? []}, "command", player);
+  /* One printed ability can use multiple layer bodies; its Oracle text is still printed once (CR 114.2-4). */
+  if (params.text !== undefined) state.objects[id].emblemOracleText = params.text;
   return [event("GameEventEmblemCreated", state, {player: {playerId: player, name: state.players[player].name}, card: cardRef(state, id)})];
 }
 
@@ -641,6 +651,7 @@ function makeToken(state, spec, controller, params, context, events) {
     abilities: spec.abilities ?? [],
     /* An Aura token's Enchant (a Role's, CR 303.7): what the state-based actions hold it to (CR 704.5m). */
     ...(spec.enchant ? {enchant: spec.enchant} : {}),
+    ...(spec.preparation ? {preparation: structuredClone(spec.preparation)} : {}),
     /* A double-faced token (an Incubator, CR 111.10i): both faces, its front face up as it enters (CR 712.14's default),
        so it is one that can transform (CR 701.27a, 712.9). */
     ...(spec.back ? {mdfc: {front: tokenFace(spec), back: tokenFace(spec.back), transforming: true}} : {}),
@@ -649,13 +660,14 @@ function makeToken(state, spec, controller, params, context, events) {
     token: true,
   }, "battlefield");
   /* "Create a tapped Treasure token": the effect says so as well as a spec can. */
+  let entering = null;
   if (spec.tapped || params.tapped) state.objects[id].tapped = true;
   /* "Creatures your opponents control enter tapped" (Authority of the Consuls; CR 614.1c, 614.12): a token is a permanent
      entering the battlefield too (CR 111.1), and a replacement that has it enter tapped applies as it is made. Only that is
      taken from them here -- what else a token enters with, the effect's own words give (above, below) -- and not "tapped
      unless you pay" (a shock land's), which asks a question no token is asked yet (NAMED). */
   else {
-    const entering = enteringModifications(state, {objectId: id, player: controller, types: state.objects[id].types, abilities: state.objects[id].abilities});
+    entering = enteringModifications(state, {objectId: id, player: controller, types: state.objects[id].types, abilities: state.objects[id].abilities});
     if (entering.tapped && !entering.asks.some((ask) => ask.life !== undefined || ask.reveal !== undefined)) state.objects[id].tapped = true;
   }
   /* "An Incubator token that enters the battlefield with N +1/+1 counters on it" (incubate, CR 701.53a): given as it enters,
@@ -672,6 +684,11 @@ function makeToken(state, spec, controller, params, context, events) {
     to: {zoneType: "Battlefield", player: {playerId: controller}},
     createdAsToken: true,
   }));
+  /* A preparation token's own replacement gives it a fresh designation/copy, never the source's prepared state. */
+  if (state.objects[id].preparation) {
+    const preparedEntry = entering ?? enteringModifications(state, {objectId: id, player: controller, types: state.objects[id].types, abilities: state.objects[id].abilities});
+    if ((preparedEntry.designations ?? []).includes("prepared")) prepare(state, id, events);
+  }
   /* The tokens each player has made this turn ("only if you created a token this turn", Idol of Oblivion): its creator
      is its controller unless the effect says otherwise (CR 111.2). Cleared as a turn begins (rules/turn.mjs). */
   state.players[controller].tokensThisTurn = (state.players[controller].tokensThisTurn ?? 0) + 1;

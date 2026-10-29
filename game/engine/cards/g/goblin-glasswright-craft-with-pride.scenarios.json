@@ -256,6 +256,228 @@
           ]
         }
       ]
+    },
+    {
+      "name": "A token copy enters prepared: its own inset casts, makes a Treasure, and is consumed",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Mountain",
+            "Goblin Glasswright // Craft with Pride"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Irenicus's Vile Duplication"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Irenicus's Vile Duplication",
+          "targets": [
+            {
+              "card": "Goblin Glasswright"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Craft with Pride"
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Craft with Pride"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Mountain",
+            "Goblin Glasswright",
+            "Goblin Glasswright",
+            "Treasure"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": []
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Craft with Pride"
+          },
+          "count": 0
+        },
+        {
+          "event": "GameEventCardAttribute",
+          "where": {
+            "attribute": "prepared",
+            "value": true
+          }
+        },
+        {
+          "event": "GameEventCardAttribute",
+          "where": {
+            "attribute": "prepared",
+            "value": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "A Clone entering as a copy enters prepared: its own inset casts, makes a Treasure, and is consumed",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Mountain",
+            "Goblin Glasswright // Craft with Pride"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Clone"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Island"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Clone"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Goblin Glasswright"
+          ]
+        },
+        {
+          "expect": [
+            {
+              "seat": 0,
+              "zone": "exile",
+              "cards": [
+                "Craft with Pride"
+              ]
+            }
+          ]
+        },
+        {
+          "tap": "Mountain"
+        },
+        {
+          "cast": "Craft with Pride"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Island",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Mountain",
+            "Goblin Glasswright",
+            "Goblin Glasswright",
+            "Treasure"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "exile",
+          "cards": []
+        },
+        {
+          "offers": {
+            "kind": "cast",
+            "card": "Craft with Pride"
+          },
+          "count": 0
+        },
+        {
+          "event": "GameEventCardAttribute",
+          "where": {
+            "attribute": "prepared",
+            "value": true
+          }
+        },
+        {
+          "event": "GameEventCardAttribute",
+          "where": {
+            "attribute": "prepared",
+            "value": false
+          }
+        }
+      ]
     }
   ]
 }

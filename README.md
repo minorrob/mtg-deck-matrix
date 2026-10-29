@@ -1424,6 +1424,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-exchange-life` - `tests/engine-exchange-life.mjs`
 - `engine-damage-each` - `tests/engine-damage-each.mjs`
 - `engine-designations` - `tests/engine-designations.mjs`
+- `engine-load100-w1-faces` — `tests/engine-load100-w1-faces.mjs`: actual emblem and copied preparation behavior
 - `engine-prepare` - `tests/engine-prepare.mjs`
 - `engine-connive-memory` - `tests/engine-connive-memory.mjs`
 - `engine-block-designation-triggers` - `tests/engine-block-designation-triggers.mjs`

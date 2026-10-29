@@ -134,7 +134,8 @@ BREAKS = [
     # Counters a choice counts, as it enters (Banner of Kinship).
     ('chosen counters: kept beside the choice', REPLACEMENT, '''  if (ability.change?.entersWithCounters && namesChosen(ability.change.entersWithCounters.count)) {''', '''  if (false) {'''),
     ('chosen counters: on the question', REPLACEMENT, '''  return at < 0 ? asks : asks.map((ask, i) => (i === at ? {...ask, chosenCounters: proposal.chosenCounters} : ask));''', '''  return asks;'''),
-    ('chosen counters: a copy entering', REPLACEMENT, '''  return {tapped: proposal.tapped === true, counters, asks: withChoiceCounters(proposal)};''', '''  return {tapped: proposal.tapped === true, counters, asks: proposal.asks ?? []};'''),
+    ('chosen counters: a copy entering', REPLACEMENT, '''  /* Copied preparation cards also enter with their designation (CR 614.12, 722.3a). */
+  return {tapped: proposal.tapped === true, counters, asks: withChoiceCounters(proposal), designations: proposal.designations ?? []};''', '''  return {tapped: proposal.tapped === true, counters, asks: proposal.asks ?? [], designations: proposal.designations ?? []};'''),
     ('chosen counters: counted with the choice', ENTERING, CHOICE_COUNTERS, CHOICE_COUNTERS.replace('withChosen(count, option.chosen)', 'count')),
     ('chosen counters: doubled as they enter', ENTERING, '''    chooser.counters[counter] = was + enteringCountersPlaced(state, awaiting.objectId, counter, n, chooser.controller);''', '''    chooser.counters[counter] = was + n;'''),
     ('chosen counters: said', ENTERING, '''fields: {card: eventCard(state, awaiting.objectId), type: counter, oldValue: was, newValue: chooser.counters[counter], by: chooser.controller}}});''',

@@ -13,5 +13,139 @@
     "| Tokens and copies of prepare cards never prepared | `script/effects/attributes.mjs`:23 | W1 |",
     "| Unsure, to be settled by a scenario: Song of the Dryads and Sagas under ability loss; Incubator copies single-faced; Social Snub's copy; Winter's prompt and a draw-two cost under Narset | `rules/layers.mjs`:870; `permanents.mjs`:644; `actions.mjs` | V8 finds, W1/W6/W2/W7 fix |"
   ],
-  "status": "queued; prerequisite PR 834 verification in progress"
+  "status": "Bounded emblem/preparation checkpoint pushed as draft PR 917; independent bounded V8 review passed; root integration and full wave gates pending",
+  "checkpoint": {
+    "cardsAdded": 0,
+    "cardsPromoted": 0,
+    "corrected": [
+      {
+        "name": "Elspeth, Sun's Champion",
+        "scenarios": 3,
+        "change": "Real command-zone emblem carries static power/toughness and Flying effects, with its single Oracle sentence displayed once"
+      },
+      {
+        "name": "Goblin Glasswright // Craft with Pride",
+        "scenariosBefore": 3,
+        "scenariosNow": 5,
+        "change": "Actual token-copy and Clone-copy prepare-spell casts create Treasure and consume the independent inset"
+      }
+    ],
+    "proof": [
+      "engine-load100-w1-faces: 79 checks passed, including exact emblem text, genuine repeated abilities, invalid explicit text, and a shared-sentence +3/+3 variant with matching behavior",
+      "engine-prepare: 3 checks passed, running all 5 saved Glasswright scenarios",
+      "data-integrity: Validated 50 variants and 50 connected buy profiles",
+      "feature-wiring: 131 checks passed",
+      "anchors: 57 pre-existing problems; five moved h3/k3/walkers anchors restored; no new problem",
+      "Original preparation checkpoint: 17 caught, missed: []; unbroken suite union includes original h3/k3 suites and engine-cards",
+      "Final emblem-text increment: seven targeted mutations caught, missed: []; 23 unique mutations caught across both runs",
+      "Diagnostic generated definitions used only for mutation baselines; exact restoration verified before committing",
+      "check-cards: 6430 definitions; 11025 scenarios, 0 failed; exit 0 on code checkpoint 9f4dfcb2",
+      "19 related reader suites passed on preparation code checkpoint 9f4dfcb2; final emblem-text increment has separate directly affected verification",
+      "Final text increment: engine-projection 93, engine-planeswalkers 65, sentence-paragraphs 11 passed; unbroken mutation baseline also passes all seven registered suites",
+      "Pre-push source head 9c4366f7: SCAN PASS, clean merge with main 39a45706, no secrets or personal addresses added; final metadata head has its own required scan"
+    ],
+    "queued": [
+      "Battles: 0 final Battle definitions in baseline; battle-half ROB-149 not implemented in this checkpoint",
+      "Daretti, Scrap Savant and Teferi, Temporal Archmage: undefined finals; no new final loaded in wave 0",
+      "Teferi, Who Slows the Sunset and Teferi's Talent also appear as undefined Oracle emblem cards",
+      "Prepare spells that are permanent spells remain refused by cards/index.mjs"
+    ],
+    "existingSupport": [
+      "Teferi, Hero of Dominaria already defines an emblem object; no redundant card edit"
+    ],
+    "pending": [
+      "Consolidated independent ability coverage on integrated source",
+      "Consolidated generation and root gates/staging"
+    ],
+    "ignoresAdded": [],
+    "sources": [
+      {
+        "name": "Clone",
+        "rulings_uri": "https://api.scryfall.com/cards/5e648262-3b9b-4c58-8e29-48356e3cb064/rulings"
+      },
+      {
+        "name": "Elspeth, Sun's Champion",
+        "rulings_uri": "https://api.scryfall.com/cards/a91d9163-c1f2-4eae-acab-5dabbc71d7d4/rulings"
+      },
+      {
+        "name": "Goblin Glasswright // Craft with Pride",
+        "rulings_uri": "https://api.scryfall.com/cards/c85c5f06-dd31-4e2c-97be-2f64d65069ea/rulings"
+      },
+      {
+        "name": "Irenicus's Vile Duplication",
+        "rulings_uri": "https://api.scryfall.com/cards/40a791df-2483-406d-90b0-a8d402d615d6/rulings"
+      }
+    ],
+    "rules": [
+      "114.1-5",
+      "614.12",
+      "707.9b",
+      "722.2b",
+      "722.3a-c",
+      "722.4",
+      "400.7"
+    ],
+    "plan": "engine-compile --plan --demand with exact paired/comma-containing names: 2 asked, 2 hand-authored, no API calls",
+    "readerSuites": [
+      "tests/engine-state.mjs",
+      "tests/engine-layers.mjs",
+      "tests/engine-entering.mjs",
+      "tests/engine-projection.mjs",
+      "tests/engine-state-trigger.mjs",
+      "tests/engine-copies.mjs",
+      "tests/engine-copy-spell.mjs",
+      "tests/engine-copy-set.mjs",
+      "tests/engine-copy-memory.mjs",
+      "tests/engine-mdfc.mjs",
+      "tests/engine-adventure-targets.mjs",
+      "tests/engine-mutate.mjs",
+      "tests/engine-designations.mjs",
+      "tests/engine-adventure.mjs",
+      "tests/engine-adventure-asking.mjs",
+      "tests/engine-libload-l1.mjs",
+      "tests/engine-planeswalkers.mjs",
+      "tests/engine-granted-loyalty.mjs",
+      "tests/room-prepared.mjs"
+    ],
+    "mutationResults": [
+      "caught Elspeth makes an actual emblem -- tests/engine-load100-w1-faces.mjs",
+      "caught copy effects replace preparation characteristics -- tests/engine-load100-w1-faces.mjs",
+      "caught copy names override inset source names -- tests/engine-load100-w1-faces.mjs",
+      "caught last known copies keep their inset -- tests/engine-load100-w1-faces.mjs",
+      "caught the inset is a copiable value -- tests/engine-load100-w1-faces.mjs",
+      "caught token copies apply their prepared entry -- tests/engine-load100-w1-faces.mjs",
+      "caught token-copy entry gives the prepared designation -- tests/engine-load100-w1-faces.mjs",
+      "caught literal preparation tokens retain the inset -- tests/engine-load100-w1-faces.mjs",
+      "caught literal preparation tokens apply entry -- tests/engine-load100-w1-faces.mjs",
+      "caught tapped preparation tokens still prepare -- tests/engine-load100-w1-faces.mjs",
+      "caught literal-token entry gives the prepared designation -- tests/engine-load100-w1-faces.mjs",
+      "caught a copied entering card carries designations -- tests/engine-prepare.mjs",
+      "caught a Clone becomes prepared as it enters -- tests/engine-prepare.mjs",
+      "caught copied planeswalker: loyalty counters -- tests/engine-wave4a-h3.mjs",
+      "caught COPY_KEYS: loyalty -- tests/engine-wave4a-h3.mjs",
+      "caught last known copiable: loyalty -- tests/engine-wave4a-h3.mjs",
+      "caught chosen counters: a copy entering -- tests/engine-cards.mjs",
+      "caught explicit emblem text is validated -- tests/engine-load100-w1-faces.mjs",
+      "caught explicit emblem text is nonempty -- tests/engine-load100-w1-faces.mjs",
+      "caught an emblem retains its explicit text -- tests/engine-load100-w1-faces.mjs",
+      "caught explicit emblem text is preferred -- tests/engine-load100-w1-faces.mjs",
+      "caught legacy emblem text is preserved -- tests/engine-load100-w1-faces.mjs",
+      "caught emblem: shown as one -- tests/engine-load100-w1-faces.mjs",
+      "missed: []"
+    ],
+    "limits": [
+      "Functional engine and existing projection data verified; no browser visual acceptance or real-table sign-off claimed",
+      "No clean-game exercises credited by these scenario/suite results",
+      "Full calibration will be consolidated after W4 sentence fixes merge; the base branch still contains the known original calibration debt",
+      "Generated definitions omitted intentionally for root consolidation; diagnostic generated file was restored"
+    ],
+    "emblemText": "Optional emblem effect text uses the existing nested-text sentence templating, is validated as nonempty, and projects in preference to the retained abilities-text fallback. No global deduplication.",
+    "mutationCommands": [
+      "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w1-faces.py (original 17 before emblem-text increment)",
+      "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w1-faces.py 'explicit emblem text is validated' 'explicit emblem text is nonempty' 'an emblem retains its explicit text' 'explicit emblem text is preferred' 'legacy emblem text is preserved' 'Elspeth makes an actual emblem' 'emblem: shown as one'"
+    ],
+    "sourceCheckpoint": "9c4366f7832eb2bc408a4583563a95bc07aee7b0",
+    "pullRequest": "https://github.com/minorrob/mtg-deck-matrix/pull/917",
+    "independentReview": "V8 read-only review on 9c4366f7 passed compiler/effect/object/projection/fallback, all 79 checks, and additional +4/+4 shared-template variant with controller 1, persisted reload, opponent 2 view and actual Bear power 6. No bounded finding; no theme/gate completion claimed."
+  }
 }
