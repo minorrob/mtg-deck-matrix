@@ -63,6 +63,7 @@ function finishEntry(state, frame) {
     const n = amountOf(view, withChosen(count, object.chosen), {controller: frame.player, source: frame.objectId, x: frame.x ?? 0});
     if (n > 0) counters[counter] = (counters[counter] ?? 0) + n;
   }
+  for (const counter of Object.keys(counters)) if (!(counters[counter] > 0)) delete counters[counter];
   return {status: "done", result: {entering: {tapped: frame.proposal.tapped === true, counters, asks: [],
     designations: frame.proposal.designations ?? [], ...(frame.gainsKeywords?.length ? {gainsKeywords: frame.gainsKeywords} : {}),
     ...(frame.to ? {to: frame.to} : {})}, objectPatch: frame.objectPatch}};
