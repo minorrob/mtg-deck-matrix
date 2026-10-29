@@ -1,0 +1,22 @@
+{
+  "schema": "V8SourceBatchFinalInputAudit@1",
+  "source": {
+    "revision": "6dea84a370d73a6aee80d1a7b21e426414bcad89",
+    "tree": "e46f36a33aefdfe637e1c72a0d21ba3420325102",
+    "dirty": false
+  },
+  "afterHistoricalSource": "ad2d8bcd452717fd936e92bbd0675368a1c4a9a8",
+  "selectedScripts": 700,
+  "selectedScenarioFiles": 700,
+  "originalSelectedScenarios": 1962,
+  "selectedInputs": {
+    "scripts": "24b07ed6e664d805968f3d9c2dd701ae733c4d5395cd605c38fb699cb2533108",
+    "scenarios": "ca33047b774692aab0bc72eaef997567af093ebdddce3ea922b9031d5583e3c4"
+  },
+  "selectedInputsMatchCleanAfter": true,
+  "all6430ScenarioFileHashesMatchApprovedState": true,
+  "editedFiles": 700,
+  "sourceFields": 3430,
+  "everyOtherOriginalFieldPreserved": true,
+  "all161RejectedScenariosUntouched": true
+}

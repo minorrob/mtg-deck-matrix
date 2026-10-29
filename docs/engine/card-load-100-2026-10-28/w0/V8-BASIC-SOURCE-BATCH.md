@@ -91,3 +91,14 @@ node --stack-size=4000 ../scratch/v8-basic-source-batch-edited-full.mjs
 No new card definition, final-card promotion, canonical acceptance, full-game completion, review, staging or release
 credit is claimed. The frozen target remains 8,514 names covering 95.0013% of deck appearances. The separate static
 controller issue remains a deferred primitive/DSL-level debt; this batch makes no production architecture change.
+
+Publication sync merges scanned dependency `b04dd2f423e8ca820af87faf784c73ca48f5b8a8`. On combined clean source
+`6dea84a370d73a6aee80d1a7b21e426414bcad89`, the one final full legacy reader passes 55 checks over all 6,430 definitions
+and the 11,044-scenario inventory. This is legacy coverage, not strict G-3 acceptance. The final audit verifies all
+6,430 scenario-file hashes against the approved state and confirms that the complete 700-card inputs match clean
+AFTER `ad2d8bcd`. No runtime, definition or scenario-helper change occurred during sync.
+
+Integrity, wiring 131, assets 136, service-worker 9, frozen scope and inventory pass; inventory regeneration has no
+diff (60 artifacts/80.9 MB), and README matches the actual 714 suites. All 35 main proof archive Git blobs match their
+recorded hashes. The unchanged policy reader/probe matrix is not repeated. Final source-bound checks and logs are in
+`evidence/v8-basic-source-batch-final.json`; both selected checker exits remain 1 and all broader gates remain open.
