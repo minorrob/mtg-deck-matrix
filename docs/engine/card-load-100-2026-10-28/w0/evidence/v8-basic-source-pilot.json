@@ -1,0 +1,406 @@
+{
+  "scope": "scratch10 only; no saved files, definitions, runner or gates edited",
+  "source": "644d844bab026329b08028988f515074bd2da7aa",
+  "candidates": 1241,
+  "results": [
+    {
+      "file": "game\\engine\\cards\\a\\a-i-m-scientists.scenarios.json",
+      "card": "A.I.M. Scientists",
+      "scenario": "It enters and connives: a card drawn, the Bear discarded, a +1/+1 counter",
+      "prefix": [
+        {
+          "step": 0,
+          "name": "Island",
+          "ordinal": 0,
+          "added": true
+        },
+        {
+          "step": 1,
+          "name": "Wastes",
+          "ordinal": 0,
+          "added": true
+        },
+        {
+          "step": 2,
+          "name": "Wastes",
+          "ordinal": 1,
+          "added": true
+        },
+        {
+          "step": 3,
+          "name": "Wastes",
+          "ordinal": 2,
+          "added": true
+        }
+      ],
+      "originalFieldsPreserved": true,
+      "nativePrefixVerified": true,
+      "fullStrictPass": true,
+      "assertions": 5,
+      "eligibleForSavedEdit": true
+    },
+    {
+      "file": "game\\engine\\cards\\a\\a-i-m-scientists.scenarios.json",
+      "card": "A.I.M. Scientists",
+      "scenario": "A land discarded: no counter",
+      "prefix": [
+        {
+          "step": 0,
+          "name": "Island",
+          "ordinal": 0,
+          "added": true
+        },
+        {
+          "step": 1,
+          "name": "Wastes",
+          "ordinal": 0,
+          "added": true
+        },
+        {
+          "step": 2,
+          "name": "Wastes",
+          "ordinal": 1,
+          "added": true
+        },
+        {
+          "step": 3,
+          "name": "Wastes",
+          "ordinal": 2,
+          "added": true
+        }
+      ],
+      "originalFieldsPreserved": true,
+      "nativePrefixVerified": true,
+      "fullStrictPass": true,
+      "assertions": 4,
+      "eligibleForSavedEdit": true
+    },
+    {
+      "file": "game\\engine\\cards\\a\\a-i-m-scientists.scenarios.json",
+      "card": "A.I.M. Scientists",
+      "scenario": "Basic landcycling {2}: discarded, and a Forest searched for into the hand",
+      "prefix": [
+        {
+          "step": 0,
+          "name": "Wastes",
+          "ordinal": 0,
+          "added": true
+        },
+        {
+          "step": 1,
+          "name": "Wastes",
+          "ordinal": 1,
+          "added": true
+        }
+      ],
+      "originalFieldsPreserved": true,
+      "nativePrefixVerified": true,
+      "fullStrictPass": true,
+      "assertions": 2,
+      "eligibleForSavedEdit": true
+    },
+    {
+      "file": "game\\engine\\cards\\a\\aang-swift-savior-aang-and-la-oceans-fury.scenarios.json",
+      "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+      "scenario": "Enters: airbends up to one other creature -- none chosen, nothing exiled; never Aang itself",
+      "prefix": [
+        {
+          "step": 0,
+          "name": "Plains",
+          "ordinal": 0,
+          "added": true
+        },
+        {
+          "step": 1,
+          "name": "Island",
+          "ordinal": 0,
+          "added": true
+        },
+        {
+          "step": 2,
+          "name": "Wastes",
+          "ordinal": 0,
+          "added": true
+        }
+      ],
+      "originalFieldsPreserved": true,
+      "nativePrefixVerified": true,
+      "fullStrictPass": true,
+      "assertions": 1,
+      "eligibleForSavedEdit": true
+    },
+    {
+      "file": "game\\engine\\cards\\a\\aether-channeler.scenarios.json",
+      "card": "Aether Channeler",
+      "scenario": "Enters, first mode: a 1/1 white Bird with flying (with no other nonland permanent, the second mode is not offered)",
+      "prefix": [
+        {
+          "step": 0,
+          "name": "Island",
+          "ordinal": 0,
+          "added": true
+        },
+        {
+          "step": 1,
+          "name": "Wastes",
+          "ordinal": 0,
+          "added": true
+        },
+        {
+          "step": 2,
+          "name": "Wastes",
+          "ordinal": 1,
+          "added": true
+        }
+      ],
+      "originalFieldsPreserved": true,
+      "nativePrefixVerified": true,
+      "fullStrictPass": true,
+      "assertions": 4,
+      "eligibleForSavedEdit": true
+    },
+    {
+      "file": "game\\engine\\cards\\a\\agadeems-awakening-agadeem-the-undercrypt.scenarios.json",
+      "card": "Agadeem's Awakening // Agadeem, the Undercrypt",
+      "scenario": "X of 3: any number of creature cards with different mana values, 3 or less, return",
+      "prefix": [
+        {
+          "step": 0,
+          "name": "Swamp",
+          "ordinal": 0,
+          "added": true
+        },
+        {
+          "step": 1,
+          "name": "Swamp",
+          "ordinal": 1,
+          "added": true
+        },
+        {
+          "step": 2,
+          "name": "Swamp",
+          "ordinal": 2,
+          "added": true
+        },
+        {
+          "step": 3,
+          "name": "Wastes",
+          "ordinal": 0,
+          "added": true
+        },
+        {
+          "step": 4,
+          "name": "Wastes",
+          "ordinal": 1,
+          "added": true
+        },
+        {
+          "step": 5,
+          "name": "Wastes",
+          "ordinal": 2,
+          "added": true
+        }
+      ],
+      "originalFieldsPreserved": true,
+      "nativePrefixVerified": true,
+      "fullStrictPass": true,
+      "assertions": 2,
+      "eligibleForSavedEdit": true
+    },
+    {
+      "file": "game\\engine\\cards\\a\\akroma-angel-of-fury.scenarios.json",
+      "card": "Akroma, Angel of Fury",
+      "scenario": "Cast for {5}{R}{R}{R}: Maya's Counter can aim at it and does nothing -- it can't be countered",
+      "prefix": [
+        {
+          "step": 0,
+          "name": "Mountain",
+          "ordinal": 0,
+          "added": true
+        },
+        {
+          "step": 1,
+          "name": "Mountain",
+          "ordinal": 1,
+          "added": true
+        },
+        {
+          "step": 2,
+          "name": "Mountain",
+          "ordinal": 2,
+          "added": true
+        },
+        {
+          "step": 3,
+          "name": "Wastes",
+          "ordinal": 0,
+          "added": true
+        },
+        {
+          "step": 4,
+          "name": "Wastes",
+          "ordinal": 1,
+          "added": true
+        },
+        {
+          "step": 5,
+          "name": "Wastes",
+          "ordinal": 2,
+          "added": true
+        },
+        {
+          "step": 6,
+          "name": "Wastes",
+          "ordinal": 3,
+          "added": true
+        },
+        {
+          "step": 7,
+          "name": "Wastes",
+          "ordinal": 4,
+          "added": true
+        }
+      ],
+      "originalFieldsPreserved": true,
+      "nativePrefixVerified": true,
+      "fullStrictPass": false,
+      "fullFailure": {
+        "message": "Cast for {5}{R}{R}{R}: Maya's Counter can aim at it and does nothing -- it can't be countered: Island has 2 matching actions; select its physical source, ability, targets, cost or mana explicitly",
+        "assertion": {
+          "kind": "choice-policy"
+        }
+      },
+      "eligibleForSavedEdit": false
+    },
+    {
+      "file": "game\\engine\\cards\\a\\aether-helix.scenarios.json",
+      "card": "Aether Helix",
+      "scenario": "Any permanent, a land too: Maya's Forest returns to her hand",
+      "prefix": [
+        {
+          "step": 0,
+          "name": "Forest",
+          "ordinal": 0,
+          "added": true
+        },
+        {
+          "step": 1,
+          "name": "Island",
+          "ordinal": 0,
+          "added": true
+        },
+        {
+          "step": 2,
+          "name": "Wastes",
+          "ordinal": 0,
+          "added": true
+        },
+        {
+          "step": 3,
+          "name": "Wastes",
+          "ordinal": 1,
+          "added": true
+        },
+        {
+          "step": 4,
+          "name": "Wastes",
+          "ordinal": 2,
+          "added": true
+        }
+      ],
+      "originalFieldsPreserved": true,
+      "nativePrefixVerified": true,
+      "fullStrictPass": true,
+      "assertions": 2,
+      "eligibleForSavedEdit": true
+    },
+    {
+      "file": "game\\engine\\cards\\a\\aerial-extortionist.scenarios.json",
+      "card": "Aerial Extortionist",
+      "scenario": "Up to one: nothing chosen, nothing exiled",
+      "prefix": [
+        {
+          "step": 0,
+          "name": "Plains",
+          "ordinal": 0,
+          "added": true
+        },
+        {
+          "step": 1,
+          "name": "Plains",
+          "ordinal": 1,
+          "added": true
+        },
+        {
+          "step": 2,
+          "name": "Wastes",
+          "ordinal": 0,
+          "added": true
+        },
+        {
+          "step": 3,
+          "name": "Wastes",
+          "ordinal": 1,
+          "added": true
+        },
+        {
+          "step": 4,
+          "name": "Wastes",
+          "ordinal": 2,
+          "added": true
+        }
+      ],
+      "originalFieldsPreserved": true,
+      "nativePrefixVerified": true,
+      "fullStrictPass": false,
+      "fullFailure": {
+        "message": "Up to one: nothing chosen, nothing exiled: settle cannot answer choose-targets; script its explicit answer",
+        "assertion": {
+          "kind": "choice-policy"
+        }
+      },
+      "eligibleForSavedEdit": false
+    },
+    {
+      "file": "game\\engine\\cards\\a\\aether-channeler.scenarios.json",
+      "card": "Aether Channeler",
+      "scenario": "Enters, third mode: draw a card",
+      "prefix": [
+        {
+          "step": 0,
+          "name": "Island",
+          "ordinal": 0,
+          "added": true
+        },
+        {
+          "step": 1,
+          "name": "Wastes",
+          "ordinal": 0,
+          "added": true
+        },
+        {
+          "step": 2,
+          "name": "Wastes",
+          "ordinal": 1,
+          "added": true
+        }
+      ],
+      "originalFieldsPreserved": true,
+      "nativePrefixVerified": true,
+      "fullStrictPass": true,
+      "assertions": 1,
+      "eligibleForSavedEdit": true
+    }
+  ],
+  "nativeRepeatedSourceRefusal": {
+    "scenario": "It enters and connives: a card drawn, the Bear discarded, a +1/+1 counter",
+    "message": "It enters and connives: a card drawn, the Bear discarded, a +1/+1 counter: Rob is not offered activate-mana Wastes",
+    "assertion": {
+      "kind": "action-offer",
+      "card": "Wastes",
+      "action": "activate-mana"
+    }
+  },
+  "eligible": 8,
+  "deferred": 2
+}

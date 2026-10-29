@@ -1,0 +1,325 @@
+{
+  "scope": "only approved eight fully passing pilot scenarios",
+  "beforeSource": "644d844bab026329b08028988f515074bd2da7aa",
+  "scenarioFiles": 5,
+  "editedScenarios": 8,
+  "newSourceFields": 30,
+  "allOtherOriginalFieldsPreserved": true,
+  "files": [
+    {
+      "file": "game\\engine\\cards\\a\\a-i-m-scientists.scenarios.json",
+      "originalSha256": "bdd074f9c5a30b817abb2c92af07d0585abbe1fb48dd8d5518820b4f14361486",
+      "afterSha256": "0bc7456eb59601b7a1b124d3565c60064abb6a98f14fba114df738a123ff2acc",
+      "allOriginalFieldsPreserved": true,
+      "originalScenarioCount": 3,
+      "edits": [
+        {
+          "scenarioIndex": 0,
+          "scenario": "It enters and connives: a card drawn, the Bear discarded, a +1/+1 counter",
+          "step": 0,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
+        },
+        {
+          "scenarioIndex": 0,
+          "scenario": "It enters and connives: a card drawn, the Bear discarded, a +1/+1 counter",
+          "step": 1,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
+        },
+        {
+          "scenarioIndex": 0,
+          "scenario": "It enters and connives: a card drawn, the Bear discarded, a +1/+1 counter",
+          "step": 2,
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
+        },
+        {
+          "scenarioIndex": 0,
+          "scenario": "It enters and connives: a card drawn, the Bear discarded, a +1/+1 counter",
+          "step": 3,
+          "source": {
+            "zone": "battlefield",
+            "index": 2
+          }
+        },
+        {
+          "scenarioIndex": 1,
+          "scenario": "A land discarded: no counter",
+          "step": 0,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
+        },
+        {
+          "scenarioIndex": 1,
+          "scenario": "A land discarded: no counter",
+          "step": 1,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
+        },
+        {
+          "scenarioIndex": 1,
+          "scenario": "A land discarded: no counter",
+          "step": 2,
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
+        },
+        {
+          "scenarioIndex": 1,
+          "scenario": "A land discarded: no counter",
+          "step": 3,
+          "source": {
+            "zone": "battlefield",
+            "index": 2
+          }
+        },
+        {
+          "scenarioIndex": 2,
+          "scenario": "Basic landcycling {2}: discarded, and a Forest searched for into the hand",
+          "step": 0,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
+        },
+        {
+          "scenarioIndex": 2,
+          "scenario": "Basic landcycling {2}: discarded, and a Forest searched for into the hand",
+          "step": 1,
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
+        }
+      ]
+    },
+    {
+      "file": "game\\engine\\cards\\a\\aang-swift-savior-aang-and-la-oceans-fury.scenarios.json",
+      "originalSha256": "79980dec93e85e3678f4609adda8c01d006ae877fd35aa5fd96f56d10f08de5d",
+      "afterSha256": "b72bab1c4cc445eb2f9af54650e8b36874816153c49ef11ae46d15f7e5d6ee3b",
+      "allOriginalFieldsPreserved": true,
+      "originalScenarioCount": 3,
+      "edits": [
+        {
+          "scenarioIndex": 1,
+          "scenario": "Enters: airbends up to one other creature -- none chosen, nothing exiled; never Aang itself",
+          "step": 0,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
+        },
+        {
+          "scenarioIndex": 1,
+          "scenario": "Enters: airbends up to one other creature -- none chosen, nothing exiled; never Aang itself",
+          "step": 1,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
+        },
+        {
+          "scenarioIndex": 1,
+          "scenario": "Enters: airbends up to one other creature -- none chosen, nothing exiled; never Aang itself",
+          "step": 2,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
+        }
+      ]
+    },
+    {
+      "file": "game\\engine\\cards\\a\\aether-channeler.scenarios.json",
+      "originalSha256": "69925ddbb9cf938d1d6625109feb8ebbc1a221349891da47866e5ef7ead05b0b",
+      "afterSha256": "803a6ca53832dbd696a4bb586b5bf56adf9a8ac4ae82a8f97c40d70cc2904217",
+      "allOriginalFieldsPreserved": true,
+      "originalScenarioCount": 3,
+      "edits": [
+        {
+          "scenarioIndex": 0,
+          "scenario": "Enters, first mode: a 1/1 white Bird with flying (with no other nonland permanent, the second mode is not offered)",
+          "step": 0,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
+        },
+        {
+          "scenarioIndex": 0,
+          "scenario": "Enters, first mode: a 1/1 white Bird with flying (with no other nonland permanent, the second mode is not offered)",
+          "step": 1,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
+        },
+        {
+          "scenarioIndex": 0,
+          "scenario": "Enters, first mode: a 1/1 white Bird with flying (with no other nonland permanent, the second mode is not offered)",
+          "step": 2,
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
+        },
+        {
+          "scenarioIndex": 2,
+          "scenario": "Enters, third mode: draw a card",
+          "step": 0,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
+        },
+        {
+          "scenarioIndex": 2,
+          "scenario": "Enters, third mode: draw a card",
+          "step": 1,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
+        },
+        {
+          "scenarioIndex": 2,
+          "scenario": "Enters, third mode: draw a card",
+          "step": 2,
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
+        }
+      ]
+    },
+    {
+      "file": "game\\engine\\cards\\a\\aether-helix.scenarios.json",
+      "originalSha256": "5ad960dfa5603b54b843fa5fb524315460d62d51402d1e0b31398fd4ac993401",
+      "afterSha256": "e4d9664a9fe87854ad919ec83f09fd00223825405530369c4d22e648bb631f39",
+      "allOriginalFieldsPreserved": true,
+      "originalScenarioCount": 3,
+      "edits": [
+        {
+          "scenarioIndex": 1,
+          "scenario": "Any permanent, a land too: Maya's Forest returns to her hand",
+          "step": 0,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
+        },
+        {
+          "scenarioIndex": 1,
+          "scenario": "Any permanent, a land too: Maya's Forest returns to her hand",
+          "step": 1,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
+        },
+        {
+          "scenarioIndex": 1,
+          "scenario": "Any permanent, a land too: Maya's Forest returns to her hand",
+          "step": 2,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
+        },
+        {
+          "scenarioIndex": 1,
+          "scenario": "Any permanent, a land too: Maya's Forest returns to her hand",
+          "step": 3,
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
+        },
+        {
+          "scenarioIndex": 1,
+          "scenario": "Any permanent, a land too: Maya's Forest returns to her hand",
+          "step": 4,
+          "source": {
+            "zone": "battlefield",
+            "index": 2
+          }
+        }
+      ]
+    },
+    {
+      "file": "game\\engine\\cards\\a\\agadeems-awakening-agadeem-the-undercrypt.scenarios.json",
+      "originalSha256": "da1eac5966fc8a1681cf1e5c47bf2467159750a0cef918931d97198a2db7b550",
+      "afterSha256": "fe90debfbc962ec577df17e6863516dd5c340c0a3d2e86ea34d8a6b06b203aa9",
+      "allOriginalFieldsPreserved": true,
+      "originalScenarioCount": 5,
+      "edits": [
+        {
+          "scenarioIndex": 0,
+          "scenario": "X of 3: any number of creature cards with different mana values, 3 or less, return",
+          "step": 0,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
+        },
+        {
+          "scenarioIndex": 0,
+          "scenario": "X of 3: any number of creature cards with different mana values, 3 or less, return",
+          "step": 1,
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
+        },
+        {
+          "scenarioIndex": 0,
+          "scenario": "X of 3: any number of creature cards with different mana values, 3 or less, return",
+          "step": 2,
+          "source": {
+            "zone": "battlefield",
+            "index": 2
+          }
+        },
+        {
+          "scenarioIndex": 0,
+          "scenario": "X of 3: any number of creature cards with different mana values, 3 or less, return",
+          "step": 3,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
+        },
+        {
+          "scenarioIndex": 0,
+          "scenario": "X of 3: any number of creature cards with different mana values, 3 or less, return",
+          "step": 4,
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
+        },
+        {
+          "scenarioIndex": 0,
+          "scenario": "X of 3: any number of creature cards with different mana values, 3 or less, return",
+          "step": 5,
+          "source": {
+            "zone": "battlefield",
+            "index": 2
+          }
+        }
+      ]
+    }
+  ]
+}

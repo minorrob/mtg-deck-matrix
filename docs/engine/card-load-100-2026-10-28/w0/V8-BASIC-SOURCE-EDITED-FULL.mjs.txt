@@ -1,0 +1,19 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {pathToFileURL} from 'node:url';
+const root=pathToFileURL(process.cwd()+'/');
+const {loadCardIndex}=await import(new URL('game/tools/engine-cards.mjs',root));
+const {runScenario}=await import(new URL('game/engine/cards/scenario.mjs',root));
+const pilot=JSON.parse(fs.readFileSync('../scratch/v8-basic-source-pilot.json','utf8').replace(/^\uFEFF/,'')),cards=loadCardIndex();
+const results=[];
+for(const approved of pilot.results.filter(entry=>entry.eligibleForSavedEdit)) {
+  const data=JSON.parse(fs.readFileSync(approved.file,'utf8'));
+  const scenario=data.scenarios.find(s=>s.name===approved.scenario);assert(scenario);
+  const original=structuredClone(scenario);
+  const actual=runScenario(scenario,name=>cards.definition(name),data.fixtures??{},{explicitChoices:true});
+  assert.deepEqual(scenario,original);
+  results.push({card:data.card,scenario:scenario.name,fullStrictPass:true,assertions:actual.passed.length});
+}
+assert.equal(results.length,8);
+console.log(JSON.stringify({scope:'all eight edited full saved scenarios with all original assertions',results,
+  fullStrictPassed:results.length,assertions:results.reduce((sum,r)=>sum+r.assertions,0)},null,2));

@@ -1,0 +1,548 @@
+{
+  "schema": "V8BasicSourceReferenceRepair@1",
+  "scope": "selected diagnostic only; no canonical/card completion or family credit",
+  "before": {
+    "source": {
+      "revision": "644d844bab026329b08028988f515074bd2da7aa",
+      "tree": "f98b8dbd6d17492b77753199b644e74e989d0a05",
+      "dirty": false,
+      "inputs": {
+        "scripts": "bf0bbfb91b44226c12060b1833a50d1901a4bf97873240f3efda152442d52a2d",
+        "scenarios": "05553ba4657e336c67ad5ff6e097f81293d1ce9650af4605dd79a07f48d0c23b"
+      }
+    },
+    "scope": {
+      "directory": false,
+      "canonical": false,
+      "cardDirectory": null,
+      "selected": [
+        "A.I.M. Scientists",
+        "Aang, Swift Savior // Aang and La, Ocean's Fury",
+        "Aether Channeler",
+        "Agadeem's Awakening // Agadeem, the Undercrypt",
+        "Aether Helix"
+      ],
+      "cardRoot": "C:\\Users\\robmi\\CrankMagic\\worktrees\\load100\\w0-v8-policies\\game\\engine\\cards"
+    },
+    "measurement": {
+      "complete": true,
+      "counterfactual": true,
+      "choicePolicy": "explicit",
+      "definitions": 5,
+      "scenarios": 17,
+      "problems": 0,
+      "failed": 14
+    },
+    "summary": {
+      "final": 5,
+      "exercised": 0,
+      "neverExercised": [
+        "A.I.M. Scientists",
+        "Aang, Swift Savior // Aang and La, Ocean's Fury",
+        "Aether Channeler",
+        "Aether Helix",
+        "Agadeem's Awakening // Agadeem, the Undercrypt"
+      ],
+      "abilities": 14,
+      "reached": 0,
+      "scenarioReached": 0,
+      "counterfactualReached": 0,
+      "unreached": [
+        {
+          "card": "A.I.M. Scientists",
+          "path": "abilities[0]",
+          "kind": "triggered",
+          "reason": "no successful resolution observed"
+        },
+        {
+          "card": "A.I.M. Scientists",
+          "path": "abilities[1]",
+          "kind": "activated",
+          "reason": "no successful resolution observed"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "abilities[0]",
+          "kind": "keyword",
+          "reason": "no unambiguous application event observed"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "abilities[1]",
+          "kind": "keyword",
+          "reason": "no unambiguous application event observed"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "abilities[2]",
+          "kind": "triggered",
+          "reason": "no successful resolution observed"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "abilities[3]",
+          "kind": "activated",
+          "reason": "no successful resolution observed"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "back.abilities[0]",
+          "kind": "keyword",
+          "reason": "no unambiguous application event observed"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "back.abilities[1]",
+          "kind": "keyword",
+          "reason": "no unambiguous application event observed"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "back.abilities[2]",
+          "kind": "triggered",
+          "reason": "no successful resolution observed"
+        },
+        {
+          "card": "Aether Channeler",
+          "path": "abilities[0]",
+          "kind": "triggered",
+          "reason": "no successful resolution observed"
+        },
+        {
+          "card": "Aether Helix",
+          "path": "abilities[0]",
+          "kind": "spell",
+          "reason": "no successful resolution observed"
+        },
+        {
+          "card": "Agadeem's Awakening // Agadeem, the Undercrypt",
+          "path": "abilities[0]",
+          "kind": "spell",
+          "reason": "no successful resolution observed"
+        },
+        {
+          "card": "Agadeem's Awakening // Agadeem, the Undercrypt",
+          "path": "back.abilities[0]",
+          "kind": "replacement",
+          "reason": "no unambiguous application event observed"
+        },
+        {
+          "card": "Agadeem's Awakening // Agadeem, the Undercrypt",
+          "path": "back.abilities[1]",
+          "kind": "activated",
+          "reason": "no unambiguous application event observed"
+        }
+      ],
+      "scenarioUnreached": [
+        {
+          "card": "A.I.M. Scientists",
+          "path": "abilities[0]",
+          "kind": "triggered",
+          "reason": "no passing scenario has execution or runtime-removal behavior proof"
+        },
+        {
+          "card": "A.I.M. Scientists",
+          "path": "abilities[1]",
+          "kind": "activated",
+          "reason": "no passing scenario has execution or runtime-removal behavior proof"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "abilities[0]",
+          "kind": "keyword",
+          "reason": "no passing scenario has execution or runtime-removal behavior proof"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "abilities[1]",
+          "kind": "keyword",
+          "reason": "no passing scenario has execution or runtime-removal behavior proof"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "abilities[2]",
+          "kind": "triggered",
+          "reason": "no passing scenario has execution or runtime-removal behavior proof"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "abilities[3]",
+          "kind": "activated",
+          "reason": "no passing scenario has execution or runtime-removal behavior proof"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "back.abilities[0]",
+          "kind": "keyword",
+          "reason": "no passing scenario has execution or runtime-removal behavior proof"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "back.abilities[1]",
+          "kind": "keyword",
+          "reason": "no passing scenario has execution or runtime-removal behavior proof"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "back.abilities[2]",
+          "kind": "triggered",
+          "reason": "no passing scenario has execution or runtime-removal behavior proof"
+        },
+        {
+          "card": "Aether Channeler",
+          "path": "abilities[0]",
+          "kind": "triggered",
+          "reason": "no passing scenario has execution or runtime-removal behavior proof"
+        },
+        {
+          "card": "Aether Helix",
+          "path": "abilities[0]",
+          "kind": "spell",
+          "reason": "no passing scenario has execution or runtime-removal behavior proof"
+        },
+        {
+          "card": "Agadeem's Awakening // Agadeem, the Undercrypt",
+          "path": "abilities[0]",
+          "kind": "spell",
+          "reason": "no passing scenario has execution or runtime-removal behavior proof"
+        },
+        {
+          "card": "Agadeem's Awakening // Agadeem, the Undercrypt",
+          "path": "back.abilities[0]",
+          "kind": "replacement",
+          "reason": "no passing scenario has execution or runtime-removal behavior proof"
+        },
+        {
+          "card": "Agadeem's Awakening // Agadeem, the Undercrypt",
+          "path": "back.abilities[1]",
+          "kind": "activated",
+          "reason": "no passing scenario has execution or runtime-removal behavior proof"
+        }
+      ],
+      "complete": false,
+      "scenarioComplete": false
+    },
+    "checkerExit": 1
+  },
+  "after": {
+    "source": {
+      "revision": "102f55f512c930865674bc2653055e15555ee734",
+      "tree": "f4c8df6d0dbedac997400827a6f404402809877f",
+      "dirty": false,
+      "inputs": {
+        "scripts": "bf0bbfb91b44226c12060b1833a50d1901a4bf97873240f3efda152442d52a2d",
+        "scenarios": "fe5d92123bc69f7df654a6ceada54c90505b2549dfd1553105f4ce4fff08465b"
+      }
+    },
+    "scope": {
+      "directory": false,
+      "canonical": false,
+      "cardDirectory": null,
+      "selected": [
+        "A.I.M. Scientists",
+        "Aang, Swift Savior // Aang and La, Ocean's Fury",
+        "Aether Channeler",
+        "Agadeem's Awakening // Agadeem, the Undercrypt",
+        "Aether Helix"
+      ],
+      "cardRoot": "C:\\Users\\robmi\\CrankMagic\\worktrees\\load100\\w0-v8-policies\\game\\engine\\cards"
+    },
+    "measurement": {
+      "complete": true,
+      "counterfactual": true,
+      "choicePolicy": "explicit",
+      "definitions": 5,
+      "scenarios": 17,
+      "problems": 0,
+      "failed": 7
+    },
+    "summary": {
+      "final": 5,
+      "exercised": 0,
+      "neverExercised": [
+        "A.I.M. Scientists",
+        "Aang, Swift Savior // Aang and La, Ocean's Fury",
+        "Aether Channeler",
+        "Aether Helix",
+        "Agadeem's Awakening // Agadeem, the Undercrypt"
+      ],
+      "abilities": 14,
+      "reached": 4,
+      "scenarioReached": 4,
+      "counterfactualReached": 0,
+      "unreached": [
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "abilities[0]",
+          "kind": "keyword",
+          "reason": "no unambiguous application event observed"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "abilities[1]",
+          "kind": "keyword",
+          "reason": "no unambiguous application event observed"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "abilities[2]",
+          "kind": "triggered",
+          "reason": "no successful resolution observed"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "abilities[3]",
+          "kind": "activated",
+          "reason": "no successful resolution observed"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "back.abilities[0]",
+          "kind": "keyword",
+          "reason": "no unambiguous application event observed"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "back.abilities[1]",
+          "kind": "keyword",
+          "reason": "no unambiguous application event observed"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "back.abilities[2]",
+          "kind": "triggered",
+          "reason": "no successful resolution observed"
+        },
+        {
+          "card": "Agadeem's Awakening // Agadeem, the Undercrypt",
+          "path": "abilities[0]",
+          "kind": "spell",
+          "reason": "no successful resolution observed"
+        },
+        {
+          "card": "Agadeem's Awakening // Agadeem, the Undercrypt",
+          "path": "back.abilities[0]",
+          "kind": "replacement",
+          "reason": "no unambiguous application event observed"
+        },
+        {
+          "card": "Agadeem's Awakening // Agadeem, the Undercrypt",
+          "path": "back.abilities[1]",
+          "kind": "activated",
+          "reason": "no unambiguous application event observed"
+        }
+      ],
+      "scenarioUnreached": [
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "abilities[0]",
+          "kind": "keyword",
+          "reason": "no passing scenario has execution or runtime-removal behavior proof"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "abilities[1]",
+          "kind": "keyword",
+          "reason": "no passing scenario has execution or runtime-removal behavior proof"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "abilities[2]",
+          "kind": "triggered",
+          "reason": "no passing scenario has execution or runtime-removal behavior proof"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "abilities[3]",
+          "kind": "activated",
+          "reason": "no passing scenario has execution or runtime-removal behavior proof"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "back.abilities[0]",
+          "kind": "keyword",
+          "reason": "no passing scenario has execution or runtime-removal behavior proof"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "back.abilities[1]",
+          "kind": "keyword",
+          "reason": "no passing scenario has execution or runtime-removal behavior proof"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "back.abilities[2]",
+          "kind": "triggered",
+          "reason": "no passing scenario has execution or runtime-removal behavior proof"
+        },
+        {
+          "card": "Agadeem's Awakening // Agadeem, the Undercrypt",
+          "path": "abilities[0]",
+          "kind": "spell",
+          "reason": "no passing scenario has execution or runtime-removal behavior proof"
+        },
+        {
+          "card": "Agadeem's Awakening // Agadeem, the Undercrypt",
+          "path": "back.abilities[0]",
+          "kind": "replacement",
+          "reason": "no passing scenario has execution or runtime-removal behavior proof"
+        },
+        {
+          "card": "Agadeem's Awakening // Agadeem, the Undercrypt",
+          "path": "back.abilities[1]",
+          "kind": "activated",
+          "reason": "no passing scenario has execution or runtime-removal behavior proof"
+        }
+      ],
+      "complete": false,
+      "scenarioComplete": false
+    },
+    "checkerExit": 1,
+    "canonicalVerifierExit": 1
+  },
+  "repair": {
+    "scenarioFiles": 5,
+    "editedScenarios": 8,
+    "newLiteralSourceFields": 30,
+    "everyOriginalFieldPreserved": true,
+    "all17OriginalScenariosPresent": true,
+    "fullEditedStrictScenariosPassed": 8,
+    "originalAssertionsPassed": 21,
+    "oneEditedAangScenarioAlreadyPassedBefore": true
+  },
+  "originalPilot": {
+    "scenarios": 10,
+    "nativeTapsVerified": 43,
+    "fullStrictPassed": 8,
+    "ineligible": 2,
+    "originalResultsRetained": true,
+    "deferred": [
+      "Akroma: later ambiguous opponent Island",
+      "Aerial Extortionist: original settle cannot answer choose-targets"
+    ]
+  },
+  "additiveControl": {
+    "diagnosticCloneNotAnotherSavedOriginal": true,
+    "existingLiteralPreservedByteExact": true,
+    "inconsistentAndDifferingLiteralExcludeWholeCandidate": true,
+    "fullOriginalAssertionsPassed": 5,
+    "repeatedIndexNativeRefusal": "action-offer"
+  },
+  "privacyScan": {
+    "passed": true,
+    "categories": "same eight credential/personal-address patterns as local-ci.sh"
+  },
+  "cardDefinitionChanges": 0,
+  "ruleOrHelperOrClassifierChanges": 0,
+  "promotions": 0,
+  "canonicalAcceptance": false,
+  "expandedToInventoryBatch": false,
+  "archives": [
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/v8-basic-source-before-644d844b.json.gz",
+      "rawBytes": 21522,
+      "rawSha256": "1de2a2df18f626ce0d0e31579c4a03114efec9ddec36a67764cf6cc77692da8f",
+      "storedBytes": 2508,
+      "storedSha256": "3607ce66c31eb8c0564d2c86a7d55813c207c80aecc314d2e0089ee161b6321b",
+      "privacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/v8-basic-source-before-644d844b.log",
+      "rawBytes": 3250,
+      "rawSha256": "196f33b69549da159674250df7f261b108aa73f123573d0f9beacf5a6b2c9415",
+      "storedBytes": 3250,
+      "storedSha256": "196f33b69549da159674250df7f261b108aa73f123573d0f9beacf5a6b2c9415",
+      "privacyScanPassed": true
+    },
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/v8-basic-source-after-102f55f5.json.gz",
+      "rawBytes": 22542,
+      "rawSha256": "7a963fa9a871e399a2215fa9b09b598ecdbd9d41eaac51629c977fade27d3bc2",
+      "storedBytes": 2599,
+      "storedSha256": "8f20c039d72f98f1e319d4af18e4e673af874f454d2aae4cd0a2b9730d8dd79e",
+      "privacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/v8-basic-source-after-102f55f5.log",
+      "rawBytes": 1863,
+      "rawSha256": "e619fa63bd5d529066429a579a27dd7dfef5074c6b99e361b10826bd450d2f21",
+      "storedBytes": 1863,
+      "storedSha256": "e619fa63bd5d529066429a579a27dd7dfef5074c6b99e361b10826bd450d2f21",
+      "privacyScanPassed": true
+    },
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/v8-basic-source-pilot.json",
+      "rawBytes": 10696,
+      "rawSha256": "dacf4e0291c8866bf9b4e45276abef171fb25f509ddbf8c98ba5af56f474b8af",
+      "storedBytes": 10696,
+      "storedSha256": "dacf4e0291c8866bf9b4e45276abef171fb25f509ddbf8c98ba5af56f474b8af",
+      "privacyScanPassed": true
+    },
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/v8-basic-source-preservation-control.json",
+      "rawBytes": 424,
+      "rawSha256": "a626567c3a21b5705ff4c571fb09765eb55de8106ddd39c60c0303363325a0b0",
+      "storedBytes": 424,
+      "storedSha256": "a626567c3a21b5705ff4c571fb09765eb55de8106ddd39c60c0303363325a0b0",
+      "privacyScanPassed": true
+    },
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/v8-basic-source-preservation-native.json",
+      "rawBytes": 220,
+      "rawSha256": "3ef285924a35af308b2c8d7fa30186e9d84317de0dd8810404582b1c06b5ee13",
+      "storedBytes": 220,
+      "storedSha256": "3ef285924a35af308b2c8d7fa30186e9d84317de0dd8810404582b1c06b5ee13",
+      "privacyScanPassed": true
+    },
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/v8-basic-source-edited-full.json",
+      "rawBytes": 1783,
+      "rawSha256": "7feac0b993ea2c3dbacceec0451d27c44682e9fa99168e869fa1fc83ff261e17",
+      "storedBytes": 1783,
+      "storedSha256": "7feac0b993ea2c3dbacceec0451d27c44682e9fa99168e869fa1fc83ff261e17",
+      "privacyScanPassed": true
+    },
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/v8-basic-source-repair-diff.json",
+      "rawBytes": 10216,
+      "rawSha256": "f5f7fca51871c519aa79bc4ec59e13f0eb79497abc6de66fa1e14ca40693c027",
+      "storedBytes": 10216,
+      "storedSha256": "f5f7fca51871c519aa79bc4ec59e13f0eb79497abc6de66fa1e14ca40693c027",
+      "privacyScanPassed": true
+    },
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/v8-basic-source-after-verifier.log",
+      "rawBytes": 463,
+      "rawSha256": "7e62b1fe1434c95f91015caaf2b9e1ad17dcc9372c5f62094a933b7bbee42958",
+      "storedBytes": 463,
+      "storedSha256": "7e62b1fe1434c95f91015caaf2b9e1ad17dcc9372c5f62094a933b7bbee42958",
+      "privacyScanPassed": true
+    },
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/V8-BASIC-SOURCE-PILOT.mjs.txt",
+      "bytes": 8164,
+      "sha256": "2799816e4c6dc0f02d06a05d974bb77a1bfea0e3618669673260f84cba487034",
+      "privacyScanPassed": true
+    },
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/V8-BASIC-SOURCE-REPAIR.py.txt",
+      "bytes": 6139,
+      "sha256": "fca3fd4cefef0d167149661881dfd4d8e4c6991852f1216b4898ae719941de79",
+      "privacyScanPassed": true
+    },
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/V8-BASIC-SOURCE-PRESERVATION.mjs.txt",
+      "bytes": 891,
+      "sha256": "4f6e23ef2f7944b6aed9adb400401b85e9f777284ef6530a0bea98db430a907c",
+      "privacyScanPassed": true
+    },
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/V8-BASIC-SOURCE-EDITED-FULL.mjs.txt",
+      "bytes": 1243,
+      "sha256": "43f30638b5a0867bf5b3de592737a41dc72d50932038204b4621bdaac8cde8d2",
+      "privacyScanPassed": true
+    }
+  ]
+}

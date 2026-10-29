@@ -1,0 +1,83 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import {pathToFileURL} from 'node:url';
+const root=pathToFileURL(process.cwd()+'/');
+const {loadCardIndex}=await import(new URL('game/tools/engine-cards.mjs',root));
+const {runScenario}=await import(new URL('game/engine/cards/scenario.mjs',root));
+const {abilitiesOf,controllerOf}=await import(new URL('game/engine/rules/layers.mjs',root));
+const {legalActions}=await import(new URL('game/engine/rules/actions.mjs',root));
+const {gameOver}=await import(new URL('game/engine/rules/sba.mjs',root));
+const index=loadCardIndex(),basic={Wastes:'C',Plains:'W',Island:'U',Swamp:'B',Mountain:'R',Forest:'G'};
+const clone=x=>structuredClone(x),same=(a,b)=>assert.deepEqual(a,b),fields=e=>e.data?.fields??e.fields??{};
+const files=dir=>fs.readdirSync(dir,{withFileTypes:true}).flatMap(e=>e.isDirectory()?files(path.join(dir,e.name)):e.name.endsWith('.scenarios.json')?[path.join(dir,e.name)]:[]);
+const candidates=[];
+for(const file of files('game/engine/cards')) {
+  const data=JSON.parse(fs.readFileSync(file,'utf8').replace(/^\uFEFF/,''));
+  for(const original of data.scenarios??[]) {
+    if(JSON.stringify(original.at??{turn:1,phase:'MAIN1'})!==JSON.stringify({turn:1,phase:'MAIN1'}))continue;
+    const setup=original.setup??[],fixtures=data.fixtures??{};
+    if(setup.some(e=>e.zone==='command'||e.zone==='battlefield'&&e.cards.some(name=>!Object.hasOwn(basic,name)||Object.hasOwn(fixtures,name))))continue;
+    const setupCounts={};for(const e of setup)if(e.zone==='battlefield'&&e.seat===0)for(const name of e.cards)setupCounts[name]=(setupCounts[name]??0)+1;
+    const changed=clone(original),used={},prefix=[];let reject=false;
+    for(let i=0;i<(original.steps??[]).length;i++) {
+      const step=original.steps[i];
+      if(!Object.hasOwn(basic,step.tap)||(step.seat??0)!==0||Object.keys(step).some(k=>!['tap','seat','source','mana'].includes(k)))break;
+      const ordinal=used[step.tap]??0,source={zone:'battlefield',index:ordinal};
+      if(ordinal>=(setupCounts[step.tap]??0)||step.source&&JSON.stringify(step.source)!==JSON.stringify(source)){reject=true;break;}
+      if(!Object.hasOwn(step,'source'))changed.steps[i].source=source;
+      prefix.push({step:i,name:step.tap,ordinal,added:!Object.hasOwn(step,'source')});used[step.tap]=ordinal+1;
+    }
+    if(reject||!prefix.some(p=>p.added))continue;
+    const roundtrip=clone(changed);for(const p of prefix)if(p.added)delete roundtrip.steps[p.step].source;same(roundtrip,original);
+    candidates.push({file,card:data.card,fixtures,original,changed,prefix});
+  }
+}
+const selected=[],take=predicate=>{const found=candidates.find(c=>!selected.includes(c)&&predicate(c));if(found)selected.push(found);};
+take(c=>c.prefix.filter(p=>p.name==='Wastes').length>=2);
+take(c=>new Set(c.prefix.map(p=>p.name)).size>=2);
+take(c=>c.prefix.some(p=>!p.added));
+for(const name of Object.keys(basic))take(c=>c.prefix.some(p=>p.name===name));
+while(selected.length<10)take(()=>true);
+assert.equal(selected.length,10);
+const run=(c,steps,full=false)=>runScenario(full?c.changed:{...c.changed,steps:c.changed.steps.slice(0,steps),expect:[]},name=>index.definition(name),c.fixtures,{explicitChoices:true});
+function clear(s){assert.equal(s.turn,1);assert.equal(s.phase,'MAIN1');assert.equal(s.activePlayer,0);assert.equal(s.priorityPlayer,0);assert(!gameOver(s));assert.equal(s.stack.length,0);assert(!s.awaiting&&!s.ruleOperation&&!s.resolving&&!s.pendingTriggers?.length);}
+const results=[];
+for(const c of selected) {
+  const item={file:c.file,card:c.card,scenario:c.original.name,prefix:c.prefix,originalFieldsPreserved:true};
+  try {
+    const initial=run(c,0);clear(initial.state);assert.equal(initial.state.effects?.length??0,0);
+    const ordered=[...(c.original.setup??[]).filter(e=>!e.sick),...(c.original.setup??[]).filter(e=>e.sick)]
+      .filter(e=>e.zone==='battlefield').flatMap(e=>e.cards.map(card=>({card,seat:e.seat})));
+    const ids=[...initial.state.zones.battlefield];assert.equal(ids.length,ordered.length);
+    ids.forEach((id,i)=>{const o=initial.state.objects[id];assert.equal(o.card,ordered[i].card);assert.equal(o.owner,ordered[i].seat);assert.equal(o.controller,ordered[i].seat);assert.equal(controllerOf(initial.state,id),ordered[i].seat);assert(!o.tapped);});
+    for(const p of c.prefix) {
+      const before=run(c,p.step),after=run(c,p.step+1);clear(before.state);clear(after.state);
+      same(before.state.zones.battlefield,ids);same(after.state.zones.battlefield,ids);
+      const authored=ids.filter(id=>initial.state.objects[id].card===p.name&&initial.state.objects[id].controller===0)[p.ordinal];
+      assert.notEqual(authored,undefined);const source=before.state.objects[authored];assert(!source.tapped);assert.equal(controllerOf(before.state,authored),0);
+      const physical=before.state.zones.battlefield.filter(id=>before.state.objects[id].card===p.name&&controllerOf(before.state,id)===0)[p.ordinal];assert.equal(physical,authored);
+      const actions=legalActions(before.state,0).filter(a=>a.kind==='activate-mana'&&a.objectId===authored&&a.label===p.name);assert.equal(actions.length,1);
+      const action=actions[0],mana={[basic[p.name]]:1};same(action.mana,mana);if(c.changed.steps[p.step].mana)same(c.changed.steps[p.step].mana,mana);
+      assert(Object.keys(action).every(k=>['kind','objectId','abilityId','label','mana'].includes(k)));
+      const ability=abilitiesOf(before.state,authored).find(a=>a.id===action.abilityId);assert(ability);assert.equal(ability.kind,'mana');assert.equal(ability.tapSelf,true);same(ability.produces,mana);
+      assert(Object.keys(ability).every(k=>['id','kind','text','tapSelf','produces'].includes(k)));
+      const delta=after.events.slice(before.events.length);same(delta.map(e=>e.kind),['GameEventCardTapped','GameEventManaPool']);
+      assert.equal(fields(delta[0]).card.cardId,authored);assert.equal(fields(delta[0]).tapped,true);assert.equal(fields(delta[1]).source.cardId,authored);assert.equal(fields(delta[1]).player.playerId,0);same(fields(delta[1]).produced,mana);
+      same(after.state.objects[authored],{...source,tapped:true});
+      for(const id of Object.keys(before.state.objects))if(Number(id)!==authored)same(after.state.objects[id],before.state.objects[id]);
+      const pool={...before.state.players[0].manaPool};pool[basic[p.name]]=(pool[basic[p.name]]??0)+1;same(after.state.players[0].manaPool,pool);
+      before.state.players.forEach((player,i)=>{assert.equal(after.state.players[i].life,player.life);if(i)same(after.state.players[i].manaPool,player.manaPool);});
+    }
+    item.nativePrefixVerified=true;
+    try{const full=run(c,null,true);item.fullStrictPass=true;item.assertions=full.passed.length;}catch(error){item.fullStrictPass=false;item.fullFailure={message:error.message,assertion:error.scenarioAssertion??null};}
+  }catch(error){item.nativePrefixVerified=false;item.prefixFailure={message:error.message,assertion:error.scenarioAssertion??null};}
+  item.eligibleForSavedEdit=item.nativePrefixVerified===true&&item.fullStrictPass===true;
+  results.push(item);
+}
+const duplicate=selected.find(c=>c.prefix.some(p=>p.ordinal===1));assert(duplicate);
+const repeat=duplicate.prefix.find(p=>p.ordinal===1),refused=clone(duplicate.changed);refused.steps[repeat.step].source={zone:'battlefield',index:0};refused.steps=refused.steps.slice(0,repeat.step+1);refused.expect=[];
+let refusal;try{runScenario(refused,name=>index.definition(name),duplicate.fixtures,{explicitChoices:true});throw new Error('repeated physical source was accepted');}catch(error){assert(!error.message.includes('repeated physical source was accepted'));refusal={scenario:duplicate.original.name,message:error.message,assertion:error.scenarioAssertion??null};assert(error.scenarioAssertion);}
+console.log(JSON.stringify({scope:'scratch10 only; no saved files, definitions, runner or gates edited',source:process.argv[2]??null,candidates:candidates.length,
+  results,nativeRepeatedSourceRefusal:refusal,eligible:results.filter(r=>r.eligibleForSavedEdit).length,
+  deferred:results.filter(r=>!r.eligibleForSavedEdit).length},null,2));
