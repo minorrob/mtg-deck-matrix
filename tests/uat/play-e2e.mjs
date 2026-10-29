@@ -310,7 +310,7 @@ try {
       await createGame(page, BASE, {host: "Rob", humans: [{name: "Newcomer"}], ai: [{name: "Bot"}]}, "#table");
       await page.locator(".cm-cloud-table .cm-lobby-seat").nth(2).waitFor({timeout: 30000});
       const tableId = (/id=([^&]+)/.exec(new URL(page.url()).hash) || [])[1], turl = `/api/tables/${tableId}`;
-      await page.locator(`.cm-lobby-seat[data-seat="1"]`).getByRole("button", {name: /^Invite$/}).click();
+      await page.locator(`.cm-lobby-seat[data-seat="1"]`).getByRole("button", {name: /^Invite a player$/}).click();
       const input = page.locator("#cm-dialog[open] #cm-table-link");
       await until("the invitation link", async () => Boolean(await input.inputValue().catch(() => "")), 15000);
       const link = new URL(await input.inputValue());
@@ -340,16 +340,25 @@ try {
       await until("the dialog's known counts", async () => newcomer.locator("#cm-dialog [data-known-for]").evaluateAll((els) => els.length > 0 && els.every((el) => el.dataset.ok !== "pending")), 30000);
       const known = Object.fromEntries(await rows.evaluateAll((els) => els.map((el) => [el.querySelector("strong").textContent.trim(), el.querySelector("[data-known-for]").dataset.text])));
       eq([known["Elves (e2e)"], known["Goblins with a gap (e2e)"]], ["All 100 cards known", "99 of 100 known · 1 to learn"], "the deck dialog says which decks the table can play, before one is chosen");
-      await newcomer.locator("#cm-dialog [data-action=table-use-shared-deck]").filter({hasText:"Krenko"}).click();
+      /* The restored library now holds the same Goblins list the host shares, and the dialog lists a deck once by its
+         contents (f81ae7ca, 2026-10-26: a shared deck that matches one of the reader's own is not offered twice), so
+         the newcomer picks it from their own decks. */
+      ok(await newcomer.locator("#cm-dialog [data-action=table-use-shared-deck]").filter({hasText: "Krenko"}).count() === 0,
+        "the shared Krenko list is not offered twice once the newcomer's own library holds the same deck");
+      await rows.filter({has: newcomer.locator("strong", {hasText: /^Goblins \(e2e\)$/})}).click();
       await newcomer.locator(`.cm-lobby-seat[data-seat="1"] .cm-seat-line`, {hasText: "Goblins (e2e)"}).waitFor({timeout: 15000});
       await newcomer.locator(`.cm-lobby-seat[data-seat="1"]`).getByRole("button", {name: /^Ready$/}).click();
 
       /* The host seats their deck and the AI's, and starts. */
       await page.goto(`${BASE}/index.html#table?id=${tableId}`);
       await page.locator(".cm-cloud-table .cm-lobby-seat").nth(2).waitFor({timeout: 30000});
-      for (const [seat, button] of [[0, /^Choose a deck$/], [2, /^Choose its deck$/]]) {
+      /* An AI seat is handed a fully known public precon when it is added (the 10-28 lobby), so its button may read
+         Change deck; the walk still hands it the Goblins list. */
+      for (const [seat, button] of [[0, /^Choose a deck$/], [2, /^(Choose its deck|Change deck)$/]]) {
         await page.locator(`.cm-lobby-seat[data-seat="${seat}"]`).getByRole("button", {name: button}).click();
-        await page.locator("#cm-dialog .cm-table-deck[data-action=table-use-deck]").filter({has: page.locator("strong").getByText("Goblins (e2e)", {exact: true})}).click();
+        /* The row of this seat's dialog: the previous seat's dialog may still be closing, and a click on its row would
+           seat that deck again (seen as a seat left without its deck, intermittently). */
+        await page.locator(`#cm-dialog .cm-table-deck[data-action=table-use-deck][data-seat="${seat}"]`).filter({has: page.locator("strong").getByText("Goblins (e2e)", {exact: true})}).click();
         await page.locator(`.cm-lobby-seat[data-seat="${seat}"] .cm-seat-line`, {hasText: "Goblins (e2e)"}).waitFor({timeout: 15000});
       }
       await page.locator(`.cm-lobby-seat[data-seat="0"]`).getByRole("button", {name: /^Ready$/}).click();
@@ -373,6 +382,9 @@ try {
         const d = p.locator("#cm-board-decision:not(.is-also)").first();
         if (await d.count()) {
           assert.ok(!/cannot answer/.test((await d.textContent()) || ""), "the board can answer what it is asked");
+          /* The opening hand has its own Keep and Mulligan buttons since the r4 shell (113c4283, 2026-10-26). */
+          const keep = d.locator("[data-action=board-opening-hand]", {hasText: /^Keep$/});
+          if (await keep.count()) {if (await enabled(keep.first())) await keep.first().click({timeout:2000}); return;}
           /* A stack of the same card (×N) is a choice to press as well (Rob, 2026-10-25); where a question needs more of it
              than one, its how-many is set to as many as it allows. */
           const confirm = d.locator("[data-action=board-confirm]"), opts = d.locator("[data-action=board-option]:enabled, [data-action=board-option-same]:enabled");
@@ -392,7 +404,8 @@ try {
         // A socket update can replace the decision between lookup and click. Retry on the next bounded turn walk.
         if(error.name!=='TimeoutError')throw error;
       }};
-      const turnOf = async (p) => Number((/Turn (\d+)/.exec((await p.locator(".cm-board-turn").first().textContent().catch(() => "")) || "") || [0, 0])[1]);
+      /* The turn label's own text is capitals ("TURN 3") since the r4 shell; the number is what is read. */
+      const turnOf = async (p) => Number((/turn (\d+)/i.exec((await p.locator(".cm-board-turn").first().textContent().catch(() => "")) || "") || [0, 0])[1]);
       await until("both people to reach turn 3", async () => {await act(page); await act(newcomer); return Math.min(await turnOf(page), await turnOf(newcomer)) >= 3;}, 180000);
       ok(true, `both people play through their boards to turn ${await turnOf(page)}`);
 
@@ -403,11 +416,10 @@ try {
       ok(true, "the newcomer reloads mid-game and is back on their board, with no seat counted away");
 
       /* The host ends it for everyone; the record replays with the table's own cards. */
-      await page.locator("[data-action=board-profile]").click();
-      await page.locator(".cm-profile-menu [data-action=board-tools]").click();
-      await page.locator("#cm-dialog [role=tab][data-tab=gameplay]").click();
-      await page.locator("[data-action=board-end]").click();
-      await page.locator("[data-action=board-end][data-confirm]").click();
+      /* End game for everyone is in the Table menu, with its confirmation in place (the r4 shell and the 10-28 menus). */
+      await page.locator("[data-action=board-table-menu]").click();
+      await page.locator("#cm-table-menu [data-action=board-end]:not([data-confirm])").click();
+      await page.locator("#cm-table-menu [data-action=board-end][data-confirm]").click();
       for (const p of [page, newcomer]) await p.locator(".cm-board-over").waitFor({timeout: 30000});
       const [download] = await Promise.all([page.waitForEvent("download", {timeout: 20000}), page.locator(".cm-board-over [data-action=board-record]").click()]);
       const rec = JSON.parse(readFileSync(await download.path(), "utf8"));
