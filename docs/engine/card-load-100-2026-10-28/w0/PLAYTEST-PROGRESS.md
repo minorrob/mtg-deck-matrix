@@ -93,3 +93,36 @@ room-optional-count21, game-table186, Cancel63/room53, Salty71/provocation21, bl
 No full suite is duplicated locally. The suite registry now contains the three new suites (687 actual Node suites).
 
 Universal/shared ROB-205 and ROB-209 are not closed by this checkpoint.
+
+## ROB-209 activated / route / cost follow-up
+
+Read-only audit of published `5239d3f6` found concrete unsupported activated/trigger/effect routes, a funded Scepter to
+Getaway Glamer additional-cost refusal, Kess/flashback entry-ID collision and missing nonmana escalate Pay facts.
+[MODAL-ROUTE-AUDIT.md](MODAL-ROUTE-AUDIT.md) records actual saved-card cases, copied/repeated modes, departed Ao,
+observer privacy and the separately approved later committed-question design. W5 owns actual effect-paid/free casting
+and received the funded Scepter case. No committed-question implementation is included here.
+
+The approved bounded follow-up adds `CrankActionEntry@1` / `CrankActionStage@1` activation metadata, preserving cast
+client schemas. Actual Cankerbloom chooses modes/targets before spending mana or sacrificing itself. Effective ability
+reads also handle actual Conspicuous Snoop with Goblin Cratermaker on top. A versioned route isolates selected ability,
+face and casting method/permission; actual Kess plus Past in Flames can no longer silently switch between normal and
+flashback routes. Old unversioned private drafts withdraw conservatively with engine facts unchanged. Actual Collective
+Effort exposes the native count of its nonmana escalate tappers at Pay, and still asks/pays through the native handler.
+
+`engine-action-stages` passes 44 checks; `room-action-stages` passes 42. The latter uses actual Cankerbloom/Sol Ring
+and native land taps, with real G/U pool funding options. Native activations require funded pool mana at this boundary;
+the test does not claim automatic source tapping. It keeps ordinary stack priority (`passStack: false`) so the actual
+ability remains observable after Pay. Private stages and both private/native reversible Cancel preserve full engine,
+RNG, journal and history; reload/partial/funding/final replay, stale input, Back, accepted retry, exact one mana plus one
+source sacrifice, source departure and legacy private-route withdrawal pass. Spectator/opponent views, using a fixed
+event cursor, remain deeply unchanged except revision. This is bounded fixture evidence, not a Commander-load gate.
+
+`breaks-playtest-action-stages.py`: all 13 new mutations caught, `missed: []`. Original cast tests retain their 52/46
+assertions; all original 19 semantic mutation probes are caught with `missed: []`, after helper/dispatch reanchors.
+No actions, asking, funding, house-pilot, Battle, verifier or production UI module is edited. Shared UI completion and
+the remaining committed/effect-paid routes remain open.
+
+Follow-up affected readers pass unchanged: controller66, decision-facts34, top-card-abilities8, flashback36,
+alternative-cost19, tiered20, escalate23, modal-triggers18, ability-target23, trigger-targets28, copy-spell24,
+targets-up-to44, costs32, Cancel63/room53, Undo23, replay14, yield43, optional21, table186, wiring131 and integrity.
+The two new suites bring this checkpoint's actual registry count to 690. No browser or full-suite run is duplicated.

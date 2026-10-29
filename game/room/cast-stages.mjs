@@ -7,18 +7,28 @@ import {createController} from "../engine/controller.mjs";
 import {hashState} from "../engine/journal.mjs";
 
 const SCHEMA="CrankCastDraft@1";
+const ACTION_SCHEMA="CrankActionDraft@1";
 const key=t=>Array.isArray(t)?`[${t.map(key).join(",")}]`:t?`${t.kind}:${t.id}`:"none";
 const modesKey=m=>(m??[]).join(",");
-const route=a=>({kind:a.kind,objectId:a.objectId,...(a.face?{face:a.face}:{}),...(a.adventure?{adventure:true}:{})});
+/* Modes/targets and their spree/tiered/escalate costs vary inside this route. A different ability, face or permission
+   is a different proposal. Version it so an old private route that omitted those facts is withdrawn conservatively. */
+const route=a=>({schema:"CrankActionRoute@1",kind:a.kind,objectId:a.objectId,from:a.from??null,abilityId:a.abilityId??null,
+  face:a.face??null,adventure:a.adventure===true,flashback:a.flashback===true,alternative:a.alternative??null,
+  escape:a.escape??null,via:a.via??null,asType:a.asType??null,free:a.free===true,disguise:a.disguise===true,
+  x:a.x??null,kicked:a.kicked??0,replicated:a.replicated??0,gift:a.gift??null,offspring:a.offspring===true,
+  convoke:a.convoke===true,delve:a.delve===true,lifeInstead:a.lifeInstead??null});
 export const castEntryFor=action=>({schema:"CrankCastEntry@1",sourceId:action.objectId,actionId:`cast:${action.objectId}:${hashState(route(action))}`});
+export const actionEntryFor=action=>({schema:"CrankActionEntry@1",kind:action.kind,sourceId:action.objectId,abilityId:action.abilityId,
+  actionId:`${action.kind}:${action.objectId}:${hashState(route(action))}`});
+const entryFor=action=>action.kind==="cast"?castEntryFor(action):actionEntryFor(action);
 const sameRoute=(a,b)=>JSON.stringify(route(a))===JSON.stringify(b);
 const has=(array,value)=>array.some(t=>key(t)===key(value));
-const invalid=()=>Object.assign(new Error("This cast proposal no longer fits the live game. Cancel it and choose the card again."),{castDraftExpired:true});
-const modeId=(d,index)=>`${castEntryFor(d.route).actionId}/mode:${index}`;
+const invalid=()=>Object.assign(new Error("This action proposal no longer fits the live game. Choose its action again."),{castDraftExpired:true});
+const modeId=(d,index)=>`${entryFor(d.route).actionId}/mode:${index}`;
 function modalOf(state,action){return offerScript(state,{...action,modes:undefined})?.modal??null;}
 function live(state,draft){
-  if(draft?.schema!==SCHEMA||state.awaiting||state.resolving||state.ruleOperation||state.priorityPlayer!==draft.actor||state.players[draft.actor]?.lost)throw invalid();
-  const offers=legalActions(state,draft.actor).filter(a=>a.kind==="cast"&&sameRoute(a,draft.route)&&Array.isArray(a.modes));
+  if(![SCHEMA,ACTION_SCHEMA].includes(draft?.schema)||draft.route?.schema!=="CrankActionRoute@1"||state.awaiting||state.resolving||state.ruleOperation||state.priorityPlayer!==draft.actor||state.players[draft.actor]?.lost)throw invalid();
+  const offers=legalActions(state,draft.actor).filter(a=>a.kind===draft.route.kind&&sameRoute(a,draft.route)&&Array.isArray(a.modes));
   const modal=offers.length?modalOf(state,offers[0]):null;
   if(!modal)throw invalid();
   return {offers,modal};
@@ -62,14 +72,29 @@ function chosen(state,draft,offers){
 }
 export function beginCastDraft(state,actor,action,id){
   if(action?.kind!=="cast"||!modalOf(state,action))throw new Error("That card has no casting modes to step through.");
-  const draft={schema:SCHEMA,id,actor,sourceId:action.objectId,route:route(action),version:0,modes:null,targets:[],cursor:0};
+  return beginActionDraft(state,actor,action,id);
+}
+export function beginActionDraft(state,actor,action,id){
+  if(!["cast","activate"].includes(action?.kind)||!modalOf(state,action))throw new Error("That action has no modes to step through.");
+  const draft={schema:action.kind==="cast"?SCHEMA:ACTION_SCHEMA,id,actor,sourceId:action.objectId,route:route(action),version:0,modes:null,targets:[],cursor:0};
   live(state,draft);
   return draft;
 }
 const canceled={schema:"CrankDecisionCancel@1",allowed:true,kind:"abandon-draft",returnsPriority:true};
-function common(draft,stage){return {id:`${draft.id}/question:${draft.version}`,sourceId:draft.sourceId,stage,
-  cancellation:{...canceled},castStage:{schema:"CrankCastStage@1",transactionId:draft.id,actionId:castEntryFor(draft.route).actionId,
-    sourceId:draft.sourceId,stage,canBack:stage!=="modes",version:draft.version}};}
+function common(draft,stage){
+  const cast=draft.route.kind==="cast",field=cast?"castStage":"actionStage";
+  return {id:`${draft.id}/question:${draft.version}`,sourceId:draft.sourceId,stage,cancellation:{...canceled},
+    [field]:{schema:cast?"CrankCastStage@1":"CrankActionStage@1",transactionId:draft.id,actionId:entryFor(draft.route).actionId,
+      kind:draft.route.kind,...(!cast?{abilityId:draft.route.abilityId}:{}),sourceId:draft.sourceId,stage,canBack:stage!=="modes",version:draft.version}};
+}
+function declaredCosts(state,action){
+  const script=offerScript(state,{...action,modes:undefined});
+  if(action.kind==="activate")return {activation:structuredClone(script.cost??[])};
+  /* The offer already counted the actual escalate tappers. Only describe that fact; native costChoice pays it. */
+  const escalate=script.additionalCost?.find(atom=>atom.atom==="escalate");
+  return {...(script.additionalCost?.length?{additionalCosts:structuredClone(script.additionalCost)}:{}),
+    ...(action.escalateTap?{nonmana:[{atom:"tapCreature",count:action.escalateTap,selector:structuredClone(escalate.tap.selector)}]}:{})};
+}
 export function castDraftChoice(state,draft,{describeActions}={}){
   const {offers,modal}=live(state,draft);
   if(draft.modes===null){
@@ -107,14 +132,15 @@ export function castDraftChoice(state,draft,{describeActions}={}){
   }
   const unique=[...new Map(actions.map(a=>[hashState(a),a])).values()];
   const details=describeActions?.(draft.actor,unique)??[];
-  return {...common(draft,"payment"),title:`${state.objects[draft.sourceId].card}: pay and cast`,mode:"one",min:1,max:1,selectedModes,targetGroups,selectedTargets,
+  const cast=draft.route.kind==="cast",verb=cast?"cast":"activate";
+  return {...common(draft,"payment"),title:`${state.objects[draft.sourceId].card}: pay and ${verb}`,mode:"one",min:1,max:1,selectedModes,targetGroups,selectedTargets,
     options:unique.map((action,index)=>({index,id:`${draft.id}/pay:${hashState(action)}`,actionId:`${draft.id}/pay:${hashState(action)}`,
-      label:"Pay and cast",costs:{printed:state.objects[draft.sourceId].manaCost??"",additional:action.extraMana??"",
+      label:`Pay and ${verb}`,costs:{...(cast?{printed:state.objects[draft.sourceId].manaCost??"",additional:action.extraMana??""}:{}),...declaredCosts(state,action),
         ...(action.x!==undefined?{x:action.x}:{}),...(action.tax?{commanderTax:action.tax}:{}),
         ...(action.payment?{payment:action.payment}:{}),...(action.autoTap?{automaticSources:true}:{})},...(details[index]?{detail:details[index]}:{})}))};
 }
 export function castDraftSignature(choice){
-  const {id,castStage,...rest}=choice;
+  const {id,castStage,actionStage,...rest}=choice;
   return hashState(rest);
 }
 export function offerCastDraft(state,draft,options){
@@ -126,9 +152,9 @@ export function offerCastDraft(state,draft,options){
 export function answerCastDraft(state,draft,answer,options){
   if(answer.cancel===true)return {draft:null};
   const choice=castDraftChoice(state,draft,options);
-  if(castDraftSignature(choice)!==draft.offeredSignature)throw new Error("The cast choices changed. Reopen the table and review them.");
+  if(castDraftSignature(choice)!==draft.offeredSignature)throw new Error("The action choices changed. Reopen the table and review them.");
   if(answer.back===true){
-    if(!choice.castStage.canBack)throw new Error("This is already the first casting stage.");
+    if(!(choice.castStage??choice.actionStage).canBack)throw new Error("This is already the first action stage.");
     if(draft.cursor>0){draft.cursor--;draft.targets=draft.targets.slice(0,draft.cursor);}
     else{draft.modes=null;draft.targets=[];}
     draft.version++;draft.offeredSignature=null;return {draft};
@@ -145,7 +171,8 @@ export function answerCastDraft(state,draft,answer,options){
   }else{
     const {offers}=live(state,draft),actions=[...new Map(chosen(state,draft,offers).map(a=>[hashState(a),a])).values()];
     const action=actions[indices[0]];
-    return {draft:null,action:{...action,castStage:{...choice.castStage,canBack:false,selectedModes:choice.selectedModes,selectedTargets:choice.selectedTargets}}};
+    const field=action.kind==="cast"?"castStage":"actionStage";
+    return {draft:null,action:{...action,[field]:{...choice[field],canBack:false,selectedModes:choice.selectedModes,selectedTargets:choice.selectedTargets}}};
   }
   draft.version++;draft.offeredSignature=null;
   return {draft};

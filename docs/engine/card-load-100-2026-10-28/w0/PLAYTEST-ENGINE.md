@@ -13,6 +13,10 @@ or the original full-index board-choices baseline failure. ROB-209 native52/room
 additive saved cast-stage contract; UI and remaining modal routes stay open. PR #932 was merged
 externally at `0aee1474`, but its full CI was canceled at 60 minutes and provides no full acceptance credit here.
 
+Activated/route/cost follow-up now proves actual Cankerbloom and effective Snoop, native44/room42 plus 13 new caught
+mutations, while retaining original cast52/room46 and all 19 caught probes. Committed trigger/effect refinement is
+separate future work; W5 owns the funded Scepter/Getaway additional-cost debt. The shared UI issues remain open.
+
 Root integrates and confirms the work. The subagent works in an isolated `codex/engine-load100-w0-playtest` branch
 from the current integration head, after checking current main and ownership. Keep its source and proof in a pushed
 draft PR and update the existing Linear issues with measured results and remaining work. Do not mark issues Done

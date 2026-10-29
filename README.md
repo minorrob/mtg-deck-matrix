@@ -1161,6 +1161,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-cancel-decision` — `tests/engine-cancel-decision.mjs` (reversible native target/cost proposals, numeric stages, full state restoration and committed information/mandatory-effect boundaries)
 - `engine-playtest-blink` — `tests/engine-playtest-blink.mjs` (actual Brago combat, Thassa zero/one targets, single-target control wording, delayed Flickerwisp reentry and Claim Jumper conditional Plains searches)
 - `engine-cast-stages` — `tests/engine-cast-stages.mjs` (live modal/spree mode sets, per-mode and repeated targets, native target constraints, backtracking and actual costs)
+- `engine-action-stages` — `tests/engine-action-stages.mjs` (actual modal/effective activations, isolated casting permissions, native nonmana cost review and stale targets)
 - `engine-threat` — `tests/engine-threat.mjs` (the threat table every difficulty reads: life, hitters, growth and ramp off the seat's view; Easy's rank, Normal's weighted mean; a person and an AI the same row; L1 attacks where threat × effect is highest; the floor under an attack that dies for nothing)
 - `engine-pilot-picks` — `tests/engine-pilot-picks.mjs` (the AI seats take what an "up to" or a search is for: the lands of the colors they lack, proliferate's good counters, their own side; old matches answered as before)
 - `engine-ingest` — `tests/engine-ingest.mjs`
@@ -1235,6 +1236,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `room-pilot-provocation` — `tests/room-pilot-provocation.mjs` (real spell damage remembered across pilot recreation and room reload, accepted retries, refusals, undo and replay)
 - `room-cancel-decision` — `tests/room-cancel-decision.mjs` (native Cancel with auto-pass and Undo configurations, reload/retry, full state/RNG/journal preservation, actor departure and mandatory-effect refusal)
 - `room-cast-stages` — `tests/room-cast-stages.mjs` (private saved modal proposals, reload/replay, stale input, Cancel/Back boundaries and actual payment exactly once)
+- `room-action-stages` — `tests/room-action-stages.mjs` (actual Cankerbloom stages, observer privacy, reload/replay, native funding Cancel, exact mana/sacrifice and permission-version withdrawal)
 - `room-agent-seat` — `tests/room-agent-seat.mjs` (the LLM seat in the room: only its close calls offered to it, its answers on the tape)
 - `room-refused-answer` — `tests/room-refused-answer.mjs`
 - `room-optional-count-targets` — `tests/room-optional-count-targets.mjs` (ROB-204: the room takes an "up to one" and an "any number" target answer with one, several or none chosen, refuses past the most, and plays on)

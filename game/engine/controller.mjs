@@ -292,7 +292,7 @@ export function createController(resume = null) {
       const answer = translate(pending, request);
       if (answer.choiceId !== pending.id) throw new Error("This choice has expired");
 
-      const steppingBack = answer.back === true && pending.castStage?.canBack === true;
+      const steppingBack = answer.back === true && (pending.castStage??pending.actionStage)?.canBack === true;
       if (!steppingBack && (answer.cancel !== true || (pending.mode !== "text" && pending.cancellation?.allowed !== true))) {
         if (pending.mode === "damage") validateCombatDamage(pending, answer);
         else if (pending.mode === "amount") validateGenericAmount(pending, answer);
