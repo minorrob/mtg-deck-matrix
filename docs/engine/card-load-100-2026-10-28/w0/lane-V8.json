@@ -94,6 +94,15 @@
       "typeFixSource": "304fbabf79a95fb66daacf725ce8498f47fca962",
       "findings": "R7 full current legal type catalog and R8 chosen subtype representation closed narrowly; native unseen Elf/Time Lord choices plus subsequent token counters and3 actual Shared Animosity completed combats pass",
       "limits": "No rerun/relabel of unchanged caller cases after the type-only fix. Writer mutations/generated refresh remain separately gated; no whole-theme/global gate acceptance."
+    },
+    "missingPromptVersionRegression": {
+      "staleSource": "304fbabf79a95fb66daacf725ce8498f47fca962",
+      "currentVerifierBase": "ddd687904f461ed5b5581b35836306672ae83532",
+      "diagnosis": "W2 selected8/10 came from stale untagged runner and old classifier. Current choose precheck already has question-offer provenance and universal rejection; no production runner/classifier change.",
+      "regression": "Actual named original Automaton/Mimic/Throne prompt scenarios:33 checks, baselines pass and all3 missing prompts stay unproved;2 new guard/tag mutations and4 retained mutations caught, missed:[]",
+      "measurement": "Original ledger unchanged/hash-preserved. Three invalid credits mean expected selected5/10; root must remeasure assembled current verifier/new compiled bundle. No edited count or global gate improvement.",
+      "evidence": "evidence/v8-review-2026-10-29.json, missingPromptRegression",
+      "fixtureScope": "Historical Serra negative now selects its exact original name and asserts one match, instead of all future scenarios or index1. Root558 file context passes:3 Serra baselines, historical negative unobserved, full-file Flying final-life proof valid;6 entry baselines pass with named negatives unobserved. Policy167 and ability44 pass."
     }
   }
 }
