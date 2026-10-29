@@ -122,7 +122,7 @@ recorded with its evidence.
 
 | # | Check | Pass means |
 | --- | --- | --- |
-| 1 | `node --stack-size=4000 game/tools/batch/check-cards.mjs` | 0 failed |
+| 1 | `node --stack-size=4000 game/tools/batch/check-cards.mjs --ability-ledger <wave-ability-ledger.json> --counterfactual` | Whole directory, 0 failed, 0 unreached abilities, completed ledger |
 | 2 | `node game/tools/sentence-library.mjs` | No new calibration failure (today's four are wave 0's debt) |
 | 3 | `node game/tools/engine-definitions.mjs --check`, `node game/tools/engine-candidates.mjs --check`, `node game/tools/engine-catalog.mjs --check`, `node tools/data-inventory.mjs --check` | all current |
 | 4 | `node tests/engine-cards.mjs`, `tests/card-compiler.mjs`, `tests/card-waves.mjs`, `tests/table-candidates.mjs`, `tests/sentence-library.mjs`, `tests/table-basics.mjs`, `tests/data-integrity.mjs`, `tests/feature-wiring.mjs`, `tests/engine-breaks-anchors.mjs`, every suite a lane added | all pass |
@@ -137,6 +137,13 @@ The whole suite runs once, on GitHub (Rob, 2026-10-01: never twice). The Workers
 (`crankmagic`, `crankmagic-staging`) fail on every PR and do not gate. If Actions cannot run at all (a job that fails in
 seconds with no log, on `main` too), `bash tools/local-ci.sh HEAD 2` is the gate instead and its PASS block goes on the PR
 as a comment; say so in the merge report.
+
+**Ability evidence is mandatory in check 1** (Rob's approved supplement, October 28). Merge V8's harness before running
+this command. Require its ledger to say `measurement.complete: true`, `scope.directory: true`, and zero scenario-unreached
+abilities, plus a successful process exit and zero scenario failures. A legacy no-ledger exit of 0, an ignored/unknown
+flag, a selected-card result, a partial checkpoint, an ownership ambiguity, or a timed-out probe cannot pass this gate.
+The strict command already runs the original schema, fidelity, smoke and scenario checks; do not duplicate that run.
+The default CLI and automatic CI wiring remain separate open work until implemented and proven.
 
 **Pipeline the waves.** Once checks 1 to 8 pass on wave N's integration head, deal wave N+1 and start its lanes from
 that head (not from `main`) while Actions runs check 9. If the run fails, the fix lands on wave N's branch and wave N+1

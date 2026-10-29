@@ -5,35 +5,55 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
-- **Holder:** Codex, started October 28, 2026, for Rob; Linear ROB-199 (run), ROB-200 (wave 0), under ROB-85.
+- **Holder:** Codex hand-back, October 28, 2026, for Rob; Linear ROB-199 (run), ROB-200 (wave 0), under ROB-85.
+  Resume with a fresh orchestrator from this record. This context stops at Rob's requested hand-back boundary.
 - **Main at the start:** `39a45706`.
-- **Wave and step:** wave 0, baseline complete; prerequisite regression and first debt batch in progress; no new cards.
+- **Wave and step:** wave 0 is unfinished. Baseline, prerequisite reconciliation and five bounded role checkpoints are
+  preserved; no new cards or promotions. W2/W3/W7 have not started. No gate or wave completion is claimed.
 - **Integration:** `codex/engine-load100-w0`, worktree `C:\Users\robmi\CrankMagic\worktrees\load100\w0-integrate`.
   Package #911 and prerequisite #834 merged locally; eight debt lane files committed at `c9d31c40`.
   Draft integration PR #912: https://github.com/minorrob/mtg-deck-matrix/pull/912.
+  Last root code checkpoint: `e7d00039` (paragraph prerequisite and four proved inherited-anchor repairs); subsequent
+  record/readiness-command edits are documentation. No writer or verifier branch has been merged into integration.
 - **Prerequisite:** original #834 remains open and conflicted on GitHub. Isolated reconciliation branch
   `codex/engine-load100-pr834` at `ba82617b` merges main and preserves paragraph boundaries alongside current
   castable-card spell segmentation. Integrated through `8c0566dc`. Full backstop validation exposed its inherited
   assertion that Gemstone Caverns must never be sampled; fixed to require sampling and successful scenario execution,
   with a mutation restoring the exclusion. The corrected full backstop suite passes in the mutation runner's baseline;
   both selected backstop breaks are caught, `missed: []`. The five paragraph breaks were also rerun and caught.
-- **Lanes:** V8 `codex/engine-load100-w0-v8-verify` at pushed `0a848bb4` (draft #913) has the approved proof
-  supplement and measuring initial full-directory coverage. W4 combat at pushed `9177d29b` (draft #914) and W5 mana at
-  pushed `79fe06c7` (draft #915) are clean bounded checkpoints with their remaining debts explicitly queued.
-  W1 faces and W6 tokens are active in their own worktrees; W2/W3/W7 remain queued. This session has three subagent
-  slots, so all eight roles remain separate and run in batches. No lane is complete.
+- **Lanes:** five clean, pushed bounded checkpoints are listed below; their remaining debts are queued, not waived.
+  This session has three subagent slots, so the eight roles run in batches. Keep all eight roles separate; start the
+  three unstarted roles next. Do not describe these bounded checkpoints as complete themes.
 - **Ownership:** the primary checkout has another session's unresolved merge and remains untouched. The old standing
-  engine table predates Rob's direct October 28 assignment; current open PRs were checked. No active engine-rule PR
-  besides #834 was listed. `readDeck` overlap remains a narrow coordination request; the monarch is Play's request.
+  engine table predates Rob's direct October 28 assignment. At claim time no other active rule-module PR besides #834
+  was listed. Re-check current work before `readDeck` edits. The monarch already has a canonical Engine-to-Play request
+  (Requests row 1 in `docs/ACTIVE.md`); the card-load section reinforces it.
 - **Toolchain:** Node `v22.23.3`; required dependency junctions created. Git Bash is
   `C:\Program Files\Git\bin\bash.exe`; Windows blocks its named-object initialization inside the sandbox, so the
-  authorized scan runs with escalation. Network fetch/gh also requires escalation. No approval review rejection.
-- **Next:** complete W1/W6 and V8's approved coverage measurement, then start W2/W3/W7 with fresh roles as slots free.
-  Finish the remaining W4/W5 debts. Merge writers W1 through W7, then V8, into integration; regenerate once and run
-  the consolidated gates. No writer branch is merged into integration yet. Do not claim a gate from package history.
+  authorized scan runs with escalation. Network fetch/gh also requires escalation. W5's first export review was rejected;
+  root verified the authorized remote/payload, rescanned, and published successfully. No approval remains pending.
+- **Next:** claim the hand-back, fetch, and start W2/W3/W7. Plan the shared resumable-choice work with W3/W5/W7 before
+  replacing outside-resolution fallback choices. Finish all queued writer/verifier debts. Merge W1 through W7, then V8,
+  regenerate once, and run the strict consolidated checks. Do not mark ready while the ability/anchor gates remain red.
 - **Rob's decision, October 28:** "Allow the additional harness proof." V8 may supplement journal evidence with an
   in-memory ability-removal scenario proof; the safeguards and limits are in `BRIEF.md`. G-3 remains unmet until the
   evidence is measured. No saved card/rule instrumentation or schema/fidelity-only failure earns coverage.
+
+| Role | Branch under `codex/engine-load100-` | Pushed head | Draft PR | State |
+| --- | --- | --- | --- | --- |
+| W1 faces | `w0-w1-faces` | `27182d42e9afa664dfccae8fb5dd878d6079d6a8` | #917 | Source `9c4366f7`; Elspeth and supported preparation copies; battles, undefined emblem cards and permanent-type insets queued |
+| W2 stack | `w0-w2-stack` (not created) | — | — | Not started; deal file `w0/lane-W2.json` |
+| W3 graveyard | `w0-w3-graveyard` (not created) | — | — | Not started; deal file `w0/lane-W3.json` |
+| W4 combat | `w0-w4-combat` | `9177d29baca191ce1bee7773a6851bfabef68df5` | #914 | Clean bounded checkpoint; five debts queued |
+| W5 mana | `w0-w5-mana` | `79fe06c741a2d25f1c7c75ecf20e2810e4d07977` | #915 | Clean bounded checkpoint; five debts queued |
+| W6 tokens | `w0-w6-tokens` | `5c927528f8c26adc3e4e0300001f320331fb9272` | #916 | Clean bounded checkpoint; three replacement-order debts queued |
+| W7 spells | `w0-w7-spells` (not created) | — | — | Not started; deal file `w0/lane-W7.json` |
+| V8 verifier | `w0-v8-verify` | `1890c72f5bf4aac013d554fe5a9035f688b1df55` | #913 | Clean bounded harness/review checkpoint; coverage, strict-runner and final integration debts remain |
+
+Worktrees are `C:\Users\robmi\CrankMagic\worktrees\load100\<branch suffix>`. Preserve their node_modules junctions;
+do not delete through a junction. Every code/evidence checkpoint is pushed; read each lane JSON and PR body before
+continuing it. A model taking a lane over uses the brief's prefix/suffix hand-off rule; integration stays on its current
+branch. PR #834 and #911 are ancestors of integration only, not yet merged to main.
 
 ## Wave 0 evidence so far
 
@@ -64,6 +84,25 @@ Fresh baseline on main `39a45706`, before engine changes:
 - No final integrated pool run, completed independent card review, complete ability ledger, staging release, or Rob sign-off yet.
 
 ## First lane checkpoints (not final integration evidence)
+
+- **W1:** draft #917, source `9c4366f7`. Elspeth now creates an actual emblem; optional emblem effect `text` follows
+  the existing sentence-template path, is retained as `emblemOracleText`, and projects one exact sentence while the
+  legacy fallback preserves genuine repeated abilities. Supported token/physical-copy preparation definitions and
+  entry designations propagate without copying prepared state; named copies, control changes and LKI are covered.
+  Focused 79 checks; 23 unique mutations caught across the preparation and final text increments; `missed: []`.
+  Preparation checkpoint full checker: 6,430 definitions, 11,025 scenarios, 0 failed. Final text increment: seven
+  baseline suites plus affected projection/planeswalker readers pass. V8 independently reran 79 and a persisted
+  +4/+4 variant under a different controller, checking both actual Bear power 6 and opponent-visible text.
+  No browser visual acceptance or real-table playtest is claimed. Battles, permanent-type preparation insets, and
+  undefined Daretti/Teferi emblem cards remain queued; no new final was added.
+- **W6:** draft #916, pushed `5c927528`, source `6f2e915f`. Plumb's departed original is copied using bounded,
+  departure-time memory; latest targets/modes/X/copied values survive countering, JSON reload and owner departure.
+  Double-faced token copies preserve both faces/orientation without counters; physical single-faced copies do not
+  become double-faced; illegal instant/sorcery opposite faces legally do nothing. Morph/disguise copies retain the
+  correct nameless characteristics and Ward distinction without printed-face/preparation leaks in the copied token's
+  three public views. Focused 90, 35 mutations caught (`missed: []`), 14 related readers; full checker 6,430/11,024/0.
+  V8 independently countered the source, persisted/reloaded, copied under another controller, and resolved against the
+  latest target with X/modes preserved. Three outside-resolution replacement-order rows remain queued.
 
 - **V8:** first pushed `ae7e22ba`, then parser follow-up `8acb3213`, draft PR #913 into #912's branch. Pool suite 64 checks, library suite 12,
   feature-wiring 131, data-integrity, 28 mutation breaks caught (`missed: []`), SCAN PASS. Seed-parser review found
@@ -103,13 +142,62 @@ Fresh baseline on main `39a45706`, before engine changes:
   their provenance is checkable. These are initial summaries, not the final all-card exercised ledger.
 - No staging release, main merge, full-pool coverage, complete ability coverage, or Rob playtest sign-off yet.
 
+## Authoritative initial ability audit and remaining verifier work
+
+- Final V8 head: `1890c72f5bf4aac013d554fe5a9035f688b1df55`; code measured: `508afa94c70b00611e247d78adf23383d4403802`.
+  Source is unchanged main `39a45706` card/scenario data plus the prerequisite; this is initial, not combined-writer,
+  evidence. `6,430 definitions`; `11,023 scenarios, 0 failed`; `6,079 of 11,636` abilities reached by passing scenarios,
+  including `1,840` runtime-removal proofs; `5,557` unreached across `3,665` cards; 0 over-budget probes. Expected exit 1.
+- The provisional `0a848bb4` sweep overcredited seven spell abilities through ambiguous face-name ownership. Corrected
+  lookup rejects ambiguous aliases, including exact standalone names colliding with preparation halves; denominator
+  unchanged. Mixed game/scenario evidence also cannot manufacture scenario reachability: a successful-resolution
+  observation must itself name a scenario, or a valid runtime-removal proof must exist. Historical artifacts are
+  separately labeled; do not reuse their provisional 6,086/5,550 totals.
+- Corrected raw ledger SHA-256: `60bda8067fcb6acaf2e28b7987dbd8807182d40464a95bfc1fe6d1e6155f2532`.
+  Full ledger is compressed to 1,474,426 bytes, with independent raw/archive hashes and completed-measurement checks.
+  On the V8 branch, read `w0/V8-PROOF.md` and
+  `w0/evidence/ability-corrected-508afa94.manifest.json`; use the readable `.summary.json` and `.backlog.json` narrowly.
+  Paths are under this package. Fetch/read `origin/codex/engine-load100-w0-v8-verify` if its worktree is unavailable.
+- Initial missing proofs by theme: combat 1,954; spells 1,396; mana 912; tokens 486; graveyard 481; faces 238; stack 75;
+  walkers 15. Large shared witness families include Flying, trample, vigilance, enters-tapped, enchant and haste.
+  A family name or equivalence is not coverage; every ability still needs its own recorded evidence.
+- V8 validation: pool 91, ability proof 42, library 12, data-integrity, feature-wiring 131; 35 incremental verifier and
+  19 ability mutations caught, `missed: []`. Every bounded writer change was independently reviewed; no full-theme
+  or all-past-card review is claimed.
+- Legacy no-flag checker and automatic CI do not enforce ability coverage. ORCHESTRATION check 1 now requires the
+  full `--ability-ledger ... --counterfactual` run and a completed whole-directory ledger with 0 unreached, plus exit 0
+  and 0 scenario failures. Merge V8 first; ignored/unknown flags or a missing ledger cannot pass. This initial audit
+  fails G-3 and cannot be omitted to mark the wave ready.
+- Still unbuilt/unrun: strict scenario diagnostics/default transition, skipped/frozen room-game seeds, replaced pilot
+  answers, partial construct coverage credits, the five unsure gameplay cases, all-card independent review, integrated
+  200 pool games, strict library 50 and strict staging 2 by 25 runs, final all-card exercise, and G-5's 5,000 games.
+
+## Resume priorities and shared-file seams
+
+1. Read/claim this record, fetch, then start W2/W3/W7 with fresh subagents and their committed debt files. The session
+   supports three concurrent subagents, not eight at once. Verify the current lane owners before edits.
+2. W2 must implement Rob's named wish-deck refusals and stack/retargeting debt. Neither wish card is written. W3 owns
+   graveyard/remembered-object work and should coordinate a serializable resumable operation outside script resolution
+   before the W4/W5/W6/W7 replacement fallbacks are removed. Current token/counter creation and entering replacements
+   cannot pause safely there; changing which default wins is not a fix.
+3. Finish W1 battles/permanent insets; W4's five combat debts; W5's five mana/cost/payment-cap debts; W6's three ordering
+   debts; and remaining V8 work. The exact itemized state is in each lane JSON and draft body. None is an agreed ignore.
+4. Merge W1 through W7, then V8, with merge commits. Preserve W1's preparation fields alongside W6's MDFC token and
+   copied-spell metadata in `permanents.mjs`; physical copies must stay distinct. Preserve W6's narrow spell-departure
+   hooks in zones/stack/SBA while adding W3's real choice continuations. Re-run both sides' mutation proofs on conflicts.
+5. Regenerate generated card/candidate/coverage/catalog/inventory files once, as the procedure says. They deliberately
+   remain out of the bounded writer commits; do not call the hand-written JSON proof a current table-bundle proof.
+6. Repair the remaining 53 inherited anchors without retargeting/weakening tests, repeat moved-anchor proofs after
+   integration, run every consolidated gate including strict ability coverage, then one Actions run. Main merge and
+   staging remain gated; production/migrations/provider calls remain forbidden. Rob alone closes G-8.
+
 ## The gates, measured
 
 | Gate (README, "What 100% means") | At the start (2026-10-28, main `39a45706`) | Now |
 | --- | --- | --- |
 | G-1 Commander cards final | 6,430 defined of about 32,046; 25,616 undefined | Main baseline: 6,424 nonbasic pool finals of 32,040 raw pool cards, plus 6 basic definitions; 25,616 undefined. Wish exemptions not subtracted from raw counts. Unmet. |
 | G-2 Candidates outstanding | 116 (compiler, live); 100 in the committed `candidates.json` | Main baseline reproduced: 116 candidates, 2 blocked. Unmet. |
-| G-3 `check-cards` | 6,430 definitions, 11,023 scenarios, 0 failed | Main baseline reproduced. Supplemental runtime proof works: selected 3 cards, 5 scenarios, 4/4 abilities reached. Full initial directory measurement on V8 `0a848bb4` running; legacy default does not enforce it. Unmet. |
+| G-3 `check-cards` | 6,430 definitions, 11,023 scenarios, 0 failed | Corrected initial code `508afa94`: 6,079/11,636 reached; 5,557 unreached, expected exit 1. Selected W4 additions prove 4/4 on 3 cards only. Strict consolidated coverage is mandatory; default/CI wiring remains open. Unmet. |
 | G-4 Calibration failures | 4 of 4,165 (Blackblade Reforged, Contagion Clasp, Goblin Piledriver, Wayfarer's Bauble) | W4 `8e0f3a2f`: 4,165 held out, 4,165 pass, no denominator exclusions. Writer changes independently reviewed; all past loads and final integration remain unreviewed/unmeasured. Full G-4 unmet. |
 | G-5 Pool fuzz, clean of games | the harness has no pool mode yet; library 3 of 3, staging decks 1 of 1 clean | Initial 3/3 app-finished pool runs clean, of which 1 reached a winner; final integration and 5,000 games unmet. |
 | G-6 Final cards exercised in a clean game | not measured (no ledger yet) | Initial 131/6,430 final definitions exercised in 3 app-finished clean runs. Unmet. |

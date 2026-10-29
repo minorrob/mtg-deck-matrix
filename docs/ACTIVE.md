@@ -10,13 +10,17 @@ and the engine modules its debt fixes require, subject to the ownership requests
 The primary checkout has another session's unfinished merge and is untouched.
 The eight roles run in batches because this session supports three active subagents.
 No new cards until wave 0 closes. No provider API calls, production changes, migrations, or spending.
+**Hand-back checkpoint:** draft integration #912; bounded role drafts #913 through #917 are pushed. W2/W3/W7 have
+not started, and existing lanes retain queued debt. Corrected initial ability audit: 6,079 of 11,636 reached, 5,557
+unproved; root proved four inherited-anchor repairs, leaving 53. No gate, main merge, staging release, or Rob playtest
+sign-off is claimed. A fresh orchestrator resumes from RUN.md; do not mark the integration ready on the legacy checker.
 
 ### Card-load coordination requests
 
 | To | Request | State |
 | --- | --- | --- |
 | Claude · Engine | The standing lane table predates Rob's direct October 28 card-load assignment. Current open PRs were checked: no separate active rule-module PR besides prerequisite #834 was listed. The run owns its debt modules and coordinates narrow shared-file scopes between its roles. | Resolved by the later direct assignment; no other session's active files are edited |
-| Play | Show the monarch already present in the room view on the board; keep a one-press card reference where applicable. | Open; Play owns the board |
+| Play | Show the monarch already present in the room view on the board; keep a one-press card reference where applicable. | Existing canonical Requests row 1 remains open; Play owns the board |
 | Lounge owner | Wave-0 W2 needs only the named wish-card refusal in `game/room/table.mjs` `readDeck`; confirm any current overlap before editing. | Open; lounge changes already on the baseline |
 | Play, Workshop, Engine | Main already has 57 stale mutation anchors across 31 breaks files; exact names, targets, and labels are in `docs/engine/card-load-100-2026-10-28/w0/preexisting-break-anchors.json`. Re-anchor only to the original behavior and prove each caught. The global anchor gate stays red until resolved. | Measured before wave-0 changes; no new prerequisite anchor failure |
 
