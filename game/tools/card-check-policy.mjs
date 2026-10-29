@@ -52,6 +52,7 @@ export function abilityLedgerProblems(ledger, {scripts, files, source}) {
   if (files.some(file => file.scenarios.some(scenario => scenario.sourceChoices === false)))
     problems.push("Legacy source-choice scenarios cannot supply the current canonical gate");
   if (measurement?.complete !== true || measurement?.counterfactual !== true) problems.push("Ability measurement is incomplete or omitted runtime-removal probes");
+  if (measurement?.choicePolicy !== "explicit") problems.push("Ability measurement did not enforce explicit scenario choices");
   if (measurement?.definitions !== scripts.length || measurement?.scenarios !== count || count === 0)
     problems.push("Ability measurement does not cover the expected definitions and scenarios");
   if (measurement?.problems !== 0 || measurement?.failed !== 0) problems.push("Definition, fidelity, smoke or scenario checks failed");

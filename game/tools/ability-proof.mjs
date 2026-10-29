@@ -32,7 +32,7 @@ export function runtimeAbilityRemoval(script, ability, definition) {
 export function scenarioBehaviorFailure(error, scenario) {
   const assertion = error?.scenarioAssertion;
   /* Availability is not execution, regardless of the subject or kind of ability being removed. */
-  const offerOnly = ["ability-offer", "action-offer", "question-offer", "policy-precheck"].includes(assertion?.kind) || assertion === "blocker-offer";
+  const offerOnly = ["ability-offer", "action-offer", "question-offer", "policy-precheck", "choice-policy"].includes(assertion?.kind) || assertion === "blocker-offer";
   return error instanceof Error && !offerOnly && !["keyword-presence", "step-limit"].includes(assertion)
     && error.message.startsWith(`${scenario.name}: `);
 }
@@ -53,20 +53,20 @@ export function proveRuntimeAbility({script, ability, cards, scenarios, fixtures
   if (removal.status !== "ready") return removal;
   const diagnostics = [];
   for (const [i, scenario] of scenarios.entries()) {
-    if (!baselines.has(scenario)) {
+    if (baselines.get(scenario)?.choicePolicy !== "explicit") {
       try {
-        const result = runScenario(scenario, cards, fixtures);
-        baselines.set(scenario, {passed: true, checks: result.passed.length, events: result.events.length});
+        const result = runScenario(scenario, cards, fixtures, {explicitChoices: true});
+        baselines.set(scenario, {passed: true, choicePolicy: "explicit", checks: result.passed.length, events: result.events.length});
         if (result.policies) baselines.get(scenario).policies = structuredClone(result.policies);
       }
-      catch (error) {baselines.set(scenario, {error: String(error.message ?? error)});}
+      catch (error) {baselines.set(scenario, {choicePolicy: "explicit", error: String(error.message ?? error)});}
     }
     const baseline = baselines.get(scenario);
     if (!baseline.passed) {diagnostics.push({scenario: scenario.name, reason: "baseline failed", error: baseline.error}); continue;}
     const changedCards = runtimeCardsWithoutAbility(cards, name, removal.definition);
     const started = now();
     let failure = null;
-    try {runScenario(scenario, changedCards, fixtures);} catch (error) {failure = error;}
+    try {runScenario(scenario, changedCards, fixtures, {explicitChoices: true});} catch (error) {failure = error;}
     const elapsedMs = now() - started;
     if (elapsedMs > maxProbeMs) {
       diagnostics.push({scenario: scenario.name, reason: "probe time budget exceeded", elapsedMs, maxProbeMs});
@@ -75,7 +75,7 @@ export function proveRuntimeAbility({script, ability, cards, scenarios, fixtures
     if (failure) {
       if (changedCards.uses > 0 && scenarioBehaviorFailure(failure, scenario, {subject: name, kind: removal.mutation.kind})) return {
         status: "proved", method: "runtime-ability-removal", scenario: scenario.name, scenarioIndex: i,
-        baseline: {status: "passed", checks: baseline.checks, events: baseline.events,
+        baseline: {status: "passed", choicePolicy: "explicit", checks: baseline.checks, events: baseline.events,
           ...(baseline.policies ? {policies: structuredClone(baseline.policies)} : {})},
         mutation: removal.mutation, result: {status: "failed", message: failure.message,
           ...(failure.scenarioPolicies ? {policies: structuredClone(failure.scenarioPolicies)} : {})}, elapsedMs,

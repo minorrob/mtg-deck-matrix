@@ -27,12 +27,12 @@ export function checkScenarios({files, scripts, cards, ledger = null, counterfac
     for (const scenario of file.scenarios) {
       runs += 1;
       try {
-        const result = runScenario(scenario, cards, file.fixtures ?? {});
-        if (counterfactual) baselines.set(scenario, {passed: true, checks: result.passed.length, events: result.events.length});
+        const result = runScenario(scenario, cards, file.fixtures ?? {}, {explicitChoices: true});
+        if (counterfactual) baselines.set(scenario, {passed: true, choicePolicy: "explicit", checks: result.passed.length, events: result.events.length});
         if (counterfactual && result.policies) baselines.get(scenario).policies = structuredClone(result.policies);
         if (ledger) addExerciseEvidence(ledger, result.events, {scenario: `${file.card}: ${scenario.name}`});
       } catch (error) {
-        failed += 1; baselines.set(scenario, {error: error.message});
+        failed += 1; baselines.set(scenario, {choicePolicy: "explicit", error: error.message});
         report("FAIL", file.card, "|", error.message.slice(0, 240));
       }
     }
@@ -101,7 +101,7 @@ export function main(argv = []) {
   console.log(`${runs} scenarios, ${failed} failed`);
   if (ledger) {
     const summary = exerciseSummary(ledger);
-    const completed = snapshot({complete: true, counterfactual: true, definitions: scripts.length, scenarios: runs, problems, failed});
+    const completed = snapshot({complete: true, counterfactual: true, choicePolicy: "explicit", definitions: scripts.length, scenarios: runs, problems, failed});
     writeFileSync(ledgerPath, JSON.stringify(completed, null, 2) + "\n");
     console.log(`ability coverage: ${summary.scenarioReached} of ${summary.abilities} reached by passing scenarios (${summary.counterfactualReached} by runtime-removal proof); ${summary.abilities - summary.scenarioReached} unreached; ${scope.canonical ? "whole canonical directory" : "diagnostic scope only"}`);
     if (scope.canonical) {

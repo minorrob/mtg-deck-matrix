@@ -87,7 +87,7 @@ try {
   ok(abilityLedgerProblems(omitted, expected).some(p => p.includes("inventory differs")), "reducing the denominator and recomputing totals cannot hide an ability");
   const variants = [
     l => {l.scope.selected = ["Glorious Anthem"];}, l => {l.scope.canonical = false;}, l => {l.measurement.complete = false;},
-    l => {l.measurement.counterfactual = false;}, l => {l.measurement.failed = 1;}, l => {l.measurement.problems = 1;},
+    l => {l.measurement.counterfactual = false;}, l => {delete l.measurement.choicePolicy;}, l => {l.measurement.failed = 1;}, l => {l.measurement.problems = 1;},
     l => {l.measurement.scenarios = 0;}, l => {l.measurement.definitions = 0;}, l => {delete l.cards["Glorious Anthem"];},
     l => {l.cards["Glorious Anthem"] = null;},
     l => {l.cards["Glorious Anthem"].abilities = [];}, l => {l.cards["Glorious Anthem"].abilities[0].path = "different";},

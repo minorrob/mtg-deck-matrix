@@ -5,13 +5,27 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Explicit-decision verifier checkpoint, October 29:** strict directory checks and both baseline/removal runs now
+  reject skipped optional moves, `targets: "any"`, automatic settle answers, required attack/block defaults, inferred
+  defenders, trigger permutations, legend choices and ambiguous physical references. New explicit question navigation
+  and counted-target deferral support indexed answers. Native 110, CLI 57, original ability-proof 44/block-policy 167;
+  all 25 new mutations and all 12 CLI mutations caught. One initially missed navigation-priority probe is now caught
+  by a stronger actual missing-question assertion. Four shifted inherited anchors are re-proved. No card/rule edited
+  by this verifier slice. Fresh canonical failure inventory is pending; no G-3 pass from the small fixtures.
+- **Published assembled checkpoint:** `2bf76b00c286bbb9572f008881fa0a4fc39b24d4` is scanned/pushed to draft #912,
+  including main `50297778`, W5 physical-source checkpoint `c3bb1824`, original W4 attribution `dfe3f377` and P0
+  `62c29715` (Salty 71/room 21, Cancel 63/room 53 independently green). Follow-up W5 output-color `58bd64eb` (#938),
+  P0 blink/US wording `ec4f6da3` (#939) and W4 damage `4b8284b8` (#940) are published for root integration.
+  W1 resumes Battle-entry/defense work from the next assembled base; P0 continues additive modal staging, W5 disjoint
+  mana/additional-cost tapping. No new cards or promotions. UI/full CI, current strict proof, games and other gates stay open.
+
 - **Strict default/CI verifier checkpoint, October 29:** `w0/V8-STRICT-CLI.md` records root's strict default ledger,
   independent canonical/source/input/inventory validator and fatal Actions/local fallback wiring. Actual CLI fixtures
   pass 56 checks, original ability-proof 44; all 12 mutations caught with `missed: []`. Data integrity,
   feature-wiring 131 and readout-feeds 1,121 pass. Wiring is not G-3 acceptance: the current whole directory still
   needs a fresh clean-source measurement and individual behavior witnesses for every unproved ability. No cards loaded.
 - **External main update:** PR #932 was merged by its owner at `0aee1474`, then #935 advanced main to `3a75d03b`.
-  Exact-head #932 `suites` was cancelled at 60 minutes; the owner's comment declares touched-suite validation rather
+  Exact-head #932 `suites` was canceled at 60 minutes; the owner's comment declares touched-suite validation rather
   than a full fallback. Record the merged Confirm behavior for ROB-210, without full-gate credit for our run.
 
 - **Active batch from `fad5f009`, October 29:** dedicated `playtest_engine` is dispatched first in
