@@ -269,6 +269,6 @@ draft, the program charter, the workstream files and the kick-off prompts carry 
 **Not done, with the reason:**
 - Statuses of issues other sessions hold were not changed; the audit's evidence is on them for their holders.
 - `docs/handover-index.md` and the dated handoff files still mention the readout and `ACTIVE.md`; they are history.
-- Every platform needs Linear access to run the loop (Codex, Cursor and Grok through their own integrations); not
-  verified here.
+- Linear access: Rob confirmed on 2026-10-29 that Codex, Cursor and Grok are all connected to Linear and to this
+  repository.
 
