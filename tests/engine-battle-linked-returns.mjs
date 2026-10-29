@@ -7,7 +7,9 @@ import {compileScript} from "../game/engine/cards/index.mjs";
 import {afterResolving} from "../game/engine/rules/priority.mjs";
 import {awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {concede} from "../game/engine/rules/sba.mjs";
+import {moveOne} from "../game/engine/script/effects/zones.mjs";
 import {entryCounterResult, entryCounterProgressFrame} from "../game/engine/rules/entry-characteristics.mjs";
+import {freezeSbaReturnBatch, reopenPreparedSbaReturn} from "../game/engine/rules/sba-move-results.mjs";
 
 let checks = 0;
 const failures = [];
@@ -79,7 +81,8 @@ run("completed counter prefix rechecks a newly live source",()=>{
     [state.ruleOperation.serial,cards[0],0,3,4,1],"the native result preserves its exact bound completed count and one applied replacement identity");
   for(const corrupt of [progress=>progress.operation++,progress=>progress.objectId=cards[1],progress=>progress.player=1,
     progress=>progress.returnBatchId="forged",progress=>progress.sourceCohortId="forged",progress=>progress.raw.loyalty=99,
-    progress=>progress.counts.loyalty=99,progress=>progress.kinds.push("shield"),progress=>progress.applied.loyalty.push(progress.applied.loyalty[0])]){
+    progress=>progress.counts.loyalty=99,progress=>progress.kinds.push("shield"),progress=>progress.complete="forged",
+    progress=>progress.generation=-1,progress=>progress.entryApplied.push(42),progress=>progress.applied.loyalty.push(progress.applied.loyalty[0])]){
     const copy=JSON.parse(JSON.stringify(state)), row=Object.values(copy.ruleOperation.entryCounterResults).find(result=>result.objectId===cards[0]);
     corrupt(row.progress);
     assert.throws(()=>resolveAwaiting(copy,[0]),/native|progress|binding/);checks++;
@@ -226,6 +229,12 @@ for(const secondTotal of [9,10])for(const askGrant of [false,true])run(`parent g
       const before=JSON.stringify(state);assert.throws(()=>entryCounterResult(state,prepared,row.objectId,row.player,options),/matching internal/);checks++;
       eq(JSON.stringify(state),before,"a partial receipt cannot be read or consumed as a completed return, including a caller flag");
     }
+    const forged=JSON.parse(JSON.stringify(state)),parent=forged.ruleOperation.frames.find(frame=>frame.kind==="sba-linked-returns");
+    forged.ruleOperation.frames=forged.ruleOperation.frames.slice(0,forged.ruleOperation.frames.indexOf(parent)+1);
+    parent.stage="ready";const batch=forged.ruleOperation.sbaReturnBatches[parent.returnBatchId];batch.phase="counters";
+    for(const member of batch.members)member.counterReady=true;
+    assert.throws(()=>freezeSbaReturnBatch(forged,parent),/completed choices/);checks++;
+    eq(ids.map(id=>forged.objects[id]?.zone),["exile","exile"],"pretending every sibling is ready cannot freeze or commit a partial counter result");
     for(let step=0;state.awaiting&&!awaitingChoice(state).id.startsWith("entry-counters:")&&step<10;step++){
       eq(ids.map(id=>state.objects[id]?.zone),["exile","exile"],"neither return commits during a newly discovered real entry cost");
       state=JSON.parse(JSON.stringify(state));resolveAwaiting(state,[awaitingChoice(state).options.findIndex(option=>option.pay===true)]);
@@ -243,6 +252,83 @@ for(const secondTotal of [9,10])for(const askGrant of [false,true])run(`parent g
   eq(actual.map(id=>state.objects[id]?.counters.loyalty),[7,secondTotal],"the first double stays committed and the new parent grant is appended exactly once; the second uses the explicitly chosen order");
   eq(state.players[0].life,askGrant?36:40,"new real entry costs occur exactly once and completed costs remain authoritative");
   eq(state.awaiting,null,"all refreshed choices finish before priority returns");
+});
+
+const lateReturn = ({kind="zone",dual=false}={}) => {
+  const state=createState({players:[{name:"A"},{name:"B"},{name:"C"},{name:"D"}]});Object.assign(state,{phase:"MAIN1",turn:1,activePlayer:0,priorityPlayer:0});
+  const put=object=>addObject(state,{owner:0,controller:0,...object},"battlefield");
+  const sources=[0,1].map(index=>{const id=put({card:`Late Return Source ${index}`,types:["Battle"],defense:0});state.objects[id].protector=0;return id;});
+  const ids=["First Late Walker","Second Late Walker"].map(card=>addObject(state,{card,types:["Planeswalker"],loyalty:3,owner:0,controller:0},"exile"));
+  const doubling=compileScript(JSON.parse(readFileSync(new URL("../game/engine/cards/d/doubling-season.json",import.meta.url))));
+  eq(doubling.problems,[],"late redirect uses the actual loaded doubler");put({...doubling.definition,card:"Doubling Season"});
+  put({card:"Second Late Plus One",types:["Enchantment"],abilities:[{id:"second-late-plus",kind:"static",rule:"more-counters",counter:"loyalty",plus:1,affects:{what:"permanent",controller:"you",named:"Second Late Walker"}}]});
+  const gate=put({owner:2,controller:2,card:"New Late Modifier Gate",types:["Enchantment"]});
+  const modifiers=(dual?["hand","exile"]:["exile"]).map((to,index)=>addObject(state,{card:`Late Modifier ${to}`,types:["Enchantment"],owner:index?1:0,controller:index?1:0,
+    abilities:[{id:`late-${to}`,kind:"replacement",watches:kind==="entry"?{event:"enters",filter:{named:"First Late Walker",controller:"you"}}
+      :{event:"zone-change",from:"exile",to:"battlefield",filter:{what:"card",zone:"exile",named:"First Late Walker"}},
+      change:kind==="entry"?{discardInstead:{types:["Land"]}}:{to,then:[{effect:"gainLife",amount:1}]}}]},"exile"));
+  state.exiledUntil=[...sources.map((source,index)=>({source,exiled:ids[index]})),...modifiers.map(exiled=>({source:gate,exiled}))];
+  const events=afterResolving(state,[]);events.push(...resolveAwaiting(state,awaitingChoice(state).options.map((_,index)=>index)));
+  eq(Object.values(state.ruleOperation.entryCounterResults).find(row=>row.objectId===ids[0]).counters.loyalty,6,"the earlier prepared entry really holds its applied counter prefix before redirect");
+  return {state,ids,events};
+};
+
+for(const kind of ["entry","zone"])run(`new ${kind} replacement redirects an earlier prepared return`,()=>{
+  let {state,ids,events}=lateReturn({kind});state=JSON.parse(JSON.stringify(state));events.push(...concede(state,2));
+  for(let step=0;state.awaiting&&step<20;step++){
+    eq(ids.map(id=>state.objects[id]?.zone),["exile","exile"],"new live replacements finish while both original return objects remain outside the battlefield");
+    state=JSON.parse(JSON.stringify(state));events.push(...resolveAwaiting(state,[0]));
+  }
+  const change=events.filter(event=>event.kind==="GameEventCardChangeZone"&&event.data.fields.card.cardId===ids[0]);
+  eq(change.length,1,"the original returning object has one actual native redirected event");
+  eq(change[0].data.fields.to.zoneType,kind==="entry"?"Graveyard":"Exile","the native entry or zone replacement controls the actual final destination");
+  eq(change[0].data.fields.enteredAs,undefined,"a redirected return never produces a battlefield arrival");
+  eq(state.objects[ids[0]],undefined,"graveyard movement and CR400.8 re-exile both retire the old identity");
+  const zone=kind==="entry"?state.zones.graveyard[0]:state.zones.exile;
+  const newId=zone.find(id=>state.objects[id].card==="First Late Walker");
+  eq(newId!==ids[0],true,"the real destination holds a new identity even when exile remains exile");
+  eq(state.objects[newId]?.counters,{},"the abandoned prospective loyalty placement does not leak counters onto a redirected card");
+  eq(events.filter(event=>event.kind==="GameEventCardCounters").map(event=>event.data.fields.newValue),[7],"only the independently returning second walker reports its actual counter placement");
+  eq(state.players[0].life,kind==="zone"?41:40,"the applicable native replacement followup runs once after a real redirected event");
+  eq(state.awaiting,null,"redirected return and remaining sibling finish their native continuation");
+});
+
+for(const destination of ["hand","exile","departed-exile"])run(`late redirect choices ${destination}`,()=>{
+  let {state,ids,events}=lateReturn({dual:true});events.push(...concede(state,2));
+  events.push(...resolveAwaiting(state,[0]));
+  eq(awaitingChoice(state).id.startsWith(`zone-replacements:${ids[0]}:`),true,"two newly live redirects require the native affected player's actual replacement question");
+  eq(ids.map(id=>state.objects[id]?.zone),["exile","exile"],"no prepared sibling commits before the late replacement answer");
+  const frame=state.ruleOperation.frames.at(-1),parent=state.ruleOperation.frames.at(-2),batch=state.ruleOperation.sbaReturnBatches[parent.returnBatchId];
+  const oldKey=frame.reopenReturn;
+  for(const corrupt of [child=>child.reopenReturn="forged",child=>child.returnBatchId="forged",child=>child.proposal.objectId=ids[1],
+    child=>child.proposal.from="hand",child=>child.preparedCounterResult="forged"]){
+    const copy=JSON.parse(JSON.stringify(state));corrupt(copy.ruleOperation.frames.at(-1));
+    assert.throws(()=>resolveAwaiting(copy,[0]),/native|internal/);checks++;
+    eq(ids.map(id=>copy.objects[id]?.zone),["exile","exile"],"forged batch/key/object/from/counter receipts cannot commit a return");
+  }
+  assert.throws(()=>reopenPreparedSbaReturn(state,parent,ids[0]),/native/);checks++;
+  state=JSON.parse(JSON.stringify(state));
+  const before=JSON.stringify(state);assert.throws(()=>resolveAwaiting(state,[2]),/Invalid selection/);checks++;
+  eq(JSON.stringify(state),before,"an invalid late replacement answer preserves the complete native continuation");
+  if(destination==="departed-exile")events.push(...concede(state,1));
+  else events.push(...resolveAwaiting(state,[awaitingChoice(state).options.findIndex(option=>option.label.includes(`Late Modifier ${destination}`))]));
+  for(let step=0;state.awaiting&&step<20;step++)events.push(...resolveAwaiting(state,[0]));
+  eq(events.filter(event=>event.kind==="GameEventCardChangeZone"&&event.data.fields.card.cardId===ids[0]).map(event=>event.data.fields.to.zoneType),
+    [destination==="exile"?"Exile":"Hand"],"the explicit legal answer, or surviving live candidate after concession, determines the actual destination");
+  eq([state.players[0].life,state.players[1].life],destination==="exile"?[40,41]:[41,40],"the actual chosen modifier controller receives its followup once; no other controller gains life");
+  eq(events.filter(event=>event.kind==="GameEventCardCounters").map(event=>event.data.fields.newValue),[7],"late redirects never emit the discarded first entry's prospective counters");
+  eq(state.ruleOperation,undefined,"the native return operation completes once after its replacement answer");
+  assert.throws(()=>reopenPreparedSbaReturn(state,{...parent,stage:"zone-recheck"},ids[0]),/internal|native/);checks++;
+  eq(oldKey.startsWith(`${batch.operation}:sba-return-move:`),true,"the recheck consumed an actual operation-bound preparation rather than a caller skip flag");
+});
+
+run("ordinary same-exile move keeps its established CR400.8 identity",()=>{
+  const state=createState({players:[{name:"A"},{name:"B"}]}),events=[];
+  const old=addObject(state,{card:"Ordinary Exile Identity",types:["Artifact"],owner:0,controller:0},"exile");
+  const moved=moveOne(state,old,"exile",events);
+  eq([state.objects[old],state.objects[moved]?.zone,moved!==old],[undefined,"exile",true],"ordinary re-exile creates a new object without return-ledger or skip flags");
+  eq(events.filter(event=>event.kind==="GameEventCardChangeZone").map(event=>[event.data.fields.from.zoneType,event.data.fields.to.zoneType,event.data.fields.enteredAs]),
+    [["Exile","Exile",undefined]],"ordinary re-exile is one native event and no battlefield entry");
 });
 
 assert.deepEqual(failures,[],failures.join("\n"));

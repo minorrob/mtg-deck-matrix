@@ -55,6 +55,7 @@ function readCounterProgress(state, prepared, objectId, player, returnBatchId, c
   if (binding.prepared.counterResult !== prepared.counterResult || !progress || progress.operation !== binding.operation.serial
     || progress.returnBatchId !== returnBatchId || progress.sourceCohortId !== binding.batch.sourceCohortId
     || progress.objectId !== objectId || progress.player !== player
+    || typeof progress.complete!=="boolean"
     || JSON.stringify(progress.raw) !== JSON.stringify(result.raw)
     || Object.values(progress.counts ?? {}).some(count => !Number.isInteger(count) || count < 0)
     || JSON.stringify(Object.fromEntries(Object.entries(progress.counts ?? {}).filter(([,count]) => count > 0))) !== JSON.stringify(result.counters)

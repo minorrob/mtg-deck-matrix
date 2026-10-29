@@ -1,0 +1,25 @@
+const VARIANT="zone";
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {createState,addObject} from "../w0-w1-faces/game/engine/state/index.mjs";
+import {compileScript} from "../w0-w1-faces/game/engine/cards/index.mjs";
+import {afterResolving} from "../w0-w1-faces/game/engine/rules/priority.mjs";
+import {awaitingChoice,resolveAwaiting} from "../w0-w1-faces/game/engine/rules/turn.mjs";
+import {concede} from "../w0-w1-faces/game/engine/rules/sba.mjs";
+const state=createState({players:[{name:"A"},{name:"B"},{name:"C"}]});Object.assign(state,{phase:"MAIN1",turn:1,activePlayer:0,priorityPlayer:0});
+const put=object=>addObject(state,{owner:0,controller:0,...object},"battlefield");
+const sources=[0,1].map(index=>{const id=put({card:`Grant Source ${index}`,types:["Battle"],defense:0});state.objects[id].protector=0;return id;});
+const ids=["First Grant Walker","Second Grant Walker"].map(card=>addObject(state,{card,types:["Planeswalker"],loyalty:3,owner:0,controller:0},"exile"));
+const doubling=compileScript(JSON.parse(readFileSync(new URL("../w0-w1-faces/game/engine/cards/d/doubling-season.json",import.meta.url))));
+assert.deepEqual(doubling.problems,[]);put({...doubling.definition,card:"Doubling Season"});
+put({card:"Second Counter Plus One",types:["Enchantment"],abilities:[{id:"second-plus",kind:"static",rule:"more-counters",counter:"loyalty",plus:1,affects:{what:"permanent",controller:"you",named:"Second Grant Walker"}}]});
+put({card:"First Existing Exile Redirect",types:["Enchantment"],abilities:[{id:"old-exile",kind:"replacement",watches:{event:"zone-change",from:"exile",to:"battlefield",filter:{what:"card",zone:"exile",named:"First Grant Walker"}},change:{to:"exile"}}]});
+const gate=put({owner:2,controller:2,card:"New Entry Grant Gate",types:["Enchantment"]});
+const grant=addObject(state,{card:"New Late Move Modifier",types:["Enchantment"],owner:0,controller:0,abilities:[{id:"late-modifier",kind:"replacement",watches:VARIANT==="entry"?{event:"enters",filter:{named:"First Grant Walker",controller:"you"}}:{event:"zone-change",from:"exile",to:"exile",filter:{what:"card",zone:"exile",named:"First Grant Walker"}},change:VARIANT==="entry"?{discardInstead:{types:["Land"]}}:{to:"battlefield"}}]},"exile");
+state.exiledUntil=[...sources.map((source,index)=>({source,exiled:ids[index]})),{source:gate,exiled:grant}];
+afterResolving(state,[]);resolveAwaiting(state,awaitingChoice(state).options.map((_,index)=>index));
+let events=[];
+try {events=concede(state,2);} catch(error){console.log(error.stack);throw error;}
+for(let step=0;state.awaiting&&step<20;step++)events.push(...resolveAwaiting(state,[0]));
+const first=state.zones.battlefield.find(id=>state.objects[id].card==="First Grant Walker");
+assert.equal(state.objects[first]?.counters.loyalty,6,"a newly applicable zone replacement can redirect the saved event back to battlefield without replaying the already-applied old exile redirect");

@@ -61,7 +61,7 @@ import {protectedFrom} from "./protection.mjs";
 import {answerForDeparted, answerRuleForDeparted, goOnWithout} from "./turn.mjs";
 import {cancelRuleOperation, beginRuleOperation, registerRuleOperation, askRuleOperation, emitRuleEvents} from "./operations.mjs";
 import {startSbaCohort, freezeSbaCohort, sbaCohort, reopenSbaPreparation, refreshPendingSbaSources, markSbaTriggerBatch,
-  startSbaLinkedReturns, sbaReturnBatch, markSbaReturnEvents, freezeSbaReturnBatch} from "./sba-move-results.mjs";
+  startSbaLinkedReturns, sbaReturnBatch, markSbaReturnEvents, freezeSbaReturnBatch, reopenPreparedSbaReturn} from "./sba-move-results.mjs";
 import {outsideEffectsFrame} from "./damage-operation.mjs";
 import {entryCounterProgressFrame, prospectiveEnteringState} from "./entry-characteristics.mjs";
 import {deferredEnteringContinuation} from "./pre-entry.mjs";
@@ -275,7 +275,7 @@ registerRuleOperation("sba-linked-returns",(state,frame)=>{
       frame.stage="after-entry";
       return {status:"continue",children:[{kind:"move-one",id:member.id,to:"battlefield",prepareOnly:true,returnBatchId:frame.returnBatchId}]};
     }
-    frame.attachmentsChecked=false;frame.countersChecked=false;frame.entryRecheckIndex=0;frame.stage="entry-recheck";
+    frame.attachmentsChecked=false;frame.countersChecked=false;frame.entryRecheckIndex=0;frame.zonesChecked=false;frame.stage="entry-recheck";
   }
   if(frame.stage==="after-entry-recheck"){
     const member=batch.members.find(member=>member.id===frame.recheckingEntryId),prepared=operation.sbaPreparedReturns[member.prepared];
@@ -285,9 +285,35 @@ registerRuleOperation("sba-linked-returns",(state,frame)=>{
       const counters=prepared.counterResult?prepared.entering.counters:result.entering.counters;
       prepared.entering={...result.entering,counters};prepared.entryPatch=result.objectPatch;prepared.counterPlan=result.counterPlan;
       prepared.entryProgress=result.entryProgress;
-      if(result.entering.to&&result.entering.to!=="battlefield")throw new Error("A deferred-entry redirect needs its native zone continuation");
+      if(result.entering.to&&result.entering.to!=="battlefield")member.entryRedirect=true;
     }
-    delete frame.childResult;frame.attachmentsChecked=false;frame.countersChecked=false;frame.entryRecheckIndex=0;frame.stage="entry-recheck";
+    delete frame.childResult;frame.attachmentsChecked=false;frame.countersChecked=false;frame.entryRecheckIndex=0;frame.zonesChecked=false;frame.stage="entry-recheck";
+  }
+  if(frame.stage==="after-zone-recheck"){
+    const member=batch.members.find(member=>member.id===frame.recheckingZoneId);
+    if(!frame.childResult?.preparedReturn)member.skipped=true;
+    else{
+      const prepared=operation.sbaPreparedReturns[member.prepared];
+      if(prepared.proposal.to!=="battlefield"){
+        member.counterReady=true;delete member.counterPartial;
+      }
+      delete member.entryRedirect;
+    }
+    delete frame.childResult;frame.zoneRecheckIndex++;frame.stage="zone-recheck";
+  }
+  if(frame.stage==="entry-recheck"&&!frame.zonesChecked){frame.zoneRecheckIndex=0;frame.stage="zone-recheck";}
+  if(frame.stage==="zone-recheck"){
+    while(frame.zoneRecheckIndex<frame.order.length){
+      const member=batch.members.find(member=>member.id===frame.order[frame.zoneRecheckIndex]),prepared=operation.sbaPreparedReturns?.[member.prepared];
+      if(member.skipped||!prepared||state.objects[member.id]?.zone!==member.from||state.players[member.owner].lost){member.skipped=true;frame.zoneRecheckIndex++;continue;}
+      if(member.entryRedirect||ruleReplacementCandidates(state,prepared.proposal).length){
+        const child=reopenPreparedSbaReturn(state,frame,member.id);
+        frame.recheckingZoneId=member.id;frame.stage="after-zone-recheck";
+        return {status:"continue",children:[child]};
+      }
+      frame.zoneRecheckIndex++;
+    }
+    frame.zonesChecked=true;frame.stage="entry-recheck";
   }
   if(frame.stage==="entry-recheck"){
     while(frame.entryRecheckIndex<frame.order.length){
@@ -328,7 +354,7 @@ registerRuleOperation("sba-linked-returns",(state,frame)=>{
       }
       prepared.host=member.host;prepared.hostZone=state.objects[member.host].zone;frame.attachmentIndex++;
     }
-    delete frame.attachmentResume;frame.attachmentsChecked=true;frame.countersChecked=false;frame.entryRecheckIndex=0;frame.stage="entry-recheck";
+    delete frame.attachmentResume;frame.attachmentsChecked=true;frame.countersChecked=false;frame.entryRecheckIndex=0;frame.zonesChecked=false;frame.stage="entry-recheck";
     return {status:"continue"};
   }
   if(frame.stage==="after-counter"){
@@ -339,7 +365,7 @@ registerRuleOperation("sba-linked-returns",(state,frame)=>{
       member.counterPartial=frame.childResult.partial===true;
     }else member.skipped=true;
     delete frame.childResult;
-    if(member.counterPartial){frame.entryRecheckIndex=0;frame.attachmentsChecked=false;frame.countersChecked=false;frame.stage="entry-recheck";}
+    if(member.counterPartial){frame.entryRecheckIndex=0;frame.attachmentsChecked=false;frame.countersChecked=false;frame.zonesChecked=false;frame.stage="entry-recheck";}
     else {frame.index++;frame.stage="counters";}
   }
   if(frame.stage==="after-counter-recheck"){
@@ -348,7 +374,7 @@ registerRuleOperation("sba-linked-returns",(state,frame)=>{
       member.counterReady=!frame.childResult.partial;member.counterPartial=frame.childResult.partial===true;}
     else member.skipped=true;
     delete frame.childResult;frame.recheckIndex=0;
-    if(member.counterPartial){frame.entryRecheckIndex=0;frame.attachmentsChecked=false;frame.countersChecked=false;frame.stage="entry-recheck";}
+    if(member.counterPartial){frame.entryRecheckIndex=0;frame.attachmentsChecked=false;frame.countersChecked=false;frame.zonesChecked=false;frame.stage="entry-recheck";}
     else frame.stage="counter-recheck";
   }
   if(frame.stage==="counters"){
@@ -381,7 +407,7 @@ registerRuleOperation("sba-linked-returns",(state,frame)=>{
       if(needs){frame.recheckingId=member.id;frame.stage="after-counter-recheck";return {status:"continue",children:[counterFrame]};}
       frame.recheckIndex++;
     }
-    frame.countersChecked=true;frame.entryRecheckIndex=0;frame.stage="entry-recheck";
+    frame.countersChecked=true;frame.entryRecheckIndex=0;frame.zonesChecked=false;frame.stage="entry-recheck";
     return {status:"continue"};
   }
   if(frame.stage==="ready"){

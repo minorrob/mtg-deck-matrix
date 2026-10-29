@@ -16,8 +16,9 @@ actual old ID, owner and source zone bind each result. Owner choices follow APNA
 moves/payment wrappers remain unchanged. Costs, concessions and other interleaved actions remain authoritative;
 only operation proposals/choices are saved, with no game snapshot rollback or event-buffer splicing.
 
-The secured local prototype passes 166 native checks before the remaining redirect/ledger/full-proof work below.
-It is based on exact assembled55f133f5 (local merge a265dbb6); exact420e797 must be merged before publication.
+The secured local prototype passes 271 native checks before the remaining redirect/ledger/full-proof work below.
+Progress work was secured at314d11d1, then exact assembled420e797 was merged ataa4c3702. README uses the actual
+710 flat readers (root709 plus this lane's additive native reader). This remains an unfinished local checkpoint.
 Focused original readers also pass: counter87, Battle-SBA128, intrinsic34 and Battle95. It covers:
 
 - The actual compiled Clone/Bear source-order cases, with a legal existing copy and no legal copy.
@@ -50,8 +51,26 @@ receipt and append-only applied identities; it cannot rerun the old multiplier. 
 
 Remaining required proof includes further entry-progress forgery/expiry controls, reverse source/choice ordering,
 JSON/forgery/expiry, live protector/attachment refresh after later choices, same-zone redirects/no movement/zero
-counters, exact-once arrival/follow-up triggers and unchanged ordinary callers. Late native entry redirects still deliberately stop at an explicit unimplemented continuation instead of inventing
-a result. Full inherited mutation unions must
+counters, exact-once arrival/follow-up triggers and unchanged ordinary callers. Late entry/zone redirects now pass the bounded native cases: a completed prospective six-counter prefix can be
+redirected to graveyard or re-exiled as a new CR400.8 identity with no battlefield entry or phantom counter event.
+Two late live zone modifiers require the affected player's explicit native choice; both answers, JSON, invalid
+answers, batch/key/object/from/counter forgery, early/reused helpers and live modifier-owner departure pass.
+Native replacement followups run exactly once for the actual source controller. Ordinary same-exile movement
+retains its existing new-identity/no-battlefield-entry behavior. No old-ID retirement helper was added.
+
+One further concrete RED is open: an earlier saved zone redirect to exile has no entering child. If a later native
+replacement redirects that modified event back toward battlefield, the first entering child currently rejects its
+new after-zone-recheck parent binding. The old applied exile replacement must stay excluded. Source/log are
+archived; additive native first-entry binding and actual child receipt forwarding are requested, not implemented.
+
+Another native liveness RED is archived: after real Temple Garden life payment, an outside concession returns a
+new life watcher while the linked Clone choice remains pending. Final preflight collection incorrectly lets that
+external watcher see the prior cost (actual1, expected0); the old watcher1/in-batch returning watcher0 controls
+remain green. A validated native pre-concession/pre-cost progress collection seam is requested, not implemented.
+No event buffer/cursor rewriting or generic trigger/payment change is proposed.
+
+Focused native progress/redirect proof has a green baseline and all10 semantic controls caught (missed[]).
+This scoped proof does not replace the required original full reader/mutation unions. Full inherited mutation unions must
 remain intact; no incomplete positive count is acceptance.
 
 Separate generic-token debt is preserved without production edits: an actual copied-token batch has the same4-vs8

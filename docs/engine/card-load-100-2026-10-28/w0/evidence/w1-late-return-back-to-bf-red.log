@@ -1,0 +1,17 @@
+file:///C:/Users/robmi/CrankMagic/worktrees/load100/w0-w1-faces/game/engine/rules/entry-characteristics.mjs:110
+    throw new Error("No matching native deferred-entry progress binding");
+          ^
+
+Error: No matching native deferred-entry progress binding
+    at returnEntryBinding (file:///C:/Users/robmi/CrankMagic/worktrees/load100/w0-w1-faces/game/engine/rules/entry-characteristics.mjs:110:11)
+    at saveDeferredEntryProgress (file:///C:/Users/robmi/CrankMagic/worktrees/load100/w0-w1-faces/game/engine/rules/entry-characteristics.mjs:176:17)
+    at finishEntry (file:///C:/Users/robmi/CrankMagic/worktrees/load100/w0-w1-faces/game/engine/rules/pre-entry.mjs:76:49)
+    at file:///C:/Users/robmi/CrankMagic/worktrees/load100/w0-w1-faces/game/engine/rules/pre-entry.mjs:234:34
+    at continueRuleOperation (file:///C:/Users/robmi/CrankMagic/worktrees/load100/w0-w1-faces/game/engine/rules/operations.mjs:73:21)
+    at answerRuleOperation (file:///C:/Users/robmi/CrankMagic/worktrees/load100/w0-w1-faces/game/engine/rules/operations.mjs:109:10)
+    at resolveAwaiting (file:///C:/Users/robmi/CrankMagic/worktrees/load100/w0-w1-faces/game/engine/rules/turn.mjs:501:77)
+    at file:///C:/Users/robmi/CrankMagic/worktrees/load100/scratch/w1-late-return-back-to-bf-red.mjs:23:62
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+
+Node.js v22.23.3

@@ -135,23 +135,56 @@ export function sbaReturnBatch(state, key) {
   return batch;
 }
 
+export function reopenPreparedSbaReturn(state,frame,objectId) {
+  const operation=state.ruleOperation,batch=sbaReturnBatch(state,frame.returnBatchId),member=batch.members.find(member=>member.id===objectId);
+  const prepared=operation.sbaPreparedReturns?.[member?.prepared];
+  if(operation.frames.at(-1)!==frame||frame.kind!=="sba-linked-returns"||frame.stage!=="zone-recheck"
+    || !["planning","counters"].includes(batch.phase)||member?.skipped||member?.committed||!prepared
+    || prepared.operation!==operation.serial||prepared.returnBatchId!==frame.returnBatchId||prepared.sourceCohortId!==batch.sourceCohortId
+    || prepared.objectId!==objectId||prepared.from!==member.from||prepared.owner!==member.owner
+    || state.objects[objectId]?.zone!==member.from||state.objects[objectId]?.owner!==member.owner)
+    throw new Error("No matching native linked-return recheck");
+  const proposal=structuredClone(prepared.proposal);
+  if(member.entryRedirect){
+    if(!prepared.entering?.to||prepared.entering.to==="battlefield")throw new Error("No native entering redirect to resume");
+    proposal.to=prepared.entering.to;
+  }
+  return {kind:"move-one",id:objectId,to:proposal.to,prepareOnly:true,returnBatchId:frame.returnBatchId,reopenReturn:member.prepared,
+    stage:"replacements",proposal,options:structuredClone(prepared.options),preparedEntering:structuredClone(prepared.entering),
+    counterPlan:structuredClone(prepared.counterPlan),preparedCounterResult:prepared.counterResult,entryPatch:structuredClone(prepared.entryPatch),
+    entryProgress:prepared.entryProgress};
+}
+
 export function validateSbaReturnPreparation(state, frame) {
   const operation = state.ruleOperation, batch = sbaReturnBatch(state,frame.returnBatchId);
-  const member = batch.members.find(member => member.id === frame.id);
-  if (batch.phase !== "planning" || operation.frames.at(-1) !== frame || frame.kind !== "move-one" || !frame.prepareOnly || frame.payment
-    || !member || member.skipped || state.objects[member.id]?.zone !== member.from || state.objects[member.id]?.owner !== member.owner
-    || !operation.frames.some(parent => parent.kind === "sba-linked-returns" && parent.returnBatchId === frame.returnBatchId))
+  const member = batch.members.find(member => member.id === frame.id),parent=operation.frames.at(-2);
+  const prepared=operation.sbaPreparedReturns?.[member?.prepared];
+  const recheck=frame.reopenReturn!==undefined;
+  if (!["planning","counters"].includes(batch.phase) || operation.frames.at(-1) !== frame || frame.kind !== "move-one" || !frame.prepareOnly || frame.payment
+    || !member || member.skipped || member.committed || state.objects[member.id]?.zone !== member.from || state.objects[member.id]?.owner !== member.owner
+    || !operation.frames.some(parent => parent.kind === "sba-linked-returns" && parent.returnBatchId === frame.returnBatchId)
+    || !recheck&&(batch.phase!=="planning"||member.prepared)
+    || recheck&&(!prepared||frame.reopenReturn!==member.prepared||prepared.operation!==operation.serial
+      || prepared.objectId!==frame.id||prepared.from!==member.from||prepared.returnBatchId!==frame.returnBatchId||prepared.sourceCohortId!==batch.sourceCohortId
+      || parent?.kind!=="sba-linked-returns"||parent.returnBatchId!==frame.returnBatchId||parent.stage!=="after-zone-recheck"||parent.recheckingZoneId!==frame.id
+      || frame.proposal?.objectId!==frame.id||frame.proposal?.from!==member.from
+      || ["applied","appliedBy"].some(key=>JSON.stringify((frame.proposal[key]??[]).slice(0,(prepared.proposal[key]??[]).length))!==JSON.stringify(prepared.proposal[key]??[]))
+      || JSON.stringify(frame.preparedEntering)!==JSON.stringify(prepared.entering)||frame.preparedCounterResult!==prepared.counterResult
+      || JSON.stringify(frame.counterPlan)!==JSON.stringify(prepared.counterPlan)||JSON.stringify(frame.entryPatch)!==JSON.stringify(prepared.entryPatch)
+      || frame.entryProgress!==prepared.entryProgress))
     throw new Error("No matching native linked-return preparation");
   return {batch, member};
 }
 
 export function savePreparedSbaReturn(state, frame, data) {
   const {batch,member} = validateSbaReturnPreparation(state,frame), operation = state.ruleOperation;
-  if (member.prepared || data.proposal.objectId !== member.id || data.proposal.from !== member.from) throw new Error("No matching native linked-return result");
+  if (data.proposal.objectId !== member.id || data.proposal.from !== member.from) throw new Error("No matching native linked-return result");
+  const previous=frame.reopenReturn;
   const key = `${operation.serial}:sba-return-move:${operation.sbaReturnMoveSerial = (operation.sbaReturnMoveSerial ?? 0) + 1}`;
   (operation.sbaPreparedReturns ??= {})[key] = {...structuredClone(data), operation: operation.serial, returnBatchId: frame.returnBatchId,
     sourceCohortId: batch.sourceCohortId, objectId: member.id, from: member.from, owner: member.owner};
   member.prepared = key;
+  if(previous)delete operation.sbaPreparedReturns[previous];
   return key;
 }
 
