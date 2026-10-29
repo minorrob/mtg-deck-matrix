@@ -632,6 +632,45 @@ for (const withLand of [false, true]) {
   eq([state.objects[hobbit].counters["+1/+1"], state.players[0].sacrificedNontokenThisTurn, state.stack.length], [6, 2, 0], "two real replaced Food sacrifices give six entry counters exactly once");
   eq(state.zones.exile.map(id => state.objects[id].card), ["Entry Food 0", "Entry Food 1"], "devour respects both actual sacrifice destinations");
 }
+{
+  const state = fresh();
+  const other = bear(state, "Second Entry Elf"); state.objects[other].subtypes = ["Elf"];
+  const foreign = bear(state, "Foreign Entry Elf", 1); state.objects[foreign].subtypes = ["Elf"];
+  const id = cast(state, "Banner of Kinship");
+  state.effects = [{id: "entry-animation", layer: 4, affects: {ids: [id]}, apply: {addTypes: ["Creature"], addSubtypes: ["Elf"]}, sourceController: 0, until: null},
+    {id: "entry-stats", layer: 7, sublayer: "b", affects: {ids: [id]}, apply: {setPower: 1, setToughness: 1}, sourceController: 0, until: null}];
+  resolveTop(state);
+  eq([awaitingChoice(state).title, field(state, "Banner of Kinship"), state.stack.length], ["Banner of Kinship: choose", [], 1], "one printed Banner replacement asks one type choice, not an order between its split compiler parts");
+  resolveAwaiting(state, [awaitingChoice(state).options.find(option => option.label === "Elf").index]);
+  const [banner] = field(state, "Banner of Kinship");
+  eq([state.objects[banner].chosen, state.objects[banner].counters.fellowship], ["Elf", 2], "fresh chosen-type counters count its controller's two existing Elves, excluding the prospective Elf entrant and opponent");
+}
+for (const recopy of [false, true]) {
+  const state = fresh();
+  state.effects = [{id: "keep-raw-clone", layer: 7, sublayer: "c", affects: {types: ["Creature"], controller: "you"}, apply: {power: 1, toughness: 1}, sourceController: 0, until: null}];
+  const raw = addObject(state, {...index.definition("Clone"), card: "Clone", owner: 0, controller: 0}, "battlefield");
+  cast(state, "Altered Ego"); state.stack.at(-1).x = 3;
+  resolveTop(state);
+  resolveAwaiting(state, [awaitingChoice(state).options.find(option => option.cardId === raw).index]);
+  eq(state.stack.length, 1, "the copied raw Clone replacement gets its own pre-entry choice");
+  resolveAwaiting(state, [awaitingChoice(state).options.find(option => recopy ? option.label === "Entry Elf" : option.copyOf === null).index]);
+  const made = state.zones.battlefield.find(id => state.objects[id].uncopied?.card === "Altered Ego");
+  eq([state.objects[made].card, state.objects[made].counters["+1/+1"] ?? 0], recopy ? ["Entry Elf", 0] : ["Clone", 3],
+    "CR707.9e: another applied copy removes the earlier copy's additional counter effect; declining keeps that effect");
+}
+for (const externalTap of [false, true]) {
+  const state = fresh();
+  state.effects = [{id: "keep-raw-clone", layer: 7, sublayer: "c", affects: {types: ["Creature"], controller: "you"}, apply: {power: 1, toughness: 1}, sourceController: 0, until: null}];
+  const raw = addObject(state, {...index.definition("Clone"), card: "Clone", owner: 0, controller: 0}, "battlefield");
+  if (externalTap) addObject(state, {card: "Other Entry Tap", types: ["Enchantment"], owner: 1, controller: 1, abilities: [{id: "tap", kind: "replacement", watches: {event: "enters", types: ["Creature"]}, change: {entersTapped: true}}]}, "battlefield");
+  const hand = addObject(state, {card: "Tapped Copier", types: ["Creature"], power: 2, toughness: 2, owner: 0, controller: 0, abilities: [{id: "copy", kind: "replacement",
+    watches: {event: "enters", who: "self"}, change: {copyOf: {types: ["Creature"]}, tapped: true}}]}, "hand", 0);
+  pushSpell(state, hand, {controller: 0, permanent: true}); resolveTop(state);
+  resolveAwaiting(state, [awaitingChoice(state).options.find(option => option.cardId === raw).index]);
+  resolveAwaiting(state, [awaitingChoice(state).options.find(option => option.label === "Entry Elf").index]);
+  const made = state.zones.battlefield.find(id => state.objects[id].uncopied?.card === "Tapped Copier");
+  eq(state.objects[made].tapped, externalTap, "a subsequent copy removes a prior copy's tapped exception while preserving another source's tapped replacement");
+}
 }
 
 if (!process.argv[2] || process.argv[2] === "entryTokens") {
@@ -648,7 +687,7 @@ if (!process.argv[2] || process.argv[2] === "entryTokens") {
     const before = state.nextObjectId, existing = state.zones.battlefield.length;
     const effect = copying ? {effect: "copyPermanent", targets: [source], count: 2, remember: true}
       : {effect: "createToken", count: 2, token: {...index.definition("Metallic Mimic"), name: "Metallic Mimic"}, remember: true};
-    const first = beginResolution(state, [effect, {effect: "gainLife", who: [0], amount: 5}], {controller: 0, source: null});
+    const first = beginResolution(state, [effect, {effect: "gainLife", who: [0], amount: {rememberedCount: true, plus: 3}}], {controller: 0, source: null});
     eq([state.zones.battlefield.length, state.nextObjectId, state.players[0].life], [existing, before, 40], "simultaneous Mimic tokens wait for every pre-entry choice before creation or the next instruction");
     eq(first.events.filter(event => event.kind === "GameEventCardChangeZone"), [], "planning a token instruction emits no provisional token arrival");
     const partial = resolveAwaiting(state, [awaitingChoice(state).options.find(option => option.label === "Elf").index]);

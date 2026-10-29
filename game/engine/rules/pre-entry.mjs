@@ -9,7 +9,7 @@ import {characteristicsOf, staticAbilities} from "./layers.mjs";
 import {enteringChoice} from "./entering.mjs";
 import {creatureTypesInGame} from "../script/effects/asking.mjs";
 import {entryCopyPatch} from "../script/effects/permanents.mjs";
-import {chosenFor, withChosen} from "../script/chosen.mjs";
+import {chosenFor, withChosen, namesChosen} from "../script/chosen.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 import {amountOf} from "../script/amount.mjs";
 import {cardsIn} from "../state/index.mjs";
@@ -56,6 +56,7 @@ function askData(state, frame) {
 function finishEntry(state, frame) {
   const view = prospectiveEnteringState(state, frame), object = view.objects[frame.objectId], current = characteristicsOf(view, frame.objectId);
   const counters = {...frame.proposal.counters};
+  for (const [counter, count] of Object.entries(frame.copyCounters ?? {})) counters[counter] = (counters[counter] ?? 0) + count;
   if (current.types.includes("Planeswalker") && Number.isInteger(object.loyalty)) counters.loyalty = (counters.loyalty ?? 0) + object.loyalty;
   if (frame.phyrexianLife > 0 && counters.loyalty > 0 && (object.keywords ?? []).includes("Compleated"))
     counters.loyalty = Math.max(0, counters.loyalty - 2 * frame.phyrexianLife);
@@ -64,7 +65,7 @@ function finishEntry(state, frame) {
     if (n > 0) counters[counter] = (counters[counter] ?? 0) + n;
   }
   for (const counter of Object.keys(counters)) if (!(counters[counter] > 0)) delete counters[counter];
-  return {status: "done", result: {entering: {tapped: frame.proposal.tapped === true, counters, asks: [],
+  return {status: "done", result: {entering: {tapped: frame.proposal.tapped === true || frame.copyTapped === true, counters, asks: [],
     designations: frame.proposal.designations ?? [], ...(frame.gainsKeywords?.length ? {gainsKeywords: frame.gainsKeywords} : {}),
     ...(frame.to ? {to: frame.to} : {})}, objectPatch: frame.objectPatch}};
 }
@@ -123,10 +124,11 @@ registerRuleOperation("entering", (state, frame) => {
       frame.objectPatch.set = {...frame.objectPatch.set, ...patch.set};
       frame.objectPatch.remove = [...new Set([...frame.objectPatch.remove, ...patch.remove])].filter(key => !(key in frame.objectPatch.set));
       frame.generation += 1;
-      if (ask.copy?.tapped) frame.proposal.tapped = true;
+      frame.copyTapped = ask.copy?.tapped === true;
+      frame.copyCounters = {};
       const copiedView = prospectiveEnteringState(state, frame);
       for (const extra of ask.copy?.except?.entersWithCounters ?? []) if (matchesSelector({...(extra.if ?? {}), what: "permanent"}, copiedView,
-        frame.objectId, {controller: frame.player, source: frame.objectId})) frame.proposal.counters[extra.counter] = (frame.proposal.counters[extra.counter] ?? 0) + extra.count;
+        frame.objectId, {controller: frame.player, source: frame.objectId})) frame.copyCounters[extra.counter] = (frame.copyCounters[extra.counter] ?? 0) + extra.count;
     }
     if (option.pay) {
       emitRuleEvents(state, runEffect(state, {effect: "loseLife", amount: data.life}, {controller: frame.player, source: frame.objectId}));
@@ -145,6 +147,17 @@ registerRuleOperation("entering", (state, frame) => {
   }
   const view = prospectiveEnteringState(state, frame), proposal = proposalIn(view, frame);
   let candidates = ruleReplacementCandidates(view, proposal);
+  /* The compiler may split one printed replacement into its choice and its choice-dependent counter part (Banner
+     of Kinship). Those parts are one replacement, not two effects for the player to order. Distinct replacements,
+     including repeated identical keywords, retain their own candidates and player order decision. */
+  const grouped = new Set();
+  candidates = candidates.map(candidate => {
+    if (candidate.ability.change?.choose === undefined || !candidate.ability.text) return candidate;
+    const parts = candidates.filter(part => part !== candidate && part.holderId === candidate.holderId
+      && part.ability.text === candidate.ability.text && namesChosen(part.ability.change?.entersWithCounters?.count));
+    for (const part of parts) grouped.add(part.key);
+    return {...candidate, members: [candidate, ...parts]};
+  }).filter(candidate => !grouped.has(candidate.key));
   /* Copy replacement effects precede every ordinary entry replacement (CR 616.1c). */
   const copies = candidates.filter(candidate => candidate.ability.change?.copyOf);
   if (copies.length) candidates = copies;
@@ -163,7 +176,8 @@ registerRuleOperation("entering", (state, frame) => {
     }
   }
   const wasTapped = proposal.tapped;
-  frame.proposal = applyRuleReplacement(view, proposal, selected.key);
+  frame.proposal = proposal;
+  for (const member of selected.members ?? [selected]) frame.proposal = applyRuleReplacement(view, frame.proposal, member.key);
   frame.asks.push(...(frame.proposal.asks ?? []).map(ask => ({...ask, wasTapped})));
   delete frame.proposal.asks;
   return {status: "continue"};
