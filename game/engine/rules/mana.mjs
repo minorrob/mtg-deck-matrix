@@ -251,7 +251,7 @@ export function automaticPayment(pool, cost, options = {}) {
 }
 
 /** Every distinct way to pay, up to `limit`, for offering as a choice. */
-export function paymentOptions(pool, cost, options = {}, limit = 12) {
+export function paymentOptions(pool, cost, options = {}, limit = Infinity) {
   return payments(pool, cost, options, limit);
 }
 
@@ -263,8 +263,8 @@ export function paymentOptions(pool, cost, options = {}, limit = 12) {
  * how much of each mana and how much life -- which travels with the action and is checked again as it is paid.
  */
 
-/** The ways asked about at most: the first that `payments` finds, each a distinct amount. */
-export const PAY_CHOICES = 12;
+/** CR 601.2h: every distinct payment is available to its payer; existence probes pass their own small limit. */
+export const PAY_CHOICES = Infinity;
 
 /** A payment's name: each mana's count, then the life. */
 export const paymentKey = (payment) => `${KEY_ORDER.map((key) => payment.mana?.[key] ?? 0).join(",")}|${payment.life ?? 0}`;
@@ -627,7 +627,7 @@ export function payWithUnits(state, player, units, indices, amount) {
  * monohybrid symbols has no ways here. */
 const unitColors = (unit) => (unit.from === "pool" ? [unit.color] : unit.kind.split(""));
 /** The ways the payer could pay this mana cost now, up to `limit`, with the units they spend: `{units, plans}`. */
-export function unlessPlans(state, player, cost, limit = 12) {
+export function unlessPlans(state, player, cost, limit = Infinity) {
   const units = paymentUnits(state, player);
   let parsed = null;
   try { parsed = parseManaCost(cost); } catch { return {units, plans: []}; }
