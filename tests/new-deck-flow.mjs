@@ -65,7 +65,9 @@ try {
   ok(!(await page.$eval("[data-action=flow-next]", (x) => x.disabled)), "a commander picked, Next is ready");
   await page.locator(".cm-flow-nav button", {hasText: "Choose colors"}).click();
   ok(!(await page.$eval("[data-action=flow-next]", (x) => x.disabled)) && /Krenko, Mob Boss/.test(await page.locator("#cm-flow-chosen").textContent()), "the selection survives switching methods");
-  await page.click("[data-action=flow-color][data-id=W]");await page.click("[data-action=flow-color][data-id=U]");
+  /* ROB-216: a chosen commander sets the colors, so changing them asks first and lets the commander go (tests/newdeck-color-lock.mjs). */
+  await page.click("[data-action=flow-color][data-id=W]");await page.click("[data-action=flow-color-yes]");
+  await page.click("[data-action=flow-color][data-id=R]");await page.click("[data-action=flow-color][data-id=U]");
   const exact = await page.$$eval(".cm-flow-results [data-name]", (bs) => bs.length);
   ok(exact > 5, `W + U lists Azorius commanders (${exact} shown)`);
   const exactCi = await page.$$eval(".cm-flow-results [data-name]", (bs) => bs.map((x) => (globalThis.__cm.catalog.exact(x.dataset.name)?.colorIdentity || []).slice().sort().join("")));
@@ -81,6 +83,9 @@ try {
   await page.locator("[data-action=flow-mech]").first().click();
   ok(await page.locator(".cm-flow-results [data-name]").count() > 0, "and so do mechanics");
   await page.locator(".cm-flow-nav button", {hasText: "Pick a commander"}).click();
+  /* The colors were changed past Krenko above (ROB-216), which let him go: he is chosen again. */
+  ok(await page.$eval("[data-action=flow-next]", (x) => x.disabled), "changing the colors let the commander go, so Next waits");
+  await page.locator(".cm-flow-results [data-name='Krenko, Mob Boss']").click();
 
   /* 3. Next: the commander only. */
   await page.click("[data-action=flow-next]");
