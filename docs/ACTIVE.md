@@ -15,7 +15,7 @@ from `5fc78a95` in separate worktrees; existing lanes retain queued debt. Rob ch
 covering **95% of deck appearances**, explicitly choosing appearances over distinct names. Frozen `scope-95.json`
 has 8,514 names: 2,715 final, 5,799 undefined at restart. Least-played remaining appearances are outside the target;
 accuracy and evidence requirements remain. Corrected initial ability audit: 6,079 of 11,636 reached, 5,557
-unproved; root proved seven inherited-anchor repairs, leaving 50. No gate, main merge, staging release, or Rob playtest
+unproved; root proved thirteen inherited-anchor repairs, leaving 44. No gate, main merge, staging release, or Rob playtest
 sign-off is claimed. RUN.md records progress; do not mark the integration ready on the legacy checker.
 
 ### Card-load coordination requests

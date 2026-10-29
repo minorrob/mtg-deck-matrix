@@ -27,6 +27,13 @@ Newest wave first. Each line names its command's result line, never a summary of
   passStack default, front-door candidate report route, and the seated reconnect event floor. Each unbroken suite
   baseline passed and each selected break was caught, `missed: []`. Global anchors now have **50 inherited problems**;
   no gate acceptance is claimed. The new scope suite's two mutations were also caught.
+- **Further anchor proof:** three deck-stage anchors now target the same stage/commander/substitute conditions after
+  the over-size guard was added; all three caught. Three seated-ending anchors distinguish the later spectator view;
+  all three caught after all original baseline suites passed. The `table-record` baseline had a false positive:
+  `game:table:<matchId>:s1`, a public result id, matched its old seed-prefix assertion. The assertion now obtains the
+  actual private seed from the match store and rejects it even inside wrapped strings. Existing hidden-field/card
+  assertions stay; a new assertion preserves the public id. A mutation leaking the real seed inside a wrapped nested
+  string is caught. No record runtime code changed. These six repairs leave **44 inherited anchor problems**.
 - **Prerequisite:** original #834 remains open and conflicted on GitHub. Isolated reconciliation branch
   `codex/engine-load100-pr834` at `ba82617b` merges main and preserves paragraph boundaries alongside current
   castable-card spell segmentation. Integrated through `8c0566dc`. Full backstop validation exposed its inherited
