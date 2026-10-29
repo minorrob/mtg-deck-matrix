@@ -1,0 +1,3 @@
+6430 definitions
+FAIL Goblin Glasswright // Craft with Pride | It enters prepared: Craft with Pride waits in Rob's exile, cast it for {R}, a Treasure, and the Glasswright is unprepared: cast Craft with Pride is offered 1 way(s), not 0
+11037 scenarios, 1 failed
