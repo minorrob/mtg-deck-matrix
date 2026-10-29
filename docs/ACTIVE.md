@@ -10,13 +10,16 @@ and the engine modules its debt fixes require, subject to the ownership requests
 The primary checkout has another session's unfinished merge and is untouched.
 The eight roles run in batches because this session supports three active subagents.
 No new cards until wave 0 closes. No provider API calls, production changes, migrations, or spending.
-**Context hand-back:** draft integration #912; bounded role drafts #913 through #920 are preserved. W2/W3/W7 started
+**Resumed October 29:** draft integration #912; all bounded role checkpoints #913 through #920 are now assembled
+locally in W1–W7/V8 order. W2/W3 continue real operation consumers; V8 cold-reviews the recent changes. W2/W3/W7 started
 from `5fc78a95` in separate worktrees; all lanes retain queued debt. Rob changed the loading target to cards
 covering **95% of deck appearances**, explicitly choosing appearances over distinct names. Frozen `scope-95.json`
 has 8,514 names: 2,715 final, 5,799 undefined at restart. Least-played remaining appearances are outside the target;
 accuracy and evidence requirements remain. Corrected initial ability audit: 6,079 of 11,636 reached, 5,557
 unproved; root proved fifteen inherited-anchor repairs, leaving 42. No gate, main merge, staging release, or Rob playtest
 sign-off is claimed. The shared foundation `b2ba9343` has focused proof; actual operation consumers remain unfinished.
+New V8 findings: copied divided-damage retargeting loses amounts (W2), and differing `manaInstead` permissions
+collapse to one choice (W3). Both are being fixed before further consumer expansion.
 RUN.md records exact checkpoints, diagnostics and restart seams; do not mark the integration ready on the legacy checker.
 
 ### Card-load coordination requests

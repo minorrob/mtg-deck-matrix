@@ -5,9 +5,10 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
-- **Holder:** Codex context hand-back, October 28, 2026, for Rob; Linear ROB-199 (run), ROB-200 (wave 0), under ROB-85.
+- **Holder:** Codex resumed October 29, 2026, for Rob; Linear ROB-199 (run), ROB-200 (wave 0), under ROB-85.
   Rob requested W2/W3/W7 start, wave-0 completion, then continued loading without weaker gates. All three lanes started
   and have bounded checkpoints below. Wave 0 is still unfinished; do not start final-card loads or claim it complete.
+  Current work: W2/W3 finish actual continuation consumers and V8 independently reviews the recent lane fixes.
 - **Revised endpoint:** Rob explicitly chose **cards covering 95% of deck appearances**, not 95% of distinct names.
   Frozen `scope-95.json`: 8,514 names, including six basics; 527,373,351/555,122,162 appearances (95.0013%).
   Source graph September 11, played data September 19, Oracle October 4, 2026; exact hashes are in the manifest.
@@ -23,7 +24,19 @@ Newest wave first. Each line names its command's result line, never a summary of
   Draft integration PR #912: https://github.com/minorrob/mtg-deck-matrix/pull/912.
   Root checkpoints: `e7d00039` (paragraph prerequisite and first four proved inherited-anchor repairs), `8753715e`
   (95% appearance manifest/tool and three more repairs), `d6e42af8` (six more repairs and the private-seed proof).
-  No writer or verifier branch has been merged into integration.
+  All bounded checkpoints are now merged **locally into the draft integration**, in the prescribed order:
+  W1 `62e4b529`, W2 `4b204cce`, W3 `67526970`, W4 `e11a4e51`, W5 `246fa8fb`, W6 `f8676df9`,
+  W7 `1a1928b4`, V8 `f67001f7`. This is assembly, not wave acceptance or a main merge. Generated definitions,
+  candidates, coverage, catalog and inventory were refreshed once after the final merge.
+  Focused checks passed during assembly: W1 79, W2 57, W3 22, operation foundation75, W4combat17/sentences14,
+  W5mana36/pool16, W6tokens90, W7compiler13/draw-dice, V8ability42/pool91. README suite registrations preserved.
+  Sole runtime conflict: `copySpell` keeps BOTH W2 final-target tracking and W6 departed-source metadata/reference.
+  Re-run both mutation files on the combined source. No assertions or test registrations removed.
+  Fresh compiler: 25,616 undefined;116 candidates;0 refused;2 blocked;0 vetoed;24,429 unknown (12,080 one short);
+  1,069 other layouts. Generated files add no new final definitions.
+- **New V8 findings being fixed:** copied divided damage retains old target IDs after retargeting (W2; actual
+  Monstrous Onslaught grammar), and distinct exile-play permissions with `manaInstead` {2}/{3} collapse to one
+  offer (W3 permission outcome key). These are reproducible cold-review findings, not accepted omissions.
 - **Resumed root changes:** froze and checked the 95% appearance scope with an explicit failing final-definition gate;
   no engine runtime change. Re-anchored three more inherited mutations on the same original behaviors: new-table
   passStack default, front-door candidate report route, and the seated reconnect event floor. Each unbroken suite
@@ -128,7 +141,8 @@ branches. W5's task-created diagnostics were preserved outside its worktree at
   caller continuation, Winter/Narset and independent V8 review remain open. Diagnostics:
   `C:\Users\robmi\CrankMagic\workbench\load100-w7-686d948f-diagnostics`.
 
-No writer or V8 branch is integrated yet. The new drafts need cold V8 review and the eventual consolidated checks.
+All bounded writer/V8 checkpoints are now assembled locally; continuing fixes still need independent review and the
+eventual consolidated checks. The evidence below remains scoped to the original lane heads unless explicitly rerun.
 Before dealing post-wave-0 cards, restrict W5's full-pool dealer output to `scope-95.json` and score reuse within that
 set. The current `--pool` output still covers all 25,616 undefined names; it must not silently restore the old target.
 
