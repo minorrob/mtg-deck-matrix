@@ -1,0 +1,416 @@
+{
+  "schema": "CrankHistoricalEffectPlayFixture@1",
+  "sourceCommit": "3bde4caa",
+  "matchId": "legacy-effect-play",
+  "seed": "legacy-effect-play",
+  "pod": {
+    "seats": [
+      {
+        "seatId": "p0",
+        "name": "Rob",
+        "pilot": "human",
+        "commander": [],
+        "cards": [
+          "Wastes",
+          "Wastes",
+          "Isochron Scepter",
+          "Boros Charm",
+          "Wastes",
+          "Wastes",
+          "Wastes",
+          "Wastes",
+          "Isochron Scepter",
+          "Boros Charm",
+          "Wastes",
+          "Wastes",
+          "Wastes",
+          "Wastes",
+          "Isochron Scepter",
+          "Boros Charm",
+          "Wastes",
+          "Wastes",
+          "Wastes",
+          "Wastes",
+          "Isochron Scepter",
+          "Boros Charm",
+          "Wastes",
+          "Wastes",
+          "Wastes",
+          "Wastes",
+          "Isochron Scepter",
+          "Boros Charm",
+          "Wastes",
+          "Wastes",
+          "Wastes",
+          "Wastes",
+          "Isochron Scepter",
+          "Boros Charm",
+          "Wastes",
+          "Wastes",
+          "Wastes",
+          "Wastes",
+          "Isochron Scepter",
+          "Boros Charm",
+          "Wastes",
+          "Wastes",
+          "Wastes",
+          "Wastes",
+          "Isochron Scepter",
+          "Boros Charm",
+          "Wastes",
+          "Wastes",
+          "Wastes",
+          "Wastes",
+          "Isochron Scepter",
+          "Boros Charm",
+          "Wastes",
+          "Wastes",
+          "Wastes",
+          "Wastes",
+          "Isochron Scepter",
+          "Boros Charm",
+          "Wastes",
+          "Wastes"
+        ]
+      },
+      {
+        "seatId": "p1",
+        "name": "Maya",
+        "pilot": "human",
+        "commander": [],
+        "cards": [
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest",
+          "Forest"
+        ]
+      }
+    ],
+    "passEmpty": true,
+    "passAfterCast": true,
+    "pooledTaps": true,
+    "sourceChoices": true
+  },
+  "nativeChoiceId": "play:0:5",
+  "tape": [
+    {
+      "n": 0,
+      "turn": 0,
+      "kind": "answer",
+      "seat": "p0",
+      "answer": {
+        "kind": "answer",
+        "actionId": "00000000-0000-4000-9000-000000000001",
+        "revision": 1,
+        "choiceId": "mulligan:0:0",
+        "indices": [
+          0
+        ]
+      }
+    },
+    {
+      "n": 1,
+      "turn": 0,
+      "kind": "answer",
+      "seat": "p1",
+      "answer": {
+        "kind": "answer",
+        "actionId": "00000000-0000-4000-9000-000000000002",
+        "revision": 4,
+        "choiceId": "mulligan:1:0",
+        "indices": [
+          0
+        ]
+      }
+    },
+    {
+      "n": 2,
+      "turn": 1,
+      "kind": "answer",
+      "seat": "p0",
+      "answer": {
+        "kind": "answer",
+        "actionId": "00000000-0000-4000-9000-000000000003",
+        "revision": 7,
+        "choiceId": "priority:1:3:6",
+        "indices": [
+          1
+        ]
+      }
+    },
+    {
+      "n": 3,
+      "turn": 2,
+      "kind": "answer",
+      "seat": "p1",
+      "answer": {
+        "kind": "answer",
+        "actionId": "00000000-0000-4000-9000-000000000004",
+        "revision": 10,
+        "choiceId": "priority:2:3:9",
+        "indices": [
+          1
+        ]
+      }
+    },
+    {
+      "n": 4,
+      "turn": 3,
+      "kind": "answer",
+      "seat": "p0",
+      "answer": {
+        "kind": "answer",
+        "actionId": "00000000-0000-4000-9000-000000000005",
+        "revision": 13,
+        "choiceId": "priority:3:3:12",
+        "indices": [
+          1
+        ]
+      }
+    },
+    {
+      "n": 5,
+      "turn": 3,
+      "kind": "answer",
+      "seat": "p0",
+      "answer": {
+        "kind": "answer",
+        "actionId": "00000000-0000-4000-9000-000000000006",
+        "revision": 16,
+        "choiceId": "priority:3:3:15",
+        "indices": [
+          3
+        ]
+      }
+    },
+    {
+      "n": 6,
+      "turn": 3,
+      "kind": "answer",
+      "seat": "p1",
+      "answer": {
+        "kind": "answer",
+        "actionId": "00000000-0000-4000-9000-000000000007",
+        "revision": 19,
+        "choiceId": "priority:3:3:18",
+        "indices": [
+          0
+        ]
+      }
+    },
+    {
+      "n": 7,
+      "turn": 3,
+      "kind": "answer",
+      "seat": "p0",
+      "answer": {
+        "kind": "answer",
+        "actionId": "00000000-0000-4000-9000-000000000008",
+        "revision": 22,
+        "choiceId": "priority:3:3:21",
+        "indices": [
+          0
+        ]
+      }
+    },
+    {
+      "n": 8,
+      "turn": 3,
+      "kind": "answer",
+      "seat": "p1",
+      "answer": {
+        "kind": "answer",
+        "actionId": "00000000-0000-4000-9000-000000000009",
+        "revision": 25,
+        "choiceId": "priority:3:3:24",
+        "indices": [
+          0
+        ]
+      }
+    },
+    {
+      "n": 9,
+      "turn": 3,
+      "kind": "answer",
+      "seat": "p0",
+      "answer": {
+        "kind": "answer",
+        "actionId": "00000000-0000-4000-9000-000000000010",
+        "revision": 28,
+        "choiceId": "chooseCard:0:3:1",
+        "indices": [
+          0
+        ]
+      }
+    },
+    {
+      "n": 10,
+      "turn": 4,
+      "kind": "answer",
+      "seat": "p1",
+      "answer": {
+        "kind": "answer",
+        "actionId": "00000000-0000-4000-9000-000000000011",
+        "revision": 31,
+        "choiceId": "priority:4:3:30",
+        "indices": [
+          1
+        ]
+      }
+    },
+    {
+      "n": 11,
+      "turn": 5,
+      "kind": "answer",
+      "seat": "p0",
+      "answer": {
+        "kind": "answer",
+        "actionId": "00000000-0000-4000-9000-000000000012",
+        "revision": 34,
+        "choiceId": "priority:5:3:33",
+        "indices": [
+          1
+        ]
+      }
+    },
+    {
+      "n": 12,
+      "turn": 5,
+      "kind": "answer",
+      "seat": "p0",
+      "answer": {
+        "kind": "answer",
+        "actionId": "00000000-0000-4000-9000-000000000013",
+        "revision": 37,
+        "choiceId": "priority:5:3:36",
+        "indices": [
+          1
+        ]
+      }
+    },
+    {
+      "n": 13,
+      "turn": 5,
+      "kind": "answer",
+      "seat": "p0",
+      "answer": {
+        "kind": "answer",
+        "actionId": "00000000-0000-4000-9000-000000000014",
+        "revision": 40,
+        "choiceId": "priority:5:3:39",
+        "indices": [
+          1
+        ]
+      }
+    },
+    {
+      "n": 14,
+      "turn": 5,
+      "kind": "answer",
+      "seat": "p0",
+      "answer": {
+        "kind": "answer",
+        "actionId": "00000000-0000-4000-9000-000000000015",
+        "revision": 43,
+        "choiceId": "priority:5:3:42",
+        "indices": [
+          4
+        ]
+      }
+    },
+    {
+      "n": 15,
+      "turn": 5,
+      "kind": "answer",
+      "seat": "p1",
+      "answer": {
+        "kind": "answer",
+        "actionId": "00000000-0000-4000-9000-000000000016",
+        "revision": 46,
+        "choiceId": "priority:5:3:45",
+        "indices": [
+          0
+        ]
+      }
+    },
+    {
+      "n": 16,
+      "turn": 5,
+      "kind": "answer",
+      "seat": "p0",
+      "answer": {
+        "kind": "answer",
+        "actionId": "00000000-0000-4000-9000-000000000017",
+        "revision": 49,
+        "choiceId": "play:0:5",
+        "indices": [
+          2
+        ]
+      }
+    }
+  ],
+  "fingerprint": {
+    "hash": "7e55d96710ee133e",
+    "events": 94,
+    "tape": 17,
+    "refused": 0,
+    "status": "playing"
+  },
+  "journalHash": "a7eb986f187bfda2"
+}
