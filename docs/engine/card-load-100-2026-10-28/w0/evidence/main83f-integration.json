@@ -1,0 +1,16 @@
+{
+  "schema": "OwnerUISync@1",
+  "source": "8abe875239bd1776d2d70d57510a50d7e88afd47",
+  "main": "83f0a8f2",
+  "pullRequest": 957,
+  "merge": "no-ff",
+  "engineRoomByteIdenticalTo": "7364caf7055b136c76f80714a9b68453c4ccf040",
+  "ownerCSSPreserved": true,
+  "actualNodeSuites": 714,
+  "assets": 136,
+  "dataIntegrity": "passed",
+  "featureWiring": 131,
+  "browser": "pending current combined source; prior historical proofs retain own source",
+  "openAccessibility": "ROB-312: unchanged original baseline RED, no mutation credit",
+  "acceptance": "dependency only, no gate or release credit"
+}

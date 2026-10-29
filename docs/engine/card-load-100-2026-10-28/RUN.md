@@ -5,6 +5,11 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Drawer-height dependency, source `8abe8752`:** owner main advances to `83f0a8f2` (#957/ROB-206) and V8's
+  pre-push scan correctly stops. Root merges `--no-ff`, preserves owner CSS/tests and regenerates shared asset pins.
+  README actual714; assets136/integrity/wiring pass. Engine/room bytes are unchanged from `7364caf7`; current browser
+  remains pending and original a11y/ROB-312 remains RED. This is only a clean dependency for the eight-scenario
+  handoff; all wave0 gates and staged-release sequence remain unchanged. Exact fresh scan/push required.
 - **Current-main face dependency, source `7364caf7`:** required scan of `65b2a078` correctly fails when main moves
   to `af363528` (#955/#956, ROB-207). Root merges `--no-ff`, preserves owner back-face projection/rendering and both
   approved Snoop lines. README actual713 and asset manifest/pins regenerate through the registry helper. Root native

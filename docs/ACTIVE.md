@@ -8,6 +8,8 @@ Linear ROB-199 under ROB-85. The record is `docs/engine/card-load-100-2026-10-28
 Claim: `game/engine/cards/**`, generated card files, `data/engine/candidates.json`, the run package,
 and the engine modules its debt fixes require, subject to the ownership requests below.
 The primary checkout has another session's unfinished merge and is untouched.
+**Drawer-height dependency8abe8752:** owner main83f0a8f2/#957 is merged; CSS preserved and asset pins generated.
+READMEactual714, assets136/integrity/wiring pass; engine/room unchanged7364. Browser and ROB-312 remain open.
 **Current-main face dependency7364caf7:** merge owner mainaf363528/#955/#956 after65b scan correctly stops.
 Back-face projection/UI preserved, board still only our two approved Snoop lines beyond main; READMEactual713.
 Native room-face6/Snoop and assets136/SW9/wiring131/integrity pass. Current combined browser pending, historicald65
