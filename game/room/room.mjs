@@ -109,7 +109,8 @@ import {addToHistory} from "./history.mjs";
 import {tableEvent, eventsFor, keep, EVENTS_SCHEMA} from "./events.mjs";
 import {endingOf} from "./ending.mjs";
 import {describeDecision} from "./decision.mjs";
-import {beginCastDraft,beginActionDraft,offerCastDraft,castDraftChoice,castDraftSignature,answerCastDraft} from "./cast-stages.mjs";
+import {castEntryFor,beginCastDraft,beginActionDraft,offerCastDraft,castDraftChoice,castDraftSignature,answerCastDraft} from "./cast-stages.mjs";
+import {refinementEntry,beginRefinement,refinementChoice,answerRefinement} from "./decision-refinement.mjs";
 
 export const ROOM_PROTOCOL = 1;
 export const ROOM_SCHEMA = "CrankRoom@1";
@@ -523,6 +524,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
   const facts = factsFrom(look);
   let seats, state, rng, journal, controller, pilots, pendingSeat = null, pendingActions = null, saved = 0;
   let castDraft = null;
+  let refinement = null, refinementNotice = null;
   const draftOptions = {describeActions: (seat, actions) => offerDetails(state, seat, actions)};
   /* Accepted actions by id, with the seat that sent them: a retry is answered from here, and never reaches
      another seat's question. The newest RECEIPTS are kept, which is ample for a client's retries. */
@@ -685,7 +687,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         playBack = finishPlay(state, playBack, rng.checkpoint());
         if (!playBack && previous.autoPass) castBy = previous.player;
       }
-      if (finished()) {castDraft = null; pendingSeat = null; pendingActions = null; driven = 0; return;}
+      if (finished()) {castDraft = null; refinement = null; refinementNotice = null; pendingSeat = null; pendingActions = null; driven = 0; return;}
       if (driven >= DRIVE_LIMIT) throw new RoomError(500, "The game stopped moving: the engine took too many steps without a decision. Nothing further was applied.");
       if (steps >= slice) {continuing = true; pendingSeat = null; pendingActions = null; return;}
       driven += 1;
@@ -820,9 +822,59 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     controller = createController({...point, pending: null, answered: null, revision: point.revision + 1});
   }
   function withdraw() {
+    refinement = null; refinementNotice = null;
     const point = controller.checkpoint();
     controller = createController({...point, pending: null, answered: null, revision: point.revision + 1});
     pendingSeat = null; pendingActions = null;
+  }
+  const refines = answer => Boolean(refinement) || (answer.staged === true && Boolean(state.awaiting) && !pendingActions && !castDraft);
+  function refinementRequestChoice(answer) {
+    if(refinement)return refinementChoice(state,controller.pending,refinement);
+    const pending=controller.pending;
+    /* Validate availability before accepting a child input. This object is private references only, not a saved question. */
+    beginRefinement(state,pending,answer.indices?.[0],"availability-check");
+    return {...pending,refinement:{schema:"CrankDecisionRefinement@1",originalChoiceId:pending.id,originalSignature:hashState(pending),canBack:false}};
+  }
+  function refineWith(seat,answer) {
+    if(!refinement){
+      refinement=beginRefinement(state,controller.pending,answer.indices?.[0],`${matchId}/refine:${tapeN}/${controller.pending.id}`);
+      refinementNotice=null;return;
+    }
+    const pending=controller.pending,result=answerRefinement(state,pending,refinement,answer);
+    refinement=result.draft;
+    if(result.closed){
+      refinementNotice={originalChoiceId:pending.id,originalSignature:hashState(pending),guidance:"Private selections closed. The original native choice is still pending; complete it to continue. No priority was returned."};
+      return;
+    }
+    if(result.nativeAnswer){
+      const problem=controller.check({choiceId:pending.id,indices:result.nativeAnswer.indices});
+      if(problem)throw new RoomError(422,problem,{refused:true});
+      refinementNotice=null;withdrawKeeping();
+      answerWith(seat,result.nativeAnswer,pending.id);
+    }
+  }
+  function visibleDecision(projected) {
+    if(refinement){
+      try{return refinementChoice(state,controller.pending,refinement);}
+      catch(error){if(!error.refinementExpired&&!error.refinementUnavailable)throw error;}
+    }
+    const pending=controller.pending;
+    const described=describeDecision(state,combatWords(state,structuredClone(pending)),pendingActions,projected);
+    if(!described)return described;
+    const top=state.awaiting?.kind==="trigger-targets"?refinementEntry(state,pending):null;
+    const seen=new Map();
+    const options=described.options.map(option=>{
+      if(top)return {...option,refinementStages:top};
+      const action=state.awaiting?.effect==="play"?state.awaiting.choices?.[option.index]:null;
+      if(!action?.modes)return option;
+      const key=castEntryFor(action).actionId;
+      if(!seen.has(key))seen.set(key,refinementEntry(state,pending,option.index));
+      const entry=seen.get(key);return entry?{...option,refinementStages:entry}:option;
+    });
+    const notice=refinementNotice?.originalChoiceId===pending?.id&&refinementNotice.originalSignature===hashState(pending)?refinementNotice.guidance:null;
+    return {...described,options,...(top?{refinementStages:top}:{}),...(notice?{guidance:notice}:{}),
+      ...(refinement?{guidance:"The private selection expired. Reopen the table to review the live native choice."}:{}),
+      ...(state.awaiting?.effect==="copySpell"?{modeSelection:"locked"}:{})};
   }
   /* A person's answer applied: a priority action by its index, or the awaited decision resolved. Shared by `act`
      and by a replay of the tape, so the two cannot drift apart.
@@ -904,6 +956,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     pilotPicks = record.pilotPicks === true;
     pilotProvocation = record.pilotProvocation === true;
     castDraft = record.castDraft ?? null;
+    refinement = record.refinement ?? null; refinementNotice = record.refinementNotice ?? null;
     state = structuredClone(point.state);
     rng = createRng(point.seed, point.rng);
     journal = createJournal({matchId, seed: point.seed}, point);
@@ -1019,7 +1072,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     const point = journal.checkpoint(state, rng.checkpoint());
     await store.saveCheckpoint(point);
     await store.pruneCheckpoints();
-    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, ...(outs.length ? {outs} : {}), history, refusals, ...(castDraft ? {castDraft} : {}), ...(pilotProvocation ? {pilotProvocation: true} : {}), ...(pilotCombatMemory?.lastEvent > 0 ? {pilotCombatMemory} : {}), ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(undoLastPlay ? {undoLastPlay, playBack: playBack !== null} : {}), ...(resultRecords ? {resultRecords: true} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(blocksNone ? {blocksNone} : {}), ...(landAnyStep ? {landAnyStep} : {}), ...(takeBackLand ? {takeBackLand, landBack: landBack !== null} : {}), ...(askAimed ? {askAimed} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {}), ...(tableEvents.length ? {events: tableEvents, eventsMark, eventsFloor} : {}), ...(seated ? {candidates: true} : {}), ...(pilotPicks ? {pilotPicks: true} : {})}));
+    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, ...(outs.length ? {outs} : {}), history, refusals, ...(castDraft ? {castDraft} : {}), ...(refinement ? {refinement} : {}), ...(refinementNotice ? {refinementNotice} : {}), ...(pilotProvocation ? {pilotProvocation: true} : {}), ...(pilotCombatMemory?.lastEvent > 0 ? {pilotCombatMemory} : {}), ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(undoLastPlay ? {undoLastPlay, playBack: playBack !== null} : {}), ...(resultRecords ? {resultRecords: true} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(blocksNone ? {blocksNone} : {}), ...(landAnyStep ? {landAnyStep} : {}), ...(takeBackLand ? {takeBackLand, landBack: landBack !== null} : {}), ...(askAimed ? {askAimed} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {}), ...(tableEvents.length ? {events: tableEvents, eventsMark, eventsFloor} : {}), ...(seated ? {candidates: true} : {}), ...(pilotPicks ? {pilotPicks: true} : {})}));
   }
 
   const api = {
@@ -1097,6 +1150,14 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         catch (error) {if (!error.castDraftExpired) throw error; castDraft = null; changed = true;}
         if (changed) {withdraw(); drive(); await persist();}
       }
+      if(refinement){
+        try{refinementChoice(state,controller.pending,refinement);}
+        catch(error){
+          if(!error.refinementExpired&&!error.refinementUnavailable)throw error;
+          /* Rebuild only from the CURRENT native awaiting state. No saved question is ever written back. */
+          withdraw();drive();await persist();
+        }
+      }
       return api;
     },
 
@@ -1124,7 +1185,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         departures: structuredClone(departures),
         seats: api.seats,
         waitingOn: pendingSeat === null ? null : seats[pendingSeat].seatId,
-        decision: mine ? describeDecision(state, combatWords(state, structuredClone(controller.pending)), pendingActions, projected) : null,
+        decision: mine ? visibleDecision(projected) : null,
         state: projected,
         /* What this seat's permanents could tap for (actions.mjs, manaSources): the board's Mana Pool. */
         manaSources: deriving(state, () => manaSources(state, seat)),
@@ -1208,6 +1269,12 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       if (seat < 0 || pendingSeat !== seat) throw new RoomError(409, `The tape parts from the game at entry ${entry.n}: it answers for ${entry.seat}, and the game is waiting on ${pendingSeat === null ? "no one" : seats[pendingSeat].seatId}.`);
       const decisionId = controller.pending?.id ?? null;
       begin();
+      if(refines(entry.answer)){
+        const accepted=controller.answerRefinement(()=>refinementRequestChoice(entry.answer),{...entry.answer,revision:controller.revision});
+        if(!accepted.changed)throw new RoomError(409,"The refinement tape repeats an already accepted input.");
+        tape({kind:"answer",seat:entry.seat,answer:entry.answer});refineWith(seat,accepted.answer);await persist();return api;
+      }
+      refinementNotice=null;
       withdrawKeeping();
       tape({kind: "answer", seat: entry.seat, answer: entry.answer});
       answerWith(seat, entry.answer, decisionId);
@@ -1328,7 +1395,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         const chosen = pilot.choose(seen, pendingActions);
         return {indices: [Math.max(0, pendingActions.indexOf(chosen))]};
       }
-      const given = pilot.answer(seen, castDraft ? castDraftChoice(state, castDraft, draftOptions) : awaitingChoice(state));
+      const given = pilot.answer(seen, refinement ? refinementChoice(state,controller.pending,refinement) : castDraft ? castDraftChoice(state, castDraft, draftOptions) : awaitingChoice(state));
       return {indices: given.indices ?? [], ...(given.amounts ? {amounts: given.amounts} : {}), ...(given.value !== undefined ? {value: given.value} : {}), ...(given.cancel ? {cancel: true} : {})};
     },
 
@@ -1359,9 +1426,17 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     check(seatId, {choiceId, indices} = {}) {
       const seat = seatIndex(seatId);
       if (seat < 0) throw new RoomError(403, "That seat is not at this table.");
-      const pending = controller.pending;
+      let pending = controller.pending;
+      if(refinement){
+        try{pending=refinementChoice(state,controller.pending,refinement);}
+        catch(error){if(!error.refinementExpired&&!error.refinementUnavailable)throw error;return {ok:false,open:false,reasons:[error.message]};}
+      }
       if (finished() || pendingSeat !== seat || !pending || pending.id !== choiceId)
         return {ok: false, open: false, reasons: ["That question is no longer open. Answer the one your view shows now."]};
+      if(refinement){
+        try{answerRefinement(state,controller.pending,structuredClone(refinement),{indices});return {ok:true,open:true,reasons:[]};}
+        catch(error){return {ok:false,open:true,reasons:[error.message]};}
+      }
       if (castDraft) {
         try {answerCastDraft(state, structuredClone(castDraft), {indices}, draftOptions); return {ok: true, open: true, reasons: []};}
         catch (error) {return {ok: false, open: true, reasons: [error.message]};}
@@ -1383,6 +1458,16 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         return {receipt: known.receipt, changed: false};
       }
       if (pendingSeat !== seat) throw new RoomError(409, "It is not your decision.");
+      if(refines(request)){
+        let accepted;
+        try{accepted=controller.answerRefinement(()=>refinementRequestChoice(request),request);}
+        catch(error){throw new RoomError(/Invalid action id/.test(error.message)?400:409,error.message);}
+        if(!accepted.changed)return {receipt:accepted.receipt,changed:false};
+        receipts=[...receipts,{actionId,seatId,body,receipt:accepted.receipt}].slice(-RECEIPTS);
+        begin();tape({kind:"answer",seat:seatId,answer:accepted.answer});
+        try{refineWith(seat,accepted.answer);}catch(error){throw await undone(error);}
+        await persist();return {receipt:accepted.receipt,changed:true};
+      }
       let receipt;
       const before = controller.revision, decisionId = controller.pending?.id ?? null;
       try {receipt = controller.answer(request);}
@@ -1390,6 +1475,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       if (controller.revision === before) return {receipt, changed: false};  /* a retry older than this room's receipts */
       receipts = [...receipts, {actionId, seatId, body, receipt}].slice(-RECEIPTS);
       const answer = controller.take();
+      refinementNotice=null;
       begin();
       tape({kind: "answer", seat: seatId, answer});
       /* Refused by the rules, or failed in the play after it: undone -- no receipt, no tape entry, the same question still

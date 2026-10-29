@@ -1,4 +1,5 @@
 /* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
+import {hashState} from "./journal.mjs";
 
 /* THE DECISION ENVELOPE: §3.2.3 AND §12.1.
  *
@@ -318,6 +319,29 @@ export function createController(resume = null) {
          retried action returns from the receipt cache above and moves nothing. */
       revision += 1;
       return receiptFor(actionId);
+    },
+
+    /* Server-only child validation. The native pending/answered records are never replaced, answered or restored here.
+       Generate the current child lazily: an accepted retry must work even after that child/native stage expired. */
+    answerRefinement(makeChoice, request) {
+      const actionId=request?.actionId,body=JSON.stringify(request);
+      if(receipts.has(actionId)) {
+        if(payloads.get(actionId)!==body)throw new Error("Action id was reused with different content");
+        return {receipt:receipts.get(actionId),answer:null,changed:false};
+      }
+      if(!pending||answered)throw new Error("The native question has expired");
+      const choice=makeChoice(),reference=choice?.refinement;
+      if(reference?.schema!=="CrankDecisionRefinement@1"||reference.originalChoiceId!==pending.id||reference.originalSignature!==hashState(pending))
+        throw new Error("The original native question changed or expired");
+      if(request.back===true&&reference.canBack!==true)throw new Error("Back is unavailable at this refinement boundary");
+      /* Reuse every existing envelope/typed selection check. This temporary controller contains only the generated child,
+         never a checkpoint or copy of the native question. Its Back adapter is server-produced, not a client claim. */
+      const validator=createController({revision:revision-1});
+      validator.offer({...choice,actionStage:{canBack:reference.canBack===true}});
+      validator.answer(request);const answer=validator.take();
+      if(answer.cancel===true&&choice.cancellation?.allowed!==true)throw new Error("Cancel is unavailable on this refinement");
+      payloads.set(actionId,body);revision+=1;
+      return {receipt:receiptFor(actionId),answer,changed:true};
     },
 
     /**
