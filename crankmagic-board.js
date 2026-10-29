@@ -3171,6 +3171,11 @@ globalThis.CrankBoard = Object.seal({
       const need = Math.max(0, ...[...zone.children].map((k) => k.offsetTop + k.offsetHeight));
       zone.classList.toggle("is-scrolling-zone", need > zone.clientHeight + 1);
     }
+    /* a row that wraps into more rows than its zone holds scrolls them (its cards are never cut off by a frame that has room) */
+    for (const row of host.querySelectorAll(".cm-stage-region .cm-board-cards")) {
+      const need = Math.max(0, ...[...row.children].map((k) => k.offsetTop + k.offsetHeight));
+      row.classList.toggle("is-scrolling-rows", need > row.clientHeight + 1);
+    }
   }
   /* A ROW TOO FULL FOR ITS CARDS OVERLAPS THEM, each over the one before, using their unchanged slot widths and margins
      (EX17: tapping rotates in the same slot; Rob, 2026-10-11: five lands, "cards cutting off on the right side").
