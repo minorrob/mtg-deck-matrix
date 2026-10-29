@@ -3,10 +3,13 @@ import {registerRuleOperation, askRuleOperation, emitRuleEvents} from "./operati
 import {ruleReplacementCandidates, applyRuleReplacement} from "./replacement.mjs";
 import {moveOne} from "../script/effects/zones.mjs";
 import {controllerOf} from "./layers.mjs";
+import {cantBeSacrificed} from "./statics.mjs";
+import {recordDiscard} from "../state/index.mjs";
 
 /* CR 616.1f: finish each replacement choice before performing the move. The saved proposal and stage survive reload;
    every option is rechecked against live state after a concession changes the board. */
 registerRuleOperation("move-one", (state, frame) => {
+  if (frame.stage === "after-redirect") return {status: "done", result: frame.childResult};
   const object = state.objects[frame.id], options = frame.options ?? {};
   if (!object || (object.token === true && object.zone !== "battlefield")) return {status: "done", result: {moved: null, zoneEventIndex: null}};
   if (!frame.stage) {
@@ -62,6 +65,10 @@ registerRuleOperation("move-one", (state, frame) => {
     frame.entryPatch = frame.childResult?.objectPatch ?? null;
     frame.preparedEntering = frame.childResult?.entering ?? frame.childResult;
     delete frame.childResult; frame.stage = "move";
+    if (frame.preparedEntering?.to && frame.preparedEntering.to !== "battlefield") {
+      frame.stage = "after-redirect";
+      return {status: "continue", children: [{kind: "move-one", id: frame.id, to: frame.preparedEntering.to, options}]};
+    }
   }
   const events = [];
   const moved = moveOne(state, frame.id, frame.to, events, {...options, preparedProposal: frame.proposal,
@@ -71,3 +78,29 @@ registerRuleOperation("move-one", (state, frame) => {
   emitRuleEvents(state, events);
   return {status: "done", result: {moved, zoneEventIndex, proposal: frame.proposal}};
 });
+
+/* CR 701.21a, 701.9a: these actions retain their identity when a replacement changes the destination. The child records
+   its exact zone-event index so follow-up events cannot accidentally be marked as the sacrifice or discard. */
+for (const [kind, field, zone] of [["sacrifice-one", "sacrificed", "battlefield"], ["discard-one", "discarded", "hand"]]) {
+  registerRuleOperation(kind, (state, frame) => {
+    if (!frame.stage) {
+      const object = state.objects[frame.id];
+      const player = frame.player ?? (kind === "sacrifice-one" && object ? controllerOf(state, frame.id) : object?.owner);
+      const eligible = object?.zone === zone && !state.players[player]?.lost && (kind === "sacrifice-one"
+        ? controllerOf(state, frame.id) === player && !cantBeSacrificed(state, frame.id)
+        : state.zones.hand[player]?.includes(frame.id));
+      if (!eligible) return {status: "done", result: {moved: null, [field]: false}};
+      frame.player = player; frame.nontoken = object.token !== true; frame.stage = "after-move";
+      return {status: "continue", children: [{kind: "move-one", id: frame.id, to: "graveyard", options: {owner: object.owner}}]};
+    }
+    const child = frame.childResult, moved = child?.moved ?? null;
+    if (moved === null) return {status: "done", result: {moved: null, [field]: false}};
+    const fields = state.ruleOperation.events[child.zoneEventIndex].data.fields;
+    fields[field] = true;
+    if (kind === "sacrifice-one") {
+      fields.sacrificer = frame.player;
+      if (frame.nontoken) state.players[frame.player].sacrificedNontokenThisTurn = (state.players[frame.player].sacrificedNontokenThisTurn ?? 0) + 1;
+    } else recordDiscard(state, frame.player);
+    return {status: "done", result: {moved, [field]: true}};
+  });
+}

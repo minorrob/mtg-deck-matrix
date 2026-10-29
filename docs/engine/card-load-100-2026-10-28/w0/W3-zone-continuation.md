@@ -41,3 +41,17 @@ readers are recorded in lane-W3.json after the source is frozen. No full card sw
 Remaining callers include ordinary moveZone/sacrifice/discard effects, costs, state-based destruction and routes outside
 effect resolution. W2's entering registration and actual spell/land/token consumers are still separate work. Commander
 hand/library and Liesa debt are proven only for the routed move-one destruction path here; neither entire debt is closed.
+
+## Next shared entry seams, local proof
+
+The next extension supplies `sacrifice-one {id,player?}` and `discard-one {id,player?}` children returning
+`{moved,sacrificed}` or `{moved,discarded}`. They wait for the actual move, annotate its exact zone event before reporting,
+and record payment counts once even when replaced by exile. Sacrifice obeys control and sacrifice prohibition while
+ignoring indestructible, shield and regeneration. A missing, departed or wrong-zone payment returns false.
+
+An entering result's `gainsKeywords` creates a persistent, noncopiable layer-6 grant to the new object. Its `to` redirects
+the unchanged source through a new move-one child before allocating any battlefield object. These are shared seams for
+W2's Mox Diamond/devour/riot consumers; their actual card entry paths are not proved by W3's standalone wrapper suite.
+The 33-check `engine-zone-action-operations` suite proves the public JSON reload/concession paths, actual payment
+results/counts, and selected replacement/follow-up outcomes. All 24 mutations in `breaks-zone-action-operations.py` were
+caught with `missed: []`. The transformed-face input seam and W2's actual caller integration remain pending.
