@@ -308,6 +308,8 @@ for (const off of [false, true]) {
   eq(record.pod.skipFirstDraw, off ? false : undefined, off ? "the pod the room was handed says the skip is off, and the record keeps it"
     : "a table that keeps CR 103.8a starts a match whose pod has no key for it, as every game before the house rule");
   eq(record.pod.pooledTaps, true, "and a table's new match tops floating mana up from its caster's sources (`pooledTaps`, rules/actions.mjs): its pod says so, and the record keeps it");
+  eq(record.pod.sourceChoices, true, "every new table match requires explicit physical mana source choices");
+  eq(record.pod.pilotProvocation, true, "every new table match uses the current house-pilot personality");
   eq(record.pod.xTaps, true, "and taps for an {X} spell too, for each X the pool and the sources pay together (`xTaps`): its pod says so, and the record keeps it");
   eq([record.pod.yieldTurn, record.pod.passStack], [true, off ? undefined : true], off
     ? "and lets a person yield an opponent's turn (`yieldTurn`); with the host's rule off, its pod has no `passStack`, and every spell is asked about as before"

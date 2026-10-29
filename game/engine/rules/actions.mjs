@@ -462,7 +462,14 @@ function costChoice(state, awaiting) {
   }
   /* Tapped for it (castTapPlans), with more than one way: which sources. */
   if (action.autoTap === true) {
-    const options = castTapPlans(state, player, action, TAP_CHOICES).map((plan, index) => ({index, label: tapWords(state, plan)}));
+    const plans = castTapPlans(state, player, action, TAP_CHOICES);
+    const plan = action.tapPlan !== undefined ? plans.find(p => p.key === action.tapPlan) : plans.length === 1 ? plans[0] : null;
+    if (action.tapPlan !== undefined && !plan) throw new Error(`${name} cannot be tapped for that way now`);
+    if (plan) {
+      const identity = fundingIdentities(state, player, action, plan);
+      if (identity.choice) return {id: `choose-cost:${action.objectId}:source:${identity.choice.sourceGroup}`, title: `${name}: which sources to tap for mana`, ...identity.choice};
+    }
+    const options = plans.map((plan, index) => ({index, label: tapWords(state, plan)}));
     for (const option of options) {
       const alike = options.filter((o) => o.label === option.label);
       if (alike.length > 1) alike.forEach((o, k) => { o.label = `${o.label} (${k + 1})`; });
@@ -563,7 +570,7 @@ export function resolveCastCost(state, awaiting, indices, amounts = null) {
      mana in the pool that would pay the creature but not its Adventure (Smaug, the Great Calamity's Spew Flame) is not read
      as paying it, which would leave no way to tap. */
   const way = choice.cost === "mana" ? asCast(state, awaiting.action, () => castTapPlans(state, awaiting.player, awaiting.action, TAP_CHOICES))[picked[0]] : null;
-  const action = {...structuredClone(awaiting.action), ...(choice.cost === "pool" ? {payWith: choice.options[picked[0]].key, ...(choice.options[picked[0]].riders ? {payRiders: choice.options[picked[0]].riders} : {})} : way ? {tapPlan: way.key} : choice.cost === "tap" ? {flashbackTap: ids}
+  const action = {...structuredClone(awaiting.action), ...(choice.cost === "manaSource" ? {tapPlan: choice.planKey, tapSources: {...awaiting.action.tapSources, [choice.sourceGroup]: ids}} : choice.cost === "pool" ? {payWith: choice.options[picked[0]].key, ...(choice.options[picked[0]].riders ? {payRiders: choice.options[picked[0]].riders} : {})} : way ? {tapPlan: way.key} : choice.cost === "tap" ? {flashbackTap: ids}
     : choice.cost === "flashbackSacrifice" ? {flashbackSacrifice: ids} : choice.cost === "delve" ? {delveExile: ids} : choice.cost === "convoke" ? {convokeTap: ids} : choice.cost === "waterbend" ? {waterbendTap: ids} : choice.cost === "tapAny" ? {tapChosen: ids} : choice.cost === "sacrificeAny" ? {sacrificeChosen: ids} : choice.cost === "behold" ? {beheld: ids} : choice.cost === "exileOthers" ? {othersExiled: ids} : choice.cost === "sacrifice" ? {sacrificeSet: ids} : choice.cost === "escalate" ? {escalateTapped: ids}
     : choice.cost === "counters" ? {counterSet: picked.map((i) => ({id: choice.options[i].cardId, counter: choice.options[i].counter}))} : {escapeExile: ids})};
   state.awaiting = null;
@@ -1584,7 +1591,7 @@ function manaOffers(state, player) {
   const actions = [];
   for (const id of state.zones.battlefield) {
     const object = state.objects[id];
-    if (object.controller !== player) continue;
+    if (controllerOf(state, id) !== player) continue;
     /* A mana ability is an activated ability (CR 605.1a): "its activated abilities can't be activated" (Koma) stops it too,
        and so does "your opponents can't activate abilities of artifacts, creatures, or enchantments" (Grand Abolisher). */
     if (activationsForbidden(state, id) || permanentActivationForbidden(state, id)) continue;
@@ -1644,7 +1651,7 @@ export function manaSources(state, player) {
   const out = [];
   for (const id of state.zones.battlefield) {
     const object = state.objects[id];
-    if (object.controller !== player || object.faceDown) continue;
+    if (controllerOf(state, id) !== player || object.faceDown) continue;
     const blocked = activationsForbidden(state, id) || permanentActivationForbidden(state, id) || sickForAbilities(state, id);
     const ways = [];
     for (const ability of abilitiesOf(state, id)) {
@@ -1763,6 +1770,50 @@ export function castTapPlans(state, player, action, limit = 2) {
   /* Its X, in a match that taps for one (`xTaps`): counted in, as the offer priced it. */
   const xs = xTaps(state) && cost.variable > 0 ? xCounted(cost, action.x ?? 0) : cost;
   return fundingPlans(state, player, action.objectId, {...xs, generic: xs.generic + x}, limit);
+}
+
+/* A kind plan describes the required outputs, not permission to pick the first physical sources. Each output block
+   takes an explicit subset of the still-available equivalent sources. Forced blocks have only one legal subset;
+   ambiguous blocks are saved as ordinary pre-payment cost questions, without enumerating all physical permutations. */
+function fundingIdentities(state, player, action, plan) {
+  if (state.sourceChoices !== true) return {taps: plan.taps};
+  const units = tapUnits(state, player, undefined, pooledTaps(state));
+  const kind = unit => [...unit.colors].sort().join("/");
+  const byId = new Map(units.map(unit => [unit.id, unit]));
+  const groups = [];
+  for (const tap of plan.taps) {
+    const unit = byId.get(tap.id);
+    if (!unit || !unit.colors.includes(tap.color)) throw new Error("Those mana sources are no longer available");
+    const key = kind(unit), group = groups.find(g => g.kind === key && g.color === tap.color);
+    if (group) group.count++;
+    else groups.push({kind: key, color: tap.color, count: 1});
+  }
+  const selections = action.tapSources ?? {};
+  if (typeof selections !== "object" || selections === null || Array.isArray(selections)
+      || Object.keys(selections).some(k => !/^(0|[1-9][0-9]*)$/.test(k) || Number(k) >= groups.length)) throw new Error("Invalid mana source selection");
+  const used = new Set(), taps = [];
+  for (let index = 0; index < groups.length; index++) {
+    const group = groups[index], eligible = units.filter(unit => kind(unit) === group.kind && !used.has(unit.id));
+    if (eligible.length < group.count) throw new Error("Those mana sources are no longer available");
+    let ids = selections[index];
+    if (ids === undefined && eligible.length > group.count) return {choice: {cost: "manaSource", sourceGroup: index, planKey: plan.key, output: group.color,
+      mode: "many", min: group.count, max: group.count,
+      options: numbered(eligible.map((unit, index) => ({index, cardId: unit.id, label: state.objects[unit.id].card})))} };
+    if (ids === undefined) ids = eligible.map(unit => unit.id);
+    if (!Array.isArray(ids) || ids.length !== group.count || new Set(ids).size !== ids.length || ids.some(id => !eligible.some(unit => unit.id === id)))
+      throw new Error("Invalid mana source selection");
+    for (const id of ids) {used.add(id); taps.push({id, color: group.color});}
+  }
+  return {taps};
+}
+
+function fundingChoiceNeeded(state, player, action) {
+  if (state.sourceChoices !== true) return action.tapPlan === undefined && castTapPlans(state, player, action, 2).length > 1;
+  const plans = castTapPlans(state, player, action, action.tapPlan === undefined ? 2 : TAP_CHOICES);
+  if (action.tapPlan === undefined && plans.length > 1) return true;
+  const plan = action.tapPlan === undefined ? plans[0] : plans.find(p => p.key === action.tapPlan);
+  if (!plan) throw new Error(`${state.objects[action.objectId]?.card ?? "That spell"} cannot be tapped for that way now`);
+  return Boolean(fundingIdentities(state, player, action, plan).choice);
 }
 
 /* AN ADVENTURER CARD WEIGHED AS ITS ADVENTURE (CR 715.3a): shown as one for the length of `fn` -- its cost, its timing, its
@@ -2874,7 +2925,7 @@ function performOffered(state, player, action, during) {
       return [];
     }
     /* A CAST THAT TAPS FOR ITSELF, more than one way (castTapPlans): which sources, asked before anything is tapped. */
-    if (action.kind === "cast" && action.autoTap === true && action.tapPlan === undefined && castTapPlans(state, player, action, 2).length > 1) {
+    if (action.kind === "cast" && action.autoTap === true && fundingChoiceNeeded(state, player, action)) {
       state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
       return [];
     }
@@ -3037,7 +3088,9 @@ function performOffered(state, player, action, during) {
       const tapped = action.tapPlan !== undefined ? ways.find((w) => w.key === action.tapPlan) : ways.length === 1 ? ways[0] : null;
       if (!tapped) throw new Error(`${object.card} cannot be tapped for that way now`);
       const units = new Map(tapUnits(state, player, undefined, pooledTaps(state)).map((u) => [u.id, u]));
-      for (const tap of tapped.taps) events.push(...perform(state, player, {kind: "activate-mana", objectId: tap.id, label: state.objects[tap.id].card, ...units.get(tap.id).via[tap.color]}));
+      const identity = fundingIdentities(state, player, action, tapped);
+      if (identity.choice) throw new Error("Choose the actual mana sources first");
+      for (const tap of identity.taps) events.push(...perform(state, player, {kind: "activate-mana", objectId: tap.id, label: state.objects[tap.id].card, ...units.get(tap.id).via[tap.color]}));
       tappedFor = tapped.payment;
     }
     if (action.via !== undefined && !permission) throw new Error(`${object.card} cannot be cast that way now`);

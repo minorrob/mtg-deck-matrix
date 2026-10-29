@@ -109,7 +109,7 @@
 
 import {controllerOf, typesOf} from "../rules/layers.mjs";
 import {cardsIn} from "../state/index.mjs";
-import {matchesSelector, compileSelector, matchesLastKnown} from "./filter.mjs";
+import {compileSelector, matchesLastKnown} from "./filter.mjs";
 import {amountOf, amountProblems} from "./amount.mjs";
 import {characteristicsOf, subtypesOf, everyCreatureTypeOf} from "../rules/layers.mjs";
 import {isCreatureType} from "../keywords/types.mjs";
@@ -411,11 +411,16 @@ export function conditionHolds(state, condition, {controller, source = null, abo
      when it says nothing), at most `atMost` ("if you control no Snakes": none). */
   if (condition.present) {
     const least = condition.atLeast ?? (condition.atMost !== undefined ? 0 : 1);
+    // Validate afresh on every query, including an empty battlefield; no mutable selector or truth is cached.
+    const matches = compileSelector(condition.present);
+    // A mandatory self selector cannot match another identity. OR branches retain the complete candidate set.
+    const selfOnly = condition.present.self === true && (condition.present.what ?? "permanent") === "permanent" && condition.present.anyOf === undefined;
+    const candidates = selfOnly ? (state.zones.battlefield.includes(source) ? [source] : []) : state.zones.battlefield;
     /* Counted only as far as the answer needs: "you control a Mountain" stops at the first (Anger, from a graveyard, asks
        it of every derivation); "at most" stops one past. */
     let n = 0;
-    for (const id of state.zones.battlefield) {
-      if (!matchesSelector(condition.present, state, id, {controller, source})) continue;
+    for (const id of candidates) {
+      if (!matches(state, id, {controller, source})) continue;
       n += 1;
       if (condition.atMost === undefined ? n >= least : n > condition.atMost) break;
     }

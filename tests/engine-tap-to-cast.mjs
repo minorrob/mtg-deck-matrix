@@ -83,10 +83,12 @@ const viewTax = (s, seat, id) => projectFor(s, seat).players[s.objects[id].owner
   const events = applyAction(s, 0, cast);
   eq([s.awaiting, onStack(s), tapped(s), s.players[0].manaPool.G], [null, ["Bear"], ["Forest", "Forest"], 0], "taken: nothing asked; both Forests tapped, the Bear on the stack, the pool spent");
   ok(events.filter((e) => e.kind === "GameEventCardTapped").length === 2 && events.some((e) => e.kind === "GameEventSpellAbilityCast"), "each Forest tapped for mana, then the cast");
-  /* Two Forests and a third: interchangeable, still one way; the first two tapped. */
+  /* The same kind with three distinct identities: the caster explicitly chooses two. */
   const t = play("identical", [at(0, "battlefield", "Forest", "Forest", "Forest"), at(0, "hand", "Bear")]);
   applyAction(t, 0, casts(t, "Bear")[0]);
-  eq([t.awaiting, tapped(t).length, t.objects[named(t, "Forest")[2]].tapped], [null, 2, false], "three Forests: no question, the third untapped");
+  eq([awaitingChoice(t).cost, awaitingChoice(t).options.map(o => o.cardId)], ["manaSource", named(t, "Forest")], "three Forests: every exact identity is offered");
+  resolveAwaiting(t, [0, 1]);
+  eq([t.awaiting, tapped(t).length, t.objects[named(t, "Forest")[2]].tapped], [null, 2, false], "the chosen first two Forests tap and the third remains untapped");
   /* A land of either color and an Island for {1}{U}... and a Grove for {1}{G} beside an Island: one way. */
   const g = play("dual", [at(0, "battlefield", "Island", "Grove"), at(0, "hand", "Bear")]);
   applyAction(g, 0, casts(g, "Bear")[0]);
@@ -102,6 +104,8 @@ const viewTax = (s, seat, id) => projectFor(s, seat).players[s.objects[id].owner
   eq([s.awaiting?.kind, q.title, q.options.map((o) => o.label), tapped(s), onStack(s)], ["choose-cost", "Bear: what to tap for it", ["Forest, Forest", "Forest, Island"], [], []],
     "asked which, before anything is tapped");
   resolveAwaiting(s, [1]);
+  eq(awaitingChoice(s).options.map(o => o.cardId), named(s, "Forest"), "the Forest-and-Island pattern asks which exact Forest");
+  resolveAwaiting(s, [0]);
   eq([onStack(s), tapped(s), s.objects[named(s, "Forest")[1]].tapped], [["Bear"], ["Forest", "Island"], false], "Forest and Island tapped; the other Forest kept");
   /* The house pilot takes the one-click cast, and answers the least flexible way: the Island kept for blue. */
   const p = play("pilot", [at(0, "battlefield", "Forest", "Forest", "Island"), at(0, "hand", "Bear")]);

@@ -15,7 +15,7 @@
 import assert from "node:assert/strict";
 import {randomUUID} from "node:crypto";
 import {memoryStorage, createMatchStore} from "../game/engine/storage.mjs";
-import {startRoom, basicCards} from "../game/room/room.mjs";
+import {startRoom, openRoom, basicCards} from "../game/room/room.mjs";
 import {replayMatch} from "../game/room/replay.mjs";
 
 let checks = 0;
@@ -88,5 +88,25 @@ eq((await createMatchStore(storage, "pooled").loadMatch()).pod.pooledTaps, true,
 /* ---- 4. Replayed ---- */
 const proof = await replayMatch({storage, matchId: "pooled", cards});
 ok(proof.same, `the game with the key, the Bear cast from floating mana on its tape, replays to the same game (${proof.tape} tape entries)`);
+
+{
+  const storage = memoryStorage(), matchId = "physical-sources";
+  const room = await startRoom({storage, matchId, cards, pod: pod({pooledTaps: true, sourceChoices: true}), seed: SEED});
+  const readyThree = v => v.seatId === "rob" && priority(v) && v.state.turnPlayerId === v.seat && v.state.phase === "MAIN1"
+    && !v.decision.options.some(o => o.act === "play-land") && forests(v).filter(c => !c.tapped).length === 3;
+  const before = await until(room, readyThree), ids = forests(before).map(c => c.cardId);
+  await act(room, before, bears(before)[0].index);
+  const asked = ask(room);
+  eq([asked.decision.mode, asked.decision.min, asked.decision.max, asked.decision.options.map(o => o.cardId)], ["many", 2, 2, ids], "a current room asks every actual source identity before paying");
+  eq([forests(asked).some(c => c.tapped), stack(asked).length], [false, 0], "the saved identity proposal has made no tap or cast");
+  const reopened = await openRoom({storage, matchId, cards});
+  eq(ask(reopened).decision.options.map(o => o.cardId), ids, "room reload preserves all exact identity options");
+  await act(reopened, ask(reopened), [1, 2]);
+  const after = ask(reopened);
+  eq([forests(after).filter(c => c.tapped).map(c => c.cardId), stack(after).length], [ids.slice(1), 1], "the room activates only the two identities chosen after reload");
+  eq((await createMatchStore(storage, matchId).loadMatch()).pod.sourceChoices, true, "the current saved pod retains its physical-source contract");
+  const proof = await replayMatch({storage, matchId, cards});
+  ok(proof.same, `current exact identity answers replay to the same game (${proof.tape} tape entries)`);
+}
 
 console.log(`room-pooled-taps: ${checks} checks passed — a new match tops floating mana up from its caster's untapped sources; a match launched before offers what it offered; the saved match keeps which, and replays the same.`);

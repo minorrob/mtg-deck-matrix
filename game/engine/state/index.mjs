@@ -128,6 +128,8 @@ export function createState(pod) {
     /* A cast tapped for tops up floating mana, and a source of more than one mana is tapped for all of it (rules/actions.mjs,
        `pooledTaps`; Rob, 2026-10-15). Only a pod that asks carries the key, as above. */
     ...(pod?.pooledTaps === true ? {pooledTaps: true} : {}),
+    /* Physical mana source identities are explicit in new matches. An absent historical pod keeps its saved replay. */
+    ...(pod?.sourceChoices === true ? {sourceChoices: true} : {}),
     /* New matches may fund the prepared inset's cast from its controller's sources, as a hand cast can be funded. */
     ...(pod?.preparedTaps === true ? {preparedTaps: true} : {}),
     /* And an {X} spell tapped for too, for each X the pool and the untapped sources pay together (rules/actions.mjs, `xTaps`;

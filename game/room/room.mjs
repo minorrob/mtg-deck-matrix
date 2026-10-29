@@ -1019,6 +1019,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         ...((pod?.houseRules?.undoLastPlay === true || pod?.undoLastPlay === true) ? {houseRules: {undoLastPlay: true}} : {}),
         /* And whether its AI seats take what a choice they may answer with none is for (`pilotPicks`), kept the same way. */
         ...(pod && pod.pilotPicks === true ? {pilotPicks: true} : {}),
+        ...(pod?.pilotProvocation === true ? {pilotProvocation: true} : {}),
         ...(pod && pod.passStack === true ? {passStack: true} : {}), ...(pod && pod.yieldTurn === true ? {yieldTurn: true} : {}),
         ...(pod && pod.blocksNone === true ? {blocksNone: true} : {}),
         ...(pod && pod.keepStepMana === true ? {keepStepMana: true} : {}),
@@ -1033,7 +1034,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       const keepMana = beats.keepStepMana === true ? {keepStepMana: seats.flatMap((s, seat) => (s.pilot !== "house" ? [seat] : []))} : {};
       /* And whether a cast tapped for tops up floating mana and taps a source for all it makes (`pooledTaps`, rules/actions.mjs):
          a match launched before it lacks the key, and so offers what it offered then. */
-      const pooled = {...(pod && pod.pooledTaps === true ? {pooledTaps: true} : {}), ...(pod && pod.xTaps === true ? {xTaps: true} : {}), ...(pod?.preparedTaps === true ? {preparedTaps: true} : {})};
+      const pooled = {...(pod && pod.pooledTaps === true ? {pooledTaps: true} : {}), ...(pod && pod.xTaps === true ? {xTaps: true} : {}), ...(pod?.preparedTaps === true ? {preparedTaps: true} : {}), ...(pod?.sourceChoices === true ? {sourceChoices: true} : {})};
       pilotPicks = beats.pilotPicks === true;
       try {state = createState({matchId, seed, players: seats.map((s) => ({name: s.name})), ...rules, ...(beats.drawBeat ? {drawBeat: true} : {}), ...pooled, ...anyStep, ...keepMana});}
       catch (error) {throw new RoomError(400, error.message);}
