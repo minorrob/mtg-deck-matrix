@@ -23,7 +23,7 @@ BREAKS = [
      'const alike = ordered.map((u, i) => i > 0 && kind(u) === kind(ordered[i - 1]));',
      'const alike = ordered.map(() => false);'),
     ('the search given no steps', 'game/engine/rules/mana.mjs',
-     'export const SEARCH_LIMIT = 4000;',
+     'export const SEARCH_LIMIT = Infinity;',
      'export const SEARCH_LIMIT = 0;'),
     ('the generic paid from the biggest rock, whatever it wastes', 'game/engine/rules/mana.mjs',
      'const next = fits[0] ?? left.sort((a, b) => out(a) - out(b))[0];',

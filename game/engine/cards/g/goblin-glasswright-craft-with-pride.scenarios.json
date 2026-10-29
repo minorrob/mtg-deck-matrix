@@ -19,7 +19,7 @@
   },
   "scenarios": [
     {
-      "name": "It enters prepared: Craft with Pride waits in Rob's exile, cast it for {R}, a Treasure, and the Glasswright is unprepared",
+      "name": "It enters prepared: cast Craft from an empty pool using the remaining Mountain, create Treasure, and unprepare",
       "setup": [
         {
           "seat": 0,
@@ -68,16 +68,12 @@
               }
             },
             {
-              "offers": {
-                "kind": "cast",
-                "card": "Craft with Pride"
-              },
-              "count": 0
+              "seat": 0,
+              "pool": {
+                "R": 0
+              }
             }
           ]
-        },
-        {
-          "tap": "Mountain"
         },
         {
           "cast": "Craft with Pride"
@@ -120,6 +116,12 @@
           "where": {
             "attribute": "prepared",
             "value": false
+          }
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "R": 0
           }
         }
       ]

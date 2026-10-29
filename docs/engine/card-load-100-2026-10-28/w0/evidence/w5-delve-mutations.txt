@@ -1,0 +1,9 @@
+baseline: every suite passes unbroken
+caught graveyard cards extend affordable X -- tests/engine-load100-mana.mjs
+caught X spells may delve -- tests/engine-load100-mana.mjs
+caught delve checks the announced X total -- tests/engine-load100-mana.mjs
+caught delve reckons reduction after X is announced -- tests/engine-load100-mana.mjs
+caught flashback may be funded before floating mana -- tests/engine-load100-mana.mjs
+caught created shock tokens use native entry choices -- tests/engine-load100-mana.mjs
+caught copied shock tokens use native entry choices -- tests/engine-load100-mana.mjs
+missed: []

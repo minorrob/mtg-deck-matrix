@@ -11,6 +11,7 @@ import {legalActions, applyAction, castTapPlans} from "../game/engine/rules/acti
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {resolveTop} from "../game/engine/rules/stack.mjs";
 
+const cardIndex = loadCardIndex();
 let checks = 0;
 const eq = (actual, expected, message) => { assert.deepEqual(actual, expected, message); checks++; };
 const saga = JSON.parse(readFileSync(new URL("../game/engine/cards/u/urzas-saga.json", import.meta.url), "utf8"));
@@ -19,7 +20,112 @@ const fixtures = Object.fromEntries([["Zero Trinket", "{0}"], ["One Trinket", "{
   ["Variable Trinket", "{X}"], ["No Cost Trinket", null], ["Artifact Land", null]].map(([name, manaCost]) =>
   [name, {types: name === "Artifact Land" ? ["Artifact", "Land"] : ["Artifact"], manaCost, colors: []}]));
 {
-  const index = loadCardIndex();
+  const sources = Object.fromEntries(Array.from({length: 17}, (_, n) => [`Rider Source ${n}`, {types: ["Land"], abilities: [{id: "m", kind: "mana", tapSelf: true, produces: {R: 1},
+    whenSpent: {spell: {types: ["Sorcery"]}, text: "When spent, you gain 1 life.", effects: [{effect: "gainLife", amount: 1}]}}]}]));
+  const fixtures = {...sources, Ride: {types: ["Sorcery"], manaCost: "{R}", spell: {id: "s", text: "You gain 3 life.", targets: [], effects: [{effect: "gainLife", amount: 3}]}}};
+  let state = runScenario({name: "all rider sources remain selectable", setup: [{seat: 0, zone: "hand", cards: ["Ride"]}, {seat: 0, zone: "battlefield", cards: Object.keys(sources)}], steps: []}, cardIndex.definition, fixtures).state;
+  const ids = [...state.zones.battlefield];
+  const events = ids.flatMap(id => applyAction(state, 0, legalActions(state, 0).find(a => a.kind === "activate-mana" && a.objectId === id)));
+  eq(events.filter(e => e.kind === "GameEventManaPool").length, 17, "seventeen actual source activations produce seventeen rider mana");
+  const offers = legalActions(state, 0).filter(a => a.kind === "cast" && a.label === "Ride");
+  eq(offers.length, 17, "all seventeen distinguishable rider-source payments remain offered");
+  const selectedRider = offers[16].riders[0], selectedSource = state.players[0].manaRiders.find(rider => rider.id === selectedRider).source;
+  state = JSON.parse(JSON.stringify(state));
+  applyAction(state, 0, offers[16]);
+  eq([state.players[0].manaPool.R, state.players[0].manaRiders.length, state.stack.at(-1)?.cardId], [16, 16, selectedSource], "selecting the last rider spends exactly its mana and triggers that source");
+  eq(state.players[0].manaRiders.some(rider => rider.id === selectedRider), false, "the chosen rider ID is spent, with the other sixteen retained");
+  resolveTop(state);
+  resolveTop(state);
+  eq(state.players[0].life, 44, "the selected rider and the spell each resolve once");
+}
+{
+  const lands = Object.fromEntries(["W", "U", "B", "R", "G", "C"].map(key => [`${key} Vast Source`, {types: ["Land"], abilities: [{id: "m", kind: "mana", tapSelf: true, produces: {[key]: 1}}]}]));
+  const fixtures = {...lands, Eight: {types: ["Sorcery"], manaCost: "{8}", spell: {id: "s", text: "You gain 8 life.", targets: [], effects: [{effect: "gainLife", amount: 8}]}}};
+  let state = runScenario({name: "search budget cannot hide funding choices", pooledTaps: true, setup: [{seat: 0, zone: "hand", cards: ["Eight"]},
+    {seat: 0, zone: "battlefield", cards: Object.keys(lands).flatMap(name => Array(6).fill(name))}], steps: []}, cardIndex.definition, fixtures).state;
+  state.players[0].manaPool.C = 1;
+  const action = legalActions(state, 0).find(a => a.kind === "cast" && a.label === "Eight"), plans = castTapPlans(state, 0, action, Infinity);
+  eq(plans.filter(plan => plan.taps.length === 7).length, 786, "all C(12,5)-6 seven-source multisets are available; the six all-one-color sets exceed source counts");
+  applyAction(state, 0, action);
+  eq(awaitingChoice(state).options.length, plans.length, "the public funding question retains the complete large plan list");
+  state = JSON.parse(JSON.stringify(state));
+  const selected = plans.findLastIndex(plan => plan.taps.length === 7), wanted = plans[selected].taps.map(tap => tap.id).sort((a,b) => a-b);
+  resolveAwaiting(state, [selected]);
+  eq(state.zones.battlefield.filter(id => state.objects[id].tapped).sort((a,b) => a-b), wanted, "a late plan pays with exactly its seven sources and the floating mana");
+  resolveTop(state);
+  eq([state.players[0].life, Object.values(state.players[0].manaPool).reduce((a,b) => a+b, 0)], [48, 0], "that late complete-search payment casts and resolves");
+}
+{
+  const fixtures = {Two: {types: ["Sorcery"], manaCost: "{2}", spell: {id: "s", text: "You gain 2 life.", targets: [], effects: [{effect: "gainLife", amount: 2}]}},
+    Rock: {types: ["Artifact"], abilities: [{id: "m", kind: "mana", tapSelf: true, produces: {C: 2}}]}};
+  const state = runScenario({name: "source budgets stay legal choices", pooledTaps: true, setup: [{seat: 0, zone: "hand", cards: ["Two"]}, {seat: 0, zone: "battlefield", cards: ["Rock", "Wastes", "Wastes"]}], steps: []}, cardIndex.definition, fixtures).state;
+  const action = legalActions(state, 0).find(a => a.kind === "cast" && a.label === "Two");
+  const plans = castTapPlans(state, 0, action, Infinity);
+  const lands = state.zones.battlefield.filter(id => state.objects[id].card === "Wastes");
+  const index = plans.findIndex(plan => plan.taps.length === 2 && plan.taps.every(tap => lands.includes(tap.id)));
+  eq(index >= 0, true, "two one-mana lands remain an option beside a single two-mana rock");
+  applyAction(state, 0, action);
+  resolveAwaiting(state, [index]);
+  eq(state.zones.battlefield.map(id => [state.objects[id].card, state.objects[id].tapped]), [["Rock", false], ["Wastes", true], ["Wastes", true]], "the chosen larger source set leaves the rock untapped");
+  resolveTop(state);
+  eq(state.players[0].life, 42, "that funding choice pays and resolves the spell");
+}
+{
+  const saved = JSON.parse(readFileSync(new URL("../game/engine/cards/f/faithless-looting.scenarios.json", import.meta.url), "utf8"));
+  const {state, events} = runScenario(saved.scenarios[0], cardIndex.definition, saved.fixtures);
+  eq(state.zones.battlefield.map((id) => [state.objects[id].card, state.objects[id].tapped]), Array.from({length: 4}, () => ["Mountain", true]), "Faithless Looting's two real casts tap exactly four Mountains");
+  eq(events.filter((e) => e.kind === "GameEventManaPool").length, 4, "four mana abilities are performed, including automatic flashback funding");
+  eq(events.filter((e) => e.kind === "GameEventSpellAbilityCast").map((e) => e.data.fields.castFrom), ["hand", "graveyard"], "exactly one ordinary and one flashback cast occur");
+  eq([events.filter((e) => e.data?.fields?.drawn).length, events.filter((e) => e.data?.fields?.discarded).length], [4, 4], "both casts draw and discard exactly two");
+}
+{
+  const index = cardIndex, shock = {...index.definition("Breeding Pool"), card: "Breeding Pool"};
+  for (const route of ["create", "copy"]) for (const pay of [false, true]) {
+    const maker = {types: ["Sorcery"], manaCost: "{0}", spell: {id: "s", text: "Create a shock-land token.",
+      targets: route === "copy" ? [{what: "permanent", types: ["Land"]}] : [],
+      effects: [route === "copy" ? {effect: "copyPermanent", targets: {target: 0}} : {effect: "createToken", count: 1, token: {...shock, name: "Breeding Pool"}}]}};
+    let state = runScenario({name: `${route} shock token`, setup: [{seat: 0, zone: "hand", cards: ["Make Shock"]},
+      ...(route === "copy" ? [{seat: 0, zone: "battlefield", cards: ["Breeding Pool"]}] : [])],
+      steps: [{cast: "Make Shock", ...(route === "copy" ? {targets: [{card: "Breeding Pool", seat: 0}]} : {})}, {resolve: true}]}, index.definition, {"Make Shock": maker}).state;
+    const choice = awaitingChoice(state);
+    eq(choice.options.map((o) => o.pay), [true, false], `${route}: actual token entry offers pay-life and decline`);
+    eq(state.zones.battlefield.filter((id) => state.objects[id].token).length, 0, "no token is committed before its entry answer");
+    state = JSON.parse(JSON.stringify(state));
+    const before = structuredClone(state);
+    assert.throws(() => resolveAwaiting(state, [99]), /Select the required rule options/); checks++;
+    eq(state, before, "invalid token entry answer preserves the reloaded game");
+    const events = resolveAwaiting(state, [pay ? 0 : 1]);
+    const made = state.zones.battlefield.filter((id) => state.objects[id].token);
+    eq([made.length, state.objects[made[0]].card, state.objects[made[0]].tapped, state.players[0].life], [1, "Breeding Pool", !pay, pay ? 38 : 40], `${route}: selected life payment determines tapped state exactly`);
+    eq(events.filter((e) => e.kind === "GameEventCardChangeZone" && e.data.fields.to.zoneType === "Battlefield").length, 1, "the selected token arrives exactly once");
+    eq([state.ruleOperation ?? null, state.awaiting], [null, null], "token creation finishes its saved operation");
+  }
+}
+{
+  const spec = {types: ["Sorcery"], manaCost: "{X}{B}", colors: ["B"], keywords: ["Delve"], spell: {id: "s", text: "You gain X life.", targets: [], effects: [{effect: "gainLife", amount: "X"}]}};
+  for (const reduction of [0, 2]) {
+  let state = runScenario({name: "X paid by delve", setup: [{seat: 0, zone: "hand", cards: ["Delve X"]}, {seat: 0, zone: "graveyard", cards: ["Wastes", "Plains", "Island"]},
+    ...(reduction ? [{seat: 0, zone: "battlefield", cards: ["Helm of Awakening", "Helm of Awakening"]}] : [])], steps: []}, cardIndex.definition, {"Delve X": spec}).state;
+  state.players[0].manaPool.B = 1;
+  const offers = legalActions(state, 0).filter((a) => a.kind === "cast" && a.label === "Delve X" && a.delve);
+  eq(offers.map((a) => a.x), [1, 2, 3].map((n) => n + reduction), "delve offers every X whose remaining generic cost the graveyard can pay after reductions");
+  applyAction(state, 0, offers[2]);
+  eq([awaitingChoice(state).min, awaitingChoice(state).max], [3, 3], "X=3 requires all three selected graveyard cards");
+  state = JSON.parse(JSON.stringify(state));
+  const before = structuredClone(state), grave = [...state.zones.graveyard[0]];
+  assert.throws(() => resolveAwaiting(state, [0, 0, 1]), /Invalid selection/); checks++;
+  eq(state, before, "duplicate delve selection changes no zone, mana or saved operation");
+  const events = resolveAwaiting(state, [0, 1, 2]);
+  eq([state.players[0].manaPool.B, state.zones.exile.map((id) => state.objects[id].card), state.stack.at(-1)?.x], [0, ["Wastes", "Plains", "Island"], 3 + reduction], "the actual X cast exiles exactly those cards and spends its black mana");
+  eq(events.filter((e) => e.kind === "GameEventCardChangeZone" && e.data.fields.to.zoneType === "Exile").map((e) => e.data.fields.card.cardId), grave, "the exile events name exactly the three chosen old object IDs");
+  eq(grave.every((id) => !state.objects[id]), true, "all old graveyard incarnations are gone");
+  eq(events.filter((e) => e.kind === "GameEventSpellAbilityCast").length, 1, "delve announces the spell exactly once");
+  resolveTop(state);
+  eq(state.players[0].life, 43 + reduction, "the resolved effect reads the announced X, including the cost reduction");
+  }
+}
+{
+  const index = cardIndex;
   const names = ["Choked Estuary", "Foreboding Ruins", "Fortified Village", "Frostboil Snarl", "Furycalm Snarl", "Game Trail",
     "Necroblossom Snarl", "Port Town", "Shineshadow Snarl", "Vineglimmer Snarl", "Murmuring Bosk"];
   for (const name of names) {
@@ -38,7 +144,7 @@ const fixtures = Object.fromEntries([["Zero Trinket", "{0}"], ["One Trinket", "{
   const lands = Object.fromEntries(["W", "U", "B", "R", "G", "C"].map((key) => [`${key} Source`, {types: ["Land"], abilities: [{id: "m", kind: "mana", tapSelf: true, produces: {[key]: 1}}]}]));
   const fixtures = {...lands, Three: {types: ["Sorcery"], manaCost: "{3}", spell: {id: "s", text: "You gain 3 life.", targets: [], effects: [{effect: "gainLife", amount: 3}]}}};
   let state = runScenario({name: "complete tapping choices", setup: [{seat: 0, zone: "hand", cards: ["Three"]},
-    {seat: 0, zone: "battlefield", cards: Object.keys(lands).flatMap((name) => [name, name, name])}], steps: []}, loadCardIndex().definition, fixtures).state;
+    {seat: 0, zone: "battlefield", cards: Object.keys(lands).flatMap((name) => [name, name, name])}], steps: []}, cardIndex.definition, fixtures).state;
   const action = legalActions(state, 0).find((a) => a.kind === "cast" && a.label === "Three");
   applyAction(state, 0, action);
   eq(awaitingChoice(state).options.length, 56, "all 56 source combinations appear beyond the old 24 tap choices");
@@ -55,7 +161,7 @@ const fixtures = Object.fromEntries([["Zero Trinket", "{0}"], ["One Trinket", "{
   const invite = {types: ["Sorcery"], manaCost: "{0}", spell: {id: "s", text: "You may cast an exiled spell.", targets: [],
     effects: [{effect: "play", from: "selector", selector: {zone: "exile", owner: "you"}, payMana: true}]}};
   const effectState = runScenario({name: "complete effect-paid mana plans", setup: [{seat: 0, zone: "hand", cards: ["Invite"]}, {seat: 0, zone: "exile", cards: ["Three"]},
-    {seat: 0, zone: "battlefield", cards: Object.keys(lands).flatMap((name) => [name, name, name])}], steps: [{cast: "Invite"}, {resolve: true}]}, loadCardIndex().definition, {...fixtures, Invite: invite}).state;
+    {seat: 0, zone: "battlefield", cards: Object.keys(lands).flatMap((name) => [name, name, name])}], steps: [{cast: "Invite"}, {resolve: true}]}, cardIndex.definition, {...fixtures, Invite: invite}).state;
   resolveAwaiting(effectState, [0]);
   eq(awaitingChoice(effectState).options.length, 56, "an effect-paid cast also exposes every funding plan beyond twelve");
   resolveAwaiting(effectState, [55]);
@@ -65,7 +171,7 @@ const fixtures = Object.fromEntries([["Zero Trinket", "{0}"], ["One Trinket", "{
   eq(effectState.players[0].life, 43, "the effect-paid spell resolves with its paid effect");
 }
 {
-  const state = runScenario({name: "complete payment choices", setup: [{seat: 0, zone: "hand", cards: ["Three"]}], steps: []}, loadCardIndex().definition,
+  const state = runScenario({name: "complete payment choices", setup: [{seat: 0, zone: "hand", cards: ["Three"]}], steps: []}, cardIndex.definition,
     {Three: {types: ["Sorcery"], manaCost: "{3}", spell: {id: "s", text: "You gain 3 life.", targets: [], effects: [{effect: "gainLife", amount: 3}]}}}).state;
   Object.assign(state.players[0].manaPool, {W: 3, U: 3, B: 3, R: 3, G: 3, C: 3});
   eq(paymentOptions(state.players[0].manaPool, parseManaCost("{3}")).length, 56, "all 56 distinct three-mana payments are enumerated");
@@ -94,7 +200,7 @@ const fixtures = Object.fromEntries([["Zero Trinket", "{0}"], ["One Trinket", "{
     "Saga III offers actual {0} or {1}; colored, X, no-cost and artifact lands with those mana values stay out");
 }
 {
-  const index = loadCardIndex();
+  const index = cardIndex;
   const scenario = {name: "Saga III's printed-cost search", library: ["Wastes", "Wastes", ...Object.keys(fixtures)],
     setup: [{seat: 0, zone: "hand", cards: ["Urza's Saga"]}],
     steps: [{play: "Urza's Saga"}, {resolve: true}, {to: {turn: 5, phase: "MAIN1"}}, {resolve: true}]};
@@ -122,7 +228,7 @@ const fixtures = Object.fromEntries([["Zero Trinket", "{0}"], ["One Trinket", "{
   eq(convokePayments({}, parseManaCost("{W/P}"), gray, {life: 2}), [], "creatures cannot be tapped for life payments or surplus contributions");
 }
 {
-  const index = loadCardIndex();
+  const index = cardIndex;
   const pals = {"White Pal": {types: ["Creature"], colors: ["W"], power: 2, toughness: 2},
     "Gray Pal": {types: ["Creature"], colors: [], power: 2, toughness: 2}, "Other Gray Pal": {types: ["Creature"], colors: [], power: 2, toughness: 2}};
   for (const [manaCost, helpers, life] of [["{1}{W/P}", ["White Pal"], 38], ["{W/P}", ["White Pal"], 40],

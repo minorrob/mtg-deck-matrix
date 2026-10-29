@@ -3,7 +3,7 @@
 SUITES = ['tests/room-prepared.mjs']
 BREAKS = [
  ('prepared copy excluded from mana funding', 'game/engine/rules/actions.mjs',
-  '(state.preparedTaps === true && from === "exile"', '(false && from === "exile"'),
+  'const tapZone = (state, player, from, id) => [', 'const tapZone = (state, player, from, id) => !preparedCopyStays(state, id) && ['),
  ('prepared cast loses its menu source', 'game/room/decision.mjs',
   'const preparedFrom = action?.kind === "cast" ? state.objects[action.objectId]?.prepareOf : undefined;',
   'const preparedFrom = undefined;'),
