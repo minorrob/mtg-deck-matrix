@@ -33,7 +33,7 @@ export function checkScenarios({files, scripts, cards, ledger = null, counterfac
         if (ledger) addExerciseEvidence(ledger, result.events, {scenario: `${file.card}: ${scenario.name}`});
       } catch (error) {
         failed += 1; baselines.set(scenario, {choicePolicy: "explicit", error: error.message});
-        report("FAIL", file.card, "|", error.message.slice(0, 240));
+        report("FAIL", file.card, "|", error.message);
       }
     }
   }

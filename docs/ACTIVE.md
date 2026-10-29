@@ -31,6 +31,9 @@ Clean `c2038646` is scanned/pushed. Its full strict check finishes RED: 6,430 de
 failures, 2,039/11,633 abilities reached (523 omission proofs), 9,594 unproved; both checker and verifier exit1.
 Fidelity/schema/smoke problems0. The -3 denominator change is reconciled to earlier Song/Saga fixes `498e3d05`,
 with no removed card. Full hashed archive/backlog is in the run evidence folder. No automatic choices or family credit.
+Explicit physical-source references now pass183 native checks plus11 new caught probes, with no saved card/scenario
+edits or ability credit. W5 repairs actual-funded face-down/Adventure readers; W1 reconciles obsolete token expectations
+against current rules and exact identities. Original browser unions use a quiet window with other heavy work paused.
 **Latest October 29 checkpoint:** source/generated `2c89a5c3` is scanned/pushed to draft #912. W1 `1fad7ec9`,
 W4 `aae67e76`, W5 code `12a32a40` and root anchors `88b616d5` are integrated. Roles are making clean pushed
 handbacks; continue their exact remaining debts from RUN.md before loading any new cards.

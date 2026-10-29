@@ -5,6 +5,23 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Physical-source authoring checkpoint:** the harness accepts an explicit `source: {zone, index, seat?, card?}`
+  for an action. It indexes named objects before legality filtering; a repeated tap of index 0 cannot silently select
+  index 1. Actual selected IDs are retained in the policy trace and mana provenance. Unknown/missing/invalid references
+  fail, and no reference bypasses native ownership, targets, output, payment or timing. Native **183** checks, **11 new
+  source/diagnostic mutations caught** against the original four-suite baseline, with no changed saved cards/scenarios.
+  The moved first-matching-action probe is caught again; entry-order51, feature-wiring131 and integrity pass.
+  Static audit:235 files/4,398 breaks/32 inherited UI failures, no engine/fuzz targets. Authoring examples are in
+  `w0/V8-STRICT-CLI.md`. Full failure diagnostics now retain their actual ending after long scenario names. The latest
+  measured whole-directory gate remains RED at `c2038646`; unused syntax does not earn new card or ability credit.
+- **Additional reader findings during the producer continuations:** W1 reproduces obsolete transforming-token and
+  face-down funding expectations, root independently confirms both, and also confirms Concerted Care stopping for the
+  new physical-source question. W5 owns `engine-face-down-play` and the two Concerted Care blocks in `engine-adventure`:
+  empty-pool premises and original final privacy/timing/zone/effect assertions stay, with explicit actual funding.
+  W1 owns `engine-transform`: exact new token IDs, current transforming-token rules, and separate ordinary single-face
+  refusal/mana-value controls. No reader is suppressed. The original browser unions run in a coordinated quiet window.
+  W5 also records real raw-payload-label collision and house-pilot additional-cost funding REDs; those remain open.
+
 - **Latest full strict directory measurement, clean `c2038646`, October 29:** 6,430 definitions, 11,039 saved
   scenarios; schema/fidelity/smoke problems **0**, strict scenario failures **6,580**. **2,039/11,633 abilities reached**,
   including 523 runtime-only omission proofs; **9,594 unproved**, checker exit 1. The independent verifier also exits 1
