@@ -59,6 +59,7 @@ import {preparedCopyStays} from "../script/effects/attributes.mjs";
 import {endControlChange, nextRecord, endCounterDurations, controlByAuras} from "../script/effects/permanents.mjs";
 import {protectedFrom} from "./protection.mjs";
 import {answerForDeparted, goOnWithout} from "./turn.mjs";
+import {rememberDepartingSpell} from "./spell-memory.mjs";
 
 /* The capitalized zone names the projection and the telemetry use. */
 const ZONE_LABEL = {
@@ -141,6 +142,7 @@ function removePlayerFromBoard(state, playerId, events) {
   for (const entry of [...state.stack]) {
     const object = entry.objectId === null ? null : state.objects[entry.objectId];
     if (!(object ? object.owner === playerId : entry.playerId === playerId)) continue;
+    rememberDepartingSpell(state, entry);
     state.stack.splice(state.stack.indexOf(entry), 1);
     if (object) removeObject(state, entry.objectId);
     if (entry.stage === "resolving") cutShort(state);

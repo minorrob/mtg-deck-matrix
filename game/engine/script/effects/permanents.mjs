@@ -211,6 +211,18 @@ function copiable(object, except = {}) {
   };
 }
 
+/* A created token copy of a double-faced permanent has both faces and its current orientation (CR 707.8a). This
+   belongs to token creation, not becomeCopy: a physical single-faced copy does not acquire another physical face.
+   A merged or face-down permanent is not copied as a double-faced permanent (CR 730.2i, 708.2a). */
+function copiedTokenFaces(original, except) {
+  if (!original.mdfc || original.merged || original.faceDown === true) return {};
+  /* An existing copy effect applies to either physical face while it lasts (CR 707.8a, 712.9). Its copiable values
+     become both token faces; the copy effect itself and the original's underlying identity are not copied. */
+  const face = (side) => copiable(original.copyEffects?.length ? original : side, except);
+  return {mdfc: {...structuredClone(original.mdfc), front: face(original.mdfc.front), back: face(original.mdfc.back)},
+    ...(original.face === "back" ? {face: "back"} : {})};
+}
+
 /* WHO A CREATURE PUT ONTO THE BATTLEFIELD ATTACKING MAY ATTACK (CR 508.4): a defending player -- and where every opponent
    is one (Commander's attack multiple players option, CR 802.2), each opponent still in the game, in turn order. */
 export function defendingPlayers(state, controller) {
@@ -354,7 +366,7 @@ export function makeCopies(state, ids, params, context, events) {
       /* A copy of an Aura enchants something as it enters, or is not made (CR 303.4f-g). */
       const hosts = values.enchant ? enchantable(state, values.enchant, controller) : null;
       if (hosts && !hosts.length) continue;
-      const copy = addObject(state, {...values, owner: controller, controller, token: true}, "battlefield");
+      const copy = addObject(state, {...values, ...copiedTokenFaces(original, except), owner: controller, controller, token: true}, "battlefield");
       if (hosts) enchantOnArrival(state, copy, hosts, controller);
       if (params.tapped) state.objects[copy].tapped = true;
       made.push(copy);
