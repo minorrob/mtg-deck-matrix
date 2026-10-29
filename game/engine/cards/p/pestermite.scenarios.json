@@ -294,15 +294,27 @@
       "steps": [
         {
           "tap": "Island",
-          "seat": 0
+          "seat": 0,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "tap": "Wastes",
-          "seat": 0
+          "seat": 0,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "tap": "Wastes",
-          "seat": 0
+          "seat": 0,
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
         },
         {
           "cast": "Pestermite"
@@ -373,15 +385,27 @@
       "steps": [
         {
           "tap": "Island",
-          "seat": 0
+          "seat": 0,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "tap": "Wastes",
-          "seat": 0
+          "seat": 0,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "tap": "Wastes",
-          "seat": 0
+          "seat": 0,
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
         },
         {
           "cast": "Pestermite"
