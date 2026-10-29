@@ -109,7 +109,7 @@ import {addToHistory} from "./history.mjs";
 import {tableEvent, eventsFor, keep, EVENTS_SCHEMA} from "./events.mjs";
 import {endingOf} from "./ending.mjs";
 import {describeDecision} from "./decision.mjs";
-import {beginCastDraft,offerCastDraft,castDraftChoice,castDraftSignature,answerCastDraft} from "./cast-stages.mjs";
+import {beginCastDraft,beginActionDraft,offerCastDraft,castDraftChoice,castDraftSignature,answerCastDraft} from "./cast-stages.mjs";
 
 export const ROOM_PROTOCOL = 1;
 export const ROOM_SCHEMA = "CrankRoom@1";
@@ -834,12 +834,14 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
   function answerWith(seat, answer, decisionId = null) {
     answering = decisionId;
     try {
-      if (answer.back === true && !castDraft) throw new RoomError(422, "Back is available only in a cast's mode and target stages. Use Cancel when the pending action can still be abandoned.", {refused: true});
-      if (pendingActions && answer.cancel === true) throw new RoomError(422, "No cast proposal is pending. Choose an action or pass priority.", {refused: true});
+      if (answer.back === true && !castDraft) throw new RoomError(422, "Back is available only in an action's mode and target stages. Use Cancel when the pending action can still be abandoned.", {refused: true});
+      if (pendingActions && answer.cancel === true) throw new RoomError(422, "No action proposal is pending. Choose an action or pass priority.", {refused: true});
       if (pendingActions) {
         const action = pendingActions[answer.indices[0]];
         pendingActions = null;
-        if (answer.staged === true) castDraft = beginCastDraft(state, seat, action, `${matchId}/cast:${tapeN}/${action.objectId}`);
+        if (answer.staged === true) castDraft = action.kind === "cast"
+          ? beginCastDraft(state, seat, action, `${matchId}/cast:${tapeN}/${action.objectId}`)
+          : beginActionDraft(state, seat, action, `${matchId}/activate:${tapeN}/${action.objectId}/${action.abilityId}`);
         else apply(seat, action, "person", answer.hold === true);
       } else if (castDraft) {
         const result = answerCastDraft(state, castDraft, answer, draftOptions);

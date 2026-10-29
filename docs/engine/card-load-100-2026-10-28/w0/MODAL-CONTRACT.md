@@ -7,7 +7,15 @@ their existing direct action answers. No production UI change is included; the s
 
 A priority cast option with `castStages.schema: "CrankCastEntry@1"` advertises its physical `sourceId` and stable
 `actionId`. Answer that option with the ordinary answer envelope and `staged: true` to begin. The selected old offer
-identifies the physical card and action route (including face/adventure), not its modes, targets or payment variant.
+identifies the physical card and action route, not its modes or targets. Routes distinguish face/adventure, effective
+ability, flashback, alternative cost, escape, source permission/type and free-cast method. Mode-dependent spree/tiered/
+escalate costs stay inside the selected route. A route cannot silently change from Kess's permission to flashback.
+
+Modal activations advertise `actionStages.schema: "CrankActionEntry@1"`, `kind: "activate"`, `sourceId`, `abilityId` and
+`actionId`. The same ordinary `staged: true` answer begins their private proposal. Their stage metadata uses
+`actionStage.schema: "CrankActionStage@1"` and includes `kind`/`abilityId`; it never presents the activation as a creature
+cast. Cast clients retain `castStages`/`castStage` and their existing schemas. Effective abilities, including an actual
+Conspicuous Snoop reading Goblin Cratermaker, are read through native offer helpers rather than raw source abilities.
 
 The private choice uses `stage: "modes"`, then `stage: "targets"` for each target group of each selected mode, then
 `stage: "payment"`. Existing `mode: "one"`/`"many"` still describes answer cardinality. Do not use it as a stage name.
@@ -33,7 +41,9 @@ Separate mode groups may choose the same object where native rules allow it.
 Selecting modes/targets only changes the private saved proposal. It does not pay mana, move cards, advance priority,
 consume RNG, or add engine journal/history facts. Each answer revalidates live native offers. A changed choice signature
 rejects old indices; reopening regenerates the question identity. A departed source/actor or invalid route withdraws
-the uncommitted proposal. Saved selections and transaction identities survive reload and deterministic replay.
+the uncommitted proposal. Saved selections and transaction identities survive reload and deterministic replay. New
+private routes carry `CrankActionRoute@1`; old unversioned private routes withdraw conservatively, without restoring or
+changing engine state. Existing native pending payment questions retain their native compatibility boundary.
 
 Back moves among the proposal's mode and target stages, discarding dependent selections. Cancel abandons the proposal
 while preserving the complete engine state, RNG and journal/history. The existing server cancellation contract remains
@@ -42,9 +52,13 @@ indices is refused atomically. Cancel at an ordinary priority question also refu
 option whose index accompanied it. Committed mandatory choices retain Rob's approved pending-choice guidance.
 
 Payment review exposes the compatible native actions and their printed/additional/X/tax costs, payment/automatic-source
-facts and native action details. The final Pay answer enters the actual native action/funding path once; later physical
+facts and native action details. Cast review also exposes declared `additionalCosts`; actual nonmana escalate tappers
+appear as `nonmana` facts copied from the native counted offer. Activation review exposes its effective `activation`
+cost atoms, including actual mana/self-sacrifice, and does not substitute the creature's casting cost. The final Pay
+answer enters the actual native action/funding path once; later physical
 source choices remain real engine decisions. Those choices retain the transaction metadata with `canBack: false`.
-Native funding questions determine the authoritative payment; retries never pay or cast twice. Pay's usual Hold modifier
+Activated native funding retains `actionStage` with `canBack: false`. Native funding questions determine the authoritative
+payment; retries never pay or cast/activate twice. Pay's usual Hold modifier
 is handled by the existing native room action path.
 
 ## Evidence and remaining boundary
@@ -58,7 +72,12 @@ affordability, stale live offers and Back/Cancel state preservation.
 once, and checks private view isolation, full engine/RNG/journal preservation, reload, partial/funding/final replay,
 retry/stale input, departure, Back and Cancel refusals. Mutation evidence is recorded in PLAYTEST-PROGRESS.md.
 
-This contract covers priority modal/spree spell casts. Activated abilities, effect-paid casts and other modal routes
-need a separate audit before claiming universal coverage. The UI owner must consume and verify these stages before
+`tests/engine-action-stages.mjs` adds actual activation/effective-ability, distinct permission and nonmana-cost evidence.
+`tests/room-action-stages.mjs` covers actual Cankerbloom, funded-pool choices, source sacrifice, privacy, reload/replay,
+Back/Cancel, stale/retry/departure and conservative old private-route withdrawal. Counts are in PLAYTEST-PROGRESS.md.
+
+This contract covers priority modal/spree spell casts and ordinary modal activations. Effect-paid casts, committed
+triggers/effects and other modal routes remain separate work; [MODAL-ROUTE-AUDIT.md](MODAL-ROUTE-AUDIT.md) records exact
+native findings and the approved later refinement design. The UI owner must consume and verify these stages before
 ROB-209 can be Done. Root owns integration/main acceptance and the unchanged card-load gates. No cards are added
 or promoted by this checkpoint.

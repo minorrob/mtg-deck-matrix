@@ -1,0 +1,84 @@
+/* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
+/* Actual saved Cankerbloom, lands and Sol Ring; setup play is bounded fixture evidence, not G-3/G-5 acceptance. */
+import assert from "node:assert/strict";
+import {isDeepStrictEqual} from "node:util";
+import {memoryStorage,createMatchStore} from "../game/engine/storage.mjs";
+import {loadCardIndex} from "../game/tools/engine-cards.mjs";
+import {startRoom,openRoom,basicCards,leastAnswer} from "../game/room/room.mjs";
+import {replayMatch,replayTape} from "../game/room/replay.mjs";
+let checks=0,serial=0;
+const eq=(a,b,m)=>{assert.ok(isDeepStrictEqual(a,b),m);checks++;},ok=(a,m)=>{assert.ok(a,m);checks++;};
+const index=loadCardIndex(),cards=n=>index.definition(n)??basicCards(n),storage=memoryStorage(),matchId="activated-stages",store=createMatchStore(storage,matchId);
+let room=await startRoom({storage,cards,matchId,seed:"activated-stages",pod:{sourceChoices:true,passEmpty:true,passStack:false,passAfterCast:true,pooledTaps:true,seats:[
+ {seatId:"p0",name:"Rob",pilot:"human",commander:[],cards:Array.from({length:60},(_,n)=>n%4===0?"Cankerbloom":n%4===1?"Island":"Forest")},
+ {seatId:"p1",name:"Maya",pilot:"human",commander:[],cards:Array.from({length:60},(_,n)=>n%4===0?"Sol Ring":"Forest")} ]}});
+const request=(v,a)=>({kind:"answer",actionId:`00000000-0000-4000-8000-${String(++serial).padStart(12,"0")}`,revision:v.revision,choiceId:v.decision.id,...a});
+const see=()=>room.view(room.waitingOn),take=(v,a)=>room.act(v.seatId,request(v,a));
+let view;
+for(let n=0;n<1600;n++){
+ view=see();const field=view.state.players[view.seat].zones.Battlefield.cards;
+ const ready=view.seat===0&&field.filter(c=>c.types.includes("Land")).length>=4&&field.some(c=>c.name==="Cankerbloom")&&view.state.players[1].zones.Battlefield.cards.some(c=>c.name==="Sol Ring");
+ const mana=view.state.players[0].mana;
+ if(ready&&mana.some(m=>m.color==="G")&&mana.some(m=>m.color==="U")&&view.decision.options.some(o=>o.act==="activate"&&o.label==="Cankerbloom"))break;
+ let option=view.decision.options.find(o=>/keep/i.test(o.label))??view.decision.options.find(o=>o.act==="play-land");
+ if(ready&&!option)option=view.decision.options.find(o=>o.act==="activate-mana"&&o.label===(mana.some(m=>m.color==="G")?"Island":"Forest"));
+ if(!option&&!field.some(c=>c.name===(view.seat===0?"Cankerbloom":"Sol Ring")))option=view.decision.options.find(o=>o.act==="cast"&&o.label===(view.seat===0?"Cankerbloom":"Sol Ring"));
+ option??=view.decision.options.find(o=>o.act==="pass");await take(view,option?{indices:[option.index]}:leastAnswer(view.decision));
+}
+const entry=view.decision.options.find(o=>o.act==="activate"&&o.label==="Cankerbloom");ok(entry?.actionStages,"actual room priority advertises a staged activated modal entry");
+eq([entry.actionStages.schema,entry.actionStages.kind],["CrankActionEntry@1","activate"],"the activation's schema and kind are unambiguous");ok(!entry.castStages,"the activation has no cast-client entry");
+const original=await store.latestCheckpoint(),journal=await store.readJournal(),history=structuredClone(view.history),setupTape=await store.readTape(),meta=await store.loadMatch();
+const plain=v=>{const copy=structuredClone(v);delete copy.revision;return copy;},after=room.watch().events.at(-1)?.eventId;
+const watch=plain(room.watch({after})),opponent=plain(room.view("p1",{after}));
+await take(view,{indices:[entry.index],staged:true});view=see();const transaction=view.decision.actionStage.transactionId;
+eq(view.decision.stage,"modes","the physical activation first opens all available modes");
+eq(view.decision.actionStage.abilityId,entry.actionStages.abilityId,"the selected effective ability remains fixed");
+eq((await store.latestCheckpoint()).state,original.state,"beginning the activation changes no native engine state");
+room=await openRoom({storage,cards,matchId});view=see();eq(view.decision.actionStage.transactionId,transaction,"activated identity survives reload");
+const mode=view.decision.options.find(o=>o.modeIndices[0]===0);await take(view,{indices:[mode.index]});view=see();eq(view.decision.stage,"targets","the chosen artifact mode opens its targets");
+eq(plain(room.watch({after})),watch,"the spectator view, events and history reveal no staged activation facts");
+eq(plain(room.view("p1",{after})),opponent,"the opponent's entire private/public view stays unchanged except revision");
+ok(!JSON.stringify(room.watch({after})).includes(transaction),"the private transaction ID is absent from spectator output");
+const fp=room.fingerprint();ok(room.check("p0",{choiceId:view.decision.id,indices:[0]}).ok,"native target check accepts the actual artifact");eq(room.fingerprint(),fp,"checking the staged activation is read-only");
+const stale=request(view,{indices:[0]});await take(view,{back:true});view=see();eq(view.decision.stage,"modes","Back returns to activated modes");
+await assert.rejects(()=>room.act("p0",stale),/changed|expired|refreshed/i);checks++;
+await take(view,{cancel:true});eq((await store.latestCheckpoint()).state,original.state,"private activation Cancel preserves complete engine state");
+eq((await store.latestCheckpoint()).rng,original.rng,"private activation Cancel preserves RNG");eq(await store.readJournal(),journal,"private activation Cancel appends no native events");eq(see().history,history,"private activation Cancel preserves public history");
+async function toPay(){view=see();const source=view.decision.options.find(o=>o.act==="activate"&&o.label==="Cankerbloom");await take(view,{indices:[source.index],staged:true});view=see();await take(view,{indices:[view.decision.options.find(o=>o.modeIndices[0]===0).index]});view=see();await take(view,{indices:[0]});view=see();}
+await toPay();eq(view.decision.stage,"payment","activated targets finish before Pay");eq(view.decision.options[0].label,"Pay and activate","actual room Pay uses the activation verb");
+eq(view.decision.options[0].costs.activation,[{atom:"mana",cost:"{1}"},{atom:"sacrifice",self:true}],"actual Pay declares mana and sacrifice facts from the effective ability");
+const partial=JSON.parse(await storage.get(`room/${matchId}`)).castDraft,replayStorage=memoryStorage();
+await replayTape({matchId,pod:meta.pod,seed:meta.seed,tape:await store.readTape(),cards,storage:replayStorage});
+eq(JSON.parse(await replayStorage.get(`room/${matchId}`)).castDraft,partial,"the private activated proposal replays byte-for-byte");
+room=await openRoom({storage,cards,matchId});view=see();const pay=request(view,{indices:[0]});await room.act("p0",pay);view=see();
+ok(view.decision.cost,"Pay reaches a real native choice of the two colored mana units already in the pool");
+eq([view.decision.stage,view.decision.actionStage.kind,view.decision.actionStage.canBack],["payment","activate",false],"native funding retains activated metadata and its Back boundary");
+ok((await replayMatch({storage,cards,matchId})).same,"the pending native activation funding frame replays exactly");
+const funding=await store.latestCheckpoint();await assert.rejects(()=>room.act("p0",request(view,{...leastAnswer(view.decision),back:true})),/Back|stage/i);checks++;
+eq(await store.latestCheckpoint(),funding,"Back plus valid funding indices cannot pay the activation");
+await take(view,{cancel:true});eq((await store.latestCheckpoint()).state,original.state,"native reversible funding Cancel preserves the complete source/resource state too");
+await toPay();const finalPay=request(view,{indices:[0]});await room.act("p0",finalPay);
+for(let n=0;n<8&&see().decision?.cost;n++)await take(see(),leastAnswer(see().decision));
+const committed=await store.latestCheckpoint(),stack=committed.state.stack;
+eq([stack.length,stack[0].kind],[1,"ability"],"exactly one real activated ability reaches the stack");
+eq(committed.state.zones.graveyard[0].filter(id=>committed.state.objects[id].card==="Cankerbloom").length,1,"the actual source was sacrificed once");
+const tapped=s=>s.zones.battlefield.filter(id=>s.objects[id].card==="Forest"&&s.objects[id].controller===0&&s.objects[id].tapped).length;
+eq(tapped(committed.state),tapped(original.state),"native activation funding does not retap the lands that already made its pool mana");
+const total=s=>Object.values(s.players[0].manaPool).reduce((a,b)=>a+b,0);
+eq(total(original.state)-total(committed.state),1,"native payment spends exactly one actual mana unit from the funded pool");
+eq((await store.readJournal()).filter(e=>e.kind==="GameEventSpellAbilityCast"&&e.data.fields.card.name==="Cankerbloom"&&!e.data.fields.sa.isSpell).length,1,"one actual activation event, without duplicate payment");
+const committedFingerprint=room.fingerprint();await room.act("p0",finalPay);eq(room.fingerprint(),committedFingerprint,"retrying accepted activated Pay cannot sacrifice or spend again");
+ok((await replayMatch({storage,cards,matchId})).same,"staged activation Back/Cancel/reload/native Pay replays to identical state and journal");
+const oldStorage=memoryStorage(),oldRoom=await replayTape({matchId,pod:meta.pod,seed:meta.seed,tape:setupTape,cards,storage:oldStorage});
+let oldView=oldRoom.view(oldRoom.waitingOn);await oldRoom.act("p0",request(oldView,{indices:[oldView.decision.options.find(o=>o.act==="activate"&&o.label==="Cankerbloom").index],staged:true}));
+const legacy=JSON.parse(await oldStorage.get(`room/${matchId}`));delete legacy.castDraft.route.schema;await oldStorage.put(`room/${matchId}`,JSON.stringify(legacy));
+const reopened=await openRoom({storage:oldStorage,cards,matchId}),oldStore=createMatchStore(oldStorage,matchId);
+eq(JSON.parse(await oldStorage.get(`room/${matchId}`)).castDraft,undefined,"old unversioned private routes expire conservatively instead of selecting an unproved permission");
+eq((await oldStore.latestCheckpoint()).state,original.state,"expiring an uncommitted legacy route never restores or changes engine facts");
+ok(reopened.view("p0").decision.options.some(o=>o.actionStages),"the actor can select a new current route normally");
+oldView=reopened.view("p0");await reopened.act("p0",request(oldView,{indices:[oldView.decision.options.find(o=>o.actionStages).index],staged:true}));
+const lateCancel=request(reopened.view("p0"),{cancel:true});await reopened.leave("p0","conceded");
+eq(JSON.parse(await oldStorage.get(`room/${matchId}`)).castDraft,undefined,"actual actor/source departure withdraws the private activated proposal");
+const departed=reopened.fingerprint();await assert.rejects(()=>reopened.act("p0",lateCancel),/over|not your|expired/i);checks++;
+eq(reopened.fingerprint(),departed,"a late activated Cancel cannot restore its departed source or actor");
+console.log(`room-action-stages: ${checks} checks; actual activated modal stages, privacy/reload/replay, reversible funding and exactly-once sacrifice`);
