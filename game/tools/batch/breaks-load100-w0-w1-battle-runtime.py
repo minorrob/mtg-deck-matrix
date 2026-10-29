@@ -35,7 +35,7 @@ BREAKS = [
  ('concession loses applied follow-up source memory', S, '  refreshPendingSbaSources(state);\n', ''),
  ('dying replacement source loses frozen power', S, '...(cohort.snapshots[follow.context.source] ? {lastKnown: cohort.snapshots[follow.context.source].leftBehind} : {})', '...{}'),
  ('replacement follow-ups execute before all base moves', Z, 'if (!prepared && destination === proposal.to) events.push(...runFollowUps(state, proposal));', 'if (destination === proposal.to) events.push(...runFollowUps(state, proposal));'),
- ('departure cleanup loses linked return entries', Z, '  return due.map(link => link.exiled).filter(exiled => state.objects[exiled]?.zone === "exile" && !state.players[state.objects[exiled].owner]?.lost);', '  return [];'),
+ ('departure cleanup loses linked return entries', L, '  departure.returnLinks = (state.exiledUntil ?? []).filter(link => link.source === id).map(link => ({id: link.exiled, source: id}));', '  departure.returnLinks = [];'),
  ('departed controlled siblings retain obsolete records', Z, '  state.effects = (state.effects ?? []).filter(effect => !(effect.rule === "control-returns" && departedIds.includes(effect.affects.ids[0])));\n', ''),
  ('returned watcher sees earlier base deaths', S, '    markSbaTriggerBatch(state, frame, events);\n    collectTriggers(state, events);', '    markSbaTriggerBatch(state, frame, events);'),
  ('outer collection replays already collected cohort', TR, '  events = uncollectedSbaTriggerEvents(state, events);\n', ''),

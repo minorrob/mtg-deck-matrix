@@ -24,7 +24,7 @@ BREAKS = [
     ('prospective self-only counter modifier omitted', STATICS, '  for (const holderId of holders) {', '  for (const holderId of state.zones.battlefield) {'),
     ('native public counter question identity reused', ENTRY, 'frame.generation = (frame.generation ?? 0) + 1;', 'frame.generation = 1;'),
     ('counter result accepts another entry', RESULT, 'result.objectId !== objectId || ', ''),
-    ('counter result accepts another controller', RESULT, 'result.player !== player\n', 'false\n'),
+    ('counter result accepts another controller', RESULT, 'result.player !== player || !allowPartial', 'false || !allowPartial'),
     ('counter result accepts altered returned counters', RESULT,
      '    || Object.keys(raw).length !== Object.keys(result.counters).length\n    || Object.entries(result.counters).some(([counter, count]) => raw[counter] !== count)', ''),
     ('counter result is reusable', RESULT, '  if (consume) delete operation.entryCounterResults[prepared.counterResult];\n', ''),
