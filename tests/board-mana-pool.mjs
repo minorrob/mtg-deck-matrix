@@ -137,7 +137,7 @@ try {
   const look = (id) => page.locator(`#cm-board .cm-stage-region .cm-bcard[data-card='${id}']`).first().evaluate((el) => ({targeted: el.classList.contains("is-targeted"), outline: getComputedStyle(el).outlineColor, width: getComputedStyle(el).outlineWidth, label: el.getAttribute("aria-label"), title: el.getAttribute("title")}));
   const proft = await look(PROFT);
   ok(proft.targeted && /rgb\(237, 69, 70\)/.test(proft.outline) && proft.width === "5px", `Proft, targeted by an opponent's Lightning Bolt, is outlined in red (${proft.outline} ${proft.width})`);
-  ok(/targeted by Lightning Bolt/.test(proft.label) && /Targeted by Lightning Bolt/.test(proft.title || ""), `and says by what (${proft.label})`);
+  ok(/targeted by Lightning Bolt/.test(proft.label) && !proft.title, `and says by what, in its name and not in a native tooltip over the card (${proft.label})`);
   ok(!(await look(FORMATION)).targeted, "a card of yours your own spell targets is not");
   if (SHOTS) await page.screenshot({path: path.join(SHOTS, "targeted-red.png")});
   await send(view);
