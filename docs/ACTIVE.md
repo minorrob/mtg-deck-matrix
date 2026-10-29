@@ -8,6 +8,10 @@ Linear ROB-199 under ROB-85. The record is `docs/engine/card-load-100-2026-10-28
 Claim: `game/engine/cards/**`, generated card files, `data/engine/candidates.json`, the run package,
 and the engine modules its debt fixes require, subject to the ownership requests below.
 The primary checkout has another session's unfinished merge and is untouched.
+**Current-main face dependency7364caf7:** merge owner mainaf363528/#955/#956 after65b scan correctly stops.
+Back-face projection/UI preserved, board still only our two approved Snoop lines beyond main; READMEactual713.
+Native room-face6/Snoop and assets136/SW9/wiring131/integrity pass. Current combined browser pending, historicald65
+proof stays source-bound. ROB-312/original a11y contrast remains RED; all wave0 gates and staging sequence unchanged.
 **Quiet browser proof d65de1b4:** combined Snoop98/tooltip21 pass;12 freshshots/4 inspected, scoped teardown verified.
 Original a11y baseline is RED at light1280/full/forge-felt2/2badge1.45:1 vs4.5; ROB-312 is in Play backlog.
 No CSS/assertion edits, both prepared UI mutations unrun/zero credit. Initial sandbox-network denial remains separate.

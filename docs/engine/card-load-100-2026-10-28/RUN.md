@@ -5,6 +5,13 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Current-main face dependency, source `7364caf7`:** required scan of `65b2a078` correctly fails when main moves
+  to `af363528` (#955/#956, ROB-207). Root merges `--no-ff`, preserves owner back-face projection/rendering and both
+  approved Snoop lines. README actual713 and asset manifest/pins regenerate through the registry helper. Root native
+  room-face6/Snoop and assets136/SW9/wiring131/integrity pass. Current combined browser is pending another quiet window;
+  prior d65 Snoop98/tooltip21 stays historical to its source. Original a11y contrast RED/ROB-312 is not waived. This is
+  a draft dependency publication only; no wave0 gate, new cards, main merge or staging release. Evidence:
+  `w0/evidence/mainaf-integration.json`. Exact fresh HEAD0 scan/push required after this record.
 - **Quiet browser checkpoint, source `d65de1b4`:** actual combined Snoop98 and tooltip21 pass with required
   Chromium/WebGL after approved local-loopback escalation. Twelve fresh screenshots, four representative whole-screen
   states inspected. Existing3D clipping/occlusion/footer limits remain, no full-layout acceptance. Root teardown is
