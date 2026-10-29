@@ -1,0 +1,26 @@
+{
+  "schema": "w5-output-colors@1",
+  "base": "c3bb1824494792780cb0f6de4eb8dd758f75b4dc",
+  "nativeRed": "One actual G/U dual source paying a generic cost exposed only G, asked no question and immediately cast. The native test required both G and U output plans.",
+  "runtime": "Current ordinary funding uses exhaustive source output patterns, normalizing one-mana source outputs. Quick/search equivalents deduplicate by output multiset plus exact payment; historical funding keys and labels retain their old tape contract.",
+  "proof": {
+    "command": "node --stack-size=4000 tests/engine-load100-mana.mjs",
+    "checks": 293,
+    "cases": ["Both G/U outputs pay generic and hybrid costs through actual production, stored spent colors, cast and resolution", "Invalid output selection leaves full state unchanged after JSON reload", "GG/GU/UU mixed patterns are each available exactly once and actually pay and resolve", "Different source-kind patterns with the same card names and aggregate mana stay individually labeled", "Physical-ID stage names the actual output to assign", "Explicit historical saved-pod fixture retains both prior activation-order keys, labels, exact event order and resolved outcome"],
+    "readers": {"engine-tap-to-cast": 72, "room-pooled-taps": 14},
+    "mutations": "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w5-output-colors.py",
+    "caught": 6,
+    "missed": [],
+    "baselineSuites": 16,
+    "original14ReaderUnionRetained": true,
+    "includesCurrentCanonicalEngineCards": true
+  },
+  "remaining": ["Disjoint mana sources and nonmana cost tappers; actual Sephara native RED saved", "Effect-paid X/additional costs and source identity stages", "Safe historical live-game migration", "Operational exhaustive funding acceptance", "Unfinished seed2801 with no clean/replay/leak credit"],
+  "cardsAdded": 0,
+  "cardsPromoted": 0,
+  "wholePaymentComplete": false,
+  "wave0Complete": false,
+  "G5": false,
+  "G7": false,
+  "ignoresAdded": []
+}

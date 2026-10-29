@@ -26,7 +26,7 @@ BREAKS = [
     ('baseline proof includes its branch', PROOF, '...(baseline.policies ? {policies: structuredClone(baseline.policies)} : {})', ''),
     ('removal proof includes its branch', PROOF, '...(failure.scenarioPolicies ? {policies: structuredClone(failure.scenarioPolicies)} : {})', ''),
     ('cached checker baseline retains policy', CHECK, 'if (counterfactual && result.policies) baselines.get(scenario).policies = structuredClone(result.policies);', ''),
-    ('availability classification has no kind escape', PROOF, '["ability-offer", "action-offer", "question-offer", "policy-precheck"].includes(assertion?.kind)', '["ability-offer", "action-offer", "question-offer", "policy-precheck"].includes(assertion?.kind) && arguments[2]?.kind === "mana"'),
+    ('availability classification has no kind escape', PROOF, '["ability-offer", "action-offer", "question-offer", "policy-precheck", "choice-policy"].includes(assertion?.kind)', '["ability-offer", "action-offer", "question-offer", "policy-precheck", "choice-policy"].includes(assertion?.kind) && arguments[2]?.kind === "mana"'),
     ('blocker availability is ineligible', PROOF, '|| assertion === "blocker-offer"', ''),
     ('blocker offer failure is tagged', RUNNER, ', "blocker-offer");', ');'),
     ('missing action precheck is tagged', RUNNER, ', {kind: "action-offer", card, action: kind});', ');'),

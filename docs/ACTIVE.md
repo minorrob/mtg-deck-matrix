@@ -11,9 +11,22 @@ The primary checkout has another session's unfinished merge and is untouched.
 The eight roles run in batches because this session supports three active subagents.
 No new cards until wave 0 closes. No provider API calls, production changes, migrations, or spending.
 **October 29 playtest intake:** Rob assigns one slot in the next subagent batch to ROB-204/210/211 and the engine
-halves of ROB-205/209 instead of card writing. Queue only at this intake; no implementation agent dispatched yet.
+halves of ROB-205/209 instead of card writing. The next batch now starts from `fad5f009`: dedicated playtest worker
+in `w0-playtest` / `codex/engine-load100-w0-playtest`, followed by W5 payment and W4 damage continuation workers.
+Root owns integration, PR #932 review/CI and V8 harness/gate work. Playtest first owns Salty pilot behavior and blink
+audit; coordinate before edits to payment/asking/operation regions, which retain the documented W5/W4 seams.
 The dedicated brief is `docs/engine/card-load-100-2026-10-28/w0/PLAYTEST-ENGINE.md`; RUN.md carries the dependency.
-PR #932 is ready/open/unmerged, exact-head `suites` in progress when checked. UI ownership remains with its holder.
+PR #932 was merged externally at `0aee1474`; its exact-head `suites` was canceled at 60 minutes. The owner's
+touched-suite merge does not supply this run's full acceptance gate. Main `50297778` (#935/#936) is integrated.
+Root's strict default/CI ledger checkpoint passes CLI 56/ability-proof 44 and catches all 12 mutations;
+whole-directory proof and remaining gates stay open. UI ownership remains with its holder.
+Root pushed assembled `2bf76b00` to draft #912. The following strict scenario-decision slice passes 110 native/57 CLI
+checks and catches 25 new mutations; missing full-directory witnesses remain gate failures. P0 continues modal room
+staging; W5 handles disjoint mana/additional-cost tappers. W4 publishes bounded damage #940; its slot now resumes W1
+Battle entry/defense only, after synchronizing the next root checkpoint. No cards loaded or promoted.
+Assembled code `50f47e22` now includes W4 #940, W5 #938 and P0 #939. Root independently passes damage140/payment293/
+blink113 and the Cancel/Salty/room/verifier readers; feature-wiring131 and integrity are green. The next clean exact
+checkpoint measures the full strict directory. Static audit remains red only for 32 inherited UI anchors; no gate closed.
 **Latest October 29 checkpoint:** source/generated `2c89a5c3` is scanned/pushed to draft #912. W1 `1fad7ec9`,
 W4 `aae67e76`, W5 code `12a32a40` and root anchors `88b616d5` are integrated. Roles are making clean pushed
 handbacks; continue their exact remaining debts from RUN.md before loading any new cards.
@@ -73,7 +86,6 @@ given card is played."* Documents only; nothing in the engine changed.
   refuses them at the table ... these cards in a deck make the deck illegal to play in Play."* The run's W2 builds the refusal by name in `readDeck`;
   the Decks wishboard comes after the load, Linear ROB-198 (under ROB-85).
 - **When the run starts** it claims the card-load files here by Rob's assignment (`ORCHESTRATION.md`, "Before wave 0"). Until then nobody holds them.
-
 ## Luke's Oct 28 playtest: ROB-201 to ROB-221 (a Claude cloud session, for Rob; `claude/crankmagic-oct28-playtest-zgybjx`, one PR per issue, each merged to `main` before the next)
 
 Rob asked for the playtest's bugs and improvements to be fixed in the order Linear gives (ROB-204, ROB-205, then ROB-210, 201, 208, 209, 211, then the Medium and Low items; ROB-212 and ROB-222 to 225 are not in scope). The session crosses lanes at Rob's word, one issue at a time, and says so in each PR. Linear is the record: each issue is In Progress while its PR is open and Done once it is merged, with the PR linked.

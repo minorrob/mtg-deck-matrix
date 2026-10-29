@@ -1,6 +1,7 @@
 /* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
-/* Deliberately RED reproduction of the still-open outside-resolution damage-order debt.
- * Run from the worktree root. This is diagnostic evidence, not a completed regression or gate credit. */
+/* Historical RED reproduction at aae67e76; now GREEN through the saved mana damage consumer.
+ * Run from the worktree root. The registered engine-outside-damage suite carries wider native coverage.
+ * Other outside callers remain open debt; this diagnostic alone gives no whole-gate credit. */
 import assert from "node:assert/strict";
 import {createState, addObject} from "../../../../../game/engine/state/index.mjs";
 import {loadCardIndex} from "../../../../../game/tools/engine-cards.mjs";

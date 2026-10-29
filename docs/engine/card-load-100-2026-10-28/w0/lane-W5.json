@@ -12,12 +12,12 @@
     "| Urza's Saga III finds \"mana value 1 or less\", not \"mana cost {0} or {1}\" | `cards/u/urzas-saga.json`:165 | W5 |",
     "| Token copies of a shock land never asked \"pay 2 life\" | `script/effects/permanents.mjs`:656 (NAMED) | W5 |",
     "| Delve not offered for an X spell; no die modifiers or \"whenever you roll\" | `actions.mjs`:1965; `script/effects/resources.mjs`:469 | W5, W7 |",
-    "| Casts from exile or with alternative costs offered only with mana already in the pool | `actions.mjs`:1681–1685 | W5 |",
+    "| Casts from exile or with alternative costs offered only with mana already in the pool | `actions.mjs`:1681\u20131685 | W5 |",
     "| {X} or additional-cost cards cast by an effect's \"pay mana\": not offered | `asking.mjs`:2302 (NAMED) | W5 |",
     "| Convoke with Phyrexian or {2/W} symbols left to the pool | `rules/mana.mjs`:483 | W5 |",
     "| Ways to pay capped: 24 tap choices, 12 payments | `rules/actions.mjs`:1703; `rules/mana.mjs`:254 | W5 |"
   ],
-  "status": "Clean bounded resume checkpoint:172 native checks and33 mutations proved; effect-paid costs and operational payment completeness/G5 remain open",
+  "status": "Current ordinary IDs/output colors native293 proven; disjoint cost tappers, effect-paid costs, live migration and G5 remain open",
   "checkpoint": {
     "cardsAdded": 0,
     "cardsPromoted": 0,
@@ -205,5 +205,48 @@
       "paymentOperationalAcceptance": false
     },
     "ignoresAdded": []
+  },
+  "presentProfileCheckpoint": {
+    "fixedBase": "ea0099b775e1e1637028e1a6d6705cb58fb8cd07",
+    "evidence": "evidence/w5-present-profile.json",
+    "nativeChecks": 85,
+    "caughtMutations": 4,
+    "missed": [],
+    "seed2801TimedOutSeconds": 90.09,
+    "clean": false,
+    "sourceIdentityDebt": "open",
+    "effectPaidCosts": "open",
+    "G5": false
+  },
+  "sourceIdentityCheckpoint": {
+    "base": "9443180710f2fb76ceab60a5f3141c82cb5a0260",
+    "evidence": "evidence/w5-source-identities.json",
+    "nativeChecks": 249,
+    "roomChecks": 14,
+    "newMutationsCaught": 9,
+    "missed": [],
+    "currentDefault": true,
+    "wholeIdentityComplete": false,
+    "historicalReplayCompatibility": true,
+    "historicalLiveMigration": "open",
+    "outputColors": "open",
+    "effectPaidCosts": "open",
+    "G5": false,
+    "G7": false
+  },
+  "outputColorCheckpoint": {
+    "base": "c3bb1824494792780cb0f6de4eb8dd758f75b4dc",
+    "evidence": "evidence/w5-output-colors.json",
+    "nativeChecks": 293,
+    "baselineSuites": 16,
+    "caughtMutations": 6,
+    "missed": [],
+    "currentDefault": true,
+    "wholePaymentComplete": false,
+    "disjointCosts": "actual Sephara RED saved",
+    "effectPaidCosts": "open",
+    "historicalLiveMigration": "open",
+    "G5": false,
+    "G7": false
   }
 }

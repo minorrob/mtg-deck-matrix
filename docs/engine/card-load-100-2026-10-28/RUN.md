@@ -5,7 +5,50 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
-- **Next-batch assignment from Rob's October 29 playtest handoff:** reserve one subagent slot for ROB-204, ROB-210,
+- **Assembled source for the next strict measurement:** `50f47e22c0a086de529bad09d9d14565df19a901` contains W4
+  `4b8284b8` / runtime `20e13e9e`, W5 output-color `58bd64eb` / runtime `84b71e9c`, P0 native blink/wording
+  `ec4f6da3`, and root explicit-decision verifier `6318785b`. Root independently passes damage 140, payment 293,
+  actual blink 113, Cancel 63/room 53, Salty 71/room 21, room payment 14, ability-proof 44, block-policy 167,
+  explicit decisions 110, CLI 57, integrity and feature-wiring 131. Two final moved controller/funding anchors are
+  repaired and caught against their original suite baselines. Static audit: **235 files, 4,387 breaks, 32 inherited
+  UI anchors unresolved; zero engine/fuzz targets**. No G-7 closure. The following documentation/anchor checkpoint
+  supplies the clean exact source for the full strict directory run; keep its ledger/log outside the worktree.
+
+- **Explicit-decision verifier checkpoint, October 29:** strict directory checks and both baseline/removal runs now
+  reject skipped optional moves, `targets: "any"`, automatic settle answers, required attack/block defaults, inferred
+  defenders, trigger permutations, legend choices and ambiguous physical references. New explicit question navigation
+  and counted-target deferral support indexed answers. Native 110, CLI 57, original ability-proof 44/block-policy 167;
+  all 25 new mutations and all 12 CLI mutations caught. One initially missed navigation-priority probe is now caught
+  by a stronger actual missing-question assertion. Four shifted inherited anchors are re-proved. No card/rule edited
+  by this verifier slice. Fresh canonical failure inventory is pending; no G-3 pass from the small fixtures.
+- **Published assembled checkpoint:** `2bf76b00c286bbb9572f008881fa0a4fc39b24d4` is scanned/pushed to draft #912,
+  including main `50297778`, W5 physical-source checkpoint `c3bb1824`, original W4 attribution `dfe3f377` and P0
+  `62c29715` (Salty 71/room 21, Cancel 63/room 53 independently green). Follow-up W5 output-color `58bd64eb` (#938),
+  P0 blink/US wording `ec4f6da3` (#939) and W4 damage `4b8284b8` (#940) are published for root integration.
+  W1 resumes Battle-entry/defense work from the next assembled base; P0 continues additive modal staging, W5 disjoint
+  mana/additional-cost tapping. No new cards or promotions. UI/full CI, current strict proof, games and other gates stay open.
+
+- **Strict default/CI verifier checkpoint, October 29:** `w0/V8-STRICT-CLI.md` records root's strict default ledger,
+  independent canonical/source/input/inventory validator and fatal Actions/local fallback wiring. Actual CLI fixtures
+  pass 56 checks, original ability-proof 44; all 12 mutations caught with `missed: []`. Data integrity,
+  feature-wiring 131 and readout-feeds 1,121 pass. Wiring is not G-3 acceptance: the current whole directory still
+  needs a fresh clean-source measurement and individual behavior witnesses for every unproved ability. No cards loaded.
+- **External main update:** PR #932 was merged by its owner at `0aee1474`, then #935 advanced main to `3a75d03b`.
+  Exact-head #932 `suites` was canceled at 60 minutes; the owner's comment declares touched-suite validation rather
+  than a full fallback. Record the merged Confirm behavior for ROB-210, without full-gate credit for our run.
+
+- **Active batch from `fad5f009`, October 29:** dedicated `playtest_engine` is dispatched first in
+  `w0-playtest` / `codex/engine-load100-w0-playtest`, followed by `w5_choice` in `w0-w5-mana` and `w4_damage`
+  in `w0-w4-combat`. Root owns integration, PR #932 review/CI and V8 gate/harness work. Playtest begins independent
+  Salty pilot work while the existing Confirm PR's CI runs. Its narrow room journal/pilot-memory save/restore seam
+  is reserved; W5 owns payment identity/performance/planner and effect-paid costs, W4 saved damage proposals and
+  mana-ability `then`. Coordinate all shared actions/asking/turn/operation changes first. UI remains with its owner.
+  No new cards or promotions; original gate failures remain open.
+  **ROB-205 policy clarified directly by Rob:** Cancel reversible actions; keep committed mandatory choices pending
+  with clear guidance. The native life40-to38 then mandatory-discard case must not skip its instruction or undo the
+  committed effect. P0 is implementing this boundary and recording the shared engine/UI contract; no exception/ignore.
+
+- **Historical next-batch intake from Rob's October 29 playtest handoff:** reserve one subagent slot for ROB-204, ROB-210,
   ROB-211 and the engine halves of shared ROB-205/ROB-209, instead of another card-writing assignment. This intake
   has not dispatched an implementation subagent; launch the dedicated slot when starting the next batch. Full brief,
   dependencies, acceptance evidence and ownership seams: `w0/PLAYTEST-ENGINE.md`. Keep UI changes with the UI owner.

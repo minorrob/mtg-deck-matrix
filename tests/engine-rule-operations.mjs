@@ -138,8 +138,9 @@ fails(() => beginRuleOperation(fresh(), {kind: "test-wrong-frame"}), /Only the c
 const left = fresh(); left.players[1].lost = true;
 fails(() => beginRuleOperation(left, {kind: "test-departed-question"}), /departed player/);
 
-for (const mode of ["integer", "text", "amount", "damage", "unrecognized"])
+for (const mode of ["integer", "text", "damage", "unrecognized"])
   fails(() => beginRuleOperation(fresh(), {kind: "test-question-shape", choice: {...choice, mode}}), /option-index/);
+fails(() => beginRuleOperation(fresh(), {kind: "test-question-shape", choice: {...choice, mode:"amount"}}), /feasible total/);
 for (const malformed of [{id: ""}, {options: null}, {min: -1}, {min: 1.5}, {max: 0}, {max: 3}, {max: 1.5}])
   fails(() => beginRuleOperation(fresh(), {kind: "test-question-shape", choice: {...choice, ...malformed}}), /valid selection bounds/);
 {

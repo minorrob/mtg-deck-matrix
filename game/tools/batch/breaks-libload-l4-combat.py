@@ -63,7 +63,7 @@ BREAKS = [
     ('scored pilot meets it', 'game/engine/pilots/scored-pilot.mjs',
      '    return {indices: Array.isArray(choice.requires) && choice.requires.length ? meetRequirements(choice, kept) : kept};', '    return {indices: kept};'),
     ('scenarios block as required', 'game/engine/cards/scenario.mjs',
-     'if (kind === "declare-blockers") return resolveAwaiting(state, meetRequirements(awaitingChoice(state), []));', 'if (kind === "declare-blockers") return resolveAwaiting(state, []);'),
+     'if (kind === "declare-blockers") {\n    const indices = meetRequirements(awaitingChoice(state), []);', 'if (kind === "declare-blockers") {\n    const indices = [];'),
 
     # Kaalia of the Vast: tapped and attacking that opponent
     ('chooseCard: attacking', 'game/engine/script/effects/asking.mjs', '        ...(params.attacking ? {attacking: params.attacking} : {})}, source: context.source ?? null,',

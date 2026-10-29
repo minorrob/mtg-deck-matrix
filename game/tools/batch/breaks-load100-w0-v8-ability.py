@@ -24,5 +24,5 @@ BREAKS = [
     ('unreached abilities fail the requested ledger gate', CHECK, 'return problems + failed + unreached > 0 ? 1 : 0;', 'return problems + failed > 0 ? 1 : 0;'),
     ('ability offers are not execution proof', PROOF, 'error instanceof Error && !offerOnly', 'error instanceof Error'),
     ('over-budget probes are not proof', PROOF, 'if (elapsedMs > maxProbeMs) {', 'if (false) {'),
-    ('baseline cache does not retain game states', CHECK, 'baselines.set(scenario, {passed: true, checks: result.passed.length, events: result.events.length});', 'baselines.set(scenario, {passed: true, checks: result.passed.length, events: result.events.length, state: result.state});'),
+    ('baseline cache does not retain game states', CHECK, 'baselines.set(scenario, {passed: true, choicePolicy: "explicit", checks: result.passed.length, events: result.events.length});', 'baselines.set(scenario, {passed: true, choicePolicy: "explicit", checks: result.passed.length, events: result.events.length, state: result.state});'),
 ]

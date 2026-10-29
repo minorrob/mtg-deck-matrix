@@ -955,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 681 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 684 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1053,7 +1053,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-replacement` — `tests/engine-replacement.mjs`
 - `engine-resolution` — `tests/engine-resolution.mjs`
 - `engine-rule-operations` — `tests/engine-rule-operations.mjs`
-- `engine-replacement-steps` — `tests/engine-replacement-steps.mjs`: live, explicit replacement steps for serializable zone and entry operations
+- `engine-replacement-steps` — `tests/engine-replacement-steps.mjs`: live, explicit replacement steps for serializable zone, entry and damage operations
+- `engine-outside-damage` — `tests/engine-outside-damage.mjs`: saved mana costs and damage choices, shared prevention allocation, exact source provenance and reload
 - `engine-zone-operations` — `tests/engine-zone-operations.mjs`: actual destruction resolution waits through nested replacement and commander choices, saved-state reload and public concessions
 - `engine-zone-action-operations` — `tests/engine-zone-action-operations.mjs`: sacrifice and discard payments preserve identity through waiting zone replacements; pre-entry result grants and refused arrivals use the new object and destination
 - `engine-load100-w3-graveyard` — `tests/engine-load100-w3-graveyard.mjs`
@@ -1571,8 +1572,10 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-face-down-play` - `tests/engine-face-down-play.mjs`: playing a card exiled face down (Gandalf, Goblins' Bane // Flameshape; CR 406.3, 406.3a-b, 601.2, 305.1) -- looked at and exiled face down, offered as the card it is (a land under the land drop's rules, a spell by its own cost and timing, an adventurer card as its Adventure) to the one player who may look at it, while "if you control a Wizard" holds and it remains exiled; turned face up and revealed as it is played, hidden from every other seat and from G1's leak judge until then; the table's words its modes and costs; asking changes nothing
 - `fuzz-pool` - `tests/fuzz-pool.mjs`: final Commander pool dealing, printed commander permissions, fatal population errors, strict refusal evidence, and journal exercise attribution; copied or fizzled spells, unclean games, and unobserved abilities receive no card-completion credit; includes a real room journal, identical replay, and leak check
 - `ability-proof` - `tests/ability-proof.mjs`: passing scenarios, followed by removal of one ability from a cloned runtime definition; static boosts, final flying combat damage and vigilance must change, while offer-only failures, keyword presence, red baselines, generic errors and saved card/schema changes receive no behavioral credit; a missing mana-activation offer stays unproved
+- `card-check-cli` - `tests/card-check-cli.mjs`: real strict checker defaults, runtime-removal behavior, rejected presence-only credit, unknown flags, partial/stale/forged ledger rejection, independent canonical inventory/source verification and fatal Actions/local-fallback wiring
 - `ability-missing-prompt` - `tests/ability-missing-prompt.mjs`: actual Adaptive Automaton, Metallic Mimic and Roaming Throne entry-choice omissions reach the missing-prompt precheck and remain unproved; classifier/tag removals must catch inflated ability credit from stale verifier sources
 - `scenario-block-policy` - `tests/scenario-block-policy.mjs`: an explicit named block-if-legal policy checks both complete declarations through the rules and records both branches through counterfactual proof; actual loaded Zephyr Sprite and runtime Flying removal finish combat with different final damage, life and graveyard results; malformed, ambiguous and illegal declarations fail
+- `scenario-explicit-choices` - `tests/scenario-explicit-choices.mjs`: native strict evidence rejects skipped optional moves, automatic answers, ambiguous actions and labels, inferred defenders, required declarations, trigger order and legend choices; explicit final outcomes and runtime omission controls use the same policy
 - `scenario-entry-order` - `tests/scenario-entry-order.mjs`: five saved counter scenarios explicitly answer either entry-replacement order and retain every original final expectation; unanswered questions produce a classified offer diagnostic and earn no ability proof
 - `sentence-paragraphs` - `tests/sentence-paragraphs.mjs`: partial translations keep an ability's paragraph together while preserving independent keyword abilities and the current spell segmentation
 - `engine-mana-upkeep` - `tests/engine-mana-upkeep.mjs`: the table's optional house rule keeps mana made in upkeep and draw until spent or the turn ends; AI pilots keep the book's mana rule

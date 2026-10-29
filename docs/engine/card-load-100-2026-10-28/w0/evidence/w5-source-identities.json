@@ -1,0 +1,33 @@
+{
+  "schema": "w5-source-identities@1",
+  "base": "9443180710f2fb76ceab60a5f3141c82cb5a0260",
+  "cardsAdded": 0,
+  "cardsPromoted": 0,
+  "contract": "Ordinary casts retain exhaustive kind plans, then select exact physical IDs per output block before any activation. A sole kind plan still asks if physical choices exist. Forced blocks have only one legal subset.",
+  "currentDefaults": ["Every new table pod sourceChoices:true", "Canonical runScenario sourceChoices:true", "Room persists and restores the saved sourceChoices flag"],
+  "coordinatedDependencies": ["Root enables the G5 fuzz pod flag", "P0 room start copies sourceChoices and pilotProvocation; W5 includes identical coordinated copy lines", "P0 requested new table pilotProvocation:true and its saved-pod assertion"],
+  "native": {
+    "command": "node --stack-size=4000 tests/engine-load100-mana.mjs",
+    "checks": 249,
+    "proof": [
+      "All six two-of-four physical subsets actually tap, produce with exact source provenance, pay, cast and resolve",
+      "JSON reload, duplicate/stale IDs and wrong-kind saved prefix refuse with full state unchanged",
+      "Concession before or after a saved identity block produces no mana and casts nothing",
+      "Actual Nirkana Revenant: equal base-output Swamp and non-Swamp identities produce different correct surplus",
+      "Both G/U assignments across equivalent dual-source identities are available for an already selected output pattern",
+      "36 physical sources choosing18 use one36-option question; the late18 IDs actually activate and resolve, without enumerating C(36,18) subsets",
+      "Existing56 and786 source-kind plan witnesses retain their exact resource and resolution outcomes through explicit identity answers",
+      "Actual Shivan Reef owned by/raw-controlled by1 under a layer2 controller0 effect activates and funds a native spell for0, with originalID provenance;1 has no activation/source facts and its forged activation changes nothing"
+    ]
+  },
+  "room": {"command": "node --stack-size=4000 tests/room-pooled-taps.mjs", "checks": 14, "proof": "Current3-Forest room asks choose2 exact IDs with zero taps/cast before answer, reopens with all choices intact, activates exactly the last2 chosen IDs and replays the tape to the same hash. Separate historical-pod replay remains reproducible."},
+  "readers": {"engine-tap-to-cast": 72, "engine-mana-riders": 29, "engine-mana-provenance": 23, "game-table": 186},
+  "mutations": {"command": "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w5-identities.py", "caught": 9, "missed": []},
+  "originalMutationUnion": {"command": "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w5-reanchored.py", "baselineSuites": 14, "includesCurrentCanonicalEngineCards": true, "caught": 13, "missed": [], "originalAssertionsAndSuiteUnionRetained": true},
+  "remaining": ["Generic/hybrid source output-color collapsing", "Effect-paid X/additional costs and their source-ID stages", "Disjoint mana-source and nonmana cost-tapper validation", "Safe ongoing historical-live-game migration", "Seed2801 still unfinished; no clean/replay/leak credit"],
+  "wholeIdentityComplete": false,
+  "wave0Complete": false,
+  "G5": false,
+  "G7": false,
+  "ignoresAdded": []
+}
