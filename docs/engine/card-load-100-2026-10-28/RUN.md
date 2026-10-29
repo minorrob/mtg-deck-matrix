@@ -5,6 +5,19 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Staging requested, October 29:** Rob explicitly selects “Finish gates, then release fixes.” Complete the unchanged
+  wave0 gates and exact-head Actions/merge requirements, then release the merged fixes through the existing staging
+  builder and authenticated read-back. Do not substitute current main or treat this request as a gate waiver.
+- **V8 guarded policies integrated locally, `5196dc61`:** clean/scanned/pushed draft #954 (`644d844b`) is merged
+  `--no-ff`. Root independently passes native319/ability-proof44/explicit-source183/block-policy167/entry-order51.
+  The role preserves the original six-reader union and catches all38 controls after retaining and strengthening two
+  initially masked witnesses. Exactly four additive Snoop/Banner scenarios, no saved definition or classifier changes.
+  Clean historical selected13/0failed/8of8 abilities is diagnostic, not canonical G-3. Full canonical gates remain open.
+- **Remaining derived-controller static defect:** root independently reproduces W5's archived real-card fixture on
+  clean `baef0762`: layer2 correctly gives Shalai controller1, but that player's Cankerbloom receives no hexproof.
+  This is separate from W5's raw-controller target-refresh fixture. V8 now owns read-only proposal/review first;
+  no layer/rule change or proof credit yet. Fixed resolved-effect controller snapshots must remain distinct from
+  current printed-static controllers. Reproduction: `node ../scratch/w5-derived-static-controller-red-20261029.mjs`.
 - **Current-main tooltip dependency, `fb1cadff`:** merges main `fac091ba` (#953/ROB-202) with `--no-ff`.
   Owner tooltip behavior and tests are preserved; board differs from main by exactly the two approved Snoop lines.
   README actual710 and asset pins/manifest are regenerated with the registry helper. Engine/room bytes remain
