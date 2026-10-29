@@ -24,6 +24,9 @@ Root pushed assembled `2bf76b00` to draft #912. The following strict scenario-de
 checks and catches 25 new mutations; missing full-directory witnesses remain gate failures. P0 continues modal room
 staging; W5 handles disjoint mana/additional-cost tappers. W4 publishes bounded damage #940; its slot now resumes W1
 Battle entry/defense only, after synchronizing the next root checkpoint. No cards loaded or promoted.
+Assembled code `50f47e22` now includes W4 #940, W5 #938 and P0 #939. Root independently passes damage140/payment293/
+blink113 and the Cancel/Salty/room/verifier readers; feature-wiring131 and integrity are green. The next clean exact
+checkpoint measures the full strict directory. Static audit remains red only for 32 inherited UI anchors; no gate closed.
 **Latest October 29 checkpoint:** source/generated `2c89a5c3` is scanned/pushed to draft #912. W1 `1fad7ec9`,
 W4 `aae67e76`, W5 code `12a32a40` and root anchors `88b616d5` are integrated. Roles are making clean pushed
 handbacks; continue their exact remaining debts from RUN.md before loading any new cards.

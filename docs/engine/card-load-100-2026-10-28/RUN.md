@@ -5,6 +5,15 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Assembled source for the next strict measurement:** `50f47e22c0a086de529bad09d9d14565df19a901` contains W4
+  `4b8284b8` / runtime `20e13e9e`, W5 output-color `58bd64eb` / runtime `84b71e9c`, P0 native blink/wording
+  `ec4f6da3`, and root explicit-decision verifier `6318785b`. Root independently passes damage 140, payment 293,
+  actual blink 113, Cancel 63/room 53, Salty 71/room 21, room payment 14, ability-proof 44, block-policy 167,
+  explicit decisions 110, CLI 57, integrity and feature-wiring 131. Two final moved controller/funding anchors are
+  repaired and caught against their original suite baselines. Static audit: **235 files, 4,387 breaks, 32 inherited
+  UI anchors unresolved; zero engine/fuzz targets**. No G-7 closure. The following documentation/anchor checkpoint
+  supplies the clean exact source for the full strict directory run; keep its ledger/log outside the worktree.
+
 - **Explicit-decision verifier checkpoint, October 29:** strict directory checks and both baseline/removal runs now
   reject skipped optional moves, `targets: "any"`, automatic settle answers, required attack/block defaults, inferred
   defenders, trigger permutations, legend choices and ambiguous physical references. New explicit question navigation
