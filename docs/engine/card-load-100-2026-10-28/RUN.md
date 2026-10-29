@@ -17,6 +17,15 @@ Newest wave first. Each line names its command's result line, never a summary of
   caught, `missed: []`. G-1/G-2 now concern this fixed set; all accuracy/evidence requirements and the existing
   whole-directory ability gate remain. The least-played remaining appearances need not be loaded.
 - **Main at the start:** `39a45706`.
+- **October 29 continuation:** main advanced to `d25bac19` (Play UI #910). Root merged it without changing its UI,
+  preserving both ACTIVE records and all test registrations, then scanned and pushed `f45d4420` to draft #912.
+  W2's copied-division, joint-final-target and cancellation fixes through `469236c4` and W3's permission/actual
+  destruction/zone consumer through `58233f3d` are now merged locally as `a344da5c` and `a414b672`.
+  Root independently reran W2 137, W3 56, actual zone-operation 71 and replacement-step 16 checks: all passed.
+  W2 is proving actual pre-entry spell/land/token callers; W3 is extending actual sacrifice/discard callers.
+  The bounded destruction path does not close all zone moves, costs or state-based destruction.
+  W7's modified draw-instruction repair is being finalized and independently reviewed; V8 is adding a strict,
+  explicit conditional blocking policy to obtain final-outcome flying witnesses. No new cards or gate credit.
 - **Wave and step:** wave 0 is unfinished. Baseline, prerequisite reconciliation and five bounded role checkpoints are
   preserved; no new cards or promotions. All eight roles now have bounded isolated checkpoints. No gate or wave completion is claimed.
 - **Integration:** `codex/engine-load100-w0`, worktree `C:\Users\robmi\CrankMagic\worktrees\load100\w0-integrate`.
@@ -31,12 +40,17 @@ Newest wave first. Each line names its command's result line, never a summary of
   Focused checks passed during assembly: W1 79, W2 57, W3 22, operation foundation75, W4combat17/sentences14,
   W5mana36/pool16, W6tokens90, W7compiler13/draw-dice, V8ability42/pool91. README suite registrations preserved.
   Sole runtime conflict: `copySpell` keeps BOTH W2 final-target tracking and W6 departed-source metadata/reference.
-  Re-run both mutation files on the combined source. No assertions or test registrations removed.
+  Root reran both mutation files on combined `c34022d4`: W2 and W6 each `missed: []`.
+  Full held-out calibration on that head: 4,165 translated, 4,165 passed (100.0%); 8,048 templates from 6,353 cards.
+  No assertions or test registrations removed.
   Fresh compiler: 25,616 undefined;116 candidates;0 refused;2 blocked;0 vetoed;24,429 unknown (12,080 one short);
   1,069 other layouts. Generated files add no new final definitions.
-- **New V8 findings being fixed:** copied divided damage retains old target IDs after retargeting (W2; actual
-  Monstrous Onslaught grammar), and distinct exile-play permissions with `manaInstead` {2}/{3} collapse to one
-  offer (W3 permission outcome key). These are reproducible cold-review findings, not accepted omissions.
+- **Cold-review findings:** W2 fixed copied divided amounts and joint final-target/cancellation choices; V8 independently
+  verified actual Monstrous Onslaught shares and final Ward events at `469236c4`. W3 fixed distinct permission outcomes
+  (mana, graveyard destination and timing); V8 independently verified actual payment, destination and timing at `34847ddf`.
+  W7 fixes draw-doubler/Collector replacement history and real no-dredger choice paths; exact latest proof is pending.
+  Earlier Serra Angel Flying credit depended on a blocker-availability assertion. V8 confirmed it cannot serve as a
+  final-outcome witness; offer-only failures must be excluded and replaced with actual completed-combat evidence.
 - **Resumed root changes:** froze and checked the 95% appearance scope with an explicit failing final-definition gate;
   no engine runtime change. Re-anchored three more inherited mutations on the same original behaviors: new-table
   passStack default, front-door candidate report route, and the seated reconnect event floor. Each unbroken suite

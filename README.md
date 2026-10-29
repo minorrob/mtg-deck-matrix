@@ -1192,6 +1192,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-load100-tokens` — `tests/engine-load100-tokens.mjs`: departed-spell copies, double-faced token copies, and copied preparation definitions
 - `load100-w7-compiler` — `tests/load100-w7-compiler.mjs`: compiler smoke must actually play its candidate, and calibrated template counts are enforced
 - `engine-load100-w7-spells` — `tests/engine-load100-w7-spells.mjs`: APNAP draws, Collector before individual replacements, doubler/dredge choices, and die-roll triggers
+- `engine-draw-instructions` — `tests/engine-draw-instructions.mjs`: modified draw instructions reconsider unused replacements and retain each applied source through reload
 - `status-and-groupings` — `tests/status-and-groupings.mjs`
 - `swap-record` — `tests/swap-record.mjs`
 - `slot-model` — `tests/slot-model.mjs`

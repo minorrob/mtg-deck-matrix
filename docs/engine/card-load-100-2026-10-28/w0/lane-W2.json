@@ -77,5 +77,31 @@
     "lane": "node --stack-size=4000 tools/library-engine-index.mjs --check-lane docs/engine/card-load-100-2026-10-28/w0/lane-W2.json: W2: 0 of 0 final"
   },
   "privacyGuard": "Explicit mayLookAt guard retained as defense in depth. Lower permits() already refuses non-viewers. Auto-review rejected its removal; safer guarded implementation retained. Authorized-viewer inversion mutation catches loss of a legal offer; no claim that this guard independently fixes an existing leak.",
-  "rulingsCache": "C:/Users/robmi/CrankMagic/worktrees/load100/scratch/w2-rulings (Force of Vigor, Displace, Metallic Mimic, Clone, Gandalf/Flameshape, Social Snub; public Scryfall card+rulings, cached)."
+  "rulingsCache": "C:/Users/robmi/CrankMagic/worktrees/load100/scratch/w2-rulings (Force of Vigor, Displace, Metallic Mimic, Clone, Gandalf/Flameshape, Social Snub; public Scryfall card+rulings, cached).",
+  "resumed20261029": {
+    "base": "c34022d4e8df01dcb7aca97796b6a6d6f93d7e23",
+    "contract": "6bf2efe82f42e0856f97aa1ace663721521b70c1",
+    "finding": "V8 cold review: a retargeted counted damage copy retained its original ID-keyed division, so new targets received zero damage.",
+    "fix": "Divided copies choose one target position at a time with the copied assigned share displayed. Provisional choices survive reload; only the final set is committed. Original announced shares follow positions to the new target IDs; unchanged illegal targets may stay only in their original positions. No redistribution is offered.",
+    "rules": [
+      "115.7d-f",
+      "601.2d",
+      "707.10"
+    ],
+    "red": "Actual compiled Monstrous Onslaught cast through legalActions/applyAction with division [1,2], then copied/retargeted after JSON reload: old IDs remained in copy.division; assertion failed on 2fb6f815.",
+    "proof": "94 W2 checks (37 new division checks); 39 W2 mutations caught in one run, missed: []; three original anchors reanchored to the same counted-copy/uniqueness behavior. Readers: precons-d140, copy-spell24, copy-memory15, tokens90, targets-up-to44.",
+    "limits": "Entry operations remain under development; no entry fix, new card, full theme or gate completion is claimed."
+  },
+  "jointTargets20261029": {
+    "finding": "V8 cold review on a49b03ea: final legal counted/scalar swap [A,B],C -> [A,C],B was omitted because each question was constrained against other original target instances.",
+    "rules": [
+      "115.7d-f",
+      "707.10c"
+    ],
+    "fix": "Stage every target instance on each copy, offer candidates without other original-instance constraints, and validate the final combined set before changing targets/division. Changed targets must be legal and previously legal kept targets cannot be invalidated. Optional copies offer explicit cancellation to all original targets/division; mandatory changeTargets stays non-cancellable. No provisional target events.",
+    "assertionCorrection": "The prior distinct test expected a target used by another original instance to be omitted. CR115.7e permits that provisional option. The replacement test requires it offered, refuses an invalid final set without consuming state, and completes the legal final swap.",
+    "proof": "137 W2 checks; all48 W2 mutations caught in one final run, missed: []. Includes scalar/counted order swaps, JSON reload, original-preserving cancellation after partial scalar or divided choices, remaining-instance cancellation, independent later copies, and V8 shroud/only-two-creatures recovery witness.",
+    "readers": "copy-spell24, targets-up-to44, precons-d140, copy-memory15, load100-tokens90.",
+    "limits": "No card promotions or entry completion claimed. Red entry regression preserved temporarily in .w2-entry-wip/engine-pre-entry.mjs while this bounded fix is published."
+  }
 }
