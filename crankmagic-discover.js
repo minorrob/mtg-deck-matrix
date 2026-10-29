@@ -189,7 +189,17 @@
     const data = {...loaded, cards: [...loaded.cards]};
     const names = new Set(data.cards.map((c) => c.name)), ids = new Set(data.cards.map((c) => c.id));
     for (const c of C.cards()) {
-      if (!names.has(c.name) && !(c.oracleId && ids.has(c.oracleId))) data.cards.push({...c, id: c.oracleId || c.id, type: c.typeLine, ci: (c.colorIdentity || []).join(''), image: c.image});
+      if (!names.has(c.name) && !(c.oracleId && ids.has(c.oracleId))) data.cards.push({...c, id: c.oracleId || c.id, type: c.typeLine, ci: (c.colorIdentity || []).join(''), image: c.image, isCommander: !!c.commander});
+    }
+    /* EVERY COMMANDER THE CATALOG KNOWS (ROB-214, Luke's playtest of 2026-10-28). The graph was baked on Sep 11; the commander
+       universe the catalog loads (Sep 28) holds commanders it never took in, 86 at the last count, and a card put in above from
+       the library had no `isCommander` at all. "Explore from a commander" looks for that flag, so a commander newer than the
+       graph was "not a commander in the catalog" while it sat on screen. They come in here as visitors, as library cards do. */
+    {
+      const have = new Set(data.cards.map((c) => c.name));
+      for (const c of C.catalog.search('', {commander: true, limit: 100000})) {
+        if (!have.has(c.name)) data.cards.push({...c, id: c.oracleId || c.id, type: c.typeLine, ci: (c.colorIdentity || []).join(''), image: c.image, isCommander: true});
+      }
     }
     /* A library or catalog card's row on the graph: by oracle id (the row's id), then by name
        for a card saved before it had one. */
@@ -351,15 +361,21 @@
         const commanders = data.cards.filter((c) => c.isCommander).sort((a, b) => String(a.name).localeCompare(String(b.name)));
         C.modal('Explore from a commander', `<form class="cm-form">
           <div class="cm-form-grid"><label>Commander name<input name="commander" list="cm-commander-list" placeholder="Type a commander name" required autocomplete="off"></label>
-          <datalist id="cm-commander-list">${commanders.slice(0, 200).map((c) => `<option value="${e(c.name)}"></option>`).join('')}</datalist>
+          <datalist id="cm-commander-list">${commanders.map((c) => `<option value="${e(c.name)}"></option>`).join('')}</datalist>
           <div class="cm-full"><p class="cm-muted">${commanders.length.toLocaleString('en-US')} commanders in the catalog.</p></div></div>
           <div class="cm-form-footer">${b('Cancel', 'close')}<button class="v-button primary" type="submit">Explore commander</button></div>
         </form>`).querySelector('form').addEventListener('submit', (ev) => {
           ev.preventDefault();
           const fd = new FormData(ev.target);
           const name = (fd.get('commander') || '').trim();
-          const card = data.cards.find((c) => c.name.toLowerCase() === name.toLowerCase() && c.isCommander);
-          if (!card) { C.notice(`"${name}" is not a commander in the catalog.`, true); return; }
+          const wanted = name.toLowerCase();
+          /* The whole name, in any case; or, where it names exactly one commander, the start of it ("Giada" is Giada, Font of Hope). */
+          const starts = commanders.filter((c) => c.name.toLowerCase().startsWith(wanted));
+          const card = commanders.find((c) => c.name.toLowerCase() === wanted) || (starts.length === 1 ? starts[0] : null);
+          if (!card) {
+            C.notice(starts.length > 1 ? `"${name}" could be ${starts.slice(0, 3).map((c) => c.name).join(', ')}${starts.length > 3 ? ' ...' : ''}. Type more of the name.` : `"${name}" is not a commander in the catalog.`, true);
+            return;
+          }
           saveRecentScope({type: 'commander', id: card.name, label: card.name});
           C.$('#cm-dialog').close();
           C.go('discover', {commander: card.name});
@@ -1373,6 +1389,7 @@
     const gapIntent = params.get('gap'); /* gap is recorded but not yet acted on in slice A */
     const commanderName = params.get('commander');
     const commanderCard = commanderName ? data.cards.find((c) => c.name.toLowerCase() === commanderName.toLowerCase() && c.isCommander) : null;
+    if (commanderName && !commanderCard) C.notice(`"${commanderName}" is not a commander in the catalog.`, true);
     const cardName = params.get('card');
     const namedCard = cardName ? data.cards.find((c) => c.name.toLowerCase() === cardName.toLowerCase()) : null;
 
