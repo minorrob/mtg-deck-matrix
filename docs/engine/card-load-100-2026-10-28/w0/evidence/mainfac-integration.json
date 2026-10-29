@@ -1,0 +1,28 @@
+{
+  "schema": "CurrentMainUIIntegration@1",
+  "source": "fb1cadff2a3f68af23d23d8c0101f07a37d2e9a1",
+  "main": "fac091ba",
+  "mainPullRequest": 953,
+  "merge": "no-ff",
+  "productionBoardDiffAgainstMain": "Exactly two approved Snoop renderer lines",
+  "nativeEngineRoomByteIdenticalTo": "56965896676dbee01f8e1f7247ce439cc54ca6d6",
+  "boardSha256": "9c849226d1c349b8225df78215a55741e26beb932799107f754a83c02cc0fd51",
+  "metadata": {
+    "actualNodeSuites": 710,
+    "assets": 136,
+    "serviceWorkerChecks": 9,
+    "featureWiring": 131,
+    "integrity": "passed",
+    "frozenScope": "passed"
+  },
+  "nativeSnoop": "passed",
+  "staticAudit": {
+    "files": 255,
+    "breaks": 4675,
+    "remainingInheritedUIProblems": 33,
+    "engineProblems": 0,
+    "fullAuditExit": 1
+  },
+  "browser": "Pending quiet window; no current browser acceptance",
+  "acceptance": "Dependency publication only; all wave0/card-load gates remain unchanged"
+}
