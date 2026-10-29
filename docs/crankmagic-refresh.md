@@ -169,6 +169,12 @@ this order and to the registry).
 - **Never rewrite `data/deck-ratings.json` without re-running the sweep.** A score
   is a claim about a protocol and an exact list; carrying one forward onto a
   different list is the one dishonesty this codebase is built to prevent.
+- **Never put a card in the catalog that is not a Commander-legal paper card** (Rob,
+  2026-10-29; `tools/catalog-rule.mjs`). Scryfall's Commander legality must be "legal",
+  the name must not begin "A-" (an Arena rebalance), and the card must have a paper
+  printing. A bulk row's `digital` flag is not that test: it describes one printing.
+  `tests/catalog-rule.mjs` holds the loaders and the committed catalogs to it. A refresh
+  that drops a card for this reason is a shrink on purpose; say so in the pull request.
 - **Never bump a version without changing the file, or change a file without
   bumping.** The first wastes everybody's cache; the second poisons it.
 

@@ -40,6 +40,7 @@ import {existsSync} from "node:fs";
 import {createRequire} from "node:module";
 import {gunzipSync} from "node:zlib";
 import {stamp} from "./lib/envelope.mjs";
+import {catalogProblem, paperOracleIds} from "./catalog-rule.mjs";
 import {report, readData} from "../schema/index.mjs";
 
 const require = createRequire(import.meta.url);
@@ -135,9 +136,10 @@ if (process.argv.includes("--check")) {
 }
 
 console.log("fetching Scryfall...");
-const [commanders, oracle] = await Promise.all([commanderNames(), oracleCards()]);
-const legal = oracle.rows.filter((c) => c.legalities?.commander === "legal");
-console.log(`  ${oracle.rows.length} oracle rows -> ${legal.length} commander-legal`);
+const [commanders, oracle, paper] = await Promise.all([commanderNames(), oracleCards(), paperOracleIds({cacheDir: CACHE})]);
+/* The catalog rule (tools/catalog-rule.mjs, ROB-213): Commander-legal paper cards only, no Alchemy and no A- rebalances. */
+const legal = oracle.rows.filter((c) => !catalogProblem(c, paper));
+console.log(`  ${oracle.rows.length} oracle rows -> ${legal.length} Commander-legal paper cards`);
 
 const cards = legal
   .map((c) => [
