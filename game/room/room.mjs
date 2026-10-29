@@ -99,7 +99,7 @@ import {createRng} from "../engine/rng.mjs";
 import {createJournal, hashState} from "../engine/journal.mjs";
 import {createController} from "../engine/controller.mjs";
 import {createMatchStore} from "../engine/storage.mjs";
-import {housePilot, meetRequirements, manaColors} from "../engine/pilots/house-pilot.mjs";
+import {housePilot, meetRequirements, manaColors, combatSourceAnswer, combatDamageAnswer} from "../engine/pilots/house-pilot.mjs";
 import {scoredPilot, SETTINGS} from "../engine/pilots/scored-pilot.mjs";
 import {personaOf, dispositionFor} from "../engine/pilots/roster.mjs";
 import {flagsOf, commanderClassOf} from "../engine/pilots/roles.mjs";
@@ -202,11 +202,14 @@ function readPod(pod, cards) {
     amount or a division filled lethal-first, then the rest on the last; a number at its minimum. */
 export function leastAnswer(choice) {
   const options = choice.options ?? [];
-  if (choice.mode === "damage" || choice.mode === "amount") {
+  const combatSource = combatSourceAnswer(choice);
+  if (combatSource) return combatSource;
+  if (choice.mode === "damage") return combatDamageAnswer(choice);
+  if (choice.mode === "amount") {
     const amounts = options.map(() => choice.minEach ?? 0);
     let left = (choice.total ?? 0) - amounts.reduce((a, b) => a + b, 0);
     for (let i = 0; i < options.length && left > 0; i += 1) {
-      const room = choice.mode === "damage" ? Math.max(0, options[i].lethal ?? 0) : Math.max(0, (options[i].max ?? left) - amounts[i]);
+      const room = Math.max(0, (options[i].max ?? left) - amounts[i]);
       const take = Math.min(left, room);
       amounts[i] += take; left -= take;
     }

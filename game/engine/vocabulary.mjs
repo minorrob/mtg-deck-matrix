@@ -276,6 +276,8 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   /* And cascade (CR 702.85a; Apex Devastator), a cast trigger: cards exiled until a nonland one that costs less, cast free
      (cards/index.mjs). */
   "cascade",
+  /* CR 702.19c-e: combat assignment over a planeswalker and, after its loyalty, to its controller. */
+  "trample over planeswalkers",
   /* Rob's lists P2: devour (CR 702.82; Feasting Hobbit's "Devour Food 3"), permanents sacrificed as it enters for +1/+1
      counters (cards/index.mjs, rules/entering.mjs); skulk (CR 702.118; Gollum, Obsessed Stalker), evasion (keywords/combat.mjs). */
   "devour", "skulk"];

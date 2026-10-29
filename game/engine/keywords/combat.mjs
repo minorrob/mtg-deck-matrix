@@ -46,7 +46,7 @@ export const KEYWORD_FAMILIES = Object.freeze({
     /* Skulk (CR 702.118; Gollum, Obsessed Stalker, Rob's lists P2): canBlockAttacker, below. */
     "Skulk"]),
   /** What happens when damage is dealt. */
-  combat: Object.freeze(["Deathtouch", "Trample", "Lifelink", "First Strike", "Double Strike", "Vigilance", "Defender",
+  combat: Object.freeze(["Deathtouch", "Trample", "Trample Over Planeswalkers", "Lifelink", "First Strike", "Double Strike", "Vigilance", "Defender",
     /* Infect (CR 702.90, batch 78): its damage is poison counters to a player and -1/-1 counters to a creature (rules/combat.mjs,
        effects/resources.mjs dealDamage). */
     "Infect",
@@ -202,9 +202,12 @@ export function combatNeedsFirstStrike(state) {
 
 /** CR 702.19b: what an attacker with trample may push past its blockers. */
 export function trampleOver(state, attackerId, assignedToBlockers) {
-  if (!has(state, attackerId, "Trample")) return 0;
+  if (!hasTrample(state, attackerId)) return 0;
   return Math.max(0, combatDamageOf(state, attackerId) - assignedToBlockers);
 }
+
+/** CR 702.19c-d: the variant also tramples over blocking creatures. */
+export const hasTrample = (state, id) => has(state, id, "Trample") || has(state, id, "Trample Over Planeswalkers");
 
 /**
  * CR 704.5h: a creature dealt damage by a source with deathtouch is destroyed, whatever its
