@@ -37,7 +37,11 @@ are guesses, not estimates from the repo.
 
 ## 2. Decisions only you can make (everything else below waits on these less)
 
-1. **Public or invite-only at launch?** Not documented anywhere; every doc says invite-only. This single answer decides the auth
+> **Update, Rob, 2026-10-29: the public release is set aside as a future item; he is not focused on it yet.** Decision 1 and everything in
+> this file that exists only for public sign-in (the auth swap in section 4, option B, and the abuse and cost controls) move to a
+> Future section when the live roadmap is made (`docs/handoff-roadmap-2026-10-29.md`). The rest stands.
+
+1. **Public or invite-only at launch?** *(deferred; see above)* Not documented anywhere; every doc says invite-only. This single answer decides the auth
    plan (section 4), abuse and cost controls, support load, and the legal gates (T3). Needed first.
 2. **Approve or edit the ten-line launch checklist** (still "draft for Rob's approval", ROB-137). It is the definition of done.
 3. **Name the game** (ROB-139, blocked on you).
