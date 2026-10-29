@@ -1,0 +1,276 @@
+departure cleanup loses linked return entries
+EXIT 1
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: source order false, existing false: both actual old exile identities produce one native return event
++ actual - expected
+
+  [
++   false,
++   false
+-   true,
+-   true
+  ]
+
+source order false, existing true: both actual old exile identities produce one native return event
++ actual - expected
+
+  [
++   false,
++   false
+-   true,
+-   true
+  ]
+
+source order true, existing false: both actual old exile identities produce one native return event
++ actual - expected
+
+  [
++   false,
++   false
+-   true,
+-   true
+  ]
+
+source order true, existing true: both actual old exile identities produce one native return event
++ actual - expected
+
+  [
++   false,
++   false
+-   true,
+-   true
+  ]
+
+completed counter prefix rechecks a newly live source: Cannot read properties of null (reading 'options')
+committed native entry costs precede every returning watcher: Cannot read properties of null (reading 'options')
+Aura preflight hosts false order false: Cannot read properties of null (reading 'options')
+Aura preflight hosts false order true: Cannot read properties of null (reading 'options')
+Aura preflight hosts true order false: Cannot read properties of null (reading 'options')
+Aura preflight hosts true order true: Cannot read properties of null (reading 'options')
+new entering modifier preserves an already paid native prefix: Cannot read properties of null (reading 'options')
+parent grant after counter prefix 9, choice false: Cannot read properties of null (reading 'options')
+parent grant after counter prefix 9, choice true: Cannot read properties of null (reading 'options')
+parent grant after counter prefix 10, choice false: Cannot read properties of null (reading 'options')
+parent grant after counter prefix 10, choice true: Cannot read properties of null (reading 'options')
+new entry replacement redirects an earlier prepared return: Cannot read properties of null (reading 'options')
+new zone replacement redirects an earlier prepared return: Cannot read properties of null (reading 'options')
+late redirect choices hand: Cannot read properties of null (reading 'options')
+late redirect choices exile: Cannot read properties of null (reading 'options')
+late redirect choices departed-exile: Cannot read properties of null (reading 'options')
+late native zone replacement starts its first actual entering child: Cannot read properties of null (reading 'options')
+new watcher after committed cost via concession: Cannot read properties of null (reading 'options')
+new watcher after committed cost via devour: Cannot read properties of null (reading 'options')
+return owner leaves during its first late entry question: Cannot read properties of null (reading 'options')
+first late entry completes or redirects with committed cost false: Cannot read properties of null (reading 'options')
+first late entry completes or redirects with committed cost true: Cannot read properties of null (reading 'options')
+first-child redirect receipt survives final choice hand: Cannot read properties of null (reading 'options')
+first-child redirect receipt survives final choice exile: Cannot read properties of null (reading 'options')
+base deaths precede an actual followup-created watcher: the actual linked Elf returns once after all source callbacks
+
+0 !== 1
+
+two loaded Mimics share an ability ID, second counter order 5: each actual Mimic grants once and the explicit second counter order remains authoritative
++ actual - expected
+
+  [
++   undefined,
++   undefined
+-   4,
+-   5
+  ]
+
+two loaded Mimics share an ability ID, second counter order 6: each actual Mimic grants once and the explicit second counter order remains authoritative
++ actual - expected
+
+  [
++   undefined,
++   undefined
+-   4,
+-   6
+  ]
+
++ actual - expected
+
++ [
++   'source order false, existing false: both actual old exile identities produce one native return event\n' +
++     '+ actual - expected\n' +
++     '\n' +
++     '  [\n' +
++     '+   false,\n' +
++     '+   false\n' +
++     '-   true,\n' +
++     '-   true\n' +
++     '  ]\n',
++   'source order false, existing true: both actual old exile identities produce one native return event\n' +
++     '+ actual - expected\n' +
++     '\n' +
++     '  [\n' +
++     '+   false,\n' +
++     '+   false\n' +
++     '-   true,\n' +
++     '-   true\n' +
++     '  ]\n',
++   'source order true, existing false: both actual old exile identities produce one native return event\n' +
++     '+ actual - expected\n' +
++     '\n' +
++     '  [\n' +
++     '+   false,\n' +
++     '+   false\n' +
++     '-   true,\n' +
++     '-   true\n' +
++     '  ]\n',
++   'source order true, existing true: both actual old exile identities produce one native return event\n' +
++     '+ actual - expected\n' +
++     '\n' +
++     '  [\n' +
++     '+   false,\n' +
++     '+   false\n' +
++     '-   true,\n' +
++     '-   true\n' +
++     '  ]\n',
++   "completed counter prefix rechecks a newly live source: Cannot read properties of null (reading 'options')",
++   "committed native entry costs precede every returning watcher: Cannot read properties of null (reading 'options')",
++   "Aura preflight hosts false order false: Cannot read properties of null (reading 'options')",
++   "Aura preflight hosts false order true: Cannot read properties of null (reading 'options')",
++   "Aura preflight hosts true order false: Cannot read properties of null (reading 'options')",
++   "Aura preflight hosts true order true: Cannot read properties of null (reading 'options')",
++   "new entering modifier preserves an already paid native prefix: Cannot read properties of null (reading 'options')",
++   "parent grant after counter prefix 9, choice false: Cannot read properties of null (reading 'options')",
++   "parent grant after counter prefix 9, choice true: Cannot read properties of null (reading 'options')",
++   "parent grant after counter prefix 10, choice false: Cannot read properties of null (reading 'options')",
++   "parent grant after counter prefix 10, choice true: Cannot read properties of null (reading 'options')",
++   "new entry replacement redirects an earlier prepared return: Cannot read properties of null (reading 'options')",
++   "new zone replacement redirects an earlier prepared return: Cannot read properties of null (reading 'options')",
++   "late redirect choices hand: Cannot read properties of null (reading 'options')",
++   "late redirect choices exile: Cannot read properties of null (reading 'options')",
++   "late redirect choices departed-exile: Cannot read properties of null (reading 'options')",
++   "late native zone replacement starts its first actual entering child: Cannot read properties of null (reading 'options')",
++   "new watcher after committed cost via concession: Cannot read properties of null (reading 'options')",
++   "new watcher after committed cost via devour: Cannot read properties of null (reading 'options')",
++   "return owner leaves during its first late entry question: Cannot read properties of null (reading 'options')",
++   "first late entry completes or redirects with committed cost false: Cannot read properties of null (reading 'options')",
++   "first late entry completes or redirects with committed cost true: Cannot read properties of null (reading 'options')",
++   "first-child redirect receipt survives final choice hand: Cannot read properties of null (reading 'options')",
++   "first-child redirect receipt survives final choice exile: Cannot read properties of null (reading 'options')",
++   'base deaths precede an actual followup-created watcher: the actual linked Elf returns once after all source callbacks\n' +
++     '\n' +
++     '0 !== 1\n',
++   'two loaded Mimics share an ability ID, second counter order 5: each actual Mimic grants once and the explicit second counter order remains authoritative\n' +
++     '+ actual - expected\n' +
++     '\n' +
++     '  [\n' +
++     '+   undefined,\n' +
++     '+   undefined\n' +
++     '-   4,\n' +
++     '-   5\n' +
++     '  ]\n',
++   'two loaded Mimics share an ability ID, second counter order 6: each actual Mimic grants once and the explicit second counter order remains authoritative\n' +
++     '+ actual - expected\n' +
++     '\n' +
++     '  [\n' +
++     '+   undefined,\n' +
++     '+   undefined\n' +
++     '-   4,\n' +
++     '-   6\n' +
++     '  ]\n'
++ ]
+- []
+
+    at file:///C:/Users/robmi/CrankMagic/worktrees/load100/w0-w1-faces/tests/engine-battle-linked-returns.mjs:587:8
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: [
+    'source order false, existing false: both actual old exile identities produce one native return event\n' +
+      '+ actual - expected\n' +
+      '\n' +
+      '  [\n' +
+      '+   false,\n' +
+      '+   false\n' +
+      '-   true,\n' +
+      '-   true\n' +
+      '  ]\n',
+    'source order false, existing true: both actual old exile identities produce one native return event\n' +
+      '+ actual - expected\n' +
+      '\n' +
+      '  [\n' +
+      '+   false,\n' +
+      '+   false\n' +
+      '-   true,\n' +
+      '-   true\n' +
+      '  ]\n',
+    'source order true, existing false: both actual old exile identities produce one native return event\n' +
+      '+ actual - expected\n' +
+      '\n' +
+      '  [\n' +
+      '+   false,\n' +
+      '+   false\n' +
+      '-   true,\n' +
+      '-   true\n' +
+      '  ]\n',
+    'source order true, existing true: both actual old exile identities produce one native return event\n' +
+      '+ actual - expected\n' +
+      '\n' +
+      '  [\n' +
+      '+   false,\n' +
+      '+   false\n' +
+      '-   true,\n' +
+      '-   true\n' +
+      '  ]\n',
+    "completed counter prefix rechecks a newly live source: Cannot read properties of null (reading 'options')",
+    "committed native entry costs precede every returning watcher: Cannot read properties of null (reading 'options')",
+    "Aura preflight hosts false order false: Cannot read properties of null (reading 'options')",
+    "Aura preflight hosts false order true: Cannot read properties of null (reading 'options')",
+    "Aura preflight hosts true order false: Cannot read properties of null (reading 'options')",
+    "Aura preflight hosts true order true: Cannot read properties of null (reading 'options')",
+    "new entering modifier preserves an already paid native prefix: Cannot read properties of null (reading 'options')",
+    "parent grant after counter prefix 9, choice false: Cannot read properties of null (reading 'options')",
+    "parent grant after counter prefix 9, choice true: Cannot read properties of null (reading 'options')",
+    "parent grant after counter prefix 10, choice false: Cannot read properties of null (reading 'options')",
+    "parent grant after counter prefix 10, choice true: Cannot read properties of null (reading 'options')",
+    "new entry replacement redirects an earlier prepared return: Cannot read properties of null (reading 'options')",
+    "new zone replacement redirects an earlier prepared return: Cannot read properties of null (reading 'options')",
+    "late redirect choices hand: Cannot read properties of null (reading 'options')",
+    "late redirect choices exile: Cannot read properties of null (reading 'options')",
+    "late redirect choices departed-exile: Cannot read properties of null (reading 'options')",
+    "late native zone replacement starts its first actual entering child: Cannot read properties of null (reading 'options')",
+    "new watcher after committed cost via concession: Cannot read properties of null (reading 'options')",
+    "new watcher after committed cost via devour: Cannot read properties of null (reading 'options')",
+    "return owner leaves during its first late entry question: Cannot read properties of null (reading 'options')",
+    "first late entry completes or redirects with committed cost false: Cannot read properties of null (reading 'options')",
+    "first late entry completes or redirects with committed cost true: Cannot read properties of null (reading 'options')",
+    "first-child redirect receipt survives final choice hand: Cannot read properties of null (reading 'options')",
+    "first-child redirect receipt survives final choice exile: Cannot read properties of null (reading 'options')",
+    'base deaths precede an actual followup-created watcher: the actual linked Elf returns once after all source callbacks\n' +
+      '\n' +
+      '0 !== 1\n',
+    'two loaded Mimics share an ability ID, second counter order 5: each actual Mimic grants once and the explicit second counter order remains authoritative\n' +
+      '+ actual - expected\n' +
+      '\n' +
+      '  [\n' +
+      '+   undefined,\n' +
+      '+   undefined\n' +
+      '-   4,\n' +
+      '-   5\n' +
+      '  ]\n',
+    'two loaded Mimics share an ability ID, second counter order 6: each actual Mimic grants once and the explicit second counter order remains authoritative\n' +
+      '+ actual - expected\n' +
+      '\n' +
+      '  [\n' +
+      '+   undefined,\n' +
+      '+   undefined\n' +
+      '-   4,\n' +
+      '-   6\n' +
+      '  ]\n'
+  ],
+  expected: [],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.23.3

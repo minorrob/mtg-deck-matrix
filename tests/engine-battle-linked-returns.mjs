@@ -8,6 +8,7 @@ import {afterResolving} from "../game/engine/rules/priority.mjs";
 import {awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {concede} from "../game/engine/rules/sba.mjs";
 import {moveOne} from "../game/engine/script/effects/zones.mjs";
+import {beginRuleOperation, answerRuleOperation} from "../game/engine/rules/operations.mjs";
 import {entryCounterResult, entryCounterProgressFrame} from "../game/engine/rules/entry-characteristics.mjs";
 import {freezeSbaReturnBatch, reopenPreparedSbaReturn, validateSbaReturnFirstEntry, pendingSbaReturnEvents} from "../game/engine/rules/sba-move-results.mjs";
 
@@ -511,6 +512,76 @@ for(const destination of ["hand","exile"])run(`first-child redirect receipt surv
   eq(events.filter(event=>event.kind==="GameEventCardChangeZone"&&event.data.fields.card.cardId===ids[0]).map(event=>event.data.fields.to.zoneType),[destination==="hand"?"Hand":"Exile"],"the selected remaining replacement controls the single final move");
   eq(events.filter(event=>event.kind==="GameEventCardCounters").map(event=>event.data.fields.newValue),[7],"redirecting the first child never journals its abandoned prospective counters");
   eq(state.players[0].life,39,"overlapping zone replacements never repeat or undo the earlier real payment or followup");
+});
+
+/* Generic followup fixture: actual supported native replacement/createToken/linked-return operations.
+   No saved-card execution credit is claimed for this custom death watcher. */
+run("base deaths precede an actual followup-created watcher",()=>{
+  const state=createState({players:[{name:"A"},{name:"B"},{name:"C"}]});Object.assign(state,{phase:"MAIN1",turn:1,activePlayer:0,priorityPlayer:0});
+  const put=object=>addObject(state,{owner:0,controller:0,...object},"battlefield");
+  const watch=id=>({id,kind:"triggered",text:"Whenever a creature dies, gain 1 life.",
+    trigger:{on:"GameEventCardChangeZone",from:"Battlefield",to:"Graveyard",who:"any",filter:{types:["Creature"]}},effects:[{effect:"gainLife",amount:1}]});
+  const first=put({card:"Callback Birth Battle",types:["Battle"],defense:0,protector:0});
+  const second=put({card:"Callback Link Battle",types:["Battle"],defense:0,protector:0});
+  const bear=put({card:"Actual Callback Dead Bear",types:["Creature"],power:2,toughness:2});state.objects[bear].damage=2;
+  put({card:"Existing Callback Watcher",types:["Enchantment"],abilities:[watch("callback-old")]});
+  put({card:"Native Callback Replacement",types:["Enchantment"],abilities:[{id:"callback-replacement",kind:"replacement",
+    watches:{event:"zone-change",from:"battlefield",to:"graveyard",filter:{named:"Callback Birth Battle"}},change:{to:"exile",then:[{effect:"createToken",count:1,
+      token:{name:"Followup Callback Watcher",types:["Enchantment"],abilities:[watch("callback-new")]}}]}}]});
+  const elf=addObject(state,{card:"Callback Linked Elf",types:["Creature"],subtypes:["Elf"],power:2,toughness:2,owner:0,controller:0},"exile");
+  state.exiledUntil=[{source:second,exiled:elf}];
+  const events=afterResolving(state,[]);
+  const newborn=state.zones.battlefield.filter(id=>state.objects[id].token&&state.objects[id].abilities?.some(ability=>ability.id==="callback-new"));
+  eq(newborn.length,1,"the supported replacement followup actually creates its new watcher before linked-return preflight");
+  eq(events.filter(event=>event.kind==="GameEventCardChangeZone"&&event.data.fields.card.cardId===elf&&event.data.fields.enteredAs!==undefined).length,1,"the actual linked Elf returns once after all source callbacks");
+  eq([state.objects[first],state.objects[second],state.objects[bear]],[undefined,undefined,undefined],"the simultaneous base identities really departed before callback birth and linked return");
+  eq([...state.stack,...state.pendingTriggers].filter(entry=>entry.abilityId==="callback-old").length,1,"the existing watcher sees the one actual base creature death once");
+  eq([...state.stack,...state.pendingTriggers].filter(entry=>entry.abilityId==="callback-new").length,0,"a watcher actually born in a preflight callback cannot see the earlier committed base death");
+});
+
+for(const total of [5,6])run(`two loaded Mimics share an ability ID, second counter order ${total}`,()=>{
+  let state=createState({players:[{name:"A"},{name:"B"},{name:"C"}]});Object.assign(state,{phase:"MAIN1",turn:1,activePlayer:0,priorityPlayer:0});
+  const put=object=>addObject(state,{owner:0,controller:0,...object},"battlefield");
+  const mimic=compileScript(JSON.parse(readFileSync(new URL("../game/engine/cards/m/metallic-mimic.json",import.meta.url))));
+  eq(mimic.problems,[],"the actual saved Metallic Mimic definition compiles");
+  for(let index=0;index<2;index++){
+    const old=addObject(state,{...mimic.definition,card:"Metallic Mimic",owner:0,controller:0},"hand",0);
+    beginRuleOperation(state,{kind:"move-one",id:old,to:"battlefield"});
+    for(let step=0;state.awaiting&&step<10;step++){
+      const choice=awaitingChoice(state),elf=choice.options.findIndex(option=>option.chosen==="Elf");
+      answerRuleOperation(state,[elf>=0?elf:0]);
+    }
+    eq(state.ruleOperation,undefined,"each real Mimic finishes its native entering operation");
+  }
+  const holders=state.zones.battlefield.filter(id=>state.objects[id].card==="Metallic Mimic");
+  eq(holders.map(id=>state.objects[id].chosen),["Elf","Elf"],"both actual Mimics made the real entering Elf choice");
+  eq(new Set(holders).size,2,"the same printed modifier belongs to two physically distinct sources");
+  state=JSON.parse(JSON.stringify(state));
+  const sources=[0,1].map(index=>{const id=put({card:`Shared-ID Source ${index}`,types:["Battle"],defense:0});state.objects[id].protector=0;return id;});
+  const ids=["First Shared-ID Elf","Second Shared-ID Elf"].map(card=>addObject(state,{card,types:["Creature"],subtypes:["Elf"],power:2,toughness:2,owner:0,controller:0},"exile"));
+  const season=compileScript(JSON.parse(readFileSync(new URL("../game/engine/cards/d/doubling-season.json",import.meta.url))));eq(season.problems,[],"the real loaded counter doubler compiles");put({...season.definition,card:"Doubling Season"});
+  put({card:"Second Counter Plus One",types:["Enchantment"],abilities:[{id:"second-plus",kind:"static",rule:"more-counters",counter:"+1/+1",plus:1,affects:{what:"permanent",controller:"you",named:"Second Shared-ID Elf"}}]});
+  state.exiledUntil=sources.map((source,index)=>({source,exiled:ids[index]}));
+  const events=afterResolving(state,[]);
+  for(let step=0;state.awaiting&&step<30;step++){
+    const choice=awaitingChoice(state),counter=choice.id.startsWith("entry-counters:");
+    if(counter){
+      const entry=Object.values(state.ruleOperation.sbaEntryProgress).find(row=>row.objectId===ids[0]);
+      const result=Object.values(state.ruleOperation.entryCounterResults).find(row=>row.objectId===ids[0]);
+      eq(entry.frame.proposal.applied,["a2","a2"],"two legitimate loaded modifiers share the same bare ability ID");
+      eq(new Set(entry.frame.proposal.appliedBy).size,2,"the native entry prefix distinguishes their holder-plus-ability identities");
+      eq(result.progress.entryApplied,entry.frame.proposal.appliedBy,"counter continuation binds to that exact canonical entry identity prefix");
+      const copy=JSON.parse(JSON.stringify(state)),bad=Object.values(copy.ruleOperation.entryCounterResults).find(row=>row.objectId===ids[0]);
+      bad.progress.entryApplied[1]=bad.progress.entryApplied[0];
+      assert.throws(()=>resolveAwaiting(copy,[0]),/native|prefix/);checks++;
+      eq(ids.map(id=>copy.objects[id]?.zone),["exile","exile"],"duplicating one holder-plus-ability key still cannot commit either native return");
+    }
+    const answer=choice.mode==="order"?choice.options.map((_,index)=>index):[counter?choice.options.findIndex(option=>option.puts===total):0];
+    state=JSON.parse(JSON.stringify(state));events.push(...resolveAwaiting(state,answer));
+  }
+  eq(state.awaiting,null,"every real shared-ID replacement and counter choice completes");
+  eq(["First Shared-ID Elf","Second Shared-ID Elf"].map(card=>state.objects[state.zones.battlefield.find(id=>state.objects[id].card===card)]?.counters["+1/+1"]),[4,total],"each actual Mimic grants once and the explicit second counter order remains authoritative");
+  eq(events.filter(event=>event.kind==="GameEventCardCounters").map(event=>event.data.fields.newValue),[4,total],"only actual final placements are journaled once per returning Elf");
 });
 
 assert.deepEqual(failures,[],failures.join("\n"));

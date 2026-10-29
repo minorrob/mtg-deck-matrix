@@ -149,7 +149,7 @@ export function counterDeferredEntryProgressFrame(state,frame) {
 
 function updateReturnCounterGrant(binding,frame) {
   const {progress}=readBoundEntryProgress(binding,binding.prepared,frame.objectId,frame.player,frame.returnBatchId);
-  const applied=progress.frame.proposal.applied??[];
+  const applied=progress.frame.proposal.appliedBy??[];
   if(JSON.stringify(applied.slice(0,(frame.entryApplied??[]).length))!==JSON.stringify(frame.entryApplied??[]))
     throw new Error("A counter continuation cannot discard its containing entry prefix");
   const next=progress.result.counterPlan.independentCounters??{},previous=frame.independentCounters??{};
@@ -200,7 +200,7 @@ export function saveEntryCounterResult(state, frame, raw, counters, {complete=tr
   if(!complete&&!binding)throw new Error("Partial counters require a native return binding");
   if(binding&&!frame.entryApplied){
     const {progress}=readBoundEntryProgress(binding,binding.prepared,frame.objectId,frame.player,frame.returnBatchId);
-    frame.entryApplied=structuredClone(progress.frame.proposal.applied??[]);
+    frame.entryApplied=structuredClone(progress.frame.proposal.appliedBy??[]);
   }
   if (frame.progressParent) {
     const previous = operation.entryCounterResults?.[frame.progressParent]?.progress;

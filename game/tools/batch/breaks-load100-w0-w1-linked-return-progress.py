@@ -40,4 +40,6 @@ BREAKS = [
      'frame.stage="replacements";'),
     ('first-child receipt accepts the wrong native operation', 'game/engine/rules/sba-move-results.mjs',
      'entry.operation===operation.serial&&entry.returnBatchId===frame.returnBatchId', 'entry.returnBatchId===frame.returnBatchId'),
+    ('canonical entry progress confuses two real holders sharing an ability ID', 'game/engine/rules/entry-characteristics.mjs',
+     'const applied=progress.frame.proposal.appliedBy??[];', 'const applied=progress.frame.proposal.applied??[];'),
 ]

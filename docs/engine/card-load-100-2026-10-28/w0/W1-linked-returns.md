@@ -16,7 +16,7 @@ actual old ID, owner and source zone bind each result. Owner choices follow APNA
 moves/payment wrappers remain unchanged. Costs, concessions and other interleaved actions remain authoritative;
 only operation proposals/choices are saved, with no game snapshot rollback or event-buffer splicing.
 
-The secured local prototype passes 402 native checks before the remaining redirect/ledger/full-proof work below.
+The secured local prototype passes 435 native checks before the remaining redirect/ledger/full-proof work below.
 Progress work was secured at314d11d1, then exact assembled420e797 was merged ataa4c3702. README uses the actual
 710 flat readers (root709 plus this lane's additive native reader). This remains an unfinished local checkpoint.
 Focused original readers also pass: counter87, Battle-SBA128, intrinsic34 and Battle95. It covers:
@@ -112,3 +112,23 @@ Its saved old count-receipt behavior is not silently opted into a new continuati
 W5 owns actions/payment and its append-only mana-reversal causes. Its new collector filter is coordinated immediately
 after the existing W1 receipt filter; W1 keeps trigger.mjs unchanged and mints its receipts in the cohort ledger.
 Root owns RUN/ACTIVE, integration, Linear and all acceptance gates.
+
+
+Final follow-up before the new full matrix: exact published60596146 was merged at55993bc2 with only the README count
+conflict resolved to actual715. The approved runtime change is exactly two entry-characteristics reads switched to
+canonical proposal.appliedBy; string, uniqueness, prefix, raw, count, order, actual payment and reopen guards remain.
+Two loaded Metallic Mimics genuinely choose Elf through native entry, then JSON before/during linked-return choices.
+Both explicit final counter outcomes4/5 and4/6 pass, with one placement per return. A duplicate holder-plus-ability key
+still rejects before either object moves.
+
+The original lost-links fault is now at canonical departure.returnLinks capture before return receipts are minted.
+Its direct result is the original missing native return events assertion ([false,false] instead of[true,true]), not
+merely a ledger rejection. The original early base-collection fault remains unchanged. A labeled custom supported
+replacement/createToken followup creates its watcher before linked-return preflight: actual new watcher1, existing
+watcher trigger1, new watcher trigger0, and original linked Elf return1. Omitting early collection makes the direct
+new-watcher assertion fail1-vs0. No saved-card execution credit is claimed for this custom fixture.
+
+Current native reader435 passes. All3 direct semantic diagnostics fail as intended and source backups are restored.
+The prior full84 result remains historical82 caught/2 MISSED. The final frozen matrix retains all44 original readers
+and all84 existing controls plus the canonical-ID control (85 total), with direct witnesses first and broad saved-card
+and generator readers last. The required final44/85 run is pending; no publication or gate credit is claimed yet.
