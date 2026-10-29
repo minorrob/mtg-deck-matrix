@@ -89,7 +89,18 @@ original counter30/base32/readiness3 plus new18 and moved Chulane1 =84 controls.
 readers run first; the full engine-cards and generators readers remain mandatory and run last. Two moved anchors
 were reanchored to the same faults: Aura eligibility using owner instead of actual entering controller, and the
 public counter-result controller check alongside its new partial-receipt guard. Static audit has33 inherited UI
-problems and zero engine targets. The full44/84 run is still pending.
+problems and zero engine targets. Frozen source e77c1137 completed the full44-reader green baseline, including engine-cards/generators, with82 controls
+caught and2 MISSED. That report remains explicitly RED: (1) the old cleanup returned-list probe is now on a legacy
+return value no longer used by the native handler; root approved moving the same fault to canonical link capture
+before receipts. (2) later preflight collection compensates the old returned-watcher witness; the original early
+collection fault stays unchanged, and an actual followup-created watcher boundary witness will be added.
+
+After full restoration and before any runtime change, two actual loaded Metallic Mimics each entered through the
+native Elf choice, with JSON before and during return decisions. Their legitimate entry histories are applied
+[a2,a2] and appliedBy[2:a2,4:a2]. Native counter recheck rejects that legitimate history. Root approved using the
+canonical appliedBy identity at the two progress snapshot/read sites, preserving string/uniqueness/prefix guards
+and all counter/payment/reopen receipts. This runtime followup and repaired full proof are still pending; no gate
+or publication credit follows from the historical82/2 result.
 This scoped proof does not replace the required original full reader/mutation unions. Full inherited mutation unions must
 remain intact; no incomplete positive count is acceptance.
 

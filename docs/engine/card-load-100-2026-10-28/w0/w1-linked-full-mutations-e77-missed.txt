@@ -1,0 +1,86 @@
+baseline: every suite passes unbroken
+caught breaks-load100-w0-w1-linked-return-progress.py: unanswered counters ignore a newly applicable containing entry replacement -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-linked-return-progress.py: updated entry grant never reaches the saved counter prefix -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-linked-return-progress.py: entry grant repeats the already applied counter replacements -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-linked-return-progress.py: partial receipt is accepted by the public completed-count reader -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-linked-return-progress.py: partial receipt can freeze as a completed simultaneous return -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-linked-return-progress.py: counter question identity is reused after parent entry changes -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-linked-return-progress.py: completed entry never rechecks newly returned Authority -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-linked-return-progress.py: late live zone replacements never reopen a prepared return -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-linked-return-progress.py: late native entry redirect keeps the old battlefield destination -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-linked-return-progress.py: recheck accepts a different preparation identity -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-linked-return-progress.py: concession introduces new watcher before prior real costs are collected -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-linked-return-progress.py: devour introduces new watcher before prior real costs are collected -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-linked-return-progress.py: overlapping progress collection reuses a canonical receipt key -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-linked-return-progress.py: first entry accepts the wrong native return parent object -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-linked-return-progress.py: first late entry never gets its first native counter plan -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-linked-return-progress.py: first-child redirect recursively resets its native authority -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-linked-return-progress.py: first-child redirect ignores the actual receipt destination -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-linked-return-progress.py: first-child receipt accepts the wrong native operation -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: Compleated replacement omitted -- tests/engine-entry-counter-order.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: Compleated subtracts the wrong loyalty -- tests/engine-entry-counter-order.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: counter order defaults instead of asking -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: explicit counter answer forgotten -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: applied counter prefix is not excluded -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: applied counter prefix keys forgotten -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: partial counter count not saved before waiting -- tests/engine-entry-counter-order.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: native prefix reporting not requested -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: prospective self-only counter modifier omitted -- tests/engine-tokens-counters-4a.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: native public counter question identity reused -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: counter result accepts another entry -- tests/engine-entry-counter-order.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: counter result accepts another controller -- tests/engine-entry-counter-order.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: counter result accepts altered returned counters -- tests/engine-entry-counter-order.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: counter result is reusable -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: zero counter result treated as absent -- tests/engine-entry-counter-order.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: stack counters replaced a second time -- tests/engine-entry-counter-order.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: move counters replaced a second time -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: independent movement counters omitted -- tests/engine-entry-counter-order.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: movement counter receipt is not forwarded -- tests/engine-entry-counter-order.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: independent token counters omitted -- tests/engine-entry-counter-order.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: token counter planning starts before sibling choices -- tests/engine-entry-counter-order.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: token child result bypasses its bound receipt -- tests/engine-entry-counter-order.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: token counter answer writes the wrong sibling -- tests/engine-entry-counter-order.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: breaks-load100-w0-w1-intrinsic-entry.py: native intrinsic counters omitted -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: breaks-load100-w0-w1-intrinsic-entry.py: native Compleated reads removed printed keyword -- tests/engine-intrinsic-entry.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: breaks-load100-w0-w1-intrinsic-entry.py: intrinsic counters erase independent grants -- tests/engine-entry-counter-order.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: breaks-pre-entry.py: tokens count simultaneous siblings as replacement sources -- tests/engine-entry-counter-order.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: breaks-wave4a-h4.py: counters: cost and entering passed on -- tests/engine-wave4c-k3.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: breaks-wave4a-h4.py: entering: as a spell resolves -- tests/engine-entry-counter-order.mjs
+caught breaks-load100-w0-w1-entry-counter-order.py: breaks-wave4a-h4.py: entering: put onto the battlefield by an effect -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: Battle damage leaves defense unchanged -- tests/engine-battle-damage-sba.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: pure Battle receives creature marked damage -- tests/engine-battle-damage-sba.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: Battle excess threshold omitted -- tests/engine-battle-damage-sba.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: Battle damage prevents other applicable type results -- tests/engine-battle-damage-sba.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: zero Siege ignores pending printed triggers -- tests/engine-battle-damage-sba.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: zero Siege waits for ordinary activations -- tests/engine-battle-damage-sba.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: zero Siege waits for another source identity -- tests/engine-battle-damage-sba.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: protector repair chooses first opponent silently -- tests/engine-battle-damage-sba.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: live non-Siege protector forced to controller -- tests/engine-battle-damage-sba.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: cohort bypasses saved replacement preparation -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: cohort ignores frozen departure characteristics -- tests/engine-battle-damage-sba.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: cohort ignores its prepared replacement proposal -- tests/engine-load100-w2-stack.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: prepared receipts survive successful consumption -- tests/engine-battle-damage-sba.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: applied proposals never recheck newly live modifiers -- tests/engine-battle-damage-sba.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: concession loses applied follow-up source memory -- tests/engine-battle-damage-sba.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: dying replacement source loses frozen power -- tests/engine-battle-damage-sba.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: replacement follow-ups execute before all base moves -- tests/engine-battle-linked-returns.mjs
+MISSED breaks-load100-w0-w1-battle-runtime.py: departure cleanup loses linked return entries -- 
+caught breaks-load100-w0-w1-battle-runtime.py: departed controlled siblings retain obsolete records -- tests/engine-battle-damage-sba.mjs
+MISSED breaks-load100-w0-w1-battle-runtime.py: returned watcher sees earlier base deaths -- 
+caught breaks-load100-w0-w1-battle-runtime.py: outer collection replays already collected cohort -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: next cohort restamps a collected prefix -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: saved callback clears receipts before final collection -- tests/engine-battle-damage-sba.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: card flag alone suppresses actual triggers -- tests/engine-battle-damage-sba.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: native umbra moves a modifier before planning siblings -- tests/engine-battle-damage-sba.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: nested umbra choices skip recursive preflight -- tests/engine-battle-damage-sba.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: native destruction answer uses first semantic key -- tests/engine-battle-damage-sba.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: destruction prefix events silently dropped -- tests/engine-battle-damage-sba.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: state-based resume grants priority before next check -- tests/engine-battle-linked-returns.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: breaks-outside-damage.py: mana LKI must match original ID -- tests/engine-outside-damage.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: breaks-outside-damage.py: departure refreshes pending LKI -- tests/engine-outside-damage.mjs
+caught breaks-load100-w0-w1-battle-runtime.py: breaks-outside-damage.py: damage source filter reads matching LKI -- tests/engine-outside-damage.mjs
+caught breaks-load100-w0-w1-battle-readiness.py: SBA receipt bypasses native commit readiness -- tests/engine-battle-damage-sba.mjs
+caught breaks-load100-w0-w1-battle-readiness.py: breaks-precons-e-zombies.py: follow-ups run by moveOne -- tests/engine-zone-action-operations.mjs
+caught breaks-load100-w0-w1-battle-readiness.py: breaks-roblists-p3-counters.py: a shield counter replaces the state-based destruction too -- tests/engine-roblists-p3.mjs
+caught breaks-chulane-completion.py: aura host uses owner -- tests/engine-chulane-completion.mjs
+missed: ['breaks-load100-w0-w1-battle-runtime.py: departure cleanup loses linked return entries', 'breaks-load100-w0-w1-battle-runtime.py: returned watcher sees earlier base deaths']
