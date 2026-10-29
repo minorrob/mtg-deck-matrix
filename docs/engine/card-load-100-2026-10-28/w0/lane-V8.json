@@ -20,6 +20,16 @@
     "| Coverage counts seven partial constructs as built, so `coverage.md`'s shares read high | `game/tools/engine-constructs.mjs`:345–396 | V8 |"
   ],
   "status": "Completed RED measurement at clean c2038646: 6430 definitions,11039 scenarios/6580failed;2039/11633 reached,523 omission proofs,9594unproved. Strict default/CI/source validation and explicit decisions are implemented; per-card repairs, individual witnesses, full review and required games remain open.",
+  "strictCliCheckpoint": {
+    "code": "74087c6d",
+    "integration": "449246c2",
+    "baselineSuites": 35,
+    "mutationsCaught": 20,
+    "mutationsMissed": [],
+    "evidence": "evidence/v8-identity-squee.json",
+    "scope": "Independent Oracle printed defense; every printed face and exact whole clauses; actual artifact smoke; explicitly transferred completed-funding guard. No saved-card rewrite or ability credit.",
+    "remaining": "Latest full strict measurement c2038646 is RED; individual scenarios/ability witnesses, review, games, Table browser and inherited UI anchors remain open. No new cards or promotions."
+  },
   "latestStrictMeasurement": {
     "source": "c2038646f1187eb68a0495a621a2d9e1ee1078a0",
     "archive": "evidence/ability-strict-c2038646.json.gz",

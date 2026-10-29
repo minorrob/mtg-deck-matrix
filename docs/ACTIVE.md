@@ -8,7 +8,12 @@ Linear ROB-199 under ROB-85. The record is `docs/engine/card-load-100-2026-10-28
 Claim: `game/engine/cards/**`, generated card files, `data/engine/candidates.json`, the run package,
 and the engine modules its debt fixes require, subject to the ownership requests below.
 The primary checkout has another session's unfinished merge and is untouched.
-**Current October 29 assembly:** `8a386222` includes main `7a8383a0`, W5 `45616142`, W1 `85a3a89f` and P0 `8e363d95`.
+**Latest validated dependency:** code `449246c2` includes verifier/funding `74087c6d`, W1 counter-order `1553f7b1`
+and main `7f6e76ae`. Complete35-reader/20-mutation proof passes with none missed; root integration readers, manifest,
+wiring and integrity pass. Exact HEAD0 scan/push follows; draft #912 stays unfinished. W5 isolated native refresh,
+P0 committed refinement and W1 atomic Battle/SBA work continue in separate lanes. Static33 inherited UI failures,
+original Table browser startup and all card-load acceptance gates remain open. No new cards/promotions.
+**Earlier October 29 assembly:** `8a386222` includes main `7a8383a0`, W5 `45616142`, W1 `85a3a89f` and P0 `8e363d95`.
 Root verifies Oracle printed defense and all printed faces; native Oracle32/face23/artifact smoke19/CLI60 pass. Its
 narrow transferred Squee funding fix passes157 checks; full35-reader baseline and all20 mutations pass, none missed.
 W1 publishes counter-order87/32 caught at `1553f7b1` (#944), pending root integration;
