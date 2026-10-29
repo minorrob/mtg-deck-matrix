@@ -10,7 +10,7 @@
  * A look at another player's hand (the `handLook` decision, mode `ack`, game/engine/script/effects/asking.mjs): the
  * cards it is about are drawn above OK, each opens Card zoom, and OK answers it with nothing chosen.
  *
- * Each in Full, Table and Focus at 1280x720 (the phone at 390x844 is in the phone follow-up PR), hit-tested with elementFromPoint (a Playwright
+ * Each in Full, Table and Focus at 1280x720 and the phone at 390x844, hit-tested with elementFromPoint (a Playwright
  * click proves no reach). GEOMETRY_REQUIRED=1 refuses a missing browser.
  *   node tests/board-commander-hand.mjs
  */
@@ -57,10 +57,14 @@ async function fixture(view, width, height, mode) {
   await page.goto(`${base}/index.html#table?id=cmdr0001`);
   await page.locator("#cm-board").waitFor();
   await page.waitForTimeout(400);
+  /* The drawers are the top layer: on the phone one lies over the board, and a person puts it away to reach a card under it. */
+  if (width < 500) {for (const rail of await page.locator("[data-action=board-stage-rail][aria-expanded=true]").all()) await rail.click(); await page.waitForTimeout(500);}
   return {page, context, frames, errors};
 }
 /* Reached where a person would press it: the element itself is under the point, inside the window. */
 async function reach(page, selector, [fx, fy] = [0.5, 0.5]) {
+  /* The phone's board is taller than its window and scrolls inside it: a person scrolls to a card before pressing it. */
+  if (page.viewportSize().width < 500) {await page.locator(selector).first().evaluate((el) => el.scrollIntoView({block: "center", inline: "center", behavior: "instant"})); await page.waitForTimeout(300);}
   return page.locator(selector).first().evaluate((el, [fx, fy]) => {
     const r = el.getBoundingClientRect(), x = r.x + r.width * fx, y = r.y + r.height * fy;
     return {ok: x >= 0 && y >= 0 && x < innerWidth && y < innerHeight && el.contains(document.elementFromPoint(x, y)), x, y};
@@ -70,7 +74,7 @@ const acts = (frames) => frames.filter((f) => f.type === "act");
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1;};
 try {
-  for (const [width, height, mode] of [[1280, 720, "full"], [1280, 720, "table"], [1280, 720, "focus"]]) {   /* the phone (390x844) waits for the phone follow-up PR (Rob, 2026-10-29); docs/ACTIVE.md */
+  for (const [width, height, mode] of [[1280, 720, "full"], [1280, 720, "table"], [1280, 720, "focus"], [390, 844, "focus"]]) {
     const where = `${mode} ${width}x${height}`;
     /* ---- the commander tax and partners ---- */
     {
@@ -101,6 +105,10 @@ try {
       ok(k.ok, `${where}: Kraum takes the pointer`);
       ok(t.ok, `${where}: Tymna's uncovered top takes the pointer`);
       /* Current native path (Rob, 2026-10-27): the card, then its row -- two presses -- and a row that asks nothing more is sent at once. */
+      /* measured again where the phone's scroll left the board: reaching Tymna moved it */
+      k = await reach(page, kraum, [0.5, 0.2]);
+      for (const fy of [0.5, 0.8]) if (!k.ok) k = await reach(page, kraum, [0.5, fy]);
+      ok(k.ok, `${where}: Kraum still takes the pointer where it is pressed`);
       await page.mouse.click(k.x, k.y);
       const cast = '#cm-card-menu [data-action="board-card-menu-do"][data-index="1"]';
       await page.locator(cast).waitFor();
