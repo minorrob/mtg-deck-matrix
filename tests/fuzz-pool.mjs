@@ -137,6 +137,7 @@ const unique = createExerciseLedger([script("Bolt", [{kind: "spell"}])]);
 addExerciseEvidence(unique, [inferredCast("Bolt", 1), inferredResolution("Bolt", 1)], {scenario: "one printed spell was actually cast and resolved"});
 eq(unique.cards.Bolt.abilities[0].resolved, 1, "a matched successful ordinary spell identifies its unique printed spell ability");
 eq(unique.cards.Bolt.abilities[0].observations[0].method, "inferred-unique-printed-spell", "the inference method is distinct from explicit journal ability ids");
+eq(unique.cards.Bolt.abilities[0].observations[0].sourceName, "Bolt", "the original journal name is retained for ownership audits");
 for (const [label, population, rows] of [
   ["missing cast", [script("Bolt", [{kind: "spell"}])], [inferredResolution("Bolt", 1)]],
   ["copy or wrong stack", [script("Bolt", [{kind: "spell"}])], [inferredCast("Bolt", 1), event("GameEventSpellCopied", {card: {name: "Bolt"}, stackId: 2}), inferredResolution("Bolt", 2)]],
@@ -149,6 +150,20 @@ for (const [label, population, rows] of [
   addExerciseEvidence(rejectedInference, rows, {scenario: label});
   eq(exerciseSummary(rejectedInference).scenarioReached, 0, `${label} cannot infer a printed spell's execution`);
 }
+const aliasCollision = createExerciseLedger([script("Back", [{kind: "spell"}]),
+  {...script("Front // Back", [{kind: "activated"}]), prepare: {identity: {name: "Back"}, abilities: [{kind: "spell"}]}}]);
+addExerciseEvidence(aliasCollision, [inferredCast("Back", 1), inferredResolution("Back", 1), event("GameEventLandPlayed", {land: {name: "Back"}})], {game: "ambiguous prepared copy", clean: true});
+eq([exerciseSummary(aliasCollision).exercised, exerciseSummary(aliasCollision).reached], [0, 0], "a standalone name cannot steal an indistinguishable prepared-face event");
+eq([aliasCollision.cards.Back.cast, aliasCollision.cards.Back.played, aliasCollision.cards.Back.resolved], [0, 0, 0], "ambiguous ownership credits no cast, play, or resolution to the standalone card");
+ok(aliasCollision.unattributed.some((e) => e.reason === "ambiguous card/face ownership"), "card/face alias ambiguity is named in evidence");
+const repeatedOwner = createExerciseLedger([{...script("Front // Back", [{kind: "activated"}]), back: {identity: {name: "Back"}, abilities: [{kind: "activated"}, {kind: "keyword"}]}}]);
+addExerciseEvidence(repeatedOwner, [event("GameEventLandPlayed", {land: {name: "Back"}})], {game: "one owner with repeated aliases", clean: true});
+eq(repeatedOwner.cards["Front // Back"].played, 1, "repeated face/ability aliases of the same owner are not falsely ambiguous");
+let inventoryScans = 0;
+const noise = createExerciseLedger([script("Known", [{kind: "spell"}])]);
+noise.cards = new Proxy(noise.cards, {ownKeys(target) {inventoryScans += 1; return Reflect.ownKeys(target);}});
+addExerciseEvidence(noise, Array.from({length: 1000}, () => inferredResolution("Unknown Fixture", 1)), {game: "fixture noise", clean: true});
+eq(inventoryScans, 1, "unknown fixtures use one cached ownership index rather than rescanning every final card per event");
 
 /* A real room journal, rather than only hand-built events: a small fixture game deliberately ends by decking. */
 const storage = memoryStorage(), matchId = "pool-ledger-fixture";

@@ -64,3 +64,15 @@ completed four-player matches with winners. Journal credit stops at each run's a
 The historical initial ledger observed 131 of 6,430 cards and 47 of 11,636 explicit successful-resolution ability IDs.
 Those numbers precede the spell inference and runtime-removal supplement and are not relabeled. Final requirements
 remain 200 consolidated pool games this wave and the program's 5,000-game gate, plus strict library/staging runs.
+
+The full initial `0a848bb4` sweep completed with 11,023 passing scenarios, 6,086 of 11,636 abilities reached (1,840 by
+runtime removal), and 5,550 unreached across 3,658 cards. These counts are provisional because that version prioritized
+standalone names over conflicting face aliases. The corrected ownership index rejects every alias with multiple
+distinct owners, including exact standalone keys, and caches the index so unknown fixtures do not rescan the directory.
+New observations retain the journal's source name. There are 12 colliding names in the initial directory; none had cast,
+play, resolution, or ability credit in the archived three-game pool ledger, so its historical 131-card count is unaffected
+by this ownership correction.
+
+The full historical ledger is archived as `evidence/ability-initial-0a848bb4.json.gz`, with a manifest, hashes, raw-data
+secret scan, and readable provisional summary. It is retained as history, not authoritative gate evidence. A corrected
+whole-directory sweep uses the new ownership code and reports its own exact harness head.

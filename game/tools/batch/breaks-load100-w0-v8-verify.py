@@ -37,4 +37,6 @@ BREAKS = [
     ('inferred spell evidence retains its method', EVIDENCE, 'method = "inferred-unique-printed-spell";', 'method = "explicit-ability-id";'),
     ('scenario reachability requires a resolution observation', EVIDENCE, 'o.kind === "resolved"\n  && o.scenario !== null && o.scenario !== undefined', 'o.scenario !== null && o.scenario !== undefined'),
     ('scenario reachability cannot borrow a game resolution', EVIDENCE, 'o.scenario !== null && o.scenario !== undefined', 'true'),
+    ('standalone names cannot steal ambiguous face events', EVIDENCE, 'else if (index.get(alias)?.[0] !== full) index.set(alias, null);', ''),
+    ('unknown fixture ownership is cached', EVIDENCE, 'ownershipCache.set(ledger, index);', ''),
 ]

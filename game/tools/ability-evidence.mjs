@@ -28,11 +28,22 @@ export function createExerciseLedger(scripts) {
 
 /* A face's name and the card's full name may both appear. If the journal cannot distinguish two face-local a0 ids,
    neither is credited. The ambiguity is retained for review, rather than resolved using the current object's face. */
-function ownerOf(ledger, name) {
-  if (ledger.cards[name]) return [name, ledger.cards[name]];
-  const matches = Object.entries(ledger.cards).filter(([full, card]) => full.split(" // ").includes(name) || card.abilities.some((a) => a.face === name));
-  return matches.length === 1 ? matches[0] : null;
+const ownershipCache = new WeakMap();
+function ownershipIndex(ledger) {
+  let index = ownershipCache.get(ledger);
+  if (!index) {
+    index = new Map();
+    for (const [full, card] of Object.entries(ledger.cards)) {
+      for (const alias of new Set([full, ...full.split(" // "), ...card.abilities.map((a) => a.face)])) {
+        if (!index.has(alias)) index.set(alias, [full, card]);
+        else if (index.get(alias)?.[0] !== full) index.set(alias, null);
+      }
+    }
+    ownershipCache.set(ledger, index);
+  }
+  return index;
 }
+const ownerOf = (ledger, name) => ownershipIndex(ledger).get(name) ?? null;
 
 /** Add only a passing scenario's journal or a clean game's journal. `clean` must be supplied by the game verdict. */
 export function addExerciseEvidence(ledger, events, {game = null, scenario = null, clean = false} = {}) {
@@ -59,7 +70,7 @@ export function addExerciseEvidence(ledger, events, {game = null, scenario = nul
     }
     const hit = matches[0];
     hit[kind] += 1;
-    (hit.observations ??= []).push({method, kind, game, scenario, stackId: event.data?.fields?.stackId ?? event.data?.fields?.sa?.stackId ?? null,
+    (hit.observations ??= []).push({method, kind, sourceName: name, game, scenario, stackId: event.data?.fields?.stackId ?? event.data?.fields?.sa?.stackId ?? null,
       eventId: event.eventId ?? null});
     if (scenario !== null) addName(hit.scenarios, scenario);
     if (game !== null) addName(hit.games, game);
@@ -67,7 +78,10 @@ export function addExerciseEvidence(ledger, events, {game = null, scenario = nul
   for (const event of events) {
     const f = event?.data?.fields ?? {}, name = f.card?.name ?? f.land?.name;
     const owner = name ? ownerOf(ledger, name) : null;
-    if (!owner) continue;
+    if (!owner) {
+      if (name && ownershipIndex(ledger).has(name)) ledger.unattributed.push({game, scenario, name, kind: event.kind, reason: "ambiguous card/face ownership"});
+      continue;
+    }
     const [full, card] = owner;
     if (event.kind === "GameEventLandPlayed") {
       if (game !== null) {card.played += 1; card.resolved += 1; successful.add(full);}
