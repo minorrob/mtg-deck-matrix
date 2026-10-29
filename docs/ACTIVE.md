@@ -8,6 +8,18 @@ Linear ROB-199 under ROB-85. The record is `docs/engine/card-load-100-2026-10-28
 Claim: `game/engine/cards/**`, generated card files, `data/engine/candidates.json`, the run package,
 and the engine modules its debt fixes require, subject to the ownership requests below.
 The primary checkout has another session's unfinished merge and is untouched.
+**Latest validated dependency:** code `449246c2` includes verifier/funding `74087c6d`, W1 counter-order `1553f7b1`
+and main `7f6e76ae`. Complete35-reader/20-mutation proof passes with none missed; root integration readers, manifest,
+wiring and integrity pass. Exact HEAD0 scan/push follows; draft #912 stays unfinished. W5 isolated native refresh,
+P0 committed refinement and W1 atomic Battle/SBA work continue in separate lanes. Static33 inherited UI failures,
+original Table browser startup and all card-load acceptance gates remain open. No new cards/promotions.
+**Earlier October 29 assembly:** `8a386222` includes main `7a8383a0`, W5 `45616142`, W1 `85a3a89f` and P0 `8e363d95`.
+Root verifies Oracle printed defense and all printed faces; native Oracle32/face23/artifact smoke19/CLI60 pass. Its
+narrow transferred Squee funding fix passes157 checks; full35-reader baseline and all20 mutations pass, none missed.
+W1 publishes counter-order87/32 caught at `1553f7b1` (#944), pending root integration;
+bounded Battle work follows. W5 effect-paid costs and P0 committed-question
+refinement are active in their separate worktrees. Mandatory committed questions stay live; Cancel closes only a
+reversible child flow. Optional-targets browser50/blink148 pass; original Table startup remains RED. See newest RUN entry.
 The eight roles run in batches because this session supports three active subagents.
 No new cards until wave 0 closes. No provider API calls, production changes, migrations, or spending.
 **October 29 playtest intake:** Rob assigns one slot in the next subagent batch to ROB-204/210/211 and the engine
@@ -68,7 +80,7 @@ RUN.md records exact checkpoints, diagnostics and restart seams; do not mark the
 
 | To | Request | State |
 | --- | --- | --- |
-| Engine playtest slot / UI owner | One next-batch subagent owns ROB-204 verification, ROB-210 after that blocker, ROB-211 and the engine contracts for shared ROB-205 Cancel and ROB-209 mode/target/payment stages. UI controls remain with their owner; shared Done requires both halves. Coordinate payment, operation and Battle seams with the existing writer owners. | Direct Rob handoff October 29; reserved/queued, not started; details in `w0/PLAYTEST-ENGINE.md` |
+| Engine playtest slot / UI owner | Dedicated P0 owns ROB-204 verification, ROB-210, ROB-211 and engine contracts for shared ROB-205 Cancel/ROB-209 stages. UI controls stay with their owner; shared Done requires both halves. Coordinate payment, operation and Battle seams. | Active: published draft #943 includes bounded Cancel, blink/Salty and priority cast/activation stages; committed-question refinement continues. Original Table browser startup is still RED. Details in `w0/PLAYTEST-ENGINE.md` and RUN |
 | Claude · Engine | The standing lane table predates Rob's direct October 28 card-load assignment. Current open PRs were checked: no separate active rule-module PR besides prerequisite #834 was listed. The run owns its debt modules and coordinates narrow shared-file scopes between its roles. | Resolved by the later direct assignment; no other session's active files are edited |
 | Play | Show the monarch already present in the room view on the board; keep a one-press card reference where applicable. | Existing canonical Requests row 1 remains open; Play owns the board |
 | Lounge owner | Wave-0 W2 needs only the named wish-card refusal in `game/room/table.mjs` `readDeck`; confirm any current overlap before editing. | Refreshed open PR file list at resume: no overlap; W2 owns the narrow refusal |
@@ -102,6 +114,7 @@ Rob asked for the playtest's bugs and improvements to be fixed in the order Line
 - **ROB-213 (the catalog is Commander-legal paper cards only).** `tools/catalog-rule.mjs` is the rule (Scryfall Commander "legal", no "A-" name, a paper printing by Scryfall's own `legal:commander game:paper` search; a bulk row's `digital` flag is the chosen printing's, not the card's, and wrongly names 1,046 paper cards). `tools/commander-universe.mjs` and `tools/build-engine-cards.mjs` apply it. Today it removes exactly one card from 32,116: "Name Sticker" Goblin (MTGO-only). It stays in the committed `oracle.json`, `support.json`, `commander-universe.json` and `graph.json` until the next refresh: `graph-played.json`'s 701,916 edges address `graph.json`'s cards by position, so it cannot be dropped by hand. `tests/catalog-rule.mjs` holds the one exception and fails the day the rebuild removes it.
 - **ROB-214 (Explore says a commander is not in the catalog).** Not an import that failed to register: Explore's data is `data/graph.json` (baked Sep 11, 3,411 commanders) and 86 of the 3,497 commanders in the universe (Sep 28) are not in it at all (Aerid Konstrari, Arni, Avacyn, Angel of Horror, ...); library cards pushed in beside the graph also had no `isCommander`. `crankmagic-discover.js` now brings every catalog commander in as a visitor row, finds a commander by whole name in any case or by the start of it when that names one ("Giada"), says so when a deep link names none (it opened Atraxa), and lists all of them. `tests/explore-commander-door.mjs`. Giada herself *is* flagged in the committed graph, so Luke's exact typed text is unconfirmed; commented on the issue.
 - **ROB-216 (New deck: the colors drift off the commander).** In Start from, once a commander is chosen "Choose colors" shows and locks to its identity; pressing another color asks first (it names the commander and says it will be disconnected), Keep changes nothing, Change colors lets the commander go and applies the change from its colors (`crankmagic-newdeck.js`, two rules in `crankmagic.css`). `tests/newdeck-color-lock.mjs`. `tests/new-deck-flow.mjs` changed with it, on purpose: it changed the colors past a chosen Krenko and expected him kept; it now goes through the warning and chooses him again before Next.
+- **ROB-221 (Resources and Mana Pool on by default).** `DEFAULT_MODULES` in `crankmagic-board.js` is now stack, mana, resources, history, chat, coach: the layout of anyone who has not saved one. A saved layout keeps what its owner chose (nothing is added to it). `tests/table-tabletop.mjs` pins the new list. Visible cost: at 900px tall History, Chat and Coach start below the drawer's fold (it scrolls); say if you want the order changed.
 - **Known and not mine, red on a clean `main`:** `tests/board-target-lands.mjs`, `tests/board-direct-blocking.mjs`, `tests/board-yield.mjs`.
 
 ## Play: Table and Focus are the 3D view's HUD without the canvas; the drawers lie over the stage; Chat a default module, 2026-10-28 (a Claude cloud session, for Rob; `claude/gifted-ride-w6xoa3`, the third PR of the day)

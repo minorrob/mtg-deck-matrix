@@ -1,6 +1,7 @@
 # Strict card-check defaults and gate wiring
 
-Root owns this verifier-only slice. No saved cards or rules are edited. The default `check-cards` command always
+Root owns the strict-default verifier slice. It edits no saved cards or rules; the later bounded Squee repair below
+has its own explicitly transferred production seam. The default `check-cards` command always
 creates an ability ledger and runs the authorized runtime-only removal supplement. An explicit output path and the
 historical `--counterfactual` spelling still work; neither is required to enable coverage. An unreached ability fails
 even when every original scenario passes. Unknown/duplicate flags, empty card directories, missing saved scenarios
@@ -79,3 +80,48 @@ original final outcomes; no blanket legacy-answer conversion is performed.
 
 Checker failures retain the full scenario name and actual error. The prior 240-character cutoff concealed five actual
 causes in the c203 snapshot's printed diagnostics; that archive is preserved as measured, without invented details.
+
+## Printed identity and every printed face
+
+The pending follow-up compares printed defense with the committed Oracle's actual face independently of schema.
+A positive but wrong integer can satisfy schema and must still fail identity. It rejects missing/malformed Battle
+defense, invented ordinary-card defense, outer-card numbers substituted for the front, and wrong second-face values.
+Both the strict executable and the original whole-card reader use the check. Oracle32 and actual child-CLI60 checks
+pass; the executable's wrong-defense fixture retains a real passing static behavior proof while identity fails.
+
+The previous fidelity function checked the front and Adventure/prepare spell but omitted the back. Removing every
+back ability from actual loaded Aang still returned `ok: true`. Every supplied printed face is now checked against
+its own text. Only a parenthesized transform reminder naming this actual front is recognized as physical metadata;
+adjacent executable text is still required. A second actual omission control removes Itlimoc's fixed mana ability:
+its longer conditional mana sentence cannot claim the distinct shorter sentence just because their prefixes match.
+The original clause-combination/reminder logic remains. Native face23 checks include all6,430 current definitions and
+all29 back faces; no saved definition is rewritten and no behavior/ability credit follows from text checks.
+
+The compiler's old unplayed list retained Artifact Blast and Halt Order after `686d948f` supplied real artifact smoke
+targets. The exact inventory now requires their play; native artifact-smoke19 checks prove both casts, the exact
+countered stack entry, both owners' final graveyards, and only Halt Order's own draw before later turn draws.
+
+## Completed funding must advance to the remaining cost
+
+The full original verifier reader baseline stopped on an obsolete Squee zero-offer assertion. Preserving its original
+manual-funded cast exposed a separate native defect: after the actor chose the last three of four Wastes, the cost
+chooser reopened mana instead of asking which four other graveyard cards to exile. Repeating the answer made no
+progress. W5 transferred only the current-mode funding fallthrough condition to root, after its mutator restored.
+The chooser now asks funding only while a genuine funding choice remains. Historical question behavior is retained.
+
+`engine-x11-costs` passes157 checks: the original manual-funded outcome and invalid payer controls remain, and all five
+four-of-five graveyard payments execute with explicit last-three-of-four Wastes, the required Mountain, exact mana
+production/spend, reload, duplicate/unfunded refusal, one cast announcement and actual Squee resolution. No chosen
+source is substituted, no cost skipped and no saved card edited. The original462 funding checks also pass.
+
+The combined proof keeps all19 verifier readers and the original17 funding readers (35 distinct suites); focused
+readers precede both expensive whole-directory readers. Its20 planned mutations include the causal funding-loop
+reversion and the original nonmana-before-mana probe, re-anchored without dropping the new condition. The final complete
+run passes all35 baseline suites (including engine-cards55 and engine-compile84), catches all20 probes and reports
+`missed: []`. The first combined35 baseline also passed, with eight
+causal mutations caught. The zero-value probe exposed a missing numeric-Oracle-zero control: the existing zero fixture
+used a string, whose truthiness did not exercise that branch. The run was stopped before crediting that probe; the
+original helper was restored from its exact backup (SHA256 `634ee82136de36b8e09eedcd237c3a0f4ee71862daf20f4c4d3ce39ab293cf18`).
+The added numeric-zero assertion passes unbroken; the complete35-reader/20-mutation rerun uses no narrowed
+union or changed production source. No card-load gate is closed by these unit proofs. A scratch-only outer logger retains
+per-suite timings/results without changing the original driver, its suite union, timeouts or production modules.

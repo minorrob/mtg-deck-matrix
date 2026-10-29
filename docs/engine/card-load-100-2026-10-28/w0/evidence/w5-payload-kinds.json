@@ -1,0 +1,38 @@
+{
+  "schema": "w5-payload-kinds@1",
+  "base": "bc4f16a776e074abda8624d13dcfbf431d1b932e",
+  "savedRawRed": "W5-output-payload-kind-red.mjs.txt: same output label C with distinct C1/C2 payloads previously returned only source1; both are now retained by the normal exported planner",
+  "runtime": "Current quick/search keys, source kinds, funding pattern deduplication, reserved availability witnesses and staged physical identity blocks use complete normalized mana vectors. Labels remain bindings to each actual source activation. Source outputs are sorted by payload before symmetry pruning. Explicitly named historical planners retain saved pre-sourceChoices label/order keys.",
+  "proof": {
+    "nativeCommand": "node tests/engine-load100-mana.mjs",
+    "nativeChecks": 462,
+    "cases": [
+      "Raw same-label C1/C2 retains both complete payloads and distinct keys",
+      "Raw reversed/renamed output aliases retain GG/GU/UU exactly once with valid per-source activation bindings and matching quick/search keys",
+      "Actual equivalent G/U bundles with reversed object-key labels form one pattern and explicitly offer both physical sources; either exact answer produces/pays/resolves with its own original payload",
+      "Actual reversed G/U output arrays exercise GG, UU and both exact GU identity assignments",
+      "Reserved four-flyer cost retargets the outside equivalent bundled source using its actual different activation label; exact costs and surplus resolve Sephara",
+      "Invalid answer and stale source after JSON reload refuse atomically; concession produces no mana or cast",
+      "Exact historical floating-pool keys, displayed labels, activation order, actual payment and final resolution remain unchanged",
+      "Existing actual C1/C2, C2/GU, painland side effects, restricted-mana provenance, all15 nonmana tap subsets and original source-ID tests remain green"
+    ],
+    "mutationsCommand": "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w5-payload-kinds.py",
+    "baselineSuites": 17,
+    "baseline": "All original W5 disjoint reader suites passed, including historical room/table and legacy engine-cards diagnostics; this is not strict G3 acceptance",
+    "firstMutationRun": {"caught": 7, "unappliedAmbiguousAnchors": ["equivalent output arrays align by payload"]},
+    "supplemental": "The ambiguous anchor was narrowed to the exact search output line, then applied against the unchanged successful baseline source and unchanged original suite union. Native assertion lost UU and caught it. Original bytes restored exactly. No duplicate broad baseline run.",
+    "totalDistinctMutationsCaught": 8,
+    "uncaughtAfterSupplement": [],
+    "reanchoredPriorMutation": "Current quick/search keys are now semantic on both paths, so comparing keys no longer breaks deduplication. The original output-colors mutation now bypasses current deduplication entirely while preserving historical filtering; it is caught with the original reader union retained.",
+    "featureWiringChecks": 131,
+    "allEightAnchorsFoundOnce": true
+  },
+  "remaining": ["Effect-paid X/additional costs including Scepter/Getaway Glamer", "Historical live-game migration", "Operational source enumeration and unfinished seed2801", "Original face-down six-reader browser startup failure and two uncredited mutations", "No general restriction/side-effect equivalence claim beyond pure-output eligibility and actual bounded tests"],
+  "cardsAdded": 0,
+  "cardsPromoted": 0,
+  "strictG3Accepted": false,
+  "wave0Complete": false,
+  "G5": false,
+  "G7": false,
+  "ignoresAdded": []
+}

@@ -14,7 +14,7 @@ BREAKS = [
      'unit.colors.slice(0, 1).map(color => [color, {[color]: 1}])'),
     ('current quick and search patterns deduplicate by output', ACTIONS,
      'state.sourceChoices === true ? pattern(w) !== quickPattern : w.key !== quick.key',
-     'w.key !== quick.key'),
+     'state.sourceChoices === true ? true : w.key !== quick.key'),
     ('historical funding keys retain their old tape contract', ACTIONS,
      'state.sourceChoices === true ? pattern(w) !== quickPattern : w.key !== quick.key',
      'pattern(w) !== pattern(quick)'),

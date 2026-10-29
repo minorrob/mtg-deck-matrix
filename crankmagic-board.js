@@ -250,7 +250,9 @@ globalThis.CrankBoard = Object.seal({
   });
   let paneEditing = false, paneSaving = false, profileOpen = false;
   const PANE_MODULES = [["history", "History"], ["coach", "AI Coach"], ["counter", "Counter-Intel"], ["resources", "Resources"], ["mana", "Mana Pool"], ["stack", "On the Stack"], ["inspect", "Card Preview"], ["table", "Table Vitals"], ["recommended", "Recommended Actions"], ["chat", "Chat"], ["actions", "Actions"]];
-  const DEFAULT_MODULES = ["stack", "history", "chat", "coach"];
+  /* Mana Pool and Resources are on by default (Rob, 2026-10-29; Luke's playtest: he added both just to see what a Pathway made).
+     A layout a person saved keeps what they chose; this is the layout of anyone who has not saved one. */
+  const DEFAULT_MODULES = ["stack", "mana", "resources", "history", "chat", "coach"];
   // Preferences travel in the existing account library. Never apply a previous account's layout.
   function paneLayout() {
     const saved = C.state.preferences?.play?.sidePane, fallback = {left:["actions"], right:[...DEFAULT_MODULES]};

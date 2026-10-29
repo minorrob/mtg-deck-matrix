@@ -2,7 +2,8 @@
 
 Prerequisite: Confirm PR #932 merged externally into main at `0aee1474`. Root verified that its exact-head Actions run
 was **canceled**, not green; the author merged on touched suites. It receives no full acceptance-gate credit here.
-The merged native `room-optional-count-targets` suite passes 21 checks. The coordinated browser audit remains pending.
+The merged native `room-optional-count-targets` suite passes 21 checks. The coordinated browser audit now passes
+the required Confirm regression (50 checks) and native-backed blink/search audit (148 checks).
 
 The saved card definition for **Claim Jumper** has an enters-the-battlefield catch-up Plains search and no blink target.
 Its two may-search decisions are independent, the second happens only if an opponent still controls more lands, and
@@ -27,6 +28,22 @@ target bounds, immediate/deferred return, new-object tracking, return control, s
 searched provenance, land parity and combat provenance. No saved cards, rules modules or gate assertions are changed by
 this audit checkpoint; mutation files are restored after each probe. No cards are added or promoted.
 
-Remaining: run the merged Confirm browser regression and the native-backed prompt/network audit in root's quiet browser
-window. Record observed browser results before marking ROB-210 Done. Production UI stays with its owner, and the full
-integration gate remains root's responsibility. ROB-209 modal/spree staging is separate follow-up.
+The quiet browser window ran sequentially with Node 22, `GEOMETRY_REQUIRED=1`, `UAT_BROWSER=chromium` and the existing
+`C:\Users\robmi\CrankMagic\workbench\playwright-browsers` cache. `tests/board-optional-count-targets.mjs` passes 50 checks.
+`tests/board-playtest-blink.mjs` passes 148 checks across Focus/Full and ten actual room contexts: Brago zero/one/two
+targets, Thassa zero/one, and Claim Jumper's actual search/find-none/decline continuations. Browser packets reach the
+actual `GameRoom.prototype.webSocketMessage`, including production request stripping, `room.act`, `room.check` and
+checked/refused envelopes. Assertions cover final zones/new objects, accepted packets, search/shuffle journal facts
+and absence of page errors. Context, browser and server teardown is awaited.
+
+The first default-cache attempt failed before browser launch and earns no credit. The first native-backed run used a
+fixture without `passStack: true`: Brago correctly retained a one-item stack, with no pending engine choice, while
+waiting for ordinary priority. Root approved one fixture correction to the canonical table/fuzz stack-shortcut policy;
+the same original stack/awaiting/zone/journal assertions then passed. The initial failure is not a stuck decision.
+Repeated 60-card fixture decks, bounded native preparation and storage copies are fixture setup, not G-3/G-5 Commander
+load acceptance. Production UI is unchanged.
+
+The original `board-choices` full-index baseline still fails waiting 60 seconds at line 330 for `#cm-board .cm-stage-top`
+after eleven room-detail checks. No payment mutation ran or receives credit from that failed baseline. These focused
+browser proofs do not close that full-union gate. ROB-210 remains In Progress pending publication, integration/main
+review and required acceptance; root owns those gates. ROB-209 modal/spree staging is separate follow-up.
