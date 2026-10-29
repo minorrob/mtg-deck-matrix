@@ -129,7 +129,14 @@ if (!process.argv[2] || process.argv[2] === "distinct") {
     const original = pushSpell(s, addObject(s, {...SHOT, spell: {...SHOT.spell, targets: specs}, owner: 0, controller: 0}, "hand", 0),
       {controller: 0, targets: [[{kind: "object", id: a}], {kind: "object", id: b}]});
     beginResolution(s, [{effect: "copySpell", spells: [original.objectId], newTargets: true}], {controller: 0, source: null});
-    ok(!awaitingChoice(s).options.some((o) => o.cardId === b), "a new counted target cannot duplicate a distinct other instance, in either direction");
+    ok(awaitingChoice(s).options.some((o) => o.cardId === b), "a target used by another original instance is available for a legal final-set change, in either direction");
+    const swapped = JSON.parse(JSON.stringify(s));
+    resolveAwaiting(swapped, [pick(swapped, "Beta")]);
+    const beforeInvalid = hashState(swapped);
+    assert.throws(() => resolveAwaiting(swapped, [0]), /not legal/); checks += 1;
+    eq(hashState(swapped), beforeInvalid, "an invalid final duplicate preserves the question and every original target");
+    resolveAwaiting(swapped, [pick(swapped, "Alpha")]);
+    eq(swapped.stack[1].targets, [[{kind: "object", id: b}], {kind: "object", id: a}], "both instances may change together to a valid distinct final set");
     resolveAwaiting(s, [pick(s, "Gamma")]);
     resolveAwaiting(s, [0]);
     eq(s.stack[1].targets, [[{kind: "object", id: c}], {kind: "object", id: b}], "distinct instances retain their independently chosen targets");
@@ -289,6 +296,112 @@ if (!process.argv[2] || process.argv[2] === "copyDivision") {
     resolveTop(game);
     const expected = swapping ? [2, 1, 0, 0] : variant === "both-new" ? [0, 0, 1, 2] : [0, 0, 2, 0];
     eq([left, right, third, fourth].map(target => game.objects[target].damage), expected, `${variant}: only legal final targets receive their original shares`);
+  }
+}
+if (!process.argv[2] || process.argv[2] === "copyJoint") {
+  for (const countedFirst of [true, false]) {
+    let s = table();
+    const a = bear(s, "Joint Alpha"), b = bear(s, "Joint Beta"), c = bear(s, "Joint Gamma");
+    const counted = {...CREATURE, controller: "you", count: {min: 0, max: 2}}, scalar = {...CREATURE, controller: "you", distinctFrom: [countedFirst ? 0 : 1]};
+    const specs = countedFirst ? [counted, scalar] : [scalar, counted];
+    const originalTargets = countedFirst ? [[{kind: "object", id: a}, {kind: "object", id: b}], {kind: "object", id: c}]
+      : [{kind: "object", id: c}, [{kind: "object", id: a}, {kind: "object", id: b}]];
+    const original = pushSpell(s, addObject(s, {...SHOT, spell: {...SHOT.spell, targets: specs}, owner: 0, controller: 0}, "hand", 0),
+      {controller: 0, targets: originalTargets});
+    const opened = beginResolution(s, [{effect: "copySpell", spells: [original.objectId], newTargets: true}], {controller: 0, source: null});
+    ok(s.awaiting?.effect === "copySpell", "a legal joint final target set is offered instead of silently keeping all originals");
+    eq(opened.events.filter(event => event.kind === "GameEventBecomesTarget"), [], "creating a provisional copy reports no target events");
+    const first = resolveAwaiting(s, countedFirst ? [pick(s, "Joint Alpha"), pick(s, "Joint Gamma")] : [pick(s, "Joint Beta")]);
+    eq(first.filter(event => event.kind === "GameEventBecomesTarget"), [], "a provisional target instance reports no target events");
+    eq(s.stack[1].targets, originalTargets, "the first choice stays provisional until all instances have been answered");
+    s = JSON.parse(JSON.stringify(s));
+    const final = resolveAwaiting(s, countedFirst ? [pick(s, "Joint Beta")] : [pick(s, "Joint Alpha"), pick(s, "Joint Gamma")]);
+    const desired = countedFirst ? [[{kind: "object", id: a}, {kind: "object", id: c}], {kind: "object", id: b}]
+      : [{kind: "object", id: b}, [{kind: "object", id: a}, {kind: "object", id: c}]];
+    eq(s.stack[1].targets, desired, "the final counted and scalar instances change together after reload");
+    eq(final.filter(event => event.kind === "GameEventBecomesTarget").map(event => event.data.fields.targetId).sort((a,b) => a-b), [a,b,c],
+      "the copy becomes targeting only once its complete legal final set is committed");
+    eq(s.stack[0].targets, originalTargets, "the original spell's targets are unchanged");
+  }
+  {
+    let s = table();
+    const a = bear(s, "Cancel Alpha"), b = bear(s, "Cancel Beta"), c = bear(s, "Cancel Gamma");
+    const specs = [{...CREATURE, count: {min: 0, max: 2}}, {...CREATURE, distinctFrom: [0]}];
+    const targets = [[{kind: "object", id: a}, {kind: "object", id: b}], {kind: "object", id: c}];
+    const original = pushSpell(s, addObject(s, {...SHOT, spell: {...SHOT.spell, targets: specs}, owner: 0, controller: 0}, "hand", 0), {controller: 0, targets});
+    original.division = {0: {[a]: 1, [b]: 2}};
+    beginResolution(s, [{effect: "copySpell", spells: [original.objectId], newTargets: true}], {controller: 0, source: null});
+    resolveAwaiting(s, [0]);
+    const partial = resolveAwaiting(s, [pick(s, "Cancel Gamma")]);
+    eq(partial.filter(event => event.kind === "GameEventBecomesTarget"), [], "completed divided positions stay provisional while another target instance is pending");
+    s = JSON.parse(JSON.stringify(s));
+    ok(awaitingChoice(s).maySkip === true && awaitingChoice(s).title.includes("Cancel keeps original targets"), "the player can explicitly decline all provisional retargeting");
+    const done = resolveAwaiting(s, undefined, null, null, {cancel: true});
+    eq(s.stack[1].targets, targets, "canceling after a reloaded partial plan keeps every original target");
+    eq(s.stack[1].division, {0: {[a]: 1, [b]: 2}}, "canceling also keeps every original divided share");
+    eq(done.filter(event => event.kind === "GameEventBecomesTarget").map(event => event.data.fields.targetId), [a,b,c],
+      "explicit cancellation reports the final original targets once, with no provisional ward events");
+  }
+  {
+    let s = table();
+    const a = bear(s, "Scalar Cancel Alpha"), b = bear(s, "Scalar Cancel Beta"), c = bear(s, "Scalar Cancel Gamma"), d = bear(s, "Scalar Cancel Delta");
+    const targets = [{kind: "object", id: a}, [{kind: "object", id: b}], {kind: "object", id: c}];
+    const original = pushSpell(s, addObject(s, {...SHOT, spell: {...SHOT.spell, targets: [CREATURE, {...CREATURE, count: {min: 0, max: 2}}, CREATURE]}, owner: 0, controller: 0}, "hand", 0), {controller: 0, targets});
+    beginResolution(s, [{effect: "copySpell", spells: [original.objectId], newTargets: true}], {controller: 0, source: null});
+    eq(resolveAwaiting(s, [pick(s, "Scalar Cancel Delta")]).filter(event => event.kind === "GameEventBecomesTarget"), [], "a scalar provisional answer has no targeting events");
+    s = JSON.parse(JSON.stringify(s));
+    const canceled = resolveAwaiting(s, undefined, null, null, {cancel: true});
+    eq(s.stack[1].targets, targets, "canceling a reloaded scalar plan keeps all original target instances");
+    eq(canceled.filter(event => event.kind === "GameEventBecomesTarget").map(event => event.data.fields.targetId), [a,b,c], "scalar cancellation reports original targets once without the provisional target");
+    eq(s.awaiting, null, "canceling discards every remaining target-instance question for this copy");
+  }
+  {
+    let s = table();
+    const a = bear(s, "Recovery Alpha"), b = bear(s, "Recovery Beta");
+    s.objects[a].power = 3;
+    const card = addObject(s, {...index.definition("Monstrous Onslaught"), card: "Monstrous Onslaught", owner: 0, controller: 0}, "hand", 0);
+    s.players[0].manaPool = {C: 3, G: 2};
+    const cast = legalActions(s, 0).find(action => action.kind === "cast" && action.objectId === card);
+    applyAction(s, 0, {...cast, targets: [[{kind: "object", id: a}, {kind: "object", id: b}]], division: [1, 2]});
+    s.objects[a].keywords = ["Shroud"];
+    beginResolution(s, [{effect: "copySpell", spells: [s.stack.at(-1).objectId], count: 2, newTargets: true}], {controller: 0, source: null});
+    const copyId = s.awaiting.questions[0].stackId;
+    const partial = resolveAwaiting(s, [pick(s, "Recovery Beta")]);
+    eq(partial.filter(event => event.kind === "GameEventBecomesTarget"), [], "an incomplete copied division has no targeting events");
+    s = JSON.parse(JSON.stringify(s));
+    const invalid = hashState(s);
+    assert.throws(() => resolveAwaiting(s, [0]), /Invalid selection/); checks += 1;
+    eq(hashState(s), invalid, "a final duplicate is rejected without consuming the reloaded question");
+    ok(awaitingChoice(s).maySkip && awaitingChoice(s).title.includes("Cancel keeps original targets"), "an invalid provisional route has an explicit recovery choice");
+    const cancel = resolveAwaiting(s, undefined, null, null, {cancel: true});
+    const copy = s.stack.find(entry => entry.stackId === copyId);
+    eq(copy.targets, [[{kind: "object", id: a}, {kind: "object", id: b}]], "recovery keeps the unchanged illegal original and its other original target");
+    eq(copy.division, {0: {[a]: 1, [b]: 2}}, "recovery restores both announced shares after reload");
+    eq(cancel.filter(event => event.kind === "GameEventBecomesTarget").map(event => [event.data.fields.stackId,event.data.fields.targetId]), [[copyId,a],[copyId,b]],
+      "canceling an incomplete divided group reports only that copy's original targets once");
+    ok(s.awaiting.questions[0].stackId !== copyId, "canceling skips all remaining positions of this copy and continues the next copy");
+    resolveAwaiting(s, [0]);
+    s = JSON.parse(JSON.stringify(s));
+    resolveAwaiting(s, [0]);
+    eq(s.awaiting, null, "the next copy can complete normally after the first copy canceled");
+  }
+  {
+    const s = table(), a = bear(s, "May Alpha"), b = bear(s, "May Beta");
+    const original = spell(s, [{kind: "object", id: a}]);
+    beginResolution(s, [{effect: "changeTargets", spells: [original.objectId], may: true}], {controller: 0, source: null});
+    eq(awaitingChoice(s).maySkip ?? false, false, "noncopy target changes keep their existing explicit keep-target choice");
+    resolveAwaiting(s, [0]);
+    eq(original.targets, [{kind: "object", id: a}], "keeping a noncopy target remains explicit");
+  }
+  {
+    const s = table(), a = bear(s, "Mandatory Alpha"), b = bear(s, "Mandatory Beta");
+    const original = spell(s, [[{kind: "object", id: a}]]);
+    beginResolution(s, [{effect: "changeTargets", spells: [original.objectId]}], {controller: 0, source: null});
+    eq(awaitingChoice(s).maySkip ?? false, false, "mandatory target changes do not gain cancellation");
+    const unchanged = hashState(s);
+    assert.throws(() => resolveAwaiting(s, undefined, null, null, {cancel: true}), /Invalid selection/); checks += 1;
+    eq(hashState(s), unchanged, "attempting to cancel a mandatory target change does not change state");
+    resolveAwaiting(s, [pick(s, "Mandatory Beta")]);
   }
 }
 console.log(`engine-load100-w2-stack: ${checks} checks passed`);
