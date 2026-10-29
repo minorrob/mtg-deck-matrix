@@ -955,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 654 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 656 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1031,6 +1031,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-actions` — `tests/engine-actions.mjs`
 - `engine-cast` — `tests/engine-cast.mjs`
 - `engine-combat` — `tests/engine-combat.mjs`
+- `engine-load100-w0-combat` — `tests/engine-load100-w0-combat.mjs`
+- `engine-mana-upkeep` — `tests/engine-mana-upkeep.mjs`
 - `engine-commander` — `tests/engine-commander.mjs`
 - `engine-controller` — `tests/engine-controller.mjs`
 - `engine-effects` — `tests/engine-effects.mjs`
@@ -1183,6 +1185,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `shop-export` — `tests/shop-export.mjs`
 - `sim-engine` — `tests/sim-engine.mjs`
 - `sentence-library` — `tests/sentence-library.mjs`
+- `sentence-load100-w0` — `tests/sentence-load100-w0.mjs`
 - `sentence-paragraphs` — `tests/sentence-paragraphs.mjs`: complete unfinished abilities and independent keywords (CR 113.2c)
 - `status-and-groupings` — `tests/status-and-groupings.mjs`
 - `swap-record` — `tests/swap-record.mjs`
