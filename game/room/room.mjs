@@ -109,6 +109,7 @@ import {addToHistory} from "./history.mjs";
 import {tableEvent, eventsFor, keep, EVENTS_SCHEMA} from "./events.mjs";
 import {endingOf} from "./ending.mjs";
 import {describeDecision} from "./decision.mjs";
+import {beginCastDraft,offerCastDraft,castDraftChoice,castDraftSignature,answerCastDraft} from "./cast-stages.mjs";
 
 export const ROOM_PROTOCOL = 1;
 export const ROOM_SCHEMA = "CrankRoom@1";
@@ -521,6 +522,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
   const look = (name) => (seated ? withCandidates : cards)(name);
   const facts = factsFrom(look);
   let seats, state, rng, journal, controller, pilots, pendingSeat = null, pendingActions = null, saved = 0;
+  let castDraft = null;
   /* Accepted actions by id, with the seat that sent them: a retry is answered from here, and never reaches
      another seat's question. The newest RECEIPTS are kept, which is ample for a client's retries. */
   let receipts = [];
@@ -682,7 +684,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         playBack = finishPlay(state, playBack, rng.checkpoint());
         if (!playBack && previous.autoPass) castBy = previous.player;
       }
-      if (finished()) {pendingSeat = null; pendingActions = null; driven = 0; return;}
+      if (finished()) {castDraft = null; pendingSeat = null; pendingActions = null; driven = 0; return;}
       if (driven >= DRIVE_LIMIT) throw new RoomError(500, "The game stopped moving: the engine took too many steps without a decision. Nothing further was applied.");
       if (steps >= slice) {continuing = true; pendingSeat = null; pendingActions = null; return;}
       driven += 1;
@@ -698,6 +700,15 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         return;
       }
       if (state.stepIndex !== undefined) track();
+      if (castDraft) {
+        try {
+          const choice = offerCastDraft(state, castDraft);
+          controller.offer(choice); pendingSeat = castDraft.actor; pendingActions = null; driven = 0; return;
+        } catch (error) {
+          if (!error.castDraftExpired) throw error;
+          castDraft = null;
+        }
+      }
       if (state.awaiting) {
         const seat = state.awaiting.player, choice = awaitingChoice(state);
         if (seats[seat].pilot === "house" || leaving.includes(seat)) {
@@ -825,7 +836,12 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       if (pendingActions) {
         const action = pendingActions[answer.indices[0]];
         pendingActions = null;
-        apply(seat, action, "person", answer.hold === true);
+        if (answer.staged === true) castDraft = beginCastDraft(state, seat, action, `${matchId}/cast:${decisionId}/${action.objectId}`);
+        else apply(seat, action, "person", answer.hold === true);
+      } else if (castDraft) {
+        const result = answerCastDraft(state, castDraft, answer);
+        castDraft = result.draft;
+        if (result.action) apply(seat, result.action, "person", answer.hold === true);
       } else {
         const cancelledProposal = answer.cancel === true && awaitingChoice(state)?.cancellation?.kind === "abandon-action";
         step.acted = true; write(resolveAwaiting(state, answer.indices, answer.amounts, rng, answer));
@@ -882,6 +898,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     seated = record.candidates === true;
     pilotPicks = record.pilotPicks === true;
     pilotProvocation = record.pilotProvocation === true;
+    castDraft = record.castDraft ?? null;
     state = structuredClone(point.state);
     rng = createRng(point.seed, point.rng);
     journal = createJournal({matchId, seed: point.seed}, point);
@@ -997,7 +1014,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     const point = journal.checkpoint(state, rng.checkpoint());
     await store.saveCheckpoint(point);
     await store.pruneCheckpoints();
-    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, ...(outs.length ? {outs} : {}), history, refusals, ...(pilotProvocation ? {pilotProvocation: true} : {}), ...(pilotCombatMemory?.lastEvent > 0 ? {pilotCombatMemory} : {}), ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(undoLastPlay ? {undoLastPlay, playBack: playBack !== null} : {}), ...(resultRecords ? {resultRecords: true} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(blocksNone ? {blocksNone} : {}), ...(landAnyStep ? {landAnyStep} : {}), ...(takeBackLand ? {takeBackLand, landBack: landBack !== null} : {}), ...(askAimed ? {askAimed} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {}), ...(tableEvents.length ? {events: tableEvents, eventsMark, eventsFloor} : {}), ...(seated ? {candidates: true} : {}), ...(pilotPicks ? {pilotPicks: true} : {})}));
+    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, ...(outs.length ? {outs} : {}), history, refusals, ...(castDraft ? {castDraft} : {}), ...(pilotProvocation ? {pilotProvocation: true} : {}), ...(pilotCombatMemory?.lastEvent > 0 ? {pilotCombatMemory} : {}), ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(undoLastPlay ? {undoLastPlay, playBack: playBack !== null} : {}), ...(resultRecords ? {resultRecords: true} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(blocksNone ? {blocksNone} : {}), ...(landAnyStep ? {landAnyStep} : {}), ...(takeBackLand ? {takeBackLand, landBack: landBack !== null} : {}), ...(askAimed ? {askAimed} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {}), ...(tableEvents.length ? {events: tableEvents, eventsMark, eventsFloor} : {}), ...(seated ? {candidates: true} : {}), ...(pilotPicks ? {pilotPicks: true} : {})}));
   }
 
   const api = {
@@ -1069,6 +1086,12 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
 
     async open() {
       await restore();
+      if (castDraft) {
+        let changed = false;
+        try {const choice = castDraftChoice(state, castDraft); changed = !controller.pending || controller.pending.id !== choice.id || castDraftSignature(choice) !== castDraft.offeredSignature;}
+        catch (error) {if (!error.castDraftExpired) throw error; castDraft = null; changed = true;}
+        if (changed) {withdraw(); drive(); await persist();}
+      }
       return api;
     },
 
@@ -1300,7 +1323,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         const chosen = pilot.choose(seen, pendingActions);
         return {indices: [Math.max(0, pendingActions.indexOf(chosen))]};
       }
-      const given = pilot.answer(seen, awaitingChoice(state));
+      const given = pilot.answer(seen, castDraft ? castDraftChoice(state, castDraft) : awaitingChoice(state));
       return {indices: given.indices ?? [], ...(given.amounts ? {amounts: given.amounts} : {}), ...(given.value !== undefined ? {value: given.value} : {}), ...(given.cancel ? {cancel: true} : {})};
     },
 
@@ -1316,7 +1339,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       const pilot = pilotFor(seat);
       if (typeof pilot.explain !== "function") return null;
       const seen = pilotView(seat);
-      const explained = pilot.explain(seen, pendingActions ? {actions: pendingActions} : {choice: awaitingChoice(state)});
+      const explained = pilot.explain(seen, pendingActions ? {actions: pendingActions} : {choice: castDraft ? castDraftChoice(state, castDraft) : awaitingChoice(state)});
       const p = personaOf(seats[seat].persona);
       return {...explained, persona: p ? {name: p.name, blurb: p.blurb, ...p.disposition} : null};
     },
@@ -1334,6 +1357,10 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       const pending = controller.pending;
       if (finished() || pendingSeat !== seat || !pending || pending.id !== choiceId)
         return {ok: false, open: false, reasons: ["That question is no longer open. Answer the one your view shows now."]};
+      if (castDraft) {
+        try {answerCastDraft(state, structuredClone(castDraft), {indices}); return {ok: true, open: true, reasons: []};}
+        catch (error) {return {ok: false, open: true, reasons: [error.message]};}
+      }
       const checked = state.awaiting?.kind === "declare-blockers" ? deriving(state, () => blockers.check(state, state.awaiting, indices)) : null;
       const reasons = checked ? checked.reasons : [controller.check({choiceId, indices})].filter(Boolean);
       return {ok: reasons.length === 0, open: true, reasons, ...(checked?.byAttacker?.length ? {byAttacker: checked.byAttacker} : {})};
