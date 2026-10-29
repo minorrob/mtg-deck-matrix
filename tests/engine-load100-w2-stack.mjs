@@ -685,4 +685,16 @@ if (!process.argv[2] || process.argv[2] === "entryTokens") {
   }
 }
 
+if (!process.argv[2] || process.argv[2] === "tokenSizes") {
+  const state = table();
+  bear(state, "Counted Creature A"); bear(state, "Counted Creature B");
+  const result = beginResolution(state, [{effect: "createToken", token: {name: "Counted Entry", types: ["Creature"], power: "X",
+    toughness: {count: {what: "permanent", types: ["Creature"], controller: "you"}}}}], {controller: 0, source: null, x: 4});
+  const [made] = state.zones.battlefield.filter(id => state.objects[id].token);
+  eq([state.objects[made].power, state.objects[made].toughness], [4, 2], "X and object-valued token stats are counted against the real game before token entry");
+  eq(result.events.filter(event => event.kind === "GameEventCardChangeZone" && event.data.fields.becomes === made).length, 1, "the sized token enters once through the actual effect caller");
+  bear(state, "Counted Creature C");
+  eq([state.objects[made].power, state.objects[made].toughness], [4, 2], "a token's counted creation stats stay its copiable values after the board changes");
+}
+
 console.log(`engine-load100-w2-stack: ${checks} checks passed`);

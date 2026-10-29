@@ -654,7 +654,7 @@ export function tokenQuestion(state, effect, context, answers = {}) {
 }
 
 /* One token of this spec, under `controller`'s control, as the effect says it is made (tapped), said so. */
-function tokenObject(spec, controller, context) {
+function tokenObject(state, spec, controller, context) {
   const sized = (value) => (value === "X" || (value !== null && typeof value === "object") ? amountOf(state, value, context) : value ?? null);
   return {
     card: spec.name ?? "Token",
@@ -707,7 +707,7 @@ function tokenEntryBatches(state, params, context) {
     const [host] = settings.attachedTo ?? [];
     if (settings.attachedTo !== undefined && !enchantable(state, spec.enchant, controller).includes(host)) return;
     const {groups} = tokensCreated(state, controller, settings.count ?? 1, spec, {orders: settings.tokenOrders?.[TOKEN_EVENT] ?? []});
-    add(controller, groups.flatMap(({token, count}) => Array.from({length: count}, () => ({candidate: tokenObject(token, controller, local), forcedTapped: token.tapped === true}))), local, settings);
+    add(controller, groups.flatMap(({token, count}) => Array.from({length: count}, () => ({candidate: tokenObject(state, token, controller, local), forcedTapped: token.tapped === true}))), local, settings);
   };
   if (params.effect === "createToken") {
     if (params.linked === true) {
@@ -728,7 +728,7 @@ function tokenEntryBatches(state, params, context) {
       const {groups} = tokensCreated(state, controller, settings.count ?? 1, copiable(original, except), {orders: settings.tokenOrders?.[copyEventKey(id)] ?? []});
       for (const {token, count, own} of groups) for (let index = 0; index < count; index += 1) entries.push({ownCopy: own === true, forcedTapped: !own && token.tapped === true, candidate: own
         ? {...copiable(original, except), ...copiedTokenFaces(original, except), owner: controller, controller, token: true}
-        : tokenObject(token, controller, local)});
+        : tokenObject(state, token, controller, local)});
     }
     add(controller, entries, local, settings);
   };
@@ -820,7 +820,7 @@ registerRuleOperation("token-entry", (state, frame) => {
   return {status: "done", result: {context: frame.context, made}};
 });
 function makeToken(state, spec, controller, params, context, events) {
-  const id = addObject(state, tokenObject(spec, controller, context), "battlefield");
+  const id = addObject(state, tokenObject(state, spec, controller, context), "battlefield");
   /* "Create a tapped Treasure token": the effect says so as well as a spec can. */
   let entering = null;
   if (spec.tapped || params.tapped) state.objects[id].tapped = true;
