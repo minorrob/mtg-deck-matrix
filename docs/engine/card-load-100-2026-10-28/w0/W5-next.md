@@ -27,8 +27,12 @@ Shared source: `2c89a5c3` merged as `d807b03a`; lane JSON records the final proo
    New table games and canonical scenarios enable it by default; the room saves the contract and exact answers replay.
    A sole kind plan still asks where physical choices exist. Actual Nirkana surplus and layer-2 borrowed-source cases pass.
    The 56/786 kind counts remain unchanged. See `evidence/w5-source-identities.json` for the bounded native and room proof.
-   Remaining: `tapPlans` still collapses generic/hybrid output-color assignments; effect-paid casts do not yet use these
-   identity stages; ongoing historical games without the saved flag still use historical behavior until safe migration.
+   Current ordinary funding now preserves all output patterns, including generic/hybrid colors and mixed outputs;
+   the public choices name produced/spent mana and the ID stage names its output. See `evidence/w5-output-colors.json`.
+   Remaining: effect-paid casts do not yet use these identity stages; ongoing historical games without the saved flag
+   still use historical behavior until safe migration; exhaustive kind/output enumeration has no operational acceptance.
+   `W5-disjoint-tap-red.mjs.txt` reproduces two actual Sephara failures: an impossible four-flyer sole-mana-Bird alternative
+   is offered, and a legal five-flyer alternative loops its sole funding question instead of asking four cost tappers.
    Do not claim whole payment/identity completeness from this ordinary-cast slice.
 4. Coordinate with W1's queued Siege transformed-cast seam before editing choicesNow/play flags.
    W4 owns the mana-ability `then` damage-continuation region; avoid overlapping edits there.

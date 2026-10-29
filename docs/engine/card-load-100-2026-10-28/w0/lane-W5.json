@@ -17,7 +17,7 @@
     "| Convoke with Phyrexian or {2/W} symbols left to the pool | `rules/mana.mjs`:483 | W5 |",
     "| Ways to pay capped: 24 tap choices, 12 payments | `rules/actions.mjs`:1703; `rules/mana.mjs`:254 | W5 |"
   ],
-  "status": "Current ordinary source-ID stages native249/room14 proven; effect-paid costs, output colors, historical-live migration and G5 remain open",
+  "status": "Current ordinary IDs/output colors native293 proven; disjoint cost tappers, effect-paid costs, live migration and G5 remain open",
   "checkpoint": {
     "cardsAdded": 0,
     "cardsPromoted": 0,
@@ -231,6 +231,21 @@
     "historicalLiveMigration": "open",
     "outputColors": "open",
     "effectPaidCosts": "open",
+    "G5": false,
+    "G7": false
+  },
+  "outputColorCheckpoint": {
+    "base": "c3bb1824494792780cb0f6de4eb8dd758f75b4dc",
+    "evidence": "evidence/w5-output-colors.json",
+    "nativeChecks": 293,
+    "baselineSuites": 16,
+    "caughtMutations": 6,
+    "missed": [],
+    "currentDefault": true,
+    "wholePaymentComplete": false,
+    "disjointCosts": "actual Sephara RED saved",
+    "effectPaidCosts": "open",
+    "historicalLiveMigration": "open",
     "G5": false,
     "G7": false
   }

@@ -1,0 +1,14 @@
+/* Run from the worktree root: Get-Content <this file> -Raw | node --input-type=module */
+import assert from 'node:assert/strict';
+import {runScenario} from './game/engine/cards/scenario.mjs';
+import {loadCardIndex} from './game/tools/engine-cards.mjs';
+import {legalActions,applyAction} from './game/engine/rules/actions.mjs';
+import {awaitingChoice} from './game/engine/rules/turn.mjs';
+const fixtures={Bird:{types:['Creature'],power:1,toughness:1,keywords:['Flying'],abilities:[{id:'m',kind:'mana',tapSelf:true,produces:{W:1}}]},Drake:{types:['Creature'],power:1,toughness:1,keywords:['Flying']}};
+const make=n=>runScenario({name:'Sephara disjoint source/tapper choices '+n,setup:[{seat:0,zone:'hand',cards:["Sephara, Sky's Blade"]},{seat:0,zone:'battlefield',cards:['Bird',...Array(n).fill('Drake')]}],steps:[]},loadCardIndex().definition,fixtures).state;
+const impossible=make(3),offered=legalActions(impossible,0).filter(a=>a.kind==='cast'&&a.alternative!==undefined);
+console.log(JSON.stringify({case:'four total flyers, the only mana source is one of them',offers:offered}));
+const valid=make(4),action=legalActions(valid,0).find(a=>a.kind==='cast'&&a.alternative!==undefined);applyAction(valid,0,action);
+console.log(JSON.stringify({case:'five flyers, a legal disjoint payment exists',choice:awaitingChoice(valid)}));
+assert.equal(offered.length,0,'four cost tappers cannot include the creature already tapped as the only mana source');
+assert.equal(awaitingChoice(valid).cost,'tap','the legal alternative must ask its four nonmana cost tappers instead of looping its sole funding plan');

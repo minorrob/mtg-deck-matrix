@@ -355,6 +355,7 @@ const fixtures = Object.fromEntries([["Zero Trinket", "{0}"], ["One Trinket", "{
     {seat: 0, zone: "battlefield", cards: ["Dual", "Dual"]}], steps: []}, cardIndex.definition, fixtures).state;
   applyAction(initial, 0, legalActions(initial, 0).find(a => a.kind === "cast"));
   const all = awaitingChoice(initial).options.map(o => o.cardId);
+  eq(awaitingChoice(initial).title.includes("{G}"), true, "the physical-ID stage says which output these exact sources will make");
   for (const pick of [0, 1]) {
     const state = JSON.parse(JSON.stringify(initial)), chosen = all[pick], other = all[1-pick];
     const events = resolveAwaiting(state, [pick]);
@@ -425,5 +426,69 @@ const fixtures = Object.fromEntries([["Zero Trinket", "{0}"], ["One Trinket", "{
   eq(state.zones.battlefield.slice(0, 18).some(id => state.objects[id].tapped), false, "no earlier equivalent source is silently substituted");
   resolveTop(state);
   eq([state.players[0].life, state.awaiting, state.players[0].manaPool.C], [58, null, 0], "the scalable identity selection pays and resolves natively");
+}
+for (const manaCost of ["{1}", "{G/U}"]) {
+  const fixtures = {Dual: {types: ["Land"], abilities: [{id: "m", kind: "mana", tapSelf: true, produces: [{G: 1}, {U: 1}]}]},
+    One: {types: ["Sorcery"], manaCost, spell: {id: "s", text: "You gain 1 life.", targets: [], effects: [{effect: "gainLife", amount: 1}]}}};
+  const initial = runScenario({name: `both outputs pay ${manaCost}`, setup: [{seat: 0, zone: "hand", cards: ["One"]},
+    {seat: 0, zone: "battlefield", cards: ["Dual"]}], steps: []}, cardIndex.definition, fixtures).state;
+  const action = legalActions(initial, 0).find(a => a.kind === "cast"), plans = castTapPlans(initial, 0, action, Infinity);
+  eq(plans.map(p => p.taps[0].color).sort(), ["G", "U"], `${manaCost}: neither output color is silently discarded`);
+  applyAction(initial, 0, action);
+  eq([initial.awaiting?.kind, awaitingChoice(initial).options.length, initial.stack.length], ["choose-cost", 2, 0], "the actual output question precedes payment or casting");
+  eq(["G", "U"].every(color => awaitingChoice(initial).options.some(o => o.label.includes(`make {${color}}`))), true, "the public options describe the actual colors to choose");
+  for (const color of ["G", "U"]) {
+    const state = JSON.parse(JSON.stringify(initial)), choice = awaitingChoice(state), before = structuredClone(state);
+    assert.throws(() => resolveAwaiting(state, [2]), /Invalid selection/); checks++;
+    eq(state, before, "invalid output selection preserves all state after reload");
+    const events = resolveAwaiting(state, [plans.findIndex(p => p.taps[0].color === color)]);
+    eq(events.filter(e => e.kind === "GameEventManaPool").map(e => e.data.fields.produced), [{[color]: 1}], "the selected actual ability produces exactly the selected output");
+    const spell = state.objects[state.stack.at(-1).objectId];
+    eq([spell.spent[color], state.players[0].manaPool.G, state.players[0].manaPool.U, state.awaiting], [1, 0, 0, null], "the selected output actually pays the spell");
+    resolveTop(state);
+    eq(state.players[0].life, 41, "each explicit output alternative reaches native resolution");
+  }
+}
+{
+  const fixtures = {Dual: {types: ["Land"], abilities: [{id: "m", kind: "mana", tapSelf: true, produces: [{G: 1}, {U: 1}]}]},
+    Two: {types: ["Sorcery"], manaCost: "{2}", spell: {id: "s", text: "You gain 2 life.", targets: [], effects: [{effect: "gainLife", amount: 2}]}}};
+  const initial = runScenario({name: "all mixed output patterns", setup: [{seat: 0, zone: "hand", cards: ["Two"]},
+    {seat: 0, zone: "battlefield", cards: ["Dual", "Dual"]}], steps: []}, cardIndex.definition, fixtures).state;
+  const action = legalActions(initial, 0).find(a => a.kind === "cast"), plans = castTapPlans(initial, 0, action, Infinity);
+  eq(plans.map(p => p.taps.map(t => t.color).sort().join("")).sort(), ["GG", "GU", "UU"], "all same-color and mixed-color output patterns remain available exactly once");
+  applyAction(initial, 0, action);
+  for (let i = 0; i < plans.length; i++) {
+    const state = JSON.parse(JSON.stringify(initial)), events = [...resolveAwaiting(state, [i]), ...finishSources(state, plans[i])];
+    eq(events.filter(e => e.kind === "GameEventManaPool").map(e => Object.keys(e.data.fields.produced)[0]).sort(), plans[i].taps.map(t => t.color).sort(), "every mixed output pattern activates its actual chosen mana outputs");
+    const spent = state.objects[state.stack.at(-1).objectId].spent;
+    eq([spent.G ?? 0, spent.U ?? 0], [plans[i].taps.filter(t => t.color === "G").length, plans[i].taps.filter(t => t.color === "U").length], "the actual paid colors match the selected mixed pattern");
+    resolveTop(state);
+    eq([state.players[0].life, state.players[0].manaPool.G, state.players[0].manaPool.U, state.awaiting], [42, 0, 0, null], "every mixed pattern pays, casts and resolves with no leftover decision");
+  }
+  const alias = runScenario({name: "same names and same total outputs remain distinct kind choices", setup: [{seat: 0, zone: "hand", cards: ["Two"]},
+    {seat: 0, zone: "battlefield", cards: ["Dual", "Dual", "Forest", "Forest"]}], steps: []}, cardIndex.definition, fixtures).state;
+  for (const id of alias.zones.battlefield) alias.objects[id].card = "Same Source";
+  applyAction(alias, 0, legalActions(alias, 0).find(a => a.kind === "cast"));
+  const labels = awaitingChoice(alias).options.map(o => o.label);
+  eq([labels.length, new Set(labels).size], [6, 6], "different kind patterns with identical names and total colors stay individually identifiable");
+  eq(labels.every(label => (label.match(/make/g) ?? []).length === 1), true, "duplicate display facts are added once per pattern");
+}
+{
+  /* An explicitly historical saved pod: its floating-pool solver kept quick/search activation orders as two keys.
+     Preserve that tape contract; every canonical scenario and current table uses the current contract above. */
+  const saved = createState({matchId: "historical-floating-funding", seed: "old", pooledTaps: true, players: [{name: "Rob"}, {name: "Maya"}]});
+  saved.phase = "MAIN1"; saved.activePlayer = 0; saved.priorityPlayer = 0; saved.turn = 1; saved.players[0].manaPool.C = 1;
+  const grove = addObject(saved, {card: "Grove", types: ["Land"], owner: 0, controller: 0, abilities: [{id: "m", kind: "mana", tapSelf: true, produces: [{G: 1}, {U: 1}]}]}, "battlefield", null);
+  const island = addObject(saved, {...cardIndex.definition("Island"), card: "Island", owner: 0, controller: 0}, "battlefield", null);
+  addObject(saved, {card: "Old Three", types: ["Sorcery"], owner: 0, controller: 0, manaCost: "{1}{G}{U}",
+    spell: {id: "s", text: "You gain 2 life.", targets: [], effects: [{effect: "gainLife", amount: 2}]}}, "hand", 0);
+  const state = JSON.parse(JSON.stringify(saved)), action = legalActions(state, 0).find(a => a.kind === "cast");
+  eq([Object.hasOwn(state, "sourceChoices"), castTapPlans(state, 0, action, Infinity).length], [false, 2], "the explicitly historical saved pod retains its old distinct activation-order keys");
+  applyAction(state, 0, action);
+  eq(awaitingChoice(state).options.map(o => o.label), ["Grove, Island", "Island, Grove"], "historical output labels remain exactly as on its old tape");
+  const events = resolveAwaiting(state, [1]);
+  eq(events.filter(e => e.kind === "GameEventManaPool").map(e => e.data.fields.source.cardId), [island, grove], "the historical answer retains its original activation order");
+  resolveTop(state);
+  eq([state.players[0].life, Object.values(state.players[0].manaPool).reduce((a,b) => a+b, 0)], [42, 0], "historical funding retains its actual paid and resolved outcome");
 }
 console.log(`engine-load100-mana: ${checks} checks passed — printed costs, convoke alternatives, and funded casts.`);
