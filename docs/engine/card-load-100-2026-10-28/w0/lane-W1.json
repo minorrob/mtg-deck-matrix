@@ -182,7 +182,8 @@
       "Original reanchored mutation files retain their full original suite unions; blocked by shared engine-cards Faithless Looting baseline, routed to W5/root. No suite removed.",
       "Full original engine-cards baseline stops at Faithless Looting old cast-offer assertion after W5 d9 entry fixes; root and W5 notified. No assertion weakened or excluded.",
       "Object-rule emblem reader authorized next; Daretti and other Teferi generic semantics audit; battles await W4 combat handoff.",
-      "Generated definitions deferred to root consolidation; no full pool/fuzz/staging/visual or theme completion claimed."
+      "Generated definitions deferred to root consolidation; no full pool/fuzz/staging/visual or theme completion claimed.",
+      "Original engine-rearrange-copies-4b reader fails line 187: direct copied land entries yield no immediate born objects under shared resumable entry pipeline (expected [[false],[true],40], actual [[],[],40]); routed root. No test changed."
     ],
     "sources": [
       "https://api.scryfall.com/cards/161e66e3-0339-495c-bd06-0a799a254906/rulings",
@@ -199,6 +200,7 @@
       "714.4",
       "722.3c"
     ],
-    "ignoresAdded": []
+    "ignoresAdded": [],
+    "sourceCheckpoint": "498e3d05"
   }
 }
