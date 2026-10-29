@@ -3421,7 +3421,9 @@ globalThis.CrankBoard = Object.seal({
   actions["board-confirm"] = () => {
     const d = view.decision;
     if (!d || sending) return;
-    if(targetChoice(d) && d.kind!=="priority" && !targetReviewing && !d.options.find(o=>o.index===picked[0])?.decline)return;
+    /* A single target is reviewed before it is sent (Next); a counted one ("up to one target", "any number of targets": mode many) has
+       no review, only Confirm -- held back here it did nothing, Sword of Hearth and Home's "up to one" included (Rob, 2026-10-28). */
+    if(targetChoice(d) && d.kind!=="priority" && ["one","boolean","index"].includes(d.mode) && !targetReviewing && !d.options.find(o=>o.index===picked[0])?.decline)return;
     if (["one","boolean","index"].includes(d.mode)) {
       if (draftRevision !== view.revision || picked.length !== 1 || !d.options.some(o => o.index === picked[0])) return;
       return send({indices:[...picked]});
