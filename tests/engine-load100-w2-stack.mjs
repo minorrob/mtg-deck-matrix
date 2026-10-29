@@ -220,4 +220,75 @@ if (!process.argv[2] || process.argv[2] === "faceDown") {
   const arrived = s.zones.battlefield.find((id) => s.objects[id].faceDownCard?.card === name);
   eq([s.objects[arrived]?.faceDown, s.objects[arrived]?.power, s.objects[arrived]?.toughness], [true, 2, 2], "the face-down cast resolves into a face-down permanent");
 }
+if (!process.argv[2] || process.argv[2] === "copyDivision") {
+  let s = table();
+  const a = bear(s, "Division Alpha", 1), b = bear(s, "Division Beta", 1), c = bear(s, "Division Gamma", 2);
+  for (const id of [a, b, c]) s.objects[id].toughness = 10;
+  s.objects[a].power = 3; s.objects[a].controller = 0;
+  const id = addObject(s, {...index.definition("Monstrous Onslaught"), card: "Monstrous Onslaught", owner: 0, controller: 0}, "hand", 0);
+  s.players[0].manaPool = {C: 3, G: 2};
+  const offer = legalActions(s, 0).find(action => action.kind === "cast" && action.objectId === id);
+  applyAction(s, 0, {...offer, targets: [[{kind: "object", id: a}, {kind: "object", id: b}]], division: [1, 2]});
+  const originalStackId = s.stack.at(-1).stackId;
+  beginResolution(s, [{effect: "copySpell", spells: [s.stack.at(-1).objectId], newTargets: true}], {controller: 2, source: null});
+  s = JSON.parse(JSON.stringify(s));
+  eq(awaitingChoice(s).title.includes("1 assigned"), true, "the first copied share is identified before its target is selected");
+  const unchosen = hashState(s);
+  for (const bad of [[], [0, 0]]) assert.throws(() => resolveAwaiting(s, bad), /Invalid selection/);
+  checks += 2;
+  eq(hashState(s), unchosen, "invalid positional selections do not consume a copied share");
+  resolveAwaiting(s, [0]);
+  eq(awaitingChoice(s).title.includes("2 assigned"), true, "the second copied share is identified independently");
+  const choices = awaitingChoice(s);
+  resolveAwaiting(s, [choices.options.find(option => option.cardId === c).index]);
+  const original = s.stack.find(entry => entry.stackId === originalStackId), copy = s.stack.at(-1);
+  eq(copy.division, {0: {[a]: 1, [c]: 2}}, "a copied divided spell retains announced amounts on its chosen target positions after reload");
+  eq(original.division, {0: {[a]: 1, [b]: 2}}, "choosing new targets for the copy does not change the original division");
+  resolveTop(s);
+  eq([s.objects[a].damage, s.objects[b].damage, s.objects[c].damage], [1, 0, 2], "the copy deals its original 1 and 2 damage to its kept and newly chosen targets");
+
+  for (const variant of ["swap", "swap-becomes-illegal", "illegal-kept", "both-new"]) {
+    let game = table();
+    const left = bear(game, "Divided Left", 0), right = bear(game, "Divided Right", 1), third = bear(game, "Divided Third", 2), fourth = bear(game, "Divided Fourth", 1);
+    for (const target of [left, right, third, fourth]) game.objects[target].toughness = 10;
+    game.objects[left].power = 3;
+    const card = addObject(game, {...index.definition("Monstrous Onslaught"), card: "Monstrous Onslaught", owner: 0, controller: 0}, "hand", 0);
+    game.players[0].manaPool = {C: 3, G: 2};
+    const cast = legalActions(game, 0).find(action => action.kind === "cast" && action.objectId === card);
+    applyAction(game, 0, {...cast, targets: [[{kind: "object", id: left}, {kind: "object", id: right}]], division: [1, 2]});
+    if (variant === "illegal-kept") game.objects[left].keywords = ["Shroud"];
+    beginResolution(game, [{effect: "copySpell", spells: [game.stack.at(-1).objectId], newTargets: true}], {controller: 2, source: null});
+    const swapping = variant.startsWith("swap");
+    const first = swapping ? right : variant === "both-new" ? third : left;
+    const firstChoice = awaitingChoice(game);
+    eq(firstChoice.mode, "one", `${variant}: a copied share is assigned to one target, not redistributed`);
+    ok(first === left || firstChoice.options.some(option => option.cardId === first), `${variant}: the first legal replacement target is available`);
+    resolveAwaiting(game, [first === left ? 0 : firstChoice.options.find(option => option.cardId === first).index]);
+    eq(game.stack.at(-1).division, {0: {[left]: 1, [right]: 2}}, `${variant}: provisional target choice does not partially rewrite the division`);
+    game = JSON.parse(JSON.stringify(game));
+    const secondChoice = awaitingChoice(game), second = swapping ? left : variant === "both-new" ? fourth : third;
+    if (variant === "swap") {
+      const beforeDuplicate = hashState(game);
+      assert.throws(() => resolveAwaiting(game, [0]), /Invalid selection/); checks += 1;
+      eq(hashState(game), beforeDuplicate, "a duplicate final target is refused without consuming the second share");
+    }
+    if (variant === "illegal-kept") eq(secondChoice.options.some(option => option.cardId === left), false,
+      "an illegal original target cannot be moved to the other announced share");
+    ok(secondChoice.options.some(option => option.cardId === second), `${variant}: the second legal replacement target is available`);
+    if (variant === "swap-becomes-illegal") {
+      /* The live game can change during a question, for example when another player concedes (CR 104.3a, 800.4a).
+         A previously selected new target is checked again; it is not a kept target merely because another share had it. */
+      game.objects[right].keywords = ["Shroud"];
+      const changedBoard = hashState(game);
+      assert.throws(() => resolveAwaiting(game, [secondChoice.options.find(option => option.cardId === second).index]), /not legal/); checks += 1;
+      eq(hashState(game), changedBoard, "a relocated original target that becomes illegal is refused without consuming the last choice");
+      game.objects[right].keywords = [];
+    }
+    resolveAwaiting(game, [secondChoice.options.find(option => option.cardId === second).index]);
+    eq(game.stack.at(-1).division, {0: {[first]: 1, [second]: 2}}, `${variant}: copied shares retain their positions across the second reload`);
+    resolveTop(game);
+    const expected = swapping ? [2, 1, 0, 0] : variant === "both-new" ? [0, 0, 1, 2] : [0, 0, 2, 0];
+    eq([left, right, third, fourth].map(target => game.objects[target].damage), expected, `${variant}: only legal final targets receive their original shares`);
+  }
+}
 console.log(`engine-load100-w2-stack: ${checks} checks passed`);

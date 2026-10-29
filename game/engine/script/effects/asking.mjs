@@ -1616,7 +1616,7 @@ function retargetOptions(state, question, {withOthers = true} = {}) {
   /* A counted target's list holding its one target (changeTargets): that one. */
   const was = entry.targets[question.index];
   const counted = Array.isArray(was) ? was : null;
-  const current = (Array.isArray(was) ? was[0] : was) ?? null;
+  const current = (Array.isArray(was) ? was[question.position ?? 0] : was) ?? null;
   /* An ability's source is the object it came from (entry.cardId), while it is still that object (CR 113.7a). */
   const source = entry.objectId ?? (entry.cardId !== null && state.objects[entry.cardId] ? entry.cardId : null);
   /* `withOthers`: read against the entry's other targets as they stand -- "another target" (`distinctFrom`) not one of them. */
@@ -1630,8 +1630,13 @@ function retargetOptions(state, question, {withOthers = true} = {}) {
     .filter((c) => !(current && c.kind === current.kind && c.id === current.id))
     /* A counted "for each opponent" remembers whose creature this new target was (CR 608.2b; bind.countedChoice). */
     .map((c) => spec.forEach === "opponent" && c.kind === "object" ? {...c, forPlayer: controllerOf(state, c.id)} : c);
-  return {entry, current, others: counted ? others.filter((c) => !counted.some((t) => t.kind === c.kind && t.id === c.id)) : others, counted, spec};
+  return {entry, current, others: counted && question.position === undefined ? others.filter((c) => !counted.some((t) => t.kind === c.kind && t.id === c.id)) : others, counted, spec};
 }
+/* A divided spell copies each announced share (CR 707.10, 115.7f). Its target positions are chosen separately so the
+   player knows which share a new target receives; provisional targets are checked together, once final (115.7e). */
+const copyTargetQuestions = copy => copy.targets.flatMap((targets, index) => (!Array.isArray(targets) || targets.length
+  ? [{stackId: copy.stackId, index, ...(Array.isArray(targets) && copy.division?.[index] ? {position: 0, picked: []} : {})}]
+  : []));
 export const copySpell = {
   open(state, params, context) {
     /* Or a spell or ability by its stack entry (`stack`: "copy target triggered ability you control", Strionic Resonator;
@@ -1653,7 +1658,7 @@ export const copySpell = {
         const copy = pushAbilityCopy(state, original, {controller: context.controller});
         copied.push(copy);
         events.push(event("GameEventAbilityCopied", state, {name: original.name, playerId: context.controller, stackId: copy.stackId, original: original.stackId}));
-        if (params.newTargets === true) copy.targets.forEach((t, index) => { if (!Array.isArray(t) || t.length) questions.push({stackId: copy.stackId, index}); });
+        if (params.newTargets === true) questions.push(...copyTargetQuestions(copy));
         continue;
       }
       const copy = pushCopy(state, original, {controller: context.controller, nonLegendary: params.except?.nonLegendary === true,
@@ -1662,7 +1667,7 @@ export const copySpell = {
       events.push(event("GameEventSpellCopied", state, {card: cardRef(state, copy.objectId), original: cardRef(state, original.objectId) ?? original.recordedReference ?? null,
         playerId: context.controller, stackId: copy.stackId}));
       /* A counted instance retains its original number; the chooser may keep any targets, including illegal ones (CR 707.10c). */
-      if (params.newTargets === true) copy.targets.forEach((t, index) => { if (!Array.isArray(t) || t.length) questions.push({stackId: copy.stackId, index}); });
+      if (params.newTargets === true) questions.push(...copyTargetQuestions(copy));
     }
     const asked = questions.filter((q) => (retargetOptions(state, q)?.others ?? []).length > 0);
     /* A copy becomes a targeting spell/ability with its final targets, including kept ones (CR 115.1, 707.10c, 702.21a).
@@ -1678,6 +1683,14 @@ export const copySpell = {
     const found = retargetOptions(state, question);
     const {entry, current, others, counted} = found ?? {entry: null, current: null, others: []};
     const many = (entry ? specsOf(state, entry) : []).length > 1;
+    if (counted && question.position !== undefined) {
+      const share = entry.division?.[question.index]?.[current?.id] ?? 0;
+      return {id: `copySpell:${question.stackId}:${question.index}:${question.position}`,
+        title: `${entry.name}: ${ordinal(question.position)} target (${share} assigned)`, mode: "one", min: 1, max: 1,
+        options: [{index: 0, label: `Keep ${targetName(state, current) || "its target, now gone"} (${share} assigned)`, keep: true, target: current},
+          ...others.map((target, index) => ({index: index + 1, label: targetName(state, target),
+            ...(target.kind === "object" ? {cardId: target.id} : {}), target}))]};
+    }
     if (counted) return {
       id: `copySpell:${question.stackId}:${question.index}`,
       title: `${entry.name}: keep or choose ${counted.length} targets for the copy`, mode: "many", min: counted.length, max: counted.length,
@@ -1698,24 +1711,38 @@ export const copySpell = {
     const found = retargetOptions(state, awaiting.questions[0]);
     if (found?.counted) {
       const {entry, counted} = found, question = awaiting.questions[0], choice = copySpell.choice(state, awaiting);
-      const selected = (indices ?? []).map((i) => choice.options[i]?.target);
-      if (selected.length !== counted.length || new Set(indices).size !== selected.length || selected.some((t) => !t)) throw new Error("Invalid selection");
+      let selected;
+      if (question.position !== undefined) {
+        const option = choice.options[indices?.[0]];
+        if (!Array.isArray(indices) || indices.length !== 1 || !option) throw new Error("Invalid selection");
+        selected = [...question.picked, option.target];
+        if (selected.length < counted.length) {
+          question.picked = selected; question.position += 1;
+          return {events: [], again: true};
+        }
+      } else selected = (indices ?? []).map((i) => choice.options[i]?.target);
+      if (selected.length !== counted.length || new Set(selected.map(t => `${t?.kind}:${t?.id}`)).size !== selected.length || selected.some((t) => !t)) throw new Error("Invalid selection");
       const same = (a, b) => a.kind === b.kind && a.id === b.id;
-      const changed = selected.filter((t) => !counted.some((old) => same(t, old)));
+      const changed = selected.filter((t, i) => question.position === undefined ? !counted.some((old) => same(t, old)) : !same(t, counted[i]));
       const targets = structuredClone(entry.targets); targets[question.index] = selected;
       const context = {controller: entry.playerId, source: entry.objectId ?? entry.cardId, chosenTargets: targets, ...(entry.x !== undefined ? {x: entry.x} : {}), ...(entry.about ? {about: entry.about} : {})};
       /* Newly chosen targets must be legal and cannot make a previously legal, unchanged target illegal (CR 115.7d). */
       const checked = recheckTargets(state, specsOf(state, entry), targets, context).targets;
       const before = recheckTargets(state, specsOf(state, entry), entry.targets, {...context, chosenTargets: entry.targets}).targets;
       const legal = (list, t) => [].concat(list ?? []).some((c) => c && same(c, t));
-      if (changed.some((t) => !legal(checked[question.index], t)) || targets.some((list, i) => [].concat(list ?? []).some((t) => t
-        && [].concat(entry.targets[i] ?? []).some((old) => same(t, old)) && legal(before[i], t) && !legal(checked[i], t)))) throw new Error("Those new targets are not legal");
+      if (changed.some((t) => !legal(checked[question.index], t)) || targets.some((list, i) => [].concat(list ?? []).some((t, position) => t
+        && (i === question.index && question.position !== undefined ? same(t, counted[position]) : [].concat(entry.targets[i] ?? []).some((old) => same(t, old)))
+        && legal(before[i], t) && !legal(checked[i], t)))) throw new Error("Those new targets are not legal");
       if (changed.length && (differentControllersProblem(state, found.spec, selected, entry.name) || shareProblem(state, found.spec, selected, entry.name))) throw new Error("Those new targets do not meet the target restrictions");
       /* "Each with a different mana value" (Agadeem's Awakening): new choices keep the instance's group restriction
          (CR 115.7d); targets already gone may still be left unchanged. */
       if (changed.length && found.spec.differentManaValues === true) {
         const values = selected.filter((t) => t.kind === "object" && state.objects[t.id]).map((t) => manaValue(parseManaCost(state.objects[t.id].manaCost ?? "")));
         if (new Set(values).size !== values.length) throw new Error("Choose targets with different mana values");
+      }
+      if (question.position !== undefined) {
+        const announced = entry.division[question.index];
+        entry.division[question.index] = Object.fromEntries(selected.map((target, i) => [target.id, announced[counted[i].id]]));
       }
       entry.targets[question.index] = selected;
       const rest = awaiting.questions.slice(1);
