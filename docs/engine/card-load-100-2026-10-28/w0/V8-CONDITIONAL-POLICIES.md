@@ -72,3 +72,8 @@ Static audit256 files/4,713 breaks retains33 inherited UI failures and zero engi
 
 The canonical full-directory ledger, independent canonical verifier, full games, per-card review, staging and every
 other wave0 gate remain required. No new definitions, final-card promotions or production release are included.
+
+Publication sync merges the owner's scanned `baef0762566872a2d24125816747cef7dd34fb1b` assembly, including
+main `fac091ba`, without changing any `game/` file. The runner retains the exact SHA-256 above. The combined
+inventory contains 711 Node suites; README records that count. Historical proof artifacts retain their original
+source and input hashes rather than claiming a new run on the merged head.
