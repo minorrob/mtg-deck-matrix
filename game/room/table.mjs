@@ -478,6 +478,7 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
          match launched before keeps its choices and its replay (rules/actions.mjs, `pooledTaps`). */
       pooledTaps: true,
       sourceChoices: true,
+      effectPlayVersion: 1,
       pilotProvocation: true,
       preparedTaps: true,
       resultRecords: true,

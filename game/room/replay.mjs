@@ -15,12 +15,12 @@
  * game/room/table.mjs `record`: the seed, pod and tape this replays, for a playtest table only; any other table's
  * seat gets its own last view and the public history. */
 import {memoryStorage, createMatchStore} from "../engine/storage.mjs";
-import {startRoom, openRoom} from "./room.mjs";
+import {startRoomFromTape, openRoom} from "./room.mjs";
 import {hashState} from "../engine/journal.mjs";
 
 /** Replays `tape` on a fresh in-memory room started from `pod` and `seed`; returns the room. */
 export async function replayTape({matchId, pod, seed, tape, cards, candidates, pilot, storage = memoryStorage()}) {
-  const room = await startRoom({storage, matchId, pod, seed, ...(cards ? {cards} : {}), ...(candidates ? {candidates} : {}), ...(pilot ? {pilot} : {})});
+  const room = await startRoomFromTape({storage, matchId, pod, seed, ...(cards ? {cards} : {}), ...(candidates ? {candidates} : {}), ...(pilot ? {pilot} : {})});
   for (const entry of tape) await room.replay(entry);
   return room;
 }

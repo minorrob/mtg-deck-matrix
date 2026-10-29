@@ -66,6 +66,14 @@ change. Child-only expiry is insufficient: a refreshed original must both remove
 newly legal native variants. This dependency is being integrated separately with W5. No complete freshness or
 publication claim is made until the joint native/controller lifecycle and stale-generation proofs pass.
 
+Current live starts record `effectPlayVersion: 1` in both pod and engine state. The live room/table entry points force
+this value rather than accepting a client opt-out. Native origin/generation behavior is independent of the older
+`sourceChoices` flag. Trusted tape replay uses the original saved epoch; absence preserves the historical state shape
+and native IDs, without adding a zero-valued field and changing the state hash. A captured 17-input pre-version
+Scepter/Boros tape already has `sourceChoices: true` and the actual native ID `play:0:5`; its complete state/journal
+hashes are fixed in `tests/fixtures/effect-play-legacy-tape.json`. This is historical compatibility, not acceptance or
+migration of old live matches. Current canonical scenarios and operational runs must use the current epoch.
+
 ## Evidence and remaining routes
 
 Focused native fixtures use actual saved definitions: departed Ao; Shadrix's combined/distinct-player choices and
