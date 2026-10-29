@@ -1,7 +1,10 @@
 # Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE.
-SUITES = ['tests/engine-zone-action-operations.mjs']
+SUITES = ['tests/engine-zone-action-operations.mjs', 'tests/engine-load100-w2-stack.mjs']
 Z = 'game/engine/rules/zone-operation.mjs'
 E = 'game/engine/script/effects/zones.mjs'
+R = 'game/engine/script/resolution.mjs'
+T = 'game/engine/rules/turn.mjs'
+S = 'game/engine/rules/sba.mjs'
 BREAKS = [
     ('redirect returns actual child result', Z, '  if (frame.stage === "after-redirect") return {status: "done", result: frame.childResult};', ''),
     ('failed entry starts redirected move', Z, 'if (frame.preparedEntering?.to && frame.preparedEntering.to !== "battlefield")', 'if (false)'),
@@ -10,9 +13,9 @@ BREAKS = [
     ('sacrifice default controller read', Z, 'kind === "sacrifice-one" && object ? controllerOf(state, frame.id) : object?.owner', 'null'),
     ('payment required zone enforced', Z, 'object?.zone === zone', 'Boolean(object)'),
     ('departed payer refused', Z, '!state.players[player]?.lost', 'true'),
-    ('sacrifice controller required', Z, 'controllerOf(state, frame.id) === player && !cantBeSacrificed(state, frame.id)', '!cantBeSacrificed(state, frame.id)'),
-    ('sacrifice prohibition enforced', Z, 'controllerOf(state, frame.id) === player && !cantBeSacrificed(state, frame.id)', 'controllerOf(state, frame.id) === player'),
-    ('discard requires payer hand', Z, 'state.zones.hand[player]?.includes(frame.id)', 'true'),
+    ('sacrifice controller required', Z, 'controllerOf(state, id) === player && !cantBeSacrificed(state, id)', '!cantBeSacrificed(state, id)'),
+    ('sacrifice prohibition enforced', Z, 'controllerOf(state, id) === player && !cantBeSacrificed(state, id)', 'controllerOf(state, id) === player'),
+    ('discard requires payer hand', Z, 'state.zones.hand[player]?.includes(id)', 'true'),
     ('refused payment has false result', Z, 'if (!eligible) return {status: "done", result: {moved: null, [field]: false}};', 'if (!eligible) return {status: "done", result: {moved: null, [field]: true}};'),
     ('token classification preserved', Z, 'frame.nontoken = object.token !== true;', 'frame.nontoken = true;'),
     ('action moves through live zone operation', Z, 'id: frame.id, to: "graveyard", options: {owner: object.owner}', 'id: frame.id, to: "exile", options: {owner: object.owner}'),
@@ -27,4 +30,28 @@ BREAKS = [
     ('entry grant timestamp increments', E, 'const timestamp = state.nextTimestamp++;', 'const timestamp = state.nextTimestamp;'),
     ('entry grant targets new object', E, 'id: `entry-keywords:${moved}:${timestamp}`, layer: 6, affects: {ids: [moved]}', 'id: `entry-keywords:${moved}:${timestamp}`, layer: 6, affects: {ids: [id]}'),
     ('entry grant grants selected keywords', E, 'apply: {addKeywords: [...entering.gainsKeywords]}', 'apply: {addKeywords: []}'),
+    ('departed borrowed payment rechecked before move', Z, 'if (frame.payment && !paymentEligible(state, frame.id, frame.payment.kind, frame.payment.player))', 'if (false)'),
+    ('child retains payment actor', Z, 'payment: {kind, player}', 'payment: null'),
+    ('transformed preview gets complete face', Z, 'set: Object.fromEntries(COPY_KEYS.filter(key => face[key] !== undefined).map(key => [key, face[key]]))', 'set: {}'),
+    ('transformed preview removes absent characteristics', Z, 'remove: COPY_KEYS.filter(key => face[key] === undefined)', 'remove: []'),
+    ('literal sacrifice effect kind enforced', Z, 'effect?.effect !== "moveZone"', 'effect?.effect === "moveZone"'),
+    ('literal sacrifice flag enforced', Z, 'effect.sacrifice !== true', 'false'),
+    ('literal sacrifice target list required', Z, '!Array.isArray(effect.targets)', 'false'),
+    ('advanced move modifiers not dropped', Z, 'Object.keys(effect).some(key => !["effect", "targets", "sacrifice", "remember"].includes(key))', 'false'),
+    ('sacrifice effect captures live permanents', Z, 'frame.ids.filter(id => state.objects[id]?.zone === "battlefield")', 'frame.ids.filter(id => state.objects[id]?.zone !== "battlefield")'),
+    ('sacrifice effect remembers moved IDs', Z, 'frame.remembered.push(moved); frame.rememberedControllers[moved] = frame.current.player;', 'frame.rememberedControllers[moved] = frame.current.player;'),
+    ('sacrifice effect remembers original controllers', Z, 'frame.rememberedControllers[moved] = frame.current.player;', 'frame.rememberedControllers[moved] = -1;'),
+    ('sacrifice movedWas contract preserved', Z, 'if (frame.was && state.objects[moved]?.zone === "graveyard")', 'if (frame.was)'),
+    ('sacrifice visits all saved payments', Z, 'frame.cursor >= frame.payments.length', 'frame.cursor >= 1'),
+    ('sacrifice result context returned', Z, 'context: frame.remember ? {', 'context: false ? {'),
+    ('resolution dispatches saved sacrifice frame', R, 'let operationFrame = zoneEffectFrame(effect, resolving.context) ?? tokenEntryEffectFrame(effect, resolving.context);', 'let operationFrame = tokenEntryEffectFrame(effect, resolving.context);'),
+    ('script prefix transferred into new entry operation', T, '    state.ruleOperation.events.unshift(...prefix);', ''),
+    ('script prefix not journaled again', T, '    state.ruleOperation.reported += prefix.length;', ''),
+    ('full script prefix survives previous questions', T, '    const prefix = outcome.all ?? outcome.events;', '    const prefix = outcome.events;'),
+    ('only complete script transfers prefix', T, 'if (outcome.status === "done" && state.ruleOperation)', 'if (state.ruleOperation)'),
+    ('canceled entry retains finished script prefix', S, 'state.resolving?.events ?? state.ruleOperation.events', 'state.resolving?.events ?? []'),
+    ('effect play starts its deferred child', R, 'if (!Array.isArray(outcome) && outcome.operation)', 'if (false)'),
+    ('deferred child shares resolution owner', R, 'beginRuleOperation(state, outcome.operation, {after: {kind: "resolution"}}, rng)', 'beginRuleOperation(state, outcome.operation, {after: null}, rng)'),
+    ('deferred child forwards caller RNG', R, 'beginRuleOperation(state, outcome.operation, {after: {kind: "resolution"}}, rng), rng)', 'beginRuleOperation(state, outcome.operation, {after: {kind: "resolution"}}, rng), null)'),
+    ('normal token effects wait through entry factory', R, ' ?? tokenEntryEffectFrame(effect, resolving.context)', ''),
 ]

@@ -403,6 +403,12 @@ function choiceFor(state) {
 function resolutionAnswered(state, outcome) {
   const finished = outcome.status === "done" ? finishResolving(state) : [];
   const events = [...outcome.events, ...finished];
+  if (outcome.status === "done" && state.ruleOperation) {
+    const prefix = outcome.all ?? outcome.events;
+    state.ruleOperation.events.unshift(...prefix);
+    state.ruleOperation.reported += prefix.length;
+    return events;
+  }
   /* Each event is handed back once, as it happened; what triggers reads the whole resolution once it is done, the
      events before its questions too -- they triggered then, and wait for a player to receive priority (CR 603.2,
      603.3): the life Uro gained before asking for a land still triggers "whenever you gain life". */

@@ -202,7 +202,7 @@ export function monarchLeft(state, events = []) {
 function cutShort(state) {
   /* A paused rule operation's already-reported prefix happened before its controller left (CR 603.2, 800.4a).
      Preserve surviving players' triggers before withdrawing that caller, without reporting those events again. */
-  if (state.ruleOperation && state.resolving) collectTriggers(state, state.resolving.events);
+  if (state.ruleOperation) collectTriggers(state, state.resolving?.events ?? state.ruleOperation.events);
   state.resolving = null;
   cancelRuleOperation(state);
   if (state.awaiting?.kind === "effect-choice") state.awaiting = null;

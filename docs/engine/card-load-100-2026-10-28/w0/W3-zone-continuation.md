@@ -55,3 +55,28 @@ W2's Mox Diamond/devour/riot consumers; their actual card entry paths are not pr
 The 33-check `engine-zone-action-operations` suite proves the public JSON reload/concession paths, actual payment
 results/counts, and selected replacement/follow-up outcomes. All 24 mutations in `breaks-zone-action-operations.py` were
 caught with `missed: []`. The transformed-face input seam and W2's actual caller integration remain pending.
+
+The follow-on shared bridge now uses W2's root-reviewed local entering/land/token dependencies. Transformed entry passes
+only copiable back-face values and explicit removals to the real entering child; its actual pre-entry question and final
+chosen type are proved across JSON reload. A completed permanent script that opens a new entry operation transfers its
+whole trigger prefix but advances the new journal cursor. Its surviving trigger resolves once after normal entry or
+controller concession. An answered effect-play land starts `outcome.operation` only after the old question is withdrawn
+and its queue advances. An actual any-number land effect waits through a shock-land choice, then asks its next play,
+then runs the original following effects with one seeded die roll and one prefix trigger. Normal token effects dispatch
+through W2's token-entry factory, so all same-instruction token choices precede allocation and following effects.
+
+An actual literal-target `moveZone {sacrifice:true}` resolution consumer now uses the same saved frames. A borrowed
+permanent owned by the surviving spell controller stays on the battlefield when its sacrificer concedes during the
+replacement question: the move child rechecks the saved payer's live control/zone/prohibition before moving. The surviving
+outer instruction completes once without a sacrifice event or count. Multi-target selected outcomes retain remembered
+new IDs/controllers and the existing graveyard-only movedWas contract. Other moveZone modifiers retain their existing
+implementation; no broad moveZone closure is claimed.
+
+The current extension has 64 checks in `engine-zone-action-operations` and 48 caught mutations, `missed: []`. The merged
+unchanged W2 suite passes 214 checks and draw-instruction suite passes 33. W2 owns its entry/card/token implementation and
+its own mutation closure; these shared bridge results do not certify all W2 code.
+
+Explicit remaining caller seams: replacement `moveOne.runFollowUps` still runs token effects synchronously; converting it
+also requires marking sacrifice/discard identity and counts before a token-child prefix can be journaled. Search/fetch
+`asking.chooseCard.apply` still uses synchronous moveOne and needs a saved post-entry shuffle stage with the original RNG.
+Costs, state-based destruction and complex moveZone routes remain open. No new final cards, promotions or global gate.
