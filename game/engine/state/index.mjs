@@ -92,6 +92,7 @@ export function createState(pod) {
   const seats = pod?.players ?? [];
   if (seats.length < 2) throw new Error("A game needs at least two players");
   if (seats.length > 4) throw new Error("A table seats at most four players");
+  if (pod.effectPlayVersion !== undefined && pod.effectPlayVersion !== 1) throw new Error("Unsupported native effect-play version");
   /* CR 903.7 starts a Commander game at 40 life; a table's host may set another as a house rule (Rob, 2026-09-30), and
      the pod carries it. Anything but a whole number from 1 to 999 is refused rather than guessed at. */
   const life = pod?.startingLife ?? STARTING_LIFE;
@@ -130,6 +131,8 @@ export function createState(pod) {
     ...(pod?.pooledTaps === true ? {pooledTaps: true} : {}),
     /* Physical mana source identities are explicit in new matches. An absent historical pod keeps its saved replay. */
     ...(pod?.sourceChoices === true ? {sourceChoices: true} : {}),
+    /* New drivers record the native resolving-play question epoch. Its absence preserves historical state hashes/IDs. */
+    ...(pod?.effectPlayVersion === 1 ? {effectPlayVersion: 1} : {}),
     /* New matches may fund the prepared inset's cast from its controller's sources, as a hand cast can be funded. */
     ...(pod?.preparedTaps === true ? {preparedTaps: true} : {}),
     /* And an {X} spell tapped for too, for each X the pool and the untapped sources pay together (rules/actions.mjs, `xTaps`;

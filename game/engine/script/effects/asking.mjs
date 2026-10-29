@@ -2483,6 +2483,39 @@ const playable = (state, player, pool, {most, free, anyMana, payMana = false, la
         return pay === null || !canPayGeneric(state, player, pay) ? [] : [{...action, owed: pay}];
       })]));
 };
+const playSignature = value => JSON.stringify(value, function (key, item) {
+  return item && typeof item === "object" && !Array.isArray(item)
+    ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item;
+});
+const playQuestionId = (state, awaiting, generation) => `play:${awaiting.player}:${state.turn}${awaiting.again ? `:${awaiting.cast}` : ""}:${awaiting.playSerial ?? "saved"}:${generation}`;
+/** Derive current legal variants without editing the live question or allocating another copy. The origin retains the
+    exact resolving permission, card pool and mana-value limit; source identity is never recovered from old indices. */
+export function deriveEffectPlay(state, awaiting = state.awaiting) {
+  if (state.effectPlayVersion !== 1 || awaiting?.kind !== "effect-choice" || awaiting.effect !== "play" || !awaiting.playOrigin
+    || awaiting.funding || awaiting.targeting || awaiting.planning || awaiting.paying || awaiting.playLocked) return null;
+  const origin = awaiting.playOrigin;
+  let pool = origin.pool;
+  if (origin?.from === "hand") pool = cardsIn(state, "hand", awaiting.player);
+  else if (origin?.from === "command") pool = cardsIn(state, "command", awaiting.player).filter(id => state.objects[id].commander === true);
+  else if (origin?.from === "selector") pool = selectMatching(state, {what: "card", ...origin.selector}, origin.context)
+    .filter(id => !["battlefield", "stack"].includes(state.objects[id]?.zone));
+  const choices = playable(state, awaiting.player, pool, {...origin.terms, lands: awaiting.lands === true,
+    most: origin?.most ?? Infinity});
+  const signature = playSignature(choices), changed = signature !== (awaiting.playSignature ?? playSignature(awaiting.choices));
+  const generation = (awaiting.playGeneration ?? 0) + (changed ? 1 : 0);
+  return {choices, signature, changed, generation, choiceId: playQuestionId(state, awaiting, generation)};
+}
+/** Called by the authoritative driver after external facts change, never by projection or a child draft's answers. */
+export function refreshEffectPlay(state) {
+  const derived = deriveEffectPlay(state);
+  if (!derived) return {changed: false};
+  if (derived.changed) {
+    state.awaiting.choices = structuredClone(derived.choices);
+    state.awaiting.playSignature = derived.signature;
+    state.awaiting.playGeneration = derived.generation;
+  }
+  return {changed: derived.changed, generation: derived.generation, choiceId: derived.choiceId};
+}
 export const play = {
   open(state, params, context) {
     /* "They may cast that card without paying its mana cost" (Tibalt's Trickery; card load w4d L1): `who`, the player who
@@ -2531,6 +2564,13 @@ export const play = {
       ...(params.anyNumber === true ? {again: {pool, ...terms, most: Number.isFinite(most) ? most : null}, cast: 0} : {}), ...exileInstead,
       ...otherwise, ...(params.rememberCast === true ? {rememberCast: true} : {}),
       ...(terms.lands ? {lands: true} : {})};
+    if (state.effectPlayVersion === 1) {
+      state.effectPlaySerial = (state.effectPlaySerial ?? 0) + 1;
+      Object.assign(state.awaiting, {playSerial: state.effectPlaySerial, playGeneration: 0, playSignature: playSignature(choices),
+        playOrigin: {pool: [...pool], from: copied !== null || copies !== null ? "fixed" : from, terms: {free: terms.free, anyMana: terms.anyMana, payMana: terms.payMana},
+          most: Number.isFinite(most) ? most : null,
+          ...(from === "selector" && copied === null && copies === null ? {selector: structuredClone(params.selector ?? {}), context: structuredClone(context)} : {})}});
+    }
     return true;
   },
   choice(state, awaiting) {
@@ -2545,11 +2585,15 @@ export const play = {
     }
     /* Played, a land among them (`lands`): the question says "play". */
     const [title, decline] = awaiting.lands ? ["Play the card?", "Don't play"] : [awaiting.cast ? "Cast another spell?" : "Cast a spell?", "Don't cast"];
-    return {id: `play:${awaiting.player}:${state.turn}${awaiting.again ? `:${awaiting.cast}` : ""}`, title, mode: "one", min: 1, max: 1,
-      options: [...awaiting.choices.map((c, index) => ({index, label: c.targetNames?.length ? `${c.label} → ${c.targetNames.join(", ")}` : c.label, cardId: c.objectId})),
-        {index: awaiting.choices.length, label: decline}]};
+    const live = deriveEffectPlay(state, awaiting), choices = live?.choices ?? awaiting.choices;
+    return {id: live?.choiceId ?? `play:${awaiting.player}:${state.turn}${awaiting.again ? `:${awaiting.cast}` : ""}`, title, mode: "one", min: 1, max: 1,
+      options: [...choices.map((c, index) => ({index, label: c.targetNames?.length ? `${c.label} → ${c.targetNames.join(", ")}` : c.label, cardId: c.objectId})),
+        {index: choices.length, label: decline}]};
   },
-  apply(state, awaiting, indices) {
+  apply(state, awaiting, indices, extra = {}) {
+    const live = deriveEffectPlay(state, awaiting);
+    if (live && (live.changed || (live.generation > 0 || extra.choiceId !== undefined) && extra.choiceId !== live.choiceId))
+      throw new Error("This casting choice has expired; refresh its legal variants before answering");
     let chosen, events;
     if (awaiting.targeting) {
       const picked = pickActionTargets(state, {player: awaiting.player, ...awaiting.targeting}, indices);
@@ -2575,7 +2619,7 @@ export const play = {
       const action = structuredClone(chosen), targetIndex = nextToChoose(state, awaiting.player, action);
       awaiting.choices[index] = action;
       if (targetIndex >= 0) {
-        state.awaiting = {...awaiting, targeting: {chosen: index, action, index: targetIndex}};
+        state.awaiting = {...awaiting, ...(awaiting.playOrigin ? {playLocked: true} : {}), targeting: {chosen: index, action, index: targetIndex}};
         return {events: [], again: true};
       }
       /* Its mana cost, colors and all (`payMana`): the one way there is, paid at once; more, and which is asked. */
@@ -2620,6 +2664,7 @@ export const play = {
       const choices = playable(state, awaiting.player, pool, {most: most ?? Infinity, free, anyMana, payMana});
       if (choices.length) {
         const next = {...awaiting, choices, cast: awaiting.cast + 1};
+        if (next.playOrigin) { next.playSignature = playSignature(choices); next.playGeneration = 0; delete next.playLocked; }
         delete next.paying;
         delete next.planning;
         state.awaiting = next;
