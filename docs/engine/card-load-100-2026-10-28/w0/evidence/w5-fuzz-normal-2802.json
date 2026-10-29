@@ -1,0 +1,70 @@
+{
+  "library": true,
+  "humans": [],
+  "level": "normal",
+  "strictRefusals": true,
+  "node": "v22.23.3",
+  "rows": [
+    {
+      "seed": 2802,
+      "decks": [
+        "Titanbones, Towering Heart",
+        "Teyo, Diamondblade Mage",
+        "Anim Pakal, Thousandth Moon",
+        "Danitha Capashen, Paragon"
+      ],
+      "status": "finished",
+      "result": {
+        "winner": "s1",
+        "reason": "last player standing",
+        "ending": {
+          "kind": "won",
+          "seatId": "s1",
+          "reason": null,
+          "seats": [
+            {
+              "seatId": "s0",
+              "outcome": "lost",
+              "reason": "life"
+            },
+            {
+              "seatId": "s1",
+              "outcome": "won",
+              "reason": null
+            },
+            {
+              "seatId": "s2",
+              "outcome": "lost",
+              "reason": "life"
+            },
+            {
+              "seatId": "s3",
+              "outcome": "lost",
+              "reason": "life"
+            }
+          ]
+        }
+      },
+      "turns": 49,
+      "decisions": 0,
+      "ms": 14931,
+      "longestWait": {
+        "ms": 0,
+        "turn": null
+      },
+      "refusals": {
+        "total": 0,
+        "since": 0,
+        "first": []
+      },
+      "personRefused": 0,
+      "loopsStopped": 0,
+      "replaySame": true,
+      "leaks": [],
+      "leakChecks": 1,
+      "clean": true
+    }
+  ],
+  "source": "5a004e444d83e3fd8e63873f6b5ef9f6160430d3",
+  "scope": "One all-house library game, not pool coverage; leak checking ran once on the final views."
+}
