@@ -31,8 +31,18 @@ Shared source: `2c89a5c3` merged as `d807b03a`; lane JSON records the final proo
    the public choices name produced/spent mana and the ID stage names its output. See `evidence/w5-output-colors.json`.
    Remaining: effect-paid casts do not yet use these identity stages; ongoing historical games without the saved flag
    still use historical behavior until safe migration; exhaustive kind/output enumeration has no operational acceptance.
-   `W5-disjoint-tap-red.mjs.txt` reproduces two actual Sephara failures: an impossible four-flyer sole-mana-Bird alternative
-   is offered, and a legal five-flyer alternative loops its sole funding question instead of asking four cost tappers.
+   The two actual Sephara failures in `W5-disjoint-tap-red.mjs.txt` now pass: current ordinary alternative/flashback tap costs
+   reserve cost tappers during affordability, ask them first, filter their IDs from mana, and refuse invalid subsets atomically.
+   Exact native proof covers all15 four-of-six cost subsets/ten complete payments, outside same-kind/flexible witnesses,
+   current-controller eligibility and an opposing Grand Arbiter tax that catches unsafe constrained memo pruning.
+   See `evidence/w5-disjoint-costs.json`; the original17-reader baseline is diagnostic, not strict G-3 acceptance.
+   Next raw solver RED: `W5-output-payload-kind-red.mjs.txt` uses the same output label for distinct C1/C2 payloads and loses
+   a legal result. Fix full-payload kind signatures consistently in normal quick/search/pattern/physical identity paths;
+   preserve saved historical keys through an explicit compatibility path. Actual C1/C2/bundled/restriction/effect families
+   pass, but do not infer general output/ability equivalence from those bounded cases.
+   Operational RED: `W5-disjoint-pilot-red.mjs.txt` shows the house pilot choosing both mana Birds among its four cost
+   tappers, causing a correct refusal. P0 owns the pilot and is informed; coordinate typed constraints/factual legal witness
+   metadata without a human auto-answer/default policy. G-5 stays open.
    Do not claim whole payment/identity completeness from this ordinary-cast slice.
 4. Coordinate with W1's queued Siege transformed-cast seam before editing choicesNow/play flags.
    W4 owns the mana-ability `then` damage-continuation region; avoid overlapping edits there.

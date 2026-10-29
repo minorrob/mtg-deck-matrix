@@ -11,6 +11,7 @@ import {legalActions, applyAction, castTapPlans, manaSources} from "../game/engi
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {resolveTop} from "../game/engine/rules/stack.mjs";
 import {concede} from "../game/engine/rules/sba.mjs";
+import {keywordsOf} from "../game/engine/rules/layers.mjs";
 
 const cardIndex = loadCardIndex();
 let checks = 0;
@@ -490,5 +491,170 @@ for (const manaCost of ["{1}", "{G/U}"]) {
   eq(events.filter(e => e.kind === "GameEventManaPool").map(e => e.data.fields.source.cardId), [island, grove], "the historical answer retains its original activation order");
   resolveTop(state);
   eq([state.players[0].life, Object.values(state.players[0].manaPool).reduce((a,b) => a+b, 0)], [42, 0], "historical funding retains its actual paid and resolved outcome");
+}
+{
+  const fixtures = {Bird: {types: ["Creature"], power: 1, toughness: 1, keywords: ["Flying"], abilities: [{id: "m", kind: "mana", tapSelf: true, produces: {W: 1}}]},
+    Drake: {types: ["Creature"], power: 1, toughness: 1, keywords: ["Flying"]},
+    Flexible: {types: ["Land"], abilities: [{id: "m", kind: "mana", tapSelf: true, produces: [{W: 1}, {G: 1}]}]},
+    Spectrum: {types: ["Land"], abilities: [{id: "m", kind: "mana", tapSelf: true, produces: [{U: 1}, {B: 1}, {R: 1}]}]}};
+  const make = (birds, drakes, land = []) => runScenario({name: `Sephara disjoint tap costs ${birds}/${drakes}/${land}`, setup: [{seat: 0, zone: "hand", cards: ["Sephara, Sky's Blade"]},
+    {seat: 0, zone: "battlefield", cards: [...Array(birds).fill("Bird"), ...Array(drakes).fill("Drake"), ...land]}], steps: []}, cardIndex.definition, fixtures).state;
+  const alternatives = state => legalActions(state, 0).filter(a => a.kind === "cast" && a.alternative !== undefined);
+  const impossible = make(1, 3);
+  eq(alternatives(impossible), [], "four cost flyers cannot also tap their sole mana Bird for the required white mana");
+  const initial = make(2, 4);
+  applyAction(initial, 0, alternatives(initial)[0]);
+  const first = awaitingChoice(initial);
+  eq([first.cost, first.mode, first.min, first.max, first.options.length], ["tap", "many", 4, 4, 6], "the actual alternative asks nonmana cost tappers before its funding sources");
+  const all = first.options.map(o => o.cardId), birds = all.filter(id => initial.objects[id].card === "Bird");
+  const verify = (state, costIds, source, events) => {
+    eq(events.filter(e => e.kind === "GameEventManaPool").map(e => e.data.fields.source.cardId), [source], "only the disjoint chosen mana source produces");
+    const tapped = events.filter(e => e.kind === "GameEventCardTapped" && e.data.fields.tapped === true).map(e => e.data.fields.card.cardId);
+    eq([tapped.length, new Set(tapped).size, [...tapped].sort((a,b) => a-b)], [5, 5, [...costIds, source].sort((a,b) => a-b)], "the four cost tappers and mana source each tap exactly once");
+    eq([state.players[0].manaPool.W, state.stack.at(-1)?.name, state.awaiting], [0, "Sephara, Sky's Blade", null], "the actual disjoint resources pay and cast Sephara");
+    resolveTop(state);
+    const drake = state.zones.battlefield.find(id => state.objects[id].card === "Drake");
+    eq([state.zones.battlefield.some(id => state.objects[id].card === "Sephara, Sky's Blade"), keywordsOf(state, drake).includes("Indestructible")], [true, true], "the actual Sephara resolves and protects the other flyer");
+  };
+  let refused = 0, paid = 0;
+  for (let a = 0; a < 6; a++) for (let b = a + 1; b < 6; b++) for (let c = b + 1; c < 6; c++) for (let d = c + 1; d < 6; d++) {
+    const state = JSON.parse(JSON.stringify(initial)), picks = [a,b,c,d], costs = picks.map(i => all[i]), remaining = birds.filter(id => !costs.includes(id));
+    if (!remaining.length) {
+      const before = structuredClone(state);
+      assert.throws(() => resolveAwaiting(state, picks), /leave no legal mana payment/); checks++;
+      eq(state, before, "every unaffordable tap subset refuses before clearing the proposal or paying anything");
+      refused++;
+    } else {
+      const events = resolveAwaiting(state, picks);
+      if (state.awaiting) {
+        eq([awaitingChoice(state).cost, state.zones.battlefield.some(id => state.objects[id].tapped), state.stack.length], ["manaSource", false, 0], "the chosen cost IDs are saved while both possible mana IDs remain unpaid");
+        eq(state.awaiting.action.flashbackTap, costs, "the cost-tapper prefix survives to its source-identity question");
+        for (let index = 0; index < remaining.length; index++) {
+          const resumed = JSON.parse(JSON.stringify(state)), source = awaitingChoice(resumed).options[index].cardId;
+          eq(remaining.includes(source), true, "only a source outside the saved cost set is offered");
+          verify(resumed, costs, source, [...events, ...resolveAwaiting(resumed, [index])]); paid++;
+        }
+        const withdrawn = JSON.parse(JSON.stringify(state)); concede(withdrawn, 0);
+        eq([withdrawn.awaiting, withdrawn.stack.length, withdrawn.players[0].manaPool.W], [null, 0, 0], "concession after saving cost tappers commits no cost or cast");
+        const stale = JSON.parse(JSON.stringify(state)); stale.objects[costs[0]].controller = 1;
+        const staleBefore = structuredClone(stale);
+        assert.throws(() => resolveAwaiting(stale, [0]), /untapped creatures you control/); checks++;
+        eq(stale, staleBefore, "a saved cost tapper that changed controller refuses before source activation or proposal changes");
+      } else {verify(state, costs, remaining[0], events); paid++;}
+    }
+  }
+  eq([refused, paid], [6, 10], "all15 four-of-six cost subsets are audited: six invalid subsets and ten distinct legal complete payments");
+  for (const land of ["Plains", "Flexible"]) {
+    const state = make(1, 3, [land]), action = alternatives(state)[0];
+    eq(Boolean(action), true, "an outside same-kind or flexible source admits the legal payment after a rejected Bird witness");
+    eq(castTapPlans(state, 0, action, Infinity).every(p => p.taps.every(t => state.objects[t.id].card === land)), true, "the concrete availability witness also leaves all four mandatory cost flyers untapped");
+    applyAction(state, 0, action);
+    const costs = awaitingChoice(state).options.map(o => o.cardId), source = state.zones.battlefield.find(id => state.objects[id].card === land);
+    const events = resolveAwaiting(state, [0,1,2,3]);
+    verify(state, costs, source, events);
+  }
+  const forged = make(2, 4), action = alternatives(forged)[0], own = forged.zones.battlefield.filter(id => forged.objects[id].card === "Drake");
+  const enemy = addObject(forged, {...fixtures.Drake, card: "Enemy Drake", owner: 1, controller: 1}, "battlefield", null);
+  const before = structuredClone(forged);
+  assert.throws(() => applyAction(forged, 0, {...action, flashbackTap: [enemy, ...own.slice(0, 3)]}), /untapped creatures you control/); checks++;
+  eq(forged, before, "a forged opponent cost tapper refuses before replacing the proposal or committing any resource");
+  const borrowed = make(2, 3);
+  const drake = addObject(borrowed, {...fixtures.Drake, card: "Borrowed Drake", owner: 1, controller: 1}, "battlefield", null);
+  (borrowed.effects ??= []).push({id: "borrowed cost flyer", layer: 2, timestamp: 1, affects: {ids: [drake]}, apply: {controller: 0}});
+  applyAction(borrowed, 0, alternatives(borrowed)[0]);
+  const costs = awaitingChoice(borrowed).options.filter(o => borrowed.objects[o.cardId].card !== "Bird");
+  eq(costs.some(o => o.cardId === drake), true, "a layer2-controlled cost tapper is eligible despite raw controller and owner");
+  resolveAwaiting(borrowed, costs.map(o => o.index));
+  const source = awaitingChoice(borrowed).options[1].cardId;
+  verify(borrowed, costs.map(o => o.cardId), source, resolveAwaiting(borrowed, [1]));
+  const constrained = make(1, 3, ["Flexible", "Spectrum"]);
+  addObject(constrained, {...cardIndex.definition("Grand Arbiter Augustin IV"), card: "Grand Arbiter Augustin IV", owner: 1, controller: 1}, "battlefield", null);
+  const legal = alternatives(constrained)[0];
+  eq(Boolean(legal), true, "a rejected Bird prefix cannot memo-prune the later legal outside-source pattern under the real Arbiter tax");
+  applyAction(constrained, 0, legal);
+  const tapIds = awaitingChoice(constrained).options.map(o => o.cardId);
+  resolveAwaiting(constrained, [0,1,2,3]);
+  const funding = castTapPlans(constrained, 0, constrained.awaiting.action, Infinity), picked = funding.findIndex(p => p.payment.mana.W === 1 && p.payment.mana.U === 1);
+  eq(picked >= 0, true, "the real taxed alternative retains the legal W/U funding output pattern");
+  const events = resolveAwaiting(constrained, [picked]);
+  const manaIds = constrained.zones.battlefield.filter(id => ["Flexible", "Spectrum"].includes(constrained.objects[id].card));
+  eq(events.filter(e => e.kind === "GameEventManaPool").map(e => e.data.fields.source.cardId), manaIds, "only both outside sources fund the taxed alternative");
+  eq(events.filter(e => e.kind === "GameEventCardTapped").map(e => e.data.fields.card.cardId).sort((a,b) => a-b), [...tapIds, ...manaIds].sort((a,b) => a-b), "the taxed cast taps exactly six distinct mana/cost identities");
+  resolveTop(constrained);
+  eq(constrained.zones.battlefield.some(id => constrained.objects[id].card === "Sephara, Sky's Blade"), true, "the real tax and disjoint nonmana cost finish in actual resolution");
+}
+{
+  const fixtures = {Small: {types: ["Land"], abilities: [{id: "m", kind: "mana", tapSelf: true, produces: {C: 1}}]},
+    Large: {types: ["Land"], abilities: [{id: "m", kind: "mana", tapSelf: true, produces: {C: 2}}]},
+    Two: {types: ["Sorcery"], manaCost: "{2}", spell: {id: "s", text: "You gain 2 life.", targets: [], effects: [{effect: "gainLife", amount: 2}]}}};
+  const initial = runScenario({name: "actual same-name C1/C2 payload identities", pooledTaps: true, setup: [{seat: 0, zone: "hand", cards: ["Two"]},
+    {seat: 0, zone: "battlefield", cards: ["Small", "Small", "Large"]}], steps: []}, cardIndex.definition, fixtures).state;
+  for (const id of initial.zones.battlefield) initial.objects[id].card = "Same Source";
+  const action = legalActions(initial, 0).find(a => a.kind === "cast"), plans = castTapPlans(initial, 0, action, Infinity);
+  eq(plans.length, 3, "actual C1/C2 outputs retain the large source, both small sources and one of each pattern");
+  applyAction(initial, 0, action);
+  let paid = 0;
+  const verify = (state, events) => {
+    const produced = events.filter(e => e.kind === "GameEventManaPool");
+    eq(produced.every(e => e.data.fields.produced.C === state.objects[e.data.fields.source.cardId].abilities[0].produces.C), true, "each exact source identity retains its actual C1 or C2 production payload");
+    const made = produced.reduce((n,e) => n + e.data.fields.produced.C, 0);
+    eq([state.objects[state.stack.at(-1).objectId].spent.C, state.players[0].manaPool.C], [2, made - 2], "different output quantities pay the same two and retain their exact surplus");
+    resolveTop(state);
+    eq(state.players[0].life, 42, "each quantity-specific physical payment reaches native resolution"); paid++;
+  };
+  for (let i = 0; i < plans.length; i++) {
+    const state = JSON.parse(JSON.stringify(initial)), events = resolveAwaiting(state, [i]);
+    if (state.awaiting) {
+      const choice = awaitingChoice(state);
+      eq(choice.options.every(o => state.objects[o.cardId].abilities[0].produces.C === 1), true, "the ambiguous small-output ID block cannot substitute the C2 source");
+      for (const option of choice.options) {const resumed = JSON.parse(JSON.stringify(state)); verify(resumed, [...events, ...resolveAwaiting(resumed, [option.index])]);}
+    } else verify(state, events);
+  }
+  eq(paid, 4, "all four actual physical C1/C2 payments are exercised");
+}
+{
+  const fixtures = {Bundle: {types: ["Land"], abilities: [{id: "m", kind: "mana", tapSelf: true, produces: [{C: 2}, {G: 1, U: 1}]}]},
+    Two: {types: ["Sorcery"], manaCost: "{2}", spell: {id: "s", text: "You gain 2 life.", targets: [], effects: [{effect: "gainLife", amount: 2}]}}};
+  const initial = runScenario({name: "actual distinct bundled payloads", pooledTaps: true, setup: [{seat: 0, zone: "hand", cards: ["Two"]}, {seat: 0, zone: "battlefield", cards: ["Bundle"]}], steps: []}, cardIndex.definition, fixtures).state;
+  const action = legalActions(initial, 0).find(a => a.kind === "cast"), plans = castTapPlans(initial, 0, action, Infinity);
+  eq(plans.length, 2, "both actual C2 and G1/U1 bundled output payloads remain available");
+  applyAction(initial, 0, action);
+  for (let i = 0; i < plans.length; i++) {
+    const state = JSON.parse(JSON.stringify(initial)), events = resolveAwaiting(state, [i]);
+    const made = events.find(e => e.kind === "GameEventManaPool").data.fields.produced;
+    eq(made, plans[i].taps[0].color === "C:2" ? {C: 2} : {G: 1, U: 1}, "the selected actual bundled ability produces its full payload");
+    eq(Object.values(state.players[0].manaPool).reduce((a,b) => a+b, 0), 0, "the full bundled payload pays exactly two");
+    resolveTop(state);
+    eq(state.players[0].life, 42, "both distinct actual bundles cast and resolve");
+  }
+}
+{
+  const fixtures = {One: {types: ["Sorcery"], manaCost: "{1}", spell: {id: "s", text: "You gain 1 life.", targets: [], effects: [{effect: "gainLife", amount: 1}]}}};
+  const initial = runScenario({name: "actual pain outputs stay distinct from pure tap funding", setup: [{seat: 0, zone: "hand", cards: ["One"]}, {seat: 0, zone: "battlefield", cards: ["Shivan Reef"]}], steps: []}, cardIndex.definition, fixtures).state;
+  const cast = legalActions(initial, 0).find(a => a.kind === "cast");
+  eq(castTapPlans(initial, 0, cast, Infinity).map(p => p.taps[0].color), ["C"], "the actual damage-producing U/R abilities are not grouped into pure tap funding");
+  const automatic = JSON.parse(JSON.stringify(initial)); applyAction(automatic, 0, cast); resolveTop(automatic);
+  eq(automatic.players[0].life, 41, "the automatic pure C ability causes no hidden painland damage");
+  const manual = JSON.parse(JSON.stringify(initial)), blue = legalActions(manual, 0).find(a => a.kind === "activate-mana" && a.mana.U === 1);
+  applyAction(manual, 0, blue);
+  eq([manual.players[0].life, manual.players[0].manaPool.U], [39, 1], "the explicit actual blue mana ability retains its damage side effect");
+  applyAction(manual, 0, legalActions(manual, 0).find(a => a.kind === "cast")); resolveTop(manual);
+  eq([manual.players[0].life, manual.players[0].manaPool.U], [40, 0], "the explicit painland payment still pays, casts and resolves with its real life total");
+}
+{
+  const fixtures = {One: {types: ["Sorcery"], manaCost: "{1}", spell: {id: "s", text: "You gain 1 life.", targets: [], effects: [{effect: "gainLife", amount: 1}]}}};
+  const initial = runScenario({name: "actual spending restriction is not a pure-output identity", setup: [{seat: 0, zone: "hand", cards: ["One"]},
+    {seat: 0, zone: "battlefield", cards: ["Ancient Ziggurat", "Wastes"]}], steps: []}, cardIndex.definition, fixtures).state;
+  const pure = initial.zones.battlefield.find(id => initial.objects[id].card === "Wastes"), restricted = initial.zones.battlefield.find(id => initial.objects[id].card === "Ancient Ziggurat");
+  const cast = legalActions(initial, 0).find(a => a.kind === "cast");
+  eq(castTapPlans(initial, 0, cast, Infinity).map(p => p.taps.map(t => t.id)), [[pure]], "the real creature-only mana source is not grouped with unrestricted funding of a sorcery");
+  const green = legalActions(initial, 0).find(a => a.kind === "activate-mana" && a.objectId === restricted && a.mana.G === 1);
+  applyAction(initial, 0, green);
+  eq(initial.players[0].restrictedMana.map(entry => [entry.key, entry.source]), [["G", restricted]], "the explicit actual restricted activation retains its green amount and source provenance");
+  const events = applyAction(initial, 0, legalActions(initial, 0).find(a => a.kind === "cast"));
+  eq(events.filter(e => e.kind === "GameEventManaPool").map(e => e.data.fields.source.cardId), [pure], "the sorcery funds only from the unrestricted actual identity");
+  eq([initial.players[0].restrictedMana.map(entry => [entry.key, entry.source]), initial.players[0].manaPool.C], [[["G", restricted]], 0], "casting retains the unspent creature-only green mana and spends the pure colorless mana");
+  resolveTop(initial);
+  eq(initial.players[0].life, 41, "the actual restricted/pure split still reaches native sorcery resolution");
 }
 console.log(`engine-load100-mana: ${checks} checks passed — printed costs, convoke alternatives, and funded casts.`);

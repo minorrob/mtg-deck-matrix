@@ -461,7 +461,7 @@ function costChoice(state, awaiting) {
       options: numbered(flashbackTappers(state, player, tap).map((cardId, index) => ({index, label: state.objects[cardId].card, cardId})))};
   }
   /* Tapped for it (castTapPlans), with more than one way: which sources. */
-  if (action.autoTap === true) {
+  if (action.autoTap === true && !(state.sourceChoices === true && !Array.isArray(action.flashbackTap) && castTapCost(state, player, action))) {
     const plans = castTapPlans(state, player, action, TAP_CHOICES);
     const plan = action.tapPlan !== undefined ? plans.find(p => p.key === action.tapPlan) : plans.length === 1 ? plans[0] : null;
     if (action.tapPlan !== undefined && !plan) throw new Error(`${name} cannot be tapped for that way now`);
@@ -586,6 +586,13 @@ export function resolveCastCost(state, awaiting, indices, amounts = null) {
   const action = {...structuredClone(awaiting.action), ...(choice.cost === "manaSource" ? {tapPlan: choice.planKey, tapSources: {...awaiting.action.tapSources, [choice.sourceGroup]: ids}} : choice.cost === "pool" ? {payWith: choice.options[picked[0]].key, ...(choice.options[picked[0]].riders ? {payRiders: choice.options[picked[0]].riders} : {})} : way ? {tapPlan: way.key} : choice.cost === "tap" ? {flashbackTap: ids}
     : choice.cost === "flashbackSacrifice" ? {flashbackSacrifice: ids} : choice.cost === "delve" ? {delveExile: ids} : choice.cost === "convoke" ? {convokeTap: ids} : choice.cost === "waterbend" ? {waterbendTap: ids} : choice.cost === "tapAny" ? {tapChosen: ids} : choice.cost === "sacrificeAny" ? {sacrificeChosen: ids} : choice.cost === "behold" ? {beheld: ids} : choice.cost === "exileOthers" ? {othersExiled: ids} : choice.cost === "sacrifice" ? {sacrificeSet: ids} : choice.cost === "escalate" ? {escalateTapped: ids}
     : choice.cost === "counters" ? {counterSet: picked.map((i) => ({id: choice.options[i].cardId, counter: choice.options[i].counter}))} : {escapeExile: ids})};
+  if (state.sourceChoices === true && action.kind === "cast" && Array.isArray(action.flashbackTap)) {
+    asCast(state, action, () => {
+      const tap = castTapCost(state, awaiting.player, action);
+      if (tap) flashbackTapped(state, awaiting.player, action, tap, "for it");
+    });
+    if (action.autoTap === true && !castTapPlans(state, awaiting.player, action, 1).length) throw new Error("Those cost tappers leave no legal mana payment");
+  }
   state.awaiting = null;
   state.priorityPlayer = awaiting.player;
   return applyAction(state, awaiting.player, action);
@@ -614,6 +621,10 @@ function flashbackTapped(state, player, action, tap, forWhat = "for its flashbac
   if (!Array.isArray(list) || list.length !== tap.count || new Set(list).size !== list.length || !list.every((id) => fitting.includes(id)))
     throw new Error(`Those are not ${tappersInWords(tap)} ${forWhat}`);
   return [...list];
+}
+function castTapCost(state, player, action) {
+  return (action.flashback === true ? flashbackCost(state, player, action.objectId)?.tap : null)
+    ?? (action.alternative !== undefined ? alternativeCosts(state, player, action.objectId).find(way => way.index === action.alternative)?.tap : null);
 }
 
 /* BEHOLD (CR 701.4a): "behold an Elf" is "reveal an Elf card from your hand or choose an Elf you control"; "behold three
@@ -1758,7 +1769,7 @@ export const tapWords = (state, plan) => plan.taps.map((t) => state.objects[t.id
 
 /* Current matches preserve each source-output pattern and its payment, including generic and hybrid colors. Historical
    matches retain their empty-pool one-mana solver (tapPlans), or their floating/bundled solver when pooledTaps allows it. */
-function fundingPlans(state, player, id, cost, limit, units = tapUnits(state, player, undefined, pooledTaps(state))) {
+function fundingPlans(state, player, id, cost, limit, units = tapUnits(state, player, undefined, pooledTaps(state)), reserve = null) {
   const pool = poolFor(state, player, {spell: id});
   const empty = poolSize(pool) === 0;
   if (state.sourceChoices !== true && (!pooledTaps(state) || (empty && units.every((u) => u.colors.every((c) => MANA_KEYS.includes(c))))))
@@ -1766,10 +1777,29 @@ function fundingPlans(state, player, id, cost, limit, units = tapUnits(state, pl
   /* The one an unasked cast taps is built (quickTapPlan); asking which way lists what the search finds with that one first,
      so the first way asked is the way the offer was priced at. */
   const complete = units.map(unit => ({...unit, outputs: unit.outputs ?? Object.fromEntries(unit.colors.map(color => [color, {[color]: 1}]))}));
-  const quick = quickTapPlan(complete, pool, cost);
-  if (limit === 1) return quick ? [quick] : sourceTapPlans(complete, pool, cost, 1);
-  const found = sourceTapPlans(complete, pool, cost, limit);
   const byId = new Map(complete.map(unit => [unit.id, unit]));
+  const kind = unit => Object.keys(unit.outputs).sort().join("/");
+  const reserved = new Set(reserve?.ids ?? []), outside = new Map();
+  for (const unit of complete) if (!reserved.has(unit.id)) outside.set(kind(unit), (outside.get(kind(unit)) ?? 0) + 1);
+  /* Equivalent source IDs can be assigned outside the cost set first. Only unavoidable overlap reduces the cost's
+     available tappers. This is an existence witness; the player still chooses every ambiguous physical subset. */
+  const acceptTaps = reserve ? taps => {
+    const counts = new Map();
+    for (const tap of taps) {const key = kind(byId.get(tap.id)); counts.set(key, (counts.get(key) ?? 0) + 1);}
+    const overlap = [...counts].reduce((n, [key, count]) => n + Math.max(0, count - (outside.get(key) ?? 0)), 0);
+    return reserve.ids.length - overlap >= reserve.count;
+  } : null;
+  /* The uncommitted availability witness also names a feasible set of IDs; it is never the player's later ID choice. */
+  const witness = plan => {
+    if (!reserve) return plan;
+    const groups = new Map(), at = new Map();
+    for (const unit of complete) {const key = kind(unit); if (!groups.has(key)) groups.set(key, []); groups.get(key).push(unit);}
+    for (const group of groups.values()) group.sort((a,b) => Number(reserved.has(a.id)) - Number(reserved.has(b.id)));
+    return {...plan, taps: plan.taps.map(tap => {const key = kind(byId.get(tap.id)), index = at.get(key) ?? 0; at.set(key, index + 1); return {...tap, id: groups.get(key)[index].id};})};
+  };
+  const built = quickTapPlan(complete, pool, cost), quick = built && (!acceptTaps || acceptTaps(built.taps)) ? witness(built) : null;
+  if (limit === 1) return quick ? [quick] : sourceTapPlans(complete, pool, cost, 1, acceptTaps).map(witness);
+  const found = sourceTapPlans(complete, pool, cost, limit, acceptTaps).map(witness);
   const pattern = plan => `${plan.taps.map(tap => `${Object.keys(byId.get(tap.id).outputs).sort().join("/")}=${tap.color}`).sort().join(";")}|${paymentKey(plan.payment)}`;
   const quickPattern = quick && state.sourceChoices === true ? pattern(quick) : null;
   return quick ? [quick, ...found.filter((w) => state.sourceChoices === true ? pattern(w) !== quickPattern : w.key !== quick.key)].slice(0, limit) : found;
@@ -1786,7 +1816,11 @@ export function castTapPlans(state, player, action, limit = 2) {
   });
   /* Its X, in a match that taps for one (`xTaps`): counted in, as the offer priced it. */
   const xs = xTaps(state) && cost.variable > 0 ? xCounted(cost, action.x ?? 0) : cost;
-  return fundingPlans(state, player, action.objectId, {...xs, generic: xs.generic + x}, limit);
+  const chosen = state.sourceChoices === true ? new Set(action.flashbackTap ?? []) : new Set();
+  const units = tapUnits(state, player, undefined, pooledTaps(state)).filter(unit => !chosen.has(unit.id));
+  const tapCost = state.sourceChoices === true ? asCast(state, action, () => castTapCost(state, player, action)) : null;
+  const reserve = state.sourceChoices === true && tapCost && !Array.isArray(action.flashbackTap) ? {ids: flashbackTappers(state, player, tapCost), count: tapCost.count} : null;
+  return fundingPlans(state, player, action.objectId, {...xs, generic: xs.generic + x}, limit, units, reserve);
 }
 
 /* A kind plan describes the required outputs, not permission to pick the first physical sources. Each output block
@@ -1794,7 +1828,8 @@ export function castTapPlans(state, player, action, limit = 2) {
    ambiguous blocks are saved as ordinary pre-payment cost questions, without enumerating all physical permutations. */
 function fundingIdentities(state, player, action, plan) {
   if (state.sourceChoices !== true) return {taps: plan.taps};
-  const units = tapUnits(state, player, undefined, pooledTaps(state));
+  const costTaps = new Set(action.flashbackTap ?? []);
+  const units = tapUnits(state, player, undefined, pooledTaps(state)).filter(unit => !costTaps.has(unit.id));
   const kind = unit => [...unit.colors].sort().join("/");
   const byId = new Map(units.map(unit => [unit.id, unit]));
   const groups = [];
@@ -2044,7 +2079,9 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
        not then be tapped for it (their mana is paid from the pool first). */
     if (!payment && (pooledTaps(state) ? !canPay(pool, cost, {life: lifeLeft, x: x + (xMana ?? 0) * cost.variable}) : poolSize(pool) === 0) && (xMana === null || tapsForX) && !tapsAny && !variant.escalateTap && tapZone(state, player, from, id)) {
       const paying = xMana === null ? cost : xCounted(cost, xMana);
-      const [plan] = fundingPlans(state, player, id, {...paying, generic: paying.generic + x}, 1, tappable());
+      const tapCost = back?.tap ?? way?.tap;
+      const reserve = state.sourceChoices === true && tapCost ? {ids: flashbackTappers(state, player, tapCost), count: tapCost.count} : null;
+      const [plan] = fundingPlans(state, player, id, {...paying, generic: paying.generic + x}, 1, tappable(), reserve);
       if (plan) {
         autoTap = true;
         payment = plan.payment;
@@ -2840,6 +2877,11 @@ function perform(state, player, action, during = null) {
 /* An action already found among the offers (perform), done. */
 function performOffered(state, player, action, during) {
   if (!during) {
+    if (state.sourceChoices === true && action.kind === "cast" && Array.isArray(action.flashbackTap)) {
+      const tap = castTapCost(state, player, action);
+      if (!tap) throw new Error("That cast has no creature tap cost");
+      flashbackTapped(state, player, action, tap, "for it");
+    }
     /* A COUNTED TARGET (CR 601.2c, 602.2b; script/bind.mjs): taken with its placeholder, the offer stops to ask which,
        nothing moved or paid before the answer (rules/turn.mjs, "choose-targets"); taken with a list, the list is checked. */
     if ((action.targets ?? []).some(isChoosing)) {

@@ -363,7 +363,8 @@ export function tapPlans(units, cost, limit = 2) {
  * player's question retains all distinct plans. No search-step budget may remove a legal payment (CR 601.2g-h). */
 /* Existence probes stop at their requested result count; a payment question must not stop after an arbitrary search budget. */
 export const SEARCH_LIMIT = Infinity;
-export function sourceTapPlans(units, pool, cost, limit = 2) {
+/* acceptTaps may reserve other tap costs: rejection cannot be repaired by tapping more mana sources. */
+export function sourceTapPlans(units, pool, cost, limit = 2, acceptTaps = null) {
   if (cost.variable > 0 || cost.symbols.some((s) => !["generic", "colored", "hybrid"].includes(s.kind))) return [];
   const size = cost.generic + cost.symbols.filter((s) => s.kind !== "generic").length;
   const kind = (u) => Object.keys(u.outputs).sort().join("/");
@@ -382,13 +383,15 @@ export function sourceTapPlans(units, pool, cost, limit = 2) {
     const payments = paymentOptions(available, cost, {life: 0}, limit - result.length);
     if (payments.length) {
       for (const payment of payments) {
+        if (acceptTaps && !acceptTaps(taps)) continue;
         const key = `sources:${taps.map((t) => `${t.kind}=${t.color}`).join(";")}|${paymentKey(payment)}`;
         if (!foundKeys.has(key)) { foundKeys.add(key); result.push({taps, payment, key}); }
       }
       return;
     }
     if (i === ordered.length || taps.length === budget || !canPay(add(available, ceiling[i]), cost, {life: 0})) return;
-    const key = `${i}|${budget - taps.length}|${alike[i] ? last : "*"}|${MANA_KEYS.map((k) => Math.min(size, available[k] || 0)).join(",")}`;
+    /* Equal mana totals can leave different nonmana cost tappers; a constrained search retains its prefix pattern. */
+    const key = `${i}|${budget - taps.length}|${alike[i] ? last : "*"}|${MANA_KEYS.map((k) => Math.min(size, available[k] || 0)).join(",")}${acceptTaps ? `|${taps.map(t => `${t.kind}=${t.color}`).join(";")}` : ""}`;
     if (dead.has(key)) return;
     const before = result.length, unit = ordered[i];
     /* After a source alike that was left, this one is left too; after one tapped for an output, this one for that or a later. */
