@@ -9,7 +9,7 @@
   "review": [],
   "debt": "Alms Collector and dredge asked (CR 616.1); \"each player draws\" from the active player; draw replacements asked; dice modifiers and \"whenever you roll\"; the compiler's gate: a candidate's smoke game must have **played** the card, and the minimum template count raised to what the calibration supports (`game/tools/card-compiler.mjs`)",
   "evidence": [
-    "| Alms Collector and dredge: which replacement first is not asked (CR 616.1) | `script/effects/zones.mjs`:752–760 | W7 |",
+    "| Alms Collector and dredge: which replacement first is not asked (CR 616.1) | `script/effects/zones.mjs`:752\u00e2\u20ac\u201c760 | W7 |",
     "| \"Each player draws\" in seat order, not from the active player | `zones.mjs`:280 | W7 |",
     "| Delve not offered for an X spell; no die modifiers or \"whenever you roll\" | `actions.mjs`:1965; `script/effects/resources.mjs`:469 | W5, W7 |",
     "| Unsure, to be settled by a scenario: Song of the Dryads and Sagas under ability loss; Incubator copies single-faced; Social Snub's copy; Winter's prompt and a draw-two cost under Narset | `rules/layers.mjs`:870; `permanents.mjs`:644; `actions.mjs` | V8 finds, W1/W6/W2/W7 fix |",
@@ -17,5 +17,105 @@
     "| A compiler candidate passes its smoke game without the card ever being played (`played` recorded, not required) | `game/tools/card-compiler.mjs`:75, 79 | W7 |",
     "| Calibration trusts a template seen on one card (`minimumCount: 1`) | `card-compiler.mjs`:89 | W7 |"
   ],
-  "status": "queued; prerequisite PR 834 verification in progress"
+  "status": "bounded checkpoint; outside-resolution draw choices and die modifiers remain open; wave 0 gates not passed",
+  "checkpoint": {
+    "code": "8e512b0c",
+    "foundation": "b2ba9343e4316c618f5b49f8bfec5df5374d0583",
+    "dependencyMerge": "baf5e2b6",
+    "dependencyAuthorization": "Root reviewed foundation-only commit and explicitly authorized this dependency exception; no W3 domain work merged.",
+    "latestCode": "686d948f7bbe147176f05ee06856b1365eae0ce3"
+  },
+  "fixed": [
+    "Compiler refuses smoke.ok with smoke.played !== true; battlefield-seeded no-cost permanents no longer count as played.",
+    "Multi-player draw instructions, their individual draws, and replacement questions follow APNAP order (CR 121.2c).",
+    "In resolving effects, the drawer can apply a mandatory single-draw doubler before dredge; descendants track applied replacement keys (CR 614.5, 616.1).",
+    "Die-roll watchers compile and match the correct roller and retained final result; separate roll instructions do not collapse into one one-or-more trigger (CR 706.2, 706.6)."
+  ],
+  "settledByEvidence": [
+    {
+      "question": "Alms Collector before dredge",
+      "answer": "Required order, preserved and regression-proved; no player choice to dredge before the multi-card instruction is replaced.",
+      "rules": [
+        "121.2a",
+        "616.1g"
+      ],
+      "rulingDate": "2017-08-25",
+      "source": "https://api.scryfall.com/cards/named?exact=Alms%20Collector"
+    },
+    {
+      "question": "Minimum template count",
+      "answer": "Retained measured count 1; raising it is not supported by this calibration.",
+      "evidence": "W7-calibration.json",
+      "sourceCode": "9177d29baca191ce1bee7773a6851bfabef68df5",
+      "limits": "Held-out existing scenarios measure template reuse, not independent Oracle correctness or ability coverage."
+    }
+  ],
+  "proof": {
+    "cards": {
+      "definitions": 6430,
+      "scenarios": 11023,
+      "failed": 0,
+      "command": "node --stack-size=4000 game/tools/batch/check-cards.mjs",
+      "code": "8e512b0c",
+      "abilityGate": "Legacy scenario check only; no G-3 coverage claim."
+    },
+    "focused": [
+      "tests/load100-w7-compiler.mjs: 13 checks",
+      "tests/engine-load100-w7-spells.mjs: APNAP, Collector/dredge/doubler choices, die watchers",
+      "tests/engine-wave4c-k2.mjs: 71 checks",
+      "tests/engine-wave4c-k3.mjs: 171 checks",
+      "tests/engine-spells-draws-4c.mjs: 94 checks",
+      "tests/engine-draws-replaced.mjs: 19 checks",
+      "tests/engine-vocabulary.mjs: 49 checks",
+      "tests/feature-wiring.mjs: 131 checks"
+    ],
+    "readers": "W7-readers.json: 48 completed readers, all exit 0; engine-compile 309.53 seconds",
+    "current": [
+      "engine-definitions --check",
+      "engine-candidates --check",
+      "data-inventory --check: 60 artifacts",
+      "tests/data-integrity.mjs"
+    ],
+    "mutations": {
+      "new": 22,
+      "newMissed": [],
+      "legacyReanchoredCaught": 6,
+      "legacyMissed": [],
+      "legacySuites": [
+        "tests/engine-wave4c-k2.mjs",
+        "tests/engine-wave4c-k3.mjs"
+      ],
+      "legacyMethod": "Original mutation strings imported into local selected-label wrappers; legacy SUITES lists unchanged.",
+      "checkpoints": {
+        "initial18": "8e512b0c/baf5e2b6, final full18-run missed[]",
+        "smokeFixture4": "686d948f, four incremental mutations caught, missed[]"
+      }
+    },
+    "anchors": {
+      "problems": 53,
+      "new": []
+    },
+    "readersAfterFixtureFix": [
+      "tests/card-compiler.mjs: 29 checks, 100 stored candidates",
+      "tests/card-waves.mjs: 22 checks",
+      "tests/table-candidates.mjs: 43 checks",
+      "tests/table-basics.mjs: 6 checks, all 11023 scenarios"
+    ]
+  },
+  "remaining": [
+    "Outside-resolution draw replacements still use their previous fallback behavior. Needs W3 move-one operation frame and the shared resolution/turn continuation bridge, then W7 staged draw consumers.",
+    "Die modifiers are not implemented by this watcher checkpoint. Need staged roll frames preserving RNG results across questions, replacement ordering, ignored-roll tie selection, rerolls, and optional/numeric modifiers.",
+    "Mana abilities that roll (Vexing Puzzlebox) need the mana-ability caller continuation before modifier grammar can be enabled safely; W5/actions owner coordinates with W3/W7.",
+    "Winter sacrifice prompt and draw-two cost under Narset remain the original V8 unsure-case review; not settled or waived here.",
+    "Independent V8 review of this checkpoint and consolidated wave gates remain pending."
+  ],
+  "ignoresAdded": [],
+  "annulSmokeRepair": {
+    "before": "Existing card-compiler reader failed because stored Annul smoke had played:false and the generic fixture cast a sorcery.",
+    "after": "Generic Artifact and Enchantment spell fixtures let Annul actually cast at Smoke Artifact Spell; stack1 is countered, stack2 Annul resolves without fizzling.",
+    "evidence": "W7-Annul-smoke.json",
+    "caution": "The smoke.resolved count2 includes the countered target event; this is not two successfully resolved spells.",
+    "generatedCandidatesEdited": false
+  },
+  "diagnostics": "C:\\Users\\robmi\\CrankMagic\\workbench\\load100-w7-686d948f-diagnostics"
 }

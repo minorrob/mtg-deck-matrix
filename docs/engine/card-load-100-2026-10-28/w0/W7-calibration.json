@@ -1,0 +1,109 @@
+{
+  "summary": {
+    "cards": 6430,
+    "structure": 77,
+    "unknown": 2188,
+    "translated": 4165,
+    "passed": 4165,
+    "failed": 0,
+    "low": 0.9991
+  },
+  "minimumCount": 1,
+  "pooled": [
+    {
+      "band": "1",
+      "templates": 301,
+      "tried": 512,
+      "passed": 512,
+      "rate": 1,
+      "low": 0.9925527526279385
+    },
+    {
+      "band": "2-4",
+      "templates": 303,
+      "tried": 931,
+      "passed": 931,
+      "rate": 1,
+      "low": 0.9958906407245889
+    },
+    {
+      "band": "5-9",
+      "templates": 154,
+      "tried": 952,
+      "passed": 952,
+      "rate": 1,
+      "low": 0.995980924035949
+    },
+    {
+      "band": "10-19",
+      "templates": 74,
+      "tried": 812,
+      "passed": 812,
+      "rate": 1,
+      "low": 0.9952912428098786
+    },
+    {
+      "band": "20-49",
+      "templates": 53,
+      "tried": 1309,
+      "passed": 1309,
+      "rate": 1,
+      "low": 0.9970738282516338
+    },
+    {
+      "band": "50+",
+      "templates": 23,
+      "tried": 2494,
+      "passed": 2494,
+      "rate": 1,
+      "low": 0.9984620321801031
+    }
+  ],
+  "atLeast": [
+    {
+      "from": 1,
+      "tried": 7010,
+      "passed": 7010,
+      "rate": 1,
+      "low": 0.999452283039868
+    },
+    {
+      "from": 2,
+      "tried": 6498,
+      "passed": 6498,
+      "rate": 1,
+      "low": 0.9994091520162534
+    },
+    {
+      "from": 5,
+      "tried": 5567,
+      "passed": 5567,
+      "rate": 1,
+      "low": 0.9993104094002602
+    },
+    {
+      "from": 10,
+      "tried": 4615,
+      "passed": 4615,
+      "rate": 1,
+      "low": 0.9991682763054702
+    },
+    {
+      "from": 20,
+      "tried": 3803,
+      "passed": 3803,
+      "rate": 1,
+      "low": 0.9989908694913915
+    },
+    {
+      "from": 50,
+      "tried": 2494,
+      "passed": 2494,
+      "rate": 1,
+      "low": 0.9984620321801031
+    }
+  ],
+  "source": "9177d29baca191ce1bee7773a6851bfabef68df5",
+  "method": "Held-out existing cards; 95% Wilson lower bound, z=1.96; not independent correctness evidence",
+  "command": "calibrate() from W4 sentence-library.mjs, read-only"
+}
