@@ -1547,7 +1547,10 @@ export function playerRuleChanged(state, rule, player) {
 /** Whether any static ability on the battlefield -- or an effect with a duration ("can't be blocked this turn") -- changes `rule` for this object. */
 export function ruleChanged(state, rule, id) {
   const held = staticAbilities(state);
-  for (const holderId of state.zones.battlefield) {
+  /* CR 114.4: an emblem's object rules function in the command zone, using its controller and current selector.
+     Ordinary cards in that zone do not gain this permission (Teferi's loyalty-timing emblem). */
+  const emblems = (state.zones.command ?? []).flat().filter((holderId) => state.objects[holderId]?.emblem === true);
+  for (const holderId of [...state.zones.battlefield, ...emblems]) {
     const holder = state.objects[holderId];
     for (const ability of held(holderId)) {
       if (ability.kind !== "static" || ability.rule !== rule) continue;

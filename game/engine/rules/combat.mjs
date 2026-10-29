@@ -63,7 +63,7 @@ import {recordCommanderDamage} from "./commander.mjs";
 import {damageAssignmentProblem} from "../controller.mjs";
 import {
   canBlockAttacker, blockersAreLegal, whyBlockersAreIllegal, lethalNeededFrom, oneBlockerWords,
-  dealsFirstStrike, dealsRegular, trampleOver, lifelinkFrom, markDeathtouch,
+  dealsFirstStrike, dealsRegular, trampleOver, hasTrample, lifelinkFrom, markDeathtouch,
 } from "../keywords/combat.mjs";
 
 const event = (kind, state, fields) => ({kind, data: {turn: state.turn, phase: state.phase, fields}});
@@ -112,11 +112,14 @@ const planeswalkersOf = (state, player) =>
 /* Whether the planeswalker an attack is on is still in combat (CR 506.4): on the battlefield, a planeswalker, its
    controller unchanged. Gone, the creature still attacks, but unblocked deals no combat damage (506.4c). */
 const planeswalkerInCombat = (state, attack) => attack.planeswalker !== undefined && Boolean(state.objects[attack.planeswalker])
+  && onBattlefield(state, attack.planeswalker) && !state.players[attack.defender].lost
   && typesOf(state, attack.planeswalker).includes("Planeswalker") && controllerOf(state, attack.planeswalker) === attack.defender;
 /* Combat damage to what it attacks: the player, or the planeswalker while it is in combat; or none. */
 /* None to a player who has left the game (CR 800.4e). */
 const toAttacked = (state, attack, amount) => (attack.planeswalker === undefined ? (state.players[attack.defender].lost ? null : {toPlayer: attack.defender, amount, source: attack.attacker})
-  : planeswalkerInCombat(state, attack) ? {toCard: attack.planeswalker, amount, source: attack.attacker} : null);
+  : planeswalkerInCombat(state, attack) ? {toCard: attack.planeswalker, amount, source: attack.attacker}
+    : hasNow(state, attack.attacker, "Trample Over Planeswalkers") && !state.players[attack.defender].lost
+      ? {toPlayer: attack.defender, amount, source: attack.attacker} : null);
 
 /* ---- declare attackers ---- */
 
@@ -675,24 +678,111 @@ const dealsIn = (state, id, step) => {
   return Array.isArray(struck) ? !struck.includes(id) || hasNow(state, id, "Double Strike") : dealsRegular(state, id);
 };
 
+/* CR 702.19c: count damage already being assigned by other creatures in this step, not replacement amounts. */
+function otherWalkerDamage(state, attack, step) {
+  return state.combat.attacks.filter(other => other !== attack && other.planeswalker === attack.planeswalker
+    && onBattlefield(state, other.attacker) && dealsIn(state, other.attacker, step)).reduce((sum, other) => {
+    if (other.assignment?.step === step) return sum + other.assignment.toDefender;
+    const standing = other.blockers.filter(id => onBattlefield(state, id));
+    return sum + (!other.blocked || (!standing.length && hasTrample(state, other.attacker))
+      ? Math.max(0, power(state, other.attacker)) : 0);
+  }, 0);
+}
+
+const walkerLethal = (state, attack, step) => Math.max(0, (state.objects[attack.planeswalker]?.counters?.loyalty ?? 0)
+  - otherWalkerDamage(state, attack, step));
+
+function potentialWalkerDamage(state, attack, step) {
+  return state.combat.attacks.filter(other => other.planeswalker === attack.planeswalker
+    && onBattlefield(state, other.attacker) && dealsIn(state, other.attacker, step)).reduce((sum, other) => {
+    const blockers = other.blockers.filter(id => onBattlefield(state, id));
+    if (other.blocked && !hasTrample(state, other.attacker)) return sum;
+    return sum + Math.max(0, power(state, other.attacker) - blockers.reduce((n, id) => n + lethalNeededFrom(state, other.attacker, id), 0));
+  }, 0);
+}
+
+function assignmentAttackers(state, step) {
+  return state.combat.attacks.filter(a => {
+    if (!onBattlefield(state, a.attacker) || !dealsIn(state, a.attacker, step) || power(state, a.attacker) <= 0) return false;
+    const standing = a.blockers.filter(id => onBattlefield(state, id));
+    return standing.length > 1 || (standing.length === 1 && hasTrample(state, a.attacker)
+      && toAttacked(state, a, 1) !== null && power(state, a.attacker) > lethalNeededFrom(state, a.attacker, standing[0]))
+      || (!standing.length && hasNow(state, a.attacker, "Trample Over Planeswalkers") && planeswalkerInCombat(state, a)
+        && potentialWalkerDamage(state, a, step) > (state.objects[a.planeswalker].counters?.loyalty ?? 0));
+  });
+}
+
+/* CR 510.1, 702.19c: allocations to one walker may cooperate. Ask every allocation, allow revision, then validate
+   the complete simultaneous assignment. Checking each creature alone would forbid legal shared loyalty damage. */
+function jointAssignmentProblem(state, step, attacks) {
+  if (attacks.some(a => a.assignment?.step !== step)) return "Assign every creature's damage before confirming combat damage";
+  for (const attack of attacks) {
+    const choice = combatDamage.choice(state, {attacker: attack.attacker, step});
+    const recipients = choice.options.map(option => option.cardId ?? option.planeswalkerId ?? `player:${option.playerId}`);
+    const amounts = choice.options.map(option => !option.defender ? attack.assignment.toBlockers[option.cardId] ?? 0
+      : option.overPlaneswalker ? attack.assignment.toPlayer : attack.assignment.toDefender);
+    if (JSON.stringify(recipients) !== JSON.stringify(attack.assignment.recipients) || damageAssignmentProblem(choice, amounts))
+      return `Review ${shownName(state.objects[attack.attacker])}'s damage after the battlefield changed`;
+  }
+  const hits = [];
+  for (const a of state.combat.attacks) {
+    if (!onBattlefield(state, a.attacker) || !dealsIn(state, a.attacker, step)) continue;
+    const standing = a.blockers.filter(id => onBattlefield(state, id));
+    const allocation = a.assignment?.step === step ? a.assignment : null;
+    if (allocation) {
+      for (const id of standing) hits.push({id, source: a.attacker, amount: allocation.toBlockers[id] ?? 0});
+      if (planeswalkerInCombat(state, a)) hits.push({id: a.planeswalker, source: a.attacker, amount: allocation.toDefender});
+    } else if (!a.blocked || (!standing.length && hasTrample(state, a.attacker))) {
+      if (planeswalkerInCombat(state, a)) hits.push({id: a.planeswalker, source: a.attacker, amount: power(state, a.attacker)});
+    } else if (standing.length === 1) hits.push({id: standing[0], source: a.attacker, amount: power(state, a.attacker)});
+  }
+  for (const a of attacks) {
+    const allocation = a.assignment;
+    if (allocation.toDefender > 0 || allocation.toPlayer > 0) {
+      for (const id of a.blockers.filter(id => onBattlefield(state, id))) {
+        const dealt = hits.filter(hit => hit.id === id && hit.amount > 0);
+        if (!dealt.some(hit => hasNow(state, hit.source, "Deathtouch"))
+          && dealt.reduce((n, hit) => n + hit.amount, state.objects[id].damage ?? 0) < toughnessOf(state, id))
+          return "Assign lethal damage to every blocker before assigning any to the player or planeswalker";
+      }
+    }
+    if (allocation.toPlayer > 0 && planeswalkerInCombat(state, a)
+      && hits.filter(hit => hit.id === a.planeswalker).reduce((n, hit) => n + hit.amount, 0) < (state.objects[a.planeswalker].counters?.loyalty ?? 0))
+      return "Assign damage equal to the planeswalker's loyalty before assigning any to its controller";
+  }
+  return null;
+}
+
 export const combatDamage = {
   /* CR 510.1c, 702.19b: multiple blockers permit a division, and a trampler facing one blocker may put excess on that
      blocker instead of the defender. With no excess and one recipient there is only one legal assignment. */
   open(state, step = damageStep(state)) {
     if (!state.combat) return false;
-    const dealsNow = (id) => dealsIn(state, id, step);
-    const attack = state.combat.attacks.find((a) => {
-      if (a.assignment?.step === step || !onBattlefield(state, a.attacker) || !dealsNow(a.attacker) || power(state, a.attacker) <= 0) return false;
-      const standing = a.blockers.filter((id) => onBattlefield(state, id));
-      return standing.length > 1 || (standing.length === 1 && hasNow(state, a.attacker, "Trample")
-        && toAttacked(state, a, 1) !== null && power(state, a.attacker) > lethalNeededFrom(state, a.attacker, standing[0]));
-    });
+    if (state.awaiting?.kind === "assign-combat-damage" && state.awaiting.step === step) return true;
+    const attacks = assignmentAttackers(state, step);
+    const shared = attacks.some(a => planeswalkerInCombat(state, a) && hasNow(state, a.attacker, "Trample Over Planeswalkers")
+      && attacks.some(other => other !== a && other.planeswalker === a.planeswalker));
+    if (shared && state.combat.damageReview?.step !== step) state.combat.damageReview = {step, confirmed: false};
+    if (state.combat.damageReview?.step === step) {
+      if (state.combat.damageReview.confirmed) return false;
+      state.awaiting = {kind: "assign-combat-damage", player: state.combat.attackingPlayerId, step, selectSource: true};
+      return true;
+    }
+    const attack = attacks.find(a => a.assignment?.step !== step);
     if (!attack) return false;
     state.awaiting = {kind: "assign-combat-damage", player: state.combat.attackingPlayerId, attacker: attack.attacker, step};
     return true;
   },
 
   choice(state, awaiting) {
+    if (awaiting.selectSource) {
+      const attacks = assignmentAttackers(state, awaiting.step);
+      return {id: `assign-sources:${state.turn}:${awaiting.step}`, title: "Assign combat damage, then confirm all assignments",
+        mode: "one", min: 1, max: 1, options: [...attacks.map((a, index) => ({index, cardId: a.attacker,
+          damageAssigned: a.assignment?.step === awaiting.step,
+          label: `${shownName(state.objects[a.attacker])}: ${a.assignment?.step === awaiting.step ? "revise" : "assign"} damage`})),
+          {index: attacks.length, label: "Confirm all combat damage", confirmDamage: true}]};
+    }
     const attack = state.combat.attacks.find((a) => a.attacker === awaiting.attacker);
     const options = attack.blockers.filter((id) => onBattlefield(state, id)).map((id, index) => ({
       index,
@@ -703,16 +793,23 @@ export const combatDamage = {
       defender: false,
     }));
     /* CR 702.19b: a trampler's damage may go on to the player it attacks, once every blocker has lethal. */
-    if (hasNow(state, awaiting.attacker, "Trample") && toAttacked(state, attack, 1) !== null)
+    if (hasTrample(state, awaiting.attacker) && toAttacked(state, attack, 1) !== null)
       options.push({index: options.length, label: `${attack.planeswalker !== undefined ? `${state.objects[attack.planeswalker]?.card ?? "The planeswalker"} (${state.players[attack.defender].name})` : state.players[attack.defender].name}, once every blocker has lethal damage`,
-        lethal: 0, defender: true, playerId: attack.defender, ...(attack.planeswalker !== undefined ? {planeswalkerId: attack.planeswalker} : {})});
+        lethal: 0, defender: true, playerId: attack.defender, ...(planeswalkerInCombat(state, attack) ? {planeswalkerId: attack.planeswalker} : {})});
+    if (hasNow(state, awaiting.attacker, "Trample Over Planeswalkers") && planeswalkerInCombat(state, attack)) {
+      const walkerIndex = options.length - 1;
+      options.push({index: options.length, label: `${state.players[attack.defender].name}, after the planeswalker's loyalty`,
+        lethal: 0, defender: true, playerId: attack.defender, overPlaneswalker: true,
+        requires: [{index: walkerIndex, amount: walkerLethal(state, attack, awaiting.step ?? "regular")}]});
+    }
     return {
       id: `assign-damage:${state.turn}:${awaiting.step ?? "regular"}:${awaiting.attacker}`,
-      title: `Assign ${power(state, awaiting.attacker)} damage`,
+      title: `Assign ${options.length ? power(state, awaiting.attacker) : 0} damage`,
       mode: "damage",
       min: 0,
       max: 0,
-      total: power(state, awaiting.attacker),
+      total: options.length ? power(state, awaiting.attacker) : 0,
+      simultaneousReview: state.combat.damageReview?.step === awaiting.step,
       maySkip: false,
       /* CR 510.1c: divided among the blockers as the attacking creature's controller chooses -- in no order. */
       divide: true,
@@ -722,16 +819,30 @@ export const combatDamage = {
   },
 
   resolve(state, awaiting, amounts) {
+    if (awaiting.selectSource) {
+      const choice = combatDamage.choice(state, awaiting), selected = Array.isArray(amounts) && amounts.length === 1 ? choice.options[amounts[0]] : null;
+      if (!selected) throw new Error("Choose a creature's assignment or confirm all combat damage");
+      if (selected.confirmDamage) {
+        const problem = jointAssignmentProblem(state, awaiting.step, assignmentAttackers(state, awaiting.step));
+        if (problem) throw new Error(problem);
+        state.combat.damageReview.confirmed = true;
+        state.awaiting = null;
+      } else state.awaiting = {kind: "assign-combat-damage", player: awaiting.player, step: awaiting.step, attacker: selected.cardId};
+      return [];
+    }
     const attack = state.combat.attacks.find((a) => a.attacker === awaiting.attacker);
     const choice = combatDamage.choice(state, awaiting);
     const problem = damageAssignmentProblem(choice, amounts);
     if (problem) throw new Error(problem);
     attack.assignment = {
       step: awaiting.step ?? "regular",
+      recipients: choice.options.map(option => option.cardId ?? option.planeswalkerId ?? `player:${option.playerId}`),
       toBlockers: Object.fromEntries(choice.options.filter((o) => !o.defender).map((o) => [o.cardId, amounts[o.index]])),
-      toDefender: choice.options.filter((o) => o.defender).reduce((n, o) => n + amounts[o.index], 0),
+      toDefender: choice.options.filter((o) => o.defender && !o.overPlaneswalker).reduce((n, o) => n + amounts[o.index], 0),
+      toPlayer: choice.options.filter((o) => o.overPlaneswalker).reduce((n, o) => n + amounts[o.index], 0),
     };
-    state.awaiting = null;
+    state.awaiting = state.combat.damageReview?.step === awaiting.step
+      ? {kind: "assign-combat-damage", player: awaiting.player, step: awaiting.step, selectSource: true} : null;
     return [];
   },
 
@@ -770,7 +881,16 @@ export const combatDamage = {
       if (!stillThere(attack.attacker)) continue;
       const attackPower = power(state, attack.attacker);
       if (dealsNow(attack.attacker) && attackPower > 0) {
-        if (!attack.blocked) {
+        if (attack.assignment?.step === step) {
+          for (const id of attack.blockers.filter(stillThere)) {
+            const amount = attack.assignment.toBlockers[id] ?? 0;
+            if (amount > 0) pending.push({toCard: id, amount, source: attack.attacker});
+          }
+          const hit = attack.assignment.toDefender > 0 ? toAttacked(state, attack, attack.assignment.toDefender) : null;
+          if (hit) pending.push(hit);
+          if (attack.assignment.toPlayer > 0 && !state.players[attack.defender].lost)
+            pending.push({toPlayer: attack.defender, amount: attack.assignment.toPlayer, source: attack.attacker});
+        } else if (!attack.blocked) {
           /* CR 510.1a: an unblocked attacker assigns its damage to the player it is attacking. */
           const hit = toAttacked(state, attack, attackPower);
           if (hit) pending.push(hit);
@@ -781,19 +901,10 @@ export const combatDamage = {
                none (CR 510.1c). */
             const hit = trampleOver(state, attack.attacker, 0) > 0 ? toAttacked(state, attack, attackPower) : null;
             if (hit) pending.push(hit);
-          } else if (standing.length === 1 && attack.assignment?.step !== step) {
+          } else if (standing.length === 1) {
             /* No division was needed: one blocker, and either no trample, no excess, or no attacked recipient left
                (CR 510.1c, 702.19b). A real choice was asked by open and uses its assignment below. */
             pending.push({toCard: standing[0], amount: attackPower, source: attack.attacker});
-          } else {
-            /* Divided as its controller chose for this step (open, resolve). */
-            const assignment = attack.assignment?.step === step ? attack.assignment : {toBlockers: {}, toDefender: 0};
-            for (const id of standing) {
-              const amount = assignment.toBlockers[id] ?? 0;
-              if (amount > 0) pending.push({toCard: id, amount, source: attack.attacker});
-            }
-            const hit = assignment.toDefender > 0 ? toAttacked(state, attack, assignment.toDefender) : null;
-            if (hit) pending.push(hit);
           }
         }
       }

@@ -20,11 +20,11 @@ BREAKS = [
     ('implicit count multiplier is learned', SENTENCES,
      'v = {...v, times: 1};', 'v = {...v};'),
     ('one blocker permits trample division', COMBAT,
-     'standing.length === 1 && hasNow(state, a.attacker, "Trample")', 'standing.length === 2 && hasNow(state, a.attacker, "Trample")'),
+     'standing.length === 1 && hasTrample(state, a.attacker)', 'standing.length === 2 && hasTrample(state, a.attacker)'),
     ('departed walker is not an assignment recipient', COMBAT,
      'toAttacked(state, a, 1) !== null && power(state, a.attacker)', 'true && power(state, a.attacker)'),
     ('no division when there is no excess', COMBAT,
      'power(state, a.attacker) > lethalNeededFrom(state, a.attacker, standing[0])', 'true'),
     ('single blocker uses chosen assignment', COMBAT,
-     'standing.length === 1 && attack.assignment?.step !== step', 'standing.length === 1'),
+     'if (attack.assignment?.step === step) {', 'if (attack.assignment?.step === step && attack.blockers.length !== 1) {'),
 ]

@@ -58,37 +58,6 @@
       "apply": {
         "setColors": []
       }
-    },
-    {
-      "kind": "static",
-      "text": "Enchanted permanent is a colorless Forest land.",
-      "layer": 6,
-      "affects": {
-        "what": "permanent",
-        "attachedBy": "self"
-      },
-      "apply": {
-        "removeAllAbilities": true,
-        "addAbilities": [
-          {
-            "kind": "activated",
-            "text": "{T}: Add {G}.",
-            "cost": [
-              {
-                "atom": "{T}"
-              }
-            ],
-            "effects": [
-              {
-                "effect": "addMana",
-                "mana": {
-                  "G": 1
-                }
-              }
-            ]
-          }
-        ]
-      }
     }
   ]
 }

@@ -95,7 +95,12 @@ export function damageAssignmentProblem(choice, amounts) {
   if (!Array.isArray(amounts) || amounts.length !== targets.length) return "Assign damage to each listed recipient";
   if (amounts.some((n) => !Number.isFinite(n) || !Number.isInteger(n) || n < 0 || n > choice.total)) return "Use whole, nonnegative damage amounts";
   const short = targets.some((t, i) => t.defender !== true && amounts[i] < (t.lethal ?? 0));
-  if (short && targets.some((t, i) => t.defender === true && amounts[i] > 0)) return "Assign lethal damage to every blocker before assigning any to the player";
+  if (choice.simultaneousReview !== true && short && targets.some((t, i) => t.defender === true && amounts[i] > 0)) return "Assign lethal damage to every blocker before assigning any to the player";
+  for (const target of targets) {
+    if (amounts[target.index] <= 0) continue;
+    if (choice.simultaneousReview !== true && (target.requires ?? []).some(requirement => amounts[requirement.index] < requirement.amount))
+      return "Assign damage equal to the planeswalker's loyalty before assigning any to its controller";
+  }
   if (choice.divide !== true) {
     let priorNeedsLethal = false;
     for (let i = 0; i < targets.length; i += 1) {

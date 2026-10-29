@@ -18,11 +18,10 @@
  *   prepared, that copy stays in exile -- an exception to CR 704.5e (rules/sba.mjs) -- and the permanent's controller may
  *   cast it (rules/actions.mjs); casting it unprepares the permanent as it becomes cast (601.2i). Unprepared any other way
  *   (722.3b), or gone, and the copy ceases to exist. The copy is a copy of a card: cast, it is a spell like any other, and
- *   once it leaves the stack it ceases to exist (CR 704.5e; rules/stack.mjs).
+ *   an instant or sorcery ceases after it leaves the stack; a resolving permanent spell becomes a token (CR 608.3f).
  *
  * A copied preparation card retains its alternative spell characteristics (CR 722.2b), including tokens. Its prepared
- * designation is not copied; the copy becomes prepared only when a rule or effect makes it so. A prepare spell that is
- * itself a permanent spell remains unbuilt (cards/index.mjs refuses one).
+ * designation is not copied; the copy becomes prepared only when a rule or effect makes it so.
  */
 
 import {addObject, removeObject} from "../../state/index.mjs";
