@@ -73,7 +73,7 @@ new IDs/controllers and the existing graveyard-only movedWas contract. Other mov
 implementation; no broad moveZone closure is claimed.
 
 The current extension has 64 checks in `engine-zone-action-operations` and 48 caught mutations, `missed: []`. The merged
-unchanged W2 suite passes 214 checks and draw-instruction suite passes 33. W2 owns its entry/card/token implementation and
+W2 suite passes 222 checks and draw-instruction suite passes 33. W2 owns its entry/card/token implementation and
 its own mutation closure; these shared bridge results do not certify all W2 code.
 
 Explicit remaining caller seams: replacement `moveOne.runFollowUps` still runs token effects synchronously; converting it

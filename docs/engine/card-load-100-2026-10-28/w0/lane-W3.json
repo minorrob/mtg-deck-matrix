@@ -58,8 +58,19 @@
     "checks": 64,
     "mutations": 48,
     "missed": [],
-    "fullW2Checks": 214,
+    "fullW2Checks": 222,
     "drawInstructionChecks": 33,
+    "readers": {
+      "engine-entering": 15, "engine-enter-copy": 24, "engine-riot": 22,
+      "engine-resolution": 91, "engine-commander": 56, "engine-exile-commanders": 107,
+      "engine-x11-umbra-armor": 39, "engine-replacement": 32, "engine-enters-or-leaves": 14,
+      "engine-actions": 34, "engine-costs": 32, "engine-load100-w3-graveyard": 56,
+      "engine-play-from-zones": 76, "engine-play-from": 20, "engine-may-play": 34,
+      "engine-copies": 19, "engine-copy-memory": 15, "engine-tokens-replaced": 48,
+      "engine-tokens-counters-4a": 208, "game-leave": 67, "engine-x11-leave": 40,
+      "engine-x11-leave-questions": 94, "feature-wiring": 131, "data-integrity": "pass"
+    },
+    "anchorStatus": "Current shared dependency tree has 56 global anchor problems; seven engine entries were reported to W2 for its introduced-copy/land anchor closure, with inherited stale entries still separate. W3's 60+48 anchors are valid and all caught. Global anchor gate remains red.",
     "actualConsumers": "Literal-target sacrifice instruction including borrowed-control payer concession; transformed move-one through real entering child; completed script-to-entry grouped trigger prefix and cancellation; deferred effect-play land with any-number splice and seeded following roll; normal token-effect dispatch.",
     "remaining": "Replacement runFollowUps token child still synchronous; search/fetch move choice and post-entry shuffle; costs, state-based destruction and complex moveZone routes. No global gate or card-loading credit."
   },
