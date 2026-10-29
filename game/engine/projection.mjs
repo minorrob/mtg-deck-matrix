@@ -97,6 +97,10 @@ function cardFor(state, id, canSeeFace, viewer = null) {
        a zone change makes a new object, and an Aura in a hidden zone must never gain an identity through its old host. */
     ...(object.zone === "battlefield" ? {
       ...(object.token === true ? {token: true} : {}),
+      /* WHICH FACE IS UP (ROB-207; the UI's request #5): the back face of a double-faced permanent, said with its name. A name
+         cannot say which side of one picture to draw (a modal double-faced land played as its back face, Mistgate Pathway).
+         The front is the default and says nothing; `face` is only ever "back" here (an adventure's face is not a permanent's). */
+      ...(named && object.face === "back" ? {face: "back"} : {}),
       attachments: (object.attachments ?? []).filter(id => state.objects[id]?.zone === "battlefield" && state.objects[id].attachedTo === object.id),
     } : {}),
 
