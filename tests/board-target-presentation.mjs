@@ -5,7 +5,7 @@ const helpers=code.slice(code.indexOf('  const visibleSpell ='),code.indexOf('  
 const heading=code.slice(code.indexOf('  function targetHeading('),code.indexOf('  function targetReview('));
 const cards=[{cardId:1,name:'Unrelated commander',types:['Creature'],controller:0},{cardId:50,name:'Pinger',types:['Creature'],controller:1}];
 const view={seat:0,state:{stack:[{stackId:1,cardId:50,name:'Pinger',kind:'ability',playerId:1,faceDown:false}]}};
-const ctx=vm.createContext({view,findCard:id=>cards.find(c=>c.cardId===id)||null,players:()=>[{playerId:0,name:'Rob'},{playerId:1,name:'Keith'}],nameOf:id=>id===0?'You':'Keith',e:String});
+const ctx=vm.createContext({view,isYou:i=>view.spectator!==true&&i===view.seat,findCard:id=>cards.find(c=>c.cardId===id)||null,players:()=>[{playerId:0,name:'Rob'},{playerId:1,name:'Keith'}],nameOf:id=>id===0?'You':'Keith',e:String});
 vm.runInContext(helpers+heading+';globalThis.read={targetCard,targetName,targetHeading};',ctx);let checks=0;const eq=(a,b,m)=>{assert.deepEqual(a,b,m);checks++;};
 const t={kind:'ability',id:1,controllerId:1};
 eq(ctx.read.targetCard(t).cardId,50,'ability stack id never resolves an unrelated object with the same id');

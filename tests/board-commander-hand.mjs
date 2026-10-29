@@ -10,7 +10,7 @@
  * A look at another player's hand (the `handLook` decision, mode `ack`, game/engine/script/effects/asking.mjs): the
  * cards it is about are drawn above OK, each opens Card zoom, and OK answers it with nothing chosen.
  *
- * Each in Full, Table and Focus at 1280x720 and the phone at 390x844, hit-tested with elementFromPoint (a Playwright
+ * Each in Full, Table and Focus at 1280x720 (the phone at 390x844 is in the phone follow-up PR), hit-tested with elementFromPoint (a Playwright
  * click proves no reach). GEOMETRY_REQUIRED=1 refuses a missing browser.
  *   node tests/board-commander-hand.mjs
  */
@@ -70,28 +70,37 @@ const acts = (frames) => frames.filter((f) => f.type === "act");
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1;};
 try {
-  for (const [width, height, mode] of [[1280, 720, "full"], [1280, 720, "table"], [1280, 720, "focus"], [390, 844, "focus"]]) {
+  for (const [width, height, mode] of [[1280, 720, "full"], [1280, 720, "table"], [1280, 720, "focus"]]) {   /* the phone (390x844) waits for the phone follow-up PR (Rob, 2026-10-29); docs/ACTIVE.md */
     const where = `${mode} ${width}x${height}`;
     /* ---- the commander tax and partners ---- */
     {
       const {page, context, frames, errors} = await fixture(commanderView(), width, height, mode);
-      const pile = `[data-zone="command"]`, tymna = `${pile} [data-card="${TYMNA}"]`, kraum = `${pile} [data-card="${KRAUM}"]`;
-      ok(await page.locator(tymna).count() === 1 && await page.locator(kraum).count() === 1 && await page.locator(tymna).evaluate((el, k) => !!el.closest('[data-zone="command"]').querySelector(`[data-card="${k}"]`), KRAUM), `${where}: both partners are drawn, together in the command zone`);
-      ok((await page.locator(`${tymna} .cm-bcard-tax`).innerText()).trim() === "+2", `${where}: Tymna's tax badge says +2`);
-      ok((await page.locator(`${kraum} .cm-bcard-tax`).innerText()).trim() === "+0", `${where}: Kraum's tax badge says +0`);
+      const pile = `[data-zone="command"]`, tymna = `${pile} .cm-bcard[data-card="${TYMNA}"]`, kraum = `${pile} .cm-bcard[data-card="${KRAUM}"]`;
+      ok(await page.locator(tymna).count() === 1 && await page.locator(kraum).count() === 1 && await page.locator(tymna).evaluate((el, k) => !!el.closest('[data-zone="command"]').querySelector(`.cm-bcard[data-card="${k}"]`), KRAUM), `${where}: both partners are drawn, together in the command zone`);
+      ok((await page.locator(`${tymna} .cm-bcard-tax`).textContent()).trim() === "+2", `${where}: Tymna's tax badge says +2`);
+      ok((await page.locator(`${kraum} .cm-bcard-tax`).textContent()).trim() === "+0", `${where}: Kraum's tax badge says +0`);
       ok(/commander tax 2/.test(await page.locator(tymna).getAttribute("aria-label")), `${where}: the tax is said with Tymna's name`);
-      /* Measured in the card's own layout, before any transform: the phone's board is turned 90 degrees and Full's table tilted. */
-      const badge = await page.locator(`${tymna} .cm-bcard-tax`).evaluate((b) => {const c = b.closest(".cm-bcard"); return {right: c.clientWidth - b.offsetLeft - b.offsetWidth, top: b.offsetTop, w: c.clientWidth, px: parseFloat(getComputedStyle(b).fontSize)};});
-      ok(badge.right < badge.w * 0.2 && badge.top < badge.w * 0.2 && badge.px >= 10, `${where}: the badge sits at the card's top-right, at 10px or more (${JSON.stringify(badge)})`);
-      const apart = await page.locator(tymna).evaluate((el) => {const b = el.querySelector('.cm-bcard-tax'), n = el.querySelector('.cm-bcard-name'); return n.offsetLeft + n.offsetWidth <= b.offsetLeft + 0.5 || n.offsetTop + n.offsetHeight <= b.offsetTop + 0.5;});
-      ok(apart, `${where}: the badge never lies over the name`);
+      /* Legible or absent (Rob, 2026-10-29): on a board whose cards are too small for the badge at the text floor it stands down, and the card's label says the tax (above). */
+      const shownBadge = await page.locator(`${tymna} .cm-bcard-tax`).isVisible();
+      if (!shownBadge) ok(await page.locator(tymna).evaluate((el) => !!el.closest("[data-tiny]")), `${where}: the badge is absent only on a board of cards too small for it`);
+      else {
+        /* Measured in the card's own layout, before any transform: the phone's board is turned 90 degrees and Full's table tilted. */
+        const badge = await page.locator(`${tymna} .cm-bcard-tax`).evaluate((b) => {const c = b.closest(".cm-bcard"); return {right: c.clientWidth - b.offsetLeft - b.offsetWidth, top: b.offsetTop, w: c.clientWidth, px: parseFloat(getComputedStyle(b).fontSize)};});
+        ok(badge.right < badge.w * 0.2 && badge.top < badge.w * 0.2 && badge.px >= 10, `${where}: the badge sits at the card's top-right, at 10px or more (${JSON.stringify(badge)})`);
+        const apart = await page.locator(tymna).evaluate((el) => {const b = el.querySelector('.cm-bcard-tax'), n = el.querySelector('.cm-bcard-name'); return n.offsetLeft + n.offsetWidth <= b.offsetLeft + 0.5 || n.offsetTop + n.offsetHeight <= b.offsetTop + 0.5;});
+        ok(apart, `${where}: the badge never lies over the name`);
+
+      }
       ok(await page.locator(kraum).evaluate((el) => el.classList.contains("is-bright")), `${where}: castable Kraum is lit`);
       ok(!(await page.locator(tymna).evaluate((el) => el.classList.contains("is-bright"))), `${where}: Tymna, with nothing to do, is not`);
       ok((await page.locator(tymna).getAttribute("aria-label")).endsWith(`. ${TYMNA_WHY}`), `${where}: and says why, with her name (ROB-24)`);
-      const k = await reach(page, kraum), t = await reach(page, tymna, [0.3, 0.15]);
+      /* Pressed on the card's upper part: its quick tab opens over the foot of a small card, and a press there is the tab's own. */
+      let k = await reach(page, kraum, [0.5, 0.2]);
+      for (const fy of [0.5, 0.8]) if (!k.ok) k = await reach(page, kraum, [0.5, fy]);
+      const t = await reach(page, tymna, [0.3, 0.15]);
       ok(k.ok, `${where}: Kraum takes the pointer`);
       ok(t.ok, `${where}: Tymna's uncovered top takes the pointer`);
-      /* Current native path: the card menu stages Cast; W14's one primary commits it. Neither opening nor staging sends. */
+      /* Current native path (Rob, 2026-10-27): the card, then its row -- two presses -- and a row that asks nothing more is sent at once. */
       await page.mouse.click(k.x, k.y);
       const cast = '#cm-card-menu [data-action="board-card-menu-do"][data-index="1"]';
       await page.locator(cast).waitFor();
@@ -99,12 +108,6 @@ try {
       const castAt = await reach(page, cast);
       ok(castAt.ok, `${where}: Kraum's Cast offer takes the pointer`);
       await page.mouse.click(castAt.x, castAt.y);
-      const primary = '#cm-board-decision[data-wf="W14"] [data-action="board-direct"][data-index="1"]';
-      await page.locator(primary).waitFor();
-      ok(acts(frames).length === 0, `${where}: staging Kraum still sends no action`);
-      const bindAt = await reach(page, primary);
-      ok(bindAt.ok, `${where}: W14's cast primary takes the pointer`);
-      await page.mouse.click(bindAt.x, bindAt.y);
       await page.waitForTimeout(100);
       ok(acts(frames).length === 1 && acts(frames)[0].choiceId === "priority:25:3:900" && JSON.stringify(acts(frames)[0].indices) === "[1]", `${where}: exactly one action casts Kraum from the command zone (${JSON.stringify(acts(frames))})`);
       ok(!errors.length, `${where}: no page error (${errors.join(" | ")})`);
@@ -113,7 +116,7 @@ try {
     /* ---- why Tymna can't be cast now (ROB-24): shown where her options would be, once she is picked ---- */
     {
       const {page, context, errors} = await fixture(commanderView(), width, height, mode);
-      const t = await reach(page, `[data-zone="command"] [data-card="${TYMNA}"]`, [0.3, 0.15]);
+      const t = await reach(page, `[data-zone="command"] .cm-bcard[data-card="${TYMNA}"]`, [0.3, 0.15]);
       await page.mouse.click(t.x, t.y);
       await page.waitForTimeout(400);
       await page.locator('#cm-card-menu .cm-card-menu-none').waitFor();
