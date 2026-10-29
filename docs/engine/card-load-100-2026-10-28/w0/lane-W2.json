@@ -61,7 +61,7 @@
     },
     {
       "debt": "Strict selected ability coverage remains incomplete",
-      "requires": "Raw three-card counterfactual output8/10 is historical/provisional. Root identified3 availability-only false proofs; V8 must correct classifier and remeasure. Unchanged Roaming Throne Ward and trigger-doubling scenarios remain unproved in this selection. No G-3 waiver or card completion credit."
+      "requires": "This branch raw three-card8/10 ledger used the older pre-087 verifier and is HISTORICAL/provisional. Current integration already rejects the3 availability-only false proofs. Root/V8 remeasure with the latest assembled verifier; unchanged Roaming Throne Ward/doubling and stricter choice proof debt remain. No G-3 waiver/card completion credit."
     }
   ],
   "proof": {
@@ -168,7 +168,7 @@
       "W2Problems": 0
     },
     "rawCards": "Seven selected definitions: schema/fidelity/smoke18 scenarios0failed; three appended actual Shared Animosity combat cases. Definitions bundle remains pending root final refresh. No new definition or promotion.",
-    "strictAbilityAudit": "NOT ACCEPTED as8/10 valid: raw output8/10 included3 availability-only proofs identified by root. Corrected score pending V8 classifier/remeasure; Ward/doubling and choice proof debt retained. No overall G-3 claim.",
+    "strictAbilityAudit": "HISTORICAL/provisional under this branch pre-087 verifier, not current8valid: root found3 availability-only proofs in raw8/10. Current assembled verifier already rejects them; corrected assembled score pending root/V8 remeasurement. Ward/doubling/choice proof debt retained; no overall G-3 claim.",
     "independentReview": "V8 exact304 narrow recheck passed324/324 current normalized CR terms with no missing/invalid names; native land-only Mimic Elf/Time Lord choices+reload+latercounter; actual Shared Animosity combats Mimic/Automaton/Throne powers3/3/5. Narrow findings only.",
     "inventory": "data-inventory check matches60 artifacts; existing creature-type generator check matches324 registered types/80 planeswalker types.",
     "diagnostics": "Own logs, discarded-run evidence, public ruling cache and historical scratch will be moved to C:/Users/robmi/CrankMagic/workbench/load100-w2-304fbabf-proof-20261029 before handback; no active process or .bak remains."
