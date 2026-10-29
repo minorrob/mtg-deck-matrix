@@ -955,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 713 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 714 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1314,6 +1314,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `board-table-menu-settings` — `tests/board-table-menu-settings.mjs` (ROB-220, Luke's playtest of 2026-10-28: Play settings, Background and Table design are in the Table menu, Camera holds none of them, and Play settings still reaches the drawer modules)
 - `board-card-no-native-tooltip` — `tests/board-card-no-native-tooltip.mjs` (ROB-202, Luke's playtest of 2026-10-28: no card on the mat carries a native title tooltip (drawn at the pointer, over the card's text); how to reorder and the land stack's counts are an aria-description, and the hover still pops the card up)
 - `board-modal-face` — `tests/board-modal-face.mjs` (ROB-207, Luke's playtest of 2026-10-28: a double-faced land played as its back face is drawn from the back in Table, Focus and 3D; played as its front, or not double-faced, nothing changes)
+- `board-module-fills` — `tests/board-module-fills.mjs` (ROB-206, Luke's playtest of 2026-10-28: a drawer module given more height lets History and Chat use it, step by step, and the drawer's width reaches every module at once)
 - `admin-window` — `tests/admin-window.mjs` (Admin in the Menu for the administrator alone, refused to anyone else by the Worker; a window with General and Share down its left; General shows the setup and keeps the 3D camera glance; Share admits an invitee to staging and production Access, confirms each, then emails an HTML invitation, and a refusal sends nothing)
 - `board-babylon` — `tests/board-babylon.mjs` (live Babylon/DOM projection alignment, scene resource disposal, graphics fallback, re-entry, and the Play lounge)
 - `board-3d-camera` — `tests/board-3d-camera.mjs` (the 3D camera by hand: the wheel zooms toward the pointer except over a row that scrolls, a mat dragged moves the view while the bare table still tilts, a held right button looks at the place and back on the motion's own clock with the DOM cards on the Babylon table every frame; a card's right-click menu of the room's offers in shorthand, from the keyboard too, in every view)
