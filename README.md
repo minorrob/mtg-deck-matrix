@@ -1033,7 +1033,6 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-mana-upkeep` — `tests/engine-mana-upkeep.mjs` (mana made in the upkeep or the draw step stays in the pool until it is spent or the turn ends: the house rule over CR 500.4, `keepStepMana`)
 - `engine-combat` — `tests/engine-combat.mjs`
 - `engine-load100-w0-combat` — `tests/engine-load100-w0-combat.mjs`
-- `engine-mana-upkeep` — `tests/engine-mana-upkeep.mjs`
 - `engine-commander` — `tests/engine-commander.mjs`
 - `engine-controller` — `tests/engine-controller.mjs`
 - `engine-effects` — `tests/engine-effects.mjs`
@@ -1156,7 +1155,6 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-ingest` — `tests/engine-ingest.mjs`
 - `engine-learned` — `tests/engine-learned.mjs`
 - `engine-mana-abilities` — `tests/engine-mana-abilities.mjs`
-- `engine-mana-upkeep` — `tests/engine-mana-upkeep.mjs`
 - `engine-exile-commanders` — `tests/engine-exile-commanders.mjs` (Quintorius and Maralen linked exile, free casting and owner choices)
 - `engine-faerie-interactions` — `tests/engine-faerie-interactions.mjs` (second-card draws, Spellstutter's live Faerie count and Winnower's unequal power/toughness targets)
 - `engine-chulane-completion` — `tests/engine-chulane-completion.mjs` (Guardian Project, Yavimaya Dryad, Claim Jumper)
