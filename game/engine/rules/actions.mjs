@@ -469,10 +469,23 @@ function costChoice(state, awaiting) {
     if (action.tapPlan !== undefined && !plan) throw new Error(`${name} cannot be tapped for that way now`);
     if (plan) {
       const identity = fundingIdentities(state, player, action, plan);
-      if (identity.choice) return {id: `choose-cost:${action.objectId}:source:${identity.choice.sourceGroup}`, title: `${name}: which sources to tap for mana`, ...identity.choice};
+      if (identity.choice) return {id: `choose-cost:${action.objectId}:source:${identity.choice.sourceGroup}`, title: `${name}: which sources make ${identity.choice.outputLabel}`, ...identity.choice};
     }
     const options = plans.map((plan, index) => ({index, label: tapWords(state, plan)}));
-    for (const option of options) {
+    if (state.sourceChoices === true) {
+      const groups = new Map();
+      for (const option of options) {if (!groups.has(option.label)) groups.set(option.label, []); groups.get(option.label).push(option);}
+      const units = [...groups.values()].some(alike => alike.length > 1) ? new Map(tapUnits(state, player, undefined, pooledTaps(state)).map(unit => [unit.id, unit])) : null;
+      for (const alike of groups.values()) {
+        if (alike.length < 2) continue;
+        for (const option of alike) {
+          const plan = plans[option.index], made = {};
+          for (const tap of plan.taps) for (const [color, count] of Object.entries(units.get(tap.id).outputs?.[tap.color] ?? {[tap.color]: 1})) made[color] = (made[color] ?? 0) + count;
+          option.label = `${option.label}: make ${manaMadeWords(made)}; ${paymentWords(plan.payment)}`;
+        }
+        numbered(alike);
+      }
+    } else for (const option of options) {
       const alike = options.filter((o) => o.label === option.label);
       if (alike.length > 1) alike.forEach((o, k) => { o.label = `${o.label} (${k + 1})`; });
     }
@@ -1741,23 +1754,27 @@ const xCounted = (cost, X) => ({...cost, symbols: cost.symbols.filter((s) => s.k
 
 /** CR 601.2g-h: a payment question includes every funding plan; availability probes ask for just one or two. */
 const TAP_CHOICES = Infinity;
+const manaMadeWords = mana => MANA_KEYS.filter(color => mana[color] > 0).map(color => `${mana[color] > 1 ? `${mana[color]} × ` : ""}{${color}}`).join(" + ");
 /** A way to tap, in words: the sources' names, in the order they are tapped ("Forest, Forest, Island"). */
 export const tapWords = (state, plan) => plan.taps.map((t) => state.objects[t.id]?.card ?? "a source").join(", ");
 
-/* The ways to tap for a cost, each with the payment it makes: from an empty pool and one-mana sources the simple solver
-   (tapPlans); with floating mana or a source of more than one mana, the bundled one (sourceTapPlans), where the match
-   allows it (`pooledTaps`). */
+/* Current matches preserve each source-output pattern and its payment, including generic and hybrid colors. Historical
+   matches retain their empty-pool one-mana solver (tapPlans), or their floating/bundled solver when pooledTaps allows it. */
 function fundingPlans(state, player, id, cost, limit, units = tapUnits(state, player, undefined, pooledTaps(state))) {
   const pool = poolFor(state, player, {spell: id});
   const empty = poolSize(pool) === 0;
-  if (!pooledTaps(state) || (empty && units.every((u) => u.colors.every((c) => MANA_KEYS.includes(c)))))
+  if (state.sourceChoices !== true && (!pooledTaps(state) || (empty && units.every((u) => u.colors.every((c) => MANA_KEYS.includes(c))))))
     return !empty ? [] : tapPlans(units, cost, limit).map((plan) => ({...plan, payment: {mana: Object.fromEntries(MANA_KEYS.map((k) => [k, plan.taps.filter((t) => t.color === k).length])), life: 0}}));
   /* The one an unasked cast taps is built (quickTapPlan); asking which way lists what the search finds with that one first,
      so the first way asked is the way the offer was priced at. */
-  const quick = quickTapPlan(units, pool, cost);
-  if (limit === 1) return quick ? [quick] : sourceTapPlans(units, pool, cost, 1);
-  const found = sourceTapPlans(units, pool, cost, limit);
-  return quick ? [quick, ...found.filter((w) => w.key !== quick.key)].slice(0, limit) : found;
+  const complete = units.map(unit => ({...unit, outputs: unit.outputs ?? Object.fromEntries(unit.colors.map(color => [color, {[color]: 1}]))}));
+  const quick = quickTapPlan(complete, pool, cost);
+  if (limit === 1) return quick ? [quick] : sourceTapPlans(complete, pool, cost, 1);
+  const found = sourceTapPlans(complete, pool, cost, limit);
+  const byId = new Map(complete.map(unit => [unit.id, unit]));
+  const pattern = plan => `${plan.taps.map(tap => `${Object.keys(byId.get(tap.id).outputs).sort().join("/")}=${tap.color}`).sort().join(";")}|${paymentKey(plan.payment)}`;
+  const quickPattern = quick && state.sourceChoices === true ? pattern(quick) : null;
+  return quick ? [quick, ...found.filter((w) => state.sourceChoices === true ? pattern(w) !== quickPattern : w.key !== quick.key)].slice(0, limit) : found;
 }
 
 /** The ways to tap for this cast (`action.autoTap`), up to `limit`, as `tapPlans` says them. */
@@ -1788,7 +1805,7 @@ function fundingIdentities(state, player, action, plan) {
     if (!unit || !unit.colors.includes(tap.color)) throw new Error("Those mana sources are no longer available");
     const key = kind(unit), group = groups.find(g => g.kind === key && g.color === tap.color);
     if (group) group.count++;
-    else groups.push({kind: key, color: tap.color, count: 1});
+    else groups.push({kind: key, color: tap.color, count: 1, outputLabel: manaMadeWords(unit.outputs?.[tap.color] ?? {[tap.color]: 1})});
   }
   const selections = action.tapSources ?? {};
   if (typeof selections !== "object" || selections === null || Array.isArray(selections)
@@ -1798,7 +1815,7 @@ function fundingIdentities(state, player, action, plan) {
     const group = groups[index], eligible = units.filter(unit => kind(unit) === group.kind && !used.has(unit.id));
     if (eligible.length < group.count) throw new Error("Those mana sources are no longer available");
     let ids = selections[index];
-    if (ids === undefined && eligible.length > group.count) return {choice: {cost: "manaSource", sourceGroup: index, planKey: plan.key, output: group.color,
+    if (ids === undefined && eligible.length > group.count) return {choice: {cost: "manaSource", sourceGroup: index, planKey: plan.key, output: group.color, outputLabel: group.outputLabel,
       mode: "many", min: group.count, max: group.count,
       options: numbered(eligible.map((unit, index) => ({index, cardId: unit.id, label: state.objects[unit.id].card})))} };
     if (ids === undefined) ids = eligible.map(unit => unit.id);
