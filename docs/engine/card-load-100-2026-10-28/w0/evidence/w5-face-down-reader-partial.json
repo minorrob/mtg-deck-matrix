@@ -1,0 +1,17 @@
+{
+  "schema": "w5-face-down-reader-partial@1",
+  "base": "7d03fd5f947441aeddd7569c8d292242ce5c5654",
+  "status": "partial-native-reader-repair-browser-blocked",
+  "engineChanges": false,
+  "scenarioPolicyChanges": false,
+  "native": {"engine-face-down-play": 68, "engine-adventure": 71, "engine-hidden-exile": 24, "engine-manifest": 55, "engine-disguise": 46},
+  "proof": ["Original empty pool with two untapped Mountains retained; both actual face-down Bolt target offers require R funding", "Every Mountain ID offered; explicitly choose the last after JSON reload; invalid/unfunded forged selections leave full state unchanged", "Exact chosen Mountain tap and R production/spend; other source untapped; reveal occurs only at paid cast", "Actual target takes2 damage, stack and graveyard objects have new identities, Hidden Grove remains private and old exile permission cannot cast graveyard object", "Both affected Adventure blocks explicitly choose the last Plains after the unchanged Plains/Wastes pattern; original final/Adventure/restricted-pool assertions retained"],
+  "originalReaderUnion": ["tests/engine-face-down-play.mjs", "tests/engine-hidden-exile.mjs", "tests/engine-adventure.mjs", "tests/engine-manifest.mjs", "tests/board-choices.mjs", "tests/engine-disguise.mjs"],
+  "mutationAttempt": {"command": "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w5-face-down-reader.py", "baselinePassed": false, "failedSuite": "tests/board-choices.mjs", "intended": 2, "applied": 0, "creditedCaught": 0, "fullUnionAccepted": false},
+  "isolatedBrowserDiagnostic": {"command": "node --stack-size=4000 tests/board-choices.mjs", "node": "22.23.3", "PLAYWRIGHT_BROWSERS_PATH": "workbench/playwright-browsers", "GEOMETRY_REQUIRED": "1", "UAT_BROWSER": "chromium", "installedRevision": 1194, "installedOnly": true, "skip": false, "exit": 1, "nativeRoomDetailChecksBeforeBrowser": 11, "error": "locator.waitFor Timeout60000ms waiting for locator('#cm-board .cm-stage-top') to be visible", "location": "tests/board-choices.mjs:330", "coordinatedWithRoot": true, "repeatedAfterDiagnostic": false},
+  "teardown": "Test finally awaits browser/server close; diagnostic process exited; Get-Process found no remaining visible node or headless_shell process. No mutation backup remained.",
+  "gateClaims": {"originalSixReaderUnionGreen": false, "mutationProofComplete": false, "strictG3": false, "wave0Complete": false},
+  "cardsAdded": 0,
+  "cardsPromoted": 0,
+  "ignoresAdded": []
+}
