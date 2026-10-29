@@ -13,7 +13,7 @@
     "| Tokens and copies of prepare cards never prepared | `script/effects/attributes.mjs`:23 | W1 |",
     "| Unsure, to be settled by a scenario: Song of the Dryads and Sagas under ability loss; Incubator copies single-faced; Social Snub's copy; Winter's prompt and a draw-two cost under Narset | `rules/layers.mjs`:870; `permanents.mjs`:644; `actions.mjs` | V8 finds, W1/W6/W2/W7 fix |"
   ],
-  "status": "Bounded emblem/preparation checkpoint proven locally; independent review and root integration pending",
+  "status": "Bounded emblem/preparation checkpoint pushed as draft PR 917; independent bounded V8 review passed; root integration and full wave gates pending",
   "checkpoint": {
     "cardsAdded": 0,
     "cardsPromoted": 0,
@@ -42,7 +42,7 @@
       "check-cards: 6430 definitions; 11025 scenarios, 0 failed; exit 0 on code checkpoint 9f4dfcb2",
       "19 related reader suites passed on preparation code checkpoint 9f4dfcb2; final emblem-text increment has separate directly affected verification",
       "Final text increment: engine-projection 93, engine-planeswalkers 65, sentence-paragraphs 11 passed; unbroken mutation baseline also passes all seven registered suites",
-      "Every pushed head requires its own pre-push SCAN PASS"
+      "Pre-push source head 9c4366f7: SCAN PASS, clean merge with main 39a45706, no secrets or personal addresses added; final metadata head has its own required scan"
     ],
     "queued": [
       "Battles: 0 final Battle definitions in baseline; battle-half ROB-149 not implemented in this checkpoint",
@@ -54,7 +54,7 @@
       "Teferi, Hero of Dominaria already defines an emblem object; no redundant card edit"
     ],
     "pending": [
-      "Independent V8 review/ability coverage",
+      "Consolidated independent ability coverage on integrated source",
       "Consolidated generation and root gates/staging"
     ],
     "ignoresAdded": [],
@@ -143,6 +143,9 @@
     "mutationCommands": [
       "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w1-faces.py (original 17 before emblem-text increment)",
       "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w1-faces.py 'explicit emblem text is validated' 'explicit emblem text is nonempty' 'an emblem retains its explicit text' 'explicit emblem text is preferred' 'legacy emblem text is preserved' 'Elspeth makes an actual emblem' 'emblem: shown as one'"
-    ]
+    ],
+    "sourceCheckpoint": "9c4366f7832eb2bc408a4583563a95bc07aee7b0",
+    "pullRequest": "https://github.com/minorrob/mtg-deck-matrix/pull/917",
+    "independentReview": "V8 read-only review on 9c4366f7 passed compiler/effect/object/projection/fallback, all 79 checks, and additional +4/+4 shared-template variant with controller 1, persisted reload, opponent 2 view and actual Bear power 6. No bounded finding; no theme/gate completion claimed."
   }
 }
