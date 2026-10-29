@@ -1,8 +1,10 @@
 # Conditional native scenario policy proposal
 
-Status: proposal and scratch demonstrations only, on published source `55f133f5`. No production runner, saved
-scenario, definition, rule, ledger or proof gate is edited. The current selected diagnostic remains4/8 abilities
-proved and4 unproved. Nothing here grants new ability, card, whole-game or canonical acceptance credit.
+Historical proposal and scratch demonstrations on published source `55f133f5`. At that checkpoint no production
+runner, saved scenario, definition, rule, ledger or proof gate was edited and the selected diagnostic remained4/8.
+Root subsequently approved only the bounded seams below and the two pure internal validators used by production.
+The implemented contract and current source-bound evidence are recorded in `V8-CONDITIONAL-POLICIES.md`.
+This scratch record alone grants no ability, card, whole-game or canonical acceptance credit.
 
 ## Bounded action grammar
 
@@ -112,7 +114,7 @@ node ../scratch/v8-policies-guard-demo.mjs
 python ../scratch/v8-policies-guard-controls.py
 ```
 
-The exact proposed production seams, subject to root review:
+The exact production seams reviewed and approved by root after this scratch proposal:
 
 1. `game/engine/cards/scenario.mjs`: a new guarded branch before ordinary action/resolve dispatch; a small new
    conditional-action helper next to physical source resolution; capture minimal native frame facts when an explicit
@@ -126,4 +128,4 @@ The exact proposed production seams, subject to root review:
    change the ledger/proof classifier. Re-run the selected diagnostic and preserve any still-unproved abilities.
 
 The source-bound full canonical ledger, all-card exercise/review, full-game requirements and every other wave0 gate
-remain required. This proposal does not authorize or perform production implementation.
+remain required. The historical scratch proposal itself did not authorize or perform production implementation.

@@ -1,0 +1,55 @@
+{
+  "schema": "V8BoundNativePolicyProof@1",
+  "sourceBase": "420e797795d42782d56e1d76e24a00fa69df6c7b",
+  "status": "Bounded native/mutation proof complete; clean selected snapshot recorded separately",
+  "runnerSha256": "1f768c89f2432685703e3d3e292d653404ed9b63e1dc67c1c3b185b8603a2224",
+  "readerSha256": "1f76a53a6a1349609c1ed86db32480655dd12c249044746467df6cb43a936b01",
+  "nativeChecks": 319,
+  "baselineSuites": [
+    "tests/scenario-conditional-policy.mjs",
+    "tests/scenario-explicit-choices.mjs",
+    "tests/card-check-cli.mjs",
+    "tests/ability-proof.mjs",
+    "tests/scenario-block-policy.mjs",
+    "tests/scenario-entry-order.mjs"
+  ],
+  "initialCaught": 36,
+  "initialMissedWitnesses": [
+    "conditional source cannot substitute another named card",
+    "entry policy cannot answer a different kind of entering choice"
+  ],
+  "witnessRepair": "Preserve every old assertion; add reachable same-zone different card and actual Outpost Siege entering-choose cases; no runtime guard change",
+  "finalCaught": 38,
+  "finalMissed": [],
+  "restoredByteExact": true,
+  "directSupplement": "v8-conditional-direct-guards.json",
+  "legacyWholeCardReader": {
+    "checks": 55,
+    "definitions": 6430,
+    "savedScenarios": 11044,
+    "passed": true,
+    "strictG3Acceptance": false
+  },
+  "metadata": {
+    "README": 710,
+    "dataIntegrity": "passed",
+    "featureWiring": 131,
+    "inventoryArtifacts": 60,
+    "inventoryMB": 80.9,
+    "inventoryDrift": false,
+    "scopeNames": 8514,
+    "scopeFinal": 2715,
+    "scopeUndefined": 5799
+  },
+  "staticAnchors": {
+    "files": 256,
+    "breaks": 4713,
+    "remainingInheritedUIProblems": 33,
+    "engineProblems": 0
+  },
+  "cardDefinitionChanges": 0,
+  "ruleModuleChanges": 0,
+  "classifierOrLedgerChanges": 0,
+  "newPromotions": 0,
+  "canonicalAcceptance": false
+}

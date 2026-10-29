@@ -20,12 +20,15 @@
  *     setup: [{seat, zone, cards, sick?}]   (a card put in the command zone is that seat's commander),
  *     steps: [ {play|tap|cast|activate|turnFaceUp|suspend|plot: name, seat?, targets?: [{card, seat?} | {player} | {ability}] | "any", ability?, mana?, x?, optional?, gift?}
  *            | {resolve: true} | {settle: true} | {pass: n} | {to: {turn, phase}} | {answer: [indices], amounts?: [n]} | {expect: [...]}
- *            | {attack: [names], at?} | {block: [[blocker, attacker], ...]} | {blockIfLegal: [blocker, attacker], seat?} | {choose: [labels]} ],
+ *            | {attack: [names], at?} | {block: [[blocker, attacker], ...]} | {blockIfLegal: [blocker, attacker], seat?} | {choose: [labels]}
+ *            | {actIfLegal: {cast|activate|tap: name, seat, source, targets?: [], mana?, ability?}, resolveSelected?: true}
+ *            | {chooseEnteringIfAsked: {card, seat, question: "entering-choose", choose: [label]}} ],
  *   (`targets: "any"` takes the first legal aim; `optional` skips a move the rules do not offer; `settle` answers every
  *   question with its first legal answer and resolves the stack until it is empty -- the card loader's smoke test.)
  *   Canonical evidence forbids those automatic choices. `source: {zone, index, seat?, card?}` identifies a physical
  *   action source among the named cards in its current zone, before legality filtering. Question navigation may use
  *   `to: {turn, phase, ask: kind}` followed by an explicit answer; `targets: [{ask: true}]` defers a counted question.
+ *   Conditional policies are explicit, bounded native instructions: no arbitrary branches or automatic answers.
  *     expect: [ {seat, of?, zone, cards?, count?, faceDown?} | {seat, life} | {seat, poison} | {stack} | {seat, tapped, is}
  *             | {seat, pool} | {seat, counters: {card, counter, count}} | {offers: {kind, card, seat?}, count, targets?} | {event, where}
  *             | {monarch: seat | null} ] }]}
@@ -42,6 +45,7 @@ import {projectFor} from "../projection.mjs";
 import {createRng} from "../rng.mjs";
 import {targetName, isChoosing} from "../script/bind.mjs";
 import {meetRequirements} from "../pilots/house-pilot.mjs";
+import {hashState} from "../journal.mjs";
 
 export const SCENARIOS_SCHEMA = "CrankCardScenarios@1";
 
@@ -63,6 +67,51 @@ const firstAmounts = (choice) => {
 
 const ZONES = {hand: "Hand", battlefield: "Battlefield", graveyard: "Graveyard", exile: "Exile", command: "Command", library: "Library"};
 const STEP_LIMIT = 2000;
+const nativeFields = event => event?.data?.fields ?? event?.fields ?? {};
+const policyProblem = message => Object.assign(new Error(message), {scenarioAssertion: {kind: "policy-precheck"}});
+
+/** Internal harness validator. Only actual native events enter here in production; no scenario-supplied receipt. */
+export function selectedScenarioFrame(state, events, selection) {
+  if (!selection || typeof selection !== "object" || Array.isArray(selection) || !Array.isArray(events)
+    || Object.keys(selection).some(key => !["sourceId", "actor", "card", "kind", "abilityId"].includes(key)))
+    throw policyProblem("Malformed selected native action receipt");
+  const {sourceId, actor, card, kind, abilityId} = selection;
+  if (!Number.isInteger(sourceId) || !Number.isInteger(actor) || !state.players[actor] || typeof card !== "string" || !card
+    || !["cast", "activate"].includes(kind) || kind === "activate" && (typeof abilityId !== "string" || !abilityId))
+    throw policyProblem("Malformed selected native action identity");
+  const matching = events.filter(event => event.kind === "GameEventSpellAbilityCast").map(nativeFields).filter(fields =>
+    fields.card?.cardId === sourceId && fields.card.name === card && fields.si?.actor?.playerId === actor
+    && fields.si?.isTrigger === false && fields.sa?.isSpell === (kind === "cast")
+    && (kind === "cast" || fields.sa.abilityId === abilityId));
+  if (matching.length !== 1) throw policyProblem("The selected native action has no unique source/actor event");
+  const frame = state.stack.find(entry => entry.stackId === matching[0].sa.stackId);
+  if (!frame || frame.playerId !== actor || frame.name !== card || frame.kind !== (kind === "cast" ? "spell" : "ability")
+    || kind !== "cast" && (frame.abilityId !== abilityId || frame.cardId !== sourceId))
+    throw policyProblem("The emitted selected action does not match its native stack frame");
+  if (state.stack.length !== 1 || state.stack.at(-1).stackId !== frame.stackId)
+    throw policyProblem("An extra or intervening frame prevents selected resolution");
+  return {stackId: frame.stackId, cardId: frame.cardId, objectId: frame.objectId, playerId: frame.playerId, name: frame.name, kind: frame.kind};
+}
+
+/** Internal pure validation of a private preceding-spell context, never a scenario-supplied context. */
+export function boundScenarioEnteringAnswer(state, context, label) {
+  const frame = context?.frame;
+  if (!frame || frame.kind !== "spell" || context.questionSignature === null || hashState(state.awaiting) !== context.questionSignature)
+    throw policyProblem("The captured entering question changed or expired");
+  const live = state.stack.find(entry => entry.stackId === frame.stackId), native = state.ruleOperation?.frames?.at(-1);
+  if (!live || live.kind !== "spell" || live.cardId !== frame.cardId || live.playerId !== frame.playerId || state.players[frame.playerId]?.lost
+    || state.objects[frame.cardId]?.card !== frame.name || state.objects[frame.cardId]?.zone !== "stack"
+    || state.awaiting?.kind !== "rule-operation" || state.awaiting.player !== frame.playerId)
+    throw policyProblem("A different native source or mandatory question is pending");
+  const choice = awaitingChoice(state);
+  if (choice?.id !== `entering-choose:${frame.cardId}` || choice.mode !== "one" || choice.min !== 1 || choice.max !== 1
+    || choice.options.some(option => option.cardId !== frame.cardId || option.chosen !== option.label)
+    || native?.kind !== "entering" || native.objectId !== frame.cardId || native.asks?.[0]?.choose !== "creature type")
+    throw policyProblem("A different native source or mandatory question is pending");
+  const options = choice.options.filter(option => option.label === label);
+  if (options.length !== 1) throw policyProblem("The fixed entering answer is unavailable or ambiguous");
+  return {choiceId: choice.id, index: options[0].index, label};
+}
 
 /* Questions the rules ask on the way that a scenario has no view on: nobody attacks or blocks unless a step says so -- or
    the rules make it ("attacks each combat if able", CR 508.1d: those alone, each at its first player) -- a player's
@@ -225,6 +274,98 @@ export function runScenario(scenario, cards, fixtures = {}, {explicitChoices = f
     if (id === undefined) failChoice(`source ${name} has no physical index ${spec.index} in ${spec.zone} for seat ${seat}`);
     return {id, zone: spec.zone, seat, card: name, index: spec.index};
   };
+
+  const failPolicy = message => fail(message, {kind: "policy-precheck"});
+  const recordObject = value => value !== null && typeof value === "object" && !Array.isArray(value);
+  function conditionalAction(step) {
+    if (Object.keys(step).some(key => !["actIfLegal", "resolveSelected"].includes(key))) failPolicy("actIfLegal has an unknown or competing field");
+    const request = step.actIfLegal;
+    if (!recordObject(request) || Object.keys(request).some(key => !["cast", "activate", "tap", "seat", "source", "targets", "ability", "mana"].includes(key)))
+      failPolicy("actIfLegal needs a bounded native action descriptor");
+    const operations = ["cast", "activate", "tap"].filter(key => Object.hasOwn(request, key));
+    if (operations.length !== 1) failPolicy("actIfLegal needs exactly one cast, activation or mana activation");
+    const operation = operations[0], kind = {cast: "cast", activate: "activate", tap: "activate-mana"}[operation], card = request[operation], actor = request.seat;
+    if (typeof card !== "string" || !card || card.trim() !== card || !Number.isInteger(actor) || !state.players[actor] || state.players[actor].lost)
+      failPolicy("actIfLegal needs an explicit existing actor and named card");
+    if (!["MAIN1", "MAIN2"].includes(state.phase) || state.activePlayer !== actor || state.priorityPlayer !== actor || gameOver(state)
+      || state.awaiting || state.ruleOperation || state.resolving || state.stack.length || state.pendingTriggers?.length)
+      failPolicy("actIfLegal requires own main-phase priority with no pending commitment or stack");
+    if (kind === "activate-mana" ? step.resolveSelected !== undefined && step.resolveSelected !== false : step.resolveSelected !== true)
+      failPolicy("A conditional nonmana action requires one explicit selected resolution; a mana action cannot resolve a stack");
+    if (kind !== "activate-mana" && !Object.hasOwn(request, "targets") || request.targets !== undefined && (!Array.isArray(request.targets) || request.targets.length !== 0))
+      failPolicy("actIfLegal currently supports only explicitly targetless actions");
+    if (request.ability !== undefined && (kind === "cast" || typeof request.ability !== "string" || !request.ability)) failPolicy("Invalid conditional activation ability selector");
+    if (request.mana !== undefined && (kind !== "activate-mana" || !recordObject(request.mana) || !Object.keys(request.mana).length
+      || Object.entries(request.mana).some(([color, amount]) => color.length !== 1 || !"WUBRGC".includes(color) || !Number.isInteger(amount) || amount <= 0)))
+      failPolicy("Invalid conditional mana vector");
+    const spec = request.source;
+    if (!recordObject(spec) || spec.seat !== undefined && spec.seat !== actor || spec.card !== undefined && spec.card !== card
+      || (kind === "cast" ? !["hand", "library", "graveyard", "exile", "command"].includes(spec.zone) : spec.zone !== "battlefield"))
+      failPolicy("actIfLegal needs the named actor's explicit physical source");
+    let source;
+    try {source = physicalSource(spec, actor, card);} catch (error) {
+      if (error.scenarioAssertion?.kind === "choice-policy") failPolicy(error.message.slice(scenario.name.length + 2));
+      throw error;
+    }
+    const before = hashState(state);
+    let actions = legalActions(state, actor).filter(action => action.kind === kind && action.objectId === source.id && action.label === card);
+    if (request.ability !== undefined) actions = actions.filter(action => action.abilityId === request.ability);
+    if (request.mana !== undefined) actions = actions.filter(action => hashState(action.mana) === hashState(request.mana));
+    if (hashState(state) !== before) failPolicy("Conditional legality lookup changed native state");
+    if (actions.length > 1) failPolicy("Conditional action is ambiguous; specify its native ability or mana vector");
+    const trace = {kind: "conditional-native-action", action: kind, actor, sourceId: source.id, sourceZone: source.zone, card};
+    if (!actions.length) {policies.push({...trace, branch: "unavailable"}); return;}
+    const action = actions[0], produced = record(applyAction(state, actor, action));
+    policies.push({...trace, branch: "applied", ...(action.abilityId !== undefined ? {abilityId: action.abilityId} : {})});
+    if (state.awaiting || state.ruleOperation || state.resolving || state.pendingTriggers?.length)
+      failPolicy("The conditional action requires an unsupported native question or continuation");
+    if (kind === "activate-mana") {
+      if (state.stack.length || !produced.some(event => event.kind === "GameEventManaPool" && nativeFields(event).source?.cardId === source.id))
+        failPolicy("The selected mana action has no immediate source-bound native result");
+      policies.at(-1).branch = "mana-produced";
+      return;
+    }
+    let frame;
+    try {frame = selectedScenarioFrame(state, produced, {sourceId: source.id, actor, card, kind, abilityId: action.abilityId});}
+    catch (error) {if (error.scenarioAssertion?.kind === "policy-precheck") failPolicy(error.message); throw error;}
+    const eventStart = events.length;
+    for (let n = 0; n < STEP_LIMIT && state.stack.some(entry => entry.stackId === frame.stackId) && !state.awaiting; n += 1) stepOnce();
+    if (state.awaiting || state.ruleOperation || state.resolving || state.stack.length || state.pendingTriggers?.length
+      || !events.slice(eventStart).some(event => event.kind === "GameEventSpellResolved" && nativeFields(event).stackId === frame.stackId && nativeFields(event).hasFizzled === false))
+      failPolicy("The expressly selected native resolution did not finish without another commitment");
+    Object.assign(policies.at(-1), {branch: "applied-and-resolved", stackId: frame.stackId});
+  }
+
+  function conditionalEnteringAnswer(step, context) {
+    if (Object.keys(step).some(key => key !== "chooseEnteringIfAsked")) failPolicy("chooseEnteringIfAsked has an unknown or competing field");
+    const request = step.chooseEnteringIfAsked;
+    if (!context || !recordObject(request) || Object.keys(request).some(key => !["card", "seat", "question", "choose"].includes(key))
+      || request.card !== context.frame.name || request.seat !== context.frame.playerId || request.question !== "entering-choose"
+      || !Array.isArray(request.choose) || request.choose.length !== 1 || typeof request.choose[0] !== "string" || !request.choose[0] || request.choose[0].trim() !== request.choose[0])
+      failPolicy("Bound entering answer needs the immediately preceding native spell, actor and fixed label");
+    const {frame} = context;
+    const completedEntry = list => {
+      if (state.awaiting || state.ruleOperation || state.resolving || state.stack.some(entry => entry.stackId === frame.stackId)
+        || !list.some(event => event.kind === "GameEventSpellResolved" && nativeFields(event).stackId === frame.stackId && nativeFields(event).hasFizzled === false))
+        failPolicy("The captured native spell has not completed successfully");
+      const movements = list.filter(event => event.kind === "GameEventCardChangeZone").map(nativeFields).filter(fields =>
+        fields.card?.cardId === frame.cardId && fields.to?.zoneType === "Battlefield"
+        && state.objects[fields.enteredAs]?.card === frame.name && controllerOf(state, fields.enteredAs) === frame.playerId);
+      if (movements.length !== 1) failPolicy("The captured source has no exact completed native entry");
+    };
+    const trace = {kind: "conditional-entering-answer", actor: frame.playerId, card: frame.name, sourceId: frame.cardId, stackId: frame.stackId};
+    if (!state.awaiting) {
+      completedEntry(context.events);
+      policies.push({...trace, branch: "completed-without-question"});
+      return;
+    }
+    let bound;
+    try {bound = boundScenarioEnteringAnswer(state, context, request.choose[0]);}
+    catch (error) {if (error.scenarioAssertion?.kind === "policy-precheck") failPolicy(error.message); throw error;}
+    const answered = record(resolveAwaiting(state, [bound.index], null, rng, {choiceId: bound.choiceId}));
+    completedEntry([...context.events, ...answered]);
+    policies.push({...trace, branch: "answered", choiceId: bound.choiceId, label: bound.label});
+  }
 
   function act(step) {
     if (explicitChoices && step.targets === "any") failChoice("targets: any cannot supply explicit scenario evidence");
@@ -436,15 +577,25 @@ export function runScenario(scenario, cards, fixtures = {}, {explicitChoices = f
     }
   }
 
+  const capturesEntering = (scenario.steps ?? []).some(step => Object.hasOwn(step, "chooseEnteringIfAsked"));
+  let previousResolution = null;
   for (const step of scenario.steps ?? []) {
+    const precedingResolution = previousResolution;
+    previousResolution = null;
     if (Object.hasOwn(step, "blockIfLegal") && Object.keys(step).some((key) => !["blockIfLegal", "seat"].includes(key))) fail("blockIfLegal requires exactly one named blocker/attacker pair and optional seat", {kind: "policy-precheck"});
-    if (step.play || step.tap || step.cast || step.activate || step.turnFaceUp || step.suspend || step.plot) act(step);
+    if (Object.hasOwn(step, "actIfLegal")) conditionalAction(step);
+    else if (Object.hasOwn(step, "chooseEnteringIfAsked")) conditionalEnteringAnswer(step, precedingResolution);
+    else if (step.play || step.tap || step.cast || step.activate || step.turnFaceUp || step.suspend || step.plot) act(step);
     else if (step.resolve) {
       if (!state.stack.length) fail("there is nothing on the stack to resolve", {kind: "action-offer", action: "resolve"});
       /* Everyone passes in turn until the top object has left the stack, or stopped to ask somebody. What its
          resolution put on the stack -- a permanent's "when this enters" -- waits for its own step. */
       const top = state.stack[state.stack.length - 1].stackId;
+      const entry = capturesEntering && state.stack.at(-1).kind === "spell" ? state.stack.at(-1) : null;
+      const frame = entry ? {stackId: entry.stackId, cardId: entry.cardId, name: entry.name, playerId: entry.playerId, kind: entry.kind} : null;
+      const eventStart = events.length;
       for (let n = 0; n < STEP_LIMIT && state.stack.some((e) => e.stackId === top) && !state.awaiting; n += 1) stepOnce();
+      if (frame) previousResolution = {frame, events: events.slice(eventStart), questionSignature: state.awaiting ? hashState(state.awaiting) : null};
     } else if (step.settle) {
       for (let n = 0; n < STEP_LIMIT && (state.awaiting || state.stack.length); n += 1) {
         if (state.awaiting) {

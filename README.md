@@ -955,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 709 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 710 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1601,6 +1601,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `ability-missing-prompt` - `tests/ability-missing-prompt.mjs`: actual Adaptive Automaton, Metallic Mimic and Roaming Throne entry-choice omissions reach the missing-prompt precheck and remain unproved; classifier/tag removals must catch inflated ability credit from stale verifier sources
 - `scenario-block-policy` - `tests/scenario-block-policy.mjs`: an explicit named block-if-legal policy checks both complete declarations through the rules and records both branches through counterfactual proof; actual loaded Zephyr Sprite and runtime Flying removal finish combat with different final damage, life and graveyard results; malformed, ambiguous and illegal declarations fail
 - `scenario-explicit-choices` - `tests/scenario-explicit-choices.mjs`: native strict evidence rejects skipped optional moves, automatic answers, ambiguous actions and labels, inferred defenders, required declarations, trigger order and legend choices; explicit physical sources, indexed answers, final outcomes and runtime omission controls use the same policy
+- `scenario-conditional-policy` — `tests/scenario-conditional-policy.mjs`: explicit physical native actions resolve only their exact emitted frame; fixed entering answers bind the preceding spell/source/actor; actual effects and runtime omissions, source/question forgeries, unsupported commitments and ineligible policy failures
 - `scenario-entry-order` - `tests/scenario-entry-order.mjs`: five saved counter scenarios explicitly answer either entry-replacement order and retain every original final expectation; unanswered questions produce a classified offer diagnostic and earn no ability proof
 - `sentence-paragraphs` - `tests/sentence-paragraphs.mjs`: partial translations keep an ability's paragraph together while preserving independent keyword abilities and the current spell segmentation
 - `engine-mana-upkeep` - `tests/engine-mana-upkeep.mjs`: the table's optional house rule keeps mana made in upkeep and draw until spent or the turn ends; AI pilots keep the book's mana rule
