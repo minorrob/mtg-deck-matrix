@@ -19,7 +19,20 @@
     "| `tests/engine-x11-leave-questions.mjs`: refused pilot answers replaced, not failed (except a concession's) | :481, :518, :529 | V8 |",
     "| Coverage counts seven partial constructs as built, so `coverage.md`'s shares read high | `game/tools/engine-constructs.mjs`:345–396 | V8 |"
   ],
-  "status": "Partial checkpoint: root implemented strict default/CI canonical validation and explicit scenario decisions, with bounded fixtures/mutations. Current whole-directory ability coverage remains unmeasured/red; individual missing proofs, strict scenario repairs, independent review and required games remain open.",
+  "status": "Completed RED measurement at clean c2038646: 6430 definitions,11039 scenarios/6580failed;2039/11633 reached,523 omission proofs,9594unproved. Strict default/CI/source validation and explicit decisions are implemented; per-card repairs, individual witnesses, full review and required games remain open.",
+  "latestStrictMeasurement": {
+    "source": "c2038646f1187eb68a0495a621a2d9e1ee1078a0",
+    "archive": "evidence/ability-strict-c2038646.json.gz",
+    "manifest": "evidence/ability-strict-c2038646.manifest.json",
+    "scenarioFailures": 6580,
+    "abilities": 11633,
+    "scenarioReached": 2039,
+    "unproved": 9594,
+    "checkerExit": 1,
+    "independentVerifierExit": 1,
+    "denominator": "Earlier reviewed Song of the Dryads and Urza's Saga fixes498e3d05 account for -3 ability entries versus11e4fe86; no final card removed. All current raw inputs inventoried; no waiver.",
+    "next": "Add explicit physical source references, then per-card decision/outcome repairs and individual behavior witnesses. Preserve original assertions. No blanket automatic-answer conversion or family proof credit."
+  },
   "checkpoint": {
     "scope": "No saved card or rule module edited. Pool dealing, strict refusal evidence, journal attribution, safe pure level validation, runtime-removal evidence, and opt-in check-cards ability enforcement. Scenario-runner metadata tags preserve all original assertions.",
     "proof": [
