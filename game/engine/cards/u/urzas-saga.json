@@ -162,9 +162,10 @@
             "types": [
               "Artifact"
             ],
-            "manaValue": {
-              "max": 1
-            }
+            "manaCost": [
+              "{0}",
+              "{1}"
+            ]
           },
           "to": "battlefield",
           "shuffle": true
