@@ -118,7 +118,7 @@ const planeswalkerInCombat = (state, attack) => attack.planeswalker !== undefine
 /* None to a player who has left the game (CR 800.4e). */
 const toAttacked = (state, attack, amount) => (attack.planeswalker === undefined ? (state.players[attack.defender].lost ? null : {toPlayer: attack.defender, amount, source: attack.attacker})
   : planeswalkerInCombat(state, attack) ? {toCard: attack.planeswalker, amount, source: attack.attacker}
-    : hasNow(state, attack.attacker, "Trample over planeswalkers") && !state.players[attack.defender].lost
+    : hasNow(state, attack.attacker, "Trample Over Planeswalkers") && !state.players[attack.defender].lost
       ? {toPlayer: attack.defender, amount, source: attack.attacker} : null);
 
 /* ---- declare attackers ---- */
@@ -707,7 +707,7 @@ function assignmentAttackers(state, step) {
     const standing = a.blockers.filter(id => onBattlefield(state, id));
     return standing.length > 1 || (standing.length === 1 && hasTrample(state, a.attacker)
       && toAttacked(state, a, 1) !== null && power(state, a.attacker) > lethalNeededFrom(state, a.attacker, standing[0]))
-      || (!standing.length && hasNow(state, a.attacker, "Trample over planeswalkers") && planeswalkerInCombat(state, a)
+      || (!standing.length && hasNow(state, a.attacker, "Trample Over Planeswalkers") && planeswalkerInCombat(state, a)
         && potentialWalkerDamage(state, a, step) > (state.objects[a.planeswalker].counters?.loyalty ?? 0));
   });
 }
@@ -760,7 +760,7 @@ export const combatDamage = {
     if (!state.combat) return false;
     if (state.awaiting?.kind === "assign-combat-damage" && state.awaiting.step === step) return true;
     const attacks = assignmentAttackers(state, step);
-    const shared = attacks.some(a => planeswalkerInCombat(state, a) && hasNow(state, a.attacker, "Trample over planeswalkers")
+    const shared = attacks.some(a => planeswalkerInCombat(state, a) && hasNow(state, a.attacker, "Trample Over Planeswalkers")
       && attacks.some(other => other !== a && other.planeswalker === a.planeswalker));
     if (shared && state.combat.damageReview?.step !== step) state.combat.damageReview = {step, confirmed: false};
     if (state.combat.damageReview?.step === step) {
@@ -796,7 +796,7 @@ export const combatDamage = {
     if (hasTrample(state, awaiting.attacker) && toAttacked(state, attack, 1) !== null)
       options.push({index: options.length, label: `${attack.planeswalker !== undefined ? `${state.objects[attack.planeswalker]?.card ?? "The planeswalker"} (${state.players[attack.defender].name})` : state.players[attack.defender].name}, once every blocker has lethal damage`,
         lethal: 0, defender: true, playerId: attack.defender, ...(planeswalkerInCombat(state, attack) ? {planeswalkerId: attack.planeswalker} : {})});
-    if (hasNow(state, awaiting.attacker, "Trample over planeswalkers") && planeswalkerInCombat(state, attack)) {
+    if (hasNow(state, awaiting.attacker, "Trample Over Planeswalkers") && planeswalkerInCombat(state, attack)) {
       const walkerIndex = options.length - 1;
       options.push({index: options.length, label: `${state.players[attack.defender].name}, after the planeswalker's loyalty`,
         lethal: 0, defender: true, playerId: attack.defender, overPlaneswalker: true,

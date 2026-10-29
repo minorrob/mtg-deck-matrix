@@ -14,6 +14,7 @@ import {randomLegalPilot} from "../game/engine/pilots/random-legal.mjs";
 import {createRng} from "../game/engine/rng.mjs";
 import {projectFor} from "../game/engine/projection.mjs";
 import {leastAnswer} from "../game/room/room.mjs";
+import {compileScript} from "../game/engine/cards/index.mjs";
 
 let checks = 0;
 const eq = (actual, expected, message) => { assert.deepEqual(actual, expected, message); checks += 1; };
@@ -32,7 +33,12 @@ const assign = (state, amounts) => {
   combatDamage.resolve(state, state.awaiting, amounts);
   return combatDamage.deal(state);
 };
-eq(KEYWORD_FAMILIES.combat.includes("Trample over planeswalkers"), true, "the variant is registered among combat keywords");
+eq(KEYWORD_FAMILIES.combat.includes("Trample Over Planeswalkers"), true, "the variant is registered among combat keywords");
+{
+  const compiled = compileScript({schema: "CrankCardScript@1", identity: {name: "Smoke variant", oracleId: "smoke-variant", types: ["Creature"], manaCost: "{5}{G}", power: 7, toughness: 7},
+    oracleText: "Trample over planeswalkers", abilities: [{kind: "keyword", text: "Trample over planeswalkers", keyword: "trample over planeswalkers"}]});
+  eq([compiled.problems, compiled.definition.keywords], [[], ["Trample Over Planeswalkers"]], "normal script compilation uses the registered canonical keyword spelling");
+}
 
 {
   const {state, blocker} = combat();
@@ -95,7 +101,7 @@ eq(KEYWORD_FAMILIES.combat.includes("Trample over planeswalkers"), true, "the va
   eq(combatDamage.open(state, "regular"), true, "a surviving blocker permits a fresh division in the regular step");
 }
 
-function walkerCombat({keywords = ["Trample over planeswalkers"], power = 7, blocker = false, second = false,
+function walkerCombat({keywords = ["Trample Over Planeswalkers"], power = 7, blocker = false, second = false,
   secondPower = 1, secondKeywords = []} = {}) {
   let state = createState({matchId: "walker-combat", seed: "walker", players: ["Rob", "Maya", "Trey", "Lee"].map(name => ({name}))});
   for (let player = 0; player < 4; player += 1) for (let i = 0; i < 40; i += 1)
@@ -156,7 +162,7 @@ function walkerCombat({keywords = ["Trample over planeswalkers"], power = 7, blo
   eq([game.state.players[1].life, game.state.zones.graveyard[1].length], [36, 1], "shared simultaneous loyalty damage permits four excess to the player");
 }
 {
-  const game = walkerCombat({power: 3, second: true, secondPower: 3, secondKeywords: ["Trample over planeswalkers"]});
+  const game = walkerCombat({power: 3, second: true, secondPower: 3, secondKeywords: ["Trample Over Planeswalkers"]});
   game.drive(() => game.state.phase === "COMBAT_DAMAGE");
   eq(awaitingChoice(game.state).mode, "one", "cooperating allocations first ask which creature to assign or revise");
   const source = id => resolveAwaiting(game.state, [awaitingChoice(game.state).options.findIndex(o => o.cardId === id)]);
@@ -173,7 +179,7 @@ function walkerCombat({keywords = ["Trample over planeswalkers"], power = 7, blo
   eq(events.filter(e => e.kind === "GameEventPlayerDamaged").map(e => e.data.fields.amount), [1, 1], "each revised player allocation is dealt exactly once after confirmation");
 }
 {
-  const game = walkerCombat({blocker: true, second: true, secondPower: 3, secondKeywords: ["Trample over planeswalkers"]});
+  const game = walkerCombat({blocker: true, second: true, secondPower: 3, secondKeywords: ["Trample Over Planeswalkers"]});
   game.drive(() => game.state.phase === "COMBAT_DAMAGE");
   const source = id => resolveAwaiting(game.state, [awaitingChoice(game.state).options.findIndex(o => o.cardId === id)]);
   const confirm = () => resolveAwaiting(game.state, [awaitingChoice(game.state).options.findIndex(o => o.confirmDamage)]);
@@ -185,14 +191,14 @@ function walkerCombat({keywords = ["Trample over planeswalkers"], power = 7, blo
   eq([game.state.players[1].life, game.state.zones.graveyard[1].length], [36, 2], "whole assignment enforces blocker lethal before either onward recipient");
 }
 {
-  const game = walkerCombat({keywords: ["Trample over planeswalkers", "Double Strike"]});
+  const game = walkerCombat({keywords: ["Trample Over Planeswalkers", "Double Strike"]});
   game.drive(() => game.state.phase === "COMBAT_FIRST_STRIKE_DAMAGE");
   resolveAwaiting(game.state, [], [4, 3]);
   game.drive(() => game.state.phase === "COMBAT_DAMAGE");
   eq(game.state.players[1].life, 30, "double strike sends regular-step damage to player after walker leaves in first strike");
 }
 {
-  const {state, blocker} = combat({keywords: ["Trample over planeswalkers"]});
+  const {state, blocker} = combat({keywords: ["Trample Over Planeswalkers"]});
   combatDamage.open(state); assign(state, [2, 3]);
   eq([state.objects[blocker].damage, state.players[1].life], [2, 37], "the variant also tramples over blockers when attacking a player");
 }
@@ -255,14 +261,14 @@ function walkerCombat({keywords = ["Trample over planeswalkers"], power = 7, blo
 }
 {
   const game = walkerCombat({keywords: []});
-  runEffect(game.state, {effect: "pump", targets: [game.attacker], keywords: ["Trample over planeswalkers"]}, {controller: 0, source: null});
+  runEffect(game.state, {effect: "pump", targets: [game.attacker], keywords: ["Trample Over Planeswalkers"]}, {controller: 0, source: null});
   game.drive(() => game.state.phase === "COMBAT_DAMAGE");
   eq(awaitingChoice(game.state).options.length, 2, "variant granted by a live layer applies during damage assignment");
   resolveAwaiting(game.state, [], [4, 3]);
   eq(game.state.players[1].life, 37, "the granted variant changes the actual combat outcome");
 }
 {
-  const game = walkerCombat({keywords: ["Trample over planeswalkers", "Deathtouch"]});
+  const game = walkerCombat({keywords: ["Trample Over Planeswalkers", "Deathtouch"]});
   game.drive(() => game.state.phase === "COMBAT_DAMAGE");
   assert.throws(() => resolveAwaiting(game.state, [], [1, 6]), /loyalty/); checks += 1;
   resolveAwaiting(game.state, [], [4, 3]);
@@ -279,7 +285,7 @@ function walkerCombat({keywords = ["Trample over planeswalkers"], power = 7, blo
   eq(game.state.players[1].life, 36, "regular step uses the walker's current loyalty");
 }
 {
-  const game = walkerCombat({power: 3, second: true, secondPower: 3, secondKeywords: ["Trample over planeswalkers"]});
+  const game = walkerCombat({power: 3, second: true, secondPower: 3, secondKeywords: ["Trample Over Planeswalkers"]});
   addObject(game.state, {card: "Smoke shared power lord", owner: 2, controller: 2, types: ["Enchantment"],
     abilities: [{id: "boost", kind: "static", layer: 7, sublayer: "c", affects: {types: ["Creature"]}, apply: {power: 2, toughness: 0}}]}, "battlefield");
   game.drive(() => game.state.phase === "COMBAT_DAMAGE");
@@ -302,7 +308,7 @@ for (const [name, answer] of [
   ["random-legal", choice => randomLegalPilot(createRng("trample-pilot")).answer(choice)],
   ["room leastAnswer", choice => leastAnswer(choice)],
 ]) {
-  const game = walkerCombat({power: 3, second: true, secondPower: 3, secondKeywords: ["Trample over planeswalkers"]});
+  const game = walkerCombat({power: 3, second: true, secondPower: 3, secondKeywords: ["Trample Over Planeswalkers"]});
   game.drive(() => game.state.phase === "COMBAT_DAMAGE");
   const events = [];
   for (let n = 0; n < 8 && game.state.awaiting; n += 1) {
