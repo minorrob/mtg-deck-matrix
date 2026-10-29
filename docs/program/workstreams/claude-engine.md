@@ -1,5 +1,7 @@
 # Claude · Engine: the instruction set
 
+> **Superseded in part, 2026-10-29 (Rob: one loop for all work, in Linear).** Where this file says to read or update `docs/ACTIVE.md`, a readout feed (`docs/readout/`, `tests/readout-feeds.mjs`) or a handoff file, follow instead `AGENTS.md`, "The work is in Linear: one loop", and the Linear document "How work flows: the one loop" on initiative I-1: pick up the next Todo issue in your lane, claim it, build, then update the PR, the issue and its status. The lanes, file ownership and engineering rules in this file still hold.
+
 *Platform: Claude Code in a cloud container (Fable), the engine session that has held this lane since October 16.
 Linear label `Claude · Engine`. Feed `docs/readout/feeds/claude-engine.json`. Branch today
 `claude/admiring-franklin-58cxy4`; new topics `claude/engine-<topic>`. The charter is `docs/program/README.md`; this
