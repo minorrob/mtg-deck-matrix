@@ -1163,7 +1163,8 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-mana-cell .cm-mana{display:inline-flex}
 #matrix-v2 .cm-mana-cell .cm-mana :is(img,svg){width:26px;height:26px}
 #matrix-v2 .cm-mana-cell b{font-size:calc(18px * var(--hud-scale,1));line-height:1.1;font-variant-numeric:tabular-nums}
-#matrix-v2 .cm-mana-cell.is-none{opacity:.45}
+/* A color with none is told by its dimmed symbol; its count stays full ink, so the 0 reads at 4.5:1 (tests/a11y-board.mjs, ROB-221 put the pool on by default). */
+#matrix-v2 .cm-mana-cell.is-none .cm-mana{opacity:.45}
 /* A card of yours an opponent's spell or ability targets: a red outline with a red glow, past any other state's ring,
    thick enough to read on a far mat of the 3D table. */
 #matrix-v2 .cm-board .cm-bcard.is-targeted{outline:5px solid var(--color-required,#ed4546);outline-offset:2px;filter:drop-shadow(0 0 7px color-mix(in srgb,var(--color-required,#ed4546) 85%,transparent))}
