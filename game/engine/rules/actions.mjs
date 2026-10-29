@@ -2727,6 +2727,7 @@ registerRuleOperation("played-land", (state, frame) => {
   const {player, action} = frame;
   if (!frame.stage) {
     if (!state.objects[action.objectId] || state.players[player]?.lost) return {status: "done"};
+    if (state.objects[action.objectId].faceDown === true && state.objects[action.objectId].zone === "exile") state.objects[action.objectId] = shownFaceUp(state.objects[action.objectId]);
     if (action.face === "back") showFace(state, action.objectId, "back");
     /* Announced from face-down exile, it remains revealed while its entry is waiting (CR 406.3a). */
     state.objects[action.objectId] = {...state.objects[action.objectId]};

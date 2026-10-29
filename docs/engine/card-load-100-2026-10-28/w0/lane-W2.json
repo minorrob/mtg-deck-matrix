@@ -115,6 +115,7 @@
       "Token creation/copy continuations and full caller ownership mapping",
       "Public room storage reload/idempotent retry/RNG proof, concession matrix, all new mutation proofs and touched readers",
       "Required exact-HEAD scan before any eventual push"
-    ]
+    ],
+    "followOn": "Local dependency correction: failed-entry root saves its departing stack-entry metadata so a real move-one departure can still emit one resolution after removing old object/entry. Actual Mox and Feasting Hobbit plus public room storage/retry/RNG now pass57 entry checks. Deferred effect-land play.apply producer returns outcome.operation=playedLandFrame and any-number splice; it requires W3 carryOn protocol before full W2 suite can be green. Existing effect-land assertion is RED without that protocol and remains unchanged; no acceptance/push permitted. Token factory is separate working development, not part of this dependency."
   }
 }
