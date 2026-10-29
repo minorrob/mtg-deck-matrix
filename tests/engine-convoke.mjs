@@ -154,15 +154,15 @@ const tapped = (s, card) => s.objects[named(s, card)[0]].tapped === true;
 }
 
 {
-  /* As many ways as the pool's own question offers at most (PAY_CHOICES), never more: one of each mana and a white and blue
-     creature for {2}{W}{U} -- the creature paying the {W} leaves ten ways, paying the {U} ten more, sixteen in all. */
+  /* Every payment: one of each mana and a white and blue creature for {2}{W}{U} -- the creature paying the {W} leaves ten
+     ways, paying the {U} ten more, sixteen distinct payments in all (four overlap). */
   const ways = convokePayments({W: 1, U: 1, B: 1, R: 1, G: 1, C: 1}, parseManaCost("{2}{W}{U}"), [{id: 1, colors: ["W", "U"]}]);
-  eq([ways.length, new Set(ways.map(paymentKey)).size], [PAY_CHOICES, PAY_CHOICES], `sixteen ways, the first ${PAY_CHOICES} offered, each another`);
-  /* And found at once: twelve white creatures for {10} and eight {W}, with twenty mana in the pool, could be assigned tens of
-     millions of ways; the first assignment already leaves the pool more than PAY_CHOICES ways to pay, and the search stops. */
+  eq([ways.length, new Set(ways.map(paymentKey)).size], [16, 16], "all sixteen distinct payments, including the four beyond the former cap");
+  /* Twelve helpers leave six mana to pay. All five-color multisets of six with at most four of each color are legal:
+     C(10,4) - 5*C(5,4) = 185. Assignment memoization avoids revisiting identical states without dropping payments. */
   const began = Date.now();
   const many = convokePayments({W: 4, U: 4, B: 4, R: 4, G: 4}, parseManaCost(`{10}${"{W}".repeat(8)}`), Array.from({length: 12}, (_, id) => ({id, colors: ["W"]})));
-  eq(many.length, PAY_CHOICES, `twelve creatures and a rich pool: ${PAY_CHOICES} ways, found in ${Date.now() - began} ms`);
+  eq([many.length, new Set(many.map(paymentKey)).size], [185, 185], `all 185 payments, found in ${Date.now() - began} ms`);
 }
 
 /* ---- four players, as the fuzz found it (tools/fuzz-live.mjs, D3 to D6, turn 29) ---- */

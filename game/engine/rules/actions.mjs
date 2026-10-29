@@ -1709,10 +1709,10 @@ export function tapUnits(state, player, offered = manaOffers(state, player), bun
 /* A cast that may tap for itself: from the hand or the command zone, its mana cost (and a commander's tax) paid, with
    nothing in the pool -- so the mana tapped is exactly the cost, and paying it is no further choice. */
 /* X paid in life (`payLifeX`, Toxic Deluge) is no X its sources' mana pays: it is tapped for as any other. */
-const tapZone = (state, player, from, id) => ["hand", "command"].includes(from) || (state.preparedTaps === true && from === "exile"
-  && preparedCopyStays(state, id) && controllerOf(state, state.objects[id].prepareOf) === player);
-const tapCastable = (state, player, action) => tapZone(state, player, action.from, action.objectId) && !action.free && !action.flashback
-  && action.escape === undefined && action.alternative === undefined && (action.x === undefined || action.payLifeX === true || xTaps(state))
+/* CR 601.2g: a permitted cast can activate mana abilities regardless of its zone or alternative cost. */
+const tapZone = (state, player, from, id) => ["hand", "command", "exile", "graveyard", "library"].includes(from);
+const tapCastable = (state, player, action) => tapZone(state, player, action.from, action.objectId)
+  && (action.x === undefined || action.payLifeX === true || xTaps(state))
   && (pooledTaps(state) || poolSize(poolFor(state, player, {spell: action.objectId})) === 0);
 
 /* FLOATING MANA AND A SOURCE'S WHOLE OUTPUT TOGETHER (`pooledTaps`, game/room/table.mjs): a cast tapped for tops up what is
@@ -1730,8 +1730,8 @@ const xTaps = (state) => state.xTaps === true && pooledTaps(state);
 /* A cost with its X counted into its generic mana (CR 107.3a): what the source planners, which take no {X}, are handed. */
 const xCounted = (cost, X) => ({...cost, symbols: cost.symbols.filter((s) => s.kind !== "variable"), variable: 0, generic: cost.generic + X * cost.variable});
 
-/** How many ways to tap for a cast are asked at most: the least flexible first (tapPlans), so the sensible ones. */
-const TAP_CHOICES = 24;
+/** CR 601.2g-h: a payment question includes every funding plan; availability probes ask for just one or two. */
+const TAP_CHOICES = Infinity;
 /** A way to tap, in words: the sources' names, in the order they are tapped ("Forest, Forest, Island"). */
 export const tapWords = (state, plan) => plan.taps.map((t) => state.objects[t.id]?.card ?? "a source").join(", ");
 
@@ -1754,9 +1754,12 @@ function fundingPlans(state, player, id, cost, limit, units = tapUnits(state, pl
 /** The ways to tap for this cast (`action.autoTap`), up to `limit`, as `tapPlans` says them. */
 export function castTapPlans(state, player, action, limit = 2) {
   if (!tapCastable(state, player, action)) return [];
-  const tax = action.from === "command" ? commanderTax(state, player, action.objectId) : 0;
-  /* An Adventure's cost, cast as one (CR 715.3a). */
-  const {cost, x} = asCast(state, action, () => castCost(state, player, action.objectId, tax, false, null, action.extraMana ?? "", action.targets, action.x));
+  /* CR 118.9d, 601.2f: use exactly the terms that payment uses, including an alternative cost and a permission's cost. */
+  const {cost, x} = asCast(state, action, () => {
+    const {tax, free, back, way, fled, permission, lifeCost, manaInstead} = castTerms(state, player, action);
+    const reckoned = castCost(state, player, action.objectId, tax, Boolean(free), lifeCost !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : manaInstead, action.extraMana ?? "", action.targets, action.x);
+    return {...reckoned, cost: anyTypeCost(reckoned.cost, permission)};
+  });
   /* Its X, in a match that taps for one (`xTaps`): counted in, as the offer priced it. */
   const xs = xTaps(state) && cost.variable > 0 ? xCounted(cost, action.x ?? 0) : cost;
   return fundingPlans(state, player, action.objectId, {...xs, generic: xs.generic + x}, limit);
@@ -1969,7 +1972,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
     let autoTap = false;
     /* Not with creatures tapped as an additional cost or for escalate: one tapped for mana as the cast taps its sources could
        not then be tapped for it (their mana is paid from the pool first). */
-    if (!payment && (pooledTaps(state) ? !canPay(pool, cost, {life: lifeLeft, x: x + (xMana ?? 0) * cost.variable}) : poolSize(pool) === 0) && (xMana === null || tapsForX) && !freely && !back && !fled && !way && !tapsAny && !variant.escalateTap && tapZone(state, player, from, id)) {
+    if (!payment && (pooledTaps(state) ? !canPay(pool, cost, {life: lifeLeft, x: x + (xMana ?? 0) * cost.variable}) : poolSize(pool) === 0) && (xMana === null || tapsForX) && !tapsAny && !variant.escalateTap && tapZone(state, player, from, id)) {
       const paying = xMana === null ? cost : xCounted(cost, xMana);
       const [plan] = fundingPlans(state, player, id, {...paying, generic: paying.generic + x}, 1, tappable());
       if (plan) {

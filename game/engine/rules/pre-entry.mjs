@@ -102,6 +102,11 @@ registerRuleOperation("entering", (state, frame) => {
       frame.asks.shift(); return {status: "continue"};
     }
     const choice = enteringChoice(prospectiveEnteringState(state, frame), data);
+    /* CR 614.12, 118.3: with no qualifying card, revealing is impossible. The replacement already made it tapped;
+       there is no decision to suspend its move for (Choked Estuary and Murmuring Bosk). */
+    if (data.reveal && !choice.options.some(option => option.reveal !== undefined && option.reveal !== null)) {
+      frame.asks.shift(); return {status: "continue"};
+    }
     if (!frame.answer) {
       frame.options = choice.options;
       return askRuleOperation(state, frame, {player: frame.player, choice});
