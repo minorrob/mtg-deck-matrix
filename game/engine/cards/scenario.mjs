@@ -182,6 +182,9 @@ export function runScenario(scenario, cards, fixtures = {}) {
 
   function act(step) {
     const seat = seatOf(step);
+    if (!Number.isInteger(seat) || !state.players[seat])
+      fail(state.awaiting ? `answer ${state.awaiting.kind} before taking another action` : "no player has priority for this action",
+        {kind: state.awaiting ? "question-offer" : "action-offer"});
     /* `turnFaceUp`: a manifested permanent turned face up (CR 701.40b), named by the card it is -- as its controller,
        who is offered it, sees it (CR 708.5). */
     /* `suspend`: a card suspended from its owner's hand (CR 702.62a), a special action. */
