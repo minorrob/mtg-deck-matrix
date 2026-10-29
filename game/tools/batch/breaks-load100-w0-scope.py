@@ -5,5 +5,7 @@ BREAKS = [
     ('stop at the old eighty percent', 'tools/card-load-scope.mjs',
      'topCards({graph, played, share: 0.95})', 'topCards({graph, played, share: 0.8})'),
     ('count undefined cards as final', 'tools/card-load-scope.mjs',
-     'required.filter((c) => !definition(c.name))', 'required.filter((c) => false)'),
+     'required.filter((c) => !definition(c.name) || !table(c.name))', 'required.filter((c) => false)'),
+    ('missing table bundle counted as final', 'tools/card-load-scope.mjs',
+     '!definition(c.name) || !table(c.name)', '!definition(c.name)'),
 ]

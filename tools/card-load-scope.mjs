@@ -42,9 +42,9 @@ export function loadScope({graph, played, oracle, banned, hashes = {}}) {
     cards};
 }
 
-export function scopeStatus(scope, definition) {
+export function scopeStatus(scope, definition, table = definition) {
   const required = scope.cards.filter((c) => !c.exempt);
-  const missing = required.filter((c) => !definition(c.name)).map((c) => c.name);
+  const missing = required.filter((c) => !definition(c.name) || !table(c.name)).map((c) => c.name);
   return {included: scope.cards.length, required: required.length, exempt: scope.cards.length - required.length,
     final: required.length - missing.length, missing};
 }
@@ -71,8 +71,9 @@ async function main() {
     if (readFileSync(output, "utf8") !== text) throw new Error("Scope differs from its frozen sources; review the changed ranking before rewriting it");
   }
   const {loadCardIndex} = await import("../game/tools/engine-cards.mjs");
+  const {tableDefinition} = await import("../game/engine/cards/definitions.mjs");
   const index = loadCardIndex();
-  const status = scopeStatus(scope, (name) => index.resolve(name)?.playable === true);
+  const status = scopeStatus(scope, (name) => index.resolve(name)?.playable === true, (name) => Boolean(tableDefinition(name)));
   console.log(`card-load-scope: ${status.included} names cover ${scope.coveredAppearances}/${scope.appearances} appearances; ${status.final}/${status.required} final, ${status.exempt} exempt, ${status.missing.length} undefined`);
   if (process.argv.includes("--gate") && status.missing.length) process.exitCode = 1;
 }

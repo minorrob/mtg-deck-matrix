@@ -20,8 +20,9 @@ Newest wave first. Each line names its command's result line, never a summary of
 - **Integration:** `codex/engine-load100-w0`, worktree `C:\Users\robmi\CrankMagic\worktrees\load100\w0-integrate`.
   Package #911 and prerequisite #834 merged locally; eight debt lane files committed at `c9d31c40`.
   Draft integration PR #912: https://github.com/minorrob/mtg-deck-matrix/pull/912.
-  Last root code checkpoint: `e7d00039` (paragraph prerequisite and four proved inherited-anchor repairs); subsequent
-  record/readiness-command edits are documentation. No writer or verifier branch has been merged into integration.
+  Root checkpoints: `e7d00039` (paragraph prerequisite and first four proved inherited-anchor repairs), `8753715e`
+  (95% appearance manifest/tool and three more repairs), `d6e42af8` (six more repairs and the private-seed proof).
+  No writer or verifier branch has been merged into integration.
 - **Resumed root changes:** froze and checked the 95% appearance scope with an explicit failing final-definition gate;
   no engine runtime change. Re-anchored three more inherited mutations on the same original behaviors: new-table
   passStack default, front-door candidate report route, and the seated reconnect event floor. Each unbroken suite
@@ -34,6 +35,16 @@ Newest wave first. Each line names its command's result line, never a summary of
   actual private seed from the match store and rejects it even inside wrapped strings. Existing hidden-field/card
   assertions stay; a new assertion preserves the public id. A mutation leaking the real seed inside a wrapped nested
   string is caught. No record runtime code changed. These six repairs leave **44 inherited anchor problems**.
+- **Latest short step:** two clock anchors now match the existing `owner` argument and the precise paid-route call,
+  removing only their original request-clock argument in each mutant. Both were caught by `tests/advisor.mjs` after
+  every original baseline suite passed; `missed: []`. These tests use injected provider stand-ins, no network/provider
+  calls. No access-policy or clock runtime code changed. **42 inherited anchor problems remain**. Scope accounting
+  now requires both a playable directory entry and a table-bundle definition; all three scope mutations caught.
+- **Shared foundation:** W3 isolated `b2ba9343` (plain-data rule-operation interpreter, tests/breaks and registration).
+  Root read it cold and independently ran its 75 checks; W3 reports all 32 mutations caught. Root explicitly authorized
+  W2/W7 to merge this foundation-only commit as a shared dependency, rather than copy uncommitted files or merge the
+  full W3 lane. W2 dependency merge `e35dfb09`; W7 `baf5e2b6`. Domain/whole-game continuation and concession behavior
+  are not proved by the interpreter suite. Remaining operation consumers still block affected debt closure.
 - **Prerequisite:** original #834 remains open and conflicted on GitHub. Isolated reconciliation branch
   `codex/engine-load100-pr834` at `ba82617b` merges main and preserves paragraph boundaries alongside current
   castable-card spell segmentation. Integrated through `8c0566dc`. Full backstop validation exposed its inherited
@@ -201,8 +212,8 @@ Fresh baseline on main `39a45706`, before engine changes:
 
 ## Resume priorities and shared-file seams
 
-1. Read/claim this record, fetch, then start W2/W3/W7 with fresh subagents and their committed debt files. The session
-   supports three concurrent subagents, not eight at once. Verify the current lane owners before edits.
+1. Read/claim this record and fetch. W2/W3/W7 have now started; continue their committed debt files and checkpoints
+   below. The session supports three concurrent subagents, not eight at once. Verify current lane owners before edits.
 2. W2 must implement Rob's named wish-deck refusals and stack/retargeting debt. Neither wish card is written. W3 owns
    graveyard/remembered-object work and should coordinate a serializable resumable operation outside script resolution
    before the W4/W5/W6/W7 replacement fallbacks are removed. Current token/counter creation and entering replacements
@@ -214,7 +225,7 @@ Fresh baseline on main `39a45706`, before engine changes:
    hooks in zones/stack/SBA while adding W3's real choice continuations. Re-run both sides' mutation proofs on conflicts.
 5. Regenerate generated card/candidate/coverage/catalog/inventory files once, as the procedure says. They deliberately
    remain out of the bounded writer commits; do not call the hand-written JSON proof a current table-bundle proof.
-6. Repair the remaining 53 inherited anchors without retargeting/weakening tests, repeat moved-anchor proofs after
+6. Repair the remaining 42 inherited anchors without retargeting/weakening tests, repeat moved-anchor proofs after
    integration, run every consolidated gate including strict ability coverage, then one Actions run. Main merge and
    staging remain gated; production/migrations/provider calls remain forbidden. Rob alone closes G-8.
 
@@ -222,13 +233,13 @@ Fresh baseline on main `39a45706`, before engine changes:
 
 | Gate (README, "What 100% means") | At the start (2026-10-28, main `39a45706`) | Now |
 | --- | --- | --- |
-| G-1 Commander cards final | 6,430 defined of about 32,046; 25,616 undefined | Main baseline: 6,424 nonbasic pool finals of 32,040 raw pool cards, plus 6 basic definitions; 25,616 undefined. Wish exemptions not subtracted from raw counts. Unmet. |
-| G-2 Candidates outstanding | 116 (compiler, live); 100 in the committed `candidates.json` | Main baseline reproduced: 116 candidates, 2 blocked. Unmet. |
+| G-1 Included cards final | Full-pool baseline: 6,430 definitions | Rob's revised 95%-appearance target: 2,715/8,514 final, 5,799 undefined; scope gate exits 1. Full-pool undefined count is diagnostic. Unmet. |
+| G-2 Included candidates outstanding | 116 global (compiler, live); 100 in committed `candidates.json` | Scoped count awaits consolidated compile; 5,799 included names are not final. No scoped acceptance claimed. Unmet. |
 | G-3 `check-cards` | 6,430 definitions, 11,023 scenarios, 0 failed | Corrected initial code `508afa94`: 6,079/11,636 reached; 5,557 unreached, expected exit 1. Selected W4 additions prove 4/4 on 3 cards only. Strict consolidated coverage is mandatory; default/CI wiring remains open. Unmet. |
 | G-4 Calibration failures | 4 of 4,165 (Blackblade Reforged, Contagion Clasp, Goblin Piledriver, Wayfarer's Bauble) | W4 `8e0f3a2f`: 4,165 held out, 4,165 pass, no denominator exclusions. Writer changes independently reviewed; all past loads and final integration remain unreviewed/unmeasured. Full G-4 unmet. |
 | G-5 Pool fuzz, clean of games | the harness has no pool mode yet; library 3 of 3, staging decks 1 of 1 clean | Initial 3/3 app-finished pool runs clean, of which 1 reached a winner; final integration and 5,000 games unmet. |
 | G-6 Final cards exercised in a clean game | not measured (no ledger yet) | Initial 131/6,430 final definitions exercised in 3 app-finished clean runs. Unmet. |
-| G-7 Gameplay-gap list open items | section 4: 21 open, 5 unsure; section 5: 10 open; section 7: 10 open; section 8: 10 rows open, 4 partial (`README.md`, "Open accuracy debt") | Debt fixes in progress. Main baseline's 57 stale break anchors are named in `w0/preexisting-break-anchors.json`; root re-anchored/proved four, leaving 53 on integration. Unmet. |
+| G-7 Gameplay-gap list open items | section 4: 21 open, 5 unsure; section 5: 10 open; section 7: 10 open; section 8: 10 rows open, 4 partial (`README.md`, "Open accuracy debt") | Debt fixes in progress. Main's 57 stale break anchors are named in `w0/preexisting-break-anchors.json`; root re-anchored/proved fifteen, leaving 42. Unmet. |
 | G-8 Rob's playtest sign-off | none | None; only Rob can close this gate. |
 
 ## Root's inherited-anchor repair

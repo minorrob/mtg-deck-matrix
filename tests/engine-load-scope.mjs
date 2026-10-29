@@ -16,6 +16,8 @@ assert.equal(scope.appearances, 100);
 assert.deepEqual(scopeStatus(scope, (name) => name === "Popular"),
   {included: 2, required: 2, exempt: 0, final: 1, missing: ["Next"]});
 assert.equal(scopeStatus(scope, () => true).missing.length, 0);
+assert.deepEqual(scopeStatus(scope, () => true, (name) => name === "Popular").missing, ["Next"],
+  "a playable source definition absent from the table bundle is still missing");
 assert.throws(() => loadScope({...given, oracle: {cards: oracle.cards.slice(1)}}), /missing from Oracle/);
 assert.throws(() => loadScope({...given, banned: new Set(["Next"])}), /outside the legal/);
 assert.throws(() => loadScope({...given, played: {played: []}}), /No measured appearances/);
