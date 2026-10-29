@@ -20,7 +20,7 @@
  *     setup: [{seat, zone, cards, sick?}]   (a card put in the command zone is that seat's commander),
  *     steps: [ {play|tap|cast|activate|turnFaceUp|suspend|plot: name, seat?, targets?: [{card, seat?} | {player} | {ability}] | "any", ability?, mana?, x?, optional?, gift?}
  *            | {resolve: true} | {settle: true} | {pass: n} | {to: {turn, phase}} | {answer: [indices], amounts?: [n]} | {expect: [...]}
- *            | {attack: [names], at?} | {block: [[blocker, attacker], ...]} | {choose: [labels]} ],
+ *            | {attack: [names], at?} | {block: [[blocker, attacker], ...]} | {blockIfLegal: [blocker, attacker], seat?} | {choose: [labels]} ],
  *   (`targets: "any"` takes the first legal aim; `optional` skips a move the rules do not offer; `settle` answers every
  *   question with its first legal answer and resolves the stack until it is empty -- the card loader's smoke test.)
  *     expect: [ {seat, of?, zone, cards?, count?, faceDown?} | {seat, life} | {seat, poison} | {stack} | {seat, tapped, is}
@@ -28,7 +28,8 @@
  *             | {monarch: seat | null} ] }]}
  */
 
-import {controllerOf} from "../rules/layers.mjs";
+import {controllerOf, typesOf} from "../rules/layers.mjs";
+import {blockers} from "../rules/combat.mjs";
 import {createState, addObject} from "../state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../rules/turn.mjs";
 import {legalActions, applyAction} from "../rules/actions.mjs";
@@ -86,9 +87,11 @@ function routine(state) {
 export function runScenario(scenario, cards, fixtures = {}) {
   const passed = [];
   const events = [];
+  const policies = [];
   const fail = (message, assertion = null) => {
     const error = new Error(`${scenario.name}: ${message}`);
     if (assertion) error.scenarioAssertion = assertion;
+    if (policies.length) error.scenarioPolicies = structuredClone(policies);
     throw error;
   };
   const seats = scenario.seats ?? 2;
@@ -126,7 +129,7 @@ export function runScenario(scenario, cards, fixtures = {}) {
 
   /* The rules loop the room runs, without the people: pass, advance, and the routine questions. */
   const stepOnce = () => {
-    if (state.awaiting) { if (!routine(state)) fail(`the game asks ${state.awaiting.kind}, which the scenario did not answer`); return; }
+    if (state.awaiting) { if (!routine(state)) fail(`the game asks ${state.awaiting.kind}, which the scenario did not answer`, {kind: "question-offer"}); return; }
     if (state.priorityPlayer === null) { record(advance(state)); return; }
     const outcome = passPriority(state, null, rng);
     record(outcome.events);
@@ -237,7 +240,7 @@ export function runScenario(scenario, cards, fixtures = {}) {
     /* As which of its permanent types, through a permission kept by type (Muldrotha, the Gravetide): `asType`, "Artifact". */
     if (step.asType !== undefined) found = found.filter((a) => (a.asType ?? null) === step.asType);
     if (!found.length && step.optional) return;
-    if (!found.length) fail(`${names[seat]} is not offered ${kind} ${card}${step.targets ? ` at ${JSON.stringify(step.targets)}` : ""}`);
+    if (!found.length) fail(`${names[seat]} is not offered ${kind} ${card}${step.targets ? ` at ${JSON.stringify(step.targets)}` : ""}`, {kind: "action-offer", card, action: kind});
     record(applyAction(state, seat, found[0]));
     /* Each counted target the step names as a list, picked as it is asked: by name, or player, and seat. */
     for (let n = 0; n < 8 && state.awaiting?.kind === "choose-targets" && state.awaiting.stackId === undefined && Array.isArray((aim ?? [])[state.awaiting.index]); n += 1) {
@@ -245,7 +248,7 @@ export function runScenario(scenario, cards, fixtures = {}) {
       const indices = aim[state.awaiting.index].map((w) => {
         const option = choice.options.find((o) => !used.has(o.index) && (w.player !== undefined ? o.targets[0].kind === "player" && o.targets[0].id === w.player
           : o.targets[0].kind === "object" && targetName(state, o.targets[0]) === w.card && (w.seat === undefined || controllerOf(state, o.targets[0].id) === w.seat)));
-        if (!option) fail(`${card}: no ${JSON.stringify(w)} among ${choice.options.map((o) => o.label).join(", ")}`);
+        if (!option) fail(`${card}: no ${JSON.stringify(w)} among ${choice.options.map((o) => o.label).join(", ")}`, {kind: "question-offer"});
         used.add(option.index);
         return option.index;
       });
@@ -309,8 +312,7 @@ export function runScenario(scenario, cards, fixtures = {}) {
         for (const [color, n] of Object.entries(e.pool)) if ((pool[color] ?? 0) !== n) fail(`${names[e.seat]}'s pool has ${pool[color] ?? 0} ${color}, not ${n}`);
         passed.push(`${names[e.seat]}'s pool: ${JSON.stringify(e.pool)}`);
       } else if (e.offers !== undefined) {
-        const assertion = ["activate", "activate-mana"].includes(e.offers.kind)
-          ? {kind: "ability-offer", card: e.offers.card, action: e.offers.kind} : null;
+        const assertion = {kind: "ability-offer", card: e.offers.card, action: e.offers.kind};
         const found = offered(e.offers);
         if (found.length !== e.count) fail(`${e.offers.kind} ${e.offers.card ?? ""} is offered ${found.length} way(s), not ${e.count}`, assertion);
         if (e.targets !== undefined) {
@@ -332,19 +334,20 @@ export function runScenario(scenario, cards, fixtures = {}) {
         passed.push(`${e.offers.kind} ${e.offers.card ?? ""} offered ${e.count} way(s)`);
       } else if (e.asks !== undefined) {
         /* The question the game is waiting on: whom it asks, and the options it offers them. */
-        if (!state.awaiting) fail(`nothing is being asked (expected ${JSON.stringify(e.asks)})`);
+        const assertion = {kind: "question-offer"};
+        if (!state.awaiting) fail(`nothing is being asked (expected ${JSON.stringify(e.asks)})`, assertion);
         const choice = awaitingChoice(state);
-        if (e.asks.seat !== undefined && state.awaiting.player !== e.asks.seat) fail(`${names[state.awaiting.player]} is asked, not ${names[e.asks.seat]}`);
+        if (e.asks.seat !== undefined && state.awaiting.player !== e.asks.seat) fail(`${names[state.awaiting.player]} is asked, not ${names[e.asks.seat]}`, assertion);
         if (e.asks.options !== undefined) {
           const got = choice.options.map((o) => o.label).sort();
-          if (JSON.stringify(got) !== JSON.stringify([...e.asks.options].sort())) fail(`the question offers ${JSON.stringify(got)}, not ${JSON.stringify(e.asks.options)}`);
+          if (JSON.stringify(got) !== JSON.stringify([...e.asks.options].sort())) fail(`the question offers ${JSON.stringify(got)}, not ${JSON.stringify(e.asks.options)}`, assertion);
         }
-        if (e.asks.min !== undefined && choice.min !== e.asks.min) fail(`the question takes at least ${choice.min}, not ${e.asks.min}`);
+        if (e.asks.min !== undefined && choice.min !== e.asks.min) fail(`the question takes at least ${choice.min}, not ${e.asks.min}`, assertion);
         passed.push(`asks ${names[state.awaiting.player]}: ${(e.asks.options ?? []).join(", ")}`);
       } else if (e.keywords !== undefined) {
         /* A permanent's current keywords, as its controller's view shows them. */
         const card = onField(e.seat, e.keywords.card);
-        if (!card) fail(`${e.keywords.card} is not on ${names[e.seat]}'s battlefield`);
+        if (!card) fail(`${e.keywords.card} is not on ${names[e.seat]}'s battlefield`, "keyword-presence");
         for (const k of e.keywords.has ?? []) if (!card.keywords.includes(k)) fail(`${e.keywords.card} lacks ${k}`, "keyword-presence");
         for (const k of e.keywords.lacks ?? []) if (card.keywords.includes(k)) fail(`${e.keywords.card} has ${k}`, "keyword-presence");
         passed.push(`${e.keywords.card}: ${(e.keywords.has ?? []).join(", ")}${(e.keywords.lacks ?? []).length ? `, not ${e.keywords.lacks.join(", ")}` : ""}`);
@@ -375,9 +378,10 @@ export function runScenario(scenario, cards, fixtures = {}) {
   }
 
   for (const step of scenario.steps ?? []) {
+    if (Object.hasOwn(step, "blockIfLegal") && Object.keys(step).some((key) => !["blockIfLegal", "seat"].includes(key))) fail("blockIfLegal requires exactly one named blocker/attacker pair and optional seat", {kind: "policy-precheck"});
     if (step.play || step.tap || step.cast || step.activate || step.turnFaceUp || step.suspend || step.plot) act(step);
     else if (step.resolve) {
-      if (!state.stack.length) fail("there is nothing on the stack to resolve");
+      if (!state.stack.length) fail("there is nothing on the stack to resolve", {kind: "action-offer", action: "resolve"});
       /* Everyone passes in turn until the top object has left the stack, or stopped to ask somebody. What its
          resolution put on the stack -- a permanent's "when this enters" -- waits for its own step. */
       const top = state.stack[state.stack.length - 1].stackId;
@@ -402,10 +406,50 @@ export function runScenario(scenario, cards, fixtures = {}) {
         /* At whom (`at`, a player's name, or one for each attacker in turn), or its first defender. */
         const at = Array.isArray(step.at) ? step.at[k] : step.at;
         const option = choice.options.find((o) => (at ? o.label === `${name} → ${at}` : o.label.startsWith(`${name} → `)) && !picked.some((i) => choice.options[i].cardId === o.cardId));
-        if (!option) fail(`${name} cannot attack: ${choice.options.map((o) => o.label).join(", ") || "nothing can"}`);
+        if (!option) fail(`${name} cannot attack: ${choice.options.map((o) => o.label).join(", ") || "nothing can"}`, {kind: "action-offer", card: name, action: "attack"});
         picked.push(option.index);
       }
       record(resolveAwaiting(state, picked));
+    } else if (Object.hasOwn(step, "blockIfLegal")) {
+      /* An explicit player policy, not an optional action: block with this exact pair if the WHOLE declaration is legal;
+         otherwise declare no blocks, only when that declaration is also legal (CR 509.1b-c). Record either decision.
+         One named pair deliberately does not solve multi-blocker requirements or choose another creature silently. */
+      const pair = step.blockIfLegal;
+      const unavailable = {kind: "policy-precheck"};
+      if (!Array.isArray(pair) || pair.length !== 2 || pair.some((name) => typeof name !== "string" || !name || name.trim() !== name)) fail("blockIfLegal requires exactly one named blocker/attacker pair and optional seat", unavailable);
+      if (!["COMBAT_DECLARE_ATTACKERS", "COMBAT_DECLARE_BLOCKERS"].includes(state.phase)) fail("blockIfLegal requires this combat's blocker declaration phase", unavailable);
+      const named = (name, role) => {
+        const ids = state.zones.battlefield.filter((id) => state.objects[id]?.card === name);
+        if (ids.length !== 1) fail(`blockIfLegal ${role} ${name} is ${ids.length ? "ambiguous" : "missing"}`, unavailable);
+        if (!typesOf(state, ids[0]).includes("Creature")) fail(`blockIfLegal ${role} ${name} is not a creature`, unavailable);
+        return ids[0];
+      };
+      const blocker = named(pair[0], "blocker"), attacker = named(pair[1], "attacker"), turn = state.turn;
+      const attack = state.combat?.attacks.find((a) => a.attacker === attacker);
+      if (!attack) fail(`blockIfLegal ${pair[1]} is not attacking in this combat`, unavailable);
+      if (controllerOf(state, blocker) !== attack.defender) fail(`blockIfLegal ${pair[0]} is not controlled by the defending player`, unavailable);
+      if (step.seat !== undefined && (!Number.isInteger(step.seat) || step.seat !== attack.defender)) fail("blockIfLegal seat is not the defending player", unavailable);
+      for (let n = 0; n < STEP_LIMIT && state.awaiting?.kind !== "declare-blockers"; n += 1) {
+        if (state.turn !== turn || !["COMBAT_DECLARE_ATTACKERS", "COMBAT_DECLARE_BLOCKERS"].includes(state.phase)) fail("blockIfLegal left this combat's blocker declaration phase", unavailable);
+        stepOnce();
+      }
+      if (state.awaiting?.kind !== "declare-blockers") fail("the game never asked who blocks", "step-limit");
+      if (state.awaiting.player !== attack.defender) fail("blockIfLegal is not the defending player being asked", unavailable);
+      const choice = awaitingChoice(state), options = choice.options.filter((o) => o.cardId === blocker && o.attackerId === attacker);
+      if (options.length > 1) fail("blockIfLegal pair is ambiguous in the blocker question", unavailable);
+      const proposed = options.map((o) => o.index);
+      const checked = proposed.length ? blockers.check(state, state.awaiting, proposed) : null;
+      const indices = checked && checked.reasons.length === 0 ? proposed : [];
+      const final = blockers.check(state, state.awaiting, indices);
+      const decision = {kind: "blockIfLegal", turn, player: state.awaiting.player, blocker: {id: blocker, name: pair[0]},
+        attacker: {id: attacker, name: pair[1]}, branch: indices.length ? "block" : "declare-no-blocks", indices,
+        pairReasons: checked?.reasons ?? ["The named pair is not offered"], reasons: final.reasons,
+        status: final.reasons.length ? "refused" : "selected"};
+      policies.push(decision);
+      if (final.reasons.length) fail(`blockIfLegal cannot declare legal blocks: ${final.reasons.join("; ")}`, unavailable);
+      record(resolveAwaiting(state, indices));
+      decision.status = "answered";
+      passed.push(`blockIfLegal: ${decision.branch}`);
     } else if (step.block) {
       /* On to the declare-blockers step, the named creatures blocking: `block` a list of [blocker, attacker] (Train B: "whenever
          this Vehicle blocks"). Nobody blocks unless a step says so; this one says so, for the first defending player asked. */
@@ -416,20 +460,20 @@ export function runScenario(scenario, cards, fixtures = {}) {
          that is not among them (Gravecrawler). */
       if (step.blockers !== undefined) {
         const got = [...new Set(choice.options.map((o) => o.label.split(" blocks ")[0]))].sort();
-        if (JSON.stringify(got) !== JSON.stringify([...step.blockers].sort())) fail(`the creatures that may block are ${JSON.stringify(got)}, not ${JSON.stringify(step.blockers)}`);
+        if (JSON.stringify(got) !== JSON.stringify([...step.blockers].sort())) fail(`the creatures that may block are ${JSON.stringify(got)}, not ${JSON.stringify(step.blockers)}`, "blocker-offer");
         passed.push(`may block: ${step.blockers.join(", ") || "nothing"}`);
       }
       for (const [blocker, attacker] of step.block) {
         const option = choice.options.find((o) => o.label === `${blocker} blocks ${attacker}` && !picked.includes(o.index));
-        if (!option) fail(`${blocker} cannot block ${attacker}: ${choice.options.map((o) => o.label).join(", ") || "nothing can"}`);
+        if (!option) fail(`${blocker} cannot block ${attacker}: ${choice.options.map((o) => o.label).join(", ") || "nothing can"}`, {kind: "action-offer", card: blocker, action: "block"});
         picked.push(option.index);
       }
       record(resolveAwaiting(state, picked));
     } else if (step.choose) {
       /* An answer by the options' words: ["Maya"] picks the option labeled Maya. */
       const choice = awaitingChoice(state);
-      if (!choice) fail("nothing is being asked");
-      const indices = step.choose.map((label) => { const o = choice.options.find((x) => x.label === label); if (!o) fail(`no option ${label}: ${choice.options.map((x) => x.label).join(", ")}`); return o.index; });
+      if (!choice) fail("nothing is being asked", {kind: "question-offer"});
+      const indices = step.choose.map((label) => { const o = choice.options.find((x) => x.label === label); if (!o) fail(`no option ${label}: ${choice.options.map((x) => x.label).join(", ")}`, {kind: "question-offer"}); return o.index; });
       record(resolveAwaiting(state, indices, null, rng, step.extra ?? {}));
     }
     /* An amount for each option (`amounts`): a division (CR 601.2d), answered as the room answers one. */
@@ -438,5 +482,5 @@ export function runScenario(scenario, cards, fixtures = {}) {
     else fail(`a step the runner does not know: ${JSON.stringify(step)}`);
   }
   check(scenario.expect);
-  return {passed, state, events};
+  return {passed, state, events, ...(policies.length ? {policies} : {})};
 }
