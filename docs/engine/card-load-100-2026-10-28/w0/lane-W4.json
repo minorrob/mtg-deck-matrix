@@ -16,8 +16,8 @@
     "| Two damage replacements where nobody can be asked | `rules/replacement.mjs`:34 | W4 |",
     "| A token put onto the battlefield attacking attacks the first player in turn order | `script/effects/permanents.mjs`:270 | W4 |"
   ],
-  "status": "bounded trample checkpoint and reproducible outside-mana damage handback; damage ordering, attacking tokens and blocker-side joint requirements remain open",
-  "codeCheckpoint": "89bfae71e1023c4d0d5ed82ebaa9260f6b61ed1e",
+  "status": "Bounded saved mana damage/cost checkpoint; broader outside damage, combat replay, attacking tokens and blocker requirements remain open",
+  "codeCheckpoint": "20e13e9e08044bbaf1527328a6b940f13dce92a5",
   "pullRequest": "https://github.com/minorrob/mtg-deck-matrix/pull/930",
   "completed": [
     "Blackblade Reforged: held-out translation counts Land after for each, not the equipped Creature",
@@ -120,16 +120,31 @@
       "limits": "No new cards/promotions; no main merge, release, full suite or wave closure. ROB-149 blocker-side capacity/joint requirements remain open and must revisit simultaneous shared-blocker damage when implemented. Existing UI choice modes are reused; no real-table visual/playtest sign-off is claimed."
     },
     "outsideManaDamage": {
-      "status": "OPEN, deliberately RED native reproduction; no implementation or gate credit",
+      "status": "Bounded actual mana/cost consumer GREEN at20e13e9e; broader outside callers remain OPEN",
       "fixture": "docs/engine/card-load-100-2026-10-28/w0/evidence/w4-mana-order-red.mjs",
       "design": "docs/engine/card-load-100-2026-10-28/w0/W4-damage-continuation.md",
       "command": "Node22 first on PATH; node docs/engine/card-load-100-2026-10-28/w0/evidence/w4-mana-order-red.mjs",
-      "actual": "exit1; Shivan Reef actual red mana action taps/adds R1, automatically deals5, player0 life35, no awaiting choice",
+      "actual": "HISTORICAL aae67e76: exit1; Shivan Reef actual red mana action taps/adds R1, automatically deals5, player0 life35, no awaiting choice",
       "required": "Ask player0 before damage; add-two then triple deals9/life31, triple then add-two deals5/life35. Preserve R1, tapped source, empty stack, one mana event/one damage event across reload.",
       "testPreservation": "Only W4's uncommitted deliberate RED hunk was moved to this diagnostic fixture. tests/engine-damage-replaced.mjs restored exactly to published source89bfae71; no assertions/skips/ignores changed.",
       "seams": "W5 reserved actions.mjs mana ability.then region near2981; tapUnits excludes ability.then from automatic casting sources. W1 owns combat.mjs for battles. Safe continuation must serialize damage proposals and defer shield/next-use consumption, preserve applied replacements across concessions, emit committed tap/mana prefix once and resume remaining instructions.",
-      "handback": "Root requested this bounded design/evidence checkpoint before context handback; no multi-module damage implementation started. Remaining damage, token and blocker debts are not waived."
+      "handback": "Root requested this bounded design/evidence checkpoint before context handback; no multi-module damage implementation started. Remaining damage, token and blocker debts are not waived.",
+      "current": "engine-outside-damage140 and original native diagnostic GREEN; new27/original69 mutations caught; source20e13e9e; no full-gate or clean-game credit"
     },
     "anchors": "53 problems after exact W5 merge:49 inherited plus4 funding actions anchors. No W4 changed-file anchor failures. Root is reconciling inherited/funding proofs."
+  },
+  "damageContinuation20261029": {
+    "source": "20e13e9e08044bbaf1527328a6b940f13dce92a5",
+    "attributionSource": "dfe3f377",
+    "nativeChecks": 140,
+    "readers": 22,
+    "newMutationsCaught": 27,
+    "originalMutationsCaught": 69,
+    "missed": [],
+    "evidence": "evidence/w4-damage-native-20261029.json",
+    "continuation": "W4-damage-continuation.md",
+    "gateCredit": false,
+    "cardsPromoted": 0,
+    "cleanGamesCredited": 0
   }
 }

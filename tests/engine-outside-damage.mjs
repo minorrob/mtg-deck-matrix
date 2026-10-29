@@ -171,6 +171,7 @@ for (const leaving of ["actor","recipient"]) {
   eq([s.objects[swamp],s.players[0].manaPool.B,s.awaiting],[undefined,2,null],"a real Nirkana Revenant sees the Swamp tapped for mana even after its sacrifice cost moved it");
   const mana=events.filter(e=>e.kind==="GameEventManaPool");
   eq(mana.map(e=>[e.data.fields.source.cardId,e.data.fields.produced]),[[swamp,{B:1}],[revenant,{B:1}]],"base and triggered mana each happen once with exact source IDs");
+  eq(manaTriggered(s,mana[0],{cardId:swamp,types:["Land"],subtypes:["Swamp"],controller:0}),[{player:0,mana:{B:1},source:revenant}],"a matching source snapshot supports the real filtered mana reader after movement");
   eq(manaTriggered(s,mana[0],{cardId:swamp+99,types:["Land"],subtypes:["Swamp"],controller:0}),[],"another object's snapshot cannot satisfy the moved mana source filter");
 }
 {
@@ -228,7 +229,36 @@ for (const departing of [2,3]) {
   } else eq([s.awaiting,s.players[0].life,s.objects[shield]],[null,34,undefined],"a departing unchosen shield cannot supply an invented allocation");
   eq(events.filter(e=>e.kind==="GameEventManaPool").length,1);
 }
+{
+  let s=state();const target=on(s,{card:"Deathtouch recipient",types:["Creature"],power:1,toughness:20},1);
+  const reef=reefWith(s,[{effect:"dealDamage",amount:1,targets:[target]}],{sacrificeSelf:true});s.objects[reef].keywords=["Deathtouch"];
+  for(const [name,change] of [["Triple",{multiply:3}],["Add two",{add:2}]]) on(s,{card:name,types:["Enchantment"],abilities:[{id:name,kind:"replacement",text:name,watches:{event:"damage"},change}]});
+  const events=activate(s,reef);s=JSON.parse(JSON.stringify(s));events.push(...answer(s,"Triple"));
+  eq(s.objects[target],undefined,"damage from the departed source retains deathtouch for the next state-based check");
+  eq(events.filter(e=>e.kind==="GameEventCardDamaged").map(e=>[e.data.fields.source.cardId,e.data.fields.amount]),[[reef,5]]);
+}
+{
+  let s=state();const reef=reefWith(s,[{effect:"dealDamage",amount:1,who:"you"},{effect:"gainLife",amount:1}]);
+  change(s,"Triple",{multiply:3});change(s,"Add two",{add:2});
+  s.effects=[{id:"palm",rule:"prevent-damage",players:[0],next:true,apply:{},until:"end-of-turn",sourceController:0,name:"Palm",dealer:reef,
+    then:[{effect:"dealDamage",amount:{damagePrevented:true},who:"that card's controller"}]}];
+  const events=activate(s,reef);events.push(...answer(s,"Triple"));
+  s=JSON.parse(JSON.stringify(s));events.push(...answer(s,"Palm"));
+  eq([s.effects.length,s.awaiting?.kind,s.players[0].life],[0,"rule-operation",40],"a consumed prevention's follow-up has its own saved damage choice before the suffix");
+  s=JSON.parse(JSON.stringify(s));events.push(...answer(s,"Triple"));
+  eq([s.players[0].life,s.awaiting],[30,null]);
+  eq(events.filter(e=>e.kind==="GameEventPlayerDamaged").map(e=>e.data.fields.amount),[11],"prevented damage is absent; the independently ordered follow-up happens once");
+  eq(events.filter(e=>e.kind==="GameEventManaPool").length,1);
+}
+{
+  let s=state();const definition=card("Swamp");definition.abilities=structuredClone(definition.abilities);definition.abilities[0].sacrifice={types:["Creature"]};
+  const swamp=on(s,definition),revenant=on(s,card("Nirkana Revenant"));
+  for (const [name,to] of [["Exile cost","exile"],["Return cost","hand"]]) on(s,{card:name,types:["Enchantment"],abilities:[{id:name,kind:"replacement",text:name,watches:{event:"zone-change",from:"battlefield",to:"graveyard",filter:{types:["Creature"]}},change:{to}}]});
+  const action=legalActions(s,0).find(a=>a.kind==="activate-mana"&&a.objectId===swamp&&a.costChoice?.sacrifice===revenant);
+  assert.ok(action);checks++;const events=applyAction(s,0,action);
+  eq([s.awaiting.kind,s.players[0].manaPool.B],["rule-operation",0]);
+  s=JSON.parse(JSON.stringify(s));events.push(...answer(s,"Exile cost"));
+  eq([s.objects[revenant],s.players[0].manaPool.B,s.awaiting],[undefined,1,null],"a mana-trigger holder sacrificed as a cost is absent when the mana is actually produced");
+  eq(events.filter(e=>e.kind==="GameEventManaPool").map(e=>[e.data.fields.source.cardId,e.data.fields.produced]),[[swamp,{B:1}]],"tap-for-mana triggers check at mana production, after the moving cost");
+}
 console.log(`engine-outside-damage: ${checks} checks passed; actual mana damage choices, reload, holder departure and deferred shields`);
-
-
-

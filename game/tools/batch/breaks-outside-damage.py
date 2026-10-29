@@ -16,6 +16,7 @@ BREAKS = [
  ('damage event keeps live derived controller', RES, ': {...cardRef(state,source),controller:controllerOf(state,source)};', ': cardRef(state,source);'),
  ('live lifelink goes to derived controller', RES, 'changeLife(state, controllerOf(state,source), linked, events);', 'changeLife(state, state.objects[source].controller, linked, events);'),
  ('departed source infect retained', RES, 'was?.keywords?.includes("Infect") === true;', 'false;'),
+ ('departed source deathtouch retained', RES, 'if (was?.keywords?.includes("Deathtouch") && state.objects[toCard])', 'if (false)'),
  ('departure refreshes pending LKI', 'game/engine/rules/sba.mjs', '  refreshPendingDamageSources(state);', ''),
  ('damage source filter reads matching LKI', R, 'if (proposal.sourceLastKnown?.cardId !== proposal.sourceId || !matchesLastKnown(watches.source,proposal.sourceLastKnown,context)) return false;', 'return false;'),
  ('redirected damage no longer hits named player', R, 'if (Number.isInteger(watches.toPlayer) && toPlayer !== watches.toPlayer) return false;', ''),
@@ -32,4 +33,5 @@ BREAKS = [
  ('nested branch remains resumable', D, 'if (effect.effect === "branch")', 'if (false)'),
  ('nested repeat remains resumable', D, 'if (effect.effect === "repeatFor") return', 'if (false) return'),
  ('remaining effects advance once', D, 'frame.effects[frame.cursor++]', 'frame.effects[frame.cursor]'),
+ ('prevention follow-up keeps a real saved caller', D, 'if (followUps.length) return', 'if (false) return'),
 ]
