@@ -54,6 +54,11 @@ Worktrees are `C:\Users\robmi\CrankMagic\worktrees\load100\<branch suffix>`. Pre
 do not delete through a junction. Every code/evidence checkpoint is pushed; read each lane JSON and PR body before
 continuing it. A model taking a lane over uses the brief's prefix/suffix hand-off rule; integration stays on its current
 branch. PR #834 and #911 are ancestors of integration only, not yet merged to main.
+Final local audit: all six prerequisite/role worktrees have empty `git status --porcelain` and heads equal their remote
+branches. W5's task-created diagnostics were preserved outside its worktree at
+`C:\Users\robmi\CrankMagic\workbench\load100-w5-79fe06c7-diagnostics`; W1's are at
+`C:\Users\robmi\CrankMagic\workbench\load100-w1-27182d42-diagnostics`. The primary checkout is still on
+`codex/reconcile-893-20261026`, `32109d12`; main remains `39a45706`. No lane process is left running.
 
 ## Wave 0 evidence so far
 
