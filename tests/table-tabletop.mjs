@@ -67,7 +67,7 @@ const prefs={preferences:{play:{overlay:37,sidePane:{version:2,owner:'another@ex
 const prefScope={C:{state:prefs,signedInAs:()=> 'player@example.com',notice(){},async commit(command){prefs.preferences={...prefs.preferences,...command.values};}},draw(){}};
 vm.createContext(prefScope);vm.runInContext(preferenceCode,prefScope);
 const layout=()=>JSON.parse(JSON.stringify(vm.runInContext('paneLayout()',prefScope)));
-assert.deepEqual(layout(),{left:['actions'],right:['stack','history','chat','coach']},'another account gets the r4 default (Chat is a default module: Rob, 2026-10-28) without inheriting the saved owner layout');
+assert.deepEqual(layout(),{left:['actions'],right:['stack','mana','resources','history','chat','coach']},'another account gets the r4 default (Chat is a default module: Rob, 2026-10-28; Mana Pool and Resources too: Rob, 2026-10-29, ROB-221) without inheriting the saved owner layout');
 await vm.runInContext('savePaneModules({left:["history"],right:["stack","table"]})',prefScope);
 assert.deepEqual(layout(),{left:['actions','history'],right:['stack','table']},'saving preserves drawer placement and ordering');
 assert.equal(prefs.preferences.play.overlay,37,'saving modules does not replace unrelated Play settings');
@@ -352,7 +352,7 @@ try {
   // Another player using this browser must not inherit this account's pane.
   await accountRoutes(page,'other@example.com');await page.reload();await page.locator('.cm-stage-canvas').waitFor();
   await page.locator('.cm-stage-right[data-action=board-stage-side]').click();
-  assert.deepEqual(await moduleOrder(),['stack','history','chat','coach'],'a different profile gets the r4 default without another owner layout');
+  assert.deepEqual(await moduleOrder(),['stack','mana','resources','history','chat','coach'],'a different profile gets the r4 default, Mana Pool and Resources among it, without another owner layout');
   await accountRoutes(page);await page.reload();await page.locator('.cm-stage-canvas').waitFor();
   await page.locator('[data-action=account-keep-cloud]').click();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
