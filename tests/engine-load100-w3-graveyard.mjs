@@ -4,7 +4,7 @@ import {loadCardIndex} from "../game/tools/engine-cards.mjs";
 import {runScenario} from "../game/engine/cards/scenario.mjs";
 import {runEffect} from "../game/engine/script/effects/index.mjs";
 import {legalActions, applyAction} from "../game/engine/rules/actions.mjs";
-import {usesThisTurn} from "../game/engine/state/index.mjs";
+import {usesThisTurn, addObject} from "../game/engine/state/index.mjs";
 
 let checks = 0;
 const eq = (a, b, message) => { assert.deepEqual(a, b, message); checks += 1; };
@@ -79,6 +79,27 @@ for (const [kind, card] of [["cast", "Smoke Relic"], ["play-land", "Forest"]]) {
   const state = start([at(0, "graveyard", "Smoke Relic")]);
   for (let n = 0; n < 2; n += 1) runEffect(state, {effect: "mayPlay", from: "graveyard"}, {controller: 0});
   eq(legalActions(state, 0).filter(a => a.kind === "cast" && a.label === "Smoke Relic").length, 1, "identical unlimited permissions still have the same outcome and need one offer");
+}
+
+/* Two permissions can differ only in their alternative mana cost (CR 118.9, 601.2a). Neither is auto-selected. */
+for (const limited of [false, true]) {
+  const state = start([]);
+  const card = addObject(state,
+    {card: "Smoke Exile Creature", types: ["Creature"], manaCost: "{7}", power: 1, toughness: 1, owner: 0, controller: 0}, "exile", 0);
+  state.players[0].manaPool = {C: 10};
+  for (const manaInstead of ["{2}", "{3}"]) runEffect(state, {effect: "mayPlay", targets: [card], manaInstead, ...(limited ? {count: 1} : {})}, {controller: 0, source: null});
+  const permissions = state.effects.filter(e => e.rule === "may-play");
+  const offers = legalActions(state, 0).filter(action => action.kind === "cast" && action.objectId === card);
+  eq(offers.map(action => action.via), permissions.map(e => e.id), "different alternative costs remain separately identified choices");
+  eq(offers.map(action => action.payment.mana.C), [2, 3], "each permission offers its own actual mana payment");
+  for (let selected = 0; selected < 2; selected += 1) {
+    const resumed = JSON.parse(JSON.stringify(state));
+    applyAction(resumed, 0, JSON.parse(JSON.stringify(offers[selected])));
+    eq(resumed.players[0].manaPool.C, 8 - selected, "the persisted selected alternative cost is what is paid");
+    eq(resumed.effects.filter(e => e.rule === "may-play").map(e => e.id),
+      limited ? [permissions[1 - selected].id] : permissions.map(e => e.id), "only the chosen limited permission is consumed");
+    eq(resumed.stack.filter(entry => entry.kind === "spell").length, 1, "the chosen permission casts exactly one spell");
+  }
 }
 
 console.log(`engine-load100-w3-graveyard: ${checks} checks passed`);

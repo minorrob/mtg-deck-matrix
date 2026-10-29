@@ -3,6 +3,7 @@
 SUITES = ['tests/engine-rule-operations.mjs']
 OPS = 'game/engine/rules/operations.mjs'
 BREAKS = [
+    ('complete trigger batch retained', OPS, 'all: operation.events, result:', 'all: [], result:'),
     ('pending means frames remain', OPS, 'export const ruleOperationPending = state => Boolean(state.ruleOperation);', 'export const ruleOperationPending = state => false;'),
     ('events reach caller', OPS, '  state.ruleOperation.events.push(...events);', '  state.ruleOperation.events.push();'),
     ('reported prefix advances', OPS, '  operation.reported = operation.events.length;', '  operation.reported = 0;'),

@@ -594,6 +594,23 @@ export function applyReplacements(state, proposal, {orders = [], askable = false
   return {proposal: current, applied: current.applied, awaiting: false};
 }
 
+/* Explicit operation frames apply one live replacement at a time (CR 616.1f). The caller owns precedence and questions;
+   this interface neither chooses an order nor saves a candidate that may cease to apply while a player answers. */
+function checkStepProposal(proposal) {
+  if (!["zone-change", "enters"].includes(proposal.event)) throw new Error("Replacement steps support zone-change or enters proposals");
+}
+export function ruleReplacementCandidates(state, proposal) {
+  checkStepProposal(proposal);
+  return applicable(state, proposal).map(candidate => ({key: candidateKey(candidate), holderId: candidate.holderId,
+    ability: structuredClone(candidate.ability), label: `${state.objects[candidate.holderId]?.card ?? candidate.ability.name ?? "Effect"}: ${candidate.ability.text ?? candidate.ability.id}`}));
+}
+export function applyRuleReplacement(state, proposal, key) {
+  checkStepProposal(proposal);
+  const candidate = applicable(state, proposal).find(candidate => candidateKey(candidate) === key);
+  if (!candidate) throw new Error("That replacement no longer applies");
+  return applyOne(state, candidate, proposal);
+}
+
 /* The counters an exile replacement gives the card it sends there ("with a void counter on it", Dauthi Voidwalker), put on
    the card it became (CR 400.7) once it is in exile -- by every route that asks applyReplacements of a zone change. */
 export function placeReplacedCounters(state, movedId, proposal) {

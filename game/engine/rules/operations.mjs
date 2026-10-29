@@ -58,7 +58,7 @@ export function continueRuleOperation(state, rng = null) {
   for (let steps = 0; steps < 100000; steps += 1) {
     const frame = operation.frames.at(-1);
     if (!frame) {
-      const outcome = {status: "done", events: unreported(operation), result: operation.result, after: operation.after};
+      const outcome = {status: "done", events: unreported(operation), all: operation.events, result: operation.result, after: operation.after};
       delete state.ruleOperation;
       return outcome;
     }
