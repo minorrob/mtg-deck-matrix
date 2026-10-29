@@ -1768,12 +1768,12 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=table] .cm-seat-identity{flex:0 1 auto;min-width:0;padding-right:8px}
 #matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-mat[data-fit=table] .cm-seat-portrait{display:none}
 /* On a card this small the power/toughness and counts take less room, so they stay on it. */
-#matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-bcard-pt{padding:0 2px;border-radius:3px;font-size:max(7px,calc(var(--bc) * .3))}
-#matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-bcard-count{padding:0 2px;font-size:max(10px,calc(var(--bc) * .4))}
+#matrix-v2 .cm-board .cm-stage-slot[data-tight] :is(.cm-bcard-pt,.cm-bcard-count){padding:0 2px;border-radius:3px}
 #matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-bcard-tax{top:2px;padding:0 3px}
+#matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-bcard-name{display:none}   /* at this size its letters are a smear, and the badge stands where they were: the card is named by its label for a reader */
 /* THE QUICK ACTION TAB (Rob, 2026-10-28): the undo drawer under a card, holding Tap, Cast, Play and Undo, each once; the same in Table, Focus and 3D. */
 #matrix-v2 .cm-board .cm-quick-drawer{display:flex;align-items:center;justify-content:center;gap:6px;padding:2px 4px}
-#matrix-v2 .cm-board .cm-quick-do{flex:none;min-height:0;height:auto;padding:2px 5px;border:1px solid color-mix(in srgb,var(--mat-ink) 40%,transparent);border-radius:4px;background:rgb(0 0 0 / .5);color:var(--mat-ink);font:700 calc(13px*var(--hud-scale,1))/1.15 var(--font-body);cursor:pointer;white-space:nowrap}
+#matrix-v2 .cm-board .cm-quick-do{flex:none;min-height:0;height:auto;padding:2px 5px;border:1px solid color-mix(in srgb,var(--mat-ink) 40%,transparent);border-radius:4px;background:rgb(0 0 0 / .5);color:var(--mat-ink);font:700 calc(15px*var(--hud-scale,1)/var(--mat-mag,1))/1.15 var(--font-body);cursor:pointer;white-space:nowrap}   /* 15px as drawn on the page: the board is drawn at --mat-mag of its size */
 #matrix-v2 .cm-board .cm-quick-do:hover,#matrix-v2 .cm-board .cm-quick-do:focus-visible{background:var(--color-aether,#4aa8ff);color:#06161a}
 #matrix-v2 .cm-board .cm-quick-do:disabled{opacity:.5;cursor:default}
 /* A BOARD'S NAME is plain text above it (Rob, 2026-10-28): no container, no fill; the turn's seat in the accent color. A double click on a board focuses it. */
@@ -1791,10 +1791,9 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-stage-max.is-on{background:var(--color-aether,#4aa8ff);border-color:var(--color-aether,#4aa8ff);color:#06161a}
 .cm-stage-hand.is-hidden .cm-stage-hand-label{top:auto;bottom:0}
 /* A pile's count never reads under 10px, however small its card (the boards fit the window). */
-#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-bcard-count{font-size:max(10px,calc(var(--bc) * .3))}
 /* On a small card the quick action tab is as short as its words allow, so a press in the middle of the card still reaches the card; its focus ring and the hand tab's are not clipped. */
 #matrix-v2 .cm-board .cm-stage-slot .cm-quick-drawer{min-height:0;padding:0 2px;gap:3px}
-#matrix-v2 .cm-board .cm-stage-slot .cm-quick-do{padding:0 4px;border-radius:3px;font-size:max(10px,min(calc(13px*var(--hud-scale,1)),calc(var(--bc,60px) * .5)));line-height:1.2}
+#matrix-v2 .cm-board .cm-stage-slot .cm-quick-do{padding:0 4px;border-radius:3px;font-size:calc(15px*var(--hud-scale,1)/var(--mat-mag,1));line-height:1.2}
 .cm-stage-hand-label:focus-visible{clip-path:none;border-radius:6px 6px 0 0;outline:0;box-shadow:0 0 0 1px #0b1213,0 0 0 3px var(--focus-halo,#fff),0 0 0 6px var(--v-accent,#4aa8ff)}   /* the card's own two-tone ring, which a trapezoid's clip-path would cut off */
 #matrix-v2 .cm-board .cm-stage-max{font-size:calc(15px*var(--hud-scale,1));height:auto;padding:2px 8px;line-height:1.2}
 /* THE LOBBY'S BUTTONS (Rob, 2026-10-28): Start (and Cancel, once it counts down) takes the full-width place End game had, under the "n to Ready Up" box, which now runs the panel's whole width; End game is at the top right, beside Leave lobby. */
@@ -1808,13 +1807,14 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit] .cm-board-pile:is([data-zone=command],[data-zone=exile]){align-self:start}
 #matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit] .cm-board-pile:is([data-zone=library],[data-zone=graveyard]){align-self:end}
 #matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit] .cm-board-pile>:is(.cm-bcard,.cm-board-partners){position:absolute;inset:0;width:100%;height:100%;margin:0}
-#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit] .cm-board-pile>.cm-board-partners>.cm-bcard{--bc:inherit}
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit] .cm-board-pile>.cm-board-partners>:is(.cm-bcard,.cm-card-slot){position:absolute;left:0;top:0;margin:0}
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit] .cm-board-pile>.cm-board-partners>:is(.cm-bcard,.cm-card-slot)+:is(.cm-bcard,.cm-card-slot){left:22%;top:30%;z-index:2}   /* the second partner over the first like a small pile, inside the one frame */
 #matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit] .cm-board-pile figcaption{position:absolute;left:0;right:0;bottom:0;z-index:3;width:auto;padding:0 2px;background:#091b1dd9;pointer-events:none}
 
 /* THE LAYERS, bottom to top (Rob, 2026-10-28: "cards shouldn't cut off at the edge of the mat ... background > table > mat > cards > card HUD > game HUD"): the mat, its grid and its zones clip nothing, so a card lies over the edge of its zone and of the mat as it would on a table (a tapped one's turned corners too); the card's own HUD -- power and toughness, counts, the quick tab -- stands over the cards beside it, and the game's HUD (drawers, header, pop-ups) over all. A row or zone clips only while its cards really outgrow it and it scrolls them (is-scrolling, is-scrolling-zone). */
-#matrix-v2 .cm-board .cm-stage-region :is(.cm-stage-front,.cm-stage-mini,.cm-mat,.cm-mat-grid){overflow:visible}
-#matrix-v2 .cm-board .cm-stage-region .cm-mat-zone:is(.cm-board-field,.cm-board-lands):not(.is-scrolling-zone){overflow:visible}
-#matrix-v2 .cm-board .cm-stage-region .cm-board-cards:not(.is-scrolling){overflow:visible}
+#matrix-v2 .cm-board .cm-stage-region :is(.cm-stage-front,.cm-stage-mini,.cm-mat,.cm-mat-grid):not(.cm-phone-battlefield *,[data-fit=phone],[data-fit=phone] *){overflow:visible}
+#matrix-v2 .cm-board .cm-stage-region .cm-mat-zone:is(.cm-board-field,.cm-board-lands):not(.is-scrolling-zone,.cm-phone-battlefield *,[data-fit=phone] *){overflow:visible}
+#matrix-v2 .cm-board .cm-stage-region .cm-board-cards:not(.is-scrolling,.cm-phone-battlefield *,[data-fit=phone] *){overflow:visible}
 #matrix-v2 .cm-board .cm-stage-region .cm-card-slot:is(:hover,:focus-within){z-index:7}
 #matrix-v2 .cm-board .cm-stage-region :is(.cm-bcard-pt,.cm-bcard-tax,.cm-bcard-count,.cm-bcard-marks){z-index:3}
 #matrix-v2 .cm-board .cm-flat-rear .cm-stage-mini>.cm-mat{--bc:var(--rear-card)}
@@ -1823,3 +1823,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-flat-rear .cm-board-empty{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}   /* read, not seen: a thumbnail has no room for it */
 /* The 3D view's far boards are drawn on the table's plane, small and behind: they keep their edge (the near board and Table and Focus lay their cards over theirs). */
 #matrix-v2 .cm-board .cm-stage-region .cm-stage-rear:not(.cm-flat-rear) .cm-stage-mini{overflow:hidden}
+/* LEGIBLE OR ABSENT (Rob, 2026-10-29): a card under 30px wide on the page has no room for a badge at the text floor (15px), so its power/toughness, counts, tax and marks stand down -- the card's label still says them, and Focus, 3D, Max and the zoom pop-up show them. */
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-stage-rear)[data-tiny] :is(.cm-bcard-pt,.cm-bcard-count,.cm-bcard-tax,.cm-bcard-marks){display:none}
+#matrix-v2 .cm-board .cm-board-pile[data-caption-none] figcaption{visibility:hidden}
+#matrix-v2 .cm-board .cm-stage-hand-label{font-size:calc(16px*var(--hud-scale,1))}

@@ -145,7 +145,9 @@ eq(results.table.popup.replace(/\s+/g, " "), results.full.popup.replace(/\s+/g, 
   eq(await seatOf(".cm-stage-big"), pt[2], "and it is that board that is looked at");
   eq(await page.locator(".cm-flat-rear > .cm-stage-boardname").count(), 3, "focus: each of the others is a board with its name above it");
   eq(await page.locator(".cm-flat-rear .cm-stage-seat-label, .cm-flat-rear .cm-seat-header, [data-action=board-focus].cm-stage-seat-label").count(), 0, "and no chip of life, hand and a Focus button");
-  const rear = await page.evaluate(() => {const e = document.querySelector(".cm-flat-rear .cm-stage-mini .cm-mat"), r = e.getBoundingClientRect(), s = e.closest(".cm-flat-rear").dataset.seat; return [r.left + r.width - 10, r.top + 10, s];});
+  const rear = await page.evaluate(() => {const e = document.querySelector(".cm-flat-rear .cm-stage-mini .cm-mat"), r = e.getBoundingClientRect(), s = e.closest(".cm-flat-rear").dataset.seat;
+    for (let y = r.top + 3; y < r.bottom - 3; y += 3) for (let x = r.left + 3; x < r.right - 3; x += 3) {const el = document.elementFromPoint(x, y); if (el && e.contains(el) && !el.closest(".cm-bcard, button, a, [data-zone-scroll], [data-drag]")) return [x, y, s];} return null;});
+  ok(rear, "focus: there is empty board to double-click on another board");
   await page.mouse.dblclick(rear[0], rear[1]); await page.waitForTimeout(700);
   eq(await seatOf(".cm-stage-big"), rear[2], "focus: a double click on another board focuses that one");
   /* the Boards module: press a board, then the same again */
@@ -167,6 +169,9 @@ for (const mode of ["table", "focus", "full"]) {
   ok(target && /Tap|Cast|Play/.test(target[2]), `${mode}: a card of yours carries a quick action tab (${target && target[2]})`);
   await page.mouse.move(target[0], target[1]); await page.waitForTimeout(700);
   ok(await page.evaluate(() => [...document.querySelectorAll(".cm-quick-drawer")].some((d) => Number(getComputedStyle(d).opacity) > .9)), `${mode}: the tab opens under the card on hover`);
+  await page.mouse.click(target[0], target[1], {button: "right"}); await page.waitForTimeout(500);
+  eq(await page.locator("#cm-card-menu").count(), 1, `${mode}: a right click on a card of the mat opens its menu`);
+  await page.keyboard.press("Escape"); await page.waitForTimeout(200);
   const hand = page.locator(".cm-stage-fan-slot .cm-bcard").nth(2), hb = await hand.boundingBox();
   await page.mouse.move(hb.x + hb.width / 2, hb.y + hb.height / 2); await page.waitForTimeout(800);
   const peek = await page.evaluate(() => document.querySelector(".cm-board-peek .cm-bcard")?.getBoundingClientRect().width || 0);

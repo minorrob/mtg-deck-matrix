@@ -356,6 +356,7 @@
     const o=s.opts, cards=1+.8*(clamp(o.cards??100,70,200)-100)/100, seatsN=(o.mats||[]).length;
     const g=flatGeometry(s.box.width,s.box.height,{mode:o.grid?"table":"focus",zoom:o.zoom,pan:o.pan,seats:seatsN,reserve:o.reserve||0,top:o.top||0,gapX:o.gapX,gapY:o.gapY,padL:o.padL||0,capB:o.capB||0,stripMin:o.stripMin||0,inL:o.inL||0,inR:o.inR||0,labelH:o.labelH||0,youArea:o.youArea||"",youScale:o.youScale||1,edge:o.edge??GRID_MARGIN});
     s.view=g;
+    const hudScale=parseFloat(getComputedStyle(s.host).getPropertyValue('--hud-scale'))||1;   /* the text size the person chose: a badge needs room for it */
     const size=(el,r)=>{
       el.style.setProperty('--row-w',`${r.width}px`);el.style.setProperty('--mat-w',`${r.width}px`);el.style.setProperty('--mat-h',`${r.height}px`);el.style.setProperty('--board-scale',String(cards));
       el.style.setProperty('--rear-card',`${Math.max(12,(r.height-16)/3.6)}px`);   /* a rear board is a whole mat in its own 16:9: two card rows and the divider stand in it, none cut off */
@@ -365,7 +366,9 @@
       const chip=el.querySelector('.cm-board-chip')?.offsetHeight||0, piles=Math.floor(((r.height-head-14-band-chip)/2-26)/1.4), rows=Math.floor((r.height-head-24-84-chip)/3.44);
       /* A board this small has no room for its zones' captions: the cards and piles keep the height. */
       el.toggleAttribute('data-tight',r.height<200);
-      el.style.setProperty("--bc-cap",`${Math.max(16,Math.min(piles,rows)*cards)}px`);   /* the cap is the size that fits; Camera's Cards scales it either way (larger cards scroll in their zone) */
+      el.style.setProperty("--bc-cap",`${Math.max(16,Math.min(piles,rows)*Math.min(cards,1))*Math.max(cards,1)}px`);   /* the cap is the size that fits; Camera's Cards scales it either way (larger cards scroll in their zone) */
+      /* A card under 30px wide (times the text size chosen) on the page has no room for a badge at the text floor: the board says so, and its badges stand down (crankmagic-stage.css). */
+      const smallest=Math.min(...[...el.querySelectorAll('.cm-bcard')].map(c=>c.offsetWidth)),shown=el.offsetWidth?el.getBoundingClientRect().width/el.offsetWidth:1;el.toggleAttribute('data-tiny',smallest*shown<30*hudScale);   /* as drawn: the board's matrix scales it */
     };
     if(g.grid){
       for(const el of s.host.querySelectorAll('.cm-stage-slot')){const r=g.slot(el.dataset.area);position(el,r);size(el,r);}

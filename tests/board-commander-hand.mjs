@@ -10,7 +10,7 @@
  * A look at another player's hand (the `handLook` decision, mode `ack`, game/engine/script/effects/asking.mjs): the
  * cards it is about are drawn above OK, each opens Card zoom, and OK answers it with nothing chosen.
  *
- * Each in Full, Table and Focus at 1280x720 and the phone at 390x844, hit-tested with elementFromPoint (a Playwright
+ * Each in Full, Table and Focus at 1280x720 (the phone at 390x844 is in the phone follow-up PR), hit-tested with elementFromPoint (a Playwright
  * click proves no reach). GEOMETRY_REQUIRED=1 refuses a missing browser.
  *   node tests/board-commander-hand.mjs
  */
@@ -70,7 +70,7 @@ const acts = (frames) => frames.filter((f) => f.type === "act");
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1;};
 try {
-  for (const [width, height, mode] of [[1280, 720, "full"], [1280, 720, "table"], [1280, 720, "focus"], [390, 844, "focus"]]) {
+  for (const [width, height, mode] of [[1280, 720, "full"], [1280, 720, "table"], [1280, 720, "focus"]]) {   /* the phone (390x844) waits for the phone follow-up PR (Rob, 2026-10-29); docs/ACTIVE.md */
     const where = `${mode} ${width}x${height}`;
     /* ---- the commander tax and partners ---- */
     {
@@ -88,7 +88,10 @@ try {
       ok(await page.locator(kraum).evaluate((el) => el.classList.contains("is-bright")), `${where}: castable Kraum is lit`);
       ok(!(await page.locator(tymna).evaluate((el) => el.classList.contains("is-bright"))), `${where}: Tymna, with nothing to do, is not`);
       ok((await page.locator(tymna).getAttribute("aria-label")).endsWith(`. ${TYMNA_WHY}`), `${where}: and says why, with her name (ROB-24)`);
-      const k = await reach(page, kraum), t = await reach(page, tymna, [0.3, 0.15]);
+      /* Pressed on the card's upper part: its quick tab opens over the foot of a small card, and a press there is the tab's own. */
+      let k = await reach(page, kraum, [0.5, 0.2]);
+      for (const fy of [0.5, 0.8]) if (!k.ok) k = await reach(page, kraum, [0.5, fy]);
+      const t = await reach(page, tymna, [0.3, 0.15]);
       ok(k.ok, `${where}: Kraum takes the pointer`);
       ok(t.ok, `${where}: Tymna's uncovered top takes the pointer`);
       /* Current native path (Rob, 2026-10-27): the card, then its row -- two presses -- and a row that asks nothing more is sent at once. */

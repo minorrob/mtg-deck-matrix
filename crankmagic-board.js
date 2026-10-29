@@ -1113,10 +1113,12 @@ globalThis.CrankBoard = Object.seal({
   }
   function fitPileCaptions(host) {
     for(const pile of host.querySelectorAll('.cm-board-pile')){
-      pile.removeAttribute('data-caption-compact');
+      pile.removeAttribute('data-caption-compact');pile.removeAttribute('data-caption-none');
       const caption=pile.querySelector('figcaption'),name=caption?.querySelector('em'),count=caption?.querySelector('b');if(!name||!count)continue;
       const css=getComputedStyle(caption),available=Math.min(caption.clientWidth,pile.clientWidth)-parseFloat(css.paddingLeft)-parseFloat(css.paddingRight);
       pile.toggleAttribute('data-caption-compact',!name.getClientRects().length || name.scrollWidth+count.offsetWidth+(parseFloat(css.columnGap)||4)>available);
+      /* Not even its count fits the frame (the text size past what a card this small holds): the count is left unseen, the pile's label still says it. */
+      pile.toggleAttribute('data-caption-none',pile.hasAttribute('data-caption-compact') && count.offsetWidth>available);
     }
   }
   function zoneMetrics(mat) {
@@ -4422,7 +4424,7 @@ globalThis.CrankBoard = Object.seal({
     event.preventDefault();
     const recent = lastPress && performance.now() - lastPress.at < 900 ? lastPress : null, right = recent?.button === 2;
     if (!el || (recent && recent.type !== "mouse")) return;
-    if (table && (hold || right)) return;
+    if (table && stageEnabled() && (hold || right)) return;   /* the 3D table answers a right press when it is let go; Table and Focus open a card's menu at once */
     peek(null); openCardMenu(Number(el.dataset.card), right ? {x: event.clientX, y: event.clientY} : el, el);
   });
   /* THE LOBBY'S MUSIC (Rob, 2026-10-09: "Lobby music."): the pack's lobby bed ("Lobby / seat", bgm_lobby_mythic_calm), from

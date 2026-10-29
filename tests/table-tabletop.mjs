@@ -577,7 +577,8 @@ try {
   await page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
   for(const [selector,action] of [['.cm-stage-rail','board-stage-rail'],['.cm-stage-side','board-stage-side']]) if(!await page.locator(`${selector}.is-open`).count()) await page.locator(`.cm-stage-handle[data-action=${action}]`).click();
-  const showModulePreview=async()=>{await page.locator('.cm-stage-hand .cm-bcard').first().hover();await page.locator('.cm-full-pick .cm-bcard').waitFor();};
+  const showModulePreview=async()=>{const at=await page.evaluate(()=>{for(const c of document.querySelectorAll('.cm-stage-hand .cm-bcard')){const r=c.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;if(document.elementFromPoint(x,y)?.closest('.cm-bcard')===c)return [x,y];}return null;});await page.mouse.move(at[0],at[1]);   /* a card of the hand no drawer lies over */
+  await page.locator('.cm-full-pick .cm-bcard').waitFor();};
   await showModulePreview();
   assert.deepEqual(await page.locator('.cm-stack-summary strong').allTextContents(),['Intruder Alarm','Dundoolin Weaver'],'stack entries are in resolution order');
   assert.deepEqual(await page.locator('.cm-stack-position').allTextContents(),['#1','#2'],'each entry has its own stack position');

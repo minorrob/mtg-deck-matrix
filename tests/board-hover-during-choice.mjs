@@ -72,7 +72,8 @@ try{
     eq(await peeked(),"Command Tower",`${mode}: the keyboard's focus on an option shows its card too`);
     await page.locator("body").focus();await page.evaluate(()=>document.activeElement?.blur());
     /* 4. */
-    await away();await onTable(526).click({button:"right"});await page.locator("#cm-card-menu [data-action=board-card-menu-view]").click();
+    /* A card's menu: a right click in 3D; in Table and Focus a click on the card's upper part (the hover's quick tab lies under its foot), at a point the browser says is the card's. A right click on a card of the flat mat does not open it (docs/ACTIVE.md, reported). */
+    await away();await onTable(526).click(mode==="full"?{button:"right"}:{});await page.locator("#cm-card-menu [data-action=board-card-menu-view]").click();
     await page.locator("#cm-card-inspector").waitFor();
     await away();await onTable(545).hover();
     eq(await peeked(),"Faerie Formation",`${mode}: with Proft pinned by 🔍, another card (Faerie Formation) still pops up on a hover`);

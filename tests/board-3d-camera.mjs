@@ -164,7 +164,9 @@ try {
   await page.keyboard.up("Control");
   await page.waitForTimeout(400);
   ok(JSON.stringify(await tableAt()) !== JSON.stringify(quadWas) && await page.waitForFunction(() => Number(localStorage.getItem("cm-board-zoom-v2")) > 100, null, {timeout: 3000}).then(() => true, () => false), "with Ctrl the wheel over the row zooms the table");
-  eq(await scrolled(), rowAt, "and leaves the row where it was");
+  /* Zoomed, the row sits under a scale transform and the browser snaps its scroll offset to a device pixel: a row at its end (86) reads 85.5 about half the time.
+     The row did not scroll (a Ctrl wheel of -200 would move it 200), so the measure is within a pixel. */
+  near(await scrolled(), rowAt, 1, "and leaves the row where it was");
   /* ⌘/Ctrl + and − still size the cards, not the table. */
   const scale = () => page.evaluate(() => getComputedStyle(document.getElementById("cm-board")).getPropertyValue("--card-scale") || document.documentElement.style.getPropertyValue("--card-scale"));
   const zoomBefore = await page.evaluate(() => localStorage.getItem("cm-board-zoom-v2"));
