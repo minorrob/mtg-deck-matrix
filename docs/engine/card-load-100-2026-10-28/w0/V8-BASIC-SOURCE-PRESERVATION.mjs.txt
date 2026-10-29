@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {pathToFileURL} from 'node:url';
+const root=pathToFileURL(process.cwd()+'/');
+const {loadCardIndex}=await import(new URL('game/tools/engine-cards.mjs',root));
+const {runScenario}=await import(new URL('game/engine/cards/scenario.mjs',root));
+const data=JSON.parse(fs.readFileSync('../scratch/v8-basic-source-preservation-fixture.json','utf8'));
+const before=JSON.stringify(data.scenario.steps[0].source),cards=loadCardIndex();
+const result=runScenario(data.scenario,name=>cards.definition(name),data.fixtures,{explicitChoices:true});
+assert.equal(JSON.stringify(data.scenario.steps[0].source),before);
+console.log(JSON.stringify({scope:'additive diagnostic clone; no saved original added to pilot',
+  existingLiteralUnchanged:JSON.parse(before),fullOriginalAssertionsPassed:result.passed.length,strict:true},null,2));

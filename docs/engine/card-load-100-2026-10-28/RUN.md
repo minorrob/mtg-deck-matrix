@@ -5,6 +5,47 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Narrow source batch approved after root review:** root independently matches all6,430 file hashes and audits
+  all1,233 plans for scope and exact original-field preservation; all11 fixed samples pass23 original assertions on
+  local `62619241`. The exact eligible set is1,072 scenarios/700 files/3,430 literal source fields; all161 rejected
+  scenarios remain untouched. V8's clean BEFORE on `544d8512` includes all700 identities/1,962 scenarios:1,171 failed,
+  347/1,388 abilities reached,55 runtime-only proofs, problems0, exit1. Exact identity-list SHA
+  191ef2957ed3aea5925e4d8a7a21894691f9670ef2ef6f0fa3dd1722ab04c97a. Two pre-measurement Windows encoding failures are
+  retained uncredited; only UTF-8 argument transport is corrected, invoking the unchanged checker main/parser.
+  The3,430 fields are now written in V8's worktree with a complete structural audit; actual full edited-scenario
+  reruns/clean AFTER ledger/publication remain pending. No corrections, reselection, definition or gate changes.
+- **W1 actual duplicate-ID correction approved:** frozen `e77c1137` finishes44 baseline/82 caught/2 missed, restored.
+  Two genuinely entered loaded Metallic Mimics reproduce duplicate bare `a2` IDs versus unique holder keys2:a2/4:a2,
+  crashing saved return-counter recheck. Root approves only the two canonical `.applied` reads→`.appliedBy` in
+  entry-characteristics, retaining all uniqueness/prefix/payment/reopen guards. Native435 passes both actual counter
+  orders/JSON/duplicate-key refusal after sync `55993bc2`. The two old missed controls now have direct missing-return
+  and late-born-watcher assertions; final44-reader/85-control proof is next, not already green.
+- **Current role proof checkpoint:** W1 frozen `e77c1137` passes the full44-reader baseline; its84 controls remain
+  unaccepted with two actual misses. One legacy linked-return result is now bypassed by canonical pre-cleanup capture:
+  reanchor the same fault before sealing, keeping the old union and direct behavior. The original early-trigger fault
+  is masked by later preflight collection: retain it and add an actual callback-created watcher witness. After exact
+  restore, reproduce two loaded modifiers sharing an ability ID/JSON before proposing any `entryApplied` change.
+  W5's uninterrupted fresh42-reader baseline passes after the documented pause artifact;31 remaining controls run
+  with33 earlier caught controls retained by exact hashes. A potentially redundant fuzz caller epoch field must not
+  become a source-text assertion: preserve the persisted/replay epoch contract at the actual shared native boundary.
+  After restore/sync, reproduce an older epoch1 Hada/Rioter pending question through held refresh before accepting
+  new `effectTerms` payment dispatch; absent-epoch replay alone does not prove migration. No runtime change is approved
+  solely for a mutation test, and no role has full acceptance. Latest published sync target is `60596146`.
+- **Larger source validation, no writes:** on clean `544d8512`, V8 validates all1,233 remaining narrow candidates:
+  3,896 native taps pass;1,072 scenarios/700 files/3,430 proposed fields pass every original strict assertion. The161
+  other scenarios retain choice-policy failures; zero prefix failures/timeouts/execution errors. Full fixed inventory
+  hash a9be9808449d759e85483653621be7b7457c7bd2086076788dc44119bc2fd7b2. Package/samples await root review before any
+  saved batch or omission ledger. Mixed-board/command-zone candidates remain excluded; no card/gate credit.
+- **Eight source repairs integrated locally, `50ce44bd`:** clean/scanned/pushed draft #958 (`544d8512`) is merged
+  `--no-ff`. Root repeats all eight full strict scenarios:21 original assertions pass. The role's historical selected
+  before/after keeps all17 scenarios:14 to7 failures,0 to4 of14 abilities reached, zero runtime-removal proofs, both
+  checker exits1. Exactly30 source fields in five files; no original field, choice, expectation or definition changes.
+  V8 now validates the remaining narrow basic-only candidate inventory read-only; no larger saved batch is approved.
+- **Additive back-face API controls on `50ce44bd`:** original room-face6/projection93/native-Snoop baseline passes.
+  Two exact field faults fail their direct original assertions (omitted actual back face; falsely tagged front face),
+  no error/timeout credit; source restores byte-exact SHA46e9fd0aebaf687aafc1a6312c4fa691a34737d257cf09f49f055f1eefd23025.
+  No production/browser assertion changes. Full hashed logs and reader/probe inputs: `w0/evidence/face-view-proof.json`.
+  This is native API proof only; current combined browser, a11y/ROB-312, all full wave0 gates and staging remain open.
 - **Drawer-height dependency, source `8abe8752`:** owner main advances to `83f0a8f2` (#957/ROB-206) and V8's
   pre-push scan correctly stops. Root merges `--no-ff`, preserves owner CSS/tests and regenerates shared asset pins.
   README actual714; assets136/integrity/wiring pass. Engine/room bytes are unchanged from `7364caf7`; current browser

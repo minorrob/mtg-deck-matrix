@@ -1,0 +1,36 @@
+{
+  "schema": "V8BasicSourceIntegration@1",
+  "testedCleanSource": "fdd17480e1e311dd0206dfdd2ebb24a67feefee1",
+  "dependency": "9699cf562bd4f655dbb44e5a0cc707a17d73685d",
+  "mainAncestor": "af363528",
+  "historicalBefore": "644d844bab026329b08028988f515074bd2da7aa",
+  "historicalAfter": "102f55f512c930865674bc2653055e15555ee734",
+  "allOriginalFieldsPreservedAfterSync": true,
+  "sourceFieldsAdded": 30,
+  "editedScenarios": 8,
+  "originalSelectedScenariosStillPresent": 17,
+  "fullEditedScenariosPassed": 8,
+  "originalAssertionsPassed": 21,
+  "policyRunnerReaderAndProbeByteIdentical": true,
+  "all14ArchiveGitBlobHashesVerified": true,
+  "metadata": {
+    "integrity": "50 variants/50 profiles passed",
+    "featureWiring": 131,
+    "assets": 136,
+    "serviceWorker": 9,
+    "READMEActualSuites": 713,
+    "inventoryArtifacts": 60,
+    "inventoryMB": 80.9,
+    "inventoryDrift": false,
+    "scopeNames": 8514,
+    "scopeFinal": 2715,
+    "scopeUndefined": 5799
+  },
+  "postSyncFullScenarioLog": {
+    "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/v8-basic-source-edited-full-post-sync.json",
+    "sha256": "f0b8c8d67e9b6e784601ba046acf17c196e0f9ab571fad90166fa8d9a961a91e"
+  },
+  "largerBatchApproved": false,
+  "newPromotions": 0,
+  "canonicalAcceptance": false
+}
