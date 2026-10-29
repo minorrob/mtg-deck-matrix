@@ -56,7 +56,7 @@ import {runEffect} from "../script/effects/index.mjs";
 import {askEntering, enteringChoice, resolveEnteringChoice} from "./entering.mjs";
 import {collectTriggers, openTriggers, askTriggerTargets, triggerChoice, resolveTriggerOrder, triggerTargetsChoice, resolveTriggerTargets, triggerCountedChoice, resolveTriggerCounted} from "./trigger.mjs";
 import {chooseTargetsChoice, resolveChooseTargets, castCostChoice, resolveCastCost, afterAction} from "./actions.mjs";
-import {deriving} from "./layers.mjs";
+import {deriving, abilitiesOf, subtypesOf, controllerOf} from "./layers.mjs";
 
 /* The steps of a turn, CR 500.1, in order.
  *
@@ -683,9 +683,9 @@ function arrive(state, events) {
     else if (state.drawBeat) state.awaiting = {kind: "draw-card", player: state.activePlayer};
     else draw(state, state.activePlayer, events);
   }
-  /* CR 714.3b: as the precombat main phase begins, the active player puts a lore counter on each Saga they control -- what
-     brings its next chapter. */
-  if (state.phase === "MAIN1") for (const id of state.zones.battlefield.filter((x) => state.objects[x].controller === state.activePlayer && (state.objects[x].subtypes ?? []).includes("Saga")))
+  /* CR 714.3c: a Saga advances only while it has a chapter ability, after type/control and ability changes. */
+  if (state.phase === "MAIN1") for (const id of state.zones.battlefield.filter((x) => controllerOf(state, x) === state.activePlayer
+    && subtypesOf(state, x).includes("Saga") && abilitiesOf(state, x).some((a) => a.kind === "triggered" && Number.isInteger(a.trigger?.chapter))))
     events.push(...runEffect(state, {effect: "putCounter", targets: [id], counter: "lore", count: 1}, {controller: state.activePlayer, source: id}));
   /* The combat steps' turn-based actions (CR 508.1, 509.1, 510.1) each stop the game and ask.
      `open` returns false when there is nothing to decide, and the step just proceeds. */

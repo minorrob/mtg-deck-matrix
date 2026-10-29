@@ -15,6 +15,8 @@ import {keywordsOf} from "../game/engine/rules/layers.mjs";
 import {collectTriggers} from "../game/engine/rules/trigger.mjs";
 import {checkStateBasedActions} from "../game/engine/rules/sba.mjs";
 import {runEffects} from "../game/engine/script/effects/index.mjs";
+import {resolveTop} from "../game/engine/rules/stack.mjs";
+import {afterResolving} from "../game/engine/rules/priority.mjs";
 import {compileScript} from "../game/engine/cards/index.mjs";
 import {missingFor} from "../game/tools/engine-constructs.mjs";
 import {loadCardIndex} from "../game/tools/engine-cards.mjs";
@@ -75,18 +77,30 @@ const chapters = (s, events) => { s.pendingTriggers = []; collectTriggers(s, eve
   eq(t.objects[early].zone, "battlefield", "two of three: it stays");
 }
 {
-  /* Urza's Saga has what its chapters gave from that many lore counters: its {C} from one, the Construct from two. */
+  /* Urza's Saga gains abilities only as its chapters resolve, independent of its later lore count. */
   const s = table();
-  const urza = put(s, card("Urza's Saga"));
+  const urzaCard = addObject(s, {...card("Urza's Saga"), owner: 0, controller: 0}, "hand", 0);
   put(s, WASTES); put(s, WASTES);
   beginGame(s);
   for (let n = 0; n < 50 && !(s.phase === "MAIN1" && s.priorityPlayer === 0); n += 1) advance(s);
+  applyAction(s, 0, legalActions(s, 0).find((a) => a.kind === "play-land" && a.objectId === urzaCard));
+  const urza = s.zones.battlefield.find((id) => s.objects[id].card === "Urza's Saga");
+  const offers = () => [legalActions(s, 0).filter((a) => a.kind === "activate-mana" && a.objectId === urza).length,
+    legalActions(s, 0).filter((a) => a.kind === "activate" && a.objectId === urza).length];
+  eq(offers(), [0, 0], "chapter I on the stack grants no mana ability yet");
+  afterResolving(s, resolveTop(s));
   for (let a; (a = legalActions(s, 0).find((x) => x.kind === "activate-mana" && x.label === "Wastes"));) applyAction(s, 0, a);
-  s.objects[urza].counters = {lore: 1};
-  const offers = () => [legalActions(s, 0).filter((a) => a.kind === "activate-mana" && a.objectId === urza).length, legalActions(s, 0).filter((a) => a.kind === "activate" && a.objectId === urza).length];
-  eq(offers(), [1, 0], "one lore counter, {2} in the pool: it taps for {C}; no Construct yet");
-  s.objects[urza].counters = {lore: 2};
-  eq(offers(), [1, 1], "two: its {C}, and the Construct");
+  eq(offers(), [1, 0], "resolved I grants the colorless mana ability, without a Construct ability yet");
+  afterResolving(s, lore(s, urza, 1));
+  eq(offers(), [1, 0], "chapter II on the stack grants no Construct ability yet");
+  afterResolving(s, resolveTop(s));
+  eq(offers(), [1, 1], "resolved II grants its paid Construct ability");
+  s.objects[urza].counters.lore = 0;
+  eq(offers(), [1, 1], "removing all lore does not remove abilities its chapters already granted");
+  applyAction(s, 0, legalActions(s, 0).find((a) => a.kind === "activate" && a.objectId === urza));
+  afterResolving(s, resolveTop(s));
+  eq([s.players[0].manaPool.C, s.zones.battlefield.filter((id) => s.objects[id].card === "Construct").length], [0, 1],
+    "the gained Construct ability pays two and makes an actual token after all lore is removed");
 }
 {
   /* Keyword counters (CR 122.1b): indestructible and flying give their keywords; a +1/+1 counter gives none. */
@@ -104,6 +118,42 @@ const chapters = (s, events) => { s.pendingTriggers = []; collectTriggers(s, eve
   eq([script(["Saga"], [SAGA, I(1)]).problems.length, script([], [SAGA, I(1)]).problems.length > 0, script(["Saga"], [SAGA, I(0)]).problems.length > 0], [0, true, true],
     "a Saga: read; not a Saga: refused; chapter 0: refused");
   eq(missingFor({keywords: ["Chapter"]}), [], "the catalog credits Chapter");
+}
+
+/* A Saga with no chapter abilities neither advances nor sacrifices (CR 714.3c, 714.4). */
+for (const stripped of [true, false]) {
+  const s = table();
+  const saga = put(s, card("Binding the Old Gods"));
+  s.objects[saga].counters = {lore: 1};
+  if (stripped) (s.effects ??= []).push({id: "chapter-loss", timestamp: s.nextTimestamp++, layer: 6, affects: {ids: [saga]}, apply: {removeAllAbilities: true}});
+  beginGame(s);
+  for (let n = 0; n < 50 && !(s.phase === "MAIN1" && s.priorityPlayer === 0); n += 1) advance(s);
+  eq(s.objects[saga].counters.lore, stripped ? 1 : 2, "precombat main advances only a Saga that has a chapter ability");
+  s.objects[saga].counters.lore = 3;
+  s.pendingTriggers = [];
+  s.stack = [];
+  checkStateBasedActions(s);
+  eq(s.objects[saga]?.zone === "battlefield", stripped, "only a Saga with a chapter ability sacrifices at its final chapter");
+}
+
+{
+  const s = table(), saga = put(s, card("Binding the Old Gods"));
+  s.objects[saga].counters = {lore: 1};
+  (s.effects ??= []).push({id: "no-saga-type", timestamp: s.nextTimestamp++, layer: 4, affects: {ids: [saga]}, apply: {setSubtypes: []}});
+  beginGame(s);
+  for (let n = 0; n < 50 && !(s.phase === "MAIN1" && s.priorityPlayer === 0); n += 1) advance(s);
+  eq(s.objects[saga].counters.lore, 1, "an object with chapter abilities that lost its Saga subtype does not advance");
+  s.objects[saga].counters.lore = 3;
+  checkStateBasedActions(s);
+  eq(s.objects[saga].zone, "battlefield", "a former Saga retains its chapter abilities but does not sacrifice by the Saga rule");
+}
+{
+  const s = table(), saga = put(s, card("Binding the Old Gods"), 1);
+  s.objects[saga].counters = {lore: 1};
+  (s.effects ??= []).push({id: "new-controller", timestamp: s.nextTimestamp++, layer: 2, affects: {ids: [saga]}, apply: {controller: 0}});
+  beginGame(s);
+  for (let n = 0; n < 50 && !(s.phase === "MAIN1" && s.priorityPlayer === 0); n += 1) advance(s);
+  eq(s.objects[saga].counters.lore, 2, "the Saga advances at its current controller's precombat main phase");
 }
 
 console.log(`engine-saga: ${checks} checks passed — a lore counter as it enters and each precombat main phase; chapter N as the count crosses N; sacrificed at its last chapter once nothing of it waits; keyword counters give their keywords.`);

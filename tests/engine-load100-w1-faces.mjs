@@ -11,8 +11,9 @@ import {prepare, unprepare} from "../game/engine/script/effects/attributes.mjs";
 import {addObject, moveObject, shownFaceDown} from "../game/engine/state/index.mjs";
 import {legalActions, applyAction} from "../game/engine/rules/actions.mjs";
 import {resolveTop} from "../game/engine/rules/stack.mjs";
+import {afterResolving} from "../game/engine/rules/priority.mjs";
 import {checkStateBasedActions} from "../game/engine/rules/sba.mjs";
-import {lastKnown, characteristicsOf} from "../game/engine/rules/layers.mjs";
+import {lastKnown, characteristicsOf, abilitiesOf} from "../game/engine/rules/layers.mjs";
 import {compileScript} from "../game/engine/cards/index.mjs";
 import {abstractBody, fillBody, templateOf} from "../game/engine/cards/sentences.mjs";
 
@@ -23,6 +24,8 @@ const read = (file) => JSON.parse(readFileSync(new URL(`../game/engine/cards/${f
 const elspeth = read("e/elspeth-suns-champion.scenarios.json");
 for (const scenario of elspeth.scenarios) runScenario(scenario, index.definition, elspeth.fixtures);
 const {state} = runScenario(elspeth.scenarios.at(-1), index.definition, elspeth.fixtures);
+const songScenarios = read("s/song-of-the-dryads.scenarios.json");
+for (const scenario of songScenarios.scenarios) runScenario(scenario, index.definition, songScenarios.fixtures);
 const emblemIds = state.zones.command[0].filter((id) => state.objects[id]?.emblem === true);
 eq(emblemIds.length, 1, "Elspeth creates an actual emblem in its controller's command zone (CR 114.1-2)");
 const emblem = state.objects[emblemIds[0]];
@@ -198,6 +201,120 @@ for (const tapped of [false, true]) {
   prepare(s, copy);
   eq(s.objects[copy].preparation, undefined, "copying the face-down characteristics does not copy the hidden inset");
   eq(s.zones.exile.length, 0, "a face-down copy cannot create a hidden prepare spell");
+}
+
+/* Generic permanent-inset grammar, without loading an undefined final card (CR 722.3c, 608.3f). */
+{
+  const script = read("g/goblin-glasswright-craft-with-pride.json");
+  script.identity.name = "Inset Host // Inset Visionary";
+  script.prepare = {identity: {name: "Inset Visionary", types: ["Creature"], subtypes: ["Elf"], manaCost: "{G}", colors: ["G"], power: 2, toughness: 3},
+    oracleText: "When this creature enters, draw a card.", abilities: [{kind: "triggered", text: "When this creature enters, draw a card.",
+      trigger: {on: "enters", who: "self"}, effects: [{effect: "draw", count: 1}]}]};
+  const compiled = compileScript(script);
+  eq(compiled.problems, [], "a permanent prepare spell is legal grammar, with its own entering ability");
+  const resolver = (name) => name === script.identity.name ? compiled.definition : index.definition(name);
+  const scenario = {name: "Public host cast, permanent inset cast, and entering trigger", seats: 3,
+    setup: [{seat: 0, zone: "battlefield", cards: ["Mountain", "Wastes", "Forest"]},
+      {seat: 0, zone: "hand", cards: [script.identity.name]}, {seat: 0, zone: "library", cards: ["Island"]}],
+    steps: [{tap: "Mountain"}, {tap: "Wastes"}, {cast: "Inset Host"}, {resolve: true}], expect: []};
+  let s = runScenario(scenario, resolver).state;
+  const host = s.zones.battlefield.find((id) => s.objects[id].card === "Inset Host");
+  const exile = s.objects[host].preparedCopy;
+  eq([s.objects[exile].card, s.objects[exile].types, s.objects[exile].copy, s.objects[exile].token],
+    ["Inset Visionary", ["Creature"], true, false], "the prepared inset is a card copy in exile with normal inset characteristics");
+  s = JSON.parse(JSON.stringify(s));
+  const forest = s.zones.battlefield.find((id) => s.objects[id].card === "Forest");
+  applyAction(s, 0, legalActions(s, 0).find((a) => a.kind === "activate-mana" && a.objectId === forest));
+  const offer = legalActions(s, 0).find((a) => a.kind === "cast" && a.objectId === exile);
+  eq(Boolean(offer), true, "the reloaded permanent inset is offered with a payable cost");
+  const castEvents = applyAction(s, 0, offer);
+  const stackId = s.stack.at(-1).objectId;
+  eq([s.objects[host].prepared, s.objects[host].preparedCopy, s.players[0].manaPool.G], [undefined, undefined, 0],
+    "casting pays the inset's green cost and immediately unprepares its host");
+  eq(castEvents.some((e) => e.kind === "GameEventCardAttribute" && e.data.fields.attribute === "prepared" && e.data.fields.value === false), true,
+    "the public cast emits unprepared at cast time");
+  s = JSON.parse(JSON.stringify(s));
+  afterResolving(s, resolveTop(s));
+  checkStateBasedActions(s);
+  const permanent = s.zones.battlefield.find((id) => s.objects[id].card === "Inset Visionary");
+  eq(Boolean(permanent), true, "the inset resolves to a permanent that survives state-based actions");
+  eq([s.objects[permanent].token, s.objects[permanent].copy, s.objects[permanent].power, s.objects[permanent].toughness],
+    [true, undefined, 2, 3], "the resolved copy becomes a token with its inset's own power and toughness");
+  eq([s.objects[exile], s.objects[stackId]], [undefined, undefined], "each zone change replaces the old public object identity");
+  eq(s.stack.at(-1)?.cardId, permanent, "the entering ability belongs to the arrived inset token");
+  const drawn = s.zones.library[0][0], handBefore = s.zones.hand[0].length;
+  const drawEvents = resolveTop(s);
+  eq(s.zones.hand[0].length, handBefore + 1, "the inset token's actual entering trigger draws exactly one card");
+  const draw = drawEvents.find((e) => e.kind === "GameEventCardChangeZone" && e.data.fields.drawn)?.data.fields;
+  eq([draw.card.cardId, draw.from.zoneType, draw.to.zoneType, s.zones.hand[0].includes(draw.drewAs)],
+    [drawn, "Library", "Hand", true], "the actual draw event names the old library object and its new hand identity");
+  const returned = moveObject(s, permanent, "hand", 0);
+  checkStateBasedActions(s);
+  eq(s.objects[returned], undefined, "the inset is a token and ceases after leaving the battlefield");
+  const invalid = structuredClone(script);
+  invalid.prepare.identity.types = ["Land"];
+  invalid.prepare.abilities = [];
+  invalid.prepare.oracleText = "";
+  eq(compileScript(invalid).problems.some((problem) => /prepare spell.*land/i.test(problem)), true,
+    "an inset that is a land cannot be cast as a prepare spell");
+}
+
+/* Setting a basic land type removes rules-text abilities, preserving external grants (CR 305.7). */
+{
+  let s = start("Song preserves earlier and later external grants", [
+    {seat: 0, zone: "battlefield", cards: ["Forest", "Wastes", "Wastes"]},
+    {seat: 0, zone: "hand", cards: ["Song of the Dryads"]}]);
+  const host = field(s, {card: "Rules-text Host", types: ["Creature"], subtypes: ["Elf"], keywords: ["Flying"], power: 2, toughness: 2,
+    abilities: [{id: "lord", kind: "static", layer: 7, sublayer: "c", affects: {types: ["Creature"], controller: "you"}, apply: {power: 1, toughness: 1}}, {id: "printed-red", kind: "mana", tapSelf: true, produces: {R: 1}}]});
+  s.objects[host].counters = {vigilance: 1};
+  const ally = field(s, {card: "Lord Companion", types: ["Creature"], power: 2, toughness: 2});
+  const grant = (color, amount) => (s.effects ??= []).push({id: `grant-${color}`, timestamp: s.nextTimestamp++, layer: 6, affects: {ids: [host]},
+    apply: {addKeywords: ["Haste"], addAbilities: [{id: `life-${color}`, kind: "activated", text: `{${color}}: You gain ${amount} life.`,
+      cost: [{atom: "mana", cost: `{${color}}`}], effects: [{effect: "gainLife", amount}]}]}});
+  grant("U", 2);
+  for (const name of ["Forest", "Wastes", "Wastes"]) {
+    const mana = legalActions(s, 0).find((a) => a.kind === "activate-mana" && s.objects[a.objectId].card === name);
+    applyAction(s, 0, mana);
+  }
+  const song = legalActions(s, 0).find((a) => a.kind === "cast" && s.objects[a.objectId].card === "Song of the Dryads" && a.targets?.[0]?.id === host);
+  applyAction(s, 0, song);
+  afterResolving(s, resolveTop(s));
+  s = JSON.parse(JSON.stringify(s));
+  eq(abilitiesOf(s, host).some((a) => a.text === "{U}: You gain 2 life."), true,
+    "Song leaves an ability granted before it resolved, independently of timestamps");
+  eq(abilitiesOf(s, host).some((a) => a.id === "printed-red"), false, "the host's rules-text mana ability is lost");
+  eq(characteristicsOf(s, host).keywords, ["Vigilance", "Haste"], "printed Flying is lost while a keyword counter and external Haste survive");
+  eq(characteristicsOf(s, ally).power, 2, "the lost rules-text lord ability no longer pumps its other creature");
+  grant("R", 3);
+  for (const [color, amount] of [["U", 2], ["R", 3]]) {
+    s.players[0].manaPool[color] = 1;
+    const ability = legalActions(s, 0).find((a) => a.kind === "activate" && a.objectId === host && a.text === `{${color}}: You gain ${amount} life.`);
+    eq(Boolean(ability), true, "the earlier and later grants each remain legal public activations");
+    const life = s.players[0].life;
+    applyAction(s, 0, ability);
+    afterResolving(s, resolveTop(s));
+    eq([s.players[0].life, s.players[0].manaPool[color]], [life + amount, 0], "each grant pays its own cost and gains its own life");
+  }
+  const forestMana = legalActions(s, 0).filter((a) => a.kind === "activate-mana" && a.objectId === host);
+  eq(forestMana.length, 1, "the set Forest type gives exactly one intrinsic mana ability");
+  applyAction(s, 0, forestMana[0]);
+  eq(s.players[0].manaPool.G, 1, "the transformed permanent actually taps for green");
+}
+
+/* The same basic type rule applies without Song's definition, including a Forest set to Forest. */
+for (const [types, subtypes, change, lost, mana] of [
+  [["Land"], ["Forest"], {setSubtypes: ["Forest"]}, true, 1],
+  [["Land"], ["Forest"], {addSubtypes: ["Island"]}, false, 1],
+  [["Land"], ["Forest"], {setSubtypes: ["Locus"]}, false, 0],
+  [["Creature"], [], {setSubtypes: ["Forest"]}, false, 0],
+]) {
+  const s = start("Generic land-type setting preserves the right abilities");
+  const id = field(s, {card: "Land-type Host", types, subtypes, power: 2, toughness: 2, keywords: ["Flying"],
+    abilities: [{id: "own", kind: "activated", cost: [], effects: [{effect: "gainLife", amount: 1}]}]});
+  (s.effects ??= []).push({id: "type-setting", layer: 4, timestamp: s.nextTimestamp++, affects: {ids: [id]}, apply: change});
+  eq(characteristicsOf(s, id).keywords.includes("Flying"), !lost, "rules-text keywords obey the same basic type rule");
+  eq(abilitiesOf(s, id).some((a) => a.id === "own"), !lost, "only a set basic land type on a land removes rules-text abilities");
+  eq(abilitiesOf(s, id).filter((a) => a.kind === "mana").length, mana, "intrinsic mana follows the new basic types even if the old type was the same");
 }
 
 console.log(`engine-load100-w1-faces: ${checks} checks passed`);

@@ -108,7 +108,7 @@ BREAKS = [
     ('basic land types: their mana abilities', LAYERS,
      '      if (layer === 4) intrinsicMana(state, id, current);\n', ''),
     ('basic land types: not the ones it prints', LAYERS,
-     '    if (!color || own.includes(type)) continue;', '    if (!color) continue;'),
+     '    if (!color || (own.includes(type) && !current.lostAbilities)) continue;', '    if (!color) continue;'),
     ('basic land types: abilities change with them', LAYERS,
      '\n    || [...(apply.addSubtypes ?? []), ...(apply.setSubtypes ?? [])].some((type) => BASIC_LAND_MANA[type])));', '));'),
 
