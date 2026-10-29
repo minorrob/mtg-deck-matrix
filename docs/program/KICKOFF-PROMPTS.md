@@ -1,5 +1,17 @@
 # Kick-off prompts: one per AI system, pasted by Rob
 
+## The prompt, since 2026-10-29: one for every session
+
+Rob, 2026-10-29, chose one loop for all work, in Linear. The per-system prompts below are kept as history; the prompt
+to paste now is the same for every system, with the lane filled in:
+
+> Read `AGENTS.md` in minorrob/mtg-deck-matrix, then the Linear document "How work flows: the one loop" on initiative
+> I-1. Your lane is **<Claude · Engine | Claude · Deck intelligence | Codex · Play | Codex · Workshop | Grok>**. Pick up
+> the next item on the roadmap for your lane, claim it, build it, and close the loop: the draft PR's body is the
+> summary of what was done, and the Linear issue gets the link, a three-line summary and its status.
+
+---
+
 *Each prompt is complete on its own. Paste it as the first message of the session it names. Every prompt points the
 session at the same four files, in the same order, then at its own workstream file; the files are the instruction
 set, the prompt is only the door. Base commit for all of them: `origin/main` at `20601740` or later main.*

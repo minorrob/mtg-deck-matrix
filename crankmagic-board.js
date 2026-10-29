@@ -250,7 +250,9 @@ globalThis.CrankBoard = Object.seal({
   });
   let paneEditing = false, paneSaving = false, profileOpen = false;
   const PANE_MODULES = [["history", "History"], ["coach", "AI Coach"], ["counter", "Counter-Intel"], ["resources", "Resources"], ["mana", "Mana Pool"], ["stack", "On the Stack"], ["inspect", "Card Preview"], ["table", "Table Vitals"], ["recommended", "Recommended Actions"], ["chat", "Chat"], ["actions", "Actions"]];
-  const DEFAULT_MODULES = ["stack", "history", "chat", "coach"];
+  /* Mana Pool and Resources are on by default (Rob, 2026-10-29; Luke's playtest: he added both just to see what a Pathway made).
+     A layout a person saved keeps what they chose; this is the layout of anyone who has not saved one. */
+  const DEFAULT_MODULES = ["stack", "mana", "resources", "history", "chat", "coach"];
   // Preferences travel in the existing account library. Never apply a previous account's layout.
   function paneLayout() {
     const saved = C.state.preferences?.play?.sidePane, fallback = {left:["actions"], right:[...DEFAULT_MODULES]};
@@ -670,9 +672,13 @@ globalThis.CrankBoard = Object.seal({
       <span class="cm-seat-state${view.state.priorityPlayerId === p.playerId ? ' has-priority' : ''}" data-state="${seatStateKey(state)}"><span class="cm-state-word">${e(state)}</span></span></div>`;
   }
   document.addEventListener('error', event => {if (event.target.matches?.('.cm-seat-portrait img')) event.target.remove();}, true);
-  function pictureOf(name) {
+  /* A card's picture, by its name; for a double-faced permanent whose BACK face is up (the view's `face: "back"`, ROB-207), the
+     back of that card: a face's own name draws the front, and the catalog knows a double-faced card only by its front name. */
+  function pictureOf(name, card = null) {
+    const url = (extra = "") => `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}${extra}&format=image&version=normal`;
+    if (card && card.face === "back") return url("&face=back");
     const r = recordOf(name);
-    return (r && r.image) || `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}&format=image&version=normal`;
+    return (r && r.image) || url();
   }
   const optionsFor = (cardId) => (view.decision ? view.decision.options.filter((o) => o.cardId === cardId || o.preparedFrom === cardId) : []);
   /* A card shown to be READ -- the Panel's and Full screen's column (pick), the pop-up (peek), Card zoom (zoom) -- is
@@ -699,7 +705,7 @@ globalThis.CrankBoard = Object.seal({
   function controlGhost(c) {
     const name = controlName(c);
     return `<button type="button" id="cm-control-ref-${c.cardId}" class="cm-bcard cm-control-ghost${c.faceDown ? " is-back" : ""}" data-action="board-control-inspect" data-control-card="${c.cardId}" aria-label="${e(`${name}, ownership reference, ${controlSummary(c)}; inspect control details`)}">
-      ${!c.faceDown && c.name ? `<img src="${e(pictureOf(c.name))}" alt="" draggable="false" loading="lazy" referrerpolicy="no-referrer"><span class="cm-bcard-name">${e(name)}</span>` : ""}
+      ${!c.faceDown && c.name ? `<img src="${e(pictureOf(c.name, c))}" alt="" draggable="false" loading="lazy" referrerpolicy="no-referrer"><span class="cm-bcard-name">${e(name)}</span>` : ""}
       <span class="cm-control-label">With ${e(nameOf(c.controller))}</span></button>`;
   }
   function controlDetails(c) {
@@ -736,7 +742,7 @@ globalThis.CrankBoard = Object.seal({
   function combatThumb(id,role,{draft=false}={}) {
     const c=combatCard(id);if(!c)return `<span class="cm-combat-missing">${role==='Attacked permanent'?'Attacked permanent left the battlefield':'Left the battlefield'}</span>`;
     return `<span class="cm-combat-thumb" data-combat-light="${id}" data-peek-card="${id}" ${draft?`data-draft-blocker="${id}"`:`data-combat-role="${role}"`}>
-      ${c.name && !c.faceDown ? `<img src="${e(pictureOf(c.name))}" alt="${e(combatName(c))}" loading="lazy">` : `<i class="cm-combat-back" aria-label="Face-down creature"></i>`}
+      ${c.name && !c.faceDown ? `<img src="${e(pictureOf(c.name, c))}" alt="${e(combatName(c))}" loading="lazy">` : `<i class="cm-combat-back" aria-label="Face-down creature"></i>`}
       ${twinMark(id)?`<small class="cm-twin-mark">${e(twinMark(id))}</small>`:""}${c.power!=null?`<b class="cm-combat-pt">${e(c.power)}/${e(c.toughness)}</b>`:""}</span>`;
   }
   function inspectCombatThumb(id,role,{draft=false,label=false}={}) {
@@ -825,9 +831,12 @@ globalThis.CrankBoard = Object.seal({
     /* WHY NOT (ROB-24): a card of the person's own that nothing offered plays says why, from the room (`why`). */
     const label = `${named}${controlled ? `, ${controlSummary(c)}` : ""}${state.length ? ", " + state.join(", ") : ""}${bright ? `: ${can.join(" or ")}${opts.length > can.length ? `, ${opts.length} ways` : ""}` : c.why ? `. ${c.why}` : ""}`;
     if (!c.name && !c.faceDown) return `<div class="cm-bcard is-back" role="img" aria-label="${e(label)}"></div>`;
-    const html = `<button type="button" class="${cls}" data-action="${action}" data-card="${c.cardId}" data-card-revision="${view.revision}" data-card-choice="${e(view.decision?.id || '')}" data-card-match="${e(view.matchId)}"${aimed.length ? ` title="${e(`Targeted by ${aimed.join(" and ")}`)}"` : ""}${arrange ? ` draggable="true" data-arrange-card="true" title="Drag within this section to reorder; Shift + Alt + Left or Right works with a keyboard"` : ""} aria-label="${e(label)}">
+    /* NO NATIVE `title` ON A CARD (ROB-202, Luke's playtest): the browser draws it at the pointer, over the card's type line and
+       rules text, and the page cannot move it. What it said is kept: "targeted by" is in the label above, and how to reorder is
+       the card's aria-description. The hover pops the card up large, away from the pointer. */
+    const html = `<button type="button" class="${cls}" data-action="${action}" data-card="${c.cardId}" data-card-revision="${view.revision}" data-card-choice="${e(view.decision?.id || '')}" data-card-match="${e(view.matchId)}"${arrange ? ` draggable="true" data-arrange-card="true" aria-description="Drag within this section to reorder; Shift + Alt + Left or Right works with a keyboard"` : ""} aria-label="${e(label)}">
       ${c.name ? `<span class="cm-bcard-name">${e(c.name)}</span>` : ""}${creature ? `<span class="cm-bcard-pt">${c.power}/${c.toughness}</span>` : ""}${tax !== null ? `<span class="cm-bcard-tax" title="Commander tax: {${tax}} more to cast it from the command zone">+${tax}</span>` : ""}
-      ${c.name ? `<img src="${e(pictureOf(c.name))}" alt="" draggable="false" loading="lazy" referrerpolicy="no-referrer">` : ""}${controlled ? `<span class="cm-control-label">Owner: ${e(nameOf(c.owner))}</span>` : ""}${marks ? `<span class="cm-bcard-marks">${marks}</span>` : ""}</button>`;
+      ${c.name ? `<img src="${e(pictureOf(c.name, c))}" alt="" draggable="false" loading="lazy" referrerpolicy="no-referrer">` : ""}${controlled ? `<span class="cm-control-label">Owner: ${e(nameOf(c.owner))}</span>` : ""}${marks ? `<span class="cm-bcard-marks">${marks}</span>` : ""}</button>`;
     return cardUndo(c,html,where);
   }
 
@@ -1024,7 +1033,7 @@ globalThis.CrankBoard = Object.seal({
       if (d.open) {session.afterClose=null;if(settingsExit===session)settingsExit=null;return;}   /* another window took its place */
       d.querySelector(".cm-play-settings")?.remove();
       const a = document.activeElement;
-      if (!a || a === document.body || d.contains(a)) document.querySelector("#cm-board [data-action=board-camera]")?.focus({preventScroll: true});
+      if (!a || a === document.body || d.contains(a)) document.querySelector("#cm-board [data-action=board-table-menu]")?.focus({preventScroll: true});
       const after=session.afterClose;session.afterClose=null;if(settingsExit===session)settingsExit=null;after?.();
     }, {once: true});
     actions["board-settings-save"] = async () => {
@@ -1208,7 +1217,7 @@ globalThis.CrankBoard = Object.seal({
   function landStack(cards) {
     if(cards.length===1)return card(cards[0],{arrange:true});
     const top=cards[0],untapped=cards.filter(c=>!c.tapped).length,ids=cards.map(c=>c.cardId).join(','),undo=cards.map(c=>undoOffer(c.cardId)).find(Boolean);
-    const face=card({...top,tapped:untapped===0},{where:'land-stack',arrange:true}).replace('<button ',`<button data-land-members="${ids}" title="${untapped?`${untapped} untapped; double click taps the next copy`:'All tapped'}" `).replace(/aria-label="[^"]*"/,`aria-label="${e(top.name)}, ${cards.length} copies, ${untapped} untapped${untapped?'':' · All tapped'}"`);
+    const face=card({...top,tapped:untapped===0},{where:'land-stack',arrange:true}).replace('<button ',`<button data-land-members="${ids}" `).replace(/aria-description="/,`aria-description="${untapped?`${untapped} untapped; double click taps the next copy`:'All tapped'}. `).replace(/aria-label="[^"]*"/,`aria-label="${e(top.name)}, ${cards.length} copies, ${untapped} untapped${untapped?'':' · All tapped'}"`);
     return `<span class="cm-land-stack${untapped===0?' is-tapped':''}" data-land-stack="${ids}" data-wf="W16">${cards.some(c=>c.tapped)&&untapped?'<span class="cm-land-tilted" aria-hidden="true"></span>':''}${face}<span class="cm-land-count" aria-hidden="true">×${cards.length} · ${untapped} untapped</span>${undo?undoButton(undo):''}</span>`;
   }
   function cardSection(cards,section,ghosts=[]) {const ordered=arrangedCards(cards,section);return `<div class="cm-board-cards" data-card-section="${section}">${section.endsWith(':lands')?landGroups(ordered).map(landStack).join(''):ordered.map(c=>card(c,{arrange:true})).join('')}${ghosts.map(controlGhost).join("")}</div>`;}
@@ -1381,8 +1390,11 @@ globalThis.CrankBoard = Object.seal({
       <header><b>Stack & history</b>${ib('⚙', 'board-modules-edit', 'Arrange modules', {}, {pressed:paneEditing})}${ib('✕', 'board-stage-side', 'Close table panel')}</header>${stageModules('right')}</aside>
       <button type="button" class="cm-stage-handle cm-stage-right cm-drawer-tab" data-action="board-stage-side" aria-expanded="${stageSide}" aria-controls="cm-stack-drawer" aria-label="${stageSide ? 'Collapse' : 'Expand'} Stack${count ? `, ${count} on the stack` : ''}${chatUnread && !stageSide ? `, ${chatUnread} new chat message${chatUnread === 1 ? "" : "s"}` : ''}"><span class="cm-tab-label">Stack</span>${count ? `<i class="cm-tab-count" aria-hidden="true">${count}</i>` : ''}${chatUnread && !stageSide ? `<i class="cm-tab-count cm-tab-chat" aria-hidden="true" title="New chat">${chatUnread}</i>` : ''}</button>${!phone()&&historyOpen?historyMenu():''}`;
   }
+  /* PLAY SETTINGS, BACKGROUND AND TABLE DESIGN live here (Rob, 2026-10-29; Luke's playtest: he could not find backgrounds or the
+     drawer modules, both under Camera). Camera is the view's own: seats, tilt, zoom, sizes. Drawer modules are inside Play settings. */
   function tableMenu() {
-    return `<div class="cm-table-menu"><button type="button" data-action="board-table-menu" aria-expanded="${tableMenuOpen}" aria-controls="cm-table-menu">Table ▾</button>${tableMenuOpen ? `<div id="cm-table-menu" role="group" aria-label="Table">${b('History','board-history')}${table?.youAreHost ? (confirmEnd ? `<p>End the game for everyone? The record is kept.</p>${b('Cancel', 'board-end-cancel')}${b('End game for everyone', 'board-end', {confirm:'1'}, true)}` : b('End game for everyone', 'board-end')) : ''}${b('Table rules', 'board-table-rules')}${b('Help', 'page-help', {help:'table'})}${b('Concede', 'board-concede')}${b('Leave table', 'board-leave-page')}${b('CrankMagic Pages','board-menu').replace('<button ','<button aria-haspopup="true" aria-expanded="'+menuOpen+'" ')}</div>${menuOpen ? `<aside class="cm-table-flyout" aria-label="CrankMagic Pages">${menu()}</aside>` : ''}` : ''}</div>`;
+    return `<div class="cm-table-menu"><button type="button" data-action="board-table-menu" aria-expanded="${tableMenuOpen}" aria-controls="cm-table-menu">Table ▾</button>${tableMenuOpen ? `<div id="cm-table-menu" role="group" aria-label="Table">${b('History','board-history')}${table?.youAreHost ? (confirmEnd ? `<p>End the game for everyone? The record is kept.</p>${b('Cancel', 'board-end-cancel')}${b('End game for everyone', 'board-end', {confirm:'1'}, true)}` : b('End game for everyone', 'board-end')) : ''}${b('Table rules', 'board-table-rules')}${b('Play settings','board-tools').replace('<button ','<button aria-haspopup="dialog" ')}${stageEnabled() ? `<label class="cm-stage-style">Background <select data-stage-style="background" aria-label="Background">${(CrankStage.appearances.backgrounds).map(x=>`<option value="${x.id}"${appearance.background===x.id?" selected":""}>${x.name}</option>`).join("")}</select></label>
+<label class="cm-stage-style">Table <select data-stage-style="table" aria-label="Table design">${(CrankStage.appearances.tables).map(x=>`<option value="${x.id}"${tableDesignId(appearance.table)===x.id?" selected":""}>${x.name}</option>`).join("")}</select></label>` : ""}${b('Help', 'page-help', {help:'table'})}${b('Concede', 'board-concede')}${b('Leave table', 'board-leave-page')}${b('CrankMagic Pages','board-menu').replace('<button ','<button aria-haspopup="true" aria-expanded="'+menuOpen+'" ')}</div>${menuOpen ? `<aside class="cm-table-flyout" aria-label="CrankMagic Pages">${menu()}</aside>` : ''}` : ''}</div>`;
   }
   function cameraMenu() { return `${tableMenu()}<div class="cm-stage-camera"><button type="button" data-action="board-camera" aria-expanded="${cameraOpen}">Camera ▾</button>${cameraOpen ? `<div>${phone() ? "" : switcher()}<span>View seats</span>${ib("◀", "board-rotate", "Previous seat", {by: "-1"})}${ib("▶", "board-rotate", "Next seat", {by: "1"})}<button type="button" class="cm-stage-camera-reset" data-action="board-camera-reset" title="Every Camera setting back to its default">Reset</button>${hudSlider()}
         ${stageEnabled() ? `<label>Tilt <input type="range" min="0" max="${TILT_MAX}" value="${Math.round(camera.tilt)}" data-stage-camera="tilt" aria-label="Table tilt"><output>${Math.round(camera.tilt)}°</output></label>` : ""}
@@ -1390,9 +1402,7 @@ globalThis.CrankBoard = Object.seal({
         <label>Cards <input type="range" min="70" max="${CAMERA_MAX}" value="${camera.cards}" data-stage-camera="cards" aria-label="Tabletop card size"><output>${camera.cards}%</output></label>
         ${stageSliders()}
         <label>Spacing <input type="range" min="-70" max="20" step="1" value="${spacing()}" data-board-spacing aria-label="Card spacing" aria-valuetext="${spacing()}%"><output>${spacing()}%</output></label>
-        ${b('Play settings','board-tools').replace('<button ','<button aria-haspopup="dialog" ')}
-        ${stageEnabled() ? `<label class="cm-stage-style">Background <select data-stage-style="background" aria-label="Background">${(CrankStage.appearances.backgrounds).map(x=>`<option value="${x.id}"${appearance.background===x.id?" selected":""}>${x.name}</option>`).join("")}</select></label>
-        <label class="cm-stage-style">Table <select data-stage-style="table" aria-label="Table design">${(CrankStage.appearances.tables).map(x=>`<option value="${x.id}"${tableDesignId(appearance.table)===x.id?" selected":""}>${x.name}</option>`).join("")}</select></label>` : ""}</div>` : ""}</div>`; }
+</div>` : ""}</div>`; }
   /* 3D's two sizes beside Cards: ✋ the hand's cards (the wheel over the hand moves it too), ↕ the table's length on your
      side (Ctrl/⌘ + drag moves it too; 100% is the length it always had, the most is the screen's foot). */
   function stageSliders() {
@@ -1889,7 +1899,7 @@ globalThis.CrankBoard = Object.seal({
       <div class="cm-target-quadrants">${shown.map((g,i)=>{
         const key=`${d.id}:${o.index}:${g.index}`,n=targetCycles.get(key)||0,t=g.targets[n%g.targets.length],c=targetCard(t);
         return `<section class="cm-target-quadrant" data-wf="W04"><h3>${e(g.effect || "Target")}</h3><span class="cm-target-effect-arrow" aria-hidden="true">${shown.length===3 ? ["↖","↗","↓"][i] : "→"}</span><button type="button" class="cm-target-stack" data-action="board-target-cycle" data-cycle="${e(key)}" data-count="${g.targets.length}" aria-label="Cycle targets: ${e(targetName(t))}">
-          ${Array.from({length:Math.min(4,g.targets.length)},(_,j)=>`<i class="cm-target-layer" style="--layer:${j}" aria-hidden="true"></i>`).join("")}${c?.name ? `<img src="${e(pictureOf(c.name))}" alt="${e(c.name)}" data-peek-card="${c.cardId}">` : `<span>${e(targetName(t))}</span>`}<b>×${g.targets.length}</b></button><p>${e(controllerName(targetController(t)))} · ${n%g.targets.length+1} of ${g.targets.length}</p></section>`;
+          ${Array.from({length:Math.min(4,g.targets.length)},(_,j)=>`<i class="cm-target-layer" style="--layer:${j}" aria-hidden="true"></i>`).join("")}${c?.name ? `<img src="${e(pictureOf(c.name, c))}" alt="${e(c.name)}" data-peek-card="${c.cardId}">` : `<span>${e(targetName(t))}</span>`}<b>×${g.targets.length}</b></button><p>${e(controllerName(targetController(t)))} · ${n%g.targets.length+1} of ${g.targets.length}</p></section>`;
       }).join("")}</div>${groups.length>3 ? `<nav class="cm-target-pager">${b("Previous","board-target-page",{by:"-1"},false,{disabled:page===0})}<span>${page+1} of ${Math.ceil(groups.length/3)}</span>${b("Next","board-target-page",{by:"1"},false,{disabled:(page+1)*3>=groups.length})}</nav>` : ""}</div>`;
   }
   function decisionPick(d,o) {
@@ -2524,7 +2534,7 @@ globalThis.CrankBoard = Object.seal({
       const ghost = document.createElement("div");
       ghost.className = `cm-bcard cm-board-flight${was.back ? " is-back" : ""}`;
       ghost.setAttribute("aria-hidden", "true");
-      if (!was.back && c && c.name) ghost.innerHTML = `<img src="${e(pictureOf(c.name))}" alt="" referrerpolicy="no-referrer">`;
+      if (!was.back && c && c.name) ghost.innerHTML = `<img src="${e(pictureOf(c.name, c))}" alt="" referrerpolicy="no-referrer">`;
       ghost.style.cssText = `position:fixed;left:${was.rect.left}px;top:${was.rect.top}px;width:${was.rect.width}px;height:${was.rect.height}px;margin:0;z-index:66;pointer-events:none`;
       document.body.append(ghost);
       const a = ghost.animate([{transform: "translate(0,0) rotate(0deg)", opacity: 1}, {transform: `translate(${to.left + to.width / 2 - was.rect.left - was.rect.width / 2}px,${to.top + to.height / 2 - was.rect.top - was.rect.height / 2}px) rotate(${zone === "Graveyard" ? 10 : -6}deg) scale(.6)`, opacity: .2}], {duration: 240, easing: "cubic-bezier(.2,.8,.2,1)", fill: "forwards"});
@@ -4101,7 +4111,7 @@ globalThis.CrankBoard = Object.seal({
     const named = c.name || "A face-down card", n = entries.reduce((n,c)=>n+optionsFor(c.cardId).length,0);
     const rows=entries.map((member,i)=>`${entries.length>1?`<p class="cm-card-menu-copy">Copy ${i+1}${member.tapped?' · tapped':''}</p>`:''}${optionsFor(member.cardId).map(o=>menuRow(o,member)).join('')}`).join('');
     return `<div id="cm-card-menu" class="cm-card-menu" role="menu" aria-label="${e(named)}: ${n ? `${n} ${n === 1 ? "action" : "actions"}` : "no actions now"}" style="left:${cardMenu.x}px;top:${cardMenu.y}px">
-      ${c.name ? `<button type="button" role="menuitem" class="cm-card-menu-card" data-action="board-card-menu-view" data-card="${c.cardId}" aria-label="Read ${e(c.name)}" title="Read ${e(c.name)}"><img class="cm-card-menu-art" src="${e(pictureOf(c.name))}" alt=""><i aria-hidden="true">🔍</i><span>${e(c.name)}</span></button>` : `<span class="cm-card-menu-card" role="none"><i aria-hidden="true">◐</i><span>${e(named)}</span></span>`}
+      ${c.name ? `<button type="button" role="menuitem" class="cm-card-menu-card" data-action="board-card-menu-view" data-card="${c.cardId}" aria-label="Read ${e(c.name)}" title="Read ${e(c.name)}"><img class="cm-card-menu-art" src="${e(pictureOf(c.name, c))}" alt=""><i aria-hidden="true">🔍</i><span>${e(c.name)}</span></button>` : `<span class="cm-card-menu-card" role="none"><i aria-hidden="true">◐</i><span>${e(named)}</span></span>`}
       ${n ? rows : `<p class="cm-card-menu-none" role="none"><i aria-hidden="true">∅</i> ${e(c.why || "No actions now")}</p>`}</div>`;
   }
   /* Kept inside the window, measured once it is drawn. */
@@ -4547,7 +4557,7 @@ globalThis.CrankBoard = Object.seal({
     const request=coachFocusRequest=coach.open?{key:coachKey(),matchId:view?.matchId,armed:false,from:null}:null;
     if(coach.open){if(!moduleSide("coach"))inspection=null;panelOpen=false;openModuleDrawer("coach");if(phone()){stageSide=true;stageRail=false;}}
     draw();drawCoach();
-    if(request){const arm=()=>{if(coachFocusRequest!==request)return;const a=document.activeElement;if(leaving&&a&&a!==document.body&&!a.matches('#cm-board [data-action=board-camera]')){coachFocusRequest=null;return;}request.from=C.focusKey(a);request.armed=true;focusRequestedCoach(document.getElementById('cm-board-coach'));};if(leaving&&!leaving.closed)leaving.afterClose=arm;else arm();}
+    if(request){const arm=()=>{if(coachFocusRequest!==request)return;const a=document.activeElement;if(leaving&&a&&a!==document.body&&!a.matches('#cm-board [data-action=board-camera],#cm-board [data-action=board-table-menu]')){coachFocusRequest=null;return;}request.from=C.focusKey(a);request.armed=true;focusRequestedCoach(document.getElementById('cm-board-coach'));};if(leaving&&!leaving.closed)leaving.afterClose=arm;else arm();}
   };
   document.addEventListener('pointerdown',event=>{if(coachFocusRequest?.armed&&!event.target.closest?.('#cm-board-coach'))coachFocusRequest=null;},true);
   document.addEventListener('keydown',event=>{if(coachFocusRequest?.armed&&!['Shift','Control','Alt','Meta'].includes(event.key))coachFocusRequest=null;},true);

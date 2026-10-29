@@ -78,7 +78,7 @@ try{
   /* 2. The table's Settings window. */
   /* Settings' sections run down its left (Rob, 2026-10-26): Graphics resolution is under Video. */
   const video=()=>page.locator("#cm-dialog [role=tab][data-tab=video]").click();
-  await page.locator("[data-action=board-camera]").click();await page.locator(".cm-stage-camera [data-action=board-tools]").click();await video();
+  await page.locator("[data-action=board-table-menu]").click();await page.locator("#cm-table-menu [data-action=board-tools]").click();await video();
   const slider=page.locator("#cm-board-tools [data-stage-resolution]");
   await slider.waitFor();
   eq([await slider.getAttribute("min"),await slider.getAttribute("max"),await slider.inputValue()],["50","200","150"],"Settings has Graphics resolution, 50% to 200%, at 150%");
@@ -87,7 +87,7 @@ try{
   eq(await page.evaluate(()=>localStorage.getItem("cm-stage-resolution")),"150","a preview is not kept");
   await page.locator(".cm-play-settings-foot [data-action=close]").click();
   eq(await ratio(1.5),1.5,"Cancel puts it back");
-  await page.locator("[data-action=board-camera]").click();await page.locator(".cm-stage-camera [data-action=board-tools]").click();await video();
+  await page.locator("[data-action=board-table-menu]").click();await page.locator("#cm-table-menu [data-action=board-tools]").click();await video();
   await slider.evaluate(el=>{el.value="50";el.dispatchEvent(new Event("input",{bubbles:true}));el.dispatchEvent(new Event("change",{bubbles:true}));});
   eq(await ratio(.5),.5,"at its least, 50%: half the screen's pixels");
   await slider.evaluate(el=>{el.value="100";el.dispatchEvent(new Event("input",{bubbles:true}));el.dispatchEvent(new Event("change",{bubbles:true}));});

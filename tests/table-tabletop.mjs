@@ -67,7 +67,7 @@ const prefs={preferences:{play:{overlay:37,sidePane:{version:2,owner:'another@ex
 const prefScope={C:{state:prefs,signedInAs:()=> 'player@example.com',notice(){},async commit(command){prefs.preferences={...prefs.preferences,...command.values};}},draw(){}};
 vm.createContext(prefScope);vm.runInContext(preferenceCode,prefScope);
 const layout=()=>JSON.parse(JSON.stringify(vm.runInContext('paneLayout()',prefScope)));
-assert.deepEqual(layout(),{left:['actions'],right:['stack','history','chat','coach']},'another account gets the r4 default (Chat is a default module: Rob, 2026-10-28) without inheriting the saved owner layout');
+assert.deepEqual(layout(),{left:['actions'],right:['stack','mana','resources','history','chat','coach']},'another account gets the r4 default (Chat is a default module: Rob, 2026-10-28; Mana Pool and Resources too: Rob, 2026-10-29, ROB-221) without inheriting the saved owner layout');
 await vm.runInContext('savePaneModules({left:["history"],right:["stack","table"]})',prefScope);
 assert.deepEqual(layout(),{left:['actions','history'],right:['stack','table']},'saving preserves drawer placement and ordering');
 assert.equal(prefs.preferences.play.overlay,37,'saving modules does not replace unrelated Play settings');
@@ -126,7 +126,7 @@ try {
   const MODULE_IDS=['history','coach','counter','resources','mana','stack','inspect','table','recommended','chat'];
   const MODULE_TITLES=['History','AI Coach','Counter-Intel','Resources','Mana Pool','On the Stack','Card Preview','Table Vitals','Recommended Actions','Chat','Actions'];
   const openDrawerSettings=async(p=page)=>{
-    if(!await p.locator('#cm-board .cm-stage-camera>div').count())await p.locator('#cm-board [data-action=board-camera]').first().click();
+    if(!await p.locator('#cm-board #cm-table-menu').count())await p.locator('#cm-board [data-action=board-table-menu]').first().click();
     await p.locator('#cm-board [data-action=board-tools]').click();
     await p.getByRole('tab',{name:'General',exact:true}).click();
     await p.getByRole('button',{name:'Set Side Drawer Modules',exact:true}).click();
@@ -291,8 +291,6 @@ try {
           await page.locator('[data-action=board-camera-reset]').scrollIntoViewIfNeeded();
           await reachable('[data-action=board-camera-reset]','Camera Reset');
           await reachable('[data-stage-camera=tilt]','Camera Tilt');
-          await page.locator('[data-action=board-tools]').scrollIntoViewIfNeeded();
-          await reachable('[data-action=board-tools]','Play settings after native popup scrolling');
         } else {
           for(const button of await page.locator('.cm-stage-actions button:enabled').all()) {
             const action=await button.getAttribute('data-action');
@@ -352,7 +350,7 @@ try {
   // Another player using this browser must not inherit this account's pane.
   await accountRoutes(page,'other@example.com');await page.reload();await page.locator('.cm-stage-canvas').waitFor();
   await page.locator('.cm-stage-right[data-action=board-stage-side]').click();
-  assert.deepEqual(await moduleOrder(),['stack','history','chat','coach'],'a different profile gets the r4 default without another owner layout');
+  assert.deepEqual(await moduleOrder(),['stack','mana','resources','history','chat','coach'],'a different profile gets the r4 default, Mana Pool and Resources among it, without another owner layout');
   await accountRoutes(page);await page.reload();await page.locator('.cm-stage-canvas').waitFor();
   await page.locator('[data-action=account-keep-cloud]').click();
   await page.waitForFunction(()=>!document.querySelector('dialog[open]'));
