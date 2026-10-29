@@ -5,6 +5,36 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Approved Snoop fix and reported Purphoros regression, October 29:** assembled source `9195f0fc` contains clean
+  native refresh #947 (`3b879144`), approved UI #949 (`42e22351`) and bounded Battle/SBA #950 (`4033bcec`), each by
+  `--no-ff` merge. Rob explicitly overrides the UI ownership rule only for the verified Snoop renderer fix, required
+  asset versions and regression. Both the isolated production source and this combined source pass the registered
+  real-room browser98 across Table/Focus/WebGL3D. Both independent production-hunk reversion controls are caught;
+  fresh integration whole-screen screenshots are inspected, native cast/held draw/privacy are correct. Existing
+  footer/3D camera limits remain outside the fix and do not earn full layout acceptance. Browsers/server close fully.
+  Root reruns Battle-SBA128/Battle95/intrinsic34/counter87/native-refresh70/free-cast20/Valakut29/Snoop-room; all pass.
+  Asset136, wiring131 and integrity pass; inventory regeneration has no diff (60 artifacts/80.9MB). README becomes
+  the actual701 suites with the new reported-card reader. Full `generators` stops at a public Scryfall card-search DNS
+  failure; automatic approval review rejects the external retry because the original brief permits rulings only.
+  A narrow explicit exception is requested; no bypass, waived check or full-generator pass is claimed. Local inventory
+  and frozen-scope checks remain separately verifiable. Exact HEAD0 scan/push is required for this checkpoint.
+  Valakut's actual Purphoros case reproduces main `7f6e76ae`'s empty-pool/untapped-land funding gap: zero Exile cast
+  offers before manually tapping four Mountains, one afterward. Existing wave-zero W5 funding gives one before taps,
+  and the actual cast pays/taps all four sources. The29-check regression also casts the next exiled Goblin and resolves
+  Purphoros's real2 damage; end-step, timing and land limits remain. The full original W3 four-reader union plus the
+  new reader pass unbroken; the Exile-funding mutation fails the direct reported-card assertion, none missed, exact
+  source restored. No deployed revision or deployment claim. `w0/evidence/valakut-reported-card.json` records limits.
+  P0's private refinement/replay receipt and W5's effect-paid cost/reversal work remain held in their own lanes; neither
+  prototype enters this assembly. W1's separately reproduced simultaneous linked-return Clone/Bear RED remains open;
+  only the named saved return-batch seam is approved next. Latest full strict canonical measurement remains the RED
+  `c2038646` archive below, not this source. All gates remain unchanged; no new definitions/promotions or game credit.
+- **New live reports while the engine lanes continue:** Rob reports Valakut exile play, Snoop revealed/top-card play,
+  and Banner Goblin bonuses. Native explicit triage on `0130f853` confirms Valakut's actual exile cast, Snoop's public
+  successive top Goblins/casts, and Banner's correct effective/projected bonus with no counters. Snoop has a concrete
+  UI renderer finding: `mat()` always passes a null Library top. ROB-226/ROB-227 and `w0/LIVE-CARD-REPORTS.md` record
+  evidence, limits and the UI-owner handoff. No UI production change or false engine fix. The new bounded pool seed1
+  is NOT CLEAN: one simulated-person menace block was refused/retried; replay matches and leaks0/74, but exercise0.
+  Do not count it or rerun unchanged. Current P0/W5 native-refresh epoch work and W1 atomic Battle/SBA work continue.
 - **Validated dependency checkpoint, October 29:** code `449246c2` integrates verifier/funding `74087c6d`, published W1
   counter-order `1553f7b1` and main `7f6e76ae`. The verifier's complete35-reader baseline and all20 mutations pass,
   `missed: []`; Oracle32/face23/artifact-smoke19/CLI60, Squee157 and original funding462 are proved. Whole-card55 and

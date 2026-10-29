@@ -66,3 +66,26 @@ no further browser repeat without root's coordinated quiet window. Root/P0 are i
 
 Keep original mutation suite unions. Root owns generated artifacts, ACTIVE/RUN, scope dealing, and consolidated gates.
 No whole-suite rerun here; no new final loads until wave 0 closes. Node 22 first on PATH; no provider/LLM API or seat.
+
+Initial effect-play refresh is isolated from the held effect-cost/reversal slice on
+`codex/engine-load100-w0-w5-play-refresh`, base `0130f853e7ad7c6ad8ee2a6eb0532415ea50cf1f`.
+`evidence/w5-play-refresh.json` records 70 native checks, the complete original25-reader baseline and17 caught
+mutations (including the reanchored original fuzz/xTaps probe); missed 0, source restored.
+Pure `deriveEffectPlay` returns live variants and their generation-bound choice ID. Only the authoritative driver
+calls `refreshEffectPlay`; projection does not mutate a native question. Stale or untagged indices and answers submitted before authoritative refresh refuse before payment. Fixed copies, original actor/context and finite bounds remain; non-copy origin
+selectors and current variants are re-evaluated. Actual Rioter exile activations, source departure/LKI before and
+after opening, exact W payment and a resolved Hada prove the saved-context/bound behavior after JSON reload.
+
+The independent persisted epoch is `effectPlayVersion:1`. The native constructor preserves absent historical state
+shape and refuses explicit unsupported versions. Canonical scenarios and the current fuzz pod force 1. The sole room
+edit is P0's identical optional pooled-copy line, preserving absence. P0 owns the forced NEW room/table starts and
+trusted historical replay companion; those must land and pass before any current whole-room G-3/G-5/G-7 claim.
+Historical pending native questions keep old IDs and shape. Old live migration remains unresolved.
+Target/payment children remain locked. The original stronger tax-only free-cast reader retains floating payment
+and adds actual source/tax/resolution plus unfundable refusal. No held effect-cost, resource-receipt or planner edit
+is included in this dependency. Exact HEAD0 scan is required before its draft push; root RUN records the PR/head.
+
+A separate actual layer-2-controlled Shalai source does not grant its derived controller's Cankerbloom hexproof;
+`scratch/w5-derived-static-controller-red-20261029.mjs` is an actual RED. This is unresolved. The refresh proof uses
+an actual donated Shalai with owner 2/controller 1 and makes no claim about that layer-2 path. No cards/promotions,
+whole payment completeness, strict G-3, pool/library G-5 or G-7 acceptance follows from the refresh checkpoint.
