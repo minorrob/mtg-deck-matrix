@@ -8,6 +8,9 @@ Linear ROB-199 under ROB-85. The record is `docs/engine/card-load-100-2026-10-28
 Claim: `game/engine/cards/**`, generated card files, `data/engine/candidates.json`, the run package,
 and the engine modules its debt fixes require, subject to the ownership requests below.
 The primary checkout has another session's unfinished merge and is untouched.
+**Card acceptance:** Rob requires confidence in100% of each card's potential interactions before addition/promotion.
+Any known gap, untested identified interaction or unresolved doubt blocks it. The95% cutoff selects cards only;
+partial support or basic scenario passes do not qualify. BRIEF.md records the mandatory rule; no new cards/promotions.
 **USER HOLD on main:** Rob will signal when the other session's merge is done. No main fetch/pull/merge or local-ci
 (which fetches main), upstream publication/release until that signal. Existing isolated work may reach a safe checkpoint.
 Published orchestratorb04; local codedc06 additionally integrates #959's exact700-file source repair, independently

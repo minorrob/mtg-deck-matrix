@@ -5,6 +5,12 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Full interaction confidence is mandatory, October 29:** Rob explicitly requires confidence in100% of a card's
+  potential interactions before any addition or promotion. The95% appearance target is a selection cutoff only.
+  Any known gap, untested identified interaction, unsupported/approximated behavior or unresolved doubt blocks that
+  card. Review and native evidence must cover every ability and its interaction paths, not just a basic scenario;
+  do not claim exhaustive proof beyond the evidence. This is recorded in BRIEF.md for every resumed/new worker.
+  No card has been added or promoted by these wave0 repairs. The user hold on main below remains in force.
 - **USER HOLD on main, October 29:** Rob says another session is merging and will explicitly signal when it is done.
   Until that signal, do not fetch/pull/merge main, run `local-ci.sh` (it fetches main), or publish/release through main.
   Do not infer release from elapsed time or remote state. Already approved isolated checks may finish safely.
