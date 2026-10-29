@@ -200,5 +200,50 @@ run("new entering modifier preserves an already paid native prefix",()=>{
   eq([state.players[0].life,state.objects[returned].tapped],[38,true],"the newly live entering modifier applies without replaying or undoing the earlier paid prefix");
 });
 
+/* CR 614.5, 616.1f-g: a newly applicable containing entry replacement precedes the unanswered counter choice;
+   the earlier applied counter prefix remains committed. These numbers describe this fixture's chosen order. */
+for(const secondTotal of [9,10])for(const askGrant of [false,true])run(`parent grant after counter prefix ${secondTotal}, choice ${askGrant}`,()=>{
+  let state=createState({players:[{name:"A"},{name:"B"},{name:"C"}]});Object.assign(state,{phase:"MAIN1",turn:1,activePlayer:0,priorityPlayer:0});
+  const put=object=>addObject(state,{owner:0,controller:0,...object},"battlefield");
+  const sources=[0,1].map(index=>{const id=put({card:`Grant Source ${index}`,types:["Battle"],defense:0});state.objects[id].protector=0;return id;});
+  const ids=["First Grant Walker","Second Grant Walker"].map(card=>addObject(state,{card,types:["Planeswalker"],loyalty:3,owner:0,controller:0},"exile"));
+  const doubling=compileScript(JSON.parse(readFileSync(new URL("../game/engine/cards/d/doubling-season.json",import.meta.url))));
+  eq(doubling.problems,[],"the counter order uses the actual loaded doubler");put({...doubling.definition,card:"Doubling Season"});
+  put({card:"Second Counter Plus One",types:["Enchantment"],abilities:[{id:"second-plus",kind:"static",rule:"more-counters",counter:"loyalty",plus:1,affects:{what:"permanent",controller:"you",named:"Second Grant Walker"}}]});
+  const gate=put({owner:2,controller:2,card:"New Entry Grant Gate",types:["Enchantment"]});
+  const grant=addObject(state,{card:"New Entry Loyalty Grant",types:["Enchantment"],owner:0,controller:0,abilities:[{id:"entry-grant",kind:"replacement",watches:{event:"enters",filter:{types:["Planeswalker"],controller:"you"}},
+    change:{entersWithCounters:{counter:"loyalty",count:1},...(askGrant?{entersTapped:true,unlessPay:{life:2}}:{})}}]},"exile");
+  state.exiledUntil=[...sources.map((source,index)=>({source,exiled:ids[index]})),{source:gate,exiled:grant}];
+  afterResolving(state,[]);resolveAwaiting(state,awaitingChoice(state).options.map((_,index)=>index));
+  const oldQuestion=awaitingChoice(state).id,first=Object.values(state.ruleOperation.entryCounterResults).find(row=>row.objectId===ids[0]);
+  eq([first.raw.loyalty,first.counters.loyalty],[3,6],"the first doubler has actually applied before the later pending question");
+  state=JSON.parse(JSON.stringify(state));concede(state,2);
+  if(askGrant){
+    const partial=Object.entries(state.ruleOperation.entryCounterResults).find(([,row])=>row.progress?.complete===false);
+    eq(!!partial,true,"the containing replacement's actual life question holds a partial counter receipt");
+    const [key,row]=partial,prepared={counterResult:key,entering:{counters:row.counters}};
+    for(const options of [{},{consume:true},{allowPartial:true}]){
+      const before=JSON.stringify(state);assert.throws(()=>entryCounterResult(state,prepared,row.objectId,row.player,options),/matching internal/);checks++;
+      eq(JSON.stringify(state),before,"a partial receipt cannot be read or consumed as a completed return, including a caller flag");
+    }
+    for(let step=0;state.awaiting&&!awaitingChoice(state).id.startsWith("entry-counters:")&&step<10;step++){
+      eq(ids.map(id=>state.objects[id]?.zone),["exile","exile"],"neither return commits during a newly discovered real entry cost");
+      state=JSON.parse(JSON.stringify(state));resolveAwaiting(state,[awaitingChoice(state).options.findIndex(option=>option.pay===true)]);
+    }
+  }
+  const choice=awaitingChoice(state);
+  eq(choice.options.map(option=>option.puts).sort((a,b)=>a-b),[9,10],"the new parent grant changes the unanswered contained counter event before either legal order is chosen");
+  eq(choice.id!==oldQuestion,true,"the refreshed question has a new identity after the containing event changes");
+  eq(ids.map(id=>state.objects[id]?.zone),["exile","exile"],"the changed counter event is still pre-entry for both objects");
+  state=JSON.parse(JSON.stringify(state));
+  const before=JSON.stringify(state);assert.throws(()=>resolveAwaiting(state,[2]),/Invalid selection/);checks++;
+  eq(JSON.stringify(state),before,"invalid selection cannot commit or mutate the refreshed counter event");
+  resolveAwaiting(state,[awaitingChoice(state).options.findIndex(option=>option.puts===secondTotal)]);
+  const actual=ids.map((id,index)=>state.zones.battlefield.find(next=>state.objects[next].card===`${index?"Second":"First"} Grant Walker`));
+  eq(actual.map(id=>state.objects[id]?.counters.loyalty),[7,secondTotal],"the first double stays committed and the new parent grant is appended exactly once; the second uses the explicitly chosen order");
+  eq(state.players[0].life,askGrant?36:40,"new real entry costs occur exactly once and completed costs remain authoritative");
+  eq(state.awaiting,null,"all refreshed choices finish before priority returns");
+});
+
 assert.deepEqual(failures,[],failures.join("\n"));
 console.log(`engine-battle-linked-returns: ${checks} checks; actual simultaneous return preflight`);

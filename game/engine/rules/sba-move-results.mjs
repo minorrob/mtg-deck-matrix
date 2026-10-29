@@ -179,7 +179,8 @@ export function freezeSbaReturnBatch(state,frame) {
     const result=operation.sbaPreparedReturns?.[member.prepared];
     if(!member.counterReady||!result||result.objectId!==member.id||result.returnBatchId!==frame.returnBatchId
       || state.objects[member.id]?.zone!==member.from||state.objects[member.id]?.owner!==member.owner
-      || result.proposal.to==="battlefield"&&(!result.counterPlan||!operation.entryCounterResults?.[result.counterResult])
+      || result.proposal.to==="battlefield"&&(!result.counterPlan||!operation.entryCounterResults?.[result.counterResult]
+        || operation.entryCounterResults[result.counterResult].progress?.complete===false)
       || result.enchant&&(!Number.isInteger(result.host)||state.objects[result.host]?.zone!==result.hostZone))
       throw new Error("Every native return needs its completed choices, counter result and current attachment before commitment");
     frozen[member.id]={prepared:member.prepared,host:result.host,counterResult:result.counterResult};

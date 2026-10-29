@@ -64,6 +64,7 @@ import {startSbaCohort, freezeSbaCohort, sbaCohort, reopenSbaPreparation, refres
   startSbaLinkedReturns, sbaReturnBatch, markSbaReturnEvents, freezeSbaReturnBatch} from "./sba-move-results.mjs";
 import {outsideEffectsFrame} from "./damage-operation.mjs";
 import {entryCounterProgressFrame, prospectiveEnteringState} from "./entry-characteristics.mjs";
+import {deferredEnteringContinuation} from "./pre-entry.mjs";
 import {placeCounters} from "./statics.mjs";
 import {collectTriggers} from "./trigger.mjs";
 import {rememberDepartingSpell} from "./spell-memory.mjs";
@@ -274,7 +275,32 @@ registerRuleOperation("sba-linked-returns",(state,frame)=>{
       frame.stage="after-entry";
       return {status:"continue",children:[{kind:"move-one",id:member.id,to:"battlefield",prepareOnly:true,returnBatchId:frame.returnBatchId}]};
     }
-    frame.attachmentIndex=0;frame.stage="attachments";
+    frame.attachmentsChecked=false;frame.countersChecked=false;frame.entryRecheckIndex=0;frame.stage="entry-recheck";
+  }
+  if(frame.stage==="after-entry-recheck"){
+    const member=batch.members.find(member=>member.id===frame.recheckingEntryId),prepared=operation.sbaPreparedReturns[member.prepared];
+    if(!frame.childResult)member.skipped=true;
+    else{
+      const result=frame.childResult;
+      const counters=prepared.counterResult?prepared.entering.counters:result.entering.counters;
+      prepared.entering={...result.entering,counters};prepared.entryPatch=result.objectPatch;prepared.counterPlan=result.counterPlan;
+      prepared.entryProgress=result.entryProgress;
+      if(result.entering.to&&result.entering.to!=="battlefield")throw new Error("A deferred-entry redirect needs its native zone continuation");
+    }
+    delete frame.childResult;frame.attachmentsChecked=false;frame.countersChecked=false;frame.entryRecheckIndex=0;frame.stage="entry-recheck";
+  }
+  if(frame.stage==="entry-recheck"){
+    while(frame.entryRecheckIndex<frame.order.length){
+      const member=batch.members.find(member=>member.id===frame.order[frame.entryRecheckIndex]),prepared=operation.sbaPreparedReturns?.[member.prepared];
+      if(member.skipped||!prepared||state.objects[member.id]?.zone!==member.from||state.players[member.owner].lost){member.skipped=true;frame.entryRecheckIndex++;continue;}
+      if(prepared.proposal.to!=="battlefield"||!prepared.entryProgress){frame.entryRecheckIndex++;continue;}
+      const continuation=deferredEnteringContinuation(state,prepared,member.id,member.owner,frame.returnBatchId);
+      if(continuation){frame.recheckingEntryId=member.id;frame.stage="after-entry-recheck";return {status:"continue",children:[continuation]};}
+      frame.entryRecheckIndex++;
+    }
+    if(!frame.attachmentsChecked){frame.attachmentIndex=0;frame.stage="attachments";}
+    else if(!frame.countersChecked){batch.phase="counters";frame.index=0;frame.stage="counters";}
+    else frame.stage="ready";
   }
   if(frame.stage==="attachments"){
     while(frame.attachmentIndex<frame.order.length){
@@ -302,21 +328,28 @@ registerRuleOperation("sba-linked-returns",(state,frame)=>{
       }
       prepared.host=member.host;prepared.hostZone=state.objects[member.host].zone;frame.attachmentIndex++;
     }
-    delete frame.attachmentResume;batch.phase="counters";frame.index=0;frame.stage="counters";
+    delete frame.attachmentResume;frame.attachmentsChecked=true;frame.countersChecked=false;frame.entryRecheckIndex=0;frame.stage="entry-recheck";
+    return {status:"continue"};
   }
   if(frame.stage==="after-counter"){
     const member=batch.members.find(member=>member.id===frame.order[frame.index]), prepared=operation.sbaPreparedReturns[member.prepared];
     if(frame.childResult){
       prepared.counterResult=frame.childResult.counterResult;
-      prepared.entering={...prepared.entering,counters:frame.childResult.entering.counters};member.counterReady=true;
+      prepared.entering={...prepared.entering,counters:frame.childResult.entering.counters};member.counterReady=!frame.childResult.partial;
+      member.counterPartial=frame.childResult.partial===true;
     }else member.skipped=true;
-    delete frame.childResult;frame.index++;frame.stage="counters";
+    delete frame.childResult;
+    if(member.counterPartial){frame.entryRecheckIndex=0;frame.attachmentsChecked=false;frame.countersChecked=false;frame.stage="entry-recheck";}
+    else {frame.index++;frame.stage="counters";}
   }
   if(frame.stage==="after-counter-recheck"){
     const member=batch.members.find(member=>member.id===frame.recheckingId), prepared=operation.sbaPreparedReturns[member.prepared];
-    if(frame.childResult){prepared.counterResult=frame.childResult.counterResult;prepared.entering={...prepared.entering,counters:frame.childResult.entering.counters};}
+    if(frame.childResult){prepared.counterResult=frame.childResult.counterResult;prepared.entering={...prepared.entering,counters:frame.childResult.entering.counters};
+      member.counterReady=!frame.childResult.partial;member.counterPartial=frame.childResult.partial===true;}
     else member.skipped=true;
-    delete frame.childResult;frame.recheckIndex=0;frame.stage="counter-recheck";
+    delete frame.childResult;frame.recheckIndex=0;
+    if(member.counterPartial){frame.entryRecheckIndex=0;frame.attachmentsChecked=false;frame.countersChecked=false;frame.stage="entry-recheck";}
+    else frame.stage="counter-recheck";
   }
   if(frame.stage==="counters"){
     while(frame.index<frame.order.length){
@@ -324,8 +357,11 @@ registerRuleOperation("sba-linked-returns",(state,frame)=>{
       if(member.skipped||!prepared||state.objects[member.id]?.zone!==member.from||state.players[member.owner].lost){member.skipped=true;frame.index++;continue;}
       if(member.blocked||member.counterReady){frame.index++;continue;}
       if(prepared.proposal.to!=="battlefield"||!prepared.counterPlan){member.counterReady=true;frame.index++;continue;}
-      batch.counterPlanningId=member.id;frame.stage="after-counter";
-      return {status:"continue",children:[{...prepared.counterPlan,returnBatchId:frame.returnBatchId}]};
+      batch.counterPlanningId=member.id;
+      const counterFrame=prepared.counterResult?entryCounterProgressFrame(state,prepared,member.id,member.owner,frame.returnBatchId)
+        :{...prepared.counterPlan,returnBatchId:frame.returnBatchId};
+      frame.stage="after-counter";
+      return {status:"continue",children:[counterFrame]};
     }
     frame.recheckIndex=0;frame.stage="counter-recheck";
   }
@@ -337,7 +373,7 @@ registerRuleOperation("sba-linked-returns",(state,frame)=>{
       batch.counterPlanningId=member.id;
       const counterFrame=entryCounterProgressFrame(state,prepared,member.id,member.owner,frame.returnBatchId);
       const view=prospectiveEnteringState(state,counterFrame);
-      const needs=counterFrame.kinds.some(counter=>{
+      const needs=counterFrame.entryGrantChanged||counterFrame.kinds.some(counter=>{
         const next=placeCounters(view,{id:member.id},counter,counterFrame.counts[counter],member.owner,
           {entering:true,askable:true,applied:counterFrame.applied[counter]??[],reportApplied:true});
         return next.question||(next.applied??[]).length;
@@ -345,7 +381,8 @@ registerRuleOperation("sba-linked-returns",(state,frame)=>{
       if(needs){frame.recheckingId=member.id;frame.stage="after-counter-recheck";return {status:"continue",children:[counterFrame]};}
       frame.recheckIndex++;
     }
-    frame.stage="ready";
+    frame.countersChecked=true;frame.entryRecheckIndex=0;frame.stage="entry-recheck";
+    return {status:"continue"};
   }
   if(frame.stage==="ready"){
     for(const member of batch.members)if(!member.skipped&&(state.objects[member.id]?.zone!==member.from||state.players[member.owner].lost))member.skipped=true;
@@ -356,7 +393,7 @@ registerRuleOperation("sba-linked-returns",(state,frame)=>{
       if(attachment){
         if(!attachment.hosts.length){member.blocked="no-host";continue;}
         if(member.blocked||!attachment.hosts.includes(member.host)){
-          delete member.blocked;delete member.host;frame.attachmentIndex=index;frame.attachmentResume=true;frame.stage="attachments";
+          delete member.blocked;delete member.host;frame.attachmentIndex=index;frame.attachmentResume=true;frame.attachmentsChecked=false;frame.stage="attachments";
           return {status:"continue"};
         }
         prepared.enchant=attachment.enchant;prepared.hostZone=state.objects[member.host].zone;

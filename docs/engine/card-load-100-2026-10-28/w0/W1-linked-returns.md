@@ -16,7 +16,9 @@ actual old ID, owner and source zone bind each result. Owner choices follow APNA
 moves/payment wrappers remain unchanged. Costs, concessions and other interleaved actions remain authoritative;
 only operation proposals/choices are saved, with no game snapshot rollback or event-buffer splicing.
 
-The local prototype passes 103 native checks before the active entering-progress RED below. It covers:
+The secured local prototype passes 166 native checks before the remaining redirect/ledger/full-proof work below.
+It is based on exact assembled55f133f5 (local merge a265dbb6); exact420e797 must be merged before publication.
+Focused original readers also pass: counter87, Battle-SBA128, intrinsic34 and Battle95. It covers:
 
 - The actual compiled Clone/Bear source-order cases, with a legal existing copy and no legal copy.
 - Completed counter-prefix liveness: actual +1 gives4; a later question/concession brings loaded Doubling Season,
@@ -30,16 +32,26 @@ The local prototype passes 103 native checks before the active entering-progress
   host, Shroud allowed and actual Black Knight protection-from-white excluded. With no existing legal host, Aura
   remains the old exile object and cannot enchant a simultaneous returning sibling.
 
-Current active native RED: a returning Creature pays2 life, then a later PW counter choice waits. An outside owner2
-concession returns loaded Authority of the Consuls under live owner1. The Creature currently enters untapped
-instead of tapped, while life correctly remains38. A completed entering result lacks the applied entry/cost progress
-needed to inspect new sources without replaying its paid prefix. Root approved an additive internal deferred-entering
-progress/continuation in pre-entry and entry-characteristics, bound to the actual native member receipt. Ordinary
-and historical shapes must stay unchanged. This extension is not implemented yet.
+The preserved entering-progress RED now passes: a returning Creature pays2 life, then a later PW counter choice
+waits. An outside owner2 concession returns loaded Authority of the Consuls under live owner1. The Creature enters
+tapped while life remains38. An additive return-bound entering receipt preserves applied identities, copy/entry
+choices and actual costs; it rechecks remaining live candidates without replaying an applied prefix. Completed
+numerical/tapped grants are saved as factual prefix values rather than recomputed from a later board.
 
-Remaining required proof includes entry-progress application/prefix preservation, reverse source/choice ordering,
+A second preserved native RED exposed the containing-entry/counter boundary (CR614.5,616.1f-g): the first PW
+already applied loaded Doubling Season3-to6; a second waits at its double/+1 question. Concession returns a new
+parent entering grant of one loyalty. The scoped continuation now yields a noncommittable partial counter result,
+processes the actual new entry grant, and rebuilds the unanswered inner question. First6-to7 retains its chosen
+prefix; second has4 before choosing9 or10. These are fixture-specific outcomes, not a universal order for grants.
+Both legal orders, JSON, fresh question identity, invalid answers and a real new2-life cost on each PW pass.
+The public historical count API rejects partial read/consume even with a caller-supplied allowPartial option;
+ordinary/historical receipt shapes stay unchanged. A new grant delta requires the actual bound updated entry
+receipt and append-only applied identities; it cannot rerun the old multiplier. No generic token opt-in was added.
+
+Remaining required proof includes further entry-progress forgery/expiry controls, reverse source/choice ordering,
 JSON/forgery/expiry, live protector/attachment refresh after later choices, same-zone redirects/no movement/zero
-counters, exact-once arrival/follow-up triggers and unchanged ordinary callers. Full inherited mutation unions must
+counters, exact-once arrival/follow-up triggers and unchanged ordinary callers. Late native entry redirects still deliberately stop at an explicit unimplemented continuation instead of inventing
+a result. Full inherited mutation unions must
 remain intact; no incomplete positive count is acceptance.
 
 Separate generic-token debt is preserved without production edits: an actual copied-token batch has the same4-vs8

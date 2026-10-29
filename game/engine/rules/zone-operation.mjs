@@ -72,7 +72,7 @@ registerRuleOperation("move-one", (state, frame) => {
       const down = options.faceDown === true, face = options.transformed === true ? object.mdfc?.back ?? object : object;
       frame.stage = "after-enter";
       return {status: "continue", children: [{kind: "entering", objectId: frame.id, player,
-        ...(frame.returnBatchId ? {deferCounters: true} : {}),
+        ...(frame.returnBatchId ? {deferCounters: true,returnBatchId:frame.returnBatchId} : {}),
         additionalCounters: options.counters ?? {},
         types: down ? ["Creature"] : face.types, abilities: down ? [] : face.abilities,
         entryFace: {set: Object.fromEntries(COPY_KEYS.filter(key => face[key] !== undefined).map(key => [key, face[key]])),
@@ -81,6 +81,7 @@ registerRuleOperation("move-one", (state, frame) => {
     frame.stage = "move";
   }
   if (frame.stage === "after-enter") {
+    frame.entryProgress=frame.childResult?.entryProgress??null;
     frame.counterPlan = frame.childResult?.counterPlan ?? null;
     frame.preparedCounterResult = frame.childResult?.counterResult ?? null;
     frame.entryPatch = frame.childResult?.objectPatch ?? null;
@@ -96,7 +97,7 @@ registerRuleOperation("move-one", (state, frame) => {
   if (frame.prepareOnly && frame.returnBatchId) {
     const preparedReturn = savePreparedSbaReturn(state,frame,{proposal:frame.proposal,
       entering:frame.preparedEntering ?? null,counterResult:frame.preparedCounterResult ?? null,counterPlan:frame.counterPlan,
-      entryPatch:frame.entryPatch ?? null,options:frame.options ?? {}});
+      entryPatch:frame.entryPatch ?? null,entryProgress:frame.entryProgress,options:frame.options ?? {}});
     return {status:"done",result:{preparedReturn}};
   }
   if (frame.prepareOnly) {

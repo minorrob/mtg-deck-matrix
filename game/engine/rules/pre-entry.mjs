@@ -15,7 +15,8 @@ import {amountOf} from "../script/amount.mjs";
 import {cardsIn} from "../state/index.mjs";
 import {runEffect} from "../script/effects/index.mjs";
 import {cantBeSacrificed, placeCounters, counterOrderChoice} from "./statics.mjs";
-import {patchEnteringObject, prospectiveEnteringState, intrinsicEnteringCounters, saveEntryCounterResult, restoreEntryCounterProgress} from "./entry-characteristics.mjs";
+import {patchEnteringObject, prospectiveEnteringState, intrinsicEnteringCounters, saveEntryCounterResult, restoreEntryCounterProgress,
+  counterDeferredEntryProgressFrame, deferredEntryProgressFrame, restoreDeferredEntryProgress, saveDeferredEntryProgress} from "./entry-characteristics.mjs";
 export {patchEnteringObject, prospectiveEnteringState} from "./entry-characteristics.mjs";
 
 function proposalIn(view, frame) {
@@ -70,7 +71,11 @@ function finishEntry(state, frame) {
   const counterPlan = {kind: "entry-counters", objectId: frame.objectId, player: frame.player,
     ...(frame.candidate ? {candidate: frame.candidate} : {}), ...(frame.entryFace ? {entryFace: frame.entryFace} : {}),
     faceDown: frame.faceDown === true, objectPatch: frame.objectPatch, phyrexianLife: frame.phyrexianLife ?? 0, independentCounters: counters};
-  if (frame.deferCounters) return {status: "done", result: {...entryResult, counterPlan}};
+  if (frame.deferCounters) {
+    const result={...entryResult,counterPlan};
+    if(frame.returnBatchId)result.entryProgress=saveDeferredEntryProgress(state,frame,result);
+    return {status:"done",result};
+  }
   frame.entryResult = entryResult; frame.awaitingCounters = true;
   return {status: "continue", children: [counterPlan]};
 }
@@ -86,6 +91,15 @@ registerRuleOperation("entry-counters", (state, frame) => {
     frame.raw = {...frame.independentCounters};
     for (const [counter, count] of Object.entries(intrinsicEnteringCounters(object, current))) frame.raw[counter] = (frame.raw[counter] ?? 0) + count;
     frame.counts = {...frame.raw}; frame.kinds = Object.keys(frame.raw); frame.index = 0; frame.applied = {};
+  }
+  const containing=frame.answer?null:counterDeferredEntryProgressFrame(state,frame);
+  if(containing){
+    const parentView=prospectiveEnteringState(state,containing);
+    if(ruleReplacementCandidates(parentView,proposalIn(parentView,containing)).length){
+      const counters=Object.fromEntries(Object.entries(frame.counts).filter(([,count])=>count>0));
+      const counterResult=saveEntryCounterResult(state,frame,frame.raw,counters,{complete:false});
+      return {status:"done",result:{entering:{counters},counterResult,partial:true}};
+    }
   }
   while (frame.index < frame.kinds.length) {
     const counter = frame.kinds[frame.index];
@@ -114,6 +128,7 @@ registerRuleOperation("entry-counters", (state, frame) => {
 registerRuleOperation("entering", (state, frame) => {
   const object = frame.candidate ?? state.objects[frame.objectId];
   if (!object || state.players[frame.player]?.lost || state.gameOver) return {status: "done", result: null};
+  restoreDeferredEntryProgress(state,frame);
   if (frame.awaitingCounters) {
     if (!frame.childResult) return {status: "done", result: null};
     frame.counterDone = frame.childResult; delete frame.childResult; delete frame.awaitingCounters;
@@ -237,3 +252,11 @@ registerRuleOperation("entering", (state, frame) => {
   delete frame.proposal.asks;
   return {status: "continue"};
 });
+
+export function deferredEnteringContinuation(state,prepared,objectId,player,returnBatchId) {
+  const frame=deferredEntryProgressFrame(state,prepared,objectId,player,returnBatchId),view=prospectiveEnteringState(state,frame);
+  const current=characteristicsOf(view,objectId);
+  const invalidProtector=current.types.includes("Battle")&&current.subtypes.includes("Siege")
+    && !state.players.some(other=>!other.lost&&other.id!==player&&other.id===frame.selectedProtector);
+  return ruleReplacementCandidates(view,proposalIn(view,frame)).length||invalidProtector?frame:null;
+}
