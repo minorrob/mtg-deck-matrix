@@ -85,6 +85,15 @@
       "w4": "c3923102:9 savedscenarios/4cards/5abilities independently pass; eachFlying fullcombatfinal-life difference, prior scenarios/assertions/fixtures unchanged;5 actualPyrohemia sourcecolor/departure controls pass; protection scope only",
       "w3": "13ea6a5d:4 realdestruction commander-reapplication/reload cases pass perCR903.9b; prefix/suffix once, oneactualmove, no staleoperation; not wholeconsumer acceptance",
       "scope": "Cold read-only exact-source probes only. No V8 rule/card/scenario edit or additional global gate credit."
+    },
+    "combinedEntryColdReview": {
+      "report": "V8-REVIEW-2026-10-29.md, Frozen combined W2/W3 entry review",
+      "evidence": "evidence/v8-review-2026-10-29.json, combinedEntryReview",
+      "frozenSource": "97795ea2096e6927201781852775343b0b236c1b",
+      "passed": "Mimic/Clone fresh choices and counter timing;3 Mox entry outcomes/finalization;2 simultaneous normal tokens;effect-land wait/reload/prefix once;2 CR707.9e copy-exception paths",
+      "typeFixSource": "304fbabf79a95fb66daacf725ce8498f47fca962",
+      "findings": "R7 full current legal type catalog and R8 chosen subtype representation closed narrowly; native unseen Elf/Time Lord choices plus subsequent token counters and3 actual Shared Animosity completed combats pass",
+      "limits": "No rerun/relabel of unchanged caller cases after the type-only fix. Writer mutations/generated refresh remain separately gated; no whole-theme/global gate acceptance."
     }
   }
 }

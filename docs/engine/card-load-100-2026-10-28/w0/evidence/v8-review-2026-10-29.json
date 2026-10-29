@@ -320,5 +320,283 @@
         "No whole-consumer or loaded-card/new-final credit"
       ]
     }
+  },
+  "combinedEntryReview": {
+    "frozenSource": "97795ea2096e6927201781852775343b0b236c1b",
+    "typeFixSource": "304fbabf79a95fb66daacf725ce8498f47fca962",
+    "lookup": {
+      "commit": "ccb23221d7a0e909af86b7ee54e43c7fd295fa88",
+      "stableCardBlobs": [
+        {
+          "blob": "565f7ae084c52f2419e61e403b1bbe4af82468a2",
+          "path": "game/engine/cards/m/metallic-mimic.json"
+        },
+        {
+          "blob": "2f031317ae7a87888cdc4811d0b742ad9ad3712d",
+          "path": "game/engine/cards/c/clone.json"
+        },
+        {
+          "blob": "e2aea58af1b25bda1c97e7699607212f3555eaa6",
+          "path": "game/engine/cards/m/mox-diamond.json"
+        },
+        {
+          "blob": "668f4e6dd5d3960e71b8b2b9adc90f6d925eca7e",
+          "path": "game/engine/cards/u/unclaimed-territory.json"
+        },
+        {
+          "blob": "6ce3a7d80b0915f38f59aba5c2d065c3237e0a63",
+          "path": "game/engine/cards/h/hardened-scales.json"
+        },
+        {
+          "blob": "6cb6eb0deda879435515b1068502616f08c4e468",
+          "path": "game/engine/cards/a/altered-ego.json"
+        },
+        {
+          "blob": "9ca02651b78bfa4249dfb1fe3658b8dbbbda55fc",
+          "path": "game/engine/cards/g/glorious-anthem.json"
+        },
+        {
+          "blob": "427248acd6ac784fc823ec110ca7434eaf333bcf",
+          "path": "game/engine/cards/s/shared-animosity.json"
+        }
+      ],
+      "correctedCardBlobsReadInMemory": [
+        {
+          "blob": "1592ddf8b2646b7e14ebb81f54131cd73cd0aace",
+          "path": "game/engine/cards/m/metallic-mimic.json"
+        },
+        {
+          "blob": "07adc654e5cda8573dbc3d5ebc6ed9d72288e43e",
+          "path": "game/engine/cards/a/adaptive-automaton.json"
+        },
+        {
+          "blob": "9e844ef6bce2b0c53868fa5a7f0d1a971fce28c9",
+          "path": "game/engine/cards/r/roaming-throne.json"
+        }
+      ]
+    },
+    "callerCases": {
+      "mimicClone": {
+        "count": 2,
+        "freshChoices": [
+          "Elf",
+          "Goblin"
+        ],
+        "countersWithExistingMimicAndScales": [
+          2,
+          0
+        ],
+        "waitsBeforeEntry": true,
+        "reload": true
+      },
+      "mox": {
+        "count": 3,
+        "modes": [
+          "noLand",
+          "decline",
+          "discard"
+        ],
+        "resolutionsEach": 1,
+        "hasFizzled": false,
+        "noStaleStackOrOperation": true
+      },
+      "normalTokens": {
+        "count": 2,
+        "allChoicesBeforeAllocation": true,
+        "noProspectiveObjectOrIdAllocationWhileWaiting": true,
+        "countersEach": 2,
+        "tokenZoneEvents": 2,
+        "lifeBeforeAfter": [
+          42,
+          47
+        ]
+      },
+      "effectLand": {
+        "card": "Unclaimed Territory",
+        "staysInHandWhileWaiting": true,
+        "pollingDoesNotMutate": true,
+        "reload": true,
+        "landsPlayed": 1,
+        "landPlayEvents": 1,
+        "lifeBeforeAfter": [
+          42,
+          47
+        ]
+      },
+      "copyException": {
+        "card": "Altered Ego",
+        "x": 2,
+        "copies": "raw Clone kept alive by Glorious Anthem",
+        "laterCopy": [
+          "Smoke Elf",
+          "No copy"
+        ],
+        "newPermanentCounters": [
+          0,
+          2
+        ],
+        "rule": "707.9e",
+        "newObjectIdentified": true,
+        "reload": true
+      }
+    },
+    "findings": [
+      {
+        "id": "R7",
+        "before": "land-only Mimic offers only Shapeshifter; catalog missing Blinkmoth/Llama/Time Lord, invalid Lord/Time",
+        "after": "324/324 current CR205.3m names after apostrophe normalization; no missing/invalid terms; Elf and Time Lord publicly selectable",
+        "status": "closed narrowly on typeFixSource"
+      },
+      {
+        "id": "R8",
+        "before": "chosen Elf added as card type, so creatureTypesOf omits it",
+        "after": "Mimic/Automaton/Throne corrected addSubtypes; actual native entries and Shared Animosity final combat outcomes pass",
+        "status": "closed narrowly on typeFixSource"
+      }
+    ],
+    "typeFixCases": {
+      "unseenTypes": [
+        "Elf",
+        "Time Lord"
+      ],
+      "publicOptions": 324,
+      "eachSubsequentMatchingTokenCounter": 1,
+      "sharedAnimosityCards": [
+        "Metallic Mimic",
+        "Adaptive Automaton",
+        "Roaming Throne"
+      ],
+      "subjectPowers": [
+        3,
+        3,
+        5
+      ],
+      "defenderLives": [
+        34,
+        33,
+        32
+      ],
+      "damagePairs": [
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          5,
+          3
+        ]
+      ]
+    },
+    "commands": [
+      "node probe-mimic-copy.mjs",
+      "node probe-mox-and-land.mjs",
+      "node probe-normal-token-entry.mjs",
+      "node probe-copy-exception.mjs",
+      "node probe-creature-type-catalog-fixed.mjs",
+      "node probe-type-fix.mjs"
+    ],
+    "diagnostics": "workbench/load100-v8-20261029-diagnostics/combined-97795ea2-304fbabf",
+    "files": [
+      {
+        "sha256": "36D2DF679303B068DD243D138E0EE7A2F9ED32E8A45F17221FD2E77177629396",
+        "file": "probe-combined-setup.mjs"
+      },
+      {
+        "sha256": "8FA85502DA24AD6BA3617519F403AD3FCC0B3C944392AF5500FD61A0A05C3913",
+        "file": "probe-copy-exception.json"
+      },
+      {
+        "sha256": "7DF9F4F3D01E73857C9DE0A84D0C3FEB4B81267433F16922D11EB55F0E8E7F0D",
+        "file": "probe-copy-exception.mjs"
+      },
+      {
+        "sha256": "5E23095633B44CA6D46C2D7FBBA2B2948451CA73D3859A1DA2B7CD5F6427D1C2",
+        "file": "probe-creature-type-catalog-fixed.json"
+      },
+      {
+        "sha256": "8898B5DCB1F89BA7BBF184CEE7750106B28CFA97FA878DC3CC250DBD45396C46",
+        "file": "probe-creature-type-catalog-fixed.mjs"
+      },
+      {
+        "sha256": "03001ACC35EECCA846F29826F4373DC85843103693E2C9E51600BC1620B97C90",
+        "file": "probe-creature-type-catalog.json"
+      },
+      {
+        "sha256": "419912D51885B6F3D5A79DB65E36A340201606A48BBBE374DBDE5D8A5C75B917",
+        "file": "probe-creature-type-catalog.mjs"
+      },
+      {
+        "sha256": "51FC1E0E2331962FEAE25439538037595254982F57668072B8EF4D82F67D5C73",
+        "file": "probe-entry-debug.mjs"
+      },
+      {
+        "sha256": "F403BC2D93BF8AC4340BD460F11A0911A7DF218A341E7F6F5403FE2AC8BF4B2B",
+        "file": "probe-mimic-copy-debug.mjs"
+      },
+      {
+        "sha256": "8D2C875A6D72E5532CC97E26418444EA83375A69A1939838382A317D307441E0",
+        "file": "probe-mimic-copy.json"
+      },
+      {
+        "sha256": "A6EDC45F67E23EE5D29CEBAA25138B929AC43794D4A0240C280D0D61BFF0A4E0",
+        "file": "probe-mimic-copy.mjs"
+      },
+      {
+        "sha256": "3D11CD53A139B383FEF174A28BCC689EDE04038D7C11D1F73E264A8AD12DACDC",
+        "file": "probe-mimic-type-reader.json"
+      },
+      {
+        "sha256": "9E4643A773F65CE285A466E2455B0D5C3FF750ADC17EFCFEFC50FB6CFCCBFD1F",
+        "file": "probe-mimic-type-reader.mjs"
+      },
+      {
+        "sha256": "C65C2ADA1F5AC86C3996C83AED66D4D01563384BAD56D46725B54420B6F46F2E",
+        "file": "probe-mimic-unseen-type.json"
+      },
+      {
+        "sha256": "E140871016D3D80053AC2373FE8AEF8BCBFF171B1F451209B90761A068D62CB2",
+        "file": "probe-mimic-unseen-type.mjs"
+      },
+      {
+        "sha256": "DF6E843B8B8E2898B8C32C3CFEC9F915763F90468981B4F77F3824B21B7F3F6A",
+        "file": "probe-mox-and-land.json"
+      },
+      {
+        "sha256": "2FC5C8E9A5A0E42A8A73850CEFEA424EE5F7BC2227D8C691A9A7946097520B22",
+        "file": "probe-mox-and-land.mjs"
+      },
+      {
+        "sha256": "14A7C8F2F78B1CE2415AB02155A17B7C5E16FBBE550879CCA7BA0B2D2DBCD5BC",
+        "file": "probe-normal-token-entry-debug.mjs"
+      },
+      {
+        "sha256": "F6E5B7E1F5B2A26CE7E7B43B544665D9313154B8015AA062CB4336F6711C3744",
+        "file": "probe-normal-token-entry.json"
+      },
+      {
+        "sha256": "1D6CE5EFF26F0D6692F8626E754F020D1122C3DF3E956551EAF32ACC1566C7DE",
+        "file": "probe-normal-token-entry.mjs"
+      },
+      {
+        "sha256": "5F27DA1F4E27B4C2B24EB356B0A58FA933DAB1DB73CB845A20854D3E8A8D59D7",
+        "file": "probe-type-fix.json"
+      },
+      {
+        "sha256": "672EF7DBD37144A85D352A7C2C3E8683D7AD86FD6F93CCE7F7E2EAEC7FC31625",
+        "file": "probe-type-fix.mjs"
+      }
+    ],
+    "limits": [
+      "No mutated live worktree read",
+      "Only required JavaScript source frozen; no card JSON/whole-repository snapshot",
+      "Old caller observations remain frozenSource evidence; not rerun/relabelled as typeFixSource",
+      "Writer mutation acceptance and generated bundle refresh pending as reported at typeFixSource",
+      "No whole-theme, global ability, clean-game or wave gate credit",
+      "No V8 rule/card/scenario edits"
+    ]
   }
 }
