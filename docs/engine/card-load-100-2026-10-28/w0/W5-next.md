@@ -1,6 +1,6 @@
 # W5 continuation
 
-Branch: `codex/engine-load100-w0-w5-mana`; draft PR #928. No cards added or promoted.
+Branch: `codex/engine-load100-w0-w5-mana`; follow-up draft PR #933 (prior #928 merged). No cards added or promoted.
 Runtime checkpoints: `d9d00a00` (funding/basic choices/entry), `12a32a40` (delve X/search/source/riders).
 Shared source: `2c89a5c3` merged as `d807b03a`; lane JSON records the final proof checkpoint.
 
@@ -23,8 +23,13 @@ Shared source: `2c89a5c3` merged as `d807b03a`; lane JSON records the final proo
    Witness actual cost/cast/resolution, exact resources/IDs/events, JSON reload, and invalid answers leaving state unchanged.
 3. Audit alternative/X funding with nonmana tap costs: mana sources and cost tappers must be disjoint.
    Also extend source-funded X admission beyond ordinary hand/command casting without hiding alternative-cost choices.
-   Current grouping still takes the first objects with matching outputs. The 56/786 witnesses count source-kind
-   multisets; audit identity-dependent source choices before claiming all legal source-ID subsets are available.
+   Current ordinary casts now retain the complete kind plan question, then ask exact physical source subsets per output.
+   New table games and canonical scenarios enable it by default; the room saves the contract and exact answers replay.
+   A sole kind plan still asks where physical choices exist. Actual Nirkana surplus and layer-2 borrowed-source cases pass.
+   The 56/786 kind counts remain unchanged. See `evidence/w5-source-identities.json` for the bounded native and room proof.
+   Remaining: `tapPlans` still collapses generic/hybrid output-color assignments; effect-paid casts do not yet use these
+   identity stages; ongoing historical games without the saved flag still use historical behavior until safe migration.
+   Do not claim whole payment/identity completeness from this ordinary-cast slice.
 4. Coordinate with W1's queued Siege transformed-cast seam before editing choicesNow/play flags.
    W4 owns the mana-ability `then` damage-continuation region; avoid overlapping edits there.
 

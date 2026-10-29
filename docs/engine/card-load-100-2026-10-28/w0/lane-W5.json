@@ -17,7 +17,7 @@
     "| Convoke with Phyrexian or {2/W} symbols left to the pool | `rules/mana.mjs`:483 | W5 |",
     "| Ways to pay capped: 24 tap choices, 12 payments | `rules/actions.mjs`:1703; `rules/mana.mjs`:254 | W5 |"
   ],
-  "status": "Clean bounded resume checkpoint:172 native checks and33 mutations proved; effect-paid costs and operational payment completeness/G5 remain open",
+  "status": "Current ordinary source-ID stages native249/room14 proven; effect-paid costs, output colors, historical-live migration and G5 remain open",
   "checkpoint": {
     "cardsAdded": 0,
     "cardsPromoted": 0,
@@ -217,5 +217,21 @@
     "sourceIdentityDebt": "open",
     "effectPaidCosts": "open",
     "G5": false
+  },
+  "sourceIdentityCheckpoint": {
+    "base": "9443180710f2fb76ceab60a5f3141c82cb5a0260",
+    "evidence": "evidence/w5-source-identities.json",
+    "nativeChecks": 249,
+    "roomChecks": 14,
+    "newMutationsCaught": 9,
+    "missed": [],
+    "currentDefault": true,
+    "wholeIdentityComplete": false,
+    "historicalReplayCompatibility": true,
+    "historicalLiveMigration": "open",
+    "outputColors": "open",
+    "effectPaidCosts": "open",
+    "G5": false,
+    "G7": false
   }
 }
