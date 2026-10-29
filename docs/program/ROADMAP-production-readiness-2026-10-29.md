@@ -1,5 +1,11 @@
 # The road to a production-ready CrankMagic: what is outstanding, in the order to do it, and what to do about hosting
 
+> **Imported into Linear on 2026-10-29; Linear is the live roadmap.** Rob chose one loop for all work, in Linear. This
+> draft's decisions, manual steps and workstream items are issues under initiative I-1: the four tracks are projects
+> P-ROB-12 (Platform and runtime), P-ROB-13 (the Quality gate), P-ROB-14 (Trust) and P-ROB-15 (Launch operations); the
+> public release is P-ROB-16 (Future); the items are ROB-228 to ROB-311. This file is kept for its reasoning (the
+> hosting recommendation in section 4 above all) and is not updated.
+
 *Written 2026-10-29 by a Claude cloud session, for Rob, from the repository at main `50297778`, the staging and production
 release records, the Linear initiative I-1, and two read-only research passes (an inventory of every doc that lists work, and a
 read of the architecture and of what is known about lag). `AGENTS.md` is still the law; where this file and it disagree,

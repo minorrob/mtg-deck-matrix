@@ -1,5 +1,7 @@
 # Grok: the instruction set (one coordinator, workers on disjoint files)
 
+> **Superseded in part, 2026-10-29 (Rob: one loop for all work, in Linear).** Where this file says to read or update `docs/ACTIVE.md`, a readout feed (`docs/readout/`, `tests/readout-feeds.mjs`) or a handoff file, follow instead `AGENTS.md`, "The work is in Linear: one loop", and the Linear document "How work flows: the one loop" on initiative I-1: pick up the next Todo issue in your lane, claim it, build, then update the PR, the issue and its status. The lanes, file ownership and engineering rules in this file still hold.
+
 *Platform: Grok Bot, spinning up worker agents under one coordinator. Linear label `Grok`. Feed
 `docs/readout/feeds/grok.json` (updated by a worker whose only file is that feed). Branches `grok/<task>-<topic>`.
 Home project: Joyful end to end, launch readiness (P-ROB-10), milestone J2 proof; tasks may live in any project.

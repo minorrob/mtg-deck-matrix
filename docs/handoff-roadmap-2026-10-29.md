@@ -1,5 +1,9 @@
 # Handoff: from the Table, Focus and phone work to the live roadmap and backlog, 2026-10-29
 
+> **Done, 2026-10-29 (section 10).** Rob answered sections 1 and 6's process questions and the live roadmap and
+> backlog now exist in Linear. This file is the last session handoff document: from here on, the draft PR's body is the
+> handoff and Linear is the plan (`AGENTS.md`, "The work is in Linear: one loop").
+
 *From the Claude cloud session that built and released the Table/Focus HUD, the card-shaped piles, the layering and the phone
 fix, applied the staging migrations, and wrote the production-readiness roadmap draft (session
 `018fHA6QX1E9X946VyGDp93o`, branch `claude/gifted-ride-w6xoa3`). For the session Rob starts next. AGENTS.md's four things
@@ -230,3 +234,41 @@ seen red ("A test that cannot fail is a comment"). It reads only the repo; Linea
 migrations 0001 to 0006, 0009, 0010: there are no 0007 or 0008); the roadmap draft already carries the "public release set
 aside" note (its decisions section); Linear's eleven projects and their 10-18 dates. Not re-checked: the staging D1's
 `d1_migrations` (no D1 read was made by the review) and the full local suite counts in section 2.
+
+## 10. Rob's answers and what was built (2026-10-29) [review]
+
+**Rob's answers.** *"The sessions/agents doing the work keep the roadmap and backlog up to date. They get assigned work
+from the roadmap, they pull the features or build them out in Linear along with the stories and tasks, then they
+execute, then they update Linear and GitHub and the roadmap. I want 1 structure for the organization of work ... So
+yes, you can retire anything that doesn't support that end-to-end pattern."* Asked where the roadmap lives, he chose
+**Linear** (over Google Drive), and asked for the cut-over to be built now. That answers questions 13 to 16 of
+section 6 and supersedes section 5's proposals (no `docs/ROADMAP.md`, no `docs/BACKLOG.md`, no roadmap-integrity suite:
+Linear holds the items, so there is nothing in the repo for such a suite to check).
+
+**In Linear (verified by reading each object back after writing it):**
+
+| What | Where |
+| --- | --- |
+| The process, written down | Document "How work flows: the one loop" on initiative I-1; the initiative's description points at it |
+| Four track projects with features as milestones | P-ROB-12 Platform and runtime (R1 to R3), P-ROB-13 the Quality gate (Q1 to Q3), P-ROB-14 Trust (X1 to X3), P-ROB-15 Launch operations (L1 to L3) |
+| The public release as a Future item | P-ROB-16, status Backlog; ROB-68 moved there; ROB-282 the decision |
+| Order | Project priorities: P-ROB-1, 2, 12, 13, 15 High; 3 to 10 and 14 Medium; 11 and 16 Low |
+| The roadmap draft's decisions, manual steps and items | ROB-228 to ROB-278, ROB-280, ROB-281 (the thirteen red suites are ROB-239 to ROB-251 under ROB-236; Rob's manual steps are ROB-265 to ROB-274 under ROB-261) |
+| `BACKLOG.md`'s open items | ROB-279, ROB-283 to ROB-288 |
+| Untracked open work found in the repo's docs (a read-only sweep of `docs/ACTIVE.md` since 10-18, the incoming queue, the audit status, the AI-player and feedback-loop plans) | ROB-289 to ROB-309 |
+| This cut-over itself | ROB-310 (In Progress until this PR merges) |
+| Issues whose premise changed | ROB-311, Rob's call: close or re-scope ROB-30, 59, 99, 95, 11, 14, 71 |
+| A read-only audit of all 147 open issues against `main` | Evidence comments on the fifteen that look built; ROB-32 and ROB-33 set Done after the evidence was re-checked; the rest left for their holders |
+
+**In the repository (this PR):** `AGENTS.md` gains "The work is in Linear: one loop" in place of "The baton is a file",
+and the lanes section no longer sends anyone to `docs/ACTIVE.md` or a feed; `CLAUDE.md` points at the loop;
+`docs/ACTIVE.md` is frozen as an archive under a banner; the readout (`docs/readout/`) and `tests/readout-feeds.mjs`
+are removed (the README's suite list and count follow); `BACKLOG.md` is a table of where each item went; the roadmap
+draft, the program charter, the workstream files and the kick-off prompts carry a banner and the one prompt to paste.
+
+**Not done, with the reason:**
+- Statuses of issues other sessions hold were not changed; the audit's evidence is on them for their holders.
+- `docs/handover-index.md` and the dated handoff files still mention the readout and `ACTIVE.md`; they are history.
+- Every platform needs Linear access to run the loop (Codex, Cursor and Grok through their own integrations); not
+  verified here.
+

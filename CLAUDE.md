@@ -1,1 +1,1 @@
-Read `AGENTS.md` (rules of engagement) and `docs/ACTIVE.md` (who holds the work) before anything else.
+Read `AGENTS.md` (how to build: rules of engagement, lanes, merging) before anything else. What to build is in Linear: initiative I-1 is the roadmap and its document "How work flows: the one loop" is the process (Rob, 2026-10-29). `docs/ACTIVE.md` is a frozen archive; do not write to it.

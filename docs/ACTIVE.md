@@ -1,4 +1,11 @@
-# Who holds the work
+# Who held the work (archive, frozen 2026-10-29)
+
+> **Retired.** Rob, 2026-10-29, chose one structure for all work, in Linear: the roadmap is initiative I-1, the
+> process is its document "How work flows: the one loop", and who holds what is an issue's In Progress status with
+> a holder comment. The record of what a piece of work did is its draft PR's body. This file is kept unchanged below
+> as the archive of everything recorded here up to that day; **do not add to it**. Open items found in it were filed
+> as Linear issues (ROB-228 to ROB-311). See `AGENTS.md`, "The work is in Linear: one loop".
+
 
 ## Luke's Oct 28 playtest: ROB-201 to ROB-221 (a Claude cloud session, for Rob; `claude/crankmagic-oct28-playtest-zgybjx`, one PR per issue, each merged to `main` before the next)
 
