@@ -227,7 +227,7 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
   /* WHAT THE BENCH TURNS OFF, one at a time, to measure each (tools/pilot-bench.mjs --off): "reserve", "assign", "urgency", "hold", "chains". */
   const without = new Set(off);
   /* A PERSONA'S OVERRIDES (roster.mjs `dispositionFor`): the temperature of its chance moved by up to one, and the reserve's risk
-     appetite by up to a third; nothing else about what it sees or whom it weighs changes. */
+     appetite by up to a third. Salty also weighs recent public damage in its attack plans. */
   const temperature = disposition?.temperatureDelta ? {...baseTemperature, [setting]: Math.max(0, (baseTemperature[setting] ?? 0) + disposition.temperatureDelta)} : baseTemperature;
   const floor = housePilot({seat, cards, picks});
   const known = (name) => (name ? cards(name) : null) ?? null;
@@ -456,6 +456,14 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
     };
     const held = swingBack([], () => [], []);
     const threats = threatsOf(view);
+    /* A grudge follows actual public damage, not low life by itself. Compare nonlethal damage on one table-wide
+       scale, so an unprovoked weak seat is not always worth more than every other seat. Recent pressure already
+       applied lowers that incentive; hits received raise it. The kill bonus and defensive losses still decide tactics. */
+    const grudge = Math.max(0, Math.min(1, disposition?.grudge ?? 0));
+    const referenceLife = Math.max(1, ...foes.map(p => p.life));
+    const damageEffect = (amount, life) => Math.min(amount, life) / (grudge > 0 ? referenceLife : Math.max(1, life));
+    const pressure = (id) => foes.length < 2 ? 0
+      : Math.min(1, Math.max(0, view.pilotCombat?.taken?.[id] ?? 0) / 10) - Math.min(1, Math.max(0, view.pilotCombat?.dealt?.[id] ?? 0) / 10);
     /* Hard gives each creature its own defender (below); the creatures it holds home for the swing back are not in the attack. */
     const assign = setting === "hard" && !without.has("assign"), keepHome = new Set();
     /* A GROUP-HUG PERSONA (roster.mjs `groupHug`): damage to a seat that is not the table's top threat is worth that much less to it,
@@ -488,8 +496,9 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
         const out = defend({attackers: going, blockers: walls, life: p.life, worth});
         const lethal = going.length > 0 && out.through >= p.life;
         /* The damage, and the same damage again by the seat's threat (threat × effect): it goes where it does the most. */
-        const effect = Math.min(out.through, p.life) / Math.max(1, p.life);
+        const effect = damageEffect(out.through, p.life);
         let value = W.damage * effect * soft(p.playerId) + W.threat * threats.over(p.playerId) * effect + (lethal ? W.lethal : 0)
+          + W.damage * grudge * effect * pressure(p.playerId)
           + W.trade * (out.blockersLost.reduce((n, c) => n + worth(c), 0) - out.attackersLost.reduce((n, c) => n + worth(c), 0))
           - (going.length > 0 && !lethal && p.playerId !== threats.top ? hug * W.hugCost : 0);
         if (!(lethal && foes.length === 1)) {
@@ -547,8 +556,9 @@ export function scoredPilot({seat, cards = () => null, deck = [], setting = "nor
             const at = set.filter((r) => r.o.defenderId === f.playerId).map((r) => r.c);
             if (!at.length) continue;
             const out = defend({attackers: at, blockers: wallsOf.get(f.playerId), life: f.life, worth});
-            const kills = out.through >= f.life, effect = Math.min(out.through, f.life) / Math.max(1, f.life);
+            const kills = out.through >= f.life, effect = damageEffect(out.through, f.life);
             value += W.damage * effect * soft(f.playerId) + W.threat * threats.over(f.playerId) * effect + (kills ? W.lethal : 0)
+              + W.damage * grudge * effect * pressure(f.playerId)
               + W.trade * (out.blockersLost.reduce((n, c) => n + worth(c), 0) - out.attackersLost.reduce((n, c) => n + worth(c), 0))
               - (!kills && f.playerId !== threats.top ? hug * W.hugCost : 0);
             lost.push(...out.attackersLost); gone.set(f.playerId, out.blockersLost); through += out.through; lethal ||= kills;
