@@ -45,4 +45,11 @@ outcome=controller.answerRefinement(()=>{throw new Error("expired native must no
  ok(restored.refinementReceipt(request,0)?.accepted,"server actor receipt ownership survives JSON independently of the room's shorter receipt window");
  assert.throws(()=>restored.answerRefinement(()=>{throw new Error("must not generate");},request,1),/another seat/);checks++;
 }
+{
+ const live=createController();live.offer(original);const choice=child("replayed-close"),raw={...input(choice,{kind:"cancel",indices:[]}),revision:live.revision};
+ const accepted=live.answerRefinement(()=>choice,raw,0),replayed=createController({revision:20});replayed.offer(original);
+ replayed.answerRefinement(()=>choice,{...accepted.answer,revision:replayed.revision},0);
+ const before=replayed.checkpoint();ok(replayed.refinementReceipt(raw,0)?.accepted,"an original accepted typed Cancel retry remains accepted after its translated tape answer replays");
+ eq(replayed.checkpoint(),before,"a cached raw replay retry changes no original question, revision or cache");
+}
 console.log(`engine-refinement-controller: ${checks} checks; live native question preserved, atomic child validation and persistent receipt dedupe`);

@@ -95,15 +95,18 @@ for(const kind of ["ao","shadrix","scepter"]){
  eq(v.decision.stage,"modes",`${kind}: Back edits only private mode/target selections`);eq(JSON.parse(await storage.get(`room/${matchId}`)).controller.pending,nativePending,`${kind}: Back cannot erase or replace the original native question`);
  await assert.rejects(()=>room.act("p0",staleStage),/expired|changed/i);checks++;
  await room.act("p0",request(v,{indices:[v.decision.options.find(o=>o.modeIndices.join(",")===modes.join(",")).index]}));
+ let typedRequest=null;
  for(let n=0;n<5;n++){
   v=room.view("p0");if(v.decision.stage!=="targets")break;
   const index=kind==="shadrix"?v.decision.options.find(o=>o.target.id===(n===0?0:1)).index:v.decision.options.find(o=>o.target.id===1).index;
   const before=room.fingerprint();ok(room.check("p0",{choiceId:v.decision.id,indices:[index]}).ok,`${kind}: read-only child target validation uses a legal native variant`);eq(room.fingerprint(),before,`${kind}: check consumes no state or input`);
-  await room.act("p0",request(v,{kind:"player",targetId:v.decision.options[index].target.id}));
+  typedRequest=request(v,{kind:"player",targetId:v.decision.options[index].target.id});await room.act("p0",typedRequest);
  }
  v=room.view("p0");eq(v.decision.stage,"confirm",`${kind}: selected modes/targets confirm through the original native handler`);
  const sidecar=JSON.parse(await storage.get(`room/${matchId}`)).refinement,replayed=memoryStorage();
- await replayTape({matchId,pod:meta.pod,seed:meta.seed,tape:await store.readTape(),cards,storage:replayed});eq(JSON.parse(await replayed.get(`room/${matchId}`)).refinement,sidecar,`${kind}: accepted child selections replay exactly as references, without a native snapshot`);
+ const replayedRoom=await replayTape({matchId,pod:meta.pod,seed:meta.seed,tape:await store.readTape(),cards,storage:replayed});eq(JSON.parse(await replayed.get(`room/${matchId}`)).refinement,sidecar,`${kind}: accepted child selections replay exactly as references, without a native snapshot`);
+ const replayedPoint=replayedRoom.fingerprint();await replayedRoom.act("p0",cancel);eq(replayedRoom.fingerprint(),replayedPoint,`${kind}: the original raw Cancel retry stays idempotent after full tape replay`);
+ if(typedRequest){await replayedRoom.act("p0",typedRequest);eq(replayedRoom.fingerprint(),replayedPoint,`${kind}: an accepted typed-player payload is still the same receipt after replay`);}
  eq(JSON.parse(await storage.get(`room/${matchId}`)).controller.pending,nativePending,`${kind}: the original native question remains unchanged through every child stage`);
  room=await openRoom({storage,cards,matchId});v=room.view("p0");const confirm=request(v,{indices:[0]});await room.act("p0",confirm);
  const result=await store.latestCheckpoint();eq(result.state.awaiting,null,`${kind}: one final confirmation completes the original native question`);
