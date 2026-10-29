@@ -8,6 +8,15 @@ Linear ROB-199 under ROB-85. The record is `docs/engine/card-load-100-2026-10-28
 Claim: `game/engine/cards/**`, generated card files, `data/engine/candidates.json`, the run package,
 and the engine modules its debt fixes require, subject to the ownership requests below.
 The primary checkout has another session's unfinished merge and is untouched.
+**Latest P0 assembly56965896:** #951 is merged with native/private/raw-replay contracts preserved. Role87 caught
+controls and root12 affected readers pass; actual combined browser98/fresh inspected shots pass scoped Snoop behavior,
+with existing3D clipping/footer limits explicit. Four moved room mutation anchors are reanchored with original readers
+and4 caught; static255files/4,675breaks/33 inherited UI problems, zero engine targets. Actual suites708, metadata unchanged.
+W1 return/entry progress and W5 factual optional mana reversal stay unpublished; V8 conditional-policy work is proposal
+only. All card-load gates remain unchanged and no new cards/promotions. RUN.md is the exact resume record.
+**Generator exception resolved:** Rob explicitly approves the existing public Scryfall search check. Unchanged
+generators93 passes on published55f133f5:357paths/129tools, all26checks. No source/data writes or wider API/provider
+permission. Earlier blocked notes below are historical; all other wave0 gates remain open.
 **Latest saved-scenario sourcebe1a2b89:** only three explicit Banner Wastes references and an additive public Snoop
 non-Goblin reveal/privacy scenario. Every original assertion preserved. Selected proof improves2/8→4/8 abilities,
 9scenarios/0failed, two runtime-only omission witnesses; four unproved keep checker exit1. Full engine-cards55 passes

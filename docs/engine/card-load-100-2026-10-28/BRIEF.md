@@ -64,6 +64,11 @@ one outside call allowed is Scryfall's public rulings endpoint (no key; send a `
 second; cache what you fetch in your scratch space). You and the other subagents are the writers; nothing else writes
 a card.
 
+**Rob's October29 exception:** “Allow this public Scryfall check” authorizes the existing read-only generator checks
+to use Scryfall's public card-search endpoint without keys, costs or saved-data writes. The unchanged generators
+suite passes93 checks on `55f133f5`; RUN.md records the resolved approval boundary. All provider/LLM restrictions above
+remain in force. This exception does not authorize a different external service or an automated card writer.
+
 ## The roles
 
 Each writer owns its theme's rules: a construct a card needs is built by the lane whose theme it is, once. If another
