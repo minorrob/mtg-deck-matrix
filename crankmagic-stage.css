@@ -1825,10 +1825,10 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-stage-region .cm-stage-rear:not(.cm-flat-rear) .cm-stage-mini{overflow:hidden}
 /* LEGIBLE OR ABSENT (Rob, 2026-10-29): a card under 30px wide on the page has no room for a badge at the text floor (15px), so its power/toughness, counts, tax and marks stand down -- the card's label still says them, and Focus, 3D, Max and the zoom pop-up show them. */
 #matrix-v2 .cm-board :is(.cm-stage-slot,.cm-stage-rear)[data-tiny] :is(.cm-bcard-pt,.cm-bcard-count,.cm-bcard-tax){display:none}
-#matrix-v2 .cm-board .cm-board-pile[data-caption-none] figcaption{visibility:hidden}
+#matrix-v2 .cm-board .cm-board-pile[data-caption-none] figcaption{display:none}
 #matrix-v2 .cm-board .cm-stage-hand-label{font-size:calc(16px*var(--hud-scale,1))}
-/* THE HAND SITS ON THE STAGE'S DARK GROUND in every theme, so its focus ring is white with a dark line against the card: 3:1 all the way round in light and dark (a11y-board). */
-#matrix-v2 .cm-board .cm-stage-hand :is(.cm-bcard,.cm-stage-hand-label):focus-visible{outline:2px solid #fff;outline-offset:3px;box-shadow:0 0 0 3px #0b1213,0 6px 14px -6px rgb(0 0 0 / .85)}
+/* THE HAND SITS ON THE STAGE'S DARK GROUND in every theme, so its focus ring is white with a dark line on each side of it, against the card and against the tray, which is pale in the light theme: 3:1 all the way round in light and dark (a11y-board). */
+#matrix-v2 .cm-board .cm-stage-hand :is(.cm-bcard,.cm-stage-hand-label):focus-visible{outline:2px solid #fff;outline-offset:3px;box-shadow:0 0 0 3px #0b1213,0 0 0 7px #0b1213,0 6px 14px -6px rgb(0 0 0 / .85)}
 #matrix-v2 .cm-board .cm-stage-region{isolation:isolate}   /* the stage's own layers (mat, cards, their badges) never rise past a drawer */
 /* What has the focus stands in front of its neighbours, so its ring is whole: the hand's tab over the fan, the focused card's slot over the cards beside it, a commander partner over the other partner. */
 #matrix-v2 .cm-board .cm-stage-hand .cm-stage-hand-label{z-index:30}
