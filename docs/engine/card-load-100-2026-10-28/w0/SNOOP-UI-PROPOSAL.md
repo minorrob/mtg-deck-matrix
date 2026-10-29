@@ -14,6 +14,14 @@ draw or cast for its owner. The existing native room remains authoritative for G
 current board. The browser-only `candidateBoard()` applies those same two anchors in memory and refuses a moved anchor.
 It never writes the production file.
 
+Root's review caught an extra literal `+` in the first patch addition that was absent from `candidateBoard()`;
+`git apply --check` had not detected the resulting JavaScript syntax defect. The patch is corrected. It was then
+actually applied with native Git to the separate scratch copy
+`C:\Users\robmi\CrankMagic\worktrees\load100\scratch\snoop-patch-proof\crankmagic-board.js`. The resulting bytes compare
+exactly to `Buffer.from(candidateBoard(originalSource))`, and `node --check` on that actual patched file passes.
+Production `crankmagic-board.js` still has no diff. The sandbox's GNU patch helper could not start; no result from
+that failed attempt is credited.
+
 The proposed [SNOOP-BROWSER-PROPOSAL.mjs](SNOOP-BROWSER-PROPOSAL.mjs) is deliberately outside the registered suite list
 until the Play owner reviews it. It connects two actual native room views to the real `GameRoom` socket/check dispatcher
 and broadcast. It covers Table, Focus and actual Babylon WebGL 3D, a revealed own held draw with its accessible draw
