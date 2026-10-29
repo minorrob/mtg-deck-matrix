@@ -4,6 +4,14 @@ Branch: `codex/engine-load100-w0-w5-mana`; follow-up draft PR #933 (prior #928 m
 Runtime checkpoints: `d9d00a00` (funding/basic choices/entry), `12a32a40` (delve X/search/source/riders).
 Shared source: `2c89a5c3` merged as `d807b03a`; lane JSON records the final proof checkpoint.
 
+Reader-only partial checkpoint: face-down exile funding now has68 native checks; the two affected Concerted Care
+funding-answer blocks have71. Empty-pool/permission/privacy/timing assertions remain, with explicit last-Mountain/Plains
+answers and actual resource/target/new-object/final-zone outcomes. The original flameshape six-reader baseline is RED:
+required Chromium times out at `tests/board-choices.mjs:330`, waiting for `#cm-board .cm-stage-top` to become visible.
+Both intended payment/closed-permission mutations were NOT applied or credited because that baseline failed.
+`evidence/w5-face-down-reader-partial.json` records the exact blocker and teardown. Preserve all original six suites;
+no further browser repeat without root's coordinated quiet window. Root/P0 are investigating the UI consumer separately.
+
 1. Continue investigating the unfinished easy library seed 2801 at exact source `5a004e444d83e3fd8e63873f6b5ef9f6160430d3`.
    `evidence/w5-fuzz-easy-2801-timeout.json` holds the exact command, decks, timing, and CPU/memory samples.
    It consumed CPU for 628.39 seconds without a result. Exhaustive funding is a candidate cause, not a diagnosis.

@@ -33,6 +33,7 @@ import {validateScript} from "../game/engine/script/schema.mjs";
 import {loadCardIndex} from "../game/tools/engine-cards.mjs";
 import {secretsFor, leaksIn} from "../tools/fuzz-live.mjs";
 import {offerDetails} from "../game/room/room.mjs";
+import {resolveTop} from "../game/engine/rules/stack.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
@@ -111,7 +112,36 @@ const WIZARD = (library = ["Secret Bolt", "Hidden Grove"], more = []) => play([a
   nothingToDo(s, 0);
   eq([hashState(s), JSON.stringify(facedown(s).map((id) => s.objects[id]))], [before, objects], "weighed face up for the offers, and face down again after, key for key: asking changes nothing");
   const broke = WIZARD();
-  eq(offers(broke, 0, "cast", "Secret Bolt").length, 0, "nothing in the pool: the Bolt is not offered (its {R} is paid, CR 601.2g-h)");
+  const sources = broke.zones.battlefield.filter(id => broke.objects[id].card === "Mountain" && !broke.objects[id].tapped);
+  eq([Object.values(broke.players[0].manaPool).reduce((a,b) => a+b, 0), sources.length], [0, 2], "the original empty-pool premise retains two actual untapped Mountains");
+  const funded = offers(broke, 0, "cast", "Secret Bolt");
+  eq(funded.map(a => [a.from, a.autoTap, a.payment.mana.R, a.targets[0].id]), [["exile", true, 1, 0], ["exile", true, 1, 1]], "empty pool: both actual targets remain offered with explicit source-funded red payment");
+  const card = facedown(broke).find(id => real(broke, id) === "Secret Bolt"), cast = funded.find(a => a.targets[0].id === 1);
+  const unfunded = JSON.parse(JSON.stringify(broke));
+  for (const id of sources) moveOne(unfunded, id, "graveyard", []);
+  eq([Object.values(unfunded.players[0].manaPool).reduce((a,b) => a+b, 0), offers(unfunded, 0, "cast", "Secret Bolt").length], [0, 0], "with no floating mana or available source, the actual red cost cannot be offered unpaid");
+  const unpaidBefore = structuredClone(unfunded);
+  assert.throws(() => applyAction(unfunded, 0, cast), /not a legal action/); checks++;
+  eq(unfunded, unpaidBefore, "a forged unpaid exile cast cannot change state or reveal the secret");
+  applyAction(broke, 0, cast);
+  eq([broke.awaiting?.kind, awaitingChoice(broke).cost, awaitingChoice(broke).options.map(o => o.cardId)], ["choose-cost", "manaSource", sources], "every actual Mountain identity is asked before red is made or paid");
+  eq([broke.players[0].manaPool.R, broke.objects[card].faceDown, broke.objects[card].card, mentions(projectFor(broke, 1), "Secret Bolt"), mentions(projectFor(broke, null), "Secret Bolt")], [0, true, null, false, false], "the funded proposal stays unpaid, face down and secret while its physical source is being chosen");
+  const reloaded = JSON.parse(JSON.stringify(broke)), unchanged = structuredClone(reloaded);
+  assert.throws(() => resolveAwaiting(reloaded, [sources.length]), /Invalid selection/); checks++;
+  eq(reloaded, unchanged, "an invalid physical source answer changes nothing after reload");
+  const selected = sources.at(-1), picked = awaitingChoice(reloaded).options.find(o => o.cardId === selected).index;
+  const events = resolveAwaiting(reloaded, [picked]), stackId = reloaded.stack.at(-1).objectId, spell = reloaded.objects[stackId];
+  eq(events.filter(e => e.kind === "GameEventManaPool").map(e => [e.data.fields.source.cardId, e.data.fields.produced]), [[selected, {R: 1}]], "the explicitly chosen last Mountain alone produces the actual red mana");
+  eq(events.filter(e => e.kind === "GameEventCardTapped").map(e => e.data.fields.card.cardId), [selected], "only the explicitly selected new source taps");
+  eq([reloaded.objects[sources[0]].tapped, reloaded.objects[selected].tapped, reloaded.players[0].manaPool.R, spell.spent.R], [false, true, 0, 1], "the other Mountain remains available and exactly one red is spent");
+  eq([reloaded.objects[card], stackId !== card, spell.card, spell.faceDown === true, reloaded.stack.at(-1).name], [undefined, true, "Secret Bolt", false, "Secret Bolt"], "the paid exile cast reveals the actual card as a distinct stack object");
+  eq([projectFor(reloaded, 1).stack.at(-1).name, events.find(e => e.kind === "GameEventSpellAbilityCast")?.data.fields.card.name], ["Secret Bolt", "Secret Bolt"], "the opponent and cast event see its identity only after the explicit paid announcement");
+  const life = reloaded.players.map(p => p.life);
+  resolveTop(reloaded);
+  const graveId = reloaded.zones.graveyard[0].find(id => reloaded.objects[id].card === "Secret Bolt");
+  eq(reloaded.players.map(p => p.life), [life[0], life[1] - 2], "the real funded Bolt damages only its actual selected target");
+  eq([reloaded.stack.length, reloaded.objects[stackId], graveId !== card && graveId !== stackId, reloaded.objects[graveId]?.card, reloaded.objects[graveId]?.faceDown === true], [0, undefined, true, "Secret Bolt", false], "native resolution moves the revealed Bolt to a distinct graveyard object");
+  eq([facedown(reloaded).map(id => real(reloaded, id)), mentions(projectFor(reloaded, 1), "Hidden Grove"), legalActions(reloaded, 0).some(a => a.kind === "cast" && a.objectId === graveId)], [["Hidden Grove"], false, false], "the other exiled card remains private and the old permission cannot cast the new graveyard object");
   const theirs = WIZARD(undefined, [{to: {turn: 2, phase: "MAIN1"}}, {pass: 1}, {tap: "Mountain"}]);
   eq([theirs.priorityPlayer, offers(theirs, 0, "cast", "Secret Bolt").length, offers(theirs, 0, "play-land", "Hidden Grove").length], [0, 2, 0],
     "on Maya's turn, Rob holding priority with {R}: the Bolt, an instant, offered; the Grove not (CR 305.1, 305.3)");
@@ -193,8 +223,8 @@ const WIZARD = (library = ["Secret Bolt", "Hidden Grove"], more = []) => play([a
 /* ---- nothing to do? ---- */
 {
   const s = play([at(0, "battlefield", "Apprentice", "Mountain", "Mountain", "Mountain"), at(0, "hand", GANDALF)], FLAME, {library: ["Secret Bolt", "Secret Ogre"]}).state;
-  eq([s.priorityPlayer, s.stack.length, legalActions(s, 0).filter((a) => !["pass", "activate-mana"].includes(a.kind)).length, nothingToDo(s, 0)], [0, 0, 0, false],
-    "an untapped Mountain and a face-down Bolt Rob may cast: something to do, though nothing is offered until he taps it");
+  eq([s.priorityPlayer, s.stack.length, legalActions(s, 0).filter((a) => !["pass", "activate-mana"].includes(a.kind)).map(a => [a.label, a.from, a.autoTap]), nothingToDo(s, 0)], [0, 0, [["Secret Bolt", "exile", true], ["Secret Bolt", "exile", true], ["Secret Ogre", "exile", true]], false],
+    "an untapped Mountain offers the two actual Bolt targets and the Ogre through native funding: there is something to do");
   moveOne(s, s.zones.battlefield.find((id) => s.objects[id].card === "Apprentice"), "graveyard", []);
   eq(nothingToDo(s, 0), true, "and with no Wizard, nothing");
 }
