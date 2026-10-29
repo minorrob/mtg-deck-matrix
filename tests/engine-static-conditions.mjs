@@ -15,6 +15,8 @@ import {keywordsOf, characteristicsOf} from "../game/engine/rules/layers.mjs";
 import {compileScript} from "../game/engine/cards/index.mjs";
 import {missingFor} from "../game/tools/engine-constructs.mjs";
 import {loadCardIndex, loadCardScripts} from "../game/tools/engine-cards.mjs";
+import {conditionHolds} from "../game/engine/script/condition.mjs";
+import {compileSelector} from "../game/engine/script/filter.mjs";
 
 let checks = 0;
 const eq = (a, b, m) => { assert.deepEqual(a, b, m); checks += 1; };
@@ -70,4 +72,47 @@ const pt = (id) => { const c = characteristicsOf(s, id); return [c.power, c.toug
   eq(missingFor({options: ["IsPresentStatic"]}), [], "the catalog: a static's condition is built");
 }
 
-console.log(`engine-static-conditions: ${checks} checks passed — a static's condition asked every time, so it comes and goes; counting settles; a static that works from its owner's graveyard and nowhere else; what nothing reads yet is refused.`);
+{
+  const t = createState({matchId: "present-reads", seed: "quest", players: [{name: "Rob"}, {name: "Maya"}]});
+  const put = (o, seat = 0) => addObject(t, {...o, owner: seat, controller: seat}, "battlefield", null);
+  const q = put(card("Quest for the Goblin Lord"));
+  const bears = Array.from({length: 48}, (_, n) => put(BEAR, n % 2));
+  const selector = {what: "permanent", self: true, countersAtLeast: {counter: "quest", count: 5}};
+  let validations = 0;
+  const observed = new Proxy(selector, {ownKeys(value) {validations++; return Reflect.ownKeys(value);}});
+  compileSelector(observed);
+  const oneCompilation = validations;
+  validations = 0;
+  eq(conditionHolds(t, {present: observed}, {controller: 0, source: q}), false, "the actual Quest has no quest counters");
+  eq(validations, oneCompilation, "one present query validates once, rather than once per battlefield candidate");
+  const pt = id => {const c = characteristicsOf(t, id); return [c.power, c.toughness];};
+  eq([pt(bears[0]), pt(bears[1])], [[2, 2], [2, 2]], "no Quest boost below its threshold");
+  t.objects[q].counters.quest = 5;
+  eq([conditionHolds(t, {present: selector}, {controller: 0, source: q}), pt(bears[0]), pt(bears[1])], [true, [4, 2], [2, 2]], "the same live source now boosts only its controller's creature");
+  t.objects[q].counters.quest = 4;
+  eq([pt(bears[0]), pt(bears[1])], [[2, 2], [2, 2]], "a later counter change invalidates the previous truth");
+  const oracle = (c, context) => {
+    const match = compileSelector(c.present), n = t.zones.battlefield.filter(id => match(t, id, context)).length;
+    return n >= (c.atLeast ?? (c.atMost !== undefined ? 0 : 1)) && (c.atMost === undefined || n <= c.atMost);
+  };
+  const conditions = [{present: selector}, {present: selector, atMost: 0}, {present: selector, atLeast: 2},
+    {present: {...selector, controller: "you"}}, {present: {...selector, zone: "graveyard"}},
+    {present: {anyOf: [selector, {what: "permanent", types: ["Creature"], controller: "opponent"}]}},
+    {present: {self: true, anyOf: [{self: false, types: ["Creature"]}]}, atLeast: 2},
+    {present: {what: "permanent", types: ["Creature"], controller: "you"}, atLeast: 24}];
+  for (const source of [q, String(q), null, {cardId: q}]) for (const controller of [0, 1]) for (const condition of conditions)
+    eq(conditionHolds(t, condition, {source, controller}), oracle(condition, {source, controller}), "optimized query preserves selector/count/source/controller semantics");
+  selector.self = false;
+  t.objects[bears[0]].counters.quest = 6;
+  eq(conditionHolds(t, {present: selector}, {source: q}), true, "mutating the selector causes a fresh whole-board query");
+  selector.unknownPresentKey = true;
+  assert.throws(() => conditionHolds(t, {present: selector}, {source: q}), /selector grammar has no key "unknownPresentKey"/); checks++;
+  delete selector.unknownPresentKey; selector.self = true;
+  const gone = moveObject(t, q, "graveyard", 0);
+  t.objects[gone].counters = {quest: 5};
+  eq(conditionHolds(t, {present: selector}, {source: gone}), false, "a source outside the battlefield is not a permanent present");
+  t.zones.battlefield = [];
+  assert.throws(() => conditionHolds(t, {present: {what: "permanent", self: true, unknownPresentKey: true}}, {source: gone}), /selector grammar has no key "unknownPresentKey"/); checks++;
+}
+
+console.log(`engine-static-conditions: ${checks} checks passed — live static conditions, exact self identity, bounded selector validation and fresh grammar checks.`);

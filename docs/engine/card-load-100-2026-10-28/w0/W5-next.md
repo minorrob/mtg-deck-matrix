@@ -4,10 +4,15 @@ Branch: `codex/engine-load100-w0-w5-mana`; draft PR #928. No cards added or prom
 Runtime checkpoints: `d9d00a00` (funding/basic choices/entry), `12a32a40` (delve X/search/source/riders).
 Shared source: `2c89a5c3` merged as `d807b03a`; lane JSON records the final proof checkpoint.
 
-1. Investigate the unfinished easy library seed 2801 at exact source `5a004e444d83e3fd8e63873f6b5ef9f6160430d3`.
+1. Continue investigating the unfinished easy library seed 2801 at exact source `5a004e444d83e3fd8e63873f6b5ef9f6160430d3`.
    `evidence/w5-fuzz-easy-2801-timeout.json` holds the exact command, decks, timing, and CPU/memory samples.
    It consumed CPU for 628.39 seconds without a result. Exhaustive funding is a candidate cause, not a diagnosis.
-   Profile a bounded reproduction; preserve every legal payment through a resumable question if enumeration is too costly.
+   Bounded native profiling now identifies repeated layer/condition reads as a hot path, not funding enumeration.
+   The present-selector slice validates once/query and limits mandatory permanent self selectors to the actual battlefield source.
+   Actual turn-44 Quest reads improve from 125.58ms to 17.39ms for 10,000 queries; legal-action hashes are identical.
+   A current-source replay/leak-checking run still timed out at 90.09s. No final result, replay/leak result or clean credit exists.
+   See `evidence/w5-present-profile.json`. Do not rerun unchanged; further diagnosis must be bounded and evidence driven.
+   Preserve every legal payment through a resumable question if enumeration is too costly.
    Do not restore arbitrary caps or count this game clean. G-5 and operational payment completeness remain open.
 2. Implement effect-paid X and additional costs. `W5-effect-paid-costs-red.mjs.txt` is a native cast/resolution reproduction:
    an effect currently offers neither payable exiled X nor additional-discard spell, with two untapped Mountains available.
