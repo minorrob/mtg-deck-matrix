@@ -1,5 +1,11 @@
 # The orchestrator's procedure: the card load to 100% (2026-10-28)
 
+**Scope update, October 28:** Rob explicitly chose cards covering **95% of deck appearances**. Deal only names in
+`scope-95.json` after wave 0. T1/T2/T3 below remain the priority order within that set; do not require loading the
+remaining least-played appearances. `node tools/card-load-scope.mjs --gate` replaces a zero-undefined full-pool count
+for G-1. All other accuracy and evidence requirements remain; keep the whole-directory ability check. Historical
+full-pool counts remain diagnostics. `README.md` records the 8,514-name cutoff and source dates/hashes.
+
 Rob, 2026-10-28: *"I want 100% accuracy, 0 errors in the game when any given card is played, for that to be play-tested
 to satisfaction, and a 0 error rate on the execution of a card mechanic."* He handed this run to an OpenAI orchestrator
 with eight subagents. `README.md` here is where the load stands and what 100% means; `BRIEF.md` is every subagent's
@@ -122,7 +128,7 @@ recorded with its evidence.
 
 | # | Check | Pass means |
 | --- | --- | --- |
-| 1 | `node --stack-size=4000 game/tools/batch/check-cards.mjs` | 0 failed |
+| 1 | `node --stack-size=4000 game/tools/batch/check-cards.mjs --ability-ledger <wave-ability-ledger.json> --counterfactual` | Whole directory, 0 failed, 0 unreached abilities, completed ledger |
 | 2 | `node game/tools/sentence-library.mjs` | No new calibration failure (today's four are wave 0's debt) |
 | 3 | `node game/tools/engine-definitions.mjs --check`, `node game/tools/engine-candidates.mjs --check`, `node game/tools/engine-catalog.mjs --check`, `node tools/data-inventory.mjs --check` | all current |
 | 4 | `node tests/engine-cards.mjs`, `tests/card-compiler.mjs`, `tests/card-waves.mjs`, `tests/table-candidates.mjs`, `tests/sentence-library.mjs`, `tests/table-basics.mjs`, `tests/data-integrity.mjs`, `tests/feature-wiring.mjs`, `tests/engine-breaks-anchors.mjs`, every suite a lane added | all pass |
@@ -137,6 +143,13 @@ The whole suite runs once, on GitHub (Rob, 2026-10-01: never twice). The Workers
 (`crankmagic`, `crankmagic-staging`) fail on every PR and do not gate. If Actions cannot run at all (a job that fails in
 seconds with no log, on `main` too), `bash tools/local-ci.sh HEAD 2` is the gate instead and its PASS block goes on the PR
 as a comment; say so in the merge report.
+
+**Ability evidence is mandatory in check 1** (Rob's approved supplement, October 28). Merge V8's harness before running
+this command. Require its ledger to say `measurement.complete: true`, `scope.directory: true`, and zero scenario-unreached
+abilities, plus a successful process exit and zero scenario failures. A legacy no-ledger exit of 0, an ignored/unknown
+flag, a selected-card result, a partial checkpoint, an ownership ambiguity, or a timed-out probe cannot pass this gate.
+The strict command already runs the original schema, fidelity, smoke and scenario checks; do not duplicate that run.
+The default CLI and automatic CI wiring remain separate open work until implemented and proven.
 
 **Pipeline the waves.** Once checks 1 to 8 pass on wave N's integration head, deal wave N+1 and start its lanes from
 that head (not from `main`) while Actions runs check 9. If the run fails, the fix lands on wave N's branch and wave N+1
@@ -222,6 +235,11 @@ A scenario-runner fix will turn many scenarios red at once (3,547 files use `set
 an option first, measures which cards fail under it, and you deal those cards to their theme lanes in wave 0 or wave 1;
 the strict runner becomes the default only when they pass. That is the one place a check may run in two modes for a
 while, and `RUN.md` says so.
+
+**Proof-method update approved by Rob, October 28, 2026:** V8 may supplement journal evidence with the harness-only
+ability-removal proof specified in `BRIEF.md`, "Rob's approved ability-proof supplement." Existing events do not
+identify static applications or distinguish every mana ability. No saved card or rule instrumentation is permitted;
+undetected removals remain unproved. This changes the method, not the gate.
 
 Wave 0's done: every row fixed or a named ignore Rob can read; V8's first pool fuzz over every final card run, its
 findings routed and fixed. Only then does wave 1 start. Wave 0 may take more than one wave's length; that is expected.

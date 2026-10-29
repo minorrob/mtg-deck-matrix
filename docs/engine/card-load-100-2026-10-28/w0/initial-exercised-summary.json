@@ -1,0 +1,4813 @@
+{
+  "schema": "CrankCardExercisedInitialSummary@1",
+  "head": "ae7e22ba",
+  "scope": "Initial journal evidence only; unlisted final cards and abilities remain unobserved",
+  "sourceSha256": "53024fe31384bfba4fc08603faea9b28b7362b98d53703ebb330c9f9415cb73b",
+  "final": 6430,
+  "abilityTotal": 11636,
+  "exercised": 131,
+  "reached": 47,
+  "games": [
+    "pool-1",
+    "pool-2",
+    "pool-3"
+  ],
+  "cards": {
+    "Access Tunnel": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Access Tunnel",
+          "kind": "activated",
+          "text": "{T}: Add {C}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Access Tunnel",
+          "kind": "activated",
+          "text": "{3}, {T}: Target creature with power 3 or less can't be blocked this turn.",
+          "mana": false,
+          "activated": 1,
+          "triggered": 0,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-3"
+          ]
+        }
+      ]
+    },
+    "Altar of Dementia": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Altar of Dementia",
+          "kind": "activated",
+          "text": "Sacrifice a creature: Target player mills cards equal to the sacrificed creature's power.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Arid Mesa": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Arid Mesa",
+          "kind": "activated",
+          "text": "{T}, Pay 1 life, Sacrifice this land: Search your library for a Mountain or Plains card, put it onto the battlefield, then shuffle.",
+          "mana": false,
+          "activated": 1,
+          "triggered": 0,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-1"
+          ]
+        }
+      ]
+    },
+    "Arni, Humble Scribe": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Arni, Humble Scribe",
+          "kind": "triggered",
+          "text": "Whenever another nontoken creature you control enters, untap Arni.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Arni, Humble Scribe",
+          "kind": "activated",
+          "text": "{T}: Draw a card, then discard a card.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Ash Barrens": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Ash Barrens",
+          "kind": "activated",
+          "text": "{T}: Add {C}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Ash Barrens",
+          "kind": "activated",
+          "text": "Basic landcycling {1}",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Beast Whisperer": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Beast Whisperer",
+          "kind": "triggered",
+          "text": "Whenever you cast a creature spell, draw a card.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 2,
+          "resolved": 2,
+          "scenarios": [],
+          "games": [
+            "pool-1"
+          ]
+        }
+      ]
+    },
+    "Blazing Crescendo": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Blazing Crescendo",
+          "kind": "spell",
+          "text": "Target creature gets +3/+1 until end of turn.\nExile the top card of your library. Until the end of your next turn, you may play that card.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Blighted Agent": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Blighted Agent",
+          "kind": "keyword",
+          "text": "Infect",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Blighted Agent",
+          "kind": "static",
+          "text": "This creature can't be blocked.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Bloodbraid Elf": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Bloodbraid Elf",
+          "kind": "keyword",
+          "text": "Haste (This creature can attack and {T} as soon as it comes under your control.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Bloodbraid Elf",
+          "kind": "keyword",
+          "text": "Cascade (When you cast this spell, exile cards from the top of your library until you exile a nonland card that costs less. You may cast it without paying its mana cost. Put the exiled cards on the bottom in a random order.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Bloodcrazed Neonate": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Bloodcrazed Neonate",
+          "kind": "static",
+          "text": "This creature attacks each combat if able.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Bloodcrazed Neonate",
+          "kind": "triggered",
+          "text": "Whenever this creature deals combat damage to a player, put a +1/+1 counter on it.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Bombur, Gentle Dreamer": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Bombur, Gentle Dreamer",
+          "kind": "keyword",
+          "text": "Storied",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Bombur, Gentle Dreamer",
+          "kind": "static",
+          "text": "Bombur doesn't untap during your untap step unless you have an enduring story.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Brass Gnat": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Brass Gnat",
+          "kind": "keyword",
+          "text": "Flying",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Brass Gnat",
+          "kind": "static",
+          "text": "This creature doesn't untap during your untap step.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Brass Gnat",
+          "kind": "triggered",
+          "text": "At the beginning of your upkeep, you may pay {1}. If you do, untap this creature.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 5,
+          "resolved": 5,
+          "scenarios": [],
+          "games": [
+            "pool-2"
+          ]
+        }
+      ]
+    },
+    "Brass's Bounty": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Brass's Bounty",
+          "kind": "spell",
+          "text": "For each land you control, create a Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Cabaretti Courtyard": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Cabaretti Courtyard",
+          "kind": "triggered",
+          "text": "When this land enters, sacrifice it. When you do, search your library for a basic Mountain, Forest, or Plains card, put it onto the battlefield tapped, then shuffle and you gain 1 life.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 1,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-2"
+          ]
+        }
+      ]
+    },
+    "Cascade Bluffs": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Cascade Bluffs",
+          "kind": "activated",
+          "text": "{T}: Add {C}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Cascade Bluffs",
+          "kind": "activated",
+          "text": "{U/R}, {T}: Add {U}{U}, {U}{R}, or {R}{R}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Castle Embereth": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Castle Embereth",
+          "kind": "replacement",
+          "text": "This land enters tapped unless you control a Mountain.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Castle Embereth",
+          "kind": "activated",
+          "text": "{T}: Add {R}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Castle Embereth",
+          "kind": "activated",
+          "text": "{1}{R}{R}, {T}: Creatures you control get +1/+0 until end of turn.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Censor": {
+      "cast": 0,
+      "played": 0,
+      "resolved": 0,
+      "exercised": 0,
+      "games": [],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Censor",
+          "kind": "spell",
+          "text": "Counter target spell unless its controller pays {1}.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Censor",
+          "kind": "activated",
+          "text": "Cycling {U} ({U}, Discard this card: Draw a card.)",
+          "mana": false,
+          "activated": 1,
+          "triggered": 0,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-1"
+          ]
+        }
+      ]
+    },
+    "Chronicle of Victory": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Chronicle of Victory",
+          "kind": "replacement",
+          "text": "As Chronicle of Victory enters, choose a creature type.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Chronicle of Victory",
+          "kind": "static",
+          "text": "Creatures you control of the chosen type get +2/+2 and have first strike and trample.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Chronicle of Victory",
+          "kind": "static",
+          "text": "Creatures you control of the chosen type get +2/+2 and have first strike and trample.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[3]",
+          "runtimeId": "a3",
+          "face": "Chronicle of Victory",
+          "kind": "triggered",
+          "text": "Whenever you cast a spell of the chosen type, draw a card.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Chronomaton": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Chronomaton",
+          "kind": "activated",
+          "text": "{1}, {T}: Put a +1/+1 counter on this creature.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Cid, Freeflier Pilot": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Cid, Freeflier Pilot",
+          "kind": "static",
+          "text": "Equipment and Vehicle spells you cast cost {1} less to cast.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Cid, Freeflier Pilot",
+          "kind": "static",
+          "text": "Jump \u2014 During your turn, Cid has flying.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Cid, Freeflier Pilot",
+          "kind": "activated",
+          "text": "{2}, {T}: Return target Equipment or Vehicle card from your graveyard to your hand.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Clamorous Ironclad": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Clamorous Ironclad",
+          "kind": "keyword",
+          "text": "Menace (This creature can't be blocked except by two or more creatures.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Clamorous Ironclad",
+          "kind": "keyword",
+          "text": "Crew 3 (Tap any number of creatures you control with total power 3 or more: This Vehicle becomes an artifact creature until end of turn.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Clamorous Ironclad",
+          "kind": "activated",
+          "text": "Cycling {R} ({R}, Discard this card: Draw a card.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Conduit Pylons": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Conduit Pylons",
+          "kind": "triggered",
+          "text": "When this land enters, surveil 1.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 1,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-3"
+          ]
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Conduit Pylons",
+          "kind": "activated",
+          "text": "{T}: Add {C}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Conduit Pylons",
+          "kind": "activated",
+          "text": "{1}, {T}: Add one mana of any color.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Contentious Plan": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 0,
+      "exercised": 0,
+      "games": [],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Contentious Plan",
+          "kind": "spell",
+          "text": "Proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)\nDraw a card.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Cursed Mirror": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Cursed Mirror",
+          "kind": "activated",
+          "text": "{T}: Add {R}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Cursed Mirror",
+          "kind": "replacement",
+          "text": "As this artifact enters, you may have it become a copy of any creature on the battlefield until end of turn, except it has haste.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Darksteel Reactor": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Darksteel Reactor",
+          "kind": "keyword",
+          "text": "Indestructible",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Darksteel Reactor",
+          "kind": "triggered",
+          "text": "At the beginning of your upkeep, you may put a charge counter on this artifact.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 2,
+          "resolved": 2,
+          "scenarios": [],
+          "games": [
+            "pool-2"
+          ]
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Darksteel Reactor",
+          "kind": "triggered",
+          "text": "When this artifact has twenty or more charge counters on it, you win the game.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Deadly Insect": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Deadly Insect",
+          "kind": "keyword",
+          "text": "Shroud (This creature can't be the target of spells or abilities.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Disperse": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Disperse",
+          "kind": "spell",
+          "text": "Return target nonland permanent to its owner's hand.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Dive Down": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Dive Down",
+          "kind": "spell",
+          "text": "Target creature you control gets +0/+3 and gains hexproof until end of turn. (It can't be the target of spells or abilities your opponents control.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Dragonhawk, Fate's Tempest": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Dragonhawk, Fate's Tempest",
+          "kind": "keyword",
+          "text": "Flying",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Dragonhawk, Fate's Tempest",
+          "kind": "triggered",
+          "text": "Whenever Dragonhawk enters or attacks, exile the top X cards of your library, where X is the number of creatures you control with power 4 or greater. You may play those cards until your next end step. At the beginning of your next end step, Dragonhawk deals 2 damage to each opponent for each of those cards that are still exiled.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 1,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-2"
+          ]
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Dragonhawk, Fate's Tempest",
+          "kind": "triggered",
+          "text": "Whenever Dragonhawk enters or attacks, exile the top X cards of your library, where X is the number of creatures you control with power 4 or greater. You may play those cards until your next end step. At the beginning of your next end step, Dragonhawk deals 2 damage to each opponent for each of those cards that are still exiled.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 4,
+          "resolved": 4,
+          "scenarios": [],
+          "games": [
+            "pool-2"
+          ]
+        }
+      ]
+    },
+    "Ebony Rhino": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Ebony Rhino",
+          "kind": "keyword",
+          "text": "Trample",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Echoes of Eternity": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Echoes of Eternity",
+          "kind": "static",
+          "text": "If a triggered ability of a colorless spell you control or another colorless permanent you control triggers, that ability triggers an additional time.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Echoes of Eternity",
+          "kind": "triggered",
+          "text": "Whenever you cast a colorless spell, copy it. You may choose new targets for the copy.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 1,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-1"
+          ]
+        }
+      ]
+    },
+    "Expedition Map": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Expedition Map",
+          "kind": "activated",
+          "text": "{2}, {T}, Sacrifice this artifact: Search your library for a land card, reveal it, put it into your hand, then shuffle.",
+          "mana": false,
+          "activated": 1,
+          "triggered": 0,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-3"
+          ]
+        }
+      ]
+    },
+    "Fledgling Djinn": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Fledgling Djinn",
+          "kind": "keyword",
+          "text": "Flying",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Fledgling Djinn",
+          "kind": "triggered",
+          "text": "At the beginning of your upkeep, this creature deals 1 damage to you.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 2,
+          "resolved": 2,
+          "scenarios": [],
+          "games": [
+            "pool-2"
+          ]
+        }
+      ]
+    },
+    "Flooded Strand": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Flooded Strand",
+          "kind": "activated",
+          "text": "{T}, Pay 1 life, Sacrifice this land: Search your library for a Plains or Island card, put it onto the battlefield, then shuffle.",
+          "mana": false,
+          "activated": 1,
+          "triggered": 0,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-1"
+          ]
+        }
+      ]
+    },
+    "Forbidden Orchard": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Forbidden Orchard",
+          "kind": "activated",
+          "text": "{T}: Add one mana of any color.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Forbidden Orchard",
+          "kind": "triggered",
+          "text": "Whenever you tap this land for mana, target opponent creates a 1/1 colorless Spirit creature token.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 5,
+          "resolved": 5,
+          "scenarios": [],
+          "games": [
+            "pool-2"
+          ]
+        }
+      ]
+    },
+    "Force of Negation": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Force of Negation",
+          "kind": "static",
+          "text": "If it's not your turn, you may exile a blue card from your hand rather than pay this spell's mana cost.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Force of Negation",
+          "kind": "spell",
+          "text": "Counter target noncreature spell. If that spell is countered this way, exile it instead of putting it into its owner's graveyard.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Forest": {
+      "cast": 0,
+      "played": 7,
+      "resolved": 7,
+      "exercised": 2,
+      "games": [
+        "pool-1",
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Forest",
+          "kind": "activated",
+          "text": "{T}: Add {G}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Forge of Heroes": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Forge of Heroes",
+          "kind": "activated",
+          "text": "{T}: Add {C}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Forge of Heroes",
+          "kind": "activated",
+          "text": "{T}: Choose target commander that entered this turn. Put a +1/+1 counter on it if it's a creature and a loyalty counter on it if it's a planeswalker.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Foundry of the Consuls": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Foundry of the Consuls",
+          "kind": "activated",
+          "text": "{T}: Add {C}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Foundry of the Consuls",
+          "kind": "activated",
+          "text": "{5}, {T}, Sacrifice this land: Create two 1/1 colorless Thopter artifact creature tokens with flying.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Frantic Search": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Frantic Search",
+          "kind": "spell",
+          "text": "Draw two cards, then discard two cards. Untap up to three lands.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Frostfist Strider": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Frostfist Strider",
+          "kind": "keyword",
+          "text": "Ward {2} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {2}.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Frostfist Strider",
+          "kind": "triggered",
+          "text": "When this creature enters, tap target creature an opponent controls and put a stun counter on it. (If a permanent with a stun counter would become untapped, remove one from it instead.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 1,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-1"
+          ]
+        }
+      ]
+    },
+    "Furnace of Rath": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Furnace of Rath",
+          "kind": "replacement",
+          "text": "If a source would deal damage to a permanent or player, it deals double that damage to that permanent or player instead.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Gallia, Tragic Host": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Gallia, Tragic Host",
+          "kind": "keyword",
+          "text": "Menace",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Gallia, Tragic Host",
+          "kind": "activated",
+          "text": "{4}{B}, Exile another creature card from your graveyard: Return this card from your graveyard to the battlefield tapped with a +1/+1 counter on her.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Ghalma's Warden": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Ghalma's Warden",
+          "kind": "static",
+          "text": "Metalcraft \u2014 This creature gets +2/+2 as long as you control three or more artifacts.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Ghost Quarter": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Ghost Quarter",
+          "kind": "activated",
+          "text": "{T}: Add {C}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Ghost Quarter",
+          "kind": "activated",
+          "text": "{T}, Sacrifice this land: Destroy target land. Its controller may search their library for a basic land card, put it onto the battlefield, then shuffle.",
+          "mana": false,
+          "activated": 1,
+          "triggered": 0,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-3"
+          ]
+        }
+      ]
+    },
+    "Giant Adephage": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Giant Adephage",
+          "kind": "keyword",
+          "text": "Trample",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Giant Adephage",
+          "kind": "triggered",
+          "text": "Whenever this creature deals combat damage to a player, create a token that's a copy of this creature.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Glacial Wall": {
+      "cast": 2,
+      "played": 0,
+      "resolved": 2,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Glacial Wall",
+          "kind": "keyword",
+          "text": "Defender (This creature can't attack.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Goblin Spy": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Goblin Spy",
+          "kind": "static",
+          "text": "Play with the top card of your library revealed.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Gollum, Riddle Master": {
+      "cast": 2,
+      "played": 0,
+      "resolved": 2,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Gollum, Riddle Master",
+          "kind": "replacement",
+          "text": "As Gollum enters, choose odd or even. (Zero is even.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Gollum, Riddle Master",
+          "kind": "triggered",
+          "text": "Whenever an opponent casts a spell with mana value of the chosen quality, choose one that hasn't been chosen \u2014\n\u2022 Put a +1/+1 counter on Gollum.\n\u2022 Each opponent loses 2 life and you gain 2 life.\n\u2022 Draw a card.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 4,
+          "resolved": 4,
+          "scenarios": [],
+          "games": [
+            "pool-2"
+          ]
+        }
+      ]
+    },
+    "Great Hall of the Citadel": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Great Hall of the Citadel",
+          "kind": "activated",
+          "text": "{T}: Add {C}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Great Hall of the Citadel",
+          "kind": "activated",
+          "text": "{1}, {T}: Add two mana in any combination of colors. Spend this mana only to cast legendary spells.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Griptide": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Griptide",
+          "kind": "spell",
+          "text": "Put target creature on top of its owner's library.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Gruul Turf": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Gruul Turf",
+          "kind": "replacement",
+          "text": "This land enters tapped.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Gruul Turf",
+          "kind": "triggered",
+          "text": "When this land enters, return a land you control to its owner's hand.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 1,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-3"
+          ]
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Gruul Turf",
+          "kind": "activated",
+          "text": "{T}: Add {R}{G}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Guildless Commons": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Guildless Commons",
+          "kind": "replacement",
+          "text": "This land enters tapped.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Guildless Commons",
+          "kind": "triggered",
+          "text": "When this land enters, return a land you control to its owner's hand.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 1,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-1"
+          ]
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Guildless Commons",
+          "kind": "activated",
+          "text": "{T}: Add {C}{C}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Guma": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Guma",
+          "kind": "keyword",
+          "text": "Protection from blue",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Hearts on Fire": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Hearts on Fire",
+          "kind": "spell",
+          "text": "One or two target creatures each get +2/+1 until end of turn.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Herald's Horn": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Herald's Horn",
+          "kind": "replacement",
+          "text": "As this artifact enters, choose a creature type.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Herald's Horn",
+          "kind": "static",
+          "text": "Creature spells you cast of the chosen type cost {1} less to cast.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Herald's Horn",
+          "kind": "triggered",
+          "text": "At the beginning of your upkeep, look at the top card of your library. If it's a creature card of the chosen type, you may reveal it and put it into your hand.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "High Fae Trickster": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "High Fae Trickster",
+          "kind": "keyword",
+          "text": "Flash",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "High Fae Trickster",
+          "kind": "keyword",
+          "text": "Flying",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "High Fae Trickster",
+          "kind": "static",
+          "text": "You may cast spells as though they had flash.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Innocuous Rat": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Innocuous Rat",
+          "kind": "triggered",
+          "text": "When this creature dies, manifest dread.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Interplanar Beacon": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Interplanar Beacon",
+          "kind": "triggered",
+          "text": "Whenever you cast a planeswalker spell, you gain 1 life.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Interplanar Beacon",
+          "kind": "activated",
+          "text": "{T}: Add {C}.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Interplanar Beacon",
+          "kind": "activated",
+          "text": "{1}, {T}: Add two mana of different colors. Spend this mana only to cast planeswalker spells.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Island": {
+      "cast": 0,
+      "played": 16,
+      "resolved": 16,
+      "exercised": 3,
+      "games": [
+        "pool-1",
+        "pool-2",
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Island",
+          "kind": "activated",
+          "text": "{T}: Add {U}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Jade-Cast Sentinel": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Jade-Cast Sentinel",
+          "kind": "keyword",
+          "text": "Reach",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Jade-Cast Sentinel",
+          "kind": "activated",
+          "text": "{2}, {T}: Put target card from a graveyard on the bottom of its owner's library.",
+          "mana": false,
+          "activated": 1,
+          "triggered": 0,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-2"
+          ]
+        }
+      ]
+    },
+    "Jandor's Saddlebags": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Jandor's Saddlebags",
+          "kind": "activated",
+          "text": "{3}, {T}: Untap target creature.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Kappa Cannoneer": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Kappa Cannoneer",
+          "kind": "keyword",
+          "text": "Improvise (Your artifacts can help cast this spell. Each artifact you tap after you're done activating mana abilities pays for {1}.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Kappa Cannoneer",
+          "kind": "keyword",
+          "text": "Ward {4}",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Kappa Cannoneer",
+          "kind": "triggered",
+          "text": "Whenever this creature or another artifact you control enters, put a +1/+1 counter on this creature. It can't be blocked this turn.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 1,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-1"
+          ]
+        }
+      ]
+    },
+    "Lightning Greaves": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Lightning Greaves",
+          "kind": "static",
+          "text": "Equipped creature has haste and shroud.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Lightning Greaves",
+          "kind": "activated",
+          "text": "Equip {0}",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Long-Bodied Grey Dog": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Long-Bodied Grey Dog",
+          "kind": "keyword",
+          "text": "Flash",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Long-Bodied Grey Dog",
+          "kind": "keyword",
+          "text": "Reach",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Long-Bodied Grey Dog",
+          "kind": "triggered",
+          "text": "When this creature enters, create a tapped Treasure token. (It's an artifact with \"{T}, Sacrifice this token: Add one mana of any color.\")",
+          "mana": false,
+          "activated": 0,
+          "triggered": 1,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-3"
+          ]
+        }
+      ]
+    },
+    "Maestros Theater": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Maestros Theater",
+          "kind": "triggered",
+          "text": "When this land enters, sacrifice it. When you do, search your library for a basic Island, Swamp, or Mountain card, put it onto the battlefield tapped, then shuffle and you gain 1 life.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 1,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-2"
+          ]
+        }
+      ]
+    },
+    "Magistrate's Scepter": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Magistrate's Scepter",
+          "kind": "activated",
+          "text": "{4}, {T}: Put a charge counter on this artifact.",
+          "mana": false,
+          "activated": 1,
+          "triggered": 0,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-3"
+          ]
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Magistrate's Scepter",
+          "kind": "activated",
+          "text": "{T}, Remove three charge counters from this artifact: Take an extra turn after this one.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Magmaquake": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Magmaquake",
+          "kind": "spell",
+          "text": "Magmaquake deals X damage to each creature without flying and each planeswalker.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Meekstone": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Meekstone",
+          "kind": "static",
+          "text": "Creatures with power 3 or greater don't untap during their controllers' untap steps.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Mesmeric Orb": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Mesmeric Orb",
+          "kind": "triggered",
+          "text": "Whenever a permanent becomes untapped, that permanent's controller mills a card.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 100,
+          "resolved": 100,
+          "scenarios": [],
+          "games": [
+            "pool-2"
+          ]
+        }
+      ]
+    },
+    "Mire Triton": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Mire Triton",
+          "kind": "keyword",
+          "text": "Deathtouch",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Mire Triton",
+          "kind": "triggered",
+          "text": "When this creature enters, mill two cards and you gain 2 life. (To mill two cards, put the top two cards of your library into your graveyard.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 1,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-2"
+          ]
+        }
+      ]
+    },
+    "Moment's Peace": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Moment's Peace",
+          "kind": "spell",
+          "text": "Prevent all combat damage that would be dealt this turn.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Moment's Peace",
+          "kind": "keyword",
+          "text": "Flashback {2}{G} (You may cast this card from your graveyard for its flashback cost. Then exile it.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Mountain": {
+      "cast": 0,
+      "played": 13,
+      "resolved": 13,
+      "exercised": 3,
+      "games": [
+        "pool-1",
+        "pool-2",
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Mountain",
+          "kind": "activated",
+          "text": "{T}: Add {R}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Mystic Forge": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Mystic Forge",
+          "kind": "static",
+          "text": "You may look at the top card of your library any time.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Mystic Forge",
+          "kind": "static",
+          "text": "You may cast artifact spells and colorless spells from the top of your library.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Mystic Forge",
+          "kind": "activated",
+          "text": "{T}, Pay 1 life: Exile the top card of your library.",
+          "mana": false,
+          "activated": 4,
+          "triggered": 0,
+          "resolved": 4,
+          "scenarios": [],
+          "games": [
+            "pool-1"
+          ]
+        }
+      ]
+    },
+    "Nesting Grounds": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Nesting Grounds",
+          "kind": "activated",
+          "text": "{T}: Add {C}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Nesting Grounds",
+          "kind": "activated",
+          "text": "{1}, {T}: Move a counter from target permanent you control onto a second target permanent. Activate only as a sorcery.",
+          "mana": false,
+          "activated": 4,
+          "triggered": 0,
+          "resolved": 4,
+          "scenarios": [],
+          "games": [
+            "pool-2"
+          ]
+        }
+      ]
+    },
+    "Nettlecyst": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Nettlecyst",
+          "kind": "keyword",
+          "text": "Living weapon (When this Equipment enters, create a 0/0 black Phyrexian Germ creature token, then attach this to it.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Nettlecyst",
+          "kind": "static",
+          "text": "Equipped creature gets +1/+1 for each artifact and/or enchantment you control.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Nettlecyst",
+          "kind": "activated",
+          "text": "Equip {2}",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Nuka-Cola Vending Machine": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Nuka-Cola Vending Machine",
+          "kind": "activated",
+          "text": "{1}, {T}: Create a Food token.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Nuka-Cola Vending Machine",
+          "kind": "triggered",
+          "text": "Whenever you sacrifice a Food, create a tapped Treasure token.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Oakhollow Village": {
+      "cast": 0,
+      "played": 2,
+      "resolved": 2,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Oakhollow Village",
+          "kind": "activated",
+          "text": "{T}: Add {C}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Oakhollow Village",
+          "kind": "activated",
+          "text": "{T}: Add {G}. Spend this mana only to cast a creature spell.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Oakhollow Village",
+          "kind": "activated",
+          "text": "{G}, {T}: Put a +1/+1 counter on each Frog, Rabbit, Raccoon, or Squirrel you control that entered the battlefield this turn.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Octoprophet": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Octoprophet",
+          "kind": "triggered",
+          "text": "When this creature enters, scry 2. (Look at the top two cards of your library, then put any number of them on the bottom and the rest on top in any order.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 1,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-2"
+          ]
+        }
+      ]
+    },
+    "Octopus Form": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Octopus Form",
+          "kind": "spell",
+          "text": "Target creature you control gets +1/+1 and gains hexproof until end of turn. Untap it. (It can't be the target of spells or abilities your opponents control.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "One With the Wind": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "One With the Wind",
+          "kind": "keyword",
+          "text": "Enchant creature",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "One With the Wind",
+          "kind": "static",
+          "text": "Enchanted creature gets +2/+2 and has flying.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "One With the Wind",
+          "kind": "static",
+          "text": "Enchanted creature gets +2/+2 and has flying.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Onulet": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Onulet",
+          "kind": "triggered",
+          "text": "When this creature dies, you gain 2 life.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Origin of Metalbending": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Origin of Metalbending",
+          "kind": "spell",
+          "text": "Choose one \u2014\n\u2022 Destroy target artifact or enchantment.\n\u2022 Put a +1/+1 counter on target creature you control. It gains indestructible until end of turn. (Damage and effects that say \"destroy\" don't destroy it.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Page, Loose Leaf": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Page, Loose Leaf",
+          "kind": "activated",
+          "text": "{T}: Add {C}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Page, Loose Leaf",
+          "kind": "activated",
+          "text": "Grandeur \u2014 Discard another card named Page, Loose Leaf: Reveal cards from the top of your library until you reveal an instant or sorcery card. Put that card into your hand and the rest on the bottom of your library in a random order.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Pillage": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Pillage",
+          "kind": "spell",
+          "text": "Destroy target artifact or land. It can't be regenerated.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Plains": {
+      "cast": 0,
+      "played": 4,
+      "resolved": 4,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Plains",
+          "kind": "activated",
+          "text": "{T}: Add {W}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Planar Gate": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Planar Gate",
+          "kind": "static",
+          "text": "Creature spells you cast cost {2} less to cast.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Prismatic Vista": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Prismatic Vista",
+          "kind": "activated",
+          "text": "{T}, Pay 1 life, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield, then shuffle.",
+          "mana": false,
+          "activated": 1,
+          "triggered": 0,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-2"
+          ]
+        }
+      ]
+    },
+    "Rage Reflection": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Rage Reflection",
+          "kind": "static",
+          "text": "Creatures you control have double strike.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Raging Redcap": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Raging Redcap",
+          "kind": "keyword",
+          "text": "Double strike (This creature deals both first-strike and regular combat damage.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Raucous Theater": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Raucous Theater",
+          "kind": "activated",
+          "text": "{T}: Add {B} or {R}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Raucous Theater",
+          "kind": "replacement",
+          "text": "This land enters tapped.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Raucous Theater",
+          "kind": "triggered",
+          "text": "When this land enters, surveil 1.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 1,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-1"
+          ]
+        }
+      ]
+    },
+    "Reliquary Tower": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Reliquary Tower",
+          "kind": "static",
+          "text": "You have no maximum hand size.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Reliquary Tower",
+          "kind": "activated",
+          "text": "{T}: Add {C}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Rograkh, Son of Rohgahh": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Rograkh, Son of Rohgahh",
+          "kind": "keyword",
+          "text": "First strike",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Rograkh, Son of Rohgahh",
+          "kind": "keyword",
+          "text": "menace",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Rograkh, Son of Rohgahh",
+          "kind": "keyword",
+          "text": "trample",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[3]",
+          "runtimeId": "a3",
+          "face": "Rograkh, Son of Rohgahh",
+          "kind": "keyword",
+          "text": "Partner (You can have two commanders if both have partner.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Scarlet Witch, Wanda Maximoff": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Scarlet Witch, Wanda Maximoff",
+          "kind": "keyword",
+          "text": "Menace (This creature can't be blocked except by two or more creatures.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Scattershot": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Scattershot",
+          "kind": "spell",
+          "text": "Scattershot deals 1 damage to target creature.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Scattershot",
+          "kind": "keyword",
+          "text": "Storm (When you cast this spell, copy it for each spell cast before it this turn. You may choose new targets for the copies.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Scavenger Grounds": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Scavenger Grounds",
+          "kind": "activated",
+          "text": "{T}: Add {C}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Scavenger Grounds",
+          "kind": "activated",
+          "text": "{2}, {T}, Sacrifice a Desert: Exile all graveyards.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Scourge of the Throne": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Scourge of the Throne",
+          "kind": "keyword",
+          "text": "Flying",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Scourge of the Throne",
+          "kind": "keyword",
+          "text": "Dethrone",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Scourge of the Throne",
+          "kind": "triggered",
+          "text": "Whenever this creature attacks for the first time each turn, if it's attacking the player with the most life or tied for most life, untap all attacking creatures. After this phase, there is an additional combat phase.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Scroll Rack": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Scroll Rack",
+          "kind": "activated",
+          "text": "{1}, {T}: Exile any number of cards from your hand face down. Put that many cards from the top of your library into your hand. Then look at the exiled cards and put them on top of your library in any order.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Sea Eagle": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Sea Eagle",
+          "kind": "keyword",
+          "text": "Flying",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Seer's Lantern": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Seer's Lantern",
+          "kind": "activated",
+          "text": "{T}: Add {C}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Seer's Lantern",
+          "kind": "activated",
+          "text": "{2}, {T}: Scry 1. (Look at the top card of your library. You may put that card on the bottom.)",
+          "mana": false,
+          "activated": 1,
+          "triggered": 0,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-1"
+          ]
+        }
+      ]
+    },
+    "Shield-Wall Sentinel": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Shield-Wall Sentinel",
+          "kind": "keyword",
+          "text": "Defender",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Shield-Wall Sentinel",
+          "kind": "triggered",
+          "text": "When this creature enters, you may search your library for a creature card with defender, reveal it, put it into your hand, then shuffle.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 1,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-1"
+          ]
+        }
+      ]
+    },
+    "Shifting Wall": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Shifting Wall",
+          "kind": "keyword",
+          "text": "Defender (This creature can't attack.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Shifting Wall",
+          "kind": "replacement",
+          "text": "This creature enters with X +1/+1 counters on it.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Silver Shroud Costume": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Silver Shroud Costume",
+          "kind": "keyword",
+          "text": "Flash",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Silver Shroud Costume",
+          "kind": "triggered",
+          "text": "When this Equipment enters, attach it to target creature you control. That creature gains shroud until end of turn.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Silver Shroud Costume",
+          "kind": "static",
+          "text": "Equipped creature can't be blocked.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[3]",
+          "runtimeId": "a3",
+          "face": "Silver Shroud Costume",
+          "kind": "activated",
+          "text": "Equip {3}",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Skycoach Waypoint": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Skycoach Waypoint",
+          "kind": "activated",
+          "text": "{T}: Add {C}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Skycoach Waypoint",
+          "kind": "activated",
+          "text": "{3}, {T}: Target creature becomes prepared. (Only creatures with prepare spells can become prepared.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Skysovereign, Consul Flagship": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Skysovereign, Consul Flagship",
+          "kind": "keyword",
+          "text": "Flying",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Skysovereign, Consul Flagship",
+          "kind": "triggered",
+          "text": "Whenever Skysovereign enters or attacks, it deals 3 damage to target creature or planeswalker an opponent controls.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 1,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-2"
+          ]
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Skysovereign, Consul Flagship",
+          "kind": "triggered",
+          "text": "Whenever Skysovereign enters or attacks, it deals 3 damage to target creature or planeswalker an opponent controls.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[3]",
+          "runtimeId": "a3",
+          "face": "Skysovereign, Consul Flagship",
+          "kind": "keyword",
+          "text": "Crew 3",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Slith Bloodletter": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Slith Bloodletter",
+          "kind": "triggered",
+          "text": "Whenever this creature deals combat damage to a player, put a +1/+1 counter on it.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 3,
+          "resolved": 3,
+          "scenarios": [],
+          "games": [
+            "pool-2"
+          ]
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Slith Bloodletter",
+          "kind": "activated",
+          "text": "{1}{B}: Regenerate this creature.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Spinerock Knoll": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Spinerock Knoll",
+          "kind": "keyword",
+          "text": "Hideaway 4",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Spinerock Knoll",
+          "kind": "replacement",
+          "text": "This land enters tapped.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Spinerock Knoll",
+          "kind": "activated",
+          "text": "{T}: Add {R}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[3]",
+          "runtimeId": "a3",
+          "face": "Spinerock Knoll",
+          "kind": "activated",
+          "text": "{R}, {T}: You may play the exiled card without paying its mana cost if an opponent was dealt 7 or more damage this turn.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Springleaf Drum": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Springleaf Drum",
+          "kind": "activated",
+          "text": "{T}, Tap an untapped creature you control: Add one mana of any color.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Stormscape Familiar": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Stormscape Familiar",
+          "kind": "keyword",
+          "text": "Flying",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Stormscape Familiar",
+          "kind": "static",
+          "text": "White spells and black spells you cast cost {1} less to cast.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Suspicious Bookcase": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Suspicious Bookcase",
+          "kind": "keyword",
+          "text": "Defender",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Suspicious Bookcase",
+          "kind": "activated",
+          "text": "{3}, {T}: Target creature can't be blocked this turn.",
+          "mana": false,
+          "activated": 2,
+          "triggered": 0,
+          "resolved": 2,
+          "scenarios": [],
+          "games": [
+            "pool-2"
+          ]
+        }
+      ]
+    },
+    "Swamp": {
+      "cast": 0,
+      "played": 6,
+      "resolved": 6,
+      "exercised": 2,
+      "games": [
+        "pool-1",
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Swamp",
+          "kind": "activated",
+          "text": "{T}: Add {B}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Szarel, Genesis Shepherd": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Szarel, Genesis Shepherd",
+          "kind": "keyword",
+          "text": "Flying",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Szarel, Genesis Shepherd",
+          "kind": "static",
+          "text": "You may play lands from your graveyard.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Szarel, Genesis Shepherd",
+          "kind": "triggered",
+          "text": "Whenever you sacrifice another nontoken permanent during your turn, put a number of +1/+1 counters equal to Szarel's power on up to one other target creature.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Tekuthal, Inquiry Dominus": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Tekuthal, Inquiry Dominus",
+          "kind": "keyword",
+          "text": "Flying",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Tekuthal, Inquiry Dominus",
+          "kind": "static",
+          "text": "If you would proliferate, proliferate twice instead.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Tekuthal, Inquiry Dominus",
+          "kind": "activated",
+          "text": "{1}{U/P}{U/P}, Remove three counters from among other artifacts, creatures, and planeswalkers you control: Put an indestructible counter on Tekuthal.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Tenth District Guard": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Tenth District Guard",
+          "kind": "triggered",
+          "text": "When this creature enters, target creature gets +0/+1 until end of turn.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 1,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-2"
+          ]
+        }
+      ]
+    },
+    "Terramorphic Expanse": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Terramorphic Expanse",
+          "kind": "activated",
+          "text": "{T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.",
+          "mana": false,
+          "activated": 1,
+          "triggered": 0,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-1"
+          ]
+        }
+      ]
+    },
+    "Thassa, Deep-Dwelling": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Thassa, Deep-Dwelling",
+          "kind": "keyword",
+          "text": "Indestructible",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Thassa, Deep-Dwelling",
+          "kind": "static",
+          "text": "As long as your devotion to blue is less than five, Thassa isn't a creature.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Thassa, Deep-Dwelling",
+          "kind": "triggered",
+          "text": "At the beginning of your end step, exile up to one other target creature you control, then return that card to the battlefield under your control.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 4,
+          "resolved": 4,
+          "scenarios": [],
+          "games": [
+            "pool-1"
+          ]
+        },
+        {
+          "path": "abilities[3]",
+          "runtimeId": "a3",
+          "face": "Thassa, Deep-Dwelling",
+          "kind": "activated",
+          "text": "{3}{U}: Tap another target creature.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "The Grey Havens": {
+      "cast": 0,
+      "played": 2,
+      "resolved": 2,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "The Grey Havens",
+          "kind": "triggered",
+          "text": "When The Grey Havens enters, scry 1.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 2,
+          "resolved": 2,
+          "scenarios": [],
+          "games": [
+            "pool-3"
+          ]
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "The Grey Havens",
+          "kind": "activated",
+          "text": "{T}: Add {C}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "The Grey Havens",
+          "kind": "activated",
+          "text": "{T}: Add one mana of any color among legendary creature cards in your graveyard.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Thespian's Stage": {
+      "cast": 0,
+      "played": 2,
+      "resolved": 2,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Thespian's Stage",
+          "kind": "activated",
+          "text": "{T}: Add {C}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Thespian's Stage",
+          "kind": "activated",
+          "text": "{2}, {T}: This land becomes a copy of target land, except it has this ability.",
+          "mana": false,
+          "activated": 1,
+          "triggered": 0,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-2"
+          ]
+        }
+      ]
+    },
+    "Three Tree City": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Three Tree City",
+          "kind": "replacement",
+          "text": "As Three Tree City enters, choose a creature type.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Three Tree City",
+          "kind": "activated",
+          "text": "{T}: Add {C}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Three Tree City",
+          "kind": "activated",
+          "text": "{2}, {T}: Choose a color. Add an amount of mana of that color equal to the number of creatures you control of the chosen type.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Tomakul Honor Guard": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Tomakul Honor Guard",
+          "kind": "keyword",
+          "text": "Ward {2} (Whenever this creature becomes the target of a spell or ability an opponent controls, counter it unless that player pays {2}.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Ugin, the Ineffable": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Ugin, the Ineffable",
+          "kind": "static",
+          "text": "Colorless spells you cast cost {2} less to cast.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Ugin, the Ineffable",
+          "kind": "activated",
+          "text": "+1: Exile the top card of your library face down and look at it. Create a 2/2 colorless Spirit creature token. When that token leaves the battlefield, put the exiled card into your hand.",
+          "mana": false,
+          "activated": 1,
+          "triggered": 0,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-2"
+          ]
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Ugin, the Ineffable",
+          "kind": "activated",
+          "text": "\u22123: Destroy target permanent that's one or more colors.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Urza's Tower": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Urza's Tower",
+          "kind": "activated",
+          "text": "{T}: Add {C}. If you control an Urza's Mine and an Urza's Power-Plant, add {C}{C}{C} instead.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Vampire Revenant": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Vampire Revenant",
+          "kind": "keyword",
+          "text": "Flying",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Verdant Catacombs": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Verdant Catacombs",
+          "kind": "activated",
+          "text": "{T}, Pay 1 life, Sacrifice this land: Search your library for a Swamp or Forest card, put it onto the battlefield, then shuffle.",
+          "mana": false,
+          "activated": 1,
+          "triggered": 0,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-3"
+          ]
+        }
+      ]
+    },
+    "Viridian Joiner": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Viridian Joiner",
+          "kind": "activated",
+          "text": "{T}: Add an amount of {G} equal to this creature's power.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Walking Ballista": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Walking Ballista",
+          "kind": "replacement",
+          "text": "This creature enters with X +1/+1 counters on it.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Walking Ballista",
+          "kind": "activated",
+          "text": "{4}: Put a +1/+1 counter on this creature.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Walking Ballista",
+          "kind": "activated",
+          "text": "Remove a +1/+1 counter from this creature: It deals 1 damage to any target.",
+          "mana": false,
+          "activated": 1,
+          "triggered": 0,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-3"
+          ]
+        }
+      ]
+    },
+    "Well of Lost Dreams": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Well of Lost Dreams",
+          "kind": "triggered",
+          "text": "Whenever you gain life, you may pay {X}, where X is less than or equal to the amount of life you gained. If you do, draw X cards.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Winter, Team Player": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Winter, Team Player",
+          "kind": "keyword",
+          "text": "Convoke",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Winter, Team Player",
+          "kind": "triggered",
+          "text": "Whenever you cast a noncreature spell, creatures you control get +1/+0 until end of turn.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Witch's Clinic": {
+      "cast": 0,
+      "played": 2,
+      "resolved": 2,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Witch's Clinic",
+          "kind": "activated",
+          "text": "{T}: Add {C}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Witch's Clinic",
+          "kind": "activated",
+          "text": "{2}, {T}: Target commander gains lifelink until end of turn.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Wolfir Avenger": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-1"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Wolfir Avenger",
+          "kind": "keyword",
+          "text": "Flash (You may cast this spell any time you could cast an instant.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Wolfir Avenger",
+          "kind": "activated",
+          "text": "{1}{G}: Regenerate this creature.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    },
+    "Wooded Foothills": {
+      "cast": 0,
+      "played": 1,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-2"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Wooded Foothills",
+          "kind": "activated",
+          "text": "{T}, Pay 1 life, Sacrifice this land: Search your library for a Mountain or Forest card, put it onto the battlefield, then shuffle.",
+          "mana": false,
+          "activated": 1,
+          "triggered": 0,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-2"
+          ]
+        }
+      ]
+    },
+    "Xenagos, God of Revels": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Xenagos, God of Revels",
+          "kind": "keyword",
+          "text": "Indestructible",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Xenagos, God of Revels",
+          "kind": "static",
+          "text": "As long as your devotion to red and green is less than seven, Xenagos isn't a creature.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Xenagos, God of Revels",
+          "kind": "triggered",
+          "text": "At the beginning of combat on your turn, another target creature you control gains haste and gets +X/+X until end of turn, where X is that creature's power.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 1,
+          "resolved": 1,
+          "scenarios": [],
+          "games": [
+            "pool-3"
+          ]
+        }
+      ]
+    },
+    "Zodiac Tiger": {
+      "cast": 1,
+      "played": 0,
+      "resolved": 1,
+      "exercised": 1,
+      "games": [
+        "pool-3"
+      ],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Zodiac Tiger",
+          "kind": "keyword",
+          "text": "Forestwalk (This creature can't be blocked as long as defending player controls a Forest.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": []
+        }
+      ]
+    }
+  }
+}

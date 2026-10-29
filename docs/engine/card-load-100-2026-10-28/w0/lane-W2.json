@@ -15,5 +15,67 @@
     "| \"Up to N targets\" spells cast free or by an effect: left out | `asking.mjs`:2326 (NAMED) | W2 |",
     "| Unsure, to be settled by a scenario: Song of the Dryads and Sagas under ability loss; Incubator copies single-faced; Social Snub's copy; Winter's prompt and a draw-two cost under Narset | `rules/layers.mjs`:870; `permanents.mjs`:644; `actions.mjs` | V8 finds, W1/W6/W2/W7 fix |"
   ],
-  "status": "queued; prerequisite PR 834 verification in progress"
+  "status": "bounded checkpoint: counted copies/effect casts, face-down exile and wishes fixed; true pre-entry Mimic/Clone choices queued; no wave or gate completion claimed",
+  "sourceBase": "5fc78a95347bafef7c4f7f830a919a54ff30a5fb",
+  "foundation": {
+    "commit": "b2ba9343e4316c618f5b49f8bfec5df5374d0583",
+    "merge": "e35dfb0943ed12ffcffe1c2c12a950425e4cc30e",
+    "authorization": "Root-reviewed foundation-only dependency exception; no W3 domain work merged."
+  },
+  "written": 0,
+  "promoted": 0,
+  "fixed": [
+    {
+      "rule": "CR 601.2c, 115.3, 115.7d, 707.10c",
+      "behavior": "Counted spell and ability copies offer the original target count; unchanged illegal targets can be kept; newly chosen targets retain shared type, distinct instance, different-controller, opponent and mana-value restrictions. Independent copies and reloads retain their own answers."
+    },
+    {
+      "rule": "CR 115.1, 702.21a, 707.10c",
+      "behavior": "Copies report becoming targets once their final targets are selected, including targets kept from the original. Ward can counter a spell or ability copy whose targets were kept."
+    },
+    {
+      "rule": "CR 601.2c, 608.2g",
+      "behavior": "Free/effect casts offer counted target placeholders and ask every target instance before paying or moving the card; containing effects resume once. Land plays with no spell target list retain their path."
+    },
+    {
+      "rule": "CR 406.3a-b, 708.4",
+      "behavior": "A player allowed to look at a face-down exiled morph/disguise card can cast it face down through the applicable permission, weighed as its face-down characteristics, with no identity leaked to other views."
+    },
+    {
+      "rule": "Rob October 28, 2026; ROB-198",
+      "behavior": "readDeck refuses Cunning Wish and Extrapolate the Impossible in ordinary and playtest decks, by name with outside-game reason and removal instruction, even if the card lookup supplies a definition."
+    }
+  ],
+  "queued": [
+    {
+      "debt": "Metallic Mimic and copy-as-enter choices before entry; copy of a copy",
+      "requires": "W3 explicit rule-operation move-one consumer plus W2 entering frame (kind entering) returning {entering,objectPatch}; apply patch to new object after moveObject but before ETB events/counters. W2 also needs explicit finishTop, played-land and makeToken continuations. No replay or post-entry workaround."
+    },
+    {
+      "debt": "Social Snub unsure copy case",
+      "evidence": "Bounded actual-card cast/optional-copy probe passed on current source; full three/four-player sacrifice-order case remains for V8/W7. No engine change or all-ability credit claimed."
+    },
+    {
+      "debt": "Additional follow-up questions on an effect cast",
+      "requires": "Cold-review a counted spell that also divides damage or opens choose-cost; this checkpoint proves target selection, not every perform() follow-up. W5 owns broader effect-paid additional/X work. Required before lane completion; no exemption or ignore granted."
+    }
+  ],
+  "proof": {
+    "regressionSuite": "node --stack-size=4000 tests/engine-load100-w2-stack.mjs: 57 checks passed",
+    "mutations": "Final initial file: 29 caught, missed: []; one added duplicate-opponent restriction mutation caught separately on the strengthened 57-check suite, missed: []. Total 30 unique W2 mutations.",
+    "baseline": "On source 5fc78a95, selected copy/effect/wish/faceDown sections all exit 1. Wish baseline accepts the supplied lookup card (Missing expected rejection). Original copy-ward probe had zero targeting events. Distinct/opponent/mana-value edges were reproduced failing before their corrections.",
+    "assertionCorrection": {
+      "file": "tests/engine-targets-up-to.mjs",
+      "before": "eq(castChoicesNow(...), [], named: a spell with a counted target is not cast as an effect resolves yet)",
+      "after": "Exact targets [{kind:choose,min:0,max:2,of:3}] in one offer, plus real effect-cast resolution cases in the new suite. CR 601.2c/608.2g requires asking targets, not omitting the cast. Other assertions retained."
+    },
+    "readers": "targets-up-to44, adventure-targets15, copy-spell24, face-down-play52, disguise46, ward20, ability-target23, play12, adventure67, cant-cast14, split-second17, x11-memory57, x11-pay-x22, rule-operations75, game-table182, data-integrity and feature-wiring131 passed.",
+    "globalAnchors": "53 inherited problems; zero new, including zero W2 anchors. python -u game/tools/batch/breaks.py game/tools/batch/breaks-w4d-l1-stack.py \"an ability's copy keeps its targets\": baseline green, caught by tests/engine-cards.mjs, missed: [].",
+    "fullCardDiagnostic": "node --stack-size=4000 game/tools/batch/check-cards.mjs: 6430 definitions; 11023 scenarios, 0 failed (legacy diagnostic, not G-3 ability coverage)",
+    "scan": "Publication requires tools/local-ci.sh HEAD 0 SCAN PASS; the exact-head scan result is recorded in the draft PR and parent hand-back.",
+    "inventory": "node tools/data-inventory.mjs --check: docs/data-inventory.md matches repository (60 artifacts); no inventory diff.",
+    "lane": "node --stack-size=4000 tools/library-engine-index.mjs --check-lane docs/engine/card-load-100-2026-10-28/w0/lane-W2.json: W2: 0 of 0 final"
+  },
+  "privacyGuard": "Explicit mayLookAt guard retained as defense in depth. Lower permits() already refuses non-viewers. Auto-review rejected its removal; safer guarded implementation retained. Authorized-viewer inversion mutation catches loss of a legal offer; no claim that this guard independently fixes an existing leak.",
+  "rulingsCache": "C:/Users/robmi/CrankMagic/worktrees/load100/scratch/w2-rulings (Force of Vigor, Displace, Metallic Mimic, Clone, Gandalf/Flameshape, Social Snub; public Scryfall card+rulings, cached)."
 }

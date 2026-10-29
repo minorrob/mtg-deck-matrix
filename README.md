@@ -955,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 651 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 663 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -972,6 +972,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `feedback-store` — `tests/feedback-store.mjs`
 - `feedback-triage` — `tests/feedback-triage.mjs`
 - `card-compiler` — `tests/card-compiler.mjs`
+- `engine-load-scope` — `tests/engine-load-scope.mjs`: freeze the 95% deck-appearance cutoff and require playable finals for included names
 - `card-waves` — `tests/card-waves.mjs`
 - `cloud-sync` — `tests/cloud-sync.mjs`
 - `commander-legality` — `tests/commander-legality.mjs`
@@ -1030,6 +1031,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-actions` — `tests/engine-actions.mjs`
 - `engine-cast` — `tests/engine-cast.mjs`
 - `engine-combat` — `tests/engine-combat.mjs`
+- `engine-load100-w0-combat` — `tests/engine-load100-w0-combat.mjs`
+- `engine-mana-upkeep` — `tests/engine-mana-upkeep.mjs`
 - `engine-commander` — `tests/engine-commander.mjs`
 - `engine-controller` — `tests/engine-controller.mjs`
 - `engine-effects` — `tests/engine-effects.mjs`
@@ -1047,6 +1050,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-projection` — `tests/engine-projection.mjs`
 - `engine-replacement` — `tests/engine-replacement.mjs`
 - `engine-resolution` — `tests/engine-resolution.mjs`
+- `engine-rule-operations` — `tests/engine-rule-operations.mjs`
+- `engine-load100-w3-graveyard` — `tests/engine-load100-w3-graveyard.mjs`
 - `engine-rng` — `tests/engine-rng.mjs`
 - `engine-runtime` — `tests/engine-runtime.mjs`
 - `engine-sba` — `tests/engine-sba.mjs`
@@ -1150,6 +1155,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-ingest` — `tests/engine-ingest.mjs`
 - `engine-learned` — `tests/engine-learned.mjs`
 - `engine-mana-abilities` — `tests/engine-mana-abilities.mjs`
+- `engine-mana-upkeep` — `tests/engine-mana-upkeep.mjs`
 - `engine-exile-commanders` — `tests/engine-exile-commanders.mjs` (Quintorius and Maralen linked exile, free casting and owner choices)
 - `engine-faerie-interactions` — `tests/engine-faerie-interactions.mjs` (second-card draws, Spellstutter's live Faerie count and Winnower's unequal power/toughness targets)
 - `engine-chulane-completion` — `tests/engine-chulane-completion.mjs` (Guardian Project, Yavimaya Dryad, Claim Jumper)
@@ -1179,6 +1185,11 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `shop-export` — `tests/shop-export.mjs`
 - `sim-engine` — `tests/sim-engine.mjs`
 - `sentence-library` — `tests/sentence-library.mjs`
+- `sentence-load100-w0` — `tests/sentence-load100-w0.mjs`
+- `sentence-paragraphs` — `tests/sentence-paragraphs.mjs`: complete unfinished abilities and independent keywords (CR 113.2c)
+- `engine-load100-tokens` — `tests/engine-load100-tokens.mjs`: departed-spell copies, double-faced token copies, and copied preparation definitions
+- `load100-w7-compiler` — `tests/load100-w7-compiler.mjs`: compiler smoke must actually play its candidate, and calibrated template counts are enforced
+- `engine-load100-w7-spells` — `tests/engine-load100-w7-spells.mjs`: APNAP draws, Collector before individual replacements, doubler/dredge choices, and die-roll triggers
 - `status-and-groupings` — `tests/status-and-groupings.mjs`
 - `swap-record` — `tests/swap-record.mjs`
 - `slot-model` — `tests/slot-model.mjs`
@@ -1315,6 +1326,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-rules-conformance` — `tests/engine-rules-conformance.mjs`
 - `engine-room-games` — `tests/engine-room-games.mjs`
 - `engine-targets-up-to` — `tests/engine-targets-up-to.mjs`
+- `engine-load100-w2-stack` — `tests/engine-load100-w2-stack.mjs`
 - `engine-afterlife-tokens` — `tests/engine-afterlife-tokens.mjs`
 - `engine-turn-records` — `tests/engine-turn-records.mjs`
 - `engine-escape` — `tests/engine-escape.mjs`
@@ -1334,6 +1346,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-cards-pb9` — `tests/engine-cards-pb9.mjs`
 - `engine-amass` — `tests/engine-amass.mjs`
 - `engine-convoke` — `tests/engine-convoke.mjs`
+- `engine-load100-mana` — `tests/engine-load100-mana.mjs`
+- `library-engine-pool` — `tests/library-engine-pool.mjs`
 - `engine-storied` — `tests/engine-storied.mjs`
 - `engine-evoke` — `tests/engine-evoke.mjs`
 - `engine-mana-spent` — `tests/engine-mana-spent.mjs`
@@ -1421,6 +1435,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-exchange-life` - `tests/engine-exchange-life.mjs`
 - `engine-damage-each` - `tests/engine-damage-each.mjs`
 - `engine-designations` - `tests/engine-designations.mjs`
+- `engine-load100-w1-faces` — `tests/engine-load100-w1-faces.mjs`: actual emblem and copied preparation behavior
 - `engine-prepare` - `tests/engine-prepare.mjs`
 - `engine-connive-memory` - `tests/engine-connive-memory.mjs`
 - `engine-block-designation-triggers` - `tests/engine-block-designation-triggers.mjs`

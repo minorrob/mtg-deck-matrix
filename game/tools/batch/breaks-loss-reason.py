@@ -11,6 +11,8 @@ Run from the repository root, with nothing else editing the worktree:
 SUITES = ['tests/room-ending.mjs', 'tests/table-record.mjs', 'tests/room-slices.mjs', 'tests/game-leave.mjs']
 E = 'game/room/ending.mjs'
 R = 'game/room/room.mjs'
+# The seated view, present before the later spectator view added a second endingOf call.
+SEATED = '          /* And how it ended, as data (ending.mjs; Linear ROB-166): who lost and why, beside the words, which stay as they were. */\n'
 BREAKS = [
     # Each seat's outcome
     ('the winner not said to have won', E,
@@ -79,12 +81,12 @@ BREAKS = [
      'outs = record.outs || [];',
      'outs = [];'),
     ('no ending in the result', R,
-     '          ending: endingOf({over, ended, seats, players: state.players, departures, outs})} : null,',
-     '          } : null,'),
+     SEATED + '          ending: endingOf({over, ended, seats, players: state.players, departures, outs})} : null,',
+     SEATED + '          } : null,'),
     ('the room\'s departures not read for the ending', R,
-     'endingOf({over, ended, seats, players: state.players, departures, outs})',
-     'endingOf({over, ended, seats, players: state.players, departures: {}, outs})'),
+     SEATED + '          ending: endingOf({over, ended, seats, players: state.players, departures, outs})',
+     SEATED + '          ending: endingOf({over, ended, seats, players: state.players, departures: {}, outs})'),
     ('the room\'s own end not read for the ending', R,
-     'endingOf({over, ended, seats, players: state.players, departures, outs})',
-     'endingOf({over, seats, players: state.players, departures, outs})'),
+     SEATED + '          ending: endingOf({over, ended, seats, players: state.players, departures, outs})',
+     SEATED + '          ending: endingOf({over, seats, players: state.players, departures, outs})'),
 ]

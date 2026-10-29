@@ -176,6 +176,8 @@ const step = (s, phase, limit = 40) => {
   step(s, "COMBAT_DECLARE_BLOCKERS");
   resolveAwaiting(s, [0]);
   step(s, "COMBAT_DAMAGE");
+  eq(s.awaiting?.kind, "assign-combat-damage", "the trampler's controller chooses how much goes through");
+  resolveAwaiting(s, [], [1, 4]);
   eq(named(s, "Chump").length, 0, "the blocker dies");
   eq(s.players[1].life, 36,
     "and the four over lethal go to the player — a 5/5 trampler into a 1/1 is one damage assigned and four through");
@@ -333,6 +335,8 @@ const attackWith = (s, name) => {
   attackWith(s, "Trampling Wall");
   resolveAwaiting(s, [awaitingChoice(s).options.findIndex((o) => o.label.startsWith("Bear"))]);
   step(s, "COMBAT_DAMAGE");
+  eq(s.awaiting?.kind, "assign-combat-damage", "the toughness-based trampler is asked for its division too");
+  resolveAwaiting(s, [], [2, 4]);
   eq(s.players[1].life, 36, "trample's excess is counted from the same amount: a 1/6 trampler by toughness puts two on a 2/2 and four through");
 }
 

@@ -49,8 +49,9 @@ def NOT_KOMA(anchor):
 
 
 OWN_LOYALTY = '''  if ((types ?? []).includes("Planeswalker") && Number.isInteger(loyalty)) counters.loyalty = (counters.loyalty ?? 0) + loyalty;
-  return {tapped: proposal.tapped === true, counters, asks: withChoiceCounters(proposal)};'''
-COPY_KEYS = '"abilities", "power", "toughness", "loyalty", "spell", "enchant"]);'
+  /* Copied preparation cards also enter with their designation (CR 614.12, 722.3a). */
+  return {tapped: proposal.tapped === true, counters, asks: withChoiceCounters(proposal), designations: proposal.designations ?? []};'''
+COPY_KEYS = '"abilities", "power", "toughness", "loyalty", "spell", "enchant", "preparation"]);'
 RELATED = '''  return Boolean(first) && !Array.isArray(first) && first.kind === "object" && state.objects[first.id]?.zone === "battlefield"
     && candidate?.kind === "object" && state.objects[candidate.id]?.owner === controllerOf(state, first.id);'''
 
@@ -63,10 +64,10 @@ BREAKS = [
      '        if (true)\n'),
     ('spark: counters said', ENTERING, '        if (object.counters[counter] > was) events.push(', '        if (false) events.push('),
     # A planeswalker copied: its loyalty a copiable value (CR 707.2), and that many counters as it enters (CR 306.5b).
-    ('copied planeswalker: loyalty counters', REPLACEMENT, OWN_LOYALTY, '  return {tapped: proposal.tapped === true, counters, asks: withChoiceCounters(proposal)};'),
+    ('copied planeswalker: loyalty counters', REPLACEMENT, OWN_LOYALTY, '  return {tapped: proposal.tapped === true, counters, asks: withChoiceCounters(proposal), designations: proposal.designations ?? []};'),
     ('copiable: loyalty', PERMANENTS, '    ...(Number.isInteger(object.loyalty) ? {loyalty: object.loyalty} : {}),\n    ...(object.spell', '    ...(object.spell'),
-    ('COPY_KEYS: loyalty', STATE, COPY_KEYS, '"abilities", "power", "toughness", "spell", "enchant"]);'),
-    ('last known copiable: loyalty', LAYERS, COPY_KEYS, '"abilities", "power", "toughness", "spell", "enchant"]);'),
+    ('COPY_KEYS: loyalty', STATE, COPY_KEYS, '"abilities", "power", "toughness", "spell", "enchant", "preparation"]);'),
+    ('last known copiable: loyalty', LAYERS, COPY_KEYS, '"abilities", "power", "toughness", "spell", "enchant", "preparation"]);'),
     # Hunter's Insight: a delayed trigger waits on the damage's source (CR 603.7c).
     ('delayed watch: the damage source', TRIGGER,
      '      const watched = d.on.on === "GameEventPlayerDamaged" ? event.data?.fields?.source?.cardId : event.data?.fields?.card?.cardId;',

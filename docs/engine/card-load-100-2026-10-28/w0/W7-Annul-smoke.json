@@ -1,0 +1,92 @@
+{
+  "storedSmoke": {
+    "played": false,
+    "resolved": 1
+  },
+  "correctedSmoke": {
+    "ok": true,
+    "error": null,
+    "problems": [],
+    "played": true,
+    "resolved": 2
+  },
+  "events": [
+    {
+      "kind": "GameEventSpellAbilityCast",
+      "fields": {
+        "card": {
+          "cardId": 51,
+          "name": "Smoke Artifact Spell",
+          "owner": 1,
+          "controller": 1,
+          "faceDown": false
+        },
+        "sa": {
+          "isSpell": true,
+          "abilityId": null,
+          "stackId": 1
+        },
+        "si": {
+          "isTrigger": false,
+          "actor": {
+            "playerId": 1,
+            "name": "Maya"
+          }
+        },
+        "targetDescription": "",
+        "castFrom": "hand"
+      }
+    },
+    {
+      "kind": "GameEventSpellAbilityCast",
+      "fields": {
+        "card": {
+          "cardId": 45,
+          "name": "Annul",
+          "owner": 0,
+          "controller": 0,
+          "faceDown": false
+        },
+        "sa": {
+          "isSpell": true,
+          "abilityId": null,
+          "stackId": 2
+        },
+        "si": {
+          "isTrigger": false,
+          "actor": {
+            "playerId": 0,
+            "name": "Rob"
+          }
+        },
+        "targetDescription": "Smoke Artifact Spell",
+        "castFrom": "hand"
+      }
+    },
+    {
+      "kind": "GameEventSpellResolved",
+      "fields": {
+        "stackId": 1,
+        "abilityId": null,
+        "playerId": 1,
+        "kind": "spell",
+        "countered": true,
+        "hasFizzled": false
+      }
+    },
+    {
+      "kind": "GameEventSpellResolved",
+      "fields": {
+        "stackId": 2,
+        "abilityId": null,
+        "card": {
+          "cardId": 54,
+          "name": "Annul"
+        },
+        "playerId": 0,
+        "kind": "spell",
+        "hasFizzled": false
+      }
+    }
+  ]
+}

@@ -151,6 +151,9 @@ function to(s, phase, turn = s.turn) {
   attack(s, ["Loot, the Anomaly"]);
   for (let n = 0; n < 40 && s.awaiting?.kind !== "declare-blockers"; n += 1) { if (s.awaiting) { resolveAwaiting(s, []); continue; } if (passPriority(s).outcome === "step-ends") advance(s); }
   resolveAwaiting(s, [0]);
+  to(s, "COMBAT_DAMAGE");
+  eq([s.awaiting?.kind, awaitingChoice(s).total], ["assign-combat-damage", 2], "Loot's controller is asked for the trample division");
+  resolveAwaiting(s, [], [1, 1]);
   to(s, "MAIN2");
   eq([idOf(s, "Squire", 1) ?? null, s.players[1].life], [null, 39], "with trample, blocked by the Squire: 1 to it and 1 to Maya");
   eq(STATIC_RULES["negative-power-as-positive"], "rules/combat.mjs", "a rule rules/combat.mjs reads");

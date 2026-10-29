@@ -15,7 +15,7 @@ import assert from "node:assert/strict";
 import {randomUUID} from "node:crypto";
 import {createRng} from "../game/engine/rng.mjs";
 import {randomLegalPilot} from "../game/engine/pilots/random-legal.mjs";
-import {memoryStorage} from "../game/engine/storage.mjs";
+import {memoryStorage, createMatchStore} from "../game/engine/storage.mjs";
 import {basicCards} from "../game/room/room.mjs";
 import {replayTape} from "../game/room/replay.mjs";
 import {tableOn, RECORD_SCHEMA} from "../game/room/table.mjs";
@@ -89,7 +89,12 @@ async function playedTable(tableId, {playtest = false} = {}) {
   eq(Object.keys(rec).filter((k) => ["seed", "pod", "tape", "journal"].includes(k)), [], "with no seed, pod, tape or journal");
   eq(rec.view.state, room.view("s1").state, "her last view is what she was shown");
   const strings = everyString(rec);
-  ok(![...strings].some((s) => s.includes(`${matchId}:`)), "the seed is nowhere in it");
+  /* A public result id also contains matchId + ':'. Check the actual private seed, including inside wrapped strings,
+     rather than mistaking the public id for the seed. The forbidden top-level fields are checked above too. */
+  const secretSeed = (await createMatchStore(storage, matchId).loadMatch()).seed;
+  ok(typeof secretSeed === "string" && secretSeed.startsWith(`${matchId}:`), "the probe reads the actual private seed");
+  ok(![...strings].some((s) => s.includes(secretSeed)), "the seed is nowhere in it");
+  eq(rec.gameRecord.id, `game:table:${matchId}:s1`, "the public seat record id remains usable without disclosing the seed");
   const hers = room.view("s1").state, hidden = new Set();
   for (const d of [deck("ordinary01r"), deck("ordinary01c")]) for (const c of d.cards) hidden.add(c);
   const seen = everyString(hers);

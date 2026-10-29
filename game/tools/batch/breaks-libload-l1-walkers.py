@@ -68,7 +68,7 @@ BREAKS = [
      '    const holder = state.objects[id];\n    if (holder?.emblem !== true) continue;\n    for (const ability of holder.abilities ?? []) {\n      if (ability.kind !== "static" || ability.rule !== rule',
      '    const holder = state.objects[id];\n    for (const ability of holder.abilities ?? []) {\n      if (ability.kind !== "static" || ability.rule !== rule'),
     ('emblem: shown as one', PROJECTION,
-     '''    ...(object.emblem === true ? {emblem: true, text: (object.abilities ?? []).map((a) => a.text).filter(Boolean).join("\\n")} : {}),\n''', ''),
+     '''    ...(object.emblem === true ? {emblem: true, text: object.emblemOracleText ?? (object.abilities ?? []).map((a) => a.text).filter(Boolean).join("\\n")} : {}),\n''', ''),
     # ---- "prevent all but 1" (Ajani Steadfast's emblem), "to you or a planeswalker you control" ----
     ('damage watched: any one of these', REPLACEMENT,
      '  if (Array.isArray(watches.anyOf)) {\n    const {anyOf, ...rest} = watches;', '  if (false) {\n    const {anyOf, ...rest} = watches;'),

@@ -287,7 +287,7 @@ const trust = trustOf(library, calibrate({scripts, library, scenarios, definitio
   const assist = assistOf(strix, {library, trust: (id) => (/enters/.test(id) ? {ok: false} : trust(id)), except: "Baleful Strix"});
   eq([assist.known.map((a) => a.text), assist.write.map((w) => w.text)], [["Flying", "deathtouch"], ["When this creature enters, draw a card."]],
     "assisted: the library's trusted sentences written, the distrusted one left for the writer");
-  /* A keyword line's words are each an ability (CR 702.1c): deathtouch distrusted leaves Flying written. */
+  /* A keyword line's words are each an ability (CR 113.2c): deathtouch distrusted leaves Flying written. */
   const keywords = assistOf(strix, {library, trust: (id) => (/deathtouch/.test(id) ? {ok: false} : trust(id)), except: "Baleful Strix"});
   eq([keywords.known.map((a) => a.text), keywords.write.map((w) => w.text)], [["Flying", "When this creature enters, draw a card."], ["deathtouch"]],
     "a keyword line known in part: the known word written, the other asked alone");
@@ -360,14 +360,17 @@ const trust = trustOf(library, calibrate({scripts, library, scenarios, definitio
   ok(changed.size >= 3 && caught.length >= 1, `one that writes every sentence with a wrong number passes every check but its scenarios: ${changed.size} miscounted, caught in play: ${caught.map((r) => r.name).join(", ")}`);
   const capped = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: writer, examples: [], n: 3, maxCost: 0});
   ok(capped.tried === 0 && /cap/.test(capped.stopped), "the sample stops at its cap");
-  /* Every card the sample may take, asked of a writer that answers nothing (free, and refused at fidelity): never one the
-     library writes half an ability of -- Gemstone Caverns' "{T}: Add {C}." -- however the evenly spaced pick falls as the
-     directory grows (the library load's L1, 2026-10-22: sixteen more cards moved the pick off it). */
+  /* CR 113.2c: a paragraph the library knows only in part is now handed to the writer whole. Gemstone Caverns must
+     remain in the held-out sample and its correct completion must pass its scenarios; the former exclusion hid it. */
   ok(handOf("Gemstone Caverns") !== undefined, "Gemstone Caverns is defined, a card the library writes half an ability of");
+  const gemstone = await heldOutSample({scripts: [handOf("Gemstone Caverns")], scenarios, definition: index.definition,
+    oracle: ORACLE, library, trust, call: writer, examples: [], n: 1});
+  eq([gemstone.tried, gemstone.passed, gemstone.results.map((r) => r.name)], [1, 1, ["Gemstone Caverns"]],
+    "Gemstone Caverns is sampled and its complete mana ability passes every scenario");
   const asked = [];
   const silent = async (body) => { asked.push(JSON.parse(body.messages[0].content).card.name); return {answer: {abilitiesJson: "[]", notes: "", crFlags: []}, usage: {}}; };
   await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: silent, examples: [], n: scripts.length, maxCost: 1});
-  ok(asked.length > 3 && !asked.includes("Gemstone Caverns"), `the whole pool asked (${asked.length} cards), Gemstone Caverns never among them`);
+  ok(asked.length > 3 && asked.includes("Gemstone Caverns"), `the whole pool asked (${asked.length} cards), including Gemstone Caverns`);
 }
 
 console.log(`engine-compile: ${checks} checks passed — the loader's four checks held against ${scripts.length} hand definitions, every refusal at its stage, a card learned once for its text, and nothing spent without --yes.`);

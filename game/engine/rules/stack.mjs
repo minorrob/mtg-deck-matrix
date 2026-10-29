@@ -45,6 +45,7 @@ import {delayedTrigger, enterAttacking} from "../script/effects/permanents.mjs";
 import {prepare} from "../script/effects/attributes.mjs";
 import {recheckTargets, factsOf, modalScript} from "../script/bind.mjs";
 import {characteristicsOf} from "./layers.mjs";
+import {rememberDepartingSpell} from "./spell-memory.mjs";
 
 /* The projection contract (§12.1) names these zones with a capital, and the telemetry matches on
    them by name. The engine's own zone keys are lower case. */
@@ -190,15 +191,19 @@ export function pushAbility(state, {sourceId = null, controller, abilityId, kind
  * to exist (finishTop, CR 704.5e), unless it was a permanent spell that resolved: that becomes a token (CR 608.3f).
  * `nonLegendary`: "except it isn't legendary if the spell is legendary" (Double Major).
  */
-export function pushCopy(state, original, {controller, nonLegendary = false} = {}) {
-  const object = original?.objectId !== null && original?.objectId !== undefined ? state.objects[original.objectId] : null;
+export function pushCopy(state, original, {controller, nonLegendary = false, recordedSource = null} = {}) {
+  const live = original?.objectId !== null && original?.objectId !== undefined ? state.objects[original.objectId] : null;
+  /* CR 608.2h: a nontargeted reference may copy the spell as it last existed; a live original always supplies its current values. */
+  const object = live?.zone === "stack" ? live : recordedSource;
   if (!object) throw new Error("There is no spell there to copy");
   const supertypes = (object.supertypes ?? []).filter((s) => !(nonLegendary && s === "Legendary"));
   const id = addObject(state, {
     card: object.card, types: object.types, manaCost: object.manaCost, abilities: object.abilities,
     power: object.power, toughness: object.toughness, keywords: object.keywords, owner: controller, controller,
-    spell: object.spell, subtypes: object.subtypes, supertypes, colors: object.colors, colorIdentity: object.colorIdentity,
+    spell: object.spell, subtypes: object.subtypes, supertypes, colors: object.colors, colorIdentity: object.faceDown === true ? [] : object.colorIdentity,
     enchant: object.enchant, copy: true,
+    /* A preparation definition is copiable, its current prepared designation is not (CR 722.2b, 722.3). */
+    ...(object.preparation ? {preparation: structuredClone(object.preparation)} : {}),
   }, "stack", null);
   const entry = entryFor(state, {objectId: id, cardId: id, name: object.card, playerId: controller, kind: "spell",
     abilityId: original.abilityId, targets: structuredClone(original.targets ?? [])});
@@ -412,6 +417,7 @@ function paradigmResolves(state, entry) {
 function finishTop(state, entry, events, fizzled, attachTo = null) {
   /* This entry, not whatever is on top: a copy it made as it resolved is above it (pushCopy). */
   const at = state.stack.indexOf(entry);
+  rememberDepartingSpell(state, entry);
   if (at >= 0) state.stack.splice(at, 1);
 
   /* PARADIGM'S TWO SPELL ABILITIES (CR 702.192a), the last of the spell's resolution: one that did not resolve does neither. */

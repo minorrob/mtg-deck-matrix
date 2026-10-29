@@ -3,8 +3,8 @@
 /* M4 PHASE 3, BATCH 45 (THE CATALOG'S ORDER): PLAYING FROM ANOTHER ZONE (Forge's MayPlay), IN THE FORMS ITS CARDS NEED.
  *
  * "Once during each of your turns, you may cast an instant or sorcery spell from your graveyard" (Kess): a permission
- * open only on its holder's turns, spent on its source when a card is played through it -- each source its own -- and a
- * permission with no limit used first, so a limited one is spent only when it must be. "If a spell cast this way would be
+ * open only on its holder's turns, spent on its source when a card is played through it -- each source its own -- and
+ * the player chooses which permission to use when more than one is open. "If a spell cast this way would be
  * put into your graveyard, exile it instead": resolved or countered, exiled; returned to a hand, not (unlike flashback).
  * And "you may pay {1}. If you do, ...": the payment's other side.
  */
@@ -90,13 +90,14 @@ const keyOf = (s, id) => `play-from:${s.objects[id].abilities.find((a) => a.rule
   eq(zoneNames(fromHand, "graveyard", 0), ["Gift"], "cast from his hand: to the graveyard, and Kess's use unspent");
 }
 {
-  /* A permission with no limit first: Kess's use is spent only when nothing else lets him. */
+  /* The player explicitly chooses the unlimited permission, leaving Kess's use available. */
   const s = main(table());
   const kess = put(s, card("Kess, Dissident Mage"), 0, "battlefield");
   put(s, {card: "Conduit", types: ["Artifact"], abilities: [{id: "p", kind: "static", text: "You may cast spells from your graveyard.", rule: "play-from", affects: {what: "player", who: "you"}, zone: "graveyard", spells: true}]}, 0, "battlefield");
   put(s, GIFT, 0, "graveyard");
   pool(s, 0, {C: 1});
-  applyAction(s, 0, casts(s, 0, "Gift")[0]);
+  eq(casts(s, 0, "Gift").map(a => a.viaName).sort(), ["Conduit", "Kess, Dissident Mage"], "both permissions are offered, including the limited one");
+  applyAction(s, 0, casts(s, 0, "Gift").find(a => a.viaName === "Conduit"));
   eq([usesThisTurn(s, kess, keyOf(s, kess)), s.stack.at(-1).graveyardToExile], [0, undefined], "cast through the unlimited permission: Kess unspent, and nothing to exile");
   /* A land permission with a limit is spent the same way. */
   const t = main(table());
@@ -128,4 +129,4 @@ const keyOf = (s, id) => `play-from:${s.objects[id].abilities.find((a) => a.rule
     "MayPlay stays unbuilt in the catalog: a replacement's exile kept against its source from anywhere (Valgavoth), a permission's additional cost other than a sacrifice (Quilled Greatwurm) and a card castable from one zone only (Haakon) are not built (tests/engine-play-from-zones.mjs)");
 }
 
-console.log(`engine-play-from: ${checks} checks passed — once during each of your turns, per source, an unlimited permission first; exiled if it would go to a graveyard; "you may pay ... if you do".`);
+console.log(`engine-play-from: ${checks} checks passed — once during each of your turns, per source, the permission chosen by its player; exiled if it would go to a graveyard; "you may pay ... if you do".`);

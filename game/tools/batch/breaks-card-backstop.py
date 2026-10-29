@@ -7,6 +7,8 @@ Run from the repository root, with nothing else editing the worktree:
 """
 SUITES = ['tests/sentence-paragraphs.mjs', 'tests/engine-compile.mjs']
 BREAKS = [
+    ("sample includes complete unfinished abilities", 'game/tools/engine-compile.mjs',
+     '    .filter((x) => x.assist)\n', '    .filter((x) => x.assist && x.script.identity.name !== "Gemstone Caverns")\n'),
     ("the writer not told what is already written", 'game/engine/cards/compile.mjs',
      '  ...(assist ? {alreadyWritten: assist.known, writeOnly: assist.write.map((w) => w.text)} : {}),\n', ''),
     ("the library's sentences dropped from the card", 'game/engine/cards/compile.mjs',

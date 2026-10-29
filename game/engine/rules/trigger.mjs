@@ -429,6 +429,11 @@ function subjects(state, event, condition, sourceId, controller) {
   }
   /* "Whenever a player taps a land for mana" (Manabarbs): what was tapped, and who tapped it. */
   if (condition.on === "GameEventManaPool") return tappedForMana(state, fields, condition, sourceId, controller) ? [{card: fields.source?.cardId, player: fields.player?.playerId}] : [];
+  /* CR 706.2, 706.6: a roll watcher sees the final result of a retained die, with each roll instruction its own group. */
+  if (condition.on === "GameEventDieRolled") {
+    const player = fields.player?.playerId;
+    return whoseIs(condition.roller ?? "you", player, controller) ? [{player, rolled: fields.result, rollId: fields.rollId}] : [];
+  }
   /* "Whenever you draw a card", "whenever an opponent draws a card" (CR 121.1): the drawer. */
   if (condition.on === "GameEventCardChangeZone" && condition.drawn) {
     if (fields.drawn !== true) return [];
@@ -811,7 +816,8 @@ export function collectTriggers(state, events) {
           /* Damage to players, "one or more" at once: once for each player dealt it; damage to "a Dragon you control", once
              for each creature dealt it. "Whenever a player discards one or more cards" (Tinybones, Pocket Nuisance): once for
              each player who discarded (CR 603.2c). */
-          const once = `${id}:${ability.id}${ability.trigger.on === "GameEventPlayerDamaged" || ability.trigger.loser !== undefined || ability.trigger.discarded ? `:${about.player}`
+          const once = `${id}:${ability.id}${ability.trigger.on === "GameEventDieRolled" ? `:${about.rollId}`
+            : ability.trigger.on === "GameEventPlayerDamaged" || ability.trigger.loser !== undefined || ability.trigger.discarded ? `:${about.player}`
             : ability.trigger.on === "GameEventCardDamaged" && ["creature", "enchanted"].includes(ability.trigger.to) ? `:${about.card}`
             /* Counters of any kind put on a permanent (Generous Patron): once for each permanent they were put on. */
             : ability.trigger.on === "GameEventCardCounters" && ability.trigger.counter === "any" ? `:${about.card}` : ""}`;

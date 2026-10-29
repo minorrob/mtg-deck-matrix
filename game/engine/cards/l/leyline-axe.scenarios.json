@@ -183,6 +183,16 @@
         {
           "to": {
             "turn": 1,
+            "phase": "COMBAT_FIRST_STRIKE_DAMAGE"
+          }
+        },
+        {
+          "answer": [],
+          "amounts": [1, 2]
+        },
+        {
+          "to": {
+            "turn": 1,
             "phase": "MAIN2"
           }
         }
