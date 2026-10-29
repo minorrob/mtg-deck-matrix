@@ -39,7 +39,7 @@ import {loseLife, gainLife, DAMAGING, damageQuestion, addMana} from "./resources
 import {damageOrderChoice, graveyardBound, placeReplacedCounters} from "../../rules/replacement.mjs";
 import {targetCandidates, targetName, recheckTargets, differentControllersProblem, shareProblem} from "../bind.mjs";
 import {commanderTax} from "../../rules/commander.mjs";
-import {cantBeCountered, counterOrderChoice, cantBeSacrificed, tokenOrderChoice, drawForbidden, drawsMore, searchController} from "../../rules/statics.mjs";
+import {cantBeCountered, counterOrderChoice, cantBeSacrificed, tokenOrderChoice, drawForbidden, drawsMore, emptyDrawWins, searchController} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
 import {castNow, castChoicesNow, landChoicesNow, withFaceUp, nextToChoose, chooseTargetsChoice, pickActionTargets} from "../../rules/actions.mjs";
 
@@ -2031,12 +2031,19 @@ export const enchantWhat = {
 export const dredgeDraw = {
   open(state, params, context) {
     const replaced = params.replaced ?? [], cards = dredgers(state, params.player).map((d) => d.id);
-    if (!cards.length) return {events: drawEffect(state, {who: [params.player], count: 1, drawReplaced: replaced}, context)};
+    if (drawForbidden(state, params.player)) return {events: []};
     /* CR 616.1, 614.5: the drawer may apply a mandatory doubler before optional dredge. Its resulting draws may each
        be dredged, but that same doubler cannot replace them again. Its new multi-card instruction must reconsider
        unused Collectors before splitting into single draws (CR 121.2a, 616.1g). */
     const more = drawsMore(state, params.player).filter((m) => !replaced.includes(m.key));
-    const options = [...(more.length ? more.map((m) => ({kind: "more", ...m})) : [{kind: "draw"}]),
+    const wins = cardsIn(state, "library", params.player).length === 0 && emptyDrawWins(state, params.player);
+    if (!cards.length && !more.length) return {events: drawEffect(state, {who: [params.player], count: 1, drawReplaced: replaced}, context)};
+    /* Only one mandatory effect and no optional alternative leaves no order to choose (CR 616.1). Return its entire
+       modified instruction so a newly applicable Collector still asks before any card moves. */
+    if (!cards.length && more.length === 1 && !wins) return {events: [], splice: [{effect: "draw", who: [params.player], count: more[0].count,
+      drawReplaced: [...replaced, more[0].key]}]};
+    const mandatory = [...(wins ? [{kind: "win"}] : []), ...more.map((m) => ({kind: "more", ...m}))];
+    const options = [...(mandatory.length ? mandatory : [{kind: "draw"}]),
       ...cards.map((id) => ({kind: "dredge", id}))];
     state.awaiting = {kind: "effect-choice", effect: "dredgeDraw", player: params.player, cards, replaced, options};
     return true;
@@ -2045,7 +2052,7 @@ export const dredgeDraw = {
     const could = new Map(dredgers(state, awaiting.player).map((d) => [d.id, d.amount]));
     return {id: `dredge:${state.turn}:${awaiting.cards.join(",")}`, title: "You would draw a card: choose a replacement, or draw when none is required", mode: "one", min: 1, max: 1,
       options: awaiting.options.map((o, index) => ({index, ...(o.kind === "dredge" ? {cardId: o.id} : {}),
-        label: o.kind === "draw" ? "Draw a card" : o.kind === "more" ? `Draw ${o.count} cards instead`
+        label: o.kind === "draw" ? "Draw a card" : o.kind === "win" ? "Win the game instead" : o.kind === "more" ? `Draw ${o.count} cards instead`
           : dredgeWords(state, {id: o.id, amount: could.get(o.id)})}))};
   },
   apply(state, awaiting, indices) {
@@ -2053,7 +2060,7 @@ export const dredgeDraw = {
     if ((indices ?? []).length !== 1 || !(Number.isInteger(index) && index >= 0 && index < awaiting.options.length)) throw new Error("Invalid selection");
     const events = [];
     const selected = awaiting.options[index];
-    if (selected.kind === "draw") return drawEffect(state, {who: [awaiting.player], count: 1, drawReplaced: awaiting.replaced}, {controller: awaiting.player});
+    if (selected.kind === "draw" || selected.kind === "win") return drawEffect(state, {who: [awaiting.player], count: 1, drawReplaced: awaiting.replaced}, {controller: awaiting.player});
     if (selected.kind === "more") return {events, splice: [{effect: "draw", who: [awaiting.player], count: selected.count,
       drawReplaced: [...awaiting.replaced, selected.key]}]};
     if (!dredgeInstead(state, awaiting.player, selected.id, events)) throw new Error("That card can no longer dredge: draw the card, or dredge with another");

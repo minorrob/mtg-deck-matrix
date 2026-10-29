@@ -120,12 +120,12 @@
   "diagnostics": "C:\\Users\\robmi\\CrankMagic\\workbench\\load100-w7-686d948f-diagnostics",
   "drawInstructionFix20261029": {
     "finding": "V8: a selected draw doubler bypassed Collector and lost applied replacement history",
-    "behavior": "Reconsider the modified multi-card instruction; preserve source+ability history through every descendant and JSON reload. Distinct Collectors remain selectable even under one controller.",
+    "behavior": "Reconsider whole modified draw instructions; retain source+ability history through descendants and JSON reload. Ask real competing replacements even without a dredger; preserve only this instruction's remembered draws and the empty-library win alternative.",
     "proof": {
-      "focused": 13,
-      "newMutations": 10,
+      "focused": 33,
+      "newMutations": 19,
       "currentOriginalW7Mutations": 22,
-      "movedLegacyK2": 3,
+      "movedLegacyK2": 5,
       "missed": [],
       "readers": {
         "engine-draws-replaced": 19,
@@ -134,7 +134,11 @@
         "first-draw-check": 4,
         "data-integrity": "pass",
         "feature-wiring": 131
-      }
+      },
+      "movedLegacyK4": 2,
+      "boundedWorker": "15-second test-only subprocess makes a removed replacement-history guard fail promptly; no engine timeout or eligibility change.",
+      "discardedRun": "The earlier interrupted/mixed-test mutation run has no proof credit. All 19 were rerun on the final stable 33-check suite, missed: [].",
+      "anchors": "42 inherited problems, no additional W7 failure before current-main merge; remeasure on integration."
     },
     "limits": [
       "Outside-resolution replacement-order fallback remains open pending real continuation callers.",

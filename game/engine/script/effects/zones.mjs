@@ -690,7 +690,7 @@ function drawOne(state, player, events, replaced = []) {
   /* "IF YOU WOULD DRAW A CARD WHILE YOUR LIBRARY HAS NO CARDS IN IT, YOU WIN THE GAME INSTEAD" (Laboratory Maniac; CR 614.11,
      121.6a): replaced even with no card to draw, so it is no draw from an empty library -- and an opponent's "you can't win
      the game" (effects/resources.mjs, winGame) leaves the player neither winning nor losing for it (its ruling). Before "draw
-     two instead": either order ends with the same win, so nobody is asked (CR 616.1). */
+     two instead" in this synchronous helper. Resolution asks when competing replacements apply (CR 616.1). */
   if (library.length === 0 && emptyDrawWins(state, player)) { winGame(state, {who: [player]}, {controller: player}); return; }
   /* "DRAW TWO CARDS INSTEAD" (Teferi's Ageless Insight; CR 614.11a, 614.5): each `draws-more` not yet applied to this draw
      replaces it with that many draws, each one the others may still replace -- all of them made before the rest of the draw
