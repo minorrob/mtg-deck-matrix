@@ -8,14 +8,14 @@ import path from "node:path";
 import {openBrowser,ROOT} from "../../../../tests/uat/browser-runner.mjs";
 import {GameRoom} from "../../../../cloud/game-room.mjs";
 import {snoopRoom,mainAndFund,killSnoop,verifyNativeSnoop} from "./SNOOP-ROOM-FIXTURE.mjs";
-import {candidateBoard} from "./SNOOP-RENDERER-PROPOSAL.mjs";
+import {candidateBoard,replacements} from "./SNOOP-RENDERER-PROPOSAL.mjs";
 let checks=0;
 const eq=(a,b,m)=>{assert.deepEqual(a,b,m);checks++;},ok=(a,m)=>{assert.ok(a,m);checks++;};
 if(process.argv.includes("--prepare-only")){
  await verifyNativeSnoop();console.log("Snoop browser proposal: native held draw, public next top, real paid Goblin cast and source departure verified; browser not started");
 }else{
  const {browser,base,stub,close}=await openBrowser({name:"board-playtest-snoop-proposal",flag:"GEOMETRY_REQUIRED"});
- const candidate=process.argv.includes("--candidate"),html=readFileSync(path.join(ROOT,"index.html"),"utf8").replace("</head>",'<meta name="crankmagic-accounts" content="on"><meta name="crankmagic-play" content="cloud"></head>');
+ const candidate=process.argv.includes("--candidate"),heldDrawReversion=process.argv.includes("--held-draw-reversion"),html=readFileSync(path.join(ROOT,"index.html"),"utf8").replace("</head>",'<meta name="crankmagic-accounts" content="on"><meta name="crankmagic-play" content="cloud"></head>');
  try{
   for(const mode of ["table","focus","full"]){
    const fixture=await snoopRoom(),{room,store,first,second,third}=fixture,contexts=[],pages=[],sockets=[],packets=[],errors=[],refusals=[];let queue=Promise.resolve();
@@ -28,7 +28,11 @@ if(process.argv.includes("--prepare-only")){
      const table={tableId:"snoopui01",phase:"playing",matchId:fixture.matchId,away:[],blockers:[],youAreHost:seat===0,rules:{},seats:room.view(seatId).state.players.map((p,i)=>({seatId:`p${i}`,name:p.name,kind:"human",you:i===seat,occupied:true,ready:true,mat:"felt"}))};
      await page.route(`${base}/index.html*`,r=>r.fulfill({contentType:"text/html",body:html}));
      await page.route(`${base}/api/me`,r=>r.fulfill({json:{email:"rob@example.com"}}));await page.route(`${base}/api/library**`,r=>r.fulfill({json:{head:null}}));await page.route(`${base}/api/tables**`,r=>r.fulfill({json:{table,now:Date.now()}}));
-     if(candidate)await page.route(`${base}/crankmagic-board.js*`,r=>r.fulfill({contentType:"text/javascript",body:candidateBoard(readFileSync(path.join(ROOT,"crankmagic-board.js"),"utf8"))}));
+     if(candidate)await page.route(`${base}/crankmagic-board.js*`,r=>{
+      let body=candidateBoard(readFileSync(path.join(ROOT,"crankmagic-board.js"),"utf8"));
+      if(heldDrawReversion){const [original,changed]=replacements[0];assert.equal(body.split(changed).length,2);body=body.replace(changed,original);}
+      return r.fulfill({contentType:"text/javascript",body});
+     });
      await page.routeWebSocket(new RegExp("/api/tables/snoopui01/connect$"),ws=>{
       const socket={seatId,send:text=>{const frame=JSON.parse(text);if(frame.type==="refused")refusals.push(frame.error);ws.send(text);}};sockets.push(socket);
       ws.onMessage(raw=>{const frame=JSON.parse(raw);if(frame.type==="act")packets.push({seatId,...frame});queue=queue.then(()=>host.webSocketMessage(socket,raw));});

@@ -37,12 +37,26 @@ Preparation command passes without starting a browser:
 node docs/engine/card-load-100-2026-10-28/w0/SNOOP-BROWSER-PROPOSAL.mjs --prepare-only
 ```
 
-The actual current-renderer browser RED and candidate browser acceptance are pending a coordinated quiet window with
-the pinned installed Chromium cache, `GEOMETRY_REQUIRED=1` and `UAT_BROWSER=chromium`. Run the script without an argument
-for the current renderer, then with `--candidate` for browser-only proposed bytes. Preserve all errors and teardown;
-do not count a missing browser, startup timeout or the preparation command as a behavior proof.
+The coordinated quiet browser audit ran with the pinned installed Chromium cache, `GEOMETRY_REQUIRED=1` and
+`UAT_BROWSER=chromium`. Current renderer: RED after both Table mats mounted, at the missing native public Mogg Fanatic
+card 6 in seat 0's library. That fail-fast baseline did not reach later modes; it was not an initial board-startup
+failure. Candidate-only bytes: **98 checks passed**, including Table, Focus and full 3D for both room viewers. Each
+full context explicitly required the actual Babylon WebGL renderer. All original held-draw, cast, next-top,
+source-removal and public/hidden library assertions remained intact.
 
-`AGENTS.md` reserves `crankmagic-board.js` for the Play lane and says "nobody edits a file of another lane." A concrete
+After the candidate process completed, a separate `--candidate --held-draw-reversion` run retained the revealed library
+line but restored the old `card(top)` action. The unchanged held-draw assertion failed directly with expected
+`board-draw`, actual `board-card`. This independently catches the second changed line; no timeout or unrelated startup
+failure is counted as that mutation. All contexts, browsers and static servers closed through `finally`, and no
+`node` or `headless_shell` process remained. Production board source still has no diff.
+
+Exact logs remain outside the repository in `worktrees/load100/scratch/snoop-renderer-current-browser.log`,
+`snoop-renderer-candidate-browser.log` and `snoop-renderer-held-draw-mutant.log`. The current-source run uses no argument;
+`--candidate` serves only the proposed bytes. The fixture preparation command itself earns no browser credit. These
+bounded proofs are not full UI/card-load acceptance, and ROB-227 is not fixed until an authorized production UI change
+is applied and verified.
+
+`AGENTS.md` reserves `crankmagic-board.js` for the Play lane and says "nobody edits a file of another lane." The concrete
 browser RED/acceptance result and this unapplied patch can support an explicit narrow ownership override or a handoff
-to that owner. No ownership permission is inferred from the engine assignment, and no UI approval has been requested
-before that reviewable evidence. The current native effect-play refresh dependency remains the first priority.
+to that owner. No ownership permission is inferred from the engine assignment, and this engine lane has made no
+production UI edit. The current native effect-play refresh dependency remains the first priority.
