@@ -10,10 +10,17 @@ and the engine modules its debt fixes require, subject to the ownership requests
 The primary checkout has another session's unfinished merge and is untouched.
 The eight roles run in batches because this session supports three active subagents.
 No new cards until wave 0 closes. No provider API calls, production changes, migrations, or spending.
-**Hand-back checkpoint:** draft integration #912; bounded role drafts #913 through #917 are pushed. W2/W3/W7 have
-not started, and existing lanes retain queued debt. Corrected initial ability audit: 6,079 of 11,636 reached, 5,557
-unproved; root proved four inherited-anchor repairs, leaving 53. No gate, main merge, staging release, or Rob playtest
-sign-off is claimed. A fresh orchestrator resumes from RUN.md; do not mark the integration ready on the legacy checker.
+**Resumed October 29:** draft integration #912; all bounded role checkpoints #913 through #920 are now assembled
+locally in W1–W7/V8 order. W2/W3 continue real operation consumers; V8 cold-reviews the recent changes. W2/W3/W7 started
+from `5fc78a95` in separate worktrees; all lanes retain queued debt. Rob changed the loading target to cards
+covering **95% of deck appearances**, explicitly choosing appearances over distinct names. Frozen `scope-95.json`
+has 8,514 names: 2,715 final, 5,799 undefined at restart. Least-played remaining appearances are outside the target;
+accuracy and evidence requirements remain. Corrected initial ability audit: 6,079 of 11,636 reached, 5,557
+unproved; root proved fifteen inherited-anchor repairs, leaving 42. No gate, main merge, staging release, or Rob playtest
+sign-off is claimed. The shared foundation `b2ba9343` has focused proof; actual operation consumers remain unfinished.
+New V8 findings: copied divided-damage retargeting loses amounts (W2), and differing `manaInstead` permissions
+collapse to one choice (W3). Both are being fixed before further consumer expansion.
+RUN.md records exact checkpoints, diagnostics and restart seams; do not mark the integration ready on the legacy checker.
 
 ### Card-load coordination requests
 
@@ -21,7 +28,7 @@ sign-off is claimed. A fresh orchestrator resumes from RUN.md; do not mark the i
 | --- | --- | --- |
 | Claude · Engine | The standing lane table predates Rob's direct October 28 card-load assignment. Current open PRs were checked: no separate active rule-module PR besides prerequisite #834 was listed. The run owns its debt modules and coordinates narrow shared-file scopes between its roles. | Resolved by the later direct assignment; no other session's active files are edited |
 | Play | Show the monarch already present in the room view on the board; keep a one-press card reference where applicable. | Existing canonical Requests row 1 remains open; Play owns the board |
-| Lounge owner | Wave-0 W2 needs only the named wish-card refusal in `game/room/table.mjs` `readDeck`; confirm any current overlap before editing. | Open; lounge changes already on the baseline |
+| Lounge owner | Wave-0 W2 needs only the named wish-card refusal in `game/room/table.mjs` `readDeck`; confirm any current overlap before editing. | Refreshed open PR file list at resume: no overlap; W2 owns the narrow refusal |
 | Play, Workshop, Engine | Main already has 57 stale mutation anchors across 31 breaks files; exact names, targets, and labels are in `docs/engine/card-load-100-2026-10-28/w0/preexisting-break-anchors.json`. Re-anchor only to the original behavior and prove each caught. The global anchor gate stays red until resolved. | Measured before wave-0 changes; no new prerequisite anchor failure |
 
 ## Card load to 100%: the package for an OpenAI orchestrator, 2026-10-28 (Claude Code on Personal-HP, for Rob; `claude/engine-loading-orchestration-dd4c7f`)

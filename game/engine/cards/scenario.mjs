@@ -86,7 +86,11 @@ function routine(state) {
 export function runScenario(scenario, cards, fixtures = {}) {
   const passed = [];
   const events = [];
-  const fail = (message) => { throw new Error(`${scenario.name}: ${message}`); };
+  const fail = (message, assertion = null) => {
+    const error = new Error(`${scenario.name}: ${message}`);
+    if (assertion) error.scenarioAssertion = assertion;
+    throw error;
+  };
   const seats = scenario.seats ?? 2;
   const names = ["Rob", "Maya", "Trey", "Sam"].slice(0, seats);
   /* `skipFirstDraw: false`: the table's house rule that the starting player of a two-player game has their first draw step
@@ -148,7 +152,7 @@ export function runScenario(scenario, cards, fixtures = {}) {
       if (state.turn > turn) break;
       stepOnce();
     }
-    fail(`never reached turn ${turn}, ${phase}`);
+    fail(`never reached turn ${turn}, ${phase}`, "step-limit");
   };
   goTo(scenario.at ?? {turn: 1, phase: "MAIN1"});
   for (const entry of scenario.setup ?? []) if (entry.sick) for (const name of entry.cards) put(entry.seat, entry.zone, name);
@@ -305,23 +309,25 @@ export function runScenario(scenario, cards, fixtures = {}) {
         for (const [color, n] of Object.entries(e.pool)) if ((pool[color] ?? 0) !== n) fail(`${names[e.seat]}'s pool has ${pool[color] ?? 0} ${color}, not ${n}`);
         passed.push(`${names[e.seat]}'s pool: ${JSON.stringify(e.pool)}`);
       } else if (e.offers !== undefined) {
+        const assertion = ["activate", "activate-mana"].includes(e.offers.kind)
+          ? {kind: "ability-offer", card: e.offers.card, action: e.offers.kind} : null;
         const found = offered(e.offers);
-        if (found.length !== e.count) fail(`${e.offers.kind} ${e.offers.card ?? ""} is offered ${found.length} way(s), not ${e.count}`);
+        if (found.length !== e.count) fail(`${e.offers.kind} ${e.offers.card ?? ""} is offered ${found.length} way(s), not ${e.count}`, assertion);
         if (e.targets !== undefined) {
           const got = found.map((a) => (a.targetNames ?? []).join(" + ")).sort();
           const want = e.targets.map((t) => t.join(" + ")).sort();
-          if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${e.offers.card} is offered at ${JSON.stringify(got)}, not ${JSON.stringify(want)}`);
+          if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${e.offers.card} is offered at ${JSON.stringify(got)}, not ${JSON.stringify(want)}`, assertion);
         }
         /* What each offer's cost takes ("Sacrifice a creature": one offer per creature). */
         if (e.costs !== undefined) {
           const got = found.map((a) => (a.costNames ?? []).join(" + ")).sort();
           const want = e.costs.map((c) => c.join(" + ")).sort();
-          if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${e.offers.card} is offered paying ${JSON.stringify(got)}, not ${JSON.stringify(want)}`);
+          if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${e.offers.card} is offered paying ${JSON.stringify(got)}, not ${JSON.stringify(want)}`, assertion);
         }
         if (e.mana !== undefined) {
           const got = found.map((a) => JSON.stringify(a.mana)).sort();
           const want = e.mana.map((m) => JSON.stringify(m)).sort();
-          if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${e.offers.card} offers ${got.join(" ")}, not ${want.join(" ")}`);
+          if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${e.offers.card} offers ${got.join(" ")}, not ${want.join(" ")}`, assertion);
         }
         passed.push(`${e.offers.kind} ${e.offers.card ?? ""} offered ${e.count} way(s)`);
       } else if (e.asks !== undefined) {
@@ -339,8 +345,8 @@ export function runScenario(scenario, cards, fixtures = {}) {
         /* A permanent's current keywords, as its controller's view shows them. */
         const card = onField(e.seat, e.keywords.card);
         if (!card) fail(`${e.keywords.card} is not on ${names[e.seat]}'s battlefield`);
-        for (const k of e.keywords.has ?? []) if (!card.keywords.includes(k)) fail(`${e.keywords.card} lacks ${k}`);
-        for (const k of e.keywords.lacks ?? []) if (card.keywords.includes(k)) fail(`${e.keywords.card} has ${k}`);
+        for (const k of e.keywords.has ?? []) if (!card.keywords.includes(k)) fail(`${e.keywords.card} lacks ${k}`, "keyword-presence");
+        for (const k of e.keywords.lacks ?? []) if (card.keywords.includes(k)) fail(`${e.keywords.card} has ${k}`, "keyword-presence");
         passed.push(`${e.keywords.card}: ${(e.keywords.has ?? []).join(", ")}${(e.keywords.lacks ?? []).length ? `, not ${e.keywords.lacks.join(", ")}` : ""}`);
       } else if (e.counters !== undefined) {
         /* A permanent's counters of one kind, as its seat sees them: {seat, counters: {card, counter, count}}. */
@@ -390,7 +396,7 @@ export function runScenario(scenario, cards, fixtures = {}) {
     else if (step.attack) {
       /* On to the declare-attackers step of this turn, the named creatures attacking (each its first defender). */
       for (let n = 0; n < STEP_LIMIT && state.awaiting?.kind !== "declare-attackers"; n += 1) stepOnce();
-      if (state.awaiting?.kind !== "declare-attackers") fail("the game never asked who attacks");
+      if (state.awaiting?.kind !== "declare-attackers") fail("the game never asked who attacks", "step-limit");
       const choice = awaitingChoice(state), picked = [];
       for (const [k, name] of step.attack.entries()) {
         /* At whom (`at`, a player's name, or one for each attacker in turn), or its first defender. */
@@ -404,7 +410,7 @@ export function runScenario(scenario, cards, fixtures = {}) {
       /* On to the declare-blockers step, the named creatures blocking: `block` a list of [blocker, attacker] (Train B: "whenever
          this Vehicle blocks"). Nobody blocks unless a step says so; this one says so, for the first defending player asked. */
       for (let n = 0; n < STEP_LIMIT && state.awaiting?.kind !== "declare-blockers"; n += 1) stepOnce();
-      if (state.awaiting?.kind !== "declare-blockers") fail("the game never asked who blocks");
+      if (state.awaiting?.kind !== "declare-blockers") fail("the game never asked who blocks", "step-limit");
       const choice = awaitingChoice(state), picked = [];
       /* `blockers`: the creatures that may block, by name, as the question offers them -- "this creature can't block" is one
          that is not among them (Gravecrawler). */

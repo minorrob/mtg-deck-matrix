@@ -957,4 +957,4 @@ export function lastKnown(state, id) {
 }
 /* The copiable values a permanent shows (effects/permanents.mjs, COPY_KEYS: the same list, kept here to keep the layers free
    of the effects). */
-const COPIED_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "loyalty", "spell", "enchant"]);
+const COPIED_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "loyalty", "spell", "enchant", "preparation"]);

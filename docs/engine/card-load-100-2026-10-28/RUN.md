@@ -5,16 +5,60 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
-- **Holder:** Codex hand-back, October 28, 2026, for Rob; Linear ROB-199 (run), ROB-200 (wave 0), under ROB-85.
-  Resume with a fresh orchestrator from this record. This context stops at Rob's requested hand-back boundary.
+- **Holder:** Codex resumed October 29, 2026, for Rob; Linear ROB-199 (run), ROB-200 (wave 0), under ROB-85.
+  Rob requested W2/W3/W7 start, wave-0 completion, then continued loading without weaker gates. All three lanes started
+  and have bounded checkpoints below. Wave 0 is still unfinished; do not start final-card loads or claim it complete.
+  Current work: W2/W3 finish actual continuation consumers and V8 independently reviews the recent lane fixes.
+- **Revised endpoint:** Rob explicitly chose **cards covering 95% of deck appearances**, not 95% of distinct names.
+  Frozen `scope-95.json`: 8,514 names, including six basics; 527,373,351/555,122,162 appearances (95.0013%).
+  Source graph September 11, played data September 19, Oracle October 4, 2026; exact hashes are in the manifest.
+  Initial directory measurement at `5fc78a95`: 2,715 included finals, 5,799 undefined, zero wish exemptions in scope.
+  `node tools/card-load-scope.mjs --check` passes; `--gate` correctly exits 1 with 5,799 missing. Two scope mutations
+  caught, `missed: []`. G-1/G-2 now concern this fixed set; all accuracy/evidence requirements and the existing
+  whole-directory ability gate remain. The least-played remaining appearances need not be loaded.
 - **Main at the start:** `39a45706`.
 - **Wave and step:** wave 0 is unfinished. Baseline, prerequisite reconciliation and five bounded role checkpoints are
-  preserved; no new cards or promotions. W2/W3/W7 have not started. No gate or wave completion is claimed.
+  preserved; no new cards or promotions. All eight roles now have bounded isolated checkpoints. No gate or wave completion is claimed.
 - **Integration:** `codex/engine-load100-w0`, worktree `C:\Users\robmi\CrankMagic\worktrees\load100\w0-integrate`.
   Package #911 and prerequisite #834 merged locally; eight debt lane files committed at `c9d31c40`.
   Draft integration PR #912: https://github.com/minorrob/mtg-deck-matrix/pull/912.
-  Last root code checkpoint: `e7d00039` (paragraph prerequisite and four proved inherited-anchor repairs); subsequent
-  record/readiness-command edits are documentation. No writer or verifier branch has been merged into integration.
+  Root checkpoints: `e7d00039` (paragraph prerequisite and first four proved inherited-anchor repairs), `8753715e`
+  (95% appearance manifest/tool and three more repairs), `d6e42af8` (six more repairs and the private-seed proof).
+  All bounded checkpoints are now merged **locally into the draft integration**, in the prescribed order:
+  W1 `62e4b529`, W2 `4b204cce`, W3 `67526970`, W4 `e11a4e51`, W5 `246fa8fb`, W6 `f8676df9`,
+  W7 `1a1928b4`, V8 `f67001f7`. This is assembly, not wave acceptance or a main merge. Generated definitions,
+  candidates, coverage, catalog and inventory were refreshed once after the final merge.
+  Focused checks passed during assembly: W1 79, W2 57, W3 22, operation foundation75, W4combat17/sentences14,
+  W5mana36/pool16, W6tokens90, W7compiler13/draw-dice, V8ability42/pool91. README suite registrations preserved.
+  Sole runtime conflict: `copySpell` keeps BOTH W2 final-target tracking and W6 departed-source metadata/reference.
+  Re-run both mutation files on the combined source. No assertions or test registrations removed.
+  Fresh compiler: 25,616 undefined;116 candidates;0 refused;2 blocked;0 vetoed;24,429 unknown (12,080 one short);
+  1,069 other layouts. Generated files add no new final definitions.
+- **New V8 findings being fixed:** copied divided damage retains old target IDs after retargeting (W2; actual
+  Monstrous Onslaught grammar), and distinct exile-play permissions with `manaInstead` {2}/{3} collapse to one
+  offer (W3 permission outcome key). These are reproducible cold-review findings, not accepted omissions.
+- **Resumed root changes:** froze and checked the 95% appearance scope with an explicit failing final-definition gate;
+  no engine runtime change. Re-anchored three more inherited mutations on the same original behaviors: new-table
+  passStack default, front-door candidate report route, and the seated reconnect event floor. Each unbroken suite
+  baseline passed and each selected break was caught, `missed: []`. Global anchors now have **50 inherited problems**;
+  no gate acceptance is claimed. The new scope suite's two mutations were also caught.
+- **Further anchor proof:** three deck-stage anchors now target the same stage/commander/substitute conditions after
+  the over-size guard was added; all three caught. Three seated-ending anchors distinguish the later spectator view;
+  all three caught after all original baseline suites passed. The `table-record` baseline had a false positive:
+  `game:table:<matchId>:s1`, a public result id, matched its old seed-prefix assertion. The assertion now obtains the
+  actual private seed from the match store and rejects it even inside wrapped strings. Existing hidden-field/card
+  assertions stay; a new assertion preserves the public id. A mutation leaking the real seed inside a wrapped nested
+  string is caught. No record runtime code changed. These six repairs leave **44 inherited anchor problems**.
+- **Latest short step:** two clock anchors now match the existing `owner` argument and the precise paid-route call,
+  removing only their original request-clock argument in each mutant. Both were caught by `tests/advisor.mjs` after
+  every original baseline suite passed; `missed: []`. These tests use injected provider stand-ins, no network/provider
+  calls. No access-policy or clock runtime code changed. **42 inherited anchor problems remain**. Scope accounting
+  now requires both a playable directory entry and a table-bundle definition; all three scope mutations caught.
+- **Shared foundation:** W3 isolated `b2ba9343` (plain-data rule-operation interpreter, tests/breaks and registration).
+  Root read it cold and independently ran its 75 checks; W3 reports all 32 mutations caught. Root explicitly authorized
+  W2/W7 to merge this foundation-only commit as a shared dependency, rather than copy uncommitted files or merge the
+  full W3 lane. W2 dependency merge `e35dfb09`; W7 `baf5e2b6`. Domain/whole-game continuation and concession behavior
+  are not proved by the interpreter suite. Remaining operation consumers still block affected debt closure.
 - **Prerequisite:** original #834 remains open and conflicted on GitHub. Isolated reconciliation branch
   `codex/engine-load100-pr834` at `ba82617b` merges main and preserves paragraph boundaries alongside current
   castable-card spell segmentation. Integrated through `8c0566dc`. Full backstop validation exposed its inherited
@@ -23,7 +67,7 @@ Newest wave first. Each line names its command's result line, never a summary of
   both selected backstop breaks are caught, `missed: []`. The five paragraph breaks were also rerun and caught.
 - **Lanes:** five clean, pushed bounded checkpoints are listed below; their remaining debts are queued, not waived.
   This session has three subagent slots, so the eight roles run in batches. Keep all eight roles separate; start the
-  three unstarted roles next. Do not describe these bounded checkpoints as complete themes.
+  W2/W3/W7 were the resumed batch. Do not describe any bounded checkpoint as a complete theme.
 - **Ownership:** the primary checkout has another session's unresolved merge and remains untouched. The old standing
   engine table predates Rob's direct October 28 assignment. At claim time no other active rule-module PR besides #834
   was listed. Re-check current work before `readDeck` edits. The monarch already has a canonical Engine-to-Play request
@@ -32,8 +76,11 @@ Newest wave first. Each line names its command's result line, never a summary of
   `C:\Program Files\Git\bin\bash.exe`; Windows blocks its named-object initialization inside the sandbox, so the
   authorized scan runs with escalation. Network fetch/gh also requires escalation. W5's first export review was rejected;
   root verified the authorized remote/payload, rescanned, and published successfully. No approval remains pending.
-- **Next:** claim the hand-back, fetch, and start W2/W3/W7. Plan the shared resumable-choice work with W3/W5/W7 before
-  replacing outside-resolution fallback choices. Finish all queued writer/verifier debts. Merge W1 through W7, then V8,
+- **Next:** W2/W3/W7 work from `5fc78a95`; W3 owns shared explicit resumable-choice operations before the other roles
+  replace outside-resolution fallback choices. W2 owns copy/effect-cast target and Gandalf blocks; W3 owns movement,
+  destruction, commander and MayPlay permission blocks; W7 owns draw/APNAP/dredge, dice and compiler blocks. Fresh
+  fetch found main unchanged and no open PR touching `game/room/table.mjs`, clearing W2's narrow wish refusal.
+  Finish all queued writer/verifier debts. Merge W1 through W7, then V8,
   regenerate once, and run the strict consolidated checks. Do not mark ready while the ability/anchor gates remain red.
 - **Rob's decision, October 28:** "Allow the additional harness proof." V8 may supplement journal evidence with an
   in-memory ability-removal scenario proof; the safeguards and limits are in `BRIEF.md`. G-3 remains unmet until the
@@ -42,23 +89,62 @@ Newest wave first. Each line names its command's result line, never a summary of
 | Role | Branch under `codex/engine-load100-` | Pushed head | Draft PR | State |
 | --- | --- | --- | --- | --- |
 | W1 faces | `w0-w1-faces` | `27182d42e9afa664dfccae8fb5dd878d6079d6a8` | #917 | Source `9c4366f7`; Elspeth and supported preparation copies; battles, undefined emblem cards and permanent-type insets queued |
-| W2 stack | `w0-w2-stack` (not created) | — | — | Not started; deal file `w0/lane-W2.json` |
-| W3 graveyard | `w0-w3-graveyard` (not created) | — | — | Not started; deal file `w0/lane-W3.json` |
+| W2 stack | `w0-w2-stack` | `2fb6f815da5c7c91c9c9fd75128b9cdad2b5577d` | #920 | Copy/effect-cast targets, facedown exile, named wish refusals; entry/caller continuations and effect-cost edges remain open |
+| W3 graveyard | `w0-w3-graveyard` | `63f5b4c83f74f30aebde497839d54d4b72439fe1` | #918 | Shared operation foundation and limited-permission choice across sources/abilities; other debt open |
 | W4 combat | `w0-w4-combat` | `9177d29baca191ce1bee7773a6851bfabef68df5` | #914 | Clean bounded checkpoint; five debts queued |
 | W5 mana | `w0-w5-mana` | `79fe06c741a2d25f1c7c75ecf20e2810e4d07977` | #915 | Clean bounded checkpoint; five debts queued |
 | W6 tokens | `w0-w6-tokens` | `5c927528f8c26adc3e4e0300001f320331fb9272` | #916 | Clean bounded checkpoint; three replacement-order debts queued |
-| W7 spells | `w0-w7-spells` (not created) | — | — | Not started; deal file `w0/lane-W7.json` |
+| W7 spells | `w0-w7-spells` | `7b832177b4abc7efe731121849c2e1d00b3ce399` | #919 | Strict compiler actual-play gate/Annul fixture, APNAP/draw replacement order, die watchers; outside-resolution continuations/modifiers open |
 | V8 verifier | `w0-v8-verify` | `1890c72f5bf4aac013d554fe5a9035f688b1df55` | #913 | Clean bounded harness/review checkpoint; coverage, strict-runner and final integration debts remain |
 
 Worktrees are `C:\Users\robmi\CrankMagic\worktrees\load100\<branch suffix>`. Preserve their node_modules junctions;
 do not delete through a junction. Every code/evidence checkpoint is pushed; read each lane JSON and PR body before
 continuing it. A model taking a lane over uses the brief's prefix/suffix hand-off rule; integration stays on its current
 branch. PR #834 and #911 are ancestors of integration only, not yet merged to main.
-Final local audit: all six prerequisite/role worktrees have empty `git status --porcelain` and heads equal their remote
+Prior hand-back audit: all six prerequisite/role worktrees had empty `git status --porcelain` and heads equal their remote
 branches. W5's task-created diagnostics were preserved outside its worktree at
 `C:\Users\robmi\CrankMagic\workbench\load100-w5-79fe06c7-diagnostics`; W1's are at
 `C:\Users\robmi\CrankMagic\workbench\load100-w1-27182d42-diagnostics`. The primary checkout is still on
 `codex/reconcile-893-20261026`, `32109d12`; main remains `39a45706`. No lane process is left running.
+
+## Resumed W2/W3/W7 checkpoint evidence
+
+- **W2 #920:** 57 focused checks; 30 unique mutations caught, plus the moved original w4d-l1 mutation; `missed: []`.
+  Full lane check: 6,430 definitions, 11,023 scenarios, zero failures; 18 bounded readers green. Counted copies retain
+  their original target count, including zero; effect casts ask counted targets; Gandalf's permitted face-down exile
+  casts work; wishes are refused by name. Copies report final targets, including kept targets, so ward triggers.
+  The old reader assertion demanding omitted effect casts was replaced with an exact valid-offer assertion. The
+  explicit privacy guard was retained after auto-review rejected removing it; authorized-viewer denial mutation is
+  caught, with no claimed separate leak fix already prevented by permits(). Entry-type questions still need real
+  pre-entry frames at move/stack/land/token boundaries. Extra choose-cost/division combinations remain unproved.
+  Diagnostics: `C:\Users\robmi\CrankMagic\workbench\load100-w2-2fb6f815-diagnostics` (the lane's old scratch paths moved here).
+- **W3 #918:** reviewed foundation `b2ba9343`, 75 checks/32 caught mutations. First permission checkpoint: eight focused
+  checks/two caught mutations, with play-from20, play-from-zones76, may-play34, actions34, graveyard27, cards55 and
+  costs32 green. Old assertions demanding auto-selection were strengthened to require both explicit permissions and
+  prove only the selected resource is consumed. Root cold review then found the same-source/distinct-ability case;
+  its follow-up `63f5b4c8` now distinguishes source+ability in the existing address only when needed. Focused22 checks
+  and eight domain mutations pass, including spell/land choices after reload, exact selected-use consumption, legacy
+  unambiguous addresses and forged identities refused without mutation. Root read the increment and independently
+  reran22 checks. Touched readers pass; the full cards55/6,430-definition reader belongs to prior `25b3f7d3`.
+  Commander hand/library choice, manifest-dread failed entry,
+  nested destruction, Liesa waits, remembered-object constructs and full MayPlay remain open. Prototype continuation
+  code is **not runtime or proof**: `C:\Users\robmi\CrankMagic\workbench\load100-w3-continuation-wip-20261028` contains its
+  exact patch/modules/test and known defects, including applying an entry patch to the old rather than new object.
+- **W7 #919:** 22 new mutations and six moved legacy mutations caught, `missed: []`; 48 completed readers passed.
+  Compiler29, focused13, card-waves22, table-candidates43, table-basics6 passed. Full lane check before the final
+  smoke-fixture-only change: 6,430 definitions, 11,023 scenarios, zero failures. The strict gate exposed Annul's wrong
+  Sorcery fixture; generic Artifact/Enchantment fixtures now prove Annul actually casts and counters its target.
+  `smoke.resolved: 2` also counts the countered target event; it is not two successful spell resolutions. Collector
+  before dredge is **required**, per current CR121.2a/616.1g and the official ruling; preserved with a regression.
+  A separate doubler-before-dredge choice is fixed. W4-based calibration supports minimumCount1 (band1:512/512;
+  95% lower bound99.2553%); no arbitrary increase or exclusion. Outside-resolution draws, die modifiers/W5's mana
+  caller continuation, Winter/Narset and independent V8 review remain open. Diagnostics:
+  `C:\Users\robmi\CrankMagic\workbench\load100-w7-686d948f-diagnostics`.
+
+All bounded writer/V8 checkpoints are now assembled locally; continuing fixes still need independent review and the
+eventual consolidated checks. The evidence below remains scoped to the original lane heads unless explicitly rerun.
+Before dealing post-wave-0 cards, restrict W5's full-pool dealer output to `scope-95.json` and score reuse within that
+set. The current `--pool` output still covers all 25,616 undefined names; it must not silently restore the old target.
 
 ## Wave 0 evidence so far
 
@@ -179,8 +265,8 @@ Fresh baseline on main `39a45706`, before engine changes:
 
 ## Resume priorities and shared-file seams
 
-1. Read/claim this record, fetch, then start W2/W3/W7 with fresh subagents and their committed debt files. The session
-   supports three concurrent subagents, not eight at once. Verify the current lane owners before edits.
+1. Read/claim this record and fetch. W2/W3/W7 have now started; continue their committed debt files and checkpoints
+   below. The session supports three concurrent subagents, not eight at once. Verify current lane owners before edits.
 2. W2 must implement Rob's named wish-deck refusals and stack/retargeting debt. Neither wish card is written. W3 owns
    graveyard/remembered-object work and should coordinate a serializable resumable operation outside script resolution
    before the W4/W5/W6/W7 replacement fallbacks are removed. Current token/counter creation and entering replacements
@@ -192,7 +278,7 @@ Fresh baseline on main `39a45706`, before engine changes:
    hooks in zones/stack/SBA while adding W3's real choice continuations. Re-run both sides' mutation proofs on conflicts.
 5. Regenerate generated card/candidate/coverage/catalog/inventory files once, as the procedure says. They deliberately
    remain out of the bounded writer commits; do not call the hand-written JSON proof a current table-bundle proof.
-6. Repair the remaining 53 inherited anchors without retargeting/weakening tests, repeat moved-anchor proofs after
+6. Repair the remaining 42 inherited anchors without retargeting/weakening tests, repeat moved-anchor proofs after
    integration, run every consolidated gate including strict ability coverage, then one Actions run. Main merge and
    staging remain gated; production/migrations/provider calls remain forbidden. Rob alone closes G-8.
 
@@ -200,13 +286,13 @@ Fresh baseline on main `39a45706`, before engine changes:
 
 | Gate (README, "What 100% means") | At the start (2026-10-28, main `39a45706`) | Now |
 | --- | --- | --- |
-| G-1 Commander cards final | 6,430 defined of about 32,046; 25,616 undefined | Main baseline: 6,424 nonbasic pool finals of 32,040 raw pool cards, plus 6 basic definitions; 25,616 undefined. Wish exemptions not subtracted from raw counts. Unmet. |
-| G-2 Candidates outstanding | 116 (compiler, live); 100 in the committed `candidates.json` | Main baseline reproduced: 116 candidates, 2 blocked. Unmet. |
+| G-1 Included cards final | Full-pool baseline: 6,430 definitions | Rob's revised 95%-appearance target: 2,715/8,514 final, 5,799 undefined; scope gate exits 1. Full-pool undefined count is diagnostic. Unmet. |
+| G-2 Included candidates outstanding | 116 global (compiler, live); 100 in committed `candidates.json` | Scoped count awaits consolidated compile; 5,799 included names are not final. No scoped acceptance claimed. Unmet. |
 | G-3 `check-cards` | 6,430 definitions, 11,023 scenarios, 0 failed | Corrected initial code `508afa94`: 6,079/11,636 reached; 5,557 unreached, expected exit 1. Selected W4 additions prove 4/4 on 3 cards only. Strict consolidated coverage is mandatory; default/CI wiring remains open. Unmet. |
 | G-4 Calibration failures | 4 of 4,165 (Blackblade Reforged, Contagion Clasp, Goblin Piledriver, Wayfarer's Bauble) | W4 `8e0f3a2f`: 4,165 held out, 4,165 pass, no denominator exclusions. Writer changes independently reviewed; all past loads and final integration remain unreviewed/unmeasured. Full G-4 unmet. |
 | G-5 Pool fuzz, clean of games | the harness has no pool mode yet; library 3 of 3, staging decks 1 of 1 clean | Initial 3/3 app-finished pool runs clean, of which 1 reached a winner; final integration and 5,000 games unmet. |
 | G-6 Final cards exercised in a clean game | not measured (no ledger yet) | Initial 131/6,430 final definitions exercised in 3 app-finished clean runs. Unmet. |
-| G-7 Gameplay-gap list open items | section 4: 21 open, 5 unsure; section 5: 10 open; section 7: 10 open; section 8: 10 rows open, 4 partial (`README.md`, "Open accuracy debt") | Debt fixes in progress. Main baseline's 57 stale break anchors are named in `w0/preexisting-break-anchors.json`; root re-anchored/proved four, leaving 53 on integration. Unmet. |
+| G-7 Gameplay-gap list open items | section 4: 21 open, 5 unsure; section 5: 10 open; section 7: 10 open; section 8: 10 rows open, 4 partial (`README.md`, "Open accuracy debt") | Debt fixes in progress. Main's 57 stale break anchors are named in `w0/preexisting-break-anchors.json`; root re-anchored/proved fifteen, leaving 42. Unmet. |
 | G-8 Rob's playtest sign-off | none | None; only Rob can close this gate. |
 
 ## Root's inherited-anchor repair

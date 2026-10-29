@@ -1,5 +1,10 @@
 # The brief for every subagent of the card load to 100% (2026-10-28)
 
+**Scope update, October 28:** Rob chose the cards covering **95% of deck appearances**, not 95% of distinct names.
+The exact 8,514-name loading target is `scope-95.json`; `README.md` records its sources and gate command. The least-played
+remaining appearances are outside the loading target. Wave-0 accuracy debt and all proof requirements remain in force;
+do not load tail cards just to reduce the full compiler's diagnostic count.
+
 You are one of eight subagents of one wave. The orchestrator's prompt names your role, your wave number, your card list
 and your branch. `README.md` here says where the load stands and what 100% means; `ORCHESTRATION.md` is the
 orchestrator's procedure. This file is yours. Where it is silent, wave 4d's brief

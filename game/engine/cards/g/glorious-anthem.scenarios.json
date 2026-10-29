@@ -222,6 +222,18 @@
           "cards": []
         }
       ]
+    },
+    {
+      "name": "Its static ability boosts another creature you control but not an opponent's creature (CR 613.4c)",
+      "setup": [
+        {"seat": 0, "zone": "battlefield", "cards": ["Glorious Anthem", "Smoke Bear"]},
+        {"seat": 1, "zone": "battlefield", "cards": ["Smoke Bear"]}
+      ],
+      "steps": [],
+      "expect": [
+        {"seat": 0, "stats": {"card": "Smoke Bear", "power": 3, "toughness": 3}},
+        {"seat": 1, "stats": {"card": "Smoke Bear", "power": 2, "toughness": 2}}
+      ]
     }
   ]
 }

@@ -246,6 +246,23 @@
           }
         }
       ]
+    },
+    {
+      "name": "Flying excludes a ground blocker and vigilance leaves Serra Angel untapped when it attacks (CR 702.9b, 702.20b)",
+      "setup": [
+        {"seat": 0, "zone": "battlefield", "cards": ["Serra Angel"]},
+        {"seat": 1, "zone": "battlefield", "cards": ["Smoke Bear"]}
+      ],
+      "steps": [
+        {"attack": ["Serra Angel"]},
+        {"expect": [{"seat": 0, "tapped": "Serra Angel", "is": false}]},
+        {"block": [], "blockers": []},
+        {"to": {"turn": 1, "phase": "MAIN2"}}
+      ],
+      "expect": [
+        {"seat": 1, "life": 36},
+        {"seat": 0, "tapped": "Serra Angel", "is": false}
+      ]
     }
   ]
 }

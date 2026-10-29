@@ -459,11 +459,12 @@ export function quickTapPlan(units, pool, cost) {
  * Each untapped creature its caster taps pays one mana of the spell's total cost instead: a colored one of a color the
  * creature is, or a generic one. Not an additional or alternative cost: it pays part of the total cost, once that is known
  * (702.51b). Each creature pays one symbol: generic, or a colored or hybrid one of a color it is; a colorless creature
- * pays only generic, never {C}. The rest is paid with mana from the pool. Phyrexian, snow and {2/W} symbols are left to the
- * pool, and a cost with {X} is not convoked here (rules/actions.mjs does not offer it).
+ * pays only generic, never {C}. The rest is paid with mana from the pool. Hybrid and Phyrexian choices are determined
+ * before the total cost (CR 601.2b): their colored part can be convoked, and a monohybrid's generic part can use multiple
+ * creatures. Snow still requires snow mana. The caller counts a chosen X into generic mana before asking here.
  */
-const convokable = (symbol) => symbol.kind === "colored" && symbol.color !== "C" || symbol.kind === "hybrid";
-const paysSymbol = (colors, symbol) => (symbol.kind === "colored" ? colors.includes(symbol.color) : symbol.either.some((c) => colors.includes(c)));
+const convokable = (symbol) => ["colored", "phyrexian"].includes(symbol.kind) && symbol.color !== "C" || symbol.kind === "hybrid";
+const paysSymbol = (colors, symbol) => (symbol.kind === "hybrid" ? symbol.either.some((c) => colors.includes(c)) : colors.includes(symbol.color));
 /* What is left of `cost` once these of its symbols (indices into cost.symbols) and this much generic are paid. */
 function leftOf(cost, paid, generic) {
   const symbols = cost.symbols.filter((s, i) => s.kind !== "generic" && !paid.includes(i));
@@ -473,17 +474,49 @@ function leftOf(cost, paid, generic) {
   return {symbols: [...symbols, ...(left > 0 ? [{kind: "generic", amount: left}] : [])], generic: left, colored, variable: cost.variable};
 }
 
+/* A {2/W} choice is one colored mana or two generic mana in the total cost (CR 601.2b, 702.51b). The latter can be
+   shared by two creatures, or a creature and mana; it is not one symbol a single creature must pay in full. */
+function* convokeCosts(cost) {
+  const i = cost.symbols.findIndex((s) => s.kind === "monohybrid");
+  if (i < 0) { yield cost; return; }
+  const symbol = cost.symbols[i], rest = cost.symbols.filter((_, n) => n !== i);
+  yield* convokeCosts({...cost, symbols: [...rest, {kind: "colored", color: symbol.color}]});
+  yield* convokeCosts({...cost, symbols: rest, generic: cost.generic + symbol.amount});
+}
+
+function convokeWays(pool, cost, creatures, options, limit, mayLeaveUntapped) {
+  const found = new Map();
+  for (const total of convokeCosts(cost)) {
+    if (found.size >= limit) break;
+    const needs = total.symbols.map((s, i) => [s, i]).filter(([s]) => convokable(s)), seen = new Set();
+    const assign = (k, paid, generic) => {
+      if (found.size >= limit) return;
+      const key = `${k}|${[...paid].sort((a, b) => a - b).join(",")}|${generic}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      if (k === creatures.length) {
+        for (const way of payments(pool, leftOf(total, paid, generic), options, limit))
+          if (found.size < limit) found.set(paymentKey(way), way);
+        return;
+      }
+      const colors = creatures[k].colors.filter((c) => c !== "C");
+      for (const [symbol, i] of needs) if (!paid.includes(i) && paysSymbol(colors, symbol)) assign(k + 1, [...paid, i], generic);
+      if (generic < total.generic) assign(k + 1, paid, generic + 1);
+      if (mayLeaveUntapped) assign(k + 1, paid, generic);
+    };
+    assign(0, [], 0);
+  }
+  return [...found.values()];
+}
+
 /**
- * Whether the pool and these untapped creatures, each paying one symbol, can pay `cost` at all -- the creatures as units of
- * their colors beside the pool's mana (tapPlans): a colorless one pays only generic.
+ * Whether the pool and any subset of these untapped creatures can pay `cost`: each creature contributes one colored
+ * or generic mana, and the caller supplies the life available for Phyrexian choices.
  *
  * @param {Array<{id: number, colors: string[]}>} creatures
  */
-export function convokeCanPay(pool, cost, creatures) {
-  /* tapPlans leaves {X}, Phyrexian, snow and {2/W} costs alone, so none of them is convoked here. */
-  const units = [...creatures.map((c) => ({id: `creature:${c.id}`, colors: c.colors.filter((k) => k !== "C")})),
-    ...MANA_KEYS.flatMap((k) => Array.from({length: pool[k] ?? 0}, (_, n) => ({id: `pool:${k}:${n}`, colors: [k]})))];
-  return tapPlans(units, cost, 1).length > 0;
+export function convokeCanPay(pool, cost, creatures, options = {}) {
+  return convokeWays(pool, cost, creatures, options, 1, true).length > 0;
 }
 
 /**
@@ -497,21 +530,7 @@ export function convokeCanPay(pool, cost, creatures) {
  * @returns {Array<{mana: object, life: number}>}
  */
 export function convokePayments(pool, cost, creatures, options = {}, limit = PAY_CHOICES) {
-  const needs = cost.symbols.map((s, i) => [s, i]).filter(([s]) => convokable(s));
-  const found = new Map();
-  /* Each creature pays one of the symbols left that it can, or generic. */
-  const assign = (k, paid, generic) => {
-    if (found.size >= limit) return;
-    if (k === creatures.length) {
-      for (const way of payments(pool, leftOf(cost, paid, generic), options, limit)) if (found.size < limit) found.set(paymentKey(way), way);
-      return;
-    }
-    const colors = creatures[k].colors.filter((c) => c !== "C");
-    for (const [symbol, i] of needs) if (!paid.includes(i) && paysSymbol(colors, symbol)) assign(k + 1, [...paid, i], generic);
-    if (generic < cost.generic) assign(k + 1, paid, generic + 1);
-  };
-  assign(0, [], 0);
-  return [...found.values()];
+  return convokeWays(pool, cost, creatures, options, limit, false);
 }
 
 /* ---- delve (CR 702.66a): cards of the graveyard help cast a spell ----

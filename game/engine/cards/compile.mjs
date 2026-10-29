@@ -217,6 +217,9 @@ const SMOKE_FIXTURES = Object.freeze({
   "Smoke Instant": {types: ["Instant"], manaCost: "{0}", colors: ["U"], spell: {id: "s", text: "Target player draws a card.", targets: [{what: "player"}], effects: [{effect: "draw", count: 1, who: {target: 0}}]}},
   /* A free creature the card's own player casts, so a card aimed at its controller's creature spell has one to answer. */
   "Smoke Whelp": {types: ["Creature"], manaCost: "{0}", power: 1, toughness: 1},
+  /* Free permanent spells for a counterspell whose target must have one of these types (Annul). */
+  "Smoke Artifact Spell": {types: ["Artifact"], manaCost: "{0}"},
+  "Smoke Enchantment Spell": {types: ["Enchantment"], manaCost: "{0}"},
   /* A changeling card, every creature type (CR 702.73a), in the hand of a card that beholds ("behold an Elf", CR 701.4a). */
   "Smoke Changeling": {types: ["Creature"], subtypes: ["Shapeshifter"], manaCost: "{1}", keywords: ["Changeling"], power: 1, toughness: 1},
   /* A Jace planeswalker card, in the hand of a card that beholds a Jace ("behold a Jace or pay {1}", Countersculpt): Jace is a
@@ -250,6 +253,8 @@ export function smokeScenario(script) {
   const spellAims = (script.abilities ?? []).filter((a) => a?.kind === "spell").flatMap(aims).filter((t) => JSON.stringify(t).includes('"what":"spell"'));
   const wants = (test) => spellAims.some((t) => [t, ...(Array.isArray(t.anyOf) ? t.anyOf : [])].some(test));
   const answered = wants((o) => (o.types ?? []).includes("Creature")) ? "Smoke Whelp"
+    : wants((o) => (o.types ?? []).includes("Artifact")) ? "Smoke Artifact Spell"
+    : wants((o) => (o.types ?? []).includes("Enchantment")) ? "Smoke Enchantment Spell"
     : wants((o) => (o.types ?? []).includes("Instant") || (o.colors ?? []).length > 0) ? "Smoke Instant" : "Smoke Sorcery";
   const instantSpeed = !ownSpell && !isLand && Boolean(script.identity.manaCost)
     && ((script.identity.types ?? []).includes("Instant") || (script.abilities ?? []).some((a) => a?.kind === "keyword" && a.keyword === "flash"));
@@ -347,13 +352,12 @@ export function smokeTest(script, cards) {
   try {
     const {state, events} = runScenario({...scenario, stopWhenOver: true}, resolve, fixtures);
     const bad = zoneProblems(state);
-    /* Whether the card was actually played: a counterspell with nothing to counter stays in hand, which is the
-       fixture's limit and not the script's fault -- so it is reported, not refused. */
+    /* Only an actual cast or land-play event proves play. A no-mana-cost permanent seeded on the battlefield may
+       exercise an ability, but was never played; the compiler must not mistake that fixture for cast evidence. */
     /* A double-faced card's events name the face that was cast or played -- and a preparation card's its own name, the
        only one it has in every zone (CR 722.4): "Goblin Glasswright", never the pair. */
     const names = script.back !== undefined || script.adventure !== undefined || script.prepare !== undefined ? String(script.identity.name).split(" // ") : [script.identity.name];
-    const played = (!(script.identity.types ?? []).includes("Land") && !script.identity.manaCost)
-      || events.some((e) => (e.kind === "GameEventLandPlayed" && names.includes(e.data.fields.land?.name))
+    const played = events.some((e) => (e.kind === "GameEventLandPlayed" && names.includes(e.data.fields.land?.name))
         || (e.kind === "GameEventSpellAbilityCast" && e.data.fields.sa?.isSpell && names.includes(e.data.fields.card?.name)));
     const resolved = events.filter((e) => e.kind === "GameEventSpellResolved").length;
     return {ok: bad.length === 0, error: null, problems: bad, played, resolved};

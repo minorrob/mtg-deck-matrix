@@ -1,0 +1,237 @@
+{
+  "schema": "CrankCardExercised@1",
+  "games": [],
+  "scenarios": [
+    "Glorious Anthem: Glorious Anthem cast, and each ability used once (drafted by game/tools/card-waves.mjs, approved in review)",
+    "Glorious Anthem: Its static ability boosts another creature you control but not an opponent's creature (CR 613.4c)",
+    "Serra Angel: Serra Angel cast, and each ability used once (drafted by game/tools/card-waves.mjs, approved in review)",
+    "Serra Angel: Flying excludes a ground blocker and vigilance leaves Serra Angel untapped when it attacks (CR 702.9b, 702.20b)",
+    "Thran Dynamo: Three colorless"
+  ],
+  "unattributed": [
+    {
+      "game": null,
+      "scenario": "Glorious Anthem: Glorious Anthem cast, and each ability used once (drafted by game/tools/card-waves.mjs, approved in review)",
+      "kind": "GameEventSpellResolved",
+      "name": "Glorious Anthem",
+      "abilityId": null,
+      "reason": "no printed ability with that id"
+    },
+    {
+      "game": null,
+      "scenario": "Serra Angel: Serra Angel cast, and each ability used once (drafted by game/tools/card-waves.mjs, approved in review)",
+      "kind": "GameEventSpellResolved",
+      "name": "Serra Angel",
+      "abilityId": null,
+      "reason": "no printed ability with that id"
+    }
+  ],
+  "cards": {
+    "Glorious Anthem": {
+      "singleFace": true,
+      "cast": 0,
+      "played": 0,
+      "resolved": 0,
+      "exercised": 0,
+      "games": [],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Glorious Anthem",
+          "kind": "static",
+          "keyword": null,
+          "text": "Creatures you control get +1/+1.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [
+            "Glorious Anthem: Its static ability boosts another creature you control but not an opponent's creature (CR 613.4c)"
+          ],
+          "games": [],
+          "counterfactual": [
+            {
+              "status": "proved",
+              "method": "runtime-ability-removal",
+              "scenario": "Its static ability boosts another creature you control but not an opponent's creature (CR 613.4c)",
+              "scenarioIndex": 1,
+              "baseline": {
+                "status": "passed",
+                "checks": 2,
+                "events": 3
+              },
+              "mutation": {
+                "path": "abilities[0]",
+                "id": "a0",
+                "kind": "static"
+              },
+              "result": {
+                "status": "failed",
+                "message": "Its static ability boosts another creature you control but not an opponent's creature (CR 613.4c): Smoke Bear is 2/2, not 3/3"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "Serra Angel": {
+      "singleFace": true,
+      "cast": 0,
+      "played": 0,
+      "resolved": 0,
+      "exercised": 0,
+      "games": [],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Serra Angel",
+          "kind": "keyword",
+          "keyword": "flying",
+          "text": "Flying",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [
+            "Serra Angel: Flying excludes a ground blocker and vigilance leaves Serra Angel untapped when it attacks (CR 702.9b, 702.20b)"
+          ],
+          "games": [],
+          "counterfactual": [
+            {
+              "status": "proved",
+              "method": "runtime-ability-removal",
+              "scenario": "Flying excludes a ground blocker and vigilance leaves Serra Angel untapped when it attacks (CR 702.9b, 702.20b)",
+              "scenarioIndex": 1,
+              "baseline": {
+                "status": "passed",
+                "checks": 4,
+                "events": 12
+              },
+              "mutation": {
+                "path": "keywords[0]",
+                "keyword": "Flying",
+                "kind": "keyword"
+              },
+              "result": {
+                "status": "failed",
+                "message": "Flying excludes a ground blocker and vigilance leaves Serra Angel untapped when it attacks (CR 702.9b, 702.20b): the creatures that may block are [\"Smoke Bear\"], not []"
+              }
+            }
+          ]
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Serra Angel",
+          "kind": "keyword",
+          "keyword": "vigilance",
+          "text": "Vigilance (Attacking doesn't cause this creature to tap.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [
+            "Serra Angel: Flying excludes a ground blocker and vigilance leaves Serra Angel untapped when it attacks (CR 702.9b, 702.20b)"
+          ],
+          "games": [],
+          "counterfactual": [
+            {
+              "status": "proved",
+              "method": "runtime-ability-removal",
+              "scenario": "Flying excludes a ground blocker and vigilance leaves Serra Angel untapped when it attacks (CR 702.9b, 702.20b)",
+              "scenarioIndex": 1,
+              "baseline": {
+                "status": "passed",
+                "checks": 4,
+                "events": 12
+              },
+              "mutation": {
+                "path": "keywords[1]",
+                "keyword": "Vigilance",
+                "kind": "keyword"
+              },
+              "result": {
+                "status": "failed",
+                "message": "Flying excludes a ground blocker and vigilance leaves Serra Angel untapped when it attacks (CR 702.9b, 702.20b): Serra Angel is tapped"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "Thran Dynamo": {
+      "singleFace": true,
+      "cast": 0,
+      "played": 0,
+      "resolved": 0,
+      "exercised": 0,
+      "games": [],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Thran Dynamo",
+          "kind": "activated",
+          "keyword": null,
+          "text": "{T}: Add {C}{C}{C}.",
+          "mana": true,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [
+            "Thran Dynamo: Three colorless"
+          ],
+          "games": [],
+          "counterfactual": [
+            {
+              "status": "proved",
+              "method": "runtime-ability-removal",
+              "scenario": "Three colorless",
+              "scenarioIndex": 0,
+              "baseline": {
+                "status": "passed",
+                "checks": 1,
+                "events": 5
+              },
+              "mutation": {
+                "path": "abilities[0]",
+                "id": "a0",
+                "kind": "mana"
+              },
+              "result": {
+                "status": "failed",
+                "message": "Three colorless: Rob is not offered activate-mana Thran Dynamo"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "scope": {
+    "selected": [
+      "Thran Dynamo",
+      "Glorious Anthem",
+      "Serra Angel"
+    ],
+    "cardRoot": "C:\\Users\\robmi\\CrankMagic\\worktrees\\load100\\w0-w4-combat\\game\\engine\\cards"
+  },
+  "summary": {
+    "final": 3,
+    "exercised": 0,
+    "neverExercised": [
+      "Glorious Anthem",
+      "Serra Angel",
+      "Thran Dynamo"
+    ],
+    "abilities": 4,
+    "reached": 4,
+    "scenarioReached": 4,
+    "counterfactualReached": 4,
+    "unreached": [],
+    "complete": true,
+    "scenarioComplete": true
+  }
+}

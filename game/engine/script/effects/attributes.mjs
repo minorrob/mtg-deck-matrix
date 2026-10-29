@@ -20,9 +20,9 @@
  *   (722.3b), or gone, and the copy ceases to exist. The copy is a copy of a card: cast, it is a spell like any other, and
  *   once it leaves the stack it ceases to exist (CR 704.5e; rules/stack.mjs).
  *
- * WHAT IS NAMED, NOT BUILT: a token or a permanent that is a copy of a preparation card having its prepare spell (722.2b,
- * copiable values) -- tokens and copies are made without one, so they never become prepared -- and a prepare spell that is
- * itself a permanent spell (cards/index.mjs refuses one).
+ * A copied preparation card retains its alternative spell characteristics (CR 722.2b), including tokens. Its prepared
+ * designation is not copied; the copy becomes prepared only when a rule or effect makes it so. A prepare spell that is
+ * itself a permanent spell remains unbuilt (cards/index.mjs refuses one).
  */
 
 import {addObject, removeObject} from "../../state/index.mjs";
