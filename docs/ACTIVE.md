@@ -10,7 +10,10 @@ and the engine modules its debt fixes require, subject to the ownership requests
 The primary checkout has another session's unfinished merge and is untouched.
 The eight roles run in batches because this session supports three active subagents.
 No new cards until wave 0 closes. No provider API calls, production changes, migrations, or spending.
-**October 29 handoff:** all bounded role checkpoints are integrated in draft #912; source/generated checkpoint
+**Resumed October 29:** root continues from `11e4fe86` to finish wave 0 and then the frozen 95%-appearance load.
+W1 resumes faces/emblems/preparation, W4 resumes combat and W5 resumes mana/cost debt in their isolated worktrees.
+Root owns integration, the remaining inherited-anchor repairs and verifier/harness work while these roles run.
+The prior bounded role checkpoints are integrated in draft #912; source/generated checkpoint
 `5e06d705` includes main `b9999b16`. W2 `fddbd9b9`, W3 `e5dfd398`, W4 `c3923102`, W7 `a6d128e2` and V8 `10a1d325`
 are pushed. Real entry/land/script-token continuations and strict offer rejection are proved within their bounded scopes.
 Three existing chosen-type scripts are corrected; no new cards or promotions. Current selected ability evidence is 5/10

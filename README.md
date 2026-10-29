@@ -955,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 671 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 672 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1564,6 +1564,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `ability-proof` - `tests/ability-proof.mjs`: passing scenarios, followed by removal of one ability from a cloned runtime definition; static boosts, final flying combat damage and vigilance must change, while offer-only failures, keyword presence, red baselines, generic errors and saved card/schema changes receive no behavioral credit; a missing mana-activation offer stays unproved
 - `ability-missing-prompt` - `tests/ability-missing-prompt.mjs`: actual Adaptive Automaton, Metallic Mimic and Roaming Throne entry-choice omissions reach the missing-prompt precheck and remain unproved; classifier/tag removals must catch inflated ability credit from stale verifier sources
 - `scenario-block-policy` - `tests/scenario-block-policy.mjs`: an explicit named block-if-legal policy checks both complete declarations through the rules and records both branches through counterfactual proof; actual loaded Zephyr Sprite and runtime Flying removal finish combat with different final damage, life and graveyard results; malformed, ambiguous and illegal declarations fail
+- `scenario-entry-order` - `tests/scenario-entry-order.mjs`: five saved counter scenarios explicitly answer either entry-replacement order and retain every original final expectation; unanswered questions produce a classified offer diagnostic and earn no ability proof
 - `sentence-paragraphs` - `tests/sentence-paragraphs.mjs`: partial translations keep an ability's paragraph together while preserving independent keyword abilities and the current spell segmentation
 - `engine-mana-upkeep` - `tests/engine-mana-upkeep.mjs`: the table's optional house rule keeps mana made in upkeep and draw until spent or the turn ends; AI pilots keep the book's mana rule
 - `fuzz-library` - `tests/fuzz-library.mjs`: G1 over Rob's whole library (`tools/fuzz-live.mjs --library`) -- each seed's four decks Commander decks of his library (a commander the table permits, 99 cards of its color identity, none twice but basics), the same for the same seed; a game's exception said with its seed and the run going on; seed 229, the waterbend paid with rider mana that stalled a table, played clean through the real room
