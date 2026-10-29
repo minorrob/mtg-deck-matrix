@@ -61,10 +61,36 @@ different actor is refused. The persistent controller cache preserves this behav
 window; it retains the existing 1,024-entry bound. Rejected stale/wrong-child/forged-Back answers change no state,
 receipt or revision. An unaccepted expired child ID cannot answer a later original question.
 
+Private tape entries carry a server-stamped `refinementInput` with schema `CrankPrivateRefinementInput@1`, numeric actor
+and exact accepted outer request. This field is private store/tape metadata, never a room view or client permission.
+Replay validates that raw request with only its revision rebound to the current controller. Its real translated answer
+must match the recorded canonical answer before any main receipt, revision or cache changes. Actor/action/choice and
+original raw/canonical revisions must agree. Only then does the controller retain the original raw payload for retry
+identity. Native current choice/generation is validated once through the existing temporary validator. Client fields
+shaped like replay metadata cannot enable this server-only fourth-argument path.
+
+This preserves actual `kind: "cancel"` and typed-player retries after full tape replay, native question expiry and JSON
+reload. Earlier prototype tape entries without raw metadata retain their old canonical replay boundary; no original
+request can be reconstructed when it was never stored. A forged server actor or canonical answer changes neither the
+saved original native question/caches nor even the last public event batch cursor. The ordinary controller answer
+path is unchanged. The ordinary replay receipt behavior is also unchanged; this metadata restores only private
+requests that were actually recorded, not an invented reconstruction of older ordinary request caches.
+
 An initial native effect-play question also needs the owner's authoritative generation refresh when external facts
 change. Child-only expiry is insufficient: a refreshed original must both remove illegal cached targets and include
-newly legal native variants. This dependency is being integrated separately with W5. No complete freshness or
-publication claim is made until the joint native/controller lifecycle and stale-generation proofs pass.
+newly legal native variants. W5's clean `3b879144` supplies pure `deriveEffectPlay` and authoritative `refreshEffectPlay`.
+The room invokes refresh during driver/reload reconciliation, clears stale child references and reoffers only the
+current native question when its generation changes. Ordinary private inputs never refresh/write its original native
+question. Native copied-card pools/permissions remain fixed, and final confirmation carries the exact original native
+`choiceId` into the real handler. Locked native funding/targeting and historical/missing-origin states are not refreshed.
+
+House answers carry the exact freshly offered native choice ID; Easy/Normal fixtures require zero refused answers.
+Existing refusal history/tallies remain intact. Saved standing effect-play answers must match both current native ID
+and full semantic question signature, or they are cleared and reprompted. Cached old indices are never retagged to a
+fresh generation. Actual played target-owner departure, newly legal donated-Shalai targets, saved reload
+reconciliation, stale/retry/JSON and native Boros double strike prove this boundary. The test's initial lowercase
+keyword/empty-stack expectations were corrected to the real canonical `Double Strike` and preserved resolving Scepter
+frame, with stricter exact-effect/frame/event assertions; those fixture errors are not credited as engine fixes.
 
 Current live starts record `effectPlayVersion: 1` in both pod and engine state. The live room/table entry points force
 this value rather than accepting a client opt-out. Native origin/generation behavior is independent of the older
@@ -80,7 +106,9 @@ Focused native fixtures use actual saved definitions: departed Ao; Shadrix's com
 optional decline; Scepter/Boros Charm; actual Magus Sisters random rolls; Reverberate and Return the Favor copies.
 Room fixtures reach these questions through actual game actions, preserving payments, prefix events, original
 handlers, reload, replay and privacy. Repeated fixture decks are bounded regression evidence, not Commander-load
-G-3/G-5 acceptance. Exact counts and mutation receipts are recorded in PLAYTEST-PROGRESS.md at publication.
+G-3/G-5 acceptance. Current proof is controller68/native60/committed-room201/generation-room45/epoch-room30. All54
+committed probes and the preserved original cast19/activation13/cursor1 probes are caught on passing original reader
+unions. Exact commands, source checkpoints, original REDs and focused reader receipts are in PLAYTEST-PROGRESS.md.
 
 Counted targets continue through their existing native target questions. This sidecar does not invent counted-target
 enumerations, free-spree funding, copy modes or unavailable native actions. Effect-paid additional-cost continuations

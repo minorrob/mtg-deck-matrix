@@ -45,6 +45,12 @@ priority, and retains required-choice guidance. A native optional decline must e
 remaining effects. Final confirmation invokes that original handler once and uses W5's actual play/payment continuation.
 Copies keep their selected modes. Native random mode rolls remain native RNG commitments; Back cannot cross a roll or
 other committed boundary. Unsupported free-spree casts stay unavailable until their real payment implementation exists.
-No committed-question production change is included in this checkpoint.
+The original activated checkpoint included no committed-question production change. The separate approved slice now
+implements the bounded live-question refinement in COMMITTED-MODAL-CONTRACT.md: actual controller68/native60/room201,
+generation-room45/epoch30 and54 caught probes with the original eight-reader baseline retained. Original pending and
+committed engine facts remain intact during child steps; current native generations reoffer after external changes,
+and server-stamped raw private requests retain exact receipt identity across replay/expiry/JSON. Counted-target steps
+and unavailable additional-cost casts stay native/unsupported here. Shared UI consumption and full route acceptance
+are not claimed by these bounded fixtures.
 
 Shared ROB-209, full acceptance, UI consumption and wave 0 remain open. No cards are added or promoted.

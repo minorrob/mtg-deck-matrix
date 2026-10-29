@@ -127,49 +127,73 @@ alternative-cost19, tiered20, escalate23, modal-triggers18, ability-target23, tr
 targets-up-to44, costs32, Cancel63/room53, Undo23, replay14, yield43, optional21, table186, wiring131 and integrity.
 The two new suites bring this checkpoint's actual registry count to 690. No browser or full-suite run is duplicated.
 
-## Committed refinement working checkpoint, unpublished
+## Committed native refinement, epoch and raw replay receipts
 
-After published `8e363d95`, root approved a separate private refinement over still-live native mandatory questions.
-Local history preserves intermediate source and REDs in `b01dbaf6`, `3287eefb`, `3bde4caa`, `89bcf5aa` and `d2274cfa`;
-the approved integration `0130f853` entered by merge `01289298`. These local commits are not a published acceptance
-checkpoint. [COMMITTED-MODAL-CONTRACT.md](COMMITTED-MODAL-CONTRACT.md) states the additive schema and exact boundaries.
+Runtime `72a785ab` and assembled merge `d22ea1b3` preserve the original REDs/history while consuming clean root
+`bb8c2aab` and W5 API `3b879144` by merge commits. [COMMITTED-MODAL-CONTRACT.md](COMMITTED-MODAL-CONTRACT.md) states the
+private schema, server tape metadata, native generation and cancellation boundaries. Original priority-cast and
+activation stages remain intact. This is a bounded engine checkpoint; shared UI completion and full acceptance stay open.
 
-Current native/controller positives: refinement-controller35 and committed-native60. Actual Ao is refined after death
-using saved script/LKI; Shadrix retains zero-or-two modes, distinct players and native optional decline; Scepter/Boros
-uses the existing effect handler; real copied spell/ability modes stay locked. A native Magus random roll cannot be
-replaced by private mode selection or crossed by Back. An actual unrelated seat departure can leave Ao's visible
-question unchanged while its private facts signature correctly expires.
+Current focused native/controller evidence:
 
-Before adding the preserved generation RED, committed-room158 passed: actual Ao/Shadrix/Scepter and Magus rooms,
-original main pending/answered byte-identical, full engine/RNG/journal/history unchanged during child steps, observer
-privacy at a fixed event cursor, detached returned data, Back/Cancel boundaries, native optional decline, reload,
-partial/final replay and original native confirmation once. Accepted private receipts retain actor/full-payload
-ownership beyond the room's 256-entry cache. Old accepted retries cannot reopen a child or answer a later question.
+- `engine-refinement-controller`: **68**. Native pending/answered stay byte-identical. Raw Cancel and typed-player
+  receipt identity survives replay, JSON and original-question expiry. Conflicting/foreign payloads and forged server
+  actor/action/choice/revision/canonical records refuse before cache/revision mutation. Client metadata-shaped fields
+  cannot enable the server replay path; native current-choice validation runs once through its temporary validator.
+- `engine-committed-refinement`: **60**. Actual departed Ao uses saved script/LKI; Shadrix retains zero-or-two modes,
+  distinct players and native optional decline; Scepter/Boros invokes its original handler; real copied spell/ability
+  modes remain locked. Native Magus rolls first, with no Back across RNG. Unrelated actual seat departure expires
+  private references even when Ao's visible question is unchanged.
+- `room-committed-refinement`: **201**. Actual played Ao/Shadrix/Scepter/Magus rooms preserve full engine/RNG/journal/
+  history during private steps, fixed-cursor observer privacy, detached data, Back/Cancel/decline, reload, partial/full
+  replay, actual actor/target departure and one final native handler. More than 256 actual private inputs evict the
+  room cache while the bounded controller receipt still handles retries. Forged replay metadata leaves even the last
+  public event cursor unchanged. Original raw requests retry after full replay, native expiry and another JSON reopen.
+- `room-effect-play-refresh`: **45**. Actual removed/newly legal targets, fixed original copied-card pool, saved native
+  reload reconciliation, old standing-answer reprompt and house/Easy/Normal current-ID answers with zero refusals.
+  Final native Boros creates one actual temporary Double Strike effect on the selected newly legal target.
+- `room-effect-play-version`: **30**. Live room/table starts force current epoch1 despite a supplied opt-out; unsupported
+  saved epochs refuse. A captured actual pre-version `sourceChoices: true` tape has 17 inputs, native `play:0:5`, 94
+  events, state hash `7e55d96710ee133e` and journal hash `a7eb986f187bfda2`; exact historical replay retains both hashes
+  and the absent epoch field. Historical compatibility is not migration or current G-3/G-5 credit for old live games.
 
-The next actual played three-seat Scepter regression is RED: Maya's selected Cankerbloom departs on concession while
-Rob and Trey survive, but the original native cached play question keeps its old ID. A separate valid donated-Shalai
-saved-room fixture also demonstrates missing newly legal Cankerbloom targets. Child-only expiry cannot close this
-route. W5 owns the isolated native derive/refresh API and optional state epoch; this lane owns current room/table
-starts, authoritative drive/reload refresh, private expiry, exact-current-ID house answers and conservative standing
-answer binding. No native cached-index substitution or old-question restoration is authorized.
+The actual three-seat Scepter target-owner concession and donated-Shalai newly-legal fixture were RED because cached
+native play choices were not refreshed. W5's pure derive/authoritative refresh plus the room drive/reload lifecycle
+now make those same cases GREEN. Ordinary child inputs never refresh or replace the original native question.
+Server final confirmation carries its exact native generation ID; cached standing indices are never silently retagged.
+The separate raw-retry RED came from recording translated Cancel/player answers rather than accepted original payloads.
+Server-stamped private tape metadata now validates the actual translation before retaining that original retry identity.
+These regressions retain their original assertions and histories. Two additional fixture expectation errors are
+explicitly not engine fixes: canonical keyword spelling is `Double Strike`, and the pending resolving Scepter ability
+correctly remains on the stack. Their repaired assertions require the exact temporary effect, original native frame
+and zero unwanted cast events.
 
-The captured pre-version `sourceChoices: true` fixture has 17 actual native inputs, native choice `play:0:5`, 94 events,
-state hash `7e55d96710ee133e` and journal hash `a7eb986f187bfda2`. Historical replay already reproduces those exact
-values. New live starts force `effectPlayVersion: 1`; unsupported saved epochs are refused. The new current-state
-assertion remains RED until W5's optional state field/API dependency is integrated. Historical absence remains absent,
-not a zero field. Migration of old live matches and current operational/card-load acceptance remain open.
+Final-source causal proof uses every original reader baseline and probe:
 
-The separate restore cursor fix `f7090a12` is reviewable independently: restore resumes at journal sequence plus one,
-matching normal writes. Cursor31 and its one causal mutation pass, preserving actual retained events/floors and exact
-next-event delivery; original stream32, projection93 and replay14 pass. No journal reset, dropped history or masked
-event is involved. [ROOM-RESTORE-CURSOR.md](ROOM-RESTORE-CURSOR.md) records the original RED and stream evidence.
+```text
+python game/tools/batch/breaks.py game/tools/batch/breaks-playtest-committed-refinement.py
+python game/tools/batch/breaks.py game/tools/batch/breaks-playtest-cast-stages.py
+python game/tools/batch/breaks.py game/tools/batch/breaks-playtest-action-stages.py
+python game/tools/batch/breaks.py game/tools/batch/breaks-playtest-restore-cursor.py
+```
 
-Earlier 37 committed-refinement probes were caught before the latest facts/epoch changes. The final-source spec now
-has 44 unique anchors and ten readers, retaining the entire original eight-reader baseline. It is not credited until
-the generation REDs are fixed and that full baseline and all probes run. Focused current readers pass: cast52,
-activated44, controller66, Cancel63/room53, table188, replay14, stream32, projection93, yield43 and feature-wiring131.
-`room-resolve-all` was inadvertently included in a focused command and prelaunch-skipped on the missing default
-browser cache; no browser ran and no credit is claimed. No rerun was attempted during the other workers' native work.
+All four unbroken baselines pass: **54 + 19 + 13 + 1 = 87 caught**, each `missed: []`. The committed driver retains the
+entire original eight-reader union and adds the two generation/epoch readers. Original cast52/room46, activated44/
+room42 and cursor31 remain unchanged. Every mutated file was restored and no backup remained. Logs are outside the
+worktree under `worktrees/load100/scratch/playtest-{committed-final,cast-original-final,action-original-final,cursor-final}-mutations.log`.
 
-Shared ROB-205/209, UI consumption, full Actions, wave 0 and every card-load gate remain open. No cards are added or
-promoted. The new fixtures are bounded regressions, not G-3/G-5 Commander-load acceptance.
+The separately reviewable restore fix `f7090a12` resumes at journal sequence plus one, matching normal writes. Its
+cursor31 and one reversion preserve retained events/floors, empty-journal zero and exact next delivery; original
+stream32, projection93 and replay14 pass. [ROOM-RESTORE-CURSOR.md](ROOM-RESTORE-CURSOR.md) retains the actual RED. No
+journal reset, history drop or masked event is used.
+
+Additional affected readers pass on assembled source: Cancel63/room53, Undo23, yield43, optional-count21, table188,
+Salty71/provocation21, blink113, decision-facts34, native effect-refresh70, ability-target23, trigger-targets28,
+top-card8, native Snoop room, held-draw14, assets136, service-worker9, wiring131 and integrity. The actual registry has
+707 Node suites. No full suite or unchanged browser proof is duplicated. An earlier accidental `room-resolve-all`
+prelaunch skip earned no credit; the independently published Snoop UI949 production98/browser controls and root9195
+production98 are documented separately, with their broader footer/camera limits preserved.
+
+Shared ROB-205/209 UI consumption, remaining counted/effect-paid routes, old-live migration, full Actions, wave0 and
+every card-load gate remain open. No cards are added or promoted; repeated fixture decks/setup are bounded regression
+evidence, not G-3/G-5 Commander-load acceptance.
