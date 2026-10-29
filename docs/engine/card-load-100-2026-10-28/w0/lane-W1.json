@@ -13,7 +13,7 @@
     "| Tokens and copies of prepare cards never prepared | `script/effects/attributes.mjs`:23 | W1 |",
     "| Unsure, to be settled by a scenario: Song of the Dryads and Sagas under ability loss; Incubator copies single-faced; Social Snub's copy; Winter's prompt and a draw-two cost under Narset | `rules/layers.mjs`:870; `permanents.mjs`:644; `actions.mjs` | V8 finds, W1/W6/W2/W7 fix |"
   ],
-  "status": "Bounded code checkpoint: 17 mutations caught; final reader/card checks in progress",
+  "status": "Bounded emblem/preparation checkpoint proven locally; independent review and root integration pending",
   "checkpoint": {
     "cardsAdded": 0,
     "cardsPromoted": 0,
@@ -37,7 +37,10 @@
       "feature-wiring: 131 checks passed",
       "anchors: 57 pre-existing problems; four moved h3/k3 anchors restored; no new problem",
       "breaks-load100-w0-w1-faces: 17 caught, missed: []; one unbroken suite union includes original h3/k3 suites and engine-cards",
-      "Diagnostic generated definitions used for mutation baseline and restored exactly to HEAD afterward; no backups remain"
+      "Diagnostic generated definitions used for mutation baseline and restored exactly to HEAD afterward; no backups remain",
+      "check-cards: 6430 definitions; 11025 scenarios, 0 failed; exit 0 on code checkpoint 9f4dfcb2",
+      "19 related reader suites passed; no timeout, no engine or rule module changed afterward",
+      "Pre-push SCAN PASS on code checkpoint 9f4dfcb2; final metadata-only commit requires its own scan"
     ],
     "queued": [
       "Battles: 0 final Battle definitions in baseline; battle-half ROB-149 not implemented in this checkpoint",
@@ -49,7 +52,6 @@
       "Teferi, Hero of Dominaria already defines an emblem object; no redundant card edit"
     ],
     "pending": [
-      "Final check-cards and 19 related reader suites running",
       "Independent V8 review/ability coverage",
       "Consolidated generation and root gates/staging"
     ],
@@ -81,6 +83,53 @@
       "722.4",
       "400.7"
     ],
-    "plan": "engine-compile --plan --demand with exact paired/comma-containing names: 2 asked, 2 hand-authored, no API calls"
+    "plan": "engine-compile --plan --demand with exact paired/comma-containing names: 2 asked, 2 hand-authored, no API calls",
+    "readerSuites": [
+      "tests/engine-state.mjs",
+      "tests/engine-layers.mjs",
+      "tests/engine-entering.mjs",
+      "tests/engine-projection.mjs",
+      "tests/engine-state-trigger.mjs",
+      "tests/engine-copies.mjs",
+      "tests/engine-copy-spell.mjs",
+      "tests/engine-copy-set.mjs",
+      "tests/engine-copy-memory.mjs",
+      "tests/engine-mdfc.mjs",
+      "tests/engine-adventure-targets.mjs",
+      "tests/engine-mutate.mjs",
+      "tests/engine-designations.mjs",
+      "tests/engine-adventure.mjs",
+      "tests/engine-adventure-asking.mjs",
+      "tests/engine-libload-l1.mjs",
+      "tests/engine-planeswalkers.mjs",
+      "tests/engine-granted-loyalty.mjs",
+      "tests/room-prepared.mjs"
+    ],
+    "mutationResults": [
+      "caught Elspeth makes an actual emblem -- tests/engine-load100-w1-faces.mjs",
+      "caught copy effects replace preparation characteristics -- tests/engine-load100-w1-faces.mjs",
+      "caught copy names override inset source names -- tests/engine-load100-w1-faces.mjs",
+      "caught last known copies keep their inset -- tests/engine-load100-w1-faces.mjs",
+      "caught the inset is a copiable value -- tests/engine-load100-w1-faces.mjs",
+      "caught token copies apply their prepared entry -- tests/engine-load100-w1-faces.mjs",
+      "caught token-copy entry gives the prepared designation -- tests/engine-load100-w1-faces.mjs",
+      "caught literal preparation tokens retain the inset -- tests/engine-load100-w1-faces.mjs",
+      "caught literal preparation tokens apply entry -- tests/engine-load100-w1-faces.mjs",
+      "caught tapped preparation tokens still prepare -- tests/engine-load100-w1-faces.mjs",
+      "caught literal-token entry gives the prepared designation -- tests/engine-load100-w1-faces.mjs",
+      "caught a copied entering card carries designations -- tests/engine-prepare.mjs",
+      "caught a Clone becomes prepared as it enters -- tests/engine-prepare.mjs",
+      "caught copied planeswalker: loyalty counters -- tests/engine-wave4a-h3.mjs",
+      "caught COPY_KEYS: loyalty -- tests/engine-wave4a-h3.mjs",
+      "caught last known copiable: loyalty -- tests/engine-wave4a-h3.mjs",
+      "caught chosen counters: a copy entering -- tests/engine-cards.mjs",
+      "missed: []"
+    ],
+    "limits": [
+      "Functional engine and existing projection data verified; no browser visual acceptance or real-table sign-off claimed",
+      "No clean-game exercises credited by these scenario/suite results",
+      "Full calibration will be consolidated after W4 sentence fixes merge; the base branch still contains the known original calibration debt",
+      "Generated definitions omitted intentionally for root consolidation; diagnostic generated file was restored"
+    ]
   }
 }
