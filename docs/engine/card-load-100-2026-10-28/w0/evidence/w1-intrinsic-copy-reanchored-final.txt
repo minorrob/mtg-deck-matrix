@@ -1,0 +1,3 @@
+baseline: every suite passes unbroken
+caught copied planeswalker: loyalty counters -- tests/engine-intrinsic-entry.mjs
+missed: []

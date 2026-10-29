@@ -3,6 +3,19 @@ SUITES = ['tests/scenario-explicit-choices.mjs', 'tests/card-check-cli.mjs', 'te
 SCENARIO = 'game/engine/cards/scenario.mjs'
 PROOF = 'game/tools/ability-proof.mjs'
 BREAKS = [
+    ('unknown physical source fields accepted', SCENARIO, 'Object.keys(spec).some(key => !["zone", "seat", "card", "index"].includes(key))', 'false'),
+    ('unknown physical source zone accepted', SCENARIO, '!Object.hasOwn(ZONES, spec.zone)', 'false'),
+    ('physical index coerced instead of checked', SCENARIO, '!Number.isInteger(spec.index) || spec.index < 0', 'false'),
+    ('physical source seat coerced', SCENARIO, '    if (!Number.isInteger(seat) || !state.players[seat]) failChoice("source seat must name an existing player");', ''),
+    ('missing physical reference not refused', SCENARIO, '    if (id === undefined) failChoice(`source ${name} has no physical index ${spec.index} in ${spec.zone} for seat ${seat}`);', ''),
+    ('physical reference does not constrain action', SCENARIO, '    if (source) found = found.filter(action => action.objectId === source.id);', ''),
+    ('physical indices silently switch after tapping', SCENARIO,
+     '      && (spec.zone === "battlefield" ? controllerOf(state, id) : state.objects[id].owner) === seat);\n    const id = ids[spec.index];',
+     '      && (spec.zone === "battlefield" ? controllerOf(state, id) : state.objects[id].owner) === seat).filter(id => legalActions(state, actor).some(action => action.objectId === id));\n    const id = ids[spec.index];'),
+    ('physical reference ignores source seat', SCENARIO, '      && (spec.zone === "battlefield" ? controllerOf(state, id) : state.objects[id].owner) === seat);', ');'),
+    ('physical front-card reference ignored', SCENARIO, '    const name = spec.card ?? card;', '    const name = card;'),
+    ('physical decision trace lost', SCENARIO, '    if (source) policies.push({kind: "physical-source", action: kind, ...source});', ''),
+    ('long diagnostic hides actual failure', 'game/tools/batch/check-cards.mjs', 'report("FAIL", file.card, "|", error.message);', 'report("FAIL", file.card, "|", error.message.slice(0, 240));'),
     ('malformed requested kind accepted', SCENARIO, '    if (ask !== null && (typeof ask !== "string" || !ask)) failChoice("navigation ask must name a question kind");', ''),
     ('navigation ignores requested question', SCENARIO, '      if (ask && state.turn === turn && state.phase === phase && state.awaiting?.kind === ask) return;', ''),
     ('navigation accepts a different question', SCENARIO, '      if (!ask && state.turn === turn && state.phase === phase && state.awaiting && !["declare-attackers", "declare-blockers", "order-triggers"].includes(state.awaiting.kind)) return;', '      if (state.turn === turn && state.phase === phase && state.awaiting && !["declare-attackers", "declare-blockers", "order-triggers"].includes(state.awaiting.kind)) return;'),
@@ -13,7 +26,7 @@ BREAKS = [
     ('same-name physical targets choose first', SCENARIO, '        if (explicitChoices && matches.length > 1) failChoice(`${card} has ambiguous physical targets; answer by explicit indices`);', ''),
     ('skip missing optional action', SCENARIO, '      if (explicitChoices) failChoice(`optional move is unavailable: ${kind} ${card}`);', ''),
     ('first target accepted', SCENARIO, '    if (explicitChoices && step.targets === "any") failChoice("targets: any cannot supply explicit scenario evidence");', ''),
-    ('first matching action accepted', SCENARIO, '    if (explicitChoices && found.length > 1) failChoice(`${card} has ${found.length} matching actions; select its ability, targets, cost or mana explicitly`);', ''),
+    ('first matching action accepted', SCENARIO, '    if (explicitChoices && found.length > 1) failChoice(`${card} has ${found.length} matching actions; select its physical source, ability, targets, cost or mana explicitly`);', ''),
     ('settle answers a question', SCENARIO, '          if (explicitChoices) failChoice(`settle cannot answer ${state.awaiting.kind}; script its explicit answer`);', ''),
     ('navigation answers a question', SCENARIO, '  const settleOne = () => {\n    if (explicitChoices) failChoice(`settle cannot answer ${state.awaiting.kind}; script its explicit answer`);', '  const settleOne = () => {'),
     ('routine chooses required attack', SCENARIO, '    if (explicitChoices && indices.length) failChoice("required attacks need an explicit declaration");', ''),

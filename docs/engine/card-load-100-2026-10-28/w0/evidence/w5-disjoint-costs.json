@@ -1,0 +1,29 @@
+{
+  "schema": "w5-disjoint-costs@1",
+  "base": "58bd64ebd618d26094b7331e84ae3947fc78fdf9",
+  "nativeRed": "Actual Sephara was offered with four flyers even though its only W source was one of the four required nonmana tappers. With five flyers the legal alternative looped its sole funding question instead of asking the four cost tappers.",
+  "runtime": "Current alternative/flashback tap costs reserve live eligible cost IDs by kind during funding existence search. Rejected quick/search witnesses cannot end admission. The constrained memo retains its source prefix. Nonmana cost IDs precede funding, are excluded from source patterns and physical-ID choices, and invalid subsets are checked before clearing awaiting or any activation. Uncommitted existence previews name an actually feasible physical witness.",
+  "proof": {
+    "nativeCommand": "node --stack-size=4000 tests/engine-load100-mana.mjs",
+    "nativeChecks": 410,
+    "costSubsetsAudited": 15,
+    "unpayableSubsetsRefusedAtomically": 6,
+    "distinctLegalCompletePaymentsResolved": 10,
+    "cases": ["Exact mana provenance and four disjoint cost taps, each once, followed by real Sephara resolution/indestructible protection", "JSON cost-prefix reload, stale controller, forged opponent tapper and concession with no paid resources", "Same-kind outside Plains and flexible outside source remain legal after an unusable Bird witness", "Concrete availability previews preserve all four mandatory cost flyers", "An actual opposing Grand Arbiter tax catches unsafe memo pruning and resolves using two outside sources", "Actual layer2-controlled cost flyer is eligible despite different raw controller and owner", "Actual same-name C1/C2 source families exercise all four physical payments with exact quantities/surplus", "Actual C2 versus G1/U1 bundled alternatives both produce, pay and resolve", "Actual Shivan Reef pure C versus explicit pain U retains its real damage/life outcome", "Actual Ancient Ziggurat restriction/provenance remains unspent while Wastes funds the sorcery"],
+    "mutationsCommand": "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w5-disjoint.py",
+    "caught": 10,
+    "missed": [],
+    "baselineSuites": 17,
+    "originalReaderUnionRetained": true,
+    "legacyEngineCardsReaderIsDiagnosticOnly": true,
+    "strictG3Accepted": false
+  },
+  "remainingRed": ["W5-output-payload-kind-red.mjs.txt: raw same-label distinct payload kind collision", "W5-disjoint-pilot-red.mjs.txt: house pilot selects an unpayable cost subset", "Effect-paid X/additional costs and their source identity stages", "Historical live-game migration", "Operational funding enumeration and unfinished seed2801"],
+  "broadPayloadOrAbilityEquivalenceProven": false,
+  "cardsAdded": 0,
+  "cardsPromoted": 0,
+  "wave0Complete": false,
+  "G5": false,
+  "G7": false,
+  "ignoresAdded": []
+}

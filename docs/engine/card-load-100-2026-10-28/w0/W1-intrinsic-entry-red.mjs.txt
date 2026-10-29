@@ -1,0 +1,36 @@
+/* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
+/* CR 306.5b, 614.12: intrinsic entry counters depend on the entrant's prospective abilities. */
+import assert from "node:assert/strict";
+import {compileScript} from "../game/engine/cards/index.mjs";
+import {runScenario} from "../game/engine/cards/scenario.mjs";
+import {createState, addObject} from "../game/engine/state/index.mjs";
+import {enteringModifications, ownEntering} from "../game/engine/rules/replacement.mjs";
+
+let checks = 0;
+const failures = [];
+const eq = (actual, expected, message) => {assert.deepEqual(actual, expected, message); checks++;};
+const run = (name, action) => {try {action();} catch (error) {failures.push(`${name}: ${error.message}`);}};
+const script = {schema: "CrankCardScript@1", source: "hand", identity: {name: "Smoke Creature Walker", oracleId: "smoke-intrinsic-walker",
+  types: ["Creature", "Planeswalker"], manaCost: "{0}", colors: [], colorIdentity: [], power: 1, toughness: 1, loyalty: 3}, oracleText: "", abilities: []};
+const result = compileScript(script);
+eq(result.problems, [], "the generic creature-planeswalker fixture compiles");
+const mute = {types: ["Enchantment"], abilities: [{id: "mute", kind: "static", layer: 6, affects: {types: ["Creature"]}, apply: {removeAllAbilities: true}}]};
+run("native public cast", () => {
+  const {state} = runScenario({name: "A muted creature planeswalker enters without intrinsic loyalty", seats: 3,
+    setup: [{seat: 1, zone: "battlefield", cards: ["Smoke Mute"]}, {seat: 0, zone: "hand", cards: [script.identity.name]}],
+    steps: [{cast: script.identity.name}, {settle: true}], expect: []}, name => name === script.identity.name ? result.definition : null, {"Smoke Mute": mute});
+  eq(state.zones.battlefield.filter(id => state.objects[id].card === script.identity.name).length, 0,
+    "the lost intrinsic ability supplies no loyalty; the actual zero-loyalty planeswalker goes to its graveyard");
+  eq(state.zones.graveyard[0].map(id => state.objects[id].card), [script.identity.name], "the public cast ends in the owner's graveyard by the actual SBA");
+});
+for (const [name, entering] of [["legacy entry", enteringModifications], ["copied legacy entry", ownEntering]]) run(name, () => {
+  const state = createState({players: [{name: "A"}, {name: "B"}, {name: "C"}]});
+  addObject(state, {...mute, card: "Smoke Mute", owner: 1, controller: 1}, "battlefield");
+  const objectId = addObject(state, {...result.definition, card: script.identity.name, owner: 0, controller: 0}, "graveyard", 0);
+  const before = JSON.stringify(state);
+  const entry = entering(state, {objectId, player: 0, types: result.definition.types, abilities: result.definition.abilities});
+  eq(entry.counters.loyalty ?? 0, 0, "the same prospective ability loss suppresses the printed intrinsic counters");
+  eq(JSON.stringify(state), before, "checking the entrant in its prospective zone changes no actual card or battlefield state");
+});
+assert.deepEqual(failures, [], failures.join("\n"));
+console.log(`engine-intrinsic-entry: ${checks} checks; native and legacy intrinsic counters respect prospective ability loss`);

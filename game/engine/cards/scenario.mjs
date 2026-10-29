@@ -23,6 +23,9 @@
  *            | {attack: [names], at?} | {block: [[blocker, attacker], ...]} | {blockIfLegal: [blocker, attacker], seat?} | {choose: [labels]} ],
  *   (`targets: "any"` takes the first legal aim; `optional` skips a move the rules do not offer; `settle` answers every
  *   question with its first legal answer and resolves the stack until it is empty -- the card loader's smoke test.)
+ *   Canonical evidence forbids those automatic choices. `source: {zone, index, seat?, card?}` identifies a physical
+ *   action source among the named cards in its current zone, before legality filtering. Question navigation may use
+ *   `to: {turn, phase, ask: kind}` followed by an explicit answer; `targets: [{ask: true}]` defers a counted question.
  *     expect: [ {seat, of?, zone, cards?, count?, faceDown?} | {seat, life} | {seat, poison} | {stack} | {seat, tapped, is}
  *             | {seat, pool} | {seat, counters: {card, counter, count}} | {offers: {kind, card, seat?}, count, targets?} | {event, where}
  *             | {monarch: seat | null} ] }]}
@@ -30,7 +33,7 @@
 
 import {controllerOf, typesOf} from "../rules/layers.mjs";
 import {blockers} from "../rules/combat.mjs";
-import {createState, addObject} from "../state/index.mjs";
+import {createState, addObject, cardsIn} from "../state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../rules/turn.mjs";
 import {legalActions, applyAction} from "../rules/actions.mjs";
 import {passPriority} from "../rules/priority.mjs";
@@ -205,6 +208,23 @@ export function runScenario(scenario, cards, fixtures = {}, {explicitChoices = f
   const offered = ({kind, card, seat}, targets) => legalActions(state, seat ?? state.priorityPlayer)
     .filter((a) => a.kind === kind && (card === undefined || a.label === card) && (targets === undefined || sameTargets(a, targets)));
 
+  /* An author's physical reference is indexed in the named zone BEFORE legality filtering. Repeating index 0 cannot
+     silently switch to index 1 after the first source is tapped. This is a scripted decision, never a default. */
+  const physicalSource = (spec, actor, card) => {
+    if (!spec || typeof spec !== "object" || Array.isArray(spec) || Object.keys(spec).some(key => !["zone", "seat", "card", "index"].includes(key))
+        || !Object.hasOwn(ZONES, spec.zone) || !Number.isInteger(spec.index) || spec.index < 0
+        || (spec.card !== undefined && (typeof spec.card !== "string" || !spec.card.trim())))
+      failChoice("source needs a named zone and a nonnegative physical index, with optional seat/card");
+    const seat = spec.seat ?? actor;
+    if (!Number.isInteger(seat) || !state.players[seat]) failChoice("source seat must name an existing player");
+    const name = spec.card ?? card;
+    const ids = cardsIn(state, spec.zone, seat).filter(id => state.objects[id]?.card === name
+      && (spec.zone === "battlefield" ? controllerOf(state, id) : state.objects[id].owner) === seat);
+    const id = ids[spec.index];
+    if (id === undefined) failChoice(`source ${name} has no physical index ${spec.index} in ${spec.zone} for seat ${seat}`);
+    return {id, zone: spec.zone, seat, card: name, index: spec.index};
+  };
+
   function act(step) {
     if (explicitChoices && step.targets === "any") failChoice("targets: any cannot supply explicit scenario evidence");
     const seat = seatOf(step);
@@ -219,7 +239,9 @@ export function runScenario(scenario, cards, fixtures = {}, {explicitChoices = f
       : step.cast ? ["cast", step.cast] : step.turnFaceUp ? ["turn-face-up", step.turnFaceUp] : step.suspend ? ["suspend", step.suspend]
       : step.plot ? ["plot", step.plot] : ["activate", step.activate];
     const aim = step.targets === "any" ? undefined : (kind === "cast" || kind === "activate" ? step.targets ?? [] : undefined);
+    const source = Object.hasOwn(step, "source") ? physicalSource(step.source, seat, card) : null;
     let found = offered({kind, card, seat}, aim);
+    if (source) found = found.filter(action => action.objectId === source.id);
     if (kind === "activate" && step.ability !== undefined) found = found.filter((a) => a.abilityId === step.ability);
     /* Which of a mana ability's alternatives: "{T}: Add {W} or {U}" taps for the one named. */
     if (step.mana !== undefined) found = found.filter((a) => JSON.stringify(a.mana) === JSON.stringify(step.mana));
@@ -273,8 +295,9 @@ export function runScenario(scenario, cards, fixtures = {}, {explicitChoices = f
       return;
     }
     if (!found.length) fail(`${names[seat]} is not offered ${kind} ${card}${step.targets ? ` at ${JSON.stringify(step.targets)}` : ""}`, {kind: "action-offer", card, action: kind});
-    if (explicitChoices && found.length > 1) failChoice(`${card} has ${found.length} matching actions; select its ability, targets, cost or mana explicitly`);
+    if (explicitChoices && found.length > 1) failChoice(`${card} has ${found.length} matching actions; select its physical source, ability, targets, cost or mana explicitly`);
     record(applyAction(state, seat, found[0]));
+    if (source) policies.push({kind: "physical-source", action: kind, ...source});
     /* Each counted target the step names as a list, picked as it is asked: by name, or player, and seat. */
     for (let n = 0; n < 8 && state.awaiting?.kind === "choose-targets" && state.awaiting.stackId === undefined && Array.isArray((aim ?? [])[state.awaiting.index]); n += 1) {
       const choice = awaitingChoice(state), used = new Set();

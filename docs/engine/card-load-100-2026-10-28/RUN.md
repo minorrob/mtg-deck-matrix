@@ -5,6 +5,76 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Validated dependency checkpoint, October 29:** code `449246c2` integrates verifier/funding `74087c6d`, published W1
+  counter-order `1553f7b1` and main `7f6e76ae`. The verifier's complete35-reader baseline and all20 mutations pass,
+  `missed: []`; Oracle32/face23/artifact-smoke19/CLI60, Squee157 and original funding462 are proved. Whole-card55 and
+  compiler84 pass on `74087c6d`'s source tree; they are diagnostic, not G-3 acceptance. After integration root reruns
+  counter-order87/intrinsic34/Battle95/Squee157/Oracle32/face23, asset manifest136, wiring131 and integrity successfully.
+  README reflects the actual696 root suites; inventory is regenerated metadata only (60 artifacts/80.9MB unchanged).
+  Fresh static audit:247 files/4,555 breaks/33 inherited UI failures, zero engine targets. The original Table browser
+  startup remains RED. Publish this dependency through draft #912 only after its exact HEAD0 scan passes; no ready/main
+  merge, Actions run, staging, loading or gate closure. W5 may extract only the authoritative native play-choice refresh
+  dependency onto this clean base; its larger effect-paid/reversal prototype stays unpublished. P0 committed refinement
+  also remains unpublished until actual departed/newly-legal targets refresh without stale-index substitution.
+  W1's next Battle simultaneous-SBA cohort work remains a separate unfinished runtime slice. Latest complete strict
+  canonical snapshot is still `c2038646` RED with9,594 unproved abilities; no historical snapshot is relabeled.
+- **October 29 active assembly:** root's committed assembly `8a386222` includes main `7a8383a0`, W5 full mana-payload
+  identities `45616142`, W1 prospective intrinsic entry counters `85a3a89f` and P0 activated modal stages/casting-route
+  isolation `8e363d95`. Root independently passes action stages44/room42 and intrinsic-entry34; integrity and wiring131
+  pass. P0's quiet browser window passed optional targets50 and actual-room blink148; original Table `board-choices`
+  startup remains RED. These are bounded proofs, not full game/gate credit. The unpublished verifier follow-up checks
+  printed defense against each committed Oracle face and rejects omitted/invented back-face text and shorter-sentence
+  omissions sharing a longer sentence's prefix. Native Oracle32/face23/artifact-smoke19/CLI60 pass. The inherited
+  Squee admission assertion exposed a real loop after physical funding: mana reopened instead of the four-card exile
+  cost. W5 transferred only the current-mode funding fallthrough guard after restoring its mutator. Squee157 now
+  preserves original manual-funded outcomes and proves every four-of-five exile payment, explicit last-three-of-four
+  Wastes, exact resources/events, JSON/refusal and actual resolution. The combined35-reader baseline passes, including
+  original funding462, engine-cards55/all6,430 definitions and engine-compile84. All20 mutations are caught with
+  `missed: []`, including the re-anchored original nonmana-before-mana probe. No saved cards were rewritten.
+  Evidence: `w0/evidence/v8-identity-squee.json` and its mutation text. `w0/V8-STRICT-CLI.md` preserves the stopped
+  pre-mutation baseline and the uncredited zero-probe witness gap, exact restoration and full corrected rerun.
+  The compiler's inherited unplayed list incorrectly retained Artifact Blast/Halt Order after `686d948f` added eligible
+  artifact smoke targets; both now require actual casts, counter outcomes, exact zones and Halt Order's own draw.
+  W1 published clean `1553f7b1` in draft #944: entry-counter87,32 caught mutations and the original reader/generator
+  unions pass; root integration is pending. W1 starts bounded Battle runtime work. W5 continues effect-paid costs and
+  P0 committed-question staging. Main advanced separately to `7f6e76ae` (#945); root has not merged that update yet.
+  The latest full strict measurement remains the exact RED `c2038646` archive below. No new cards/promotions or gates.
+- **Physical-source authoring checkpoint:** the harness accepts an explicit `source: {zone, index, seat?, card?}`
+  for an action. It indexes named objects before legality filtering; a repeated tap of index 0 cannot silently select
+  index 1. Actual selected IDs are retained in the policy trace and mana provenance. Unknown/missing/invalid references
+  fail, and no reference bypasses native ownership, targets, output, payment or timing. Native **183** checks, **11 new
+  source/diagnostic mutations caught** against the original four-suite baseline, with no changed saved cards/scenarios.
+  The moved first-matching-action probe is caught again; entry-order51, feature-wiring131 and integrity pass.
+  Static audit:235 files/4,398 breaks/32 inherited UI failures, no engine/fuzz targets. Authoring examples are in
+  `w0/V8-STRICT-CLI.md`. Full failure diagnostics now retain their actual ending after long scenario names. The latest
+  measured whole-directory gate remains RED at `c2038646`; unused syntax does not earn new card or ability credit.
+- **Additional reader findings during the producer continuations:** W1 reproduces obsolete transforming-token and
+  face-down funding expectations, root independently confirms both, and also confirms Concerted Care stopping for the
+  new physical-source question. W5 owns `engine-face-down-play` and the two Concerted Care blocks in `engine-adventure`:
+  empty-pool premises and original final privacy/timing/zone/effect assertions stay, with explicit actual funding.
+  W1 owns `engine-transform`: exact new token IDs, current transforming-token rules, and separate ordinary single-face
+  refusal/mana-value controls. No reader is suppressed. The original browser unions run in a coordinated quiet window.
+  W5 also records real raw-payload-label collision and house-pilot additional-cost funding REDs; those remain open.
+
+- **Latest full strict directory measurement, clean `c2038646`, October 29:** 6,430 definitions, 11,039 saved
+  scenarios; schema/fidelity/smoke problems **0**, strict scenario failures **6,580**. **2,039/11,633 abilities reached**,
+  including 523 runtime-only omission proofs; **9,594 unproved**, checker exit 1. The independent verifier also exits 1
+  for those scenario/unproved failures, with no source/hash/inventory/completion disagreement. Both baseline and
+  omission use explicit decisions. Prior `11e4fe86` counts remain historical; do not compare them as equivalent proof.
+  CLI diagnostics route 5,522 ambiguous action/source failures, 865 implicit targets, 113 automatic settle answers,
+  and other required/ambiguous decisions. These counts use the actual truncated CLI diagnostics, not added observations.
+  No failure is exempted and grouping grants no family credit. Next: explicit physical source references in the harness,
+  then per-card repairs with original outcomes and independent behavior witnesses; no automatic legacy-answer conversion.
+  Archive, manifest, summary and per-ability backlog: `w0/evidence/ability-strict-c2038646.*`; full ledger is 18,879,759
+  raw bytes / 1,204,831 compressed. Raw SHA-256 `1bd5c5a181c2b87f1408be121940fe215ea90833274d2009a550b830af06457f`;
+  gzip SHA-256 `06ecc3df75f2bea2a29e4d43acff6c5ce4df7757323fd87debd6f14f4b4fd480`. Raw ledger/log privacy scans and
+  compression roundtrips pass. Source revision/tree/input hashes are in the manifest. This is a completed RED gate,
+  not final integration acceptance or clean-game exercise evidence.
+  **Denominator reconciled:** the three fewer entries versus `11e4fe86` come entirely from previously reviewed
+  `498e3d05`: Song of the Dryads removes an incorrect layer-6 override; Urza's Saga replaces two duplicate conditional
+  activations/zero-effect chapters with actual persistent chapter grants. No final card was removed, and all 6,430 raw
+  definitions are checked. The archived inventory lists the exact current abilities; no denominator waiver.
+
 - **Assembled source for the next strict measurement:** `50f47e22c0a086de529bad09d9d14565df19a901` contains W4
   `4b8284b8` / runtime `20e13e9e`, W5 output-color `58bd64eb` / runtime `84b71e9c`, P0 native blink/wording
   `ec4f6da3`, and root explicit-decision verifier `6318785b`. Root independently passes damage 140, payment 293,

@@ -8,8 +8,8 @@
  * turn it over (state/index.mjs, transformObject; effects/permanents.mjs, setState): the same object (712.18), its counters,
  * damage and effects kept, the back face's characteristics only -- but its mana value its front face's (202.3b, 712.8e) --
  * and a new timestamp (613.7g). An activated or triggered ability of the permanent transforms it only if it has not
- * transformed since the ability was put on the stack (701.27f). A copy is no double-faced card and cannot (712.9); a copy of
- * the back face has mana value 0 (202.3b). A modal double-faced permanent told to transform does (712.3, 712.9), unless
+ * transformed since the ability was put on the stack (701.27f). Token copying retains both faces (707.8a); a single-faced
+ * permanent becoming a copy of a back face has mana value 0 (202.3b). A modal double-faced permanent told to transform does (712.3, 712.9), unless
  * into an instant or sorcery face (701.27d). What the scenarios cannot reach is here.
  */
 import assert from "node:assert/strict";
@@ -29,7 +29,7 @@ import {passPriority} from "../game/engine/rules/priority.mjs";
 import {createRng} from "../game/engine/rng.mjs";
 import {advance, resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {collectTriggers, openTriggers} from "../game/engine/rules/trigger.mjs";
-import {endCopies} from "../game/engine/script/effects/permanents.mjs";
+import {endCopies, copyOnto} from "../game/engine/script/effects/permanents.mjs";
 import {identityOf} from "../game/engine/cards/compile.mjs";
 import {readFileSync} from "node:fs";
 import {amountOf} from "../game/engine/script/amount.mjs";
@@ -129,12 +129,26 @@ const SUNDER = [...Array.from({length: 7}, () => ({tap: "Wastes"})), {activate: 
   const [venat] = named(s, VENAT);
   runEffect(s, {effect: "copyPermanent", targets: [venat]}, {controller: 0, source: venat});
   const token = s.zones.battlefield.find((id) => s.objects[id].token);
-  eq([s.objects[token].card, transformObject(s, token), s.objects[token].card], [VENAT, false, VENAT], "a token copy of Venat is no double-faced card: told to transform, it does not (CR 712.9)");
+  eq([s.objects[token].card, transformObject(s, token), s.objects[token].card], [VENAT, true, HYD], "a token copy of Venat has both faces and actually transforms (CR 707.8a, 712.9)");
+  eq(factsOf(s, [{kind: "object", id: token}])[0].manaValueOf, 3, "the transformed double-faced token uses its copied front mana cost (CR 202.3b)");
   eq(transformObject(s, named(s, "Bear")[0]), false, "nor does a Bear (CR 701.27c)");
   turn(s, venat);
+  const beforeBackCopy = new Set(s.zones.battlefield);
   runEffect(s, {effect: "copyPermanent", targets: [venat]}, {controller: 0, source: venat});
-  const hydCopy = s.zones.battlefield.find((id) => s.objects[id].token && s.objects[id].card === HYD);
-  eq(factsOf(s, [{kind: "object", id: hydCopy}])[0].manaValueOf, 0, "a copy of Hydaelyn, the back face, has mana value 0 (CR 202.3b)");
+  const backCopies = s.zones.battlefield.filter(id => !beforeBackCopy.has(id) && s.objects[id].token);
+  eq(backCopies.length, 1, "the newly created back-face copy is identified by its actual new object ID");
+  const hydCopy = backCopies[0];
+  eq([s.objects[hydCopy].face, s.objects[hydCopy].mdfc.front.card, s.objects[hydCopy].mdfc.back.card], ["back", VENAT, HYD], "copying a transformed permanent makes both token faces and enters with its back face up (CR 707.8a)");
+  eq(factsOf(s, [{kind: "object", id: hydCopy}])[0].manaValueOf, 3, "the new double-faced token's back uses its copied front mana cost (CR 707.8a, 202.3b)");
+  eq([transformObject(s, hydCopy), s.objects[hydCopy].card], [true, VENAT], "the exact new back-face token can transform to its copied front");
+  eq([hydCopy !== token, s.objects[token].card], [true, HYD], "transforming the exact new token leaves the earlier independently transformed copy unchanged");
+  const bear = named(s, "Bear")[0], beforeBearCopy = new Set(s.zones.battlefield);
+  runEffect(s, {effect: "copyPermanent", targets: [bear]}, {controller: 0, source: venat});
+  const bearCopies = s.zones.battlefield.filter(id => !beforeBearCopy.has(id) && s.objects[id].token);
+  eq(bearCopies.length, 1, "the ordinary single-faced token also has an exact new identity");
+  eq([s.objects[bearCopies[0]].mdfc, transformObject(s, bearCopies[0]), s.objects[bearCopies[0]].card], [undefined, false, "Bear"], "an ordinary single-faced token cannot transform (CR 712.9)");
+  eq(copyOnto(s, bear, venat), true, "an ordinary permanent can instead become a copy of the back face");
+  eq([s.objects[bear].mdfc, factsOf(s, [{kind: "object", id: bear}])[0].manaValueOf, transformObject(s, bear)], [undefined, 0, false], "the single-faced back-face copy has mana value 0 and no other face to transform to (CR 202.3b, 712.9)");
   /* A modal double-faced permanent may be told to transform (CR 712.3): Fell Mire's other face is an instant, so nothing happens. */
   const m = play([at(0, "hand", "Fell the Profane // Fell Mire")], [{play: "Fell Mire"}, {choose: ["Don't pay: Fell Mire enters tapped"]}]);
   const [mire] = named(m, "Fell Mire");
@@ -213,4 +227,4 @@ const SUNDER = [...Array.from({length: 7}, () => ({tap: "Wastes"})), {activate: 
   eq(keywordsOf(next, named(next, "Bear")[0]).includes("Indestructible"), false, "and not once Rob's next turn has begun");
 }
 
-console.log(`engine-transform: ${checks} checks passed -- a card that transforms: its front face until it turns over, then the same object with its back face's characteristics and its front face's mana value; once per stacking, never a copy.`);
+console.log(`engine-transform: ${checks} checks passed -- native transforming cards and double-faced token copies keep both faces; single-faced copies retain their distinct transformation and mana-value rules.`);

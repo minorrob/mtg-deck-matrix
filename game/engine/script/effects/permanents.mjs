@@ -32,7 +32,8 @@ import {enteringModifications} from "../../rules/replacement.mjs";
 import {prepare} from "./attributes.mjs";
 import {isCreatureType} from "../../keywords/types.mjs";
 import {registerRuleOperation, askRuleOperation, emitRuleEvents} from "../../rules/operations.mjs";
-import {patchEnteringObject, prospectiveEnteringState} from "../../rules/pre-entry.mjs";
+import {patchEnteringObject} from "../../rules/pre-entry.mjs";
+import {entryCounterResult} from "../../rules/entry-characteristics.mjs";
 import {enteredWith} from "../../rules/entering.mjs";
 
 /* A continuous effect needs a timestamp to be ordered by (CR 613.7), and it has to be part of the
@@ -207,6 +208,7 @@ function copiable(object, except = {}) {
     /* Its printed loyalty (CR 707.2): a planeswalker copied as it enters has that many loyalty counters (CR 306.5b; Spark
        Double, rules/replacement.mjs ownEntering). */
     ...(Number.isInteger(object.loyalty) ? {loyalty: object.loyalty} : {}),
+    ...(Number.isInteger(object.defense) ? {defense: object.defense} : {}),
     ...(object.spell ? {spell: structuredClone(object.spell)} : {}),
     ...(object.enchant ? {enchant: structuredClone(object.enchant)} : {}),
     /* CR 722.2b: the inset spell is a copiable characteristic, not the prepared designation. */
@@ -748,6 +750,12 @@ registerRuleOperation("token-entry", (state, frame) => {
     frame.entries = frame.batches.flatMap((batch, batchIndex) => batch.entries.map(entry => ({...entry, batchIndex})));
     frame.index = 0;
   }
+  if (frame.stage === "after-counter-plan") {
+    const entry = frame.entries[frame.counterIndex];
+    entry.prepared = frame.childResult ? {...entry.prepared, ...frame.childResult,
+      entering: {...entry.prepared.entering, counters: frame.childResult.entering.counters}} : null;
+    delete frame.childResult; frame.stage = null; frame.counterIndex += 1;
+  }
   if (frame.stage === "after-entry") {
     frame.entries[frame.index].prepared = frame.childResult?.entering?.to && frame.childResult.entering.to !== "battlefield" ? null : frame.childResult;
     delete frame.childResult; frame.stage = "attachment";
@@ -779,23 +787,21 @@ registerRuleOperation("token-entry", (state, frame) => {
     }
     frame.stage = "after-entry";
     entry.virtualId = `token-entry:${state.ruleOperation.serial}:${frame.index}`;
-    return {status: "continue", children: [{kind: "entering", objectId: entry.virtualId, player: batch.controller, candidate: entry.candidate}]};
+    return {status: "continue", children: [{kind: "entering", objectId: entry.virtualId, player: batch.controller, candidate: entry.candidate,
+      deferCounters: true, additionalCounters: batch.params.entersWithCounters ?? {}}]};
   }
-  /* Count replacements before the simultaneous entrants exist; no new token's static can change a sibling's counters. */
-  for (const entry of frame.entries) if (entry.prepared && !state.players[frame.batches[entry.batchIndex].controller].lost) {
-    const batch = frame.batches[entry.batchIndex];
-    const view = prospectiveEnteringState(state, {objectId: entry.virtualId, player: batch.controller, candidate: entry.candidate, objectPatch: entry.prepared.objectPatch});
-    entry.counters = {};
-    const wanted = {...entry.prepared.entering.counters};
-    for (const [counter, count] of Object.entries(batch.params.entersWithCounters ?? {})) wanted[counter] = (wanted[counter] ?? 0) + count;
-    for (const [counter, count] of Object.entries(wanted)) {
-      const placed = enteringCountersPlaced(view, entry.virtualId, counter, count, batch.controller);
-      if (placed > 0) entry.counters[counter] = placed;
-    }
+  /* All sibling entry choices/costs finish first. Counter replacements then modify saved events before any entrant exists. */
+  frame.counterIndex ??= 0;
+  while (frame.counterIndex < frame.entries.length) {
+    const entry = frame.entries[frame.counterIndex], batch = frame.batches[entry.batchIndex];
+    if (!entry.prepared || state.players[batch.controller].lost) { frame.counterIndex += 1; continue; }
+    frame.stage = "after-counter-plan";
+    return {status: "continue", children: [entry.prepared.counterPlan]};
   }
   for (const entry of frame.entries) if (entry.prepared && !state.players[frame.batches[entry.batchIndex].controller].lost) {
     const batch = frame.batches[entry.batchIndex];
     if (entry.host !== undefined && (!state.objects[entry.host] || !enchantable(state, entry.enchant, batch.controller).includes(entry.host))) continue;
+    entry.counters = entryCounterResult(state, entry.prepared, entry.virtualId, batch.controller, {consume: true});
     const id = addObject(state, entry.candidate, "battlefield");
     patchEnteringObject(state.objects[id], entry.prepared.objectPatch);
     state.objects[id].counters = entry.counters;

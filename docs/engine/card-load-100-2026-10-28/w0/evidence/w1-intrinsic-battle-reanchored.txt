@@ -1,0 +1,6 @@
+baseline: every suite passes unbroken
+caught non-Battle gets defense counters -- tests/engine-battles.mjs
+caught lost intrinsic ability still gives defense -- tests/engine-battles.mjs
+caught printed entry defense omitted -- tests/engine-battles.mjs
+caught entry defense read from empty prospective counters -- tests/engine-battles.mjs
+missed: []

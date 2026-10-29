@@ -11,13 +11,14 @@
 import {CARDS_DIR, loadCardIndex, loadCardScenarios, loadCardScripts} from "../engine-cards.mjs";
 import {runScenario} from "../../engine/cards/scenario.mjs";
 import {checkFidelity, smokeTest} from "../../engine/cards/compile.mjs";
-import {writeFileSync, mkdtempSync} from "node:fs";
+import {writeFileSync, mkdtempSync, readFileSync} from "node:fs";
 import {fileURLToPath} from "node:url";
 import {tmpdir} from "node:os";
 import path from "node:path";
 import {createExerciseLedger, addExerciseEvidence, exerciseSummary, scenarioResolved} from "../ability-evidence.mjs";
 import {proveRuntimeAbility, recordRuntimeProof} from "../ability-proof.mjs";
 import {parseCardCheckArgs, cardCheckSource, cardInputHashes, abilityLedgerProblems} from "../card-check-policy.mjs";
+import {oracleDefenseProblems} from "../oracle-defense.mjs";
 
 /** Passing scenarios supply events; the authorized runtime-only supplement supplies explicit counterfactual proofs.
     The CLI always requests both. Exported diagnostic helpers cannot substitute for the canonical directory gate. */
@@ -33,7 +34,7 @@ export function checkScenarios({files, scripts, cards, ledger = null, counterfac
         if (ledger) addExerciseEvidence(ledger, result.events, {scenario: `${file.card}: ${scenario.name}`});
       } catch (error) {
         failed += 1; baselines.set(scenario, {choicePolicy: "explicit", error: error.message});
-        report("FAIL", file.card, "|", error.message.slice(0, 240));
+        report("FAIL", file.card, "|", error.message);
       }
     }
   }
@@ -84,6 +85,7 @@ export function main(argv = []) {
   if (scope.canonical && files.some(file => file.scenarios.some(scenario => scenario.sourceChoices === false)))
     throw new Error("Legacy source-choice scenarios belong in replay tests, not the current canonical card gate");
   const ledger = createExerciseLedger(scripts);
+  const oracle = new Map(JSON.parse(readFileSync(new URL("../../../data/engine/oracle.json", import.meta.url), "utf8")).cards.map(card => [card.name, card]));
   const snapshot = measurement => ({...ledger, scope, source, measurement, summary: exerciseSummary(ledger)});
   let problems = 0;
   console.log(selected ? `${scripts.length} selected definitions of ${allScripts.length}` : `${scripts.length} definitions${scope.canonical ? "" : " in a custom directory (diagnostic only)"}`);
@@ -93,6 +95,8 @@ export function main(argv = []) {
     if (!resolved.playable) {problems += 1; console.log("NOT PLAYABLE", name, resolved.problems);}
     const fidelity = checkFidelity(script);
     if (!fidelity.ok) {problems += 1; console.log("FIDELITY", name, JSON.stringify(fidelity));}
+    const defense = oracleDefenseProblems(script, oracle.get(name));
+    if (defense.length) {problems += 1; console.log("IDENTITY", name, JSON.stringify(defense));}
     const smoke = smokeTest(script, index.definition);
     if (!smoke.ok) {problems += 1; console.log("SMOKE", name, smoke.problems.join("; ").slice(0, 200));}
   }

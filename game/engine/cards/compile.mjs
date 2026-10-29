@@ -60,6 +60,8 @@ export function identityOf(card) {
     power: num(face.power), toughness: num(face.toughness),
     /* A planeswalker's printed loyalty (CR 306.5a). */
     ...(num(face.loyalty) !== null ? {loyalty: num(face.loyalty)} : {}),
+    /* CR 310.4a: a Battle's printed defense comes from its Oracle face, including zero. */
+    ...(num(face.defense) !== null ? {defense: num(face.defense)} : {}),
   };
 }
 
@@ -118,19 +120,24 @@ export function oracleClauses(text) {
  * @returns {{ok: boolean, invented: string[], unclaimed: string[]}}
  */
 export function checkFidelity(script) {
-  /* An adventurer card's Adventure (CR 715.2) is held to its own text the same way, beside the card's. */
   const own = faceFidelity(script);
-  /* And a preparation card's prepare spell (CR 722.2), to its own text. */
-  const other = script.adventure ?? script.prepare;
-  if (other === undefined) return own;
-  const adventure = faceFidelity(other);
-  return {ok: own.ok && adventure.ok, invented: [...own.invented, ...adventure.invented], unclaimed: [...own.unclaimed, ...adventure.unclaimed]};
+  /* Every other face has its own text (CR 712.8, 715.2, 722.2). A transform reminder naming the actual
+     front face describes the physical card, not a missing back-face ability (CR 207.2a). */
+  const faces = [script.back, script.adventure, script.prepare].filter(face => face !== undefined).map(face => {
+    const reminder = `(Transforms from ${String(script.identity?.name ?? "").split(" // ")[0]}.)`;
+    const oracleText = face === script.back && script.layout === "transform"
+      ? String(face.oracleText ?? "").split("\n").filter(line => line.trim() !== reminder).join("\n") : face.oracleText;
+    return faceFidelity({...face, oracleText});
+  });
+  return {ok: own.ok && faces.every(face => face.ok), invented: [...own.invented, ...faces.flatMap(face => face.invented)],
+    unclaimed: [...own.unclaimed, ...faces.flatMap(face => face.unclaimed)]};
 }
 function faceFidelity(script) {
   const full = normalize(String(script.oracleText ?? "").replace(/[()]/g, ""));
   /* Both sides with the parentheses dropped: a spell's text is the card's whole text, and a reminder in the middle
      of it (Opt's "Scry 1. (Look at ...)\nDraw a card.") is quoted with its parentheses. */
   const texts = (script.abilities ?? []).map((a) => normalize(a?.text === undefined || a?.text === null ? a?.text : String(a.text).replace(/[()]/g, "")));
+  const claimedClauses = new Set((script.abilities ?? []).flatMap(ability => oracleClauses(ability?.text).map(normalize)));
   const invented = (script.abilities ?? []).filter((a, i) => !texts[i] || !full.includes(texts[i])).map((a) => String(a?.text ?? ""));
   /* A clause is claimed by an ability that quotes it whole, or by the abilities quoted inside it when together they are
      all of it but connectives and punctuation (one sentence written as several abilities). An ability inside a longer
@@ -150,7 +157,7 @@ function faceFidelity(script) {
   };
   const unclaimed = oracleClauses(script.oracleText).filter((clause) => {
     const c = normalize(clause);
-    return !texts.some((t) => t && t.includes(c)) && !covered(c);
+    return !claimedClauses.has(c) && !covered(c);
   });
   return {ok: invented.length === 0 && unclaimed.length === 0, invented, unclaimed};
 }

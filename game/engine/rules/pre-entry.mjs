@@ -9,30 +9,14 @@ import {characteristicsOf, staticAbilities} from "./layers.mjs";
 import {enteringChoice} from "./entering.mjs";
 import {CREATURE_TYPES} from "../keywords/creature-types.mjs";
 import {entryCopyPatch} from "../script/effects/permanents.mjs";
-import {chosenFor, withChosen, namesChosen} from "../script/chosen.mjs";
+import {withChosen, namesChosen} from "../script/chosen.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 import {amountOf} from "../script/amount.mjs";
 import {cardsIn} from "../state/index.mjs";
 import {runEffect} from "../script/effects/index.mjs";
-import {cantBeSacrificed} from "./statics.mjs";
-
-export function patchEnteringObject(object, patch) {
-  for (const key of patch?.remove ?? []) delete object[key];
-  Object.assign(object, structuredClone(patch?.set ?? {}));
-}
-
-export function prospectiveEnteringState(state, frame) {
-  const object = {...(frame.candidate ?? state.objects[frame.objectId]), id: frame.objectId, zone: "battlefield", zonePlayer: null,
-    controller: frame.player, counters: {}, tapped: false, timestamp: state.nextTimestamp};
-  patchEnteringObject(object, frame.entryFace);
-  if (frame.faceDown) Object.assign(object, {types: ["Creature"], subtypes: [], supertypes: [], colors: [], keywords: [], abilities: [], power: 2, toughness: 2});
-  patchEnteringObject(object, frame.objectPatch);
-  const own = (object.abilities ?? []).filter(ability => ability.kind === "static" && ability.layer !== undefined
-    && ability.affects?.self === true && !ability.worksFrom).map(ability => ({...chosenFor(ability, object),
-    sourceId: frame.objectId, sourceController: frame.player, timestamp: ability.timestamp ?? object.timestamp,
-    partOf: `${frame.objectId}|${ability.text ?? ability.id ?? ""}`, affects: {...ability.affects, ids: [frame.objectId]}}));
-  return {...state, objects: {...state.objects, [frame.objectId]: object}, effects: [...(state.effects ?? []), ...own]};
-}
+import {cantBeSacrificed, placeCounters, counterOrderChoice} from "./statics.mjs";
+import {patchEnteringObject, prospectiveEnteringState, intrinsicEnteringCounters, saveEntryCounterResult} from "./entry-characteristics.mjs";
+export {patchEnteringObject, prospectiveEnteringState} from "./entry-characteristics.mjs";
 
 function proposalIn(view, frame) {
   const current = characteristicsOf(view, frame.objectId);
@@ -55,24 +39,89 @@ function askData(state, frame) {
 
 function finishEntry(state, frame) {
   const view = prospectiveEnteringState(state, frame), object = view.objects[frame.objectId], current = characteristicsOf(view, frame.objectId);
+  /* CR 310.9a, 310.12a: choose the protector using the prospective final characteristics, after entry-copy choices.
+     The entrant stays in its old zone; its controller never receives an inferred opponent. */
+  if (!frame.to && current.types.includes("Battle")) {
+    const siege = current.subtypes.includes("Siege"), eligible = state.players.filter(player => !player.lost && (!siege || player.id !== frame.player)).map(player => player.id);
+    if (!siege) frame.objectPatch.set.protector = frame.player;
+    else if (eligible.length && !eligible.includes(frame.selectedProtector)) {
+      frame.battleOptions = eligible; frame.battleChoice = true;
+      frame.battleGeneration = (frame.battleGeneration ?? 0) + 1;
+      return askRuleOperation(state, frame, {player: frame.player, choice: {
+        id: `battle-protector:${frame.objectId}:${frame.battleGeneration}`, title: `${object.card}: choose its protector`, mode: "one", min: 1, max: 1,
+        options: eligible.map((playerId, index) => ({index, playerId, label: state.players[playerId].name}))}});
+    } else if (eligible.length) frame.objectPatch.set.protector = frame.selectedProtector;
+    /* CR 101.3: if no eligible opponent remains, no player can be chosen. Battle SBAs are handled separately. */
+  }
+  if (frame.counterDone) return {status: "done", result: {...frame.entryResult, ...frame.counterDone, objectPatch: frame.objectPatch,
+    entering: {...frame.entryResult.entering, counters: frame.counterDone.entering.counters}}};
   const counters = {...frame.proposal.counters};
   for (const [counter, count] of Object.entries(frame.copyCounters ?? {})) counters[counter] = (counters[counter] ?? 0) + count;
-  if (current.types.includes("Planeswalker") && Number.isInteger(object.loyalty)) counters.loyalty = (counters.loyalty ?? 0) + object.loyalty;
-  if (frame.phyrexianLife > 0 && counters.loyalty > 0 && (object.keywords ?? []).includes("Compleated"))
-    counters.loyalty = Math.max(0, counters.loyalty - 2 * frame.phyrexianLife);
+  for (const [counter, count] of Object.entries(frame.additionalCounters ?? {})) counters[counter] = (counters[counter] ?? 0) + count;
   for (const {counter, count} of frame.proposal.chosenCounters ?? []) {
     const n = amountOf(view, withChosen(count, object.chosen), {controller: frame.player, source: frame.objectId, x: frame.x ?? 0});
     if (n > 0) counters[counter] = (counters[counter] ?? 0) + n;
   }
   for (const counter of Object.keys(counters)) if (!(counters[counter] > 0)) delete counters[counter];
-  return {status: "done", result: {entering: {tapped: frame.proposal.tapped === true || frame.copyTapped === true, counters, asks: [],
+  const entryResult = {entering: {tapped: frame.proposal.tapped === true || frame.copyTapped === true, counters, asks: [],
     designations: frame.proposal.designations ?? [], ...(frame.gainsKeywords?.length ? {gainsKeywords: frame.gainsKeywords} : {}),
-    ...(frame.to ? {to: frame.to} : {})}, objectPatch: frame.objectPatch}};
+    ...(frame.to ? {to: frame.to} : {})}, objectPatch: frame.objectPatch};
+  if (frame.to) return {status: "done", result: entryResult};
+  const counterPlan = {kind: "entry-counters", objectId: frame.objectId, player: frame.player,
+    ...(frame.candidate ? {candidate: frame.candidate} : {}), ...(frame.entryFace ? {entryFace: frame.entryFace} : {}),
+    faceDown: frame.faceDown === true, objectPatch: frame.objectPatch, phyrexianLife: frame.phyrexianLife ?? 0, independentCounters: counters};
+  if (frame.deferCounters) return {status: "done", result: {...entryResult, counterPlan}};
+  frame.entryResult = entryResult; frame.awaitingCounters = true;
+  return {status: "continue", children: [counterPlan]};
 }
+
+/* CR 616.1f: each applied replacement modifies the saved event once. Later concessions affect only the remaining
+   candidates; they cannot replay or undo a prefix already chosen by the controller. */
+registerRuleOperation("entry-counters", (state, frame) => {
+  if (!(frame.candidate ?? state.objects[frame.objectId]) || state.players[frame.player]?.lost || state.gameOver)
+    return {status: "done", result: null};
+  const view = prospectiveEnteringState(state, frame), object = view.objects[frame.objectId], current = characteristicsOf(view, frame.objectId);
+  if (!frame.raw) {
+    frame.raw = {...frame.independentCounters};
+    for (const [counter, count] of Object.entries(intrinsicEnteringCounters(object, current))) frame.raw[counter] = (frame.raw[counter] ?? 0) + count;
+    frame.counts = {...frame.raw}; frame.kinds = Object.keys(frame.raw); frame.index = 0; frame.applied = {};
+  }
+  while (frame.index < frame.kinds.length) {
+    const counter = frame.kinds[frame.index];
+    const extraCandidates = counter === "loyalty" && frame.phyrexianLife > 0 && current.keywords.includes("Compleated")
+      ? [{key: "entry:compleated", holderId: frame.objectId, label: "Compleated", ability: {id: "entry-compleated", plus: -2 * frame.phyrexianLife}}] : [];
+    const orders = frame.answer ? [frame.options[frame.answer.indices[0]]] : [];
+    delete frame.answer;
+    const placed = placeCounters(view, {id: frame.objectId}, counter, frame.counts[counter], frame.player,
+      {entering: true, askable: true, extraCandidates, applied: frame.applied[counter] ?? [], orders, reportApplied: true});
+    frame.counts[counter] = placed.count;
+    (frame.applied[counter] ??= []).push(...(placed.applied ?? []));
+    if (placed.question) {
+      frame.options = placed.question.options; frame.generation = (frame.generation ?? 0) + 1;
+      const choice = counterOrderChoice(view, {id: frame.objectId, counter, by: frame.player, ...placed.question,
+        entering: true, extraCandidates});
+      choice.id = `entry-counters:${frame.objectId}:${counter}:${frame.generation}`;
+      return askRuleOperation(state, frame, {player: frame.player, choice});
+    }
+    frame.index += 1;
+  }
+  const counters = Object.fromEntries(Object.entries(frame.counts).filter(([, count]) => count > 0));
+  const counterResult = saveEntryCounterResult(state, frame, frame.raw, counters);
+  return {status: "done", result: {entering: {counters}, counterResult}};
+});
 
 registerRuleOperation("entering", (state, frame) => {
   const object = frame.candidate ?? state.objects[frame.objectId];
   if (!object || state.players[frame.player]?.lost || state.gameOver) return {status: "done", result: null};
+  if (frame.awaitingCounters) {
+    if (!frame.childResult) return {status: "done", result: null};
+    frame.counterDone = frame.childResult; delete frame.childResult; delete frame.awaitingCounters;
+  }
+  if (frame.battleChoice && frame.answer) {
+    frame.selectedProtector = frame.battleOptions[frame.answer.indices[0]];
+    delete frame.answer; delete frame.battleChoice;
+  }
+  if (frame.counterDone) return finishEntry(state, frame);
   if (!frame.proposal) {
     frame.generation = 0;
     frame.objectPatch = {set: {}, remove: ["chosen"]};

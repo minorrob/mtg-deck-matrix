@@ -17,6 +17,9 @@ import {randomUUID} from "node:crypto";
 import {memoryStorage, createMatchStore} from "../game/engine/storage.mjs";
 import {startRoom, openRoom, basicCards} from "../game/room/room.mjs";
 import {replayMatch} from "../game/room/replay.mjs";
+import {loadCardIndex} from "../game/tools/engine-cards.mjs";
+import {housePilot} from "../game/engine/pilots/house-pilot.mjs";
+import {awaitingChoice} from "../game/engine/rules/turn.mjs";
 
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1;};
@@ -109,4 +112,61 @@ ok(proof.same, `the game with the key, the Bear cast from floating mana on its t
   ok(proof.same, `current exact identity answers replay to the same game (${proof.tape} tape entries)`);
 }
 
+{
+  const index = loadCardIndex(), name = "Sephara, Sky's Blade", storage = memoryStorage(), matchId = "pilot-disjoint-cost";
+  const cardFor = card => card === name ? index.definition(card) : /^Bird /.test(card) ? {types: ["Creature"], colors: ["W"], manaCost: "{0}", power: 0, toughness: 1, keywords: ["Flying", "Haste"],
+    abilities: [{id: "m", kind: "mana", tapSelf: true, produces: {W: 1}}]} : /^Drake /.test(card) ? {types: ["Creature"], colors: ["W"], manaCost: "{0}", power: 2, toughness: 2, keywords: ["Flying"]}
+    : card === "General" ? {types: ["Creature"], supertypes: ["Legendary"], manaCost: "{20}", power: 1, toughness: 1} : basicCards(card);
+  const answers = [];
+  const pilot = ({seat, cards}) => {
+    const own = housePilot({seat, cards});
+    return {...own, choose(view, actions) {
+      const board = view.players[seat].zones.Battlefield.cards;
+      if (seat === 0 && !board.some(c => c.name === name)) {
+        const birds = board.filter(c => /^Bird /.test(c.name)).length, drakes = board.filter(c => /^Drake /.test(c.name)).length;
+        const next = actions.find(a => a.kind === "cast" && ((birds < 2 && /^Bird /.test(a.label)) || (drakes < 4 && /^Drake /.test(a.label))));
+        if (next) return next;
+        if (birds === 2 && drakes === 4) {const cast = actions.find(a => a.kind === "cast" && a.label === name && a.alternative !== undefined); if (cast) return cast;}
+        return actions.find(a => a.kind === "pass");
+      }
+      return own.choose(view, actions);
+    }, answer(view, choice) {
+      const answer = own.answer(view, choice);
+      if (seat === 0 && choice.cost === "tap" && choice.title.startsWith(name)) answers.push({choice: structuredClone(choice), answer: structuredClone(answer)});
+      return answer;
+    }};
+  };
+  const pod = {sourceChoices: true, pooledTaps: true, passEmpty: true, seats: [
+    {seatId: "rob", name: "Rob", pilot: "house", level: "easy", commander: [name], cards: Array.from({length: 99}, (_, i) => `${i % 2 ? "Bird" : "Drake"} ${i}`)},
+    {seatId: "maya", name: "Maya", pilot: "house", level: "easy", commander: ["General"], cards: Array(99).fill("Wastes")}
+  ]};
+  let room = await startRoom({storage, matchId, cards: cardFor, pod, seed: "pilot-disjoint-cost-1", pilot, slice: 1});
+  const store = createMatchStore(storage, matchId);
+  let checkpoint;
+  for (let i = 0; i < 1200; i++) {
+    checkpoint = await store.latestCheckpoint();
+    if (checkpoint.state.awaiting?.kind === "choose-cost" && checkpoint.state.awaiting.action?.label === name) break;
+    assert.ok(room.continuing, "the real room continues toward the actual cost question");
+    await room.resume();
+  }
+  eq([checkpoint.state.awaiting?.kind, checkpoint.state.priorityPlayer, answers.length], ["choose-cost", null, 0], "the real room saves the unpaid proposal before its house pilot answers");
+  const question = JSON.parse(JSON.stringify(awaitingChoice(checkpoint.state))), sources = question.fundingWitness.sources.map(s => s.cardId);
+  eq([question.options.length, question.min, question.max, sources.length], [6, 4, 4, 1], "the saved public facts retain every human cost option and one real funding witness");
+  eq(checkpoint.state.zones.battlefield.some(id => checkpoint.state.objects[id].tapped), false, "no mana or nonmana cost tap is committed before reload");
+  room = await openRoom({storage, matchId, cards: cardFor, pilot, slice: 1});
+  await room.resume();
+  const paid = (await store.latestCheckpoint()).state, answer = answers[0];
+  eq(answers.length, 1, "the actual house-pilot answer is taken once after room reload");
+  const costs = answer.answer.indices.map(i => answer.choice.options[i].cardId);
+  eq([costs.length, costs.some(id => sources.includes(id))], [4, false], "the actual room pilot preserves its visible funding source while selecting the other tap cost");
+  eq(paid.zones.battlefield.filter(id => paid.objects[id].tapped).sort((a,b) => a-b), [...costs, ...sources].sort((a,b) => a-b), "Pay commits exactly the pilot's four cost IDs and one distinct mana ID");
+  eq([paid.awaiting, paid.priorityPlayer, paid.passes, paid.players[0].manaPool.W, paid.stack.at(-1)?.name], [null, 0, 0, 0, name], "the real paid cast retains its actor's priority and exact empty pool");
+  eq([room.refusals.since, room.refusals.total], [0, 0], "the real pilot payment has zero refusals from the match start");
+  for (let i = 0; i < 1200 && room.continuing; i++) await room.resume();
+  eq([room.status, room.refusals.total], ["finished", 0], "the real easy-house game finishes with no rejected answer or fallback");
+  const ended = (await store.latestCheckpoint()).state;
+  eq([ended.players[0].lost, ended.players[1].lost], [false, true], "the actual paid flying board reaches a winner");
+  const proof = await replayMatch({storage, matchId, cards: cardFor, pilot});
+  ok(proof.same, `actual pilot Pay/reload and complete room game replay with the same state/journal (${proof.tape} tape entries)`);
+}
 console.log(`room-pooled-taps: ${checks} checks passed — a new match tops floating mana up from its caster's untapped sources; a match launched before offers what it offered; the saved match keeps which, and replays the same.`);

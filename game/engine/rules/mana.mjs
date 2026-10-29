@@ -363,13 +363,33 @@ export function tapPlans(units, cost, limit = 2) {
  * player's question retains all distinct plans. No search-step budget may remove a legal payment (CR 601.2g-h). */
 /* Existence probes stop at their requested result count; a payment question must not stop after an arbitrary search budget. */
 export const SEARCH_LIMIT = Infinity;
-export function sourceTapPlans(units, pool, cost, limit = 2) {
+/* Output labels bind back to actual activations; only the complete mana vector identifies an output. No activation
+   effects or spending restrictions are compared here: callers must exclude them before providing these pure units. */
+export const manaPayloadKey = mana => JSON.stringify(MANA_KEYS.map(key => mana[key] || 0));
+export const sourceOutputs = unit => unit.outputs ?? Object.fromEntries(unit.colors.map(color => [color, {[color]: 1}]));
+export const sourceKindKey = unit => JSON.stringify([...new Set(Object.values(sourceOutputs(unit)).map(manaPayloadKey))].sort());
+const payloadOutputs = unit => [...new Map(Object.entries(unit.outputs).sort(([a], [b]) => a.localeCompare(b, "en-US"))
+  .map(entry => [manaPayloadKey(entry[1]), entry])).entries()].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0).map(([, entry]) => entry);
+const sourcePlanKey = (units, taps, payment) => `sources:${taps.map(tap => {
+  const unit = units.find(unit => unit.id === tap.id);
+  return `${sourceKindKey(unit)}=${manaPayloadKey(unit.outputs[tap.color])}`;
+}).sort().join(";")}|${paymentKey(payment)}`;
+/* acceptTaps may reserve other tap costs: rejection cannot be repaired by tapping more mana sources. */
+export function sourceTapPlans(units, pool, cost, limit = 2, acceptTaps = null) {
+  return planSources(units, pool, cost, limit, acceptTaps, false);
+}
+/* Saved pre-sourceChoices rooms retain their original label/order keys for replay only. New callers use the exhaustive
+   payload contract above; this compatibility path is selected explicitly by the saved room version. */
+export function historicalSourceTapPlans(units, pool, cost, limit = 2, acceptTaps = null) {
+  return planSources(units, pool, cost, limit, acceptTaps, true);
+}
+function planSources(units, pool, cost, limit, acceptTaps, historical) {
   if (cost.variable > 0 || cost.symbols.some((s) => !["generic", "colored", "hybrid"].includes(s.kind))) return [];
   const size = cost.generic + cost.symbols.filter((s) => s.kind !== "generic").length;
-  const kind = (u) => Object.keys(u.outputs).sort().join("/");
+  const kind = historical ? (u) => Object.keys(u.outputs).sort().join("/") : sourceKindKey;
   const flexibility = (u) => Object.values(u.outputs).some((p) => MANA_KEYS.some((k) => k !== "C" && p[k])) ? Object.keys(u.outputs).length : 0;
   const ordered = [...units].sort((a, b) => flexibility(a) - flexibility(b) || (kind(a) < kind(b) ? -1 : kind(a) > kind(b) ? 1 : 0));
-  const outputs = ordered.map((u) => Object.entries(u.outputs));
+  const outputs = ordered.map((u) => historical ? Object.entries(u.outputs) : payloadOutputs(u));
   const alike = ordered.map((u, i) => i > 0 && kind(u) === kind(ordered[i - 1]));
   const add = (a, b) => Object.fromEntries(MANA_KEYS.map((k) => [k, (a[k] || 0) + (b[k] || 0)]));
   const ceiling = Array(ordered.length + 1); ceiling[ordered.length] = {};
@@ -382,13 +402,15 @@ export function sourceTapPlans(units, pool, cost, limit = 2) {
     const payments = paymentOptions(available, cost, {life: 0}, limit - result.length);
     if (payments.length) {
       for (const payment of payments) {
-        const key = `sources:${taps.map((t) => `${t.kind}=${t.color}`).join(";")}|${paymentKey(payment)}`;
+        if (acceptTaps && !acceptTaps(taps)) continue;
+        const key = historical ? `sources:${taps.map((t) => `${t.kind}=${t.color}`).join(";")}|${paymentKey(payment)}` : sourcePlanKey(units, taps, payment);
         if (!foundKeys.has(key)) { foundKeys.add(key); result.push({taps, payment, key}); }
       }
       return;
     }
     if (i === ordered.length || taps.length === budget || !canPay(add(available, ceiling[i]), cost, {life: 0})) return;
-    const key = `${i}|${budget - taps.length}|${alike[i] ? last : "*"}|${MANA_KEYS.map((k) => Math.min(size, available[k] || 0)).join(",")}`;
+    /* Equal mana totals can leave different nonmana cost tappers; a constrained search retains its prefix pattern. */
+    const key = `${i}|${budget - taps.length}|${alike[i] ? last : "*"}|${MANA_KEYS.map((k) => Math.min(size, available[k] || 0)).join(",")}${acceptTaps ? `|${taps.map(t => `${t.kind}=${t.color}`).join(";")}` : ""}`;
     if (dead.has(key)) return;
     const before = result.length, unit = ordered[i];
     /* After a source alike that was left, this one is left too; after one tapped for an output, this one for that or a later. */
@@ -414,9 +436,15 @@ export function sourceTapPlans(units, pool, cost, limit = 2) {
  * and hybrid symbol it leaves from the least flexible source that makes it; then the generic from the rock whose mana
  * fits it exactly or best, then the least flexible source left. Null when that does not pay -- the search decides then. */
 export function quickTapPlan(units, pool, cost) {
+  return buildTapPlan(units, pool, cost, false);
+}
+export function historicalQuickTapPlan(units, pool, cost) {
+  return buildTapPlan(units, pool, cost, true);
+}
+function buildTapPlan(units, pool, cost, historical) {
   if (cost.variable > 0 || cost.symbols.some((s) => !["generic", "colored", "hybrid"].includes(s.kind))) return null;
   const size = cost.generic + cost.symbols.filter((s) => s.kind !== "generic").length;
-  const kind = (u) => Object.keys(u.outputs).sort().join("/");
+  const kind = historical ? (u) => Object.keys(u.outputs).sort().join("/") : sourceKindKey;
   const flexibility = (u) => Object.values(u.outputs).some((p) => MANA_KEYS.some((k) => k !== "C" && p[k])) ? Object.keys(u.outputs).length : 0;
   const ordered = [...units].sort((a, b) => flexibility(a) - flexibility(b) || (kind(a) < kind(b) ? -1 : kind(a) > kind(b) ? 1 : 0));
   const single = (u) => Object.values(u.outputs).every((p) => poolSize(p) === 1);
@@ -431,7 +459,7 @@ export function quickTapPlan(units, pool, cost) {
     if (have) { held[have] = (held[have] || 0) + 1; return true; }
     for (const pick of [single, (u) => !single(u)]) for (const u of ordered) {
       if (used.has(u.id) || !pick(u)) continue;
-      const out = Object.keys(u.outputs).find((o) => colors.some((k) => u.outputs[o][k] > 0));
+      const out = (historical ? Object.entries(u.outputs) : payloadOutputs(u)).find(([, mana]) => colors.some((k) => mana[k] > 0))?.[0];
       if (out === undefined) continue;
       tap(u, out);
       const k = colors.find((c) => spare(c) > 0);
@@ -451,11 +479,11 @@ export function quickTapPlan(units, pool, cost) {
     const out = (u) => Math.max(...Object.values(u.outputs).map(poolSize));
     const fits = left.filter((u) => out(u) <= Math.max(short, 1)).sort((a, b) => out(b) - out(a));
     const next = fits[0] ?? left.sort((a, b) => out(a) - out(b))[0];
-    const color = Object.keys(next.outputs).sort((a, b) => poolSize(next.outputs[b]) - poolSize(next.outputs[a]))[0];
+    const color = (historical ? Object.entries(next.outputs) : payloadOutputs(next)).sort(([, a], [, b]) => poolSize(b) - poolSize(a))[0][0];
     tap(next, color);
     payment = paid();
   }
-  return {taps, payment, key: `sources:${taps.map((t) => `${kind(units.find((u) => u.id === t.id))}=${t.color}`).join(";")}|${paymentKey(payment)}`};
+  return {taps, payment, key: historical ? `sources:${taps.map((t) => `${kind(units.find((u) => u.id === t.id))}=${t.color}`).join(";")}|${paymentKey(payment)}` : sourcePlanKey(units, taps, payment)};
 }
 
 /* ---- convoke (CR 702.51a): creatures help cast a spell ----

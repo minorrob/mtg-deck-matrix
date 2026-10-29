@@ -253,6 +253,10 @@ const exiled = (more = []) => play([at(0, "battlefield", "Plains", "Wastes", "Pl
   eq([s.awaiting?.kind, question.title, question.options.map((o) => o.label).sort()], ["choose-cost", `${CARE}: what to tap for it`, ["Plains, Plains", "Plains, Wastes"]],
     "two ways to pay {1}{W}: asked which, for Concerted Care -- two lands, not Bofur's one");
   resolveAwaiting(s, [question.options.findIndex((o) => o.label === "Plains, Wastes")]);
+  const plains = named(s, "Plains", "battlefield").map(o => o.id), chosen = plains.at(-1);
+  eq([awaitingChoice(s).cost, awaitingChoice(s).options.map(o => o.cardId)], ["manaSource", plains], "the selected pattern asks both actual Plains identities without paying yet");
+  resolveAwaiting(s, [awaitingChoice(s).options.findIndex(o => o.cardId === chosen)]);
+  eq([s.objects[plains[0]].tapped, s.objects[chosen].tapped], [false, true], "the explicit last Plains taps and the other remains available");
   eq([s.stack.length, s.objects[s.stack[0]?.objectId]?.card, s.zones.battlefield.filter((id) => s.objects[id].tapped).map((id) => s.objects[id].card).sort()],
     [1, CARE, ["Plains", "Wastes"]], "answered: the Plains and the Wastes tapped, and Concerted Care on the stack");
 }
@@ -270,6 +274,10 @@ const exiled = (more = []) => play([at(0, "battlefield", "Plains", "Wastes", "Pl
   const question = awaitingChoice(s);
   eq(question.title, `${CARE}: what to tap for it`, "and asked which lands, as the Adventure");
   resolveAwaiting(s, [question.options.findIndex((o) => o.label === "Plains, Wastes")]);
+  const plains = named(s, "Plains", "battlefield").map(o => o.id), chosen = plains.at(-1);
+  eq([awaitingChoice(s).cost, awaitingChoice(s).options.map(o => o.cardId)], ["manaSource", plains], "restricted creature-only mana does not hide the actual Adventure source identities");
+  resolveAwaiting(s, [awaitingChoice(s).options.findIndex(o => o.cardId === chosen)]);
+  eq([s.objects[plains[0]].tapped, s.objects[chosen].tapped], [false, true], "the restricted-pool Adventure uses the explicitly chosen last Plains");
   eq([s.awaiting, s.stack.length, s.objects[s.stack[0]?.objectId]?.card, s.zones.battlefield.filter((id) => s.objects[id].tapped).map((id) => s.objects[id].card).sort()],
     [null, 1, CARE, ["Creature Land", "Plains", "Wastes"]], "answered: that way tapped and Concerted Care on the stack -- not asked again, with no escape's cards made up");
 }

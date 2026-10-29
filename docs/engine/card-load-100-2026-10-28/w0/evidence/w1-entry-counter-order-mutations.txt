@@ -1,0 +1,32 @@
+baseline: every suite passes unbroken
+caught Compleated replacement omitted -- tests/engine-entry-counter-order.mjs
+caught Compleated subtracts the wrong loyalty -- tests/engine-entry-counter-order.mjs
+caught counter order defaults instead of asking -- tests/engine-entry-counter-order.mjs
+caught explicit counter answer forgotten -- tests/engine-entry-counter-order.mjs
+caught applied counter prefix is not excluded -- tests/engine-entry-counter-order.mjs
+caught applied counter prefix keys forgotten -- tests/engine-entry-counter-order.mjs
+caught partial counter count not saved before waiting -- tests/engine-entry-counter-order.mjs
+caught native prefix reporting not requested -- tests/engine-entry-counter-order.mjs
+caught prospective self-only counter modifier omitted -- tests/engine-tokens-counters-4a.mjs
+caught native public counter question identity reused -- tests/engine-entry-counter-order.mjs
+caught counter result accepts another entry -- tests/engine-entry-counter-order.mjs
+caught counter result accepts another controller -- tests/engine-entry-counter-order.mjs
+caught counter result accepts altered returned counters -- tests/engine-entry-counter-order.mjs
+caught counter result is reusable -- tests/engine-entry-counter-order.mjs
+caught zero counter result treated as absent -- tests/engine-entry-counter-order.mjs
+caught stack counters replaced a second time -- tests/engine-entry-counter-order.mjs
+caught move counters replaced a second time -- tests/engine-entry-counter-order.mjs
+caught independent movement counters omitted -- tests/engine-entry-counter-order.mjs
+caught movement counter receipt is not forwarded -- tests/engine-entry-counter-order.mjs
+caught independent token counters omitted -- tests/engine-entry-counter-order.mjs
+caught token counter planning starts before sibling choices -- tests/engine-entry-counter-order.mjs
+caught token child result bypasses its bound receipt -- tests/engine-entry-counter-order.mjs
+caught token counter answer writes the wrong sibling -- tests/engine-entry-counter-order.mjs
+caught breaks-load100-w0-w1-intrinsic-entry.py: native intrinsic counters omitted -- tests/engine-entry-counter-order.mjs
+caught breaks-load100-w0-w1-intrinsic-entry.py: native Compleated reads removed printed keyword -- tests/engine-intrinsic-entry.mjs
+caught breaks-load100-w0-w1-intrinsic-entry.py: intrinsic counters erase independent grants -- tests/engine-entry-counter-order.mjs
+caught breaks-pre-entry.py: tokens count simultaneous siblings as replacement sources -- tests/engine-entry-counter-order.mjs
+caught breaks-wave4a-h4.py: counters: cost and entering passed on -- tests/engine-wave4c-k3.mjs
+caught breaks-wave4a-h4.py: entering: as a spell resolves -- tests/engine-entry-counter-order.mjs
+caught breaks-wave4a-h4.py: entering: put onto the battlefield by an effect -- tests/engine-entry-counter-order.mjs
+missed: []

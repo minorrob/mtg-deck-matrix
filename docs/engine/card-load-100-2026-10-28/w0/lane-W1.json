@@ -13,7 +13,7 @@
     "| Tokens and copies of prepare cards never prepared | `script/effects/attributes.mjs`:23 | W1 |",
     "| Unsure, to be settled by a scenario: Song of the Dryads and Sagas under ability loss; Incubator copies single-faced; Social Snub's copy; Winter's prompt and a draw-two cost under Narset | `rules/layers.mjs`:870; `permanents.mjs`:644; `actions.mjs` | V8 finds, W1/W6/W2/W7 fix |"
   ],
-  "status": "Draft PR 929: W1 bounded continuation proven and published; native-funded Glasswright regression repaired after W5 synchronization; remaining battle and two emblem families unfinished",
+  "status": "Published bounded Battle entry in draftPR944 atb924dbb6 after exactHEAD0 SCANPASS; source79970ba1 with assembled310595d2/exactW5 reader1000a25d. Native readers and integrity/feature checks green. Full Battle, legacy entry, intrinsic planeswalker entry and two emblem families remain unfinished. No cards/promotions or gate completion.",
   "checkpoint": {
     "cardsAdded": 0,
     "cardsPromoted": 0,
@@ -231,6 +231,61 @@
     "sources": [
       "https://api.scryfall.com/cards/368c6e60-804c-447c-bc2b-ac9dc4cab5e7/rulings",
       "https://api.scryfall.com/cards/56f642ae-68f3-4eeb-8b3f-a9fe1596231d/rulings"
+    ],
+    "ignoresAdded": []
+  },
+  "battleEntryContinuation": {
+    "base": "50f47e22c0a086de529bad09d9d14565df19a901",
+    "sourceCheckpoint": "79970ba1",
+    "publishedCheckpoint": "b924dbb62b099a9968508d814fb52f65ed136543",
+    "pullRequest": "https://github.com/minorrob/mtg-deck-matrix/pull/944",
+    "report": "W1-battle-entry.md",
+    "scope": "Printed/current defense, copiable and hidden-card identity, saved native pre-entry protector choice and counters, additive visible-Battle projection; no room/UI/funding/turn changes or final card definitions.",
+    "red": "Original restored engine-battles protector assertion failed on assembled source: actual undefined, expected rule-operation.",
+    "proof": "Native Battle entry95 checks; final35 mutations caught, missed[]. Three distinct original loyalty-copy mutations reanchored and caught with full original suite union including engine-cards baseline. First31/33 probes had two DFC-masked missing fields; added single-faced witnesses preserve all original assertions. Pure Oracle identity drift matches6430 definitions. Transform reader46 checks and3 semantic probes caught with current CR cases and exact new IDs. Receipts in evidence/w1-battle-entry-*.txt and w1-transform-reader-mutations.txt. After assembled310595d2/exactW5 reader1000a25d sync, independent face-down68/Adventure71/payment410/roompayment14 all green; separate browser visibility failure remains red and uncredited.",
+    "remaining": [
+      "Battle combat/damage/SBAs/protector repair and native Siege defeat/free transformed casting",
+      "Remaining synchronous legacy Battle entry callers",
+      "Adjacent intrinsic entry ability-loss debt is fixed at 85a3a89f; see intrinsicEntryContinuation and its report",
+      "Daretti delayed owner-graveyard return and Sunset native untap/draw audits",
+      "Root generated consolidation, strict whole-directory proof, review, clean games and gate acceptance"
+    ],
+    "ignoresAdded": []
+  },
+  "intrinsicEntryContinuation": {
+    "base": "75e3ff77879f3012215737714ef61d76e4e01b9e",
+    "report": "W1-intrinsic-entry.md",
+    "scope": "Shared prospective view and intrinsic-counter calculation for native and legacy entry; preserve old exports/API and independent counter grants.",
+    "red": "Five native/legacy witnesses: three lost-intrinsic-loyalty failures and two removed-Compleated-keyword failures, with ordinary controls passing.",
+    "proof": [
+      "engine-intrinsic-entry34, engine-battles95 and original engine-compleated22 passed.",
+      "Twelve semantic mutations caught against the complete original pre-entry/copy union including engine-cards; missed: [].",
+      "Four moved Battle-defense, six moved pre-entry and one copied-planeswalker probe caught; original suites retained, exact legacy-own reader added after the preserved initial miss. Static audit: 33 inherited UI targets, zero engine targets.",
+      "JSON reload and actual source-owner concession before native resolution, own static ability loss, type loss, independent entry counters and actual Doubling Season with removed keyword/all-abilities controls."
+    ],
+    "pending": [
+      "Native Compleated plus loaded Doubling Season ordering is fixed and proven by counterEntryContinuation; synchronous legacy conversion remains required.",
+      "Battle combat, defense damage, SBAs, protector repair, Siege defeat/free transformed casting and legacy protector entry remain unfinished.",
+      "Remaining Daretti and Sunset emblem audits and all root gates remain open."
+    ],
+    "ignoresAdded": []
+  },
+  "counterEntryContinuation": {
+    "base": "85a3a89fec6311d27d827de0960c5e0830bafdce",
+    "report": "W1-entry-counter-order.md",
+    "scope": "Saved askable native entry counter operation with distinct Compleated candidate, committed-prefix preservation, internal bound single-use counter results, native move-one grants and deferred simultaneous token counter plans.",
+    "proof": [
+      "engine-entry-counter-order 87; complete original reader union including engine-cards, h4/pre-entry readers and generators passes unbroken.",
+      "Thirty main semantic probes, including seven moved original probes, plus two supplementary protector/API-shape probes caught; both missed lists empty. No original suite/assertion removed.",
+      "Actual loaded Doubling Season 2/4 choices, own self-only counter modifiers, zero prevention, independent grants, no-move Aura, JSON/stale/Cancel/departure, live and departed applied prefixes, native copied-token 10/12 outcomes and later-sibling devour/concession timing.",
+      "Metadata-only inventory regeneration changes five reader rows, preserving 60 artifacts/80.9 MB; additive generators registration checks frozen 95% sources without writing data. Existing public Scryfall checks remain read-only.",
+      "Face-down 68, Adventure 71, transform 46, MDFC 22, enter-transformed 7, integrity and feature-wiring 131 pass. Actual README count 688; static audit 33 inherited UI targets and zero engine targets."
+    ],
+    "pending": [
+      "Synchronous legacy entry and post-entry counter callers still require askable conversion; no default order is accepted as gate evidence.",
+      "Native impending time counters remain a separate entry path requiring entry/type/keyword/copy/order controls before integration.",
+      "Battle combat, defense damage, protector/SBA/defeat and legacy protector work remain; coordinate combat/turn with root. W5 owns Siege effect-paid/free transformed casting.",
+      "Daretti/Sunset generic emblem audits and all root whole-directory/review/browser/clean-game gates remain open."
     ],
     "ignoresAdded": []
   },

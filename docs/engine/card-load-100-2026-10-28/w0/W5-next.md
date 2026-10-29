@@ -1,8 +1,17 @@
 # W5 continuation
 
-Branch: `codex/engine-load100-w0-w5-mana`; follow-up draft PR #933 (prior #928 merged). No cards added or promoted.
+Branch: `codex/engine-load100-w0-w5-mana`; integration target `codex/engine-load100-w0`. The current draft is attached to
+the task and recorded by root in RUN; prior #928/#933/#938 merged. No cards added or promoted.
 Runtime checkpoints: `d9d00a00` (funding/basic choices/entry), `12a32a40` (delve X/search/source/riders).
 Shared source: `2c89a5c3` merged as `d807b03a`; lane JSON records the final proof checkpoint.
+
+Reader-only partial checkpoint: face-down exile funding now has68 native checks; the two affected Concerted Care
+funding-answer blocks have71. Empty-pool/permission/privacy/timing assertions remain, with explicit last-Mountain/Plains
+answers and actual resource/target/new-object/final-zone outcomes. The original flameshape six-reader baseline is RED:
+required Chromium times out at `tests/board-choices.mjs:330`, waiting for `#cm-board .cm-stage-top` to become visible.
+Both intended payment/closed-permission mutations were NOT applied or credited because that baseline failed.
+`evidence/w5-face-down-reader-partial.json` records the exact blocker and teardown. Preserve all original six suites;
+no further browser repeat without root's coordinated quiet window. Root/P0 are investigating the UI consumer separately.
 
 1. Continue investigating the unfinished easy library seed 2801 at exact source `5a004e444d83e3fd8e63873f6b5ef9f6160430d3`.
    `evidence/w5-fuzz-easy-2801-timeout.json` holds the exact command, decks, timing, and CPU/memory samples.
@@ -31,9 +40,27 @@ Shared source: `2c89a5c3` merged as `d807b03a`; lane JSON records the final proo
    the public choices name produced/spent mana and the ID stage names its output. See `evidence/w5-output-colors.json`.
    Remaining: effect-paid casts do not yet use these identity stages; ongoing historical games without the saved flag
    still use historical behavior until safe migration; exhaustive kind/output enumeration has no operational acceptance.
-   `W5-disjoint-tap-red.mjs.txt` reproduces two actual Sephara failures: an impossible four-flyer sole-mana-Bird alternative
-   is offered, and a legal five-flyer alternative loops its sole funding question instead of asking four cost tappers.
+   The two actual Sephara failures in `W5-disjoint-tap-red.mjs.txt` now pass: current ordinary alternative/flashback tap costs
+   reserve cost tappers during affordability, ask them first, filter their IDs from mana, and refuse invalid subsets atomically.
+   Exact native proof covers all15 four-of-six cost subsets/ten complete payments, outside same-kind/flexible witnesses,
+   current-controller eligibility and an opposing Grand Arbiter tax that catches unsafe constrained memo pruning.
+   See `evidence/w5-disjoint-costs.json`; the original17-reader baseline is diagnostic, not strict G-3 acceptance.
+   The saved raw solver RED `W5-output-payload-kind-red.mjs.txt` now retains both C1/C2 payloads despite the same label.
+   Current quick/search/pattern/physical identity paths consistently use full normalized payloads and remap actual activation
+   labels per selected source. Payload-sorted alternatives preserve reversed-array GG/GU/UU; actual reordered bundles
+   retain both physical IDs and reserved outside-source witnesses. Named historical planners preserve exact saved keys.
+   `evidence/w5-payload-kinds.json` records462 native checks, the original17-reader baseline and eight caught mutations
+   (seven in the first run, one ambiguous anchor narrowed and separately caught on unchanged baseline source).
+   Actual C1/C2/bundled/restriction/effect families pass; no general output/ability equivalence claim follows from them.
+   The operational pilot RED in `W5-disjoint-pilot-red.mjs.txt` now passes. Native choose-cost includes one serializable
+   factual funding witness without changing any human options. The narrow generic house-pilot tap-cost chooser preserves
+   that witness and sends explicit indices; no human default, refused-answer substitution, or retry loop is added.
+   `evidence/w5-pilot-tap-cost.json` records417 native checks,25 native-room checks including Pay/reload/priority/zero
+   refusals/a real winner/identical replay, and three caught mutations. This fixture game is not pool/library G-5 credit.
    Do not claim whole payment/identity completeness from this ordinary-cast slice.
+   Next actual effect-paid RED: Isochron Scepter copying Getaway Glamer offers no cast even with C3 left after activation;
+   chosen spree costs remain owed when the base mana cost is free. P0's executable audit is in the shared scratch folder.
+   Reuse the current modal contract after coordinating root's clean integration checkpoint; do not simply lift the refusal.
 4. Coordinate with W1's queued Siege transformed-cast seam before editing choicesNow/play flags.
    W4 owns the mana-ability `then` damage-continuation region; avoid overlapping edits there.
 

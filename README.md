@@ -955,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 694 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 700 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1452,6 +1452,9 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-cards-x11-b2` — `tests/engine-cards-x11-b2.mjs`
 
 - `engine-attack-requirements` - `tests/engine-attack-requirements.mjs`
+- `engine-battles` - `tests/engine-battles.mjs`: native pre-entry protector choices, printed/current defense, entry copies and counters, reload/departure refusals, public projection and hidden-card boundaries; full Battle combat and Siege defeat remain unfinished
+- `engine-intrinsic-entry` - `tests/engine-intrinsic-entry.mjs`: native and legacy intrinsic loyalty/defense counters use prospective types and ability loss; Compleated keyword removal, independent entry counters, actual doubling, reload and departure controls
+- `engine-entry-counter-order` - `tests/engine-entry-counter-order.mjs`: separately askable Compleated/counter replacements, saved prefixes and internal entry receipts, zero prevention, native movement, simultaneous copied tokens, sibling costs, reload/departure and suffix-once controls
 - `engine-defender-permission` - `tests/engine-defender-permission.mjs`
 - `engine-ability-haste` - `tests/engine-ability-haste.mjs`
 - `engine-unless-return` - `tests/engine-unless-return.mjs`
@@ -1583,9 +1586,12 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `fuzz-pool` - `tests/fuzz-pool.mjs`: final Commander pool dealing, printed commander permissions, fatal population errors, strict refusal evidence, and journal exercise attribution; copied or fizzled spells, unclean games, and unobserved abilities receive no card-completion credit; includes a real room journal, identical replay, and leak check
 - `ability-proof` - `tests/ability-proof.mjs`: passing scenarios, followed by removal of one ability from a cloned runtime definition; static boosts, final flying combat damage and vigilance must change, while offer-only failures, keyword presence, red baselines, generic errors and saved card/schema changes receive no behavioral credit; a missing mana-activation offer stays unproved
 - `card-check-cli` - `tests/card-check-cli.mjs`: real strict checker defaults, runtime-removal behavior, rejected presence-only credit, unknown flags, partial/stale/forged ledger rejection, independent canonical inventory/source verification and fatal Actions/local-fallback wiring
+- `card-oracle-defense` - `tests/card-oracle-defense.mjs`: printed defense matches each committed Oracle face independently of schema validity, with malformed, missing, invented and wrong-number controls
+- `card-face-fidelity` - `tests/card-face-fidelity.mjs`: every back, Adventure and prepare face claims its own actual text; omitted or invented sentences fail, and only this front's physical transform reminder is recognized
+- `engine-smoke-artifacts` - `tests/engine-smoke-artifacts.mjs`: actual Artifact Blast and Halt Order smoke casts counter the exact opposing artifact stack entry, finish in the proper graveyards and execute only Halt Order's one draw
 - `ability-missing-prompt` - `tests/ability-missing-prompt.mjs`: actual Adaptive Automaton, Metallic Mimic and Roaming Throne entry-choice omissions reach the missing-prompt precheck and remain unproved; classifier/tag removals must catch inflated ability credit from stale verifier sources
 - `scenario-block-policy` - `tests/scenario-block-policy.mjs`: an explicit named block-if-legal policy checks both complete declarations through the rules and records both branches through counterfactual proof; actual loaded Zephyr Sprite and runtime Flying removal finish combat with different final damage, life and graveyard results; malformed, ambiguous and illegal declarations fail
-- `scenario-explicit-choices` - `tests/scenario-explicit-choices.mjs`: native strict evidence rejects skipped optional moves, automatic answers, ambiguous actions and labels, inferred defenders, required declarations, trigger order and legend choices; explicit final outcomes and runtime omission controls use the same policy
+- `scenario-explicit-choices` - `tests/scenario-explicit-choices.mjs`: native strict evidence rejects skipped optional moves, automatic answers, ambiguous actions and labels, inferred defenders, required declarations, trigger order and legend choices; explicit physical sources, indexed answers, final outcomes and runtime omission controls use the same policy
 - `scenario-entry-order` - `tests/scenario-entry-order.mjs`: five saved counter scenarios explicitly answer either entry-replacement order and retain every original final expectation; unanswered questions produce a classified offer diagnostic and earn no ability proof
 - `sentence-paragraphs` - `tests/sentence-paragraphs.mjs`: partial translations keep an ability's paragraph together while preserving independent keyword abilities and the current spell segmentation
 - `engine-mana-upkeep` - `tests/engine-mana-upkeep.mjs`: the table's optional house rule keeps mana made in upkeep and draw until spent or the turn ends; AI pilots keep the book's mana rule

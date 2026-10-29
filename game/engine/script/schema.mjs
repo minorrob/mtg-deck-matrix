@@ -800,6 +800,11 @@ function checkIdentity(identity, errors) {
   /* A planeswalker's printed loyalty (CR 306.5a). */
   if (identity.loyalty !== undefined && identity.loyalty !== null && !(Number.isInteger(identity.loyalty) && identity.loyalty >= 0))
     errors.push({path: "identity.loyalty", message: "A planeswalker's loyalty is its printed number, 0 or more"});
+  /* CR 310.4a: printed defense is a Battle characteristic, distinct from its counters in play. */
+  if (identity.defense !== undefined && identity.defense !== null && !(Number.isInteger(identity.defense) && identity.defense >= 0))
+    errors.push({path: "identity.defense", message: "A battle's defense is its printed number, 0 or more"});
+  if ((identity.types ?? []).includes("Battle") && identity.defense == null)
+    errors.push({path: "identity.defense", message: "A battle carries its printed defense"});
 }
 
 /**

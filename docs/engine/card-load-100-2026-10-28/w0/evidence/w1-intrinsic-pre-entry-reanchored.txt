@@ -1,0 +1,8 @@
+baseline: every suite passes unbroken
+caught prospective patch never removes absent fields -- tests/engine-load100-w2-stack.mjs
+caught prospective patch never sets chosen copied fields -- tests/engine-load100-w2-stack.mjs
+caught entrant joins the counted battlefield before entry -- tests/engine-load100-w2-stack.mjs
+caught prospective self static is omitted -- tests/engine-load100-w2-stack.mjs
+caught prospective self static forgets fresh choice -- tests/engine-load100-w2-stack.mjs
+caught entry planeswalker lacks starting loyalty -- tests/engine-wave4c-k3.mjs
+missed: []
