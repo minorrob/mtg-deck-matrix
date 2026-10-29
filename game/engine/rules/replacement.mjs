@@ -550,7 +550,7 @@ export function applyReplacements(state, proposal, {orders = [], askable = false
   if (lasting.length && !lasting.some(isShield))
     return {proposal: {...current, amount: 0, prevented: true}, applied: current.applied, awaiting: false};
   /* PROTECTION (CR 702.16e, 702.16j; rules/protection.mjs): damage from a source with the quality is prevented, all of it. */
-  if (proposal.event === "damage" && protectedFrom(state, {card: current.toCard ?? null, player: current.toPlayer ?? null}, current.sourceId))
+  if (proposal.event === "damage" && protectedFrom(state, {card: current.toCard ?? null, player: current.toPlayer ?? null}, current.sourceId, current.sourceLastKnown))
     return {proposal: {...current, amount: 0, prevented: true}, applied: current.applied, awaiting: false};
 
   /* "IF IT WOULD LEAVE THE BATTLEFIELD, EXILE IT INSTEAD OF PUTTING IT ANYWHERE ELSE" (unearth, CR 702.84a; Whip of Erebos): an
@@ -592,6 +592,23 @@ export function applyReplacements(state, proposal, {orders = [], askable = false
   }
 
   return {proposal: current, applied: current.applied, awaiting: false};
+}
+
+/* Explicit operation frames apply one live replacement at a time (CR 616.1f). The caller owns precedence and questions;
+   this interface neither chooses an order nor saves a candidate that may cease to apply while a player answers. */
+function checkStepProposal(proposal) {
+  if (!["zone-change", "enters"].includes(proposal.event)) throw new Error("Replacement steps support zone-change or enters proposals");
+}
+export function ruleReplacementCandidates(state, proposal) {
+  checkStepProposal(proposal);
+  return applicable(state, proposal).map(candidate => ({key: candidateKey(candidate), holderId: candidate.holderId,
+    ability: structuredClone(candidate.ability), label: `${state.objects[candidate.holderId]?.card ?? candidate.ability.name ?? "Effect"}: ${candidate.ability.text ?? candidate.ability.id}`}));
+}
+export function applyRuleReplacement(state, proposal, key) {
+  checkStepProposal(proposal);
+  const candidate = applicable(state, proposal).find(candidate => candidateKey(candidate) === key);
+  if (!candidate) throw new Error("That replacement no longer applies");
+  return applyOne(state, candidate, proposal);
 }
 
 /* The counters an exile replacement gives the card it sends there ("with a void counter on it", Dauthi Voidwalker), put on
@@ -664,7 +681,8 @@ export function ownEntering(state, {objectId, player, types, abilities}) {
      value (CR 707.2), and enters with that many loyalty counters (CR 306.5b), as enteringModifications gives any other. */
   const counters = {...(proposal.counters ?? {})}, loyalty = state.objects[objectId]?.loyalty;
   if ((types ?? []).includes("Planeswalker") && Number.isInteger(loyalty)) counters.loyalty = (counters.loyalty ?? 0) + loyalty;
-  return {tapped: proposal.tapped === true, counters, asks: withChoiceCounters(proposal)};
+  /* Copied preparation cards also enter with their designation (CR 614.12, 722.3a). */
+  return {tapped: proposal.tapped === true, counters, asks: withChoiceCounters(proposal), designations: proposal.designations ?? []};
 }
 
 /* How an event ends under every order of the effects that apply to it (CR 616.1f: each applied, then what still applies),

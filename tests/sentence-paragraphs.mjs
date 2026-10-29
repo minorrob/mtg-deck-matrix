@@ -1,5 +1,5 @@
 /* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
-/* CR 113.2c and 702.1c: a writer receives a complete unfinished ability, while keywords remain independent. */
+/* CR 113.2c: a writer receives a complete unfinished ability, while keywords remain independent. */
 import assert from "node:assert/strict";
 import {createLibrary, partialTranslate} from "../game/engine/cards/sentences.mjs";
 

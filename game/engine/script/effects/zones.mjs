@@ -26,11 +26,12 @@ import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf, controllerOf, abilitiesOf} from "../../rules/layers.mjs";
 import {selectMatching, compileSelector, matchesSelector, shareCreatureType} from "../filter.mjs";
 import {applyReplacements, enteringModifications, placeReplacedCounters, regenerated} from "../../rules/replacement.mjs";
-import {cantBeCountered, entersUntapped, enteringCountersPlaced, drawsInstead, cantBeSacrificed, drawForbidden, emptyDrawWins, drawsMore} from "../../rules/statics.mjs";
+import {cantBeCountered, entersUntapped, enteringCountersPlaced, drawInsteadEffects, cantBeSacrificed, drawForbidden, emptyDrawWins, drawsMore} from "../../rules/statics.mjs";
 import {winGame} from "./resources.mjs";
 import {runFollowUps} from "./index.mjs";
 import {amountOf} from "../amount.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
+import {rememberDepartingSpell} from "../../rules/spell-memory.mjs";
 
 const ZONE_LABEL = {
   library: "Library", hand: "Hand", battlefield: "Battlefield",
@@ -74,7 +75,7 @@ const PERMANENT_TYPES = ["Artifact", "Battle", "Creature", "Enchantment", "Land"
 /* `notOnto`: permanents entering the battlefield at the same time as this one (effects/zones.mjs, moveZone's `together`) --
    an Aura among them enchants none of them (CR 303.4f: what it will enchant is chosen as it enters, and they are not yet
    there to be chosen). */
-export function moveOne(state, id, to, events, {owner = null, controller = null, tapped = false, faceDown = false, lookers = null, exiledBy = null, transformed = false, counters = null, notOnto = null, nonCommanderTo = null, commanderKeys = [], orderingPlayer = null} = {}) {
+export function moveOne(state, id, to, events, {owner = null, controller = null, tapped = false, faceDown = false, lookers = null, exiledBy = null, transformed = false, counters = null, notOnto = null, nonCommanderTo = null, commanderKeys = [], orderingPlayer = null, preparedProposal = null, preparedEntering = null, entryPatch = null} = {}) {
   const object = state.objects[id];
   if (!object) return null;
   /* A TOKEN THAT HAS LEFT THE BATTLEFIELD STAYS WHERE IT IS (CR 111.8): it can't move to another zone or come back onto the
@@ -90,9 +91,9 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
      was never a 5/5. */
   const leftBehind = from === "battlefield" ? lastKnown(state, id) : undefined;
 
-  const {proposal} = applyReplacements(state, {
+  const proposal = preparedProposal ?? applyReplacements(state, {
     event: "zone-change", objectId: id, from, to, player: object.controller,
-  });
+  }).proposal;
   /* A spell an effect moves off the stack ("then return it to its owner's hand") is no longer on it: its entry goes too.
      Cast with flashback, it is exiled instead of going anywhere else (CR 702.34a). */
   const leaving = from === "stack" ? state.stack.findIndex((entry) => entry.objectId === id) : -1;
@@ -116,7 +117,7 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
      counter is not put on the creature it becomes. */
   const face = backUp ? object.mdfc.back : object;
   const entering = destination === "battlefield"
-    ? enteringModifications(state, {objectId: id, player: enteringController, types: asDown ? ["Creature"] : face.types, abilities: asDown ? [] : face.abilities})
+    ? preparedEntering ?? enteringModifications(state, {objectId: id, player: enteringController, types: asDown ? ["Creature"] : face.types, abilities: asDown ? [] : face.abilities})
     : null;
 
   /* An Aura put onto the battlefield by an effect, not resolving as a spell (CR 303.4f; Sun Titan returning one): it
@@ -127,12 +128,20 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
     if (from !== "stack") return null;
     return moveOne(state, id, "graveyard", events, {owner: object.owner});
   }
-  if (leaving >= 0) state.stack.splice(leaving, 1);
+  if (leaving >= 0) {
+    rememberDepartingSpell(state, state.stack[leaving]);
+    state.stack.splice(leaving, 1);
+  }
   /* A face-down instruction applies only to its intended zone (CR 614.1): manifest replaced with exile is face up,
      just as hideaway replaced with another destination is. The public move names a card that was not hidden. */
   const hidden = faceDown === true && to === "exile" && destination === "exile";
   if (faceDown === true && !asDown && !hidden) card = leavingRef(state, id);
   const moved = moveObject(state, id, destination, PER_PLAYER.includes(destination) ? holder : null, {faceDown: asDown || hidden, transformed: backUp, nonCommanderTo, commanderKeys});
+  /* CR 400.7, 614.12: a pre-entry copy/choice patch belongs to the new permanent before counters and arrival events. */
+  if (destination === "battlefield" && entryPatch) {
+    for (const key of entryPatch.remove ?? []) delete state.objects[moved][key];
+    Object.assign(state.objects[moved], structuredClone(entryPatch.set ?? {}));
+  }
   if (destination === "exile" && orderingPlayer !== null && object.merged && state.mergedOrders?.length)
     state.mergedOrders[state.mergedOrders.length - 1].player = orderingPlayer;
   /* A creature put into a graveyard from the battlefield died (CR 700.4): destroyed, sacrificed, put there -- what left
@@ -152,6 +161,11 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
   if (destination === "battlefield" && from === "library" && state.objects[moved]) state.objects[moved].cameFrom = {zone: "library", owner: object.zonePlayer ?? object.owner};
   if (hosts) enchantOnArrival(state, moved, hosts, state.objects[moved].controller);
   if (entering) {
+    if ((entering.gainsKeywords ?? []).length) {
+      const timestamp = state.nextTimestamp++;
+      (state.effects ??= []).push({id: `entry-keywords:${moved}:${timestamp}`, layer: 6, affects: {ids: [moved]},
+        apply: {addKeywords: [...entering.gainsKeywords]}, until: null, sourceController: enteringController, timestamp});
+    }
     /* Tapped by its own "enters tapped", or by the effect that put it there ("onto the battlefield tapped"): before the
        event, which says how it entered. */
     if ((entering.tapped || tapped) && !entersUntapped(state, moved)) state.objects[moved].tapped = true;
@@ -663,23 +677,14 @@ export function moveZoneAll(state, params, context, rng = null) {
 }
 
 /** `draw` — CR 121.1, off the top. An empty library marks the player; 1.5 turns that into a loss. */
+/* CR 121.2c: when several players draw, each completes their draws in APNAP order, including replacement questions. */
+const drawingPlayers = (state, who, controller) => {
+  const seats = state.players.length, rank = (player) => (player - state.activePlayer + seats) % seats;
+  return playersFor(state, who, controller).sort((a, b) => rank(a) - rank(b));
+};
 export function draw(state, params, context) {
   const events = [];
-  const count = params.count ?? 1;
-  for (const player of playersFor(state, params.who, context.controller)) {
-    /* "If an opponent would draw two or more cards, instead you and that player each draw a card" (Alms Collector; rules/
-       statics.mjs, drawsInstead): whose, when two players' would, as the drawing player chose (CR 616.1; effects/asking.mjs,
-       orderDraws) -- where nobody could be asked, the first in turn order after them. The two draw in turn order from the
-       active player, each one card. */
-    const instead = drawsInstead(state, player, count);
-    if (instead.length) {
-      const you = instead.includes(params.drawOrders?.[player]) ? params.drawOrders[player] : instead[0];
-      const seats = state.players.length, rank = (p) => (p - state.activePlayer + seats) % seats;
-      for (const who of [you, player].sort((a, b) => rank(a) - rank(b))) drawOne(state, who, events);
-      continue;
-    }
-    for (let i = 0; i < count; i += 1) drawOne(state, player, events);
-  }
+  for (const step of singleDrawSteps(state, params, context)) drawOne(state, step.player, events, step.replaced);
   /* "Each opponent draws a card, then you draw a card for each opponent who drew a card this way" (Cut a Deal): the cards drawn,
      each the object it is in its drawer's hand, for what follows to count -- one who drew none (an empty library, CR 121.4) is
      not among them. */
@@ -695,13 +700,16 @@ function drawOne(state, player, events, replaced = []) {
   /* "IF YOU WOULD DRAW A CARD WHILE YOUR LIBRARY HAS NO CARDS IN IT, YOU WIN THE GAME INSTEAD" (Laboratory Maniac; CR 614.11,
      121.6a): replaced even with no card to draw, so it is no draw from an empty library -- and an opponent's "you can't win
      the game" (effects/resources.mjs, winGame) leaves the player neither winning nor losing for it (its ruling). Before "draw
-     two instead": either order ends with the same win, so nobody is asked (CR 616.1). */
+     two instead" in this synchronous helper. Resolution asks when competing replacements apply (CR 616.1). */
   if (library.length === 0 && emptyDrawWins(state, player)) { winGame(state, {who: [player]}, {controller: player}); return; }
   /* "DRAW TWO CARDS INSTEAD" (Teferi's Ageless Insight; CR 614.11a, 614.5): each `draws-more` not yet applied to this draw
      replaces it with that many draws, each one the others may still replace -- all of them made before the rest of the draw
      goes on. */
   const more = drawsMore(state, player).find((m) => !replaced.includes(m.key));
-  if (more) { for (let i = 0; i < more.count; i += 1) drawOne(state, player, events, [...replaced, more.key]); return; }
+  if (more) {
+    events.push(...draw(state, {who: [player], count: more.count, drawReplaced: [...replaced, more.key]}, {controller: player}));
+    return;
+  }
   if (library.length === 0) { state.players[player].drewFromEmpty = true; return; }
   const moved = moveOne(state, library[0], "hand", events, {owner: player});
   if (moved !== null && state.objects[moved]?.zone === "hand") {
@@ -753,16 +761,25 @@ export function dredgeInstead(state, player, cardId, events) {
     "instead you and that player each draw a card" among them (drawsInstead, the one its drawing player chose, `drawOrders`)
     -- for a dredge to replace any one of them (script/resolution.mjs). */
 export function singleDraws(state, params, context) {
+  return singleDrawSteps(state, params, context).map(step => step.player);
+}
+
+/* A modified multi-card instruction is reconsidered before its single draws (CR 121.2a, 616.1g). Every descendant
+   retains the applied ability keys, so neither its doubler nor its chosen Collector can apply twice (CR 614.5). */
+export function singleDrawSteps(state, params, context) {
   const count = params.count ?? 1, draws = [];
-  for (const player of playersFor(state, params.who, context.controller)) {
-    const instead = drawsInstead(state, player, count);
+  const replaced = params.drawReplaced ?? [];
+  for (const player of drawingPlayers(state, params.who, context.controller)) {
+    const instead = drawInsteadEffects(state, player, count, replaced);
     if (instead.length) {
-      const you = instead.includes(params.drawOrders?.[player]) ? params.drawOrders[player] : instead[0];
+      const chosen = instead.find(effect => effect.key === params.drawOrders?.[player]
+        || effect.controller === params.drawOrders?.[player]) ?? instead[0];
       const seats = state.players.length, rank = (p) => (p - state.activePlayer + seats) % seats;
-      draws.push(...[you, player].sort((a, b) => rank(a) - rank(b)));
+      draws.push(...[chosen.controller, player].sort((a, b) => rank(a) - rank(b))
+        .map(who => ({player: who, replaced: [...replaced, chosen.key]})));
       continue;
     }
-    for (let i = 0; i < count; i += 1) draws.push(player);
+    for (let i = 0; i < count; i += 1) draws.push({player, replaced: [...replaced]});
   }
   return draws;
 }
@@ -774,9 +791,10 @@ export function singleDraws(state, params, context) {
    whose effects would apply; or null when no draw of the effect has such a choice not yet made (`answers`, by player). */
 export function drawQuestion(state, effect, context, answers = {}) {
   if (effect?.effect !== "draw") return null;
-  for (const player of playersFor(state, effect.who, context.controller)) {
-    const instead = drawsInstead(state, player, effect.count ?? 1);
-    if (instead.length > 1 && !instead.includes(answers[player])) return {player, options: instead, count: effect.count};
+  for (const player of drawingPlayers(state, effect.who, context.controller)) {
+    const instead = drawInsteadEffects(state, player, effect.count ?? 1, effect.drawReplaced ?? []);
+    if (instead.length > 1 && !instead.some(option => option.key === answers[player] || option.controller === answers[player]))
+      return {player, options: instead, count: effect.count};
   }
   return null;
 }
@@ -1067,6 +1085,7 @@ export function counterSpell(state, params, context) {
     if (at < 0) continue;
     /* "This spell can't be countered": the counter effect does nothing to it -- it was still a legal target (CR 101.2). */
     if (state.stack[at].objectId !== null && cantBeCountered(state, state.stack[at].objectId)) continue;
+    rememberDepartingSpell(state, state.stack[at]);
     const [entry] = state.stack.splice(at, 1);
     /* A countered copy ceases to exist (CR 707.10a, 704.5e); it is no card to put into a graveyard. */
     if (entry.objectId !== null && state.objects[entry.objectId]?.copy === true) removeObject(state, entry.objectId);

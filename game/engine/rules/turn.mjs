@@ -44,9 +44,10 @@ import {destructionChoice, dredgers, dredgeInstead, dredgeWords} from "../script
 import {commanderChoice} from "./commander.mjs";
 import {damageOrderChoice, graveyardBound, placeReplacedCounters} from "./replacement.mjs";
 import {mulliganChoice, resolveMulligan} from "./mulligan.mjs";
-import {answerResolution, answerDeparted, resolutionChoice} from "../script/resolution.mjs";
+import {answerResolution, answerDeparted, resolutionChoice, continueRuleResolution} from "../script/resolution.mjs";
+import {answerRuleOperation, continueRuleOperation} from "./operations.mjs";
 import {finishResolving} from "./stack.mjs";
-import {priorityOrder} from "./priority.mjs";
+import {priorityOrder, afterResolving} from "./priority.mjs";
 import {playerRuleChanged, untapsDuringOthers, ruleChanged, drawForbidden, emptyDrawWins} from "./statics.mjs";
 import {emptyRestricted, colorlessPool} from "./restricted-mana.mjs";
 import {endCopies, phaseIn, endControlChange, nextRecord} from "../script/effects/permanents.mjs";
@@ -54,7 +55,7 @@ import {untapOne, winGame} from "../script/effects/resources.mjs";
 import {runEffect} from "../script/effects/index.mjs";
 import {askEntering, enteringChoice, resolveEnteringChoice} from "./entering.mjs";
 import {collectTriggers, openTriggers, askTriggerTargets, triggerChoice, resolveTriggerOrder, triggerTargetsChoice, resolveTriggerTargets, triggerCountedChoice, resolveTriggerCounted} from "./trigger.mjs";
-import {chooseTargetsChoice, resolveChooseTargets, castCostChoice, resolveCastCost} from "./actions.mjs";
+import {chooseTargetsChoice, resolveChooseTargets, castCostChoice, resolveCastCost, afterAction} from "./actions.mjs";
 import {deriving} from "./layers.mjs";
 
 /* The steps of a turn, CR 500.1, in order.
@@ -351,6 +352,7 @@ export function awaitingChoice(state) {
 function choiceFor(state) {
   const awaiting = state.awaiting;
   if (!awaiting) return null;
+  if (awaiting.kind === "rule-operation") return awaiting.choice;
   if (awaiting.kind === "mulligan-decision" || awaiting.kind === "mulligan-bottom" || awaiting.kind === "opening-hand")
     return mulliganChoice(state, awaiting);
   if (awaiting.kind === "effect-choice") return resolutionChoice(state, awaiting);
@@ -401,11 +403,41 @@ function choiceFor(state) {
 function resolutionAnswered(state, outcome) {
   const finished = outcome.status === "done" ? finishResolving(state) : [];
   const events = [...outcome.events, ...finished];
+  if (outcome.status === "done" && state.ruleOperation) {
+    const prefix = outcome.all ?? outcome.events;
+    state.ruleOperation.events.unshift(...prefix);
+    state.ruleOperation.reported += prefix.length;
+    return events;
+  }
   /* Each event is handed back once, as it happened; what triggers reads the whole resolution once it is done, the
      events before its questions too -- they triggered then, and wait for a player to receive priority (CR 603.2,
      603.3): the life Uro gained before asking for a land still triggers "whenever you gain life". */
   grantStepPriority(state, events, outcome.status === "done" ? [...(outcome.all ?? outcome.events), ...finished] : events);
   return events;
+}
+
+/** Each root operation names the existing caller responsible for finishing its state/priority work. */
+export function continueRuleOutcome(state, outcome, rng = null) {
+  if (outcome.after?.kind === "resolution") return resolutionAnswered(state, continueRuleResolution(state, outcome, rng));
+  if (outcome.status === "waiting") return outcome.events;
+  if (outcome.after?.kind === "after-resolving") {
+    const all = [...outcome.all], before = all.length;
+    afterResolving(state, all);
+    return [...outcome.events, ...all.slice(before)];
+  }
+  if (outcome.after?.kind === "after-action") {
+    state.priorityPlayer = outcome.after.player;
+    return afterAction(state, outcome.after.player, outcome.events, outcome.all);
+  }
+  if (outcome.after !== null && outcome.after !== undefined) throw new Error(`Unknown rule continuation: ${outcome.after.kind}`);
+  return outcome.events;
+}
+
+/** A live frame rechecks its objects after the player it asked leaves; no replay or automatic answer is invented. */
+export function answerRuleForDeparted(state, rng = null) {
+  if (!state.ruleOperation) return [];
+  if (state.awaiting?.kind === "rule-operation") state.awaiting = null;
+  return continueRuleOutcome(state, continueRuleOperation(state, rng), rng);
 }
 
 /**
@@ -448,6 +480,7 @@ export function goOnWithout(state, withdrawn) {
 export function resolveAwaiting(state, indices, amounts = null, rng = null, extra = {}) {
   const awaiting = state.awaiting;
   if (!awaiting) throw new Error("The engine is not waiting on anything");
+  if (awaiting.kind === "rule-operation") return continueRuleOutcome(state, answerRuleOperation(state, indices, amounts, rng, extra), rng);
 
   /* The mulligan is the one decision that consumes randomness, because keeping or not decides
      whether a library is shuffled. A generator is a closure and game state is plain data (§3.2.4),

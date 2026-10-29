@@ -321,12 +321,12 @@
       <button type="button" class="v-button compact" data-action="table-rules-cancel">Cancel</button><button type="button" class="v-button compact primary" data-action="table-rules-save">Save rules</button></form>` : "";
     const end = t.youAreHost && (t.phase === "selecting" || t.phase === "countdown")
       ? (lobbyUi.confirmEnd ? `<div class="cm-lb-confirm"><p><b>End this game for everyone?</b></p><p>The seats are released and nothing is recorded.</p><div><button type="button" class="v-button compact" data-action="table-end-keep">Keep the game</button><button type="button" class="v-button compact is-danger" data-action="table-end">End game</button></div></div>`
-        : `<button type="button" class="cm-lb-end" data-action="table-end-ask" data-tour="end">End game</button>`) : "";
+        : "") : "";   /* the End game button itself is at the top right, beside Leave lobby (Rob, 2026-10-28) */
     return `<section class="cm-table-center" aria-label="Table rules">
       <img class="cm-table-stamp" src="assets/crankmagic/crankmagic-logo-gear-v4-256.webp" alt="" aria-hidden="true">
       <div class="cm-table-head"><h2>Table rules</h2>${t.youAreHost && t.phase === "selecting" && !editing ? `<button type="button" class="cm-table-rules-edit" data-action="table-rules" data-tour="rules" aria-label="Edit the table rules">Edit</button>` : ""}</div>
       ${editing ? editor : `<dl class="cm-table-rules">${rows.map(([k, v]) => `<div><dt>${e(k)}</dt><dd>${e(String(v))}</dd></div>`).join("")}</dl>`}
-      ${editing || lobbyUi.confirmEnd ? "" : `<div class="cm-table-launch-row" id="cm-table-launch">${launch}${button}</div>`}${editing ? "" : end}
+      ${editing || lobbyUi.confirmEnd ? "" : `<div class="cm-table-launch-row" id="cm-table-launch">${launch}</div>${button ? `<div class="cm-table-launch-row cm-table-action-row">${button}</div>` : ""}`}${editing ? "" : end}
     </section>`;
   }
   /* THE TABLE'S RULES (Rob, 2026-09-30): the host edits the starting life and the bracket limit from a small Edit beside
@@ -465,6 +465,7 @@
         <button type="button" class="cm-pl-ibtn" data-action="page-help" data-help="table" aria-label="About this page" title="About this page">?</button>
         <button type="button" class="cm-pl-ibtn" data-action="send-feedback" aria-label="Send feedback" title="Send feedback">${PL_MAIL}</button>
         <button type="button" class="cm-pl-btn" data-action="lobby-tour"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 14V2.5"></path><path d="M3.5 3h8l-1.6 2.75L11.5 8.5h-8"></path></svg>Lobby tour</button>
+        ${t.youAreHost && (t.phase === "selecting" || t.phase === "countdown") && !lobbyUi.confirmEnd ? `<button type="button" class="cm-lb-end cm-lb-end-top" data-action="table-end-ask" data-tour="end">End game</button>` : ""}
         <a class="cm-lb-leave" href="#game" data-lobby-leave>Leave lobby</a></header>
         <p class="cm-lb-sub">${t.spectating ? "You are watching this table; the game opens here when it starts." : t.youAreHost ? "Your table." : "You were invited to this table."} Four seats at most; it starts when everyone is ready.</p>
         ${t.phase === "rematch" ? gamePanel(t) : ""}

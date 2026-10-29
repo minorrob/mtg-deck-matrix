@@ -281,6 +281,19 @@
           ]
         },
         {
+          "to": {
+            "turn": 1,
+            "phase": "COMBAT_DAMAGE"
+          }
+        },
+        {
+          "answer": [],
+          "amounts": [
+            2,
+            2
+          ]
+        },
+        {
           "settle": true
         },
         {

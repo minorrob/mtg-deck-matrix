@@ -35,6 +35,19 @@ async function measure(zoom){
   await page.routeWebSocket(/\/api\/tables\/sharpfixture1\/connect$/,ws=>{ws.send(JSON.stringify({type:"view",view:sample}));});
   await page.goto(`${base}/index.html#table?id=sharpfixture1`);await page.locator('.cm-stage-region[data-renderer="webgl"]').waitFor({timeout:60000});
   await page.waitForFunction(()=>[...document.querySelectorAll(".cm-stage-front .cm-bcard img, .cm-stage-rear .cm-bcard img, .cm-stage-fan .cm-bcard img")].some(i=>i.complete&&i.naturalWidth>100),null,{timeout:20000});
+  /* The drawers are the top layer over a full-width stage, so the mat's cards lie under the left one: a player shuts it to see them. */
+  const rail=page.locator("[data-action=board-stage-rail][aria-expanded=true]");if(await rail.count()){await rail.click();await page.waitForTimeout(500);}
+  /* Zoomed in (the center of the view is the center of the window now that the drawers lie over it), the mat's cards are off to the left: a player
+     drags the mat across to bring them in, by a bare place on it, so the card stays under the pointer's drag as it would for a person. */
+  if(zoom>100){
+    const grab=await page.evaluate(()=>{
+      const cards=[...document.querySelectorAll(".cm-stage-front .cm-bcard img")].map(i=>i.getBoundingClientRect()),left=Math.min(...cards.map(r=>r.left)),dx=140-left;
+      for(let x=60;x<innerWidth-dx-20;x+=12)for(let y=120;y<innerHeight-60;y+=12){const el=document.elementFromPoint(x,y);
+        if(el?.closest(".cm-stage-front .cm-mat")&&!el.closest(".cm-bcard, button, a, [role=button], [data-zone-scroll], [draggable=true], .cm-drawer, .cm-stage-fan, .cm-stage-actions"))return {x,y,dx};}
+      return null;});
+    ok(grab&&grab.dx>0,`zoom ${zoom}%: a bare place on the mat to drag it by`);
+    await page.mouse.move(grab.x,grab.y);await page.mouse.down();await page.mouse.move(grab.x+grab.dx,grab.y,{steps:12});await page.mouse.up();await page.waitForTimeout(500);
+  }
   await page.mouse.move(2,450);await page.waitForTimeout(700);
   /* The largest card wholly on screen in each place, by its drawn box, inset from its frame. */
   const boxes=await page.evaluate(()=>{

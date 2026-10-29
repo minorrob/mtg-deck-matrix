@@ -7,7 +7,7 @@
  * a forged answer refused); a permission's additional cost (Exploration Broodship), which is no cost of the spell's own; "mana
  * of any type can be spent" (Tinybones, Bauble Burglar; CR 118.14, 609.4b) for colored and hybrid symbols, not Phyrexian ones, and
  * with more than one way to pay; a permission an effect gives for a zone's cards (Chainer, Nightmare Adept's `count`),
- * spent only when nothing unlimited would do; each that does something different its own offer; an alternative cost of life a
+ * spent when its player chooses it; each distinct resource or outcome its own offer; an alternative cost of life a
  * permanent gives (Demon of Fate's Design), never more than its player has; an effect on a spell that follows it onto the
  * battlefield (CR 400.7a) when it changed a characteristic, and one that changed a rule that does not; "if you didn't cast it
  * from your hand"; a Case's solved designation, seen by everyone (CR 719.3b); the nontoken permanents sacrificed this turn;
@@ -106,8 +106,7 @@ const lands = (s, seat = 0) => legalActions(s, seat).filter((a) => a.kind === "p
     [0, 1, 1], "one played: no second land from his graveyard, his hand's still is -- the land's use spent");
 }
 
-/* ---- WHICH PERMISSION: each that asks or allows something different its own offer; an unlimited one used before one spent by
-   use (a type's, so many cards'). */
+/* ---- WHICH PERMISSION: each that asks, allows or spends something different is the player's choice. */
 {
   const s = table();
   put(s, card("Muldrotha, the Gravetide"), 0, "battlefield");
@@ -139,8 +138,12 @@ const lands = (s, seat = 0) => legalActions(s, seat).filter((a) => a.kind === "p
   put(s, creature("Cub", "{1}"), 0, "graveyard");
   pool(s, 0, {C: 1});
   const offers = casts(s, "Cub");
-  eq(offers.map((a) => a.asType ?? null), [null], "alike, one offer -- through the Gate, which nothing spends");
-  applyAction(s, 0, offers[0]);
+  eq(offers.map(a => [a.viaName, a.asType ?? null]), [["Muldrotha, the Gravetide", "Creature"], ["Grave Gate", null]],
+    "both the limited Creature permission and unlimited Gate are offered explicitly");
+  const throughMuldrotha = JSON.parse(JSON.stringify(s));
+  applyAction(throughMuldrotha, 0, offers.find(a => a.viaName === "Muldrotha, the Gravetide"));
+  eq(usesThisTurn(throughMuldrotha, mul, "play-from:a0:Creature"), 1, "choosing Muldrotha spends its Creature permission even though Gate is open");
+  applyAction(s, 0, offers.find(a => a.viaName === "Grave Gate"));
   eq(usesThisTurn(s, mul, "play-from:a0:Creature"), 0, "Muldrotha's creature unspent");
 }
 {
@@ -149,10 +152,11 @@ const lands = (s, seat = 0) => legalActions(s, seat).filter((a) => a.kind === "p
   runEffect(s, {effect: "mayPlay", from: "graveyard", spellsOnly: true, spells: {types: ["Creature"]}}, {controller: 0, source: null});
   put(s, creature("Cub", "{1}"), 0, "graveyard"); put(s, creature("Cub", "{1}"), 0, "graveyard");
   pool(s, 0, {C: 2});
-  applyAction(s, 0, casts(s, "Cub")[0]);
+  const unlimitedPermission = s.effects.find(e => e.rule === "may-play" && e.count === undefined).id;
+  applyAction(s, 0, casts(s, "Cub").find(a => a.via === unlimitedPermission));
   eq(s.effects.filter((e) => e.rule === "may-play").map((e) => e.count ?? null), [1, null], "a permission for one creature spell kept, the unlimited one used");
   resolveTop(s);
-  applyAction(s, 0, casts(s, "Cub")[0]);
+  applyAction(s, 0, casts(s, "Cub").find(a => a.via === unlimitedPermission));
   eq(s.effects.filter((e) => e.rule === "may-play").length, 2, "and again: still both");
 }
 
@@ -327,4 +331,4 @@ const lands = (s, seat = 0) => legalActions(s, seat).filter((a) => a.kind === "p
     "MayPlay stays unbuilt in the catalog: a replacement's exile kept against its source, from anywhere (Valgavoth), a permission's additional cost other than a sacrifice (Quilled Greatwurm) and a card castable from one zone only (Haakon) are not built");
 }
 
-console.log(`engine-play-from-zones: ${checks} checks passed -- a permission kept by type, a forged one refused; a permission's own additional cost; mana of any type, but not for Phyrexian symbols; an effect's permission for a zone's cards, spent last; life for mana within a player's life; an effect on a spell onto the battlefield (CR 400.7a); "if you didn't cast it from your hand"; solved; nontoken sacrifices this turn; exiled with counters; the schema; the runner's blockers.`);
+console.log(`engine-play-from-zones: ${checks} checks passed -- a permission kept by type, a forged one refused; a permission's own additional cost; mana of any type, but not for Phyrexian symbols; an effect's permission for a zone's cards, spent when chosen; life for mana within a player's life; an effect on a spell onto the battlefield (CR 400.7a); "if you didn't cast it from your hand"; solved; nontoken sacrifices this turn; exiled with counters; the schema; the runner's blockers.`);

@@ -11,6 +11,7 @@
  */
 import assert from "node:assert/strict";
 import {createState, addObject} from "../game/engine/state/index.mjs";
+import {awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {characteristicsOf, keywordsOf} from "../game/engine/rules/layers.mjs";
 import {canBlockAttacker} from "../game/engine/keywords/combat.mjs";
 import {runScenario} from "../game/engine/cards/scenario.mjs";
@@ -39,8 +40,8 @@ const named = (s, name) => s.zones.battlefield.filter((id) => s.objects[id].card
   /* Asked: each other nonland permanent, or none -- the lands and the Impersonator itself not among them. Its arrival waits:
      nothing has triggered yet, not even the Warden's "another creature enters". */
   const s = play([at(0, "battlefield", "Island", "Island", "Wastes", "Wastes", "Seer", "Warden"), at(0, "hand", "Clever Impersonator")], IMPERSONATE);
-  eq(s.awaiting?.copyOf?.map((id) => s.objects[id].card).sort(), ["Seer", "Warden"], "the Seer or the Warden; no land, not itself");
-  eq([(s.pendingTriggers ?? []).length, s.stack.length], [0, 0], "waiting for the answer: nothing triggered yet");
+  eq(awaitingChoice(s).options.filter(option => option.copyOf !== null).map(option => option.label).sort(), ["Seer", "Warden"], "the Seer or the Warden; no land, not itself");
+  eq([(s.pendingTriggers ?? []).length, s.stack.length, named(s, "Clever Impersonator").length], [0, 1, 0], "the spell remains on the stack, with no entrant or trigger before the answer");
   /* Copied: it arrives as the Seer -- its "when this enters" triggers -- and the Warden sees a creature enter. */
   const t = play([at(0, "battlefield", "Island", "Island", "Wastes", "Wastes", "Seer", "Warden"), at(0, "hand", "Clever Impersonator")], [...IMPERSONATE, {choose: ["Seer"]}]);
   eq([(t.pendingTriggers ?? []).map((p) => p.source.name).sort(), t.awaiting?.kind], [["Seer", "Warden"], "order-triggers"],
@@ -55,10 +56,16 @@ const named = (s, name) => s.zones.battlefield.filter((id) => s.objects[id].card
   /* Nothing to copy: nobody is asked, and it arrives at once (the Sculpting Steel with no artifact out). */
   const t = play([at(0, "battlefield", "Wastes", "Wastes", "Wastes", "Warden"), at(0, "hand", "Sculpting Steel")], [{tap: "Wastes"}, {tap: "Wastes"}, {tap: "Wastes"}, {cast: "Sculpting Steel"}, {resolve: true}]);
   eq([t.awaiting ?? null, named(t, "Sculpting Steel").length], [null, 1], "no artifact to copy: nothing asked, a Sculpting Steel");
-  /* A copy of a card that itself enters as a copy is not asked again: Mirrormade as a Sculpting Steel stays one. */
+  /* The copied raw Sculpting Steel has its own entry replacement (CR 707.5); its fresh copy choice is made before entry. */
   const u = play([at(0, "battlefield", "Island", "Island", "Wastes", "Sculpting Steel", "Trinket"), at(0, "hand", "Mirrormade")],
     [{tap: "Island"}, {tap: "Island"}, {tap: "Wastes"}, {cast: "Mirrormade"}, {resolve: true}, {choose: ["Sculpting Steel"]}], {...FIXTURES, Trinket: {types: ["Artifact"], manaCost: "{2}", colors: []}});
-  eq([u.awaiting ?? null, named(u, "Sculpting Steel").length], [null, 2], "Mirrormade a Sculpting Steel, nothing more asked");
+  eq([u.awaiting?.kind, named(u, "Sculpting Steel").length, u.stack.length], ["rule-operation", 1, 1], "copying the raw copier asks its gained entry replacement before any permanent arrives");
+  eq(awaitingChoice(u).options.map(option => option.label).sort(), ["No copy", "Sculpting Steel", "Trinket"], "the copied replacement offers legal existing artifacts and an explicit decline");
+  resolveAwaiting(u, [awaitingChoice(u).options.find(option => option.label === "Trinket").index]);
+  eq([named(u, "Trinket").length, u.stack.length], [2, 0], "the gained replacement can choose the Trinket and finish one final copy");
+  const declined = play([at(0, "battlefield", "Island", "Island", "Wastes", "Sculpting Steel", "Trinket"), at(0, "hand", "Mirrormade")],
+    [{tap: "Island"}, {tap: "Island"}, {tap: "Wastes"}, {cast: "Mirrormade"}, {resolve: true}, {choose: ["Sculpting Steel"]}, {choose: ["No copy"]}], {...FIXTURES, Trinket: {types: ["Artifact"], manaCost: "{2}", colors: []}});
+  eq([declined.awaiting, named(declined, "Sculpting Steel").length], [null, 2], "declining the gained copy replacement explicitly keeps the raw Sculpting Steel characteristics");
   /* Only its own "as this enters" applies to the copy: what another permanent's replacement did as it entered is not done
      twice ("each creature you control enters with an additional +1/+1 counter"). */
   const GIFT = {types: ["Enchantment"], abilities: [{id: "g", kind: "replacement", text: "Each creature you control enters with an additional +1/+1 counter on it.",
@@ -80,7 +87,7 @@ const named = (s, name) => s.zones.battlefield.filter((id) => s.objects[id].card
   eq(characteristicsOf(m, copy).types.sort(), ["Artifact", "Creature"], "the Metamorph: an artifact Bear");
   const mech = play([at(0, "battlefield", "Island", "Wastes", "Bear"), at(0, "hand", "Imposter Mech"), at(1, "battlefield", "Raptor")],
     [{tap: "Island"}, {tap: "Wastes"}, {cast: "Imposter Mech"}, {resolve: true}]);
-  eq(mech.awaiting.copyOf.map((id) => mech.objects[id].card), ["Raptor"], "Imposter Mech: Maya's Raptor only, not his Bear");
+  eq(awaitingChoice(mech).options.filter(option => option.copyOf !== null).map(option => option.label), ["Raptor"], "Imposter Mech: Maya's Raptor only, not his Bear");
   const made = play([at(0, "battlefield", "Island", "Wastes", "Bear"), at(0, "hand", "Imposter Mech"), at(1, "battlefield", "Raptor")],
     [{tap: "Island"}, {tap: "Wastes"}, {cast: "Imposter Mech"}, {resolve: true}, {choose: ["Raptor"]}]);
   const raptor = made.zones.battlefield.find((id) => made.objects[id].card === "Raptor" && made.objects[id].controller === 0);
@@ -99,7 +106,7 @@ const named = (s, name) => s.zones.battlefield.filter((id) => s.objects[id].card
 {
   /* The copied card's own "as this enters, choose a creature type" is asked next (Clever Impersonator as Patchwork Banner). */
   const s = play([at(0, "battlefield", "Island", "Island", "Wastes", "Wastes", "Patchwork Banner", "Bear"), at(0, "hand", "Clever Impersonator")], [...IMPERSONATE, {choose: ["Patchwork Banner"]}]);
-  eq([s.awaiting?.kind, s.awaiting?.choose?.includes("Bear")], ["entering-choice", true], "a Patchwork Banner now, asking for a creature type");
+  eq([s.awaiting?.kind, awaitingChoice(s).options.some(option => option.label === "Bear"), s.stack.length], ["rule-operation", true, 1], "the prospective Patchwork Banner asks a fresh creature type while its spell still waits");
   /* "Until end of turn" (Cursed Mirror): an Ogre with haste, then the Mirror again. */
   const fix = {...FIXTURES, Ogre: creature("{1}{R}", ["Ogre"], {colors: ["R"], power: 3, toughness: 3})};
   const m = play([at(0, "battlefield", "Mountain", "Wastes", "Wastes", "Ogre"), at(0, "hand", "Cursed Mirror")], [{tap: "Mountain"}, {tap: "Wastes"}, {tap: "Wastes"}, {cast: "Cursed Mirror"}, {resolve: true}, {choose: ["Ogre"]}], fix);

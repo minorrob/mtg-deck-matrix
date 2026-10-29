@@ -671,7 +671,8 @@ Tier 0 (the seven decks), grouped, with the Forge ruler in parentheses only to s
   M4 phase 3, batch 51; one that adds mana is a mana ability, CR 605.1b), counter added (and once), life gained, life
   lost, token created (once), becomes monstrous, chapter (a Saga's, CR 714.2c; added in M4 phase 3, batch 60),
   proliferated (CR 701.34a), crime committed (CR 700.13), a state trigger (CR 603.8) and transformed (CR 701.27e; all four
-  added in Train C), becomes level (a Class's, CR 716.2a; wave 4c).
+  added in Train C), becomes level (a Class's, CR 716.2a; wave 4c), die rolled (the retained die's final result,
+  with separate roll instructions distinguished for one-or-more triggers; CR 706.2, 706.6; card load wave 0).
 - Statics: continuous characteristic changes, combat damage by toughness, can't attack, can attack as though no
   defender, attack restriction, can't be cast, can't be blocked by, must attack, cost reduction, alternative cost,
   activate as though haste, Panharmonicon-style trigger doubling.

@@ -135,6 +135,10 @@ of that same build, made only after `tests/uat/release-acceptance.mjs` passes on
 the builder's profile. Rob set this on 2026-09-24, when he chose to merge Account Cloud and Play into
 `main` as they are built rather than hold them on long branches.
 
+## The game fits the window; it never scrolls
+
+Rob, 2026-10-28, a standing rule: *"No scrolling down to see more of the game. The game always fits the visible window. (You can scroll down within panes in the game, but not the full game itself as though it's an informational website)."* Every Play view (Table, Focus and 3D; the phone layout has not been audited against this) is the size of the window: the boards, the hand, the header and the drawers fit it, and what does not fit shrinks (a board smaller, a caption shorter, a control folded away), never grows the board taller than the window. A pane inside the game (a drawer module, a mat's own rows, the log) may scroll; the game itself does not. A change that makes `#cm-board` scroll, or sets a minimum size that overflows it, is a defect; `tests/board-flat-views.mjs` proves it at three small window sizes in every view.
+
 ## The United States, always
 
 Everything written here is American English: prose, comments, commit messages, labels, tests,

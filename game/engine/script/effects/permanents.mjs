@@ -29,7 +29,11 @@ import {countersPlaced, enteringCountersPlaced, tokensCreated} from "../../rules
 import {clearRingBearer} from "../../keywords/ring.mjs";
 import {removeFromCombat} from "../../rules/combat.mjs";
 import {enteringModifications} from "../../rules/replacement.mjs";
+import {prepare} from "./attributes.mjs";
 import {isCreatureType} from "../../keywords/types.mjs";
+import {registerRuleOperation, askRuleOperation, emitRuleEvents} from "../../rules/operations.mjs";
+import {patchEnteringObject, prospectiveEnteringState} from "../../rules/pre-entry.mjs";
+import {enteredWith} from "../../rules/entering.mjs";
 
 /* A continuous effect needs a timestamp to be ordered by (CR 613.7), and it has to be part of the
    state so a checkpoint carries it. The state's own counter is the right source: it is monotonic
@@ -205,7 +209,21 @@ function copiable(object, except = {}) {
     ...(Number.isInteger(object.loyalty) ? {loyalty: object.loyalty} : {}),
     ...(object.spell ? {spell: structuredClone(object.spell)} : {}),
     ...(object.enchant ? {enchant: structuredClone(object.enchant)} : {}),
+    /* CR 722.2b: the inset spell is a copiable characteristic, not the prepared designation. */
+    ...(object.preparation ? {preparation: structuredClone(object.preparation)} : {}),
   };
+}
+
+/* A created token copy of a double-faced permanent has both faces and its current orientation (CR 707.8a). This
+   belongs to token creation, not becomeCopy: a physical single-faced copy does not acquire another physical face.
+   A merged or face-down permanent is not copied as a double-faced permanent (CR 730.2i, 708.2a). */
+function copiedTokenFaces(original, except) {
+  if (!original.mdfc || original.merged || original.faceDown === true) return {};
+  /* An existing copy effect applies to either physical face while it lasts (CR 707.8a, 712.9). Its copiable values
+     become both token faces; the copy effect itself and the original's underlying identity are not copied. */
+  const face = (side) => copiable(original.copyEffects?.length ? original : side, except);
+  return {mdfc: {...structuredClone(original.mdfc), front: face(original.mdfc.front), back: face(original.mdfc.back)},
+    ...(original.face === "back" ? {face: "back"} : {})};
 }
 
 /* WHO A CREATURE PUT ONTO THE BATTLEFIELD ATTACKING MAY ATTACK (CR 508.4): a defending player -- and where every opponent
@@ -351,7 +369,7 @@ export function makeCopies(state, ids, params, context, events) {
       /* A copy of an Aura enchants something as it enters, or is not made (CR 303.4f-g). */
       const hosts = values.enchant ? enchantable(state, values.enchant, controller) : null;
       if (hosts && !hosts.length) continue;
-      const copy = addObject(state, {...values, owner: controller, controller, token: true}, "battlefield");
+      const copy = addObject(state, {...values, ...copiedTokenFaces(original, except), owner: controller, controller, token: true}, "battlefield");
       if (hosts) enchantOnArrival(state, copy, hosts, controller);
       if (params.tapped) state.objects[copy].tapped = true;
       made.push(copy);
@@ -359,6 +377,11 @@ export function makeCopies(state, ids, params, context, events) {
         card: cardRef(state, copy), enteredAs: copy, becomes: copy, ...(state.objects[copy]?.tapped ? {enteredTapped: true} : {}),
         from: {zoneType: null, player: {playerId: controller}}, to: {zoneType: "Battlefield", player: {playerId: controller}}, createdAsToken: true,
       }));
+      /* The copied preparation card's own entering replacement applies (CR 614.12, 722.3a-c). */
+      if (values.preparation) {
+        const entering = enteringModifications(state, {objectId: copy, player: controller, types: values.types, abilities: values.abilities});
+        if ((entering.designations ?? []).includes("prepared")) prepare(state, copy, events);
+      }
     }
   }
   afterwards(state, made, {...params, controller}, context);
@@ -442,6 +465,17 @@ export function copyOnto(state, id, fromId, {except = {}, keep = [], until = nul
   showCopy(object);
   return true;
 }
+/* A pre-entry copy uses the same copiable-value implementation as becomeCopy. Only this one object's prospective
+   characteristics are cloned; the real card, battlefield, timestamps and object-ID stream are untouched. */
+export function entryCopyPatch(state, id, fromId, options = {}) {
+  const object = state.objects[id];
+  if (!object || state.objects[fromId]?.zone !== "battlefield") return null;
+  const prospective = {...structuredClone(object), zone: "battlefield"};
+  if (!copyOnto({objects: {...state.objects, [id]: prospective}}, id, fromId, options)) return null;
+  const keys = [...COPY_KEYS, "uncopied", "copyEffects"];
+  return {set: Object.fromEntries(keys.filter(key => prospective[key] !== undefined).map(key => [key, structuredClone(prospective[key])])),
+    remove: keys.filter(key => prospective[key] === undefined)};
+}
 /* "Each nonland permanent you control becomes a copy of target non-Aura permanent" (Mirrorform): `selector`, what becomes
    the copy in the source's place -- each permanent it matches as the effect begins (CR 611.2c). The target among them
    becomes a copy of itself, which changes nothing, so the rest copy it as it was (CR 707.2). */
@@ -512,6 +546,8 @@ export function emblem(state, params, context) {
   const named = state.objects[context.source]?.card ?? context.lastKnown?.name ?? null;
   const id = addObject(state, {card: named ? `${named} emblem` : "Emblem", emblem: true, owner: player, controller: player,
     abilities: params.abilities ?? []}, "command", player);
+  /* One printed ability can use multiple layer bodies; its Oracle text is still printed once (CR 114.2-4). */
+  if (params.text !== undefined) state.objects[id].emblemOracleText = params.text;
   return [event("GameEventEmblemCreated", state, {player: {playerId: player, name: state.players[player].name}, card: cardRef(state, id)})];
 }
 
@@ -618,12 +654,9 @@ export function tokenQuestion(state, effect, context, answers = {}) {
 }
 
 /* One token of this spec, under `controller`'s control, as the effect says it is made (tapped), said so. */
-function makeToken(state, spec, controller, params, context, events) {
-  /* "An X/X green Dinosaur Beast ... where X is the amount of damage those creatures dealt" (Quartzwood Crasher): its size
-     counted as it is made. */
-  /* "X/X ... where X is the mana value of the exiled card" (linkedTokens): "X", the X this effect was given. */
+function tokenObject(state, spec, controller, context) {
   const sized = (value) => (value === "X" || (value !== null && typeof value === "object") ? amountOf(state, value, context) : value ?? null);
-  const id = addObject(state, {
+  return {
     card: spec.name ?? "Token",
     types: spec.types ?? ["Creature"],
     /* A Goblin token is a Goblin (CR 111.4): "sacrifice a Goblin" has to find it. */
@@ -641,21 +674,162 @@ function makeToken(state, spec, controller, params, context, events) {
     abilities: spec.abilities ?? [],
     /* An Aura token's Enchant (a Role's, CR 303.7): what the state-based actions hold it to (CR 704.5m). */
     ...(spec.enchant ? {enchant: spec.enchant} : {}),
+    ...(spec.preparation ? {preparation: structuredClone(spec.preparation)} : {}),
     /* A double-faced token (an Incubator, CR 111.10i): both faces, its front face up as it enters (CR 712.14's default),
        so it is one that can transform (CR 701.27a, 712.9). */
     ...(spec.back ? {mdfc: {front: tokenFace(spec), back: tokenFace(spec.back), transforming: true}} : {}),
     owner: controller,
     controller,
     token: true,
-  }, "battlefield");
+  };
+}
+
+/* A script caller dispatches these effects through the rule-operation bridge. Every token in one instruction is
+   planned before any of them enters, so a Mimic created in the same event is never a pre-existing replacement source. */
+export function tokenEntryEffectFrame(effect, context) {
+  if (!["createToken", "copyPermanent", "investigate", "incubate"].includes(effect.effect)) return null;
+  const params = effect.effect === "investigate" ? {effect: "createToken", count: effect.count ?? 1, token: {predefined: "Clue"},
+    ...(effect.controller !== undefined ? {controller: effect.controller} : {})}
+    : effect.effect === "incubate" ? {effect: "createToken", count: 1, token: {predefined: "Incubator"}, entersWithCounters: {"+1/+1": effect.count ?? 0}}
+    : effect;
+  return {kind: "token-entry", params: structuredClone(params), context: structuredClone(context)};
+}
+
+function tokenEntryBatches(state, params, context) {
+  const batches = [];
+  const add = (controller, entries, local = context, settings = params) => {
+    if (state.players[controller] && !state.players[controller].lost) batches.push({controller, entries, context: structuredClone(local), params: structuredClone(settings), made: []});
+  };
+  const ordinary = (settings, local) => {
+    const controller = settings.controller ?? local.controller;
+    const spec = settings.token?.predefined ? PREDEFINED_TOKENS[settings.token.predefined] : settings.token ?? {};
+    if (!spec) throw new Error(`No predefined token named ${settings.token.predefined}`);
+    const [host] = settings.attachedTo ?? [];
+    if (settings.attachedTo !== undefined && !enchantable(state, spec.enchant, controller).includes(host)) return;
+    const {groups} = tokensCreated(state, controller, settings.count ?? 1, spec, {orders: settings.tokenOrders?.[TOKEN_EVENT] ?? []});
+    add(controller, groups.flatMap(({token, count}) => Array.from({length: count}, () => ({candidate: tokenObject(state, token, controller, local), forcedTapped: token.tapped === true}))), local, settings);
+  };
+  if (params.effect === "createToken") {
+    if (params.linked === true) {
+      const key = context.source ?? context.lastKnown?.cardId ?? null;
+      const exiled = (state.links?.[key] ?? []).filter(id => state.objects[id]);
+      if (key !== null && state.links) delete state.links[key];
+      const x = exiled.reduce((n, id) => n + (state.objects[id].manaCost ? manaValue(parseManaCost(state.objects[id].manaCost)) : 0), 0);
+      for (const controller of new Set(exiled.map(id => state.objects[id].owner))) ordinary({...params, linked: false, controller}, {...context, x});
+    } else ordinary(params, context);
+    return batches;
+  }
+  const copies = (ids, settings, local) => {
+    const controller = settings.controller ?? local.controller, entries = [];
+    for (const id of ids) {
+      const original = id?.values ?? (settings.asItLastWas === true && local.about?.copiedAs && state.objects[id] ? local.about.copiedAs : state.objects[id]);
+      if (!original) continue;
+      const except = settings.except?.addAbilities ? {...settings.except, addAbilities: rememberedIn(settings.except.addAbilities, local.remembered)} : settings.except;
+      const {groups} = tokensCreated(state, controller, settings.count ?? 1, copiable(original, except), {orders: settings.tokenOrders?.[copyEventKey(id)] ?? []});
+      for (const {token, count, own} of groups) for (let index = 0; index < count; index += 1) entries.push({ownCopy: own === true, forcedTapped: !own && token.tapped === true, candidate: own
+        ? {...copiable(original, except), ...copiedTokenFaces(original, except), owner: controller, controller, token: true}
+        : tokenObject(state, token, controller, local)});
+    }
+    add(controller, entries, local, settings);
+  };
+  if (params.of === "moved") for (const one of movedCopies(state, params, context))
+    copies([{values: one.original, key: one.id}], {...params, controller: one.controller, except: one.except}, context);
+  else {
+    const originals = params.selector ? selectMatching(state, params.selector, context) : params.targets ?? [];
+    const gone = params.lastKnown === true && !originals.length && context.lastKnown?.copiable ? [{values: context.lastKnown.copiable}] : null;
+    copies(gone ?? originals, params, context);
+  }
+  return batches;
+}
+
+registerRuleOperation("token-entry", (state, frame) => {
+  if (!frame.batches) {
+    frame.batches = tokenEntryBatches(state, frame.params, frame.context);
+    frame.entries = frame.batches.flatMap((batch, batchIndex) => batch.entries.map(entry => ({...entry, batchIndex})));
+    frame.index = 0;
+  }
+  if (frame.stage === "after-entry") {
+    frame.entries[frame.index].prepared = frame.childResult?.entering?.to && frame.childResult.entering.to !== "battlefield" ? null : frame.childResult;
+    delete frame.childResult; frame.stage = "attachment";
+  }
+  if (frame.index < frame.entries.length) {
+    const entry = frame.entries[frame.index], batch = frame.batches[entry.batchIndex];
+    if (!state.players[batch.controller] || state.players[batch.controller].lost) { frame.index += 1; frame.stage = null; return {status: "continue"}; }
+    if (frame.stage === "attachment") {
+      const values = {...entry.candidate}; patchEnteringObject(values, entry.prepared?.objectPatch);
+      if (values.enchant && entry.prepared) {
+        entry.enchant = values.enchant;
+        const hosts = enchantable(state, values.enchant, batch.controller), specified = batch.params.attachedTo;
+        if (specified !== undefined) entry.host = hosts.includes(specified[0]) ? specified[0] : null;
+        else if (frame.answer) {
+          const selected = frame.hosts[frame.answer.indices[0]]; delete frame.answer;
+          if (hosts.includes(selected)) entry.host = selected;
+        }
+        if (specified === undefined && entry.host === undefined && hosts.length > 1) {
+          frame.hosts = hosts;
+          return askRuleOperation(state, frame, {player: batch.controller, choice: {id: `token-enchant:${state.ruleOperation.serial}:${frame.index}`,
+            title: `${values.card}: choose what it enchants as it enters`, mode: "one", min: 1, max: 1,
+            options: hosts.map((id, index) => ({index, label: state.objects[id].card, cardId: id}))}});
+        }
+        if (specified === undefined && entry.host === undefined) entry.host = hosts[0] ?? null;
+        if (entry.host === null) entry.prepared = null;
+      }
+      frame.index += 1; frame.stage = null;
+      return {status: "continue"};
+    }
+    frame.stage = "after-entry";
+    entry.virtualId = `token-entry:${state.ruleOperation.serial}:${frame.index}`;
+    return {status: "continue", children: [{kind: "entering", objectId: entry.virtualId, player: batch.controller, candidate: entry.candidate}]};
+  }
+  /* Count replacements before the simultaneous entrants exist; no new token's static can change a sibling's counters. */
+  for (const entry of frame.entries) if (entry.prepared && !state.players[frame.batches[entry.batchIndex].controller].lost) {
+    const batch = frame.batches[entry.batchIndex];
+    const view = prospectiveEnteringState(state, {objectId: entry.virtualId, player: batch.controller, candidate: entry.candidate, objectPatch: entry.prepared.objectPatch});
+    entry.counters = {};
+    const wanted = {...entry.prepared.entering.counters};
+    for (const [counter, count] of Object.entries(batch.params.entersWithCounters ?? {})) wanted[counter] = (wanted[counter] ?? 0) + count;
+    for (const [counter, count] of Object.entries(wanted)) {
+      const placed = enteringCountersPlaced(view, entry.virtualId, counter, count, batch.controller);
+      if (placed > 0) entry.counters[counter] = placed;
+    }
+  }
+  for (const entry of frame.entries) if (entry.prepared && !state.players[frame.batches[entry.batchIndex].controller].lost) {
+    const batch = frame.batches[entry.batchIndex];
+    if (entry.host !== undefined && (!state.objects[entry.host] || !enchantable(state, entry.enchant, batch.controller).includes(entry.host))) continue;
+    const id = addObject(state, entry.candidate, "battlefield");
+    patchEnteringObject(state.objects[id], entry.prepared.objectPatch);
+    state.objects[id].counters = entry.counters;
+    state.objects[id].tapped = entry.forcedTapped || batch.params.tapped === true || entry.prepared.entering.tapped === true;
+    if (entry.host !== undefined) attachTo(state, id, entry.host);
+    const events = [event("GameEventCardChangeZone", state, {card: cardRef(state, id), becomes: id, createdAsToken: true,
+      ...(entry.ownCopy ? {enteredAs: id} : {}), ...(state.objects[id].tapped ? {enteredTapped: true} : {}), from: {zoneType: null, player: {playerId: batch.controller}}, to: {zoneType: "Battlefield", player: {playerId: batch.controller}}})];
+    if ((entry.prepared.entering.designations ?? []).includes("prepared")) prepare(state, id, events);
+    events.push(...enteredWith(state, id, {counters: entry.counters}));
+    if (entry.prepared.entering.gainsKeywords?.length) pushEffect(state, {id: `entry-keywords:${id}`, layer: 6, affects: {ids: [id]},
+      apply: {addKeywords: entry.prepared.entering.gainsKeywords}, until: null, sourceController: batch.controller});
+    state.players[batch.controller].tokensThisTurn = (state.players[batch.controller].tokensThisTurn ?? 0) + 1;
+    batch.made.push(id); emitRuleEvents(state, events);
+  }
+  const made = frame.batches.flatMap(batch => batch.made);
+  for (const batch of frame.batches) {
+    afterwards(state, batch.made, {...batch.params, controller: batch.controller}, batch.context);
+    if (batch.params.linkRemembered === true) for (const id of batch.made) (state.links ??= {})[id] = (batch.context.remembered ?? []).filter(card => state.objects[card]?.zone === "exile");
+  }
+  if (frame.params.remember) frame.context.remembered = made;
+  if (frame.params.rememberMore) frame.context.remembered = [...(frame.context.remembered ?? []), ...made];
+  return {status: "done", result: {context: frame.context, made}};
+});
+function makeToken(state, spec, controller, params, context, events) {
+  const id = addObject(state, tokenObject(state, spec, controller, context), "battlefield");
   /* "Create a tapped Treasure token": the effect says so as well as a spec can. */
+  let entering = null;
   if (spec.tapped || params.tapped) state.objects[id].tapped = true;
   /* "Creatures your opponents control enter tapped" (Authority of the Consuls; CR 614.1c, 614.12): a token is a permanent
      entering the battlefield too (CR 111.1), and a replacement that has it enter tapped applies as it is made. Only that is
      taken from them here -- what else a token enters with, the effect's own words give (above, below) -- and not "tapped
      unless you pay" (a shock land's), which asks a question no token is asked yet (NAMED). */
   else {
-    const entering = enteringModifications(state, {objectId: id, player: controller, types: state.objects[id].types, abilities: state.objects[id].abilities});
+    entering = enteringModifications(state, {objectId: id, player: controller, types: state.objects[id].types, abilities: state.objects[id].abilities});
     if (entering.tapped && !entering.asks.some((ask) => ask.life !== undefined || ask.reveal !== undefined)) state.objects[id].tapped = true;
   }
   /* "An Incubator token that enters the battlefield with N +1/+1 counters on it" (incubate, CR 701.53a): given as it enters,
@@ -672,6 +846,11 @@ function makeToken(state, spec, controller, params, context, events) {
     to: {zoneType: "Battlefield", player: {playerId: controller}},
     createdAsToken: true,
   }));
+  /* A preparation token's own replacement gives it a fresh designation/copy, never the source's prepared state. */
+  if (state.objects[id].preparation) {
+    const preparedEntry = entering ?? enteringModifications(state, {objectId: id, player: controller, types: state.objects[id].types, abilities: state.objects[id].abilities});
+    if ((preparedEntry.designations ?? []).includes("prepared")) prepare(state, id, events);
+  }
   /* The tokens each player has made this turn ("only if you created a token this turn", Idol of Oblivion): its creator
      is its controller unless the effect says otherwise (CR 111.2). Cleared as a turn begins (rules/turn.mjs). */
   state.players[controller].tokensThisTurn = (state.players[controller].tokensThisTurn ?? 0) + 1;

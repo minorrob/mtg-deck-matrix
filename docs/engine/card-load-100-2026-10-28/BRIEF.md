@@ -1,5 +1,10 @@
 # The brief for every subagent of the card load to 100% (2026-10-28)
 
+**Scope update, October 28:** Rob chose the cards covering **95% of deck appearances**, not 95% of distinct names.
+The exact 8,514-name loading target is `scope-95.json`; `README.md` records its sources and gate command. The least-played
+remaining appearances are outside the loading target. Wave-0 accuracy debt and all proof requirements remain in force;
+do not load tail cards just to reduce the full compiler's diagnostic count.
+
 You are one of eight subagents of one wave. The orchestrator's prompt names your role, your wave number, your card list
 and your branch. `README.md` here says where the load stands and what 100% means; `ORCHESTRATION.md` is the
 orchestrator's procedure. This file is yours. Where it is silent, wave 4d's brief
@@ -173,6 +178,24 @@ reports. You never edit a card or a rule; you find, prove and report.
    the scenario or seed that shows it · the theme lane that owns it.
 
 ## Any model may pick up any lane
+
+### Rob's approved ability-proof supplement, October 28, 2026
+
+Rob approved the additional harness proof: "Allow the additional harness proof." Existing journal evidence stays the
+first source. Where events cannot identify a static, keyword, replacement, or mana ability unambiguously, V8 may also
+remove that one ability from an in-memory compiled definition and require an originally passing scenario to fail.
+This supplements the journal-only method above; it does not change G-3's requirement to account for every ability.
+
+- Never edit saved card definitions, scenarios, or rule modules for the removal. Restore the original lookup after
+  every probe; no probe may affect the next scenario or a played game.
+- Run the original scenario successfully first. A failure caused only by schema or fidelity validation of a modified
+  script is not behavioral proof; remove the ability from a valid compiled/runtime definition.
+- A keyword-list presence assertion alone is not proof of evasion, combat, or another keyword's behavior. Preserve
+  that assertion, but distinguish it from a behavioral failure when recording counterfactual coverage.
+- Record the card, ability path, scenario, original result, removal result, and evidence method. Keep ambiguity,
+  redundancy, and a removal the scenario does not detect as unproved, with G-3 unmet for that ability.
+- This proves that a scenario depends on the ability. Its accuracy still needs independent Oracle/rules review and
+  clean played games; do not turn a coverage result into a claim of universal correctness.
 
 Rob hands lanes between OpenAI's subagents, Claude, Codex, Cursor and Grok as his plan limits allow. So a lane never
 depends on a conversation: **everything it knows lives in four places**: its lane file (`w<N>/lane-<role>.json`), its

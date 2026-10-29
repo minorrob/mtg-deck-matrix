@@ -398,6 +398,9 @@ const TRIGGERS = {
   drawn: (t) => (t.nthThisTurn === undefined || (Number.isInteger(t.nthThisTurn) && t.nthThisTurn >= 1)) && [undefined, true].includes(t.exceptFirstInDrawStep)
     ? {on: "GameEventCardChangeZone", from: "Library", to: "Hand", drawn: true, drawer: t.drawer ?? "you",
       ...(t.nthThisTurn !== undefined ? {nthThisTurn: t.nthThisTurn} : {}), ...(t.exceptFirstInDrawStep ? {exceptFirstInDrawStep: true} : {})} : null,
+  /* "Whenever you roll one or more dice" (Wyll, Blade of Frontiers; CR 706.6): ignored rolls never produce this event. */
+  "die rolled": (t) => ["you", "opponent", "any"].includes(t.roller ?? "you")
+    ? {on: "GameEventDieRolled", roller: t.roller ?? "you"} : null,
   /* "Whenever you gain life" (CR 119.9): `gainer` you, opponent or any. */
   "life gained": (t) => ({on: "GameEventPlayerLivesChanged", gainer: t.gainer ?? "you", ...(t.firstThisTurn === true ? {firstThisTurn: true} : {})}),
   /* "Whenever an opponent loses life", "whenever you lose life" (CR 119.3, batch 78): `loser` you, opponent or any; about
@@ -682,6 +685,8 @@ function compileGivenIn(effects, text, problems) {
        changed for players (rules/statics.mjs, playerRuleChanged), and a static ability in a layer (rules/layers.mjs,
        gatherEffects: Liliana of the Dark Realms' "Swamps you control have ..."). */
     if (effect.effect === "emblem") {
+      if (effect.text !== undefined && (typeof effect.text !== "string" || !effect.text.trim()))
+        problems.push(`${text}: explicit emblem Oracle text is a nonempty string`);
       const list = effect.abilities;
       if (!Array.isArray(list) || !list.length) { problems.push(`${text}: an emblem's abilities are a list, with at least one`); continue; }
       for (const ability of list) if (!(["triggered", "replacement"].includes(ability?.kind) || (ability?.kind === "static" && typeof ability.rule === "string" && ability.affects?.what === "player")

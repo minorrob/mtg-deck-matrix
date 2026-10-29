@@ -83,7 +83,7 @@ BREAKS = [
     ('copySpell copies nothing by its stack entry', ASKING,
      '...(Array.isArray(params.stack) ? params.stack.map((id) => state.stack.find((e) => e.stackId === id)) : [])]', '...[]]'),
     ("an ability's copy keeps its targets", ASKING,
-     '        if (params.newTargets === true) copy.targets.forEach((t, index) => { if (!Array.isArray(t)) questions.push({stackId: copy.stackId, index}); });\n        continue;',
+     '        if (params.newTargets === true) questions.push(...copyTargetQuestions(copy));\n        continue;',
      '        continue;'),
     ("an ability's copy not said", ASKING,
      '        events.push(event("GameEventAbilityCopied", state, {name: original.name, playerId: context.controller, stackId: copy.stackId, original: original.stackId}));\n', ''),

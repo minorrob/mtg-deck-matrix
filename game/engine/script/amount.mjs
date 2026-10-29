@@ -494,7 +494,7 @@ export function amountOf(state, value, context = {}) {
      (effects/resources.mjs) -- none removed, or none removed yet, is 0. */
   else if ("countersRemovedThisWay" in value) n = context.countersRemoved ?? 0;
   /* "Equal to the result" (Ancient Copper Dragon): what the rollDie before it rolled (effects/resources.mjs) -- none rolled, 0. */
-  else if ("dieRolled" in value) n = context.rolled ?? 0;
+  else if ("dieRolled" in value) n = context.rolled ?? context.about?.rolled ?? 0;
   /* "DISTRIBUTE TWO +1/+1 COUNTERS AMONG ONE OR TWO TARGET CREATURES YOU CONTROL" (The Earth Crystal): the total divided as the
      ability was put on the stack, each target chosen then getting at least one (CR 601.2d) -- with one chosen, all of it; with
      as many chosen as the total, one each. That leaves no division to choose (cards/index.mjs refuses one that would), so

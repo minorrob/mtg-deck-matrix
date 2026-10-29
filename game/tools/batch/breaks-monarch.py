@@ -63,7 +63,7 @@ BREAKS = [
     ('725.4: the active player first', SBA, HEIR, HEIR.replace('state.activePlayer + step', 'state.activePlayer + step + 1')),
     ('725.4: still in the game', SBA, HEIR, HEIR.replace('.find((id) => !state.players[id].lost)', '.find(() => true)')),
     ('725.4: nobody left, no monarch', SBA, '  if (heir === undefined) delete state.monarch;\n', '  if (heir === undefined) void 0;\n'),
-    ('725.4: asked as the check finds them gone', SBA, '    monarchLeft(state, events);\n', ''),
+    ('725.4: asked as the check finds them gone', SBA, '    monarchLeft(state, events);\n\n    if (!acted)', '    if (!acted)'),
     ('725.4: asked as an effect makes them lose', RES, '  return monarchLeft(state, events);\n', '  return events;\n'),
     # The condition (script/condition.mjs).
     ('condition: if you are the monarch', CONDITION, '  if (condition.monarch === "you" && state.monarch !== controller) return false;\n', ''),
