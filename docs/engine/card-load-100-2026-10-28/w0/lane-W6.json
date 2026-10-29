@@ -81,7 +81,11 @@
       "engine-stack51; engine-sba54; engine-projection93; engine-zone-costs12: all passed",
       "tests/data-integrity.mjs:exit0; Validated50 variants and50 connected buy profiles",
       "tests/feature-wiring.mjs:131 checks passed",
-      "python game/tools/batch/anchors.py:57 inherited failures;0 new; all W6 anchors found once"
+      "python game/tools/batch/anchors.py:57 inherited failures;0 new; all W6 anchors found once",
+      "node game/tools/engine-definitions.mjs --check:definitions.mjs is current",
+      "node game/tools/engine-candidates.mjs --check:candidates.mjs is current",
+      "node tools/data-inventory.mjs --check:60 artifacts match",
+      "tools/local-ci.sh HEAD 0:SCAN PASS on code6f2e915f0e5c7d9604f805c7f6e746588e14bb15"
     ],
     "mutationNotes": [
       "Initial33-break sweep missed live-source precedence; a direct pushCopy API regression was added and the full final sweep catches it.",
@@ -112,6 +116,8 @@
       "Spell-departure hooks audited at finishTop, effect zone movement, countering and player departure. Trigger-only stack removals have no spell object. No unbounded spell history.",
       "Source memory and token metadata changes are not a general RememberObjects construct credit.",
       "Actual three-seat morph/disguise copies retain only nameless copiable characteristics; copied token public projections expose no printed source name or preparation."
-    ]
+    ],
+    "codeCheckpoint": "6f2e915f0e5c7d9604f805c7f6e746588e14bb15",
+    "draftPR": "https://github.com/minorrob/mtg-deck-matrix/pull/916"
   }
 }
