@@ -27,10 +27,10 @@ BREAKS = [
  ('hand mana compiled', CARDS, '...(cost.some((a) => a.atom === "exile" && a.self === true) ? {zone: "hand", exileSelf: true} : {}),', ''),
  ('hand mana offered', ACTIONS, 'for (const id of cardsIn(state, "hand", player)) {\n    const object = state.objects[id];\n    for (const ability of object.abilities ?? []) {', 'for (const id of []) {\n    const object = state.objects[id];\n    for (const ability of object.abilities ?? []) {'),
  ('not from the battlefield', ACTIONS, 'if (ability.kind !== "mana" || ability.zone === "hand") continue;', 'if (ability.kind !== "mana") continue;'),
- ('the card is exiled', ACTIONS, 'if (ability.exileSelf && state.objects[action.objectId]?.zone === "hand") moveOne(', 'if (false) moveOne('),
+ ('the card is exiled', ACTIONS, 'if (ability.exileSelf) frame.costs.push(', 'if (false) frame.costs.push('),
  ('hand mana is a play', ACTIONS, '"exileFromGraveyard", "exertSelf", "exileSelf"];', '"exileFromGraveyard", "exertSelf"];'),
  # Spinerock Knoll: the damage each player was dealt this turn.
- ('noncombat damage counted', RESOURCES, '      state.players[toPlayer].damagedThisTurn = (state.players[toPlayer].damagedThisTurn ?? 0) + proposal.amount;\n', ''),
+ ('noncombat damage counted', RESOURCES, '    state.players[toPlayer].damagedThisTurn = (state.players[toPlayer].damagedThisTurn ?? 0) + proposal.amount;\n', ''),
  ('combat damage counted', COMBAT, '        state.players[hit.toPlayer].damagedThisTurn = (state.players[hit.toPlayer].damagedThisTurn ?? 0) + hit.amount;\n', ''),
  ('counted for this turn only', TURN, 'if (player.damagedThisTurn) player.damagedThisTurn = 0;', 'if (false) player.damagedThisTurn = 0;'),
  ('an amount kind', AMOUNT, '  "damageTakenThisTurn",\n', ''),
