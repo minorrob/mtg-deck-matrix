@@ -44,7 +44,11 @@ Linear ROB-211 is In Progress. Review/integration and exact-head Actions remain 
 
 ## Remaining intake
 
-ROB-204: root verifies PR932 exact head and CI. ROB-210 remains blocked until that prerequisite is verified.
+ROB-204: root verified external main merge `0aee1474`, exact-head CI canceled rather than green; no full-gate credit.
+The merged room optional-count regression passes21 checks. ROB-210 is now In Progress: native actual-card audit113
+checks covers Brago combat provenance, zero/one/several blink targets, Thassa up-to-one, Cloudshift/Ephemerate return
+control, Flickerwisp saved delayed return and real Claim Jumper searches after reentry. Claim Jumper itself has no blink
+target. [BLINK-AUDIT.md](BLINK-AUDIT.md) records the exact patterns and the pending quiet browser verification.
 ROB-205: Rob explicitly confirmed “Cancel reversible actions; keep committed mandatory choices pending with clear
 guidance (preserves the gates).” The engine candidate implements that policy with a server-created proposal marker,
 normalized full-state fingerprints, zero committed events and no resolving/rule-operation prefix. A real reveal event
