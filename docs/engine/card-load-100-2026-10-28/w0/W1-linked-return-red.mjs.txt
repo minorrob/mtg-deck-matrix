@@ -1,0 +1,26 @@
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {createState,addObject} from "../w0-w1-faces/game/engine/state/index.mjs";
+import {compileScript} from "../w0-w1-faces/game/engine/cards/index.mjs";
+import {afterResolving} from "../w0-w1-faces/game/engine/rules/priority.mjs";
+import {awaitingChoice} from "../w0-w1-faces/game/engine/rules/turn.mjs";
+const state = createState({players:[{name:"A"},{name:"B"},{name:"C"}]});
+Object.assign(state,{phase:"MAIN1",turn:1,activePlayer:0,priorityPlayer:0});
+const put = name => {
+  const id = addObject(state,{card:name,types:["Battle"],defense:0,owner:0,controller:0},"battlefield");
+  state.objects[id].protector = 0;
+  return id;
+};
+const first = put("First Returning Battle"), second = put("Second Returning Battle");
+const bear = addObject(state,{card:"Simultaneously Returning Bear",types:["Creature"],power:2,toughness:2,owner:0,controller:0},"exile");
+const compiled = compileScript(JSON.parse(readFileSync(new URL("../w0-w1-faces/game/engine/cards/c/clever-impersonator.json",import.meta.url))));
+assert.deepEqual(compiled.problems,[]);
+const clone = addObject(state,{...compiled.definition,card:"Clever Impersonator",owner:0,controller:0},"exile");
+state.exiledUntil = [{source:first,exiled:bear},{source:second,exiled:clone}];
+const events = afterResolving(state,[]), choice = state.awaiting ? awaitingChoice(state) : null;
+const returnedBear = state.zones.battlefield.find(id => state.objects[id].card === "Simultaneously Returning Bear");
+console.log(JSON.stringify({oldSourcesPresent:[!!state.objects[first],!!state.objects[second]],cloneZone:state.objects[clone]?.zone,
+  returnedBear,choice,departures:events.filter(event=>event.kind==="GameEventCardChangeZone").map(event=>[event.data.fields.card.cardId,event.data.fields.to.zoneType])}));
+assert.equal(choice === null || choice.id.startsWith("entering-copy:"),true,"only a legal actual copy choice may suspend the linked returns");
+assert.equal(choice?.options.some(option=>option.copyOf===returnedBear) ?? false,false,
+  "CR 610.3d and 614.12a: a Clone cannot copy the Bear returning simultaneously from another source in the same departure event");

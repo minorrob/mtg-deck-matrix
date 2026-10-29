@@ -106,7 +106,152 @@ export function takeSbaDeparture(state, key, id) {
     || cohort.members.some(member => !member.committed && !member.skipped) || !departure || departure.finished)
     throw new Error("SBA departures require every completed base move and their native callback stage");
   departure.finished = true;
+  departure.returnLinks = (state.exiledUntil ?? []).filter(link => link.source === id).map(link => ({id: link.exiled, source: id}));
   return {...structuredClone(departure), departedIds: cohort.members.filter(member => member.committed).map(member => member.id)};
+}
+
+/* Linked returns use a separate capability space: only completed native source departures can authorize these
+   exile-zone members. Their source cohort remains alive until the return child completes. */
+export function startSbaLinkedReturns(state, frame) {
+  const {operation, cohort} = cohortIn(state, frame.sourceCohortId);
+  const parent = operation.frames.at(-2);
+  if (operation.frames.at(-1) !== frame || frame.kind !== "sba-linked-returns" || parent?.kind !== "sba-cohort"
+    || parent.cohortId !== frame.sourceCohortId || parent.stage !== "after-linked-returns"
+    || cohort.departures.some(departure => !departure.finished)) throw new Error("Linked returns require their completed native source cohort");
+  const key = `${operation.serial}:sba-return:${operation.sbaReturnSerial = (operation.sbaReturnSerial ?? 0) + 1}`;
+  const seen = new Set();
+  const members = cohort.departures.flatMap(departure => departure.returnLinks ?? []).filter(link => {
+    const object = state.objects[link.id];
+    if (seen.has(link.id) || object?.zone !== "exile" || object.token === true || state.players[object.owner]?.lost) return false;
+    seen.add(link.id); return true;
+  }).map(link => ({...link, from: "exile", owner: state.objects[link.id].owner}));
+  (operation.sbaReturnBatches ??= {})[key] = {operation: operation.serial, sourceCohortId: frame.sourceCohortId, phase: "planning", members};
+  return key;
+}
+
+export function sbaReturnBatch(state, key) {
+  const operation = state.ruleOperation, batch = operation?.sbaReturnBatches?.[key];
+  if (!batch || batch.operation !== operation.serial || !operation.sbaCohorts?.[batch.sourceCohortId]) throw new Error("No matching internal linked-return batch");
+  return batch;
+}
+
+export function reopenPreparedSbaReturn(state,frame,objectId) {
+  const operation=state.ruleOperation,batch=sbaReturnBatch(state,frame.returnBatchId),member=batch.members.find(member=>member.id===objectId);
+  const prepared=operation.sbaPreparedReturns?.[member?.prepared];
+  if(operation.frames.at(-1)!==frame||frame.kind!=="sba-linked-returns"||frame.stage!=="zone-recheck"
+    || !["planning","counters"].includes(batch.phase)||member?.skipped||member?.committed||!prepared
+    || prepared.operation!==operation.serial||prepared.returnBatchId!==frame.returnBatchId||prepared.sourceCohortId!==batch.sourceCohortId
+    || prepared.objectId!==objectId||prepared.from!==member.from||prepared.owner!==member.owner
+    || state.objects[objectId]?.zone!==member.from||state.objects[objectId]?.owner!==member.owner)
+    throw new Error("No matching native linked-return recheck");
+  const proposal=structuredClone(prepared.proposal);
+  if(member.entryRedirect){
+    if(!prepared.entering?.to||prepared.entering.to==="battlefield")throw new Error("No native entering redirect to resume");
+    proposal.to=prepared.entering.to;
+  }
+  return {kind:"move-one",id:objectId,to:proposal.to,prepareOnly:true,returnBatchId:frame.returnBatchId,reopenReturn:member.prepared,
+    stage:"replacements",proposal,options:structuredClone(prepared.options),preparedEntering:structuredClone(prepared.entering),
+    counterPlan:structuredClone(prepared.counterPlan),preparedCounterResult:prepared.counterResult,entryPatch:structuredClone(prepared.entryPatch),
+    entryProgress:prepared.entryProgress};
+}
+
+export function validateSbaReturnPreparation(state,frame) {return returnPreparationBinding(state,frame);}
+
+export function validateSbaReturnFirstEntry(state,child) {
+  const operation=state.ruleOperation,frame=operation?.frames.at(-2);
+  if(operation?.frames.at(-1)!==child||child.kind!=="entering"||frame?.kind!=="move-one"||frame.stage!=="after-enter"
+    || frame.id!==child.objectId||frame.returnBatchId!==child.returnBatchId||!frame.reopenReturn)
+    throw new Error("No native first-entry child of a return recheck");
+  const binding=returnPreparationBinding(state,frame,child),prepared=operation.sbaPreparedReturns[binding.member.prepared];
+  if(prepared.entering||prepared.entryProgress||prepared.counterPlan||frame.proposal.to!=="battlefield")
+    throw new Error("A native first entry cannot replace an existing saved entry");
+  return binding;
+}
+
+function returnPreparationBinding(state, frame, child=null) {
+  const operation = state.ruleOperation, batch = sbaReturnBatch(state,frame.returnBatchId);
+  const member = batch.members.find(member => member.id === frame.id),parent=operation.frames.at(child?-3:-2);
+  const prepared=operation.sbaPreparedReturns?.[member?.prepared];
+  const entry=operation.sbaEntryProgress?.[frame.entryProgress];
+  const firstEntry=prepared&&!prepared.entering&&!prepared.entryProgress&&entry
+    && entry.operation===operation.serial&&entry.returnBatchId===frame.returnBatchId&&entry.sourceCohortId===batch.sourceCohortId
+    && entry.objectId===frame.id&&entry.player===member.owner&&entry.source===member.source
+    && entry.frame.objectId===frame.id&&entry.frame.player===member.owner&&entry.frame.proposal.objectId===frame.id
+    && entry.frame.proposal.event==="enters"&&entry.frame.to===entry.result.entering.to
+    && JSON.stringify(entry.result.entering)===JSON.stringify(frame.preparedEntering)
+    && JSON.stringify(entry.result.counterPlan)===JSON.stringify(frame.counterPlan)
+    && JSON.stringify(entry.result.objectPatch)===JSON.stringify(frame.entryPatch);
+  const recheck=frame.reopenReturn!==undefined;
+  if (!["planning","counters"].includes(batch.phase) || operation.frames.at(-1) !== (child??frame) || frame.kind !== "move-one" || !frame.prepareOnly || frame.payment
+    || !member || member.skipped || member.committed || state.objects[member.id]?.zone !== member.from || state.objects[member.id]?.owner !== member.owner
+    || !operation.frames.some(parent => parent.kind === "sba-linked-returns" && parent.returnBatchId === frame.returnBatchId)
+    || !recheck&&(batch.phase!=="planning"||member.prepared)
+    || recheck&&(!prepared||frame.reopenReturn!==member.prepared||prepared.operation!==operation.serial
+      || prepared.objectId!==frame.id||prepared.from!==member.from||prepared.returnBatchId!==frame.returnBatchId||prepared.sourceCohortId!==batch.sourceCohortId
+      || parent?.kind!=="sba-linked-returns"||parent.returnBatchId!==frame.returnBatchId||parent.stage!=="after-zone-recheck"||parent.recheckingZoneId!==frame.id
+      || frame.proposal?.objectId!==frame.id||frame.proposal?.from!==member.from
+      || ["applied","appliedBy"].some(key=>JSON.stringify((frame.proposal[key]??[]).slice(0,(prepared.proposal[key]??[]).length))!==JSON.stringify(prepared.proposal[key]??[]))
+      || !firstEntry&&(JSON.stringify(frame.preparedEntering)!==JSON.stringify(prepared.entering)||frame.preparedCounterResult!==prepared.counterResult
+        || JSON.stringify(frame.counterPlan)!==JSON.stringify(prepared.counterPlan)||JSON.stringify(frame.entryPatch)!==JSON.stringify(prepared.entryPatch)
+        || frame.entryProgress!==prepared.entryProgress)))
+    throw new Error("No matching native linked-return preparation");
+  return {batch, member};
+}
+
+export function savePreparedSbaReturn(state, frame, data) {
+  const {batch,member} = validateSbaReturnPreparation(state,frame), operation = state.ruleOperation;
+  if (data.proposal.objectId !== member.id || data.proposal.from !== member.from) throw new Error("No matching native linked-return result");
+  const previous=frame.reopenReturn;
+  const key = `${operation.serial}:sba-return-move:${operation.sbaReturnMoveSerial = (operation.sbaReturnMoveSerial ?? 0) + 1}`;
+  (operation.sbaPreparedReturns ??= {})[key] = {...structuredClone(data), operation: operation.serial, returnBatchId: frame.returnBatchId,
+    sourceCohortId: batch.sourceCohortId, objectId: member.id, from: member.from, owner: member.owner};
+  member.prepared = key;
+  if(previous)delete operation.sbaPreparedReturns[previous];
+  return key;
+}
+
+export function preparedSbaReturn(state,key,returnBatchId,id) {
+  const operation = state.ruleOperation, batch = sbaReturnBatch(state,returnBatchId), frame = operation.frames.at(-1);
+  const member = batch.members.find(member => member.id === id), result = operation.sbaPreparedReturns?.[key];
+  if (batch.phase !== "commit" || frame?.kind !== "sba-linked-returns" || frame.returnBatchId !== returnBatchId || frame.stage !== "commit"
+    || !member || member.prepared !== key || member.committed || member.skipped || !result || result.operation !== operation.serial
+    || result.returnBatchId !== returnBatchId || result.sourceCohortId !== batch.sourceCohortId || result.objectId !== id
+    || state.objects[id]?.zone !== member.from || state.objects[id]?.owner !== member.owner
+    || !batch.frozen?.[id] || batch.frozen[id].prepared !== key || batch.frozen[id].host !== result.host
+    || batch.frozen[id].counterResult !== result.counterResult
+    || batch.members.some(other => !other.skipped && !other.committed && (!other.counterReady || !operation.sbaPreparedReturns?.[other.prepared])))
+    throw new Error("No ready matching native linked-return commit");
+  return structuredClone(result);
+}
+
+export function freezeSbaReturnBatch(state,frame) {
+  const operation=state.ruleOperation,batch=sbaReturnBatch(state,frame.returnBatchId);
+  if(operation.frames.at(-1)!==frame||frame.kind!=="sba-linked-returns"||frame.stage!=="ready"||batch.phase!=="counters")
+    throw new Error("Linked returns cannot commit before native preflight completes");
+  const frozen={};
+  for(const member of batch.members){
+    if(member.skipped)continue;
+    const result=operation.sbaPreparedReturns?.[member.prepared];
+    if(!member.counterReady||!result||result.objectId!==member.id||result.returnBatchId!==frame.returnBatchId
+      || state.objects[member.id]?.zone!==member.from||state.objects[member.id]?.owner!==member.owner
+      || result.proposal.to==="battlefield"&&(!result.counterPlan||!operation.entryCounterResults?.[result.counterResult]
+        || operation.entryCounterResults[result.counterResult].progress?.complete===false)
+      || result.enchant&&(!Number.isInteger(result.host)||state.objects[result.host]?.zone!==result.hostZone))
+      throw new Error("Every native return needs its completed choices, counter result and current attachment before commitment");
+    frozen[member.id]={prepared:member.prepared,host:result.host,counterResult:result.counterResult};
+  }
+  batch.frozen=frozen;batch.phase="commit";
+}
+
+export function consumeSbaReturn(state,key,returnBatchId,id,moved) {
+  const operation = state.ruleOperation, batch = sbaReturnBatch(state,returnBatchId), frame = operation.frames.at(-1);
+  const member = batch.members.find(member => member.id === id), result = operation.sbaPreparedReturns?.[key];
+  if (batch.phase !== "commit" || frame?.kind !== "sba-linked-returns" || frame.returnBatchId !== returnBatchId || frame.stage !== "commit"
+    || !member || member.prepared !== key || member.committed || member.skipped || !result || result.objectId !== id
+    || state.objects[id] || moved === null || moved === undefined || state.objects[moved]?.zone !== result.proposal.to || state.objects[moved]?.owner !== member.owner)
+    throw new Error("Only the completed native linked return consumes its result");
+  member.committed = true; member.moved = moved;
+  delete operation.sbaPreparedReturns[key];
 }
 
 /* A concession can remove a borrowed replacement source while its controller remains. Only sources of already
@@ -115,8 +260,12 @@ export function refreshPendingSbaSources(state) {
   const operation = state.ruleOperation;
   if (!operation) return;
   const proposals = [...Object.values(operation.sbaPreparedMoves ?? {}).map(result => result.proposal),
+    ...Object.values(operation.sbaPreparedReturns ?? {}).map(result => result.proposal),
     ...operation.frames.filter(frame => frame.prepareOnly && frame.kind === "move-one").map(frame => frame.proposal),
-    ...Object.values(operation.sbaCohorts ?? {}).flatMap(cohort => cohort.departures.map(departure => departure.proposal))];
+    ...Object.values(operation.sbaCohorts ?? {}).flatMap(cohort => cohort.departures.map(departure => departure.proposal)),
+    ...Object.values(operation.sbaReturnBatches ?? {}).flatMap(batch => (batch.followUps ?? []).map(follow => ({followUps:[follow]}))),
+    ...operation.frames.filter(frame => frame.kind === "outside-effects" && operation.sbaReturnBatches?.[frame.sbaReturnBatchId])
+      .map(frame => ({followUps:[{context:frame.context}]}))];
   for (const proposal of proposals) for (const follow of proposal?.followUps ?? []) {
     const source = follow.context.source;
     if (state.objects[source]?.zone === "battlefield") follow.context.lastKnown = structuredClone(lastKnown(state, source));
@@ -132,8 +281,41 @@ export function markSbaTriggerBatch(state, frame, events) {
     throw new Error("Only the fully committed native SBA cohort can identify its trigger batch");
   const key = `${operation.serial}:${frame.cohortId}:triggers`;
   cohort.triggerBatch = key;
+  markInternalSbaEvents(state,key,operation.serial,frame.cohortId,events);
+}
+
+/* The native operation's event list contains committed actions only, never the saved proposals being planned.
+   Collect its prior prefix before an outside concession or a real entry cost can introduce a new watcher. */
+export function pendingSbaReturnEvents(state) {
+  const operation=state.ruleOperation;
+  const index=operation?.frames.findLastIndex(frame=>frame.kind==="sba-linked-returns")??-1;
+  if(index<0)return null;
+  const frame=operation.frames[index],parent=operation.frames[index-1],batch=sbaReturnBatch(state,frame.returnBatchId);
+  if(["commit","done"].includes(batch.phase))return null;
+  if(parent?.kind!=="sba-cohort"||parent.cohortId!==batch.sourceCohortId||parent.stage!=="after-linked-returns"
+    || !["planning","counters"].includes(batch.phase)||batch.members.some(member=>member.committed)
+    || !operation.sbaCohorts[batch.sourceCohortId].departures.every(departure=>departure.finished))
+    throw new Error("No native uncommitted return progress to collect");
+  const key=`${operation.serial}:${frame.returnBatchId}:progress:${batch.progressSerial=(batch.progressSerial??0)+1}:triggers`;
+  markInternalSbaEvents(state,key,operation.serial,batch.sourceCohortId,operation.events);
+  return operation.events;
+}
+
+export function markSbaReturnEvents(state,frame,events,phase) {
+  const operation=state.ruleOperation,batch=sbaReturnBatch(state,frame.returnBatchId);
+  if(operation.frames.at(-1)!==frame||frame.kind!=="sba-linked-returns"||frame.stage!=="commit"||batch.phase!=="commit"
+    || !["preflight","arrival"].includes(phase)||batch.triggerBatches?.[phase]
+    || phase==="preflight"&&batch.members.some(member=>member.committed||!member.skipped&&!member.counterReady)
+    || phase==="arrival"&&batch.members.some(member=>!member.skipped&&!member.committed))
+    throw new Error("Only the ready native return batch can identify its event phase");
+  const key=`${operation.serial}:${frame.returnBatchId}:${phase}:triggers`;
+  (batch.triggerBatches??={})[phase]=key;
+  markInternalSbaEvents(state,key,operation.serial,batch.sourceCohortId,events);
+}
+
+function markInternalSbaEvents(state,key,serial,cohortId,events) {
   const fresh = events.filter(event => !matchingSbaTriggerReceipt(state, event));
-  const receipt = {operation: operation.serial, cohortId: frame.cohortId, events: fresh.map(event => {
+  const receipt = {operation: serial, cohortId, events: fresh.map(event => {
     const {sbaTriggerReceipt: ignored, ...payload} = event;
     return JSON.stringify(payload);
   }), collected: []};

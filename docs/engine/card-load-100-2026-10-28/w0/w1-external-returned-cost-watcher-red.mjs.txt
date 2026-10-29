@@ -1,0 +1,46 @@
+/* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
+/* CR 610.3d, 614.12a, 101.4: simultaneous linked returns remain outside the battlefield through every entry choice. */
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {createState, addObject} from "../w0-w1-faces/game/engine/state/index.mjs";
+import {compileScript} from "../w0-w1-faces/game/engine/cards/index.mjs";
+import {afterResolving} from "../w0-w1-faces/game/engine/rules/priority.mjs";
+import {awaitingChoice, resolveAwaiting} from "../w0-w1-faces/game/engine/rules/turn.mjs";
+import {concede} from "../w0-w1-faces/game/engine/rules/sba.mjs";
+import {moveOne} from "../w0-w1-faces/game/engine/script/effects/zones.mjs";
+import {entryCounterResult, entryCounterProgressFrame} from "../w0-w1-faces/game/engine/rules/entry-characteristics.mjs";
+import {freezeSbaReturnBatch, reopenPreparedSbaReturn} from "../w0-w1-faces/game/engine/rules/sba-move-results.mjs";
+
+let checks=0;const eq=(a,b,why)=>{assert.deepEqual(a,b,why);checks++;};
+const mirror=compileScript(JSON.parse(readFileSync(new URL("../w0-w1-faces/game/engine/cards/c/clever-impersonator.json",import.meta.url))));
+  let state=createState({players:[{name:"A"},{name:"B"},{name:"C"}]});
+  Object.assign(state,{phase:"MAIN1",turn:1,activePlayer:0,priorityPlayer:0});
+  const put=object=>addObject(state,{owner:0,controller:0,...object},"battlefield");
+  const sources=[0,1,2].map(index=>{const id=put({card:`Cost Return Source ${index}`,types:["Battle"],defense:0});state.objects[id].protector=0;return id;});
+  const ability=id=>({id,kind:"triggered",text:"Whenever you lose life, gain 1 life.",trigger:{on:"GameEventPlayerLivesChanged",loser:"you",batch:true},effects:[{effect:"gainLife",amount:1}]});
+  put({card:"Existing Life Watcher",types:["Enchantment"],abilities:[ability("old-life")]});
+  const garden=compileScript(JSON.parse(readFileSync(new URL("../w0-w1-faces/game/engine/cards/t/temple-garden.json",import.meta.url))));
+  eq(garden.problems,[],"the actual saved life-payment entry card compiles");
+  const land=addObject(state,{...garden.definition,card:"Temple Garden",owner:0,controller:0},"exile");
+  const watcher=addObject(state,{card:"Returning Life Watcher",types:["Creature"],power:2,toughness:2,owner:0,controller:0,abilities:[ability("returned-life")]},"exile");
+  const clone=addObject(state,{...mirror.definition,card:"Clever Impersonator",owner:0,controller:0},"exile");
+  const ids=[land,watcher,clone];state.exiledUntil=sources.map((source,index)=>({source,exiled:ids[index]}));
+  const gate=put({card:"External Watcher Gate",types:["Enchantment"],owner:2,controller:2});
+  const external=addObject(state,{card:"External Returned Life Watcher",types:["Enchantment"],owner:0,controller:0,abilities:[ability("external-returned-life")]},"exile");
+  state.exiledUntil.push({source:gate,exiled:external});
+  afterResolving(state,[]);
+  resolveAwaiting(state,awaitingChoice(state).options.map((_,index)=>index));
+  const cost=awaitingChoice(state);
+  eq(cost.options.some(option=>option.pay===true),true,"the actual native entry offers its real life cost before all returns");
+  const paid=resolveAwaiting(state,[cost.options.findIndex(option=>option.pay===true)]);
+  eq([state.players[0].life,awaitingChoice(state).id.startsWith("entering-copy:")],[38,true],"the first real cost remains paid while a later sibling asks its copy decision");
+  eq(ids.map(id=>state.objects[id]?.zone),["exile","exile","exile"],"no returning object moved after the committed cost and before the later decision");
+  eq(paid.filter(event=>event.kind==="GameEventPlayerLivesChanged").length,1,"the committed native cost prefix is reported once before the later question");
+  state=JSON.parse(JSON.stringify(state));concede(state,2);
+  const finished=resolveAwaiting(state,[awaitingChoice(state).options.findIndex(option=>option.copyOf===null)]);
+  eq(state.players[0].life,38,"reload and independent concession cannot snapshot-rollback the real paid cost");
+  eq(state.players[2].lost,true,"the independent outside concession remains authoritative after the saved entry resumes");
+  eq(finished.filter(event=>event.kind==="GameEventPlayerLivesChanged").length,0,"finishing the returns does not replay the already-reported cost prefix");
+  eq([...state.stack,...state.pendingTriggers].filter(entry=>entry.abilityId==="old-life").length,1,"the already-existing watcher sees the native paid life once");
+  eq([...state.stack,...state.pendingTriggers].filter(entry=>entry.abilityId==="returned-life").length,0,"a watcher returning afterward cannot see a life payment made before it entered");
+  eq([...state.stack,...state.pendingTriggers].filter(entry=>entry.abilityId==="external-returned-life").length,0,"a watcher arriving during the outside concession cannot observe a prior committed cost");

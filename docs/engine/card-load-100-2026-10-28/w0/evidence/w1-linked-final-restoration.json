@@ -1,0 +1,11 @@
+{
+  "source": "105e39dc48047f74d752358d60eaa3b5b2aeb221",
+  "baselineReaders": 44,
+  "caught": 85,
+  "missed": [],
+  "timeouts": false,
+  "changedFrozenFiles": [],
+  "cardsAdded": 0,
+  "cardsPromoted": 0,
+  "gatesClosed": []
+}

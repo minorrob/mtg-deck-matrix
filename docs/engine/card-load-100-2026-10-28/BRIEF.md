@@ -5,6 +5,18 @@ The exact 8,514-name loading target is `scope-95.json`; `README.md` records its 
 remaining appearances are outside the loading target. Wave-0 accuracy debt and all proof requirements remain in force;
 do not load tail cards just to reduce the full compiler's diagnostic count.
 
+**Mandatory acceptance rule, October 29:** Rob requires confidence that a card works for **100% of its potential
+interactions** before it is added or promoted. The 95% cutoff selects cards; it does not reduce their required support.
+No partial implementation, approximation, known gap, untested identified interaction or unresolved doubt qualifies.
+
+Review every printed ability, ruling and applicable rule against the engine's interaction paths. This includes costs,
+timing, zones and object identity, targets/modes/choices, stack resolution, replacement/prevention effects, trigger
+ordering, continuous effects, copying/faces, control/ownership and multiplayer behavior. This list is a starting point,
+not a limit on the review. Verify the identified interactions and boundary/refusal cases through the actual current
+game engine. Basic scenario passes, offers, calibration, or similarity to another card do not establish full support.
+Keep every uncertainty and missing proof visible; leave the card unloaded/unpromoted until resolved. Passing tests
+must never be described as exhaustive interaction proof when the evidence does not establish that claim.
+
 You are one of eight subagents of one wave. The orchestrator's prompt names your role, your wave number, your card list
 and your branch. `README.md` here says where the load stands and what 100% means; `ORCHESTRATION.md` is the
 orchestrator's procedure. This file is yours. Where it is silent, wave 4d's brief

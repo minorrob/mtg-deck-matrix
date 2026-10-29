@@ -18,8 +18,9 @@ reviewed CSV/text/XLSX imports and enriched Excel exports give the user control 
 data. Loading a plan never asserts ownership.
 
 The current [r4 execution record](docs/r4-execution/README.md) links the approved decisions,
-requirements, source packets and evidence. Read [docs/ACTIVE.md](docs/ACTIVE.md) before
-working in a lane; the execution handoff distinguishes integrated work from release proof.
+requirements, source packets and evidence. Read [AGENTS.md](AGENTS.md) before working in a lane;
+what to work on is in Linear (initiative I-1, "How work flows: the one loop"), and
+[docs/ACTIVE.md](docs/ACTIVE.md) is the frozen archive of the work before 2026-10-29.
 
 ## Run
 
@@ -1017,7 +1018,6 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `design-tokens` — `tests/design-tokens.mjs`
 - `first-draw-check` — `tests/first-draw-check.mjs`
 - `play-audio-pack` — `tests/play-audio-pack.mjs`
-- `readout-feeds` — `tests/readout-feeds.mjs`
 - `reasonableness` — `tests/reasonableness.mjs`
 - `script-encoding` — `tests/script-encoding.mjs`
 - `wireframe-conformance` — `tests/wireframe-conformance.mjs`
@@ -1467,6 +1467,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-intrinsic-entry` - `tests/engine-intrinsic-entry.mjs`: native and legacy intrinsic loyalty/defense counters use prospective types and ability loss; Compleated keyword removal, independent entry counters, actual doubling, reload and departure controls
 - `engine-entry-counter-order` - `tests/engine-entry-counter-order.mjs`: separately askable Compleated/counter replacements, saved prefixes and internal entry receipts, zero prevention, native movement, simultaneous copied tokens, sibling costs, reload/departure and suffix-once controls
 - `engine-battle-damage-sba` - `tests/engine-battle-damage-sba.mjs`: native Battle damage and excess across permanent types, zero-defense trigger exception and saved protector repair; atomic SBA cohort work remains in progress
+- `engine-battle-linked-returns` - `tests/engine-battle-linked-returns.mjs`: simultaneous return choices, counter progress and Aura preflight; live entering-replacement continuation is under active RED proof
 - `engine-defender-permission` - `tests/engine-defender-permission.mjs`
 - `engine-ability-haste` - `tests/engine-ability-haste.mjs`
 - `engine-unless-return` - `tests/engine-unless-return.mjs`

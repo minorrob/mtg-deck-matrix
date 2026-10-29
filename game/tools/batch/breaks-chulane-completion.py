@@ -22,7 +22,7 @@ BREAKS=[
  ('stack subject forgotten',ZONE,'[...state.stack, ...(state.pendingTriggers ?? [])]','(state.pendingTriggers ?? [])'),
  ('entry replacement uses owner',ZONE,'player: enteringController, types: asDown','player: object.owner, types: asDown'),
  ('entry counters use owner',ZONE,'state.objects[moved].controller = enteringController','state.objects[moved].controller = object.owner'),
- ('aura host uses owner',ZONE,'enchantable(state, object.enchant, enteringController)','enchantable(state, object.enchant, object.owner)'),
+ ('aura host uses owner',ZONE,'enchantable(state, enchant, enteringController)','enchantable(state, enchant, object.owner)'),
  ('arrival event names owner',ZONE,'playerId: destination === "battlefield" ? enteringController : holder','playerId: holder'),
  ('search recipient dropped','game/engine/script/effects/asking.mjs','controller: awaiting.controller, tapped: where.tapped','controller: null, tapped: where.tapped'),
  ('forestwalk ignored',COMBAT,'if (!has(state, attackerId, walk)) continue;','if (walk === "Forestwalk" || !has(state, attackerId, walk)) continue;'),

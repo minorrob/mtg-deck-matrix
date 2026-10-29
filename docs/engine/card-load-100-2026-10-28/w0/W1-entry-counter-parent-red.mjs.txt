@@ -1,0 +1,30 @@
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {createState,addObject} from "../w0-w1-faces/game/engine/state/index.mjs";
+import {compileScript} from "../w0-w1-faces/game/engine/cards/index.mjs";
+import {afterResolving} from "../w0-w1-faces/game/engine/rules/priority.mjs";
+import {awaitingChoice,resolveAwaiting} from "../w0-w1-faces/game/engine/rules/turn.mjs";
+import {concede} from "../w0-w1-faces/game/engine/rules/sba.mjs";
+const state=createState({players:[{name:"A"},{name:"B"},{name:"C"}]});Object.assign(state,{phase:"MAIN1",turn:1,activePlayer:0,priorityPlayer:0});
+const put=object=>addObject(state,{owner:0,controller:0,...object},"battlefield");
+const sources=[0,1].map(index=>{const id=put({card:`Grant Source ${index}`,types:["Battle"],defense:0});state.objects[id].protector=0;return id;});
+const ids=["First Grant Walker","Second Grant Walker"].map(card=>addObject(state,{card,types:["Planeswalker"],loyalty:3,owner:0,controller:0},"exile"));
+const doubling=compileScript(JSON.parse(readFileSync(new URL("../w0-w1-faces/game/engine/cards/d/doubling-season.json",import.meta.url))));
+assert.deepEqual(doubling.problems,[]);put({...doubling.definition,card:"Doubling Season"});
+put({card:"Second Counter Plus One",types:["Enchantment"],abilities:[{id:"second-plus",kind:"static",rule:"more-counters",counter:"loyalty",plus:1,affects:{what:"permanent",controller:"you",named:"Second Grant Walker"}}]});
+const gate=put({owner:2,controller:2,card:"New Entry Grant Gate",types:["Enchantment"]});
+const grant=addObject(state,{card:"New Entry Loyalty Grant",types:["Enchantment"],owner:0,controller:0,abilities:[{id:"entry-grant",kind:"replacement",watches:{event:"enters",filter:{types:["Planeswalker"],controller:"you"}},change:{entersWithCounters:{counter:"loyalty",count:1}}}]},"exile");
+state.exiledUntil=[...sources.map((source,index)=>({source,exiled:ids[index]})),{source:gate,exiled:grant}];
+afterResolving(state,[]);resolveAwaiting(state,awaitingChoice(state).options.map((_,index)=>index));
+const first=Object.values(state.ruleOperation.entryCounterResults).find(row=>row.objectId===ids[0]);
+assert.deepEqual([first.raw.loyalty,first.counters.loyalty],[3,6]);
+concede(state,2);
+const next=awaitingChoice(state);
+console.log(JSON.stringify({firstPrefix:{raw:first.raw,counters:first.counters},newSource:state.zones.battlefield.filter(id=>state.objects[id].card==="New Entry Loyalty Grant"),next}));
+const failures=[];
+try{assert.deepEqual(next.options.map(option=>option.puts).sort((a,b)=>a-b),[9,10],
+ "the newly live parent entering grant must be processed before the unanswered contained counter-replacement choice (CR 616.1g)");}catch(error){failures.push(error.message);}
+for(let step=0;state.awaiting&&step<20;step++)resolveAwaiting(state,[0]);
+const entered=state.zones.battlefield.find(id=>state.objects[id].card==="First Grant Walker");
+try{assert.equal(state.objects[entered].counters.loyalty,7,"the completed first double remains six, then the new entering grant adds one without doubling twice");}catch(error){failures.push(error.message);}
+assert.deepEqual(failures,[],failures.join("\n"));

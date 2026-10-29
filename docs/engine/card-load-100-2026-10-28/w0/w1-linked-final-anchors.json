@@ -1,0 +1,237 @@
+{
+  "files": 258,
+  "breaks": 4817,
+  "problems": [
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-a11y-tabletop.py",
+      "label": "the profile menu not a named group",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-board-fullscreen-notes.py",
+      "label": "a click in Full screen only shows the card",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-board-fullscreen-notes.py",
+      "label": "a double-click playing twice",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-board-fullscreen-notes.py",
+      "label": "the double-click taking nothing back",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-board-fullscreen-notes.py",
+      "label": "the single click not waiting",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-board-fullscreen-notes.py",
+      "label": "the actions left in the strip",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-board-fullscreen-notes.py",
+      "label": "the actions small",
+      "target": "crankmagic-stage.css",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-board-fullscreen-notes.py",
+      "label": "the Boards pane is omitted from the preview gap",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-board-yield.py",
+      "label": "phone loses its visible yield",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-combat-journey.py",
+      "label": "real combat is missing from the board",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-decks-hub.py",
+      "label": "favorite star hides without hover",
+      "target": "crankmagic.css",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-decks-hub.py",
+      "label": "the deck page drops its table line on a redraw",
+      "target": "crankmagic-decks.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-direct-blocking.py",
+      "label": "mat click no longer selects blocker",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-new-deck-flow.py",
+      "label": "the selection lost on switching",
+      "target": "crankmagic-newdeck.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-play-shared-a11y.py",
+      "label": "closed previews mark every played card selected",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-play-shared-shell.py",
+      "label": "Table loses the shared header",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-play-shared-shell.py",
+      "label": "Focus loses Camera",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-play-tabletop.py",
+      "label": "the kept Camera not read back",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-play-ui-rest.py",
+      "label": "the launch line says Waiting again",
+      "target": "crankmagic-table.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-play-ui.py",
+      "label": "no step lit in the ribbon",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-play-ui.py",
+      "label": "the hover card taller than the mat",
+      "target": "crankmagic.css",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-play-ui.py",
+      "label": "3D never on the board",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-public-precons.py",
+      "label": "a bundled deck when nothing is shared",
+      "target": "crankmagic-table.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-r4-foundation.py",
+      "label": "wordmark loses its Oxanium mark",
+      "target": "crankmagic-design.css",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-r4-views.py",
+      "label": "Other seats renders full mats instead of compact counts",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-r4-workshop-flows.py",
+      "label": "AI decks before configured rules",
+      "target": "crankmagic-table.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-r4-workshop-flows.py",
+      "label": "repeat setup creates another table",
+      "target": "crankmagic-table.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-table-camera.py",
+      "label": "four-seat Table restores its duplicate slider",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-table-camera.py",
+      "label": "two-seat Table restores its duplicate slider",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-turn-flow-board.py",
+      "label": "your turn not said",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "game/tools/batch/breaks-why-not.py",
+      "label": "a click on the card not saying why",
+      "target": "crankmagic-board.js",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "tools/a11y-app-breaks.py",
+      "label": "the fill not darkened in light themes",
+      "target": "crankmagic-design.css",
+      "found": 0
+    },
+    {
+      "kind": "not once",
+      "file": "tools/breaks-play-r2.py",
+      "label": "a new revision keeps an obsolete draft",
+      "target": "crankmagic-board.js",
+      "found": 0
+    }
+  ]
+}

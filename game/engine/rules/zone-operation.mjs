@@ -5,7 +5,7 @@ import {moveOne} from "../script/effects/zones.mjs";
 import {controllerOf, lastKnown} from "./layers.mjs";
 import {cantBeSacrificed} from "./statics.mjs";
 import {recordDiscard, COPY_KEYS} from "../state/index.mjs";
-import {validateSbaPreparation, savePreparedSbaMove} from "./sba-move-results.mjs";
+import {validateSbaPreparation, savePreparedSbaMove, validateSbaReturnPreparation, savePreparedSbaReturn} from "./sba-move-results.mjs";
 
 function paymentEligible(state, id, kind, player) {
   const object = state.objects[id], zone = kind === "sacrifice-one" ? "battlefield" : "hand";
@@ -22,7 +22,10 @@ registerRuleOperation("move-one", (state, frame) => {
   if (!object || (object.token === true && object.zone !== "battlefield")) return {status: "done", result: {moved: null, zoneEventIndex: null}};
   if (frame.payment && !paymentEligible(state, frame.id, frame.payment.kind, frame.payment.player))
     return {status: "done", result: {moved: null, zoneEventIndex: null}};
-  if (frame.prepareOnly) validateSbaPreparation(state, frame);
+  if (frame.prepareOnly) {
+    if (frame.returnBatchId) validateSbaReturnPreparation(state,frame);
+    else validateSbaPreparation(state, frame);
+  }
   if (!frame.stage) {
     frame.proposal = {event: "zone-change", objectId: frame.id, from: object.zone, to: frame.to, player: object.controller, applied: []};
     if (object.exileIfLeaves === true) frame.proposal.to = "exile";
@@ -69,6 +72,7 @@ registerRuleOperation("move-one", (state, frame) => {
       const down = options.faceDown === true, face = options.transformed === true ? object.mdfc?.back ?? object : object;
       frame.stage = "after-enter";
       return {status: "continue", children: [{kind: "entering", objectId: frame.id, player,
+        ...(frame.returnBatchId ? {deferCounters: true,returnBatchId:frame.returnBatchId} : {}),
         additionalCounters: options.counters ?? {},
         types: down ? ["Creature"] : face.types, abilities: down ? [] : face.abilities,
         entryFace: {set: Object.fromEntries(COPY_KEYS.filter(key => face[key] !== undefined).map(key => [key, face[key]])),
@@ -77,17 +81,30 @@ registerRuleOperation("move-one", (state, frame) => {
     frame.stage = "move";
   }
   if (frame.stage === "after-enter") {
+    frame.entryProgress=frame.childResult?.entryProgress??null;
+    frame.counterPlan = frame.childResult?.counterPlan ?? null;
     frame.preparedCounterResult = frame.childResult?.counterResult ?? null;
     frame.entryPatch = frame.childResult?.objectPatch ?? null;
     frame.preparedEntering = frame.childResult?.entering ?? frame.childResult;
     delete frame.childResult; frame.stage = "move";
     if (frame.preparedEntering?.to && frame.preparedEntering.to !== "battlefield") {
+      if(frame.returnBatchId&&frame.reopenReturn){
+        validateSbaReturnPreparation(state,frame);
+        frame.proposal={...frame.proposal,to:frame.preparedEntering.to};frame.stage="replacements";
+        return {status:"continue"};
+      }
       frame.stage = "after-redirect";
       return {status: "continue", children: [{kind: "move-one", id: frame.id, to: frame.preparedEntering.to, options, payment: frame.payment,
-        ...(frame.prepareOnly ? {prepareOnly: true, cohortId: frame.cohortId} : {})}]};
+        ...(frame.prepareOnly ? {prepareOnly: true, ...(frame.returnBatchId ? {returnBatchId: frame.returnBatchId} : {cohortId: frame.cohortId})} : {})}]};
     }
   }
   const events = [];
+  if (frame.prepareOnly && frame.returnBatchId) {
+    const preparedReturn = savePreparedSbaReturn(state,frame,{proposal:frame.proposal,
+      entering:frame.preparedEntering ?? null,counterResult:frame.preparedCounterResult ?? null,counterPlan:frame.counterPlan,
+      entryPatch:frame.entryPatch ?? null,entryProgress:frame.entryProgress,options:frame.options ?? {}});
+    return {status:"done",result:{preparedReturn}};
+  }
   if (frame.prepareOnly) {
     const preparedMove = savePreparedSbaMove(state, frame, {proposal: frame.proposal,
       entering: frame.preparedEntering ?? null, counterResult: frame.preparedCounterResult ?? null,

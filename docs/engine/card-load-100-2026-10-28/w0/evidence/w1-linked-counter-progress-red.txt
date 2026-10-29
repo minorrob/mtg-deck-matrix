@@ -1,0 +1,34 @@
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: completed counter prefix rechecks a newly live source: the saved four-counter prefix receives the newly live Doubling Season once before any sibling commits
+
+4 !== 8
+
++ actual - expected
+
++ [
++   'completed counter prefix rechecks a newly live source: the saved four-counter prefix receives the newly live Doubling Season once before any sibling commits\n' +
++     '\n' +
++     '4 !== 8\n'
++ ]
+- []
+
+    at file:///C:/Users/robmi/CrankMagic/worktrees/load100/w0-w1-faces/tests/engine-battle-linked-returns.mjs:88:8
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: [
+    'completed counter prefix rechecks a newly live source: the saved four-counter prefix receives the newly live Doubling Season once before any sibling commits\n' +
+      '\n' +
+      '4 !== 8\n'
+  ],
+  expected: [],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.23.3
