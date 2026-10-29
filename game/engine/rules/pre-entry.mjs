@@ -15,7 +15,7 @@ import {amountOf} from "../script/amount.mjs";
 import {cardsIn} from "../state/index.mjs";
 import {runEffect} from "../script/effects/index.mjs";
 import {cantBeSacrificed, placeCounters, counterOrderChoice} from "./statics.mjs";
-import {patchEnteringObject, prospectiveEnteringState, intrinsicEnteringCounters, saveEntryCounterResult} from "./entry-characteristics.mjs";
+import {patchEnteringObject, prospectiveEnteringState, intrinsicEnteringCounters, saveEntryCounterResult, restoreEntryCounterProgress} from "./entry-characteristics.mjs";
 export {patchEnteringObject, prospectiveEnteringState} from "./entry-characteristics.mjs";
 
 function proposalIn(view, frame) {
@@ -80,6 +80,7 @@ function finishEntry(state, frame) {
 registerRuleOperation("entry-counters", (state, frame) => {
   if (!(frame.candidate ?? state.objects[frame.objectId]) || state.players[frame.player]?.lost || state.gameOver)
     return {status: "done", result: null};
+  restoreEntryCounterProgress(state,frame);
   const view = prospectiveEnteringState(state, frame), object = view.objects[frame.objectId], current = characteristicsOf(view, frame.objectId);
   if (!frame.raw) {
     frame.raw = {...frame.independentCounters};

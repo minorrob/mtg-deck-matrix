@@ -19,9 +19,9 @@
 
 import {holdArrival, enteredWith} from "../../rules/entering.mjs";
 import {entryCounterResult} from "../../rules/entry-characteristics.mjs";
-import {preparedSbaMove, consumeSbaMove, takeSbaDeparture} from "../../rules/sba-move-results.mjs";
+import {preparedSbaMove, consumeSbaMove, takeSbaDeparture, preparedSbaReturn, consumeSbaReturn} from "../../rules/sba-move-results.mjs";
 import {prepare} from "./attributes.mjs";
-import {afterwards, delayedTrigger, enchantable, enchantOnArrival, controlSourceLeft, endWhileSourceRemains} from "./permanents.mjs";
+import {afterwards, delayedTrigger, enchantable, enchantOnArrival, attachTo, controlSourceLeft, endWhileSourceRemains} from "./permanents.mjs";
 import {typesOf} from "../../rules/layers.mjs";
 import {objectsAfterMove, moveObject, cardsIn, PUBLIC_ZONES, removeObject, eventCard, rememberExileLooker, recordDraw, recordDrawStepDraw, recordDeath} from "../../state/index.mjs";
 import {lastKnown} from "../../rules/layers.mjs";
@@ -78,6 +78,12 @@ const PERMANENT_TYPES = ["Artifact", "Battle", "Creature", "Enchantment", "Land"
    an Aura among them enchants none of them (CR 303.4f: what it will enchant is chosen as it enters, and they are not yet
    there to be chosen). */
 export function moveOne(state, id, to, events, options = {}) {
+  if (options.preparedReturn !== undefined) {
+    const prepared = preparedSbaReturn(state,options.preparedReturn,options.returnBatchId,id);
+    return performMove(state,id,prepared.proposal.to,events,{...prepared.options,preparedProposal:prepared.proposal,
+      preparedEntering:prepared.entering,preparedCounterResult:prepared.counterResult,entryPatch:prepared.entryPatch},
+    {...prepared,token:options.preparedReturn});
+  }
   if (options.preparedMove === undefined) return performMove(state, id, to, events, options);
   const prepared = preparedSbaMove(state, options.preparedMove, options.cohortId, id);
   return performMove(state, id, prepared.proposal.to, events, {...prepared.options, preparedProposal: prepared.proposal,
@@ -135,7 +141,10 @@ function performMove(state, id, to, events, {owner = null, controller = null, ta
   /* An Aura put onto the battlefield by an effect, not resolving as a spell (CR 303.4f; Sun Titan returning one): it
      enchants what its controller chooses as it enters, and with nothing to enchant it stays where it is -- or, from the
      stack, goes to its owner's graveyard (CR 303.4g). */
-  const hosts = destination === "battlefield" && object.enchant && !asDown ? enchantable(state, object.enchant, enteringController).filter((host) => !(notOnto ?? []).includes(host)) : null;
+  const enchant=prepared?.returnBatchId?prepared.enchant:object.enchant;
+  const hosts = destination === "battlefield" && enchant && !asDown ? prepared?.returnBatchId
+    ? state.objects[prepared.host]?.zone===prepared.hostZone?[prepared.host]:[]
+    : enchantable(state, enchant, enteringController).filter((host) => !(notOnto ?? []).includes(host)) : null;
   if (hosts && !hosts.length) {
     if (prepared) return null;
     if (from !== "stack") return null;
@@ -174,7 +183,10 @@ function performMove(state, id, to, events, {owner = null, controller = null, ta
   /* "If it entered from your library" (Fblthp, the Lost): where the permanent came from, and whose library that was --
      read by the condition `cameFrom` (script/condition.mjs). A library only; rules/stack.mjs records a cast from one. */
   if (destination === "battlefield" && from === "library" && state.objects[moved]) state.objects[moved].cameFrom = {zone: "library", owner: object.zonePlayer ?? object.owner};
-  if (hosts) enchantOnArrival(state, moved, hosts, state.objects[moved].controller);
+  if (hosts) {
+    if(prepared?.returnBatchId)attachTo(state,moved,prepared.host);
+    else enchantOnArrival(state, moved, hosts, state.objects[moved].controller);
+  }
   if (entering) {
     if ((entering.gainsKeywords ?? []).length) {
       const timestamp = state.nextTimestamp++;
@@ -211,7 +223,7 @@ function performMove(state, id, to, events, {owner = null, controller = null, ta
     ...(destination === "battlefield" && state.objects[moved]?.tapped ? {enteredTapped: true} : {}),
     /* And what it became wherever it went, when that zone is public (CR 400.7e): "that card" in a dies trigger. */
     ...(PUBLIC_ZONES.includes(destination) ? {becomes: moved} : {}),
-    from: {zoneType: ZONE_LABEL[from] ?? from, player: {playerId: prepared ? leftBehind.controller : object.controller}},
+    from: {zoneType: ZONE_LABEL[from] ?? from, player: {playerId: prepared && leftBehind ? leftBehind.controller : object.controller}},
     to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: destination === "battlefield" ? enteringController : holder}},
   }));
   /* What the replacement that sent it there does beside the move (Kalitas's Zombie; rules/replacement.mjs, `followUps`). */
@@ -223,7 +235,8 @@ function performMove(state, id, to, events, {owner = null, controller = null, ta
   /* What it entered with, said once it has (rules/entering.mjs, enteredWith). */
   if (destination === "battlefield") events.push(...enteredWith(state, moved, entering));
   /* What it exiled "until this leaves the battlefield", back now (CR 610.3). */
-  if (prepared) consumeSbaMove(state, prepared.token, prepared.cohortId, id, moved);
+  if (prepared?.returnBatchId) consumeSbaReturn(state,prepared.token,prepared.returnBatchId,id,moved);
+  else if (prepared) consumeSbaMove(state, prepared.token, prepared.cohortId, id, moved);
   else if (from === "battlefield") returnExiledUntil(state, id, events, leftBehind);
   return moved;
 }

@@ -1,0 +1,29 @@
+import assert from "node:assert/strict";
+import {createState,addObject} from "../w0-w1-faces/game/engine/state/index.mjs";
+import {loadCardIndex} from "../w0-w1-faces/game/tools/engine-cards.mjs";
+import {beginResolution} from "../w0-w1-faces/game/engine/script/resolution.mjs";
+import {concede} from "../w0-w1-faces/game/engine/rules/sba.mjs";
+import {awaitingChoice,resolveAwaiting} from "../w0-w1-faces/game/engine/rules/turn.mjs";
+const state=createState({players:[{name:"A"},{name:"B"},{name:"C"}]});
+Object.assign(state,{phase:"MAIN1",turn:1,activePlayer:0,priorityPlayer:0});
+const put = object => addObject(state,{owner:0,controller:0,...object},"battlefield");
+for(const card of ["First Counter Walker","Second Counter Walker"]){
+ const id=put({card,types:["Planeswalker"],loyalty:3});state.objects[id].counters.loyalty=3;
+}
+const more=(card,named,change)=>put({card,types:["Enchantment"],abilities:[{id:card,kind:"static",rule:"more-counters",affects:{what:"permanent",controller:"you",named},counter:"loyalty",...change}]});
+more("First applied plus one","First Counter Walker",{plus:1});
+more("Second plus one","Second Counter Walker",{plus:1});
+more("Second doubler","Second Counter Walker",{times:2});
+const gate=put({owner:1,controller:1,card:"Return Gate",types:["Enchantment"]});
+const season=addObject(state,{...loadCardIndex().definition("Doubling Season"),owner:0,controller:0,card:"Doubling Season"},"exile");
+state.exiledUntil=[{source:gate,exiled:season}];
+const outcome=beginResolution(state,[{effect:"copyPermanent",selector:{types:["Planeswalker"]},count:1}],{controller:0,source:null});
+assert.equal(outcome.status,"waiting");
+assert.equal(state.zones.battlefield.filter(id=>state.objects[id].token).length,0,"neither copied token exists before the later counter question");
+console.log(JSON.stringify({pending:awaitingChoice(state),firstSaved:Object.values(state.ruleOperation.entryCounterResults??{}).map(row=>({objectId:row.objectId,raw:row.raw,counters:row.counters,progress:row.applied}))}));
+concede(state,1);
+for(let i=0;state.awaiting&&i<20;i++)resolveAwaiting(state,[0]);
+const tokens=state.zones.battlefield.filter(id=>state.objects[id].token).map(id=>({card:state.objects[id].card,counters:state.objects[id].counters}));
+console.log(JSON.stringify({tokens}));
+assert.equal(tokens.find(token=>token.card==="First Counter Walker").counters.loyalty,8,
+ "an earlier completed counter plan must preserve its applied plus-one prefix and apply the newly live Doubling Season before any sibling is created");
