@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {pathToFileURL} from 'node:url';
+const root=pathToFileURL(process.cwd()+'/');
+const {loadCardIndex}=await import(new URL('game/tools/engine-cards.mjs',root));
+const {runScenario}=await import(new URL('game/engine/cards/scenario.mjs',root));
+const review=JSON.parse(fs.readFileSync('../scratch/v8-basic-source-inventory-review-544d8512.json','utf8'));
+const index=loadCardIndex(),results=[],cache=new Map();
+for(const entry of review.all1072EligibleCandidates){
+  let file=cache.get(entry.file);if(!file){file=JSON.parse(fs.readFileSync(entry.file,'utf8'));cache.set(entry.file,file);}
+  const scenario=file.scenarios[entry.scenarioIndex];assert.equal(scenario.name,entry.scenario);
+  const unchanged=JSON.stringify(scenario),result={ordinal:entry.ordinal,file:entry.file,card:file.card,scenario:scenario.name};
+  try{const actual=runScenario(scenario,name=>index.definition(name),file.fixtures??{},{explicitChoices:true});
+    assert.equal(actual.passed.length,entry.fullOriginalAssertionCount);assert.equal(JSON.stringify(scenario),unchanged);
+    result.passed=true;result.assertions=actual.passed.length;
+  }catch(error){result.passed=false;result.error={message:error.message,assertion:error.scenarioAssertion??null};}
+  results.push(result);
+  if(results.length%100===0)console.log(JSON.stringify({completed:results.length,passed:results.filter(r=>r.passed).length}));
+}
+const report={schema:'V8ApprovedEditedFullScenarios@1',scope:'all actual edited saved scenarios, all original assertions retained',
+  scenarios:results.length,passed:results.filter(r=>r.passed).length,failed:results.filter(r=>!r.passed).length,
+  assertionsPassed:results.filter(r=>r.passed).reduce((sum,r)=>sum+r.assertions,0),results};
+fs.writeFileSync('../scratch/v8-basic-source-batch-edited-full.json',JSON.stringify(report,null,2)+'\n');
+console.log(JSON.stringify({scenarios:report.scenarios,passed:report.passed,failed:report.failed,assertionsPassed:report.assertionsPassed}));
+if(report.failed)process.exitCode=1;

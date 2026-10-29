@@ -1,0 +1,67 @@
+"""Apply exactly the root-reviewed source fields; no case selection or scenario repair."""
+from pathlib import Path
+from copy import deepcopy
+from collections import defaultdict
+import ast,hashlib,json,subprocess
+root=Path.cwd();outside=root.parent/'scratch';source='544d8512d226790498ae5da29087471ab6ba9a29'
+sha=lambda raw:hashlib.sha256(raw).hexdigest()
+assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==source
+assert not subprocess.check_output(['git','status','--porcelain'],text=True).strip()
+review_raw=(outside/'v8-basic-source-inventory-review-544d8512.json').read_bytes()
+inventory_raw=(outside/'v8-basic-source-inventory-544d8512.json').read_bytes()
+assert sha(review_raw)=='64d2850834cbe2eb2911fbf052280ebaa603a6f7f763856ed0cc3ad8d8fc7544'
+assert sha(inventory_raw)=='a9be9808449d759e85483653621be7b7457c7bd2086076788dc44119bc2fd7b2'
+review=json.loads(review_raw);inventory=json.loads(inventory_raw);eligible=review['all1072EligibleCandidates']
+before=json.loads((outside/'v8-basic-source-batch-before-544d8512.json').read_bytes())
+assert before['source']['revision']==source and before['source']['dirty'] is False and before['measurement']['complete']
+assert (before['measurement']['definitions'],before['measurement']['scenarios'])==(700,1962)
+names=sorted({c['card'] for c in eligible});assert before['scope']['selected']==names and set(before['cards'])==set(names)
+assert len(eligible)==1072 and len(names)==700 and sum(len(c['additions']) for c in eligible)==3430
+planner_raw=(outside/'v8-basic-source-repair.py').read_bytes();assert sha(planner_raw)==inventory['plannerFileSha256']
+tree=ast.parse(planner_raw.decode());node=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='plan')
+namespace={'deepcopy':deepcopy,'basic':{'Wastes','Plains','Island','Swamp','Mountain','Forest'}}
+exec(compile(ast.Module(body=[node],type_ignores=[]),'<unchanged-reviewed-planner>','exec'),namespace)
+plan=namespace['plan'];byfile=defaultdict(list)
+for entry in eligible:byfile[entry['file']].append(entry)
+assert len(byfile)==700
+for item in inventory['scenarioFileInputs']:assert sha((root/item['file']).read_bytes())==item['sha256']
+pending=[];audit=[]
+for file,entries in sorted(byfile.items()):
+    target=root/file;raw=target.read_bytes();original=json.loads(raw);changed=deepcopy(original);edits=[]
+    for entry in entries:
+        candidate=inventory['candidates'][entry['ordinal']]
+        assert (candidate['file'],candidate['card'],candidate['scenarioIndex'])==(file,entry['card'],entry['scenarioIndex'])
+        at=entry['scenarioIndex'];assert original['scenarios'][at]==candidate['original']
+        planned=plan(original['scenarios'][at],original.get('fixtures',{}));assert planned
+        proposed,additions=planned
+        assert proposed==candidate['changed'] and additions==entry['additions']==candidate['additions']
+        changed['scenarios'][at]=proposed
+        edits.extend({'scenarioIndex':at,'scenario':entry['scenario'],**addition} for addition in additions)
+    restored=deepcopy(changed)
+    for edit in edits:del restored['scenarios'][edit['scenarioIndex']]['steps'][edit['step']]['source']
+    assert restored==original and len(changed['scenarios'])==len(original['scenarios'])
+    blob=(json.dumps(changed,ensure_ascii=False,indent=2)+'\n').encode('utf-8')
+    pending.append((target,blob))
+    audit.append({'file':file,'beforeSha256':sha(raw),'afterSha256':sha(blob),'allOriginalFieldsPreserved':True,
+      'originalScenariosRetained':len(original['scenarios']),'edits':edits})
+assert sum(len(record['edits']) for record in audit)==3430
+for target,blob in pending:target.write_bytes(blob)
+changed_paths=set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines())
+assert changed_paths==set(byfile)
+for item in inventory['scenarioFileInputs']:
+    if item['file'] not in byfile:assert sha((root/item['file']).read_bytes())==item['sha256']
+for record in audit:
+    actual=json.loads((root/record['file']).read_bytes());restored=deepcopy(actual)
+    for edit in record['edits']:del restored['scenarios'][edit['scenarioIndex']]['steps'][edit['step']]['source']
+    original=json.loads(subprocess.check_output(['git','show',source+':'+record['file']]))
+    assert restored==original
+rejected={case['ordinal'] for case in review['all161ExactRejections']}
+for at in rejected:
+    case=inventory['candidates'][at];actual=json.loads((root/case['file']).read_bytes())['scenarios'][case['scenarioIndex']]
+    assert actual==case['original']
+report={'schema':'V8ApprovedSourceBatchDiff@1','beforeSource':source,'approvedReviewSha256':sha(review_raw),
+  'fixedInventorySha256':sha(inventory_raw),'editedScenarios':1072,'editedFiles':700,'addedSourceFields':3430,
+  'all1962SelectedOriginalScenariosRetained':True,'allOtherOriginalFieldsPreserved':True,'all161RejectedScenariosUntouched':True,
+  'everyOtherScenarioFileByteExact':True,'onlyApprovedFilesChanged':True,'files':audit}
+(outside/'v8-basic-source-approved1072-diff.json').write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+print(json.dumps({key:report[key] for key in ['editedScenarios','editedFiles','addedSourceFields','allOtherOriginalFieldsPreserved','all161RejectedScenariosUntouched','everyOtherScenarioFileByteExact']},indent=2))
