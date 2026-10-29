@@ -86,9 +86,9 @@ or fidelity-checked. On the exact same fixed policies:
 These are four genuine remaining-ability outcome pairs, not a claim that the registered checker now proves8/8.
 The current runner cannot execute this grammar. Its existing offer/question-presence exclusions remain unchanged.
 
-The scratch audit passes156 checks. It rejects malformed/missing/wrong sources and actors, wrong phase/priority,
+The scratch audit passes161 checks. It rejects malformed/missing/wrong sources and actors, wrong phase/priority,
 pending commitments, multiple actions, arbitrary branch fields, missing resolution, ambiguous or malformed colors,
-forged event source/actor/stack identity, a real intervening Firebrand activation, stale changed question, wrong
+forged event source/actor/stack identity, an activation masquerading as a captured spell, a real intervening Firebrand activation, stale changed question, wrong
 question/label/context, reuse and false question absence. The wrong-input prechecks preserve native state; a real
 intervening activation is left committed and neither stack frame is resolved. Separate offer-only and
 activation-without-resolution controls produce no entrant/tokens. `scenarioBehaviorFailure` rejects every policy

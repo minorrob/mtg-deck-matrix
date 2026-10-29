@@ -1,11 +1,10 @@
 {
   "schema": "V8ConditionalPolicyProposal@1",
-  "source": "55f133f5d9c14142aae6638ea8cc65b0110df112",
   "status": "Proposal only; production4of8 unchanged",
   "demo": {
-    "source": "55f133f5d9c14142aae6638ea8cc65b0110df112",
+    "source": "681a0e36377da6dafc853d8883e12868f5fa7f70",
     "productionEdits": 0,
-    "checks": 156,
+    "checks": 161,
     "results": [
       {
         "case": "Snoop cast permission",
@@ -60,9 +59,9 @@
     ]
   },
   "controls": {
-    "source": "55f133f5d9c14142aae6638ea8cc65b0110df112",
+    "source": "681a0e36377da6dafc853d8883e12868f5fa7f70",
     "productionEdits": 0,
-    "baselineSha256": "33c33affae2b39e27c42d9cb1bc8cfdc604dafedb5dba5f6c67cc8fca7b3d385",
+    "baselineSha256": "b521df37e2ead1e147a156705b4898dc35e9d0c3b9272932d4dbc734d3321fea",
     "caught": [
       {
         "label": "skip actual selected action",
@@ -92,5 +91,8 @@
     ],
     "missed": [],
     "baselineByteIdentical": true
-  }
+  },
+  "sourceBase": "55f133f5d9c14142aae6638ea8cc65b0110df112",
+  "runtimeExecutionRevision": "681a0e36377da6dafc853d8883e12868f5fa7f70",
+  "sourceEquivalence": "Execution revision adds only proposal documentation/artifacts to55f; production imports and saved cards are unchanged. Scratch audit is not canonical acceptance."
 }

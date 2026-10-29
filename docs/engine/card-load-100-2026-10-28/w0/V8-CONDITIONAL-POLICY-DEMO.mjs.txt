@@ -67,7 +67,7 @@ function actIfLegal(state,step,afterApply=null){
  return {branch:'applied-and-resolved',kind,actor,sourceId:id,stackId,events:[...events,...resolved]};
 }
 function resolveAndCapture(state){
- must(!state.awaiting&&state.stack.length===1,'capture needs one current native frame');
+ must(!state.awaiting&&state.stack.length===1&&state.stack.at(-1).kind==='spell','capture needs one current native spell frame');
  const {stackId,cardId,name,playerId,kind}=state.stack.at(-1),frame={stackId,cardId,name,playerId,kind},events=resolveTop(state),token=Object.freeze({});
  contexts.set(token,{frame,events,questionSignature:state.awaiting?hashState(state.awaiting):null});return token;
 }
@@ -129,6 +129,7 @@ for(const variant of ['forged','source','actor','question','label','stale','othe
 {const s=run('consumed Banner context',bannerSetup,[],bannerPrefix),token=resolveAndCapture(s);chooseEnteringIfAsked(s,token,chooseRequest);rejects(s,()=>chooseEnteringIfAsked(s,token,chooseRequest),/forged|missing/);}
 {const s=run('false absence Banner context',bannerSetup,[],bannerPrefix),token=resolveAndCapture(s);s.awaiting=null;rejects(s,()=>chooseEnteringIfAsked(s,token,chooseRequest),/not complete/);}
 {const s=run('other mandatory after absent Banner',bannerSetup,[],bannerPrefix,cardsWithout('Patchwork Banner','a0')),token=resolveAndCapture(s);s.awaiting={kind:'discard-mandatory',player:0};rejects(s,()=>chooseEnteringIfAsked(s,token,chooseRequest),/stale changed question/);}
+{const s=grantState(),action=legalActions(s,0).find(a=>a.kind==='activate'&&a.label==='Conspicuous Snoop');applyAction(s,0,action);rejects(s,()=>resolveAndCapture(s),/native spell frame/);}
 /* These controls distinguish full effects from mere availability/activation. */
 {const s=castState();ok(legalActions(s,0).some(a=>a.kind==='cast'&&a.label==='Raging Goblin'),'the offer-only control has an offer');eq(names(s).includes('Raging Goblin'),false,'an offer alone produces no entrant');}
 {const s=grantState(),action=legalActions(s,0).find(a=>a.kind==='activate'&&a.label==='Conspicuous Snoop');applyAction(s,0,action);eq(names(s).filter(n=>n==='Goblin').length,0,'activation/tap without resolution produces no Goblin effect');}
