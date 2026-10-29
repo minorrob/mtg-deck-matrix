@@ -45,7 +45,7 @@ const BLOCKERS_DECLARED = ["COMBAT_DECLARE_BLOCKERS", "COMBAT_FIRST_STRIKE_DAMAG
 
 /** Every key a selector may carry. Anything else is a bug in whatever wrote it. */
 export const SELECTOR_KEYS = Object.freeze([
-  "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "named",
+  "what", "types", "subtypes", "supertypes", "nonTypes", "nonSubtypes", "zone", "controller", "who", "another", "target", "token", "manaValue", "manaCost", "named",
   "attachedBy", "colors", "tapped", "counters", "power", "self", "keywords", "nonSupertypes", "colorless", "attacking", "toughness", "countersAtLeast", "attackedThisTurn", "commander", "nonColors", "owner", "enteredThisTurn", "toughnessOverPower",
   "unblocked", "singleTarget", "abilityKind", "goaded", "uniqueName", "sharesCreatureType", "multicolored", "monocolored", "sharesColor",
   /* "Whenever a modified creature you control deals combat damage" (Kodama of the West Tree; CR 700.15, rules/layers.mjs). */
@@ -214,6 +214,12 @@ function assertGrammar(selector) {
     throw new Error("A selector's subtypes are a list: 'Mountain Plains' is two of them");
   for (const key of ["supertypes", "nonTypes", "nonSubtypes", "nonKeywords"])
     if (selector[key] !== undefined && !Array.isArray(selector[key])) throw new Error(`A selector's ${key} are a list`);
+  /* Actual mana costs (Urza's Saga III; CR 202.1), not their mana values. A missing cost is never {0} (202.1b). */
+  if (selector.manaCost !== undefined) {
+    if (!Array.isArray(selector.manaCost) || !selector.manaCost.length || selector.manaCost.some((cost) => typeof cost !== "string" || !cost.trim()))
+      throw new Error("A selector's manaCost is a nonempty list of braced mana costs");
+    for (const cost of selector.manaCost) parseManaCost(cost);
+  }
   /* What it shares a creature type with: a selector of permanents, held to the same grammar. */
   if (selector.sharesCreatureType !== undefined) compileSelector({...selector.sharesCreatureType, what: "permanent"});
   if (selector.multicolored !== undefined && selector.multicolored !== true) throw new Error("A selector's multicolored is true: two or more colors");
@@ -487,6 +493,8 @@ export function compileSelector(selector) {
     }
 
     if (selector.manaValue && !matchesManaValue(state, id, selector.manaValue, context)) return false;
+    /* The actual cost of this face (CR 202.1), with no cost distinct from {0} (202.1b). */
+    if (selector.manaCost !== undefined && !selector.manaCost.includes(object.manaCost)) return false;
     /* "Tapped land your opponents control" (CR 110.5), "creature with a +1/+1 counter on it" (CR 122.1), "power 4 or
        greater" (through the layers), "this creature" itself. */
     if (selector.tapped !== undefined && (object.tapped === true) !== selector.tapped) return false;

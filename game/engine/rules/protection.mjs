@@ -103,8 +103,14 @@ export function playerHexproofFrom(state, player, chooser, sourceId) {
  * @param {{card?: number, player?: number}} who
  * @param {?number} sourceId
  */
-export function protectedFrom(state, {card = null, player = null}, sourceId) {
-  if (sourceId === null || sourceId === undefined) return false;
+export function protectedFrom(state, {card = null, player = null}, sourceId, sourceLastKnown = null) {
+  /* CR 608.2h: a read-only local view supplies a departed damage source's final qualities. It never rejoins the
+     battlefield or the saved game's objects, and an existing live source always uses its current characteristics. */
+  if (!state.objects[sourceId] && sourceLastKnown) {
+    sourceId = sourceLastKnown.cardId;
+    state = {...state, objects: {...state.objects, [sourceId]: {...sourceLastKnown, zone: "last-known"}}};
+  }
+  if ((sourceId === null || sourceId === undefined) && !sourceLastKnown) return false;
   /* "They gain protection from everything" (Teferi's Reproach): an effect over players (effectUntil's `rule: "protection"`). */
   if (player !== null && player !== undefined && (state.effects ?? []).some((e) => e.rule === "protection" && (e.players ?? []).includes(player) && hasQuality(state, e.from, sourceId))) return true;
   /* "Creatures you control gain ... protection from each color until end of turn" (Akroma's Will): an effect over the

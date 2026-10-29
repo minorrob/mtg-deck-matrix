@@ -74,6 +74,7 @@ import {lastKnown, characteristicsOf, abilitiesOf, deriving, derivingAfresh, onc
 import {namesChosen, withChosen, chosenFor} from "../script/chosen.mjs";
 import {poolFor, spendFor, addRestricted, addRider, riderChoices, addProvenance, addPoolMana} from "./restricted-mana.mjs";
 import {askEntering} from "./entering.mjs";
+import {registerRuleOperation, beginRuleOperation, emitRuleEvents, ruleOperationPending} from "./operations.mjs";
 import {collectTriggers, openTriggers, manaTriggered} from "./trigger.mjs";
 
 const MAIN_PHASES = ["MAIN1", "MAIN2"];
@@ -490,7 +491,10 @@ function costChoice(state, awaiting) {
         options: ways.map((way, index) => ({index, label: paymentWords(way), key: paymentKey(way)}))};
     }
     const cost = convokeCost(state, player, action), creatures = convokers(state, player, action.objectId);
-    const symbols = cost.generic + cost.symbols.filter((s) => (s.kind === "colored" && s.color !== "C") || s.kind === "hybrid").length;
+    /* Hybrid/Phyrexian alternatives precede the total cost (CR 601.2b): a {2/W} may take two generic helpers,
+       and {W/P}'s colored choice may take one. This is only the maximum; convokeWays validates the chosen assignment. */
+    const symbols = cost.generic + cost.symbols.reduce((n, s) => n + (s.kind === "monohybrid" ? s.amount
+      : (["colored", "phyrexian"].includes(s.kind) && s.color !== "C") || s.kind === "hybrid" ? 1 : 0), 0);
     const alone = automaticPayment(poolFor(state, player, {spell: action.objectId}), cost, {life: state.players[player].life}) !== null;
     return {id: `choose-cost:${action.objectId}`, title: hasConvoke(state, action.objectId) ? `${name}: tap creatures to convoke it` : `${name}: tap artifacts to improvise it`, mode: "many", min: alone ? 0 : 1, max: Math.min(creatures.length, symbols),
       cost: "convoke", options: named(creatures.map((c) => c.id))};
@@ -1464,27 +1468,47 @@ const freeLife = (object, free) => (free?.payLife === "manaValue" ? (object.mana
 /* The permissions open now that let this card be played from where it is. */
 const openPermissions = (state, player, id, kind) => allPlayPermissions(state, player)
   .filter(({ability, source}) => permissionOpen(state, player, ability, source) && permittedFrom(state, player, ability).includes(id) && permits(state, player, ability, id, kind, source));
-/* Of permissions that give the card the same thing, the one with the fewest drawbacks: no limit, so a limited one is spent
-   only when it must be, and no "exile it instead" (Kess) -- the two doing the same but for what is used up or lost, which is
-   no choice taken from the player. */
+/* An unlimited permission can stand for an identical unlimited permission. Limited permissions spend different
+   resources, so permissionWays keeps each one available for the player to choose (CR 601.2a, 305.1). */
 /* Spent by being used: a `limit`, a type's use (`perType`, Muldrotha), so many cards (`count`, Chainer). */
 const unlimited = (ability) => ability.limit === undefined && ability.perType !== true && ability.count === undefined;
 const preferred = (open) => open.find(({ability}) => unlimited(ability) && ability.graveyardToExile !== true)
   ?? open.find(({ability}) => unlimited(ability)) ?? open[0] ?? null;
-/* The permission a card is played through: the one its player chose (`via`, its source), or the preferred one there is. */
+/* A source can grant more than one play permission (CR 113.2c). Keep the old source-only action address when it names
+   one ability; otherwise name both source and ability in the existing `via` field. Saved unambiguous actions keep the
+   same shape, while two once-per-turn abilities on one permanent spend their separate use counters (CR 601.2a). */
+const PERMISSION_ADDRESS = "play-permission:";
+function permissionAddress(via) {
+  if (typeof via !== "string" || !via.startsWith(PERMISSION_ADDRESS)) return {source: via, ability: null};
+  try {
+    const parts = JSON.parse(via.slice(PERMISSION_ADDRESS.length));
+    return Array.isArray(parts) && parts.length === 2 && (Number.isInteger(parts[0]) || typeof parts[0] === "string") && typeof parts[1] === "string"
+      ? {source: parts[0], ability: parts[1]} : null;
+  } catch { return null; }
+}
+function permissionVia(state, player, permission) {
+  const sameSource = allPlayPermissions(state, player).filter(({source}) => source === permission.source);
+  return sameSource.length > 1 ? PERMISSION_ADDRESS + JSON.stringify([permission.source, permission.ability.id]) : permission.source;
+}
+/* The permission a card is played through: the chosen source and, when needed, ability (`via`), or the only equivalent way. */
 function playPermission(state, player, id, kind, via = null) {
   const open = openPermissions(state, player, id, kind);
-  if (via !== null) return open.find(({source}) => source === via) ?? null;
+  if (via !== null) {
+    const address = permissionAddress(via);
+    return address ? open.find(({source, ability}) => source === address.source && (address.ability === null || ability.id === address.ability)) ?? null : null;
+  }
   return preferred(open);
 }
 /* WHICH PERMISSION, WHEN IT MATTERS (CR 601.2a, 305.1; Rob, 2026-09-23: the players decide). Two permanents may each let a
    player play the same card, and do different things with it: Serra Paragon's land "gains" an ability and Crucible of
    Worlds's does not; Bolas's Citadel's spell is paid for with life, Future Sight's with mana; Thundermane Dragon's creature
-   gains haste. Each permission that gives something different is an offer of its own, `via` its source -- the preferred of
-   those that give alike; ones that all give alike are one offer, as they always were (playPermission). */
-/* And what it asks or allows beside: an additional cost to pay (Exploration Broodship), mana of any type spent (Tinybones). */
+   gains haste. Each permission that gives something different or spends a different limited resource is its own offer,
+   `via` its source. Identical unlimited permissions share one offer (playPermission). */
+/* The full supported outcome signature: granted characteristics, payment choices, timing, and post-stack destination.
+   Zone/card/condition/turn restrictions are filtered by openPermissions; finite resources are keyed separately below.
+   Sorcery timing is checked later in castOffers, so it must remain distinct here too (CR 601.2a, 118.9). */
 const permissionDoes = (ability) => JSON.stringify([ability.grants ?? null, ability.gains ?? null, ability.payLife ?? null, ability.free === true, ability.graveyardToLibraryBottom === true,
-  ability.additionalCost ?? null, ability.anyMana === true]);
+  ability.additionalCost ?? null, ability.anyMana === true, ability.manaInstead ?? null, ability.graveyardToExile === true, ability.sorcery === true]);
 /* Through a per-type permission (Muldrotha), which of its permanent types it is cast as: each still open its own offer, its
    player's to choose; through any other, as itself (null). */
 function typeWays(state, player, id, via) {
@@ -1494,11 +1518,11 @@ function typeWays(state, player, id, via) {
 function permissionWays(state, player, id, kind) {
   const groups = new Map();
   for (const permission of openPermissions(state, player, id, kind)) {
-    const does = permissionDoes(permission.ability);
+    const does = JSON.stringify([permissionDoes(permission.ability), unlimited(permission.ability) ? null : [permission.source, permission.ability.id]]);
     if (!groups.has(does)) groups.set(does, []);
     groups.get(does).push(permission);
   }
-  return groups.size > 1 ? [...groups.values()].map((alike) => preferred(alike).source) : [null];
+  return groups.size > 1 ? [...groups.values()].map((alike) => permissionVia(state, player, preferred(alike))) : [null];
 }
 /* What a permission gives what was played through it (`grants`, compiled abilities): a layer-6 effect on the permanent, for
    good -- a permanent that leaves is a new object, and the effect has nothing to apply to (CR 400.7). */
@@ -1514,7 +1538,14 @@ function ridersOffer(state, riders) {
   /* A source gone since -- a Treasure sacrificed for its mana -- named as it was (`from`). */
   return {riders, riderNames: riders.map((id) => { const entry = entries.find((e) => e.id === id); return state.objects[entry?.source]?.card ?? entry?.from?.name ?? "mana"; })};
 }
-const viaOf = (state, via) => (via !== null && via !== undefined ? {via, viaName: state.objects[via]?.card ?? (state.effects ?? []).find(e => e.id === via)?.name ?? null} : {});
+const viaOf = (state, via) => {
+  if (via === null || via === undefined) return {};
+  const address = permissionAddress(via);
+  const name = state.objects[address?.source]?.card ?? (state.effects ?? []).find(e => e.id === address?.source)?.name ?? null;
+  const ordinal = address?.ability === null ? -1 : abilitiesOf(state, address.source)
+    .filter(a => a.kind === "static" && a.rule === "play-from").findIndex(a => a.id === address.ability);
+  return {via, viaName: ordinal >= 0 ? `${name} (permission ${ordinal + 1})` : name};
+};
 
 function playableElsewhere(state, player, kind) {
   const found = [];
@@ -1781,7 +1812,8 @@ function withFaceDown(state, id, fn) {
    revealed to every player as it is played (CR 400.7). Anything else, as it is -- a face-down permanent too, whose ability's
    question (asCast) is no play of a card. Only the permission's player is asked, and only one who may look at it (permits,
    CR 406.3b), so no other seat is ever offered, or shown, what it is (projection.mjs). Cast face down from there (708.4) is
-   not built: a face-down card offers no disguise. And for an effect that lets it be played as it resolves -- "you may play
+   offered by reading the real card first, then weighing the nameless face-down spell. And for an effect that lets it be
+   played as it resolves -- "you may play
    the exiled card" of a hideaway card (Windbrisk Heights; CR 702.75a) -- what it may be played as is weighed so too
    (effects/asking.mjs, `play`). */
 export function withFaceUp(state, id, fn) {
@@ -1955,7 +1987,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
        convoke asking for one creature of none could not be answered. */
     const helpers = (X === null || !lifeX) && !freely && !back && !fled && !way && !variant.escalateTap && helpsCast(state, player, id) ? convokers(state, player, id) : [];
     const convoking = X === null ? cost : xCounted(cost, X);
-    const convokes = helpers.length > 0 && convokeCanPay(pool, {...convoking, generic: convoking.generic + x}, helpers);
+    const convokes = helpers.length > 0 && convokeCanPay(pool, {...convoking, generic: convoking.generic + x}, helpers, {life: lifeLeft});
     /* DELVE (CR 702.66a): cards of its caster's graveyard help pay its generic mana, and the pool the rest -- one offer
        (`convoke` "delve" here, `delve` on the offer), beside any the pool or its sources pay alone, when the pool could pay
        what the most cards it may exile leave; which cards, picked once it is taken (castCostChoice). With flashback or an
@@ -2136,10 +2168,15 @@ function offers(state, player) {
      flashback or escape, other alternative costs (CR 118.9a): a card in a graveyard with no permission is not offered. */
   const disguisable = new Set([...castable.map((e) => e.id), ...allPlayPermissions(state, player).flatMap(({ability}) => permittedFrom(state, player, ability))]);
   for (const id of disguisable) {
-    if (!disguiseOf(state.objects[id])) continue;
-    const from = state.objects[id].zone;
-    actions.push(...withFaceDown(state, id, () => (["hand", "command"].includes(from) ? [null] : playPermission(state, player, id, "spell") !== null ? permissionWays(state, player, id, "spell") : [])
-      .flatMap((via) => castOffers(state, player, {id, from, via, disguise: true}, tappable))));
+    /* Gandalf/Flameshape (CR 406.3a, 708.4): read morph/disguise from the hidden card only for a player allowed to look,
+       then apply the permission to the face-down spell's characteristics. Neither inspection changes the saved exile. */
+    if (state.objects[id]?.faceDown && !mayLookAt(state, state.objects[id], player)) continue;
+    actions.push(...withFaceUp(state, id, () => {
+      if (!disguiseOf(state.objects[id])) return [];
+      const from = state.objects[id].zone;
+      return withFaceDown(state, id, () => (["hand", "command"].includes(from) ? [null] : playPermission(state, player, id, "spell") !== null ? permissionWays(state, player, id, "spell") : [])
+        .flatMap((via) => castOffers(state, player, {id, from, via, disguise: true}, tappable)));
+    }));
   }
   /* Suspend, from the hand (CR 702.62a): a special action, where its card could be cast. */
   actions.push(...suspendOffers(state, player), ...plotOffers(state, player));
@@ -2323,10 +2360,8 @@ function choicesNow(state, player, id) {
   if (splitSecondOnStack(state)) return [];
   const base = {kind: "cast", objectId: id, label: object.card, payment: {mana: {}, life: 0}, from: object.zone, tax: 0};
   const context = {controller: player, source: id};
-  /* NAMED: a spell with a counted target ("up to two target creatures") is not cast this way yet -- its targets would be a
-     question in the middle of a resolution, which the cast an effect makes does not stop for. */
-  return (object.spell?.modal ? withModes(state, base, object.spell.modal, context) : withTargets(state, base, object.spell, context))
-    .filter((offer) => !(offer.targets ?? []).some(isChoosing));
+  /* The effect's play question asks counted targets before paying or casting, just as a priority cast does (CR 601.2c). */
+  return object.spell?.modal ? withModes(state, base, object.spell.modal, context) : withTargets(state, base, object.spell, context);
 }
 
 const sorcerySpeed = (object) => (object.types ?? []).some((type) => SORCERY_SPEED.includes(type));
@@ -2569,9 +2604,9 @@ export function offerSpecs(state, player, action) {
 
 /* The next counted target of an offer still to be picked, or -1. One with nothing it could choose is no question: it is
    chosen as nothing (its least is 0, or the offer would not have been made). */
-function nextToChoose(state, player, action) {
+export function nextToChoose(state, player, action) {
   const {specs, context} = offerSpecs(state, player, action);
-  for (let index = action.targets.findIndex(isChoosing); index >= 0; index = action.targets.findIndex(isChoosing)) {
+  for (let index = (action.targets ?? []).findIndex(isChoosing); index >= 0; index = (action.targets ?? []).findIndex(isChoosing)) {
     /* None at most (a total of 0 to divide, offerSpecs): no question either. */
     if (targetCandidates(state, specs[index], context).length && countOf(specs[index], context)?.max !== 0) return index;
     action.targets[index] = [];
@@ -2599,6 +2634,18 @@ export function chooseTargetsChoice(state, awaiting) {
  * cast or activated now, as it would have been had they been chosen with it (CR 601.2c-i, 602.2b).
  */
 export function resolveChooseTargets(state, awaiting, indices) {
+  const {action, next} = pickActionTargets(state, awaiting, indices);
+  if (next >= 0) {
+    state.awaiting = {...awaiting, action, index: next};
+    return [];
+  }
+  state.awaiting = null;
+  state.priorityPlayer = awaiting.player;
+  return applyAction(state, awaiting.player, action);
+}
+
+/* A counted answer shared by priority casts and casts made inside a resolving effect (CR 601.2c). No cast or payment yet. */
+export function pickActionTargets(state, awaiting, indices) {
   const action = structuredClone(awaiting.action);
   /* An Adventure's checked and its next target found with the card shown as one (CR 715.3a); the cast itself shows it so
      again (perform). */
@@ -2610,13 +2657,7 @@ export function resolveChooseTargets(state, awaiting, indices) {
     action.targets[awaiting.index] = picked.map((i) => choice.options[i].targets[0]);
     return nextToChoose(state, awaiting.player, action);
   });
-  if (next >= 0) {
-    state.awaiting = {...awaiting, action, index: next};
-    return [];
-  }
-  state.awaiting = null;
-  state.priorityPlayer = awaiting.player;
-  return applyAction(state, awaiting.player, action);
+  return {action, next};
 }
 
 /* A counted target's list, as its controller picked it: each a legal choice now, none twice (CR 115.3), as many as its
@@ -2654,9 +2695,15 @@ function countedProblem(state, player, action) {
  */
 export function applyAction(state, player, action) {
   const events = perform(state, player, action);
+  if (ruleOperationPending(state)) { state.passes = 0; state.priorityPlayer = null; return events; }
+  return afterAction(state, player, events);
+}
+
+/** Finish an action's already-performed instructions; a resumed operation supplies its complete trigger batch. */
+export function afterAction(state, player, events, triggering = events) {
   state.passes = 0;
   /* What the action did triggers now (CR 603.2), whatever is asked next; the triggers wait to go on the stack. */
-  collectTriggers(state, events);
+  collectTriggers(state, triggering);
   /* A land that asks as it enters (a shock land) asks first: it is part of the land's entering. */
   if (askEntering(state)) { state.priorityPlayer = null; return events; }
   const sba = checkStateBasedActions(state);
@@ -2673,6 +2720,30 @@ export function applyAction(state, player, action) {
   }
   return events;
 }
+
+/** A played land's remaining work is saved with its move; its announcement and permission are spent once. */
+export const playedLandFrame = (player, action) => ({kind: "played-land", player, action: structuredClone(action)});
+registerRuleOperation("played-land", (state, frame) => {
+  const {player, action} = frame;
+  if (!frame.stage) {
+    if (!state.objects[action.objectId] || state.players[player]?.lost) return {status: "done"};
+    if (state.objects[action.objectId].faceDown === true && state.objects[action.objectId].zone === "exile") state.objects[action.objectId] = shownFaceUp(state.objects[action.objectId]);
+    if (action.face === "back") showFace(state, action.objectId, "back");
+    /* Announced from face-down exile, it remains revealed while its entry is waiting (CR 406.3a). */
+    state.objects[action.objectId] = {...state.objects[action.objectId]};
+    state.players[player].landsPlayed += 1;
+    emitRuleEvents(state, [event("GameEventLandPlayed", state, {land: cardRef(state, action.objectId), player: {playerId: player, name: state.players[player].name}})]);
+    frame.permission = state.objects[action.objectId].zone !== "hand" ? playPermission(state, player, action.objectId, "land", action.via ?? null) : null;
+    spendPermission(state, frame.permission, "land");
+    frame.stage = "arriving";
+    return {status: "continue", children: [{kind: "move-one", id: action.objectId, to: "battlefield", options: {controller: player}}]};
+  }
+  const result = frame.childResult, arrived = result?.moved;
+  const arrival = result?.zoneEventIndex === null ? null : state.ruleOperation.events[result?.zoneEventIndex];
+  if (arrival?.data?.fields?.to?.zoneType === "Battlefield") arrival.data.fields.played = true;
+  if (arrived !== null && state.objects[arrived]?.zone === "battlefield") grantPlayed(state, arrived, frame.permission, player);
+  return {status: "done", result: {moved: arrived ?? null}};
+});
 
 function perform(state, player, action, during = null) {
   /* Cast as an effect resolves (castNow): no priority, and not one of the offers -- the effect has chosen it, and paid. */
@@ -2822,6 +2893,7 @@ function performOffered(state, player, action, during) {
     throw new Error("Pass through passPriority, which is what decides whether a round ends a step or resolves an object");
 
   if (action.kind === "play-land") {
+    if (!during) return beginRuleOperation(state, playedLandFrame(player, action), {after: {kind: "after-action", player}}).events;
     const events = [];
     /* A double-faced card's land face, turned up first (CR 712.12): it is played as that face, so it is announced by that
        face's name, and it enters with that face up -- how it enters is that face's "as this land enters". */

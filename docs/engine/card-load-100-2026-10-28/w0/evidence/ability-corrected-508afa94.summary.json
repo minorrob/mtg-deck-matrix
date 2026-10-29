@@ -1,0 +1,1561 @@
+{
+  "harnessHead": "508afa94c70b00611e247d78adf23383d4403802",
+  "savedCardSource": "main 39a45706 plus unchanged prerequisite",
+  "scope": {
+    "directory": true,
+    "cardRoot": "C:\\Users\\robmi\\CrankMagic\\worktrees\\load100\\w0-v8-verify\\game\\engine\\cards"
+  },
+  "complete": true,
+  "ledgerSha256": "60bda8067fcb6acaf2e28b7987dbd8807182d40464a95bfc1fe6d1e6155f2532",
+  "counts": {
+    "definitions": 6430,
+    "abilities": 11636,
+    "reached": 6079,
+    "unreached": 5557,
+    "counterfactualReached": 1840,
+    "affectedCards": 3665,
+    "overBudgetProbes": 0
+  },
+  "byTheme": {
+    "combat": {
+      "abilities": 1954,
+      "cards": 1202
+    },
+    "spells": {
+      "abilities": 1396,
+      "cards": 999
+    },
+    "mana": {
+      "abilities": 912,
+      "cards": 607
+    },
+    "tokens": {
+      "abilities": 486,
+      "cards": 352
+    },
+    "graveyard": {
+      "abilities": 481,
+      "cards": 348
+    },
+    "faces": {
+      "abilities": 238,
+      "cards": 85
+    },
+    "stack": {
+      "abilities": 75,
+      "cards": 59
+    },
+    "walkers": {
+      "abilities": 15,
+      "cards": 13
+    }
+  },
+  "byKind": {
+    "keyword": {
+      "abilities": 2926,
+      "cards": 2292
+    },
+    "activated": {
+      "abilities": 1169,
+      "cards": 1038
+    },
+    "static": {
+      "abilities": 833,
+      "cards": 703
+    },
+    "triggered": {
+      "abilities": 290,
+      "cards": 272
+    },
+    "replacement": {
+      "abilities": 269,
+      "cards": 268
+    },
+    "spell": {
+      "abilities": 70,
+      "cards": 70
+    }
+  },
+  "byKeyword": {
+    "none": {
+      "abilities": 2631,
+      "cards": 2021
+    },
+    "flying": {
+      "abilities": 802,
+      "cards": 802
+    },
+    "trample": {
+      "abilities": 215,
+      "cards": 214
+    },
+    "vigilance": {
+      "abilities": 196,
+      "cards": 196
+    },
+    "enchant": {
+      "abilities": 170,
+      "cards": 170
+    },
+    "haste": {
+      "abilities": 145,
+      "cards": 145
+    },
+    "reach": {
+      "abilities": 132,
+      "cards": 132
+    },
+    "first strike": {
+      "abilities": 111,
+      "cards": 111
+    },
+    "defender": {
+      "abilities": 101,
+      "cards": 101
+    },
+    "deathtouch": {
+      "abilities": 97,
+      "cards": 97
+    },
+    "lifelink": {
+      "abilities": 90,
+      "cards": 90
+    },
+    "protection": {
+      "abilities": 85,
+      "cards": 85
+    },
+    "menace": {
+      "abilities": 76,
+      "cards": 75
+    },
+    "convoke": {
+      "abilities": 40,
+      "cards": 40
+    },
+    "prowess": {
+      "abilities": 37,
+      "cards": 36
+    },
+    "hexproof": {
+      "abilities": 37,
+      "cards": 37
+    },
+    "indestructible": {
+      "abilities": 36,
+      "cards": 36
+    },
+    "double strike": {
+      "abilities": 35,
+      "cards": 35
+    },
+    "flash": {
+      "abilities": 32,
+      "cards": 32
+    },
+    "ward": {
+      "abilities": 30,
+      "cards": 30
+    },
+    "crew": {
+      "abilities": 25,
+      "cards": 25
+    },
+    "flashback": {
+      "abilities": 25,
+      "cards": 25
+    },
+    "cascade": {
+      "abilities": 23,
+      "cards": 19
+    },
+    "changeling": {
+      "abilities": 22,
+      "cards": 22
+    },
+    "infect": {
+      "abilities": 22,
+      "cards": 22
+    },
+    "forestwalk": {
+      "abilities": 22,
+      "cards": 22
+    },
+    "exalted": {
+      "abilities": 21,
+      "cards": 21
+    },
+    "affinity": {
+      "abilities": 20,
+      "cards": 20
+    },
+    "shroud": {
+      "abilities": 17,
+      "cards": 17
+    },
+    "bushido": {
+      "abilities": 16,
+      "cards": 16
+    },
+    "islandwalk": {
+      "abilities": 14,
+      "cards": 14
+    },
+    "fabricate": {
+      "abilities": 12,
+      "cards": 12
+    },
+    "improvise": {
+      "abilities": 12,
+      "cards": 12
+    },
+    "toxic": {
+      "abilities": 12,
+      "cards": 12
+    },
+    "fear": {
+      "abilities": 12,
+      "cards": 12
+    },
+    "backup": {
+      "abilities": 11,
+      "cards": 11
+    },
+    "devoid": {
+      "abilities": 11,
+      "cards": 11
+    },
+    "partner": {
+      "abilities": 9,
+      "cards": 9
+    },
+    "flanking": {
+      "abilities": 9,
+      "cards": 9
+    },
+    "shadow": {
+      "abilities": 9,
+      "cards": 9
+    },
+    "evolve": {
+      "abilities": 8,
+      "cards": 8
+    },
+    "delve": {
+      "abilities": 8,
+      "cards": 8
+    },
+    "extort": {
+      "abilities": 7,
+      "cards": 7
+    },
+    "umbra armor": {
+      "abilities": 7,
+      "cards": 7
+    },
+    "mobilize": {
+      "abilities": 7,
+      "cards": 7
+    },
+    "echo": {
+      "abilities": 6,
+      "cards": 6
+    },
+    "mentor": {
+      "abilities": 6,
+      "cards": 6
+    },
+    "dredge": {
+      "abilities": 6,
+      "cards": 6
+    },
+    "split second": {
+      "abilities": 6,
+      "cards": 6
+    },
+    "rebound": {
+      "abilities": 5,
+      "cards": 5
+    },
+    "storm": {
+      "abilities": 5,
+      "cards": 5
+    },
+    "dash": {
+      "abilities": 5,
+      "cards": 5
+    },
+    "ninjutsu": {
+      "abilities": 5,
+      "cards": 5
+    },
+    "choose a background": {
+      "abilities": 5,
+      "cards": 5
+    },
+    "gift": {
+      "abilities": 4,
+      "cards": 4
+    },
+    "afterlife": {
+      "abilities": 4,
+      "cards": 4
+    },
+    "freerunning": {
+      "abilities": 3,
+      "cards": 3
+    },
+    "spree": {
+      "abilities": 3,
+      "cards": 3
+    },
+    "saga": {
+      "abilities": 3,
+      "cards": 3
+    },
+    "kicker": {
+      "abilities": 3,
+      "cards": 3
+    },
+    "partner with": {
+      "abilities": 3,
+      "cards": 3
+    },
+    "riot": {
+      "abilities": 3,
+      "cards": 3
+    },
+    "cumulative upkeep": {
+      "abilities": 2,
+      "cards": 2
+    },
+    "surge": {
+      "abilities": 2,
+      "cards": 2
+    },
+    "escalate": {
+      "abilities": 2,
+      "cards": 2
+    },
+    "increment": {
+      "abilities": 2,
+      "cards": 2
+    },
+    "living weapon": {
+      "abilities": 2,
+      "cards": 2
+    },
+    "suspend": {
+      "abilities": 2,
+      "cards": 2
+    },
+    "evoke": {
+      "abilities": 1,
+      "cards": 1
+    },
+    "tiered": {
+      "abilities": 1,
+      "cards": 1
+    },
+    "multikicker": {
+      "abilities": 1,
+      "cards": 1
+    },
+    "warp": {
+      "abilities": 1,
+      "cards": 1
+    },
+    "replicate": {
+      "abilities": 1,
+      "cards": 1
+    },
+    "offspring": {
+      "abilities": 1,
+      "cards": 1
+    },
+    "unearth": {
+      "abilities": 1,
+      "cards": 1
+    },
+    "spectacle": {
+      "abilities": 1,
+      "cards": 1
+    },
+    "encore": {
+      "abilities": 1,
+      "cards": 1
+    },
+    "annihilator": {
+      "abilities": 1,
+      "cards": 1
+    },
+    "embalm": {
+      "abilities": 1,
+      "cards": 1
+    }
+  },
+  "byRule": {
+    "none": {
+      "abilities": 4544,
+      "cards": 3245
+    },
+    "layer 6: addKeywords": {
+      "abilities": 255,
+      "cards": 248
+    },
+    "layer 7: power,toughness": {
+      "abilities": 215,
+      "cards": 209
+    },
+    "protection": {
+      "abilities": 85,
+      "cards": 85
+    },
+    "cant-block": {
+      "abilities": 38,
+      "cards": 38
+    },
+    "cant-be-countered": {
+      "abilities": 36,
+      "cards": 32
+    },
+    "this-costs-less": {
+      "abilities": 34,
+      "cards": 34
+    },
+    "cant-be-blocked": {
+      "abilities": 33,
+      "cards": 33
+    },
+    "flashback": {
+      "abilities": 25,
+      "cards": 25
+    },
+    "cant-be-blocked-by": {
+      "abilities": 20,
+      "cards": 20
+    },
+    "attacks-each-combat": {
+      "abilities": 20,
+      "cards": 20
+    },
+    "can-block-only": {
+      "abilities": 20,
+      "cards": 20
+    },
+    "alternative-cost": {
+      "abilities": 18,
+      "cards": 18
+    },
+    "spells-cost-less": {
+      "abilities": 18,
+      "cards": 18
+    },
+    "cant-attack": {
+      "abilities": 13,
+      "cards": 13
+    },
+    "toxic": {
+      "abilities": 12,
+      "cards": 12
+    },
+    "control-enchanted": {
+      "abilities": 11,
+      "cards": 11
+    },
+    "look-at-top": {
+      "abilities": 10,
+      "cards": 10
+    },
+    "layer 7: setPower": {
+      "abilities": 9,
+      "cards": 9
+    },
+    "layer 4: addTypes": {
+      "abilities": 8,
+      "cards": 8
+    },
+    "no-maximum-hand-size": {
+      "abilities": 8,
+      "cards": 8
+    },
+    "blocked-by-one-at-most": {
+      "abilities": 8,
+      "cards": 8
+    },
+    "umbra-armor": {
+      "abilities": 7,
+      "cards": 7
+    },
+    "layer 6: addAbilities": {
+      "abilities": 7,
+      "cards": 7
+    },
+    "top-revealed": {
+      "abilities": 7,
+      "cards": 7
+    },
+    "opening-hand": {
+      "abilities": 6,
+      "cards": 6
+    },
+    "dredge": {
+      "abilities": 6,
+      "cards": 6
+    },
+    "rebound": {
+      "abilities": 5,
+      "cards": 5
+    },
+    "storm": {
+      "abilities": 5,
+      "cards": 5
+    },
+    "doesnt-untap": {
+      "abilities": 5,
+      "cards": 5
+    },
+    "layer 7: power": {
+      "abilities": 5,
+      "cards": 5
+    },
+    "cant-cast": {
+      "abilities": 4,
+      "cards": 4
+    },
+    "layer 7: setPower,setToughness": {
+      "abilities": 4,
+      "cards": 4
+    },
+    "player-hexproof": {
+      "abilities": 3,
+      "cards": 3
+    },
+    "cant-lose": {
+      "abilities": 3,
+      "cards": 3
+    },
+    "opponents-cant-win": {
+      "abilities": 3,
+      "cards": 3
+    },
+    "must-be-blocked": {
+      "abilities": 3,
+      "cards": 3
+    },
+    "can-be-commander": {
+      "abilities": 3,
+      "cards": 3
+    },
+    "play-from": {
+      "abilities": 3,
+      "cards": 3
+    },
+    "spells-cost-more": {
+      "abilities": 3,
+      "cards": 3
+    },
+    "layer 5: setColors": {
+      "abilities": 3,
+      "cards": 3
+    },
+    "more-life": {
+      "abilities": 2,
+      "cards": 2
+    },
+    "draws-more": {
+      "abilities": 2,
+      "cards": 2
+    },
+    "more-tokens": {
+      "abilities": 2,
+      "cards": 2
+    },
+    "layer 4: addSubtypes": {
+      "abilities": 2,
+      "cards": 2
+    },
+    "cant-gain-life": {
+      "abilities": 2,
+      "cards": 2
+    },
+    "layer 6: addAbilities,addKeywords": {
+      "abilities": 2,
+      "cards": 2
+    },
+    "suspend": {
+      "abilities": 2,
+      "cards": 2
+    },
+    "mana-becomes-colorless": {
+      "abilities": 2,
+      "cards": 2
+    },
+    "triggers-again": {
+      "abilities": 2,
+      "cards": 2
+    },
+    "attack-tax": {
+      "abilities": 1,
+      "cards": 1
+    },
+    "boast-twice": {
+      "abilities": 1,
+      "cards": 1
+    },
+    "layer 6: removeKeywords": {
+      "abilities": 1,
+      "cards": 1
+    },
+    "more-counters": {
+      "abilities": 1,
+      "cards": 1
+    },
+    "layer 6: addKeywords,removeAllAbilities": {
+      "abilities": 1,
+      "cards": 1
+    },
+    "attacks-despite-defender": {
+      "abilities": 1,
+      "cards": 1
+    },
+    "cast-as-though-flash": {
+      "abilities": 1,
+      "cards": 1
+    },
+    "layer 4: setCreatureTypes,setTypes": {
+      "abilities": 1,
+      "cards": 1
+    },
+    "layer 6: removeAllAbilities": {
+      "abilities": 1,
+      "cards": 1
+    },
+    "layer 4: removeTypes": {
+      "abilities": 1,
+      "cards": 1
+    },
+    "lands-enter-untapped": {
+      "abilities": 1,
+      "cards": 1
+    },
+    "any-number-in-deck": {
+      "abilities": 1,
+      "cards": 1
+    },
+    "attackers-at-most": {
+      "abilities": 1,
+      "cards": 1
+    },
+    "untap-during-others": {
+      "abilities": 1,
+      "cards": 1
+    }
+  },
+  "topFamilies": [
+    {
+      "kind": "keyword",
+      "keyword": "flying",
+      "rule": "none",
+      "family": "KW",
+      "abilities": 801,
+      "cards": 801,
+      "examples": [
+        {
+          "card": "A.I.M. Bot",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Aang, Air Nomad",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Abbey Gargoyles",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Abbey Griffin",
+          "path": "abilities[0]"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "keyword": "trample",
+      "rule": "none",
+      "family": "KW",
+      "abilities": 215,
+      "cards": 214,
+      "examples": [
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "back.abilities[1]"
+        },
+        {
+          "card": "Agent Frank Horrigan",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Aggressive Mammoth",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Agonasaur Rex",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Akroma, Angel of Fury",
+          "path": "abilities[2]"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "keyword": "vigilance",
+      "rule": "none",
+      "family": "KW",
+      "abilities": 196,
+      "cards": 196,
+      "examples": [
+        {
+          "card": "Aang, Air Nomad",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Abbey Griffin",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Aerial Responder",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Affa Protector",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Air Response Unit",
+          "path": "abilities[1]"
+        }
+      ]
+    },
+    {
+      "kind": "replacement",
+      "keyword": "none",
+      "rule": "none",
+      "family": "this TYPE enters tapped",
+      "abilities": 170,
+      "cards": 170,
+      "examples": [
+        {
+          "card": "A.I.M. Labs",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Abandoned Outpost",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Abraded Bluffs",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Adagia, Windswept Bastion",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Akoum Refuge",
+          "path": "abilities[0]"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "keyword": "enchant",
+      "rule": "none",
+      "family": "enchant TYPE",
+      "abilities": 151,
+      "cards": 151,
+      "examples": [
+        {
+          "card": "All That Glitters",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Ancestral Mask",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Angelic Destiny",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Angelic Gift",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Annex",
+          "path": "abilities[0]"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "keyword": "haste",
+      "rule": "none",
+      "family": "KW",
+      "abilities": 145,
+      "cards": 145,
+      "examples": [
+        {
+          "card": "Adult Gold Dragon",
+          "path": "abilities[2]"
+        },
+        {
+          "card": "Akroma, Angel of Wrath",
+          "path": "abilities[4]"
+        },
+        {
+          "card": "Ambush Party",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Anger",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Arc Runner",
+          "path": "abilities[0]"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "keyword": "reach",
+      "rule": "none",
+      "family": "KW",
+      "abilities": 132,
+      "cards": 132,
+      "examples": [
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "back.abilities[0]"
+        },
+        {
+          "card": "Alaborn Musketeer",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Ancient Greenwarden",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Ancient Spider",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Annoyed Altisaur",
+          "path": "abilities[0]"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "keyword": "none",
+      "rule": "none",
+      "family": "{t}: add {c}",
+      "abilities": 115,
+      "cards": 115,
+      "examples": [
+        {
+          "card": "Access Tunnel",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Accursed Duneyard",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Adarkar Wastes",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Adventurer's Inn",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Ash Barrens",
+          "path": "abilities[0]"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "keyword": "first strike",
+      "rule": "none",
+      "family": "KW",
+      "abilities": 111,
+      "cards": 111,
+      "examples": [
+        {
+          "card": "Abigale, Eloquent First-Year",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Akroma, Angel of Wrath",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Ambush Party",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Anaba Bodyguard",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Ancient Spider",
+          "path": "abilities[1]"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "keyword": "defender",
+      "rule": "none",
+      "family": "KW",
+      "abilities": 101,
+      "cards": 101,
+      "examples": [
+        {
+          "card": "Amaranthine Wall",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Angelic Wall",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Archers of Qarsi",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Barrier of Bones",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Basilica Guards",
+          "path": "abilities[0]"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "keyword": "deathtouch",
+      "rule": "none",
+      "family": "KW",
+      "abilities": 96,
+      "cards": 96,
+      "examples": [
+        {
+          "card": "Ambush Viper",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Ankle Biter",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Arcane Amphisbaena",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Arno Dorian",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Atraxa, Praetors' Voice",
+          "path": "abilities[2]"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "keyword": "lifelink",
+      "rule": "none",
+      "family": "KW",
+      "abilities": 90,
+      "cards": 90,
+      "examples": [
+        {
+          "card": "Aardvark Sloth",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Abigale, Eloquent First-Year",
+          "path": "abilities[2]"
+        },
+        {
+          "card": "Adult Gold Dragon",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Aerial Responder",
+          "path": "abilities[2]"
+        },
+        {
+          "card": "Aerith Gainsborough",
+          "path": "abilities[0]"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "keyword": "none",
+      "rule": "none",
+      "family": "cycling {N}",
+      "abilities": 81,
+      "cards": 81,
+      "examples": [
+        {
+          "card": "Angel of the God-Pharaoh",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Angelsong",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Archfiend of Ifnir",
+          "path": "abilities[2]"
+        },
+        {
+          "card": "Aura Extraction",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Barkhide Mauler",
+          "path": "abilities[0]"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "keyword": "menace",
+      "rule": "none",
+      "family": "KW",
+      "abilities": 76,
+      "cards": 75,
+      "examples": [
+        {
+          "card": "Alley Strangler",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Apex Witchstalker",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Aradara Express",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Bebop, Warthog Warrior",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Blood Researcher",
+          "path": "abilities[0]"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "keyword": "protection",
+      "rule": "protection",
+      "family": "protection from COLOR",
+      "abilities": 63,
+      "cards": 63,
+      "examples": [
+        {
+          "card": "Abbey Gargoyles",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Archon of Absolution",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Aven Smokeweaver",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Bloated Toad",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Blood Knight",
+          "path": "abilities[1]"
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "keyword": "none",
+      "rule": "layer 6: addKeywords",
+      "family": "enchanted TYPE gets +N/+N and has KW",
+      "abilities": 44,
+      "cards": 44,
+      "examples": [
+        {
+          "card": "Arcane Flight",
+          "path": "abilities[2]"
+        },
+        {
+          "card": "Aspect of Gorgon",
+          "path": "abilities[2]"
+        },
+        {
+          "card": "Astral Wingspan",
+          "path": "abilities[4]"
+        },
+        {
+          "card": "Candlelight Vigil",
+          "path": "abilities[2]"
+        },
+        {
+          "card": "Cartouche of Knowledge",
+          "path": "abilities[3]"
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "keyword": "none",
+      "rule": "layer 7: power,toughness",
+      "family": "equipped TYPE gets +N/+N",
+      "abilities": 42,
+      "cards": 42,
+      "examples": [
+        {
+          "card": "+2 Mace",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Bladed Battle-Fan",
+          "path": "abilities[2]"
+        },
+        {
+          "card": "Bone Saw",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Bonesplitter",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Bramble Armor",
+          "path": "abilities[1]"
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "keyword": "none",
+      "rule": "layer 7: power,toughness",
+      "family": "enchanted TYPE gets +N/+N and has KW",
+      "abilities": 41,
+      "cards": 41,
+      "examples": [
+        {
+          "card": "Arcane Flight",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Aspect of Gorgon",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Astral Wingspan",
+          "path": "abilities[3]"
+        },
+        {
+          "card": "Candlelight Vigil",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Cartouche of Knowledge",
+          "path": "abilities[2]"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "keyword": "convoke",
+      "rule": "none",
+      "family": "convoke",
+      "abilities": 40,
+      "cards": 40,
+      "examples": [
+        {
+          "card": "Aerial Boost",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Arboretum Elemental",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Astral Wingspan",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Autochthon Wurm",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Collective Nightmare",
+          "path": "abilities[0]"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "keyword": "none",
+      "rule": "none",
+      "family": "equip {N}",
+      "abilities": 39,
+      "cards": 39,
+      "examples": [
+        {
+          "card": "+2 Mace",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Accorder's Shield",
+          "path": "abilities[2]"
+        },
+        {
+          "card": "Batterbone",
+          "path": "abilities[3]"
+        },
+        {
+          "card": "Blackblade Reforged",
+          "path": "abilities[2]"
+        },
+        {
+          "card": "Bramble Armor",
+          "path": "abilities[2]"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "keyword": "prowess",
+      "rule": "none",
+      "family": "KW",
+      "abilities": 37,
+      "cards": 36,
+      "examples": [
+        {
+          "card": "Agent of Atlas",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Bloodfire Expert",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Bria, Riptide Rogue",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Crimson Operative",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Dragon Bell Monk",
+          "path": "abilities[1]"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "keyword": "hexproof",
+      "rule": "none",
+      "family": "KW",
+      "abilities": 37,
+      "cards": 37,
+      "examples": [
+        {
+          "card": "Arboretum Elemental",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Ascended Lawmage",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Aven Fleetwing",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Bassara Tower Archer",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Bastion Inventor",
+          "path": "abilities[1]"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "keyword": "indestructible",
+      "rule": "none",
+      "family": "KW",
+      "abilities": 36,
+      "cards": 36,
+      "examples": [
+        {
+          "card": "Cascading Cataracts",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Darkmoss Bridge",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Darksteel Angel",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Darksteel Axe",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Darksteel Gargoyle",
+          "path": "abilities[1]"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "keyword": "double strike",
+      "rule": "none",
+      "family": "KW",
+      "abilities": 35,
+      "cards": 35,
+      "examples": [
+        {
+          "card": "Bayek of Siwa",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Boldwyr Aggressor",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Boros Swiftblade",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Char-Rumbler",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Death-Greeter's Champion",
+          "path": "abilities[2]"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "keyword": "none",
+      "rule": "none",
+      "family": "{t}: add N mana of any color",
+      "abilities": 34,
+      "cards": 34,
+      "examples": [
+        {
+          "card": "Alloy Myr",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Arbor Adherent",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Bandit's Haul",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Birds of Paradise",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Bronze Walrus",
+          "path": "abilities[1]"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "keyword": "none",
+      "rule": "none",
+      "family": "{t}: add {g}",
+      "abilities": 34,
+      "cards": 34,
+      "examples": [
+        {
+          "card": "Ba Sing Se",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Bala Ged Recovery // Bala Ged Sanctuary",
+          "path": "back.abilities[1]"
+        },
+        {
+          "card": "Bridgeworks Battle // Tanglespan Bridgeworks",
+          "path": "back.abilities[1]"
+        },
+        {
+          "card": "Castle Garenbrig",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Copper Myr",
+          "path": "abilities[0]"
+        }
+      ]
+    },
+    {
+      "kind": "keyword",
+      "keyword": "flash",
+      "rule": "none",
+      "family": "KW",
+      "abilities": 32,
+      "cards": 32,
+      "examples": [
+        {
+          "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Blizzard Strix",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Cast Out",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Cathar Commando",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Deceiver Exarch",
+          "path": "abilities[0]"
+        }
+      ]
+    },
+    {
+      "kind": "activated",
+      "keyword": "none",
+      "rule": "none",
+      "family": "{t}: add {w} or {u}",
+      "abilities": 31,
+      "cards": 31,
+      "examples": [
+        {
+          "card": "Avengers Hangar",
+          "path": "abilities[2]"
+        },
+        {
+          "card": "Azorius Guildgate",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Boreal Shelf",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Celestial Colonnade",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Coastal Tower",
+          "path": "abilities[1]"
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "keyword": "none",
+      "rule": "cant-be-countered",
+      "family": "this spell can't be countered",
+      "abilities": 30,
+      "cards": 30,
+      "examples": [
+        {
+          "card": "Abrupt Decay",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Allosaurus Shepherd",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Blurred Mongoose",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Carnage Tyrant",
+          "path": "abilities[0]"
+        },
+        {
+          "card": "Dragonlord Dromoka",
+          "path": "abilities[0]"
+        }
+      ]
+    },
+    {
+      "kind": "static",
+      "keyword": "none",
+      "rule": "layer 7: power,toughness",
+      "family": "enchanted TYPE gets +N/+N",
+      "abilities": 30,
+      "cards": 30,
+      "examples": [
+        {
+          "card": "Accelerated Evolution",
+          "path": "abilities[3]"
+        },
+        {
+          "card": "Aspect of Manticore",
+          "path": "abilities[3]"
+        },
+        {
+          "card": "Boar Umbra",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Brilliant Halo",
+          "path": "abilities[1]"
+        },
+        {
+          "card": "Chosen by Heliod",
+          "path": "abilities[2]"
+        }
+      ]
+    }
+  ],
+  "familyCount": 733,
+  "warning": "Grouping prioritizes behavioral witnesses only. Every card/ability still needs its own caught counterfactual or observed scenario execution; no equivalence-family credit.",
+  "budgetLimit": "The 30-second elapsed guard rejects results after return; it does not preempt synchronous calls.",
+  "interpretation": "Authoritative initial ability-measurement baseline on unchanged main-39a source, not consolidated integration evidence; G-3 remains open."
+}

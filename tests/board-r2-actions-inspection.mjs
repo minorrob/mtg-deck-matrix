@@ -1,4 +1,5 @@
-/* R2's shared interactions against seat-projected room frames. No rules are simulated here. */
+/* R2's shared interactions against seat-projected room frames, in Table, Focus and 3D (all three are the 3D HUD; Table and Focus run it on a
+ * flat stage). Drawers and the inspector are the top layer: they lie over a stage that never moves. No rules are simulated here. */
 import assert from "node:assert/strict";
 import {readFileSync,mkdirSync} from "node:fs";
 import path from "node:path";
@@ -51,16 +52,29 @@ try{
   await target.hover();await page.waitForTimeout(450);
   eq(await page.locator('#cm-board-peek').count(),0,'pinned inspection suppresses a duplicate preview over the board');
   eq(sent.filter(x=>x.type==="act").length,0,"pinned inspection does not act");
+  /* Rob, 2026-10-28: drawers (and the inspector, which lies at the right edge) are the TOP LAYER. The old guarantee "the game surface stays
+     clear of Actions and inspector" is superseded: the stage is the window's whole width and does not move for either; they lie over it
+     (a pointer at their edge finds them), and in Table and Focus the boards keep clear of where the drawers and inspector lie. */
   const bounds=await page.evaluate(()=>{
-   const host=document.querySelector('#cm-board'),rail=host.querySelector('.cm-stage-rail').getBoundingClientRect(),surface=host.querySelector('.cm-stage-region,.cm-board-stage,.cm-board-tabletop').getBoundingClientRect(),inspect=host.querySelector('#cm-card-inspector').getBoundingClientRect();
-   return {rail:rail.right,left:surface.left,right:surface.right,inspect:inspect.left,width:surface.width};
+   const host=document.querySelector('#cm-board'),R=e=>{const b=e.getBoundingClientRect();return {x:Math.round(b.left),y:Math.round(b.top),w:Math.round(b.width),h:Math.round(b.height)};};
+   const rail=host.querySelector('.cm-stage-rail').getBoundingClientRect(),inspect=host.querySelector('#cm-card-inspector').getBoundingClientRect();
+   const at=(x,y)=>document.elementFromPoint(x,y);
+   return {rail:rail.right,inspect:inspect.left,region:R(host.querySelector('.cm-stage-region')),hand:R(host.querySelector('.cm-stage-hand')),
+    slots:[...host.querySelectorAll('.cm-stage-slot,.cm-stage-rear')].map(R),
+    railOver:!!at(rail.left+20,rail.bottom-30)?.closest('.cm-stage-rail'),inspectOver:!!at(inspect.left+20,inspect.bottom-30)?.closest('#cm-card-inspector')};
   });
-  ok(bounds.left>=bounds.rail-1&&bounds.right<=bounds.inspect+1&&bounds.width>300,"game surface stays clear of Actions and inspector");
+  ok(bounds.railOver&&bounds.inspectOver,"Actions and the inspector lie over the stage (they are what a pointer finds at their edge)");
+  ok(bounds.region.x===0&&bounds.region.w===1440&&bounds.hand.x===0&&bounds.hand.w===1440,`the stage and the hand stay the window's whole width with Actions and the inspector open (${JSON.stringify(bounds.region)})`);
+  if(mode!=='full') for(const b of bounds.slots) ok(b.x>=bounds.rail-1&&b.x+b.w<=bounds.inspect+1&&b.w>0,`${mode}: a board stays clear of Actions and the inspector (${b.x}..${b.x+b.w} within ${bounds.rail}..${bounds.inspect})`);
+  const shut=await (async()=>{await page.keyboard.press('Escape');await page.locator('#cm-card-inspector').waitFor({state:'detached'});return page.evaluate(()=>{const R=e=>{const b=e.getBoundingClientRect();return {x:Math.round(b.left),y:Math.round(b.top),w:Math.round(b.width),h:Math.round(b.height)};};return {region:R(document.querySelector('.cm-stage-region')),hand:R(document.querySelector('.cm-stage-hand')),slots:[...document.querySelectorAll('.cm-stage-slot,.cm-stage-rear')].map(R)};});})();
+  eq(shut.region,bounds.region,"opening the inspector does not move the stage");
+  eq(shut.hand,bounds.hand,"opening the inspector does not move the hand");
+  if(mode!=='full') eq(shut.slots,bounds.slots,`${mode}: opening the inspector does not move a board`);
   if(mode==='full') {
    const fit=await page.evaluate(()=>{const r=document.querySelector('.cm-stage-hand').getBoundingClientRect();return [...document.querySelectorAll('.cm-stage-fan-slot')].every(el=>{const c=el.getBoundingClientRect();return c.left>=r.left-1&&c.right<=r.right+1;});});
    ok(fit,'3D hand stays inside the space remaining beside both panes');
   }
-  await page.keyboard.press("Escape");eq(await page.locator('#cm-card-inspector').count(),0,"Escape closes inspection only");
+  eq(await page.locator('#cm-card-inspector').count(),0,"Escape closes inspection only");
   eq(await page.locator('#cm-board').getAttribute('data-view'),mode,"Escape does not change view preference");
   await page.locator('[data-action="board-actions-toggle"]').click();
   ok(await page.locator('#cm-decision-slot #cm-board-decision').isVisible(),"collapsed Actions retains an actionable pending decision");
@@ -76,7 +90,7 @@ try{
  await page.locator('#cm-board-decision [data-index="0"]').click();
  await change(page,"focus");
  eq(await page.locator('#cm-board-decision [data-index="0"]').getAttribute('aria-pressed'),'true','selection survives view switch');
- await page.locator(`.cm-board-hand .cm-bcard[data-card="${id}"]`).click({button:"right"});await page.locator('#cm-card-menu [data-action=board-card-menu-view]').click();
+ await page.locator(`.cm-stage-fan .cm-bcard[data-card="${id}"]`).click({button:"right"});await page.locator('#cm-card-menu [data-action=board-card-menu-view]').click();
  eq(await page.locator('#cm-board-decision [data-index="0"]').getAttribute('aria-pressed'),'true','inspection preserves draft');
  await page.keyboard.press("Escape");
  const newer=structuredClone(choice);newer.revision=++revision;newer.decision.id="r2-new-targets";await show(newer);
@@ -85,9 +99,9 @@ try{
  const touch=structuredClone(sample);touch.revision=++revision;
  touch.decision={id:'r2-touch',kind:'priority',mode:'one',title:'Your priority',options:[{index:0,act:'cast',label:'Cast this card',cardId:id}]};
  await show(touch);
- await page.locator(`.cm-board-hand .cm-bcard[data-card="${id}"]`).dispatchEvent('pointerdown',{pointerType:'touch',clientX:700,clientY:750});
+ await page.locator(`.cm-stage-fan .cm-bcard[data-card="${id}"]`).dispatchEvent('pointerdown',{pointerType:'touch',clientX:700,clientY:750});
  await page.locator('#cm-card-inspector').waitFor();
- await page.locator(`.cm-board-hand .cm-bcard[data-card="${id}"]`).dispatchEvent('click',{detail:1});await page.waitForTimeout(100);
+ await page.locator(`.cm-stage-fan .cm-bcard[data-card="${id}"]`).dispatchEvent('click',{detail:1});await page.waitForTimeout(100);
  eq(sent.filter(x=>x.type==='act').length,0,'long-press follow-up click cannot play a card');
  eq(await page.locator('.cm-action-review').count(),0,'long-press follow-up click cannot select an action either');
  await page.keyboard.press('Escape');
@@ -97,7 +111,7 @@ try{
  for(const mode of ['table','focus','full']) {
   ways.revision=++revision;ways.decision.id='r2-ways-'+mode;await show(structuredClone(ways));await change(page,mode);
   const before=sent.filter(x=>x.type==='act').length;
-  await page.locator(`.cm-board-hand .cm-bcard[data-card="${id}"], .cm-stage-fan .cm-bcard[data-card="${id}"]`).first().click();
+  await page.locator(`.cm-stage-fan .cm-bcard[data-card="${id}"]`).first().click();
   eq(await page.locator('#cm-dialog[open]').count(),0,'card action choices do not cover the board');
   await page.locator('#cm-board-decision [data-index="1"]').click();
   eq(sent.filter(x=>x.type==='act').length,before,'selecting a target/payment offer sends nothing');
@@ -110,15 +124,18 @@ try{
   eq(desk.words,['✦ Cast Spell','Back','Cancel'],'r4 names the binding action and both draft exits');
   ok(desk.row,'binding action and Back sit side by side');
   /* The drawer's open/shut is a thin chevron with no fill, and the drawer's scrollbar a faint track, never white. */
-  const quiet=await page.evaluate(()=>{const t=document.querySelector('[data-action="board-actions-toggle"]'),r=t.getBoundingClientRect(),cs=getComputedStyle(t),back=document.querySelector('.cm-board-back'),d=document.querySelector('#cm-board-decision').getBoundingClientRect();return {w:r.width,h:r.height,bg:cs.backgroundColor,svg:!!t.querySelector('svg.cm-chev'),back:back?Math.round(back.getBoundingClientRect().left-d.left):null,bar:getComputedStyle(document.querySelector('.cm-stage-rail')).scrollbarColor};});
-  ok(quiet.w<=24&&quiet.h<=24&&quiet.svg&&/rgba\(0, 0, 0, 0\)|transparent/.test(quiet.bg),`the Actions toggle is a small unfilled chevron (${quiet.w}×${quiet.h}, ${quiet.bg})`);
+  const quiet=await page.evaluate(()=>{const t=document.querySelector('[data-action="board-actions-toggle"]'),r=t.getBoundingClientRect(),cs=getComputedStyle(t),back=document.querySelector('.cm-board-back'),d=document.querySelector('#cm-board-decision').getBoundingClientRect();return {w:r.width,h:r.height,bg:cs.backgroundColor,glyph:/[▸▾]/.test(t.textContent),module:t.classList.contains('cm-module-toggle'),back:back?Math.round(back.getBoundingClientRect().left-d.left):null,bar:getComputedStyle(document.querySelector('.cm-stage-rail')).scrollbarColor};});
+  /* The 3D HUD's drawers (Table and Focus now share them): the open/shut control is the module's own header row, a thin line of title and
+     chevron glyph (▸ ▾) with no fill, as every other module's. The old standalone 24px svg chevron no longer exists; its guarantee, a quiet
+     unfilled control that is not a button-sized block, is kept as: one line high (at most 24px), unfilled, carrying the chevron glyph. */
+  ok(quiet.h<=24&&quiet.glyph&&quiet.module&&/rgba\(0, 0, 0, 0\)|transparent/.test(quiet.bg),`the Actions toggle is a thin unfilled header row with a chevron (${quiet.w}×${quiet.h}, ${quiet.bg})`);
   eq(quiet.back,0,'All actions is a small link at the left edge');
   ok(!/255, 255, 255\)|#fff\b|white/i.test(quiet.bar)&&quiet.bar!=='auto',`the drawer's scrollbar is quiet (${quiet.bar})`);
   /* Rob, 2026-10-25: "Don't need both. Inspection pane should be within the left drawer." */
   ok(await page.locator('.cm-stage-rail #cm-board-decision .cm-action-card img').count()===1,'the source card is read in the Actions desk during review');
   eq(await page.locator('#cm-card-inspector').count(),0,'and no second inspection pane opens on the right');
   /* Rob, 2026-10-25: "Even when an action to decide on a selected card, my on-hover for any card should still work". */
-  await page.mouse.move(2,2);await page.locator(`.cm-board-hand .cm-bcard[data-card="${id}"], .cm-stage-fan .cm-bcard[data-card="${id}"]`).first().hover();
+  await page.mouse.move(2,2);await page.locator(`.cm-stage-fan .cm-bcard[data-card="${id}"]`).first().hover();
   await page.locator('#cm-board-peek').waitFor({timeout:3000});
   ok(true,'while an action is being decided, the hover still pops the card up');
   await page.mouse.move(2,2);
@@ -136,7 +153,8 @@ try{
  await page.locator('#cm-board-decision [data-index="1"]').click();
  eq(sent.filter(x=>x.type==='act').length,beforePay,'payment is not sent on selection');
  ok((await page.locator('#cm-board-decision [data-index="1"][aria-pressed="true"]').innerText()).includes('Forest and Sol Ring'),'payment sources shown for review, outlined');
- await page.locator('[data-action=board-profile]').click();
+ /* Play settings moved from the account menu to the Camera menu with the 3D HUD (Table and Focus share it). */
+ await page.locator('[data-action=board-camera]').click();
  await page.locator('[data-action=board-tools]').click();await page.keyboard.press('Escape');
  await page.locator('#cm-board-tools').waitFor({state:'detached',timeout:3000});
  eq(await page.locator('#cm-board-tools').count(),0,'Escape closes the foremost Settings menu');
@@ -156,7 +174,7 @@ try{
  await change(page,"table");
  const known=structuredClone(sample);known.revision=++revision;
  const knownCard=known.state.players[known.seat].zones.Hand.cards.find(c=>c.cardId===id);knownCard.faceDown=true;
- await show(known);await page.locator(`.cm-board-hand .cm-bcard[data-card="${id}"]`).click({button:'right'});await page.locator('#cm-card-menu [data-action=board-card-menu-view]').click();
+ await show(known);await page.locator(`.cm-stage-fan .cm-bcard[data-card="${id}"]`).click({button:'right'});await page.locator('#cm-card-menu [data-action=board-card-menu-view]').click();
  ok((await page.locator('#cm-card-inspector').innerText()).includes(knownCard.name),'authorized face-down identity remains inspectable');
  const concealed=structuredClone(known);concealed.revision=++revision;concealed.state.players[concealed.seat].zones.Hand.cards.find(c=>c.cardId===id).name=null;
  await show(concealed);eq(await page.locator('#cm-card-inspector img').count(),0,'redacted face-down identity is removed from inspection');

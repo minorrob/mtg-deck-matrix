@@ -8,6 +8,7 @@
  *   node tools/library-engine-index.mjs --check-lane <lane.json> ...     # where each card of a lane file stands now
  *   node tools/library-engine-index.mjs --top 180 [--rides faces:walkers,walkers:stack]   # and the next most-played cards
  *   node tools/library-engine-index.mjs ... --review-by-theme            # each lane also reviews its theme's candidates
+ *   node tools/library-engine-index.mjs --pool --out <dir>              # every undefined Commander card, sentence reuse first
  *
  * Every card the collection names (each deck's hundred, everything owned, ordered or on the buy list) is put in one tier,
  * the way a table would see it:
@@ -32,6 +33,7 @@
 import {readFileSync, writeFileSync, mkdirSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
+import {commanderPool, scorePool, dealPoolLanes} from './library-engine-pool.mjs';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const arg = (flag, fallback = null) => { const i = process.argv.indexOf(flag); return i > 0 ? process.argv[i + 1] : fallback; };
@@ -61,7 +63,9 @@ if (lanesToCheck.length) {
 }
 
 const livePath = arg('--live', 'data/live-load.json');
-const live = read(livePath);
+const poolMode = process.argv.includes('--pool');
+/* T3 is the public oracle universe, independent of a person's collection or deck files. */
+const live = poolMode ? {decks: []} : read(livePath);
 const laneSize = Number(arg('--lane-size', 30));
 const outDir = arg('--out');
 const liveDecks = new Set((arg('--live-decks') || live.decks.filter((d) => /^D\d+$/.test(d.id)).map((d) => d.id).join(',')).split(',').filter(Boolean));
@@ -84,6 +88,7 @@ const candidatesSummary = read('data/engine/candidates.json').summary;
 const byOracle = new Map();
 for (const c of oracle.cards) { byOracle.set(foldName(c.name), c); const front = c.name.split(' // ')[0]; if (front !== c.name && !byOracle.has(foldName(front))) byOracle.set(foldName(front), c); }
 const index = loadCardIndex();
+if (poolMode) for (const card of commanderPool(oracle, new Set(read('data/commander-banned.json').cards), index.resolve)) entry(card.name).pool = true;
 const scripts = loadCardScripts().map((f) => f.script);
 const library = createLibrary(scripts);
 const calibration = calibrate({scripts, library, scenarios: new Map(loadCardScenarios().map((f) => [f.scenarios.card, f.scenarios])), definition: index.definition});
@@ -95,7 +100,7 @@ const rankOf = new Map(top.map((c, i) => [foldName(typeof c === 'string' ? c : c
 /* THE NEXT MOST-PLAYED CARDS (--top N): beyond the collection, the N most-played cards that are neither final nor a
    candidate, and every candidate of the set, which a review can promote without writing it again. */
 const topCount = Number(arg('--top', 0));
-if (topCount) {
+if (topCount && !poolMode) {
   let taken = 0;
   for (const c of top) {
     const name = typeof c === 'string' ? c : c.name;
@@ -112,13 +117,15 @@ for (const e of cards.values()) {
   e.rank = rankOf.get(foldName(e.name)) ?? (record ? rankOf.get(foldName(record.name)) : undefined) ?? null;
   if (record) { e.type = record.type; e.layout = record.layout; e.mv = record.mv; e.text = record.text || ''; }
   if (tableDefinition(e.name) || (record && tableDefinition(record.name))) { e.tier = 'final'; continue; }
-  if (candidateDefinition(e.name) || (record && candidateDefinition(record.name))) { e.tier = 'candidate'; continue; }
+  if (!poolMode && (candidateDefinition(e.name) || (record && candidateDefinition(record.name)))) { e.tier = 'candidate'; continue; }
   const hand = index.resolve(e.name) || (record && index.resolve(record.name));
   if (hand && !hand.playable) { e.tier = 'defined'; e.problems = hand.problems; continue; }
   if (!record) { e.tier = 'unresolved'; continue; }
   e.tier = 'unloaded';
   e.oracleName = record.name;
   const verdict = compileCard(record, {library, trust, definition: index.definition});
+  /* Recompile the whole pool, including stored candidates: current calibration, not a stale generated snapshot. */
+  if (poolMode && verdict.status === 'candidate') e.tier = 'candidate';
   e.compiler = verdict.status;
   if (verdict.gaps) e.gaps = verdict.gaps.map((g) => String(g).replace(/\s+/g, ' ').trim());
   if (verdict.why) e.why = verdict.why;
@@ -146,7 +153,7 @@ const RIDES_WITH = Object.fromEntries((arg('--rides') || 'faces:walkers').split(
 const wanted = (c) => [c.liveDecks.length ? 0 : c.decks.length ? 1 : c.watchFor ? 2 : c.top ? 4 : 3, -c.liveDecks.length, -c.decks.length, c.rank ?? 1e9, c.name];
 const cmp = (a, b) => { const x = wanted(a), y = wanted(b); for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] < y[i] ? -1 : 1; return 0; };
 
-const all = [...cards.values()].sort((a, b) => a.name.localeCompare(b.name));
+const all = (poolMode ? scorePool([...cards.values()]) : [...cards.values()]).sort((a, b) => a.name.localeCompare(b.name));
 const count = (tier) => all.filter((c) => c.tier === tier).length;
 const unloaded = all.filter((c) => c.tier === 'unloaded');
 const byTheme = new Map(THEMES.map(([id]) => [id, []]));
@@ -154,8 +161,8 @@ for (const c of unloaded) byTheme.get(themeOf(c)).push(c);
 for (const [small, host] of Object.entries(RIDES_WITH)) { byTheme.get(host).push(...byTheme.get(small)); byTheme.set(small, []); }
 const ridersOf = (id) => Object.keys(RIDES_WITH).filter((k) => RIDES_WITH[k] === id).flatMap((k) => [k, ...ridersOf(k)]);
 const labelOf = (id) => [id, ...ridersOf(id)].map((t) => THEMES.find(([x]) => x === t)[1]).join('; ');
-const lanes = [];
-for (const [id] of THEMES) {
+const lanes = poolMode ? dealPoolLanes(all, {laneSize, themes: THEMES, themeOf, rides: RIDES_WITH}) : [];
+if (!poolMode) for (const [id] of THEMES) {
   const list = byTheme.get(id).sort(cmp), label = labelOf(id);
   const parts = Math.max(1, Math.ceil(list.length / laneSize));
   const per = Math.ceil(list.length / parts);
@@ -169,8 +176,8 @@ const candidates = all.filter((c) => c.tier === 'candidate').sort(cmp);
 /* --review-by-theme: no separate review session; each candidate goes to the lane that owns its theme, as a list to review
    and promote (game/tools/card-waves.mjs) beside the cards to write. A review builds no rule, so the load is balanced: a
    candidate goes to its theme's lane while that lane holds fewer than its share of all the cards, else to the lightest. */
-const reviewByTheme = process.argv.includes('--review-by-theme');
-if (reviewByTheme) {
+const reviewByTheme = poolMode || process.argv.includes('--review-by-theme');
+if (reviewByTheme && !poolMode) {
   const hostOf = (t) => (RIDES_WITH[t] ? hostOf(RIDES_WITH[t]) : t);
   for (const lane of lanes) lane.review = [];
   const share = Math.ceil((unloaded.length + candidates.length) / lanes.length), load = (l) => l.cards.length + l.review.length;
@@ -182,10 +189,10 @@ if (reviewByTheme) {
 }
 
 /* THE REPORT. */
-const scope = (c) => c.liveDecks.length ? 'live' : c.decks.length ? 'deck' : c.watchFor ? 'watched' : c.top ? 'top' : 'library';
-console.log(`${livePath}: ${live.decks.length} decks, ${all.length} distinct cards (live decks: ${[...liveDecks].join(', ')})`);
+const scope = (c) => c.liveDecks.length ? 'live' : c.decks.length ? 'deck' : c.watchFor ? 'watched' : c.top ? 'top' : c.pool ? 'pool' : 'library';
+console.log(poolMode ? `Commander pool: ${all.length} undefined cards, sentence reuse first` : `${livePath}: ${live.decks.length} decks, ${all.length} distinct cards (live decks: ${[...liveDecks].join(', ')})`);
 console.log(`  final ${count('final')} · candidate ${count('candidate')} · defined, refused ${count('defined')} · unloaded ${count('unloaded')} · unresolved ${count('unresolved')}`);
-for (const s of ['live', 'deck', 'watched', 'library', 'top']) {
+for (const s of ['live', 'deck', 'watched', 'library', 'top', ...(poolMode ? ['pool'] : [])]) {
   const of = all.filter((c) => scope(c) === s);
   console.log(`  ${s.padEnd(8)} ${String(of.length).padStart(5)} cards: final ${of.filter((c) => c.tier === 'final').length}, candidate ${of.filter((c) => c.tier === 'candidate').length}, unloaded ${of.filter((c) => c.tier === 'unloaded').length}`);
 }
@@ -200,9 +207,10 @@ if (outDir) {
   mkdirSync(outDir, {recursive: true});
   const slim = (c) => ({name: c.name, ...(c.oracleName && c.oracleName !== c.name ? {oracleName: c.oracleName} : {}), scope: scope(c),
     liveDecks: c.liveDecks, decks: c.decks, ...(c.watchFor ? {watchedFor: c.watchFor} : {}), owned: c.owned, rank: c.rank, type: c.type, layout: c.layout,
-    compiler: c.compiler, gaps: c.gaps, why: c.why, needs: c.needs});
+    compiler: c.compiler, gaps: c.gaps, why: c.why, needs: c.needs,
+    ...(poolMode ? {sentencesNeeded: c.sentencesNeeded, potentialCompletions: c.potentialCompletions, potentialPerSentence: c.potentialPerSentence} : {})});
   const rel = path.relative(ROOT, path.resolve(livePath)).split(path.sep).join('/');
-  const source = {collection: rel.startsWith('..') ? path.basename(livePath) : rel, workbook: live.workbook, decks: live.decks.map((d) => d.id),
+  const source = poolMode ? {pool: true, oracle: oracle.generatedAt ?? null, priority: 'Estimated one-gap completions per missing sentence; actual gains require a post-wave compiler run'} : {collection: rel.startsWith('..') ? path.basename(livePath) : rel, workbook: live.workbook, decks: live.decks.map((d) => d.id),
     liveDecks: [...liveDecks], ...(topCount ? {top: topCount} : {}), candidates: candidatesSummary};
   writeFileSync(path.join(outDir, 'index.json'), JSON.stringify({schema: 'library-engine-index@1', source,
     summary: {cards: all.length, final: count('final'), candidate: count('candidate'), defined: count('defined'), unloaded: count('unloaded'), unresolved: count('unresolved'), verdicts},

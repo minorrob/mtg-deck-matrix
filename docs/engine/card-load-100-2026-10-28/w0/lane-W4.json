@@ -12,9 +12,87 @@
     "| Damage from a source that left the battlefield is sourceless, so protection does not stop it | `asking.mjs`:1782 (NAMED) | W4 |",
     "| Damage doublers where nobody can be asked: the order that deals the least | `rules/replacement.mjs`:34, 576 | W4 |",
     "| Trample over a planeswalker (CR 702.19c) | `rules/combat.mjs`:118 | W4 |",
-    "| Trample blocked by one creature: exactly lethal assigned, the attacker's controller not asked (CR 702.19b) | `rules/combat.mjs`:781–790 | W4 |",
+    "| Trample blocked by one creature: exactly lethal assigned, the attacker's controller not asked (CR 702.19b) | `rules/combat.mjs`:781\u2013790 | W4 |",
     "| Two damage replacements where nobody can be asked | `rules/replacement.mjs`:34 | W4 |",
     "| A token put onto the battlefield attacking attacks the first player in turn order | `script/effects/permanents.mjs`:270 | W4 |"
   ],
-  "status": "queued; prerequisite PR 834 verification in progress"
+  "status": "active bounded continuation: completed-combat Flying witnesses and departed-source protection; other queued debt remains",
+  "codeCheckpoint": "8e0f3a2f01e32bfdc0fc00639a42092c417fb892",
+  "pullRequest": "https://github.com/minorrob/mtg-deck-matrix/pull/914",
+  "completed": [
+    "Blackblade Reforged: held-out translation counts Land after for each, not the equipped Creature",
+    "Goblin Piledriver: a teacher's implicit times 1 is learned as the printed multiplier slot",
+    "Wayfarer's Bauble (routed from W5): an effect's selector binds after the activated cost",
+    "Contagion Clasp: each target binds its own printed noun, distinct from the entering artifact",
+    "CR 702.19b: excess damage against one blocker is assigned by the attacker controller",
+    "V8 saved-depth finding: Glorious Anthem now has a scenario proving another own creature is boosted and an opponent's is not",
+    "V8 saved-depth finding: Serra Angel now has a scenario proving a ground Bear is not offered as a blocker and attacking leaves Serra Angel untapped",
+    "Departed-source protection: actual Pyrohemia ability after source departure/reload deals no damage to Silver Knight, while Bear and both players take damage; source is not restored."
+  ],
+  "queued": [
+    "CR 702.19c trample over planeswalkers: distinct keyword and loyalty-aware assignment absent",
+    "Damage replacements outside an askable resolution still choose leastFirst",
+    "Tokens entering attacking outside a resolution still choose the first player",
+    "Blocker-side requirements need a joint maximum-requirements solver (ROB-149)"
+  ],
+  "ignores": [],
+  "proof": {
+    "red": "sentence-load100-w0: three original held-out scenario families failed before the fix; engine-load100-w0-combat: single-blocker choice false before fix",
+    "calibration": "Final tests/sentence-library.mjs: 77 checks passed; 8048 templates from 6353 cards; 4165 translated with themselves held out, 4165 passed their own scenarios. Zero calibration failures; the other G-4 conditions are not claimed.",
+    "focused": [
+      "sentence-load100-w0: 14 checks passed, including V8's independent two-target/count counterexample",
+      "engine-load100-w0-combat: 17 checks passed",
+      "30 original scenarios in eight edited card files passed",
+      "all 29 engine suites directly naming rules/combat.mjs passed",
+      "sentence-paragraphs: 11 checks passed",
+      "data-integrity and feature-wiring passed"
+    ],
+    "mutation": "eleven breaks caught, missed: []; anchors remain 57 existing problems, with no new problem on changed files",
+    "fullCheck": "Final check-cards: 6430 definitions; 11023 scenarios, 0 failed; exit 0. Seven initially unanswered scenario inputs were repaired without changing expectations. Final sentence-library suite exit 0.",
+    "additionalDepth": "HISTORICAL, NOT CURRENT G-3 CREDIT: After the full checkpoint, two behavior scenarios were appended to Glorious Anthem and Serra Angel, retaining all old scenarios/assertions. Both cards' four saved scenarios pass and both held-out calibrations pass; all three runtime ability removals are caught. Independent V8 on ae4d6ba6: Thran Dynamo, Glorious Anthem, Serra Angel; 3 definitions, 5 scenarios, 0 failed; 4/4 abilities behaviorally reached, 0 unreached, exit 0. Exact artifact: ability-depth-W4-sample.json. This is scenario depth only: the artifact credits 0 cards exercised in clean games. No whole-suite rerun for these two additions; full counts above belong to 8e0f3a2f. V8 October29 found the Flying and Thran Dynamo offers insufficient under the approved proof rule; this old 4/4 count is superseded and requires remeasurement.",
+    "depthCommand": "From the V8 worktree with Node 22: node --stack-size=4000 game/tools/batch/check-cards.mjs --card-root C:/Users/robmi/CrankMagic/worktrees/load100/w0-w4-combat/game/engine/cards --cards 'Thran Dynamo|Glorious Anthem|Serra Angel' --ability-ledger ../scratch/v8-ability-w4.json --counterfactual",
+    "generated": "engine-definitions --check: current; engine-candidates --check: current; data-inventory --check: matches the repository, 60 artifacts",
+    "scan": "tools/local-ci.sh HEAD 0: SCAN PASS on code checkpoint 8e0f3a2f; record updates are scanned separately before push",
+    "limitations": "No new cards or definitions changed; queued debt is open, not waived; independent V8 review, consolidated gate and staging not done"
+  },
+  "rulings": [
+    "https://api.scryfall.com/cards/240448cd-c308-49ae-9e4b-0c35adc59fba/rulings",
+    "https://api.scryfall.com/cards/4b332e3d-dcf4-4f62-8130-124ec5d23b90/rulings"
+  ],
+  "followup20261029": {
+    "flying": {
+      "cards": [
+        "Air Elemental",
+        "Serra Angel",
+        "Suntail Hawk",
+        "Zephyr Sprite"
+      ],
+      "scenarios": 9,
+      "failed": 0,
+      "abilities": 5,
+      "scenarioReached": 5,
+      "method": "Four appended explicit block-if-legal policies finish combat; removing Flying makes the ground blocker block and final life becomes40. Vigilance removal changes actual tapped state.",
+      "evidence": "evidence/w4-flying-completed-combat.json",
+      "scope": "Selected cards only; zero new final cards and zero clean-game exercise credit."
+    },
+    "departedProtection": {
+      "checks": 26,
+      "mutations": 12,
+      "missed": [],
+      "red": "First witness: departed red source dealt3 instead of0 to Silver Knight. Actual Pyrohemia stack/reload witness separately proved the null-context-source seam.",
+      "behavior": "Carry only the matching last-known source snapshot through actual and dry damage paths. Protection reads final qualities in a local read-only view; live current qualities win and no saved object or ID is restored.",
+      "readers": {
+        "protection-color": 14,
+        "protection": 12,
+        "protection-multicolored": 25,
+        "prevention-shields": 33,
+        "wave4a-h3": 63,
+        "ability-loss": "pass",
+        "load100-w0-combat": 17,
+        "data-integrity": "pass"
+      },
+      "limits": "No closure of other departed-source qualities, source-qualified damage replacement filters or damage-event source provenance is claimed."
+    },
+    "anchors": "50 inherited/current-main problems; no failure on the changed protection/resources/replacement files. Earlier42 belongs to the pre-d25 Play head."
+  }
 }

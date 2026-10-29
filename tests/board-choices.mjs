@@ -11,9 +11,10 @@
  *             "{W}"; two that would read the same are told apart by power and toughness and whether they are tapped,
  *             then numbered; no two of one card's options read alike; nothing the seat may not see is named.
  *   Room      a real table, Rob against an AI seat: the priority question's cast options carry their details, distinct.
- *   Board     "You can also ▾" lists the spell once, with how many ways; pressing it, or the card in the hand, opens a
- *             pop-up listing every way by its target; "→ Maya" casts it at Maya, and the stack says so. The card's own
- *             label names what it can do once, not once per target.
+ *   Board     the Actions module of the left drawer (the same in Table, Focus and 3D, where the forced Actions pop-up is
+ *             gone) lists the spell once, with how many ways; pressing it, or the card in the hand, lists every way by its
+ *             target; "→ Maya" casts it at Maya, and the stack says so. The card's own label names what it can do once,
+ *             not once per target. Table and 3D are read before anything is cast; the cast itself is walked in Focus.
  *   Scry      a second table, where Rob casts "Scry 3.": the board draws the question as a pick-several pop-up (any to
  *             the bottom, none included; a second press puts one back), then the order of the two kept; and the saved
  *             game has the picked card on the bottom of his library and the other two on top in his order. The board
@@ -307,26 +308,48 @@ function carry(ws) {
   ws.onMessage((message) => serial(() => at.webSocketMessage(server, message)));
   ws.onClose(() => {server.closed = true;});
 }
-try {
-  const context = await browser.newContext({viewport: {width: 1400, height: 900}, serviceWorkers: "block"});
-  const page = await context.newPage();
-  await page.addInitScript(() => {if (!localStorage.getItem("cm-board-view")) localStorage.setItem("cm-board-view", "focus");});
+/* The page's routes: the shell with the cloud board on, and the real tables above behind a stubbed API and socket. */
+async function wire(page) {
   if (stub) await stub(page);
   await page.route(`${base}/index.html*`, (r) => r.fulfill({contentType: "text/html; charset=utf-8", body: html}));
   await page.route(`${base}/api/me`, (r) => r.fulfill({json: {email: ROB}}));
   await page.route(`${base}/api/library**`, (r) => r.fulfill({json: {head: null}}));
   await page.route(`${base}/api/tables**`, answer);
   await page.routeWebSocket(/\/api\/tables\/[a-z0-9]+\/connect$/, carry);
-  await page.goto("about:blank");
+  await page.route(/\/assets\/environments\/[^/?]+\.webm(\?.*)?$/, (r) => r.abort());
+}
+try {
+  /* ---- 3a. the same choice in every view: Table and 3D draw the Actions module the Focus view does (Rob, 2026-10-28: one HUD), read before
+     anything is cast on this table; the walk through the cast is in Focus below ---- */
+  for (const view of ["table", "full"]) {
+    const ctx = await browser.newContext({viewport: {width: 1400, height: 900}, serviceWorkers: "block", reducedMotion: "reduce"});
+    const pg = await ctx.newPage();
+    await pg.addInitScript((m) => {localStorage.setItem("cm-board-view", m); localStorage.setItem("crankmagic-audio-muted", "true");}, view);
+    await wire(pg);
+    await pg.goto(`${base}/index.html#table?id=${TABLE}`);
+    await pg.locator("#cm-board .cm-stage-top").waitFor({timeout: 60000});
+    await pg.locator(".cm-stage-rail [data-action=board-choose]").first().waitFor({timeout: 20000});
+    const here = pg.locator(".cm-stage-rail [data-action=board-choose]", {hasText: "Cast Zap"});
+    ok(await here.count() === 1 && new RegExp(`Cast Zap · ${castOptions.length} ways`).test((await here.innerText()).replace(/\s+/g, " ")), `${view}: Actions lists Zap once, saying how many ways`);
+    ok(/^Zap: Cast Zap, \d+ ways$/.test(await pg.locator(".cm-stage-fan .cm-bcard[aria-label^='Zap']").first().getAttribute("aria-label")), `${view}: and the card in the hand says what it can do once, and how many ways`);
+    ok(await pg.locator("[data-action=board-actions-open]").count() === 0, `${view}: with no forced Actions pop-up to open`);
+    await ctx.close();
+  }
+  const context = await browser.newContext({viewport: {width: 1400, height: 900}, serviceWorkers: "block"});
+  const page = await context.newPage();
+  await page.addInitScript(() => {if (!localStorage.getItem("cm-board-view")) localStorage.setItem("cm-board-view", "focus");});
+  await wire(page);
   await page.goto(`${base}/index.html#table?id=${TABLE}`);
   await page.locator("#cm-board .cm-stage-top").waitFor({timeout: 60000});
-  await page.locator("[data-action=board-actions-open]").waitFor({timeout: 20000});
+  /* Choices are in the Actions module of the left drawer (open by default), not in a forced Actions pop-up: that pop-up and its opener
+     (board-actions-open) are gone by Rob's request (2026-10-28), and the pop-up over the stage keeps only the turn's buttons. */
+  await page.locator(".cm-stage-rail [data-action=board-choose]").first().waitFor({timeout: 20000});
+  ok(await page.locator("[data-action=board-actions-open]").count() === 0, "there is no forced Actions pop-up to open: the choice is already in the drawer's Actions module");
 
-  const zapCard = page.locator(".cm-board-hand .cm-bcard[aria-label^='Zap']").first();
+  const zapCard = page.locator(".cm-stage-fan .cm-bcard[aria-label^='Zap']").first();
   const label = await zapCard.getAttribute("aria-label");
   ok(/^Zap: Cast Zap, \d+ ways$/.test(label), `the card in the hand says what it can do once, and how many ways: "${label}"`);
 
-  await page.click("[data-action=board-actions-open]");
   const choose = page.locator(".cm-stage-rail [data-action=board-choose]", {hasText: "Cast Zap"});
   ok(await choose.count() === 1, "Actions lists Zap once");
   ok(new RegExp(`Cast Zap · ${castOptions.length} ways`).test((await choose.innerText()).replace(/\s+/g, " ")), `saying how many ways (${(await choose.innerText()).replace(/\s+/g, " ").trim()})`);
@@ -357,7 +380,8 @@ try {
   for (let t = 0; t < 100 && !latest.canUndo; t += 1) await new Promise((r) => setTimeout(r, 100));
   ok(latest.canUndo===true && latest.decision?.kind==='priority' && latest.state.stack.some(s=>s.name==='Zap') && latest.decision.options.some(o=>o.act==='pass') && mayaLife(latest)===before,
     'native Cast leaves Zap on the stack with Undo and an offered Pass, without applying its damage');
-  await page.locator('#cm-board .cm-stage-top [data-action=board-pass]:not([disabled])').click();
+  /* the pass is Next step in the pop-up over the stage (the header carries no pass any more) */
+  await page.locator('#cm-board .cm-stage-actions [data-action=board-pass]:not([disabled])').click();
   for (let t = 0; t < 100 && mayaLife(latest) === before; t += 1) await new Promise((r) => setTimeout(r, 100));
   ok(mayaLife(latest) === before - 1 && latest.history.filter((h) => h.text === "Rob cast Zap").length === castsBefore + 1 && latest.history.some((h) => h.text === "Zap resolved"),
     `choosing "→ Maya" casts Zap at Maya: it resolves, and Maya's life goes ${before} → ${mayaLife(latest)}`);

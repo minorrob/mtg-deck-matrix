@@ -160,7 +160,7 @@
 .cm-stage-fan-slot:hover,.cm-stage-fan-slot:focus-within{z-index:20!important}
 .cm-stage-fan-slot .cm-bcard:hover,.cm-stage-fan-slot .cm-bcard:focus-visible{transform:translateY(0)}
 .cm-stage-fan-slot .cm-bcard.is-dim{filter:brightness(.85) saturate(.85)}
-.cm-stage-hand-label{position:absolute;top:0;left:50%;transform:translateX(-50%);color:#fff2d2;background:#181714cc;clip-path:polygon(8% 0,92% 0,100% 100%,0 100%);padding:5px 23px;font-size:11px;white-space:nowrap}
+.cm-stage-hand-label{position:absolute;top:0;left:50%;transform:translateX(-50%);color:#fff2d2;background:#181714cc;clip-path:polygon(8% 0,92% 0,100% 100%,0 100%);padding:5px 23px;font-size:15px;white-space:nowrap}
 .cm-stage-hand-empty{display:block;text-align:center;padding-top:50px;color:#e3d8c7;font-size:13px}
 #matrix-v2 .cm-stage-hand-arrow{position:absolute;top:85px;left:calc(50% - var(--fan-half,calc(var(--hc,140px)*3.05)) - 45px);height:48px;width:36px;min-width:0;padding:0;border-radius:50%;border:1px solid #cbb78a88;color:#fff2ce;background:#161716bb;font-size:32px;pointer-events:auto;z-index:25}
 #matrix-v2 .cm-stage-hand-arrow[data-by="1"]{left:auto;right:calc(50% - var(--fan-half,calc(var(--hc,140px)*3.05)) - 45px)}
@@ -298,7 +298,6 @@
 .cm-stage-camera .cm-board-views{display:flex;width:100%;gap:4px}
 .cm-stage-camera .cm-board-views button{flex:1;min-width:0;padding:0 4px!important;font-size:11px;white-space:normal}
 .cm-stage-camera .cm-board-views .cm-view-word{min-width:0;white-space:normal}
-.cm-board[data-shell="shared"][data-view="table"]{grid-template-rows:58px var(--tabletop-h,minmax(0,1fr)) auto}
 .cm-stage-top>.cm-board-turnsteps{flex:1;min-width:0}
 .cm-stage-top .cm-board-ribbon-button{width:100%;color:inherit}
 .cm-stage-camera .cm-board-scale{grid-template-columns:1fr 44px;gap:4px;height:auto;padding:6px 8px;border-radius:6px}
@@ -311,7 +310,7 @@
 .cm-profile-menu .cm-board-menu{left:auto;right:0;max-height:calc(100vh - 180px);overflow:auto}
 .cm-board[data-shell="shared"]>.cm-stage-rail:not(.is-open),.cm-board[data-shell="shared"]>.cm-stage-side:not(.is-open){display:none}
 
-.cm-board[data-shell="shared"]:not([data-view="full"]){--stage-side-width:min(var(--panel-w,340px),45vw)}
+.cm-board[data-shell="shared"]:not([data-stage="on"]){--stage-side-width:min(var(--panel-w,340px),45vw)}
 /* The right drawer's resize line on the drawer's edge, not 17px inside it over its modules (Rob, Oct 18; Codex's fix). */
 .cm-stage-side>.cm-board-panelgrip{position:absolute;left:0;top:0;height:100%;width:12px;margin:0}
 .cm-stage-side>.cm-board-panelgrip .cm-board-grip::before{left:0;transform:none}
@@ -337,7 +336,6 @@
 
 /* Confirmed combat gets its own header space; decisions keep the surface below it. */
 .cm-board[data-shell="shared"][data-combat]{grid-template-rows:188px minmax(0,1fr)}
-.cm-board[data-shell="shared"][data-view="table"][data-combat]{grid-template-rows:188px var(--tabletop-h,minmax(0,1fr)) auto}
 .cm-board[data-combat]>.cm-stage-top{position:relative;padding-bottom:135px}
 .cm-board[data-combat]>.cm-stage-rail,.cm-board[data-combat]>.cm-stage-side{top:188px}
 .cm-board[data-combat]>.cm-stage-side{height:calc(100% - 188px)!important}
@@ -473,7 +471,7 @@
 .cm-board[data-shell="shared"]:has(>.cm-stage-rail.is-open){--play-left:var(--stage-left-width)}
 .cm-board[data-shell="shared"][data-inspecting="on"]{--play-inspector:clamp(240px,24vw,320px)}
 .cm-board[data-shell="shared"][data-coach="open"]{--play-inspector:clamp(240px,24vw,320px)}
-.cm-board[data-shell="shared"]>.cm-board-body,.cm-board[data-shell="shared"]>.cm-board-tabletop,.cm-board[data-shell="shared"]>.cm-board-hand,.cm-board[data-shell="shared"]>.cm-stage-region,.cm-board[data-shell="shared"]>.cm-stage-hand{margin-left:var(--play-left);margin-right:var(--play-inspector);min-width:0}
+.cm-board[data-shell="shared"]>.cm-board-body,.cm-board[data-shell="shared"]>.cm-board-tabletop,.cm-board[data-shell="shared"]>.cm-board-hand{margin-left:var(--play-left);margin-right:var(--play-inspector);min-width:0}
 .cm-board[data-shell="shared"]>.cm-board-body{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
 .cm-board[data-shell="shared"] .cm-stage-rail{background:#101c1e;border-right:1px solid #8d7856;box-shadow:8px 0 24px #0003;padding:14px 12px}
 .cm-stage-rail .cm-board-pane{position:static;display:block;width:100%;height:auto;max-height:none;padding:12px 0 0;margin:14px 0 0;border:0;border-top:1px solid #43564d;background:none;overflow:visible}
@@ -568,7 +566,7 @@
 .cm-stage-module[data-module="actions"].has-height>.cm-module-body{display:flex;flex-direction:column;overflow:hidden}
 .cm-stage-module[data-module="actions"].has-height .cm-board-decision{max-height:none;flex:1 1 auto;min-height:0}
 /* The right drawer's width, dragged at its left edge as the left drawer's is at its right (Rob, 2026-10-26). */
-.cm-board[data-view="full"] .cm-stage-side>.cm-board-panelgrip{display:flex;z-index:4}
+.cm-board[data-stage="on"] .cm-stage-side>.cm-board-panelgrip{display:flex;z-index:4}
 .cm-stage-side>.cm-board-panelgrip [data-drag]{width:12px;height:100%;cursor:col-resize}
 /* The way back from one card's actions: a small chevron link at the left, not a button the width of a word. */
 .cm-board-back{align-self:flex-start;display:inline-flex;align-items:center;gap:2px;margin:0 0 -4px;padding:2px 6px 2px 0;border:0;background:none;color:#b6cbbf;font:600 12px/1.3 system-ui,sans-serif;cursor:pointer}
@@ -715,9 +713,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-drawer{transition:none}
 
 /* The HUD reserves its measured row at both ends of the scale. The steps menu retains the full turn. */
 #matrix-v2 .cm-board[data-shell=shared]{--hud-top:calc(28px + 30px * var(--hud-scale,1));grid-template-rows:var(--hud-top) minmax(0,1fr)}
-#matrix-v2 .cm-board[data-shell=shared][data-view=table]{grid-template-rows:var(--hud-top) var(--tabletop-h,minmax(0,1fr)) auto}
 #matrix-v2 .cm-board[data-shell=shared][data-combat]{grid-template-rows:calc(var(--hud-top) + 130px) minmax(0,1fr)}
-#matrix-v2 .cm-board[data-shell=shared][data-view=table][data-combat]{grid-template-rows:calc(var(--hud-top) + 130px) var(--tabletop-h,minmax(0,1fr)) auto}
 #matrix-v2 .cm-board .cm-stage-top{height:var(--hud-top,58px);min-height:var(--hud-top,58px);background:var(--color-panel);color:var(--color-ink);border-color:var(--color-line-strong)}
 #matrix-v2 .cm-board .cm-stage-priority,#matrix-v2 .cm-board .cm-board-turn{color:var(--color-ink)}
 #matrix-v2 .cm-board .cm-stage-self .cm-seat-header{background:var(--mat-scrim);padding:5px;border-radius:var(--radius-control)}
@@ -738,7 +734,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-drawer{transition:none}
 #matrix-v2 .cm-board .cm-board-lands{display:flex;flex-direction:column}
 #matrix-v2 .cm-board .cm-board-lands>.cm-mat-label{position:static;order:-1;align-self:flex-start;flex:none;margin:0 0 6px;padding:2px 5px}
 #matrix-v2 .cm-board .cm-board-lands>[data-card-section]{flex:none;width:100%}
-#matrix-v2 .cm-board[data-phone] .cm-phone-battlefield .cm-board-field,#matrix-v2 .cm-board[data-phone] .cm-phone-battlefield [data-card-section]{height:auto!important;max-height:none!important;overflow:visible!important}
+#matrix-v2 .cm-board[data-phone] .cm-phone-battlefield :is(.cm-board-field,.cm-board-lands),#matrix-v2 .cm-board[data-phone] .cm-phone-battlefield [data-card-section]{height:auto!important;max-height:none!important;overflow:visible!important}   /* the lands too: the board's one frame scrolls them, no zone clips a crowded row of its own */
 #matrix-v2 .cm-board[data-phone] .cm-phone-battlefield .cm-board-field{min-height:130px}
 
 #matrix-v2 .cm-board .cm-stage-top .v-button,#matrix-v2 .cm-board .cm-stage-top .cm-board-ribbon{font-size:calc(var(--text-hud-caption)*var(--hud-scale,1))!important}
@@ -861,7 +857,6 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-target-stack>img{animation:non
 /* r4 B: one private attacker row, one binding Send, and a desk per attacker. */
 #matrix-v2 .cm-board[data-combat]{--combat-h:calc(72px + 104px*var(--hud-scale,1));--rail-top:calc(var(--hud-top,58px) + var(--combat-h))}
 #matrix-v2 .cm-board[data-shell=shared][data-combat]{grid-template-rows:var(--rail-top) minmax(0,1fr)}
-#matrix-v2 .cm-board[data-shell=shared][data-view=table][data-combat]{grid-template-rows:var(--rail-top) var(--tabletop-h,minmax(0,1fr)) auto}
 #matrix-v2 .cm-board[data-combat]>.cm-stage-top{padding-bottom:var(--combat-h)}
 #matrix-v2 .cm-board[data-combat]>.cm-stage-rail,#matrix-v2 .cm-board[data-combat]>.cm-stage-side,#matrix-v2 .cm-board[data-combat]>#cm-card-inspector{top:var(--rail-top)}
 #matrix-v2 .cm-board[data-combat]>.cm-stage-side{height:calc(100% - var(--rail-top))!important}
@@ -979,7 +974,6 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-board-pie-life.is-active{filter:drop-shadow(0 0 5px var(--color-accent))}
 #matrix-v2 .cm-board .cm-board-pie-priority{position:absolute;top:58%;left:50%;transform:translateX(-50%);font-size:calc(15px*var(--hud-scale,1));white-space:nowrap;color:var(--mat-ink);background:var(--mat-scrim);padding:2px 4px;border-radius:3px;pointer-events:none}
 #matrix-v2 .cm-board .cm-hand-legend{font-size:calc(15px*var(--hud-scale,1));white-space:normal}
-#matrix-v2 .cm-board[data-view=table]>.cm-board-hand{--hc:max(79px,calc(112px*var(--hand-scale,1)))}
 #matrix-v2 .cm-board .cm-stage-module>header>h3{display:flex;flex:1;margin:0;min-width:0}
 #matrix-v2 .cm-board .cm-module-toggle{display:flex;align-items:center;justify-content:space-between;gap:6px;width:100%;min-height:28px;margin:0;padding:0 4px;border:0;background:transparent;color:inherit;font:700 15px/1.2 var(--font-body);text-align:left;cursor:pointer}
 #matrix-v2 .cm-board .cm-stage-module[data-module=coach]>.cm-module-body{overflow:visible}
@@ -1116,15 +1110,15 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-board-pile figcaption{min-width:0;max-width:100%}
 #matrix-v2 .cm-board[data-shell=shared] .cm-stage-camera{right:calc(var(--play-inspector,0px) + var(--stage-side-offset,0px) + 16px)}
 #matrix-v2 .cm-board[data-shell=shared] .cm-table-menu{right:calc(var(--play-inspector,0px) + var(--stage-side-offset,0px) + 126px)}
-#matrix-v2 .cm-board[data-view=full] .cm-stage-top{flex-wrap:wrap}
-#matrix-v2 .cm-board[data-view=full] .cm-stage-top>.cm-stage-camera,#matrix-v2 .cm-board[data-view=full] .cm-stage-top>.cm-table-menu{position:relative;top:auto;right:auto;bottom:auto;flex:none}
-#matrix-v2 .cm-board[data-view=full] .cm-stage-top .cm-stage-camera>div,#matrix-v2 .cm-board[data-view=full] .cm-stage-top .cm-table-menu>div{top:calc(100% + 6px);bottom:auto}
-#matrix-v2 .cm-board[data-view=full]{--full-pane-top:calc(var(--hud-top,58px) + var(--combat-h,0px));--full-clear-top:calc(var(--full-pane-top) + var(--full-action-h,0px) + 24px)}
-#matrix-v2 .cm-board[data-view=full]>.cm-stage-rail,#matrix-v2 .cm-board[data-view=full]>.cm-stage-side,#matrix-v2 .cm-board[data-view=full]>#cm-card-inspector{top:var(--full-pane-top)}
-#matrix-v2 .cm-board[data-view=full]>.cm-stage-side{height:calc(100% - var(--full-pane-top))!important}
-#matrix-v2 .cm-board[data-view=full]>.cm-board-panegrip{top:var(--full-pane-top);height:calc(100% - var(--full-pane-top))}
-#matrix-v2 .cm-board[data-view=full] .cm-stage-region>.cm-decision-slot{top:calc(var(--full-action-h,0px) + 24px);max-height:calc(100% - var(--full-action-h,0px) - 36px)}
-#matrix-v2 .cm-board[data-view=full] .cm-stage-region>.cm-decision-slot>#cm-board-decision{max-height:min(65dvh,650px,calc(100dvh - var(--full-clear-top) - 20px))}
+#matrix-v2 .cm-board[data-stage=on] .cm-stage-top{flex-wrap:wrap}
+#matrix-v2 .cm-board[data-stage=on] .cm-stage-top>.cm-stage-camera,#matrix-v2 .cm-board[data-stage=on] .cm-stage-top>.cm-table-menu{position:relative;top:auto;right:auto;bottom:auto;flex:none}
+#matrix-v2 .cm-board[data-stage=on] .cm-stage-top .cm-stage-camera>div,#matrix-v2 .cm-board[data-stage=on] .cm-stage-top .cm-table-menu>div{top:calc(100% + 6px);bottom:auto}
+#matrix-v2 .cm-board[data-stage=on]{--full-pane-top:calc(var(--hud-top,58px) + var(--combat-h,0px));--full-clear-top:calc(var(--full-pane-top) + var(--full-action-h,0px) + 24px)}
+#matrix-v2 .cm-board[data-stage=on]>.cm-stage-rail,#matrix-v2 .cm-board[data-stage=on]>.cm-stage-side,#matrix-v2 .cm-board[data-stage=on]>#cm-card-inspector{top:var(--full-pane-top)}
+#matrix-v2 .cm-board[data-stage=on]>.cm-stage-side{height:calc(100% - var(--full-pane-top))!important}
+#matrix-v2 .cm-board[data-stage=on]>.cm-board-panegrip{top:var(--full-pane-top);height:calc(100% - var(--full-pane-top))}
+#matrix-v2 .cm-board[data-stage=on] .cm-stage-region>.cm-decision-slot{top:calc(var(--full-action-h,0px) + 24px);max-height:calc(100% - var(--full-action-h,0px) - 36px)}
+#matrix-v2 .cm-board[data-stage=on] .cm-stage-region>.cm-decision-slot>#cm-board-decision{max-height:min(65dvh,650px,calc(100dvh - var(--full-clear-top) - 20px))}
 #matrix-v2 .cm-board .cm-stage-actions .v-button{font-size:calc(15px*var(--hud-scale,1));min-height:42px}
 @media(max-width:1100px){#matrix-v2 .cm-board .cm-stage-actions .v-button{min-height:38px}}
 #matrix-v2 .cm-board .cm-stage-actions small,#matrix-v2 .cm-board :is(.cm-stage-caption,.cm-stage-life-list,.cm-stage-life){font-size:calc(15px*var(--hud-scale,1))}
@@ -1241,7 +1235,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board :is(.cm-stage-module>header h3,.cm-board-pane-head h3){font:700 calc(var(--text-hud-caption)*var(--hud-scale,1))/1.3 var(--font-body);letter-spacing:0;text-transform:none;color:inherit}
 #matrix-v2 .cm-board :is(.cm-stage-rail,.cm-stage-side) :is(.cm-muted,.cm-stage-module p){font-size:var(--text-small);line-height:1.4}
 /* The turn caption stands clear of the left tab, which hangs at the same corner. */
-#matrix-v2 .cm-board:not([data-phone]) .cm-stage-caption{left:calc(var(--drawer-inset) + 34px)}
+#matrix-v2 .cm-board:not([data-phone]) .cm-stage-caption{left:calc(var(--drawer-l,0px) + var(--drawer-inset) + 34px)}
 
 /* SCROLLING (Rob, 2026-10-27: the bars "are seemingly always present, even when text isn't bleeding out"; "we already have text
    wrapping in here, so the left-right should likely never be needed"). Neither drawer scrolls sideways, ever. Down the drawer there is
@@ -1266,7 +1260,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 /* Scrolling something into view in a drawer (a focused box, a card) leaves a margin instead of landing flush on the edge. */
 #matrix-v2 .cm-board :is(.cm-stage-rail,.cm-stage-side){scroll-padding:var(--drawer-inset)}
 /* In the 3D view the tabs hang from the top of the drawers; in the flat views the seat labels run along the top, so there they stay where they were, at the middle. */
-#matrix-v2 .cm-board[data-view=full]:not([data-phone]) .cm-drawer-tab{top:var(--full-pane-top)}
+#matrix-v2 .cm-board[data-stage=on]:not([data-phone]) .cm-drawer-tab{top:var(--full-pane-top)}
 /* The right tab stands at the right drawer's outer edge: past the inspector or Coach panel when one is open, and past the drawer's own width. */
 #matrix-v2 .cm-board[data-shell=shared]:not([data-phone])>.cm-stage-right{right:calc(var(--play-inspector,0px) + var(--stage-side-offset,0px))}
 /* The ribbon is the HUD's height whatever its text (two lines or three), and while the combat band hangs from it, that plus the band. */
@@ -1309,7 +1303,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 /* THE TABLE MENU'S PAGES, A DRAWER AT ITS SIDE (Rob, 2026-10-27: "when I select an option it should have a drawer that pops out the side of the menu with that selection's options. Currently it puts it at the bottom"): CrankMagic Pages is the menu's last item; its list opens beside the menu, to its left, never under it. */
 #matrix-v2 .cm-board .cm-table-menu>div{width:240px;min-width:0;box-sizing:border-box}
 #matrix-v2 .cm-board .cm-table-menu>.cm-table-flyout{position:absolute;right:248px;top:46px;width:220px;box-sizing:border-box;padding:12px;background:var(--color-panel);border:1px solid var(--color-line-strong);border-radius:var(--radius-card);box-shadow:var(--shadow-pop);max-height:70dvh;overflow:auto;z-index:1}
-#matrix-v2 .cm-board[data-view=full] .cm-stage-top .cm-table-menu>.cm-table-flyout{top:calc(100% + 6px)}
+#matrix-v2 .cm-board[data-stage=on] .cm-stage-top .cm-table-menu>.cm-table-flyout{top:calc(100% + 6px)}
 #matrix-v2 .cm-board .cm-table-flyout .cm-board-nav{position:static;width:auto;border:0;box-shadow:none;background:none;padding:0}
 #matrix-v2 .cm-board .cm-table-flyout .cm-board-nav a{color:var(--color-ink)}
 #matrix-v2 .cm-board[data-phone] .cm-table-menu>.cm-table-flyout{position:fixed;left:8px;right:8px;top:auto;bottom:8px;width:auto}
@@ -1705,8 +1699,8 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-board-pane .cm-board-tile{grid-template-rows:auto;gap:0;padding:5px 8px}
 #matrix-v2 .cm-lb-grid .cm-lobby-seat>header>.cm-seat-remove{pointer-events:auto}
 
-/* THE HAND'S CENTER CARD IS THE CENTER OF WHAT YOU SEE (Rob, 2026-10-28: "the center card of the hand should always be centered, currently shifted right"): with the Stack & history drawer open, the hand is laid out between the drawers, not under the right one. */
-#matrix-v2 .cm-board[data-shell=shared]>.cm-stage-hand{margin-right:calc(var(--play-inspector,0px) + var(--stage-side-offset,0px))}
+/* THE DRAWERS ARE THE TOP LAYER (Rob, 2026-10-28: "when a drawer opens, the table and hand of cards shifts. They shouldn't. The drawers should not affect the canvas. They should sit as the top layer"): the stage and the hand are the window's whole width whatever is open, and a drawer lies over them. The flat views keep their boards clear of where the drawers lie (--gut-l, --gut-r: the same whether a drawer is open or not), so nothing moves when one opens. */
+.cm-board[data-shell=shared]>:is(.cm-stage-region,.cm-stage-hand){margin-left:0;margin-right:0}
 
 /* THE MAT'S EDGES AND ITS PILES (Rob, 2026-10-28): the divider between the lands and the battlefield moves only those two; Commander and Exile stay at the top right of the mat, Library and Graveyard at the bottom right, whatever the divider does, and the mat has almost no margin round it (it kept 62px above, for a card of you that is no longer there, and 48px below). */
 #matrix-v2 .cm-board .cm-stage-front .cm-mat .cm-board-pile[data-zone="command"],
@@ -1741,3 +1735,116 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
    of the backdrop does not take it. */
 #matrix-v2 .cm-lb :is(button,a,input,select){scroll-margin:14px}
 #matrix-v2 .cm-board .cm-seatboard [data-action=board-focus]:focus-visible{outline:2px solid #11161f;outline-offset:2px;box-shadow:0 0 0 2px #ffffff}
+
+/* TABLE AND FOCUS ARE THE 3D VIEW'S STAGE WITHOUT ITS CANVAS (Rob, 2026-10-28): the flat ground under the boards, in the 3D view's own dark green. */
+.cm-board[data-stage="on"]:not([data-3d="on"]){background:#071719}
+.cm-stage-region[data-renderer="flat"]{background:radial-gradient(ellipse at 50% 18%,#315847,#071719 74%)}
+/* The boards of the flat stage are set by CrankStage.flatGeometry, one matrix each, like the 3D view's. */
+.cm-stage-slot{position:absolute;z-index:1;min-width:0;min-height:0}
+.cm-stage-slot>*{zoom:var(--mat-zoom,1)}
+.cm-stage-slot>.cm-mat{width:100%;height:100%}
+#matrix-v2 .cm-stage-region>.cm-board-table.cm-stage-flat{position:absolute;inset:0;display:block;padding:0;margin:0;gap:0;isolation:isolate;pointer-events:none}
+.cm-stage-flat>*{pointer-events:auto}
+.cm-stage-flat>.cm-board-fan{pointer-events:none}
+
+/* THE FLAT STAGE'S BOARDS (Rob, 2026-10-28; the Focus board, as he asked it): the four piles are the size of a playing card -- Command and Exile at the top, Library and Graveyard at
+   the foot -- with the History between them, not a pane along the bottom; and no board's cards are larger than its height can hold. */
+#matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=table]{--bc:min(var(--bc-cap,60px),max(calc(clamp(30px,var(--row-w,620px)*.074,60px)*var(--board-scale,1)),var(--caption-card-min,0px)))}
+#matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=focus]{--bc:min(var(--bc-cap,136px),max(calc(clamp(60px,var(--mat-w,1060px)*.078,136px)*var(--board-scale,1)),var(--caption-card-min,0px)))}
+#matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=focus]>.cm-mat-grid{grid-template-rows:var(--field-px) 8px var(--lands-px)}
+#matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=focus] .cm-board-pile{grid-row:1 / -1;height:var(--pile-row)}
+#matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=focus] .cm-board-pile:is([data-zone=command],[data-zone=exile]){align-self:start}
+#matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=focus] .cm-board-pile:is([data-zone=library],[data-zone=graveyard]){align-self:end}
+#matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=focus]>.cm-mat-grid>.cm-board-band{grid-column:2 / -1;grid-row:1 / -1;min-height:0;margin-block:calc(var(--pile-row) + 6px);align-self:stretch;overflow:auto}
+#matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=focus] .cm-board-band h3{font-size:clamp(11px,calc(var(--bc) * .22),15px);white-space:nowrap;gap:4px}
+#matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=focus] .cm-board-band :is(ol,li){font-size:clamp(10px,calc(var(--bc) * .2),13px)}
+#matrix-v2 .cm-board .cm-tab-count.cm-tab-chat{background:var(--color-money,#2f8f6b)}
+/* A board on the flat Table is a 16:9 of its own size: its seat's facts take one line, not three, so the piles and the cards have the height. */
+#matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=table] .cm-mat-head{padding:3px 8px;gap:6px}
+#matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=table] .cm-mat-head .cm-seat-header{flex-wrap:nowrap;gap:6px;min-width:0}
+#matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=table] .cm-seat-commander,#matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=table] .cm-seat-state{display:none}
+#matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=table] .cm-seat-portrait{width:24px;height:24px;flex:none}
+#matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-mat :is(.cm-board-field,.cm-board-lands)>.cm-mat-label,#matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-mat .cm-board-group>h3{display:none}
+#matrix-v2 .cm-board .cm-stage-slot .cm-mat[data-fit=table] .cm-seat-identity{flex:0 1 auto;min-width:0;padding-right:8px}
+#matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-mat[data-fit=table] .cm-seat-portrait{display:none}
+/* On a card this small the power/toughness and counts take less room, so they stay on it. */
+#matrix-v2 .cm-board .cm-stage-slot[data-tight] :is(.cm-bcard-pt,.cm-bcard-count){padding:0 2px;border-radius:3px}
+#matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-bcard-tax{top:2px;padding:0 3px}
+#matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-bcard-name{display:none}   /* at this size its letters are a smear, and the badge stands where they were: the card is named by its label for a reader */
+/* THE QUICK ACTION TAB (Rob, 2026-10-28): the undo drawer under a card, holding Tap, Cast, Play and Undo, each once; the same in Table, Focus and 3D. */
+#matrix-v2 .cm-board .cm-quick-drawer{display:flex;align-items:center;justify-content:center;gap:6px;padding:2px 4px}
+#matrix-v2 .cm-board .cm-quick-do{flex:none;min-height:0;height:auto;padding:2px 5px;border:1px solid color-mix(in srgb,var(--mat-ink) 40%,transparent);border-radius:4px;background:rgb(0 0 0 / .5);color:var(--mat-ink);font:700 calc(15px*var(--hud-scale,1)/var(--mat-mag,1))/1.15 var(--font-body);cursor:pointer;white-space:nowrap}   /* 15px as drawn on the page: the board is drawn at --mat-mag of its size */
+#matrix-v2 .cm-board .cm-quick-do:hover,#matrix-v2 .cm-board .cm-quick-do:focus-visible{background:var(--color-aether,#4aa8ff);color:#06161a}
+#matrix-v2 .cm-board .cm-quick-do:disabled{opacity:.5;cursor:default}
+/* A BOARD'S NAME is plain text above it (Rob, 2026-10-28): no container, no fill; the turn's seat in the accent color. A double click on a board focuses it. */
+.cm-stage-boardname{position:absolute;left:2px;bottom:100%;margin-bottom:2px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 calc(16px*var(--hud-scale,1))/1.2 var(--font-body);color:#eef4ea;text-shadow:0 1px 3px #000d;cursor:default}
+.cm-stage-boardname.is-turn{color:#8fd0ff}   /* the flat stage's ground is dark in every theme, so its names do not follow the theme's accent */
+.cm-stage-rear.cm-flat-rear{display:block}
+.cm-flat-rear>.cm-stage-mini{position:absolute;inset:0}
+.cm-stage-region.is-peeking{cursor:zoom-in}
+/* TABLE'S MAX and the hand's tab (Rob, 2026-10-28). */
+.cm-stage-fan[hidden]{display:none}
+.cm-stage-hand-label{pointer-events:auto;cursor:pointer;border:0;font-family:inherit}
+.cm-stage-hand.is-hidden{overflow:visible}
+#matrix-v2 .cm-board .cm-stage-max{height:22px;margin-left:4px;padding:0 8px;border:1px solid #4a7770;border-radius:6px;background:#0a1d20e6;color:#e4efe6;font:700 11px/1 var(--font-body);letter-spacing:.04em;cursor:pointer}
+#matrix-v2 .cm-board .cm-stage-max:hover{background:#142e32}
+#matrix-v2 .cm-board .cm-stage-max.is-on{background:var(--color-aether,#4aa8ff);border-color:var(--color-aether,#4aa8ff);color:#06161a}
+.cm-stage-hand.is-hidden .cm-stage-hand-label{top:auto;bottom:0}
+/* A pile's count never reads under 10px, however small its card (the boards fit the window). */
+/* On a small card the quick action tab is as short as its words allow, so a press in the middle of the card still reaches the card; its focus ring and the hand tab's are not clipped. */
+#matrix-v2 .cm-board .cm-stage-slot .cm-quick-drawer{min-height:0;padding:0 2px;gap:3px}
+#matrix-v2 .cm-board .cm-stage-slot .cm-quick-do{padding:0 4px;border-radius:3px;font-size:calc(15px*var(--hud-scale,1)/var(--mat-mag,1));line-height:1.2}
+.cm-stage-hand-label:focus-visible{clip-path:none;border-radius:6px 6px 0 0;outline:0;box-shadow:0 0 0 1px #0b1213,0 0 0 3px var(--focus-halo,#fff),0 0 0 6px var(--v-accent,#4aa8ff)}   /* the card's own two-tone ring, which a trapezoid's clip-path would cut off */
+#matrix-v2 .cm-board .cm-stage-max{font-size:calc(15px*var(--hud-scale,1));height:auto;padding:2px 8px;line-height:1.2}
+/* THE LOBBY'S BUTTONS (Rob, 2026-10-28): Start (and Cancel, once it counts down) takes the full-width place End game had, under the "n to Ready Up" box, which now runs the panel's whole width; End game is at the top right, beside Leave lobby. */
+#matrix-v2 .cm-lb-grid .cm-table-action-row .v-button{flex:1 1 auto;width:100%}
+#matrix-v2 .cm-pl-head .cm-lb-end-top{height:40px;padding:0 16px;margin-left:auto;font-size:14px}
+#matrix-v2 .cm-pl-head .cm-lb-end-top + .cm-lb-leave{margin-left:16px}
+
+/* THE PILES ARE THE SHAPE OF A CARD (Rob, 2026-10-28: "The commander, exile, graveyard and library squares on the mat should be the aspect ratio of the card"): on the flat Table and Focus a pile's frame is one card, 5:7, its top card filling it, its count (and name, where they fit) along the foot of it. Command and Exile stand at the top right of the mat, Library and Graveyard at the bottom right, whatever the divider does. */
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit]>.cm-mat-grid{--pile-row:calc(var(--bc) * 7 / 5);grid-template-columns:minmax(0,1fr) var(--bc) var(--bc)}
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit] .cm-board-pile{position:relative;display:block;grid-row:1 / -1;width:var(--bc);height:var(--pile-row);padding:0;border-radius:calc(var(--bc) * .07);overflow:hidden}
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit] .cm-board-pile:is([data-zone=command],[data-zone=exile]){align-self:start}
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit] .cm-board-pile:is([data-zone=library],[data-zone=graveyard]){align-self:end}
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit] .cm-board-pile>:is(.cm-bcard,.cm-board-partners){position:absolute;inset:0;width:100%;height:100%;margin:0}
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit] .cm-board-pile>.cm-board-partners>:is(.cm-bcard,.cm-card-slot){position:absolute;left:0;top:0;margin:0}
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit] .cm-board-pile>.cm-board-partners>:is(.cm-bcard,.cm-card-slot)+:is(.cm-bcard,.cm-card-slot){left:22%;top:30%;z-index:2}   /* the second partner over the first like a small pile, inside the one frame */
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit] .cm-board-pile figcaption{position:absolute;left:0;right:0;bottom:0;z-index:3;width:auto;padding:0 2px;background:#091b1dd9;pointer-events:none}
+
+/* THE LAYERS, bottom to top (Rob, 2026-10-28: "cards shouldn't cut off at the edge of the mat ... background > table > mat > cards > card HUD > game HUD"): the mat, its grid and its zones clip nothing, so a card lies over the edge of its zone and of the mat as it would on a table (a tapped one's turned corners too); the card's own HUD -- power and toughness, counts, the quick tab -- stands over the cards beside it, and the game's HUD (drawers, header, pop-ups) over all. A row or zone clips only while its cards really outgrow it and it scrolls them (is-scrolling, is-scrolling-rows, is-scrolling-zone). */
+#matrix-v2 .cm-board .cm-stage-region :is(.cm-stage-front,.cm-stage-mini,.cm-mat,.cm-mat-grid):not(.cm-phone-battlefield *,[data-fit=phone],[data-fit=phone] *){overflow:visible}
+#matrix-v2 .cm-board .cm-stage-region .cm-mat-zone:is(.cm-board-field,.cm-board-lands):not(.is-scrolling-zone,.cm-phone-battlefield *,[data-fit=phone] *){overflow:visible}
+#matrix-v2 .cm-board .cm-stage-region .cm-board-cards:not(.is-scrolling,.is-scrolling-rows,.cm-phone-battlefield *,[data-fit=phone] *){overflow:visible}
+#matrix-v2 .cm-board .cm-stage-region .cm-card-slot:is(:hover,:focus-within){z-index:7}
+#matrix-v2 .cm-board .cm-stage-region :is(.cm-bcard-pt,.cm-bcard-tax,.cm-bcard-count,.cm-bcard-marks){z-index:3}
+#matrix-v2 .cm-board .cm-flat-rear .cm-stage-mini>.cm-mat{--bc:var(--rear-card)}
+/* A rear board in Focus is a whole mat in its own 16:9: its two rows share its height, so nothing of it is cut off. */
+#matrix-v2 .cm-board .cm-flat-rear .cm-stage-mini .cm-mat[data-fit]>.cm-mat-grid{grid-template-rows:minmax(0,1fr) 8px minmax(0,1fr);min-height:0}
+#matrix-v2 .cm-board .cm-flat-rear .cm-board-empty{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}   /* read, not seen: a thumbnail has no room for it */
+/* The 3D view's far boards are drawn on the table's plane, small and behind: they keep their edge (the near board and Table and Focus lay their cards over theirs). */
+#matrix-v2 .cm-board .cm-stage-region .cm-stage-rear:not(.cm-flat-rear) .cm-stage-mini{overflow:hidden}
+/* LEGIBLE OR ABSENT (Rob, 2026-10-29): a card under 30px wide on the page has no room for a badge at the text floor (15px), so its power/toughness, counts, tax and marks stand down -- the card's label still says them, and Focus, 3D, Max and the zoom pop-up show them. */
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-stage-rear)[data-tiny] :is(.cm-bcard-pt,.cm-bcard-count,.cm-bcard-tax){display:none}
+#matrix-v2 .cm-board .cm-board-pile[data-caption-none] figcaption{display:none}
+#matrix-v2 .cm-board .cm-stage-hand-label{font-size:calc(16px*var(--hud-scale,1))}
+/* THE HAND SITS ON THE STAGE'S DARK GROUND in every theme, so its focus ring is white with a dark line on each side of it, against the card and against the tray, which is pale in the light theme: 3:1 all the way round in light and dark (a11y-board). */
+#matrix-v2 .cm-board .cm-stage-hand :is(.cm-bcard,.cm-stage-hand-label):focus-visible{outline:3px solid #fff;outline-offset:2px;box-shadow:0 0 0 2px #0b1213,0 0 0 9px #0b1213,0 6px 14px -6px rgb(0 0 0 / .85)}
+/* What has the focus stands in front of its neighbors, so its ring is whole: the hand's tab over the fan, the focused card's slot over the cards beside it, a commander partner over the other partner. */
+#matrix-v2 .cm-board .cm-stage-hand .cm-stage-hand-label{z-index:30}
+#matrix-v2 .cm-board .cm-stage-fan-slot:focus-within{z-index:29}
+#matrix-v2 .cm-board .cm-board-partners>:is(.cm-bcard,.cm-card-slot):focus-within,#matrix-v2 .cm-board .cm-board-partners>.cm-bcard:focus-visible{z-index:5}
+/* A control that has the keyboard's focus is never under a neighbor or clipped by its frame: its card's slot, and the quick tab in it, stand in front, and a pile lets it out. */
+#matrix-v2 .cm-board .cm-stage-region .cm-card-slot:focus-within{z-index:11}   /* in front of its neighbors, under the action pop-up (12) and the drawers (15) */
+#matrix-v2 .cm-board .cm-card-slot:focus-within>.cm-quick-drawer{z-index:31;transition:none;opacity:1;clip-path:inset(0);pointer-events:auto}   /* whole the moment it has the focus: nothing is under it while it opens */
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit] .cm-board-pile:focus-within{overflow:visible;z-index:6}
+/* The land stack's count is legible on any mat: on a scrim, as the piles' counts are. */
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-land-count{background:#091b1dd9;border-radius:3px;padding:0 3px}
+/* On Table and Focus the quick tab hangs under its card (Rob: "under each of the user's mat cards"), over the table, never over the card it belongs to. */
+#matrix-v2 .cm-board .cm-stage-slot .cm-card-slot>.cm-undo-drawer{bottom:auto;top:100%}
+/* A pile's count is said once, on its caption: the card's own count (a library's back) stands down, so two numbers never lie one over the other. */
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-board-pile .cm-bcard-count{display:none}
+/* A thumbnail has no room for the land stack's words: read, not seen. */
+#matrix-v2 .cm-board .cm-flat-rear .cm-land-count{position:absolute;width:1px;height:1px;min-width:0;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+/* THE PHONE'S ONE FRAME SCROLLS THE WHOLE BOARD: its rows take the room their cards need, and the mat clips nothing of a crowded row. */
+#matrix-v2 .cm-board[data-phone] .cm-phone-battlefield .cm-mat-grid{grid-template-rows:auto auto auto auto!important}
+#matrix-v2 .cm-board[data-phone] .cm-phone-battlefield>.cm-mat{overflow:visible}

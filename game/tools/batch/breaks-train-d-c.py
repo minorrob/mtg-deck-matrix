@@ -16,7 +16,9 @@ BREAKS = [
     ('as many as the opponents', BIND, '  if (forEachOpponent(spec)) return {min: 0, max: null};\n', ''),
     # One of each opponent's: the cap, its key on each option, and the refusal.
     ('the cap', BIND, 'const capped = oneOfEach(spec) ?', 'const capped = spec?.differentControllers === true ?'),
-    ('each option\'s controller', BIND, '...(oneOfEach(spec) && c.kind === "object"', '...(spec?.differentControllers === true && c.kind === "object"'),
+    # The same controllerId fact is now supplied by the shared targetFacts helper.
+    ('each option\'s controller', 'game/engine/script/decision.mjs',
+     '...(controllerId !== undefined ? {controllerId} : {}), ', ''),
     ('two of one opponent\'s refused', BIND, '  if (!oneOfEach(spec)) return null;\n', '  if (spec?.differentControllers !== true) return null;\n'),
     # Each kept with the opponent it was chosen for, and held to that player as it resolves (CR 608.2b).
     ('the opponent it was chosen for', BIND, 'const target = forEachOpponent(spec) ? {...c, forPlayer: controllerOf(state, c.id)} : c;', 'const target = c;'),

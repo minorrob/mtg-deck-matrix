@@ -1,0 +1,163 @@
+/* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
+import assert from "node:assert/strict";
+import {loadCardIndex} from "../game/tools/engine-cards.mjs";
+import {runScenario} from "../game/engine/cards/scenario.mjs";
+import {runEffect} from "../game/engine/script/effects/index.mjs";
+import {legalActions, applyAction} from "../game/engine/rules/actions.mjs";
+import {pushAbility, resolveTop} from "../game/engine/rules/stack.mjs";
+import {usesThisTurn, addObject} from "../game/engine/state/index.mjs";
+
+let checks = 0;
+const eq = (a, b, message) => { assert.deepEqual(a, b, message); checks += 1; };
+const index = loadCardIndex();
+const at = (seat, zone, ...cards) => ({seat, zone, cards});
+const FIX = {
+  "Smoke Permit": {types: ["Creature"], manaCost: "{B}", colors: ["B"], power: 1, toughness: 1},
+  "Smoke Relic": {types: ["Artifact"], manaCost: "{0}", colors: []},
+  "Smoke Archivist": {types: ["Creature"], manaCost: "{1}", colors: [], power: 1, toughness: 1,
+    abilities: [{id: "permission", kind: "static", rule: "play-from", affects: {what: "player", who: "you"}, zone: "graveyard", spells: true, limit: 1}]},
+  "Smoke Double Archivist": {types: ["Creature"], manaCost: "{1}", colors: [], power: 1, toughness: 1,
+    abilities: ["permission-a", "permission-b"].map(id => ({id, kind: "static", rule: "play-from", affects: {what: "player", who: "you"},
+      zone: "graveyard", spells: true, lands: true, limit: 1}))},
+};
+const start = (setup, more = {}) => runScenario({name: "W3 accuracy debt", seats: 3, setup, steps: [], ...more}, index.definition, FIX).state;
+
+/* Outcome identity matters even when unlimited permissions spend no distinct source resource. */
+for (const rider of ["additionalCost", "anyMana"]) {
+  const card = rider === "additionalCost" ? "Smoke Relic" : "Smoke Permit";
+  const state = start([at(0, "graveyard", card), at(0, "battlefield", "Forest")]);
+  for (const special of [false, true]) addObject(state, {card: special ? "Special Gate" : "Normal Gate", types: ["Artifact"], owner: 0, controller: 0,
+    abilities: [{id: "gate", kind: "static", rule: "play-from", affects: {what: "player", who: "you"}, zone: "graveyard", spells: true,
+      ...(special ? rider === "additionalCost" ? {additionalCost: [{atom: "sacrifice", selector: {types: ["Land"]}}]} : {anyMana: true} : {})}]}, "battlefield");
+  state.players[0].manaPool.B = 1;
+  const offers = legalActions(state, 0).filter(a => a.kind === "cast" && a.label === card);
+  eq(offers.map(a => a.viaName).sort(), ["Normal Gate", "Special Gate"], `${rider}: unlimited differing outcomes are distinct explicit offers`);
+  for (const name of ["Normal Gate", "Special Gate"]) {
+    const resumed = JSON.parse(JSON.stringify(state)); applyAction(resumed, 0, offers.find(a => a.viaName === name));
+    eq(resumed.zones.battlefield.some(id => resumed.objects[id].card === "Forest"), rider !== "additionalCost" || name === "Normal Gate",
+      `${rider}: selected permission pays exactly its own land sacrifice after reload`);
+  }
+  if (rider === "anyMana") {
+    const resumed = JSON.parse(JSON.stringify(state)); resumed.players[0].manaPool.B = 0; resumed.players[0].manaPool.C = 1;
+    const colored = legalActions(resumed, 0).filter(a => a.kind === "cast" && a.label === card);
+    eq(colored.map(a => a.viaName), ["Special Gate"], "only the selected any-mana outcome can pay a black symbol with colorless mana");
+    applyAction(resumed, 0, colored[0]); eq(resumed.players[0].manaPool.C, 0, "the any-mana cast actually spends that colorless mana");
+  }
+}
+
+/* CR 601.2a: two limited permissions consume different resources, even when both give the same cast. */
+{
+  const state = start([at(0, "battlefield", "Smoke Permit"), at(0, "graveyard", "Smoke Relic")]);
+  const source = state.zones.battlefield.find(id => state.objects[id].card === "Smoke Permit");
+  for (let n = 0; n < 2; n += 1) runEffect(state, {effect: "mayPlay", from: "graveyard", count: 1, spellsOnly: true}, {controller: 0, source});
+  const permits = state.effects.filter(e => e.rule === "may-play").map(e => e.id);
+  const offers = legalActions(state, 0).filter(a => a.kind === "cast" && a.label === "Smoke Relic");
+  eq(offers.map(a => a.via).sort(), [...permits].sort(), "the player chooses which limited permission is spent");
+  applyAction(state, 0, offers.find(a => a.via === permits[1]));
+  eq(state.effects.filter(e => e.rule === "may-play").map(e => e.id), [permits[0]], "choosing the second permission leaves the first available");
+  eq(state.stack.length, 1, "one spell was cast, once");
+}
+
+/* One permanent can grant two separate permissions; each ability has its own use counter (CR 113.2c, 601.2a, 305.1). */
+for (const [kind, card] of [["cast", "Smoke Relic"], ["play-land", "Forest"]]) {
+  const state = start([at(0, "graveyard", card), at(0, "battlefield", "Smoke Double Archivist")]);
+  const source = state.zones.battlefield.find(id => state.objects[id].card === "Smoke Double Archivist");
+  const offers = legalActions(state, 0).filter(action => action.kind === kind && action.label === card);
+  eq(offers.length, 2, `${kind}: two limited abilities on one source are separate choices`);
+  eq(new Set(offers.map(action => action.via)).size, 2, `${kind}: saved actions identify the particular permission ability`);
+  eq(offers.map(action => action.viaName), ["Smoke Double Archivist (permission 1)", "Smoke Double Archivist (permission 2)"],
+    `${kind}: a player can tell the same-source choices apart`);
+  for (let selected = 0; selected < 2; selected += 1) {
+    const resumed = JSON.parse(JSON.stringify(state));
+    applyAction(resumed, 0, JSON.parse(JSON.stringify(offers[selected])));
+    eq(["permission-a", "permission-b"].map(id => usesThisTurn(resumed, source, `play-from:${id}`)),
+      selected === 0 ? [1, 0] : [0, 1], `${kind}: selecting ability ${selected + 1} spends only that ability after reload`);
+  }
+  const before = JSON.stringify(state);
+  assert.throws(() => applyAction(state, 0, {...offers[1], via: String(offers[1].via).replace("permission-b", "missing-permission")}),
+    `${kind}: a forged permission ability is refused`); checks += 1;
+  eq(JSON.stringify(state), before, `${kind}: refusal does not spend a counter, move a card or change priority`);
+}
+
+{
+  let state = start([at(0, "graveyard", "Smoke Relic"), at(0, "battlefield", "Smoke Archivist", "Smoke Archivist")]);
+  const sources = state.zones.battlefield.filter(id => state.objects[id].card === "Smoke Archivist");
+  const offers = legalActions(state, 0).filter(a => a.kind === "cast" && a.label === "Smoke Relic");
+  eq(offers.map(a => a.via), sources, "two identical limited static permissions also remain separate choices");
+  state = JSON.parse(JSON.stringify(state));
+  applyAction(state, 0, offers[1]);
+  eq(sources.map(id => usesThisTurn(state, id, "play-from:permission")), [0, 1], "the persisted action spends the chosen source's once-per-turn permission");
+}
+
+{
+  const state = start([at(0, "graveyard", "Smoke Relic")]);
+  for (const count of [1, undefined]) runEffect(state, {effect: "mayPlay", from: "graveyard", ...(count ? {count} : {})}, {controller: 0});
+  const permits = state.effects.filter(e => e.rule === "may-play");
+  const offers = legalActions(state, 0).filter(a => a.kind === "cast" && a.label === "Smoke Relic");
+  eq(offers.map(a => a.via), permits.map(e => e.id), "the player can spend a limited permission even while an unlimited one is open");
+  applyAction(state, 0, offers[0]);
+  eq(state.effects.filter(e => e.rule === "may-play").map(e => e.id), [permits[1].id], "choosing the limited permission consumes it and leaves the unlimited permission");
+}
+
+{
+  const state = start([at(0, "graveyard", "Smoke Relic")]);
+  for (let n = 0; n < 2; n += 1) runEffect(state, {effect: "mayPlay", from: "graveyard"}, {controller: 0});
+  eq(legalActions(state, 0).filter(a => a.kind === "cast" && a.label === "Smoke Relic").length, 1, "identical unlimited permissions still have the same outcome and need one offer");
+}
+
+/* Two permissions can differ only in their alternative mana cost (CR 118.9, 601.2a). Neither is auto-selected. */
+for (const limited of [false, true]) {
+  const state = start([]);
+  const card = addObject(state,
+    {card: "Smoke Exile Creature", types: ["Creature"], manaCost: "{7}", power: 1, toughness: 1, owner: 0, controller: 0}, "exile", 0);
+  state.players[0].manaPool = {C: 10};
+  for (const manaInstead of ["{2}", "{3}"]) runEffect(state, {effect: "mayPlay", targets: [card], manaInstead, ...(limited ? {count: 1} : {})}, {controller: 0, source: null});
+  const permissions = state.effects.filter(e => e.rule === "may-play");
+  const offers = legalActions(state, 0).filter(action => action.kind === "cast" && action.objectId === card);
+  eq(offers.map(action => action.via), permissions.map(e => e.id), "different alternative costs remain separately identified choices");
+  eq(offers.map(action => action.payment.mana.C), [2, 3], "each permission offers its own actual mana payment");
+  for (let selected = 0; selected < 2; selected += 1) {
+    const resumed = JSON.parse(JSON.stringify(state));
+    applyAction(resumed, 0, JSON.parse(JSON.stringify(offers[selected])));
+    eq(resumed.players[0].manaPool.C, 8 - selected, "the persisted selected alternative cost is what is paid");
+    eq(resumed.effects.filter(e => e.rule === "may-play").map(e => e.id),
+      limited ? [permissions[1 - selected].id] : permissions.map(e => e.id), "only the chosen limited permission is consumed");
+    eq(resumed.stack.filter(entry => entry.kind === "spell").length, 1, "the chosen permission casts exactly one spell");
+  }
+}
+
+{
+const fresh = () => start([]);
+const spell = (s, zone) => addObject(s, {card: "Smoke Permission Spell", types: ["Instant"], manaCost: "{1}", owner: 0, controller: 0}, zone, 0);
+if (!process.argv[2] || process.argv[2] === "destination") {
+  const s = fresh(), card = spell(s, "graveyard"); s.players[0].manaPool = {C: 5};
+  const gates = [true, false].map((exile, index) => addObject(s, {card: index ? "Normal Gate" : "Exiling Gate", types: ["Artifact"], owner: 0, controller: 0,
+    abilities: [{id: "permission", kind: "static", rule: "play-from", affects: {what: "player", who: "you"}, zone: "graveyard", spells: true,
+      ...(exile ? {graveyardToExile: true} : {})}]}, "battlefield"));
+  const offers = legalActions(s, 0).filter(a => a.kind === "cast" && a.objectId === card);
+  eq(offers.map(a => a.via), gates, "a permission's exile-on-finish rider is an explicit player choice");
+  for (let i = 0; i < 2; i += 1) {
+    const resumed = JSON.parse(JSON.stringify(s)); applyAction(resumed, 0, JSON.parse(JSON.stringify(offers[i])));
+    eq(Boolean(resumed.stack.at(-1).graveyardToExile), i === 0, "the selected permission controls the actual stack rider");
+    resolveTop(resumed);
+    eq(resumed.zones.exile.map(id => resumed.objects[id].card), i === 0 ? ["Smoke Permission Spell"] : [], "the exile rider changes the eventual destination");
+    eq(resumed.zones.graveyard[0].map(id => resumed.objects[id].card), i === 1 ? ["Smoke Permission Spell"] : [], "the ordinary permission keeps the normal graveyard destination");
+  }
+}
+if (!process.argv[2] || process.argv[2] === "timing") {
+  const s = fresh(), card = spell(s, "exile"); s.players[0].manaPool = {C: 5};
+  runEffect(s, {effect: "mayPlay", targets: [card]}, {controller: 0});
+  /* The saved restriction a plot action writes; mayPlay's effect grammar does not itself accept a sorcery field. */
+  s.effects.find(e => e.rule === "may-play").sorcery = true;
+  runEffect(s, {effect: "mayPlay", targets: [card]}, {controller: 0});
+  const normal = s.effects.filter(e => e.rule === "may-play")[1].id;
+  eq(s.effects.filter(e => e.rule === "may-play").map(e => e.sorcery === true), [true, false], "the fixture contains the actual plotted restriction and a separate unrestricted permission");
+  pushAbility(s, {controller: 1, abilityId: "waiting", script: {effects: []}});
+  const offers = legalActions(s, 0).filter(a => a.kind === "cast" && a.objectId === card);
+  eq(offers.map(a => a.via), [normal], "a sorcery-timing permission cannot hide an instant-speed permission while the stack is nonempty");
+  applyAction(s, 0, offers[0]);
+  eq(s.stack.length, 2, "the legal instant-speed permission casts over the existing stack object");
+}
+}
+
+console.log(`engine-load100-w3-graveyard: ${checks} checks passed`);

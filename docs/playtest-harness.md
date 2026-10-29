@@ -74,7 +74,7 @@ A run, step by step (the decks to paste, the tables to make, the records to hand
 
 Buttons carry `data-action`:
 
-- `table-create`: start a table.
+- Starting a table is the New game pop-up (`crankmagic-lounge.js`, opened from Play's Pre-lobby): rows for the humans and the AI seats, difficulty and personality, rules and privacy, then Create; its buttons carry `data-ng` (not `data-action`). It replaced the lobby's old create button on 2026-10-28.
 - `table-invite`, `table-copy-link`, `table-uninvite`: invite a seat, copy its link, take the invitation back.
 - `table-deck`, then `table-use-deck` or `table-use-test-deck`: choose a deck for your seat.
 - `table-mat`, `table-mat-pick`, `table-mat-use`: choose a mat. *Use this mat* sits beside the ✕ and is off until a mat is picked.
@@ -145,7 +145,7 @@ few seconds (*The AI players are still taking their turns*); try again when the 
 
 **Table view:**
 
-- The life counter at the center: `.cm-board-pie`, `role=group`, named *Life: You 40, Maya 40*. Its logo, `data-action=board-vitals`, opens Table vitals.
+- Life, names and priority are in the turn box at the top left (`.cm-stage-caption`, one `.cm-stage-life` row per seat). The Table view's center life counter is gone (2026-10-28); Table vitals open from the Table menu (`data-action=board-vitals`).
 - The row bar and the tray bar: `[data-drag=rows]` and `[data-drag=hand]`, `role=separator`. The arrow keys move them.
   With two seats the boards sit side by side, yours on the right, and the row bar stands upright between them (← and →).
 - The hand never takes the boards' room: a hand larger than the table's card size runs on below the window, and the

@@ -8,6 +8,7 @@ Brushrazer). One break for each engine change they needed -- each guard, each br
     python3 game/tools/batch/breaks.py game/tools/batch/breaks-wave4a-h1.py
 """
 SUITES = [
+    'tests/engine-load100-w3-graveyard.mjs',
     'tests/engine-play-from-zones.mjs',
     'tests/engine-play-from.mjs',
     'tests/engine-may-play.mjs',
@@ -40,7 +41,7 @@ FREE_LIFE_TERMS = '  const lifeCost = way ? null : free ? freeLife(object, free)
 FREE_LIFE = 'const freeLife = (object, free) => (free?.payLife === "manaValue" ?'
 PAID_LIFE = '  const paidLife = freely ? freeLife(object, free) : lifeCost;'
 UNLIMITED = 'const unlimited = (ability) => ability.limit === undefined && ability.perType !== true && ability.count === undefined;'
-DOES = '  ability.additionalCost ?? null, ability.anyMana === true]);'
+DOES = '  ability.additionalCost ?? null, ability.anyMana === true, ability.manaInstead ?? null, ability.graveyardToExile === true, ability.sorcery === true]);'
 TYPE_WAYS = '  return permission?.ability.perType === true ? openTypes(state, permission.ability, permission.source, id, "spell") : [null];'
 SELF_FROM = '      && conditionHolds(state, a.condition, {controller: player, source: id})) && !found.includes(id)) found.push(id);'
 OWN_EXTRA = ' && !(permission?.ability.additionalCost && !(object.spell?.additionalCost ?? []).length))'
@@ -93,8 +94,8 @@ BREAKS = [
     ('spent: a spell cast', ACTIONS, '    spendPermission(state, permission, "spell", action.asType);\n', ''),
     ('unlimited first: a type kept', ACTIONS, UNLIMITED, UNLIMITED.replace(' && ability.perType !== true', '')),
     ('unlimited first: a count kept', ACTIONS, UNLIMITED, UNLIMITED.replace(' && ability.count === undefined', '')),
-    ('which permission: an additional cost', ACTIONS, DOES, '  ability.anyMana === true]);'),
-    ('which permission: mana of any type', ACTIONS, DOES, '  ability.additionalCost ?? null]);'),
+    ('which permission: an additional cost', ACTIONS, DOES, DOES.replace('ability.additionalCost ?? null, ', '')),
+    ('which permission: mana of any type', ACTIONS, DOES, DOES.replace('ability.anyMana === true, ', '')),
 
     # A permission an effect gives for a zone's cards (Chainer, Nightmare Adept; Gwenom, Remorseless).
     ('zone permission: read as a zone', ACTIONS, '    ability: e.from !== undefined ? {id: e.id, zone: e.from,', '    ability: e.from === "never" ? {id: e.id, zone: e.from,'),

@@ -38,7 +38,7 @@
         "self": true
       },
       "apply": {
-        "addTypes": [
+        "addSubtypes": [
           "$chosen"
         ]
       }

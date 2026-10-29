@@ -1,0 +1,502 @@
+{
+  "schema": "CrankCardExercised@1",
+  "games": [],
+  "scenarios": [
+    "Adaptive Automaton: Elf: his other Elf 2/2; the Automaton an Elf too, not pumped by itself",
+    "Adaptive Automaton: Chosen Elf shares its actual subtype with another attacking Elf under Shared Animosity",
+    "Metallic Mimic: Elf: the next Elf enters with a +1/+1 counter",
+    "Metallic Mimic: Chosen Elf shares its actual subtype with another attacking Elf under Shared Animosity",
+    "Roaming Throne: Elf: chosen as it enters",
+    "Roaming Throne: Chosen Elf shares its actual subtype with another attacking Elf under Shared Animosity"
+  ],
+  "unattributed": [
+    {
+      "game": null,
+      "scenario": "Adaptive Automaton: Elf: his other Elf 2/2; the Automaton an Elf too, not pumped by itself",
+      "kind": "GameEventSpellResolved",
+      "name": "Adaptive Automaton",
+      "abilityId": null,
+      "reason": "no printed ability with that id"
+    },
+    {
+      "game": null,
+      "scenario": "Adaptive Automaton: Chosen Elf shares its actual subtype with another attacking Elf under Shared Animosity",
+      "kind": "GameEventSpellResolved",
+      "name": "Adaptive Automaton",
+      "abilityId": null,
+      "reason": "no printed ability with that id"
+    },
+    {
+      "game": null,
+      "scenario": "Metallic Mimic: Elf: the next Elf enters with a +1/+1 counter",
+      "kind": "GameEventSpellResolved",
+      "name": "Metallic Mimic",
+      "abilityId": null,
+      "reason": "no printed ability with that id"
+    },
+    {
+      "game": null,
+      "scenario": "Metallic Mimic: Chosen Elf shares its actual subtype with another attacking Elf under Shared Animosity",
+      "kind": "GameEventSpellResolved",
+      "name": "Metallic Mimic",
+      "abilityId": null,
+      "reason": "no printed ability with that id"
+    },
+    {
+      "game": null,
+      "scenario": "Roaming Throne: Elf: chosen as it enters",
+      "kind": "GameEventSpellResolved",
+      "name": "Roaming Throne",
+      "abilityId": null,
+      "reason": "no printed ability with that id"
+    },
+    {
+      "game": null,
+      "scenario": "Roaming Throne: Chosen Elf shares its actual subtype with another attacking Elf under Shared Animosity",
+      "kind": "GameEventSpellResolved",
+      "name": "Roaming Throne",
+      "abilityId": null,
+      "reason": "no printed ability with that id"
+    }
+  ],
+  "cards": {
+    "Adaptive Automaton": {
+      "singleFace": true,
+      "cast": 0,
+      "played": 0,
+      "resolved": 0,
+      "exercised": 0,
+      "games": [],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Adaptive Automaton",
+          "kind": "replacement",
+          "keyword": null,
+          "text": "As this creature enters, choose a creature type.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": [],
+          "counterfactualUnobserved": {
+            "reason": "no passing scenario failed because of this runtime removal",
+            "diagnostics": [
+              {
+                "scenario": "Elf: his other Elf 2/2; the Automaton an Elf too, not pumped by itself",
+                "reason": "generic exception, presence assertion, or step limit is not behavior proof",
+                "error": "Elf: his other Elf 2/2; the Automaton an Elf too, not pumped by itself: nothing is being asked"
+              },
+              {
+                "scenario": "Chosen Elf shares its actual subtype with another attacking Elf under Shared Animosity",
+                "reason": "generic exception, presence assertion, or step limit is not behavior proof",
+                "error": "Chosen Elf shares its actual subtype with another attacking Elf under Shared Animosity: nothing is being asked"
+              }
+            ]
+          }
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Adaptive Automaton",
+          "kind": "static",
+          "keyword": null,
+          "text": "This creature is the chosen type in addition to its other types.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [
+            "Adaptive Automaton: Chosen Elf shares its actual subtype with another attacking Elf under Shared Animosity"
+          ],
+          "games": [],
+          "counterfactual": [
+            {
+              "status": "proved",
+              "method": "runtime-ability-removal",
+              "scenario": "Chosen Elf shares its actual subtype with another attacking Elf under Shared Animosity",
+              "scenarioIndex": 1,
+              "baseline": {
+                "status": "passed",
+                "checks": 2,
+                "events": 45
+              },
+              "mutation": {
+                "path": "abilities[1]",
+                "id": "a1",
+                "kind": "static"
+              },
+              "result": {
+                "status": "failed",
+                "message": "Chosen Elf shares its actual subtype with another attacking Elf under Shared Animosity: Adaptive Automaton is 2/2, not 3/2"
+              },
+              "elapsedMs": 25.203300000000127
+            }
+          ]
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Adaptive Automaton",
+          "kind": "static",
+          "keyword": null,
+          "text": "Other creatures you control of the chosen type get +1/+1.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [
+            "Adaptive Automaton: Elf: his other Elf 2/2; the Automaton an Elf too, not pumped by itself"
+          ],
+          "games": [],
+          "counterfactual": [
+            {
+              "status": "proved",
+              "method": "runtime-ability-removal",
+              "scenario": "Elf: his other Elf 2/2; the Automaton an Elf too, not pumped by itself",
+              "scenarioIndex": 0,
+              "baseline": {
+                "status": "passed",
+                "checks": 2,
+                "events": 13
+              },
+              "mutation": {
+                "path": "abilities[2]",
+                "id": "a2",
+                "kind": "static"
+              },
+              "result": {
+                "status": "failed",
+                "message": "Elf: his other Elf 2/2; the Automaton an Elf too, not pumped by itself: Elf is 1/1, not 2/2"
+              },
+              "elapsedMs": 5.265400000000227
+            }
+          ]
+        }
+      ]
+    },
+    "Metallic Mimic": {
+      "singleFace": true,
+      "cast": 0,
+      "played": 0,
+      "resolved": 0,
+      "exercised": 0,
+      "games": [],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Metallic Mimic",
+          "kind": "replacement",
+          "keyword": null,
+          "text": "As this creature enters, choose a creature type.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": [],
+          "counterfactualUnobserved": {
+            "reason": "no passing scenario failed because of this runtime removal",
+            "diagnostics": [
+              {
+                "scenario": "Elf: the next Elf enters with a +1/+1 counter",
+                "reason": "generic exception, presence assertion, or step limit is not behavior proof",
+                "error": "Elf: the next Elf enters with a +1/+1 counter: nothing is being asked"
+              },
+              {
+                "scenario": "Chosen Elf shares its actual subtype with another attacking Elf under Shared Animosity",
+                "reason": "generic exception, presence assertion, or step limit is not behavior proof",
+                "error": "Chosen Elf shares its actual subtype with another attacking Elf under Shared Animosity: nothing is being asked"
+              }
+            ]
+          }
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Metallic Mimic",
+          "kind": "static",
+          "keyword": null,
+          "text": "This creature is the chosen type in addition to its other types.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [
+            "Metallic Mimic: Chosen Elf shares its actual subtype with another attacking Elf under Shared Animosity"
+          ],
+          "games": [],
+          "counterfactual": [
+            {
+              "status": "proved",
+              "method": "runtime-ability-removal",
+              "scenario": "Chosen Elf shares its actual subtype with another attacking Elf under Shared Animosity",
+              "scenarioIndex": 1,
+              "baseline": {
+                "status": "passed",
+                "checks": 2,
+                "events": 42
+              },
+              "mutation": {
+                "path": "abilities[1]",
+                "id": "a1",
+                "kind": "static"
+              },
+              "result": {
+                "status": "failed",
+                "message": "Chosen Elf shares its actual subtype with another attacking Elf under Shared Animosity: Metallic Mimic is 2/1, not 3/1"
+              },
+              "elapsedMs": 7.008899999999812
+            }
+          ]
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Metallic Mimic",
+          "kind": "replacement",
+          "keyword": null,
+          "text": "Each other creature you control of the chosen type enters with an additional +1/+1 counter on it.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [
+            "Metallic Mimic: Elf: the next Elf enters with a +1/+1 counter"
+          ],
+          "games": [],
+          "counterfactual": [
+            {
+              "status": "proved",
+              "method": "runtime-ability-removal",
+              "scenario": "Elf: the next Elf enters with a +1/+1 counter",
+              "scenarioIndex": 0,
+              "baseline": {
+                "status": "passed",
+                "checks": 1,
+                "events": 18
+              },
+              "mutation": {
+                "path": "abilities[2]",
+                "id": "a2",
+                "kind": "replacement"
+              },
+              "result": {
+                "status": "failed",
+                "message": "Elf: the next Elf enters with a +1/+1 counter: Elf is 1/1, not 2/2"
+              },
+              "elapsedMs": 3.960399999999936
+            }
+          ]
+        }
+      ]
+    },
+    "Roaming Throne": {
+      "singleFace": true,
+      "cast": 0,
+      "played": 0,
+      "resolved": 0,
+      "exercised": 0,
+      "games": [],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Roaming Throne",
+          "kind": "keyword",
+          "keyword": "ward",
+          "text": "Ward {2}",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": [],
+          "counterfactualUnobserved": {
+            "reason": "no passing scenario failed because of this runtime removal",
+            "diagnostics": []
+          }
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Roaming Throne",
+          "kind": "replacement",
+          "keyword": null,
+          "text": "As this creature enters, choose a creature type.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": [],
+          "counterfactualUnobserved": {
+            "reason": "no passing scenario failed because of this runtime removal",
+            "diagnostics": [
+              {
+                "scenario": "Elf: chosen as it enters",
+                "reason": "generic exception, presence assertion, or step limit is not behavior proof",
+                "error": "Elf: chosen as it enters: nothing is being asked"
+              },
+              {
+                "scenario": "Chosen Elf shares its actual subtype with another attacking Elf under Shared Animosity",
+                "reason": "generic exception, presence assertion, or step limit is not behavior proof",
+                "error": "Chosen Elf shares its actual subtype with another attacking Elf under Shared Animosity: nothing is being asked"
+              }
+            ]
+          }
+        },
+        {
+          "path": "abilities[2]",
+          "runtimeId": "a2",
+          "face": "Roaming Throne",
+          "kind": "static",
+          "keyword": null,
+          "text": "This creature is the chosen type in addition to its other types.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [
+            "Roaming Throne: Chosen Elf shares its actual subtype with another attacking Elf under Shared Animosity"
+          ],
+          "games": [],
+          "counterfactual": [
+            {
+              "status": "proved",
+              "method": "runtime-ability-removal",
+              "scenario": "Chosen Elf shares its actual subtype with another attacking Elf under Shared Animosity",
+              "scenarioIndex": 1,
+              "baseline": {
+                "status": "passed",
+                "checks": 2,
+                "events": 48
+              },
+              "mutation": {
+                "path": "abilities[2]",
+                "id": "a2",
+                "kind": "static"
+              },
+              "result": {
+                "status": "failed",
+                "message": "Chosen Elf shares its actual subtype with another attacking Elf under Shared Animosity: Roaming Throne is 4/4, not 5/4"
+              },
+              "elapsedMs": 8.817800000000261
+            }
+          ]
+        },
+        {
+          "path": "abilities[3]",
+          "runtimeId": "a3",
+          "face": "Roaming Throne",
+          "kind": "static",
+          "keyword": null,
+          "text": "If a triggered ability of another creature you control of the chosen type triggers, it triggers an additional time.",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [],
+          "games": [],
+          "counterfactualUnobserved": {
+            "reason": "no passing scenario failed because of this runtime removal",
+            "diagnostics": []
+          }
+        }
+      ]
+    }
+  },
+  "scope": {
+    "selected": [
+      "Adaptive Automaton",
+      "Metallic Mimic",
+      "Roaming Throne"
+    ],
+    "cardRoot": "C:\\Users\\robmi\\CrankMagic\\worktrees\\load100\\w0-integrate\\game\\engine\\cards"
+  },
+  "measurement": {
+    "complete": true
+  },
+  "summary": {
+    "final": 3,
+    "exercised": 0,
+    "neverExercised": [
+      "Adaptive Automaton",
+      "Metallic Mimic",
+      "Roaming Throne"
+    ],
+    "abilities": 10,
+    "reached": 5,
+    "scenarioReached": 5,
+    "counterfactualReached": 5,
+    "unreached": [
+      {
+        "card": "Adaptive Automaton",
+        "path": "abilities[0]",
+        "kind": "replacement",
+        "reason": "no unambiguous application event observed"
+      },
+      {
+        "card": "Metallic Mimic",
+        "path": "abilities[0]",
+        "kind": "replacement",
+        "reason": "no unambiguous application event observed"
+      },
+      {
+        "card": "Roaming Throne",
+        "path": "abilities[0]",
+        "kind": "keyword",
+        "reason": "no unambiguous application event observed"
+      },
+      {
+        "card": "Roaming Throne",
+        "path": "abilities[1]",
+        "kind": "replacement",
+        "reason": "no unambiguous application event observed"
+      },
+      {
+        "card": "Roaming Throne",
+        "path": "abilities[3]",
+        "kind": "static",
+        "reason": "no unambiguous application event observed"
+      }
+    ],
+    "scenarioUnreached": [
+      {
+        "card": "Adaptive Automaton",
+        "path": "abilities[0]",
+        "kind": "replacement",
+        "reason": "no passing scenario has execution or runtime-removal behavior proof"
+      },
+      {
+        "card": "Metallic Mimic",
+        "path": "abilities[0]",
+        "kind": "replacement",
+        "reason": "no passing scenario has execution or runtime-removal behavior proof"
+      },
+      {
+        "card": "Roaming Throne",
+        "path": "abilities[0]",
+        "kind": "keyword",
+        "reason": "no passing scenario has execution or runtime-removal behavior proof"
+      },
+      {
+        "card": "Roaming Throne",
+        "path": "abilities[1]",
+        "kind": "replacement",
+        "reason": "no passing scenario has execution or runtime-removal behavior proof"
+      },
+      {
+        "card": "Roaming Throne",
+        "path": "abilities[3]",
+        "kind": "static",
+        "reason": "no passing scenario has execution or runtime-removal behavior proof"
+      }
+    ],
+    "complete": false,
+    "scenarioComplete": false
+  }
+}

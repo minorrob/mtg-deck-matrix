@@ -217,6 +217,71 @@
           }
         }
       ]
+    },
+    {
+      "name": "Zephyr Sprite deals combat damage past a ground blocker that its player blocks with whenever legal (CR 702.9b)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Zephyr Sprite"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Smoke Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Zephyr Sprite"
+          ],
+          "at": "Maya"
+        },
+        {
+          "blockIfLegal": [
+            "Smoke Bear",
+            "Zephyr Sprite"
+          ],
+          "seat": 1
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 39
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Zephyr Sprite"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Smoke Bear"
+          ]
+        }
+      ]
     }
   ]
 }
