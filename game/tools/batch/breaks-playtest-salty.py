@@ -32,4 +32,12 @@ BREAKS = [
      'pilotCombatMemory = record.pilotCombatMemory ?? null;', 'pilotCombatMemory = null;'),
     ('room recreates pilots without public damage facts', R,
      'pilotCombat: combatMemoryFor(pilotCombatMemory, seat, state.turn, seats.length)', 'pilotCombat: undefined'),
+    ('historical Salty silently switches its untaped policy', R,
+     'given && !provocation ? {...given,grudge:0} : given', 'given'),
+    ('new matches lose their pilot policy flag', R,
+     '...(pod?.pilotProvocation === true ? {pilotProvocation: true} : {}),', ''),
+    ('saved matches lose their pilot policy flag', R,
+     '...(pilotProvocation ? {pilotProvocation: true} : {}),', ''),
+    ('reopened matches lose their pilot policy flag', R,
+     'pilotProvocation = record.pilotProvocation === true;', 'pilotProvocation = false;'),
 ]

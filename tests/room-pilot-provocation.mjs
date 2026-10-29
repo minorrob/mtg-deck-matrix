@@ -15,7 +15,7 @@ const pilot=args=>{
   return {...actual,answer(v,c){observe(v);return actual.answer(v,c);},choose(v,a){observe(v);return actual.choose(v,a);}};
 };
 const storage=memoryStorage();
-let room=await startRoom({storage,cards,pilot,matchId:"provocation",seed:"provocation",pod:{passEmpty:true,houseRules:{undoLastPlay:true},seats:[
+let room=await startRoom({storage,cards,pilot,matchId:"provocation",seed:"provocation",pod:{pilotProvocation:true,passEmpty:true,houseRules:{undoLastPlay:true},seats:[
   {seatId:"person",name:"Person",pilot:"human",commander:[],cards:Array(99).fill("Public Ping")},
   ...["Sable","Trey","Lee"].map((name,i)=>({seatId:`s${i+1}`,name,pilot:"house",level:"normal",...(i===0?{persona:"sable"}:{}),commander:[],cards:Array(99).fill("Plains")}))]}});
 const see=()=>room.view(room.waitingOn);
@@ -36,6 +36,7 @@ view=see();eq(view.state.stack.at(-1).targets,[{kind:"player",id:1}],"the actual
 await until(v=>v.state.players[1].life===37);
 const saved=JSON.parse(await storage.get("room/provocation"));
 eq(saved.pilotCombatMemory.hits[1][0].amount,3,"three actual damage is persisted against the public source controller");
+eq(saved.pilotProvocation,true,"the room saves the new untaped pilot policy's version with the match");
 ok(!JSON.stringify(saved.pilotCombatMemory).includes("Ping"),"the host's compact memory stores no card names");
 const before=room.fingerprint();
 room=await openRoom({storage,cards,pilot,matchId:"provocation"});
@@ -65,4 +66,17 @@ ok((await replayMatch({storage,cards,pilot,matchId:"provocation"})).same,"damage
 const cleanStorage=memoryStorage();
 await startRoom({storage:cleanStorage,cards,matchId:"new-provocation",seed:"new",pod:{seats:[0,1].map(i=>({seatId:`p${i}`,name:`P${i}`,pilot:"human",commander:[],cards:Array(40).fill("Plains")}))}});
 eq(JSON.parse(await cleanStorage.get("room/new-provocation")).pilotCombatMemory,undefined,"a new match begins with no old grudge");
+const legacyStorage=memoryStorage(),legacyMark=views.length;
+room=await startRoom({storage:legacyStorage,cards,pilot,matchId:"legacy-provocation",seed:"legacy",pod:{passEmpty:true,seats:[
+  {seatId:"person",name:"Person",pilot:"human",commander:[],cards:Array(99).fill("Public Ping")},
+  ...["Sable","Trey","Lee"].map((name,i)=>({seatId:`s${i+1}`,name,pilot:"house",level:"normal",...(i===0?{persona:"sable"}:{}),commander:[],cards:Array(99).fill("Plains")}))]}});
+view=await until(v=>v.decision.options.some(o=>o.act==="cast"&&o.label==="Public Ping"&&/Sable/.test(o.detail??"")));
+await take(view,view.decision.options.find(o=>o.act==="cast"&&o.label==="Public Ping"&&/Sable/.test(o.detail??"")));
+await until(v=>v.state.players[1].life===37);
+const legacySaved=JSON.parse(await legacyStorage.get("room/legacy-provocation"));
+eq([legacySaved.pilotProvocation,legacySaved.pilotCombatMemory],[undefined,undefined],"actual damage in a historical unflagged match never silently opts it into a new untaped policy");
+ok(views.slice(legacyMark).every(v=>v.memory===undefined),"historical pilots receive no new public memory input");
+const legacyBefore=room.fingerprint();room=await openRoom({storage:legacyStorage,cards,pilot,matchId:"legacy-provocation"});
+eq(room.fingerprint(),legacyBefore,"historical policy absence survives a real room reload");
+ok((await replayMatch({storage:legacyStorage,cards,pilot,matchId:"legacy-provocation"})).same,"the actual unflagged historical policy replays its native room and journal");
 console.log(`room-pilot-provocation: ${checks} checks; native damage, retry/refusal, saved memory and actual pilot reopening`);

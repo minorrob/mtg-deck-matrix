@@ -32,6 +32,14 @@ Proof on Node 22.23.3:
 - Affected readers: `engine-scored-pilot` 60, `engine-hard-pilot` 49, `room-seat-pilots` 15, `room-undo-play` 23,
   `game-replay` 14, `pilot-roles` 31, `pilot-policy` 25, `engine-house-pilot` 19. The existing bounded games/replays pass.
 
+The follow-up versions untaped pilot policy with saved pod/room `pilotProvocation: true`. New canonical table/fuzz
+launches must set it; an unflagged historical pod keeps the former scoring and receives no new damage memory. Direct
+pilot construction uses the current policy. The native suite now has 71 checks, including the historical three-turn
+target sequence `[1,1,1]`; the room suite has 21 checks, including actual damage/reopen/replay without the flag. All
+seventeen mutations are caught in one run with `missed: []`. This proves this policy boundary, not migration of old
+live games or compatibility of every historical engine rule/event change. W5 owns canonical table flags; root owns
+canonical fuzz flags. The room also copies W5's `sourceChoices` field into the state creation arguments.
+
 Linear ROB-211 is In Progress. Review/integration and exact-head Actions remain with root; it is not marked Done.
 
 ## Remaining intake

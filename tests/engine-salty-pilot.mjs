@@ -23,14 +23,14 @@ function fixture() {
   const trampler=creature("Huge trampler",2,12,12,["Trample"]);
   return {state,mine,trampler};
 }
-function combat(state,mine,memory,sequence,round) {
+function combat(state,mine,memory,sequence,round,provocation=true) {
   state.turn=5+round*4;state.activePlayer=0;state.phase="COMBAT_DECLARE_ATTACKERS";
   state.players[0].turnBegan=state.turn;
   for(const id of mine)state.objects[id].tapped=false;
   ok(attackers.open(state),"actual rules open the attack declaration");
   const choice=attackers.choice(state,state.awaiting);
   const view={...projectFor(state,0),pilotCombat:combatMemoryFor(memory,0,state.turn,4)};
-  const answer=seatPilot({seat:0,level:"normal",persona:"sable",seed:"salty"}).answer(view,choice);
+  const answer=seatPilot({seat:0,level:"normal",persona:"sable",seed:"salty",provocation}).answer(view,choice);
   const target=choice.options.find(o=>o.index===answer.indices[0])?.defenderId;
   ok(answer.indices.length>0,"there is a profitable actual attack");
   attackers.resolve(state,state.awaiting,answer.indices);
@@ -55,6 +55,13 @@ function combat(state,mine,memory,sequence,round) {
   ok(new Set(targets).size>=2,"unprovoked Sable does not send three consecutive attacks at only the weakest board");
   ok(!targets.includes(2),"salty pressure does not throw a Guard into the untapped 12/12");
   eq(state.players.slice(1).reduce((n,p)=>n+(p.id===1?27:40)-p.life,0),18,"all eighteen damage is actual combat damage");
+}
+{
+  const {state,mine}=fixture();let memory=null,sequence=0;const targets=[];
+  for(let round=0;round<3;round++){
+    const out=combat(state,mine,memory,sequence,round,false);targets.push(out.target);memory=out.memory;sequence=out.sequence;
+  }
+  eq(targets,[1,1,1],"historical untaped Salty choices retain their original three-turn policy when the saved match lacks the new version");
 }
 {
   const {state,mine}=fixture();
