@@ -76,3 +76,26 @@ by this ownership correction.
 The full historical ledger is archived as `evidence/ability-initial-0a848bb4.json.gz`, with a manifest, hashes, raw-data
 secret scan, and readable provisional summary. It is retained as history, not authoritative gate evidence. A corrected
 whole-directory sweep uses the new ownership code and reports its own exact harness head.
+
+The authoritative initial sweep completed on `508afa94c70b00611e247d78adf23383d4403802`, using the same unchanged saved
+cards/scenarios and original rules: 6,430 definitions, 11,023 scenarios, 0 failed; 6,079 of 11,636 abilities reached
+(1,840 by runtime removal), 5,557 unreached across 3,665 cards, and 0 over-budget probes. The expected exit is 1.
+This is initial debt measurement, not consolidated integration evidence. Ownership correction removed seven provisional
+spell credits: Brainstorm, Careful Study, Raise Dead, Rampant Growth, Secret Rendezvous, Seething Song, and Wheel of Fortune.
+Every ability remains in the denominator.
+
+The corrected full ledger is `evidence/ability-corrected-508afa94.json.gz`; its manifest records code SHA and both raw
+and compressed hashes. The readable `.summary.json` and `.backlog.json` group missing witnesses by card, theme, kind,
+keyword, runtime rule, and text-template family. There are 733 families; grouping grants no execution credit.
+The largest families are Flying (801), trample (215), vigilance (196), enters tapped (170), enchant (151), and haste (145).
+Each future family-based writer still must produce and catch a behavioral witness separately for each card/ability.
+
+Unreached abilities by routing theme: combat 1,954; spells 1,396; mana 912; tokens 486; graveyard 481; faces 238;
+stack 75; walkers 15. By kind: keyword 2,926; activated 1,169; static 833; triggered 290; replacement 269; spell 70.
+The core ledger's raw SHA-256 is `60bda8067fcb6acaf2e28b7987dbd8807182d40464a95bfc1fe6d1e6155f2532`.
+
+Bounded independent reviews found no new rules conflict in W4's corrected noun/target binding and trample choice,
+W5's printed-cost search and convoke alternatives, W1's copied preparation/emblem behavior, or W6's departure-time
+spell copies and token faces. Extra live probes independently exercised copied-inset casting under another controller
+and a countered original's copied spell after persisted reload. W1 subsequently identified a duplicate emblem text
+rendering and is correcting it; the earlier behavior review does not close that display-data issue or any full theme.
