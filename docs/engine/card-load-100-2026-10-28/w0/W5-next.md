@@ -45,16 +45,22 @@ no further browser repeat without root's coordinated quiet window. Root/P0 are i
    Exact native proof covers all15 four-of-six cost subsets/ten complete payments, outside same-kind/flexible witnesses,
    current-controller eligibility and an opposing Grand Arbiter tax that catches unsafe constrained memo pruning.
    See `evidence/w5-disjoint-costs.json`; the original17-reader baseline is diagnostic, not strict G-3 acceptance.
-   Next raw solver RED: `W5-output-payload-kind-red.mjs.txt` uses the same output label for distinct C1/C2 payloads and loses
-   a legal result. Fix full-payload kind signatures consistently in normal quick/search/pattern/physical identity paths;
-   preserve saved historical keys through an explicit compatibility path. Actual C1/C2/bundled/restriction/effect families
-   pass, but do not infer general output/ability equivalence from those bounded cases.
+   The saved raw solver RED `W5-output-payload-kind-red.mjs.txt` now retains both C1/C2 payloads despite the same label.
+   Current quick/search/pattern/physical identity paths consistently use full normalized payloads and remap actual activation
+   labels per selected source. Payload-sorted alternatives preserve reversed-array GG/GU/UU; actual reordered bundles
+   retain both physical IDs and reserved outside-source witnesses. Named historical planners preserve exact saved keys.
+   `evidence/w5-payload-kinds.json` records462 native checks, the original17-reader baseline and eight caught mutations
+   (seven in the first run, one ambiguous anchor narrowed and separately caught on unchanged baseline source).
+   Actual C1/C2/bundled/restriction/effect families pass; no general output/ability equivalence claim follows from them.
    The operational pilot RED in `W5-disjoint-pilot-red.mjs.txt` now passes. Native choose-cost includes one serializable
    factual funding witness without changing any human options. The narrow generic house-pilot tap-cost chooser preserves
    that witness and sends explicit indices; no human default, refused-answer substitution, or retry loop is added.
    `evidence/w5-pilot-tap-cost.json` records417 native checks,25 native-room checks including Pay/reload/priority/zero
    refusals/a real winner/identical replay, and three caught mutations. This fixture game is not pool/library G-5 credit.
    Do not claim whole payment/identity completeness from this ordinary-cast slice.
+   Next actual effect-paid RED: Isochron Scepter copying Getaway Glamer offers no cast even with C3 left after activation;
+   chosen spree costs remain owed when the base mana cost is free. P0's executable audit is in the shared scratch folder.
+   Reuse the current modal contract after coordinating root's clean integration checkpoint; do not simply lift the refusal.
 4. Coordinate with W1's queued Siege transformed-cast seam before editing choicesNow/play flags.
    W4 owns the mana-ability `then` damage-continuation region; avoid overlapping edits there.
 

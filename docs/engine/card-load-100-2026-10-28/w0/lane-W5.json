@@ -17,7 +17,7 @@
     "| Convoke with Phyrexian or {2/W} symbols left to the pool | `rules/mana.mjs`:483 | W5 |",
     "| Ways to pay capped: 24 tap choices, 12 payments | `rules/actions.mjs`:1703; `rules/mana.mjs`:254 | W5 |"
   ],
-  "status": "Pilot disjoint-cost chooser native417/room25/three mutations proven; raw full payload kinds and other wave0 gates remain open",
+  "status": "Full-payload ordinary source identities native462/original17-reader baseline/eight mutations proven; effect-paid costs and other wave0 gates remain open",
   "checkpoint": {
     "cardsAdded": 0,
     "cardsPromoted": 0,
@@ -293,9 +293,25 @@
     "actualFixtureGameWinner": true,
     "actualFixtureGameReplay": true,
     "poolOrLibraryG5Credit": false,
-    "rawPayloadKinds": "RED saved; approved next",
+    "rawPayloadKinds": "corrected by the subsequent full-payload checkpoint",
     "effectPaidCosts": "open",
     "originalReaderBrowser": "blocked; two mutations uncredited",
+    "G5": false,
+    "G7": false
+  },
+  "payloadKindCheckpoint": {
+    "base": "bc4f16a776e074abda8624d13dcfbf431d1b932e",
+    "evidence": "evidence/w5-payload-kinds.json",
+    "nativeChecks": 462,
+    "originalBaselineSuites": 17,
+    "firstRunCaught": 7,
+    "repairedAmbiguousAnchorCaught": 1,
+    "totalDistinctMutationsCaught": 8,
+    "uncaughtAfterSupplement": [],
+    "normalRawContract": "full payload identity",
+    "historicalExactKeys": "preserved by named compatibility planners",
+    "effectPaidCosts": "open; actual Scepter/Getaway Glamer RED",
+    "wholePaymentComplete": false,
     "G5": false,
     "G7": false
   }

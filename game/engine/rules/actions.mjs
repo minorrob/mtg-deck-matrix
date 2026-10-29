@@ -55,7 +55,7 @@
 import {cardsIn, moveObject, usesThisTurn, recordUse, showFace, showAdventure, shownFaceDown, shownFaceUp, turnFaceUp, eventCard, commanderKeyOf, recordDiscard, activationsForbidden, valueCostOf} from "../state/index.mjs";
 import {mayLookAt} from "../projection.mjs";
 import {pushSpell, pushAbility, becameTarget, crimeCommitted} from "./stack.mjs";
-import {spend, parseManaCost, automaticPayment, canPay, chosenPayment, paymentOptions, paymentKey, paymentWords, PAY_CHOICES, manaValue, poolSize, tapPlans, sourceTapPlans, quickTapPlan, convokeCanPay, convokePayments, lessGeneric} from "./mana.mjs";
+import {spend, parseManaCost, automaticPayment, canPay, chosenPayment, paymentOptions, paymentKey, paymentWords, PAY_CHOICES, manaValue, poolSize, tapPlans, sourceTapPlans, quickTapPlan, historicalSourceTapPlans, historicalQuickTapPlan, manaPayloadKey, sourceOutputs, sourceKindKey, convokeCanPay, convokePayments, lessGeneric} from "./mana.mjs";
 import {commanderTax, recordCommanderCast, commanderIdentity} from "./commander.mjs";
 import {COLORS, MANA_KEYS, manaAbilityNow} from "./mana.mjs";
 import {sickForAbilities, hasFlash, splitSecondOnStack} from "../keywords/timing.mjs";
@@ -1788,7 +1788,7 @@ function fundingPlans(state, player, id, cost, limit, units = tapUnits(state, pl
      so the first way asked is the way the offer was priced at. */
   const complete = units.map(unit => ({...unit, outputs: unit.outputs ?? Object.fromEntries(unit.colors.map(color => [color, {[color]: 1}]))}));
   const byId = new Map(complete.map(unit => [unit.id, unit]));
-  const kind = unit => Object.keys(unit.outputs).sort().join("/");
+  const kind = state.sourceChoices === true ? sourceKindKey : unit => Object.keys(unit.outputs).sort().join("/");
   const reserved = new Set(reserve?.ids ?? []), outside = new Map();
   for (const unit of complete) if (!reserved.has(unit.id)) outside.set(kind(unit), (outside.get(kind(unit)) ?? 0) + 1);
   /* Equivalent source IDs can be assigned outside the cost set first. Only unavoidable overlap reduces the cost's
@@ -1805,12 +1805,19 @@ function fundingPlans(state, player, id, cost, limit, units = tapUnits(state, pl
     const groups = new Map(), at = new Map();
     for (const unit of complete) {const key = kind(unit); if (!groups.has(key)) groups.set(key, []); groups.get(key).push(unit);}
     for (const group of groups.values()) group.sort((a,b) => Number(reserved.has(a.id)) - Number(reserved.has(b.id)));
-    return {...plan, taps: plan.taps.map(tap => {const key = kind(byId.get(tap.id)), index = at.get(key) ?? 0; at.set(key, index + 1); return {...tap, id: groups.get(key)[index].id};})};
+    return {...plan, taps: plan.taps.map(tap => {
+      const original = byId.get(tap.id), key = kind(original), index = at.get(key) ?? 0;
+      at.set(key, index + 1);
+      const unit = groups.get(key)[index], payload = manaPayloadKey(original.outputs[tap.color]);
+      return {id: unit.id, color: Object.keys(unit.outputs).find(color => manaPayloadKey(unit.outputs[color]) === payload)};
+    })};
   };
-  const built = quickTapPlan(complete, pool, cost), quick = built && (!acceptTaps || acceptTaps(built.taps)) ? witness(built) : null;
-  if (limit === 1) return quick ? [quick] : sourceTapPlans(complete, pool, cost, 1, acceptTaps).map(witness);
-  const found = sourceTapPlans(complete, pool, cost, limit, acceptTaps).map(witness);
-  const pattern = plan => `${plan.taps.map(tap => `${Object.keys(byId.get(tap.id).outputs).sort().join("/")}=${tap.color}`).sort().join(";")}|${paymentKey(plan.payment)}`;
+  const build = state.sourceChoices === true ? quickTapPlan : historicalQuickTapPlan;
+  const search = state.sourceChoices === true ? sourceTapPlans : historicalSourceTapPlans;
+  const built = build(complete, pool, cost), quick = built && (!acceptTaps || acceptTaps(built.taps)) ? witness(built) : null;
+  if (limit === 1) return quick ? [quick] : search(complete, pool, cost, 1, acceptTaps).map(witness);
+  const found = search(complete, pool, cost, limit, acceptTaps).map(witness);
+  const pattern = plan => `${plan.taps.map(tap => `${kind(byId.get(tap.id))}=${manaPayloadKey(byId.get(tap.id).outputs[tap.color])}`).sort().join(";")}|${paymentKey(plan.payment)}`;
   const quickPattern = quick && state.sourceChoices === true ? pattern(quick) : null;
   return quick ? [quick, ...found.filter((w) => state.sourceChoices === true ? pattern(w) !== quickPattern : w.key !== quick.key)].slice(0, limit) : found;
 }
@@ -1840,16 +1847,18 @@ function fundingIdentities(state, player, action, plan) {
   if (state.sourceChoices !== true) return {taps: plan.taps};
   const costTaps = new Set(action.flashbackTap ?? []);
   const units = tapUnits(state, player, undefined, pooledTaps(state)).filter(unit => !costTaps.has(unit.id));
-  const kind = unit => [...unit.colors].sort().join("/");
+  const kind = sourceKindKey;
   const byId = new Map(units.map(unit => [unit.id, unit]));
   const groups = [];
   for (const tap of plan.taps) {
     const unit = byId.get(tap.id);
     if (!unit || !unit.colors.includes(tap.color)) throw new Error("Those mana sources are no longer available");
-    const key = kind(unit), group = groups.find(g => g.kind === key && g.color === tap.color);
+    const key = kind(unit), payload = manaPayloadKey(sourceOutputs(unit)[tap.color]), group = groups.find(g => g.kind === key && g.payload === payload);
     if (group) group.count++;
-    else groups.push({kind: key, color: tap.color, count: 1, outputLabel: manaMadeWords(unit.outputs?.[tap.color] ?? {[tap.color]: 1})});
+    else groups.push({kind: key, payload, color: tap.color, count: 1, outputLabel: manaMadeWords(sourceOutputs(unit)[tap.color])});
   }
+  /* Numeric saved group selections refer to a stable payload order, independent of the quick witness's activation order. */
+  groups.sort((a,b) => a.kind < b.kind ? -1 : a.kind > b.kind ? 1 : a.payload < b.payload ? -1 : a.payload > b.payload ? 1 : 0);
   const selections = action.tapSources ?? {};
   if (typeof selections !== "object" || selections === null || Array.isArray(selections)
       || Object.keys(selections).some(k => !/^(0|[1-9][0-9]*)$/.test(k) || Number(k) >= groups.length)) throw new Error("Invalid mana source selection");
@@ -1864,7 +1873,11 @@ function fundingIdentities(state, player, action, plan) {
     if (ids === undefined) ids = eligible.map(unit => unit.id);
     if (!Array.isArray(ids) || ids.length !== group.count || new Set(ids).size !== ids.length || ids.some(id => !eligible.some(unit => unit.id === id)))
       throw new Error("Invalid mana source selection");
-    for (const id of ids) {used.add(id); taps.push({id, color: group.color});}
+    for (const id of ids) {
+      const unit = byId.get(id), color = Object.keys(sourceOutputs(unit)).find(color => manaPayloadKey(sourceOutputs(unit)[color]) === group.payload);
+      if (color === undefined) throw new Error("Those mana sources are no longer available");
+      used.add(id); taps.push({id, color});
+    }
   }
   return {taps};
 }

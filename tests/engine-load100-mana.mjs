@@ -6,7 +6,7 @@ import {createState, addObject} from "../game/engine/state/index.mjs";
 import {compileSelector} from "../game/engine/script/filter.mjs";
 import {loadCardIndex} from "../game/tools/engine-cards.mjs";
 import {runScenario} from "../game/engine/cards/scenario.mjs";
-import {parseManaCost, convokeCanPay, convokePayments, paymentKey, paymentOptions} from "../game/engine/rules/mana.mjs";
+import {parseManaCost, convokeCanPay, convokePayments, paymentKey, paymentOptions, sourceTapPlans, quickTapPlan, manaPayloadKey, sourceKindKey} from "../game/engine/rules/mana.mjs";
 import {legalActions, applyAction, castTapPlans, manaSources} from "../game/engine/rules/actions.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {resolveTop} from "../game/engine/rules/stack.mjs";
@@ -487,6 +487,7 @@ for (const manaCost of ["{1}", "{G/U}"]) {
     spell: {id: "s", text: "You gain 2 life.", targets: [], effects: [{effect: "gainLife", amount: 2}]}}, "hand", 0);
   const state = JSON.parse(JSON.stringify(saved)), action = legalActions(state, 0).find(a => a.kind === "cast");
   eq([Object.hasOwn(state, "sourceChoices"), castTapPlans(state, 0, action, Infinity).length], [false, 2], "the explicitly historical saved pod retains its old distinct activation-order keys");
+  eq(castTapPlans(state, 0, action, Infinity).map(plan => plan.key), ["sources:G/U=G;U=U|0,1,0,0,1,1|0", "sources:U=U;G/U=G|0,1,0,0,1,1|0"], "the historical tape retains its exact pre-payload keys");
   applyAction(state, 0, action);
   eq(awaitingChoice(state).options.map(o => o.label), ["Grove, Island", "Island, Grove"], "historical output labels remain exactly as on its old tape");
   const events = resolveAwaiting(state, [1]);
@@ -677,5 +678,99 @@ for (const manaCost of ["{1}", "{G/U}"]) {
   eq([reloaded.awaiting, reloaded.priorityPlayer, reloaded.passes, reloaded.stack.at(-1)?.name, reloaded.players[0].manaPool.W], [null, 0, 0, "Sephara, Sky's Blade", 0], "the actual pilot payment casts once and returns priority to its actor");
   resolveTop(reloaded);
   eq(reloaded.zones.battlefield.some(id => reloaded.objects[id].card === "Sephara, Sky's Blade"), true, "the pilot's actual paid spell resolves");
+}
+{
+  const units = [{id: 1, outputs: {C: {C: 1}}}, {id: 2, outputs: {C: {C: 2}}}];
+  const plans = sourceTapPlans(units, {}, parseManaCost("{1}"), Infinity);
+  eq(plans.map(plan => plan.taps[0].id).sort(), [1, 2], "the saved raw RED retains both complete payloads even with the same C display label");
+  eq(new Set(plans.map(plan => plan.key)).size, 2, "different full payloads retain distinct plan keys");
+  eq(sourceKindKey(units[0]) === sourceKindKey(units[1]), false, "source kinds distinguish amounts rather than just color names");
+  const aliases = [{id: 1, outputs: {alpha: {G: 1}, beta: {U: 1}}}, {id: 2, outputs: {delta: {U: 1}, gamma: {G: 1}}}];
+  const ways = sourceTapPlans(aliases, {}, parseManaCost("{2}"), Infinity);
+  const pattern = plan => plan.taps.map(tap => Object.keys(aliases.find(unit => unit.id === tap.id).outputs[tap.color])[0]).sort().join("");
+  eq(ways.map(pattern).sort(), ["GG", "GU", "UU"], "reversed output aliases retain every semantic combination exactly once");
+  eq(ways.every(plan => plan.taps.every(tap => aliases.find(unit => unit.id === tap.id).outputs[tap.color])), true, "every raw output label still binds to the actual selected source");
+  const quick = quickTapPlan(aliases, {}, parseManaCost("{2}"));
+  eq(ways.find(plan => plan.key === quick.key)?.key, quick.key, "quick and searched keys identify the same payload pattern independently of activation order");
+  const renamed = aliases.map((unit, index) => ({id: unit.id, outputs: Object.fromEntries(Object.values(unit.outputs).reverse().map((mana, n) => [`label-${index}-${n}`, mana]))}));
+  eq(sourceTapPlans(renamed, {}, parseManaCost("{2}"), Infinity).map(plan => plan.key).sort(), ways.map(plan => plan.key).sort(), "renaming and reordering presentation labels cannot change semantic funding keys");
+}
+{
+  const fixtures = {First: {types: ["Land"], abilities: [{id: "m", kind: "mana", tapSelf: true, produces: {G: 1, U: 1}}]},
+    Second: {types: ["Land"], abilities: [{id: "m", kind: "mana", tapSelf: true, produces: {U: 1, G: 1}}]},
+    Two: {types: ["Sorcery"], manaCost: "{2}", spell: {id: "s", text: "You gain 2 life.", targets: [], effects: [{effect: "gainLife", amount: 2}]}}};
+  const initial = runScenario({name: "actual equivalent bundle labels retain physical choices", pooledTaps: true, setup: [{seat: 0, zone: "hand", cards: ["Two"]},
+    {seat: 0, zone: "battlefield", cards: ["First", "Second"]}], steps: []}, cardIndex.definition, fixtures).state;
+  const ids = [...initial.zones.battlefield];
+  for (const id of ids) initial.objects[id].card = "Same Bundle";
+  const action = legalActions(initial, 0).find(action => action.kind === "cast"), plans = castTapPlans(initial, 0, action, Infinity);
+  eq(plans.length, 1, "reordered actual bundled mana vectors form one funding pattern");
+  applyAction(initial, 0, action);
+  eq([awaitingChoice(initial).cost, awaitingChoice(initial).options.map(option => option.cardId)], ["manaSource", ids], "a sole bundle pattern still asks for either actual physical source");
+  eq([initial.stack.length, ids.every(id => !initial.objects[id].tapped)], [0, true], "previewing the equivalent payloads pays and taps nothing");
+  const invalid = JSON.parse(JSON.stringify(initial)), before = structuredClone(invalid);
+  assert.throws(() => resolveAwaiting(invalid, [99])); checks++;
+  eq(invalid, before, "a forged bundle choice after reload changes no state");
+  for (let index = 0; index < ids.length; index++) {
+    const state = JSON.parse(JSON.stringify(initial)), events = resolveAwaiting(state, [index]);
+    eq(events.filter(event => event.kind === "GameEventManaPool").map(event => [event.data.fields.source.cardId, event.data.fields.produced]),
+      [[ids[index], state.objects[ids[index]].abilities[0].produces]], "the selected bundle uses its own exact activation label and full original payload");
+    eq(ids.map(id => state.objects[id].tapped === true), ids.map(id => id === ids[index]), "only the explicitly selected physical bundle is tapped");
+    eq([state.objects[state.stack.at(-1).objectId].spent.G, state.objects[state.stack.at(-1).objectId].spent.U, Object.values(state.players[0].manaPool).reduce((a,b) => a+b, 0)], [1, 1, 0], "the selected full bundle actually pays its two colors with no residual mana");
+    resolveTop(state);
+    eq([state.awaiting, state.players[0].life, state.zones.graveyard[0].some(id => state.objects[id].card === "Two")], [null, 42, true], "either physical bundled source reaches real resolution and the final graveyard zone");
+  }
+  const stale = JSON.parse(JSON.stringify(initial)); stale.objects[ids[1]].tapped = true;
+  const staleBefore = structuredClone(stale);
+  assert.throws(() => resolveAwaiting(stale, [1])); checks++;
+  eq(stale, staleBefore, "a stale payload source refuses atomically without substituting the other source");
+  const stopped = JSON.parse(JSON.stringify(initial)), stoppedEvents = concede(stopped, 0);
+  eq([stopped.awaiting, stopped.stack.length, stopped.players[0].manaPool.G, stopped.players[0].manaPool.U, stoppedEvents.some(event => event.kind === "GameEventManaPool")], [null, 0, 0, 0, false], "conceding a saved payload question produces no mana and casts nothing");
+}
+{
+  const fixtures = {Bird: {types: ["Creature"], power: 1, toughness: 1, keywords: ["Flying"], abilities: [{id: "m", kind: "mana", tapSelf: true, produces: {W: 1, G: 1}}]},
+    Land: {types: ["Land"], abilities: [{id: "m", kind: "mana", tapSelf: true, produces: {G: 1, W: 1}}]},
+    Drake: {types: ["Creature"], power: 1, toughness: 1, keywords: ["Flying"]}};
+  const {state} = runScenario({name: "reserved witness remaps equivalent bundle labels", pooledTaps: true, setup: [{seat: 0, zone: "hand", cards: ["Sephara, Sky's Blade"]},
+    {seat: 0, zone: "battlefield", cards: ["Bird", "Land", "Drake", "Drake", "Drake"]}], steps: []}, cardIndex.definition, fixtures);
+  const land = state.zones.battlefield.find(id => state.objects[id].card === "Land"), costs = state.zones.battlefield.filter(id => id !== land);
+  const action = legalActions(state, 0).find(action => action.kind === "cast" && action.alternative !== undefined), plans = castTapPlans(state, 0, action, Infinity);
+  eq(plans.map(plan => plan.taps), [[{id: land, color: "G:1+W:1"}]], "a reserved witness retargets an equivalent outside source using that source's own bundled output label");
+  const events = applyAction(state, 0, action);
+  while (state.awaiting) {
+    const choice = awaitingChoice(state);
+    eq(choice.cost, "tap", "the reserved bundle leaves only the real four-flyer cost question");
+    events.push(...resolveAwaiting(state, choice.options.filter(option => costs.includes(option.cardId)).map(option => option.index)));
+  }
+  eq(events.filter(event => event.kind === "GameEventManaPool").map(event => [event.data.fields.source.cardId, event.data.fields.produced]), [[land, {G: 1, W: 1}]], "the remapped outside-source activation produces its real full bundle");
+  eq([costs.every(id => state.objects[id].tapped), state.players[0].manaPool.G, state.players[0].manaPool.W, state.stack.at(-1)?.name], [true, 1, 0, "Sephara, Sky's Blade"], "nonmana and mana source costs remain disjoint with the exact bundled surplus");
+  resolveTop(state);
+  eq(state.zones.battlefield.some(id => state.objects[id].card === "Sephara, Sky's Blade"), true, "the full remapped payment reaches actual resolution");
+}
+{
+  const fixtures = {First: {types: ["Land"], abilities: [{id: "m", kind: "mana", tapSelf: true, produces: [{G: 1}, {U: 1}]}]},
+    Second: {types: ["Land"], abilities: [{id: "m", kind: "mana", tapSelf: true, produces: [{U: 1}, {G: 1}]}]},
+    Two: {types: ["Sorcery"], manaCost: "{2}", spell: {id: "s", text: "You gain 2 life.", targets: [], effects: [{effect: "gainLife", amount: 2}]}}};
+  const initial = runScenario({name: "actual reversed output arrays", pooledTaps: true, setup: [{seat: 0, zone: "hand", cards: ["Two"]},
+    {seat: 0, zone: "battlefield", cards: ["First", "Second"]}], steps: []}, cardIndex.definition, fixtures).state;
+  const ids = [...initial.zones.battlefield]; for (const id of ids) initial.objects[id].card = "Same Dual";
+  const action = legalActions(initial, 0).find(action => action.kind === "cast"), plans = castTapPlans(initial, 0, action, Infinity);
+  eq(plans.map(plan => plan.taps.map(tap => tap.color).sort().join("")).sort(), ["GG", "GU", "UU"], "actual reversed output arrays preserve all GG/GU/UU patterns");
+  applyAction(initial, 0, action);
+  let paid = 0;
+  for (let index = 0; index < plans.length; index++) {
+    const state = JSON.parse(JSON.stringify(initial)), events = resolveAwaiting(state, [index]);
+    const choices = state.awaiting ? awaitingChoice(state).options.map(option => option.index) : [null];
+    for (const selected of choices) {
+      const resumed = JSON.parse(JSON.stringify(state)), actual = [...events, ...(selected === null ? [] : resolveAwaiting(resumed, [selected]))];
+      eq(actual.filter(event => event.kind === "GameEventManaPool").map(event => manaPayloadKey(event.data.fields.produced)).sort(),
+        plans[index].taps.map(tap => manaPayloadKey({[tap.color]: 1})).sort(), "each actual reversed-array payment activates the selected full output payloads");
+      eq(ids.every(id => resumed.objects[id].tapped), true, "each complete payment taps the two actual physical sources once");
+      if (selected !== null) eq(actual.find(event => event.kind === "GameEventManaPool" && event.data.fields.produced.G).data.fields.source.cardId, ids[selected], "both mixed-color physical assignments retain the explicitly selected green source");
+      resolveTop(resumed);
+      eq([resumed.awaiting, resumed.players[0].life], [null, 42], "each reversed-array physical payment resolves once"); paid++;
+    }
+  }
+  eq(paid, 4, "GG, UU and both exact GU assignments are exercised natively");
 }
 console.log(`engine-load100-mana: ${checks} checks passed — printed costs, convoke alternatives, and funded casts.`);
