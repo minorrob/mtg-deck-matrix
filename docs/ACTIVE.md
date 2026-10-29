@@ -8,6 +8,12 @@ Linear ROB-199 under ROB-85. The record is `docs/engine/card-load-100-2026-10-28
 Claim: `game/engine/cards/**`, generated card files, `data/engine/candidates.json`, the run package,
 and the engine modules its debt fixes require, subject to the ownership requests below.
 The primary checkout has another session's unfinished merge and is untouched.
+**USER HOLD on main:** Rob will signal when the other session's merge is done. No main fetch/pull/merge or local-ci
+(which fetches main), upstream publication/release until that signal. Existing isolated work may reach a safe checkpoint.
+Published orchestratorb04; local codedc06 additionally integrates #959's exact700-file source repair, independently
+audited. #960/449e is published with native435/full44/85 caught, not yet integrated. V8's mixed pilot awaits review.
+W5 only completes the already approved isolated independent cost-version separation/tests/local checkpoint; old-live
+upgrade and all full gates remain open. No staging or new card promotion. RUN.md is the exact hold/resume record.
 **Local eight-repair integration50ce44bd:** #958 adds only30 literal source fields; root8/21 full strict outcomes pass.
 Selected failures14→7 and reached0→4/14 remain historical diagnostic evidence, zero card/gate completion.
 Additive back-face API baseline6/93/nativeSnoop and two direct caught controls pass with exact source restoration.

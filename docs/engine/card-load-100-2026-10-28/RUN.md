@@ -5,6 +5,24 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **USER HOLD on main, October 29:** Rob says another session is merging and will explicitly signal when it is done.
+  Until that signal, do not fetch/pull/merge main, run `local-ci.sh` (it fetches main), or publish/release through main.
+  Do not infer release from elapsed time or remote state. Already approved isolated checks may finish safely.
+  Latest pushed orchestrator is `b04dd2f4`; current local code `dc06fba2` additionally merges #959. Root independently
+  verifies the actual700 changed files/1,072 scenarios/3,430 fields exactly match the approved plans, with all other
+  fields/scenarios retained and no definition/helper changes. Source-bound selected failures1,171→444, reached347→762
+  of1,388, omission55→86, both exits1 remain diagnostic; all35 archive hashes and full legacy55 pass on the role.
+  #960 is published/attached at `449e4e39` but not yet integrated here: proof `105e39dc` native435/full44/85caught,
+  none missed; post-b04 cards55/generators93/metadata green. Its first scan hit Windows path length; unchanged-source
+  retry with invocation-only longpaths passes. W1 is clean and parked, no active native/mutation/browser command.
+  V8 is clean at `9c4fa115`; the mixed-board fixed pilot is6/10 full passes, four unproved, no wider validation or
+  saved edit approved. Its proposal/package is in scratch, pending root review after hold release.
+  W5 is completing only its approved isolated `effectCostVersion:1` separation and safe local checkpoint. Both earlier
+  epoch1 unpaid refresh and whole-room serial6→7 replay regressions are reproduced. The independent cost version is
+  approved: all new room/table/scenario/fuzz force/store1; absence preserves exact historical costs, not a proof escape.
+  No play-epoch/source proxy, no repricing locked old choices, no hash ignores. Earlier1 whole17 replay now matches
+  state/journal after separation; paid/locked/anyNumber/current-cost proofs and full new-source controls remain pending.
+  Old-live upgrade policy is explicitly open. No main merge, staging release or card/gate completion.
 - **Narrow source batch approved after root review:** root independently matches all6,430 file hashes and audits
   all1,233 plans for scope and exact original-field preservation; all11 fixed samples pass23 original assertions on
   local `62619241`. The exact eligible set is1,072 scenarios/700 files/3,430 literal source fields; all161 rejected
