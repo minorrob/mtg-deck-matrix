@@ -1505,7 +1505,7 @@ function playPermission(state, player, id, kind, via = null) {
    `via` its source. Identical unlimited permissions share one offer (playPermission). */
 /* And what it asks or allows beside: an additional cost to pay (Exploration Broodship), mana of any type spent (Tinybones). */
 const permissionDoes = (ability) => JSON.stringify([ability.grants ?? null, ability.gains ?? null, ability.payLife ?? null, ability.free === true, ability.graveyardToLibraryBottom === true,
-  ability.additionalCost ?? null, ability.anyMana === true]);
+  ability.additionalCost ?? null, ability.anyMana === true, ability.manaInstead ?? null]);
 /* Through a per-type permission (Muldrotha), which of its permanent types it is cast as: each still open its own offer, its
    player's to choose; through any other, as itself (null). */
 function typeWays(state, player, id, via) {

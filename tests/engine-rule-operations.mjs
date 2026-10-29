@@ -80,6 +80,8 @@ registerRuleOperation("test-finished", (state) => { emitRuleEvents(state, [{kind
   outcome = answerRuleOperation(state, [1], null, rng);
   eq(outcome.status, "done", "the last answer finishes its child, parent and following root frame");
   eq(outcome.events.map(e => e.kind), ["completed", "tail"], "saved parent continuation and root tail each execute once");
+  eq(outcome.all.map(e => e.kind), ["paid", "child-started", "child-started", "completed", "tail"],
+    "the complete operation batch remains available for grouped triggers while journal events stay incremental");
   eq(outcome.result, "tail-result", "last root result is returned to its caller");
   eq(outcome.after, {kind: "test-owner"}, "the owner's continuation tag survives every question");
   eq([state.players.map(p => p.life), state.objects[1].counters, rng.draws], [[38, 41, 42], {charge: 2, child: 2}, 3], "all earlier choices and randomness survive every reload");

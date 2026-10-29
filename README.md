@@ -1051,6 +1051,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-replacement` — `tests/engine-replacement.mjs`
 - `engine-resolution` — `tests/engine-resolution.mjs`
 - `engine-rule-operations` — `tests/engine-rule-operations.mjs`
+- `engine-replacement-steps` — `tests/engine-replacement-steps.mjs`: live, explicit replacement steps for serializable zone and entry operations
 - `engine-load100-w3-graveyard` — `tests/engine-load100-w3-graveyard.mjs`
 - `engine-rng` — `tests/engine-rng.mjs`
 - `engine-runtime` — `tests/engine-runtime.mjs`
