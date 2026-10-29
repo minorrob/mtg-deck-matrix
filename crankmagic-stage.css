@@ -1856,7 +1856,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board[data-phone] .cm-phone-battlefield>.cm-mat{overflow:visible}
 /* Required decisions own the existing canvas pop-up for their entire sequence. */
 #matrix-v2 .cm-board .cm-required-popup{position:fixed!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;z-index:60;width:min(540px,calc(100vw - 32px))!important;max-width:calc(100vw - 32px)!important;max-height:calc(100dvh - 100px)!important;margin:0!important}
-#matrix-v2 .cm-board .cm-required-popup>#cm-board-decision{padding:20px;box-sizing:border-box;max-height:calc(100dvh - 100px)!important;overflow:auto;box-shadow:0 18px 60px #0009}
+#matrix-v2 .cm-board #cm-decision-slot.cm-required-popup>#cm-board-decision{padding:20px;box-sizing:border-box;max-height:calc(100dvh - 100px)!important;overflow:hidden;box-shadow:0 18px 60px #0009}
 #matrix-v2 .cm-board .cm-choice-flow h2{margin:0 0 12px;font-size:var(--text-hud-heading,20px);line-height:1.25;text-align:center}
 #matrix-v2 .cm-board .cm-choice-flow .cm-flow-card{display:block;width:100px;height:140px;object-fit:contain;align-self:center;margin:0 auto 14px;border-radius:6px}
 #matrix-v2 .cm-board .cm-choice-flow .cm-board-options{display:grid;gap:8px;min-width:0}
@@ -1869,9 +1869,22 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-choice-flow .cm-decide-actions button{min-height:44px}
 #matrix-v2 .cm-board .cm-choice-review{list-style:none;padding:0;margin:0;display:grid;gap:8px;line-height:1.4}
 #matrix-v2 .cm-board .cm-choice-review li{padding:8px 12px;background:var(--color-panel-raised,var(--color-panel));border-left:2px solid var(--color-line-strong)}
-@media(max-width:500px){#matrix-v2 .cm-board .cm-required-popup>#cm-board-decision{padding:14px}#matrix-v2 .cm-board .cm-choice-flow .cm-flow-card{width:72px;height:100px}}
+@media(max-width:500px){#matrix-v2 .cm-board #cm-decision-slot.cm-required-popup>#cm-board-decision{padding:14px}#matrix-v2 .cm-board .cm-choice-flow .cm-flow-card{width:72px;height:100px}}
 
 .cm-flow-inspect{display:block;margin:0 auto 16px;padding:0;border:0;background:none;cursor:zoom-in}.cm-flow-inspect .cm-flow-card{margin:0}
 .cm-required-popup .cm-r4-combat{position:static;min-width:0;max-width:100%;margin-bottom:12px}
 
-#matrix-v2 .cm-board #cm-decision-slot.cm-required-popup #cm-board-decision>.cm-board-options{max-height:45dvh;overflow:auto;overscroll-behavior:contain;min-height:0}
+#matrix-v2 .cm-board #cm-decision-slot.cm-required-popup #cm-board-decision>.cm-board-options{flex:1 1 auto;max-height:45dvh;overflow:auto;overscroll-behavior:contain;min-height:0}
+
+/* ONE SCROLL REGION PER DECISION IN THE ACTIONS PANE (ROB-201, Luke's playtest of 2026-10-28). The question sat inside three
+   scrolling boxes (the drawer, its own section, its list of options), each capped by a rule of its own, so a taller drawer
+   showed nothing more. The drawer is the one now; the question and its options take the height they need, and the row that
+   answers stays in reach at the foot. A module the person gave a height of its own (`.has-height`) scrolls the question itself. */
+#matrix-v2 .cm-board .cm-stage-module[data-module=actions] .cm-board-decision{overflow:visible;max-height:none;flex:none}
+#matrix-v2 .cm-board .cm-stage-module[data-module=actions] .cm-board-decision>.cm-board-options{overflow:visible;flex:none;min-height:0;max-height:none;margin:0}
+#matrix-v2 .cm-board .cm-stage-module[data-module=actions] .cm-board-decision>.cm-board-decision-foot{position:sticky;bottom:0;z-index:2;padding:8px 0 2px;background:var(--color-panel)}
+#matrix-v2 .cm-board .cm-stage-module[data-module=actions].has-height .cm-board-decision{overflow-y:auto;overflow-x:hidden;flex:1 1 auto;min-height:0}
+/* what is scrolled to is kept clear of the sticky answering row (a key press or a scroll-into-view stops above it) */
+#matrix-v2 .cm-board #cm-actions-drawer,#matrix-v2 .cm-board .cm-stage-module[data-module=actions].has-height .cm-board-decision{scroll-padding-bottom:76px}
+
+#matrix-v2 .cm-board #cm-decision-slot.cm-required-popup #cm-board-decision>:not(.cm-board-options){flex:none}
