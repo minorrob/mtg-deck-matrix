@@ -291,7 +291,8 @@ const FACE_DOWN_EXILED = Object.freeze({card: null, types: [], subtypes: [], sup
    projection.mjs), and what it becomes as it is turned face up (708.8) or leaves the battlefield (708.9). */
 /* A permanent's copiable values (CR 707.2): what a copy effect writes onto it (effects/permanents.mjs, becomeCopy), its own
    kept beside them as `uncopied` -- only the values it has, so it is the same object woken from storage as in memory. */
-export const COPY_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "loyalty", "spell", "enchant"]);
+/* A preparation card's alternative spell characteristics are copiable (CR 722.2b); its prepared designation is not. */
+export const COPY_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "loyalty", "spell", "enchant", "preparation"]);
 /* An adventurer card's two sets of characteristics (`adventurer`, CR 715.2) are the card's too: kept beside it face down, so a
    card exiled face down and played from there may still be cast as its Adventure (715.3), and one manifested leaves the
    battlefield as the card it is (708.9). */
@@ -388,8 +389,8 @@ export function addObject(state, object, zone, player = null) {
   const owner = Number.isInteger(object.owner) ? object.owner : player;
   state.objects[id] = {
     id,
-    /* A preparation card is called by its own name alone, in every zone (CR 722.4): "Goblin Glasswright", not the pair. */
-    card: object.preparation?.of ?? object.card ?? null,
+    /* A preparation card uses its front name (CR 722.4), while an explicit copy-name exception still applies (707.9b). */
+    card: (object.preparation ? (object.card ?? object.preparation.of)?.split(" // ")[0] : object.card) ?? null,
     /* The card's PRINTED types (CR 109.3). What an object's types currently are is the layer
        system's answer (CR 613, phase 1.8); this is the base it starts from, and it comes from the
        card definition once the directory exists in phase 2. */

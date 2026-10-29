@@ -28,6 +28,7 @@ import {ownEntering, graveyardBound, placeReplacedCounters} from "./replacement.
 import {collectTriggers} from "./trigger.mjs";
 import {enteringCountersPlaced, cantBeSacrificed} from "./statics.mjs";
 import {amountOf} from "../script/amount.mjs";
+import {prepare} from "../script/effects/attributes.mjs";
 import {withChosen} from "../script/chosen.mjs";
 
 /* A chapter's number as a Saga prints it (CR 714.2a). */
@@ -240,6 +241,8 @@ export function resolveEnteringChoice(state, awaiting, indices) {
           fields: {card: eventCard(state, awaiting.objectId), type: counter, oldValue: was, newValue: object.counters[counter], by: object.controller}}});
       }
       for (const ask of own.asks) queueEnteringQuestion(state, awaiting.objectId, ask);
+      /* The card copied as it enters also has its prepare spell and entering designation (CR 614.12, 722.2b, 722.3a). */
+      if ((own.designations ?? []).includes("prepared")) prepare(state, awaiting.objectId, events);
       if (object.tapped && asked?.arrival) asked.arrival.data.fields.enteredTapped = true;
     }
     arrived(state, asked);

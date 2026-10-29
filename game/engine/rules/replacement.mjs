@@ -664,7 +664,8 @@ export function ownEntering(state, {objectId, player, types, abilities}) {
      value (CR 707.2), and enters with that many loyalty counters (CR 306.5b), as enteringModifications gives any other. */
   const counters = {...(proposal.counters ?? {})}, loyalty = state.objects[objectId]?.loyalty;
   if ((types ?? []).includes("Planeswalker") && Number.isInteger(loyalty)) counters.loyalty = (counters.loyalty ?? 0) + loyalty;
-  return {tapped: proposal.tapped === true, counters, asks: withChoiceCounters(proposal)};
+  /* Copied preparation cards also enter with their designation (CR 614.12, 722.3a). */
+  return {tapped: proposal.tapped === true, counters, asks: withChoiceCounters(proposal), designations: proposal.designations ?? []};
 }
 
 /* How an event ends under every order of the effects that apply to it (CR 616.1f: each applied, then what still applies),
