@@ -48,7 +48,7 @@ ROB-204: root verified external main merge `0aee1474`, exact-head CI canceled ra
 The merged room optional-count regression passes21 checks. ROB-210 is now In Progress: native actual-card audit113
 checks covers Brago combat provenance, zero/one/several blink targets, Thassa up-to-one, Cloudshift/Ephemerate return
 control, Flickerwisp saved delayed return and real Claim Jumper searches after reentry. Claim Jumper itself has no blink
-target. [BLINK-AUDIT.md](BLINK-AUDIT.md) records the exact patterns and the pending quiet browser verification.
+target. [BLINK-AUDIT.md](BLINK-AUDIT.md) records the exact patterns and completed quiet browser verification.
 ROB-205: Rob explicitly confirmed “Cancel reversible actions; keep committed mandatory choices pending with clear
 guidance (preserves the gates).” The engine candidate implements that policy with a server-created proposal marker,
 normalized full-state fingerprints, zero committed events and no resolving/rule-operation prefix. A real reveal event
@@ -65,5 +65,31 @@ Affected readers pass: controller66, decision-facts34, convoke43, targets-up-to4
 W2-stack268, costs32, room-undo23, replay14, room-yield43, plus Salty71/provocation21. Original assertions remain intact.
 W5 owns payment source stages; W4 owns saved damage operations. Shared UI implementation and issue closure remain open.
 
-ROB-209: modes, per-mode targets and payment continuation contract/fixtures remain to implement. UI stays with its owner.
+ROB-210 browser checkpoint: required `board-optional-count-targets` passes 50 checks; new `board-playtest-blink` passes
+148 checks across ten Focus/Full actual-room contexts through production GameRoom socket/check dispatch. The initial
+default-cache prelaunch failure receives no credit. The initial native-backed fixture retained ordinary stack priority;
+root approved matching the canonical `passStack: true` policy, retaining all original assertions. Awaited browser/server
+teardown completed before root released native work. Fixture preparation/repeated 60-card decks/storage copies are not
+G-3/G-5 Commander acceptance. Original `board-choices` still times out on full-index board startup; its failed baseline
+and unrun mutations remain an open gate. No production UI change or full-union credit is claimed.
+
+ROB-209 now has the additive private engine [MODAL-CONTRACT.md](MODAL-CONTRACT.md). Native `engine-cast-stages` passes
+52 checks, actual `room-cast-stages` 46. Selecting an old physical-source offer with `staged: true` begins fresh modes,
+then per-selected-mode targets, then payment. Stable route/printed-mode/instance/group identities, live native target
+constraints, zero/repeated/shared targets, actual Getaway Glamer spree costs and Lorehold Command target offsets are
+proved. Saved private proposals and later native funding replay exactly. Back/Cancel leave full engine/RNG/journal
+state intact before Pay; actual native funding taps four Plains and casts once. Accepted Pay retry never repays.
+Actual actor/source departure withdraws only the private proposal. Native funding retains stage metadata and forbids
+Back, including an otherwise valid selected index. Cancel at priority cannot silently cast a supplied option index.
+
+`python game/tools/batch/breaks.py game/tools/batch/breaks-playtest-cast-stages.py`: all 19 mutations caught,
+`missed: []`, with both original suite baselines green. Source files are restored after every probe. No funding rule
+module or production UI edits are included. Activated/effect-paid/other modal routes and UI consumption remain to audit;
+this is a bounded engine contract, not universal modal completion.
+
+Focused affected readers pass unchanged on the assembled dependencies: controller66, decision-facts34, precons-d140,
+copy-spell24, W2-stack268, convoke43, targets-up-to44, costs32, room-undo23, replay14, room-yield43,
+room-optional-count21, game-table186, Cancel63/room53, Salty71/provocation21, blink113, feature-wiring131 and integrity.
+No full suite is duplicated locally. The suite registry now contains the three new suites (687 actual Node suites).
+
 Universal/shared ROB-205 and ROB-209 are not closed by this checkpoint.

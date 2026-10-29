@@ -955,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 686 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 689 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1160,6 +1160,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-salty-pilot` — `tests/engine-salty-pilot.mjs` (Normal Salty: actual multi-turn four-seat combat, public damage attribution, provocation and a lethal trample swing back)
 - `engine-cancel-decision` — `tests/engine-cancel-decision.mjs` (reversible native target/cost proposals, numeric stages, full state restoration and committed information/mandatory-effect boundaries)
 - `engine-playtest-blink` — `tests/engine-playtest-blink.mjs` (actual Brago combat, Thassa zero/one targets, single-target control wording, delayed Flickerwisp reentry and Claim Jumper conditional Plains searches)
+- `engine-cast-stages` — `tests/engine-cast-stages.mjs` (live modal/spree mode sets, per-mode and repeated targets, native target constraints, backtracking and actual costs)
 - `engine-threat` — `tests/engine-threat.mjs` (the threat table every difficulty reads: life, hitters, growth and ramp off the seat's view; Easy's rank, Normal's weighted mean; a person and an AI the same row; L1 attacks where threat × effect is highest; the floor under an attack that dies for nothing)
 - `engine-pilot-picks` — `tests/engine-pilot-picks.mjs` (the AI seats take what an "up to" or a search is for: the lands of the colors they lack, proliferate's good counters, their own side; old matches answered as before)
 - `engine-ingest` — `tests/engine-ingest.mjs`
@@ -1233,6 +1234,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `room-seat-pilots` — `tests/room-seat-pilots.mjs` (an AI seat's Easy or Normal, from New table to the pilot; L1 games replay)
 - `room-pilot-provocation` — `tests/room-pilot-provocation.mjs` (real spell damage remembered across pilot recreation and room reload, accepted retries, refusals, undo and replay)
 - `room-cancel-decision` — `tests/room-cancel-decision.mjs` (native Cancel with auto-pass and Undo configurations, reload/retry, full state/RNG/journal preservation, actor departure and mandatory-effect refusal)
+- `room-cast-stages` — `tests/room-cast-stages.mjs` (private saved modal proposals, reload/replay, stale input, Cancel/Back boundaries and actual payment exactly once)
 - `room-agent-seat` — `tests/room-agent-seat.mjs` (the LLM seat in the room: only its close calls offered to it, its answers on the tape)
 - `room-refused-answer` — `tests/room-refused-answer.mjs`
 - `room-optional-count-targets` — `tests/room-optional-count-targets.mjs` (ROB-204: the room takes an "up to one" and an "any number" target answer with one, several or none chosen, refuses past the most, and plays on)
@@ -1284,6 +1286,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `board-fullscreen-notes` — `tests/board-fullscreen-notes.mjs` (a card played by its click in every view, a land just played taken back by its double-click, the actions large over the table in Full screen, the others' plays held up for ten seconds, the two priority choices, the tabletop to 200%, the commander tax below the title bar)
 - `board-choice-stacks` — `tests/board-choice-stacks.mjs` (Rob, 2026-10-25: in a question for one or many, the same card is one stack, ×N, a click taking one and taking it back, with how many beside it where more than one may be chosen, never past the stack or the question's most; a tapped Goblin no twin of an untapped one; and the cards another seat plays held up beside the question, never over its controls, in Focus, Full screen and Table at three window sizes; `breaks-choice-stacks.py`)
 - `board-optional-count-targets` — `tests/board-optional-count-targets.mjs` (ROB-204, Luke's playtest of 2026-10-28: an "up to one" or "any number" target question confirms with one, several or none chosen and sends the answer, the count still holds, and a single required target keeps Pick, Next, Review)
+- `board-playtest-blink` — `tests/board-playtest-blink.mjs` (Focus/Full Confirm packets through production socket/check dispatch into actual Brago/Thassa and Claim Jumper rooms; bounded fixture evidence, not Commander-load acceptance)
 - `board-r4-combat` — `tests/board-r4-combat.mjs`
 - `board-offer-context` — `tests/board-offer-context.mjs` (actual offer identity, revision, card and duplicate-send guards)
 - `board-r4-input` — `tests/board-r4-input.mjs` (native double click and touch card menus, sibling Undo overlay, stale action refusal)
