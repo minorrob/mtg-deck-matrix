@@ -15,7 +15,10 @@ externally at `0aee1474`, but its full CI was canceled at 60 minutes and provide
 
 Activated/route/cost follow-up now proves actual Cankerbloom and effective Snoop, native44/room42 plus 13 new caught
 mutations, while retaining original cast52/room46 and all 19 caught probes. Committed trigger/effect refinement is
-separate future work; W5 owns the funded Scepter/Getaway additional-cost debt. The shared UI issues remain open.
+separate work now in a local unpublished checkpoint; native/controller and earlier room positives are recorded in
+PLAYTEST-PROGRESS.md alongside the preserved actual Scepter target-departure/newly-legal REDs. Publication waits for
+the clean W5 native generation API plus room/table/replay epoch and lifecycle proofs. W5 owns the funded
+Scepter/Getaway additional-cost debt. The shared UI issues remain open.
 
 Root integrates and confirms the work. The subagent works in an isolated `codex/engine-load100-w0-playtest` branch
 from the current integration head, after checking current main and ownership. Keep its source and proof in a pushed
