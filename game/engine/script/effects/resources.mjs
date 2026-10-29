@@ -302,6 +302,7 @@ function excessOf(state, id, amount, source, sourceLastKnown = null) {
     excess = Math.max(excess, amount - (deathtouch ? Math.min(lethal, 1) : lethal));
   }
   if (types.includes("Planeswalker")) excess = Math.max(excess, amount - (object.counters?.loyalty ?? 0));
+  if (types.includes("Battle")) excess = Math.max(excess, amount - (object.counters?.defense ?? 0));
   return Math.max(0, excess);
 }
 
@@ -336,12 +337,18 @@ export function damagePermanent(state, id, amount, events, {infect = false, by =
      or not, marked, loyalty removed or -1/-1 counters from infect, all damage dealt (120.3c-d) -- counted for this turn
      only (state/index.mjs, usesThisTurn), and for this object only: one that leaves and returns is a new one (CR 400.7). */
   recordUse(state, id, "dealt damage");
+  if (types.includes("Battle")) {
+    const before = object.counters.defense ?? 0;
+    object.counters.defense = Math.max(0, before - amount);
+    events.push(event("GameEventCardCounters", state, {card: cardRef(state, id), type: "defense", oldValue: before, newValue: object.counters.defense}));
+  }
   if (types.includes("Planeswalker")) {
     const before = object.counters.loyalty ?? 0;
     object.counters.loyalty = Math.max(0, before - amount);
     events.push(event("GameEventCardCounters", state, {card: cardRef(state, id), type: "loyalty", oldValue: before, newValue: object.counters.loyalty}));
     if (!types.includes("Creature")) return;
   }
+  if (types.includes("Battle") && !types.includes("Creature")) return;
   if (infect) addCounters(state, id, "-1/-1", amount, events, by);
   else object.damage += amount;
 }

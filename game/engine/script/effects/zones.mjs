@@ -19,6 +19,7 @@
 
 import {holdArrival, enteredWith} from "../../rules/entering.mjs";
 import {entryCounterResult} from "../../rules/entry-characteristics.mjs";
+import {preparedSbaMove, consumeSbaMove} from "../../rules/sba-move-results.mjs";
 import {prepare} from "./attributes.mjs";
 import {afterwards, delayedTrigger, enchantable, enchantOnArrival, controlSourceLeft, endWhileSourceRemains} from "./permanents.mjs";
 import {typesOf} from "../../rules/layers.mjs";
@@ -76,7 +77,15 @@ const PERMANENT_TYPES = ["Artifact", "Battle", "Creature", "Enchantment", "Land"
 /* `notOnto`: permanents entering the battlefield at the same time as this one (effects/zones.mjs, moveZone's `together`) --
    an Aura among them enchants none of them (CR 303.4f: what it will enchant is chosen as it enters, and they are not yet
    there to be chosen). */
-export function moveOne(state, id, to, events, {owner = null, controller = null, tapped = false, faceDown = false, lookers = null, exiledBy = null, transformed = false, counters = null, notOnto = null, nonCommanderTo = null, commanderKeys = [], orderingPlayer = null, preparedProposal = null, preparedEntering = null, preparedCounterResult = null, entryPatch = null} = {}) {
+export function moveOne(state, id, to, events, options = {}) {
+  if (options.preparedMove === undefined) return performMove(state, id, to, events, options);
+  const prepared = preparedSbaMove(state, options.preparedMove, options.cohortId, id);
+  return performMove(state, id, prepared.proposal.to, events, {...prepared.options, preparedProposal: prepared.proposal,
+    preparedEntering: prepared.entering, preparedCounterResult: prepared.counterResult, entryPatch: prepared.entryPatch},
+  {...prepared, token: options.preparedMove});
+}
+
+function performMove(state, id, to, events, {owner = null, controller = null, tapped = false, faceDown = false, lookers = null, exiledBy = null, transformed = false, counters = null, notOnto = null, nonCommanderTo = null, commanderKeys = [], orderingPlayer = null, preparedProposal = null, preparedEntering = null, preparedCounterResult = null, entryPatch = null} = {}, prepared = null) {
   const object = state.objects[id];
   if (!object) return null;
   /* A TOKEN THAT HAS LEFT THE BATTLEFIELD STAYS WHERE IT IS (CR 111.8): it can't move to another zone or come back onto the
@@ -86,11 +95,11 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
   if (object.token === true && object.zone !== "battlefield") return null;
   const from = object.zone;
   const down = faceDown === true && to === "battlefield";
-  let card = down || (faceDown === true && to === "exile") ? {...cardRef(state, id), name: null, faceDown: true} : leavingRef(state, id);
+  let card = prepared?.card ?? (down || (faceDown === true && to === "exile") ? {...cardRef(state, id), name: null, faceDown: true} : leavingRef(state, id));
   /* Only a departure from the battlefield needs last known information (CR 113.7a): that is the
      zone where an object had characteristics worth remembering. A card moving hand to graveyard
      was never a 5/5. */
-  const leftBehind = from === "battlefield" ? lastKnown(state, id) : undefined;
+  const leftBehind = prepared?.leftBehind ?? (from === "battlefield" ? lastKnown(state, id) : undefined);
 
   const proposal = preparedProposal ?? applyReplacements(state, {
     event: "zone-change", objectId: id, from, to, player: object.controller,
@@ -201,11 +210,11 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
     ...(destination === "battlefield" && state.objects[moved]?.tapped ? {enteredTapped: true} : {}),
     /* And what it became wherever it went, when that zone is public (CR 400.7e): "that card" in a dies trigger. */
     ...(PUBLIC_ZONES.includes(destination) ? {becomes: moved} : {}),
-    from: {zoneType: ZONE_LABEL[from] ?? from, player: {playerId: object.controller}},
+    from: {zoneType: ZONE_LABEL[from] ?? from, player: {playerId: prepared ? leftBehind.controller : object.controller}},
     to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: destination === "battlefield" ? enteringController : holder}},
   }));
   /* What the replacement that sent it there does beside the move (Kalitas's Zombie; rules/replacement.mjs, `followUps`). */
-  if (destination === proposal.to) events.push(...runFollowUps(state, proposal));
+  if (!prepared && destination === proposal.to) events.push(...runFollowUps(state, proposal));
   /* "You may have this creature enter as a copy of ...": its arrival waits for the answer (rules/entering.mjs). */
   if (destination === "battlefield") holdArrival(state, moved, events[events.length - 1]);
   /* "Enters prepared" (CR 614.1c, 722.3a): the designation it entered with, and its prepare spell's copy in exile (722.3c). */
@@ -213,7 +222,8 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
   /* What it entered with, said once it has (rules/entering.mjs, enteredWith). */
   if (destination === "battlefield") events.push(...enteredWith(state, moved, entering));
   /* What it exiled "until this leaves the battlefield", back now (CR 610.3). */
-  if (from === "battlefield") returnExiledUntil(state, id, events, leftBehind);
+  if (prepared) consumeSbaMove(state, prepared.token, prepared.cohortId, id, moved);
+  else if (from === "battlefield") returnExiledUntil(state, id, events, leftBehind);
   return moved;
 }
 

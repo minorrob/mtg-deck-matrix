@@ -955,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 688 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 689 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1446,6 +1446,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-battles` - `tests/engine-battles.mjs`: native pre-entry protector choices, printed/current defense, entry copies and counters, reload/departure refusals, public projection and hidden-card boundaries; full Battle combat and Siege defeat remain unfinished
 - `engine-intrinsic-entry` - `tests/engine-intrinsic-entry.mjs`: native and legacy intrinsic loyalty/defense counters use prospective types and ability loss; Compleated keyword removal, independent entry counters, actual doubling, reload and departure controls
 - `engine-entry-counter-order` - `tests/engine-entry-counter-order.mjs`: separately askable Compleated/counter replacements, saved prefixes and internal entry receipts, zero prevention, native movement, simultaneous copied tokens, sibling costs, reload/departure and suffix-once controls
+- `engine-battle-damage-sba` - `tests/engine-battle-damage-sba.mjs`: native Battle damage and excess across permanent types, zero-defense trigger exception and saved protector repair; atomic SBA cohort work remains in progress
 - `engine-defender-permission` - `tests/engine-defender-permission.mjs`
 - `engine-ability-haste` - `tests/engine-ability-haste.mjs`
 - `engine-unless-return` - `tests/engine-unless-return.mjs`

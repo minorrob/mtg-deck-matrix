@@ -5,6 +5,7 @@ import {moveOne} from "../script/effects/zones.mjs";
 import {controllerOf, lastKnown} from "./layers.mjs";
 import {cantBeSacrificed} from "./statics.mjs";
 import {recordDiscard, COPY_KEYS} from "../state/index.mjs";
+import {validateSbaPreparation, savePreparedSbaMove} from "./sba-move-results.mjs";
 
 function paymentEligible(state, id, kind, player) {
   const object = state.objects[id], zone = kind === "sacrifice-one" ? "battlefield" : "hand";
@@ -21,6 +22,7 @@ registerRuleOperation("move-one", (state, frame) => {
   if (!object || (object.token === true && object.zone !== "battlefield")) return {status: "done", result: {moved: null, zoneEventIndex: null}};
   if (frame.payment && !paymentEligible(state, frame.id, frame.payment.kind, frame.payment.player))
     return {status: "done", result: {moved: null, zoneEventIndex: null}};
+  if (frame.prepareOnly) validateSbaPreparation(state, frame);
   if (!frame.stage) {
     frame.proposal = {event: "zone-change", objectId: frame.id, from: object.zone, to: frame.to, player: object.controller, applied: []};
     if (object.exileIfLeaves === true) frame.proposal.to = "exile";
@@ -80,10 +82,17 @@ registerRuleOperation("move-one", (state, frame) => {
     delete frame.childResult; frame.stage = "move";
     if (frame.preparedEntering?.to && frame.preparedEntering.to !== "battlefield") {
       frame.stage = "after-redirect";
-      return {status: "continue", children: [{kind: "move-one", id: frame.id, to: frame.preparedEntering.to, options, payment: frame.payment}]};
+      return {status: "continue", children: [{kind: "move-one", id: frame.id, to: frame.preparedEntering.to, options, payment: frame.payment,
+        ...(frame.prepareOnly ? {prepareOnly: true, cohortId: frame.cohortId} : {})}]};
     }
   }
   const events = [];
+  if (frame.prepareOnly) {
+    const preparedMove = savePreparedSbaMove(state, frame, {proposal: frame.proposal,
+      entering: frame.preparedEntering ?? null, counterResult: frame.preparedCounterResult ?? null,
+      entryPatch: frame.entryPatch ?? null, options: frame.options ?? {}});
+    return {status: "done", result: {preparedMove}};
+  }
   const moved = moveOne(state, frame.id, frame.to, events, {...options, preparedProposal: frame.proposal,
     preparedEntering: frame.preparedEntering ?? null, preparedCounterResult: frame.preparedCounterResult ?? null, entryPatch: frame.entryPatch ?? null});
   const index = events.findIndex(e => e.kind === "GameEventCardChangeZone" && e.data.fields.card?.cardId === frame.id);

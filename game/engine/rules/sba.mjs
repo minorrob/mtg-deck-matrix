@@ -59,7 +59,7 @@ import {preparedCopyStays} from "../script/effects/attributes.mjs";
 import {endControlChange, nextRecord, endCounterDurations, controlByAuras} from "../script/effects/permanents.mjs";
 import {protectedFrom} from "./protection.mjs";
 import {answerForDeparted, answerRuleForDeparted, goOnWithout} from "./turn.mjs";
-import {cancelRuleOperation} from "./operations.mjs";
+import {cancelRuleOperation, beginRuleOperation, registerRuleOperation, askRuleOperation} from "./operations.mjs";
 import {collectTriggers} from "./trigger.mjs";
 import {rememberDepartingSpell} from "./spell-memory.mjs";
 
@@ -78,6 +78,50 @@ const event = (kind, state, fields) => ({kind, data: {turn: state.turn, phase: s
 const cardRef = eventCard;
 
 const isCreature = (object) => (object.types ?? []).includes("Creature");
+
+/* CR 704.5v: only an actual triggered ability of this exact Siege can hold its zero-defense SBA. */
+function battleWaitingTrigger(state, id) {
+  return (state.pendingTriggers ?? []).some(trigger => trigger.source?.cardId === id && !state.players[trigger.controller]?.lost)
+    || state.stack.some(entry => entry.kind === "trigger" && entry.cardId === id && !state.players[entry.playerId]?.lost);
+}
+
+function battleProtectorRepair(state, id) {
+  if (state.objects[id]?.zone !== "battlefield" || !typesOf(state, id).includes("Battle")) return null;
+  const player = controllerOf(state, id), siege = subtypesOf(state, id).includes("Siege");
+  const protector = state.objects[id].protector;
+  /* CR 310.9g: an in-game protector can survive copying a non-Siege; entry's forced choice is not an ongoing restriction. */
+  if (state.players[protector] && !state.players[protector].lost && (!siege || protector !== player)) return null;
+  const eligible = state.players.filter(other => !other.lost && (siege ? other.id !== player : other.id === player)).map(other => other.id);
+  /* CR 704.5x-y: a missing protector waits while the Battle is attacked; an in-game but invalid protector does not. */
+  if ((protector === undefined || !state.players[protector] || state.players[protector].lost)
+    && state.combat?.attacks?.some(attack => attack.battle === id)) return null;
+  return {objectId: id, player, siege, eligible};
+}
+
+function setBattleProtector(state, id, player, events) {
+  const old = state.objects[id].protector;
+  state.objects[id].protector = player;
+  events.push(event("GameEventBattleProtectorChanged", state, {card: cardRef(state, id), oldProtector: old ?? null, protector: player}));
+}
+
+registerRuleOperation("battle-protector-sba", (state, frame) => {
+  const repair = battleProtectorRepair(state, frame.objectId);
+  if (!repair || state.players[repair.player]?.lost || state.gameOver) return {status: "done"};
+  if (!repair.eligible.length) return {status: "done"}; // The ordinary zero/unprotectable pass performs this move.
+  const selected = frame.answer ? frame.options[frame.answer.indices[0]] : undefined;
+  delete frame.answer;
+  if (!repair.siege || repair.eligible.includes(selected)) {
+    const events = [];
+    setBattleProtector(state, frame.objectId, repair.siege ? selected : repair.player, events);
+    state.ruleOperation.events.push(...events);
+    return {status: "done"};
+  }
+  frame.options = repair.eligible; frame.generation = (frame.generation ?? 0) + 1;
+  return askRuleOperation(state, frame, {player: repair.player, choice: {
+    id: `battle-protector-sba:${state.ruleOperation.serial}:${frame.objectId}:${frame.generation}`,
+    title: `${state.objects[frame.objectId].card}: choose its protector`, mode: "one", min: 1, max: 1,
+    options: repair.eligible.map((playerId, index) => ({index, playerId, label: state.players[playerId].name}))}});
+});
 
 /**
  * Deal damage to a player from a source, keeping the commander tally.
@@ -342,7 +386,7 @@ export function checkStateBasedActions(state) {
        damage is read once for the whole board, every object derived once (rules/layers.mjs, deriving) -- asking it again
        for each creature derived the board once per creature. Each one found is asked again below as it is acted on; one
        that only a death in this pass brings down dies in the next check. */
-    const {lethal, spent, asks} = deriving(state, () => {
+    const {lethal, spent, fallenBattles, asks} = deriving(state, () => {
       const lethal = new Set(state.zones.battlefield.filter((id) => {
         const object = state.objects[id];
         if (!typesOf(state, id).includes("Creature")) return false;
@@ -352,6 +396,9 @@ export function checkStateBasedActions(state) {
       return {lethal,
         /* And the planeswalkers with no loyalty left (CR 704.5i), acted on below. */
         spent: state.zones.battlefield.filter((id) => typesOf(state, id).includes("Planeswalker") && (state.objects[id].counters?.loyalty ?? 0) <= 0),
+        fallenBattles: state.zones.battlefield.filter(id => typesOf(state, id).includes("Battle")
+          && (((state.objects[id].counters?.defense ?? 0) <= 0 && (!subtypesOf(state, id).includes("Siege") || !battleWaitingTrigger(state, id)))
+            || battleProtectorRepair(state, id)?.eligible.length === 0)),
         /* WHICH REPLACES A DESTRUCTION, WHEN SEVERAL WOULD (CR 616.1; two Auras with umbra armor, or one and a regeneration
            shield): asked of the creature's controller before any of these destructions happens -- they happen at once (CR
            704.3) -- and the whole check made again with the answer (finishDestructionChoice). Read in the same question, every
@@ -428,7 +475,7 @@ export function checkStateBasedActions(state) {
     /* CR 704.5i: a planeswalker with loyalty 0 is put into its owner's graveyard -- put, not destroyed, so indestructible
        does not keep it; through the replacements and with its last known information. Read with the lethal creatures
        above, so one that was a creature too and died is gone. */
-    for (const id of spent) {
+    for (const id of new Set([...spent, ...fallenBattles])) {
       const object = state.objects[id];
       if (!object || object.zone !== "battlefield") continue;
       const card = cardRef(state, id);
@@ -495,6 +542,17 @@ export function checkStateBasedActions(state) {
         /* Only read: every object derived once (rules/layers.mjs, deriving). */
         const ask = deriving(state, () => mergedOrderToAsk(state) ?? legendToAsk(state) ?? commanderToAsk(state));
         if (ask) state.awaiting = ask;
+        else {
+          /* Forced non-Siege protection is determined by rule; Siege opponents remain an explicit saved choice. */
+          const repairs = deriving(state, () => state.zones.battlefield.map(id => battleProtectorRepair(state, id)).filter(Boolean));
+          for (const repair of repairs.filter(repair => !repair.siege)) setBattleProtector(state, repair.objectId, repair.player, events);
+          const order = state.players.map((_, n) => (state.activePlayer + n) % state.players.length);
+          const next = repairs.filter(repair => repair.siege).sort((a,b) => order.indexOf(a.player) - order.indexOf(b.player))[0];
+          if (next && !state.ruleOperation && !state.resolving) {
+            const outcome = beginRuleOperation(state, {kind: "battle-protector-sba", objectId: next.objectId}, {after: {kind: "state-based"}});
+            events.push(...outcome.events);
+          }
+        }
       }
       break;
     }
