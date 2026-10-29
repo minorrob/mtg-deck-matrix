@@ -81,8 +81,8 @@ try {
     for(const action of ['board-menu','board-history','board-tools']) {
       const settings=action==='board-tools';
       if(settings){
-        await page.locator('[data-action=board-camera]').click();
-        await page.locator('.cm-stage-camera [data-action=board-tools]').click();
+        await page.locator('[data-action=board-table-menu]').click();
+        await page.locator('#cm-table-menu [data-action=board-tools]').click();
       }else{
         await page.locator('[data-action=board-table-menu]').click();
         await page.locator(`#cm-table-menu [data-action=${action}]`).click();

@@ -4,7 +4,7 @@
 
      1. Camera ▾ closes on a press anywhere outside it -- the board, the table, the header -- and stays open for a
         press inside it.
-     2. Settings (Camera ▾ › Play settings) is a window: the app's dialog, ✕ at its top right, Cancel and Save at its bottom
+     2. Settings (Table ▾ › Play settings) is a window: the app's dialog, ✕ at its top right, Cancel and Save at its bottom
         right, sized to the browser at every size and again when the window changes size. Save keeps what is set;
         Cancel, ✕ and Escape put back what was set when it opened.
      3. (Oct 26) Its sections run down the left -- General, Video, Audio, Gameplay -- and the chosen one uses the
@@ -49,7 +49,7 @@ async function board(mode, {width = 1440, height = 900} = {}) {
 const cameraOpen = (page) => page.locator("#cm-board .cm-stage-camera>div").count();
 const settingsOpen = (page) => page.evaluate(() => !!document.querySelector("#cm-dialog.cm-play-settings-dialog[open] #cm-board-tools"));
 async function openSettings(page) {
-  await page.locator("#cm-board [data-action=board-camera]").first().click();
+  await page.locator("#cm-board [data-action=board-table-menu]").first().click();
   await page.locator("#cm-board [data-action=board-tools]").first().click();
   await page.locator("#cm-dialog[open] #cm-board-tools").waitFor({timeout: 5000});
 }
@@ -187,7 +187,7 @@ try {
     eq(await page.locator("#cm-dialog [role=tab][aria-selected=true]").getAttribute("data-tab"), "gameplay", "drawn again, the window stays on Gameplay");
     await page.locator("#cm-dialog .cm-dialog-close").click();
     await page.waitForTimeout(150);
-    eq(await page.evaluate(() => document.activeElement?.dataset?.action), "board-camera", "closed, the focus goes back to Camera");
+    eq(await page.evaluate(() => document.activeElement?.dataset?.action), "board-table-menu", "closed, the focus goes back to Table");
     if(page.viewportSize().width===1440) {
       await openSettings(page);await tab(page,'general');await page.locator('#cm-board-tools [data-action=board-modules-settings]').click();await page.locator('#cm-drawer-settings').waitFor();
       const actions=page.locator('#cm-drawer-settings tr').filter({has:page.locator('th', {hasText:/^Actions$/})});
