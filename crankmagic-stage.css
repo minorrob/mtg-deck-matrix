@@ -1830,3 +1830,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 /* THE HAND SITS ON THE STAGE'S DARK GROUND in every theme, so its focus ring is white with a dark line against the card: 3:1 all the way round in light and dark (a11y-board). */
 #matrix-v2 .cm-board .cm-stage-hand :is(.cm-bcard,.cm-stage-hand-label):focus-visible{outline:2px solid #fff;outline-offset:3px;box-shadow:0 0 0 3px #0b1213,0 6px 14px -6px rgb(0 0 0 / .85)}
 #matrix-v2 .cm-board .cm-stage-region{isolation:isolate}   /* the stage's own layers (mat, cards, their badges) never rise past a drawer */
+/* What has the focus stands in front of its neighbours, so its ring is whole: the hand's tab over the fan, the focused card's slot over the cards beside it, a commander partner over the other partner. */
+#matrix-v2 .cm-board .cm-stage-hand .cm-stage-hand-label{z-index:30}
+#matrix-v2 .cm-board .cm-stage-fan-slot:focus-within{z-index:29}
+#matrix-v2 .cm-board .cm-board-partners>:is(.cm-bcard,.cm-card-slot):focus-within,#matrix-v2 .cm-board .cm-board-partners>.cm-bcard:focus-visible{z-index:5}
