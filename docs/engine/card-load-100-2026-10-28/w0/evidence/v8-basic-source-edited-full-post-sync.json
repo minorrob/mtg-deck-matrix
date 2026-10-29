@@ -1,0 +1,55 @@
+{
+  "scope": "all eight edited full saved scenarios with all original assertions",
+  "results": [
+    {
+      "card": "A.I.M. Scientists",
+      "scenario": "It enters and connives: a card drawn, the Bear discarded, a +1/+1 counter",
+      "fullStrictPass": true,
+      "assertions": 5
+    },
+    {
+      "card": "A.I.M. Scientists",
+      "scenario": "A land discarded: no counter",
+      "fullStrictPass": true,
+      "assertions": 4
+    },
+    {
+      "card": "A.I.M. Scientists",
+      "scenario": "Basic landcycling {2}: discarded, and a Forest searched for into the hand",
+      "fullStrictPass": true,
+      "assertions": 2
+    },
+    {
+      "card": "Aang, Swift Savior // Aang and La, Ocean's Fury",
+      "scenario": "Enters: airbends up to one other creature -- none chosen, nothing exiled; never Aang itself",
+      "fullStrictPass": true,
+      "assertions": 1
+    },
+    {
+      "card": "Aether Channeler",
+      "scenario": "Enters, first mode: a 1/1 white Bird with flying (with no other nonland permanent, the second mode is not offered)",
+      "fullStrictPass": true,
+      "assertions": 4
+    },
+    {
+      "card": "Agadeem's Awakening // Agadeem, the Undercrypt",
+      "scenario": "X of 3: any number of creature cards with different mana values, 3 or less, return",
+      "fullStrictPass": true,
+      "assertions": 2
+    },
+    {
+      "card": "Aether Helix",
+      "scenario": "Any permanent, a land too: Maya's Forest returns to her hand",
+      "fullStrictPass": true,
+      "assertions": 2
+    },
+    {
+      "card": "Aether Channeler",
+      "scenario": "Enters, third mode: draw a card",
+      "fullStrictPass": true,
+      "assertions": 1
+    }
+  ],
+  "fullStrictPassed": 8,
+  "assertions": 21
+}

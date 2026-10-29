@@ -57,6 +57,18 @@ review, staging or release acceptance is claimed. Scope stays at 8,514 names cov
 with 2,715 final and 5,799 undefined. The separate generic layer-2 static-controller debt remains deferred; ordinary
 saved Conscripts control effects and return worked in the earlier native effect-level comparison.
 
+The later read-only DSL check also confirms that public `validateScript` and `compileScript` admit an in-memory
+`effectUntil` with layer 2 and integer `apply.controller` without errors, retaining that effect in the compiled
+definition. This is grammar admission, not a saved or fidelity-approved card route; the production fix remains
+deferred. The diagnostic is recorded in `evidence/v8-static-controller-dsl-admission.json`.
+
+Publication sync merges the owner's scanned `9699cf562bd4f655dbb44e5a0cc707a17d73685d` assembly, including main
+`af363528`. On combined clean source `fdd17480`, all eight edited scenarios and 21 original assertions pass again,
+and the original-field audit remains exact. Policy runner/reader/probe bytes are unchanged. Integrity, wiring 131,
+assets 136, service-worker 9 and scope pass; inventory regeneration has no diff (60 artifacts/80.9 MB), and the actual
+suite count is 713. All 14 original archive Git blobs match their recorded hashes. Those results are bound separately
+in `evidence/v8-basic-source-integration.json`; the before/after ledgers keep their historical source hashes.
+
 ## Reproduction
 
 Use Node 22 first on PATH. The selected checker command, run on the matching clean source, is:
