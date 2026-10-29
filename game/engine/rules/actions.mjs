@@ -75,6 +75,7 @@ import {namesChosen, withChosen, chosenFor} from "../script/chosen.mjs";
 import {poolFor, spendFor, addRestricted, addRider, riderChoices, addProvenance, addPoolMana} from "./restricted-mana.mjs";
 import {askEntering} from "./entering.mjs";
 import {registerRuleOperation, beginRuleOperation, emitRuleEvents, ruleOperationPending} from "./operations.mjs";
+import {outsideEffectsFrame} from "./damage-operation.mjs";
 import {collectTriggers, openTriggers, manaTriggered} from "./trigger.mjs";
 
 const MAIN_PHASES = ["MAIN1", "MAIN2"];
@@ -2751,6 +2752,110 @@ registerRuleOperation("played-land", (state, frame) => {
   return {status: "done", result: {moved: arrived ?? null}};
 });
 
+function payManaActivationStart(state, player, action, ability, payment) {
+  const events = [], object = state.objects[action.objectId];
+    const pool = state.players[player].manaPool;
+    spend(pool, payment.mana);
+    const life = (ability.payLife ?? 0) + payment.life;
+    /* Life paid is life lost (CR 119.4): said, and counted (batch 78). */
+    if (life > 0) changeLife(state, player, -life, events);
+    payCounters(state, action.objectId, ability.counterCost, player);
+    if (ability.limit) recordUse(state, action.objectId, ability.id);
+    /* "Exert this land" (Arena of Glory; CR 701.43a): it won't untap during this player's next untap step (rules/turn.mjs). */
+    if (ability.exertSelf) object.exerted = player;
+    if (ability.tapSelf) {
+      object.tapped = true;
+      events.push(event("GameEventCardTapped", state, {card: cardRef(state, action.objectId), tapped: true}));
+    }
+    /* And the creature its cost taps, the one chosen with the offer (manaTappers): tapped, not "tapped for mana" (CR 106.12). */
+    if (ability.tapCreature && action.costChoice?.tap !== undefined) {
+      state.objects[action.costChoice.tap].tapped = true;
+      events.push(event("GameEventCardTapped", state, {card: cardRef(state, action.costChoice.tap), tapped: true}));
+    }
+  return events;
+}
+
+function produceActivatedMana(state, player, action, ability, produced, sourceRef = null, sourceWas = null) {
+  const events = [];
+    /* "Spend this mana only to cast a creature spell of the chosen type": beside the pool (rules/restricted-mana.mjs). */
+    if (ability.spendOnly) addRestricted(state, player, produced, ability.spendOnly, action.objectId);
+    else {
+      /* "This mana can't be spent to cast spells from your hand" (Heartwood Crafter): in the pool, and remembered beside it. */
+      addPoolMana(state, player, produced, ability.cantSpend, action.objectId);
+      /* Its source as it is now, before a sacrifice of its cost (CR 106.3): "mana from a Treasure". */
+      addProvenance(state, player, produced, action.objectId, sourceWas);
+    }
+    /* "When that mana is spent to cast ..." (Path of Ancestry, Study Hall): in the pool, its rider remembered beside it. */
+    if (ability.whenSpent) addRider(state, player, produced, {...ability.whenSpent, ability: ability.id}, action.objectId);
+    events.push(event("GameEventManaPool", state, {
+      player: {playerId: player, name: state.players[player].name},
+      produced: {...produced}, source: sourceRef ?? cardRef(state, action.objectId),
+      /* "Tapped for mana" (CR 605.1b): what a "whenever ... is tapped for mana" ability watches. */
+      ...(ability.tapSelf ? {tapped: true} : {}),
+    }));
+    /* Triggered mana abilities: at once, as part of this one -- "its controller adds an additional {G}". */
+    for (const extra of manaTriggered(state, events[events.length - 1], sourceWas)) {
+      addPoolMana(state, extra.player, extra.mana);
+      events.push(event("GameEventManaPool", state, {player: {playerId: extra.player, name: state.players[extra.player].name}, produced: {...extra.mana}, source: cardRef(state, extra.source)}));
+    }
+  return events;
+}
+
+/* Mana abilities resolve without the stack, but moving costs can themselves require replacement choices. */
+registerRuleOperation("mana-activation", (state, frame) => {
+  const {player,action,ability,produced,payment}=frame;
+  if (state.players[player]?.lost) return {status:"done"};
+  if (!frame.stage) {
+    frame.sourceWas=lastKnown(state,action.objectId);
+    frame.sourceRef={...cardRef(state,action.objectId),controller:frame.sourceWas.controller};
+    emitRuleEvents(state,payManaActivationStart(state,player,action,ability,payment));
+    frame.costs=[];
+    if (ability.millCost) frame.costs.push({kind:"mill-cost",remaining:ability.millCost});
+    if (ability.exileFromGraveyard) frame.costs.push({kind:"move-one",id:action.costChoice.exile,to:"exile",options:{owner:state.objects[action.costChoice.exile].owner}});
+    if (ability.sacrificeSelf) frame.costs.push({kind:"sacrifice-one",id:action.objectId,player});
+    if (ability.exileSelf) frame.costs.push({kind:"move-one",id:action.objectId,to:"exile",options:{owner:state.objects[action.objectId].owner}});
+    if (ability.sacrifice) frame.costs.push({kind:"sacrifice-one",id:action.costChoice.sacrifice,player});
+    frame.stage="costs";
+  }
+  if (frame.stage === "after-cost") {
+    if (frame.childResult?.moved == null) return {status:"done"};
+    const departed=state.ruleOperation.events[frame.childResult.zoneEventIndex]?.data?.fields;
+    if (departed?.leftBehind?.cardId === action.objectId) {
+      frame.sourceWas=departed.leftBehind;
+      frame.sourceRef={...departed.card,controller:frame.sourceWas.controller};
+    }
+    delete frame.childResult;frame.stage="costs";
+  }
+  if (frame.stage === "costs" && frame.costs.length) {
+    if (state.objects[action.objectId]) {
+      frame.sourceWas=lastKnown(state,action.objectId);
+      frame.sourceRef={...cardRef(state,action.objectId),controller:frame.sourceWas.controller};
+    }
+    let child=frame.costs[0];
+    if (child.kind === "mill-cost") {
+      const id=cardsIn(state,"library",player)[0];
+      if (id === undefined) return {status:"done"};
+      child.remaining--;
+      if (!child.remaining) frame.costs.shift();
+      child={kind:"move-one",id,to:"graveyard",options:{owner:player}};
+    } else frame.costs.shift();
+    frame.stage="after-cost";
+    return {status:"continue",children:[child]};
+  }
+  if (frame.stage === "costs") {
+    if (state.objects[action.objectId]) {
+      frame.sourceWas=lastKnown(state,action.objectId);
+      frame.sourceRef={...cardRef(state,action.objectId),controller:frame.sourceWas.controller};
+    }
+    frame.stage="after-effects";
+    emitRuleEvents(state,produceActivatedMana(state,player,action,ability,produced,frame.sourceRef,frame.sourceWas));
+    return {status:"continue",children:[outsideEffectsFrame(ability.then ?? [],{
+      controller:player,source:action.objectId,lastKnown:frame.sourceWas,produced:{...produced},
+    })]};
+  }
+  return {status:"done"};
+});
+
 function perform(state, player, action, during = null) {
   /* Cast as an effect resolves (castNow): no priority, and not one of the offers -- the effect has chosen it, and paid. */
   if (!during) {
@@ -2936,64 +3041,18 @@ function performOffered(state, player, action, during) {
     const payment = manaAbilityPayment(state, player, ability);
     if (!produced || !payment || !withinLimit(state, action.objectId, ability) || !countersPayable(state, action.objectId, ability.counterCost) || !millPayable(state, player, ability))
       throw new Error(`${object.card} cannot add that mana now`);
-    const pool = state.players[player].manaPool;
-    spend(pool, payment.mana);
-    const life = (ability.payLife ?? 0) + payment.life;
-    /* Life paid is life lost (CR 119.4): said, and counted (batch 78). */
-    if (life > 0) changeLife(state, player, -life, events);
-    payCounters(state, action.objectId, ability.counterCost, player);
-    /* "{T}, Mill a card: Add {C}" (Millikin): the top card milled as the cost is paid, before the mana is added -- a mill
-       like any other, which "whenever a card is put into your graveyard" sees (CR 701.17, 605.3a). */
-    if (ability.millCost) events.push(...mill(state, {who: [player], count: ability.millCost}, {controller: player, source: action.objectId}));
-    if (ability.limit) recordUse(state, action.objectId, ability.id);
-    /* "Exert this land" (Arena of Glory; CR 701.43a): it won't untap during this player's next untap step (rules/turn.mjs). */
-    if (ability.exertSelf) object.exerted = player;
-    if (ability.tapSelf) {
-      object.tapped = true;
-      events.push(event("GameEventCardTapped", state, {card: cardRef(state, action.objectId), tapped: true}));
-    }
-    /* And the creature its cost taps, the one chosen with the offer (manaTappers): tapped, not "tapped for mana" (CR 106.12). */
-    if (ability.tapCreature && action.costChoice?.tap !== undefined) {
-      state.objects[action.costChoice.tap].tapped = true;
-      events.push(event("GameEventCardTapped", state, {card: cardRef(state, action.costChoice.tap), tapped: true}));
-    }
-    /* And the card of the graveyard its cost exiles, the one chosen with the offer (graveyardChoices), before the mana is
-       added -- a cost, paid as the ability is activated (CR 605.3a). Its "when you do" is in `then` (immediateTrigger). */
-    if (ability.exileFromGraveyard && action.costChoice?.exile !== undefined) moveOne(state, action.costChoice.exile, "exile", events, {owner: state.objects[action.costChoice.exile].owner});
-    /* "Spend this mana only to cast a creature spell of the chosen type": beside the pool (rules/restricted-mana.mjs). */
-    if (ability.spendOnly) addRestricted(state, player, produced, ability.spendOnly, action.objectId);
-    else {
-      /* "This mana can't be spent to cast spells from your hand" (Heartwood Crafter): in the pool, and remembered beside it. */
-      addPoolMana(state, player, produced, ability.cantSpend, action.objectId);
-      /* Its source as it is now, before a sacrifice of its cost (CR 106.3): "mana from a Treasure". */
-      addProvenance(state, player, produced, action.objectId);
-    }
-    /* "When that mana is spent to cast ..." (Path of Ancestry, Study Hall): in the pool, its rider remembered beside it. */
-    if (ability.whenSpent) addRider(state, player, produced, {...ability.whenSpent, ability: ability.id}, action.objectId);
-    events.push(event("GameEventManaPool", state, {
-      player: {playerId: player, name: state.players[player].name},
-      produced: {...produced}, source: cardRef(state, action.objectId),
-      /* "Tapped for mana" (CR 605.1b): what a "whenever ... is tapped for mana" ability watches. */
-      ...(ability.tapSelf ? {tapped: true} : {}),
-    }));
-    /* Triggered mana abilities: at once, as part of this one -- "its controller adds an additional {G}". */
-    for (const extra of manaTriggered(state, events[events.length - 1])) {
-      addPoolMana(state, extra.player, extra.mana);
-      events.push(event("GameEventManaPool", state, {player: {playerId: extra.player, name: state.players[extra.player].name}, produced: {...extra.mana}, source: cardRef(state, extra.source)}));
-    }
+    if (ability.sacrificeSelf || ability.exileSelf || ability.sacrifice || ability.exileFromGraveyard || ability.millCost)
+      return beginRuleOperation(state,{kind:"mana-activation",player,action,ability:chosenFor(ability,object),produced,payment},
+        {after:{kind:"after-action",player}}).events;
+    events.push(...payManaActivationStart(state, player, action, ability, payment));
+    events.push(...produceActivatedMana(state, player, action, ability, produced));
     /* "This land deals 1 damage to you": part of the same mana ability, so it happens now, off the stack too. */
     if ((ability.then ?? []).length) {
       /* "Put a nest counter on this creature": bound to the source, and counted, as a resolution would (it has none). What it
          added (`produced`) is there too: "this creature becomes that color until end of turn" (Foraging Wickermaw). */
       const context = {controller: player, source: action.objectId, produced: {...produced}};
-      events.push(...runEffects(state, ability.then.map((e) => countEffect(state, bindEffect(e, context), context)), context));
+      return beginRuleOperation(state,outsideEffectsFrame(ability.then,context,events),{after:{kind:"after-action",player}}).events;
     }
-    /* "{T}, Sacrifice this artifact: Add one mana of any color" (a Treasure, Lotus Petal): the sacrifice is part of the
-       cost of a mana ability, paid as it is activated (CR 605.3a, 701.21a). */
-    if (ability.sacrificeSelf && state.objects[action.objectId]) sacrificeOne(state, action.objectId, events);
-    /* "Exile this card from your hand" (Simian Spirit Guide): its cost, the card moved from its owner's hand to exile. */
-    if (ability.exileSelf && state.objects[action.objectId]?.zone === "hand") moveOne(state, action.objectId, "exile", events, {owner: object.owner});
-    if (ability.sacrifice && action.costChoice?.sacrifice !== undefined) sacrificeOne(state, action.costChoice.sacrifice, events);
     /* NOTHING GOES ON THE STACK. CR 605.3a — the whole point of a mana ability. */
     return events;
   }

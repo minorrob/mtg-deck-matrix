@@ -30,10 +30,16 @@ export function askRuleOperation(state, frame, {player, choice}) {
   if (!state.players[player] || state.players[player].lost) throw new Error("A rule frame must handle a departed player before asking");
   if (state.awaiting && (state.awaiting.kind !== "rule-operation" || state.awaiting.operation !== operation.serial))
     throw new Error("A rule frame cannot replace another mechanism's question");
-  if (!INDEX_MODES.has(choice?.mode)) throw new Error("Rule operations currently support option-index choices only");
+  if (!INDEX_MODES.has(choice?.mode) && choice?.mode !== "amount") throw new Error("Rule operations support option-index or amount choices only");
   if (typeof choice.id !== "string" || !choice.id || !Array.isArray(choice.options)
     || !Number.isInteger(choice.min) || !Number.isInteger(choice.max) || choice.min < 0 || choice.max < choice.min || choice.max > choice.options.length)
     throw new Error("A rule question needs an id, options and valid selection bounds");
+  if (choice.mode === "amount" && (!Number.isInteger(choice.total) || choice.total < 0
+    || !Number.isInteger(choice.minEach ?? 0) || (choice.minEach ?? 0) < 0
+    || choice.options.some(o => !Number.isInteger(o.max) || o.max < (choice.minEach ?? 0))
+    || choice.total < choice.options.length * (choice.minEach ?? 0)
+    || choice.total > choice.options.reduce((n,o) => n+o.max,0)))
+    throw new Error("An amount rule question needs a feasible total and per-option bounds");
   state.awaiting = {kind: "rule-operation", player, operation: operation.serial, choice: structuredClone(choice)};
   state.priorityPlayer = null;
   return {status: "waiting"};
@@ -82,7 +88,7 @@ export function continueRuleOperation(state, rng = null) {
   throw new Error("Rule operation did not reach a question or completion");
 }
 
-/** The supported option-index choices are also validated for direct rule callers. Other modes are refused at ask time. */
+/** Validate direct callers before changing a saved operation or its question. */
 export function answerRuleOperation(state, indices, amounts = null, rng = null, extra = {}) {
   const operation = state.ruleOperation, awaiting = state.awaiting;
   if (!operation || awaiting?.kind !== "rule-operation" || awaiting.operation !== operation.serial)
@@ -93,6 +99,11 @@ export function answerRuleOperation(state, indices, amounts = null, rng = null, 
       || new Set(indices).size !== indices.length || indices.some(i => !Number.isInteger(i) || i < 0 || i >= (choice.options ?? []).length))
       throw new Error("Invalid selection. Select the required rule options");
   }
+  if (choice.mode === "amount" && (!Array.isArray(indices) || indices.length !== 0
+    || !Array.isArray(amounts) || amounts.length !== choice.options.length
+    || amounts.some((n,i) => !Number.isInteger(n) || n < (choice.minEach ?? 0) || n > choice.options[i].max)
+    || amounts.reduce((sum,n) => sum+n,0) !== choice.total))
+    throw new Error("Invalid selection. Allocate the required amount within the rule bounds");
   operation.frames.at(-1).answer = structuredClone({indices, amounts, extra});
   state.awaiting = null;
   return continueRuleOperation(state, rng);

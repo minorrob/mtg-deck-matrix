@@ -27,7 +27,7 @@ BREAKS = [
     ('cancel keeps unrelated question', OPS, '  if (state.awaiting?.kind === "rule-operation") state.awaiting = null;', '  state.awaiting = null;'),
     ('duplicate handler rejected', OPS, 'if (handlers.has(kind)) throw new Error(`Rule operation already registered: ${kind}`);', ''),
     ('foreign question cannot be overwritten', OPS, 'if (state.awaiting && (state.awaiting.kind !== "rule-operation" || state.awaiting.operation !== operation.serial))', 'if (false)'),
-    ('unsupported question modes refused', OPS, 'if (!INDEX_MODES.has(choice?.mode)) throw new Error("Rule operations currently support option-index choices only");', ''),
+    ('unsupported question modes refused', OPS, 'if (!INDEX_MODES.has(choice?.mode) && choice?.mode !== "amount") throw new Error("Rule operations support option-index or amount choices only");', ''),
     ('question bounds valid before asking', OPS, 'choice.min < 0', 'false'),
     ('question id required', OPS, '|| !choice.id ||', '|| false ||'),
     ('root cannot overwrite foreign question', OPS, '  if (state.awaiting) throw new Error("A rule operation cannot replace another mechanism\'s question");', ''),

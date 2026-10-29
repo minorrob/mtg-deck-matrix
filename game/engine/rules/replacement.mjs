@@ -45,11 +45,11 @@
  * 1.8 for one that lasts "this turn" and then goes away.
  */
 
-import {compileSelector, matchesSelector} from "../script/filter.mjs";
+import {compileSelector, matchesSelector, matchesLastKnown} from "../script/filter.mjs";
 import {amountOf, isCounted} from "../script/amount.mjs";
 import {chosenFor, namesChosen} from "../script/chosen.mjs";
 import {protectedFrom} from "./protection.mjs";
-import {controllerOf, staticAbilities} from "./layers.mjs";
+import {controllerOf, staticAbilities, lastKnown} from "./layers.mjs";
 import {conditionHolds} from "../script/condition.mjs";
 
 /* "This land enters tapped unless you control a Forest or a Plains" (a check land), "... unless you control two or
@@ -211,11 +211,15 @@ function damageWatched(state, watches, holder, proposal) {
   if (watches.combat === false && proposal.combat === true) return false;
   if (watches.source) {
     const source = proposal.sourceId === null || proposal.sourceId === undefined ? null : state.objects[proposal.sourceId];
-    if (!source) return false;
-    const what = source.zone === "battlefield" ? "permanent" : source.zone === "stack" ? "spell" : "card";
-    if (!compileSelector({...watches.source, what, ...(what === "card" ? {zone: source.zone} : {})})(state, proposal.sourceId, context)) return false;
+    if (!source) {
+      if (proposal.sourceLastKnown?.cardId !== proposal.sourceId || !matchesLastKnown(watches.source,proposal.sourceLastKnown,context)) return false;
+    } else {
+      const what = source.zone === "battlefield" ? "permanent" : source.zone === "stack" ? "spell" : "card";
+      if (!compileSelector({...watches.source, what, ...(what === "card" ? {zone: source.zone} : {})})(state, proposal.sourceId, context)) return false;
+    }
   }
   const toPlayer = proposal.toPlayer !== undefined && proposal.toPlayer !== null ? proposal.toPlayer : null;
+  if (Number.isInteger(watches.toPlayer) && toPlayer !== watches.toPlayer) return false;
   if (watches.to === "opponent") {
     const whose = toPlayer !== null ? toPlayer : state.objects[proposal.toCard]?.controller ?? null;
     if (whose === null || whose === you) return false;
@@ -260,7 +264,7 @@ function leastFirst(candidates, amount) {
  * below cannot find it. The proposal carries the abilities of the thing about to arrive, and they
  * are put at the head of the list because a self-replacement applies before anybody else's (CR
  * 614.15), which is what stops the order being a choice nobody should have to make. */
-function applicable(state, proposal) {
+function applicable(state, proposal, allDamagePreventions = false) {
   const found = [];
   for (const ability of proposal.entering?.abilities ?? []) {
     if (applies(state, ability, null, proposal)) found.push({holderId: null, ability});
@@ -307,7 +311,7 @@ function applicable(state, proposal) {
      candidate like any, so the player dealt the damage orders them with the rest (CR 616.1). */
   if (proposal.event === "damage") {
     const shields = preventionsFor(state, proposal);
-    if (shields.some(isShield)) for (const effect of shields) {
+    if (allDamagePreventions || shields.some(isShield)) for (const effect of shields) {
       const ability = shieldAbility(effect);
       if (!(proposal.appliedBy ?? []).includes(appliedKey(null, ability))) found.push({holderId: null, ability, effect});
     }
@@ -473,10 +477,13 @@ function applyOne(state, {holderId, ability, effect = null}, proposal, dry = fal
       const source = proposal.sourceId ?? null, from = source !== null ? state.objects[source] : null;
       next.followUps = [...(next.followUps ?? []), {effects: structuredClone(ability.change.then), context: {controller: effect.sourceController,
         source: effect.dealer !== undefined && state.objects[effect.dealer] ? effect.dealer : null,
-        about: {...(from ? {card: source, controller: from.zone === "battlefield" ? controllerOf(state, source) : from.controller} : {}), amount: next.amount}}}];
+        ...(effect.dealer !== undefined && state.objects[effect.dealer] ? {lastKnown:lastKnown(state,effect.dealer)}:{}),
+        about: {...(from ? {card: source, controller: from.zone === "battlefield" ? controllerOf(state, source) : from.controller}
+          : proposal.sourceLastKnown?.cardId === source ? {card:source,controller:proposal.sourceLastKnown.controller}:{}), amount: next.amount}}}];
     } else if (ability.change.prevent === true && Array.isArray(ability.change.then) && next.amount > 0) {
       const holder = state.objects[holderId];
       next.followUps = [...(next.followUps ?? []), {effects: structuredClone(ability.change.then), context: {controller: holder.controller, source: holderId,
+        lastKnown:lastKnown(state,holderId),
         about: {...(proposal.toCard !== undefined && proposal.toCard !== null ? {card: proposal.toCard} : {}), ...(proposal.toPlayer !== undefined && proposal.toPlayer !== null ? {player: proposal.toPlayer} : {}), amount: next.amount}}}];
     }
     /* A shield counter (SHIELD): removed as it prevents damage -- once for damage dealt to it at once (`batch`), never by an
@@ -597,18 +604,86 @@ export function applyReplacements(state, proposal, {orders = [], askable = false
 /* Explicit operation frames apply one live replacement at a time (CR 616.1f). The caller owns precedence and questions;
    this interface neither chooses an order nor saves a candidate that may cease to apply while a player answers. */
 function checkStepProposal(proposal) {
-  if (!["zone-change", "enters"].includes(proposal.event)) throw new Error("Replacement steps support zone-change or enters proposals");
+  if (!["zone-change", "enters", "damage"].includes(proposal.event)) throw new Error("Replacement steps support zone-change, enters or damage proposals");
 }
-export function ruleReplacementCandidates(state, proposal) {
+function stepCandidates(state, proposal, reserved = []) {
+  const candidates = applicable(state, proposal, proposal.event === "damage");
+  if (proposal.event !== "damage") return candidates;
+  if (proposal.amount <= 0 || proposal.prevented) return [];
+  const all = [...reserved, ...(proposal.damageConsumption ?? [])];
+  const protection = {id: `protection:${proposal.toPlayer ?? `card:${proposal.toCard}`}`, name: "Protection", kind: "replacement", change: {prevent: true}};
+  if (!(proposal.appliedBy ?? []).includes(appliedKey(null, protection))
+    && protectedFrom(state, {card: proposal.toCard ?? null, player: proposal.toPlayer ?? null}, proposal.sourceId, proposal.sourceLastKnown))
+    candidates.push({holderId: null, ability: protection});
+  return candidates.flatMap(candidate => {
+    if (candidate.effect?.next && all.some(c => c.kind === "next" && c.effect === candidate.effect.id)) return [];
+    if (Number.isInteger(candidate.ability.prevent)) {
+      const spent = all.filter(c => c.kind === "finite" && c.holder === candidate.holderId && c.ability === candidate.ability.id).reduce((n,c) => n+c.amount,0);
+      const prevent = Math.max(0,candidate.ability.prevent-spent);
+      return prevent ? [{...candidate,ability:{...candidate.ability,prevent}}] : [];
+    }
+    if (candidate.ability.change?.shieldCounter) {
+      const sameBatch = proposal.batch !== undefined && (state.objects[candidate.holderId]?.shieldBatch === proposal.batch
+        || all.some(c => c.kind === "counter" && c.holder === candidate.holderId && c.batch === proposal.batch));
+      const spent = all.filter(c => c.kind === "counter" && c.holder === candidate.holderId).length;
+      if (!sameBatch && (state.objects[candidate.holderId]?.counters?.shield ?? 0) <= spent) return [];
+    }
+    return [candidate];
+  });
+}
+export function ruleReplacementCandidates(state, proposal, {reserved = []} = {}) {
   checkStepProposal(proposal);
-  return applicable(state, proposal).map(candidate => ({key: candidateKey(candidate), holderId: candidate.holderId,
+  return stepCandidates(state, proposal, reserved).map(candidate => ({key: candidateKey(candidate), holderId: candidate.holderId,
     ability: structuredClone(candidate.ability), label: `${state.objects[candidate.holderId]?.card ?? candidate.ability.name ?? "Effect"}: ${candidate.ability.text ?? candidate.ability.id}`}));
 }
-export function applyRuleReplacement(state, proposal, key) {
+export function applyRuleReplacement(state, proposal, key, {reserved = [], preventAmount} = {}) {
   checkStepProposal(proposal);
-  const candidate = applicable(state, proposal).find(candidate => candidateKey(candidate) === key);
+  const candidate = stepCandidates(state, proposal, reserved).find(candidate => candidateKey(candidate) === key);
   if (!candidate) throw new Error("That replacement no longer applies");
+  if (proposal.event === "damage") {
+    if (preventAmount !== undefined) {
+      if (!Number.isInteger(candidate.ability.prevent) || !Number.isInteger(preventAmount)
+        || preventAmount < 0 || preventAmount > candidate.ability.prevent || preventAmount > proposal.amount)
+        throw new Error("Invalid finite damage prevention allocation");
+      candidate.ability = {...candidate.ability,prevent:preventAmount};
+    }
+    // CR 615.7, 616.1: choices edit a saved proposal; spending a shield waits for the event's commit.
+    const next = applyOne(state, candidate, proposal, true), consumption = [...(proposal.damageConsumption ?? [])];
+    const {holderId,ability,effect} = candidate;
+    if (Number.isInteger(ability.prevent)) consumption.push({kind:"finite",holder:holderId,ability:ability.id,amount:Math.min(ability.prevent,proposal.amount)});
+    if (effect?.next && proposal.amount > 0) consumption.push({kind:"next",effect:effect.id});
+    if (ability.change?.shieldCounter && proposal.amount > 0) {
+      const sameBatch = proposal.batch !== undefined && (state.objects[holderId]?.shieldBatch === proposal.batch
+        || [...reserved,...consumption].some(c => c.kind === "counter" && c.holder === holderId && c.batch === proposal.batch));
+      if (!sameBatch) consumption.push({kind:"counter",holder:holderId,...(proposal.batch !== undefined ? {batch:proposal.batch} : {})});
+    }
+    next.damageConsumption = consumption;
+    return next;
+  }
   return applyOne(state, candidate, proposal);
+}
+
+/** Commit exactly the reservations attached to a settled event; an already-applied replacement outlives its holder. */
+export function consumeDamageReplacements(state, proposal) {
+  const events = [];
+  for (const spent of proposal.damageConsumption ?? []) {
+    if (spent.kind === "next") state.effects = (state.effects ?? []).filter(e => e.id !== spent.effect);
+    if (spent.kind === "finite") {
+      const ability = state.objects[spent.holder]?.abilities?.find(a => a.id === spent.ability);
+      if (ability && Number.isInteger(ability.prevent)) ability.prevent = Math.max(0,ability.prevent-spent.amount);
+    }
+    if (spent.kind === "counter") {
+      const holder = state.objects[spent.holder];
+      if (!holder || (spent.batch !== undefined && holder.shieldBatch === spent.batch)) continue;
+      if (spent.batch !== undefined) holder.shieldBatch = spent.batch;
+      const before = holder.counters?.shield ?? 0;
+      if (before > 0) {
+        holder.counters.shield = before-1;
+        events.push({kind:"GameEventCardCounters",data:{turn:state.turn,phase:state.phase,fields:{card:{cardId:holder.id,name:holder.card,owner:holder.owner,controller:holder.controller},type:"shield",oldValue:before,newValue:before-1}}});
+      }
+    }
+  }
+  return events;
 }
 
 /* The counters an exile replacement gives the card it sends there ("with a void counter on it", Dauthi Voidwalker), put on
