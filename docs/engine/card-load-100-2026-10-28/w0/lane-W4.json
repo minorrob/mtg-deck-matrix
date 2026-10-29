@@ -16,7 +16,7 @@
     "| Two damage replacements where nobody can be asked | `rules/replacement.mjs`:34 | W4 |",
     "| A token put onto the battlefield attacking attacks the first player in turn order | `script/effects/permanents.mjs`:270 | W4 |"
   ],
-  "status": "bounded trample-over-planeswalkers checkpoint published; damage ordering, attacking tokens and blocker-side joint requirements remain open",
+  "status": "bounded trample checkpoint and reproducible outside-mana damage handback; damage ordering, attacking tokens and blocker-side joint requirements remain open",
   "codeCheckpoint": "89bfae71e1023c4d0d5ed82ebaa9260f6b61ed1e",
   "pullRequest": "https://github.com/minorrob/mtg-deck-matrix/pull/930",
   "completed": [
@@ -118,6 +118,17 @@
         "Four actions.mjs mutation anchors moved/duplicated by W5 funding; routed to W5/integration."
       ],
       "limits": "No new cards/promotions; no main merge, release, full suite or wave closure. ROB-149 blocker-side capacity/joint requirements remain open and must revisit simultaneous shared-blocker damage when implemented. Existing UI choice modes are reused; no real-table visual/playtest sign-off is claimed."
+    },
+    "outsideManaDamage": {
+      "status": "OPEN, deliberately RED native reproduction; no implementation or gate credit",
+      "fixture": "docs/engine/card-load-100-2026-10-28/w0/evidence/w4-mana-order-red.mjs",
+      "design": "docs/engine/card-load-100-2026-10-28/w0/W4-damage-continuation.md",
+      "command": "Node22 first on PATH; node docs/engine/card-load-100-2026-10-28/w0/evidence/w4-mana-order-red.mjs",
+      "actual": "exit1; Shivan Reef actual red mana action taps/adds R1, automatically deals5, player0 life35, no awaiting choice",
+      "required": "Ask player0 before damage; add-two then triple deals9/life31, triple then add-two deals5/life35. Preserve R1, tapped source, empty stack, one mana event/one damage event across reload.",
+      "testPreservation": "Only W4's uncommitted deliberate RED hunk was moved to this diagnostic fixture. tests/engine-damage-replaced.mjs restored exactly to published source89bfae71; no assertions/skips/ignores changed.",
+      "seams": "W5 reserved actions.mjs mana ability.then region near2981; tapUnits excludes ability.then from automatic casting sources. W1 owns combat.mjs for battles. Safe continuation must serialize damage proposals and defer shield/next-use consumption, preserve applied replacements across concessions, emit committed tap/mana prefix once and resume remaining instructions.",
+      "handback": "Root requested this bounded design/evidence checkpoint before context handback; no multi-module damage implementation started. Remaining damage, token and blocker debts are not waived."
     },
     "anchors": "53 problems after exact W5 merge:49 inherited plus4 funding actions anchors. No W4 changed-file anchor failures. Root is reconciling inherited/funding proofs."
   }
