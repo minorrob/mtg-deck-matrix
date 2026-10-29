@@ -155,12 +155,34 @@ export function reopenPreparedSbaReturn(state,frame,objectId) {
     entryProgress:prepared.entryProgress};
 }
 
-export function validateSbaReturnPreparation(state, frame) {
+export function validateSbaReturnPreparation(state,frame) {return returnPreparationBinding(state,frame);}
+
+export function validateSbaReturnFirstEntry(state,child) {
+  const operation=state.ruleOperation,frame=operation?.frames.at(-2);
+  if(operation?.frames.at(-1)!==child||child.kind!=="entering"||frame?.kind!=="move-one"||frame.stage!=="after-enter"
+    || frame.id!==child.objectId||frame.returnBatchId!==child.returnBatchId||!frame.reopenReturn)
+    throw new Error("No native first-entry child of a return recheck");
+  const binding=returnPreparationBinding(state,frame,child),prepared=operation.sbaPreparedReturns[binding.member.prepared];
+  if(prepared.entering||prepared.entryProgress||prepared.counterPlan||frame.proposal.to!=="battlefield")
+    throw new Error("A native first entry cannot replace an existing saved entry");
+  return binding;
+}
+
+function returnPreparationBinding(state, frame, child=null) {
   const operation = state.ruleOperation, batch = sbaReturnBatch(state,frame.returnBatchId);
-  const member = batch.members.find(member => member.id === frame.id),parent=operation.frames.at(-2);
+  const member = batch.members.find(member => member.id === frame.id),parent=operation.frames.at(child?-3:-2);
   const prepared=operation.sbaPreparedReturns?.[member?.prepared];
+  const entry=operation.sbaEntryProgress?.[frame.entryProgress];
+  const firstEntry=prepared&&!prepared.entering&&!prepared.entryProgress&&entry
+    && entry.operation===operation.serial&&entry.returnBatchId===frame.returnBatchId&&entry.sourceCohortId===batch.sourceCohortId
+    && entry.objectId===frame.id&&entry.player===member.owner&&entry.source===member.source
+    && entry.frame.objectId===frame.id&&entry.frame.player===member.owner&&entry.frame.proposal.objectId===frame.id
+    && entry.frame.proposal.event==="enters"&&entry.frame.to===entry.result.entering.to
+    && JSON.stringify(entry.result.entering)===JSON.stringify(frame.preparedEntering)
+    && JSON.stringify(entry.result.counterPlan)===JSON.stringify(frame.counterPlan)
+    && JSON.stringify(entry.result.objectPatch)===JSON.stringify(frame.entryPatch);
   const recheck=frame.reopenReturn!==undefined;
-  if (!["planning","counters"].includes(batch.phase) || operation.frames.at(-1) !== frame || frame.kind !== "move-one" || !frame.prepareOnly || frame.payment
+  if (!["planning","counters"].includes(batch.phase) || operation.frames.at(-1) !== (child??frame) || frame.kind !== "move-one" || !frame.prepareOnly || frame.payment
     || !member || member.skipped || member.committed || state.objects[member.id]?.zone !== member.from || state.objects[member.id]?.owner !== member.owner
     || !operation.frames.some(parent => parent.kind === "sba-linked-returns" && parent.returnBatchId === frame.returnBatchId)
     || !recheck&&(batch.phase!=="planning"||member.prepared)
@@ -169,9 +191,9 @@ export function validateSbaReturnPreparation(state, frame) {
       || parent?.kind!=="sba-linked-returns"||parent.returnBatchId!==frame.returnBatchId||parent.stage!=="after-zone-recheck"||parent.recheckingZoneId!==frame.id
       || frame.proposal?.objectId!==frame.id||frame.proposal?.from!==member.from
       || ["applied","appliedBy"].some(key=>JSON.stringify((frame.proposal[key]??[]).slice(0,(prepared.proposal[key]??[]).length))!==JSON.stringify(prepared.proposal[key]??[]))
-      || JSON.stringify(frame.preparedEntering)!==JSON.stringify(prepared.entering)||frame.preparedCounterResult!==prepared.counterResult
-      || JSON.stringify(frame.counterPlan)!==JSON.stringify(prepared.counterPlan)||JSON.stringify(frame.entryPatch)!==JSON.stringify(prepared.entryPatch)
-      || frame.entryProgress!==prepared.entryProgress))
+      || !firstEntry&&(JSON.stringify(frame.preparedEntering)!==JSON.stringify(prepared.entering)||frame.preparedCounterResult!==prepared.counterResult
+        || JSON.stringify(frame.counterPlan)!==JSON.stringify(prepared.counterPlan)||JSON.stringify(frame.entryPatch)!==JSON.stringify(prepared.entryPatch)
+        || frame.entryProgress!==prepared.entryProgress)))
     throw new Error("No matching native linked-return preparation");
   return {batch, member};
 }
@@ -260,6 +282,23 @@ export function markSbaTriggerBatch(state, frame, events) {
   const key = `${operation.serial}:${frame.cohortId}:triggers`;
   cohort.triggerBatch = key;
   markInternalSbaEvents(state,key,operation.serial,frame.cohortId,events);
+}
+
+/* The native operation's event list contains committed actions only, never the saved proposals being planned.
+   Collect its prior prefix before an outside concession or a real entry cost can introduce a new watcher. */
+export function pendingSbaReturnEvents(state) {
+  const operation=state.ruleOperation;
+  const index=operation?.frames.findLastIndex(frame=>frame.kind==="sba-linked-returns")??-1;
+  if(index<0)return null;
+  const frame=operation.frames[index],parent=operation.frames[index-1],batch=sbaReturnBatch(state,frame.returnBatchId);
+  if(["commit","done"].includes(batch.phase))return null;
+  if(parent?.kind!=="sba-cohort"||parent.cohortId!==batch.sourceCohortId||parent.stage!=="after-linked-returns"
+    || !["planning","counters"].includes(batch.phase)||batch.members.some(member=>member.committed)
+    || !operation.sbaCohorts[batch.sourceCohortId].departures.every(departure=>departure.finished))
+    throw new Error("No native uncommitted return progress to collect");
+  const key=`${operation.serial}:${frame.returnBatchId}:progress:${batch.progressSerial=(batch.progressSerial??0)+1}:triggers`;
+  markInternalSbaEvents(state,key,operation.serial,batch.sourceCohortId,operation.events);
+  return operation.events;
 }
 
 export function markSbaReturnEvents(state,frame,events,phase) {

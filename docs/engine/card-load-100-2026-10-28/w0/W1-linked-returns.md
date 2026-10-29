@@ -16,7 +16,7 @@ actual old ID, owner and source zone bind each result. Owner choices follow APNA
 moves/payment wrappers remain unchanged. Costs, concessions and other interleaved actions remain authoritative;
 only operation proposals/choices are saved, with no game snapshot rollback or event-buffer splicing.
 
-The secured local prototype passes 271 native checks before the remaining redirect/ledger/full-proof work below.
+The secured local prototype passes 402 native checks before the remaining redirect/ledger/full-proof work below.
 Progress work was secured at314d11d1, then exact assembled420e797 was merged ataa4c3702. README uses the actual
 710 flat readers (root709 plus this lane's additive native reader). This remains an unfinished local checkpoint.
 Focused original readers also pass: counter87, Battle-SBA128, intrinsic34 and Battle95. It covers:
@@ -58,18 +58,38 @@ answers, batch/key/object/from/counter forgery, early/reused helpers and live mo
 Native replacement followups run exactly once for the actual source controller. Ordinary same-exile movement
 retains its existing new-identity/no-battlefield-entry behavior. No old-ID retirement helper was added.
 
-One further concrete RED is open: an earlier saved zone redirect to exile has no entering child. If a later native
-replacement redirects that modified event back toward battlefield, the first entering child currently rejects its
-new after-zone-recheck parent binding. The old applied exile replacement must stay excluded. Source/log are
-archived; additive native first-entry binding and actual child receipt forwarding are requested, not implemented.
+First-time late native entry now passes: the saved event was initially redirected to exile, then a new live
+replacement sends that same event back toward battlefield. Its old applied exile key stays excluded, its first
+native entry/cost/counter receipts are bound to the exact reopen parent, and no intermediate exile/ETB is emitted.
+JSON, direct forged parent/key/applied-prefix checks, reuse and actual owner departure before commitment pass.
 
-Another native liveness RED is archived: after real Temple Garden life payment, an outside concession returns a
-new life watcher while the linked Clone choice remains pending. Final preflight collection incorrectly lets that
-external watcher see the prior cost (actual1, expected0); the old watcher1/in-batch returning watcher0 controls
-remain green. A validated native pre-concession/pre-cost progress collection seam is requested, not implemented.
-No event buffer/cursor rewriting or generic trigger/payment change is proposed.
+Both prior-cost watcher REDs now pass, including actual Devour sacrifice. Return-only canonical progress collection
+runs before concession removes board facts and before the saved real devour child starts. Only already committed
+operation events are marked and collected; no unanswered proposal, journal buffer, reported cursor, ordinary payment
+wrapper or generic collector is changed. Repeated/overlapping receipt requests plus reload preserve oldwatcher1,
+newwatcher0 and life38. A disappeared source retains its prior trigger for its surviving controller; a departed
+controller retains zero. W5 confirms its deferred sole-undo causes cannot be active in these native return frames.
 
-Focused native progress/redirect proof has a green baseline and all10 semantic controls caught (missed[]).
+The preserved first-entry redirect RED now passes in its own separately checked source: after the initial exile
+replacement and later back-to-battlefield replacement, the first native entry can explicitly pay2 and then accept
+or decline the loaded discard-instead condition. The same validated reopen frame forwards the actual saved child
+receipt and destination. Both completed battlefield and redirected graveyard outcomes keep costs and applied keys,
+produce only the proper final new identity, and emit no intermediate exile/ETB or phantom counter event. Two further
+remaining zone alternatives stay explicit; operation/cohort/object/parent/receipt forgery, invalid answers, overlap
+and JSON controls pass. No recursive authority reset or ordinary/token/payment route change was introduced.
+
+Focused native progress/redirect proof has a green baseline and all18 semantic controls caught (missed[]).
+The original report with two missed controls is retained: tests were strengthened with a direct first-entry API
+negative and a prefix overlap after actual collection, then those unchanged controls were caught.
+
+The predecessor source passed the full43-reader union including unchanged engine-cards and all generator checks;
+that report is archived explicitly as before-first-redirect evidence. It is not proof of the later fix. The final
+frozen matrix now retains all original44 readers (including the moved Chulane probe's complete original reader),
+original counter30/base32/readiness3 plus new18 and moved Chulane1 =84 controls. Direct return/entry/counter/prefix
+readers run first; the full engine-cards and generators readers remain mandatory and run last. Two moved anchors
+were reanchored to the same faults: Aura eligibility using owner instead of actual entering controller, and the
+public counter-result controller check alongside its new partial-receipt guard. Static audit has33 inherited UI
+problems and zero engine targets. The full44/84 run is still pending.
 This scoped proof does not replace the required original full reader/mutation unions. Full inherited mutation unions must
 remain intact; no incomplete positive count is acceptance.
 

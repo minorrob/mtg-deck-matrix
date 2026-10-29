@@ -9,7 +9,7 @@ import {awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {concede} from "../game/engine/rules/sba.mjs";
 import {moveOne} from "../game/engine/script/effects/zones.mjs";
 import {entryCounterResult, entryCounterProgressFrame} from "../game/engine/rules/entry-characteristics.mjs";
-import {freezeSbaReturnBatch, reopenPreparedSbaReturn} from "../game/engine/rules/sba-move-results.mjs";
+import {freezeSbaReturnBatch, reopenPreparedSbaReturn, validateSbaReturnFirstEntry, pendingSbaReturnEvents} from "../game/engine/rules/sba-move-results.mjs";
 
 let checks = 0;
 const failures = [];
@@ -254,7 +254,7 @@ for(const secondTotal of [9,10])for(const askGrant of [false,true])run(`parent g
   eq(state.awaiting,null,"all refreshed choices finish before priority returns");
 });
 
-const lateReturn = ({kind="zone",dual=false}={}) => {
+const lateReturn = ({kind="zone",dual=false,back=false,discardFirst=false,graveChoices=false}={}) => {
   const state=createState({players:[{name:"A"},{name:"B"},{name:"C"},{name:"D"}]});Object.assign(state,{phase:"MAIN1",turn:1,activePlayer:0,priorityPlayer:0});
   const put=object=>addObject(state,{owner:0,controller:0,...object},"battlefield");
   const sources=[0,1].map(index=>{const id=put({card:`Late Return Source ${index}`,types:["Battle"],defense:0});state.objects[id].protector=0;return id;});
@@ -262,14 +262,27 @@ const lateReturn = ({kind="zone",dual=false}={}) => {
   const doubling=compileScript(JSON.parse(readFileSync(new URL("../game/engine/cards/d/doubling-season.json",import.meta.url))));
   eq(doubling.problems,[],"late redirect uses the actual loaded doubler");put({...doubling.definition,card:"Doubling Season"});
   put({card:"Second Late Plus One",types:["Enchantment"],abilities:[{id:"second-late-plus",kind:"static",rule:"more-counters",counter:"loyalty",plus:1,affects:{what:"permanent",controller:"you",named:"Second Late Walker"}}]});
+  if(back){
+    put({card:"First Existing Exile Redirect",types:["Enchantment"],abilities:[{id:"old-exile",kind:"replacement",watches:{event:"zone-change",from:"exile",to:"battlefield",filter:{what:"card",zone:"exile",named:"First Late Walker"}},change:{to:"exile"}}]});
+    state.objects[ids[0]].abilities=[{id:"first-real-entry",kind:"replacement",watches:{event:"enters",who:"self"},change:{entersTapped:true,unlessPay:{life:2}}}];
+    if(discardFirst){
+      state.objects[ids[0]].abilities[0].text="Pay two life before return.";
+      const mox=compileScript(JSON.parse(readFileSync(new URL("../game/engine/cards/m/mox-diamond.json",import.meta.url))));
+      eq(mox.problems,[],"the actual loaded native discard-instead entry condition compiles");
+      state.objects[ids[0]].abilities.push({...mox.definition.abilities.find(ability=>ability.kind==="replacement"),id:"first-discard-entry"});
+      addObject(state,{card:"Actual Discard Land",types:["Land"],owner:0,controller:0},"hand",0);
+    }
+    if(graveChoices)for(const to of ["hand","exile"])put({card:`Final Redirect ${to}`,types:["Enchantment"],abilities:[{id:`final-${to}`,kind:"replacement",watches:{event:"zone-change",from:"exile",to:"graveyard",filter:{what:"card",zone:"exile",named:"First Late Walker"}},change:{to}}]});
+  }
   const gate=put({owner:2,controller:2,card:"New Late Modifier Gate",types:["Enchantment"]});
   const modifiers=(dual?["hand","exile"]:["exile"]).map((to,index)=>addObject(state,{card:`Late Modifier ${to}`,types:["Enchantment"],owner:index?1:0,controller:index?1:0,
     abilities:[{id:`late-${to}`,kind:"replacement",watches:kind==="entry"?{event:"enters",filter:{named:"First Late Walker",controller:"you"}}
-      :{event:"zone-change",from:"exile",to:"battlefield",filter:{what:"card",zone:"exile",named:"First Late Walker"}},
-      change:kind==="entry"?{discardInstead:{types:["Land"]}}:{to,then:[{effect:"gainLife",amount:1}]}}]},"exile"));
+      :{event:"zone-change",from:"exile",to:back?"exile":"battlefield",filter:{what:"card",zone:"exile",named:"First Late Walker"}},
+      change:kind==="entry"?{discardInstead:{types:["Land"]}}:{to:back?"battlefield":to,then:[{effect:"gainLife",amount:1}]}}]},"exile"));
   state.exiledUntil=[...sources.map((source,index)=>({source,exiled:ids[index]})),...modifiers.map(exiled=>({source:gate,exiled}))];
   const events=afterResolving(state,[]);events.push(...resolveAwaiting(state,awaitingChoice(state).options.map((_,index)=>index)));
-  eq(Object.values(state.ruleOperation.entryCounterResults).find(row=>row.objectId===ids[0]).counters.loyalty,6,"the earlier prepared entry really holds its applied counter prefix before redirect");
+  if(!back)eq(Object.values(state.ruleOperation.entryCounterResults).find(row=>row.objectId===ids[0]).counters.loyalty,6,"the earlier prepared entry really holds its applied counter prefix before redirect");
+  else eq(Object.values(state.ruleOperation.entryCounterResults??{}).some(row=>row.objectId===ids[0]),false,"the initial modified exile event has no invented entry or counter result");
   return {state,ids,events};
 };
 
@@ -329,6 +342,175 @@ run("ordinary same-exile move keeps its established CR400.8 identity",()=>{
   eq([state.objects[old],state.objects[moved]?.zone,moved!==old],[undefined,"exile",true],"ordinary re-exile creates a new object without return-ledger or skip flags");
   eq(events.filter(event=>event.kind==="GameEventCardChangeZone").map(event=>[event.data.fields.from.zoneType,event.data.fields.to.zoneType,event.data.fields.enteredAs]),
     [["Exile","Exile",undefined]],"ordinary re-exile is one native event and no battlefield entry");
+});
+
+run("late native zone replacement starts its first actual entering child",()=>{
+  let {state,ids,events}=lateReturn({back:true});state=JSON.parse(JSON.stringify(state));events.push(...concede(state,2));
+  events.push(...resolveAwaiting(state,[0]));
+  eq(awaitingChoice(state).options.some(option=>option.pay===true),true,"a late redirect to battlefield starts the actual first native entering replacement");
+  eq(ids.map(id=>state.objects[id]?.zone),["exile","exile"],"no intermediate fictitious re-exile or battlefield move occurs while the first entry question waits");
+  const entry=state.ruleOperation.frames.at(-1),move=state.ruleOperation.frames.at(-2),parent=state.ruleOperation.frames.at(-3);
+  eq(move.proposal.applied.length,2,"the old exile modifier and new battlefield redirect each apply once to the saved event");
+  eq(!!entry.entryProgressParent,false,"this is a first native entry, not a replay of an earlier entry receipt");
+  validateSbaReturnFirstEntry(state,entry);checks++;
+  for(const corrupt of [copy=>copy.ruleOperation.frames.at(-3).recheckingZoneId=ids[1],
+    copy=>copy.ruleOperation.frames.at(-2).reopenReturn="forged",
+    copy=>copy.ruleOperation.frames.at(-2).proposal.applied=[]]){
+    const copy=JSON.parse(JSON.stringify(state));corrupt(copy);
+    assert.throws(()=>validateSbaReturnFirstEntry(copy,copy.ruleOperation.frames.at(-1)),/native|internal/);checks++;
+    assert.throws(()=>resolveAwaiting(copy,[0]),/native|internal/);checks++;
+    eq(ids.map(id=>copy.objects[id]?.zone),["exile","exile"],"a forged first-entry parent/key/applied-zone prefix cannot commit either sibling");
+  }
+  state=JSON.parse(JSON.stringify(state));events.push(...resolveAwaiting(state,[awaitingChoice(state).options.findIndex(option=>option.pay===true)]));
+  eq(events.filter(event=>event.kind==="GameEventCardChangeZone"&&event.data.fields.card.cardId===ids[0]).map(event=>event.data.fields.to.zoneType),["Battlefield"],"the final native event enters once with no intermediate false exile event");
+  const first=state.zones.battlefield.find(id=>state.objects[id].card==="First Late Walker");
+  eq([first!==ids[0],state.objects[first]?.counters.loyalty,state.objects[first]?.tapped,state.players[0].life],[true,6,false,39],"the actual first entry pays2 once, places its first doubled loyalty once and runs the selected redirect followup once");
+  eq(events.filter(event=>event.kind==="GameEventCardCounters").map(event=>event.data.fields.newValue),[6,7],"only the two actual completed entries report their final counters");
+  assert.throws(()=>validateSbaReturnFirstEntry(state,entry),/native/);checks++;
+  assert.throws(()=>reopenPreparedSbaReturn(state,parent,ids[0]),/native|internal/);checks++;
+});
+
+run("new watcher after committed cost via concession",()=>{
+  let state=createState({players:[{name:"A"},{name:"B"},{name:"C"}]});
+  Object.assign(state,{phase:"MAIN1",turn:1,activePlayer:0,priorityPlayer:0});
+  const put=object=>addObject(state,{owner:0,controller:0,...object},"battlefield");
+  const sources=[0,1,2].map(index=>{const id=put({card:`Cost Return Source ${index}`,types:["Battle"],defense:0});state.objects[id].protector=0;return id;});
+  const ability=id=>({id,kind:"triggered",text:"Whenever you lose life, gain 1 life.",trigger:{on:"GameEventPlayerLivesChanged",loser:"you",batch:true},effects:[{effect:"gainLife",amount:1}]});
+  put({card:"Existing Life Watcher",types:["Enchantment"],abilities:[ability("old-life")]});
+  const garden=compileScript(JSON.parse(readFileSync(new URL("../game/engine/cards/t/temple-garden.json",import.meta.url))));
+  eq(garden.problems,[],"the actual saved life-payment entry card compiles");
+  put({card:"Departing Owned Life Source",types:["Enchantment"],owner:2,controller:0,abilities:[ability("surviving-life-controller")]});
+  put({card:"Losing Life Controller Source",types:["Enchantment"],owner:0,controller:2,abilities:[{...ability("losing-life-controller"),trigger:{on:"GameEventPlayerLivesChanged",batch:true}}]});
+  const land=addObject(state,{...garden.definition,card:"Temple Garden",owner:0,controller:0},"exile");
+  const watcher=addObject(state,{card:"Returning Life Watcher",types:["Creature"],power:2,toughness:2,owner:0,controller:0,abilities:[ability("returned-life")]},"exile");
+  const clone=addObject(state,{...mirror.definition,card:"Clever Impersonator",owner:0,controller:0},"exile");
+  const ids=[land,watcher,clone];state.exiledUntil=sources.map((source,index)=>({source,exiled:ids[index]}));
+  const gate=put({card:"External Watcher Gate",types:["Enchantment"],owner:2,controller:2});
+  const external=addObject(state,{card:"External Returned Life Watcher",types:["Enchantment"],owner:0,controller:0,abilities:[ability("external-returned-life")]},"exile");
+  state.exiledUntil.push({source:gate,exiled:external});
+  afterResolving(state,[]);
+  resolveAwaiting(state,awaitingChoice(state).options.map((_,index)=>index));
+  const cost=awaitingChoice(state);
+  eq(cost.options.some(option=>option.pay===true),true,"the actual native entry offers its real life cost before all returns");
+  const paid=resolveAwaiting(state,[cost.options.findIndex(option=>option.pay===true)]);
+  eq([state.players[0].life,awaitingChoice(state).id.startsWith("entering-copy:")],[38,true],"the first real cost remains paid while a later sibling asks its copy decision");
+  eq(ids.map(id=>state.objects[id]?.zone),["exile","exile","exile"],"no returning object moved after the committed cost and before the later decision");
+  eq(paid.filter(event=>event.kind==="GameEventPlayerLivesChanged").length,1,"the committed native cost prefix is reported once before the later question");
+  const originalLength=state.ruleOperation.events.length,reported=state.ruleOperation.reported;
+  const firstPrefix=pendingSbaReturnEvents(state),again=pendingSbaReturnEvents(state);
+  eq(firstPrefix,again,"overlapping native prefix requests preserve the actual append-only operation event list");
+  eq([state.ruleOperation.events.length,state.ruleOperation.reported],[originalLength,reported],"canonical receipt marking cannot splice or renumber the reported prefix");
+  const corrupt=JSON.parse(JSON.stringify(state));corrupt.ruleOperation.frames.find(frame=>frame.kind==="sba-linked-returns").returnBatchId="forged";
+  assert.throws(()=>pendingSbaReturnEvents(corrupt),/native|internal/);checks++;
+  state=JSON.parse(JSON.stringify(state));concede(state,2);
+  pendingSbaReturnEvents(state);state=JSON.parse(JSON.stringify(state));
+  const finished=resolveAwaiting(state,[awaitingChoice(state).options.findIndex(option=>option.copyOf===null)]);
+  eq(state.players[0].life,38,"reload and independent concession cannot snapshot-rollback the real paid cost");
+  eq(state.players[2].lost,true,"the independent outside concession remains authoritative after the saved entry resumes");
+  eq(finished.filter(event=>event.kind==="GameEventPlayerLivesChanged").length,0,"finishing the returns does not replay the already-reported cost prefix");
+  eq([...state.stack,...state.pendingTriggers].filter(entry=>entry.abilityId==="old-life").length,1,"the already-existing watcher sees the native paid life once");
+  eq([...state.stack,...state.pendingTriggers].filter(entry=>entry.abilityId==="returned-life").length,0,"a watcher returning afterward cannot see a life payment made before it entered");
+  eq([...state.stack,...state.pendingTriggers].filter(entry=>entry.abilityId==="external-returned-life").length,0,"a watcher arriving during the outside concession cannot observe a prior committed cost");
+  eq([...state.stack,...state.pendingTriggers].filter(entry=>entry.abilityId==="surviving-life-controller").length,1,"a now-departed source preserves its earlier actual trigger for a surviving controller");
+  eq([...state.stack,...state.pendingTriggers].filter(entry=>entry.abilityId==="losing-life-controller").length,0,"a departed controller leaves no queued trigger from its earlier source");
+
+});
+
+run("new watcher after committed cost via devour",()=>{
+  let state=createState({players:[{name:"A"},{name:"B"},{name:"C"}]});
+  Object.assign(state,{phase:"MAIN1",turn:1,activePlayer:0,priorityPlayer:0});
+  const put=object=>addObject(state,{owner:0,controller:0,...object},"battlefield");
+  const sources=[0,1,2].map(index=>{const id=put({card:`Cost Return Source ${index}`,types:["Battle"],defense:0});state.objects[id].protector=0;return id;});
+  const ability=id=>({id,kind:"triggered",text:"Whenever you lose life, gain 1 life.",trigger:{on:"GameEventPlayerLivesChanged",loser:"you",batch:true},effects:[{effect:"gainLife",amount:1}]});
+  put({card:"Existing Life Watcher",types:["Enchantment"],abilities:[ability("old-life")]});
+  const garden=compileScript(JSON.parse(readFileSync(new URL("../game/engine/cards/t/temple-garden.json",import.meta.url))));
+  eq(garden.problems,[],"the actual saved life-payment entry card compiles");
+  const land=addObject(state,{...garden.definition,card:"Temple Garden",owner:0,controller:0},"exile");
+  const watcher=addObject(state,{card:"Devour Return",types:["Creature"],power:2,toughness:2,owner:0,controller:0,abilities:[{id:"return-devour",kind:"replacement",watches:{event:"enters",who:"self"},change:{devour:{amount:1,of:{types:["Creature"]}}}}]},"exile");
+  const clone=addObject(state,{...mirror.definition,card:"Clever Impersonator",owner:0,controller:0},"exile");
+  const ids=[land,watcher,clone];state.exiledUntil=sources.map((source,index)=>({source,exiled:ids[index]}));
+  const gate=put({card:"External Watcher Gate",types:["Creature"],power:2,toughness:2,owner:0,controller:0});
+  const external=addObject(state,{card:"External Returned Life Watcher",types:["Enchantment"],owner:0,controller:0,abilities:[ability("external-returned-life")]},"exile");
+  state.exiledUntil.push({source:gate,exiled:external});
+  afterResolving(state,[]);
+  resolveAwaiting(state,awaitingChoice(state).options.map((_,index)=>index));
+  const cost=awaitingChoice(state);
+  eq(cost.options.some(option=>option.pay===true),true,"the actual native entry offers its real life cost before all returns");
+  const paid=resolveAwaiting(state,[cost.options.findIndex(option=>option.pay===true)]);
+  eq(state.players[0].life,38,"the earlier native life payment remains committed before the later devour cost");
+  resolveAwaiting(state,[0]);
+  eq(awaitingChoice(state).id.startsWith("entering-copy:"),true,"the later sibling's real copy question follows the real sacrifice cost");
+  eq(ids.map(id=>state.objects[id]?.zone),["exile","exile","exile"],"no returning object moved after the committed cost and before the later decision");
+  eq(paid.filter(event=>event.kind==="GameEventPlayerLivesChanged").length,1,"the committed native cost prefix is reported once before the later question");
+  state=JSON.parse(JSON.stringify(state));
+  const finished=resolveAwaiting(state,[awaitingChoice(state).options.findIndex(option=>option.copyOf===null)]);
+  eq(state.players[0].life,38,"reload and independent concession cannot snapshot-rollback the real paid cost");
+
+  eq(finished.filter(event=>event.kind==="GameEventPlayerLivesChanged").length,0,"finishing the returns does not replay the already-reported cost prefix");
+  eq([...state.stack,...state.pendingTriggers].filter(entry=>entry.abilityId==="old-life").length,1,"the already-existing watcher sees the native paid life once");
+
+  eq([...state.stack,...state.pendingTriggers].filter(entry=>entry.abilityId==="external-returned-life").length,0,"a watcher arriving from an actual later devour sacrifice cannot observe the prior committed life cost");
+
+});
+
+run("return owner leaves during its first late entry question",()=>{
+  const {state,ids,events}=lateReturn({back:true});events.push(...concede(state,2));events.push(...resolveAwaiting(state,[0]));
+  eq(awaitingChoice(state).options.some(option=>option.pay===true),true,"the owner's real first entering cost is still unanswered");
+  events.push(...concede(state,0));
+  eq(ids.map(id=>state.objects[id]),[undefined,undefined],"the departing owner's old exile objects leave the game and cannot be resurrected by saved entry receipts");
+  eq(events.filter(event=>event.kind==="GameEventCardChangeZone"&&ids.includes(event.data.fields.card?.cardId)&&event.data.fields.enteredAs!==undefined).length,0,"owner departure never commits an already prepared battlefield arrival");
+  eq(events.filter(event=>event.kind==="GameEventCardCounters").length,0,"no planned counters are journaled for an owner who leaves before any return");
+  eq(state.players[0].life,40,"the unanswered two-life cost is never paid for the departing owner");
+  eq(state.ruleOperation,undefined,"all expired return members finish without leaving a reusable native receipt");
+});
+
+const reachFirstDiscard = ({graveChoices=false}={}) => {
+  const result=lateReturn({back:true,discardFirst:true,graveChoices}),{state,events}=result;
+  events.push(...concede(state,2));events.push(...resolveAwaiting(state,[0]));
+  const order=awaitingChoice(state);
+  eq(order.id.startsWith("entry-order:"),true,"the first native entry orders its two actual replacements explicitly");
+  events.push(...resolveAwaiting(state,[order.options.findIndex(option=>option.label.includes("Pay two life"))]));
+  events.push(...resolveAwaiting(state,[awaitingChoice(state).options.findIndex(option=>option.pay===true)]));
+  eq(state.players[0].life,38,"the real first-entry cost is committed before the later discard condition");
+  eq(awaitingChoice(state).options.some(option=>option.discard===null),true,"the actual loaded condition explicitly offers declining the land discard");
+  return result;
+};
+
+for(const accept of [false,true])run(`first late entry completes or redirects with committed cost ${accept}`,()=>{
+  let {state,ids,events}=reachFirstDiscard();state=JSON.parse(JSON.stringify(state));
+  events.push(...resolveAwaiting(state,[awaitingChoice(state).options.findIndex(option=>accept?option.discard!==null:option.discard===null)]));
+  for(let step=0;state.awaiting&&step<20;step++)events.push(...resolveAwaiting(state,[0]));
+  const moves=events.filter(event=>event.kind==="GameEventCardChangeZone"&&event.data.fields.card.cardId===ids[0]);
+  eq(moves.map(event=>event.data.fields.to.zoneType),[accept?"Battlefield":"Graveyard"],"the actual first-child entry outcome forwards through the same native event with no intermediate false zone change");
+  eq(state.objects[ids[0]],undefined,"both completed and redirected outcomes produce their proper final new identity");
+  eq(events.filter(event=>event.kind==="GameEventCardCounters").map(event=>event.data.fields.newValue),accept?[6,7]:[7],"only actual battlefield entries emit their once-only final counters");
+  eq(state.players[0].life,39,"the earlier real two-life cost stays paid once and the already-bound zone followup occurs once");
+  eq(state.zones.graveyard[0].filter(id=>state.objects[id].card==="Actual Discard Land").length,accept?1:0,"only accepting the native discard cost moves the actual land card once");
+  eq(state.awaiting,null,"both native child outcomes finish before granting priority");
+});
+
+for(const destination of ["hand","exile"])run(`first-child redirect receipt survives final choice ${destination}`,()=>{
+  let {state,ids,events}=reachFirstDiscard({graveChoices:true});
+  events.push(...resolveAwaiting(state,[awaitingChoice(state).options.findIndex(option=>option.discard===null)]));
+  eq(awaitingChoice(state).id.startsWith(`zone-replacements:${ids[0]}:`),true,"the actual redirected event still offers both remaining genuine zone replacements");
+  const move=state.ruleOperation.frames.at(-1),entryKey=move.entryProgress;
+  eq(!!state.ruleOperation.sbaEntryProgress[entryKey],true,"the exact first-child receipt survives the saved native zone continuation");
+  eq(move.proposal.applied.length,2,"the applied exile and battlefield replacements remain in the same proposal before the final choice");
+  for(const corrupt of [copy=>copy.ruleOperation.frames.at(-1).entryProgress="forged",
+    copy=>copy.ruleOperation.sbaEntryProgress[entryKey].operation++,copy=>copy.ruleOperation.sbaEntryProgress[entryKey].sourceCohortId="forged",
+    copy=>copy.ruleOperation.sbaEntryProgress[entryKey].objectId=ids[1],copy=>copy.ruleOperation.sbaEntryProgress[entryKey].result.entering.to="hand",
+    copy=>copy.ruleOperation.frames.at(-2).recheckingZoneId=ids[1]]){
+    const copy=JSON.parse(JSON.stringify(state));corrupt(copy);
+    assert.throws(()=>resolveAwaiting(copy,[0]),/native|internal/);checks++;
+    eq(ids.map(id=>copy.objects[id]?.zone),["exile","exile"],"a forged child receipt or parent cannot move either saved sibling or bypass its real replacement question");
+  }
+  state=JSON.parse(JSON.stringify(state));
+  const before=JSON.stringify(state);assert.throws(()=>resolveAwaiting(state,[2]),/Invalid selection/);checks++;
+  eq(JSON.stringify(state),before,"invalid final replacement selection preserves paid cost and every saved child receipt");
+  events.push(...resolveAwaiting(state,[awaitingChoice(state).options.findIndex(option=>option.label.includes(`Final Redirect ${destination}`))]));
+  eq(events.filter(event=>event.kind==="GameEventCardChangeZone"&&event.data.fields.card.cardId===ids[0]).map(event=>event.data.fields.to.zoneType),[destination==="hand"?"Hand":"Exile"],"the selected remaining replacement controls the single final move");
+  eq(events.filter(event=>event.kind==="GameEventCardCounters").map(event=>event.data.fields.newValue),[7],"redirecting the first child never journals its abandoned prospective counters");
+  eq(state.players[0].life,39,"overlapping zone replacements never repeat or undo the earlier real payment or followup");
 });
 
 assert.deepEqual(failures,[],failures.join("\n"));

@@ -88,6 +88,11 @@ registerRuleOperation("move-one", (state, frame) => {
     frame.preparedEntering = frame.childResult?.entering ?? frame.childResult;
     delete frame.childResult; frame.stage = "move";
     if (frame.preparedEntering?.to && frame.preparedEntering.to !== "battlefield") {
+      if(frame.returnBatchId&&frame.reopenReturn){
+        validateSbaReturnPreparation(state,frame);
+        frame.proposal={...frame.proposal,to:frame.preparedEntering.to};frame.stage="replacements";
+        return {status:"continue"};
+      }
       frame.stage = "after-redirect";
       return {status: "continue", children: [{kind: "move-one", id: frame.id, to: frame.preparedEntering.to, options, payment: frame.payment,
         ...(frame.prepareOnly ? {prepareOnly: true, ...(frame.returnBatchId ? {returnBatchId: frame.returnBatchId} : {cohortId: frame.cohortId})} : {})}]};

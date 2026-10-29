@@ -4,6 +4,8 @@
    only the proposed characteristics and replacement progress. A local view derives what it would be on the field;
    it never joins the battlefield list, so a choice counting other permanents cannot count the entrant itself. */
 import {registerRuleOperation, askRuleOperation, emitRuleEvents} from "./operations.mjs";
+import {pendingSbaReturnEvents} from "./sba-move-results.mjs";
+import {collectTriggers} from "./trigger.mjs";
 import {ruleReplacementCandidates, applyRuleReplacement} from "./replacement.mjs";
 import {characteristicsOf, staticAbilities} from "./layers.mjs";
 import {enteringChoice} from "./entering.mjs";
@@ -67,7 +69,13 @@ function finishEntry(state, frame) {
   const entryResult = {entering: {tapped: frame.proposal.tapped === true || frame.copyTapped === true, counters, asks: [],
     designations: frame.proposal.designations ?? [], ...(frame.gainsKeywords?.length ? {gainsKeywords: frame.gainsKeywords} : {}),
     ...(frame.to ? {to: frame.to} : {})}, objectPatch: frame.objectPatch};
-  if (frame.to) return {status: "done", result: entryResult};
+  if (frame.to) {
+    if(frame.returnBatchId){
+      const result={...entryResult,counterPlan:null};result.entryProgress=saveDeferredEntryProgress(state,frame,result);
+      return {status:"done",result};
+    }
+    return {status:"done",result:entryResult};
+  }
   const counterPlan = {kind: "entry-counters", objectId: frame.objectId, player: frame.player,
     ...(frame.candidate ? {candidate: frame.candidate} : {}), ...(frame.entryFace ? {entryFace: frame.entryFace} : {}),
     faceDown: frame.faceDown === true, objectPatch: frame.objectPatch, phyrexianLife: frame.phyrexianLife ?? 0, independentCounters: counters};
@@ -152,6 +160,10 @@ registerRuleOperation("entering", (state, frame) => {
       delete frame.childResult; frame.cost.waiting = false;
     }
     if (frame.cost.ids.length) {
+      if(frame.returnBatchId&&frame.cost.kind==="sacrifice-one"){
+        const prefix=pendingSbaReturnEvents(state);
+        if(prefix)collectTriggers(state,prefix);
+      }
       frame.cost.waiting = true;
       return {status: "continue", children: [{kind: frame.cost.kind, id: frame.cost.ids.shift(), player: frame.player}]};
     }

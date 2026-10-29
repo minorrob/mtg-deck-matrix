@@ -1,5 +1,6 @@
 /* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
 import {chosenFor} from "../script/chosen.mjs";
+import {validateSbaReturnFirstEntry} from "./sba-move-results.mjs";
 
 export function patchEnteringObject(object, patch) {
   for (const key of patch?.remove ?? []) delete object[key];
@@ -99,7 +100,9 @@ function returnEntryBinding(state,objectId,player,returnBatchId,child=null) {
   const operation=state.ruleOperation,batch=operation?.sbaReturnBatches?.[returnBatchId];
   const parent=child?operation?.frames.at(-2):operation?.frames.at(-1);
   const member=batch?.members.find(member=>member.id===objectId),prepared=operation?.sbaPreparedReturns?.[member?.prepared];
-  const initial=child&&parent?.kind==="move-one"&&parent.prepareOnly&&parent.returnBatchId===returnBatchId&&parent.id===objectId
+  const firstRecheck=child&&parent?.reopenReturn&&parent?.kind==="move-one"&&parent.stage==="after-enter";
+  if(firstRecheck)validateSbaReturnFirstEntry(state,child);
+  const initial=firstRecheck||child&&parent?.kind==="move-one"&&parent.prepareOnly&&parent.returnBatchId===returnBatchId&&parent.id===objectId
     && operation.frames.at(-3)?.kind==="sba-linked-returns"&&operation.frames.at(-3).stage==="after-entry";
   const resumed=parent?.kind==="sba-linked-returns"&&parent.returnBatchId===returnBatchId
     && (child?parent.stage==="after-entry-recheck"&&parent.recheckingEntryId===objectId:parent.stage==="entry-recheck");

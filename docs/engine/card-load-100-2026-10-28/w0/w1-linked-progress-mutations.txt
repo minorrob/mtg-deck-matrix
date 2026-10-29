@@ -9,4 +9,12 @@ caught completed entry never rechecks newly returned Authority -- tests/engine-b
 caught late live zone replacements never reopen a prepared return -- tests/engine-battle-linked-returns.mjs
 caught late native entry redirect keeps the old battlefield destination -- tests/engine-battle-linked-returns.mjs
 caught recheck accepts a different preparation identity -- tests/engine-battle-linked-returns.mjs
+caught concession introduces new watcher before prior real costs are collected -- tests/engine-battle-linked-returns.mjs
+caught devour introduces new watcher before prior real costs are collected -- tests/engine-battle-linked-returns.mjs
+caught overlapping progress collection reuses a canonical receipt key -- tests/engine-battle-linked-returns.mjs
+caught first entry accepts the wrong native return parent object -- tests/engine-battle-linked-returns.mjs
+caught first late entry never gets its first native counter plan -- tests/engine-battle-linked-returns.mjs
+caught first-child redirect recursively resets its native authority -- tests/engine-battle-linked-returns.mjs
+caught first-child redirect ignores the actual receipt destination -- tests/engine-battle-linked-returns.mjs
+caught first-child receipt accepts the wrong native operation -- tests/engine-battle-linked-returns.mjs
 missed: []

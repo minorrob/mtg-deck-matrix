@@ -61,7 +61,7 @@ import {protectedFrom} from "./protection.mjs";
 import {answerForDeparted, answerRuleForDeparted, goOnWithout} from "./turn.mjs";
 import {cancelRuleOperation, beginRuleOperation, registerRuleOperation, askRuleOperation, emitRuleEvents} from "./operations.mjs";
 import {startSbaCohort, freezeSbaCohort, sbaCohort, reopenSbaPreparation, refreshPendingSbaSources, markSbaTriggerBatch,
-  startSbaLinkedReturns, sbaReturnBatch, markSbaReturnEvents, freezeSbaReturnBatch, reopenPreparedSbaReturn} from "./sba-move-results.mjs";
+  startSbaLinkedReturns, sbaReturnBatch, markSbaReturnEvents, freezeSbaReturnBatch, reopenPreparedSbaReturn, pendingSbaReturnEvents} from "./sba-move-results.mjs";
 import {outsideEffectsFrame} from "./damage-operation.mjs";
 import {entryCounterProgressFrame, prospectiveEnteringState} from "./entry-characteristics.mjs";
 import {deferredEnteringContinuation} from "./pre-entry.mjs";
@@ -296,10 +296,11 @@ registerRuleOperation("sba-linked-returns",(state,frame)=>{
       const prepared=operation.sbaPreparedReturns[member.prepared];
       if(prepared.proposal.to!=="battlefield"){
         member.counterReady=true;delete member.counterPartial;
-      }
+      }else if(!prepared.counterResult){member.counterReady=false;delete member.counterPartial;}
       delete member.entryRedirect;
     }
-    delete frame.childResult;frame.zoneRecheckIndex++;frame.stage="zone-recheck";
+    delete frame.childResult;frame.attachmentsChecked=false;frame.countersChecked=false;frame.entryRecheckIndex=0;
+    frame.zoneRecheckIndex++;frame.stage="zone-recheck";
   }
   if(frame.stage==="entry-recheck"&&!frame.zonesChecked){frame.zoneRecheckIndex=0;frame.stage="zone-recheck";}
   if(frame.stage==="zone-recheck"){
@@ -487,6 +488,8 @@ function lossReason(state, player) {
    phasing included -- and every effect giving them control ends; then what they control on the stack that
    no card of theirs represents ceases to exist; then whatever they still control is exiled. */
 function removePlayerFromBoard(state, playerId, events) {
+  const returnPrefix=pendingSbaReturnEvents(state);
+  if(returnPrefix)collectTriggers(state,returnPrefix);
   refreshPendingDamageSources(state);
   refreshPendingSbaSources(state);
   for (const id of [...state.zones.battlefield]) {
