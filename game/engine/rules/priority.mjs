@@ -25,6 +25,7 @@
 
 import {peekStack, resolveTop} from "./stack.mjs";
 import {resolutionPending} from "../script/resolution.mjs";
+import {ruleOperationPending} from "./operations.mjs";
 import {checkStateBasedActions} from "./sba.mjs";
 import {collectTriggers, openTriggers} from "./trigger.mjs";
 import {askEntering} from "./entering.mjs";
@@ -105,7 +106,7 @@ export function passPriority(state, effect = null, rng = null) {
   }
 
   const events = resolveTop(state, effect, rng);
-  if (resolutionPending(state)) {state.priorityPlayer = null; return {outcome: "resolving", events};}
+  if (resolutionPending(state) || ruleOperationPending(state)) {state.priorityPlayer = null; return {outcome: "resolving", events};}
   return {outcome: "resolved", events: afterResolving(state, events)};
 }
 

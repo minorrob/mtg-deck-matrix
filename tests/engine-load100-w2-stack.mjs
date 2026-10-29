@@ -12,6 +12,8 @@ import {runScenario} from "../game/engine/cards/scenario.mjs";
 import {loadCardIndex} from "../game/tools/engine-cards.mjs";
 import {projectFor} from "../game/engine/projection.mjs";
 import {hashState} from "../game/engine/journal.mjs";
+import {passPriority} from "../game/engine/rules/priority.mjs";
+import {matchesSelector} from "../game/engine/script/filter.mjs";
 import {collectTriggers, openTriggers} from "../game/engine/rules/trigger.mjs";
 
 let checks = 0;
@@ -404,4 +406,131 @@ if (!process.argv[2] || process.argv[2] === "copyJoint") {
     resolveAwaiting(s, [pick(s, "Mandatory Beta")]);
   }
 }
+if (!process.argv[2] || process.argv[2] === "entry") {
+const fresh = () => {
+  const state = createState({matchId: "pre-entry", seed: "pre-entry", players: [{name: "Rob"}, {name: "Maya"}, {name: "Trey"}]});
+  state.phase = "MAIN1"; state.activePlayer = 0; state.priorityPlayer = 0; state.turn = 1;
+  addObject(state, {card: "Entry Elf", types: ["Creature"], subtypes: ["Elf"], power: 2, toughness: 2, owner: 0, controller: 0}, "battlefield");
+  return state;
+};
+const cast = (state, name) => {
+  const id = addObject(state, {...index.definition(name), card: name, owner: 0, controller: 0}, "hand", 0);
+  return pushSpell(state, id, {controller: 0, permanent: true}).objectId;
+};
+const field = (state, name) => state.zones.battlefield.filter(id => state.objects[id].card === name);
+
+{
+  let state = fresh();
+  const id = cast(state, "Metallic Mimic"), nextId = state.nextObjectId;
+  const events = resolveTop(state);
+  eq(field(state, "Metallic Mimic"), [], "Metallic Mimic has not entered while its creature type is being chosen");
+  eq([state.objects[id]?.zone, state.stack.some(entry => entry.objectId === id), state.nextObjectId], ["stack", true, nextId],
+    "its spell and object ID remain on the stack before the replacement choice");
+  eq(events.filter(e => e.kind === "GameEventCardChangeZone" && e.data?.fields?.to?.zoneType === "Battlefield"), [],
+    "no arrival event is reported before the choice");
+  state = JSON.parse(JSON.stringify(state));
+  const choice = awaitingChoice(state);
+  const elf = choice.options.find(o => o.label === "Elf");
+  assert.ok(elf, "an existing creature type can be chosen"); checks += 1;
+  resolveAwaiting(state, [elf.index]);
+  const [mimic] = field(state, "Metallic Mimic");
+  eq([field(state, "Metallic Mimic").length, state.objects[mimic]?.chosen, matchesSelector({what: "permanent", subtypes: ["Elf"]}, state, mimic, {controller: 0})], [1, "Elf", true],
+    "the saved answer makes one permanent with its chosen type already applying");
+  eq([state.objects[id], state.stack.some(entry => entry.objectId === id), state.nextObjectId], [undefined, false, nextId + 1],
+    "completion moves the spell exactly once and allocates one new permanent ID");
+}
+
+{
+  let state = fresh();
+  addObject(state, {card: "Entry Goblin", types: ["Creature"], subtypes: ["Goblin"], power: 2, toughness: 2, owner: 0, controller: 0}, "battlefield");
+  const mimic = addObject(state, {...index.definition("Metallic Mimic"), card: "Metallic Mimic", chosen: "Elf", owner: 0, controller: 0}, "battlefield");
+  state.objects[mimic].chosen = "Elf";
+  const id = cast(state, "Clone"), before = state.nextObjectId;
+  eq(resolveTop(state).filter(e => e.data?.fields?.to?.zoneType === "Battlefield"), [], "Clone has no arrival while choosing its copiable values");
+  eq(state.objects[id].card, "Clone", "the spell remains its original card before the copy answer");
+  state = JSON.parse(JSON.stringify(state));
+  let choice = awaitingChoice(state);
+  const copying = resolveAwaiting(state, [choice.options.find(o => o.cardId === mimic).index]);
+  eq(copying.filter(e => e.data?.fields?.to?.zoneType === "Battlefield"), [], "copying Mimic still waits for its own fresh type choice");
+  eq([state.objects[id].card, state.nextObjectId], ["Clone", before], "the prospective copy changes neither the real spell nor the ID stream");
+  state = JSON.parse(JSON.stringify(state));
+  choice = awaitingChoice(state);
+  resolveAwaiting(state, [choice.options.find(o => o.label === "Elf").index]);
+  const firstCopy = state.zones.battlefield.find(other => other !== mimic && state.objects[other].card === "Metallic Mimic");
+  eq([state.objects[firstCopy].chosen, state.objects[firstCopy].counters["+1/+1"]], ["Elf", 1], "the copied chosen type is established before the other Mimic gives its entering counter");
+  eq(state.objects[firstCopy].uncopied.card, "Clone", "the physical card retains its own copiable values beneath the entry copy effect");
+  const second = cast(state, "Clone");
+  resolveTop(state);
+  choice = awaitingChoice(state);
+  resolveAwaiting(state, [choice.options.find(o => o.cardId === firstCopy).index]);
+  state = JSON.parse(JSON.stringify(state));
+  choice = awaitingChoice(state);
+  eq(choice.options.some(o => o.label === "Goblin"), true, "a copy of the copied Mimic makes its own creature-type choice");
+  resolveAwaiting(state, [choice.options.find(o => o.label === "Goblin").index]);
+  const secondCopy = state.zones.battlefield.find(other => other !== mimic && other !== firstCopy && state.objects[other].card === "Metallic Mimic");
+  eq([state.objects[secondCopy].chosen, state.objects[secondCopy].counters["+1/+1"] ?? 0], ["Goblin", 0], "copy of a copy receives neither another object's choice nor counters for the wrong chosen type");
+  eq(state.objects[second], undefined, "copy-of-copy entry moves the spell once");
+}
+
+
+{
+  const state = fresh();
+  const id = addObject(state, {...index.definition("Metallic Mimic"), card: "Metallic Mimic", owner: 0, controller: 0}, "hand", 0);
+  state.players[0].manaPool = {C: 2};
+  const castAction = legalActions(state, 0).find(action => action.kind === "cast" && action.objectId === id);
+  applyAction(state, 0, castAction);
+  const nextId = state.nextObjectId;
+  passPriority(state); passPriority(state);
+  const paused = passPriority(state);
+  eq([paused.outcome, field(state, "Metallic Mimic"), state.priorityPlayer], ["resolving", [], null], "the real pass-priority caller waits before the permanent enters");
+  eq([state.players[0].manaPool.C, state.nextObjectId], [0, nextId], "mana is paid once and entry allocates nothing before the choice");
+  const before = hashState(state);
+  assert.throws(() => resolveAwaiting(state, [awaitingChoice(state).options.length]), /required rule options/); checks += 1;
+  eq(hashState(state), before, "an invalid pre-entry answer preserves the entire waiting game");
+  resolveAwaiting(state, [awaitingChoice(state).options.find(option => option.label === "Elf").index]);
+  eq([state.players[0].manaPool.C, state.nextObjectId, state.stack.length, state.priorityPlayer], [0, nextId + 1, 0, 0], "normal completion returns priority without replaying the cost or creating a second permanent");
+}
+{
+  const state = fresh();
+  const wall = addObject(state, {...index.definition("Wall of Omens"), card: "Wall of Omens", owner: 1, controller: 1}, "battlefield");
+  addObject(state, {card: "Entry Draw", types: ["Land"], owner: 0, controller: 0}, "library", 0);
+  cast(state, "Clone");
+  const first = resolveTop(state);
+  eq([state.stack.length, state.zones.hand[0].length], [1, 0], "the copying spell stays on the stack before its prospective ETB can trigger");
+  const last = resolveAwaiting(state, [awaitingChoice(state).options.find(option => option.cardId === wall).index]);
+  eq(state.stack.map(entry => entry.kind), ["trigger"], "the copied Wall's ETB is put on the stack only after entry is complete");
+  eq([...first,...last].filter(event => event.kind === "GameEventCardChangeZone" && event.data?.fields?.to?.zoneType === "Battlefield").length, 1, "the completed copy reports one arrival after its answer");
+  resolveTop(state);
+  eq(state.zones.hand[0].map(id => state.objects[id].card), ["Entry Draw"], "the copied ETB resolves once using the copied text");
+}
+{
+  let state = fresh();
+  const land = addObject(state, {...index.definition("Breeding Pool"), card: "Breeding Pool", owner: 0, controller: 0}, "hand", 0);
+  const nextId = state.nextObjectId;
+  const first = applyAction(state, 0, legalActions(state, 0).find(action => action.kind === "play-land" && action.objectId === land));
+  eq([field(state, "Breeding Pool"), state.objects[land].zone, state.players[0].landsPlayed, state.players[0].life, state.nextObjectId],
+    [[], "hand", 1, 40, nextId], "a played shock land is announced once but neither enters nor pays life before the player chooses");
+  eq(first.map(event => event.kind), ["GameEventLandPlayed"], "the pending land action emits only its already-made announcement");
+  state = JSON.parse(JSON.stringify(state));
+  const last = resolveAwaiting(state, [awaitingChoice(state).options.find(option => option.pay).index]);
+  const [arrived] = field(state, "Breeding Pool");
+  eq([state.objects[arrived].tapped, state.players[0].life, state.players[0].landsPlayed, state.nextObjectId, state.priorityPlayer],
+    [false, 38, 1, nextId + 1, 0], "the paid land enters untapped once and the original action resumes after reload");
+  const arrivals = [...first,...last].filter(event => event.kind === "GameEventCardChangeZone" && event.data.fields.to?.zoneType === "Battlefield");
+  eq(arrivals.map(event => [event.data.fields.played, event.data.fields.becomes]), [[true, arrived]], "the resumed land arrival retains its played marker exactly once");
+}
+for (const rootFirst of [true, false]) {
+  const state = fresh();
+  addObject(state, {card: "Entry Tapper", types: ["Enchantment"], owner: 1, controller: 1, abilities: [{id: "tap", kind: "replacement", text: "Lands enter tapped.", watches: {event: "enters", types: ["Land"]}, change: {entersTapped: true}}]}, "battlefield");
+  const land = addObject(state, {...index.definition("Breeding Pool"), card: "Breeding Pool", owner: 0, controller: 0}, "hand", 0);
+  applyAction(state, 0, legalActions(state, 0).find(action => action.kind === "play-land" && action.objectId === land));
+  const order = awaitingChoice(state), root = order.options.find(option => option.label.includes("Entry Tapper")).index;
+  resolveAwaiting(state, [rootFirst ? root : order.options.find(option => option.index !== root).index]);
+  eq(field(state, "Breeding Pool"), [], "ordering multiple entry replacements does not put the land on the battlefield");
+  resolveAwaiting(state, [awaitingChoice(state).options.find(option => option.pay).index]);
+  const [arrived] = field(state, "Breeding Pool");
+  eq([state.objects[arrived].tapped, state.players[0].life], [true, 38], "paying the shock land's life cannot remove another effect's tapped entry in either chosen order");
+}
+}
+
 console.log(`engine-load100-w2-stack: ${checks} checks passed`);

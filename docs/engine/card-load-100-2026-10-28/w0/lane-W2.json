@@ -103,5 +103,18 @@
     "proof": "137 W2 checks; all48 W2 mutations caught in one final run, missed: []. Includes scalar/counted order swaps, JSON reload, original-preserving cancellation after partial scalar or divided choices, remaining-instance cancellation, independent later copies, and V8 shroud/only-two-creatures recovery witness.",
     "readers": "copy-spell24, targets-up-to44, precons-d140, copy-memory15, load100-tokens90.",
     "limits": "No card promotions or entry completion claimed. Red entry regression preserved temporarily in .w2-entry-wip/engine-pre-entry.mjs while this bounded fix is published."
+  },
+  "entryDependency20261029": {
+    "status": "LOCAL UNPUBLISHED DEPENDENCY ONLY; incomplete and unaccepted, no role/theme/gate/card credit",
+    "base": "13ea6a5d real W3 consumer + authorized f45d4420 current-main sync",
+    "implementation": "Real finish-permanent and ordinary played-land parents push registered entering child. Choice stage retains old object/stack entry; derived prospective characteristic view never joins the battlefield. {set,remove} patch applies to new permanent before counters/arrival. Copy uses same copiable-value implementation as becomeCopy. Priority/applyAction defer finalizers while an operation waits.",
+    "proofSoFar": "32 public awaitingChoice/resolveAwaiting checks, W2 total169; W3 public71 plus existing actions34/copy24/precons140/copy-memory15/token90 green. No new entry mutation acceptance yet.",
+    "outstanding": [
+      "W3 sacrifice-one/discard-one wrappers for Mox Diamond/devour and entering.to/gainsKeywords/entryFace seams",
+      "Completed paused-script prefix transfer and effect-land deferred operation protocol",
+      "Token creation/copy continuations and full caller ownership mapping",
+      "Public room storage reload/idempotent retry/RNG proof, concession matrix, all new mutation proofs and touched readers",
+      "Required exact-HEAD scan before any eventual push"
+    ]
   }
 }

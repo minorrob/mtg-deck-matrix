@@ -462,6 +462,17 @@ export function copyOnto(state, id, fromId, {except = {}, keep = [], until = nul
   showCopy(object);
   return true;
 }
+/* A pre-entry copy uses the same copiable-value implementation as becomeCopy. Only this one object's prospective
+   characteristics are cloned; the real card, battlefield, timestamps and object-ID stream are untouched. */
+export function entryCopyPatch(state, id, fromId, options = {}) {
+  const object = state.objects[id];
+  if (!object || state.objects[fromId]?.zone !== "battlefield") return null;
+  const prospective = {...structuredClone(object), zone: "battlefield"};
+  if (!copyOnto({objects: {...state.objects, [id]: prospective}}, id, fromId, options)) return null;
+  const keys = [...COPY_KEYS, "uncopied", "copyEffects"];
+  return {set: Object.fromEntries(keys.filter(key => prospective[key] !== undefined).map(key => [key, structuredClone(prospective[key])])),
+    remove: keys.filter(key => prospective[key] === undefined)};
+}
 /* "Each nonland permanent you control becomes a copy of target non-Aura permanent" (Mirrorform): `selector`, what becomes
    the copy in the source's place -- each permanent it matches as the effect begins (CR 611.2c). The target among them
    becomes a copy of itself, which changes nothing, so the rest copy it as it was (CR 707.2). */
