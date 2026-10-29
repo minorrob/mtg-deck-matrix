@@ -1,0 +1,136 @@
+import assert from 'node:assert/strict';
+import {execFileSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+import {loadCardIndex} from '../w0-v8-policies/game/tools/engine-cards.mjs';
+import {runScenario} from '../w0-v8-policies/game/engine/cards/scenario.mjs';
+import {legalActions,applyAction} from '../w0-v8-policies/game/engine/rules/actions.mjs';
+import {resolveTop} from '../w0-v8-policies/game/engine/rules/stack.mjs';
+import {awaitingChoice,resolveAwaiting} from '../w0-v8-policies/game/engine/rules/turn.mjs';
+import {characteristicsOf,controllerOf} from '../w0-v8-policies/game/engine/rules/layers.mjs';
+import {hashState} from '../w0-v8-policies/game/engine/journal.mjs';
+import {scenarioBehaviorFailure} from '../w0-v8-policies/game/tools/ability-proof.mjs';
+const index=loadCardIndex(),at=(seat,zone,...cards)=>({seat,zone,cards}),fields=e=>e.data?.fields??e.fields??{};
+let checks=0;const eq=(a,b,m)=>{assert.deepEqual(a,b,m);checks++;};const ok=(a,m)=>{assert.ok(a,m);checks++;};
+const policyError=message=>Object.assign(new Error(`scratch-policy: ${message}`),{scenarioAssertion:{kind:'policy-precheck'}});
+const must=(condition,message)=>{if(!condition)throw policyError(message);};
+const tap=(card,index=0)=>({tap:card,source:{zone:'battlefield',index}});
+const cardsWithout=(card,id)=>name=>{const d=index.definition(name);if(name!==card)return d;const copy=structuredClone(d);copy.abilities=copy.abilities.filter(a=>a.id!==id);return copy;};
+const run=(name,setup,library=[],steps=[],cards=index.definition)=>runScenario({name,setup,library,steps},cards,{}, {explicitChoices:true}).state;
+const names=state=>state.zones.battlefield.map(id=>state.objects[id].card);
+const contexts=new WeakMap();
+function physical(state,actor,name,source){
+ must(source&&typeof source==='object'&&Object.keys(source).every(k=>['zone','index','seat'].includes(k)),'malformed source');
+ must(['battlefield','hand','library','exile','graveyard','command'].includes(source.zone)&&Number.isInteger(source.index)&&source.index>=0,'malformed source');
+ must(source.seat===undefined||source.seat===actor,'wrong source actor');
+ const raw=state.zones[source.zone],ids=['battlefield','exile'].includes(source.zone)?raw:raw[actor];
+ const selected=ids.filter(id=>state.objects[id]?.card===name&&(source.zone==='battlefield'?controllerOf(state,id):state.objects[id].owner)===actor)[source.index];
+ must(selected!==undefined,'missing physical source');return selected;
+}
+function chosenFrame(state,events,action,actor,name){
+ const cast=events.filter(e=>e.kind==='GameEventSpellAbilityCast').map(fields).filter(f=>f.card?.cardId===action.objectId&&f.card.name===name&&f.si?.actor?.playerId===actor&&f.sa?.isSpell===(action.kind==='cast')&&(action.kind==='cast'||f.sa.abilityId===action.abilityId));
+ must(cast.length===1,'missing or forged selected action event');
+ const frame=state.stack.find(entry=>entry.stackId===cast[0].sa.stackId);
+ must(frame&&frame.playerId===actor&&frame.name===name&&frame.kind===(action.kind==='cast'?'spell':'ability')&&(action.kind==='cast'||frame.abilityId===action.abilityId),'wrong selected native frame');
+ must(state.stack.length===1&&state.stack.at(-1).stackId===frame.stackId,'intervening or extra frame');
+ return frame;
+}
+function actIfLegal(state,step,afterApply=null){
+ must(step&&Object.keys(step).every(k=>['actIfLegal','resolveSelected'].includes(k)),'unknown policy field');
+ const request=step.actIfLegal;
+ must(request&&Object.keys(request).every(k=>['cast','activate','tap','source','seat','ability','mana','targets'].includes(k)),'malformed action');
+ const operations=['cast','activate','tap'].filter(k=>Object.hasOwn(request,k));must(operations.length===1,'exactly one action');
+ const operation=operations[0],kind={cast:'cast',activate:'activate',tap:'activate-mana'}[operation],name=request[operation],actor=request.seat??0;
+ must(typeof name==='string'&&name.trim()===name&&name.length>0&&Number.isInteger(actor)&&state.players[actor]&&!state.players[actor].lost,'malformed actor/card');
+ must(['MAIN1','MAIN2'].includes(state.phase)&&state.priorityPlayer===actor&&!state.awaiting&&!state.ruleOperation&&!state.resolving&&!state.stack.length,'wrong stage or pending commitment');
+ must(kind==='activate-mana'?(step.resolveSelected===undefined||step.resolveSelected===false):step.resolveSelected===true,'one expressly selected resolution required for nonmana action');
+ must(kind==='activate-mana'||Array.isArray(request.targets)&&request.targets.length===0,'first proposal supports explicit targetless actions only');
+ if(request.ability!==undefined)must(typeof request.ability==='string'&&request.ability.length>0,'malformed ability selector');
+ if(request.mana!==undefined)must(request.mana&&Object.keys(request.mana).length>0&&Object.entries(request.mana).every(([c,n])=>'WUBRGC'.includes(c)&&c.length===1&&Number.isInteger(n)&&n>0),'malformed mana selector');
+ const id=physical(state,actor,name,request.source),before=hashState(state);
+ let actions=legalActions(state,actor).filter(a=>a.kind===kind&&a.objectId===id);
+ if(request.ability!==undefined)actions=actions.filter(a=>a.abilityId===request.ability);
+ if(request.mana!==undefined)actions=actions.filter(a=>hashState(a.mana)===hashState(request.mana));
+ must(actions.length<=1,'ambiguous native action');
+ if(!actions.length){must(hashState(state)===before,'query mutated state');return {branch:'unavailable',kind,actor,sourceId:id,events:[]};}
+ const action=actions[0],events=applyAction(state,actor,action);
+ if(afterApply)afterApply(state,events,action);
+ must(!state.awaiting&&!state.ruleOperation&&!state.resolving,'action asked an unsupported mandatory question');
+ if(kind==='activate-mana'){
+   must(!state.stack.length,'mana action created an unsupported stack');
+   must(events.some(e=>e.kind==='GameEventManaPool'&&fields(e).source?.cardId===id),'no selected native mana result');
+   return {branch:'applied',kind,actor,sourceId:id,events};
+ }
+ const frame=chosenFrame(state,events,action,actor,name),stackId=frame.stackId;
+ const resolved=resolveTop(state);
+ must(!state.awaiting&&!state.ruleOperation&&!state.resolving&&!state.stack.some(e=>e.stackId===stackId),'selected resolution did not complete');
+ must(resolved.some(e=>e.kind==='GameEventSpellResolved'&&fields(e).stackId===stackId&&fields(e).hasFizzled!==true),'no native successful resolution receipt');
+ return {branch:'applied-and-resolved',kind,actor,sourceId:id,stackId,events:[...events,...resolved]};
+}
+function resolveAndCapture(state){
+ must(!state.awaiting&&state.stack.length===1,'capture needs one current native frame');
+ const {stackId,cardId,name,playerId,kind}=state.stack.at(-1),frame={stackId,cardId,name,playerId,kind},events=resolveTop(state),token=Object.freeze({});
+ contexts.set(token,{frame,events,questionSignature:state.awaiting?hashState(state.awaiting):null});return token;
+}
+function answeredEntry(state,frame,events){
+ must(!state.awaiting&&!state.ruleOperation&&!state.resolving&&!state.stack.some(e=>e.stackId===frame.stackId),'captured frame is not complete');
+ must(events.some(e=>e.kind==='GameEventSpellResolved'&&fields(e).stackId===frame.stackId&&fields(e).hasFizzled!==true),'captured spell did not resolve');
+ const moves=events.filter(e=>e.kind==='GameEventCardChangeZone').map(fields).filter(f=>f.card?.cardId===frame.cardId&&f.to?.zoneType==='Battlefield'&&state.objects[f.enteredAs]?.card===frame.name&&controllerOf(state,f.enteredAs)===frame.playerId);
+ must(moves.length===1,'no exact captured entrant movement');
+}
+function chooseEnteringIfAsked(state,token,request){
+ must(contexts.has(token),'forged or missing resolution context');
+ const {frame,events,questionSignature}=contexts.get(token);
+ must(request&&Object.keys(request).every(k=>['card','seat','question','choose'].includes(k))&&request.card===frame.name&&request.seat===frame.playerId&&request.question==='entering-choose'&&Array.isArray(request.choose)&&request.choose.length===1&&typeof request.choose[0]==='string','wrong source/actor/question declaration');
+ if(!state.awaiting){answeredEntry(state,frame,events);contexts.delete(token);return {branch:'completed-without-question',stackId:frame.stackId,sourceId:frame.cardId};}
+ must(questionSignature!==null&&hashState(state.awaiting)===questionSignature,'stale changed question');
+ const q=awaitingChoice(state),native=state.ruleOperation?.frames.at(-1);
+ must(state.awaiting.kind==='rule-operation'&&state.awaiting.player===frame.playerId&&q.id===`entering-choose:${frame.cardId}`&&q.mode==='one'&&q.min===1&&q.max===1&&q.options.every(o=>o.cardId===frame.cardId&&o.chosen===o.label)&&native?.kind==='entering'&&native.objectId===frame.cardId&&native.asks?.[0]?.choose==='creature type','another mandatory question is pending');
+ const options=q.options.filter(option=>option.label===request.choose[0]);must(options.length===1,'unavailable or ambiguous fixed answer');
+ const outcome=resolveAwaiting(state,[options[0].index],null,null,{choiceId:q.id});
+ answeredEntry(state,frame,[...events,...outcome]);contexts.delete(token);
+ return {branch:'answered',stackId:frame.stackId,sourceId:frame.cardId,choiceId:q.id,label:request.choose[0]};
+}
+const castRequest={actIfLegal:{cast:'Raging Goblin',source:{zone:'library',index:0},targets:[]},resolveSelected:true};
+const grantRequest={actIfLegal:{activate:'Conspicuous Snoop',source:{zone:'battlefield',index:0},targets:[]},resolveSelected:true};
+const bannerRequest={actIfLegal:{tap:'Patchwork Banner',source:{zone:'battlefield',index:0},mana:{R:1}}};
+const chooseRequest={card:'Patchwork Banner',seat:0,question:'entering-choose',choose:['Goblin']};
+const castState=(omitted=false,extra=[])=>run('conditional Snoop permission',[at(0,'battlefield','Conspicuous Snoop','Mountain',...extra)],['Raging Goblin'],[tap('Mountain')],omitted?cardsWithout('Conspicuous Snoop','a1'):index.definition);
+const grantState=(omitted=false)=>run('conditional Snoop grant',[at(0,'battlefield','Conspicuous Snoop','Fanatical Firebrand')],['Krenko, Mob Boss'],[],omitted?cardsWithout('Conspicuous Snoop','a2'):index.definition);
+const bannerSetup=[at(0,'battlefield','Wastes','Wastes','Wastes','Fanatical Firebrand'),at(0,'hand','Patchwork Banner')];
+const bannerPrefix=[tap('Wastes',0),tap('Wastes',1),tap('Wastes',2),{cast:'Patchwork Banner'}];
+const bannerManaState=(omitted=false)=>run('conditional Banner mana',bannerSetup,[],[...bannerPrefix,{resolve:true},{choose:['Goblin']}],omitted?cardsWithout('Patchwork Banner','a2'):index.definition);
+const results=[];
+for(const omitted of [false,true]){
+ const cast=castState(omitted),trace=actIfLegal(cast,castRequest);
+ eq(names(cast).includes('Raging Goblin'),!omitted,'actual Goblin enters only through the native permission');eq(cast.players[0].manaPool.R,omitted?1:0,'native cast really pays red');
+ results.push({case:'Snoop cast permission',omitted,branch:trace.branch,goblinEntered:names(cast).includes('Raging Goblin'),R:cast.players[0].manaPool.R});
+ const granted=grantState(omitted),grantTrace=actIfLegal(granted,grantRequest),tokens=names(granted).filter(name=>name==='Goblin').length;
+ eq(tokens,omitted?0:2,'actual Krenko resolution creates exactly two tokens');results.push({case:'Snoop granted activation',omitted,branch:grantTrace.branch,tokens});
+ const mana=bannerManaState(omitted),manaTrace=actIfLegal(mana,bannerRequest);eq(mana.players[0].manaPool.R,omitted?0:1,'actual selected Banner activation adds exactly red');results.push({case:'Banner mana',omitted,branch:manaTrace.branch,R:mana.players[0].manaPool.R});
+ const replace=run('conditional Banner replacement',bannerSetup,[],bannerPrefix,omitted?cardsWithout('Patchwork Banner','a0'):index.definition),context=resolveAndCapture(replace);
+ const reloaded=JSON.parse(JSON.stringify(replace)),replacementTrace=chooseEnteringIfAsked(reloaded,context,chooseRequest),firebrand=reloaded.zones.battlefield.find(id=>reloaded.objects[id].card==='Fanatical Firebrand');
+ eq(characteristicsOf(reloaded,firebrand).power,omitted?1:2,'the actual chosen replacement changes the real Goblin power');results.push({case:'Banner entry replacement',omitted,branch:replacementTrace.branch,power:characteristicsOf(reloaded,firebrand).power});
+}
+const rejects=(state,fn,pattern)=>{const before=hashState(state);let error;try{fn();}catch(caught){error=caught;}ok(error instanceof Error,'negative control rejects');assert.match(error.message,pattern);checks++;eq(error.scenarioAssertion,{kind:'policy-precheck'},'rejection is not ability proof');eq(hashState(state),before,'preflight rejection leaves state unchanged');ok(!scenarioBehaviorFailure(error,{name:'scratch-policy'}),'proof classifier rejects policy failure');};
+for(const change of [request=>{delete request.actIfLegal.source;},request=>{request.actIfLegal.source.index=99;},request=>{request.actIfLegal.source.seat=1;},request=>{request.actIfLegal.targets='any';},request=>{request.actIfLegal.tap='Mountain';},request=>{request.then=[{damage:99}];},request=>{delete request.resolveSelected;}]){
+ const state=castState(),request=structuredClone(castRequest);change(request);rejects(state,()=>actIfLegal(state,request),/source|actor|targetless|exactly one|unknown policy|resolution/);
+}
+for(const change of [s=>{s.phase='END_OF_TURN';},s=>{s.priorityPlayer=1;},s=>{s.awaiting={kind:'mandatory-choice',player:0};},s=>{s.stack.push({stackId:999,name:'unrelated'});}]){const s=castState();change(s);rejects(s,()=>actIfLegal(s,castRequest),/stage|commitment/);}
+{const s=bannerManaState(),request=structuredClone(bannerRequest);delete request.actIfLegal.mana;rejects(s,()=>actIfLegal(s,request),/ambiguous/);}
+for(const mana of [{Z:1},{R:0}]){const s=bannerManaState(),request=structuredClone(bannerRequest);request.actIfLegal.mana=mana;rejects(s,()=>actIfLegal(s,request),/malformed mana/);}
+{const s=bannerManaState(),request=structuredClone(bannerRequest);request.resolveSelected=true;rejects(s,()=>actIfLegal(s,request),/resolution/);}
+{const s=castState();const events=applyAction(s,0,legalActions(s,0).find(a=>a.kind==='cast'&&a.label==='Raging Goblin')),action={kind:'cast',objectId:1};for(const key of ['card','actor','stack']){const forged=structuredClone(events);const e=forged.find(e=>e.kind==='GameEventSpellAbilityCast'),f=fields(e);if(key==='card')f.card.cardId+=1;if(key==='actor')f.si.actor.playerId=1;if(key==='stack')f.sa.stackId+=100;rejects(s,()=>chosenFrame(s,forged,action,0,'Raging Goblin'),/forged|frame/);}}
+{const s=castState(false,['Fanatical Firebrand']);let error;try{actIfLegal(s,castRequest,state=>{const action=legalActions(state,0).find(a=>a.kind==='activate'&&a.label==='Fanatical Firebrand'&&a.targets?.[0]?.kind==='player'&&a.targets[0].id===1);must(action,'native Firebrand control unavailable');applyAction(state,0,action);});}catch(caught){error=caught;}ok(error instanceof Error,'real unrelated activation blocks implicit resolution');assert.match(error.message,/intervening|extra/);checks++;eq(s.stack.length,2,'neither the selected nor unrelated native frame was resolved');}
+for(const variant of ['forged','source','actor','question','label','stale','other-pending']){
+ const s=run('negative Banner context',bannerSetup,[],bannerPrefix),token=resolveAndCapture(s),request=structuredClone(chooseRequest);
+ let given=token;if(variant==='forged')given={};if(variant==='source')request.card='Other Banner';if(variant==='actor')request.seat=1;if(variant==='question')request.question='any';if(variant==='label')request.choose=['Not a creature type'];if(variant==='stale')s.awaiting.choice.title+=' changed';if(variant==='other-pending')s.awaiting={kind:'discard-mandatory',player:0};
+ rejects(s,()=>chooseEnteringIfAsked(s,given,request),/forged|source|actor|question|answer|stale/);
+}
+{const s=run('consumed Banner context',bannerSetup,[],bannerPrefix),token=resolveAndCapture(s);chooseEnteringIfAsked(s,token,chooseRequest);rejects(s,()=>chooseEnteringIfAsked(s,token,chooseRequest),/forged|missing/);}
+{const s=run('false absence Banner context',bannerSetup,[],bannerPrefix),token=resolveAndCapture(s);s.awaiting=null;rejects(s,()=>chooseEnteringIfAsked(s,token,chooseRequest),/not complete/);}
+{const s=run('other mandatory after absent Banner',bannerSetup,[],bannerPrefix,cardsWithout('Patchwork Banner','a0')),token=resolveAndCapture(s);s.awaiting={kind:'discard-mandatory',player:0};rejects(s,()=>chooseEnteringIfAsked(s,token,chooseRequest),/stale changed question/);}
+/* These controls distinguish full effects from mere availability/activation. */
+{const s=castState();ok(legalActions(s,0).some(a=>a.kind==='cast'&&a.label==='Raging Goblin'),'the offer-only control has an offer');eq(names(s).includes('Raging Goblin'),false,'an offer alone produces no entrant');}
+{const s=grantState(),action=legalActions(s,0).find(a=>a.kind==='activate'&&a.label==='Conspicuous Snoop');applyAction(s,0,action);eq(names(s).filter(n=>n==='Goblin').length,0,'activation/tap without resolution produces no Goblin effect');}
+const source=execFileSync('git',['-C',fileURLToPath(new URL('../w0-v8-policies/',import.meta.url)),'rev-parse','HEAD'],{encoding:'utf8'}).trim();
+console.log(JSON.stringify({source,productionEdits:0,checks,results},null,2));
