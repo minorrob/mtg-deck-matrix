@@ -1270,7 +1270,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       const decisionId = controller.pending?.id ?? null;
       begin();
       if(refines(entry.answer)){
-        const accepted=controller.answerRefinement(()=>refinementRequestChoice(entry.answer),{...entry.answer,revision:controller.revision});
+        const accepted=controller.answerRefinement(()=>refinementRequestChoice(entry.answer),{...entry.answer,revision:controller.revision},seat);
         if(!accepted.changed)throw new RoomError(409,"The refinement tape repeats an already accepted input.");
         tape({kind:"answer",seat:entry.seat,answer:entry.answer});refineWith(seat,accepted.answer);await persist();return api;
       }
@@ -1457,10 +1457,12 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         if (known.seatId !== seatId || known.body !== body) throw new RoomError(409, "Action id was reused with different content");
         return {receipt: known.receipt, changed: false};
       }
+      try{const cached=controller.refinementReceipt(request,seat);if(cached)return {receipt:cached,changed:false};}
+      catch(error){throw new RoomError(409,error.message);}
       if (pendingSeat !== seat) throw new RoomError(409, "It is not your decision.");
       if(refines(request)){
         let accepted;
-        try{accepted=controller.answerRefinement(()=>refinementRequestChoice(request),request);}
+        try{accepted=controller.answerRefinement(()=>refinementRequestChoice(request),request,seat);}
         catch(error){throw new RoomError(/Invalid action id/.test(error.message)?400:409,error.message);}
         if(!accepted.changed)return {receipt:accepted.receipt,changed:false};
         receipts=[...receipts,{actionId,seatId,body,receipt:accepted.receipt}].slice(-RECEIPTS);

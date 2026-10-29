@@ -240,6 +240,7 @@ export function createController(resume = null) {
   let answered = resume?.answered ? structuredClone(resume.answered) : null;
   const receipts = new Map(resume?.receipts ?? []);
   const payloads = new Map(resume?.payloads ?? []);
+  const refinementOwners = new Map(resume?.refinementOwners ?? []);
 
   function receiptFor(actionId) {
     const value = {accepted: true, actionId};
@@ -248,6 +249,7 @@ export function createController(resume = null) {
       const oldest = receipts.keys().next().value;
       receipts.delete(oldest);
       payloads.delete(oldest);
+      refinementOwners.delete(oldest);
     }
     return value;
   }
@@ -323,9 +325,17 @@ export function createController(resume = null) {
 
     /* Server-only child validation. The native pending/answered records are never replaced, answered or restored here.
        Generate the current child lazily: an accepted retry must work even after that child/native stage expired. */
-    answerRefinement(makeChoice, request) {
+    refinementReceipt(request, actor = null) {
+      const actionId=request?.actionId;
+      if(!refinementOwners.has(actionId))return null;
+      if(refinementOwners.get(actionId)!==actor)throw new Error("This refinement input belongs to another seat");
+      if(payloads.get(actionId)!==JSON.stringify(request))throw new Error("Action id was reused with different content");
+      return receipts.get(actionId)??null;
+    },
+    answerRefinement(makeChoice, request, actor = null) {
       const actionId=request?.actionId,body=JSON.stringify(request);
       if(receipts.has(actionId)) {
+        if(refinementOwners.has(actionId)&&refinementOwners.get(actionId)!==actor)throw new Error("This refinement input belongs to another seat");
         if(payloads.get(actionId)!==body)throw new Error("Action id was reused with different content");
         return {receipt:receipts.get(actionId),answer:null,changed:false};
       }
@@ -340,7 +350,7 @@ export function createController(resume = null) {
       validator.offer({...choice,actionStage:{canBack:reference.canBack===true}});
       validator.answer(request);const answer=validator.take();
       if(answer.cancel===true&&choice.cancellation?.allowed!==true)throw new Error("Cancel is unavailable on this refinement");
-      payloads.set(actionId,body);revision+=1;
+      payloads.set(actionId,body);refinementOwners.set(actionId,actor);revision+=1;
       return {receipt:receiptFor(actionId),answer,changed:true};
     },
 
@@ -377,6 +387,7 @@ export function createController(resume = null) {
         answered: answered ? structuredClone(answered) : null,
         receipts: [...receipts.entries()],
         payloads: [...payloads.entries()],
+        ...(refinementOwners.size?{refinementOwners:[...refinementOwners.entries()]}:{}),
       };
     },
   };

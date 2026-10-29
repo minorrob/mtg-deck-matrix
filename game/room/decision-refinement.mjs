@@ -1,9 +1,9 @@
 /* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
 /* Private references into a STILL-LIVE native question. Never save or restore an engine/controller question here. */
 import {awaitingChoice} from "../engine/rules/turn.mjs";
-import {offerScript} from "../engine/rules/actions.mjs";
+import {offerScript,offerSpecs} from "../engine/rules/actions.mjs";
 import {hashState} from "../engine/journal.mjs";
-import {isChoosing,targetName} from "../engine/script/bind.mjs";
+import {isChoosing,targetName,targetCandidates} from "../engine/script/bind.mjs";
 import {targetFacts} from "../engine/script/decision.mjs";
 import {castEntryFor} from "./cast-stages.mjs";
 const SCHEMA="CrankDecisionRefinement@1";
@@ -32,7 +32,11 @@ function descriptor(state,pending,{index,routeId}={}){
   if(!modal||!variants.length)throw expired();
   if(variants.some(v=>v.targets.some(t=>Array.isArray(t)||isChoosing(t))))
     throw unsupported("These modes use native counted-target steps. Answer the original choice to continue those steps.");
-  const nativeSignature=hashState({choice:q,awaiting:a,entry,resolving:state.resolving??null,operation:state.ruleOperation??null});
+  if(kind==="effect-cast")for(const v of variants){
+    const action=a.choices[v.index],script=offerScript(state,action),{context}=offerSpecs(state,a.player,action);
+    if(!script||script.targets.length!==v.targets.length||v.targets.some((target,index)=>target&&!targetCandidates(state,script.targets[index],context).some(c=>targetKey(c)===targetKey(target))))throw expired();
+  }
+  const nativeSignature=hashState({facts:hashState(state),choice:q,awaiting:a,entry,resolving:state.resolving??null,operation:state.ruleOperation??null});
   return {q,modal,variants,kind,locked,sourceId,route,nativeSignature,actor:a.player};
 }
 export function refinementEntry(state,pending,index=0){
@@ -74,8 +78,11 @@ export function refinementChoice(state,pending,draft){
       kind:d.kind,stage,canBack,modeSelection:d.locked?"locked":"choose"}};
   if(stage==="modes"){
     const sets=[...new Map(d.variants.map(v=>[modeKey(v.modes),v.modes])).values()];
-    return {...base,title:"Choose modes for the pending native choice",modeChoices:d.modal.modes.map((m,index)=>({id:`${draft.id}/mode:${index}`,modeIndex:index,label:m.text})),
-      options:sets.map((modes,index)=>({index,id:`${draft.id}/modes:${modeKey(modes)}`,modeIndices:modes,
+    const allowedCounts=[...new Set(sets.map(m=>m.length))].sort((a,b)=>a-b);
+    return {...base,title:"Choose modes for the pending native choice",
+      modeCardinality:{min:allowedCounts[0],max:allowedCounts.at(-1),allowedCounts,repeatable:d.modal.sameMode===true},
+      modeChoices:d.modal.modes.map((m,index)=>({id:`${draft.id}/mode:${index}`,modeIndex:index,label:m.text,...(m.cost?{additionalCost:m.cost}:{})})),
+      options:sets.map((modes,index)=>({index,id:`${draft.id}/modes:${modeKey(modes)}`,modeIndices:[...modes],
         label:modes.length?modes.map(i=>d.modal.modes[i].text).join("; "):"Choose none"}))};
   }
   const variants=selected(d,draft),all=groups(d.modal,draft.modes,draft.id),group=all[draft.cursor];
@@ -83,7 +90,8 @@ export function refinementChoice(state,pending,draft){
   if(group){
     const targets=[...new Map(variants.map(v=>[targetKey(v.targets[group.index]),v.targets[group.index]])).values()];
     return {...base,title:`${d.modal.modes[group.modeIndex].text}: choose targets`,modeIndex:group.modeIndex,modeInstanceId:group.modeInstanceId,targetGroupId:group.id,selectedModes,
-      options:targets.map((target,index)=>({index,id:`${group.id}/${targetKey(target)}`,target,label:targetName(state,target)||"No target",...targetFacts(state,target)}))};
+      options:targets.map((target,index)=>({index,id:`${group.id}/${targetKey(target)}`,target:structuredClone(target),label:targetName(state,target)||"No target",
+        ...(target?.kind==="object"?{cardId:target.id}:target?.kind==="player"?{playerId:target.id}:{}),...targetFacts(state,target)}))};
   }
   return {...base,title:"Confirm the pending native choice",selectedModes,selectedTargets:structuredClone(draft.targets),
     options:variants.map((v,index)=>({index,id:`${draft.id}/native:${v.index}`,nativeIndex:v.index,label:d.q.options[v.index].label}))};
@@ -100,7 +108,7 @@ export function answerRefinement(state,pending,draft,answer){
     const option=choice.options[indices[0]];
     if(choice.stage==="modes")draft.modes=[...option.modeIndices];
     else if(choice.stage==="targets"){draft.targets.push(structuredClone(option.target));draft.cursor++;}
-    else return {draft:null,nativeAnswer:{indices:[option.nativeIndex]}};
+    else return {draft:null,nativeAnswer:{indices:[option.nativeIndex],choiceId:pending.id}};
   }
   draft.version++;return {draft};
 }

@@ -7,6 +7,7 @@ import {runScenario} from "../game/engine/cards/scenario.mjs";
 import {legalActions,applyAction} from "../game/engine/rules/actions.mjs";
 import {awaitingChoice,resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {passPriority} from "../game/engine/rules/priority.mjs";
+import {concede} from "../game/engine/rules/sba.mjs";
 import {moveObject} from "../game/engine/state/index.mjs";
 import {createRng} from "../game/engine/rng.mjs";
 import {createController} from "../game/engine/controller.mjs";
@@ -35,18 +36,27 @@ function finish(s){for(let n=0;n<12&&["choose-cost","choose-targets"].includes(s
 }
 {
  const s=play([at(0,"battlefield","Shadrix Silverquill")],[{to:{turn:1,phase:"COMBAT_BEGIN"}}],{seats:3}),pending=awaitingChoice(s),before=hashState(s);
- let d=beginRefinement(s,pending,0,"shadrix-child"),q=refinementChoice(s,pending,d);d=answerRefinement(s,pending,d,{indices:[q.options.find(o=>o.modeIndices.join(",")==="0,1").index]}).draft;
+ let d=beginRefinement(s,pending,0,"shadrix-child"),q=refinementChoice(s,pending,d);eq(q.modeCardinality?.allowedCounts,[0,2],"actual Shadrix exposes zero-or-two modes, never an invented one-mode intermediate");d=answerRefinement(s,pending,d,{indices:[q.options.find(o=>o.modeIndices.join(",")==="0,1").index]}).draft;
  q=refinementChoice(s,pending,d);d=answerRefinement(s,pending,d,{indices:[q.options.find(o=>o.target.id===0).index]}).draft;q=refinementChoice(s,pending,d);
  ok(q.options.every(o=>o.target.id!==0),"the second mode obeys the real combined different-player variant constraint");
  d=answerRefinement(s,pending,d,{indices:[q.options.find(o=>o.target.id===1).index]}).draft;q=refinementChoice(s,pending,d);eq(q.stage,"confirm","both Shadrix mode targets finish before native confirmation");
  eq(hashState(s),before,"Shadrix selections do not remove or answer its original native question");
  const result=answerRefinement(s,pending,d,{indices:[0]});resolveAwaiting(s,result.nativeAnswer.indices);eq([s.stack[0].modes,s.stack[0].targets.map(t=>t.id)],[[0,1],[0,1]],"the original native handler receives exactly the chosen complete legal Shadrix variant");
 }
-function scepter(name){return play([at(0,"battlefield",...Array(4).fill("Wastes"),"Cankerbloom"),at(0,"hand","Isochron Scepter",name)],
- [{tap:"Wastes"},{tap:"Wastes"},{cast:"Isochron Scepter"},{resolve:true},{resolve:true},{choose:[name]},{tap:"Wastes"},{tap:"Wastes"},{activate:"Isochron Scepter"},{resolve:true}]);}
+function scepter(name){return play([at(0,"battlefield",...Array(4).fill("Wastes"),"Cankerbloom"),at(1,"battlefield","Cankerbloom"),at(0,"hand","Isochron Scepter",name)],
+ [{tap:"Wastes"},{tap:"Wastes"},{cast:"Isochron Scepter"},{resolve:true},{resolve:true},{choose:[name]},{tap:"Wastes"},{tap:"Wastes"},{activate:"Isochron Scepter"},{resolve:true}],{seats:3});}
+{
+ const s=play([at(0,"battlefield","Shadrix Silverquill")],[{to:{turn:1,phase:"COMBAT_BEGIN"}}]),pending=awaitingChoice(s),before=hashState(s);
+ let d=beginRefinement(s,pending,0,"shadrix-native-none"),q=refinementChoice(s,pending,d);d=answerRefinement(s,pending,d,{indices:[q.options.find(o=>o.modeIndices.length===0).index]}).draft;
+ eq(refinementChoice(s,pending,d).stage,"confirm","the actual native optional-none variant remains an explicit confirmable choice");eq(hashState(s),before,"selecting optional none privately does not prematurely remove its native trigger");
+ const result=answerRefinement(s,pending,d,{indices:[0]});resolveAwaiting(s,result.nativeAnswer.indices);eq([s.awaiting,s.stack.length],[null,0],"explicit confirmation invokes the real native choose-none handler");
+}
 {
  const s=scepter("Boros Charm"),pending=awaitingChoice(s),before=hashState(s),index=s.awaiting.choices.findIndex(c=>c.modes?.[0]===0);
  let d=beginRefinement(s,pending,index,"scepter-child"),q=refinementChoice(s,pending,d);eq(q.options.length,3,"a physical free-cast entry retains all three actual native Boros Charm modes");
+ q.options[0].modeIndices.push(999);eq(hashState(s),before,"returned effect-cast mode arrays are detached from the live native choices");q=refinementChoice(s,pending,d);
+ let aimed=beginRefinement(s,pending,index,"scepter-target-copy"),first=refinementChoice(s,pending,aimed);aimed=answerRefinement(s,pending,aimed,{indices:[first.options.find(o=>o.modeIndices[0]===0).index]}).draft;
+ first=refinementChoice(s,pending,aimed);first.options[0].target.id=999;eq(hashState(s),before,"returned effect-cast target references cannot mutate the native question");
  d=answerRefinement(s,pending,d,{indices:[q.options.find(o=>o.modeIndices[0]===1).index]}).draft;q=refinementChoice(s,pending,d);
  eq(hashState(s),before,"Scepter has already paid its prefix, but refining the copied card changes none of it");
  const result=answerRefinement(s,pending,d,{indices:[0]});resolveAwaiting(s,result.nativeAnswer.indices);
@@ -59,6 +69,20 @@ function scepter(name){return play([at(0,"battlefield",...Array(4).fill("Wastes"
  eq(hashState(s),changed,"an expired copied-card refinement cannot write back the old native question or restore its source");
 }
 {
+ const s=scepter("Boros Charm"),pending=awaitingChoice(s),d=beginRefinement(s,pending,0,"different-native-frame");
+ /* Counterfactual saved-frame boundary: the same visible question must not let an old child attach to another caster's resolution. */
+ s.resolving.context.controller=1;const changed=hashState(s);eq(awaitingChoice(s),pending,"the visible question alone cannot identify its native resolving frame");
+ assert.throws(()=>answerRefinement(s,pending,d,{cancel:true}),/native question changed/i);checks++;
+ eq(hashState(s),changed,"expired child close never restores its old native context or question");
+}
+{
+ const s=scepter("Boros Charm"),pending=awaitingChoice(s),index=s.awaiting.choices.findIndex(c=>c.modes?.[0]===2&&s.objects[c.targets[0].id]?.owner===1);
+ let d=beginRefinement(s,pending,index,"stale-native-effect-target"),q=refinementChoice(s,pending,d);d=answerRefinement(s,pending,d,{indices:[q.options.find(o=>o.modeIndices[0]===2).index]}).draft;
+ const target=s.awaiting.choices[index].targets[0].id;concede(s,1);const changed=hashState(s);ok(!s.objects[target],"actual opponent concession removes the previously offered Boros target while two other seats remain");
+ assert.throws(()=>refinementChoice(s,pending,d),/native question changed/i);checks++;
+ eq(hashState(s),changed,"a departed target is not restored by a stale effect-cast child");
+}
+{
  const data=JSON.parse(readFileSync(new URL("../game/engine/cards/s/summon-magus-sisters.scenarios.json",import.meta.url),"utf8"));
  const example=data.scenarios.find(s=>s.name.startsWith("I: the game rolls Combine Powers!")),s=runScenario({...example,steps:example.steps.slice(0,8),expect:[]},index.definition,data.fixtures).state;
  let pending=awaitingChoice(s);eq(refinementEntry(s,pending),null,"the actual mandatory native random mode roll cannot be replaced by a private mode chooser");
@@ -68,5 +92,18 @@ function scepter(name){return play([at(0,"battlefield",...Array(4).fill("Wastes"
   const d=beginRefinement(s,pending,0,"rolled-child"),q=refinementChoice(s,pending,d);eq(q.refinement.modeSelection,"locked","a post-roll child cannot choose a different mode");
   ok(q.stage!=="modes"&&!q.refinement.canBack,"post-roll target selection cannot Back across the native RNG commitment");
   assert.throws(()=>answerRefinement(s,pending,d,{back:true}),/native commitment boundary/);checks++;
+}
+for(const ability of [false,true]){
+ const s=play([at(0,"hand",...(ability?["Return the Favor"]:["Getaway Glamer","Reverberate"])),at(0,"battlefield","Cankerbloom","Sol Ring"),at(1,"battlefield","Cankerbloom","Sol Ring","Ghostly Prison")]);
+ Object.assign(s.players[0].manaPool,ability?{R:2,C:2}:{W:1,R:2,C:3});
+ const source=legalActions(s,0).find(a=>ability?a.kind==="activate"&&a.label==="Cankerbloom"&&a.modes?.[0]===0:a.label==="Getaway Glamer"&&a.modes?.join(",")==="0,1");ok(source,"the actual native modal original is available");applyAction(s,0,source);finish(s);
+ const copyAction=legalActions(s,0).find(a=>a.label===(ability?"Return the Favor":"Reverberate")&&(!ability||a.modes?.join(",")==="0"));ok(copyAction,"the actual copy spell can target that modal original");applyAction(s,0,copyAction);finish(s);
+ for(let n=0;n<4&&!s.awaiting;n++)passPriority(s);
+ const pending=awaitingChoice(s),copy=s.stack.find(e=>e.copy===true),before=hashState(s);ok(copy&&s.awaiting?.effect==="copySpell","the original native copy handler asks only its target questions");
+ eq(refinementEntry(s,pending),null,"a copy cannot advertise a fresh modal choice");assert.throws(()=>beginRefinement(s,pending,0,"forged-copy-mode"),/native target|current native choice/i);checks++;
+ eq(hashState(s),before,"refusing an invented copy-mode refinement changes no native fact");
+ const modes=structuredClone(copy.modes??null),effects=structuredClone(copy.script?.effects??null),targets=structuredClone(copy.targets),pool=structuredClone(s.players[0].manaPool);
+ if(ability)ok(pending.options.every(o=>!o.cardId||s.objects[o.cardId].types.includes("Artifact")),"the copied Cankerbloom artifact mode cannot silently become its enchantment mode");else eq(copy.modes,[0,1],"the actual modal spell copy inherits both original modes");
+ resolveAwaiting(s,[],null,null,{cancel:true});eq([copy.modes??null,copy.script?.effects??null,copy.targets],[modes,effects,targets],"native copy Cancel keeps its inherited modes, script and original targets");eq(s.players[0].manaPool,pool,"keeping a copy's targets never charges a modal cost again");
 }
 console.log(`engine-committed-refinement: ${checks} checks; actual departed Ao, Shadrix, Scepter, stale facts and native random-mode boundary`);

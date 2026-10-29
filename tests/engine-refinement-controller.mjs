@@ -27,6 +27,7 @@ for(const [label,choice,extra,pattern]of [
  ["wrong child",child(),{choiceId:"another-child"},/expired/],
  ["forged Back",child(),{back:true},/Back/],
  ["invalid selection",child(),{indices:[42]},/Invalid selection/],
+ ["refused Cancel",{...child(),cancellation:{allowed:false}},{cancel:true},/Cancel is unavailable/i],
  ["wrong original",{...child(),refinement:{...child().refinement,originalChoiceId:"another-native-question"}},{},/native|expired/i],
  ["changed native signature",{...child(),refinement:{...child().refinement,originalSignature:"old"}},{},/native|changed|expired/i]
 ]){const point=controller.checkpoint();assert.throws(()=>controller.answerRefinement(()=>choice,input(choice,extra)),pattern,label);checks++;eq(controller.checkpoint(),point,`${label} preserves the original pending/answered and all revision/receipt state`);}
@@ -37,4 +38,11 @@ eq(outcome.answer.cancel,true,"child Cancel is translated by the normal controll
 controller.answer(input(original));controller.take();const closed=controller.checkpoint();
 assert.throws(()=>controller.answerRefinement(()=>child(),input(child())),/expired|native/i);checks++;eq(controller.checkpoint(),closed,"an expired original native question cannot be resurrected by a child");
 outcome=controller.answerRefinement(()=>{throw new Error("expired native must not generate child");},cancel);eq(outcome.changed,false,"accepted child retry still works after the original native question was consumed");eq(controller.checkpoint(),closed,"expired-stage retry changes nothing");
+{
+ const owned=createController();owned.offer(original);const choice=child("owned-child"),request={...input(choice),revision:owned.revision};
+ owned.answerRefinement(()=>choice,request,0);const before=owned.checkpoint(),restored=createController(JSON.parse(JSON.stringify(before)));
+ assert.throws(()=>restored.refinementReceipt(request,1),/another seat/);checks++;eq(restored.checkpoint(),before,"wrong-seat cached replay preserves original question, revision and caches");
+ ok(restored.refinementReceipt(request,0)?.accepted,"server actor receipt ownership survives JSON independently of the room's shorter receipt window");
+ assert.throws(()=>restored.answerRefinement(()=>{throw new Error("must not generate");},request,1),/another seat/);checks++;
+}
 console.log(`engine-refinement-controller: ${checks} checks; live native question preserved, atomic child validation and persistent receipt dedupe`);
