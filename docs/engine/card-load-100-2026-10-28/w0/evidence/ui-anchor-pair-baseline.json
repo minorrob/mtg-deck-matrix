@@ -1,0 +1,40 @@
+{
+  "source": "e8f967ff32992f60226bf24ff9c9cfbf3bb40269",
+  "baseline": [
+    {
+      "suite": "tests/a11y-board.mjs",
+      "exit": 1,
+      "log": "baseline-0.log",
+      "sha256": "76f760493edaaebddcb224a20dc143a406ba83675daaf38bb39a701b09dcd62a"
+    }
+  ],
+  "mutations": [],
+  "readerHashes": {
+    "tests/a11y-board.mjs": "5c694fd251081660878dd3d65c4e47169d77dc0018709562b19bba86742e4cd9",
+    "tests/new-deck-flow.mjs": "aab1f352551dcf07aa74894725e1e916ef053a4ace058dd85e7ce14b58b49408"
+  },
+  "schema": "OriginalUIAnchorPairBaseline@1",
+  "status": "RED baseline; both mutations unrun/uncredited",
+  "failure": {
+    "reader": "tests/a11y-board.mjs",
+    "view": "full",
+    "theme": "light",
+    "width": 1280,
+    "mats": [
+      "forge",
+      "felt"
+    ],
+    "element": ".cm-bcard-pt",
+    "text": "2/2",
+    "ratio": 1.45,
+    "required": 4.5,
+    "pixel": [
+      1106,
+      352
+    ]
+  },
+  "uiIssue": "ROB-312",
+  "readerOrProductionChanges": 0,
+  "environmentalFirstAttempt": "Local assets denied net::ERR_NETWORK_ACCESS_DENIED under sandbox; separate failure, no behavior credit. Unchanged retry approved via require_escalated loopback.",
+  "artifactPrivacy": "Only hashes/failure facts archived; full raw local log remains outside repository."
+}

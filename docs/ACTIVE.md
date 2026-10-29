@@ -8,6 +8,26 @@ Linear ROB-199 under ROB-85. The record is `docs/engine/card-load-100-2026-10-28
 Claim: `game/engine/cards/**`, generated card files, `data/engine/candidates.json`, the run package,
 and the engine modules its debt fixes require, subject to the ownership requests below.
 The primary checkout has another session's unfinished merge and is untouched.
+**Drawer-height dependency8abe8752:** owner main83f0a8f2/#957 is merged; CSS preserved and asset pins generated.
+READMEactual714, assets136/integrity/wiring pass; engine/room unchanged7364. Browser and ROB-312 remain open.
+**Current-main face dependency7364caf7:** merge owner mainaf363528/#955/#956 after65b scan correctly stops.
+Back-face projection/UI preserved, board still only our two approved Snoop lines beyond main; READMEactual713.
+Native room-face6/Snoop and assets136/SW9/wiring131/integrity pass. Current combined browser pending, historicald65
+proof stays source-bound. ROB-312/original a11y contrast remains RED; all wave0 gates and staging sequence unchanged.
+**Quiet browser proof d65de1b4:** combined Snoop98/tooltip21 pass;12 freshshots/4 inspected, scoped teardown verified.
+Original a11y baseline is RED at light1280/full/forge-felt2/2badge1.45:1 vs4.5; ROB-312 is in Play backlog.
+No CSS/assertion edits, both prepared UI mutations unrun/zero credit. Initial sandbox-network denial remains separate.
+Workers resume native proofs. Full layout/oldclipping/footer and all wave0 gates remain open; no staging yet.
+**Staging request:** Rob selects “Finish gates, then release fixes.” All existing wave0, exact-head CI and merge
+requirements remain; staging follows the merged fixes. No release of current main is substituted.
+**Local V8 integration5196dc61:** clean draft #954 adds bounded native scenario policies and four positive Snoop/
+Banner witnesses. Root passes native319/ability44/source183/block167/entry51; original six-reader union/38 controls
+and selected13scenarios/8of8 abilities remain source-bound role evidence. READMEactual711, static33UI/zeroengine.
+Full canonical/review/game gates remain open. W1/W5 proof drivers are safely paused for root's quiet UI checks.
+**Latest dependency fb1cadff includes mainfac091ba/#953:** owner tooltip UI is preserved; board still differs by only
+our two approved Snoop lines. Engine/room unchanged569. Assets136/SW9/wiring131/integrity/scope/nativeSnoop pass,
+READMEactual710, static33 inherited UI/zeroengine. Combined browser pending quiet window, no gate or new-card credit.
+V8 implementation/selected proofs are clean locally; W1 return/entry and W5 factual mana undo proofs continue.
 **Latest source1a16a935 includes main494d3fa9/#952:** required scan728 stops at moved-main conflicts; root preserves
 owner's Table-menu/CSS and our two Snoop lines, regenerates pins/manifest (board168/sw725/app742), READMEactual709.
 Engine/room remains byte-identical to proved569. Actual combined Snoop98/newmenu25 and inspected screenshots pass
@@ -153,6 +173,10 @@ Rob asked for the playtest's bugs and improvements to be fixed in the order Line
 - **ROB-220 (Play settings, Background and Table design move to the Table menu).** `crankmagic-board.js`: Camera keeps the view's own controls (seats, tilt, zoom, sizes); Table holds Play settings (so Set Side Drawer Modules) and, in 3D, the two pickers. Closing Settings returns focus to Table, where it was opened. `tests/board-table-menu-settings.mjs`; eleven suites that opened Settings through Camera now open it through Table (`a11y-board`, `board-fullscreen-notes`, `board-graphics`, `board-mana-pool`, `board-r2-actions-inspection`, `board-r4-views`, `board-settings-window`, `table-board`, `table-shared-shell`, `table-tabletop`).
 - **A regression of mine from ROB-221, fixed in the same PR.** Putting the Mana Pool on by default made `tests/a11y-board.mjs` see its dimmed zero counts (`opacity:.45` on the whole cell: under 4.5:1). Now only the symbol dims and the count keeps full ink. `a11y-board` was red on `main` from #945 until this PR.
 - **Flaky on a clean `main`:** `tests/board-r2-actions-inspection.mjs` (a timeout on the view switch; 1 failure in 3 runs).
+- **ROB-202 (the hover tooltip covers a card's text).** It was the browser's native `title` on battlefield cards ("Drag within this section to reorder...", the land stack's "n untapped; double click taps the next copy", "Targeted by ..."): drawn at the pointer over the card, and a page cannot move it. `crankmagic-board.js` no longer puts a `title` on a card; "targeted by" is in the card's name, and how to reorder or tap is its `aria-description`. The hover pop-up (the card, large) is unchanged. `tests/board-card-no-native-tooltip.mjs`; `board-mana-pool` and `board-r4-layout` read the old titles and now read the new places.
+- **ROB-207, first half (the engine's view; a small additive PR merged before the board's).** The room's view now carries `face: "back"` on a double-faced permanent whose back face is up, to every seat, as its name is (`game/engine/projection.mjs`; the UI's Requests row 5, "which face is up"; `docs/ui-lane/gameplay-anchor.md`). A name alone cannot say which side of one picture to draw, and `face=back` is refused (422) by Scryfall for a split card, so the client cannot guess. `tests/room-view-face.mjs`. This is the engine lane's file, touched at Rob's word for the playtest list and said here for the lane's session.
+- **ROB-207, second half (the board).** `pictureOf` in `crankmagic-board.js` asks Scryfall for `face=back` of a card whose view says `face: "back"` (#955); every picture on the mat, in the peek, in combat, in the card menu and in a target's layers passes the card. Checked against Scryfall: the generated URL returns the same image bytes as the full-name back request, and not the front's. `tests/board-modal-face.mjs` (red before: the URL had no `face=back`).
+- **ROB-206 (drawer resize lags before the module reflows).** Measured, not guessed: the drawer's width and a module's height both reach the box, every module and the Mana Pool's cells in the very next frame; what did not follow was the *list inside*: History is a band fixed at 240px and Chat's list is capped, so a taller module showed empty space and never caught up (still the same after 1.2 s). `crankmagic-stage.css`: a module with a height of its own lets History and Chat use all of it. No observer or redraw was needed. `tests/board-module-fills.mjs`.
 - **Known and not mine, red on a clean `main`:** `tests/board-target-lands.mjs`, `tests/board-direct-blocking.mjs`, `tests/board-yield.mjs`.
 
 ## Play: Table and Focus are the 3D view's HUD without the canvas; the drawers lie over the stage; Chat a default module, 2026-10-28 (a Claude cloud session, for Rob; `claude/gifted-ride-w6xoa3`, the third PR of the day)

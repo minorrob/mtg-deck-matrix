@@ -563,6 +563,11 @@
 .cm-desk-grip>.cm-board-grip,.cm-module-grip>.cm-board-grip{cursor:ns-resize}
 .cm-stage-module.has-height>.cm-module-body{height:var(--module-h);max-height:none;overflow:auto;scrollbar-width:thin}
 .cm-stage-module.has-height>.cm-module-body #cm-full-pick,.cm-stage-module.has-height>.cm-module-body .cm-board-stack,.cm-stage-module.has-height>.cm-module-body .cm-board-band{max-height:none}
+/* A module given a height lets its list use it (ROB-206, Luke's playtest: "extending a drawer takes a moment before the module
+   inside refreshes"). The box followed the handle at once but History stayed a fixed 240px band and Chat's list stayed capped. */
+.cm-stage-module.has-height>.cm-module-body .cm-board-band{height:100%}
+.cm-stage-module.has-height>.cm-module-body .cm-chat{height:100%}
+.cm-stage-module.has-height>.cm-module-body .cm-chat-list{flex:1 1 auto;max-height:none;min-height:0}
 .cm-stage-module[data-module="actions"].has-height>.cm-module-body{display:flex;flex-direction:column;overflow:hidden}
 .cm-stage-module[data-module="actions"].has-height .cm-board-decision{max-height:none;flex:1 1 auto;min-height:0}
 /* The right drawer's width, dragged at its left edge as the left drawer's is at its right (Rob, 2026-10-26). */

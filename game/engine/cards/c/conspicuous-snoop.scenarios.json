@@ -33,6 +33,33 @@
   },
   "scenarios": [
     {
+      "name": "An explicit conditional top Goblin cast pays and resolves",
+      "library": ["Raging Goblin"],
+      "setup": [{"seat": 0, "zone": "battlefield", "cards": ["Conspicuous Snoop", "Mountain"]}],
+      "steps": [
+        {"tap": "Mountain", "source": {"zone": "battlefield", "index": 0}},
+        {"actIfLegal": {"cast": "Raging Goblin", "seat": 0, "source": {"zone": "library", "index": 0}, "targets": []}, "resolveSelected": true}
+      ],
+      "expect": [
+        {"seat": 0, "zone": "battlefield", "cards": ["Conspicuous Snoop", "Mountain", "Raging Goblin"]},
+        {"seat": 0, "pool": {"R": 0}},
+        {"stack": 0}
+      ]
+    },
+    {
+      "name": "An explicit conditional inherited Krenko activation resolves two Goblins",
+      "library": ["Krenko, Mob Boss"],
+      "setup": [{"seat": 0, "zone": "battlefield", "cards": ["Conspicuous Snoop", "Fanatical Firebrand"]}],
+      "steps": [
+        {"actIfLegal": {"activate": "Conspicuous Snoop", "seat": 0, "source": {"zone": "battlefield", "index": 0}, "targets": []}, "resolveSelected": true}
+      ],
+      "expect": [
+        {"seat": 0, "zone": "battlefield", "cards": ["Conspicuous Snoop", "Fanatical Firebrand", "Goblin", "Goblin"]},
+        {"seat": 0, "tapped": "Conspicuous Snoop"},
+        {"stack": 0}
+      ]
+    },
+    {
       "name": "The non-Goblin top is public to both players while another library stays hidden",
       "library": ["Bear"],
       "setup": [{"seat": 0, "zone": "battlefield", "cards": ["Conspicuous Snoop"]}],

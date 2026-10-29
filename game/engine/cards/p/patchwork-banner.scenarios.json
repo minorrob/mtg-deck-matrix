@@ -33,6 +33,39 @@
   },
   "scenarios": [
     {
+      "name": "An explicit conditional Banner activation produces red after the real type choice",
+      "setup": [
+        {"seat": 0, "zone": "battlefield", "cards": ["Wastes", "Wastes", "Wastes", "Fanatical Firebrand"]},
+        {"seat": 0, "zone": "hand", "cards": ["Patchwork Banner"]}
+      ],
+      "steps": [
+        {"tap": "Wastes", "source": {"zone": "battlefield", "index": 0}},
+        {"tap": "Wastes", "source": {"zone": "battlefield", "index": 1}},
+        {"tap": "Wastes", "source": {"zone": "battlefield", "index": 2}},
+        {"cast": "Patchwork Banner", "source": {"zone": "hand", "index": 0}},
+        {"resolve": true},
+        {"choose": ["Goblin"]},
+        {"actIfLegal": {"tap": "Patchwork Banner", "seat": 0, "source": {"zone": "battlefield", "index": 0}, "mana": {"R": 1}}}
+      ],
+      "expect": [{"seat": 0, "pool": {"R": 1}}, {"seat": 0, "tapped": "Patchwork Banner"}, {"stack": 0}]
+    },
+    {
+      "name": "Only the captured Banner spell answers its type choice and boosts the Goblin",
+      "setup": [
+        {"seat": 0, "zone": "battlefield", "cards": ["Wastes", "Wastes", "Wastes", "Fanatical Firebrand"]},
+        {"seat": 0, "zone": "hand", "cards": ["Patchwork Banner"]}
+      ],
+      "steps": [
+        {"tap": "Wastes", "source": {"zone": "battlefield", "index": 0}},
+        {"tap": "Wastes", "source": {"zone": "battlefield", "index": 1}},
+        {"tap": "Wastes", "source": {"zone": "battlefield", "index": 2}},
+        {"cast": "Patchwork Banner", "source": {"zone": "hand", "index": 0}},
+        {"resolve": true},
+        {"chooseEnteringIfAsked": {"card": "Patchwork Banner", "seat": 0, "question": "entering-choose", "choose": ["Goblin"]}}
+      ],
+      "expect": [{"seat": 0, "stats": {"card": "Fanatical Firebrand", "power": 2, "toughness": 2}}, {"seat": 0, "pool": {"C": 0}}, {"stack": 0}]
+    },
+    {
       "name": "Elf chosen, of the Elf and Goblin in the game: his Elf 2/2, his Goblin unchanged",
       "setup": [
         {

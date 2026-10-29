@@ -5,6 +5,50 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Drawer-height dependency, source `8abe8752`:** owner main advances to `83f0a8f2` (#957/ROB-206) and V8's
+  pre-push scan correctly stops. Root merges `--no-ff`, preserves owner CSS/tests and regenerates shared asset pins.
+  README actual714; assets136/integrity/wiring pass. Engine/room bytes are unchanged from `7364caf7`; current browser
+  remains pending and original a11y/ROB-312 remains RED. This is only a clean dependency for the eight-scenario
+  handoff; all wave0 gates and staged-release sequence remain unchanged. Exact fresh scan/push required.
+- **Current-main face dependency, source `7364caf7`:** required scan of `65b2a078` correctly fails when main moves
+  to `af363528` (#955/#956, ROB-207). Root merges `--no-ff`, preserves owner back-face projection/rendering and both
+  approved Snoop lines. README actual713 and asset manifest/pins regenerate through the registry helper. Root native
+  room-face6/Snoop and assets136/SW9/wiring131/integrity pass. Current combined browser is pending another quiet window;
+  prior d65 Snoop98/tooltip21 stays historical to its source. Original a11y contrast RED/ROB-312 is not waived. This is
+  a draft dependency publication only; no wave0 gate, new cards, main merge or staging release. Evidence:
+  `w0/evidence/mainaf-integration.json`. Exact fresh HEAD0 scan/push required after this record.
+- **Quiet browser checkpoint, source `d65de1b4`:** actual combined Snoop98 and tooltip21 pass with required
+  Chromium/WebGL after approved local-loopback escalation. Twelve fresh screenshots, four representative whole-screen
+  states inspected. Existing3D clipping/occlusion/footer limits remain, no full-layout acceptance. Root teardown is
+  verified through elevated scoped PID checks; default sandbox process inventory cannot see elevated children.
+  Original accessibility baseline on source `e8f967ff` remains RED: light1280/full/forge-felt `2/2` stat badge1.45:1
+  versus required4.5:1. Original two-reader union stops before mutations; both prepared UI anchors receive zero proof
+  credit and remain outside this assembly. Logged for Play owner as ROB-312; no CSS/browser assertion edits.
+  Initial default-sandbox attempts denied every local script/style (`ERR_NETWORK_ACCESS_DENIED`); separate logs are
+  retained as environmental failures, never behavioral control credit. W1/W5 frozen drivers safely resume after this
+  window; preserve any pause-induced timeout before required fresh proof. Evidence: `mainfac-integration.json` and
+  `ui-anchor-pair-baseline.json`. No unchanged failed-browser rerun, gate closure or staging release.
+- **Staging requested, October 29:** Rob explicitly selects “Finish gates, then release fixes.” Complete the unchanged
+  wave0 gates and exact-head Actions/merge requirements, then release the merged fixes through the existing staging
+  builder and authenticated read-back. Do not substitute current main or treat this request as a gate waiver.
+- **V8 guarded policies integrated locally, `5196dc61`:** clean/scanned/pushed draft #954 (`644d844b`) is merged
+  `--no-ff`. Root independently passes native319/ability-proof44/explicit-source183/block-policy167/entry-order51.
+  The role preserves the original six-reader union and catches all38 controls after retaining and strengthening two
+  initially masked witnesses. Exactly four additive Snoop/Banner scenarios, no saved definition or classifier changes.
+  Clean historical selected13/0failed/8of8 abilities is diagnostic, not canonical G-3. Full canonical gates remain open.
+- **Remaining derived-controller static defect:** root independently reproduces W5's archived real-card fixture on
+  clean `baef0762`: layer2 correctly gives Shalai controller1, but that player's Cankerbloom receives no hexproof.
+  This is separate from W5's raw-controller target-refresh fixture. V8 now owns read-only proposal/review first;
+  no layer/rule change or proof credit yet. Fixed resolved-effect controller snapshots must remain distinct from
+  current printed-static controllers. Reproduction: `node ../scratch/w5-derived-static-controller-red-20261029.mjs`.
+- **Current-main tooltip dependency, `fb1cadff`:** merges main `fac091ba` (#953/ROB-202) with `--no-ff`.
+  Owner tooltip behavior and tests are preserved; board differs from main by exactly the two approved Snoop lines.
+  README actual710 and asset pins/manifest are regenerated with the registry helper. Engine/room bytes remain
+  identical to the proved `56965896` assembly. Assets136/service-worker9/wiring131/integrity/frozen-scope and native
+  Snoop pass. Static255files/4,675breaks/33 inherited UI problems, zero engine targets. Current combined browser
+  checks are pending the next quiet window; prior main494 browser98/menu25 remain historical to that source.
+  This is a dependency publication for V8's final sync, not browser/full-gate acceptance. W1 return redirects,
+  W5 mana receipts and V8 policies remain in separate unaccepted role checkpoints. No new cards/promotions.
 - **Current-main Table-menu merge, `1a16a935`:** main advanced to `494d3fa9` (#952/ROB-220) during the required
   pre-push scan of `728193a2`. That scan correctly stops for merge conflicts; no credit is taken. Root merges main
   `--no-ff`, preserves its new menu/CSS/test registrations and the two approved Snoop lines. Only README count and
