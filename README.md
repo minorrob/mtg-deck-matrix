@@ -955,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 652 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 653 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1195,6 +1195,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `deck-page-r3` — `tests/deck-page-r3.mjs`
 - `library-r3` — `tests/library-r3.mjs`
 - `explore-r3` — `tests/explore-r3.mjs`
+- `explore-commander-door` — `tests/explore-commander-door.mjs` (ROB-214, Luke's playtest of 2026-10-28: "Explore from a commander" finds every commander the catalog knows, including the 86 the graph never took in, by the whole name in any case or the start of it where that names one commander, and refuses a non-commander by name)
 - `card-states` — `tests/card-states.mjs`
 - `card-states-screens` — `tests/card-states-screens.mjs`
 - `card-status-flows` — `tests/card-status-flows.mjs`
