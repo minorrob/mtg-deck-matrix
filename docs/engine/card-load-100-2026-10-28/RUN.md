@@ -5,6 +5,17 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Upcoming-batch intake, ROB-317, October 29:** Rob reports that Ash Barrens does not present Basic landcycling.
+  Root reproduces on engine source `e2845fc4`: empty pool/untapped Wastes offers only the land play; manually tapping
+  Wastes exposes Basic landcycling {1}. The explicit manual control actually pays one, discards Ash Barrens and finds
+  Forest into hand. The final missing-offer assertion remains RED, with no fix or full interaction/UI claim. Reproduce
+  with `w0/evidence/ash-barrens-offer-red.mjs.txt` as its header directs. Linear owns the queued upcoming-batch task.
+- **Current dependency published:** exact `e2845fc4b7fdb1b01612d3c46fb08280b2ea501c` passes `tools/local-ci.sh HEAD 0`
+  and is pushed to draft #912; current main `51ec9f8f` is an ancestor. ROB-314/315/316 workers are synchronized from it.
+  ROB-315 is proving its complete original42-reader/64-control union plus10 reviewed native version controls; V8 is
+  validating the frozen3,263 mixed-board candidates read-only with unchanged worker/guard and all failures retained.
+  Battle checkpoint A is limited to actual combat identity/rules; intrinsic defeat/freecast remains separate and open.
+  No new card, promotion, full wave0 gate, main merge or staging release is credited.
 - **Hold released; latest main integrated, October 29:** Rob explicitly says the other session has finished and asks
   to pull main and continue with unchanged full-interaction gates. Main `51ec9f8f` is merged at `314ab4cf`; only the
   README count conflicts. Its new Linear one-loop policy is adopted: ACTIVE.md is restored exactly to main's frozen
