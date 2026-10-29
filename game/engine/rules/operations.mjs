@@ -91,7 +91,7 @@ export function answerRuleOperation(state, indices, amounts = null, rng = null, 
   if (INDEX_MODES.has(choice.mode)) {
     if (!Array.isArray(indices) || indices.length < (choice.min ?? 0) || indices.length > (choice.max ?? 0)
       || new Set(indices).size !== indices.length || indices.some(i => !Number.isInteger(i) || i < 0 || i >= (choice.options ?? []).length))
-      throw new Error("Select the required rule options");
+      throw new Error("Invalid selection. Select the required rule options");
   }
   operation.frames.at(-1).answer = structuredClone({indices, amounts, extra});
   state.awaiting = null;
