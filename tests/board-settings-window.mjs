@@ -4,7 +4,7 @@
 
      1. Camera ▾ closes on a press anywhere outside it -- the board, the table, the header -- and stays open for a
         press inside it.
-     2. Settings (Profile ▾ › Settings) is a window: the app's dialog, ✕ at its top right, Cancel and Save at its bottom
+     2. Settings (Camera ▾ › Play settings) is a window: the app's dialog, ✕ at its top right, Cancel and Save at its bottom
         right, sized to the browser at every size and again when the window changes size. Save keeps what is set;
         Cancel, ✕ and Escape put back what was set when it opened.
      3. (Oct 26) Its sections run down the left -- General, Video, Audio, Gameplay -- and the chosen one uses the
@@ -69,7 +69,7 @@ const layout = (page) => page.evaluate(() => {
 
 try {
   /* ---- 1. Camera ▾ closes on a press outside it ---- */
-  for (const mode of ["focus", "full"]) {
+  for (const mode of ["table", "focus", "full"]) {
     const {page, context, errors} = await board(mode);
     await page.locator("#cm-board [data-action=board-camera]").click();
     eq(await cameraOpen(page), 1, `${mode}: Camera ▾ opens`);
@@ -196,7 +196,15 @@ try {
       await page.locator('input[name=module-history][value=none]').check();await page.locator('[data-action=board-modules-save]').click();await page.locator('#cm-drawer-settings').waitFor({state:'hidden'});
       eq(await page.locator('.cm-stage-module[data-module=history]').count(),0,'real None selection removes optional History module');eq(await page.locator('.cm-stage-module[data-module=actions]').count(),1,'saving preserves the fixed Actions module');
       const stackToggle=page.locator('[data-action=board-stage-side][aria-controls=cm-stack-drawer]');if(await stackToggle.getAttribute('aria-expanded')!=='true')await stackToggle.click();
-      await page.locator('[data-action=board-module-move][data-module=coach][data-by="-1"]').click();await page.waitForFunction(()=>document.querySelector('.cm-stage-modules[data-module-side=right]>.cm-stage-module')?.dataset.module==='coach');ok(true,'real drawer arrow changes saved module order');
+      /* Chat joined Stack and Coach as a default module of the right drawer (2026-10-28), so Coach is no longer second: the arrow's guarantee is that it moves
+         Coach exactly one place up and leaves the others in their order. */
+      const order=()=>page.evaluate(()=>[...document.querySelectorAll('.cm-stage-modules[data-module-side=right]>.cm-stage-module')].map(m=>m.dataset.module));
+      const was=await order(),at=was.indexOf('coach');
+      ok(at>0,`Coach is below another module to begin with (${was})`);
+      await page.locator('[data-action=board-module-move][data-module=coach][data-by="-1"]').click();
+      await page.waitForFunction((i)=>document.querySelector('.cm-stage-modules[data-module-side=right]>.cm-stage-module:nth-child('+(i)+')')?.dataset.module==='coach',at);
+      const now=await order(),expected=[...was];expected.splice(at,1);expected.splice(at-1,0,'coach');
+      eq(now,expected,'real drawer arrow moves the saved module one place up and keeps the rest in order');
     }
     eq(errors, [], `no page error (${errors.join(" | ")})`);
     await context.close();
@@ -204,4 +212,4 @@ try {
 } finally {
   await close();
 }
-console.log(`board-settings-window: ${checks} checks passed -- Camera closes on a press outside it in Focus and Full screen; Settings is a window sized to the browser at three sizes and when made smaller, ✕ at its top right, Cancel and Save at its bottom right, its sections down the left (General, Video, Audio, Gameplay), each fitting without scrolling and using the full width; Save keeps, Cancel, ✕ and Escape put back.`);
+console.log(`board-settings-window: ${checks} checks passed -- Camera closes on a press outside it in Table, Focus and 3D; Settings is a window sized to the browser at three sizes and when made smaller, ✕ at its top right, Cancel and Save at its bottom right, its sections down the left (General, Video, Audio, Gameplay), each fitting without scrolling and using the full width; Save keeps, Cancel, ✕ and Escape put back.`);

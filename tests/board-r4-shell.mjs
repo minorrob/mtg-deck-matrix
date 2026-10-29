@@ -1,7 +1,8 @@
 /* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE.
  * r4 D1: decisions stay usable when a drawer folds, HUD sizing is a device preference,
  * and the table's destructive actions require confirmation. The room view is a fixture;
- * this suite proves rendering and requests, not engine legality.
+ * this suite proves rendering and requests, not engine legality. Table, Focus and 3D are one HUD (header, turn box, action pop-up,
+ * drawers); Focus's other seats are the rear tiles behind the seat looked at.
  */
 import assert from "node:assert/strict";
 import {readFileSync, mkdirSync} from "node:fs";
@@ -37,12 +38,12 @@ async function open(mode, width, skin = "sapphire-obsidian", opening = false) {
   return {page,context,errors,posts,sample};
 }
 
-async function wholeRows(page,label) {
-  const clipped=await page.evaluate(() => {
+async function wholeRows(page,label,scope='#cm-board') {
+  const clipped=await page.evaluate((scope) => {
     const fails=[];
     const areas=[...document.querySelectorAll('#cm-board .cm-mat-grid,.cm-phone-battlefield,.cm-board-field,[data-card-section]')];
     const saved=areas.map(el=>[el,el.scrollTop,el.scrollLeft]);
-    for(const card of document.querySelectorAll('#cm-board [data-card-section] .cm-bcard')) {
+    for(const card of document.querySelectorAll(`${scope} [data-card-section] .cm-bcard`)) {
       if(!card.getClientRects().length)continue;
       if(card.classList.contains('is-tapped')){
         const m=new DOMMatrix(getComputedStyle(card).transform),angle=Math.atan2(m.b,m.a)*180/Math.PI;
@@ -59,8 +60,33 @@ async function wholeRows(page,label) {
     }
     for(const [el,y,x] of saved){el.scrollTop=y;el.scrollLeft=x;}
     return fails;
-  });
+  }, scope);
   eq(clipped,[],`${label}: every battlefield/land card is wholly scroll-reachable`);
+}
+
+/* Focus: the others' boards are the flat rear boards (.cm-stage-rear.cm-flat-rear: a plain-text name above a 16:9 .cm-stage-mini mat). They carry no seat-label button and
+   no Focus button any more (Rob, 2026-10-28), so a seat is looked at the way a player does it: a double click on its board (here on its name, which focuses it as the board does). Every seat is looked at in turn and its own
+   board's cards must be wholly reachable there. (The tiles' previews are checked in place as well, below.) */
+async function wholeRowsEachSeat(page,label) {
+  const first=await page.evaluate(()=>document.querySelector('.cm-stage-big')?.dataset.seat);
+  const seats=await page.locator('.cm-stage-rear.cm-flat-rear').evaluateAll(es=>es.map(el=>el.dataset.seat));
+  ok(seats.length>0,`${label}: there are rear boards to focus`);
+  const focusBy=async n=>{
+    /* A real double click where the name can be hit; at 200% with the left drawer folded the decision pop-up (the folded Actions) lies over the rear boards, so
+       there the same double click is dispatched on the name (the way a pointer's second click would arrive), as the retired seat-label's click was. */
+    const name=page.locator(`.cm-stage-rear.cm-flat-rear[data-seat="${n}"] > .cm-stage-boardname`),box=await name.boundingBox();
+    const hit=await page.evaluate(([x,y,n])=>document.elementFromPoint(x,y)?.closest('.cm-stage-rear')?.dataset.seat===n,[box.x+box.width/2,box.y+box.height/2,n]);
+    if(hit)await page.mouse.dblclick(box.x+box.width/2,box.y+box.height/2);
+    else await name.dispatchEvent('dblclick');
+    await page.waitForFunction(n=>document.querySelector('.cm-stage-big')?.dataset.seat===n,n);
+    await page.waitForTimeout(500);
+  };
+  for(const seat of seats) {
+    await focusBy(seat);
+    await wholeRows(page,`${label}/seat ${seat} looked at`,'.cm-stage-big');
+  }
+  if(first!==undefined&&await page.evaluate(()=>document.querySelector('.cm-stage-big')?.dataset.seat)!==first)await focusBy(first);
+  eq(await page.evaluate(()=>document.querySelector('.cm-stage-big')?.dataset.seat),first,`${label}: the seat first looked at is looked at again`);
 }
 
 try {
@@ -82,6 +108,7 @@ try {
     eq(primaries.length,1,`${mode}/${width}: priority has one enabled primary (${primaries.join(', ')})`);
     const menu = await page.locator('[data-action=board-table-menu]').boundingBox(), camera = await page.locator('[data-action=board-camera]').boundingBox();
     ok(Math.abs(menu.y-camera.y) <= 5 && menu.x+menu.width <= camera.x+2,`${mode}/${width}: Table sits beside Camera`);
+    if(mode==='focus'&&width>=500)await wholeRowsEachSeat(page,`${mode}/${width}/100`);
     await wholeRows(page,`${mode}/${width}/100`);
     const life = await page.locator("#cm-board .cm-seat-header .cm-vitals>b").first().evaluate(el => parseFloat(getComputedStyle(el).fontSize));
     ok(life >= 28, `${mode}/${width}: life is readable (${life}px)`);
@@ -103,6 +130,8 @@ try {
       const children = await page.locator('.cm-stage-top').evaluate(el => [...el.children].filter(n => n.getClientRects().length && !n.matches('.cm-combat')).map(n => {const r=n.getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom};}));
       ok(children.every(r => r.left >= -1 && r.right <= width+1 && r.top >= header.y-1 && r.bottom <= header.y+header.height+1),`${mode}: all top-bar content fits its HUD-sized row at 200%`);
     }
+    /* the global check below also covers each rear tile's own preview (.cm-stage-mini), so a card a tile draws must be reachable in place, at 200% as at 100% */
+    if(mode==='focus'&&width>=500)await wholeRowsEachSeat(page,`${mode}/${width}/200`);
     await wholeRows(page,`${mode}/${width}/200`);
     const overlaps = await page.locator('.cm-board-field').evaluateAll(fields => fields.flatMap(field => {const label=field.querySelector(':scope>.cm-mat-label');if(!label || !label.getClientRects().length)return [];const r=label.getBoundingClientRect();return [...field.querySelectorAll('.cm-board-group>h3')].filter(h=>{const b=h.getBoundingClientRect();return r.left<b.right && r.right>b.left && r.top<b.bottom && r.bottom>b.top;}).map(h=>h.textContent);}));
     eq(overlaps,[],`${mode}/${width}: zone captions do not overlap group headings at 200%`);

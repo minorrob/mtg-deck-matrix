@@ -75,6 +75,23 @@ async function board(mode, {width = 1440, height = 900, reduced = false} = {}) {
   const again = async () => {sock.send(JSON.stringify({type: "receipt", receipt: {}})); sock.send(JSON.stringify({type: "view", view: {...structuredClone(view), revision: ++revision}})); await page.waitForTimeout(350);};
   return {page, context, errors, sent, acts, again};
 }
+/* The drawers are the top layer: a card of yours may lie under one. A player shuts the Actions drawer to reach it, and the pointer
+   then goes only to a point the browser says is that card's (the Actions pop-up may stand over the middle of the stage). */
+const pointOn = (page, id, where) => page.evaluate(({id, where}) => {
+  const r = document.querySelector(`${where} .cm-bcard[data-card='${id}']`).getBoundingClientRect();
+  for (let y = r.top + r.height / 2; y < r.bottom; y += 3) for (let x = r.left + r.width / 2; x < r.right; x += 3) if (document.elementFromPoint(x, y)?.closest(".cm-bcard")?.dataset.card === String(id)) return {x, y};
+  for (let y = r.top + 2; y < r.bottom; y += 3) for (let x = r.left + 2; x < r.right; x += 3) if (document.elementFromPoint(x, y)?.closest(".cm-bcard")?.dataset.card === String(id)) return {x, y};
+  return null;
+}, {id, where});
+const rightClickCard = async (page, id, where = ".cm-stage-fan") => {
+  let at = await pointOn(page, id, where);
+  if (!at) {
+    const rail = page.locator("[data-action=board-stage-rail][aria-expanded=true]");
+    if (await rail.count()) {await rail.click(); await page.waitForTimeout(450); at = await pointOn(page, id, where);}
+  }
+  ok(at, `a point on card ${id} that the pointer reaches`);
+  await page.mouse.click(at.x, at.y, {button: "right"});
+};
 const diag = (page) => page.evaluate(() => CrankStage.diagnostics());
 /* How far the lean has gone at 35% of the time (its phase .2-.8, eased): what it has taken back of the rise by the peak. */
 const phase35 = () => {const x = (.35 - .2) / .6; return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;};
@@ -147,7 +164,9 @@ try {
   await page.keyboard.up("Control");
   await page.waitForTimeout(400);
   ok(JSON.stringify(await tableAt()) !== JSON.stringify(quadWas) && await page.waitForFunction(() => Number(localStorage.getItem("cm-board-zoom-v2")) > 100, null, {timeout: 3000}).then(() => true, () => false), "with Ctrl the wheel over the row zooms the table");
-  eq(await scrolled(), rowAt, "and leaves the row where it was");
+  /* Zoomed, the row sits under a scale transform and the browser snaps its scroll offset to a device pixel: a row at its end (86) reads 85.5 about half the time.
+     The row did not scroll (a Ctrl wheel of -200 would move it 200), so the measure is within a pixel. */
+  near(await scrolled(), rowAt, 1, "and leaves the row where it was");
   /* ⌘/Ctrl + and − still size the cards, not the table. */
   const scale = () => page.evaluate(() => getComputedStyle(document.getElementById("cm-board")).getPropertyValue("--card-scale") || document.documentElement.style.getPropertyValue("--card-scale"));
   const zoomBefore = await page.evaluate(() => localStorage.getItem("cm-board-zoom-v2"));
@@ -340,7 +359,7 @@ try {
   ok(dHold.reached && same(dHold.last, atRest), "held on a card, the camera looks at it, and back");
   eq(await page.locator("#cm-card-menu").count(), 0, "and the card's menu does not open");
   await frames();
-  await proft.click({button: "right"});
+  await page.mouse.click(onProft.x, onProft.y, {button: "right"});   /* at the point the pointer finds on Proft: the drawers are the top layer now, so the card's center may be under one */
   await page.locator("#cm-card-menu").waitFor({timeout: 2000});
   await page.waitForTimeout(300);
   ok((await frames()).f.every((x) => x.t === null), "a quick right click on a card does not move the camera");
@@ -357,7 +376,7 @@ try {
   await page.keyboard.press("Escape");
   ok(await menu.count() === 0, "Escape closes it");
   const cardOn = (id, where = ".cm-stage-fan") => page.locator(`${where} .cm-bcard[data-card='${id}']`).first();
-  await cardOn(ISLAND).click({button: "right"});
+  await rightClickCard(page, ISLAND);
   m = await readMenu();
   eq(m.rows.map((r) => r.index), offered(ISLAND), "the Island's menu lists the one thing the room offers for it");
   eq([m.card, m.rows[0].text, m.rows[0].said, m.focused], ["🔍 Island", "⤓ Play", "Play Island", "Play Island"], "as ⤓ Play under the card's name, said in full, the focus on it");
@@ -370,18 +389,18 @@ try {
   eq(acts(), [[1]], "and plays it at once, once: the card and its row are two presses already (Rob, 2026-10-27)");
   /* The view a played land leaves is not this test's business: the offers come back as they were. */
   await again();
-  await cardOn(RIME).click({button: "right"});
+  await rightClickCard(page, RIME);
   m = await readMenu();
   eq(m.rows.map((r) => r.index), offered(RIME), "Rime Chill's menu lists only its own offer");
   eq(m.rows[0].text, "✦ Cast → up to two targets · ↷ Island, Access Tunnel", "✦ Cast, then where it goes and what it taps, in shorthand");
   eq(m.rows[0].said, "Cast Rime Chill → up to two targets · tapping Island, Access Tunnel", "and in full to a reader");
   await page.keyboard.press("Escape");
-  await cardOn(TOWER, ".cm-stage-front").click({button: "right"});
+  await rightClickCard(page, TOWER, ".cm-stage-front");
   m = await readMenu();
   eq(m.rows.map((r) => r.index), offered(TOWER), "the Command Tower's menu lists its two ways of making mana");
   ok(m.rows.every((r) => r.text.startsWith("↷") && r.mana === 1), `each a tap and the mana it makes, as a symbol (${JSON.stringify(m.rows)})`);
   await page.keyboard.press("Escape");
-  await cardOn(CHALICE, ".cm-stage-front").click({button: "right"});
+  await rightClickCard(page, CHALICE, ".cm-stage-front");
   m = await readMenu();
   eq([m.rows.map((r) => r.index), m.rows[0]?.text], [offered(CHALICE), "↶ Untap"], "the Chalice's: ↶ Untap");
   /* The card, to read, at one press. */
@@ -402,7 +421,7 @@ try {
   await page.mouse.click(5, 5);
   ok(await menu.count() === 0, "a press anywhere else puts it away");
   eq(acts(), [[1]], "opening and reading menus plays nothing more");
-  if (SHOTS) {await cardOn(TOWER, ".cm-stage-front").click({button: "right"}); await page.screenshot({path: path.join(SHOTS, "card-menu-3d.png")}); await page.keyboard.press("Escape");}
+  if (SHOTS) {await rightClickCard(page, TOWER, ".cm-stage-front"); await page.screenshot({path: path.join(SHOTS, "card-menu-3d.png")}); await page.keyboard.press("Escape");}
   await page.keyboard.press("Escape");
   const menus = await page.evaluate(() => __menus);
   ok(menus.length > 0 && menus.every((m) => !m.open), `the browser's own menu never opens on the 3D table (${menus.length} asked; ${JSON.stringify(menus)})`);
@@ -414,7 +433,7 @@ try {
   for (const mode of ["focus", "table"]) {
     const {page, context, errors, acts} = await board(mode);
     const menu = page.locator("#cm-card-menu");
-    await page.locator(`.cm-board-hand .cm-bcard[data-card='${ISLAND}']`).click({button: "right"});
+    await rightClickCard(page, ISLAND);
     await menu.waitFor({timeout: 2000});
     const rows = await menu.locator("[data-action=board-card-menu-do]").evaluateAll((els) => els.map((r) => Number(r.dataset.index)));
     eq(rows, offered(ISLAND), `${mode}: a right click on the Island shows the room's one offer for it`);
@@ -425,7 +444,7 @@ try {
     const menus = await page.evaluate(() => __menus);
     ok(menus.length === 1 && !menus[0].open, `${mode}: the browser's own menu stays shut on a card`);
     eq(acts(), [], `${mode}: nothing played`);
-    if (SHOTS && mode === "focus") {await page.locator(`.cm-board-hand .cm-bcard[data-card='${RIME}']`).click({button: "right"}); await page.screenshot({path: path.join(SHOTS, "card-menu-focus.png")});}
+    if (SHOTS && mode === "focus") {await rightClickCard(page, RIME); await page.screenshot({path: path.join(SHOTS, "card-menu-focus.png")});}
     ok(!errors.length, `${mode}: no page error (${errors.join(" | ")})`);
     await context.close();
   }
