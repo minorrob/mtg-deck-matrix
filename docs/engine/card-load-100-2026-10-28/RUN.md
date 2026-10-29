@@ -113,10 +113,8 @@ Fresh baseline on main `39a45706`, before engine changes:
 | G-4 Calibration failures | 4 of 4,165 (Blackblade Reforged, Contagion Clasp, Goblin Piledriver, Wayfarer's Bauble) | W4 `8e0f3a2f`: 4,165 held out, 4,165 pass, no denominator exclusions. Writer changes independently reviewed; all past loads and final integration remain unreviewed/unmeasured. Full G-4 unmet. |
 | G-5 Pool fuzz, clean of games | the harness has no pool mode yet; library 3 of 3, staging decks 1 of 1 clean | Initial 3/3 app-finished pool runs clean, of which 1 reached a winner; final integration and 5,000 games unmet. |
 | G-6 Final cards exercised in a clean game | not measured (no ledger yet) | Initial 131/6,430 final definitions exercised in 3 app-finished clean runs. Unmet. |
-| G-7 Gameplay-gap list open items | section 4: 21 open, 5 unsure; section 5: 10 open; section 7: 10 open; section 8: 10 rows open, 4 partial (`README.md`, "Open accuracy debt") | Debt fixes in progress. Main baseline's 57 stale break anchors are named in `w0/preexisting-break-anchors.json`; root re-anchored/proved one, leaving 56 on integration. Unmet. |
+| G-7 Gameplay-gap list open items | section 4: 21 open, 5 unsure; section 5: 10 open; section 7: 10 open; section 8: 10 rows open, 4 partial (`README.md`, "Open accuracy debt") | Debt fixes in progress. Main baseline's 57 stale break anchors are named in `w0/preexisting-break-anchors.json`; root re-anchored/proved four, leaving 53 on integration. Unmet. |
 | G-8 Rob's playtest sign-off | none | None; only Rob can close this gate. |
-
-## Waves
 
 ## Root's inherited-anchor repair
 
@@ -128,6 +126,15 @@ that exact conditional; it tests the same requirement, with no assertion change 
   `baseline: every suite passes unbroken`; `caught requirement checked -- tests/engine-libload-l4-combat.mjs`;
   `missed: []`. Combat source restored exactly after the probe.
 - `python game/tools/batch/anchors.py`: 56 remaining problems, down from the measured 57; the global gate remains red.
+- Three further exact re-anchors preserve the original contracts, with no assertion change:
+  - `breaks-combat-words.py`, "the seat's view keeps the engine's words": remove `combatWords` inside the new
+    `describeDecision` wrapper; `caught ... -- tests/room-combat-words.mjs`; `missed: []`.
+  - `breaks-train-d-c.py`, "each option's controller": the same `controllerId` option fact moved into the shared
+    `targetFacts` helper; `caught ... -- tests/engine-target-constraints.mjs`; `missed: []`.
+  - `breaks-first-draw-step.py`, "the host's choice not saved": the same `skipFirstDraw` setting now precedes more
+    saved settings; `caught ... -- tests/game-table.mjs`; `missed: []`.
+- All three mutation runners first reported `baseline: every suite passes unbroken`. Final `anchors.py`: 53 remaining
+  problems. No source file or backup was left mutated. No UI behavior or test assertion was changed.
 - Repeat this moved-anchor proof after final writer integration, as the procedure requires.
 
 ## Waves
