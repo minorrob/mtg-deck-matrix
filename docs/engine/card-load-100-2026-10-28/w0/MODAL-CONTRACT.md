@@ -76,8 +76,10 @@ retry/stale input, departure, Back and Cancel refusals. Mutation evidence is rec
 `tests/room-action-stages.mjs` covers actual Cankerbloom, funded-pool choices, source sacrifice, privacy, reload/replay,
 Back/Cancel, stale/retry/departure and conservative old private-route withdrawal. Counts are in PLAYTEST-PROGRESS.md.
 
-This contract covers priority modal/spree spell casts and ordinary modal activations. Effect-paid casts, committed
-triggers/effects and other modal routes remain separate work; [MODAL-ROUTE-AUDIT.md](MODAL-ROUTE-AUDIT.md) records exact
-native findings and the approved later refinement design. The UI owner must consume and verify these stages before
+This contract covers priority modal/spree spell casts and ordinary modal activations. The separate
+[COMMITTED-MODAL-CONTRACT.md](COMMITTED-MODAL-CONTRACT.md) now covers bounded refinement of still-live native
+trigger/effect-cast questions with authoritative generation refresh and raw replay receipts. Counted native target
+steps, unavailable additional-cost routes and other modal cases remain explicit boundaries;
+[MODAL-ROUTE-AUDIT.md](MODAL-ROUTE-AUDIT.md) records the actual findings. The UI owner must consume and verify these stages before
 ROB-209 can be Done. Root owns integration/main acceptance and the unchanged card-load gates. No cards are added
 or promoted by this checkpoint.

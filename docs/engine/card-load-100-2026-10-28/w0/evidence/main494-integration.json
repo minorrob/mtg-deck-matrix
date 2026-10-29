@@ -1,0 +1,19 @@
+{
+  "schema": "CurrentMainUIIntegration@1",
+  "source": "1a16a9351dffe33ecad95894169739e1eda34673",
+  "main": "494d3fa9",
+  "mainPullRequest": 952,
+  "supersededPrePushScan": {"source": "728193a2", "result": "FAIL: current main does not merge cleanly; no scan/gate credit"},
+  "merge": "no-ff",
+  "conflicts": "README actual suite count plus version references/asset manifest only",
+  "ownersMenuAndCSSPreserved": true,
+  "productionBoardDiffAgainstMain": "Exactly two approved Snoop renderer lines",
+  "stageCSSByteIdenticalToMain": true,
+  "nativeEngineRoomByteIdenticalTo": "56965896676dbee01f8e1f7247ce439cc54ca6d6",
+  "assetGeneration": {"helper": "tools/refresh.mjs bumpText", "manifest": "node tests/asset-versions.mjs --update", "board": 168, "serviceWorker": 725, "app": 742, "stageCSS": 175},
+  "boardSha256": "a63f67ae345590eedf0b79b281022ba7b546e5ef56a6239e328a75abcb03fdb6",
+  "browser": {"productionSnoop": 98, "newTableMenu": 25, "actualSnoopWebGLRequired": true, "screenshotsCaptured": 12, "screenshotsInspected": ["snoop-table-held-owner.png", "snoop-focus-cast-menu.png", "snoop-full-held-owner.png", "snoop-full-source-removed.png"], "directory": "worktrees/load100/scratch/snoop-root-main494-shots", "remainingNodeOrHeadlessShell": 0, "limits": "Existing other-field clipping/occlusion and footer; no full-layout acceptance"},
+  "metadata": {"actualNodeSuites": 709, "assets": 136, "serviceWorkerChecks": 9, "featureWiring": 131, "integrity": "passed", "frozenScope": "passed", "dataArtifacts": 60, "dataMB": 80.9},
+  "staticAudit": {"files": 255, "breaks": 4675, "remainingInheritedUIProblems": 33, "engineProblems": 0, "fullAuditExit": 1},
+  "acceptance": "Bounded dependency integration; fresh exact scan/push and all unchanged full wave0/card-load gates remain required"
+}

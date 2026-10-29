@@ -1879,8 +1879,8 @@ async function utility(page, action, section = "general") {
   await dismissAccount(page);
   if (action === 'board-tools') {
     if (!await page.locator('#cm-board-tools').isVisible()) {
-      if (!await page.locator('.cm-stage-camera [data-action=board-tools]').count()) await page.locator('[data-action=board-camera]').click();
-      await page.locator('.cm-stage-camera [data-action=board-tools]').click();
+      if (!await page.locator('#cm-table-menu [data-action=board-tools]').count()) await page.locator('[data-action=board-table-menu]').click();
+      await page.locator('#cm-table-menu [data-action=board-tools]').click();
     }
     await settingsSection(page, section);
   } else if (action === 'board-help') {

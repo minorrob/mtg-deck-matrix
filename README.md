@@ -955,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 703 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 710 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1162,6 +1162,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-playtest-blink` — `tests/engine-playtest-blink.mjs` (actual Brago combat, Thassa zero/one targets, single-target control wording, delayed Flickerwisp reentry and Claim Jumper conditional Plains searches)
 - `engine-cast-stages` — `tests/engine-cast-stages.mjs` (live modal/spree mode sets, per-mode and repeated targets, native target constraints, backtracking and actual costs)
 - `engine-action-stages` — `tests/engine-action-stages.mjs` (actual modal/effective activations, isolated casting permissions, native nonmana cost review and stale targets)
+- `engine-refinement-controller` — `tests/engine-refinement-controller.mjs` (private child validation preserving the live native question and persistent full-payload receipt dedupe)
+- `engine-committed-refinement` — `tests/engine-committed-refinement.mjs` (actual departed Ao, Shadrix and Scepter modal refinements, stale facts and native random commitments)
 - `engine-threat` — `tests/engine-threat.mjs` (the threat table every difficulty reads: life, hitters, growth and ramp off the seat's view; Easy's rank, Normal's weighted mean; a person and an AI the same row; L1 attacks where threat × effect is highest; the floor under an attack that dies for nothing)
 - `engine-pilot-picks` — `tests/engine-pilot-picks.mjs` (the AI seats take what an "up to" or a search is for: the lands of the colors they lack, proliferate's good counters, their own side; old matches answered as before)
 - `engine-ingest` — `tests/engine-ingest.mjs`
@@ -1238,6 +1240,10 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `room-cancel-decision` — `tests/room-cancel-decision.mjs` (native Cancel with auto-pass and Undo configurations, reload/retry, full state/RNG/journal preservation, actor departure and mandatory-effect refusal)
 - `room-cast-stages` — `tests/room-cast-stages.mjs` (private saved modal proposals, reload/replay, stale input, Cancel/Back boundaries and actual payment exactly once)
 - `room-action-stages` — `tests/room-action-stages.mjs` (actual Cankerbloom stages, observer privacy, reload/replay, native funding Cancel, exact mana/sacrifice and permission-version withdrawal)
+- `room-committed-refinement` — `tests/room-committed-refinement.mjs` (actual committed modal questions preserved through private Cancel, privacy/reload/replay and final native confirmation once)
+- `room-effect-play-refresh` — `tests/room-effect-play-refresh.mjs` (native generation changes, donated Shalai newly legal targets, stale private and standing inputs, current house/Easy/Normal native answers)
+- `room-effect-play-version` — `tests/room-effect-play-version.mjs` (actual pre-generation sourceChoices tape replay and mandatory current-version live starts despite forged opt-out)
+- `room-restore-cursor` — `tests/room-restore-cursor.mjs` (default events after reload and eventless inputs, exact next journal delivery, preserved retained stream and empty journal boundary)
 - `room-agent-seat` — `tests/room-agent-seat.mjs` (the LLM seat in the room: only its close calls offered to it, its answers on the tape)
 - `room-refused-answer` — `tests/room-refused-answer.mjs`
 - `room-optional-count-targets` — `tests/room-optional-count-targets.mjs` (ROB-204: the room takes an "up to one" and an "any number" target answer with one, several or none chosen, refuses past the most, and plays on)
@@ -1304,6 +1310,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `board-r4-folded-slot` — `tests/board-r4-folded-slot.mjs` (actual target binding and way-back hit targets after drawer/module fold, 100/200% desktop/phone)
 - `board-seat-lifecycle` — `tests/board-seat-lifecycle.mjs` (authoritative lifecycle labels in the shared seat header, including a returned seat)
 - `board-settings-window` — `tests/board-settings-window.mjs` (Camera ▾ closed by a press outside it; Settings a window sized to the browser, ✕ at its top right, Cancel and Save at its bottom right, Save keeps and Cancel puts back; its sections — General, Video, Audio, Gameplay — down the left, each fitting without scrolling and using the window's full width)
+- `board-table-menu-settings` — `tests/board-table-menu-settings.mjs` (ROB-220, Luke's playtest of 2026-10-28: Play settings, Background and Table design are in the Table menu, Camera holds none of them, and Play settings still reaches the drawer modules)
 - `admin-window` — `tests/admin-window.mjs` (Admin in the Menu for the administrator alone, refused to anyone else by the Worker; a window with General and Share down its left; General shows the setup and keeps the 3D camera glance; Share admits an invitee to staging and production Access, confirms each, then emails an HTML invitation, and a refusal sends nothing)
 - `board-babylon` — `tests/board-babylon.mjs` (live Babylon/DOM projection alignment, scene resource disposal, graphics fallback, re-entry, and the Play lounge)
 - `board-3d-camera` — `tests/board-3d-camera.mjs` (the 3D camera by hand: the wheel zooms toward the pointer except over a row that scrolls, a mat dragged moves the view while the bare table still tilts, a held right button looks at the place and back on the motion's own clock with the DOM cards on the Babylon table every frame; a card's right-click menu of the room's offers in shorthand, from the keyboard too, in every view)

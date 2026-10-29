@@ -8,6 +8,20 @@ Linear ROB-199 under ROB-85. The record is `docs/engine/card-load-100-2026-10-28
 Claim: `game/engine/cards/**`, generated card files, `data/engine/candidates.json`, the run package,
 and the engine modules its debt fixes require, subject to the ownership requests below.
 The primary checkout has another session's unfinished merge and is untouched.
+**Latest source1a16a935 includes main494d3fa9/#952:** required scan728 stops at moved-main conflicts; root preserves
+owner's Table-menu/CSS and our two Snoop lines, regenerates pins/manifest (board168/sw725/app742), READMEactual709.
+Engine/room remains byte-identical to proved569. Actual combined Snoop98/newmenu25 and inspected screenshots pass
+scoped behavior, oldclipping/footerlimits remain open. Assets136/SW9/wiring131/integrity/scope green, inventoryunchanged.
+Fresh scan/push follows; no gate closure or new cards. Evidence and resume commands in RUN.md.
+**Latest P0 assembly56965896:** #951 is merged with native/private/raw-replay contracts preserved. Role87 caught
+controls and root12 affected readers pass; actual combined browser98/fresh inspected shots pass scoped Snoop behavior,
+with existing3D clipping/footer limits explicit. Four moved room mutation anchors are reanchored with original readers
+and4 caught; static255files/4,675breaks/33 inherited UI problems, zero engine targets. Actual suites708, metadata unchanged.
+W1 return/entry progress and W5 factual optional mana reversal stay unpublished; V8 conditional-policy work is proposal
+only. All card-load gates remain unchanged and no new cards/promotions. RUN.md is the exact resume record.
+**Generator exception resolved:** Rob explicitly approves the existing public Scryfall search check. Unchanged
+generators93 passes on published55f133f5:357paths/129tools, all26checks. No source/data writes or wider API/provider
+permission. Earlier blocked notes below are historical; all other wave0 gates remain open.
 **Latest saved-scenario sourcebe1a2b89:** only three explicit Banner Wastes references and an additive public Snoop
 non-Goblin reveal/privacy scenario. Every original assertion preserved. Selected proof improves2/8→4/8 abilities,
 9scenarios/0failed, two runtime-only omission witnesses; four unproved keep checker exit1. Full engine-cards55 passes
@@ -136,6 +150,9 @@ Rob asked for the playtest's bugs and improvements to be fixed in the order Line
 - **ROB-214 (Explore says a commander is not in the catalog).** Not an import that failed to register: Explore's data is `data/graph.json` (baked Sep 11, 3,411 commanders) and 86 of the 3,497 commanders in the universe (Sep 28) are not in it at all (Aerid Konstrari, Arni, Avacyn, Angel of Horror, ...); library cards pushed in beside the graph also had no `isCommander`. `crankmagic-discover.js` now brings every catalog commander in as a visitor row, finds a commander by whole name in any case or by the start of it when that names one ("Giada"), says so when a deep link names none (it opened Atraxa), and lists all of them. `tests/explore-commander-door.mjs`. Giada herself *is* flagged in the committed graph, so Luke's exact typed text is unconfirmed; commented on the issue.
 - **ROB-216 (New deck: the colors drift off the commander).** In Start from, once a commander is chosen "Choose colors" shows and locks to its identity; pressing another color asks first (it names the commander and says it will be disconnected), Keep changes nothing, Change colors lets the commander go and applies the change from its colors (`crankmagic-newdeck.js`, two rules in `crankmagic.css`). `tests/newdeck-color-lock.mjs`. `tests/new-deck-flow.mjs` changed with it, on purpose: it changed the colors past a chosen Krenko and expected him kept; it now goes through the warning and chooses him again before Next.
 - **ROB-221 (Resources and Mana Pool on by default).** `DEFAULT_MODULES` in `crankmagic-board.js` is now stack, mana, resources, history, chat, coach: the layout of anyone who has not saved one. A saved layout keeps what its owner chose (nothing is added to it). `tests/table-tabletop.mjs` pins the new list. Visible cost: at 900px tall History, Chat and Coach start below the drawer's fold (it scrolls); say if you want the order changed.
+- **ROB-220 (Play settings, Background and Table design move to the Table menu).** `crankmagic-board.js`: Camera keeps the view's own controls (seats, tilt, zoom, sizes); Table holds Play settings (so Set Side Drawer Modules) and, in 3D, the two pickers. Closing Settings returns focus to Table, where it was opened. `tests/board-table-menu-settings.mjs`; eleven suites that opened Settings through Camera now open it through Table (`a11y-board`, `board-fullscreen-notes`, `board-graphics`, `board-mana-pool`, `board-r2-actions-inspection`, `board-r4-views`, `board-settings-window`, `table-board`, `table-shared-shell`, `table-tabletop`).
+- **A regression of mine from ROB-221, fixed in the same PR.** Putting the Mana Pool on by default made `tests/a11y-board.mjs` see its dimmed zero counts (`opacity:.45` on the whole cell: under 4.5:1). Now only the symbol dims and the count keeps full ink. `a11y-board` was red on `main` from #945 until this PR.
+- **Flaky on a clean `main`:** `tests/board-r2-actions-inspection.mjs` (a timeout on the view switch; 1 failure in 3 runs).
 - **Known and not mine, red on a clean `main`:** `tests/board-target-lands.mjs`, `tests/board-direct-blocking.mjs`, `tests/board-yield.mjs`.
 
 ## Play: Table and Focus are the 3D view's HUD without the canvas; the drawers lie over the stage; Chat a default module, 2026-10-28 (a Claude cloud session, for Rob; `claude/gifted-ride-w6xoa3`, the third PR of the day)
