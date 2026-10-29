@@ -18,7 +18,7 @@
   ],
   "status": "Bounded saved mana damage/cost checkpoint; broader outside damage, combat replay, attacking tokens and blocker requirements remain open",
   "codeCheckpoint": "20e13e9e08044bbaf1527328a6b940f13dce92a5",
-  "pullRequest": "https://github.com/minorrob/mtg-deck-matrix/pull/930",
+  "pullRequest": "https://github.com/minorrob/mtg-deck-matrix/pull/940",
   "completed": [
     "Blackblade Reforged: held-out translation counts Land after for each, not the equipped Creature",
     "Goblin Piledriver: a teacher's implicit times 1 is learned as the printed multiplier slot",
@@ -145,6 +145,8 @@
     "continuation": "W4-damage-continuation.md",
     "gateCredit": false,
     "cardsPromoted": 0,
-    "cleanGamesCredited": 0
+    "cleanGamesCredited": 0,
+    "pullRequest": "https://github.com/minorrob/mtg-deck-matrix/pull/940",
+    "scan": "HEAD0 SCAN PASS on6f85faa3; main50297778 ancestor; record tip is scanned separately before push"
   }
 }
