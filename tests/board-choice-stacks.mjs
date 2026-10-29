@@ -141,10 +141,10 @@ try {
         .filter((el) => !el.disabled).map(box).filter((r) => r.width && r.height);
       const covered = pops.filter((p) => controls.some((r) => p.left < r.right && p.right > r.left && p.top < r.bottom && p.bottom > r.top)).length;
       const ask = document.getElementById("cm-board-decision");
-      return {pops: pops.length, controls: controls.length, covered, past: !ask || pops.every((p) => p.left >= box(ask).right)};
+      return {pops: pops.length, controls: controls.length, covered, past: !ask || pops.every((p) => p.right <= box(ask).left || p.left >= box(ask).right || p.bottom <= box(ask).top || p.top >= box(ask).bottom)};
     });
     eq([geo.pops, geo.covered], [3, 0], `${mode} ${width}x${height}: the three cards played are held up, and none covers the question's ${geo.controls} controls`);
-    ok(geo.past, `${mode} ${width}x${height}: they stand past the question`);
+    ok(geo.past, `${mode} ${width}x${height}: they stand outside the question`);
     eq(errors, [], `${mode} ${width}x${height}: no page error`);
     await context.close();
   }

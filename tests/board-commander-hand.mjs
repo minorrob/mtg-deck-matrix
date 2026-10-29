@@ -110,7 +110,7 @@ try {
       for (const fy of [0.5, 0.8]) if (!k.ok) k = await reach(page, kraum, [0.5, fy]);
       ok(k.ok, `${where}: Kraum still takes the pointer where it is pressed`);
       await page.mouse.click(k.x, k.y);
-      const cast = '#cm-card-menu [data-action="board-card-menu-do"][data-index="1"]';
+      const cast = '[data-action=board-flow-confirm]';
       await page.locator(cast).waitFor();
       ok(acts(frames).length === 0, `${where}: opening Kraum's native menu sends no action`);
       const castAt = await reach(page, cast);

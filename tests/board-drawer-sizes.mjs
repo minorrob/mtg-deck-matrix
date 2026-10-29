@@ -37,18 +37,13 @@ await page.route(`${base}/api/library**`,r=>r.fulfill({json:{head:null}}));
 await page.route(`${base}/api/tables**`,r=>r.fulfill({json:{table,now:Date.now()}}));
 await page.routeWebSocket(/\/api\/tables\/sizesfixture1\/connect$/,ws=>{sock=ws;ws.send(JSON.stringify({type:"view",view:sample}));});
 const options=[];for(const id of [485,526,545])for(const d of [1,2,3])options.push({index:options.length,label:`${names[id]} → ${seats[d]}`,cardId:id,defenderId:d});
-const D=".cm-stage-rail #cm-board-decision";
+const D="#cm-board-decision";
 const open=async(kind='combat')=>{
   await page.goto("about:blank");await page.goto(`${base}/index.html#table?id=sizesfixture1`);await page.locator("#cm-board .cm-stage-top").waitFor();
   const v=structuredClone(sample);v.revision=++revision;v.decision=kind==='priority'
     ? {id:'priority:sizes',kind:'priority',title:'Your priority',mode:'one',min:1,max:1,options:[{index:0,label:'Pass priority',act:'pass'},{index:1,label:'Proft, Consulting Detective',act:'activate',cardId:526}]}
     : {id:"declare-attackers:sizes",kind:"attackers",title:"Declare attackers",mode:"many",min:0,max:options.length,options};
-  sock.send(JSON.stringify({type:"view",view:v}));await page.locator(`${D} [data-action=board-option]`).first().waitFor();
-  if(kind==='priority'){
-    const offer=`${D} [data-action=board-option][data-index="1"]`;
-    await press(offer,'the authoritative Proft priority offer');
-    await page.locator(`${D}[data-wf="W14"] .cm-action-card`).waitFor();
-  }
+  sock.send(JSON.stringify({type:"view",view:v}));await page.locator(kind==='priority'?'[data-action=board-choose]':'[data-action=board-flow-attacker]').first().waitFor();
   await page.mouse.move(5,400);await page.waitForTimeout(300);
 };
 const box=(sel)=>page.evaluate((sel)=>{const x=document.querySelector(sel);if(!x)return null;const b=x.getBoundingClientRect();return {top:b.top,bottom:b.bottom,height:b.height,width:b.width,left:b.left,right:b.right,scroll:x.scrollHeight,client:x.clientHeight};},sel);
@@ -61,55 +56,41 @@ const press=async(sel,label)=>{
 const dragBy=async(sel,dx,dy)=>{const g=page.locator(sel).first();await g.scrollIntoViewIfNeeded();const b=await g.boundingBox();const x=b.x+b.width/2,y=b.y+b.height/2;await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x+dx/2,y+dy/2,{steps:4});await page.mouse.move(x+dx,y+dy,{steps:4});await page.mouse.up();await page.waitForTimeout(150);};
 try{
   await open('priority');
-  /* 1. A current priority offer, not a forced ordinary card click, opens the automatic desk card. */
-  const card=await box(".cm-stage-rail .cm-action-card");
-  ok(card.height>=150,`the card is read at the top of the desk (${Math.round(card.width)}×${Math.round(card.height)})`);
-  const g2=".cm-stage-rail [data-drag=deskcard]";
-  ok(await page.locator(g2).count()===1,"a bar under the card sizes it");
-  await dragBy(g2,0,70);
-  let c2=await box(".cm-stage-rail .cm-action-card");
-  near(c2.height,card.height+70,3,"dragged down 70px, the card is 70px taller");
-  await dragBy(g2,0,-140);
-  c2=await box(".cm-stage-rail .cm-action-card");
-  near(c2.height,card.height-70,3,"dragged up 140px, 70px shorter than it began");
-  await page.locator(g2).focus();await page.keyboard.press("ArrowDown");
-  const c3=await box(".cm-stage-rail .cm-action-card");
-  near(c3.height,c2.height+14*7/5,2,"↓ makes it a step larger");
-  const keptW=await page.evaluate(()=>localStorage.getItem("cm-board-desk-card"));
-  near(Number(keptW),c3.height*5/7,1,`its size is kept on the device (${keptW}px wide)`);
-  await open('priority');
-  near((await box(".cm-stage-rail .cm-action-card")).height,c3.height,2,"the staged card's size is kept through a reload");
-  /* 2. Combat's nine options remain reachable without requiring an unrelated automatic card preview. */
+  /* Optional opportunities retain resizable drawer modules; starting an action uses the popup. */
+  await page.locator('[data-action=board-choose][data-card="526"]').click();
+  await page.locator('.cm-flow-card').waitFor();
+  ok(await page.locator('.cm-flow-card').isVisible(),'source card is visible in the action popup');
+  await page.locator('.cm-flow-inspect').click();await page.locator('#cm-dialog[open]').waitFor();
+  ok(await page.locator('#cm-dialog .cm-board-zoom').isVisible(),'source is available at inspection size in one press');
+  await page.locator('#cm-dialog [data-action=close]').last().click();
+  await page.locator('[data-action=board-flow-cancel]').click();
   await open();
-  const rail=await box(".cm-stage-rail"),dec=await box(D),opts=await box(`${D} > .cm-board-options`);
-  ok(opts.height>=120,`the combat choices keep at least 120px (${Math.round(opts.height)}px)`);
-  ok(dec.bottom<=rail.bottom+1&&dec.bottom<=768,`the question ends inside the visible drawer (${Math.round(dec.bottom)} of ${Math.round(rail.bottom)})`);
+  const dec=await box(D);ok(dec.bottom<=768&&dec.top>=0,'required combat popup fits viewport');
   const reachChoices=async()=>{
     for(const o of options){
-      const b=page.locator(`${D} [data-action=board-option][data-index="${o.index}"]`).first();await b.scrollIntoViewIfNeeded();
-      const facts=await b.evaluate(el=>{const r=el.getBoundingClientRect(),s=el.closest('.cm-board-options').getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;return {inside:r.top>=s.top-1&&r.bottom<=s.bottom+1&&r.bottom<=innerHeight,hit:el.contains(document.elementFromPoint(x,y)),label:el.textContent.trim()};});
-      ok(facts.inside&&facts.hit,`combat choice ${o.index} is visible and takes its native pointer (${JSON.stringify(facts)})`);
+      await press(`[data-action=board-flow-attacker][data-card="${o.cardId}"]`,'attacking creature');
+      await press(`[data-action=board-flow-choice][data-indices~="${o.index}"]`,`conditional defender ${o.index}`);
+      await press('[data-action=board-flow-confirm]','local attacker confirmation');
     }
   };
   await reachChoices();
-  await press(`${D} [data-action=board-option][data-index="8"]`,'the ninth combat choice');
-  ok(await page.locator(`${D} [data-action=board-option][data-index="8"][aria-pressed=true]`).count()===1,"the last choice, pressed, is picked");
+  eq(await page.locator('[data-action=board-flow-attacker][aria-pressed=true]').count(),3,'each creature has one defender after visiting all nine legal pairs');
+  eq(await page.locator('.cm-stage-module[data-module=actions]').count(),0,'required choices have no duplicate drawer module');
+  await open('priority');
   /* 3. */
   const g3='.cm-stage-rail [data-drag=modh][data-module-id="actions"]';
   ok(await page.locator(g3).count()===1,"a bar under the Actions module sizes its height");
   ok(await page.locator(".cm-stage-side [data-drag=modh]").count()>=3,"and one under every module in the right drawer");
   /* The module's own height is its content's, up to its cap, so it is measured in the same state each time: a fresh page, no choice picked
      (a picked choice adds the Confirm row, and the reload before the double click clears it). */
-  await open();
+  await open('priority');
   const body0=await box('.cm-stage-rail .cm-stage-module[data-module="actions"]>.cm-module-body');
   await dragBy(g3,0,400);
   const body1=await box('.cm-stage-rail .cm-stage-module[data-module="actions"]>.cm-module-body');
   near(body1.height,body0.height+400,4,"dragged down 400px, the Actions module is 400px taller");
-  await reachChoices();
-  const resized=await box(D);
-  ok(resized.bottom<=Math.min(768,(await box('.cm-stage-rail')).bottom)+1,'the resized combat decision retains its actual visible viewport budget');
+
   ok((await box(".cm-stage-rail")).scroll>(await box(".cm-stage-rail")).client,"the drawer scrolls to what is below it");
-  await open();
+  await open('priority');
   const body2=await box('.cm-stage-rail .cm-stage-module[data-module="actions"]>.cm-module-body');
   near(body2.height,body1.height,2,"the height is kept through a reload");
   await page.locator(g3).scrollIntoViewIfNeeded();await page.locator(g3).dblclick();await page.waitForTimeout(150);
@@ -135,5 +116,5 @@ try{
   await dragBy('.cm-stage-side [data-drag=modh][data-module-id="history"]',0,80);
   near((await box('.cm-stage-side .cm-stage-module[data-module="history"]>.cm-module-body')).height,h0.height+80,4,"a module in the right drawer, dragged, is that much taller");
   eq(errors,[],"no page errors");
-  console.log(`board-drawer-sizes: ${checks} checks passed — a priority offer stages the resizable card; all nine combat choices remain reachable; the card, each module's height and the right drawer's width are dragged by hand and kept.`);
+  console.log(`board-drawer-sizes: ${checks} checks passed — a priority offer opens its inspectable card; all nine conditional combat choices remain reachable; each module's height and the right drawer's width are dragged by hand and kept.`);
 }finally{await context.close();await close();}

@@ -22,7 +22,7 @@ let checks=0;
 const ok=(c,m)=>{assert.ok(c,m);checks++};
 const eq=(a,b,m)=>{assert.deepEqual(a,b,m);checks++};
 const view=structuredClone(sample);
-view.decision={id:"choose-cost:461",kind:"choice",title:"Everflowing Chalice: what to tap for it",mode:"one",min:1,max:1,options:[
+view.decision={sourceId:461,id:"choose-cost:461",kind:"choice",title:"Everflowing Chalice: what to tap for it",mode:"one",min:1,max:1,options:[
   {index:0,label:"Access Tunnel",cardId:459},{index:1,label:"Island",cardId:469},{index:2,label:"Command Tower",cardId:502}]};
 for(const id of [459,469,502])view.state.players[view.seat].zones.Battlefield.cards.find(c=>c.cardId===id).tapped=false;
 try{
@@ -37,7 +37,7 @@ try{
     await page.route(`${base}/api/tables**`,r=>r.fulfill({json:{table,now:Date.now()}}));
     await page.routeWebSocket(/\/api\/tables\/hoverfixture1\/connect$/,ws=>{ws.send(JSON.stringify({type:"view",view}));});
     await page.goto(`${base}/index.html#table?id=hoverfixture1`);await page.locator("#cm-board .cm-stage-top, #cm-board .cm-board-top").first().waitFor();
-    const desk=page.locator('.cm-stage-rail #cm-board-decision[data-choice-id="choose-cost:461"]');
+    const desk=page.locator('#cm-decision-slot #cm-board-decision[data-choice-id="choose-cost:461"]');
     await desk.waitFor({timeout:10000});
     const peeked=async()=>{await page.locator("#cm-board-peek .cm-bcard-name").waitFor({state:"attached",timeout:3000});return (await page.locator("#cm-board-peek .cm-bcard-name").textContent()).trim();};
     const away=async()=>{await page.mouse.move(2,450);await page.waitForFunction(()=>!document.getElementById("cm-board-peek"),null,{timeout:3000});};
@@ -48,35 +48,23 @@ try{
       click:async(o)=>{const at=await page.evaluate((id)=>{const el=document.querySelector(`.cm-mat .cm-bcard[data-card="${id}"]`);const r=el.getBoundingClientRect();for(let fy=.15;fy<.9;fy+=.1)for(let fx=.15;fx<.9;fx+=.1){const x=r.left+r.width*fx,y=r.top+r.height*fy,h=document.elementFromPoint(x,y);if(h&&h.closest(".cm-bcard")===el)return {x,y};}return null;},id);await page.mouse.click(at.x,at.y,o);}});
 
     /* 1. */
-    eq(await desk.locator(".cm-action-card .cm-bcard-name").textContent().then(t=>t.trim()),"Everflowing Chalice",`${mode}: the card asked about is read in the Actions desk`);
+    eq(await desk.locator("h2").textContent().then(t=>t.trim()),"Everflowing Chalice",`${mode}: the card asked about is read in the Actions desk`);
     eq(await page.locator("#cm-card-inspector").count(),0,`${mode}: no inspector opens on the right`);
-    /* 2. */
-    /* Whichever of these is on top in this view (in Table, Command Tower can lie under the other lands). */
-    const NAMES={502:"Command Tower",526:"Proft, Consulting Detective",545:"Faerie Formation",485:"Thrummingbird"};
-    const shown=[];
-    for(const id of [502,526,545,485]){
-      const top=await page.evaluate((id)=>[...document.querySelectorAll(`.cm-mat .cm-bcard[data-card="${id}"]`)].some(el=>{const r=el.getBoundingClientRect();for(let fy=.15;fy<.9;fy+=.1)for(let fx=.15;fx<.9;fx+=.1){const h=document.elementFromPoint(r.left+r.width*fx,r.top+r.height*fy);if(h&&h.closest(".cm-bcard")===el)return true;}return false;}),id);
-      if(!top)continue;
-      await away();await onTable(id).hover();shown.push(await peeked());
-    }
-    ok(shown.length>=2,`${mode}: two or more other cards on the table to hover (${shown.length})`);
-    eq(shown,[502,526,545,485].map(id=>NAMES[id]).filter(n=>shown.includes(n)),`${mode}: while Chalice's question is open, hovering any other card on the table pops it up (${shown.join(", ")})`);
-    const chalice=await page.evaluate(()=>[...document.querySelectorAll('.cm-mat .cm-bcard[data-card="461"]')].some(el=>{const r=el.getBoundingClientRect();for(let fy=.15;fy<.9;fy+=.1)for(let fx=.15;fx<.9;fx+=.1){const h=document.elementFromPoint(r.left+r.width*fx,r.top+r.height*fy);if(h&&h.closest(".cm-bcard")===el)return true;}return false;}));
-    if(chalice){await away();await onTable(461).hover();eq(await peeked(),"Everflowing Chalice",`${mode}: and Chalice itself`);}
+    /* The popup can cover the battlefield; its card references must remain readable without dismissing it. */
+    eq(await desk.locator('[data-action=board-flow-choice][data-peek-card]').count(),view.decision.options.length,`${mode}: every source choice exposes its exact card for preview`);
     /* 3. */
-    await away();await desk.locator('[data-action="board-option"][data-index="0"]').hover();
+    await away();await desk.locator('[data-action="board-flow-choice"][data-indices~="0"]').hover();
     eq(await peeked(),"Access Tunnel",`${mode}: hovering the option "Access Tunnel" pops that land up`);
     await away();
     ok(true,`${mode}: leaving it puts it away`);
-    await desk.locator('[data-action="board-option"][data-index="2"]').focus();
+    await desk.locator('[data-action="board-flow-choice"][data-indices~="2"]').focus();
     eq(await peeked(),"Command Tower",`${mode}: the keyboard's focus on an option shows its card too`);
     await page.locator("body").focus();await page.evaluate(()=>document.activeElement?.blur());
-    /* 4. */
-    /* A card's menu: a right click in 3D; in Table and Focus a click on the card's upper part (the hover's quick tab lies under its foot), at a point the browser says is the card's. A right click on a card of the flat mat does not open it (docs/ACTIVE.md, reported). */
-    await away();await onTable(526).click(mode==="full"?{button:"right"}:{});await page.locator("#cm-card-menu [data-action=board-card-menu-view]").click();
-    await page.locator("#cm-card-inspector").waitFor();
-    await away();await onTable(545).hover();
-    eq(await peeked(),"Faerie Formation",`${mode}: with Proft pinned by 🔍, another card (Faerie Formation) still pops up on a hover`);
+    /* A card remains readable without moving the action to another surface. */
+    await desk.locator('.cm-flow-inspect').click();await page.locator('#cm-dialog[open]').waitFor();
+    ok((await page.locator('#cm-dialog').textContent()).includes('Everflowing Chalice'),`${mode}: source inspection opens its actual card`);
+    await page.locator('#cm-dialog [data-action=close]').last().click();
+    eq(await page.locator('.cm-required-popup').count(),1,`${mode}: closing inspection returns to the same required sequence`);
     eq(errors,[],`${mode}: no page errors`);
     await context.close();
   }

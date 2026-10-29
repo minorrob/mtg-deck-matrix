@@ -41,37 +41,28 @@ await page.goto(`${base}/index.html#table?id=manafixture01`);await page.locator(
 const row=(scope)=>page.$$eval(`${scope} .cm-mana-row .cm-mana-tap`,bs=>bs.map(b=>{const r=b.getBoundingClientRect();return {label:b.getAttribute("aria-label"),words:b.innerText.trim(),symbols:b.querySelectorAll(".cm-mana :is(img,svg)").length,top:Math.round(r.top),w:r.width};}));
 try{
   const onTable=page.locator(`.cm-board-mat .cm-bcard[data-card="${land.cardId}"]`).first();
-  /* 1. Actions, after a click on the land. */
+  /* Mana abilities remain symbols in the popup, with one decision layer at a time. */
   await onTable.click();
-  await page.locator(".cm-stage-rail #cm-board-decision .cm-mana-row").waitFor();
-  let taps=await row(".cm-stage-rail #cm-board-decision");
-  eq(taps.map(t=>t.label),COLORS.map(c=>`Tap for mana: ${land.name} ${c}`),"in Actions the four mana abilities are four buttons, each named in full for a reader");
-  ok(taps.every(t=>t.words===""&&t.symbols===1),"each shows its mana symbol and no words");
-  ok(new Set(taps.map(t=>t.top)).size===1,`and the four sit in a single row (${taps.map(t=>t.top).join(", ")})`);
-  ok(taps.every(t=>t.w<=80),"each is a small button");
-  ok(await page.locator(".cm-stage-rail #cm-board-decision [data-action=board-option]",{hasText:"can't be blocked"}).count()===1,"the land's other ability stays a worded button");
-  const before=sent.filter(x=>x.type==="act").length;
-  await page.locator('.cm-stage-rail #cm-board-decision .cm-mana-tap[data-index="2"]').click();
-  eq(await page.locator('.cm-stage-rail #cm-board-decision .cm-mana-tap[data-index="2"]').getAttribute("aria-pressed"),"true","pressing {B} selects it, outlined");
-  eq(sent.filter(x=>x.type==="act").length,before,"and sends nothing yet");
-  await page.locator(".cm-stage-rail #cm-board-decision [data-action=board-confirm]").click();
-  eq(sent.filter(x=>x.type==="act").at(-1)?.indices,[2],"Confirm sends the {B} ability");
-  await page.keyboard.press("Escape");
-  /* 2. Card Preview, the land hovered. */
-  const v2=structuredClone(sample);v2.revision=++revision;v2.decision=decision();sock.send(JSON.stringify({type:"view",view:v2}));await page.waitForTimeout(200);
-  if(!await page.locator(".cm-stage-side.is-open").count()) await page.locator(".cm-stage-right").click();
-  await onTable.hover();
-  await page.locator("#cm-full-pick .cm-mana-row").waitFor({timeout:5000});
-  taps=await row("#cm-full-pick");
-  ok(taps.length===4&&new Set(taps.map(t=>t.top)).size===1&&taps.every(t=>t.words===""),"in Card Preview the same four symbols sit in one row under the picture");
-  const under=await page.$eval("#cm-full-pick",s=>s.querySelector(".cm-mana-row").getBoundingClientRect().top>=s.querySelector(".cm-bcard").getBoundingClientRect().bottom-1);
-  ok(under,"under the image");
-  /* 3. Not mana alone: words. */
-  const v3=structuredClone(sample);v3.revision=++revision;v3.decision=decision(["{W}","{U}","{B}","Pay 1 life: {G}"]);sock.send(JSON.stringify({type:"view",view:v3}));await page.waitForTimeout(200);
-  await page.mouse.move(5,5);await onTable.hover();
-  await page.locator("#cm-full-pick .cm-mana-row").waitFor({timeout:5000});
-  eq((await row("#cm-full-pick")).length,3,"a way that is more than mana alone is not in the row");
-  ok(await page.locator("#cm-full-pick [data-action=board-option]",{hasText:"Pay 1 life"}).count()===1,"and stays a worded button");
+  await page.locator('[data-action=board-flow-choice]',{hasText:'Tap for mana'}).click();
+  const colors=page.locator('[data-action=board-flow-choice]');
+  eq(await colors.count(),4,'four distinct mana outputs, separate from the other ability');
+  const symbols=await colors.evaluateAll(bs=>bs.map(b=>({words:b.innerText.trim(),symbols:b.querySelectorAll('.cm-mana :is(img,svg)').length})));
+  ok(symbols.every(t=>t.words===''&&t.symbols===1),'each output shows its real mana symbol');
+  const before=sent.filter(x=>x.type==='act').length;
+  await page.locator('[data-action=board-flow-choice][data-indices~="2"]').click();
+  eq(sent.filter(x=>x.type==='act').length,before,'choosing output sends nothing before confirmation');
+  await page.locator('[data-action=board-flow-confirm]').click();
+  eq(sent.filter(x=>x.type==='act').at(-1)?.indices,[2],'Confirm sends the original black-mana ability');
+  /* The source is inspectable, and a life cost is never reduced to its mana symbol alone. */
+  const v2=structuredClone(sample);v2.revision=++revision;v2.decision=decision();v2.decision.id+=':next';sock.send(JSON.stringify({type:'view',view:v2}));await page.waitForTimeout(200);
+  await onTable.click();await page.locator('.cm-flow-inspect').click();await page.locator('#cm-dialog[open]').waitFor();
+  ok((await page.locator('#cm-dialog').textContent()).includes(land.name),'source card can be read while keeping its action sequence');
+  await page.locator('#cm-dialog [data-action=close]').last().click();await page.locator('[data-action=board-flow-cancel]').click();
+  const v3=structuredClone(sample);v3.revision=++revision;v3.decision=decision(['{W}','{U}','{B}','Pay 1 life: {G}']);v3.decision.id+=':life';sock.send(JSON.stringify({type:'view',view:v3}));await page.waitForTimeout(200);
+  await onTable.click();await page.locator('[data-action=board-flow-choice]',{hasText:'Tap for mana'}).click();
+  const life=page.locator('[data-action=board-flow-choice]',{hasText:'Pay 1 life'});
+  eq(await life.count(),1,'life cost remains explicit alongside the mana choice');
+  eq(await life.locator('.cm-mana :is(img,svg)').count(),1,'life-cost option still renders the real mana symbol');
   eq(errors,[],"no page errors");
-  console.log(`board-mana-symbols: ${checks} checks passed — a land's mana abilities are one row of mana-symbol buttons, in Actions and in Card Preview, each named in full for a reader, staged by a press and sent by Confirm.`);
+  console.log(`board-mana-symbols: ${checks} checks passed — mana outputs use real symbols in a conditional popup, with source inspection, explicit life costs and exact-index confirmation.`);
 }finally{await context.close();await close();}

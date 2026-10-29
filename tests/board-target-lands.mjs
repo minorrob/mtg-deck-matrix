@@ -33,10 +33,10 @@ await page.route(`${base}/api/tables**`,r=>r.fulfill({json:{table,now:Date.now()
 await page.routeWebSocket(/\/api\/tables\/landsfixture1\/connect$/,ws=>{sock=ws;ws.send(JSON.stringify({type:"view",view:sample}));});
 await page.goto(`${base}/index.html#table?id=landsfixture1`);await page.locator("#cm-board .cm-stage-top, #cm-board .cm-board-top").first().waitFor();
 const show=async(decision)=>{const v=structuredClone(sample);v.revision=++revision;v.decision=decision;sock.send(JSON.stringify({type:"view",view:v}));await page.waitForTimeout(250);};
-const D=".cm-stage-rail #cm-board-decision";
-const read=()=>page.evaluate((D)=>{const d=document.querySelector(D),g=d.querySelector(".cm-board-lands-group"),words=(b)=>b.textContent.replace(/\s+/g," ").trim();
-  const before=[...d.querySelectorAll(".cm-board-options > [data-action^=board-option], .cm-board-options > .cm-board-same")].map(words);
-  return {before,group:!!g,open:g?.open??null,summary:g?words(g.querySelector("summary")):null,inside:g?[...g.querySelectorAll("[data-action^=board-option]")].map(words):[],last:g?g===d.querySelector(".cm-board-options").lastElementChild:null};},D);
+const D="#cm-decision-slot #cm-board-decision";
+const read=()=>page.evaluate((D)=>{const d=document.querySelector(D),g=d.querySelector(".cm-board-lands-group"),words=(b)=>{const copy=b.cloneNode(true);copy.querySelectorAll(".cm-sr-only").forEach(n=>n.remove());return copy.textContent.replace(/\s+/g," ").replace(/ · .*/," ").trim();};
+  const before=[...d.querySelectorAll(".cm-board-options [data-action^=board-option], .cm-board-options [data-action=board-flow-choice]")].filter(b=>!b.closest(".cm-board-lands-group")).map(words);
+  return {before,group:!!g,open:g?.open??null,summary:g?words(g.querySelector("summary")):null,inside:g?[...g.querySelectorAll("[data-action^=board-option], [data-action=board-flow-choice]")].map(words):[],last:g?g===d.querySelector(".cm-board-options").lastElementChild:null};},D);
 try{
   /* 1. */
   const mixed=[459,485,469,526,502,483,461];
@@ -50,9 +50,8 @@ try{
   ok((await read()).open,"a click opens it");
   await show({id:"choose-targets:900:0",kind:"targets",title:"Choose a target permanent",mode:"one",min:1,max:1,options:options(mixed)});
   ok((await read()).open,"and it stays open as the board redraws the same question");
-  await page.locator(`${D} .cm-board-lands-group [data-action^=board-option]`,{hasText:"Command Tower"}).click();
-  r=await read();
-  ok(r.open&&await page.locator(`${D} .cm-board-lands-group [aria-pressed=true]`).count()===1,"a land picked from it is shown picked, the group open");
+  await page.locator(`${D} .cm-board-lands-group [data-action=board-flow-choice]`,{hasText:"Command Tower"}).click();
+  ok((await page.locator(`${D} .cm-choice-review`).textContent()).includes("Command Tower"),"selected land is shown in confirmation");
   await show({id:"choose-targets:901:0",kind:"targets",title:"Choose another target permanent",mode:"one",min:1,max:1,options:options(mixed)});
   eq((await read()).open,false,"a new question starts with the lands shut again");
   /* 2. */

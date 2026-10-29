@@ -461,7 +461,7 @@ function costChoice(state, awaiting) {
   }
   /* Tapped for it (castTapPlans), with more than one way: which sources. */
   if (action.autoTap === true) {
-    const options = castTapPlans(state, player, action, TAP_CHOICES).map((plan, index) => ({index, label: tapWords(state, plan)}));
+    const options = castTapPlans(state, player, action, TAP_CHOICES).map((plan, index) => ({index, label: tapWords(state, plan), taps: plan.taps, payment: plan.payment}));
     for (const option of options) {
       const alike = options.filter((o) => o.label === option.label);
       if (alike.length > 1) alike.forEach((o, k) => { o.label = `${o.label} (${k + 1})`; });

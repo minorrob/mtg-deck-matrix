@@ -86,14 +86,15 @@ try {
     options:[{index:0,label:"Yes"},{index:1,label:"No"}]};
   publish({decision:required,state:{...current.state,stack:[{stackId:8001,cardId:8001,name:"Test spell",playerId:1,kind:"spell",stage:"waiting",targets:[]}]}});
   await tick(page);
-  assert.equal(await button(page).getAttribute("aria-pressed"),"true","stack and required choice preserve yield");
+  assert.equal(await control(page).count(),0,"required popup hides the optional yield control");
   assert.equal(incoming.filter(x=>x.type==="act").length,0,"no choice answered for the player");
-  await page.locator('[data-action=board-option][data-index="1"]').click();
-  await page.locator('[data-action=board-confirm]').click();
+  await page.locator('[data-action=board-flow-choice][data-indices~="1"]').click();
+  await page.locator('[data-action=board-flow-confirm]').click();
   await tick(page);
   assert.deepEqual(incoming.filter(x=>x.type==="act").at(-1).indices,[1],"the player's optional choice is sent");
   publish({decision:null});
   await tick(page);
+  assert.equal(await button(page).getAttribute("aria-pressed"),"true","yield policy survives the required choice");
   await hit(page);
   assert.deepEqual(incoming.filter(x=>x.type==="yield").at(-1),{type:"yield",on:false});
   assert.equal(await button(page).innerText(),"Stopping yield…");

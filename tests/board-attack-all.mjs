@@ -69,13 +69,14 @@ async function press(page, selector) {
   await page.waitForTimeout(150);
 }
 /* An option's own words: without its risk mark (☠ / ⊘, crankmagic-board.js attackRisk), which says what the attack risks. */
-const pickedAt = (page) => page.evaluate(() => [...document.querySelectorAll('#cm-board [data-action="board-option"][aria-pressed="true"]')].map((el) => {const c = el.cloneNode(true); c.querySelectorAll(".cm-risk").forEach((r) => r.remove()); return c.textContent.trim();}).sort());
+let currentOptions=[];
+const pickedAt=async page=>(await page.locator('[data-action=board-flow-attacker][aria-pressed=true]').evaluateAll(es=>es.map(e=>Number(e.dataset.index)))).map(i=>currentOptions.find(o=>o.index===i).label).sort();
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1;};
 try {
   for (const [width, height, mode] of [[1280, 720, "full"], [1280, 720, "table"], [1280, 720, "focus"], [390, 844, "focus"]]) {
     const where = `${mode} ${width}x${height}`;
-    const {view, others} = attackView();
+    const {view, others} = attackView();currentOptions=view.decision.options;
     const [maya, theo, ivy] = others;
     const {page, context, frames, errors} = await fixture(view, width, height, mode);
     /* In Full the question may sit in a drawer: open it where the board says it is asked. */
@@ -87,7 +88,9 @@ try {
     ok(JSON.stringify(buttons.map((t) => t.trim())) === JSON.stringify(others.map((p) => `All at ${p.name}`)), `${where}: one "All at" for each player the creatures may attack (${buttons.join(", ")})`);
     await press(page, `[data-action="board-attack-all"][data-defender="${theo.playerId}"]`);
     ok(JSON.stringify(await pickedAt(page)) === JSON.stringify([1, 2, 3].map((n) => `Goblin #${n} → ${theo.name}`)), `${where}: All at ${theo.name} picks every goblin at ${theo.name}`);
-    await press(page, `[data-action="board-option"][data-index="${2}"]`);
+    await press(page, `[data-action=board-flow-attacker][data-card="${view.decision.options[2].cardId}"]`);
+    await press(page,'[data-action=board-flow-choice][data-indices~="2"]');
+    await press(page,'[data-action=board-flow-confirm]');
     ok((await pickedAt(page)).includes(`Goblin #1 → ${ivy.name}`) && !(await pickedAt(page)).includes(`Goblin #1 → ${theo.name}`) && (await pickedAt(page)).length === 3,
       `${where}: one goblin turned on ${ivy.name} by its own option, the others still at ${theo.name}`);
     await press(page, `[data-action="board-attack-all"][data-defender="${maya.playerId}"]`);

@@ -91,12 +91,7 @@ async function press(page,sel){
 function innerWidthSafe(page){return page.viewportSize().width-5;}
 async function show(page,id){
   const active=page.locator('.cm-block-draft');
-  const drawer=page.locator('#cm-actions-drawer');
-  const open=await drawer.evaluate(el=>el.classList.contains('is-open'));
-  if(open && Number(await active.getAttribute('data-active-attacker'))===id)return;
-  if(open && await page.locator('#cm-board[data-phone]').count()) {
-    await page.locator('[data-action="board-stage-rail"]').click();await pause(page);
-  }
+  if(Number(await active.getAttribute('data-active-attacker'))===id)return;
   const control=page.locator(`[data-action="board-block-attacker"][data-attacker="${id}"]`);
   const row=page.locator('.cm-combat-groups');
   for(let n=0;n<20;n++){

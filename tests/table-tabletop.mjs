@@ -661,7 +661,7 @@ try {
         p.on("pageerror",e=>errors.push(e.message));
         p.on("websocket",ws=>ws.on("framesent",f=>sent.push(String(f.payload))));
         await p.goto(`${at}/index.html#table?id=tablepreview01`);
-        await p.waitForFunction(n=>document.querySelectorAll('.cm-stage-rail #cm-board-decision .cm-board-options>button').length===n,count);
+        await p.waitForFunction(n=>document.querySelectorAll('#cm-decision-slot #cm-board-decision .cm-board-options>button').length===n,count);
         const title='#cm-board-decision>h2', tally='#cm-board-decision .cm-board-decision-foot>.cm-muted', confirm='#cm-board-decision [data-action="board-confirm"]';
         for(const s of [title,tally,confirm]) assert.ok((await reach(p,s)).reached,`${where}: ${s} is on screen and takes the pointer`);
         const list=await p.evaluate(()=>{const o=document.querySelector('#cm-board-decision .cm-board-options'),r=o.getBoundingClientRect(),first=o.firstElementChild.getBoundingClientRect(),h=document.querySelector('#cm-board-decision>h2').getBoundingClientRect();
