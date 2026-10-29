@@ -17,6 +17,18 @@ Newest wave first. Each line names its command's result line, never a summary of
   caught, `missed: []`. G-1/G-2 now concern this fixed set; all accuracy/evidence requirements and the existing
   whole-directory ability gate remain. The least-played remaining appearances need not be loaded.
 - **Main at the start:** `39a45706`.
+- **Latest completed continuation:** scanned/pushed integration `8e7ddc83` contains W2 `469236c4`, W3 `58233f3d`,
+  W7 `a6d128e2` and V8 `08769d9a`. W7's 33-check repair is independently verified, including 16 cold chain/choice
+  cases with JSON reload; its 19 new, 22 original and seven moved legacy mutations are all caught.
+  Root reran the merged draw/destruction 19/60 mutations: both `missed: []`.
+  W4 `c3923102` is scanned/pushed as draft #922 and locally integrated at `d6165018`. Four appended completed-combat
+  scenarios pass all nine selected scenarios and prove five abilities on four existing cards. All four separately pass
+  held-out sentence calibration. Departed-source protection passes 26 checks and 12 mutations, including actual
+  Pyrohemia after reload; V8 independently confirmed five actual color/departure cases. No new final cards.
+  V8's explicit blocking policy has 166 checks; the strengthened proof classifier has 44 ability checks. Historical
+  6,079/11,636 ability coverage is **not current accepted coverage**: offer-only failures formerly earned credit.
+  Full strict coverage needs remeasurement. Current-main anchor audit is 50 inherited problems; the earlier 42 refers
+  to the pre-`d25bac19` source. No additional W4 changed-file anchor failures. G-3/G-7 remain red.
 - **October 29 continuation:** main advanced to `d25bac19` (Play UI #910). Root merged it without changing its UI,
   preserving both ACTIVE records and all test registrations, then scanned and pushed `f45d4420` to draft #912.
   W2's copied-division, joint-final-target and cancellation fixes through `469236c4` and W3's permission/actual
@@ -292,7 +304,7 @@ Fresh baseline on main `39a45706`, before engine changes:
    hooks in zones/stack/SBA while adding W3's real choice continuations. Re-run both sides' mutation proofs on conflicts.
 5. Regenerate generated card/candidate/coverage/catalog/inventory files once, as the procedure says. They deliberately
    remain out of the bounded writer commits; do not call the hand-written JSON proof a current table-bundle proof.
-6. Repair the remaining 42 inherited anchors without retargeting/weakening tests, repeat moved-anchor proofs after
+6. Repair the current 50 inherited/main anchor problems without retargeting/weakening tests, repeat moved-anchor proofs after
    integration, run every consolidated gate including strict ability coverage, then one Actions run. Main merge and
    staging remain gated; production/migrations/provider calls remain forbidden. Rob alone closes G-8.
 
@@ -302,11 +314,11 @@ Fresh baseline on main `39a45706`, before engine changes:
 | --- | --- | --- |
 | G-1 Included cards final | Full-pool baseline: 6,430 definitions | Rob's revised 95%-appearance target: 2,715/8,514 final, 5,799 undefined; scope gate exits 1. Full-pool undefined count is diagnostic. Unmet. |
 | G-2 Included candidates outstanding | 116 global (compiler, live); 100 in committed `candidates.json` | Scoped count awaits consolidated compile; 5,799 included names are not final. No scoped acceptance claimed. Unmet. |
-| G-3 `check-cards` | 6,430 definitions, 11,023 scenarios, 0 failed | Corrected initial code `508afa94`: 6,079/11,636 reached; 5,557 unreached, expected exit 1. Selected W4 additions prove 4/4 on 3 cards only. Strict consolidated coverage is mandatory; default/CI wiring remains open. Unmet. |
+| G-3 `check-cards` | 6,430 definitions, 11,023 scenarios, 0 failed | Initial `508afa94` 6,079/11,636 reached is historical: old offer-only credit is now rejected. Current full coverage must be remeasured. New selected W4 completed-combat witnesses prove 5/5 abilities on 4 cards only; zero clean-game exercise credit. Strict whole-directory coverage and default/CI wiring remain open. Unmet. |
 | G-4 Calibration failures | 4 of 4,165 (Blackblade Reforged, Contagion Clasp, Goblin Piledriver, Wayfarer's Bauble) | W4 `8e0f3a2f`: 4,165 held out, 4,165 pass, no denominator exclusions. Writer changes independently reviewed; all past loads and final integration remain unreviewed/unmeasured. Full G-4 unmet. |
 | G-5 Pool fuzz, clean of games | the harness has no pool mode yet; library 3 of 3, staging decks 1 of 1 clean | Initial 3/3 app-finished pool runs clean, of which 1 reached a winner; final integration and 5,000 games unmet. |
 | G-6 Final cards exercised in a clean game | not measured (no ledger yet) | Initial 131/6,430 final definitions exercised in 3 app-finished clean runs. Unmet. |
-| G-7 Gameplay-gap list open items | section 4: 21 open, 5 unsure; section 5: 10 open; section 7: 10 open; section 8: 10 rows open, 4 partial (`README.md`, "Open accuracy debt") | Debt fixes in progress. Main's 57 stale break anchors are named in `w0/preexisting-break-anchors.json`; root re-anchored/proved fifteen, leaving 42. Unmet. |
+| G-7 Gameplay-gap list open items | section 4: 21 open, 5 unsure; section 5: 10 open; section 7: 10 open; section 8: 10 rows open, 4 partial (`README.md`, "Open accuracy debt") | Debt fixes in progress. Root proved fifteen of the original 57 anchors; current-main changes bring the audit to 50 problems. No changed-file W4 anchor failures. Unmet. |
 | G-8 Rob's playtest sign-off | none | None; only Rob can close this gate. |
 
 ## Root's inherited-anchor repair

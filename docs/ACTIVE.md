@@ -23,6 +23,10 @@ W2 copy/target fixes and W3 permission/actual destruction consumers are integrat
 root independently passed W2 137, W3 56, actual zone-operation71 and replacement-step16 checks.
 W2 real pre-entry callers, W3 sacrifice/discard callers and W7 draw-instruction repairs remain active.
 V8 is building completed-combat witnesses and correcting offer-only ability-credit classification. No new final cards.
+Latest accepted bounded checkpoints through `8e7ddc83` are pushed. W4 `c3923102` (draft #922) is independently reviewed
+and locally merged at `d6165018`: four appended combat scenarios prove five selected abilities; departed-source protection
+has 26 checks/12 caught mutations and actual Pyrohemia/color-change evidence. The historical whole-directory ability
+count needs remeasurement under stricter offer rejection. Current-main anchor audit is 50 problems; no gate is green.
 RUN.md records exact checkpoints, diagnostics and restart seams; do not mark the integration ready on the legacy checker.
 
 ### Card-load coordination requests
