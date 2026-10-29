@@ -42,6 +42,20 @@ the registered browser98 again, with fresh screenshots under `load100/scratch/sn
 in Table, Focus and WebGL3D. Source/hash remain exact and all browser/server resources close. The scoped reveal,
 cast and held-draw behavior is verified; no deployment, full-layout or wave-zero gate completion is claimed.
 
+## Saved scenario evidence
+
+Clean selected baseline `ef1d2ba4` runs eight original scenarios, fails Banner's ambiguous three-Wastes tap and reaches
+two of eight abilities. Source `be1a2b89` changes only those three taps to explicit physical indices and adds one Snoop
+non-Goblin reveal/privacy scenario. Every original fixture, step, choice, expected creature-type list and final assertion
+is preserved. All nine now pass; four of eight abilities are reached. Two are runtime-only omission proofs with direct
+behavior failures: Snoop's actual public Library projection disappears, and Banner's Elf becomes1/1 instead of2/2.
+
+Snoop's cast permission/granted-ability static and Banner's entry replacement/mana ability remain unproved by these
+saved scenarios. Lost offers/question presence receive no execution credit; the selected checker correctly exits1.
+The full legacy card reader passes55 checks over all6,430 definitions/current scenarios; it does not establish strict
+G-3. Source/input hashes, full compressed diagnostic ledgers and the exact remaining four abilities are archived in
+`evidence/live-report-three-proof.json`. No saved card definition/rule module changes or new-card credit.
+
 ## Separate pool baseline finding
 
 One new pool seed on the same source finished in 35 turns with 73 person decisions, identical replay, zero AI

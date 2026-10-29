@@ -1,0 +1,243 @@
+{
+  "schema": "LiveReportedCardScenarioProof@1",
+  "status": "Selected diagnostic; four abilities still unproved; not canonical acceptance",
+  "originalScenarioAssertionsPreserved": true,
+  "bannerChanges": "Only the original three Wastes taps acquire explicit physical indices0/1/2",
+  "snoopChanges": "One additive native owner/opponent revealed non-Goblin top and other-library privacy scenario",
+  "runtimeRuleOrDefinitionChanges": 0,
+  "rawPrivacyScanPassed": true,
+  "privacyCategories": "same eight categories as local-ci.sh",
+  "roundtripsVerified": true,
+  "snapshots": {
+    "before": {
+      "source": {
+        "revision": "ef1d2ba4886a72a6c1e661b4e04ce0a74ec63bba",
+        "tree": "23cacbeba4df4a59e371b0dafd7e24b37d4bdac6",
+        "dirty": false,
+        "inputs": {
+          "scripts": "bdc8c032ae5cdbac0bbeee5e6f97ae6d44cdf50e690dfb584df0b8481566f008",
+          "scenarios": "3b079191583ba45d60ab63d41c8f3e5443f01e194d5a8aa8c980951a8c57b14b"
+        }
+      },
+      "scope": {
+        "directory": false,
+        "canonical": false,
+        "cardDirectory": null,
+        "selected": [
+          "Valakut Exploration",
+          "Patchwork Banner",
+          "Conspicuous Snoop"
+        ],
+        "cardRoot": "C:\\Users\\robmi\\CrankMagic\\worktrees\\load100\\w0-integrate\\game\\engine\\cards"
+      },
+      "measurement": {
+        "complete": true,
+        "counterfactual": true,
+        "choicePolicy": "explicit",
+        "definitions": 3,
+        "scenarios": 8,
+        "problems": 0,
+        "failed": 1
+      },
+      "summary": {
+        "final": 3,
+        "exercised": 0,
+        "neverExercised": [
+          "Conspicuous Snoop",
+          "Patchwork Banner",
+          "Valakut Exploration"
+        ],
+        "abilities": 8,
+        "reached": 2,
+        "scenarioReached": 2,
+        "counterfactualReached": 0,
+        "unreached": [
+          {
+            "card": "Conspicuous Snoop",
+            "path": "abilities[0]",
+            "kind": "static",
+            "reason": "no unambiguous application event observed"
+          },
+          {
+            "card": "Conspicuous Snoop",
+            "path": "abilities[1]",
+            "kind": "static",
+            "reason": "no unambiguous application event observed"
+          },
+          {
+            "card": "Conspicuous Snoop",
+            "path": "abilities[2]",
+            "kind": "static",
+            "reason": "no unambiguous application event observed"
+          },
+          {
+            "card": "Patchwork Banner",
+            "path": "abilities[0]",
+            "kind": "replacement",
+            "reason": "no unambiguous application event observed"
+          },
+          {
+            "card": "Patchwork Banner",
+            "path": "abilities[1]",
+            "kind": "static",
+            "reason": "no unambiguous application event observed"
+          },
+          {
+            "card": "Patchwork Banner",
+            "path": "abilities[2]",
+            "kind": "activated",
+            "reason": "no unambiguous application event observed"
+          }
+        ],
+        "scenarioUnreached": [
+          {
+            "card": "Conspicuous Snoop",
+            "path": "abilities[0]",
+            "kind": "static",
+            "reason": "no passing scenario has execution or runtime-removal behavior proof"
+          },
+          {
+            "card": "Conspicuous Snoop",
+            "path": "abilities[1]",
+            "kind": "static",
+            "reason": "no passing scenario has execution or runtime-removal behavior proof"
+          },
+          {
+            "card": "Conspicuous Snoop",
+            "path": "abilities[2]",
+            "kind": "static",
+            "reason": "no passing scenario has execution or runtime-removal behavior proof"
+          },
+          {
+            "card": "Patchwork Banner",
+            "path": "abilities[0]",
+            "kind": "replacement",
+            "reason": "no passing scenario has execution or runtime-removal behavior proof"
+          },
+          {
+            "card": "Patchwork Banner",
+            "path": "abilities[1]",
+            "kind": "static",
+            "reason": "no passing scenario has execution or runtime-removal behavior proof"
+          },
+          {
+            "card": "Patchwork Banner",
+            "path": "abilities[2]",
+            "kind": "activated",
+            "reason": "no passing scenario has execution or runtime-removal behavior proof"
+          }
+        ],
+        "complete": false,
+        "scenarioComplete": false
+      },
+      "archive": "live-report-three-before.json.gz",
+      "rawBytes": 17591,
+      "rawSha256": "539c3c826fb4188a50b0d40d86f30184d0de9c828d737721a78fff928924003e",
+      "gzipBytes": 2248,
+      "gzipSha256": "48bf7db258d32cc3938bcd3816b74c7c86a3888acefb42334b46c84f0db02f55"
+    },
+    "after": {
+      "source": {
+        "revision": "be1a2b8908c10d637778f9e5205a8490a4b256f1",
+        "tree": "10f5302a448de627d53b764995ac2baa1f512dd6",
+        "dirty": false,
+        "inputs": {
+          "scripts": "bdc8c032ae5cdbac0bbeee5e6f97ae6d44cdf50e690dfb584df0b8481566f008",
+          "scenarios": "9321e2922cd6773cbd139c9d8a4248bfa99c079e4f674175d4b0b076c05015c1"
+        }
+      },
+      "scope": {
+        "directory": false,
+        "canonical": false,
+        "cardDirectory": null,
+        "selected": [
+          "Valakut Exploration",
+          "Patchwork Banner",
+          "Conspicuous Snoop"
+        ],
+        "cardRoot": "C:\\Users\\robmi\\CrankMagic\\worktrees\\load100\\w0-integrate\\game\\engine\\cards"
+      },
+      "measurement": {
+        "complete": true,
+        "counterfactual": true,
+        "choicePolicy": "explicit",
+        "definitions": 3,
+        "scenarios": 9,
+        "problems": 0,
+        "failed": 0
+      },
+      "summary": {
+        "final": 3,
+        "exercised": 0,
+        "neverExercised": [
+          "Conspicuous Snoop",
+          "Patchwork Banner",
+          "Valakut Exploration"
+        ],
+        "abilities": 8,
+        "reached": 4,
+        "scenarioReached": 4,
+        "counterfactualReached": 2,
+        "unreached": [
+          {
+            "card": "Conspicuous Snoop",
+            "path": "abilities[1]",
+            "kind": "static",
+            "reason": "no unambiguous application event observed"
+          },
+          {
+            "card": "Conspicuous Snoop",
+            "path": "abilities[2]",
+            "kind": "static",
+            "reason": "no unambiguous application event observed"
+          },
+          {
+            "card": "Patchwork Banner",
+            "path": "abilities[0]",
+            "kind": "replacement",
+            "reason": "no unambiguous application event observed"
+          },
+          {
+            "card": "Patchwork Banner",
+            "path": "abilities[2]",
+            "kind": "activated",
+            "reason": "no unambiguous application event observed"
+          }
+        ],
+        "scenarioUnreached": [
+          {
+            "card": "Conspicuous Snoop",
+            "path": "abilities[1]",
+            "kind": "static",
+            "reason": "no passing scenario has execution or runtime-removal behavior proof"
+          },
+          {
+            "card": "Conspicuous Snoop",
+            "path": "abilities[2]",
+            "kind": "static",
+            "reason": "no passing scenario has execution or runtime-removal behavior proof"
+          },
+          {
+            "card": "Patchwork Banner",
+            "path": "abilities[0]",
+            "kind": "replacement",
+            "reason": "no passing scenario has execution or runtime-removal behavior proof"
+          },
+          {
+            "card": "Patchwork Banner",
+            "path": "abilities[2]",
+            "kind": "activated",
+            "reason": "no passing scenario has execution or runtime-removal behavior proof"
+          }
+        ],
+        "complete": false,
+        "scenarioComplete": false
+      },
+      "archive": "live-report-three-after.json.gz",
+      "rawBytes": 23858,
+      "rawSha256": "b06196aa01faae54863e5a999edc06568010025c6d994147bd9b8a3d009e1bcd",
+      "gzipBytes": 4162,
+      "gzipSha256": "a6db44fcf1400f5868a8c86dd354eb3a3b029767f344d500154dc5ca2b5c830d"
+    }
+  }
+}
