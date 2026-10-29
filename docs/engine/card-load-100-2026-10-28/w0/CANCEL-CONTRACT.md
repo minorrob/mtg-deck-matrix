@@ -35,4 +35,7 @@ on the input tape and replays deterministically. It appends no game journal even
 
 Proof commands: `node tests/engine-cancel-decision.mjs`, `node tests/room-cancel-decision.mjs`, and
 `python game/tools/batch/breaks.py game/tools/batch/breaks-playtest-cancel.py`. UI controls remain with the UI owner;
-this engine contract does not mark shared ROB-205 Done. ROB-209 mode/target/payment staging is separate follow-up.
+this engine contract does not mark shared ROB-205 Done. ROB-209 priority proposals and committed native refinements are
+documented separately in MODAL-CONTRACT.md and COMMITTED-MODAL-CONTRACT.md. A committed child uses
+`kind: "close-refinement"`, `returnsPriority: false`: Cancel closes only its private selections and exposes the still-live
+mandatory native question with guidance. It cannot undo costs, information, RNG or a committed effect prefix.

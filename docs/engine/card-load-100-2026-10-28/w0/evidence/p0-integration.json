@@ -1,0 +1,14 @@
+{
+  "schema": "CommittedRefinementIntegration@1",
+  "roleHead": "176b14ed7b18fd7d82024af754a19903b00e4db3",
+  "integrationSource": "56965896676dbee01f8e1f7247ce439cc54ca6d6",
+  "runtimeByteIdenticalToRoleHead": true,
+  "roomSha256": "ca0e2119a742b279e399449de0f447988de2e99a37ffe79a06837774de19375d",
+  "roleCausalControls": {"committed": 54, "originalCast": 19, "originalActivation": 13, "restoreCursor": 1, "missed": []},
+  "rootAffectedReaders": {"engine-controller": 66, "engine-refinement-controller": 68, "engine-committed-refinement": 60, "room-committed-refinement": 201, "room-effect-play-refresh": 45, "room-effect-play-version": 30, "room-restore-cursor": 31, "engine-effect-play-refresh": 70, "engine-cancel-decision": 63, "room-cancel-decision": 53, "fuzz-person-blocks": 1189, "room-playtest-snoop": "passed"},
+  "metadata": {"nodeSuites": 708, "dataArtifacts": 60, "dataMB": 80.9, "assetVersions": 136, "featureWiring": 131, "integrity": "passed", "frozenScope": "passed"},
+  "browser": {"productionChecks": 98, "screenshotsCaptured": 12, "screenshotsInspected": ["snoop-table-held-owner.png", "snoop-focus-cast-menu.png", "snoop-full-held-opponent.png", "snoop-full-source-removed.png", "snoop-full-held-owner.png", "snoop-full-cast-menu.png"], "directory": "worktrees/load100/scratch/snoop-root-p0-integration-shots", "actualWebGLRequiredBothFullContexts": true, "boardSha256": "259a97f06834f81fbe0c8118a078e2a935265a8a6a7404fa0009381baf556cb6", "remainingNodeOrHeadlessShell": 0, "limitations": ["Existing other-field clipping/occlusion in3D", "Existing footer below900px board area", "No full-layout acceptance"]},
+  "movedAnchors": {"spec": "game/tools/batch/breaks-load100-p0-anchors.py", "originalReaderUnionsRetained": true, "baselineSuites": 4, "caught": ["the seat's view keeps the engine's words", "room omits desk facts", "an answer sent again taken as a new one", "a view carrying the change before it too"], "missed": []},
+  "staticAudit": {"files": 255, "breaks": 4675, "remainingUIProblems": 33, "engineProblems": 0, "fullAuditExit": 1},
+  "acceptance": "Bounded integration only; full canonical/Actions/games/staging/UI/current-all-route and old-live migration gates remain open"
+}

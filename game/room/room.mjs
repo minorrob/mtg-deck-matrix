@@ -84,6 +84,7 @@
  */
 import {createState, addObject, shownName, shownFaceUp} from "../engine/state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../engine/rules/turn.mjs";
+import {refreshEffectPlay} from "../engine/script/effects/asking.mjs";
 import {legalActions, applyAction, nothingToDo, whyNot, escapeWays, flashbackCost, tappersInWords, castTapPlans, tapWords, manaSources} from "../engine/rules/actions.mjs";
 import {paymentWords} from "../engine/rules/mana.mjs";
 import {beforeTap, tapTaken, untappable, untapTaken} from "../engine/rules/untap-mana.mjs";
@@ -109,7 +110,8 @@ import {addToHistory} from "./history.mjs";
 import {tableEvent, eventsFor, keep, EVENTS_SCHEMA} from "./events.mjs";
 import {endingOf} from "./ending.mjs";
 import {describeDecision} from "./decision.mjs";
-import {beginCastDraft,beginActionDraft,offerCastDraft,castDraftChoice,castDraftSignature,answerCastDraft} from "./cast-stages.mjs";
+import {castEntryFor,beginCastDraft,beginActionDraft,offerCastDraft,castDraftChoice,castDraftSignature,answerCastDraft} from "./cast-stages.mjs";
+import {refinementEntry,beginRefinement,refinementChoice,answerRefinement} from "./decision-refinement.mjs";
 
 export const ROOM_PROTOCOL = 1;
 export const ROOM_SCHEMA = "CrankRoom@1";
@@ -523,6 +525,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
   const facts = factsFrom(look);
   let seats, state, rng, journal, controller, pilots, pendingSeat = null, pendingActions = null, saved = 0;
   let castDraft = null;
+  let refinement = null, refinementNotice = null;
   const draftOptions = {describeActions: (seat, actions) => offerDetails(state, seat, actions)};
   /* Accepted actions by id, with the seat that sent them: a retry is answered from here, and never reaches
      another seat's question. The newest RECEIPTS are kept, which is ample for a client's retries. */
@@ -667,16 +670,23 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
      could not go on, and that is thrown as before. */
   function answerForPilot(seat, choice, a) {
     try {
-      return resolveAwaiting(state, a.indices, a.amounts, rng, a);
+      return resolveAwaiting(state, a.indices, a.amounts, rng, {...a, choiceId: choice.id});
     } catch (error) {
       note(`${seats[seat].name}'s answer to "${choice.title}" was refused: ${error.message}. The least answer was given instead.`);
       refusals.total += 1;
       if (refusals.first.length < REFUSALS_SAID) refusals.first.push({turn: state.turn, seatId: seats[seat].seatId, question: choice.title, reason: error.message});
       const least = leastAnswer(choice);
-      return resolveAwaiting(state, least.indices, least.amounts, rng, least);
+      return resolveAwaiting(state, least.indices, least.amounts, rng, {...least, choiceId: choice.id});
     }
   }
 
+  function refreshNativePlay() {
+    if(!refreshEffectPlay(state).changed)return false;
+    /* Authoritative external-fact reconciliation only. Private steps never refresh or write an old native question. */
+    refinement=null;refinementNotice=null;
+    if(controller.pending)withdraw();
+    return true;
+  }
   function drive() {
     continuing = false;
     for (let steps = 0; ; steps += 1) {
@@ -685,7 +695,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         playBack = finishPlay(state, playBack, rng.checkpoint());
         if (!playBack && previous.autoPass) castBy = previous.player;
       }
-      if (finished()) {castDraft = null; pendingSeat = null; pendingActions = null; driven = 0; return;}
+      if (finished()) {castDraft = null; refinement = null; refinementNotice = null; pendingSeat = null; pendingActions = null; driven = 0; return;}
       if (driven >= DRIVE_LIMIT) throw new RoomError(500, "The game stopped moving: the engine took too many steps without a decision. Nothing further was applied.");
       if (steps >= slice) {continuing = true; pendingSeat = null; pendingActions = null; return;}
       driven += 1;
@@ -711,6 +721,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         }
       }
       if (state.awaiting) {
+        refreshNativePlay();
         const seat = state.awaiting.player, choice = awaitingChoice(state);
         if (seats[seat].pilot === "house" || leaving.includes(seat)) {
           const seen = pilotView(seat);
@@ -735,12 +746,16 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
            first of its kind is asked, saying the answer will go for the rest. Refused this time, it is asked. */
         const run = standing[seat];
         if (run) {
-          const key = questionKey(choice), given = run.answers?.[key];
+          const key = questionKey(choice);let given = run.answers?.[key];
+          if(given&&state.awaiting.kind==="effect-choice"&&state.awaiting.effect==="play"&&
+            (given.choiceId!==choice.id||given.questionSignature!==hashState(choice))){delete run.answers[key];given=null;}
           if (given) {
             try {write(resolveAwaiting(state, given.indices, given.amounts, rng, given)); step.acted = true; driven = 0; continue;}
             catch {delete run.answers[key];}
           }
           run.asking = key;
+          run.askingBinding = state.awaiting.kind==="effect-choice"&&state.awaiting.effect==="play"
+            ? {choiceId:choice.id,questionSignature:hashState(choice)} : null;
           choice.forRun = true;
         }
         controller.offer(choice); pendingSeat = seat; pendingActions = null; driven = 0; return;
@@ -820,9 +835,59 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     controller = createController({...point, pending: null, answered: null, revision: point.revision + 1});
   }
   function withdraw() {
+    refinement = null; refinementNotice = null;
     const point = controller.checkpoint();
     controller = createController({...point, pending: null, answered: null, revision: point.revision + 1});
     pendingSeat = null; pendingActions = null;
+  }
+  const refines = answer => Boolean(refinement) || (answer.staged === true && Boolean(state.awaiting) && !pendingActions && !castDraft);
+  function refinementRequestChoice(answer) {
+    if(refinement)return refinementChoice(state,controller.pending,refinement);
+    const pending=controller.pending;
+    /* Validate availability before accepting a child input. This object is private references only, not a saved question. */
+    beginRefinement(state,pending,answer.indices?.[0],"availability-check");
+    return {...pending,refinement:{schema:"CrankDecisionRefinement@1",originalChoiceId:pending.id,originalSignature:hashState(pending),canBack:false}};
+  }
+  function refineWith(seat,answer) {
+    if(!refinement){
+      refinement=beginRefinement(state,controller.pending,answer.indices?.[0],`${matchId}/refine:${tapeN}/${controller.pending.id}`);
+      refinementNotice=null;return;
+    }
+    const pending=controller.pending,result=answerRefinement(state,pending,refinement,answer);
+    refinement=result.draft;
+    if(result.closed){
+      refinementNotice={originalChoiceId:pending.id,originalSignature:hashState(pending),guidance:"Private selections closed. The original native choice is still pending; complete it to continue. No priority was returned."};
+      return;
+    }
+    if(result.nativeAnswer){
+      const problem=controller.check({choiceId:pending.id,indices:result.nativeAnswer.indices});
+      if(problem)throw new RoomError(422,problem,{refused:true});
+      refinementNotice=null;withdrawKeeping();
+      answerWith(seat,result.nativeAnswer,pending.id);
+    }
+  }
+  function visibleDecision(projected) {
+    if(refinement){
+      try{return refinementChoice(state,controller.pending,refinement);}
+      catch(error){if(!error.refinementExpired&&!error.refinementUnavailable)throw error;}
+    }
+    const pending=controller.pending;
+    const described=describeDecision(state,combatWords(state,structuredClone(pending)),pendingActions,projected);
+    if(!described)return described;
+    const top=state.awaiting?.kind==="trigger-targets"?refinementEntry(state,pending):null;
+    const seen=new Map();
+    const options=described.options.map(option=>{
+      if(top)return {...option,refinementStages:top};
+      const action=state.awaiting?.effect==="play"?state.awaiting.choices?.[option.index]:null;
+      if(!action?.modes)return option;
+      const key=castEntryFor(action).actionId;
+      if(!seen.has(key))seen.set(key,refinementEntry(state,pending,option.index));
+      const entry=seen.get(key);return entry?{...option,refinementStages:entry}:option;
+    });
+    const notice=refinementNotice?.originalChoiceId===pending?.id&&refinementNotice.originalSignature===hashState(pending)?refinementNotice.guidance:null;
+    return {...described,options,...(top?{refinementStages:top}:{}),...(notice?{guidance:notice}:{}),
+      ...(refinement?{guidance:"The private selection expired. Reopen the table to review the live native choice."}:{}),
+      ...(state.awaiting?.effect==="copySpell"?{modeSelection:"locked"}:{})};
   }
   /* A person's answer applied: a priority action by its index, or the awaited decision resolved. Shared by `act`
      and by a replay of the tape, so the two cannot drift apart.
@@ -859,8 +924,9 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         /* Asked in a run they let resolve: the answer goes for the same question in the rest of it. */
         const run = standing[seat];
         if (run?.asking) {
-          run.answers = {...run.answers, [run.asking]: {indices: answer.indices ?? [], ...(answer.amounts ? {amounts: answer.amounts} : {}), ...(answer.value !== undefined ? {value: answer.value} : {})}};
+          run.answers = {...run.answers, [run.asking]: {indices: answer.indices ?? [], ...(answer.amounts ? {amounts: answer.amounts} : {}), ...(answer.value !== undefined ? {value: answer.value} : {}), ...(run.askingBinding??{})}};
           delete run.asking;
+          delete run.askingBinding;
         }
       }
     } catch (error) {
@@ -904,10 +970,11 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     pilotPicks = record.pilotPicks === true;
     pilotProvocation = record.pilotProvocation === true;
     castDraft = record.castDraft ?? null;
+    refinement = record.refinement ?? null; refinementNotice = record.refinementNotice ?? null;
     state = structuredClone(point.state);
     rng = createRng(point.seed, point.rng);
     journal = createJournal({matchId, seed: point.seed}, point);
-    nextSeq = point.sequence;
+    nextSeq = point.sequence + 1;
     controller = createController(record.controller);
     matchSeed = point.seed;
     pilots = seats.map((s, seat) => (s.pilot === "house" ? pilotMade(seat) : null));
@@ -1019,7 +1086,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     const point = journal.checkpoint(state, rng.checkpoint());
     await store.saveCheckpoint(point);
     await store.pruneCheckpoints();
-    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, ...(outs.length ? {outs} : {}), history, refusals, ...(castDraft ? {castDraft} : {}), ...(pilotProvocation ? {pilotProvocation: true} : {}), ...(pilotCombatMemory?.lastEvent > 0 ? {pilotCombatMemory} : {}), ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(undoLastPlay ? {undoLastPlay, playBack: playBack !== null} : {}), ...(resultRecords ? {resultRecords: true} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(blocksNone ? {blocksNone} : {}), ...(landAnyStep ? {landAnyStep} : {}), ...(takeBackLand ? {takeBackLand, landBack: landBack !== null} : {}), ...(askAimed ? {askAimed} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {}), ...(tableEvents.length ? {events: tableEvents, eventsMark, eventsFloor} : {}), ...(seated ? {candidates: true} : {}), ...(pilotPicks ? {pilotPicks: true} : {})}));
+    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, ...(outs.length ? {outs} : {}), history, refusals, ...(castDraft ? {castDraft} : {}), ...(refinement ? {refinement} : {}), ...(refinementNotice ? {refinementNotice} : {}), ...(pilotProvocation ? {pilotProvocation: true} : {}), ...(pilotCombatMemory?.lastEvent > 0 ? {pilotCombatMemory} : {}), ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(undoLastPlay ? {undoLastPlay, playBack: playBack !== null} : {}), ...(resultRecords ? {resultRecords: true} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(blocksNone ? {blocksNone} : {}), ...(landAnyStep ? {landAnyStep} : {}), ...(takeBackLand ? {takeBackLand, landBack: landBack !== null} : {}), ...(askAimed ? {askAimed} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {}), ...(tableEvents.length ? {events: tableEvents, eventsMark, eventsFloor} : {}), ...(seated ? {candidates: true} : {}), ...(pilotPicks ? {pilotPicks: true} : {})}));
   }
 
   const api = {
@@ -1091,11 +1158,20 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
 
     async open() {
       await restore();
+      if(refreshNativePlay()){drive();await persist();}
       if (castDraft) {
         let changed = false;
         try {const choice = castDraftChoice(state, castDraft, draftOptions); changed = !controller.pending || controller.pending.id !== choice.id || castDraftSignature(choice) !== castDraft.offeredSignature;}
         catch (error) {if (!error.castDraftExpired) throw error; castDraft = null; changed = true;}
         if (changed) {withdraw(); drive(); await persist();}
+      }
+      if(refinement){
+        try{refinementChoice(state,controller.pending,refinement);}
+        catch(error){
+          if(!error.refinementExpired&&!error.refinementUnavailable)throw error;
+          /* Rebuild only from the CURRENT native awaiting state. No saved question is ever written back. */
+          withdraw();drive();await persist();
+        }
       }
       return api;
     },
@@ -1124,7 +1200,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         departures: structuredClone(departures),
         seats: api.seats,
         waitingOn: pendingSeat === null ? null : seats[pendingSeat].seatId,
-        decision: mine ? describeDecision(state, combatWords(state, structuredClone(controller.pending)), pendingActions, projected) : null,
+        decision: mine ? visibleDecision(projected) : null,
         state: projected,
         /* What this seat's permanents could tap for (actions.mjs, manaSources): the board's Mana Pool. */
         manaSources: deriving(state, () => manaSources(state, seat)),
@@ -1207,7 +1283,16 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       const seat = seatIndex(entry.seat);
       if (seat < 0 || pendingSeat !== seat) throw new RoomError(409, `The tape parts from the game at entry ${entry.n}: it answers for ${entry.seat}, and the game is waiting on ${pendingSeat === null ? "no one" : seats[pendingSeat].seatId}.`);
       const decisionId = controller.pending?.id ?? null;
+      if(refines(entry.answer)){
+        const input=entry.refinementInput;
+        if(input!==undefined&&(input?.schema!=="CrankPrivateRefinementInput@1"||input.actor!==seat))throw new RoomError(409,"The private replay input has the wrong server actor or schema.");
+        const raw=input?.request??entry.answer,replay=input?{rawRequest:raw,canonicalAnswer:entry.answer,actor:input.actor}:null;
+        const accepted=controller.answerRefinement(()=>refinementRequestChoice(raw),{...raw,revision:controller.revision},seat,replay);
+        if(!accepted.changed)throw new RoomError(409,"The refinement tape repeats an already accepted input.");
+        begin();tape({kind:"answer",seat:entry.seat,answer:entry.answer,...(input?{refinementInput:structuredClone(input)}:{})});refineWith(seat,accepted.answer);await persist();return api;
+      }
       begin();
+      refinementNotice=null;
       withdrawKeeping();
       tape({kind: "answer", seat: entry.seat, answer: entry.answer});
       answerWith(seat, entry.answer, decisionId);
@@ -1328,7 +1413,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         const chosen = pilot.choose(seen, pendingActions);
         return {indices: [Math.max(0, pendingActions.indexOf(chosen))]};
       }
-      const given = pilot.answer(seen, castDraft ? castDraftChoice(state, castDraft, draftOptions) : awaitingChoice(state));
+      const given = pilot.answer(seen, refinement ? refinementChoice(state,controller.pending,refinement) : castDraft ? castDraftChoice(state, castDraft, draftOptions) : awaitingChoice(state));
       return {indices: given.indices ?? [], ...(given.amounts ? {amounts: given.amounts} : {}), ...(given.value !== undefined ? {value: given.value} : {}), ...(given.cancel ? {cancel: true} : {})};
     },
 
@@ -1359,9 +1444,17 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     check(seatId, {choiceId, indices} = {}) {
       const seat = seatIndex(seatId);
       if (seat < 0) throw new RoomError(403, "That seat is not at this table.");
-      const pending = controller.pending;
+      let pending = controller.pending;
+      if(refinement){
+        try{pending=refinementChoice(state,controller.pending,refinement);}
+        catch(error){if(!error.refinementExpired&&!error.refinementUnavailable)throw error;return {ok:false,open:false,reasons:[error.message]};}
+      }
       if (finished() || pendingSeat !== seat || !pending || pending.id !== choiceId)
         return {ok: false, open: false, reasons: ["That question is no longer open. Answer the one your view shows now."]};
+      if(refinement){
+        try{answerRefinement(state,controller.pending,structuredClone(refinement),{indices});return {ok:true,open:true,reasons:[]};}
+        catch(error){return {ok:false,open:true,reasons:[error.message]};}
+      }
       if (castDraft) {
         try {answerCastDraft(state, structuredClone(castDraft), {indices}, draftOptions); return {ok: true, open: true, reasons: []};}
         catch (error) {return {ok: false, open: true, reasons: [error.message]};}
@@ -1382,7 +1475,20 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         if (known.seatId !== seatId || known.body !== body) throw new RoomError(409, "Action id was reused with different content");
         return {receipt: known.receipt, changed: false};
       }
+      try{const cached=controller.refinementReceipt(request,seat);if(cached)return {receipt:cached,changed:false};}
+      catch(error){throw new RoomError(409,error.message);}
       if (pendingSeat !== seat) throw new RoomError(409, "It is not your decision.");
+      if(refines(request)){
+        let accepted;
+        try{accepted=controller.answerRefinement(()=>refinementRequestChoice(request),request,seat);}
+        catch(error){throw new RoomError(/Invalid action id/.test(error.message)?400:409,error.message);}
+        if(!accepted.changed)return {receipt:accepted.receipt,changed:false};
+        receipts=[...receipts,{actionId,seatId,body,receipt:accepted.receipt}].slice(-RECEIPTS);
+        begin();tape({kind:"answer",seat:seatId,answer:accepted.answer,
+          refinementInput:{schema:"CrankPrivateRefinementInput@1",actor:seat,request:structuredClone(request)}});
+        try{refineWith(seat,accepted.answer);}catch(error){throw await undone(error);}
+        await persist();return {receipt:accepted.receipt,changed:true};
+      }
       let receipt;
       const before = controller.revision, decisionId = controller.pending?.id ?? null;
       try {receipt = controller.answer(request);}
@@ -1390,6 +1496,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       if (controller.revision === before) return {receipt, changed: false};  /* a retry older than this room's receipts */
       receipts = [...receipts, {actionId, seatId, body, receipt}].slice(-RECEIPTS);
       const answer = controller.take();
+      refinementNotice=null;
       begin();
       tape({kind: "answer", seat: seatId, answer});
       /* Refused by the rules, or failed in the play after it: undone -- no receipt, no tape entry, the same question still
@@ -1402,5 +1509,11 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
   return api;
 }
 
-export const startRoom = ({storage, matchId, cards = basicCards, candidates, pod, seed, pilot, slice}) => roomOn(storage, matchId, cards, pilot, slice, candidates).start(pod, seed);
+/* Live starts always use the current native choice contract; a client/pod cannot opt out. */
+export const startRoom = ({storage, matchId, cards = basicCards, candidates, pod, seed, pilot, slice}) => roomOn(storage, matchId, cards, pilot, slice, candidates).start({...pod,effectPlayVersion:1}, seed);
+/* Trusted server-only tape entry point. Absence is historical state shape, not a live-game option or a zero field. */
+export const startRoomFromTape = ({storage, matchId, cards = basicCards, candidates, pod, seed, pilot, slice}) => {
+  if(pod?.effectPlayVersion!==undefined&&pod.effectPlayVersion!==1)throw new RoomError(400,"Unsupported saved effect-play version. Use this match's original supported engine version.");
+  return roomOn(storage, matchId, cards, pilot, slice, candidates).start(pod, seed);
+};
 export const openRoom = ({storage, matchId, cards = basicCards, candidates, pilot, slice}) => roomOn(storage, matchId, cards, pilot, slice, candidates).open();

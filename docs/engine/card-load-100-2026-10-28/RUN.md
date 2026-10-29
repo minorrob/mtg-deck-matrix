@@ -5,6 +5,48 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Current-main Table-menu merge, `1a16a935`:** main advanced to `494d3fa9` (#952/ROB-220) during the required
+  pre-push scan of `728193a2`. That scan correctly stops for merge conflicts; no credit is taken. Root merges main
+  `--no-ff`, preserves its new menu/CSS/test registrations and the two approved Snoop lines. Only README count and
+  generated asset references/manifest conflict; the registry's `bumpText` helper and `asset-versions --update` generate
+  board168/service-worker725/app742, preserving stageCSS175. README actual709. Against current main, board differs
+  by exactly the two approved Snoop lines; stageCSS is identical. Engine/room bytes remain identical to the proved
+  `56965896` assembly. On this actual combined source, Snoop browser98 and new Table-menu25 pass; twelve fresh
+  screenshots are captured under `scratch/snoop-root-main494-shots` and four representative whole-screen states are
+  inspected. Existing clipping/footer limits remain explicit, no full-layout claim. No Node/headless-shell survives.
+  Board SHA `a63f67ae345590eedf0b79b281022ba7b546e5ef56a6239e328a75abcb03fdb6`.
+  Assets136/service-worker9/wiring131/integrity/frozen-scope pass; inventory unchanged60artifacts/80.9MB. Static audit
+  remains255files/4,675breaks/33 inherited UI problems, zero engine targets. Evidence: `w0/evidence/main494-integration.json`.
+  This clean dependency now includes P0 #951 for W5's historical/new-live receipt proofs. Exact fresh HEAD0 scan/push
+  is still required. All wave0/card-load gates remain unchanged; no new cards, final loading, main/staging release.
+- **P0 committed refinement integrated at `56965896`:** clean/scanned/pushed #951 `176b14ed` is merged `--no-ff`.
+  Its runtime remains byte-identical across this merge: live native question preserved through private mode/target
+  child choices, mandatory parent stays pending on child Cancel, actual native final handler runs once, and raw accepted
+  input retains exact actor/payload identity after full tape replay/cache expiry. New live/table games force epoch1;
+  trusted historical tapes preserve absent fields and original state/journal hashes. W5 effect-paid costs, old-live
+  migration, counted-route/UI consumption and full card-load acceptance remain open. The role's original unions pass
+  with54+19+13+1 caught controls. Root independently reruns controller66/refinement68/native60/room201/refresh-room45/
+  epoch-room30/cursor31/nativeAPI70/Cancel63+53/preflight1189/Snoop-room; all pass. README actual708. Inventory remains
+  unchanged60artifacts/80.9MB; assets136/wiring131/integrity/frozen-scope pass. User-approved generators93 remains
+  its correctly source-bound earlier checkpoint, not relabeled as a full Actions gate.
+  Root actual combined browser98 also passes after this room/controller merge; twelve fresh shots are captured and
+  six whole-screen states inspected under `scratch/snoop-root-p0-integration-shots`. Owner's public top, held draw,
+  cast menu and restored hidden pile are verified; both full contexts require actual WebGL. Existing3D other-field
+  clipping/occlusion and footer below900px remain outside this two-line fix; no full-layout acceptance. Board SHA remains
+  `259a97f06834f81fbe0c8118a078e2a935265a8a6a7404fa0009381baf556cb6`, no browser/server/Node remains after teardown.
+  Fresh static audit finds four moved older room anchors. Root reanchors their original combat words/facts, duplicate
+  draw receipt and per-view event mark behaviors without changing production or assertions; all original four-reader
+  unions pass and all four controls are caught, none missed. Final audit255files/4,675breaks/33 inherited UI issues,
+  zero engine targets. Exact source/commands/results are in `w0/evidence/p0-integration.json`.
+  W1 simultaneous return/entry progress and W5 factual Keep/Reverse receipts remain unpublished in their own lanes.
+  New V8 policies worker is scratch-only: propose explicit native conditional-action witnesses without crediting lost
+  offers or auto-answering anything; no production grammar or saved-card edits until root reviews the actual contract.
+  No new cards/promotions, canonical remeasurement or gate closure. Exact HEAD0 scan/push follows this checkpoint.
+- **Generator exception resolved on published `55f133f5`:** Rob explicitly answers “Allow this public Scryfall check”
+  for the existing read-only public card-search generator check. The unchanged `tests/generators.mjs` then passes93
+  checks:357 paths/129 tools resolve and all26 generators pass. No saved data or source changes from the run, no
+  keys/cost/provider calls. The earlier DNS/automatic-review block below is historical and resolved by this explicit
+  exception, not bypassed. This closes that current check only; no full wave0/Actions/staging/card-load gate closure.
 - **Reported-card saved proof, clean `be1a2b89`:** every original Snoop/Banner/Valakut scenario and assertion is
   preserved. Banner's three taps now identify Wastes0/1/2; one additive Snoop scenario observes its non-Goblin top
   publicly from both seats while the other library stays hidden. Before, selected clean `ef1d2ba4` has8 scenarios,

@@ -16,6 +16,6 @@ BREAKS = [
   'const may = awaiting?.optional === true || (awaiting?.effect === "modal" && awaiting.choose === 1 && awaiting.modes.some(m => !(m.effects ?? []).length));',
   'const may = true;'),
  ('room omits desk facts', 'game/room/room.mjs',
-  'describeDecision(state, combatWords(state, structuredClone(controller.pending)), pendingActions, projected)',
-  'combatWords(state, structuredClone(controller.pending))'),
+  'const described=describeDecision(state,combatWords(state,structuredClone(pending)),pendingActions,projected);',
+  'const described=combatWords(state,structuredClone(pending));'),
 ]
