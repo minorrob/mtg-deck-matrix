@@ -15,6 +15,6 @@ BREAKS = [
     ('the lobby does not say when it asked', LOBBY,
      '    draw(table, asked);\n', '    draw(table);\n'),
     ('the read is timed when it lands', LOBBY,
-     '    const asked = performance.now();   /* the board weighs the read against the room\'s newer frames by when it was asked */\n    const {table, now} = await api("GET", tableUrl(id));\n',
-     '    const {table, now} = await api("GET", tableUrl(id));\n    const asked = performance.now();\n'),
+     '    const asked = performance.now();   /* the board weighs the read against the room\'s newer frames by when it was asked */\n    const {table, now} = await api("GET", tableUrl(id) + (watch ? "?watch=1" : ""));\n',
+     '    const {table, now} = await api("GET", tableUrl(id) + (watch ? "?watch=1" : ""));\n    const asked = performance.now();\n'),
 ]
