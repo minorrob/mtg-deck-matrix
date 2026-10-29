@@ -378,4 +378,30 @@ for (const controller of [0, 1]) {
   eq(s.players[controller].life, 46, "the original opponent spell then resolves against its chosen player");
 }
 
+/* A prepared copy can activate mana abilities during its actual cast (CR 601.2g-h, 722.3c). */
+{
+  const file = read("g/goblin-glasswright-craft-with-pride.scenarios.json");
+  const scenario = file.scenarios[0];
+  let s = runScenario({...scenario, steps: scenario.steps.slice(0, 4), expect: []}, index.definition, file.fixtures).state;
+  const host = s.zones.battlefield.find((id) => s.objects[id].card === "Goblin Glasswright");
+  const inset = s.objects[host].preparedCopy;
+  const mountain = s.zones.battlefield.find((id) => s.objects[id].card === "Mountain" && !s.objects[id].tapped);
+  eq([s.players[0].manaPool.R, s.objects[mountain].tapped], [0, false], "no mana is floated and the sole funding Mountain is untapped");
+  s = JSON.parse(JSON.stringify(s));
+  const offer = legalActions(s, 0).find((a) => a.kind === "cast" && a.objectId === inset);
+  const events = applyAction(s, 0, offer);
+  eq(offer.autoTap, true, "the actual prepared cast used native mana funding from exile after reload");
+  const spell = s.stack.at(-1).objectId;
+  eq([s.objects[mountain].tapped, s.players[0].manaPool.R, s.objects[host].prepared], [true, 0, undefined],
+    "casting taps the specific remaining Mountain, pays its red mana and unprepares the specific host");
+  eq(events.filter((event) => event.kind === "GameEventManaPool").map((event) => event.data.fields.source.cardId), [mountain],
+    "exactly the selected Mountain produces mana once during this cast");
+  eq([s.objects[inset], s.objects[spell].card, s.objects[spell].zone], [undefined, "Craft with Pride", "stack"],
+    "the exile copy changes identity into the actual prepared spell on the stack");
+  afterResolving(s, resolveTop(s));
+  eq(s.zones.battlefield.filter((id) => s.objects[id].card === "Treasure").length, 1, "the auto-funded prepare spell actually creates exactly one Treasure");
+  eq([s.objects[spell], s.zones.exile, s.objects[host].preparedCopy], [undefined, [], undefined],
+    "the resolved card copy ceases and the source has no stale prepared copy");
+}
+
 console.log(`engine-load100-w1-faces: ${checks} checks passed`);

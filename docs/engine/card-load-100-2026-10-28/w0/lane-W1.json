@@ -13,7 +13,7 @@
     "| Tokens and copies of prepare cards never prepared | `script/effects/attributes.mjs`:23 | W1 |",
     "| Unsure, to be settled by a scenario: Song of the Dryads and Sagas under ability loss; Incubator copies single-faced; Social Snub's copy; Winter's prompt and a draw-two cost under Narset | `rules/layers.mjs`:870; `permanents.mjs`:644; `actions.mjs` | V8 finds, W1/W6/W2/W7 fix |"
   ],
-  "status": "Draft PR 929 continues wave 0; permanent preparation and Saga/source-grant fixes pushed; generic loyalty-timing emblems proven; remaining emblem and battle work pending",
+  "status": "Draft PR 929: W1 bounded continuation proven and published; native-funded Glasswright regression repaired after W5 synchronization; remaining battle and two emblem families unfinished",
   "checkpoint": {
     "cardsAdded": 0,
     "cardsPromoted": 0,
@@ -179,11 +179,8 @@
       "No remaining anchor problem targets W1 changed source files; global branch still reports inherited anchor debt."
     ],
     "pending": [
-      "Original reanchored mutation files retain their full original suite unions; blocked by shared engine-cards Faithless Looting baseline, routed to W5/root. No suite removed.",
-      "Full original engine-cards baseline stops at Faithless Looting old cast-offer assertion after W5 d9 entry fixes; root and W5 notified. No assertion weakened or excluded.",
-      "Object-rule emblem reader authorized next; Daretti and other Teferi generic semantics audit; battles await W4 combat handoff.",
-      "Generated definitions deferred to root consolidation; no full pool/fuzz/staging/visual or theme completion claimed.",
-      "Original engine-rearrange-copies-4b reader fails line 187: direct copied land entries yield no immediate born objects under shared resumable entry pipeline (expected [[false],[true],40], actual [[],[],40]); routed root. No test changed."
+      "Original reanchored ability-loss and wave4b-j2 mutation files retain their full suite unions. Full engine-cards now reaches only the stale generated-definitions check at line 239; root final regeneration is deliberately deferred. Re-run the three original mutations after refresh.",
+      "Generated definitions, whole-wave ability ledger/pool fuzz, exact-head CI and staging remain root work. No gate/theme completion claimed."
     ],
     "sources": [
       "https://api.scryfall.com/cards/161e66e3-0339-495c-bd06-0a799a254906/rulings",
@@ -223,10 +220,9 @@
       "engine-granted-loyalty12; engine-ability-loss109; engine-static-conditions12; engine-projection93; engine-designations8; engine-vocabulary49 passed; data-integrity and feature-wiring131 passed."
     ],
     "pending": [
-      "engine-planeswalkers old driver stops on explicit combat assignment; root identifies W4 ae9e3daa checkpoint with original final-outcome-preserving answers; merge next.",
+      "W4 ae9e3daa is merged; engine-planeswalkers now passes 66 checks with explicit assignments and original final outcomes preserved.",
       "Daretti delayed owner-graveyard return and Teferi Who Slows the Sunset native untap/draw remain generic audits.",
-      "Battles: W4 handed off combat after source89bfae71; continuation next.",
-      "No theme, G-3, full pool/fuzz, staging or visual completion claimed."
+      "Battles unfinished. Root requested clean context handback before large runtime edits; exact RED witness and native seam map preserved in W1-battle-protector-red.mjs.txt and W1-battles-next.md."
     ],
     "rules": [
       "114.4",
@@ -235,6 +231,22 @@
     "sources": [
       "https://api.scryfall.com/cards/368c6e60-804c-447c-bc2b-ac9dc4cab5e7/rulings",
       "https://api.scryfall.com/cards/56f642ae-68f3-4eeb-8b3f-a9fe1596231d/rulings"
+    ],
+    "ignoresAdded": []
+  },
+  "glasswrightFunding": {
+    "dependency": "Exact W5 5a004e44 merged locally with a merge commit; root authorized synchronization, W5 owns its push/report.",
+    "change": "Replace obsolete zero-cast-offer assertion with empty-pool premise and an actual prepare-spell cast from the remaining untapped Mountain. All original Treasure/unprepared/exile/graveyard outcomes remain.",
+    "proof": [
+      "engine-prepare: 3 checks passed, all five saved Glasswright scenarios execute.",
+      "engine-load100-w1-faces: 157 checks passed. New explicit reload witness verifies exact funding Mountain, single mana-production event, red mana consumed, host unprepared, new stack identity, exactly one Treasure, and ceased copy.",
+      "Selected mutation restores no exile funding; fails at actual applyAction; missed: [].",
+      "data-integrity: Validated 50 variants and 50 connected buy profiles; feature-wiring 131 passed.",
+      "Full engine-cards scenario/fidelity/save-state portion passes, then line239 fails because committed generated definitions intentionally await root refresh. Original legacy mutant baselines remain unclaimed."
+    ],
+    "pending": [
+      "Root regenerate and re-run original full-suite-union mutations: breaks-ability-loss labels a removal not recorded and losers: every effect a remover; breaks-wave4b-j2 label basic land types: not the ones it prints.",
+      "Continue battle native runtime and remaining generic emblems from W1-battles-next.md."
     ],
     "ignoresAdded": []
   }
