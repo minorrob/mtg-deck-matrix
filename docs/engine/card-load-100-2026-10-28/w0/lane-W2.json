@@ -15,7 +15,7 @@
     "| \"Up to N targets\" spells cast free or by an effect: left out | `asking.mjs`:2326 (NAMED) | W2 |",
     "| Unsure, to be settled by a scenario: Song of the Dryads and Sagas under ability loss; Incubator copies single-faced; Social Snub's copy; Winter's prompt and a draw-two cost under Narset | `rules/layers.mjs`:870; `permanents.mjs`:644; `actions.mjs` | V8 finds, W1/W6/W2/W7 fix |"
   ],
-  "status": "bounded checkpoint: counted copies/effect casts, face-down exile and wishes fixed; true pre-entry Mimic/Clone choices queued; no wave or gate completion claimed",
+  "status": "bounded proven follow-up: real permanent/land/script-token pre-entry continuations and chosen subtype data corrected; general caller and strict ability debt remain; zero promotions and no wave-0/theme closure",
   "sourceBase": "5fc78a95347bafef7c4f7f830a919a54ff30a5fb",
   "foundation": {
     "commit": "b2ba9343e4316c618f5b49f8bfec5df5374d0583",
@@ -48,8 +48,8 @@
   ],
   "queued": [
     {
-      "debt": "Metallic Mimic and copy-as-enter choices before entry; copy of a copy",
-      "requires": "W3 explicit rule-operation move-one consumer plus W2 entering frame (kind entering) returning {entering,objectPatch}; apply patch to new object after moveObject but before ETB events/counters. W2 also needs explicit finishTop, played-land and makeToken continuations. No replay or post-entry workaround."
+      "debt": "General moveZone/search/fetch, token replacement followups, SBA and effect-paid cost continuations",
+      "requires": "W3 owns saved parents for remaining synchronous move/search routes and token replacement followups; W5 owns effect-paid additional/X/choose-cost work. Existing legacy queued enteringQuestions remain explicit on those routes. No blanket pre-entry or theme acceptance."
     },
     {
       "debt": "Social Snub unsure copy case",
@@ -58,6 +58,10 @@
     {
       "debt": "Additional follow-up questions on an effect cast",
       "requires": "Cold-review a counted spell that also divides damage or opens choose-cost; this checkpoint proves target selection, not every perform() follow-up. W5 owns broader effect-paid additional/X work. Required before lane completion; no exemption or ignore granted."
+    },
+    {
+      "debt": "Strict selected ability coverage remains incomplete",
+      "requires": "Raw three-card counterfactual output8/10 is historical/provisional. Root identified3 availability-only false proofs; V8 must correct classifier and remeasure. Unchanged Roaming Throne Ward and trigger-doubling scenarios remain unproved in this selection. No G-3 waiver or card completion credit."
     }
   ],
   "proof": {
@@ -146,5 +150,27 @@
       "finalMutationCount": 81,
       "preservation": "New actual script-token tests preserve DFC/backface orientation, copied exceptions/no counters, requested/known/no-live-source memory guards. New global duplicate anchors narrowed to original behavioral routes; proofs still pending."
     }
+  },
+  "entryClosure20261029": {
+    "status": "Bounded proof complete; exact-HEAD scan/draft publication next, overall lane and wave remain incomplete",
+    "sourceCheckpoint": "304fbabf79a95fb66daacf725ce8498f47fca962",
+    "postFreezeChange": "Only canceled spelling in assertion message to satisfy existing feature-wiring gate; no runtime, assertion condition or expected-value changes. W2-268 and feature131 rerun green.",
+    "publicProof": "W2-268 checks: actual permanent spell/ordinary land/effect land and script-token callers pause before battlefield/ID allocation; JSON/public room reload, receipt retry, no repeated cost/events/RNG, new-object copy patch, copy-of-copy, CR707.9e exceptions, Mox/devour real child payments, concession, true Elf/Time Lord subtype behavior, DFC/token-source memory.",
+    "newMutations": "All81 final new mutations caught in one whole final run, missed: []; all sources restored; previous63caught/4missed run discarded and retained.",
+    "priorMutations": "All48 previous W2 mutations rerun/caught on final source, missed: [].",
+    "reanchors": "Seven behavioral probes caught: six newly duplicated legacy anchors (played marker, physical token faces, four last-known guards), plus inherited ability-copy target helper anchor. Original behaviors preserved; focused existing readers used.",
+    "readers": "All27 touched behavior/data readers green after sole assertion-message spelling fix: W2268, copy24, targets44, precons140, memory15, W6tokens90, zones71, zone-actions64, draws33, entering15, enter-copy24, riot22, enters14, enters-with10, transformed7, compleated22, saga12, wave4a-h363, wave4c-k3171, changeling10, amass19, actions34, costs32, play12, resolution91, data integrity, feature131.",
+    "anchors": {
+      "files": 214,
+      "breaks": 4110,
+      "inheritedNonEngineProblems": 49,
+      "engineProblems": 0,
+      "W2Problems": 0
+    },
+    "rawCards": "Seven selected definitions: schema/fidelity/smoke18 scenarios0failed; three appended actual Shared Animosity combat cases. Definitions bundle remains pending root final refresh. No new definition or promotion.",
+    "strictAbilityAudit": "NOT ACCEPTED as8/10 valid: raw output8/10 included3 availability-only proofs identified by root. Corrected score pending V8 classifier/remeasure; Ward/doubling and choice proof debt retained. No overall G-3 claim.",
+    "independentReview": "V8 exact304 narrow recheck passed324/324 current normalized CR terms with no missing/invalid names; native land-only Mimic Elf/Time Lord choices+reload+latercounter; actual Shared Animosity combats Mimic/Automaton/Throne powers3/3/5. Narrow findings only.",
+    "inventory": "data-inventory check matches60 artifacts; existing creature-type generator check matches324 registered types/80 planeswalker types.",
+    "diagnostics": "Own logs, discarded-run evidence, public ruling cache and historical scratch will be moved to C:/Users/robmi/CrankMagic/workbench/load100-w2-304fbabf-proof-20261029 before handback; no active process or .bak remains."
   }
 }

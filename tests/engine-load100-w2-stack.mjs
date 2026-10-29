@@ -682,7 +682,7 @@ for (const who of [0,1,2]) {
   const events = concede(state, who);
   if (who === 0) {
     eq([state.stack.length, state.ruleOperation, state.awaiting, field(state, "Metallic Mimic")], [0, undefined, null, []], "the entering spell's controller can concede without its permanent entering or its operation hanging");
-    eq(events.filter(event => event.kind === "GameEventSpellResolved").length, 0, "a departed controller's cancelled entry does not report a spell resolution");
+    eq(events.filter(event => event.kind === "GameEventSpellResolved").length, 0, "a departed controller's canceled entry does not report a spell resolution");
   } else {
     eq([state.objects[id].zone, state.awaiting.player, state.nextObjectId], ["stack", 0, before], "another player's concession preserves the real entering spell and its unmade entry");
     resolveAwaiting(state, [awaitingChoice(state).options.find(option => option.label === "Elf").index]);
