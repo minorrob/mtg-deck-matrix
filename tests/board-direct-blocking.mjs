@@ -179,6 +179,18 @@ try {
   await noBlocks(page);await enabled(page);
   assert.equal(frames.filter(f=>f.type==='act').length,1,'Don\'t block remains local');
   if(width===1280&&mode==='full'){
+    const beforePairs=frames.filter(f=>f.type==='check').length;
+    hold();await publish(v=>{
+      const removed=v.decision.options.find(o=>o.index===0);
+      v.decision.options=v.decision.options.filter(o=>o.index!==0);
+      v.decision.legalBlocks=v.decision.legalBlocks.map(b=>b.blocker===removed.cardId?{...b,attackers:b.attackers.filter(id=>id!==removed.attackerId)}:b);
+    });
+    assert.equal(await page.locator(send).isDisabled(),true,'empty draft cannot keep validation after legal pairs change');
+    assert.equal(frames.filter(f=>f.type==='check').length,beforePairs+1,'empty legal-pair update requests fresh validation');
+    reply(frames.filter(f=>f.type==='check').at(-1));await pause(page);
+    assert.equal(await page.locator(send).isDisabled(),true,'changed pairs require explicit attacker choices again');
+    release();await noBlocks(page);await enabled(page);
+    assert.equal(frames.filter(f=>f.type==='act').length,1,'settling changed pairs stays local until Send');
     const checksBefore=frames.filter(f=>f.type==='check').length;
     hold();await publish(v=>{v.matchId+='-empty-draft-rematch';});
     assert.equal(await page.locator(send).isDisabled(),true,'an empty draft cannot reuse permission from another match');
