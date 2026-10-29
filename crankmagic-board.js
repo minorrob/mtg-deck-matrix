@@ -2059,7 +2059,7 @@ globalThis.CrankBoard = Object.seal({
     /* Asked in a run you chose Resolve all for: this answer goes for the same question each time the run asks it (Rob,
        2026-10-09: "Yes to all"; game/room/room.mjs). */
     const forRun = d.forRun ? `<p class="cm-muted cm-board-for-run">Resolve all: your answer goes for this same question each time the run asks it.</p>` : "";
-    return `<section class="cm-board-decision${blocking() ? " is-blocking" : ""}" id="cm-board-decision" data-choice-id="${e(d.id)}" data-match-id="${e(view.matchId)}" aria-label="${e(d.title)}">${decisionPick(d,d.options.find(o=>o.index===picked[0]))}${reviewReady(d) && targeting && choiceTargets(d.options.find(o=>o.index===picked[0])).length ? targetHeading(d,d.options.find(o=>o.index===picked[0])) : blocking() ? "" : `<h2>${e(d.title)}</h2>`}${forRun}${targeting ? `<ol class="cm-steps"><li class="${reviewReady(d) ? '' : 'is-now'}">Pick</li><li class="${reviewReady(d) ? 'is-now' : ''}">Review</li></ol>` : ""}${reviewReady(d) && targeting ? "" : deskCard()}
+    return `<section class="cm-board-decision${blocking() ? " is-blocking" : ""}" id="cm-board-decision" data-choice-id="${e(d.id)}" data-match-id="${e(view.matchId)}" aria-label="${e(d.title)}">${decisionPick(d,d.options.find(o=>o.index===picked[0]))}${reviewReady(d) && targeting && choiceTargets(d.options.find(o=>o.index===picked[0])).length ? targetHeading(d,d.options.find(o=>o.index===picked[0])) : blocking() ? "" : `<h2>${e(d.title)}</h2>`}${forRun}${targeting && d.mode !== "many" ? `<ol class="cm-steps"><li class="${reviewReady(d) ? '' : 'is-now'}">Pick</li><li class="${reviewReady(d) ? 'is-now' : ''}">Review</li></ol>` : ""}${reviewReady(d) && targeting ? "" : deskCard()}
       <div class="cm-board-options">${body}</div>${foot ? `<div class="cm-board-decision-foot">${foot}</div>` : ""}</section>`;
   }
   /* What the room asks, and what is on the stack, floated over the surface under the strip. Priority is not
@@ -3586,7 +3586,10 @@ globalThis.CrankBoard = Object.seal({
   actions["board-confirm"] = () => {
     const d = view.decision;
     if (!d || sending) return;
-    if(targetChoice(d) && d.kind!=="priority" && !targetReviewing && !d.options.find(o=>o.index===picked[0])?.decline)return;
+    /* A single target goes Pick, Next, Review, Confirm. A counted target ("up to one", "any number", mode "many") has no Next
+       and no Review: its Confirm is the commit, checked against its own min and max (ROB-204; the footer's count). */
+    if(targetChoice(d) && d.mode!=="many" && d.kind!=="priority" && !targetReviewing && !d.options.find(o=>o.index===picked[0])?.decline)return;
+    if (d.mode === "many" && targetChoice(d) && (picked.length < d.min || picked.length > d.max)) return;
     if (["one","boolean","index"].includes(d.mode)) {
       if (draftRevision !== view.revision || picked.length !== 1 || !d.options.some(o => o.index === picked[0])) return;
       return send({indices:[...picked]});
