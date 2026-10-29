@@ -669,13 +669,13 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
      could not go on, and that is thrown as before. */
   function answerForPilot(seat, choice, a) {
     try {
-      return resolveAwaiting(state, a.indices, a.amounts, rng, a);
+      return resolveAwaiting(state, a.indices, a.amounts, rng, {...a, choiceId: choice.id});
     } catch (error) {
       note(`${seats[seat].name}'s answer to "${choice.title}" was refused: ${error.message}. The least answer was given instead.`);
       refusals.total += 1;
       if (refusals.first.length < REFUSALS_SAID) refusals.first.push({turn: state.turn, seatId: seats[seat].seatId, question: choice.title, reason: error.message});
       const least = leastAnswer(choice);
-      return resolveAwaiting(state, least.indices, least.amounts, rng, least);
+      return resolveAwaiting(state, least.indices, least.amounts, rng, {...least, choiceId: choice.id});
     }
   }
 
@@ -737,12 +737,16 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
            first of its kind is asked, saying the answer will go for the rest. Refused this time, it is asked. */
         const run = standing[seat];
         if (run) {
-          const key = questionKey(choice), given = run.answers?.[key];
+          const key = questionKey(choice);let given = run.answers?.[key];
+          if(given&&state.awaiting.kind==="effect-choice"&&state.awaiting.effect==="play"&&
+            (given.choiceId!==choice.id||given.questionSignature!==hashState(choice))){delete run.answers[key];given=null;}
           if (given) {
             try {write(resolveAwaiting(state, given.indices, given.amounts, rng, given)); step.acted = true; driven = 0; continue;}
             catch {delete run.answers[key];}
           }
           run.asking = key;
+          run.askingBinding = state.awaiting.kind==="effect-choice"&&state.awaiting.effect==="play"
+            ? {choiceId:choice.id,questionSignature:hashState(choice)} : null;
           choice.forRun = true;
         }
         controller.offer(choice); pendingSeat = seat; pendingActions = null; driven = 0; return;
@@ -911,8 +915,9 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         /* Asked in a run they let resolve: the answer goes for the same question in the rest of it. */
         const run = standing[seat];
         if (run?.asking) {
-          run.answers = {...run.answers, [run.asking]: {indices: answer.indices ?? [], ...(answer.amounts ? {amounts: answer.amounts} : {}), ...(answer.value !== undefined ? {value: answer.value} : {})}};
+          run.answers = {...run.answers, [run.asking]: {indices: answer.indices ?? [], ...(answer.amounts ? {amounts: answer.amounts} : {}), ...(answer.value !== undefined ? {value: answer.value} : {}), ...(run.askingBinding??{})}};
           delete run.asking;
+          delete run.askingBinding;
         }
       }
     } catch (error) {

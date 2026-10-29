@@ -955,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 700 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 701 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1240,6 +1240,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `room-cast-stages` — `tests/room-cast-stages.mjs` (private saved modal proposals, reload/replay, stale input, Cancel/Back boundaries and actual payment exactly once)
 - `room-action-stages` — `tests/room-action-stages.mjs` (actual Cankerbloom stages, observer privacy, reload/replay, native funding Cancel, exact mana/sacrifice and permission-version withdrawal)
 - `room-committed-refinement` — `tests/room-committed-refinement.mjs` (actual committed modal questions preserved through private Cancel, privacy/reload/replay and final native confirmation once)
+- `room-effect-play-refresh` — `tests/room-effect-play-refresh.mjs` (native generation changes, donated Shalai newly legal targets, stale private and standing inputs, current house/Easy/Normal native answers)
 - `room-restore-cursor` — `tests/room-restore-cursor.mjs` (default events after reload and eventless inputs, exact next journal delivery, preserved retained stream and empty journal boundary)
 - `room-agent-seat` — `tests/room-agent-seat.mjs` (the LLM seat in the room: only its close calls offered to it, its answers on the tape)
 - `room-refused-answer` — `tests/room-refused-answer.mjs`

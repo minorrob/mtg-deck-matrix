@@ -83,6 +83,15 @@ function scepter(name){return play([at(0,"battlefield",...Array(4).fill("Wastes"
  eq(hashState(s),changed,"a departed target is not restored by a stale effect-cast child");
 }
 {
+ const s=play([at(0,"hand","Getaway Glamer"),at(0,"battlefield","Ao, the Dawn Sky","Cankerbloom")],[],{seats:3});Object.assign(s.players[0].manaPool,{W:1,C:2});
+ const ao=s.zones.battlefield.find(id=>s.objects[id].card==="Ao, the Dawn Sky"),action=legalActions(s,0).find(a=>a.label==="Getaway Glamer"&&a.modes?.join(",")==="1"&&a.targets?.some(t=>t.id===ao));
+ applyAction(s,0,action);finish(s);for(let n=0;n<3;n++)passPriority(s);
+ const pending=awaitingChoice(s),d=beginRefinement(s,pending,0,"ao-unrelated-departure");concede(s,2);
+ eq(awaitingChoice(s),pending,"an unrelated actual departure can leave the mandatory Ao question visibly identical");
+ const changed=hashState(s);assert.throws(()=>refinementChoice(s,pending,d),/native question changed/i);checks++;
+ eq(hashState(s),changed,"private references still expire after native facts change without restoring a departed seat");
+}
+{
  const data=JSON.parse(readFileSync(new URL("../game/engine/cards/s/summon-magus-sisters.scenarios.json",import.meta.url),"utf8"));
  const example=data.scenarios.find(s=>s.name.startsWith("I: the game rolls Combine Powers!")),s=runScenario({...example,steps:example.steps.slice(0,8),expect:[]},index.definition,data.fixtures).state;
  let pending=awaitingChoice(s);eq(refinementEntry(s,pending),null,"the actual mandatory native random mode roll cannot be replaced by a private mode chooser");

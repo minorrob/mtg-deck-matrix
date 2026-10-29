@@ -43,6 +43,8 @@ BREAKS=[
   'modes:d.locked?[...d.variants[0].modes]:null,','modes:[...d.variants[0].modes],'),
  ('a changed resolving frame reuses an old private question',D,
   'd.nativeSignature!==draft.nativeSignature||',''),
+ ('unchanged visible Ao question reuses references after actual seat departure',D,
+  'facts:hashState(state),choice:q','choice:q'),
  ('earlier per-mode targets are discarded when filtering variants',D,
   'draft.targets.every((target,index)=>targetKey(v.targets[index])===targetKey(target))','true'),
  ('later mode target stages repeat the first target group',D,

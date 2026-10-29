@@ -12,15 +12,16 @@ const index=loadCardIndex(),cards=n=>index.definition(n)??basicCards(n);
 const request=(v,a)=>({kind:"answer",actionId:`00000000-0000-4000-8000-${String(++serial).padStart(12,"0")}`,revision:v.revision,choiceId:v.decision.id,...a});
 async function prepare(kind){
  const storage=memoryStorage(),matchId=`committed-${kind}`,store=createMatchStore(storage,matchId);
- const patterns={ao:["Plains","Plains","Forest","Ao, the Dawn Sky","Cankerbloom","Getaway Glamer"],shadrix:["Plains","Swamp","Plains","Shadrix Silverquill","Swamp","Plains"],scepter:["Wastes","Wastes","Isochron Scepter","Boros Charm","Wastes","Wastes"]};
+ const patterns={ao:["Plains","Plains","Forest","Ao, the Dawn Sky","Cankerbloom","Getaway Glamer"],shadrix:["Plains","Swamp","Plains","Shadrix Silverquill","Swamp","Plains"],scepter:["Wastes","Forest","Isochron Scepter","Boros Charm","Cankerbloom","Wastes"],random:["Wastes","Forest","Wastes","Summon: Magus Sisters","Wastes","Forest"]};
  let room=await startRoom({storage,cards,matchId,seed:`native-${kind}`,pod:{sourceChoices:true,passEmpty:true,passStack:false,passAfterCast:true,pooledTaps:true,seats:[
   {seatId:"p0",name:"Rob",pilot:"human",commander:[],cards:Array.from({length:60},(_,n)=>patterns[kind][n%6])},
-  {seatId:"p1",name:"Maya",pilot:"human",commander:[],cards:Array(60).fill("Forest")},
-  ...(kind==="shadrix"?[{seatId:"p2",name:"Trey",pilot:"human",commander:[],cards:Array(60).fill("Forest")}]:[]) ]}});
+  {seatId:"p1",name:"Maya",pilot:"human",commander:[],cards:Array.from({length:60},(_,n)=>kind==="scepter"&&n%6===1?"Cankerbloom":"Forest")},
+  ...(["shadrix","scepter"].includes(kind)?[{seatId:"p2",name:"Trey",pilot:"human",commander:[],cards:Array(60).fill("Forest")}]:[]) ]}});
  for(let n=0;n<2200;n++){
   const v=room.view(room.waitingOn),d=v.decision,field=v.state.players[0].zones.Battlefield.cards;
-  if(v.seat===0&&(kind==="scepter"?d.options.some(o=>o.refinementStages?.kind==="effect-cast"):d.refinementStages?.kind==="trigger"))return {storage,store,matchId,room};
+  if(v.seat===0&&(kind==="random"?d.id.startsWith("trigger-random:"):kind==="scepter"?d.options.some(o=>o.refinementStages?.kind==="effect-cast"):d.refinementStages?.kind==="trigger"))return {storage,store,matchId,room};
   let option=d.options.find(o=>/keep/i.test(o.label))??d.options.find(o=>o.act==="play-land");
+  if(!option&&kind==="scepter"&&v.seat===1&&!v.state.players[1].zones.Battlefield.cards.some(c=>c.name==="Cankerbloom"))option=d.options.find(o=>o.act==="cast"&&o.label==="Cankerbloom");
   if(!option&&v.seat===0){
    if(kind==="ao"){
     if(!field.some(c=>c.name==="Ao, the Dawn Sky"))option=d.options.find(o=>o.act==="cast"&&o.label==="Ao, the Dawn Sky");
@@ -32,10 +33,13 @@ async function prepare(kind){
     }
    }else if(kind==="shadrix"){
     if(!field.some(c=>c.name==="Shadrix Silverquill"))option=d.options.find(o=>o.act==="cast"&&o.label==="Shadrix Silverquill");
+   }else if(kind==="random"){
+    if(!field.some(c=>c.name==="Summon: Magus Sisters"))option=d.options.find(o=>o.act==="cast"&&o.label==="Summon: Magus Sisters");
    }else{
     if(!field.some(c=>c.name==="Isochron Scepter"))option=d.options.find(o=>o.act==="cast"&&o.label==="Isochron Scepter");
+    else if(!field.some(c=>c.name==="Cankerbloom"))option=d.options.find(o=>o.act==="cast"&&o.label==="Cankerbloom");
     option??=d.options.find(o=>o.label==="Boros Charm"&&!o.act);
-    if(!option&&v.state.players[0].zones.Exile.cards.some(c=>c.name==="Boros Charm")){
+    if(!option&&field.some(c=>c.name==="Cankerbloom")&&v.state.players[0].zones.Exile.cards.some(c=>c.name==="Boros Charm")){
      option=d.options.find(o=>o.act==="activate"&&o.label==="Isochron Scepter")??d.options.find(o=>o.act==="activate-mana"&&o.label==="Wastes");
     }
    }
@@ -141,5 +145,51 @@ for(const kind of ["ao","shadrix","scepter"]){
   await targetRoom.act("p0",begin);eq(targetRoom.fingerprint(),after,"an accepted opening retry after target departure cannot resurrect its expired child");
   ok((await replayMatch({storage:ts,cards,matchId})).same,"actual target departure and child invalidation replay without an old-question restore");
  }
+ if(kind==="scepter"){
+  const ts=memoryStorage(),targetRoom=await replayTape({matchId,pod:meta.pod,seed:meta.seed,tape:baseTape,cards,storage:ts});let tv=targetRoom.view("p0");
+  const oldNative=structuredClone(tv.decision),originalState=(await createMatchStore(ts,matchId).latestCheckpoint()).state;
+  const victim=originalState.zones.battlefield.find(id=>originalState.objects[id].card==="Cankerbloom"&&originalState.objects[id].owner===1);
+  ok(victim,"actual Maya casts a Cankerbloom before the native Scepter modal question");
+  const begin=request(tv,{indices:[tv.decision.options.find(o=>o.refinementStages).index],staged:true});await targetRoom.act("p0",begin);tv=targetRoom.view("p0");
+  await targetRoom.act("p0",request(tv,{indices:[tv.decision.options.find(o=>o.modeIndices.join(",")==="2").index]}));tv=targetRoom.view("p0");
+  await targetRoom.act("p0",request(tv,{indices:[tv.decision.options.find(o=>o.target?.id===victim).index]}));
+  const stale=request(targetRoom.view("p0"),{indices:[0]});await targetRoom.leave("p1","conceded");tv=targetRoom.view("p0");
+  ok(tv.decision.id!==oldNative.id,"actual target-owner departure reoffers a new authoritative native effect-play generation");
+  const fresh=(await createMatchStore(ts,matchId).latestCheckpoint()).state;
+  ok(!fresh.awaiting.choices.some(a=>(a.targets??[]).some(t=>t?.kind==="object"&&t.id===victim)),"the original native cached choices no longer include the departed Boros target");
+  ok(!fresh.players[0].lost&&!fresh.players[2].lost,"two actual seats continue after the target owner's departure");
+  const saved=targetRoom.fingerprint();await assert.rejects(()=>targetRoom.act("p0",stale),/expired|changed/i);checks++;eq(targetRoom.fingerprint(),saved,"old private confirmation cannot submit an index to the fresh native generation");
+  await targetRoom.act("p0",begin);eq(targetRoom.fingerprint(),saved,"accepted old opening retry never reopens the expired private child");
+  const reloaded=await openRoom({storage:ts,cards,matchId});eq(reloaded.view("p0").decision.id,tv.decision.id,"native refreshed generation survives room reload without another reindex");
+  ok((await replayMatch({storage:ts,cards,matchId})).same,"actual effect-cast target departure, native generation refresh and stale retry replay exactly");
+ }
 }
-console.log(`room-committed-refinement: ${checks} checks; actual Ao/Shadrix/Scepter, live mandatory questions, private close/reload/replay and native confirmation once`);
+{
+ const {storage,store,matchId}=await prepare("random");let room=await openRoom({storage,cards,matchId}),v=room.view("p0");
+ const before=await store.latestCheckpoint(),record=await storage.get(`room/${matchId}`);
+ ok(!v.decision.refinementStages,"the actual Magus room first asks its mandatory native roll");
+ await assert.rejects(()=>room.act("p0",request(v,{indices:[0],staged:true})),/roll|native mode/i);checks++;
+ eq(await storage.get(`room/${matchId}`),record,"refused private entry before the native roll changes no question or receipt");
+ eq((await store.latestCheckpoint()).rng,before.rng,"refused private entry cannot consume the room RNG stream");
+ await room.act("p0",request(v,{indices:[0]}));v=room.view("p0");
+ const rolled=await store.latestCheckpoint(),entry=rolled.state.stack.find(e=>e.stackId===rolled.state.awaiting?.stackId);
+ ok(rolled.rng.draws>before.rng.draws,"the native room handler commits the actual random roll");
+ ok(Number.isInteger(entry?.randomMode),"the actual room saves its selected random mode on the stack");
+ ok(entry.randomMode<2,"this actual room fixture rolled a mode with one mandatory native target");
+ eq(v.decision.refinementStages.modeSelection,"locked","post-roll room refinement advertises locked modes only");
+ const original=JSON.parse(await storage.get(`room/${matchId}`)).controller.pending;
+ await room.act("p0",request(v,{indices:[0],staged:true}));v=room.view("p0");
+ eq(v.decision.stage,"targets","the post-roll private child starts at the actual native targets");
+ ok(!v.decision.refinement.canBack,"the first post-roll target cannot Back across a native random commitment");
+ const locked=await storage.get(`room/${matchId}`);
+ await assert.rejects(()=>room.act("p0",request(v,{back:true,indices:[0]})),/Back|boundary/i);checks++;
+ eq(await storage.get(`room/${matchId}`),locked,"forged post-roll Back leaves native state, child and receipts unchanged");
+ await room.act("p0",request(v,{kind:"cancel",indices:[]}));
+ eq(JSON.parse(await storage.get(`room/${matchId}`)).controller.pending,original,"closing the post-roll child keeps the live forced native target question");
+ eq((await store.latestCheckpoint()).rng,rolled.rng,"closing private targets cannot undo or repeat the native roll");
+ room=await openRoom({storage,cards,matchId});v=room.view("p0");await room.act("p0",request(v,{indices:[0]}));
+ const final=await store.latestCheckpoint();eq(final.state.stack.find(e=>e.stackId===entry.stackId).modes,[entry.randomMode],"the original native target handler keeps the rolled mode");
+ eq(final.rng,rolled.rng,"the original native target answer never rolls again");
+ ok((await replayMatch({storage,cards,matchId})).same,"native roll, refused Back, child close/reload and locked target continuation replay exactly");
+}
+console.log(`room-committed-refinement: ${checks} checks; actual Ao/Shadrix/Scepter/Magus, live mandatory questions, private close/reload/replay and native confirmation once`);
