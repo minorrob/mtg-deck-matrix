@@ -46,7 +46,7 @@ registerRuleOperation("move-one", (state, frame) => {
     if (!chosen && keys.length > 1) {
       frame.keys = keys;
       return askRuleOperation(state, frame, {player: object.zone === "battlefield" ? controllerOf(state, frame.id) : object.owner, choice: {
-        id: `zone-replacements:${frame.id}:${(frame.proposal.appliedBy ?? []).length}`, title: `${object.card ?? "That card"}: which replacement applies first?`, mode: "one", min: 1, max: 1,
+        id: `zone-replacements:${frame.id}:${(frame.proposal.appliedBy ?? []).length}${frame.prepareOnly ? `:${frame.choiceSerial = (frame.choiceSerial ?? 0) + 1}` : ""}`, title: `${object.card ?? "That card"}: which replacement applies first?`, mode: "one", min: 1, max: 1,
         options: [...candidates.map((candidate, index) => ({index, label: candidate.label, ...(candidate.holderId !== null ? {cardId: candidate.holderId} : {})})),
           ...(commander ? [{index: candidates.length, label: "The owner may put their commander into the command zone"}] : [])],
       }});
@@ -62,7 +62,8 @@ registerRuleOperation("move-one", (state, frame) => {
     frame.stage = "enter";
   }
   if (frame.stage === "enter") {
-    if (frame.proposal.to === "battlefield") {
+    if (frame.proposal.to === "battlefield" && frame.preparedEntering) frame.stage = "move";
+    else if (frame.proposal.to === "battlefield") {
       const player = options.controller ?? object.owner;
       if (state.players[player]?.lost) return {status: "done", result: {moved: null, zoneEventIndex: null}}; // CR 800.4b.
       const down = options.faceDown === true, face = options.transformed === true ? object.mdfc?.back ?? object : object;

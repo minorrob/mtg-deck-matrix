@@ -1,5 +1,6 @@
 /* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
 /* Native SBA move preparation is operation-local; a card/client flag never authorizes committing it. */
+import {lastKnown} from "./layers.mjs";
 function cohortIn(state, key) {
   const operation = state.ruleOperation, cohort = operation?.sbaCohorts?.[key];
   if (!cohort || cohort.operation !== operation.serial) throw new Error("No matching internal SBA cohort");
@@ -44,6 +45,7 @@ export function freezeSbaCohort(state, frame, snapshots) {
   if (operation.frames.at(-1) !== frame || frame.kind !== "sba-cohort" || frame.stage !== "freeze" || cohort.phase !== "planning")
     throw new Error("An SBA cohort cannot freeze while a sibling choice is pending");
   for (const member of cohort.members) {
+    if (member.skipped) continue;
     const object = state.objects[member.id];
     if (!object || object.zone !== member.from) {member.skipped = true; continue;}
     const prepared = operation.sbaPreparedMoves?.[member.token];
@@ -84,3 +86,81 @@ export function consumeSbaMove(state, token, cohortId, id, moved) {
 }
 
 export function sbaCohort(state, key) {return cohortIn(state, key).cohort;}
+
+export function reopenSbaPreparation(state, frame, id) {
+  const {operation, cohort} = cohortIn(state, frame.cohortId), member = cohort.members.find(one => one.id === id);
+  const prepared = operation.sbaPreparedMoves?.[member?.token];
+  if (operation.frames.at(-1) !== frame || frame.kind !== "sba-cohort" || frame.stage !== "plan" || cohort.phase !== "planning"
+    || !prepared || prepared.objectId !== id || prepared.cohortId !== frame.cohortId || state.objects[id]?.zone !== member.from)
+    throw new Error("Only the native planning frame may recheck its completed SBA proposal");
+  delete operation.sbaPreparedMoves[member.token]; delete member.token;
+  return {kind: "move-one", id, to: "graveyard", prepareOnly: true, cohortId: frame.cohortId,
+    stage: "replacements", proposal: prepared.proposal, options: prepared.options,
+    preparedEntering: prepared.entering, preparedCounterResult: prepared.counterResult, entryPatch: prepared.entryPatch};
+}
+
+export function takeSbaDeparture(state, key, id) {
+  const {operation, cohort} = cohortIn(state, key), frame = operation.frames.at(-1);
+  const departure = cohort.departures.find(one => one.id === id);
+  if (cohort.phase !== "commit" || frame?.kind !== "sba-cohort" || frame.cohortId !== key || frame.stage !== "departures"
+    || cohort.members.some(member => !member.committed && !member.skipped) || !departure || departure.finished)
+    throw new Error("SBA departures require every completed base move and their native callback stage");
+  departure.finished = true;
+  return {...structuredClone(departure), departedIds: cohort.members.filter(member => member.committed).map(member => member.id)};
+}
+
+/* A concession can remove a borrowed replacement source while its controller remains. Only sources of already
+   applied follow-ups are remembered here; candidates that have not applied are still queried against live state. */
+export function refreshPendingSbaSources(state) {
+  const operation = state.ruleOperation;
+  if (!operation) return;
+  const proposals = [...Object.values(operation.sbaPreparedMoves ?? {}).map(result => result.proposal),
+    ...operation.frames.filter(frame => frame.prepareOnly && frame.kind === "move-one").map(frame => frame.proposal),
+    ...Object.values(operation.sbaCohorts ?? {}).flatMap(cohort => cohort.departures.map(departure => departure.proposal))];
+  for (const proposal of proposals) for (const follow of proposal?.followUps ?? []) {
+    const source = follow.context.source;
+    if (state.objects[source]?.zone === "battlefield") follow.context.lastKnown = structuredClone(lastKnown(state, source));
+  }
+}
+
+/* The native commit stage alone can mint a trigger-batch receipt. The canonical event payload and exact cohort are
+   retained across JSON, so a copied/altered card field cannot authorize skipping ordinary trigger collection. */
+export function markSbaTriggerBatch(state, frame, events) {
+  const {operation, cohort} = cohortIn(state, frame.cohortId);
+  if (operation.frames.at(-1) !== frame || frame.kind !== "sba-cohort" || frame.stage !== "commit" || cohort.phase !== "commit"
+    || cohort.members.some(member => !member.committed && !member.skipped) || cohort.triggerBatch)
+    throw new Error("Only the fully committed native SBA cohort can identify its trigger batch");
+  const key = `${operation.serial}:${frame.cohortId}:triggers`;
+  cohort.triggerBatch = key;
+  const fresh = events.filter(event => !matchingSbaTriggerReceipt(state, event));
+  const receipt = {operation: operation.serial, cohortId: frame.cohortId, events: fresh.map(event => {
+    const {sbaTriggerReceipt: ignored, ...payload} = event;
+    return JSON.stringify(payload);
+  }), collected: []};
+  (state.sbaTriggerReceipts ??= {})[key] = receipt;
+  fresh.forEach((event, index) => {event.sbaTriggerReceipt = {key, index};});
+}
+
+function matchingSbaTriggerReceipt(state, event) {
+  const stamp = event.sbaTriggerReceipt, receipt = state.sbaTriggerReceipts?.[stamp?.key];
+  if (!receipt || !Number.isInteger(stamp.index) || receipt.operation < 1 || !receipt.cohortId.startsWith(`${receipt.operation}:sba:`)) return null;
+  const {sbaTriggerReceipt: ignored, ...payload} = event;
+  return receipt.events[stamp.index] === JSON.stringify(payload) ? {receipt, index: stamp.index} : null;
+}
+
+export function uncollectedSbaTriggerEvents(state, events) {
+  return (events ?? []).filter(event => {
+    const matched = matchingSbaTriggerReceipt(state, event);
+    if (!matched) return true;
+    if (matched.receipt.collected[matched.index]) return false;
+    matched.receipt.collected[matched.index] = true;
+    return true;
+  });
+}
+
+export function clearFinishedSbaTriggerReceipts(state) {
+  if (state.ruleOperation) return;
+  for (const [key, receipt] of Object.entries(state.sbaTriggerReceipts ?? {}))
+    if (state.ruleOperation?.serial !== receipt.operation && receipt.events.every((_, index) => receipt.collected[index])) delete state.sbaTriggerReceipts[key];
+  if (!Object.keys(state.sbaTriggerReceipts ?? {}).length) delete state.sbaTriggerReceipts;
+}

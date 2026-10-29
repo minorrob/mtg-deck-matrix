@@ -19,7 +19,7 @@
 
 import {holdArrival, enteredWith} from "../../rules/entering.mjs";
 import {entryCounterResult} from "../../rules/entry-characteristics.mjs";
-import {preparedSbaMove, consumeSbaMove} from "../../rules/sba-move-results.mjs";
+import {preparedSbaMove, consumeSbaMove, takeSbaDeparture} from "../../rules/sba-move-results.mjs";
 import {prepare} from "./attributes.mjs";
 import {afterwards, delayedTrigger, enchantable, enchantOnArrival, controlSourceLeft, endWhileSourceRemains} from "./permanents.mjs";
 import {typesOf} from "../../rules/layers.mjs";
@@ -137,6 +137,7 @@ function performMove(state, id, to, events, {owner = null, controller = null, ta
      stack, goes to its owner's graveyard (CR 303.4g). */
   const hosts = destination === "battlefield" && object.enchant && !asDown ? enchantable(state, object.enchant, enteringController).filter((host) => !(notOnto ?? []).includes(host)) : null;
   if (hosts && !hosts.length) {
+    if (prepared) return null;
     if (from !== "stack") return null;
     return moveOne(state, id, "graveyard", events, {owner: object.owner});
   }
@@ -287,6 +288,22 @@ export function returnExiledUntil(state, departed, events, leftBehind = null) {
     if (card?.zone !== "exile" || state.players[card.owner]?.lost) continue;
     moveOne(state, exiled, "battlefield", events, {owner: card.owner});
   }
+}
+
+/* Cohort-only departure cleanup. The operation owns the receipt and runs every base move before this function can
+   return any linked cards; their existing native move-one children may then ask all ordinary entry questions. */
+export function finishSbaDeparture(state, cohortId, id, events) {
+  const {leftBehind, departedIds} = takeSbaDeparture(state, cohortId, id);
+  /* Every old cohort object is already gone. Spend their own control records together before a source's cleanup can
+     try to return control of a departed sibling; surviving controlled permanents retain the ordinary cleanup path. */
+  state.effects = (state.effects ?? []).filter(effect => !(effect.rule === "control-returns" && departedIds.includes(effect.affects.ids[0])));
+  rememberExileLooker(state, id, leftBehind.controller);
+  keepLastKnown(state, id, leftBehind);
+  controlSourceLeft(state, id, events);
+  endWhileSourceRemains(state, id);
+  const due = (state.exiledUntil ?? []).filter(link => link.source === id);
+  state.exiledUntil = (state.exiledUntil ?? []).filter(link => link.source !== id);
+  return due.map(link => link.exiled).filter(exiled => state.objects[exiled]?.zone === "exile" && !state.players[state.objects[exiled].owner]?.lost);
 }
 
 /**
@@ -858,13 +875,17 @@ const replacementWords = (state, id, key) => {
  * first player's in APNAP order first when several are destroyed at once (616.1, 101.4): `{player, objectId, options}`,
  * the options its keys.
  */
-export function destructionAsks(state, ids, answers = {}, {noRegenerate = false, byEffect = false} = {}) {
+export function destructionAsks(state, ids, answers = {}, {noRegenerate = false, byEffect = false, recursive = false} = {}) {
   const seats = state.players.length, rank = (player) => (player - (state.activePlayer ?? 0) + seats) % seats;
-  const asks = [];
-  for (const id of ids) {
-    if (answers[id] !== undefined || !state.objects[id] || keywordsOf(state, id).includes("Indestructible")) continue;
-    const candidates = destructionReplacements(state, id, {noRegenerate, byEffect});
-    if (candidates.length >= 2) asks.push({player: controllerOf(state, id), objectId: id, options: candidates.map((c) => c.key)});
+  const asks = [], pending = ids.map(id => ({id, byEffect})), visited = new Set();
+  for (let index = 0; index < pending.length; index++) {
+    const {id, byEffect: destroyingEffect} = pending[index];
+    if ((!recursive && answers[id] !== undefined) || !state.objects[id] || keywordsOf(state, id).includes("Indestructible") || visited.has(id)) continue;
+    visited.add(id);
+    const candidates = destructionReplacements(state, id, {noRegenerate, byEffect: destroyingEffect});
+    const pick = candidates.length === 1 ? candidates[0] : candidates.find(candidate => candidate.key === answers[id]);
+    if (candidates.length >= 2 && !pick) asks.push({player: controllerOf(state, id), objectId: id, options: candidates.map((c) => c.key)});
+    if (recursive && pick?.aura !== undefined) pending.push({id: pick.aura, byEffect: true});
   }
   return asks.sort((a, b) => rank(a.player) - rank(b.player));
 }
@@ -903,9 +924,11 @@ export function destructionQuestion(state, effect, context) {
  *
  * @returns {boolean} whether the destruction was replaced
  */
-export function destructionReplaced(state, id, events, {noRegenerate = false, chosen = undefined, byEffect = false} = {}) {
+export function destructionReplaced(state, id, events, {noRegenerate = false, chosen = undefined, byEffect = false, deferredMoves = null, answers = {}} = {}) {
   const candidates = destructionReplacements(state, id, {noRegenerate, byEffect});
   if (!candidates.length) return false;
+  if (deferredMoves && candidates.length > 1 && !candidates.some(candidate => candidate.key === chosen))
+    throw new Error("A deferred destruction needs its explicit live replacement answer");
   const pick = candidates.length === 1 ? candidates[0] : candidates.find((c) => c.key === chosen) ?? candidates[0];
   if (pick.key === "regenerate") return regenerated(state, id, events);
   const object = state.objects[id];
@@ -919,7 +942,11 @@ export function destructionReplaced(state, id, events, {noRegenerate = false, ch
   object.damage = 0;
   object.deathtouched = false;
   events.push(event("GameEventUmbraArmor", state, {card: cardRef(state, id), aura: cardRef(state, pick.aura)}));
-  if (!keywordsOf(state, pick.aura).includes("Indestructible") && !destructionReplaced(state, pick.aura, events, {byEffect: true})) moveOne(state, pick.aura, "graveyard", events);
+  if (!keywordsOf(state, pick.aura).includes("Indestructible") && !destructionReplaced(state, pick.aura, events,
+    {byEffect: true, ...(deferredMoves ? {deferredMoves, answers, chosen: answers[pick.aura]} : {})})) {
+    if (deferredMoves) {if (!deferredMoves.includes(pick.aura)) deferredMoves.push(pick.aura);}
+    else moveOne(state, pick.aura, "graveyard", events);
+  }
   return true;
 }
 
