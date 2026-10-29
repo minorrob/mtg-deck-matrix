@@ -767,17 +767,24 @@ export function drawsMore(state, player) {
  * draw it replaces, so the draws made instead are not replaced again.
  */
 export function drawsInstead(state, player, count) {
+  return [...new Set(drawInsteadEffects(state, player, count).map(effect => effect.controller))];
+}
+
+/* Replacement history belongs to an individual ability, including two Collectors controlled by the same player
+   (CR 614.5). Descendant instructions must still consider every unused effect (CR 616.1f-g). */
+export function drawInsteadEffects(state, player, count, replaced = []) {
   if (count < 2) return [];
   const seats = state.players.length, order = (p) => (p - player - 1 + seats) % seats;
-  const found = new Set();
+  const found = [];
   const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
     for (const ability of held(holderId))
       if (ability.kind === "static" && ability.rule === "draws-instead" && compileSelector({what: "player", ...ability.affects})(state, player, {controller: holder.controller, source: holderId}))
-        found.add(holder.controller);
+        if (!replaced.includes(`${holderId}:${ability.id}`))
+          found.push({key: `${holderId}:${ability.id}`, controller: holder.controller, sourceId: holderId});
   }
-  return [...found].sort((a, b) => order(a) - order(b));
+  return found.sort((a, b) => order(a.controller) - order(b.controller));
 }
 
 /**

@@ -24,7 +24,7 @@ import {mergedOrderToAsk} from "../state/index.mjs";
 import {ASKING, commandersGoingHome} from "./effects/asking.mjs";
 import {damageQuestion, addCounters, counterQuestion} from "./effects/resources.mjs";
 import {controllerOf} from "../rules/layers.mjs";
-import {destructionQuestion, drawQuestion, dredgers, singleDraws} from "./effects/zones.mjs";
+import {destructionQuestion, drawQuestion, dredgers, singleDraws, singleDrawSteps} from "./effects/zones.mjs";
 import {tokenQuestion} from "./effects/permanents.mjs";
 import {bindEffect} from "./bind.mjs";
 import {countEffect, amountOf} from "./amount.mjs";
@@ -291,7 +291,7 @@ export function runResolution(state, rng = null) {
        it then and a plain draw when none could (effects/asking.mjs, dredgeDraw): a dredge card the first dredge milled may
        replace the next. */
     else if (effect?.effect === "draw" && singleDraws(state, effect, resolving.context).some((player) => dredgers(state, player).length))
-      resolving.queue.splice(0, 1, ...singleDraws(state, effect, resolving.context).map((player) => ({effect: "dredgeDraw", player})));
+      resolving.queue.splice(0, 1, ...singleDrawSteps(state, effect, resolving.context).map(({player, replaced}) => ({effect: "dredgeDraw", player, replaced})));
     /* CR 616.1: a destruction two or more effects would replace, ending differently (umbra armor; effects/zones.mjs) -- the
        permanent's controller chooses which, before anything is destroyed (effects/asking.mjs, orderDestruction). */
     else if (destructionQuestion(state, effect, resolving.context)) resolving.queue[0] = {effect: "orderDestruction", destroy: effect};

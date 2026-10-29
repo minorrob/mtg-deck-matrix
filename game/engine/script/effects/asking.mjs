@@ -2033,8 +2033,8 @@ export const dredgeDraw = {
     const replaced = params.replaced ?? [], cards = dredgers(state, params.player).map((d) => d.id);
     if (!cards.length) return {events: drawEffect(state, {who: [params.player], count: 1, drawReplaced: replaced}, context)};
     /* CR 616.1, 614.5: the drawer may apply a mandatory doubler before optional dredge. Its resulting draws may each
-       be dredged, but that same doubler cannot replace them again. Alms Collector has already modified the instruction
-       before these single draws (CR 121.2a, 616.1g). */
+       be dredged, but that same doubler cannot replace them again. Its new multi-card instruction must reconsider
+       unused Collectors before splitting into single draws (CR 121.2a, 616.1g). */
     const more = drawsMore(state, params.player).filter((m) => !replaced.includes(m.key));
     const options = [...(more.length ? more.map((m) => ({kind: "more", ...m})) : [{kind: "draw"}]),
       ...cards.map((id) => ({kind: "dredge", id}))];
@@ -2054,8 +2054,8 @@ export const dredgeDraw = {
     const events = [];
     const selected = awaiting.options[index];
     if (selected.kind === "draw") return drawEffect(state, {who: [awaiting.player], count: 1, drawReplaced: awaiting.replaced}, {controller: awaiting.player});
-    if (selected.kind === "more") return {events, splice: Array.from({length: selected.count}, () =>
-      ({effect: "dredgeDraw", player: awaiting.player, replaced: [...awaiting.replaced, selected.key]}))};
+    if (selected.kind === "more") return {events, splice: [{effect: "draw", who: [awaiting.player], count: selected.count,
+      drawReplaced: [...awaiting.replaced, selected.key]}]};
     if (!dredgeInstead(state, awaiting.player, selected.id, events)) throw new Error("That card can no longer dredge: draw the card, or dredge with another");
     return events;
   },
@@ -2767,17 +2767,21 @@ export const orderDraws = {
     /* Each option by its effect's card -- "Rob's Alms Collector" -- and what it does; one whose controller has since left the
        game, with it, is said to be gone (CR 800.4a). */
     const held = staticAbilities(state);
-    const card = (you) => state.objects[state.zones.battlefield.find((id) => state.objects[id].controller === you
-      && held(id).some((a) => a.kind === "static" && a.rule === "draws-instead"))]?.card;
+    const card = (option) => option?.sourceId !== undefined ? state.objects[option.sourceId]?.card
+      : state.objects[state.zones.battlefield.find((id) => state.objects[id].controller === option
+        && held(id).some((a) => a.kind === "static" && a.rule === "draws-instead"))]?.card;
     return {id: `order-draws:${state.turn}:${awaiting.player}`, title: `${name(awaiting.player)} would draw ${awaiting.count} cards: whose replacement applies?`,
       mode: "one", min: 1, max: 1,
-      options: awaiting.options.map((you, index) => ({index, player: you,
-        label: card(you) ? `${name(you)}'s ${card(you)}: ${name(you)} and ${name(awaiting.player)} each draw a card` : "An effect no longer there"}))};
+      options: awaiting.options.map((option, index) => {
+        const you = option?.controller ?? option;
+        return {index, player: you, ...(option?.sourceId !== undefined ? {cardId: option.sourceId} : {}),
+          label: card(option) ? `${name(you)}'s ${card(option)}: ${name(you)} and ${name(awaiting.player)} each draw a card` : "An effect no longer there"};
+      })};
   },
   apply(state, awaiting, indices) {
     const chosen = Array.isArray(indices) && indices.length === 1 ? awaiting.options[indices[0]] : undefined;
     if (chosen === undefined) throw new Error("Invalid selection");
-    return {events: [], splice: [{...awaiting.draw, drawOrders: {...awaiting.answers, [awaiting.player]: chosen}}]};
+    return {events: [], splice: [{...awaiting.draw, drawOrders: {...awaiting.answers, [awaiting.player]: chosen.key ?? chosen}}]};
   },
   /* The drawing player has left the game: there is no draw of theirs to replace (CR 800.4a), and the rest goes on. */
   left(state, awaiting) {

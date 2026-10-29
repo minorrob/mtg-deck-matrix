@@ -117,5 +117,33 @@
     "caution": "The smoke.resolved count2 includes the countered target event; this is not two successfully resolved spells.",
     "generatedCandidatesEdited": false
   },
-  "diagnostics": "C:\\Users\\robmi\\CrankMagic\\workbench\\load100-w7-686d948f-diagnostics"
+  "diagnostics": "C:\\Users\\robmi\\CrankMagic\\workbench\\load100-w7-686d948f-diagnostics",
+  "drawInstructionFix20261029": {
+    "finding": "V8: a selected draw doubler bypassed Collector and lost applied replacement history",
+    "behavior": "Reconsider the modified multi-card instruction; preserve source+ability history through every descendant and JSON reload. Distinct Collectors remain selectable even under one controller.",
+    "proof": {
+      "focused": 13,
+      "newMutations": 10,
+      "currentOriginalW7Mutations": 22,
+      "movedLegacyK2": 3,
+      "missed": [],
+      "readers": {
+        "engine-draws-replaced": 19,
+        "engine-spells-draws-4c": 94,
+        "room-draw-card": 14,
+        "first-draw-check": 4,
+        "data-integrity": "pass",
+        "feature-wiring": 131
+      }
+    },
+    "limits": [
+      "Outside-resolution replacement-order fallback remains open pending real continuation callers.",
+      "No new final cards or promotions; no complete draw-theme or wave gate claim."
+    ],
+    "commands": [
+      "node tests/engine-draw-instructions.mjs",
+      "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w7-draw-instructions.py",
+      "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w7-spells.py"
+    ]
+  }
 }

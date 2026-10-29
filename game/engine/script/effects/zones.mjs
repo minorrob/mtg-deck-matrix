@@ -26,7 +26,7 @@ import {lastKnown} from "../../rules/layers.mjs";
 import {keywordsOf, controllerOf, abilitiesOf} from "../../rules/layers.mjs";
 import {selectMatching, compileSelector, matchesSelector, shareCreatureType} from "../filter.mjs";
 import {applyReplacements, enteringModifications, placeReplacedCounters, regenerated} from "../../rules/replacement.mjs";
-import {cantBeCountered, entersUntapped, enteringCountersPlaced, drawsInstead, cantBeSacrificed, drawForbidden, emptyDrawWins, drawsMore} from "../../rules/statics.mjs";
+import {cantBeCountered, entersUntapped, enteringCountersPlaced, drawInsteadEffects, cantBeSacrificed, drawForbidden, emptyDrawWins, drawsMore} from "../../rules/statics.mjs";
 import {winGame} from "./resources.mjs";
 import {runFollowUps} from "./index.mjs";
 import {amountOf} from "../amount.mjs";
@@ -674,21 +674,7 @@ const drawingPlayers = (state, who, controller) => {
 };
 export function draw(state, params, context) {
   const events = [];
-  const count = params.count ?? 1;
-  for (const player of drawingPlayers(state, params.who, context.controller)) {
-    /* "If an opponent would draw two or more cards, instead you and that player each draw a card" (Alms Collector; rules/
-       statics.mjs, drawsInstead): whose, when two players' would, as the drawing player chose (CR 616.1; effects/asking.mjs,
-       orderDraws) -- where nobody could be asked, the first in turn order after them. The two draw in turn order from the
-       active player, each one card. */
-    const instead = drawsInstead(state, player, count);
-    if (instead.length) {
-      const you = instead.includes(params.drawOrders?.[player]) ? params.drawOrders[player] : instead[0];
-      const seats = state.players.length, rank = (p) => (p - state.activePlayer + seats) % seats;
-      for (const who of [you, player].sort((a, b) => rank(a) - rank(b))) drawOne(state, who, events);
-      continue;
-    }
-    for (let i = 0; i < count; i += 1) drawOne(state, player, events, params.drawReplaced ?? []);
-  }
+  for (const step of singleDrawSteps(state, params, context)) drawOne(state, step.player, events, step.replaced);
   /* "Each opponent draws a card, then you draw a card for each opponent who drew a card this way" (Cut a Deal): the cards drawn,
      each the object it is in its drawer's hand, for what follows to count -- one who drew none (an empty library, CR 121.4) is
      not among them. */
@@ -710,7 +696,10 @@ function drawOne(state, player, events, replaced = []) {
      replaces it with that many draws, each one the others may still replace -- all of them made before the rest of the draw
      goes on. */
   const more = drawsMore(state, player).find((m) => !replaced.includes(m.key));
-  if (more) { for (let i = 0; i < more.count; i += 1) drawOne(state, player, events, [...replaced, more.key]); return; }
+  if (more) {
+    events.push(...draw(state, {who: [player], count: more.count, drawReplaced: [...replaced, more.key]}, {controller: player}));
+    return;
+  }
   if (library.length === 0) { state.players[player].drewFromEmpty = true; return; }
   const moved = moveOne(state, library[0], "hand", events, {owner: player});
   if (moved !== null && state.objects[moved]?.zone === "hand") {
@@ -762,16 +751,25 @@ export function dredgeInstead(state, player, cardId, events) {
     "instead you and that player each draw a card" among them (drawsInstead, the one its drawing player chose, `drawOrders`)
     -- for a dredge to replace any one of them (script/resolution.mjs). */
 export function singleDraws(state, params, context) {
+  return singleDrawSteps(state, params, context).map(step => step.player);
+}
+
+/* A modified multi-card instruction is reconsidered before its single draws (CR 121.2a, 616.1g). Every descendant
+   retains the applied ability keys, so neither its doubler nor its chosen Collector can apply twice (CR 614.5). */
+export function singleDrawSteps(state, params, context) {
   const count = params.count ?? 1, draws = [];
+  const replaced = params.drawReplaced ?? [];
   for (const player of drawingPlayers(state, params.who, context.controller)) {
-    const instead = drawsInstead(state, player, count);
+    const instead = drawInsteadEffects(state, player, count, replaced);
     if (instead.length) {
-      const you = instead.includes(params.drawOrders?.[player]) ? params.drawOrders[player] : instead[0];
+      const chosen = instead.find(effect => effect.key === params.drawOrders?.[player]
+        || effect.controller === params.drawOrders?.[player]) ?? instead[0];
       const seats = state.players.length, rank = (p) => (p - state.activePlayer + seats) % seats;
-      draws.push(...[you, player].sort((a, b) => rank(a) - rank(b)));
+      draws.push(...[chosen.controller, player].sort((a, b) => rank(a) - rank(b))
+        .map(who => ({player: who, replaced: [...replaced, chosen.key]})));
       continue;
     }
-    for (let i = 0; i < count; i += 1) draws.push(player);
+    for (let i = 0; i < count; i += 1) draws.push({player, replaced: [...replaced]});
   }
   return draws;
 }
@@ -784,8 +782,9 @@ export function singleDraws(state, params, context) {
 export function drawQuestion(state, effect, context, answers = {}) {
   if (effect?.effect !== "draw") return null;
   for (const player of drawingPlayers(state, effect.who, context.controller)) {
-    const instead = drawsInstead(state, player, effect.count ?? 1);
-    if (instead.length > 1 && !instead.includes(answers[player])) return {player, options: instead, count: effect.count};
+    const instead = drawInsteadEffects(state, player, effect.count ?? 1, effect.drawReplaced ?? []);
+    if (instead.length > 1 && !instead.some(option => option.key === answers[player] || option.controller === answers[player]))
+      return {player, options: instead, count: effect.count};
   }
   return null;
 }
