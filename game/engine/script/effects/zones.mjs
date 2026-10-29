@@ -161,6 +161,11 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
   if (destination === "battlefield" && from === "library" && state.objects[moved]) state.objects[moved].cameFrom = {zone: "library", owner: object.zonePlayer ?? object.owner};
   if (hosts) enchantOnArrival(state, moved, hosts, state.objects[moved].controller);
   if (entering) {
+    if ((entering.gainsKeywords ?? []).length) {
+      const timestamp = state.nextTimestamp++;
+      (state.effects ??= []).push({id: `entry-keywords:${moved}:${timestamp}`, layer: 6, affects: {ids: [moved]},
+        apply: {addKeywords: [...entering.gainsKeywords]}, until: null, sourceController: enteringController, timestamp});
+    }
     /* Tapped by its own "enters tapped", or by the effect that put it there ("onto the battlefield tapped"): before the
        event, which says how it entered. */
     if ((entering.tapped || tapped) && !entersUntapped(state, moved)) state.objects[moved].tapped = true;

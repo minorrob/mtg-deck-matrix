@@ -9,7 +9,7 @@ S = 'game/engine/rules/sba.mjs'
 A = 'game/engine/rules/actions.mjs'
 BREAKS = [
     ('token guard permits live nontoken moves', Z, '(object.token === true && object.zone !== "battlefield")', '(object.token !== true)'),
-    ('saved move does not restart', Z, 'if (!frame.stage) {', 'if (true) {'),
+    ('saved move does not restart', Z, '  if (!frame.stage) {\n    frame.proposal =', '  if (true) {\n    frame.proposal ='),
     ('unearth redirects the saved proposal', Z, 'if (object.exileIfLeaves === true)', 'if (false)'),
     ('commander waits for owner', Z, 'if (!frame.answer) return askRuleOperation', 'if (false) return askRuleOperation'),
     ('commander acceptance moves to command', Z, 'if (frame.answer.indices[0] === 0)', 'if (false)'),
@@ -62,7 +62,7 @@ BREAKS = [
     ('unknown owner rejected', T, 'if (outcome.after !== null && outcome.after !== undefined) throw', 'if (false) throw'),
     ('departed frame question cleared before recheck', T, 'if (state.awaiting?.kind === "rule-operation") state.awaiting = null;', ''),
     ('public answer dispatched to frame', T, 'if (awaiting.kind === "rule-operation") return continueRuleOutcome(state, answerRuleOperation(state, indices, amounts, rng, extra), rng);', ''),
-    ('canceled prefix triggers survive', S, 'if (state.ruleOperation && state.resolving) collectTriggers(state, state.resolving.events);', ''),
+    ('canceled prefix triggers survive', S, 'if (state.ruleOperation) collectTriggers(state, state.resolving?.events ?? state.ruleOperation.events);', ''),
     ('canceled frames withdrawn', S, '  cancelRuleOperation(state);', ''),
     ('concession does not run midresolution SBA', S, 'if (state.resolving || state.ruleOperation) {', 'if (false) {'),
     ('game end cancels instruction', S, 'if (gameOver(state)) {\n    cutShort(state);', 'if (gameOver(state)) {'),

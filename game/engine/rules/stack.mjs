@@ -35,6 +35,9 @@
  */
 
 import {holdArrival, enteredWith} from "./entering.mjs";
+import "./pre-entry.mjs";
+import {beginRuleOperation, registerRuleOperation, emitRuleEvents} from "./operations.mjs";
+import {patchEnteringObject} from "./pre-entry.mjs";
 import {ascendAsItResolves} from "../keywords/designations.mjs";
 import {conditionHolds, asksFirstResolution} from "../script/condition.mjs";
 import {moveObject, addObject, removeObject, eventCard} from "../state/index.mjs";
@@ -414,7 +417,33 @@ function paradigmResolves(state, entry) {
 
 /* The entry leaves the stack: a permanent spell to the battlefield, an instant or sorcery (or a spell that did not
    resolve) to its owner's graveyard, and an ability to nowhere. */
-function finishTop(state, entry, events, fizzled, attachTo = null) {
+registerRuleOperation("finish-permanent", (state, frame) => {
+  const entry = state.stack.find(candidate => candidate.stackId === frame.stackId) ?? (frame.stage === "did-not-enter" ? frame.departingEntry : null);
+  if (!entry || (frame.stage !== "did-not-enter" && !state.objects[entry.objectId]) || state.players[entry.playerId]?.lost) return {status: "done"};
+  if (!frame.stage) {
+    emitRuleEvents(state, frame.prefix);
+    delete frame.prefix;
+    frame.stage = "entering";
+    const object = state.objects[entry.objectId];
+    return {status: "continue", children: [{kind: "entering", objectId: entry.objectId, player: entry.playerId,
+      x: entry.x ?? 0, escaped: entry.escaped === true, kicked: entry.kicked ?? 0, phyrexianLife: entry.cast?.phyrexianLife ?? 0}]};
+  }
+  if (frame.stage === "entering" && frame.childResult?.entering?.to) {
+    frame.prepared = frame.childResult; frame.departingEntry = structuredClone(entry);
+    delete frame.childResult; frame.stage = "did-not-enter";
+    return {status: "continue", children: [{kind: "move-one", id: entry.objectId, to: frame.prepared.entering.to}]};
+  }
+  if (frame.childResult) emitRuleEvents(state, finishTop(state, entry, [], false, frame.attachTo,
+    frame.stage === "did-not-enter" ? frame.prepared : frame.childResult));
+  return {status: "done"};
+});
+function finishTop(state, entry, events, fizzled, attachTo = null, prepared = null) {
+  if (entry.permanent && !fizzled && state.objects[entry.objectId] && !prepared) {
+    entry.stage = "resolving";
+    const outcome = beginRuleOperation(state, {kind: "finish-permanent", stackId: entry.stackId, attachTo, prefix: events},
+      {after: {kind: "after-resolving"}});
+    return outcome.events;
+  }
   /* This entry, not whatever is on top: a copy it made as it resolved is above it (pushCopy). */
   const at = state.stack.indexOf(entry);
   rememberDepartingSpell(state, entry);
@@ -452,7 +481,7 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     /* Into its owner's graveyard, as the replacement effects have it (CR 608.2n, 614.1a): "if a card would be put into an
        opponent's graveyard from anywhere, instead exile it" (Dauthi Voidwalker). */
     const replaced = planned === "graveyard" ? graveyardBound(state, entry.objectId) : null;
-    const to = replaced ? replaced.to : planned;
+    const to = prepared?.entering?.to ?? (replaced ? replaced.to : planned);
     /* CR 614.12, asked before the move: a permanent coming off the stack enters tapped or with
        counters as ONE event, and the abilities that say so are on the spell, not on anything that
        is on the battlefield yet. */
@@ -469,13 +498,14 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
       events.push(...finishResolving(state));
       return events;
     }
-    const entering = to === "battlefield"
+    const entering = prepared?.entering ?? (to === "battlefield"
       ? enteringModifications(state, {objectId: entry.objectId, player: entry.playerId,
         types: object.types, abilities: object.abilities, x: entry.x ?? 0, escaped: entry.escaped === true, kicked: entry.kicked ?? 0, phyrexianLife: entry.cast?.phyrexianLife ?? 0})
-      : null;
+      : null);
     /* A face-down spell becomes a face-down permanent, the same characteristics (CR 702.168b). */
     const down = object.disguised === true ? {faceDown: true, disguised: true} : {};
     const arrived = moveObject(state, entry.objectId, to, ["graveyard", "library", "hand"].includes(to) ? owner : null, down);
+    if (to === "battlefield") patchEnteringObject(state.objects[arrived], prepared?.objectPatch);
     placeReplacedCounters(state, arrived, replaced);
     /* WHAT ITS COST EXILED (CR 607.2q; rules/actions.mjs, "behold a Goblin and exile it"): the permanent it becomes has it, for
        its ability that names the exiled card. Such a spell always becomes one as it resolves: a permanent card's spell ability
@@ -580,6 +610,11 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     if (to === "battlefield" && (object.castGrants ?? []).length)
       (state.effects ??= []).push({id: `cast-grants:${arrived}`, layer: 6, affects: {ids: [arrived]}, apply: {addAbilities: structuredClone(object.castGrants)}, until: null, sourceController: entry.playerId});
     if (entering) {
+      if (entering.gainsKeywords?.length) {
+        const timestamp = state.nextTimestamp++;
+        (state.effects ??= []).push({id: `entry-keywords:${arrived}:${timestamp}`, layer: 6, affects: {ids: [arrived]},
+          apply: {addKeywords: entering.gainsKeywords}, until: null, sourceController: entry.playerId, timestamp});
+      }
       if (entering.tapped) state.objects[arrived].tapped = true;
       for (const ask of entering.asks ?? []) (state.enteringQuestions ??= []).push({objectId: arrived, ...ask});
       /* Counters it enters with are put on it (CR 122.6) -- by its controller (122.6a): "twice that many instead" sees them. */

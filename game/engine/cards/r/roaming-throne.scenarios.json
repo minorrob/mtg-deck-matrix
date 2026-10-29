@@ -15,6 +15,20 @@
       ],
       "power": 1,
       "toughness": 1
+    },
+    "Entry Type Elf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
     }
   },
   "scenarios": [
@@ -78,6 +92,88 @@
             "card": "Roaming Throne",
             "power": 4,
             "toughness": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chosen Elf shares its actual subtype with another attacking Elf under Shared Animosity",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Entry Type Elf",
+            "Shared Animosity"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Roaming Throne"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Roaming Throne"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Elf"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Roaming Throne",
+            "Entry Type Elf"
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Roaming Throne",
+            "power": 5,
+            "toughness": 4
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Entry Type Elf",
+            "power": 2,
+            "toughness": 1
           }
         }
       ]

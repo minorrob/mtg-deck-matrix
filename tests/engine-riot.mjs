@@ -4,14 +4,14 @@
  *
  * "You may have this permanent enter with an additional +1/+1 counter on it. If you don't, it gains haste" (702.136a): a
  * replacement on its own entering (cards/index.mjs, rules/replacement.mjs), however it enters -- cast, or put there by an
- * effect -- its controller asked once it is there, before anyone has priority or any trigger goes on the stack
+ * effect -- its controller asked before it enters, before anyone has priority or any trigger goes on the stack
  * (rules/entering.mjs). The counter is put on by its controller (CR 122.6a: "twice that many" sees it) and said, as an
  * entering counter is; haste is the permanent's for as long as it is that permanent (CR 400.7). Each instance works
  * separately (702.136b).
  */
 import {runScenario} from "../game/engine/cards/scenario.mjs";
 import {keywordsOf, powerOf} from "../game/engine/rules/layers.mjs";
-import {awaitingChoice} from "../game/engine/rules/turn.mjs";
+import {awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {play, drive, happen, at, idOf, compiled, choose, labels, pilotsAnswer, keywordBuilt, index, checks} from "./helpers/x11-keywords.mjs";
 
 const {eq, ok, done} = checks("engine-riot");
@@ -25,9 +25,9 @@ const cast = (more = [], setup = []) => play([at(0, "hand", GW), at(0, "battlefi
 
 {
   const s = cast();
-  eq([s.awaiting?.kind, s.awaiting?.player, labels(s)], ["entering-choice", 0, ASK], "it resolved and entered: Rob is asked, a counter or haste");
-  eq([s.priorityPlayer, s.stack.length], [null, 0], "nobody holds priority while he decides");
-  const id = idOf(s, GW);
+  eq([s.awaiting?.kind, s.awaiting?.player, labels(s)], ["rule-operation", 0, ASK], "the resolving spell asks Rob for a counter or haste before entry");
+  eq([s.priorityPlayer, s.stack.length], [null, 1], "nobody holds priority and the spell remains on the stack while he decides");
+  const id = s.stack[0].objectId;
   eq([s.objects[id].counters["+1/+1"] ?? 0, keywordsOf(s, id).includes("Haste")], [0, false], "neither yet");
 }
 {
@@ -62,10 +62,14 @@ const cast = (more = [], setup = []) => play([at(0, "hand", GW), at(0, "battlefi
   /* Two instances work separately (702.136b): two questions; a counter from one and haste from the other. */
   eq(twice.problems, [], "a creature with riot twice compiles");
   const s = play([at(0, "hand", "Twin Rioter"), at(0, "battlefield", "Mountain")], [{tap: "Mountain"}, {cast: "Twin Rioter"}, {resolve: true}], {}, FIX);
-  const id = idOf(s, "Twin Rioter");
+  const original = s.stack[0].objectId;
+  ok(awaitingChoice(s).title.includes("choose the next entry replacement"), "two distinct riot replacement effects preserve their controller's order choice");
+  resolveAwaiting(s, [0]);
   choose(s, "Twin Rioter enters with a +1/+1 counter");
-  eq(s.awaiting?.kind, "entering-choice", "the second instance asks too");
+  eq(s.awaiting?.kind, "rule-operation", "the second instance asks before entry too");
   choose(s, "Twin Rioter gains haste");
+  const id = idOf(s, "Twin Rioter");
+  ok(id !== original, "both riot choices modify the single new permanent, not the old spell object");
   eq([s.objects[id].counters["+1/+1"], keywordsOf(s, id).includes("Haste"), s.awaiting], [1, true, null], "one counter and haste, each instance its own");
 }
 {

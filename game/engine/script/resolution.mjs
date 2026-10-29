@@ -25,13 +25,14 @@ import {ASKING, commandersGoingHome} from "./effects/asking.mjs";
 import {damageQuestion, addCounters, counterQuestion} from "./effects/resources.mjs";
 import {controllerOf} from "../rules/layers.mjs";
 import {drawQuestion, dredgers, singleDrawSteps} from "./effects/zones.mjs";
-import {tokenQuestion} from "./effects/permanents.mjs";
+import {tokenQuestion, tokenEntryEffectFrame} from "./effects/permanents.mjs";
 import {bindEffect} from "./bind.mjs";
 import {countEffect, amountOf} from "./amount.mjs";
 import {conditionHolds} from "./condition.mjs";
 import {proliferateTimes, drawsMore} from "../rules/statics.mjs";
 import {beginRuleOperation} from "../rules/operations.mjs";
 import {destructionFrame} from "../rules/destruction-operation.mjs";
+import {zoneEffectFrame} from "../rules/zone-operation.mjs";
 
 /** Whether a resolution is paused, waiting for somebody. */
 export const resolutionPending = (state) => Boolean(state.resolving);
@@ -332,8 +333,10 @@ export function runResolution(state, rng = null) {
     resolving.queue.shift();
     /* CR 616.1, 702.89a: destroying an Aura instead may create another destruction choice. Persist every caller stage,
        not just the top-level question, so neither that child nor the following instruction can run early. */
-    if (effect?.effect === "destroy" || effect?.effect === "destroyAll") {
-      const outcome = beginRuleOperation(state, destructionFrame(effect, resolving.context), {after: {kind: "resolution"}}, rng);
+    let operationFrame = zoneEffectFrame(effect, resolving.context) ?? tokenEntryEffectFrame(effect, resolving.context);
+    if (effect?.effect === "destroy" || effect?.effect === "destroyAll") operationFrame = destructionFrame(effect, resolving.context);
+    if (operationFrame) {
+      const outcome = beginRuleOperation(state, operationFrame, {after: {kind: "resolution"}}, rng);
       resolving.events.push(...outcome.events);
       if (outcome.status === "waiting") return {status: "waiting", events: unreported(resolving)};
       Object.assign(resolving.context, outcome.result?.context ?? {});
@@ -450,6 +453,10 @@ function carryOn(state, outcome, rng) {
   if (!Array.isArray(outcome) && Array.isArray(outcome.splice) && outcome.splice.length > 0) {
     state.resolving.queue.unshift(...outcome.splice);
   }
+  /* An answered play choice can start an instruction that itself asks before entry. Withdraw the old question and
+     advance its queue first, then let the explicit child own the wait; its splice remains behind that child. */
+  if (!Array.isArray(outcome) && outcome.operation)
+    return continueRuleResolution(state, beginRuleOperation(state, outcome.operation, {after: {kind: "resolution"}}, rng), rng);
   /* What follows the answer has the same random stream the answer had. */
   return runResolution(state, rng);
 }
