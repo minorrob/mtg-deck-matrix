@@ -8,6 +8,16 @@ INDEX = 'game/engine/cards/index.mjs'
 TRIGGER = 'game/engine/rules/trigger.mjs'
 AMOUNT = 'game/engine/script/amount.mjs'
 BREAKS = [
+    ('artifact spell supplied for smoke', COMPILE,
+     '"Smoke Artifact Spell": {types: ["Artifact"], manaCost: "{0}"},', ''),
+    ('enchantment spell supplied for smoke', COMPILE,
+     '"Smoke Enchantment Spell": {types: ["Enchantment"], manaCost: "{0}"},', ''),
+    ('artifact target selects artifact spell', COMPILE,
+     ': wants((o) => (o.types ?? []).includes("Artifact")) ? "Smoke Artifact Spell"',
+     ': false ? "Smoke Artifact Spell"'),
+    ('enchantment target selects enchantment spell', COMPILE,
+     ': wants((o) => (o.types ?? []).includes("Enchantment")) ? "Smoke Enchantment Spell"',
+     ': false ? "Smoke Enchantment Spell"'),
     ('smoke must play candidate', COMPILER,
      'if (smoke.played !== true) return', 'if (false) return'),
     ('seeded permanent is not played', COMPILE,

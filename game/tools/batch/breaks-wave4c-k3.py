@@ -71,7 +71,7 @@ BREAKS = [
     ('die: kept for what follows', RESOURCES, '  context.rolled = result;\n', ''),
     ('die: a die with sides', RESOURCES, '''  if (!(Number.isInteger(params.sides) && params.sides >= 2)) return [];\n''', ''),
     ('die: never without the stream', RESOURCES, '''  if (!rng) throw new Error("A die roll needs the game's random stream");\n''', ''),
-    ('die: said', RESOURCES, 'sides: params.sides, result})];', 'sides: params.sides})];'),
+    ('die: said', RESOURCES, 'sides: params.sides, result, rollId:', 'sides: params.sides, rollId:'),
     ('die: the registry', EFFECTS, '  rollDie,\n});', '});'),
     ('die: the vocabulary', VOCAB, '    "rollDie",\n', ''),
     ('die: the plan', PLAN, '`rollDie` ("roll a d20"', 'rollDie ("roll a d20"'),

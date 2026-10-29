@@ -34,4 +34,12 @@ const [template] = good.templates;
 const calibration = {minimumCount: 2, pooled: Array.from({length: 6}, () => ({rate: 1, low: 0.99})), rates: new Map()};
 assert.equal(trustOf(flyingLibrary, calibration)(template).ok, false, "a source count below the calibrated minimum is vetoed");
 assert.equal(trustOf(flyingLibrary, {...calibration, minimumCount: 1})(template).ok, true, "the measured minimum includes its exact boundary");
-console.log("load100-w7-compiler: 9 checks passed; actual smoke play and calibrated count required.");
+for (const type of ["Artifact", "Enchantment"]) {
+  const script = {...source, identity: {...source.identity, name: `Smoke ${type} Counter`},
+    oracleText: `Counter target ${type.toLowerCase()} spell.`, abilities: [{kind: "spell", text: `Counter target ${type.toLowerCase()} spell.`,
+      targets: [{what: "spell", types: [type]}], effects: [{effect: "counterSpell", spells: {target: 0}}]}]};
+  const actual = smokeTest(script, definition);
+  assert.equal(actual.played, true, `${type} counterspell is actually cast in its smoke fixture`);
+  assert.equal(actual.ok, true, `${type} fixture supplies a legal spell without weakening the smoke check`);
+}
+console.log("load100-w7-compiler: 13 checks passed; actual smoke play and calibrated count required.");

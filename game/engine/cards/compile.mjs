@@ -217,6 +217,9 @@ const SMOKE_FIXTURES = Object.freeze({
   "Smoke Instant": {types: ["Instant"], manaCost: "{0}", colors: ["U"], spell: {id: "s", text: "Target player draws a card.", targets: [{what: "player"}], effects: [{effect: "draw", count: 1, who: {target: 0}}]}},
   /* A free creature the card's own player casts, so a card aimed at its controller's creature spell has one to answer. */
   "Smoke Whelp": {types: ["Creature"], manaCost: "{0}", power: 1, toughness: 1},
+  /* Free permanent spells for a counterspell whose target must have one of these types (Annul). */
+  "Smoke Artifact Spell": {types: ["Artifact"], manaCost: "{0}"},
+  "Smoke Enchantment Spell": {types: ["Enchantment"], manaCost: "{0}"},
   /* A changeling card, every creature type (CR 702.73a), in the hand of a card that beholds ("behold an Elf", CR 701.4a). */
   "Smoke Changeling": {types: ["Creature"], subtypes: ["Shapeshifter"], manaCost: "{1}", keywords: ["Changeling"], power: 1, toughness: 1},
   /* A Jace planeswalker card, in the hand of a card that beholds a Jace ("behold a Jace or pay {1}", Countersculpt): Jace is a
@@ -250,6 +253,8 @@ export function smokeScenario(script) {
   const spellAims = (script.abilities ?? []).filter((a) => a?.kind === "spell").flatMap(aims).filter((t) => JSON.stringify(t).includes('"what":"spell"'));
   const wants = (test) => spellAims.some((t) => [t, ...(Array.isArray(t.anyOf) ? t.anyOf : [])].some(test));
   const answered = wants((o) => (o.types ?? []).includes("Creature")) ? "Smoke Whelp"
+    : wants((o) => (o.types ?? []).includes("Artifact")) ? "Smoke Artifact Spell"
+    : wants((o) => (o.types ?? []).includes("Enchantment")) ? "Smoke Enchantment Spell"
     : wants((o) => (o.types ?? []).includes("Instant") || (o.colors ?? []).length > 0) ? "Smoke Instant" : "Smoke Sorcery";
   const instantSpeed = !ownSpell && !isLand && Boolean(script.identity.manaCost)
     && ((script.identity.types ?? []).includes("Instant") || (script.abilities ?? []).some((a) => a?.kind === "keyword" && a.keyword === "flash"));
