@@ -542,8 +542,8 @@ function costChoice(state, awaiting) {
   /* An alternative cost that taps creatures ("tap four untapped creatures you control with flying", Sephara, Sky's Blade): exactly
      that many of the ones it may take -- the same question as a flashback cost's tap, answered the same way. */
   if (graveWay?.tap && !Array.isArray(action.flashbackTap))
-    return {id: `choose-cost:${action.objectId}`, title: `${name}: tap ${tappersInWords(graveWay.tap)}`, mode: "many", min: graveWay.tap.count, max: graveWay.tap.count, cost: "tap",
-      options: named(flashbackTappers(state, player, graveWay.tap))};
+    return tapFundingChoice(state, player, action, {id: `choose-cost:${action.objectId}`, title: `${name}: tap ${tappersInWords(graveWay.tap)}`, mode: "many", min: graveWay.tap.count, max: graveWay.tap.count, cost: "tap",
+      options: named(flashbackTappers(state, player, graveWay.tap))});
   /* A flashback cost's sacrifice (Dread Return; wave 4c, k2): exactly that many of the permanents it may take. */
   const sacrificing = action.flashback ? flashbackCost(state, player, action.objectId)?.sacrifice : null;
   if (sacrificing && !Array.isArray(action.flashbackSacrifice)) {
@@ -553,8 +553,8 @@ function costChoice(state, awaiting) {
   }
   if (action.escape === undefined) {
     const tap = flashbackCost(state, player, action.objectId)?.tap ?? {count: 0, selector: {}};
-    return {id: `choose-cost:${action.objectId}`, title: `${name}'s flashback: tap ${tappersInWords(tap)}`, mode: "many", min: tap.count, max: tap.count, cost: "tap",
-      options: named(flashbackTappers(state, player, tap))};
+    return tapFundingChoice(state, player, action, {id: `choose-cost:${action.objectId}`, title: `${name}'s flashback: tap ${tappersInWords(tap)}`, mode: "many", min: tap.count, max: tap.count, cost: "tap",
+      options: named(flashbackTappers(state, player, tap))});
   }
   const n = escapeWays(state, player, action.objectId).find((way) => way.kind === action.escape)?.exile ?? 0;
   return {id: `choose-cost:${action.objectId}`, title: `${name}'s escape: exile ${inWords(n)} other card${n === 1 ? "" : "s"} from your graveyard`,
@@ -625,6 +625,16 @@ function flashbackTapped(state, player, action, tap, forWhat = "for its flashbac
 function castTapCost(state, player, action) {
   return (action.flashback === true ? flashbackCost(state, player, action.objectId)?.tap : null)
     ?? (action.alternative !== undefined ? alternativeCosts(state, player, action.objectId).find(way => way.index === action.alternative)?.tap : null);
+}
+/* One factual complete payment, for an actor that wants to preserve it while choosing cost tappers. Human options are
+   unchanged: other legal subsets can fund differently. No subset is selected or committed by this metadata. */
+function tapFundingChoice(state, player, action, choice) {
+  if (state.sourceChoices !== true || action.autoTap !== true) return choice;
+  const [plan] = castTapPlans(state, player, action, 1);
+  if (!plan) throw new Error("That tap cost has no complete funding witness");
+  const units = new Map(tapUnits(state, player, undefined, pooledTaps(state)).map(unit => [unit.id, unit]));
+  return {...choice, fundingWitness: {kind: "mana-before-tap-cost", sources: plan.taps.map(tap => ({cardId: tap.id,
+    mana: structuredClone(units.get(tap.id).outputs?.[tap.color] ?? {[tap.color]: 1})})), payment: structuredClone(plan.payment)}};
 }
 
 /* BEHOLD (CR 701.4a): "behold an Elf" is "reveal an Elf card from your hand or choose an Elf you control"; "behold three

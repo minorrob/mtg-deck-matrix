@@ -1,6 +1,7 @@
 # W5 continuation
 
-Branch: `codex/engine-load100-w0-w5-mana`; follow-up draft PR #933 (prior #928 merged). No cards added or promoted.
+Branch: `codex/engine-load100-w0-w5-mana`; integration target `codex/engine-load100-w0`. The current draft is attached to
+the task and recorded by root in RUN; prior #928/#933/#938 merged. No cards added or promoted.
 Runtime checkpoints: `d9d00a00` (funding/basic choices/entry), `12a32a40` (delve X/search/source/riders).
 Shared source: `2c89a5c3` merged as `d807b03a`; lane JSON records the final proof checkpoint.
 
@@ -48,9 +49,11 @@ no further browser repeat without root's coordinated quiet window. Root/P0 are i
    a legal result. Fix full-payload kind signatures consistently in normal quick/search/pattern/physical identity paths;
    preserve saved historical keys through an explicit compatibility path. Actual C1/C2/bundled/restriction/effect families
    pass, but do not infer general output/ability equivalence from those bounded cases.
-   Operational RED: `W5-disjoint-pilot-red.mjs.txt` shows the house pilot choosing both mana Birds among its four cost
-   tappers, causing a correct refusal. P0 owns the pilot and is informed; coordinate typed constraints/factual legal witness
-   metadata without a human auto-answer/default policy. G-5 stays open.
+   The operational pilot RED in `W5-disjoint-pilot-red.mjs.txt` now passes. Native choose-cost includes one serializable
+   factual funding witness without changing any human options. The narrow generic house-pilot tap-cost chooser preserves
+   that witness and sends explicit indices; no human default, refused-answer substitution, or retry loop is added.
+   `evidence/w5-pilot-tap-cost.json` records417 native checks,25 native-room checks including Pay/reload/priority/zero
+   refusals/a real winner/identical replay, and three caught mutations. This fixture game is not pool/library G-5 credit.
    Do not claim whole payment/identity completeness from this ordinary-cast slice.
 4. Coordinate with W1's queued Siege transformed-cast seam before editing choicesNow/play flags.
    W4 owns the mana-ability `then` damage-continuation region; avoid overlapping edits there.

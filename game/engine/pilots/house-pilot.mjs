@@ -492,6 +492,15 @@ export function housePilot({seat, cards = () => null, picks = false} = {}) {
       if (id.startsWith("choose-cost:") && (choice.cost === "tap" || choice.cost === "escalate")) {
         const mine = new Map(creaturesOf(self).map((c) => [c.cardId, c]));
         const order = options.map((o, i) => i).sort((a, b) => (mine.get(options[a].cardId)?.power ?? 0) - (mine.get(options[b].cardId)?.power ?? 0) || a - b);
+        /* Preserve one actor-visible complete mana witness while choosing what to tap for the other cost. This is an
+           explicit pilot answer, not a human default, and leaves every other legal human subset available. */
+        const witness = choice.fundingWitness?.kind === "mana-before-tap-cost" ? choice.fundingWitness : null;
+        if (witness) {
+          const sources = new Set(witness.sources.map(source => source.cardId));
+          const indices = firstOf(choice, order.filter(i => !sources.has(options[i].cardId)), min);
+          if (indices.length !== min) throw new Error("Funding witness leaves too few legal cost tappers");
+          return {indices};
+        }
         return {indices: firstOf(choice, order, min)};
       }
       /* What to behold (CR 701.4a): permanents first -- choosing one shows nothing -- then cards revealed from the hand. */

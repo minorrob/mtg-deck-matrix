@@ -1,0 +1,28 @@
+{
+  "schema": "w5-pilot-tap-cost@1",
+  "base": "1000a25daae5fd7759e3bd865aaba565b3087651",
+  "nativeRed": "The actual house pilot answered [0,1,2,3], including both mana Birds among four cost tappers, and the engine correctly refused the otherwise legal Sephara cast.",
+  "runtime": "Native current-mode tap-cost choices carry one serializable factual complete funding witness. No human option is removed or selected. Only the house pilot's tap-cost branch preserves that visible witness while choosing its weakest cost creatures; it returns explicit answer indices once. No refused-answer substitution or retry loop was added.",
+  "proof": {
+    "nativeCommand": "node --stack-size=4000 tests/engine-load100-mana.mjs",
+    "nativeChecks": 417,
+    "nativeCases": ["Constructing/serializing factual choice changes no state and retains all six human options", "Witness includes only actor-visible source identities and their actual outputs", "Actual house-pilot answer chooses four disjoint cost IDs, pays after JSON reload, keeps actor priority, and resolves actual Sephara", "All fifteen human cost subsets and ten legal complete payments from the prior native proof remain intact"],
+    "roomCommand": "node --stack-size=4000 tests/room-pooled-taps.mjs",
+    "roomChecks": 25,
+    "roomCases": ["Real easy-house room/store starts normally with actual Sephara as commander", "Fixture setup priority policy reads only own projection and offered actions; cost answers always call the actual housePilot.answer implementation", "Native slice saves before Pay with all sources untapped; reopen resumes the actual pilot answer once", "Exact four cost IDs and distinct funding source commit, mana is spent, actor priority/passes are correct", "Zero refusals counted from match start; the actual game reaches a winner and replays identical state/journal"],
+    "otherReaders": {"engine-house-pilot": "19 checks, including100 engine games", "engine-tap-to-cast": 72, "engine-control": "green"},
+    "mutationsCommand": "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w5-pilot-tap-cost.py",
+    "baselineSuites": 5,
+    "caught": 3,
+    "missed": []
+  },
+  "remaining": ["Raw same-label distinct full-payload solver RED", "Original face-down six-reader browser startup failure and two uncredited mutations", "Effect-paid X/additional costs", "Historical live-game migration", "Operational source enumeration and unfinished seed2801"],
+  "poolOrLibraryG5CoverageCredit": false,
+  "cardsAdded": 0,
+  "cardsPromoted": 0,
+  "strictG3Accepted": false,
+  "wave0Complete": false,
+  "G5": false,
+  "G7": false,
+  "ignoresAdded": []
+}

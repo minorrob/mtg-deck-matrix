@@ -12,6 +12,8 @@ import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../game/engin
 import {resolveTop} from "../game/engine/rules/stack.mjs";
 import {concede} from "../game/engine/rules/sba.mjs";
 import {keywordsOf} from "../game/engine/rules/layers.mjs";
+import {housePilot} from "../game/engine/pilots/house-pilot.mjs";
+import {projectFor} from "../game/engine/projection.mjs";
 
 const cardIndex = loadCardIndex();
 let checks = 0;
@@ -656,5 +658,24 @@ for (const manaCost of ["{1}", "{G/U}"]) {
   eq([initial.players[0].restrictedMana.map(entry => [entry.key, entry.source]), initial.players[0].manaPool.C], [[["G", restricted]], 0], "casting retains the unspent creature-only green mana and spends the pure colorless mana");
   resolveTop(initial);
   eq(initial.players[0].life, 41, "the actual restricted/pure split still reaches native sorcery resolution");
+}
+{
+  const fixtures = {Bird: {types: ["Creature"], power: 1, toughness: 1, keywords: ["Flying"], abilities: [{id: "m", kind: "mana", tapSelf: true, produces: {W: 1}}]},
+    Drake: {types: ["Creature"], power: 1, toughness: 1, keywords: ["Flying"]}};
+  const {state} = runScenario({name: "pilot chooses a complete legal tap payment from actor-visible facts", setup: [{seat: 0, zone: "hand", cards: ["Sephara, Sky's Blade"]},
+    {seat: 0, zone: "battlefield", cards: ["Bird", "Bird", "Drake", "Drake", "Drake", "Drake"]}], steps: []}, cardIndex.definition, fixtures);
+  applyAction(state, 0, legalActions(state, 0).find(a => a.kind === "cast" && a.alternative !== undefined));
+  const before = structuredClone(state), choice = JSON.parse(JSON.stringify(awaitingChoice(state)));
+  eq(state, before, "constructing the factual funding witness changes no state");
+  eq([choice.fundingWitness?.kind, choice.fundingWitness?.sources.length, choice.fundingWitness?.payment.mana.W, choice.options.length], ["mana-before-tap-cost", 1, 1, 6], "one factual complete funding witness is serializable while every human cost option remains available");
+  const protectedIds = choice.fundingWitness.sources.map(source => source.cardId);
+  eq(choice.fundingWitness.sources.every(source => state.objects[source.cardId].zone === "battlefield" && source.mana.W === 1), true, "the witness contains only the actor's public mana sources and actual outputs");
+  const answer = housePilot({seat: 0}).answer(projectFor(state, 0), choice), costs = answer.indices.map(i => choice.options[i].cardId);
+  eq([costs.length, costs.some(id => protectedIds.includes(id))], [4, false], "the pilot chooses a complete cost subset without tapping its factual funding source");
+  const reloaded = JSON.parse(JSON.stringify(state)), events = resolveAwaiting(reloaded, answer.indices);
+  eq(events.filter(e => e.kind === "GameEventManaPool").map(e => e.data.fields.source.cardId), protectedIds, "the explicit pilot answer after JSON reload uses the witness's actual source");
+  eq([reloaded.awaiting, reloaded.priorityPlayer, reloaded.passes, reloaded.stack.at(-1)?.name, reloaded.players[0].manaPool.W], [null, 0, 0, "Sephara, Sky's Blade", 0], "the actual pilot payment casts once and returns priority to its actor");
+  resolveTop(reloaded);
+  eq(reloaded.zones.battlefield.some(id => reloaded.objects[id].card === "Sephara, Sky's Blade"), true, "the pilot's actual paid spell resolves");
 }
 console.log(`engine-load100-mana: ${checks} checks passed — printed costs, convoke alternatives, and funded casts.`);
