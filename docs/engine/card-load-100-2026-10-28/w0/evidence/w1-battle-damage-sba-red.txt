@@ -1,0 +1,240 @@
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: native damage Battle: every applicable permanent type receives its own proper damage result
++ actual - expected
+
+  [
++   4,
++   undefined,
+    2,
+-   undefined,
+-   0
+  ]
+
+native damage Battle,Creature: every applicable permanent type receives its own proper damage result
++ actual - expected
+
+  [
++   4,
+-   2,
+    undefined,
+    2
+  ]
+
+native damage Battle,Planeswalker: every applicable permanent type receives its own proper damage result
++ actual - expected
+
+  [
+-   2,
+    4,
++   4,
+    0
+  ]
+
+native damage Battle,Planeswalker,Creature: every applicable permanent type receives its own proper damage result
++ actual - expected
+
+  [
+-   2,
+    4,
++   4,
+    2
+  ]
+
+native excess Battle: Battle excess uses its current defense and the greatest result among all applicable types
+
+40 !== 43
+
+native excess Battle,Planeswalker,Creature: Battle excess uses its current defense and the greatest result among all applicable types
+
+41 !== 43
+
+zero non-Siege: a zero-defense non-Siege is put into its owner's graveyard by the actual SBA
++ actual - expected
+
++ []
+- [
+-   'Smoke Damage Battle'
+- ]
+
+zero Siege pending source trigger: after that exact trigger leaves the stack, the zero-defense Siege is put into its owner's graveyard
++ actual - expected
+
+  [
++   [],
+-   [
+-     'Smoke Damage Battle'
+-   ],
+    41
+  ]
+
+protector departure: the current controller receives a saved mandatory protector repair operation
++ actual - expected
+
+  [
++   undefined,
++   undefined
+-   'rule-operation',
+-   0
+  ]
+
++ actual - expected
+
++ [
++   'native damage Battle: every applicable permanent type receives its own proper damage result\n' +
++     '+ actual - expected\n' +
++     '\n' +
++     '  [\n' +
++     '+   4,\n' +
++     '+   undefined,\n' +
++     '    2,\n' +
++     '-   undefined,\n' +
++     '-   0\n' +
++     '  ]\n',
++   'native damage Battle,Creature: every applicable permanent type receives its own proper damage result\n' +
++     '+ actual - expected\n' +
++     '\n' +
++     '  [\n' +
++     '+   4,\n' +
++     '-   2,\n' +
++     '    undefined,\n' +
++     '    2\n' +
++     '  ]\n',
++   'native damage Battle,Planeswalker: every applicable permanent type receives its own proper damage result\n' +
++     '+ actual - expected\n' +
++     '\n' +
++     '  [\n' +
++     '-   2,\n' +
++     '    4,\n' +
++     '+   4,\n' +
++     '    0\n' +
++     '  ]\n',
++   'native damage Battle,Planeswalker,Creature: every applicable permanent type receives its own proper damage result\n' +
++     '+ actual - expected\n' +
++     '\n' +
++     '  [\n' +
++     '-   2,\n' +
++     '    4,\n' +
++     '+   4,\n' +
++     '    2\n' +
++     '  ]\n',
++   'native excess Battle: Battle excess uses its current defense and the greatest result among all applicable types\n' +
++     '\n' +
++     '40 !== 43\n',
++   'native excess Battle,Planeswalker,Creature: Battle excess uses its current defense and the greatest result among all applicable types\n' +
++     '\n' +
++     '41 !== 43\n',
++   "zero non-Siege: a zero-defense non-Siege is put into its owner's graveyard by the actual SBA\n" +
++     '+ actual - expected\n' +
++     '\n' +
++     '+ []\n' +
++     '- [\n' +
++     "-   'Smoke Damage Battle'\n" +
++     '- ]\n',
++   "zero Siege pending source trigger: after that exact trigger leaves the stack, the zero-defense Siege is put into its owner's graveyard\n" +
++     '+ actual - expected\n' +
++     '\n' +
++     '  [\n' +
++     '+   [],\n' +
++     '-   [\n' +
++     "-     'Smoke Damage Battle'\n" +
++     '-   ],\n' +
++     '    41\n' +
++     '  ]\n',
++   'protector departure: the current controller receives a saved mandatory protector repair operation\n' +
++     '+ actual - expected\n' +
++     '\n' +
++     '  [\n' +
++     '+   undefined,\n' +
++     '+   undefined\n' +
++     "-   'rule-operation',\n" +
++     '-   0\n' +
++     '  ]\n'
++ ]
+- []
+
+    at file:///C:/Users/robmi/CrankMagic/worktrees/load100/w0-w1-faces/tests/engine-battle-damage-sba.mjs:68:8
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: [
+    'native damage Battle: every applicable permanent type receives its own proper damage result\n' +
+      '+ actual - expected\n' +
+      '\n' +
+      '  [\n' +
+      '+   4,\n' +
+      '+   undefined,\n' +
+      '    2,\n' +
+      '-   undefined,\n' +
+      '-   0\n' +
+      '  ]\n',
+    'native damage Battle,Creature: every applicable permanent type receives its own proper damage result\n' +
+      '+ actual - expected\n' +
+      '\n' +
+      '  [\n' +
+      '+   4,\n' +
+      '-   2,\n' +
+      '    undefined,\n' +
+      '    2\n' +
+      '  ]\n',
+    'native damage Battle,Planeswalker: every applicable permanent type receives its own proper damage result\n' +
+      '+ actual - expected\n' +
+      '\n' +
+      '  [\n' +
+      '-   2,\n' +
+      '    4,\n' +
+      '+   4,\n' +
+      '    0\n' +
+      '  ]\n',
+    'native damage Battle,Planeswalker,Creature: every applicable permanent type receives its own proper damage result\n' +
+      '+ actual - expected\n' +
+      '\n' +
+      '  [\n' +
+      '-   2,\n' +
+      '    4,\n' +
+      '+   4,\n' +
+      '    2\n' +
+      '  ]\n',
+    'native excess Battle: Battle excess uses its current defense and the greatest result among all applicable types\n' +
+      '\n' +
+      '40 !== 43\n',
+    'native excess Battle,Planeswalker,Creature: Battle excess uses its current defense and the greatest result among all applicable types\n' +
+      '\n' +
+      '41 !== 43\n',
+    "zero non-Siege: a zero-defense non-Siege is put into its owner's graveyard by the actual SBA\n" +
+      '+ actual - expected\n' +
+      '\n' +
+      '+ []\n' +
+      '- [\n' +
+      "-   'Smoke Damage Battle'\n" +
+      '- ]\n',
+    "zero Siege pending source trigger: after that exact trigger leaves the stack, the zero-defense Siege is put into its owner's graveyard\n" +
+      '+ actual - expected\n' +
+      '\n' +
+      '  [\n' +
+      '+   [],\n' +
+      '-   [\n' +
+      "-     'Smoke Damage Battle'\n" +
+      '-   ],\n' +
+      '    41\n' +
+      '  ]\n',
+    'protector departure: the current controller receives a saved mandatory protector repair operation\n' +
+      '+ actual - expected\n' +
+      '\n' +
+      '  [\n' +
+      '+   undefined,\n' +
+      '+   undefined\n' +
+      "-   'rule-operation',\n" +
+      '-   0\n' +
+      '  ]\n'
+  ],
+  expected: [],
+  operator: 'deepStrictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.23.3

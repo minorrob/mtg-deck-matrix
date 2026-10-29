@@ -8,6 +8,14 @@ Linear ROB-199 under ROB-85. The record is `docs/engine/card-load-100-2026-10-28
 Claim: `game/engine/cards/**`, generated card files, `data/engine/candidates.json`, the run package,
 and the engine modules its debt fixes require, subject to the ownership requests below.
 The primary checkout has another session's unfinished merge and is untouched.
+**Latest October29 integration:** source `9195f0fc` assembles clean native refresh #947, Rob-approved narrow Snoop UI
+fix #949 and bounded Battle/SBA #950. Actual combined browser98 passes with fresh inspected screenshots; native
+Battle-SBA128/Battle95/intrinsic34/counter87/refresh70/free-cast20/Valakut29/Snoop-room and assets136/wiring131/integrity
+pass. Valakut's exact reported Purphoros Exile funding gap reproduces on current main and is covered by the existing
+W5 fix plus a new causal29-check reader. Full generators remains blocked at Scryfall search: DNS failed, then automatic
+review rejected the external retry under the rulings-only brief; explicit exception pending, no bypass/green claim.
+Exact checkpoint scan/push follows. P0/W5 held prototypes and W1 simultaneous linked-return debt remain outside.
+All wave0 gates remain open, no new cards/promotions. RUN.md is the detailed resume record.
 **Latest validated dependency:** code `449246c2` includes verifier/funding `74087c6d`, W1 counter-order `1553f7b1`
 and main `7f6e76ae`. Complete35-reader/20-mutation proof passes with none missed; root integration readers, manifest,
 wiring and integrity pass. Exact HEAD0 scan/push follows; draft #912 stays unfinished. W5 isolated native refresh,
@@ -81,6 +89,7 @@ RUN.md records exact checkpoints, diagnostics and restart seams; do not mark the
 | To | Request | State |
 | --- | --- | --- |
 | Engine playtest slot / UI owner | Dedicated P0 owns ROB-204 verification, ROB-210, ROB-211 and engine contracts for shared ROB-205 Cancel/ROB-209 stages. UI controls stay with their owner; shared Done requires both halves. Coordinate payment, operation and Battle seams. | Active: published draft #943 includes bounded Cancel, blink/Salty and priority cast/activation stages; committed-question refinement continues. Original Table browser startup is still RED. Details in `w0/PLAYTEST-ENGINE.md` and RUN |
+| Play / ROB-227 | Rob's explicit override permits the verified two Snoop board lines, required generated asset versions and regression proof here. All other UI stays with its owner. | Clean #949 merged to wave0; actual production98 and post-integration98 pass with inspected whole-screen artifacts. Independent hidden-top/held-draw controls caught. No deployment or full-layout claim |
 | Claude · Engine | The standing lane table predates Rob's direct October 28 card-load assignment. Current open PRs were checked: no separate active rule-module PR besides prerequisite #834 was listed. The run owns its debt modules and coordinates narrow shared-file scopes between its roles. | Resolved by the later direct assignment; no other session's active files are edited |
 | Play | Show the monarch already present in the room view on the board; keep a one-press card reference where applicable. | Existing canonical Requests row 1 remains open; Play owns the board |
 | Lounge owner | Wave-0 W2 needs only the named wish-card refusal in `game/room/table.mjs` `readDeck`; confirm any current overlap before editing. | Refreshed open PR file list at resume: no overlap; W2 owns the narrow refusal |

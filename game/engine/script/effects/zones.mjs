@@ -19,6 +19,7 @@
 
 import {holdArrival, enteredWith} from "../../rules/entering.mjs";
 import {entryCounterResult} from "../../rules/entry-characteristics.mjs";
+import {preparedSbaMove, consumeSbaMove, takeSbaDeparture} from "../../rules/sba-move-results.mjs";
 import {prepare} from "./attributes.mjs";
 import {afterwards, delayedTrigger, enchantable, enchantOnArrival, controlSourceLeft, endWhileSourceRemains} from "./permanents.mjs";
 import {typesOf} from "../../rules/layers.mjs";
@@ -76,7 +77,15 @@ const PERMANENT_TYPES = ["Artifact", "Battle", "Creature", "Enchantment", "Land"
 /* `notOnto`: permanents entering the battlefield at the same time as this one (effects/zones.mjs, moveZone's `together`) --
    an Aura among them enchants none of them (CR 303.4f: what it will enchant is chosen as it enters, and they are not yet
    there to be chosen). */
-export function moveOne(state, id, to, events, {owner = null, controller = null, tapped = false, faceDown = false, lookers = null, exiledBy = null, transformed = false, counters = null, notOnto = null, nonCommanderTo = null, commanderKeys = [], orderingPlayer = null, preparedProposal = null, preparedEntering = null, preparedCounterResult = null, entryPatch = null} = {}) {
+export function moveOne(state, id, to, events, options = {}) {
+  if (options.preparedMove === undefined) return performMove(state, id, to, events, options);
+  const prepared = preparedSbaMove(state, options.preparedMove, options.cohortId, id);
+  return performMove(state, id, prepared.proposal.to, events, {...prepared.options, preparedProposal: prepared.proposal,
+    preparedEntering: prepared.entering, preparedCounterResult: prepared.counterResult, entryPatch: prepared.entryPatch},
+  {...prepared, token: options.preparedMove});
+}
+
+function performMove(state, id, to, events, {owner = null, controller = null, tapped = false, faceDown = false, lookers = null, exiledBy = null, transformed = false, counters = null, notOnto = null, nonCommanderTo = null, commanderKeys = [], orderingPlayer = null, preparedProposal = null, preparedEntering = null, preparedCounterResult = null, entryPatch = null} = {}, prepared = null) {
   const object = state.objects[id];
   if (!object) return null;
   /* A TOKEN THAT HAS LEFT THE BATTLEFIELD STAYS WHERE IT IS (CR 111.8): it can't move to another zone or come back onto the
@@ -86,11 +95,11 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
   if (object.token === true && object.zone !== "battlefield") return null;
   const from = object.zone;
   const down = faceDown === true && to === "battlefield";
-  let card = down || (faceDown === true && to === "exile") ? {...cardRef(state, id), name: null, faceDown: true} : leavingRef(state, id);
+  let card = prepared?.card ?? (down || (faceDown === true && to === "exile") ? {...cardRef(state, id), name: null, faceDown: true} : leavingRef(state, id));
   /* Only a departure from the battlefield needs last known information (CR 113.7a): that is the
      zone where an object had characteristics worth remembering. A card moving hand to graveyard
      was never a 5/5. */
-  const leftBehind = from === "battlefield" ? lastKnown(state, id) : undefined;
+  const leftBehind = prepared?.leftBehind ?? (from === "battlefield" ? lastKnown(state, id) : undefined);
 
   const proposal = preparedProposal ?? applyReplacements(state, {
     event: "zone-change", objectId: id, from, to, player: object.controller,
@@ -128,6 +137,7 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
      stack, goes to its owner's graveyard (CR 303.4g). */
   const hosts = destination === "battlefield" && object.enchant && !asDown ? enchantable(state, object.enchant, enteringController).filter((host) => !(notOnto ?? []).includes(host)) : null;
   if (hosts && !hosts.length) {
+    if (prepared) return null;
     if (from !== "stack") return null;
     return moveOne(state, id, "graveyard", events, {owner: object.owner});
   }
@@ -201,11 +211,11 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
     ...(destination === "battlefield" && state.objects[moved]?.tapped ? {enteredTapped: true} : {}),
     /* And what it became wherever it went, when that zone is public (CR 400.7e): "that card" in a dies trigger. */
     ...(PUBLIC_ZONES.includes(destination) ? {becomes: moved} : {}),
-    from: {zoneType: ZONE_LABEL[from] ?? from, player: {playerId: object.controller}},
+    from: {zoneType: ZONE_LABEL[from] ?? from, player: {playerId: prepared ? leftBehind.controller : object.controller}},
     to: {zoneType: ZONE_LABEL[destination] ?? destination, player: {playerId: destination === "battlefield" ? enteringController : holder}},
   }));
   /* What the replacement that sent it there does beside the move (Kalitas's Zombie; rules/replacement.mjs, `followUps`). */
-  if (destination === proposal.to) events.push(...runFollowUps(state, proposal));
+  if (!prepared && destination === proposal.to) events.push(...runFollowUps(state, proposal));
   /* "You may have this creature enter as a copy of ...": its arrival waits for the answer (rules/entering.mjs). */
   if (destination === "battlefield") holdArrival(state, moved, events[events.length - 1]);
   /* "Enters prepared" (CR 614.1c, 722.3a): the designation it entered with, and its prepare spell's copy in exile (722.3c). */
@@ -213,7 +223,8 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
   /* What it entered with, said once it has (rules/entering.mjs, enteredWith). */
   if (destination === "battlefield") events.push(...enteredWith(state, moved, entering));
   /* What it exiled "until this leaves the battlefield", back now (CR 610.3). */
-  if (from === "battlefield") returnExiledUntil(state, id, events, leftBehind);
+  if (prepared) consumeSbaMove(state, prepared.token, prepared.cohortId, id, moved);
+  else if (from === "battlefield") returnExiledUntil(state, id, events, leftBehind);
   return moved;
 }
 
@@ -277,6 +288,22 @@ export function returnExiledUntil(state, departed, events, leftBehind = null) {
     if (card?.zone !== "exile" || state.players[card.owner]?.lost) continue;
     moveOne(state, exiled, "battlefield", events, {owner: card.owner});
   }
+}
+
+/* Cohort-only departure cleanup. The operation owns the receipt and runs every base move before this function can
+   return any linked cards; their existing native move-one children may then ask all ordinary entry questions. */
+export function finishSbaDeparture(state, cohortId, id, events) {
+  const {leftBehind, departedIds} = takeSbaDeparture(state, cohortId, id);
+  /* Every old cohort object is already gone. Spend their own control records together before a source's cleanup can
+     try to return control of a departed sibling; surviving controlled permanents retain the ordinary cleanup path. */
+  state.effects = (state.effects ?? []).filter(effect => !(effect.rule === "control-returns" && departedIds.includes(effect.affects.ids[0])));
+  rememberExileLooker(state, id, leftBehind.controller);
+  keepLastKnown(state, id, leftBehind);
+  controlSourceLeft(state, id, events);
+  endWhileSourceRemains(state, id);
+  const due = (state.exiledUntil ?? []).filter(link => link.source === id);
+  state.exiledUntil = (state.exiledUntil ?? []).filter(link => link.source !== id);
+  return due.map(link => link.exiled).filter(exiled => state.objects[exiled]?.zone === "exile" && !state.players[state.objects[exiled].owner]?.lost);
 }
 
 /**
@@ -848,13 +875,17 @@ const replacementWords = (state, id, key) => {
  * first player's in APNAP order first when several are destroyed at once (616.1, 101.4): `{player, objectId, options}`,
  * the options its keys.
  */
-export function destructionAsks(state, ids, answers = {}, {noRegenerate = false, byEffect = false} = {}) {
+export function destructionAsks(state, ids, answers = {}, {noRegenerate = false, byEffect = false, recursive = false} = {}) {
   const seats = state.players.length, rank = (player) => (player - (state.activePlayer ?? 0) + seats) % seats;
-  const asks = [];
-  for (const id of ids) {
-    if (answers[id] !== undefined || !state.objects[id] || keywordsOf(state, id).includes("Indestructible")) continue;
-    const candidates = destructionReplacements(state, id, {noRegenerate, byEffect});
-    if (candidates.length >= 2) asks.push({player: controllerOf(state, id), objectId: id, options: candidates.map((c) => c.key)});
+  const asks = [], pending = ids.map(id => ({id, byEffect})), visited = new Set();
+  for (let index = 0; index < pending.length; index++) {
+    const {id, byEffect: destroyingEffect} = pending[index];
+    if ((!recursive && answers[id] !== undefined) || !state.objects[id] || keywordsOf(state, id).includes("Indestructible") || visited.has(id)) continue;
+    visited.add(id);
+    const candidates = destructionReplacements(state, id, {noRegenerate, byEffect: destroyingEffect});
+    const pick = candidates.length === 1 ? candidates[0] : candidates.find(candidate => candidate.key === answers[id]);
+    if (candidates.length >= 2 && !pick) asks.push({player: controllerOf(state, id), objectId: id, options: candidates.map((c) => c.key)});
+    if (recursive && pick?.aura !== undefined) pending.push({id: pick.aura, byEffect: true});
   }
   return asks.sort((a, b) => rank(a.player) - rank(b.player));
 }
@@ -893,9 +924,11 @@ export function destructionQuestion(state, effect, context) {
  *
  * @returns {boolean} whether the destruction was replaced
  */
-export function destructionReplaced(state, id, events, {noRegenerate = false, chosen = undefined, byEffect = false} = {}) {
+export function destructionReplaced(state, id, events, {noRegenerate = false, chosen = undefined, byEffect = false, deferredMoves = null, answers = {}} = {}) {
   const candidates = destructionReplacements(state, id, {noRegenerate, byEffect});
   if (!candidates.length) return false;
+  if (deferredMoves && candidates.length > 1 && !candidates.some(candidate => candidate.key === chosen))
+    throw new Error("A deferred destruction needs its explicit live replacement answer");
   const pick = candidates.length === 1 ? candidates[0] : candidates.find((c) => c.key === chosen) ?? candidates[0];
   if (pick.key === "regenerate") return regenerated(state, id, events);
   const object = state.objects[id];
@@ -909,7 +942,11 @@ export function destructionReplaced(state, id, events, {noRegenerate = false, ch
   object.damage = 0;
   object.deathtouched = false;
   events.push(event("GameEventUmbraArmor", state, {card: cardRef(state, id), aura: cardRef(state, pick.aura)}));
-  if (!keywordsOf(state, pick.aura).includes("Indestructible") && !destructionReplaced(state, pick.aura, events, {byEffect: true})) moveOne(state, pick.aura, "graveyard", events);
+  if (!keywordsOf(state, pick.aura).includes("Indestructible") && !destructionReplaced(state, pick.aura, events,
+    {byEffect: true, ...(deferredMoves ? {deferredMoves, answers, chosen: answers[pick.aura]} : {})})) {
+    if (deferredMoves) {if (!deferredMoves.includes(pick.aura)) deferredMoves.push(pick.aura);}
+    else moveOne(state, pick.aura, "graveyard", events);
+  }
   return true;
 }
 

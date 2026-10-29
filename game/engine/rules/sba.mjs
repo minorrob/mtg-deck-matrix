@@ -45,11 +45,11 @@
  */
 
 import {moveObject, removeObject, PER_PLAYER, PUBLIC_ZONES, eventCard, rememberExileLooker, recordDeath} from "../state/index.mjs";
-import {applyReplacements, placeReplacedCounters} from "./replacement.mjs";
+import {applyReplacements, placeReplacedCounters, ruleReplacementCandidates} from "./replacement.mjs";
 import {lastKnown, supertypesOf, subtypesOf, toughnessOf, typesOf, keywordsOf, controllerOf, deriving, staticAbilities, abilitiesOf} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 import {commanderToAsk, resolveCommanderChoice, recordCommanderDamage} from "./commander.mjs";
-import {sacrificeOne, moveOne, returnExiledUntil, leavingRef, destructionReplaced, destructionAsks} from "../script/effects/zones.mjs";
+import {sacrificeOne, moveOne, returnExiledUntil, leavingRef, destructionReplaced, destructionAsks, destructionReplacements, destructionChoice, finishSbaDeparture} from "../script/effects/zones.mjs";
 import {changeLife, crown, refreshPendingDamageSources} from "../script/effects/resources.mjs";
 import {runFollowUps} from "../script/effects/index.mjs";
 import {mergedOrderToAsk} from "../state/index.mjs";
@@ -59,7 +59,9 @@ import {preparedCopyStays} from "../script/effects/attributes.mjs";
 import {endControlChange, nextRecord, endCounterDurations, controlByAuras} from "../script/effects/permanents.mjs";
 import {protectedFrom} from "./protection.mjs";
 import {answerForDeparted, answerRuleForDeparted, goOnWithout} from "./turn.mjs";
-import {cancelRuleOperation} from "./operations.mjs";
+import {cancelRuleOperation, beginRuleOperation, registerRuleOperation, askRuleOperation, emitRuleEvents} from "./operations.mjs";
+import {startSbaCohort, freezeSbaCohort, sbaCohort, reopenSbaPreparation, refreshPendingSbaSources, markSbaTriggerBatch} from "./sba-move-results.mjs";
+import {outsideEffectsFrame} from "./damage-operation.mjs";
 import {collectTriggers} from "./trigger.mjs";
 import {rememberDepartingSpell} from "./spell-memory.mjs";
 
@@ -78,6 +80,146 @@ const event = (kind, state, fields) => ({kind, data: {turn: state.turn, phase: s
 const cardRef = eventCard;
 
 const isCreature = (object) => (object.types ?? []).includes("Creature");
+
+/* CR 704.5v: only an actual triggered ability of this exact Siege can hold its zero-defense SBA. */
+function battleWaitingTrigger(state, id) {
+  return (state.pendingTriggers ?? []).some(trigger => trigger.source?.cardId === id && !state.players[trigger.controller]?.lost)
+    || state.stack.some(entry => entry.kind === "trigger" && entry.cardId === id && !state.players[entry.playerId]?.lost);
+}
+
+function battleProtectorRepair(state, id) {
+  if (state.objects[id]?.zone !== "battlefield" || !typesOf(state, id).includes("Battle")) return null;
+  const player = controllerOf(state, id), siege = subtypesOf(state, id).includes("Siege");
+  const protector = state.objects[id].protector;
+  /* CR 310.9g: an in-game protector can survive copying a non-Siege; entry's forced choice is not an ongoing restriction. */
+  if (state.players[protector] && !state.players[protector].lost && (!siege || protector !== player)) return null;
+  const eligible = state.players.filter(other => !other.lost && (siege ? other.id !== player : other.id === player)).map(other => other.id);
+  /* CR 704.5x-y: a missing protector waits while the Battle is attacked; an in-game but invalid protector does not. */
+  if ((protector === undefined || !state.players[protector] || state.players[protector].lost)
+    && state.combat?.attacks?.some(attack => attack.battle === id)) return null;
+  return {objectId: id, player, siege, eligible};
+}
+
+function setBattleProtector(state, id, player, events) {
+  const old = state.objects[id].protector;
+  state.objects[id].protector = player;
+  events.push(event("GameEventBattleProtectorChanged", state, {card: cardRef(state, id), oldProtector: old ?? null, protector: player}));
+}
+
+registerRuleOperation("battle-protector-sba", (state, frame) => {
+  const repair = battleProtectorRepair(state, frame.objectId);
+  if (!repair || state.players[repair.player]?.lost || state.gameOver) return {status: "done"};
+  if (!repair.eligible.length) return {status: "done"}; // The ordinary zero/unprotectable pass performs this move.
+  const selected = frame.answer ? frame.options[frame.answer.indices[0]] : undefined;
+  delete frame.answer;
+  if (!repair.siege || repair.eligible.includes(selected)) {
+    const events = [];
+    setBattleProtector(state, frame.objectId, repair.siege ? selected : repair.player, events);
+    state.ruleOperation.events.push(...events);
+    return {status: "done"};
+  }
+  frame.options = repair.eligible; frame.generation = (frame.generation ?? 0) + 1;
+  return askRuleOperation(state, frame, {player: repair.player, choice: {
+    id: `battle-protector-sba:${state.ruleOperation.serial}:${frame.objectId}:${frame.generation}`,
+    title: `${state.objects[frame.objectId].card}: choose its protector`, mode: "one", min: 1, max: 1,
+    options: repair.eligible.map((playerId, index) => ({index, playerId, label: state.players[playerId].name}))}});
+});
+
+/* CR 704.3: replacement planning holds the entire native cohort on the battlefield. Departure callbacks run only
+   after every base move, with one shared pre-move LKI snapshot. The ledger authorizes each commit exactly once. */
+registerRuleOperation("sba-cohort", (state, frame) => {
+  if (!frame.stage) {
+    frame.answers = structuredClone(state.destructionAnswers ?? {}); frame.stage = "destruction";
+  }
+  if (frame.stage === "destruction") {
+    const live = frame.lethal.filter(id => {
+      const object = state.objects[id];
+      if (object?.zone !== "battlefield" || !typesOf(state,id).includes("Creature")) return false;
+      const toughness = toughnessOf(state,id);
+      return toughness <= 0 || object.deathtouched === true || object.damage > 0 && object.damage >= toughness;
+    });
+    const destroyed = live.filter(id => !frame.required.includes(id) && toughnessOf(state,id) > 0);
+    if (frame.answer) {
+      const {objectId, options} = frame.destructionAsk;
+      const chosen = options[frame.answer.indices[0]];
+      if (state.objects[objectId]?.zone === "battlefield"
+        && destructionReplacements(state,objectId,{byEffect: !destroyed.includes(objectId)}).some(candidate => candidate.key === chosen)) frame.answers[objectId] = chosen;
+      else delete frame.answers[objectId];
+      delete frame.answer; delete frame.destructionAsk;
+    }
+    const ask = destructionAsks(state,destroyed,frame.answers,{recursive:true})[0];
+    if (ask) {
+      frame.destructionAsk = ask; frame.generation = (frame.generation ?? 0) + 1;
+      const choice = destructionChoice(state,ask);
+      choice.id = `sba-destruction:${state.ruleOperation.serial}:${frame.generation}:${ask.objectId}`;
+      return askRuleOperation(state,frame,{player:ask.player,choice});
+    }
+    const events = [], deferredMoves = [], members = frame.required.filter(id => state.objects[id]?.zone === "battlefield");
+    for (const id of live) {
+      if (members.includes(id)) continue;
+      if (toughnessOf(state,id) > 0 && (keywordsOf(state,id).includes("Indestructible")
+        || destructionReplaced(state,id,events,{chosen:frame.answers[id],deferredMoves,answers:frame.answers}))) continue;
+      members.push(id);
+    }
+    for (const id of Object.keys(frame.answers)) takeDestructionAnswer(state,id);
+    const moving = new Set([...members,...deferredMoves]);
+    frame.members = state.zones.battlefield.filter(id => moving.has(id)).map(id => ({id}));
+    frame.prefix.push(...events);
+    frame.cohortId = startSbaCohort(state, frame, frame.members, frame.prefix);
+    delete frame.prefix; frame.cursor = 0; frame.stage = "plan";
+  }
+  const cohort = sbaCohort(state, frame.cohortId);
+  if (frame.stage === "after-plan") {
+    if (!frame.childResult?.preparedMove) cohort.members.find(member => member.id === frame.planningId).skipped = true;
+    delete frame.childResult; frame.stage = "plan";
+  }
+  if (frame.stage === "plan") {
+    while (frame.cursor < cohort.members.length) {
+      const member = cohort.members[frame.cursor++];
+      if (state.objects[member.id]?.zone !== member.from) {member.skipped = true; continue;}
+      frame.planningId = member.id; frame.stage = "after-plan";
+      return {status: "continue", children: [{kind: "move-one", id: member.id, to: "graveyard", prepareOnly: true, cohortId: frame.cohortId}]};
+    }
+    /* A later sibling's question can outlive an outside concession. Applied prefixes stay fixed, but a source returned
+       by that concession can supply a new, still-unapplied replacement for an earlier completed proposal. */
+    const recheck = cohort.members.find(member => !member.skipped && state.objects[member.id]?.zone === member.from
+      && ruleReplacementCandidates(state, state.ruleOperation.sbaPreparedMoves[member.token].proposal).length);
+    if (recheck) {
+      const child = reopenSbaPreparation(state, frame, recheck.id); frame.planningId = recheck.id; frame.stage = "after-plan";
+      return {status: "continue", children: [child]};
+    }
+    frame.stage = "freeze";
+  }
+  if (frame.stage === "freeze") {
+    const snapshots = deriving(state, () => Object.fromEntries(cohort.members.filter(member => state.objects[member.id]?.zone === member.from)
+      .map(member => [member.id, {card: leavingRef(state, member.id), leftBehind: lastKnown(state, member.id)}])));
+    freezeSbaCohort(state, frame, snapshots); frame.stage = "commit";
+  }
+  if (frame.stage === "commit") {
+    const events = [...cohort.prefix]; cohort.prefix = [];
+    for (const member of cohort.members) {
+      if (member.skipped || member.committed) continue;
+      if (state.objects[member.id]?.zone !== member.from) {member.skipped = true; continue;}
+      moveOne(state, member.id, "graveyard", events, {preparedMove: member.token, cohortId: frame.cohortId});
+    }
+    markSbaTriggerBatch(state, frame, events);
+    collectTriggers(state, events);
+    emitRuleEvents(state, events); frame.cursor = 0; frame.stage = "departures";
+  }
+  if (frame.stage === "after-departure") {delete frame.childResult; frame.stage = "departures";}
+  if (frame.stage === "departures") {
+    if (frame.cursor >= cohort.departures.length) {cohort.phase = "done"; cohort.departures = []; return {status: "done"};}
+    const departure = cohort.departures[frame.cursor++], events = [];
+    const returns = finishSbaDeparture(state, frame.cohortId, departure.id, events);
+    emitRuleEvents(state, events); frame.stage = "after-departure";
+    return {status: "continue", children: [
+      ...(departure.proposal.followUps ?? []).map(follow => outsideEffectsFrame(follow.effects, {...follow.context,
+        ...(cohort.snapshots[follow.context.source] ? {lastKnown: cohort.snapshots[follow.context.source].leftBehind} : {})})),
+      ...returns.map(id => ({kind: "move-one", id, to: "battlefield"})),
+    ]};
+  }
+  return {status: "continue"};
+});
 
 /**
  * Deal damage to a player from a source, keeping the commander tally.
@@ -115,6 +257,7 @@ function lossReason(state, player) {
    no card of theirs represents ceases to exist; then whatever they still control is exiled. */
 function removePlayerFromBoard(state, playerId, events) {
   refreshPendingDamageSources(state);
+  refreshPendingSbaSources(state);
   for (const id of [...state.zones.battlefield]) {
     if (state.objects[id]?.owner !== playerId) continue;
     /* Face down, revealed as its owner leaves (CR 708.9). */
@@ -342,7 +485,7 @@ export function checkStateBasedActions(state) {
        damage is read once for the whole board, every object derived once (rules/layers.mjs, deriving) -- asking it again
        for each creature derived the board once per creature. Each one found is asked again below as it is acted on; one
        that only a death in this pass brings down dies in the next check. */
-    const {lethal, spent, asks} = deriving(state, () => {
+    const {lethal, spent, fallenBattles, asks} = deriving(state, () => {
       const lethal = new Set(state.zones.battlefield.filter((id) => {
         const object = state.objects[id];
         if (!typesOf(state, id).includes("Creature")) return false;
@@ -352,6 +495,9 @@ export function checkStateBasedActions(state) {
       return {lethal,
         /* And the planeswalkers with no loyalty left (CR 704.5i), acted on below. */
         spent: state.zones.battlefield.filter((id) => typesOf(state, id).includes("Planeswalker") && (state.objects[id].counters?.loyalty ?? 0) <= 0),
+        fallenBattles: state.zones.battlefield.filter(id => typesOf(state, id).includes("Battle")
+          && (((state.objects[id].counters?.defense ?? 0) <= 0 && (!subtypesOf(state, id).includes("Siege") || !battleWaitingTrigger(state, id)))
+            || battleProtectorRepair(state, id)?.eligible.length === 0)),
         /* WHICH REPLACES A DESTRUCTION, WHEN SEVERAL WOULD (CR 616.1; two Auras with umbra armor, or one and a regeneration
            shield): asked of the creature's controller before any of these destructions happens -- they happen at once (CR
            704.3) -- and the whole check made again with the answer (finishDestructionChoice). Read in the same question, every
@@ -360,6 +506,12 @@ export function checkStateBasedActions(state) {
     });
     /* While something else is being asked (a player conceding mid-question), the choice is not made for its controller: that
        creature waits for the next check, which asks. */
+    if (fallenBattles.length && !state.awaiting && !state.ruleOperation && !state.resolving) {
+      const outcome = beginRuleOperation(state, {kind: "sba-cohort", required: [...new Set([...spent,...fallenBattles])], lethal: [...lethal], prefix: events.splice(0)}, {after: {kind: "state-based"}});
+      events.push(...outcome.events);
+      if (outcome.status === "waiting") break;
+      continue;
+    }
     if (asks.length && !state.awaiting) { state.awaiting = {kind: "destruction-replacement", ...asks[0]}; break; }
     const undecided = new Set(asks.map((ask) => ask.objectId));
     for (const id of [...state.zones.battlefield]) {
@@ -428,7 +580,7 @@ export function checkStateBasedActions(state) {
     /* CR 704.5i: a planeswalker with loyalty 0 is put into its owner's graveyard -- put, not destroyed, so indestructible
        does not keep it; through the replacements and with its last known information. Read with the lethal creatures
        above, so one that was a creature too and died is gone. */
-    for (const id of spent) {
+    for (const id of new Set([...spent, ...fallenBattles])) {
       const object = state.objects[id];
       if (!object || object.zone !== "battlefield") continue;
       const card = cardRef(state, id);
@@ -495,6 +647,17 @@ export function checkStateBasedActions(state) {
         /* Only read: every object derived once (rules/layers.mjs, deriving). */
         const ask = deriving(state, () => mergedOrderToAsk(state) ?? legendToAsk(state) ?? commanderToAsk(state));
         if (ask) state.awaiting = ask;
+        else {
+          /* Forced non-Siege protection is determined by rule; Siege opponents remain an explicit saved choice. */
+          const repairs = deriving(state, () => state.zones.battlefield.map(id => battleProtectorRepair(state, id)).filter(Boolean));
+          for (const repair of repairs.filter(repair => !repair.siege)) setBattleProtector(state, repair.objectId, repair.player, events);
+          const order = state.players.map((_, n) => (state.activePlayer + n) % state.players.length);
+          const next = repairs.filter(repair => repair.siege).sort((a,b) => order.indexOf(a.player) - order.indexOf(b.player))[0];
+          if (next && !state.ruleOperation && !state.resolving) {
+            const outcome = beginRuleOperation(state, {kind: "battle-protector-sba", objectId: next.objectId}, {after: {kind: "state-based"}});
+            events.push(...outcome.events);
+          }
+        }
       }
       break;
     }

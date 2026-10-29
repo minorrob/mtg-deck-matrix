@@ -74,8 +74,8 @@ BREAKS = [
     # Shield counters
     ('a shield counter replaces no destruction', ZO, '  if (byEffect && (object.counters?.shield ?? 0) > 0) found.push({key: "shield"});\n', ''),
     ('a shield counter replaces the state-based destruction too', ZO,
-     'export function destructionReplaced(state, id, events, {noRegenerate = false, chosen = undefined, byEffect = false} = {}) {',
-     'export function destructionReplaced(state, id, events, {noRegenerate = false, chosen = undefined, byEffect = true} = {}) {'),
+     'export function destructionReplaced(state, id, events, {noRegenerate = false, chosen = undefined, byEffect = false, deferredMoves = null, answers = {}} = {}) {',
+     'export function destructionReplaced(state, id, events, {noRegenerate = false, chosen = undefined, byEffect = true, deferredMoves = null, answers = {}} = {}) {'),
     ('a shield counter not removed as it replaces a destruction', ZO, '    object.counters.shield = before - 1;\n', '    object.counters.shield = before;\n'),
     ('the shield choice unworded', ZO, '  if (key === "shield") return `Remove a shield counter from ${name}`;\n', ''),
     ('destroy effects not effects', ZO,
