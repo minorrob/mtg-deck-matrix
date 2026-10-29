@@ -9,30 +9,14 @@ import {characteristicsOf, staticAbilities} from "./layers.mjs";
 import {enteringChoice} from "./entering.mjs";
 import {CREATURE_TYPES} from "../keywords/creature-types.mjs";
 import {entryCopyPatch} from "../script/effects/permanents.mjs";
-import {chosenFor, withChosen, namesChosen} from "../script/chosen.mjs";
+import {withChosen, namesChosen} from "../script/chosen.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 import {amountOf} from "../script/amount.mjs";
 import {cardsIn} from "../state/index.mjs";
 import {runEffect} from "../script/effects/index.mjs";
 import {cantBeSacrificed} from "./statics.mjs";
-
-export function patchEnteringObject(object, patch) {
-  for (const key of patch?.remove ?? []) delete object[key];
-  Object.assign(object, structuredClone(patch?.set ?? {}));
-}
-
-export function prospectiveEnteringState(state, frame) {
-  const object = {...(frame.candidate ?? state.objects[frame.objectId]), id: frame.objectId, zone: "battlefield", zonePlayer: null,
-    controller: frame.player, counters: {}, tapped: false, timestamp: state.nextTimestamp};
-  patchEnteringObject(object, frame.entryFace);
-  if (frame.faceDown) Object.assign(object, {types: ["Creature"], subtypes: [], supertypes: [], colors: [], keywords: [], abilities: [], power: 2, toughness: 2});
-  patchEnteringObject(object, frame.objectPatch);
-  const own = (object.abilities ?? []).filter(ability => ability.kind === "static" && ability.layer !== undefined
-    && ability.affects?.self === true && !ability.worksFrom).map(ability => ({...chosenFor(ability, object),
-    sourceId: frame.objectId, sourceController: frame.player, timestamp: ability.timestamp ?? object.timestamp,
-    partOf: `${frame.objectId}|${ability.text ?? ability.id ?? ""}`, affects: {...ability.affects, ids: [frame.objectId]}}));
-  return {...state, objects: {...state.objects, [frame.objectId]: object}, effects: [...(state.effects ?? []), ...own]};
-}
+import {patchEnteringObject, prospectiveEnteringState, intrinsicEnteringCounters} from "./entry-characteristics.mjs";
+export {patchEnteringObject, prospectiveEnteringState} from "./entry-characteristics.mjs";
 
 function proposalIn(view, frame) {
   const current = characteristicsOf(view, frame.objectId);
@@ -71,10 +55,8 @@ function finishEntry(state, frame) {
   }
   const counters = {...frame.proposal.counters};
   for (const [counter, count] of Object.entries(frame.copyCounters ?? {})) counters[counter] = (counters[counter] ?? 0) + count;
-  if (current.types.includes("Planeswalker") && Number.isInteger(object.loyalty)) counters.loyalty = (counters.loyalty ?? 0) + object.loyalty;
-  /* CR 310.4b, 614.12: an ability-removal effect can remove this intrinsic entry ability. */
-  if (current.types.includes("Battle") && !current.lostAbilities && Number.isInteger(object.defense)) counters.defense = (counters.defense ?? 0) + object.defense;
-  if (frame.phyrexianLife > 0 && counters.loyalty > 0 && (object.keywords ?? []).includes("Compleated"))
+  for (const [counter, count] of Object.entries(intrinsicEnteringCounters(object, current))) counters[counter] = (counters[counter] ?? 0) + count;
+  if (frame.phyrexianLife > 0 && counters.loyalty > 0 && current.keywords.includes("Compleated"))
     counters.loyalty = Math.max(0, counters.loyalty - 2 * frame.phyrexianLife);
   for (const {counter, count} of frame.proposal.chosenCounters ?? []) {
     const n = amountOf(view, withChosen(count, object.chosen), {controller: frame.player, source: frame.objectId, x: frame.x ?? 0});

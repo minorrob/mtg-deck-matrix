@@ -8,6 +8,7 @@ engine change they needed -- each guard, each branch -- and the suite that catch
     python3 game/tools/batch/breaks.py game/tools/batch/breaks-wave4a-h3.py
 """
 SUITES = [
+    'tests/engine-intrinsic-entry.mjs',
     'tests/engine-wave4a-h3.mjs',
     'tests/engine-cards.mjs',
 ]
@@ -48,7 +49,7 @@ def NOT_KOMA(anchor):
     return anchor.replace('if (activationsForbidden(state, id) || ', 'if (')
 
 
-OWN_LOYALTY = '''  if ((types ?? []).includes("Planeswalker") && Number.isInteger(loyalty)) counters.loyalty = (counters.loyalty ?? 0) + loyalty;
+OWN_LOYALTY = '''  for (const [counter, count] of Object.entries(intrinsicEnteringCounters(view.objects[objectId], current))) counters[counter] = (counters[counter] ?? 0) + count;
   /* Copied preparation cards also enter with their designation (CR 614.12, 722.3a). */
   return {tapped: proposal.tapped === true, counters, asks: withChoiceCounters(proposal), designations: proposal.designations ?? []};'''
 COPY_KEYS = '"abilities", "power", "toughness", "loyalty", "defense", "spell", "enchant", "preparation"]);'

@@ -1,0 +1,16 @@
+import assert from "node:assert/strict";
+import {compileScript} from "../w0-w1-faces/game/engine/cards/index.mjs";
+import {loadCardIndex} from "../w0-w1-faces/game/tools/engine-cards.mjs";
+import {runScenario} from "../w0-w1-faces/game/engine/cards/scenario.mjs";
+const name = "Smoke Compleated Order";
+const compiled = compileScript({schema: "CrankCardScript@1", source: "hand", identity: {name, oracleId: "smoke-compleated-order",
+  types: ["Planeswalker"], manaCost: "{G/P}", colors: ["G"], colorIdentity: ["G"], loyalty: 3}, oracleText: "Compleated",
+  abilities: [{kind: "keyword", keyword: "compleated", text: "Compleated"}]});
+assert.deepEqual(compiled.problems, []);
+const cards = loadCardIndex();
+const {state} = runScenario({name: "Compleated and actual Doubling Season require the controller's replacement order", seats: 3,
+  setup: [{seat: 0, zone: "hand", cards: [name]}, {seat: 0, zone: "battlefield", cards: ["Doubling Season"]}],
+  steps: [{cast: name}, {resolve: true}], expect: []}, card => card === name ? compiled.definition : cards.definition(card));
+const walker = state.zones.battlefield.find(id => state.objects[id].card === name);
+console.log(JSON.stringify({life: state.players[0].life, awaiting: state.awaiting ?? null, entered: !!walker, loyalty: state.objects[walker]?.counters.loyalty}));
+assert.ok(state.awaiting, "CR 616.1: Compleated before doubling gives 2; doubling before Compleated gives 4, so entry must wait for the controller's explicit order");

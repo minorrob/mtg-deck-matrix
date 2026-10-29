@@ -49,7 +49,8 @@ import {compileSelector, matchesSelector, matchesLastKnown} from "../script/filt
 import {amountOf, isCounted} from "../script/amount.mjs";
 import {chosenFor, namesChosen} from "../script/chosen.mjs";
 import {protectedFrom} from "./protection.mjs";
-import {controllerOf, staticAbilities, lastKnown} from "./layers.mjs";
+import {controllerOf, staticAbilities, lastKnown, characteristicsOf} from "./layers.mjs";
+import {prospectiveEnteringState, intrinsicEnteringCounters} from "./entry-characteristics.mjs";
 import {conditionHolds} from "../script/condition.mjs";
 
 /* "This land enters tapped unless you control a Forest or a Plains" (a check land), "... unless you control two or
@@ -720,13 +721,12 @@ export function enteringModifications(state, {objectId, player, types, abilities
     entering: {abilities: abilities ?? []},
     tapped: false, counters: {},
   });
-  /* A planeswalker enters with as many loyalty counters as its printed loyalty (CR 306.5b): a replacement every
-     planeswalker has. */
-  const counters = {...(proposal.counters ?? {})}, loyalty = state.objects[objectId]?.loyalty;
-  if ((types ?? []).includes("Planeswalker") && Number.isInteger(loyalty)) counters.loyalty = (counters.loyalty ?? 0) + loyalty;
+  const view = prospectiveEnteringState(state, {objectId, player, candidate: {...state.objects[objectId], types: types ?? [], abilities: abilities ?? []}});
+  const current = characteristicsOf(view, objectId), counters = {...(proposal.counters ?? {})};
+  for (const [counter, count] of Object.entries(intrinsicEnteringCounters(view.objects[objectId], current))) counters[counter] = (counters[counter] ?? 0) + count;
   /* Compleated (CR 702.150a): two fewer for each Phyrexian symbol of its cost its caster paid with life (`phyrexianLife`,
      rules/actions.mjs), if it would enter with any. */
-  if (phyrexianLife > 0 && counters.loyalty > 0 && (state.objects[objectId]?.keywords ?? []).includes("Compleated"))
+  if (phyrexianLife > 0 && counters.loyalty > 0 && current.keywords.includes("Compleated"))
     counters.loyalty = Math.max(0, counters.loyalty - 2 * phyrexianLife);
   return {tapped: proposal.tapped === true, counters, asks: withChoiceCounters(proposal), designations: proposal.designations ?? []};
 }
@@ -752,10 +752,9 @@ function withChoiceCounters(proposal) {
 export function ownEntering(state, {objectId, player, types, abilities}) {
   const own = (abilities ?? []).filter((ability) => !ability.change?.copyOf);
   const {proposal} = applyReplacements(state, {event: "enters", objectId, player, types: types ?? [], x: 0, entering: {abilities: own}, tapped: false, counters: {}, ownOnly: true});
-  /* A planeswalker copied as it enters (Spark Double, Clever Impersonator) has that planeswalker's printed loyalty, a copiable
-     value (CR 707.2), and enters with that many loyalty counters (CR 306.5b), as enteringModifications gives any other. */
-  const counters = {...(proposal.counters ?? {})}, loyalty = state.objects[objectId]?.loyalty;
-  if ((types ?? []).includes("Planeswalker") && Number.isInteger(loyalty)) counters.loyalty = (counters.loyalty ?? 0) + loyalty;
+  const view = prospectiveEnteringState(state, {objectId, player, candidate: {...state.objects[objectId], types: types ?? [], abilities: own}});
+  const current = characteristicsOf(view, objectId), counters = {...(proposal.counters ?? {})};
+  for (const [counter, count] of Object.entries(intrinsicEnteringCounters(view.objects[objectId], current))) counters[counter] = (counters[counter] ?? 0) + count;
   /* Copied preparation cards also enter with their designation (CR 614.12, 722.3a). */
   return {tapped: proposal.tapped === true, counters, asks: withChoiceCounters(proposal), designations: proposal.designations ?? []};
 }

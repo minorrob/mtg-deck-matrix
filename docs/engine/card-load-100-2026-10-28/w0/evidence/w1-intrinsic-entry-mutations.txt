@@ -1,0 +1,14 @@
+baseline: every suite passes unbroken
+caught lost intrinsic ability still gives loyalty -- tests/engine-intrinsic-entry.mjs
+caught nonplaneswalker still gets loyalty -- tests/engine-intrinsic-entry.mjs
+caught intrinsic printed loyalty omitted -- tests/engine-intrinsic-entry.mjs
+caught intrinsic loyalty read from prospective empty counters -- tests/engine-intrinsic-entry.mjs
+caught native intrinsic counters omitted -- tests/engine-intrinsic-entry.mjs
+caught native Compleated reads removed printed keyword -- tests/engine-intrinsic-entry.mjs
+caught legacy Compleated reads removed printed keyword -- tests/engine-intrinsic-entry.mjs
+caught legacy entry derives actual old zone -- tests/engine-intrinsic-entry.mjs
+caught copied legacy entry derives actual old zone -- tests/engine-intrinsic-entry.mjs
+caught prospective entry retains actual old zone -- tests/engine-intrinsic-entry.mjs
+caught prospective own static effect omitted -- tests/engine-intrinsic-entry.mjs
+caught intrinsic counters erase independent grants -- tests/engine-intrinsic-entry.mjs
+missed: []
