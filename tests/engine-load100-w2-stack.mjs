@@ -634,4 +634,67 @@ for (const withLand of [false, true]) {
 }
 }
 
+if (!process.argv[2] || process.argv[2] === "entryTokens") {
+  const fresh = () => {
+    const state = createState({matchId: "token-entry", seed: "token-entry", players: [{name: "Rob"}, {name: "Maya"}, {name: "Trey"}]});
+    state.phase = "MAIN1"; state.turn = 1; state.activePlayer = 0; state.priorityPlayer = 0;
+    bear(state, "Token Entry Elf"); state.objects[state.zones.battlefield[0]].subtypes = ["Elf"];
+    return state;
+  };
+  for (const copying of [true, false]) {
+    let state = fresh();
+    const source = copying ? addObject(state, {...index.definition("Metallic Mimic"), card: "Metallic Mimic", owner: 0, controller: 0}, "battlefield") : null;
+    if (copying) state.objects[source].chosen = "Elf";
+    const before = state.nextObjectId, existing = state.zones.battlefield.length;
+    const effect = copying ? {effect: "copyPermanent", targets: [source], count: 2, remember: true}
+      : {effect: "createToken", count: 2, token: {...index.definition("Metallic Mimic"), name: "Metallic Mimic"}, remember: true};
+    const first = beginResolution(state, [effect, {effect: "gainLife", who: [0], amount: 5}], {controller: 0, source: null});
+    eq([state.zones.battlefield.length, state.nextObjectId, state.players[0].life], [existing, before, 40], "simultaneous Mimic tokens wait for every pre-entry choice before creation or the next instruction");
+    eq(first.events.filter(event => event.kind === "GameEventCardChangeZone"), [], "planning a token instruction emits no provisional token arrival");
+    const partial = resolveAwaiting(state, [awaitingChoice(state).options.find(option => option.label === "Elf").index]);
+    eq([state.zones.battlefield.length, state.nextObjectId, partial.length], [existing, before, 0], "the first token's answer still creates no member of the simultaneous group");
+    state = JSON.parse(JSON.stringify(state));
+    const last = resolveAwaiting(state, [awaitingChoice(state).options.find(option => option.label === "Elf").index]);
+    const made = state.zones.battlefield.filter(id => state.objects[id].token);
+    eq(made.map(id => [state.objects[id].chosen, state.objects[id].counters["+1/+1"] ?? 0]), [["Elf", copying ? 1 : 0], ["Elf", copying ? 1 : 0]],
+      "only a pre-existing Mimic modifies each sibling; a simultaneously created Mimic supplies no entering replacement");
+    eq([state.nextObjectId, state.players[0].tokensThisTurn, state.players[0].life, state.ruleOperation, state.resolving], [before + 2, 2, 45, undefined, null],
+      "all token IDs, creator counts and the following effect complete once after reload");
+    eq(last.filter(event => event.kind === "GameEventCardChangeZone" && event.data.fields.createdAsToken).length, 2, "the token batch reports two actual arrivals once");
+  }
+  {
+    const state = fresh(), source = addObject(state, {...index.definition("Mox Diamond"), card: "Mox Diamond", owner: 0, controller: 0}, "battlefield");
+    const before = state.nextObjectId;
+    const out = beginResolution(state, [{effect: "copyPermanent", targets: [source]}, {effect: "gainLife", who: [0], amount: 1}], {controller: 0, source: null});
+    eq([state.zones.battlefield.filter(id => state.objects[id].token), state.nextObjectId, state.players[0].tokensThisTurn ?? 0, state.players[0].life], [[], before, 0, 41],
+      "a token Mox that cannot discard is never created in another zone or on the battlefield");
+    eq(out.events.filter(event => event.kind === "GameEventCardChangeZone"), [], "failed token entry emits no token arrival or departure");
+  }
+  {
+    let state = fresh(); const other = bear(state, "Other Aura Host");
+    const source = addObject(state, {...index.definition("Rancor"), card: "Rancor", owner: 0, controller: 0}, "battlefield");
+    state.objects[source].attachedTo = state.zones.battlefield[0]; state.objects[state.zones.battlefield[0]].attachments = [source];
+    const before = state.nextObjectId;
+    beginResolution(state, [{effect: "copyPermanent", targets: [source]}], {controller: 0, source: null});
+    eq([state.zones.battlefield.filter(id => state.objects[id].card === "Rancor").length, state.nextObjectId], [1, before], "an Aura token waits outside the battlefield for its controller's attachment choice");
+    state = JSON.parse(JSON.stringify(state));
+    const last = resolveAwaiting(state, [awaitingChoice(state).options.find(option => option.cardId === other).index]);
+    const [made] = state.zones.battlefield.filter(id => state.objects[id].token);
+    eq([state.objects[made].attachedTo, state.objects[other].attachments, state.nextObjectId], [other, [made], before + 1], "the chosen Aura token is created attached once after reload");
+    eq(last.filter(event => event.kind === "GameEventBecomesTarget"), [], "choosing an Aura's entry attachment does not target or trigger ward");
+  }
+}
+
+if (!process.argv[2] || process.argv[2] === "tokenSizes") {
+  const state = table();
+  bear(state, "Counted Creature A"); bear(state, "Counted Creature B");
+  const result = beginResolution(state, [{effect: "createToken", token: {name: "Counted Entry", types: ["Creature"], power: "X",
+    toughness: {count: {what: "permanent", types: ["Creature"], controller: "you"}}}}], {controller: 0, source: null, x: 4});
+  const [made] = state.zones.battlefield.filter(id => state.objects[id].token);
+  eq([state.objects[made].power, state.objects[made].toughness], [4, 2], "X and object-valued token stats are counted against the real game before token entry");
+  eq(result.events.filter(event => event.kind === "GameEventCardChangeZone" && event.data.fields.becomes === made).length, 1, "the sized token enters once through the actual effect caller");
+  bear(state, "Counted Creature C");
+  eq([state.objects[made].power, state.objects[made].toughness], [4, 2], "a token's counted creation stats stay its copiable values after the board changes");
+}
+
 console.log(`engine-load100-w2-stack: ${checks} checks passed`);
