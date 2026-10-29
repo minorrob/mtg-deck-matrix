@@ -15,5 +15,95 @@
     "| Destruction replacements in nested effects (shield, then Auras in attach order) | `script/effects/zones.mjs`:864 | W3 |",
     "| Zone-change replacements (Liesa): the question is raised, the move does not wait | `replacement.mjs`:35 | W3 |"
   ],
-  "status": "queued; prerequisite PR 834 verification in progress"
+  "status": "bounded checkpoint: shared operation foundation and distinct-source limited MayPlay choices proven; wave-0 graveyard debt remains open",
+  "checkpoint": {
+    "foundation": "b2ba9343e4316c618f5b49f8bfec5df5374d0583",
+    "newCards": 0,
+    "promotions": 0,
+    "gatesClosed": []
+  },
+  "changes": [
+    {
+      "scope": "shared foundation only",
+      "files": [
+        "game/engine/rules/operations.mjs",
+        "tests/engine-rule-operations.mjs",
+        "game/tools/batch/breaks-rule-operations.py"
+      ],
+      "behavior": "Serializable explicit stage frames, nested children in source order, incremental event reporting, persisted option-index questions and owner continuation tags. No snapshot/replay or serialized closures. Unsupported numeric/text/amount/damage modes refused. Domain callers and whole-game concession behavior are not implemented by this foundation.",
+      "validation": {
+        "suite": "node tests/engine-rule-operations.mjs",
+        "checks": 75,
+        "mutationCommand": "python -u game/tools/batch/breaks.py game/tools/batch/breaks-rule-operations.py",
+        "caught": 32,
+        "missed": []
+      }
+    },
+    {
+      "scope": "limited play permission choice",
+      "files": [
+        "game/engine/rules/actions.mjs",
+        "tests/engine-load100-w3-graveyard.mjs",
+        "tests/engine-play-from.mjs",
+        "tests/engine-play-from-zones.mjs"
+      ],
+      "behavior": "Distinct sources that spend a limit, type use or count remain separate legal offers. The player chooses which resource to consume. Identical unlimited permissions retain one equivalent offer.",
+      "redBefore": "Two count:1 MayPlay effects yielded one cast offer with no via instead of both effect IDs. The focused assertion failed before the change.",
+      "validation": {
+        "suite": "node tests/engine-load100-w3-graveyard.mjs",
+        "checks": 8,
+        "mutationCommand": "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w3-graveyard.py",
+        "caught": 2,
+        "missed": []
+      },
+      "rulings": "Chainer, Nightmare Adept official 2019-08-23 ruling: separate permissions can each be used. Public Scryfall evidence cached in task diagnostics; CR 601.2a, 305.1.",
+      "testCorrection": "Root approved correcting the obsolete Muldrotha plus Grave Gate assertion from one auto-selected [null] offer to the exact two named offers, with Creature type on Muldrotha. Every existing zone/resource and unspent-Muldrotha assertion is retained. The player explicitly selects Gate; a cloned branch explicitly selects Muldrotha and proves its Creature use is spent. Kess/Conduit and finite/unlimited effect reader inputs now also select the intended permission explicitly."
+    }
+  ],
+  "remaining": [
+    "Commander hand/library replacement choice on costs and routes outside the existing moveZone resolution pre-question (CR 903.9b).",
+    "Manifest dread when the selected face-down object cannot enter (CR 701.40f, 701.62a); the entry-prohibition grammar and behavioral witness remain absent.",
+    "Nested destruction replacement choices through every caller, including outside effect resolution and state-based actions.",
+    "Zone-change replacement ordering must pause the actual move, including Liesa; no completed general continuation consumer yet.",
+    "RememberObjects and RememberChanged general constructs, and all missing MayPlay forms; catalog credit remains unchanged.",
+    "Shared explicit operation consumers/boundaries for W2 entry/copy, W5 mana, W6 token/counter replacements and W7 draw/dice. The foundation alone does not close any of these debts."
+  ],
+  "unfinishedConsumer": {
+    "status": "Not committed; all runtime changes reverted from lane worktree at checkpoint",
+    "archive": "C:/Users/robmi/CrankMagic/workbench/load100-w3-continuation-wip-20261028",
+    "files": [
+      "continuation.patch",
+      "destruction-operation.mjs",
+      "zone-operation.mjs",
+      "nested-destruction-test.mjs"
+    ],
+    "observedOnly": "A bounded nested-destruction prototype passed 9 lane checks, existing resolution91 and commander56, including a JSON reload, but lacks mutations and public concession/complete caller integration. No fix or gate credit.",
+    "nextContract": "move-one frame {kind,id,to,options} should return {moved,zoneEventIndex,proposal}. W2 entering child kind entering loads via entering.mjs and returns {entering,objectPatch}. Its objectPatch MUST apply to the new object after moveObject, before ETB/counters; saved prototype currently applies to the old object and needs correction before use. W7 draw parent can mark the zone event via its operation-local index before reporting. Root must review and authorize any further shared consumer dependency merge."
+  },
+  "anchorAudit": {
+    "command": "python game/tools/batch/anchors.py",
+    "currentProblems": 53,
+    "recordedBaselineProblems": 57,
+    "newProblems": 0,
+    "status": "expected exit1; global gate remains red"
+  },
+  "ignoresAdded": [],
+  "validation": {
+    "node": "v22.23.3",
+    "readers": {
+      "engine-rule-operations": 75,
+      "engine-load100-w3-graveyard": 8,
+      "engine-may-play": 34,
+      "engine-actions": 34,
+      "engine-play-from": 20,
+      "engine-play-from-zones": 76,
+      "engine-libload-graveyard": 27,
+      "engine-cards": 55,
+      "engine-costs": 32,
+      "feature-wiring": 131
+    },
+    "dataIntegrity": "Validated 50 variants and 50 connected buy profiles.",
+    "permissionMutationResult": "baseline: every suite passes unbroken; permission resource choice retained caught by tests/engine-play-from-zones.mjs; unlimited equivalent permissions stay equivalent caught by tests/engine-load100-w3-graveyard.mjs; missed: []",
+    "foundationScan": "local-ci: SCAN PASS at b2ba9343e4316c618f5b49f8bfec5df5374d0583; main39a45706 ancestor, no secrets or personal addresses; final domain scan required before push"
+  }
 }

@@ -1464,9 +1464,8 @@ const freeLife = (object, free) => (free?.payLife === "manaValue" ? (object.mana
 /* The permissions open now that let this card be played from where it is. */
 const openPermissions = (state, player, id, kind) => allPlayPermissions(state, player)
   .filter(({ability, source}) => permissionOpen(state, player, ability, source) && permittedFrom(state, player, ability).includes(id) && permits(state, player, ability, id, kind, source));
-/* Of permissions that give the card the same thing, the one with the fewest drawbacks: no limit, so a limited one is spent
-   only when it must be, and no "exile it instead" (Kess) -- the two doing the same but for what is used up or lost, which is
-   no choice taken from the player. */
+/* An unlimited permission can stand for an identical unlimited permission. Limited permissions spend different
+   resources, so permissionWays keeps each one available for the player to choose (CR 601.2a, 305.1). */
 /* Spent by being used: a `limit`, a type's use (`perType`, Muldrotha), so many cards (`count`, Chainer). */
 const unlimited = (ability) => ability.limit === undefined && ability.perType !== true && ability.count === undefined;
 const preferred = (open) => open.find(({ability}) => unlimited(ability) && ability.graveyardToExile !== true)
@@ -1480,8 +1479,8 @@ function playPermission(state, player, id, kind, via = null) {
 /* WHICH PERMISSION, WHEN IT MATTERS (CR 601.2a, 305.1; Rob, 2026-09-23: the players decide). Two permanents may each let a
    player play the same card, and do different things with it: Serra Paragon's land "gains" an ability and Crucible of
    Worlds's does not; Bolas's Citadel's spell is paid for with life, Future Sight's with mana; Thundermane Dragon's creature
-   gains haste. Each permission that gives something different is an offer of its own, `via` its source -- the preferred of
-   those that give alike; ones that all give alike are one offer, as they always were (playPermission). */
+   gains haste. Each permission that gives something different or spends a different limited resource is its own offer,
+   `via` its source. Identical unlimited permissions share one offer (playPermission). */
 /* And what it asks or allows beside: an additional cost to pay (Exploration Broodship), mana of any type spent (Tinybones). */
 const permissionDoes = (ability) => JSON.stringify([ability.grants ?? null, ability.gains ?? null, ability.payLife ?? null, ability.free === true, ability.graveyardToLibraryBottom === true,
   ability.additionalCost ?? null, ability.anyMana === true]);
@@ -1494,7 +1493,7 @@ function typeWays(state, player, id, via) {
 function permissionWays(state, player, id, kind) {
   const groups = new Map();
   for (const permission of openPermissions(state, player, id, kind)) {
-    const does = permissionDoes(permission.ability);
+    const does = JSON.stringify([permissionDoes(permission.ability), unlimited(permission.ability) ? null : permission.source]);
     if (!groups.has(does)) groups.set(does, []);
     groups.get(does).push(permission);
   }
