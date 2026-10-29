@@ -466,7 +466,7 @@ export function loseGame(state, params, context) {
  * `rollDie` -- "roll a d20" (Ancient Copper Dragon; wave 4c; CR 706.1-706.2): its controller rolls a die of `sides` sides,
  * each result as likely as any other -- from the game's random stream (rng.mjs), as a shuffle is, never chosen. The result
  * is what follows reads, "a number of Treasure tokens equal to the result" (`{dieRolled: true}`, script/amount.mjs), and
- * said to everyone. Nothing yet modifies a roll or watches for one ("whenever you roll a die", CR 706.2's results changed).
+ * said to everyone. Die-roll watchers see the final result (rules/trigger.mjs); modifiers remain separate operation work.
  */
 export function rollDie(state, params, context, rng = null) {
   /* "Roll the planar die" (Fractured Powerstone; `planar: true`, a six-sided die, CR 901.3a): in a game that isn't a
@@ -483,7 +483,8 @@ export function rollDie(state, params, context, rng = null) {
   /* "Choose 1, 2, or 3 at random" (Tibalt's Trickery; card load w4d L1): `atRandom`, a number chosen at random -- no die is
      rolled (CR 706.1), so nothing that watches a roll sees it -- read after it as a die's result is ({dieRolled: true}). */
   if (params.atRandom === true) return [event("GameEventNumberChosen", state, {player: {playerId: context.controller, name: state.players[context.controller]?.name}, of: params.sides, result})];
-  return [event("GameEventDieRolled", state, {player: {playerId: context.controller, name: state.players[context.controller]?.name}, sides: params.sides, result})];
+  return [event("GameEventDieRolled", state, {player: {playerId: context.controller, name: state.players[context.controller]?.name},
+    sides: params.sides, result, rollId: `roll:${state.nextTimestamp++}`})];
 }
 
 /**

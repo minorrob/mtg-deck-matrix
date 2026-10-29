@@ -39,7 +39,7 @@ import {loseLife, gainLife, DAMAGING, damageQuestion, addMana} from "./resources
 import {damageOrderChoice, graveyardBound, placeReplacedCounters} from "../../rules/replacement.mjs";
 import {targetCandidates, targetName} from "../bind.mjs";
 import {commanderTax} from "../../rules/commander.mjs";
-import {cantBeCountered, counterOrderChoice, cantBeSacrificed, tokenOrderChoice, drawForbidden, searchController} from "../../rules/statics.mjs";
+import {cantBeCountered, counterOrderChoice, cantBeSacrificed, tokenOrderChoice, drawForbidden, drawsMore, searchController} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
 import {castNow, castChoicesNow, landChoicesNow, withFaceUp} from "../../rules/actions.mjs";
 
@@ -1969,21 +1969,33 @@ export const enchantWhat = {
    never written in a card script. ---- */
 export const dredgeDraw = {
   open(state, params, context) {
-    if (!dredgers(state, params.player).length) return {events: drawEffect(state, {who: [params.player], count: 1}, context)};
-    state.awaiting = {kind: "effect-choice", effect: "dredgeDraw", player: params.player, cards: dredgers(state, params.player).map((d) => d.id)};
+    const replaced = params.replaced ?? [], cards = dredgers(state, params.player).map((d) => d.id);
+    if (!cards.length) return {events: drawEffect(state, {who: [params.player], count: 1, drawReplaced: replaced}, context)};
+    /* CR 616.1, 614.5: the drawer may apply a mandatory doubler before optional dredge. Its resulting draws may each
+       be dredged, but that same doubler cannot replace them again. Alms Collector has already modified the instruction
+       before these single draws (CR 121.2a, 616.1g). */
+    const more = drawsMore(state, params.player).filter((m) => !replaced.includes(m.key));
+    const options = [...(more.length ? more.map((m) => ({kind: "more", ...m})) : [{kind: "draw"}]),
+      ...cards.map((id) => ({kind: "dredge", id}))];
+    state.awaiting = {kind: "effect-choice", effect: "dredgeDraw", player: params.player, cards, replaced, options};
     return true;
   },
   choice(state, awaiting) {
     const could = new Map(dredgers(state, awaiting.player).map((d) => [d.id, d.amount]));
-    return {id: `dredge:${state.turn}:${awaiting.cards.join(",")}`, title: "You would draw a card: draw it, or dredge instead", mode: "one", min: 1, max: 1,
-      options: [{index: 0, label: "Draw a card"}, ...awaiting.cards.map((id, i) => ({index: i + 1, cardId: id, label: dredgeWords(state, {id, amount: could.get(id)})}))]};
+    return {id: `dredge:${state.turn}:${awaiting.cards.join(",")}`, title: "You would draw a card: choose a replacement, or draw when none is required", mode: "one", min: 1, max: 1,
+      options: awaiting.options.map((o, index) => ({index, ...(o.kind === "dredge" ? {cardId: o.id} : {}),
+        label: o.kind === "draw" ? "Draw a card" : o.kind === "more" ? `Draw ${o.count} cards instead`
+          : dredgeWords(state, {id: o.id, amount: could.get(o.id)})}))};
   },
   apply(state, awaiting, indices) {
     const [index] = indices ?? [];
-    if ((indices ?? []).length !== 1 || !(Number.isInteger(index) && index >= 0 && index <= awaiting.cards.length)) throw new Error("Invalid selection");
+    if ((indices ?? []).length !== 1 || !(Number.isInteger(index) && index >= 0 && index < awaiting.options.length)) throw new Error("Invalid selection");
     const events = [];
-    if (index === 0) return drawEffect(state, {who: [awaiting.player], count: 1}, {controller: awaiting.player});
-    if (!dredgeInstead(state, awaiting.player, awaiting.cards[index - 1], events)) throw new Error("That card can no longer dredge: draw the card, or dredge with another");
+    const selected = awaiting.options[index];
+    if (selected.kind === "draw") return drawEffect(state, {who: [awaiting.player], count: 1, drawReplaced: awaiting.replaced}, {controller: awaiting.player});
+    if (selected.kind === "more") return {events, splice: Array.from({length: selected.count}, () =>
+      ({effect: "dredgeDraw", player: awaiting.player, replaced: [...awaiting.replaced, selected.key]}))};
+    if (!dredgeInstead(state, awaiting.player, selected.id, events)) throw new Error("That card can no longer dredge: draw the card, or dredge with another");
     return events;
   },
   /* The drawing player has left the game (CR 800.4a): nothing is drawn. */

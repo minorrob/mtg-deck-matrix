@@ -76,7 +76,7 @@ BREAKS = [
     ('die: the vocabulary', VOCAB, '    "rollDie",\n', ''),
     ('die: the plan', PLAN, '`rollDie` ("roll a d20"', 'rollDie ("roll a d20"'),
     ('die: its sides, refused', SCHEMA, '''  if (name === "rollDie" && !(Number.isInteger(effect.sides) && effect.sides >= 2))''', '''  if (name === "rollDie" && !(effect.sides !== undefined))'''),
-    ('die: the result counted', AMOUNT, '  else if ("dieRolled" in value) n = context.rolled ?? 0;', '  else if ("dieRolled" in value) n = 1;'),
+    ('die: the result counted', AMOUNT, '  else if ("dieRolled" in value) n = context.rolled ?? context.about?.rolled ?? 0;', '  else if ("dieRolled" in value) n = 1;'),
     ('die: the amount kind', AMOUNT, '''  "dieRolled",\n''', ''),
     ('die: dieRolled is true', AMOUNT, '''  if ("dieRolled" in value && value.dieRolled !== true) problems.push''', '''  if (false) problems.push'''),
     ('die: the history', HISTORY, '''      return line(`${who(f.player.playerId)} rolled a d${f.sides}: ${f.result}`);''', '''      return [];'''),

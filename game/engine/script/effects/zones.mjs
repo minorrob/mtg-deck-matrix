@@ -663,10 +663,15 @@ export function moveZoneAll(state, params, context, rng = null) {
 }
 
 /** `draw` — CR 121.1, off the top. An empty library marks the player; 1.5 turns that into a loss. */
+/* CR 121.2c: when several players draw, each completes their draws in APNAP order, including replacement questions. */
+const drawingPlayers = (state, who, controller) => {
+  const seats = state.players.length, rank = (player) => (player - state.activePlayer + seats) % seats;
+  return playersFor(state, who, controller).sort((a, b) => rank(a) - rank(b));
+};
 export function draw(state, params, context) {
   const events = [];
   const count = params.count ?? 1;
-  for (const player of playersFor(state, params.who, context.controller)) {
+  for (const player of drawingPlayers(state, params.who, context.controller)) {
     /* "If an opponent would draw two or more cards, instead you and that player each draw a card" (Alms Collector; rules/
        statics.mjs, drawsInstead): whose, when two players' would, as the drawing player chose (CR 616.1; effects/asking.mjs,
        orderDraws) -- where nobody could be asked, the first in turn order after them. The two draw in turn order from the
@@ -678,7 +683,7 @@ export function draw(state, params, context) {
       for (const who of [you, player].sort((a, b) => rank(a) - rank(b))) drawOne(state, who, events);
       continue;
     }
-    for (let i = 0; i < count; i += 1) drawOne(state, player, events);
+    for (let i = 0; i < count; i += 1) drawOne(state, player, events, params.drawReplaced ?? []);
   }
   /* "Each opponent draws a card, then you draw a card for each opponent who drew a card this way" (Cut a Deal): the cards drawn,
      each the object it is in its drawer's hand, for what follows to count -- one who drew none (an empty library, CR 121.4) is
@@ -754,7 +759,7 @@ export function dredgeInstead(state, player, cardId, events) {
     -- for a dredge to replace any one of them (script/resolution.mjs). */
 export function singleDraws(state, params, context) {
   const count = params.count ?? 1, draws = [];
-  for (const player of playersFor(state, params.who, context.controller)) {
+  for (const player of drawingPlayers(state, params.who, context.controller)) {
     const instead = drawsInstead(state, player, count);
     if (instead.length) {
       const you = instead.includes(params.drawOrders?.[player]) ? params.drawOrders[player] : instead[0];
@@ -774,7 +779,7 @@ export function singleDraws(state, params, context) {
    whose effects would apply; or null when no draw of the effect has such a choice not yet made (`answers`, by player). */
 export function drawQuestion(state, effect, context, answers = {}) {
   if (effect?.effect !== "draw") return null;
-  for (const player of playersFor(state, effect.who, context.controller)) {
+  for (const player of drawingPlayers(state, effect.who, context.controller)) {
     const instead = drawsInstead(state, player, effect.count ?? 1);
     if (instead.length > 1 && !instead.includes(answers[player])) return {player, options: instead, count: effect.count};
   }
