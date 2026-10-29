@@ -5,12 +5,29 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Hold released; latest main integrated, October 29:** Rob explicitly says the other session has finished and asks
+  to pull main and continue with unchanged full-interaction gates. Main `51ec9f8f` is merged at `314ab4cf`; only the
+  README count conflicts. Its new Linear one-loop policy is adopted: ACTIVE.md is restored exactly to main's frozen
+  archive, and ongoing ownership/status/handoffs live in Linear and PR bodies. This user-requested RUN remains a
+  technical execution/evidence record. ROB-199/ROB-200 stay In Progress, Lane Claude · Engine; new subtasks are
+  ROB-314 (remaining Battles), ROB-315 (cost-version compatibility/proofs), ROB-316 (interaction witnesses).
+- **Bounded return handoff integrated at `a05170a8`:** #960/449e is merged with preserved proof source105e. Root
+  independently passes linked-return435, Battle-SBA128, counter-order87, intrinsic-entry34 and projection93. Metadata
+  integrity/wiring131/assets136 pass, actual714 suites after main retires the readout suite and W1 adds its reader.
+  Static258files/4,815breaks/33 inherited UI problems, zero engine targets; no full gate credit. Root earlier #959
+  actual700-file audit passes, with only3,430 approved fields and every other original field/scenario retained.
+  Full-interaction requirement remains: neither scenario repairs nor bounded mechanics admit any new card.
+- **Parked work resumed carefully:** W5 local15a32f5e has current costVersion1 separation and focused836/83/76 plus
+  70/30/45/table188 green, including actual older1/absent-epoch replay. New-source full union/version controls and
+  explicit old-live upgrade remain open. W1 native own-Siege attack and intrinsic defeat REDs remain open; no Battle
+  admission. V8's mixed-board fixed10 is6 full passes/four guarded refusals; native guard is unchanged and no wider
+  validation or saved edit is yet approved. New assigned work must follow the Linear lock/PR process.
 - **Full interaction confidence is mandatory, October 29:** Rob explicitly requires confidence in100% of a card's
   potential interactions before any addition or promotion. The95% appearance target is a selection cutoff only.
   Any known gap, untested identified interaction, unsupported/approximated behavior or unresolved doubt blocks that
   card. Review and native evidence must cover every ability and its interaction paths, not just a basic scenario;
   do not claim exhaustive proof beyond the evidence. This is recorded in BRIEF.md for every resumed/new worker.
-  No card has been added or promoted by these wave0 repairs. The user hold on main below remains in force.
+  No card has been added or promoted by these wave0 repairs. The historical hold below was released by Rob; see the latest resume entry.
 - **USER HOLD on main, October 29:** Rob says another session is merging and will explicitly signal when it is done.
   Until that signal, do not fetch/pull/merge main, run `local-ci.sh` (it fetches main), or publish/release through main.
   Do not infer release from elapsed time or remote state. Already approved isolated checks may finish safely.
