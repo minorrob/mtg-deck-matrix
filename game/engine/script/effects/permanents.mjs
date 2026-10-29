@@ -207,6 +207,7 @@ function copiable(object, except = {}) {
     /* Its printed loyalty (CR 707.2): a planeswalker copied as it enters has that many loyalty counters (CR 306.5b; Spark
        Double, rules/replacement.mjs ownEntering). */
     ...(Number.isInteger(object.loyalty) ? {loyalty: object.loyalty} : {}),
+    ...(Number.isInteger(object.defense) ? {defense: object.defense} : {}),
     ...(object.spell ? {spell: structuredClone(object.spell)} : {}),
     ...(object.enchant ? {enchant: structuredClone(object.enchant)} : {}),
     /* CR 722.2b: the inset spell is a copiable characteristic, not the prepared designation. */

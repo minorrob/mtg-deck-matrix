@@ -1,0 +1,5 @@
+baseline: every suite passes unbroken
+caught copiable: loyalty -- tests/engine-wave4a-h3.mjs
+caught COPY_KEYS: loyalty -- tests/engine-wave4a-h3.mjs
+caught last known copiable: loyalty -- tests/engine-wave4a-h3.mjs
+missed: []

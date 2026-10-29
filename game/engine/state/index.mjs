@@ -200,7 +200,7 @@ const listFor = (state, zone, player) => (PER_PLAYER.includes(zone) ? state.zone
  */
 /* A double-faced card's face (CR 712.8): its characteristics, from the card's own two. `mdfc` holds both faces of any
    double-faced card -- a modal one, or a nonmodal one (`transforming`, CR 712.2) that transforms. */
-const FACE_KEYS = ["card", "types", "subtypes", "supertypes", "manaCost", "colors", "power", "toughness", "loyalty", "keywords", "abilities", "spell", "enchant"];
+const FACE_KEYS = ["card", "types", "subtypes", "supertypes", "manaCost", "colors", "power", "toughness", "loyalty", "defense", "keywords", "abilities", "spell", "enchant"];
 function faceOf(mdfc, face) {
   const side = face === "back" ? mdfc.back : mdfc.front;
   return Object.fromEntries(FACE_KEYS.map((key) => [key, side[key]]));
@@ -294,11 +294,11 @@ const FACE_DOWN_EXILED = Object.freeze({card: null, types: [], subtypes: [], sup
 /* A permanent's copiable values (CR 707.2): what a copy effect writes onto it (effects/permanents.mjs, becomeCopy), its own
    kept beside them as `uncopied` -- only the values it has, so it is the same object woken from storage as in memory. */
 /* A preparation card's alternative spell characteristics are copiable (CR 722.2b); its prepared designation is not. */
-export const COPY_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "loyalty", "spell", "enchant", "preparation"]);
+export const COPY_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "loyalty", "defense", "spell", "enchant", "preparation"]);
 /* An adventurer card's two sets of characteristics (`adventurer`, CR 715.2) are the card's too: kept beside it face down, so a
    card exiled face down and played from there may still be cast as its Adventure (715.3), and one manifested leaves the
    battlefield as the card it is (708.9). */
-const CARD_KEYS = ["card", "types", "subtypes", "supertypes", "manaCost", "colors", "power", "toughness", "loyalty", "keywords", "abilities", "spell", "enchant", "mdfc", "preparation", "adventurer"];
+const CARD_KEYS = ["card", "types", "subtypes", "supertypes", "manaCost", "colors", "power", "toughness", "loyalty", "defense", "keywords", "abilities", "spell", "enchant", "mdfc", "preparation", "adventurer"];
 
 /**
  * TO TURN A FACE-DOWN PERMANENT FACE UP (CR 708.8): its copiable values go back to the card's own -- a double-faced card's
@@ -408,6 +408,8 @@ export function addObject(state, object, zone, player = null) {
     toughness: Number.isInteger(object.toughness) ? object.toughness : null,
     /* A planeswalker's printed loyalty (CR 306.5a); on the battlefield its loyalty is its loyalty counters (306.5c). */
     ...(Number.isInteger(object.loyalty) ? {loyalty: object.loyalty} : {}),
+    /* CR 310.4a, 707.2: printed defense is copiable; a protector is a designation and is not. */
+    ...(Number.isInteger(object.defense) ? {defense: object.defense} : {}),
     keywords: Array.isArray(object.keywords) ? [...object.keywords] : [],
     /* CR 302.6, summoning sickness: the turn this object came under its controller's control. A
        zone change makes a new object, so an entering permanent gets the current turn and a creature
@@ -669,7 +671,7 @@ function moveCard(state, from, zone, player, {faceDown, transformed, disguised})
        permanent, gone with it (CR 400.7). */
     ...(from.preparation ? {preparation: from.preparation} : {}),
     card: from.card, types: from.types, manaCost: from.manaCost, abilities: from.abilities,
-    power: from.power, toughness: from.toughness, loyalty: from.loyalty, keywords: from.keywords,
+    power: from.power, toughness: from.toughness, loyalty: from.loyalty, defense: from.defense, keywords: from.keywords,
     ...kept,
     spell: from.spell, subtypes: from.subtypes, supertypes: from.supertypes, colors: from.colors,
     enchant: from.enchant,

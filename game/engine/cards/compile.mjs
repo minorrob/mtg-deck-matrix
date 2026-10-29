@@ -60,6 +60,8 @@ export function identityOf(card) {
     power: num(face.power), toughness: num(face.toughness),
     /* A planeswalker's printed loyalty (CR 306.5a). */
     ...(num(face.loyalty) !== null ? {loyalty: num(face.loyalty)} : {}),
+    /* CR 310.4a: a Battle's printed defense comes from its Oracle face, including zero. */
+    ...(num(face.defense) !== null ? {defense: num(face.defense)} : {}),
   };
 }
 

@@ -1,0 +1,5 @@
+baseline: every suite passes unbroken
+caught token copying loses both faces -- tests/engine-transform.mjs
+caught single-faced tokens gain invented other faces -- tests/engine-transform.mjs
+caught single-faced back copy uses original mana cost -- tests/engine-transform.mjs
+missed: []

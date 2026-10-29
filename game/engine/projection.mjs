@@ -106,6 +106,12 @@ function cardFor(state, id, canSeeFace, viewer = null) {
     types: shown ? [...current.types] : [],
     power: shown ? current.power : null,
     toughness: shown ? current.toughness : null,
+    /* CR 310.4, 310.9: a visible battlefield Battle's defense and protector are public. Printed identity stays hidden
+       for face-down cards; a copied Battle reports its copied defense, not its original card's number. */
+    ...(named && object.zone === "battlefield" && current.types.includes("Battle") ? {
+      ...(Number.isInteger(current.printedDefense) ? {printedDefense: current.printedDefense} : {}), defense: current.defense,
+      ...(Number.isInteger(object.protector) ? {protector: object.protector} : {}),
+    } : {}),
     keywords: shown ? [...current.keywords] : [],
     ...(object.zone === "battlefield" && object.merged ? {components: object.merged.map(part => ({
       name: part.faceDown && viewer !== controller ? null : part.physical.card, faceDown: part.faceDown === true,
