@@ -49,7 +49,12 @@ token-refusal premise. Its correction passes 46 checks: double-faced token creat
 distinct from an ordinary single-faced permanent becoming a back-face copy. Exact new IDs preserve the earlier token;
 the separate mana-value-zero/refusal controls remain on the applicable single-faced case (CR 707.8a, 202.3b, 712.9).
 All three semantic regression probes are caught, `missed: []`; receipt in `evidence/w1-transform-reader-mutations.txt`.
-The face-down reader stays pending its W5 dependency; it is not excluded from the gate.
+W5's exact reader dependency `1000a25d` is included through root's assembled `310595d2`, merged without rebasing into
+this lane at `246fb797`. After synchronization: Battle 95, transform 46, face-down play 68, Adventure 71,
+payment 410 and room pooled-payment 14 pass independently. The automatic README merge retained an old suite total;
+it is corrected to the actual 686. Data integrity/feature wiring are rechecked after that metadata correction.
+W5's original browser union has a separate Table-stage visibility failure, remains explicitly red and receives no
+credit from these native reader repairs. Full browser/CI and all other run gates stay open.
 
 ## Still required
 

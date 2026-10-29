@@ -13,7 +13,7 @@
     "| Tokens and copies of prepare cards never prepared | `script/effects/attributes.mjs`:23 | W1 |",
     "| Unsure, to be settled by a scenario: Song of the Dryads and Sagas under ability loss; Incubator copies single-faced; Social Snub's copy; Winter's prompt and a draw-two cost under Narset | `rules/layers.mjs`:870; `permanents.mjs`:644; `actions.mjs` | V8 finds, W1/W6/W2/W7 fix |"
   ],
-  "status": "W1 resumed on assembled 50f47e22: bounded Battle characteristic/native-entry slice in verification; full Battle, legacy entry and two emblem families remain unfinished. No cards/promotions or gate completion.",
+  "status": "W1 bounded Battle entry source79970ba1; synchronized assembled310595d2 and exactW5 reader1000a25d. Native reader checks green; scan/publication follows. Full Battle, legacy entry, intrinsic planeswalker entry and two emblem families remain unfinished. No cards/promotions or gate completion.",
   "checkpoint": {
     "cardsAdded": 0,
     "cardsPromoted": 0,
@@ -239,7 +239,7 @@
     "report": "W1-battle-entry.md",
     "scope": "Printed/current defense, copiable and hidden-card identity, saved native pre-entry protector choice and counters, additive visible-Battle projection; no room/UI/funding/turn changes or final card definitions.",
     "red": "Original restored engine-battles protector assertion failed on assembled source: actual undefined, expected rule-operation.",
-    "proof": "Native Battle entry95 checks; final35 mutations caught, missed[]. Three distinct original loyalty-copy mutations reanchored and caught with full original suite union including engine-cards baseline. First31/33 probes had two DFC-masked missing fields; added single-faced witnesses preserve all original assertions. Pure Oracle identity drift matches6430 definitions. Transform reader46 checks and3 semantic probes caught with current CR cases and exact new IDs. Receipts in evidence/w1-battle-entry-*.txt and w1-transform-reader-mutations.txt. Face-down funding reader remains pending W5 dependency; it is not excluded.",
+    "proof": "Native Battle entry95 checks; final35 mutations caught, missed[]. Three distinct original loyalty-copy mutations reanchored and caught with full original suite union including engine-cards baseline. First31/33 probes had two DFC-masked missing fields; added single-faced witnesses preserve all original assertions. Pure Oracle identity drift matches6430 definitions. Transform reader46 checks and3 semantic probes caught with current CR cases and exact new IDs. Receipts in evidence/w1-battle-entry-*.txt and w1-transform-reader-mutations.txt. After assembled310595d2/exactW5 reader1000a25d sync, independent face-down68/Adventure71/payment410/roompayment14 all green; separate browser visibility failure remains red and uncredited.",
     "remaining": [
       "Battle combat/damage/SBAs/protector repair and native Siege defeat/free transformed casting",
       "Remaining synchronous legacy Battle entry callers",
