@@ -41,7 +41,7 @@ import {targetCandidates, targetName, recheckTargets, differentControllersProble
 import {commanderTax} from "../../rules/commander.mjs";
 import {cantBeCountered, counterOrderChoice, cantBeSacrificed, tokenOrderChoice, drawForbidden, drawsMore, searchController} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
-import {castNow, castChoicesNow, landChoicesNow, withFaceUp, nextToChoose, chooseTargetsChoice, pickActionTargets} from "../../rules/actions.mjs";
+import {castNow, playedLandFrame, castChoicesNow, landChoicesNow, withFaceUp, nextToChoose, chooseTargetsChoice, pickActionTargets} from "../../rules/actions.mjs";
 
 import {mergedOrderToAsk, mergedOrderChoice, finishMergedOrder} from "../../state/index.mjs";
 import {mergePermanent} from "../../keywords/mutate.mjs";
@@ -1086,9 +1086,7 @@ export const populate = {
   apply(state, awaiting, indices) {
     const chosen = awaiting.tokens[(indices ?? [])[0]];
     if (chosen === undefined || !state.objects[chosen]) throw new Error("Invalid selection");
-    const events = [];
-    makeCopies(state, [chosen], awaiting.params ?? {}, {controller: awaiting.player, source: awaiting.source}, events);
-    return events;
+    return {events: [], splice: [{effect: "copyPermanent", targets: [chosen], ...(awaiting.params ?? {})}]};
   },
 };
 
@@ -2593,6 +2591,15 @@ export const play = {
     const action = {...chosen};
     delete action.owed;
     delete action.cost;
+    if (action.kind === "play-land") {
+      const again = awaiting.again;
+      const splice = again ? [{effect: "play", from: "targets", targets: again.pool, who: [awaiting.player], anyNumber: true,
+        free: again.free, anyMana: again.anyMana, payMana: again.payMana, lands: again.lands,
+        ...(again.most !== null ? {manaValueAtMost: again.most} : {}),
+        ...(awaiting.exileInstead ? {exileInstead: true} : {}), ...(awaiting.rememberCast ? {rememberCast: true} : {})}] : [];
+      return {events, operation: playedLandFrame(awaiting.player, action), splice,
+        ...(awaiting.rememberCast && !again ? {remembered: []} : {})};
+    }
     const stacked = new Set(state.stack.map((entry) => entry.stackId));
     events.push(...castNow(state, awaiting.player, action, awaiting.exileInstead ? {graveyardToExile: true} : {}));
     /* `rememberCast` (above): the spell now on the stack. */

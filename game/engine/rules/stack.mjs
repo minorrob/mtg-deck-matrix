@@ -418,8 +418,8 @@ function paradigmResolves(state, entry) {
 /* The entry leaves the stack: a permanent spell to the battlefield, an instant or sorcery (or a spell that did not
    resolve) to its owner's graveyard, and an ability to nowhere. */
 registerRuleOperation("finish-permanent", (state, frame) => {
-  const entry = state.stack.find(candidate => candidate.stackId === frame.stackId);
-  if (!entry || !state.objects[entry.objectId] || state.players[entry.playerId]?.lost) return {status: "done"};
+  const entry = state.stack.find(candidate => candidate.stackId === frame.stackId) ?? (frame.stage === "did-not-enter" ? frame.departingEntry : null);
+  if (!entry || (frame.stage !== "did-not-enter" && !state.objects[entry.objectId]) || state.players[entry.playerId]?.lost) return {status: "done"};
   if (!frame.stage) {
     emitRuleEvents(state, frame.prefix);
     delete frame.prefix;
@@ -429,7 +429,8 @@ registerRuleOperation("finish-permanent", (state, frame) => {
       x: entry.x ?? 0, escaped: entry.escaped === true, kicked: entry.kicked ?? 0, phyrexianLife: entry.cast?.phyrexianLife ?? 0}]};
   }
   if (frame.stage === "entering" && frame.childResult?.entering?.to) {
-    frame.prepared = frame.childResult; delete frame.childResult; frame.stage = "did-not-enter";
+    frame.prepared = frame.childResult; frame.departingEntry = structuredClone(entry);
+    delete frame.childResult; frame.stage = "did-not-enter";
     return {status: "continue", children: [{kind: "move-one", id: entry.objectId, to: frame.prepared.entering.to}]};
   }
   if (frame.childResult) emitRuleEvents(state, finishTop(state, entry, [], false, frame.attachTo,

@@ -6,12 +6,14 @@ import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../game/engin
 import {pushSpell, pushAbility, resolveTop} from "../game/engine/rules/stack.mjs";
 import {beginResolution} from "../game/engine/script/resolution.mjs";
 import {legalActions, applyAction, castChoicesNow} from "../game/engine/rules/actions.mjs";
-import {memoryStorage} from "../game/engine/storage.mjs";
+import {memoryStorage, createMatchStore} from "../game/engine/storage.mjs";
+import {startRoom, openRoom, basicCards} from "../game/room/room.mjs";
 import {tableOn} from "../game/room/table.mjs";
 import {runScenario} from "../game/engine/cards/scenario.mjs";
 import {loadCardIndex} from "../game/tools/engine-cards.mjs";
 import {projectFor} from "../game/engine/projection.mjs";
 import {hashState} from "../game/engine/journal.mjs";
+import {concede} from "../game/engine/rules/sba.mjs";
 import {passPriority} from "../game/engine/rules/priority.mjs";
 import {matchesSelector} from "../game/engine/script/filter.mjs";
 import {collectTriggers, openTriggers} from "../game/engine/rules/trigger.mjs";
@@ -530,6 +532,105 @@ for (const rootFirst of [true, false]) {
   resolveAwaiting(state, [awaitingChoice(state).options.find(option => option.pay).index]);
   const [arrived] = field(state, "Breeding Pool");
   eq([state.objects[arrived].tapped, state.players[0].life], [true, 38], "paying the shock land's life cannot remove another effect's tapped entry in either chosen order");
+}
+{
+  const storage = memoryStorage(), matchId = "w2-entry-room";
+  const cards = name => name === "Entry Grove" ? {types: ["Land"], abilities: [{id: "mana", kind: "mana", tapSelf: true, produces: {C: 2}}]}
+    : name === "Entry Elf" ? {...BEAR, subtypes: ["Elf"]} : index.definition(name) ?? basicCards(name);
+  const pod = {passStack: true, passAfterCast: true, seats: [0,1,2].map(seat => ({seatId: `s${seat}`, name: `Person ${seat}`, pilot: "human", commander: [],
+    cards: [...Array(30).fill("Entry Grove"), ...Array(29).fill("Metallic Mimic"), "Entry Elf"]}))};
+  let room = await startRoom({storage, matchId, cards, pod, seed: "entry-room"}), waiting = null;
+  for (let step = 0; step < 500; step += 1) {
+    const who = room.waitingOn;
+    if (!who) break;
+    const view = room.view(who), decision = view.decision;
+    if (decision.id.startsWith("entering-choose:")) { waiting = view; break; }
+    let indices;
+    if (decision.kind === "priority") {
+      const preferred = who === "s0" ? decision.options.find(option => option.act === "cast" && option.label === "Metallic Mimic")
+        ?? decision.options.find(option => option.act === "play-land") ?? decision.options.find(option => option.act === "activate-mana") : null;
+      indices = [(preferred ?? decision.options.find(option => option.act === "pass")).index];
+    } else indices = decision.mode === "many" ? decision.options.slice(0, decision.min).map(option => option.index)
+      : [decision.options.find(option => /keep/i.test(option.label))?.index ?? 0];
+    await room.act(who, {actionId: crypto.randomUUID(), revision: view.revision, kind: "answer", choiceId: decision.id, indices});
+  }
+  ok(waiting, "a public room reaches the real Mimic pre-entry decision through ordinary land, mana and cast actions");
+  const store = createMatchStore(storage, matchId), before = await store.latestCheckpoint();
+  eq(before.state.zones.battlefield.filter(id => before.state.objects[id].card === "Metallic Mimic"), [], "the saved room has no Mimic permanent before the answer");
+  room = await openRoom({storage, matchId, cards});
+  const reloaded = room.view(waiting.seatId);
+  eq(reloaded.decision, waiting.decision, "opening the JSON-backed room restores the same player and pre-entry options");
+  const nextId = before.state.nextObjectId;
+  const request = {actionId: crypto.randomUUID(), revision: reloaded.revision, kind: "answer", choiceId: reloaded.decision.id,
+    indices: [reloaded.decision.options.find(option => option.label === "Elf").index]};
+  await room.act(waiting.seatId, request);
+  const after = await store.latestCheckpoint();
+  const made = after.state.zones.battlefield.filter(id => after.state.objects[id].card === "Metallic Mimic");
+  eq([made.length, after.state.objects[made[0]].chosen, after.state.nextObjectId], [1, "Elf", nextId + 1], "the public room's saved answer creates one chosen permanent with one new ID");
+  eq(after.rng, before.rng, "pre-entry choice, storage reload and completion consume no random draw");
+  const journal = await store.readJournal();
+  eq(journal.filter(event => event.kind === "GameEventSpellResolved" && event.data.fields.card?.name === "Metallic Mimic").length, 1, "the public room journals the spell's completion once");
+  await room.act(waiting.seatId, request);
+  eq([(await store.latestCheckpoint()).hash, (await store.readJournal()).length], [after.hash, journal.length], "retrying the same public answer changes no game state, cost, event or ID");
+}
+const entryRedirect = (state, name, from, to, filter = {}) => addObject(state, {card: name, types: ["Enchantment"], owner: 1, controller: 1,
+  abilities: [{id: "redirect", kind: "replacement", text: `Move it to ${to} instead.`, watches: {event: "zone-change", from, to: "graveyard", filter: {what: "card", zone: from, ...filter}}, change: {to}}]}, "battlefield");
+for (const withLand of [false, true]) {
+  let state = fresh();
+  if (withLand) addObject(state, {card: "Unpaid Land", types: ["Land"], owner: 0, controller: 0}, "hand", 0);
+  const id = cast(state, "Mox Diamond"), before = state.nextObjectId;
+  const first = resolveTop(state);
+  let last = [];
+  if (withLand) {
+    eq(field(state, "Mox Diamond"), [], "Mox Diamond remains outside the battlefield until its discard decision");
+    state = JSON.parse(JSON.stringify(state));
+    last = resolveAwaiting(state, [awaitingChoice(state).options.find(option => option.discard === null).index]);
+  }
+  eq([field(state, "Mox Diamond"), state.zones.graveyard[0].map(id => state.objects[id].card), state.stack.length, state.objects[id]],
+    [[], ["Mox Diamond"], 0, undefined], "declining or being unable to discard sends Mox directly from the stack to the graveyard and completes its spell");
+  eq([...first,...last].filter(event => event.kind === "GameEventSpellResolved").length, 1, "a failed Mox entry reports its spell resolution exactly once");
+  eq(state.nextObjectId, before + 1, "failed entry allocates one graveyard object and no intermediate battlefield object");
+}
+{
+  let state = fresh();
+  const land = addObject(state, {card: "Discarded Entry Land", types: ["Land"], owner: 0, controller: 0}, "hand", 0);
+  entryRedirect(state, "Discard Exile", "hand", "exile"); entryRedirect(state, "Discard Return", "hand", "library");
+  cast(state, "Mox Diamond"); resolveTop(state);
+  const discarded = resolveAwaiting(state, [awaitingChoice(state).options.find(option => option.discard === land).index]);
+  eq([field(state, "Mox Diamond"), state.objects[land].zone, state.players[0].discardedThisTurn ?? 0], [[], "hand", 0], "Mox cannot enter or count a discard before the discard's replacement question finishes");
+  state = JSON.parse(JSON.stringify(state));
+  const finished = resolveAwaiting(state, [awaitingChoice(state).options.find(option => option.label.includes("Discard Exile")).index]);
+  eq([field(state, "Mox Diamond").length, state.zones.exile.map(id => state.objects[id].card), state.players[0].discardedThisTurn, state.stack.length],
+    [1, ["Discarded Entry Land"], 1, 0], "the replaced discard pays Mox's entry once and the actual permanent then enters");
+  eq([...discarded,...finished].filter(event => event.kind === "GameEventCardChangeZone" && event.data.fields.discarded).length, 1, "the actual paid discard is marked once across reload");
+}
+{
+  let state = fresh();
+  entryRedirect(state, "Failed Entry Exile", "stack", "exile"); entryRedirect(state, "Failed Entry Return", "stack", "hand");
+  const id = cast(state, "Mox Diamond");
+  const first = resolveTop(state);
+  eq([field(state, "Mox Diamond"), state.objects[id].zone, state.stack.length], [[], "stack", 1], "a refused Mox entry waits for its real departure replacement while still on the stack");
+  state = JSON.parse(JSON.stringify(state));
+  const last = resolveAwaiting(state, [awaitingChoice(state).options.find(option => option.label.includes("Failed Entry Exile")).index]);
+  eq([state.zones.exile.map(id => state.objects[id].card), state.stack.length, state.objects[id]], [["Mox Diamond"], 0, undefined], "a failed-entry redirected move leaves no stale original stack entry");
+  eq([...first,...last].filter(event => event.kind === "GameEventSpellResolved").length, 1, "a redirected refused entry still finishes its one spell resolution");
+}
+{
+  let state = fresh();
+  const foods = [0,1].map(number => addObject(state, {card: `Entry Food ${number}`, types: ["Artifact"], subtypes: ["Food"], owner: 0, controller: 0}, "battlefield"));
+  entryRedirect(state, "Food Exile", "battlefield", "exile", {subtypes: ["Food"]}); entryRedirect(state, "Food Return", "battlefield", "hand", {subtypes: ["Food"]});
+  cast(state, "Feasting Hobbit"); resolveTop(state);
+  const devour = awaitingChoice(state);
+  resolveAwaiting(state, devour.options.filter(option => foods.includes(option.cardId)).map(option => option.index));
+  eq(field(state, "Feasting Hobbit"), [], "devour's sacrifices complete before the Hobbit exists on the battlefield");
+  for (const food of foods) {
+    eq(state.objects[food].zone, "battlefield", "the next selected Food remains in place until its own replacement is answered");
+    state = JSON.parse(JSON.stringify(state));
+    resolveAwaiting(state, [awaitingChoice(state).options.find(option => option.label.includes("Food Exile")).index]);
+  }
+  const [hobbit] = field(state, "Feasting Hobbit");
+  eq([state.objects[hobbit].counters["+1/+1"], state.players[0].sacrificedNontokenThisTurn, state.stack.length], [6, 2, 0], "two real replaced Food sacrifices give six entry counters exactly once");
+  eq(state.zones.exile.map(id => state.objects[id].card), ["Entry Food 0", "Entry Food 1"], "devour respects both actual sacrifice destinations");
 }
 }
 
