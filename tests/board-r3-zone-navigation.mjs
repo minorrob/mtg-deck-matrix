@@ -100,7 +100,10 @@ try {
   const before=acts().length;
   const handBefore=await page.locator(width<800?'.cm-phone-pill':'.cm-stage-hand,.cm-board-main>.cm-board-hand,#cm-board>.cm-board-hand').first().boundingBox();
   await land.focus();await page.keyboard.press('Home');
-  await land.hover();await page.mouse.wheel(0,450);await page.waitForTimeout(100);
+  /* the hand lies over the stage: the pointer goes to a place of the lands the browser says is theirs */
+  const spot=await land.evaluate(el=>{const r=el.getBoundingClientRect();for(let y=r.top+4;y<r.bottom-2;y+=4)for(let x=r.left+4;x<r.right-2;x+=6){const h=document.elementFromPoint(x,y);if(h&&el.contains(h))return [x,y];}return null;});
+  ok(spot,`${mode}/${width}: there is a place on the lands the pointer reaches`);
+  await page.mouse.move(spot[0],spot[1]);await page.mouse.wheel(0,450);await page.waitForTimeout(100);
   ok(await land.evaluate(el=>el.scrollTop>0),`${mode}/${width}: wheel reaches later lands`);
   const others=await page.locator('[data-zone-scroll]').evaluateAll(els=>els.filter(e=>!e.dataset.zoneScroll.endsWith(':lands')).map(e=>e.scrollTop));
   ok(others.every(x=>x===0),'land navigation leaves other zones alone');
