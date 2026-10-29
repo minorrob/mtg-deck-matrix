@@ -8,6 +8,12 @@ Linear ROB-199 under ROB-85. The record is `docs/engine/card-load-100-2026-10-28
 Claim: `game/engine/cards/**`, generated card files, `data/engine/candidates.json`, the run package,
 and the engine modules its debt fixes require, subject to the ownership requests below.
 The primary checkout has another session's unfinished merge and is untouched.
+**Staging request:** Rob selects “Finish gates, then release fixes.” All existing wave0, exact-head CI and merge
+requirements remain; staging follows the merged fixes. No release of current main is substituted.
+**Local V8 integration5196dc61:** clean draft #954 adds bounded native scenario policies and four positive Snoop/
+Banner witnesses. Root passes native319/ability44/source183/block167/entry51; original six-reader union/38 controls
+and selected13scenarios/8of8 abilities remain source-bound role evidence. READMEactual711, static33UI/zeroengine.
+Full canonical/review/game gates remain open. W1/W5 proof drivers are safely paused for root's quiet UI checks.
 **Latest dependency fb1cadff includes mainfac091ba/#953:** owner tooltip UI is preserved; board still differs by only
 our two approved Snoop lines. Engine/room unchanged569. Assets136/SW9/wiring131/integrity/scope/nativeSnoop pass,
 READMEactual710, static33 inherited UI/zeroengine. Combined browser pending quiet window, no gate or new-card credit.
