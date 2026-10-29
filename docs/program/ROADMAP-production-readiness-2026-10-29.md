@@ -31,7 +31,7 @@ are guesses, not estimates from the repo.
 | Main | `50297778` (PRs 910 and 925, ROB-204/213/214 merged since production) | [verified] |
 | Staging D1 | migrations 0001 to 0006, **0009 and 0010 applied today** and recorded in `d1_migrations` | [verified] |
 | Production D1 | 0001 and 0002 only, per the 10-25 release record; **not re-read** | [doc] `docs/ACTIVE.md` 10-25 release |
-| CI gate | the Actions `suites` job is cancelled at its 60-minute limit; merges have been on a full local run | [verified] run 3423; `tests.yml` `timeout-minutes: 60` |
+| CI gate | the Actions `suites` job is canceled at its 60-minute limit; merges have been on a full local run | [verified] run 3423; `tests.yml` `timeout-minutes: 60` |
 | Red suites on main | `board-target-lands`, `board-ending-rematch`, `board-mana-symbols`, `board-control`, `browser-geometry`, `precons`, `page-budget`, `coach`, `crankmagic-coach`, `engine-breaks-anchors`, `table-record` | [verified] two local full runs |
 | Lag | Never measured on a real game; one comment of yours (10-10); server per-action cost is small | section 5 |
 
