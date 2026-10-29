@@ -38,6 +38,7 @@ import {createInterface} from "node:readline";
 import {resolve, dirname, join} from "node:path";
 import {fileURLToPath} from "node:url";
 import {tmpdir} from "node:os";
+import {catalogProblem, paperOracleIds} from "./catalog-rule.mjs";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const arg = (name, fallback) => {
@@ -101,6 +102,8 @@ async function main() {
     process.stderr.write("using the cached bulk file\n");
   }
 
+  /* The catalog rule (tools/catalog-rule.mjs, ROB-213): Commander-legal paper cards only, no Alchemy and no A- rebalances. */
+  const paper = await paperOracleIds({cacheDir: join(tmpdir(), "crankmagic-catalog-rule")});
   const cards = [], tokens = [];
   let seen = 0, notLegal = 0;
   const lines = createInterface({input: createReadStream(CACHE).pipe(createGunzip()), crlfDelay: Infinity});
@@ -112,9 +115,9 @@ async function main() {
     if (!card || !card.oracle_id) continue;
     seen += 1;
     if (isToken(card)) { tokens.push(trim(card)); continue; }
-    /* Commander legality is the pool. `restricted` is not a Commander status; banned and
+    /* Commander legality is the pool, and paper (catalog-rule.mjs). `restricted` is not a Commander status; banned and
        not_legal are both out, and a card missing the field is out rather than assumed in. */
-    if (card.legalities?.commander !== "legal") { notLegal += 1; continue; }
+    if (catalogProblem(card, paper)) { notLegal += 1; continue; }
     cards.push(trim(card));
   }
 
@@ -153,7 +156,7 @@ async function main() {
     + `  oracle.json   ${String(cards.length).padStart(6)} Commander-legal cards   ${mb(oracleBytes)}\n`
     + `  tokens.json   ${String(tokens.length).padStart(6)} tokens and emblems      ${mb(tokenBytes)}\n`
     + `  support.json  ${String(cards.length).padStart(6)} rows, all unsupported    ${mb(supportBytes)}\n`
-    + `  read ${seen} oracle entries; ${notLegal} are not Commander-legal\n`);
+    + `  read ${seen} oracle entries; ${notLegal} are not Commander-legal paper cards\n`);
 }
 
 await main();
