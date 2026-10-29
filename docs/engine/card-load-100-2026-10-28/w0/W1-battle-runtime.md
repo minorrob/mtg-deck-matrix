@@ -1,7 +1,7 @@
 # W1 Battle runtime continuation (unfinished)
 
-Base: published `1553f7b10e641e3aa8751b14100c99002213ea05`, draft PR #944. This continuation is not published or
-accepted. No Battle final definition, card promotion or run gate is credited.
+Base: published `1553f7b10e641e3aa8751b14100c99002213ea05`, merged PR #944. The base-movement continuation is
+prepared for a separate bounded draft handoff. No Battle final definition, card promotion or run gate is credited.
 
 Local unfinished work was secured in `9c7d9d8c`, then exact assembled root `0130f853` was merged without rebasing at
 `970cc170`. README registrations were preserved with the actual 697 flat Node readers. The remote remains the
@@ -61,10 +61,26 @@ card and generator readers. All 32 semantic probes are caught, with none missed,
 the final three retain the original W4 source-memory negative probes. The source backups are restored. Evidence:
 `evidence/w1-battle-runtime-mutations.txt`; the cascading-batch and destruction-preflight REDs are also retained.
 
-This is still unfinished and unpublished. The final callback audit identified CR 610.3d: linked returns caused by
+Full Battle work is still unfinished. The final callback audit identified CR 610.3d: linked returns caused by
 simultaneous source departures must themselves be simultaneous. The current deferred queue still runs linked return
-children per departure. A native returning Clone/Bear witness is required before any simultaneous-return claim or
-publication. Root's coordinated browser quiet window takes precedence; no heavy W1 command runs during that window.
+children per departure. Root authorized publication of the proven base-movement checkpoint with this explicit debt;
+the native returning Clone/Bear witness and design follow as a separate checkpoint before any simultaneous-return
+claim. The original 40-reader/32-probe checkpoint is preserved unchanged, with the added native readiness capability
+bypass probe caught separately. Integrity and feature-wiring131 pass. No original assertion or mutation is removed.
+
+Static-anchor audit found two moved original engine probes: ordinary `moveOne` follow-ups and the default
+`byEffect` destruction classification. Their anchors and semantic replacements were updated while preserving each
+original suite union. The latter replacement still changes only the default and retains the added internal options.
+The extra original precons reader reproduced an inherited RED on exact clean assembled `0130f853`: it still asserted
+that Kalitas/Liesa auto-resolves without a question. Evidence: `evidence/w1-precons-0130-red.txt`.
+Root approved moving every original final assertion after an explicit affected-player answer, checking both actual
+orders and their one-Zombie/zero-Zombie outcomes, and removing the obsolete NAMED-ignore description. Supplemental
+validation of those moved probes passes after the second coordinated Snoop browser quiet window: the native
+readiness control plus both original moved probes are caught, with none missed. The original precons and Rob-list
+P3 readers pass unbroken, preserving their complete original unions. Together the primary40 and supplementary3
+baselines cover42 unique readers. All35 mutations are caught (32 primary plus3 supplementary), with no removal
+from either report. Static anchors remain33 inherited UI targets, zero engine targets. No source backup remains.
+Additional evidence: `evidence/w1-battle-readiness.txt` and `evidence/w1-battle-anchors.json`.
 
 W5 owns payment eligibility/discard-sacrifice wrappers and Siege effect-paid/free transformed casting. P0 room and
 controller stages remain untouched. Combat/filter/projection and intrinsic Siege defeat production are reserved

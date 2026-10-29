@@ -15,6 +15,7 @@ import {loadCardIndex, loadCardScenarios, loadCardScripts} from "../game/tools/e
 import {runScenario} from "../game/engine/cards/scenario.mjs";
 import {compileScript} from "../game/engine/cards/index.mjs";
 import {conditionProblems} from "../game/engine/script/condition.mjs";
+import {awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
 
 let checks = 0;
 const check = (name, fn) => { try { fn(); checks += 1; } catch (e) { e.message = `${name}: ${e.message}`; throw e; } };
@@ -49,14 +50,24 @@ check("Maya's Kalitas exiles Rob's creature and gives Maya the Zombie; Rob's own
   assert.equal(named(s, "Zombie", "battlefield", 0).length, 0);
 });
 
-/* NAMED (an ignore): Kalitas and Liesa both apply to one death; the affected player is not asked the order (CR 616.1) -- the
-   first found applies (rules/replacement.mjs, endOf). What this holds is that the game goes on, the creature exiled. */
-check("Kalitas beside Liesa on one death: exiled, and the game does not stop on a question nobody can answer", () => {
-  const s = play({setup: [at(0, "battlefield", "Kalitas, Traitor of Ghet", "Liesa, Forgotten Archangel", "Wastes"), at(0, "hand", "Murder"), at(1, "battlefield", "Bear")],
-    steps: MURDER("Bear", 0)});
-  assert.equal(s.awaiting ?? null, null, "nothing is waiting");
-  assert.equal(named(s, "Bear", "exile").length, 1, "exiled, as either effect does");
-  assert.equal(s.stack.length, 0);
+/* CR 616.1: both replacements exile the Bear, but only Kalitas creates a Zombie. The affected controller chooses. */
+check("Kalitas beside Liesa on one death: both explicit replacement orders complete with their actual outcomes", () => {
+  for (const chosen of ["Kalitas, Traitor of Ghet", "Liesa, Forgotten Archangel"]) {
+    let s = play({setup: [at(0, "battlefield", "Kalitas, Traitor of Ghet", "Liesa, Forgotten Archangel", "Wastes"), at(0, "hand", "Murder"), at(1, "battlefield", "Bear")],
+      steps: MURDER("Bear", 0)});
+    assert.equal(s.awaiting?.kind, "rule-operation", "the replacement choice is saved before the destruction finishes");
+    assert.equal(s.awaiting.player, 1, "the Bear's controller chooses the replacement");
+    assert.deepEqual(awaitingChoice(s).options.map(option => s.objects[option.cardId].card).sort(),
+      ["Kalitas, Traitor of Ghet", "Liesa, Forgotten Archangel"].sort(), "both actual replacement source identities are offered");
+    assert.equal(named(s, "Bear", "battlefield").length, 1, "the original Bear stays until the explicit answer");
+    s = JSON.parse(JSON.stringify(s));
+    resolveAwaiting(s, [awaitingChoice(s).options.findIndex(option => s.objects[option.cardId].card === chosen)]);
+    assert.equal(s.awaiting ?? null, null, "nothing is waiting");
+    assert.equal(named(s, "Bear", "exile").length, 1, "exiled, as either effect does");
+    assert.equal(s.stack.length, 0);
+    assert.equal(named(s, "Zombie", "battlefield", 0).length, chosen.startsWith("Kalitas") ? 1 : 0,
+      "Kalitas creates exactly one Zombie; choosing Liesa creates none");
+  }
 });
 
 check("Josu Vess remembers being kicked on the permanent; unkicked, he does not", () => {
