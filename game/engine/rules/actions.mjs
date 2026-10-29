@@ -282,8 +282,8 @@ const delvable = (state, player, id) => cardsIn(state, "graveyard", player).filt
 /* The total cost a delved cast pays and the life it pays with, as castPayments reckons them (castTerms). */
 function delveCost(state, player, action) {
   const {tax, free, back, way, fled, permission, lifeCost, manaInstead} = castTerms(state, player, action);
-  const reckoned = castCost(state, player, action.objectId, tax, Boolean(free), lifeCost !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : manaInstead, action.extraMana ?? "", action.targets);
-  return {cost: anyTypeCost(reckoned.cost, permission), extra: reckoned.x,
+  const reckoned = castCost(state, player, action.objectId, tax, Boolean(free), lifeCost !== null ? "" : back ? back.mana : fled ? fled.mana : way ? way.mana : manaInstead, action.extraMana ?? "", action.targets, action.x);
+  return {cost: xCounted(anyTypeCost(reckoned.cost, permission), action.x ?? 0), extra: reckoned.x,
     life: state.players[player].life - (back?.life ?? 0) - (way?.life ?? 0) - (lifeCost ?? 0) - lifeOwed(state, player, action)};
 }
 /* How many cards it may exile: from the fewest that leave the pool able to pay the rest -- one at least, the cast the pool pays
@@ -1939,7 +1939,9 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
   const pool = poolFor(state, player, {spell: id});
   /* With `xTaps`, X also as high as the pool and the caster's untapped sources can pay together: tapped for as it is cast. */
   const tapsForX = !lifeX && cost.variable > 0 && xTaps(state) && !freely && !back && !fled && !way && !tapsAny && !variant.escalateTap && ["hand", "command"].includes(from);
-  const xs = lifeX ? Array.from({length: lifeLeft + 1}, (_, i) => i) : xValues(pool, cost, x, reckoned.less);
+  /* CR 601.2b, 702.66: X is announced before the total cost, then delve may pay its generic component. */
+  const delveMana = !lifeX && hasDelve(state, id) ? delvable(state, player, id).length : 0;
+  const xs = lifeX ? Array.from({length: lifeLeft + 1}, (_, i) => i) : xValues({...pool, C: (pool.C ?? 0) + delveMana}, cost, x, reckoned.less);
   if (tapsForX) {
     const sources = tappable();
     for (let X = xs.length; X <= poolSize(pool) + sources.length; X += 1) {
@@ -1994,11 +1996,12 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
     /* DELVE (CR 702.66a): cards of its caster's graveyard help pay its generic mana, and the pool the rest -- one offer
        (`convoke` "delve" here, `delve` on the offer), beside any the pool or its sources pay alone, when the pool could pay
        what the most cards it may exile leave; which cards, picked once it is taken (castCostChoice). With flashback or an
-       alternative cost too (702.66b), and without paying its mana cost, for the tax it still owes. Not with {X} (none of the
-       lane's cards has it); and not with no card to exile or no generic mana for one to pay -- that cast is the one the pool
+       alternative cost too (702.66b), and without paying its mana cost, for the tax it still owes. X is counted into the
+       total generic cost before checking delve; not with no card to exile or no generic mana for one to pay -- that cast is the one the pool
        pays. */
-    const delvers = X === null && hasDelve(state, id) ? delvable(state, player, id) : [];
-    const delves = delvers.length > 0 && cost.generic + x > 0 && canPay(pool, lessGeneric(cost, x, Math.min(delvers.length, cost.generic + x)), {life: lifeLeft});
+    const delvers = hasDelve(state, id) ? delvable(state, player, id) : [];
+    const delving = xCounted(cost, xMana ?? 0);
+    const delves = delvers.length > 0 && delving.generic + x > 0 && canPay(pool, lessGeneric(delving, x, Math.min(delvers.length, delving.generic + x)), {life: lifeLeft});
     if (!payment && !payWays && !convokes && !delves) continue;
     const paysFor = offeredAtoms.length ? additionalChoices(state, player, id, offeredAtoms) : [null];
     for (const convoke of [...(payment || payWays ? [false] : []), ...(convokes ? [true] : []), ...(delves ? ["delve"] : [])])

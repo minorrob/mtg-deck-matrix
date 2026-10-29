@@ -5,6 +5,6 @@ BREAKS = [
      'Object.entries(focusData).every(([key, value]) => el.dataset[key] === value)',
      'Object.entries(focusData).filter(([key]) => key !== "index").every(([key, value]) => el.dataset[key] === value)'),
     ('switching views loses Camera focus', 'crankmagic-board.js',
-     ' document.querySelector("#cm-board [data-action=board-camera]")?.focus({preventScroll: true});',
-     ''),
+     'actions["board-view"] = (el) => {setMode(el.dataset.view); document.querySelector("#cm-board [data-action=board-camera]")?.focus({preventScroll: true});};',
+     'actions["board-view"] = (el) => {setMode(el.dataset.view);};'),
 ]

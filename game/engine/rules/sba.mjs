@@ -46,7 +46,7 @@
 
 import {moveObject, removeObject, PER_PLAYER, PUBLIC_ZONES, eventCard, rememberExileLooker, recordDeath} from "../state/index.mjs";
 import {applyReplacements, placeReplacedCounters} from "./replacement.mjs";
-import {lastKnown, supertypesOf, subtypesOf, toughnessOf, typesOf, keywordsOf, controllerOf, deriving, staticAbilities} from "./layers.mjs";
+import {lastKnown, supertypesOf, subtypesOf, toughnessOf, typesOf, keywordsOf, controllerOf, deriving, staticAbilities, abilitiesOf} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 import {commanderToAsk, resolveCommanderChoice, recordCommanderDamage} from "./commander.mjs";
 import {sacrificeOne, moveOne, returnExiledUntil, leavingRef, destructionReplaced, destructionAsks} from "../script/effects/zones.mjs";
@@ -466,7 +466,8 @@ export function checkStateBasedActions(state) {
        that has triggered and not yet left the stack, is sacrificed. */
     for (const id of [...state.zones.battlefield]) {
       const object = state.objects[id];
-      const chapters = (object.abilities ?? []).filter((a) => a.kind === "triggered" && Number.isInteger(a.trigger?.chapter));
+      if (!subtypesOf(state, id).includes("Saga")) continue;
+      const chapters = abilitiesOf(state, id).filter((a) => a.kind === "triggered" && Number.isInteger(a.trigger?.chapter));
       if (!chapters.length || (object.counters?.lore ?? 0) < Math.max(...chapters.map((a) => a.trigger.chapter))) continue;
       const ids = new Set(chapters.map((a) => a.id));
       if (state.stack.some((e) => e.cardId === id && ids.has(e.abilityId)) || (state.pendingTriggers ?? []).some((p) => p.source?.cardId === id && ids.has(p.abilityId))) continue;

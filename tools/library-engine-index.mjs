@@ -9,6 +9,7 @@
  *   node tools/library-engine-index.mjs --top 180 [--rides faces:walkers,walkers:stack]   # and the next most-played cards
  *   node tools/library-engine-index.mjs ... --review-by-theme            # each lane also reviews its theme's candidates
  *   node tools/library-engine-index.mjs --pool --out <dir>              # every undefined Commander card, sentence reuse first
+ *   node tools/library-engine-index.mjs --pool --scope <scope-95.json> # restrict writing/review to the frozen appearance target
  *
  * Every card the collection names (each deck's hundred, everything owned, ordered or on the buy list) is put in one tier,
  * the way a table would see it:
@@ -33,11 +34,18 @@
 import {readFileSync, writeFileSync, mkdirSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {commanderPool, scorePool, dealPoolLanes} from './library-engine-pool.mjs';
+import {createHash} from 'node:crypto';
+import {commanderPool, scorePool, dealPoolLanes, loadScopeFilter} from './library-engine-pool.mjs';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const arg = (flag, fallback = null) => { const i = process.argv.indexOf(flag); return i > 0 ? process.argv[i + 1] : fallback; };
 const read = (rel) => JSON.parse(readFileSync(path.isAbsolute(rel) ? rel : path.join(ROOT, rel), 'utf8'));
+const scopePath = arg('--scope');
+if (process.argv.includes('--scope') && (!scopePath || scopePath.startsWith('--'))) throw new Error('--scope needs a manifest path');
+const scopeRaw = scopePath ? readFileSync(path.resolve(ROOT, scopePath)) : null;
+const loadScope = scopeRaw ? JSON.parse(scopeRaw) : null;
+// Validate before calibration or any output directory is created.
+loadScopeFilter(loadScope);
 
 const {tableDefinition} = await import('../game/engine/cards/definitions.mjs');
 const {candidateDefinition} = await import('../game/engine/cards/candidates.mjs');
@@ -87,6 +95,7 @@ const oracle = read('data/engine/oracle.json');
 const candidatesSummary = read('data/engine/candidates.json').summary;
 const byOracle = new Map();
 for (const c of oracle.cards) { byOracle.set(foldName(c.name), c); const front = c.name.split(' // ')[0]; if (front !== c.name && !byOracle.has(foldName(front))) byOracle.set(foldName(front), c); }
+const included = loadScopeFilter(loadScope, (name) => byOracle.get(foldName(name))?.name ?? name);
 const index = loadCardIndex();
 if (poolMode) for (const card of commanderPool(oracle, new Set(read('data/commander-banned.json').cards), index.resolve)) entry(card.name).pool = true;
 const scripts = loadCardScripts().map((f) => f.script);
@@ -104,7 +113,7 @@ if (topCount && !poolMode) {
   let taken = 0;
   for (const c of top) {
     const name = typeof c === 'string' ? c : c.name;
-    if (cards.has(foldName(name)) || tableDefinition(name)) continue;
+    if (!included(name) || cards.has(foldName(name)) || tableDefinition(name)) continue;
     const candidate = Boolean(candidateDefinition(name));
     if (!candidate && taken >= topCount) continue;
     if (!candidate) taken++;
@@ -112,6 +121,8 @@ if (topCount && !poolMode) {
   }
 }
 
+// Apply to collection, top, pool and candidate-review rows before compiling, scoring or dealing any lane.
+for (const [key, e] of cards) if (!included(e.name)) cards.delete(key);
 for (const e of cards.values()) {
   const record = byOracle.get(foldName(e.name));
   e.rank = rankOf.get(foldName(e.name)) ?? (record ? rankOf.get(foldName(record.name)) : undefined) ?? null;
@@ -212,6 +223,9 @@ if (outDir) {
   const rel = path.relative(ROOT, path.resolve(livePath)).split(path.sep).join('/');
   const source = poolMode ? {pool: true, oracle: oracle.generatedAt ?? null, priority: 'Estimated one-gap completions per missing sentence; actual gains require a post-wave compiler run'} : {collection: rel.startsWith('..') ? path.basename(livePath) : rel, workbook: live.workbook, decks: live.decks.map((d) => d.id),
     liveDecks: [...liveDecks], ...(topCount ? {top: topCount} : {}), candidates: candidatesSummary};
+  if (loadScope) source.loadScope = {manifest: path.relative(ROOT, path.resolve(ROOT, scopePath)).split(path.sep).join('/'),
+    sha256: createHash('sha256').update(scopeRaw).digest('hex'), share: loadScope.share, names: loadScope.count,
+    appearances: loadScope.appearances, coveredAppearances: loadScope.coveredAppearances};
   writeFileSync(path.join(outDir, 'index.json'), JSON.stringify({schema: 'library-engine-index@1', source,
     summary: {cards: all.length, final: count('final'), candidate: count('candidate'), defined: count('defined'), unloaded: count('unloaded'), unresolved: count('unresolved'), verdicts},
     cards: all.map((c) => ({name: c.name, tier: c.tier, scope: scope(c), decks: c.decks, ...(c.watchFor ? {watchedFor: c.watchFor} : {}), owned: c.owned, ...(c.problems ? {problems: c.problems} : {}), ...(c.compiler ? {compiler: c.compiler} : {})}))}, null, 1) + '\n');

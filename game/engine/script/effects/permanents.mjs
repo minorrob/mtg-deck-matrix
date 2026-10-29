@@ -538,8 +538,8 @@ export function incubate(state, params, context) {
  * abilities the effect gives it (`abilities`, compiled as a card's are, cards/index.mjs) and no other characteristic: no
  * types, no mana cost, no color (114.3). It is neither a card nor a permanent (114.5); `card` is only what the board calls
  * it, after what made it. Its abilities function in the command zone (114.4): its triggered abilities (rules/trigger.mjs),
- * its replacement effects (rules/replacement.mjs) and the rules it changes for players (rules/statics.mjs,
- * playerRuleChanged). Nothing removes it.
+ * its replacement effects (rules/replacement.mjs) and the rules it changes for players and permanents (rules/statics.mjs,
+ * playerRuleChanged and ruleChanged). Nothing removes it.
  */
 export function emblem(state, params, context) {
   const player = context.controller;

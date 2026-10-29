@@ -1,0 +1,47 @@
+/* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
+/* Native battle rules, using generic fixtures without adding final card definitions (CR 310). */
+import assert from "node:assert/strict";
+import {compileScript} from "../game/engine/cards/index.mjs";
+import {loadCardIndex} from "../game/tools/engine-cards.mjs";
+import {runScenario} from "../game/engine/cards/scenario.mjs";
+import {legalActions, applyAction} from "../game/engine/rules/actions.mjs";
+import {resolveTop} from "../game/engine/rules/stack.mjs";
+import {afterResolving} from "../game/engine/rules/priority.mjs";
+import {awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
+
+let checks = 0;
+const eq = (actual, expected, why) => {assert.deepEqual(actual, expected, why); checks++;};
+const script = {schema: "CrankCardScript@1", layout: "transform", source: "hand",
+  identity: {name: "Smoke Siege // Smoke Prize", oracleId: "smoke-battle", types: ["Battle"], subtypes: ["Siege"], manaCost: "{2}", colors: [], colorIdentity: [], defense: 4},
+  oracleText: "When this battle enters, you gain 1 life.", abilities: [{kind: "triggered", text: "When this battle enters, you gain 1 life.",
+    trigger: {on: "enters", who: "self"}, effects: [{effect: "gainLife", amount: 1}]}],
+  back: {identity: {name: "Smoke Prize", types: ["Creature"], subtypes: [], manaCost: "", colors: [], power: 3, toughness: 3},
+    oracleText: "When this creature enters, you gain 3 life.", abilities: [{kind: "triggered", text: "When this creature enters, you gain 3 life.",
+      trigger: {on: "enters", who: "self"}, effects: [{effect: "gainLife", amount: 3}]}]}};
+const compiled = compileScript(script);
+eq(compiled.problems, [], "the generic transforming Siege fixture compiles");
+const cards = loadCardIndex();
+const resolver = (name) => name === script.identity.name ? compiled.definition : cards.definition(name);
+function castBattle() {
+  const {state} = runScenario({name: "An actual battle spell waits for its protector before entry", seats: 3,
+    setup: [{seat: 0, zone: "battlefield", cards: ["Wastes", "Wastes"]}, {seat: 0, zone: "hand", cards: [script.identity.name]}],
+    steps: [{tap: "Wastes"}, {tap: "Wastes"}, {cast: "Smoke Siege"}], expect: []}, resolver);
+  return state;
+}
+{
+  let s = castBattle();
+  const spell = s.stack.at(-1).objectId;
+  resolveTop(s);
+  eq(s.awaiting?.kind, "rule-operation", "resolving a Siege asks its controller to choose an opponent as protector before entry");
+  eq(s.objects[spell].zone, "stack", "the unanswered battle remains a spell and has not entered");
+  const q = awaitingChoice(s);
+  eq([q.min, q.max, q.options.map((option) => option.playerId)], [1, 1, [1, 2]], "every eligible opponent is offered, with no default protector");
+  s = JSON.parse(JSON.stringify(s));
+  resolveAwaiting(s, [1]);
+  const battle = s.zones.battlefield.find((id) => s.objects[id].card === "Smoke Siege");
+  eq([s.objects[battle].protector, s.objects[battle].counters.defense], [2, 4], "the explicit saved answer enters with the chosen protector and printed defense counters");
+  eq(s.stack.at(-1)?.cardId, battle, "the actual entering ability triggers from the arrived battle identity");
+  afterResolving(s, resolveTop(s));
+  eq(s.players[0].life, 41, "the actual battle entering ability resolves after its protector choice");
+}
+console.log(`engine-battles: ${checks} checks passed`);

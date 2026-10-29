@@ -122,6 +122,8 @@ eq(calls().map((c) => [c.email, c.outcome]), [["rob@example.com", "ok"], ["owner
 const library = async (path, env, jwt) => (await handle(new Request(`https://crankmagic.test${path}`, {headers: {"cf-access-jwt-assertion": jwt ?? await stranger(AUD)}}), env, {fetchImpl, now: clock})).json();
 eq([(await library("/api/ai-advise", {...EVERYONE, AI_ADVISE: "on"})).open, (await library("/api/ai-advise", {...OPEN, AI_ADVISE: "on"})).open], [false, false], "the deck page never offers the advisor to General Access, with AI_EVERYONE on or off");
 eq((await library("/api/ai-advise", {...EVERYONE, AI_ADVISE: "on"}, await token({aud: AUD}))).open, true, "and offers it to an insider");
+for (const everyone of ["on", "off"]) eq((await library("/api/ai-advise", {...OWNED, AI_ADVISE: "on", AI_EVERYONE: everyone}, await owner(AUD))).open, true,
+  "the owner on no roster is offered the advisor with either sign-in switch setting");
 eq([(await library("/api/ai-meter", EVERYONE)).open, (await library("/api/ai-meter", OWNED, await owner(AUD))).open], [false, true], "the settings' meter reads the same way: shut to General Access, open to the owner");
 /* The composer is offered only by the server's existing Coach gate, never inferred from UI presence. With the access groups
    the person asking is an insider (the roster) or the owner; General Access is never offered it, AI_EVERYONE or not. */

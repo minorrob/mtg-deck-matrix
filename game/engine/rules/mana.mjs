@@ -359,9 +359,10 @@ export function tapPlans(units, cost, limit = 2) {
  * the first of a kind is tapped before the second, and a kind's outputs are chosen in order, so two Forests are one way,
  * not two, and each way is found once. Only callers that have excluded activation costs, spending restrictions and side
  * effects use this; a symbol it does not pay ({X}, snow, Phyrexian, {2/W}) leaves the cost to tapping by hand. The search
- * stops after SEARCH_LIMIT steps with what it found: on a crowded board a cast it cannot work out in time is not tapped
- * for, and its player taps by hand -- an omitted shortcut, never a spell made illegal. */
-export const SEARCH_LIMIT = 4000;
+ * visits each source budget that can fund the cost; existence probes stop at their requested result count, while a
+ * player's question retains all distinct plans. No search-step budget may remove a legal payment (CR 601.2g-h). */
+/* Existence probes stop at their requested result count; a payment question must not stop after an arbitrary search budget. */
+export const SEARCH_LIMIT = Infinity;
 export function sourceTapPlans(units, pool, cost, limit = 2) {
   if (cost.variable > 0 || cost.symbols.some((s) => !["generic", "colored", "hybrid"].includes(s.kind))) return [];
   const size = cost.generic + cost.symbols.filter((s) => s.kind !== "generic").length;
@@ -373,14 +374,17 @@ export function sourceTapPlans(units, pool, cost, limit = 2) {
   const add = (a, b) => Object.fromEntries(MANA_KEYS.map((k) => [k, (a[k] || 0) + (b[k] || 0)]));
   const ceiling = Array(ordered.length + 1); ceiling[ordered.length] = {};
   for (let i = ordered.length - 1; i >= 0; i--) ceiling[i] = add(ceiling[i + 1], Object.fromEntries(MANA_KEYS.map((k) => [k, Math.max(0, ...outputs[i].map(([, p]) => p[k] || 0))])));
-  const result = [], dead = new Set();
+  const result = [], dead = new Set(), foundKeys = new Set();
   let steps = 0;
   /* `last`: the output the source before took, -1 when it was left -- what a source alike to it may still do. */
   const visit = (i, available, taps, budget, last) => {
     if (result.length >= limit || ++steps > SEARCH_LIMIT) return;
     const payments = paymentOptions(available, cost, {life: 0}, limit - result.length);
     if (payments.length) {
-      for (const payment of payments) result.push({taps, payment, key: `sources:${taps.map((t) => `${t.kind}=${t.color}`).join(";")}|${paymentKey(payment)}`});
+      for (const payment of payments) {
+        const key = `sources:${taps.map((t) => `${t.kind}=${t.color}`).join(";")}|${paymentKey(payment)}`;
+        if (!foundKeys.has(key)) { foundKeys.add(key); result.push({taps, payment, key}); }
+      }
       return;
     }
     if (i === ordered.length || taps.length === budget || !canPay(add(available, ceiling[i]), cost, {life: 0})) return;
@@ -400,7 +404,7 @@ export function sourceTapPlans(units, pool, cost, limit = 2) {
   const most = ordered.map((_, i) => Math.max(...outputs[i].map(([, p]) => poolSize(p)))).sort((a, b) => b - a);
   let least = 0;
   for (let made = poolSize(pool); made < size && least < most.length; least++) made += most[least];
-  for (let budget = least; budget <= Math.min(size, ordered.length) && !result.length && steps <= SEARCH_LIMIT; budget++) visit(0, pool, [], budget, -1);
+  for (let budget = least; budget <= Math.min(size, ordered.length) && result.length < limit && steps <= SEARCH_LIMIT; budget++) visit(0, pool, [], budget, -1);
   return result.map(({taps, payment, key}) => ({taps: taps.map(({id, color}) => ({id, color})), payment, key}));
 }
 

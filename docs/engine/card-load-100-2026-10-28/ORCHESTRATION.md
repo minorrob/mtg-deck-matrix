@@ -56,16 +56,20 @@ repository alone.
 - `git -C C:\Users\robmi\CrankMagic\repo fetch origin`; make the integration worktree `w<N>-integrate` on a new branch
   `codex/engine-load100-w<N>` from `origin/main`; push it; open a **draft** PR into `main` titled
   `Card load to 100%, wave <N>`.
-- **Deal the cards.** Wave 0 is the debt wave (below). From wave 1, in this order of tiers, each finished before the next:
-  1. **T1** Rob's library and decks: `node --stack-size=4000 tools/library-engine-index.mjs --out <scratch>/w<N> --lane-size 30 --review-by-theme`.
+- **Deal the cards.** Wave 0 is the debt wave (below). Rob's revised target is the frozen 95% of deck appearances,
+  not every distinct Commander card. Every writing/review deal must use
+  `--scope docs/engine/card-load-100-2026-10-28/scope-95.json`; its hash is recorded in the index and each lane.
+  This filters loading only; all existing final definitions retain whole-directory verification.
+  From wave 1, in this order of tiers, each finished before the next:
+  1. **T1** Rob's included library and decks: `node --stack-size=4000 tools/library-engine-index.mjs --scope docs/engine/card-load-100-2026-10-28/scope-95.json --out <scratch>/w<N> --lane-size 30 --review-by-theme`.
      Today 1 library card is unloaded; every one of the 477 live-deck cards is final.
   2. **T2** the most-played Commander cards: the same, with `--top 3239`. Today 1,247 are unloaded and 2 are candidates.
-  3. **T3** every other Commander card, **sentence first**: from wave 0's `tools/library-engine-index.mjs --pool` (built in
-     wave 0 by W5), each lane's list ordered so that the first cards written are the ones whose missing sentence
+  3. **T3** every remaining included card, **sentence first**: use `tools/library-engine-index.mjs --pool` with the same
+     required `--scope` manifest. Each lane's list is ordered so that the first cards written are the ones whose missing sentence
      completes the most other cards (`card-compiler.mjs`'s `nextSentences`; today 12,080 cards are one sentence short).
      After each wave's merge the compiler recompiles, and every card those sentences now complete arrives as a
-     candidate for the next wave's review lists. This is the program's flywheel; it is what makes 25,000 cards
-     reachable.
+     candidate for the next wave's review lists. Score sentence reuse within the frozen target; outside-scope cards
+     must not inflate its priorities or enter its candidate reviews.
 - **Deal for the flywheel, not for the count.** Among a tier's cards, prefer the ones whose gap sentences are shared by the
   most other undefined cards (`card-compiler.mjs --report`'s missing-sentence ranking; `engine-compile.mjs --plan` per
   card), so each hand-written sentence completes many cards as candidates for the next wave's review. Record in `RUN.md`

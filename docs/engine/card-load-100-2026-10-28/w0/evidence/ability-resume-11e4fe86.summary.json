@@ -1,0 +1,20 @@
+{
+  "source": "11e4fe864a9c3b26d3e1eec57fb04cc0c16e7b3a",
+  "scope": {
+    "directory": true,
+    "cardRoot": "C:\\Users\\robmi\\CrankMagic\\worktrees\\load100\\w0-integrate\\game\\engine\\cards"
+  },
+  "complete": true,
+  "ledgerSha256": "ecb7b8bbb28affc1cbfa30ccf9e3dff9d1cda6f6cff20150e0fc515e5f8accfa",
+  "counts": {
+    "final": 6430,
+    "abilities": 11636,
+    "scenarioReached": 5168,
+    "counterfactualReached": 929,
+    "exercised": 0
+  },
+  "unreached": 6468,
+  "scenarios": 11037,
+  "scenarioFailures": 18,
+  "interpretation": "Completed strict whole-directory resume measurement before subsequent W1/W4/W5 and counter-scenario repairs. G-3 fails; this is neither final integration acceptance nor clean-game exercise evidence."
+}

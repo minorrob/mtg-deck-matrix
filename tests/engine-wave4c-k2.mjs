@@ -28,6 +28,7 @@ import {keywordBuilt, FORGE_COUNTS, FORGE_API} from "../game/tools/engine-constr
 import {tableDefinition} from "../game/engine/cards/definitions.mjs";
 import {loadCardScenarios} from "../game/tools/engine-cards.mjs";
 import {runScenario} from "../game/engine/cards/scenario.mjs";
+import {resolveTop} from "../game/engine/rules/stack.mjs";
 
 const {eq, ok, throws, done} = checks("engine-wave4c-k2");
 const BEAR = creature(["Bear"], 2, 2);
@@ -113,13 +114,21 @@ const forged = (s, change) => {
   throws(forged(t, {delveExile: []}), /cannot delve/, "none picked is refused");
 }
 {
-  /* No generic mana to pay, or {X}: no delve offered. A spell without delve, delve forged onto it: refused. */
+  /* No generic mana: no delve. An announced X is part of the generic total (CR 601.2b, 702.66). No delve keyword: refused. */
   const s = play([at(0, "battlefield", "Island", "Island", "Wastes", "Wastes", "Wastes"), at(0, "hand", "Blue Delve", "X Delve", "Plain Draw"), at(0, "graveyard", "Bear", "Bear", "Bear")],
     [{tap: "Island"}, {tap: "Wastes"}, {tap: "Wastes"}, {tap: "Wastes"}], {}, FIX);
   eq([castOffers(s, "Blue Delve").map((a) => a.delve ?? false), castOffers(s, "X Delve").some((a) => a.delve), castOffers(s, "Plain Draw").map((a) => a.delve ?? false)],
-    [[false], false, [false]], "{U}: the pool's cast alone; {X}: never delved; no delve: the pool's alone");
+    [[false], true, [false]], "{U}: the pool's cast alone; announced X may be delved; no delve: the pool's alone");
   const plain = castOffers(s, "Plain Draw")[0];
   throws(() => applyAction(structuredClone(s), 0, {...plain, payment: null, delve: true, delveExile: [...cardsIn(s, "graveyard", 0)]}), /not a legal action/, "delve forged on a card without it is refused");
+  const delvedX = castOffers(s, "X Delve").filter(a => a.delve);
+  eq(delvedX.map(a => a.x), [0, 1, 2, 3, 4, 5], "three floating generic mana and three graveyard cards offer X through five for {X}{1}{U}");
+  applyAction(s, 0, delvedX.find(a => a.x === 5));
+  resolveAwaiting(s, [0, 1, 2]);
+  eq([s.players[0].manaPool.U, s.players[0].manaPool.C, cardsIn(s, "graveyard", 0).length, s.zones.exile.length, s.stack.at(-1)?.x], [0, 0, 0, 3, 5], "X=5 really spends U+CCC and exiles the three Bears");
+  const beforeDraw = cardsIn(s, "hand", 0).length;
+  resolveTop(s);
+  eq(cardsIn(s, "hand", 0).length - beforeDraw, 5, "the paid X spell resolves and draws five cards");
 }
 
 {

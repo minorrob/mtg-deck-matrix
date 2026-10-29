@@ -5,6 +5,114 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Next-batch assignment from Rob's October 29 playtest handoff:** reserve one subagent slot for ROB-204, ROB-210,
+  ROB-211 and the engine halves of shared ROB-205/ROB-209, instead of another card-writing assignment. This intake
+  has not dispatched an implementation subagent; launch the dedicated slot when starting the next batch. Full brief,
+  dependencies, acceptance evidence and ownership seams: `w0/PLAYTEST-ENGINE.md`. Keep UI changes with the UI owner.
+  ROB-204 PR #932 is attached: ready, open and unmerged at `ea670e40`; its `suites` check was in progress at intake.
+  Verify the exact-head result and existing fix first, then ROB-210. The PR identifies a client Confirm bug; do not
+  duplicate it with a speculative engine fix. ROB-211's Salty Normal policy can proceed independently without a
+  provider. The shared Cancel/modal engine contracts require actual rollback and staged-choice proofs; no silent
+  skipping of mandatory effects or weak target-count checks. Preserve all card-load gates and the 95% scope.
+
+- **Latest source/generated checkpoint, October 29:** `2c89a5c3de37959b531bf5ebe42e8673b7e9da80` is scanned and
+  pushed on `codex/engine-load100-w0`, draft #912, worktree `C:\Users\robmi\CrankMagic\worktrees\load100\w0-integrate`.
+  Main `b9999b16` is an ancestor. The following historical resume measurements are retained for provenance, not current
+  acceptance. Newest W1 `1fad7ec9` (#929), W4 `aae67e76` (#930), W5 code `12a32a40` through W1's merged `5a004e44`,
+  final W5 handback `d21407ef` (#928) and root anchor `88b616d5` (#931) are included. Auxiliary PRs may automatically close when their heads enter the
+  integration branch; that does not mean main. No new final cards, promotions, main merge, staging or Actions acceptance.
+- **Assembled positive checks:** `engine-cards: 55 checks passed — 6430 definitions`; its complete saved-scenario loop
+  passes all **11,039 scenarios**. W1 157, W5 172, planeswalkers 66, data integrity and feature-wiring 131 pass. All original
+  scenario expectations remain or are strengthened to actual legal funded outcomes: Faithless Looting pays and flashes
+  back, Glasswright pays from its real Mountain, and shock tokens explicitly pay/decline before appearing. Counter-order
+  51 checks preserve all five saved final outcomes and reject missing-prompt proof. W1 reports 27 distinct caught
+  mutations; root independently reran the earlier 20 inset/Saga and six emblem mutations. W4's 32 new mutations are
+  independently caught on integration, `missed: []`. W5's original 14-suite union now passes after regeneration, with all
+  13 moved probes caught and no suite narrowing. These are bounded evidence, not complete role or gate acceptance.
+- **Calibration is repaired:** required compiler regeneration records **4,165/4,165 passed**, minimum-count 1, the same
+  held-out denominator as the failing `11e4fe86` snapshot. Reuse `data/engine/candidates.json` `library.calibrated` and
+  `w0/evidence/calibration-regenerated-2c89a5c3.json`; do not repeat an unchanged calibration run. Generated definitions,
+  candidates/report and inventory are refreshed once for this batch; inventory 60 artifacts, compiler 25,616 undefined,
+  116 candidates, 0 refused, 2 blocked, 0 vetoed, 24,429 unknown (12,080 one short), 1,069 other layouts. Independent review
+  of all past loads and the other gates remains open. The latest strict ability snapshot is still `11e4fe86`, below:
+  **5,168/11,636 reached, 6,468 unproved**. It predates these repairs; current strict reachability must be remeasured.
+- **Loading scope is now enforced by the deal command:** root `bc4b021f` adds `--scope`; the required 95% manifest flag
+  is documented for T1/T2/T3. Actual report proof `w0/evidence/scope-dealer-resume.json`: **5,799 rows in 197 lane files,
+  0 outside scope, 0 duplicates, 0 missing included undefined names**; every output carries the frozen manifest hash.
+  This diagnostic created no cards or promotions. Pure dealer 24 checks and four mutations pass. Verification is not
+  narrowed. Scope check still returns 2,715/8,514 final, 5,799 undefined, 0 exempt; 527,373,351/555,122,162 appearances.
+- **Root's inherited-anchor checkpoint:** #931/`88b616d5` repairs 17 anchors, adds owner-advisor and empty-draft rematch
+  assertions, and leaves 32 inherited anchors open on its baseline. See `w0/ROOT-ANCHOR-PROOF-2026-10-29.md`; no
+  production UI/access changes, removed assertions, dropped mutations or ignores. All 17 probes caught before merge.
+  Post-integration repeats: six moved access probes caught on a passing original union; the 11 browser probes are
+  complete with required installed Chrome and original suites. All **17 caught**; the initially missed legal-pair
+  probe is supplemented by an empty-draft case and a verified specific stale-validation assertion, not a timeout.
+  `w0/evidence/post-integration-anchor-proof.json` records the initial miss and accepted supplement. Two additional
+  engine anchors shifted by the emblem/vocabulary changes are reanchored to their same guards and caught by their
+  original suite unions. The activated-emblem rejection assertion names the updated supported list, with unchanged
+  rejection behavior. Final static audit: **226 files, 4,256 breaks, 32 unresolved, zero engine targets**.
+- **Do not close the operational gates:** W4's two easy/normal pool games and W5's normal library seed 2802 are bounded
+  clean/replay-identical games on their recorded source, not the required G-5/G-6 runs. W5 easy library seed 2801 on
+  `5a004e44` was stopped after 628.39 seconds without final result, CPU 673.08 seconds; no clean credit. Evidence is in
+  `w0/evidence/w5-fuzz-easy-2801-timeout.json`. Exhaustive payment search is a candidate cause, not established. Source-kind multiset proofs do not
+  prove every exact-ID choice: the existing solver groups equivalent outputs and takes first IDs. Identity choices,
+  operational performance, effect-paid X/additional costs and nonmana tap-source collisions remain open. Never restore
+  an arbitrary cap or default to hide the problem.
+- **Next context's concrete work:** continue W5's identity/performance/effect-cost debt from its final pushed lane head;
+  W4's actual Shivan Reef 5/9 replacement-order RED reproduction and design are in `w0/W4-damage-continuation.md`;
+  W1's native Battle protector RED fixture and full CR310 seam map are in `w0/W1-battles-next.md`. No battle or outside
+  damage runtime implementation was started in these handbacks. W1 also owes Daretti/Teferi Sunset. W2/W3/W6/W7 debts
+  and strict V8 default/CI/provenance/optional-settle evidence remain in their lane files. V8 must build individual
+  behavioral witnesses for all unproved abilities and perform the required review/games; availability is not proof.
+  Keep root's auxiliary anchor worktree for the remaining inherited repairs. W1/W4/W5 are quiescent with clean pushed
+  handbacks. ROB-199 and ROB-200 comments are updated in place. Their first update was rejected for missing disclosure
+  authorization; direct user attachment lines 21, 49-50 and 72 explicitly authorize Linear records, and the named
+  repository was verified PUBLIC. One evidence-backed retry succeeded; no approval action remains. Primary checkout remains another session's
+  unfinished merge and is untouched. Every role must resume from this integrated source rather than its stale old base.
+
+- **Historical intermediate checkpoint from this continuation:**
+- **October 29 resumed work after `11e4fe86`:** W5 `d9d00a00` (draft #928) and W1 `15caccfe`
+  (draft #929) and W4 `ae9e3daa` (draft #930; source `89bfae71`) are integrated locally. W1 continues emblems and battles;
+  W5 continues effect-paid X/additional costs and payment search; W4 continues actual outside-resolution damage.
+  None of these bounded checkpoints closes a role. Root independently reran W1's 114/23 checks and all 20 new
+  inset/layer/Saga mutations (`missed: []`), plus W4's 69 combat and 66 planeswalker checks. W4's 32 new mutations
+  are being independently rerun on integration. Its easy and normal seed-1 games are two clean bounded games,
+  not the required complete fuzz/exercise gate.
+  Root `34f6b33b` adds explicit entry-order answers to five saved counter scenarios, preserving all original final
+  expectations. `scenario-entry-order: 51 checks`; both explicit orders finish, a missing answer is classified as
+  an offer diagnostic without ability credit. Its mutation is caught, `missed: []`. Root `2980e8b8` preserves the
+  original invalid-selection refusal while adding the operation's selection instructions; Food 156, operation 76,
+  zone-action 64 and replacement-step 16 checks pass with unchanged assertions.
+- **Current completed strict directory measurement is red:** source `11e4fe864a9c3b26d3e1eec57fb04cc0c16e7b3a`,
+  `6,430 definitions`; `11,037 scenarios, 18 failed`; `5,168 of 11,636 reached by passing scenarios
+  (929 by runtime-removal proof); 6,468 unreached; whole directory`; expected exit 1. The complete raw ledger is
+  archived as `w0/evidence/ability-resume-11e4fe86.json.gz`; its manifest verifies completed directory scope and raw
+  and archive SHA-256 hashes, and the readable summary/backlog preserves every unproved ability. Raw evidence was
+  separately scanned before compression. It predates the repairs above and is not final integration acceptance.
+  Historical 6,079/11,636 is superseded by this stricter proof classifier. Clean-game exercise from this scenario
+  measurement is zero. G-3 stays open; no missing prompts, generic failures or ability-presence assertions earn credit.
+- **Calibration on the same `11e4fe86` source:** 4,165 held out, 4,154 pass, 11 fail, minimum-count 1;
+  `w0/evidence/calibration-resume-11e4fe86.json` names every failure. No denominator exclusion. Ten reveal-land
+  failures and Coldsteel Heart's newly required entry order are repaired by W5 `d9d00a00`; the full original reader
+  then exposed Faithless Looting's obsolete no-offer assertion despite three untapped Mountains funding flashback.
+  W5 is proving actual auto-payment, draw/discard and exile before publishing that correction. The old direct token
+  copy test also assumed the named unpaid untapped-shock defect; W5 is replacing it with explicit pay/decline,
+  no-premature-token and reload outcomes. Keep the original baseline suites; do not narrow them to claim mutations.
+- **Root's separate anchor worktree:** `C:\Users\robmi\CrankMagic\worktrees\load100\w0-root-anchors`, branch
+  `codex/engine-load100-w0-root-anchors`, starts at `11e4fe86` and edits mutation tooling only. The polling timestamp
+  retains the watch query and its original race; Camera focus is scoped to the same view-switch action. AI access
+  probes now follow Rob's later October 26 policy: sign-in audience may widen, spending stays owner/insider only.
+  No paid endpoint or process provider variable is used; unit providers are injected local stand-ins. A default
+  browser run skipped missing bundled Chromium and therefore earned no proof; installed Chrome with
+  `GEOMETRY_REQUIRED=1` passes the original 326-check table-board baseline. Mutations remain pending until caught.
+- **Scope unchanged:** 8,514 names cover 95.0013% of appearances; 2,715 defined, 5,799 undefined. Wave 0 remains
+  unfinished, with zero new final cards or promotions. No Actions acceptance, main merge, staging release or Rob sign-off.
+  Root's dealer now accepts `--scope <scope-95.json>` for every collection/top/pool writing and candidate-review lane;
+  canonical front aliases use the included full identity, exempt/outside names are excluded before scoring, and each
+  output records the manifest hash. The procedure requires this flag for T1/T2/T3. Pure dealer 24 checks and four
+  new mutations pass (`missed: []`); real CLI output/provenance still needs a bounded report after W5's saved-scenario
+  correction. Verification inputs are not filtered by the loading scope.
+
 - **Resume checkpoint, October 29:** integration branch `codex/engine-load100-w0`, draft #912,
   worktree `C:\Users\robmi\CrankMagic\worktrees\load100\w0-integrate`. Source and regenerated artifacts are committed
   at `5e06d705e947f20d53128ab9a534339efa951c63`; the following handoff record belongs to the same branch.
@@ -366,11 +474,11 @@ Fresh baseline on main `39a45706`, before engine changes:
 | --- | --- | --- |
 | G-1 Included cards final | Full-pool baseline: 6,430 definitions | Rob's revised 95%-appearance target: 2,715/8,514 final, 5,799 undefined; scope gate exits 1. Full-pool undefined count is diagnostic. Unmet. |
 | G-2 Included candidates outstanding | 116 global (compiler, live); 100 in committed `candidates.json` | Scoped count awaits consolidated compile; 5,799 included names are not final. No scoped acceptance claimed. Unmet. |
-| G-3 `check-cards` | 6,430 definitions, 11,023 scenarios, 0 failed | Initial `508afa94` 6,079/11,636 reached is historical: old offer-only credit is now rejected. Current full coverage must be remeasured. New selected W4 completed-combat witnesses prove 5/5 abilities on 4 cards only; zero clean-game exercise credit. Strict whole-directory coverage and default/CI wiring remain open. Unmet. |
-| G-4 Calibration failures | 4 of 4,165 (Blackblade Reforged, Contagion Clasp, Goblin Piledriver, Wayfarer's Bauble) | W4 `8e0f3a2f`: 4,165 held out, 4,165 pass, no denominator exclusions. Writer changes independently reviewed; all past loads and final integration remain unreviewed/unmeasured. Full G-4 unmet. |
+| G-3 `check-cards` | 6,430 definitions, 11,023 scenarios, 0 failed | Strict completed `11e4fe86`: 5,168/11,636 reached, 6,468 unproved; 11,037 scenarios, 18 failed, expected exit 1. Compressed/hash-verified evidence archived. Later repairs require fresh final integration measurement. Default/CI wiring remains open. Unmet. |
+| G-4 Calibration failures | 4 of 4,165 (Blackblade Reforged, Contagion Clasp, Goblin Piledriver, Wayfarer's Bauble) | Regenerated `2c89a5c3`: 4,165/4,165 pass, minimum count 1, same denominator. Reuse compiler artifact evidence; no redundant calibration run. Independent review of all past loads remains open. Full G-4 unmet. |
 | G-5 Pool fuzz, clean of games | the harness has no pool mode yet; library 3 of 3, staging decks 1 of 1 clean | Initial 3/3 app-finished pool runs clean, of which 1 reached a winner; final integration and 5,000 games unmet. |
 | G-6 Final cards exercised in a clean game | not measured (no ledger yet) | Initial 131/6,430 final definitions exercised in 3 app-finished clean runs. Unmet. |
-| G-7 Gameplay-gap list open items | section 4: 21 open, 5 unsure; section 5: 10 open; section 7: 10 open; section 8: 10 rows open, 4 partial (`README.md`, "Open accuracy debt") | Debt fixes in progress. Root proved fifteen of the original 57 anchors; current-main changes and the further W2 repair leave 49 problems. No changed-file W4 anchor failures. Unmet. |
+| G-7 Gameplay-gap list open items | section 4: 21 open, 5 unsure; section 5: 10 open; section 7: 10 open; section 8: 10 rows open, 4 partial (`README.md`, "Open accuracy debt") | Bounded repairs and native remaining-debt reproductions committed. Root's 17 inherited repairs are caught after integration; two newly shifted engine anchors also caught. Final static audit 226 files/4,256 breaks/32 unresolved, zero engine targets. Runtime/source-identity defaults and other debt remain open. Unmet. |
 | G-8 Rob's playtest sign-off | none | None; only Rob can close this gate. |
 
 ## Root's inherited-anchor repair

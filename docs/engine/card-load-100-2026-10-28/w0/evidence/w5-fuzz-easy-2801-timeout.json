@@ -1,0 +1,56 @@
+{
+  "schema": "load100-w5-fuzz-timeout@1",
+  "source": "5a004e444d83e3fd8e63873f6b5ef9f6160430d3",
+  "branch": "codex/engine-load100-w0-w5-mana",
+  "seed": 2801,
+  "level": "easy",
+  "library": true,
+  "humans": [],
+  "strictRefusals": true,
+  "replay": true,
+  "leaks": true,
+  "node": "v22.23.3",
+  "decks": [
+    "Atraxa, Praetors' Voice",
+    "Gandalf, Goblins' Bane // Flameshape",
+    "Kambal, Profiteering Mayor",
+    "Vorinclex, Monstrous Raider"
+  ],
+  "status": "unfinished-timeout",
+  "clean": false,
+  "gatesOpen": [
+    "G-5",
+    "payment completeness operational performance"
+  ],
+  "samples": [
+    {
+      "ProcessId": 48748,
+      "ParentProcessId": 36792,
+      "Created": "2026-10-29T09:37:12.6309260-04:00",
+      "CPU": 326.65625,
+      "Bytes": 422531072,
+      "Sample": "2026-10-29T09:42:14.7885734-04:00",
+      "Command": "\"C:/Users/robmi/CrankMagic/workbench/node22/node_modules/node-win-x64/bin\\node.exe\" --stack-size=4000 tools/fuzz-live.mjs --library --level easy --seeds 2801 --strict-refusals --replay --leaks --json w5-fuzz-easy.json"
+    },
+    {
+      "ProcessId": 48748,
+      "Created": "2026-10-29T09:37:12.6309260-04:00",
+      "CPU": 520.296875,
+      "Bytes": 424407040,
+      "Sample": "2026-10-29T09:45:16.9641604-04:00",
+      "Command": "\"C:/Users/robmi/CrankMagic/workbench/node22/node_modules/node-win-x64/bin\\node.exe\" --stack-size=4000 tools/fuzz-live.mjs --library --level easy --seeds 2801 --strict-refusals --replay --leaks --json w5-fuzz-easy.json"
+    }
+  ],
+  "stopped": {
+    "ProcessId": 48748,
+    "Created": "2026-10-29T09:37:12.6309260-04:00",
+    "Stopped": "2026-10-29T09:47:41.0183653-04:00",
+    "ElapsedSeconds": 628.3874393,
+    "CPU": 673.078125,
+    "Bytes": 425447424,
+    "Command": "\"C:/Users/robmi/CrankMagic/workbench/node22/node_modules/node-win-x64/bin\\node.exe\" --stack-size=4000 tools/fuzz-live.mjs --library --level easy --seeds 2801 --strict-refusals --replay --leaks --json w5-fuzz-easy.json",
+    "Outcome": "unfinished; stopped at authorized bounded timeout; not clean"
+  },
+  "repro": "node --stack-size=4000 tools/fuzz-live.mjs --library --level easy --seeds 2801 --strict-refusals --replay --leaks --json w5-fuzz-easy.json",
+  "limitations": "No final game JSON was produced. CPU stayed active and memory stayed near 425 MB; the exact internal game state was not captured. Exhaustive funding search is a candidate cause, not yet proven. Only fingerprint-verified PID 48748 was stopped; no foreign process was touched."
+}

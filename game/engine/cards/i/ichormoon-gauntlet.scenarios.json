@@ -142,7 +142,7 @@
   },
   "scenarios": [
     {
-      "name": "−12 from a 13-loyalty planeswalker: Rob takes the next turn too, then Maya hers",
+      "name": "\u221212 from a 13-loyalty planeswalker: Rob takes the next turn too, then Maya hers",
       "setup": [
         {
           "seat": 0,
@@ -432,6 +432,24 @@
         },
         {
           "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Effect: This creature enters with a +1/+1 counter on it.",
+                  "Effect: This creature enters with a flying counter on it."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Effect: This creature enters with a +1/+1 counter on it."
+          ]
         },
         {
           "tap": "Wastes"

@@ -26,100 +26,6 @@
       "keyword": "saga"
     },
     {
-      "kind": "activated",
-      "text": "I — This Saga gains \"{T}: Add {C}.\"",
-      "mana": true,
-      "cost": [
-        {
-          "atom": "{T}"
-        }
-      ],
-      "effects": [
-        {
-          "effect": "addMana",
-          "mana": {
-            "C": 1
-          }
-        }
-      ],
-      "condition": {
-        "selfCounters": {
-          "counter": "lore",
-          "atLeast": 1
-        }
-      }
-    },
-    {
-      "kind": "activated",
-      "text": "II — This Saga gains \"{2}, {T}: Create a 0/0 colorless Construct artifact creature token with 'This token gets +1/+1 for each artifact you control.'\"",
-      "cost": [
-        {
-          "atom": "mana",
-          "cost": "{2}"
-        },
-        {
-          "atom": "{T}"
-        }
-      ],
-      "effects": [
-        {
-          "effect": "createToken",
-          "token": {
-            "name": "Construct",
-            "types": [
-              "Artifact",
-              "Creature"
-            ],
-            "subtypes": [
-              "Construct"
-            ],
-            "colors": [],
-            "power": 0,
-            "toughness": 0,
-            "abilities": [
-              {
-                "id": "c",
-                "kind": "static",
-                "text": "This token gets +1/+1 for each artifact you control.",
-                "layer": 7,
-                "sublayer": "c",
-                "affects": {
-                  "what": "permanent",
-                  "self": true
-                },
-                "apply": {
-                  "power": {
-                    "count": {
-                      "what": "permanent",
-                      "types": [
-                        "Artifact"
-                      ],
-                      "controller": "you"
-                    }
-                  },
-                  "toughness": {
-                    "count": {
-                      "what": "permanent",
-                      "types": [
-                        "Artifact"
-                      ],
-                      "controller": "you"
-                    }
-                  }
-                }
-              }
-            ]
-          }
-        }
-      ],
-      "condition": {
-        "selfCounters": {
-          "counter": "lore",
-          "atLeast": 2
-        }
-      }
-    },
-    {
       "kind": "triggered",
       "text": "I — This Saga gains \"{T}: Add {C}.\"",
       "trigger": {
@@ -128,8 +34,23 @@
       },
       "effects": [
         {
-          "effect": "gainLife",
-          "amount": 0
+          "effect": "effectUntil",
+          "layer": 6,
+          "targets": "self",
+          "apply": {
+            "addAbilities": [
+              {
+                "id": "chapter-1-grant",
+                "kind": "mana",
+                "text": "{T}: Add {C}.",
+                "tapSelf": true,
+                "produces": {
+                  "C": 1
+                }
+              }
+            ]
+          },
+          "until": "ever"
         }
       ]
     },
@@ -142,8 +63,79 @@
       },
       "effects": [
         {
-          "effect": "gainLife",
-          "amount": 0
+          "effect": "effectUntil",
+          "layer": 6,
+          "targets": "self",
+          "apply": {
+            "addAbilities": [
+              {
+                "kind": "activated",
+                "text": "{2}, {T}: Create a 0/0 colorless Construct artifact creature token with 'This token gets +1/+1 for each artifact you control.'",
+                "cost": [
+                  {
+                    "atom": "mana",
+                    "cost": "{2}"
+                  },
+                  {
+                    "atom": "{T}"
+                  }
+                ],
+                "effects": [
+                  {
+                    "effect": "createToken",
+                    "token": {
+                      "name": "Construct",
+                      "types": [
+                        "Artifact",
+                        "Creature"
+                      ],
+                      "subtypes": [
+                        "Construct"
+                      ],
+                      "colors": [],
+                      "power": 0,
+                      "toughness": 0,
+                      "abilities": [
+                        {
+                          "id": "c",
+                          "kind": "static",
+                          "text": "This token gets +1/+1 for each artifact you control.",
+                          "layer": 7,
+                          "sublayer": "c",
+                          "affects": {
+                            "what": "permanent",
+                            "self": true
+                          },
+                          "apply": {
+                            "power": {
+                              "count": {
+                                "what": "permanent",
+                                "types": [
+                                  "Artifact"
+                                ],
+                                "controller": "you"
+                              }
+                            },
+                            "toughness": {
+                              "count": {
+                                "what": "permanent",
+                                "types": [
+                                  "Artifact"
+                                ],
+                                "controller": "you"
+                              }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "id": "chapter-2-grant"
+              }
+            ]
+          },
+          "until": "ever"
         }
       ]
     },

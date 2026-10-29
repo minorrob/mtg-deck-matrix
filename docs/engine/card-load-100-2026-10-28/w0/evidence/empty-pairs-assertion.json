@@ -1,0 +1,13 @@
+{
+  "schema": "CrankMutationAssertionEvidence@1",
+  "probe": "changed legal pairs retain old draft",
+  "suite": "tests/board-direct-blocking.mjs",
+  "baseline": "passing original suite recorded in post-integrated-anchors-pairs-supplement.log",
+  "status": "caught",
+  "assertion": "empty draft cannot keep validation after legal pairs change",
+  "exit": 1,
+  "elapsedSeconds": 24.58,
+  "productionSourceSha256": "208db27f4f9447d971d51bc5eb7255eb566225398340ad0c84a3700b287a2104",
+  "restoredByteExact": true,
+  "interpretation": "Specific behavioral assertion failed; no timeout, generic exception or suite-baseline failure counted."
+}
