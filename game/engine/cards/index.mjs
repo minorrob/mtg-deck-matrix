@@ -689,9 +689,11 @@ function compileGivenIn(effects, text, problems) {
         problems.push(`${text}: explicit emblem Oracle text is a nonempty string`);
       const list = effect.abilities;
       if (!Array.isArray(list) || !list.length) { problems.push(`${text}: an emblem's abilities are a list, with at least one`); continue; }
-      for (const ability of list) if (!(["triggered", "replacement"].includes(ability?.kind) || (ability?.kind === "static" && typeof ability.rule === "string" && ability.affects?.what === "player")
+      /* CR 114.4: the shared object-rule reader supports loyalty timing; other specialized object readers remain refused. */
+      for (const ability of list) if (!(["triggered", "replacement"].includes(ability?.kind) || (ability?.kind === "static" && typeof ability.rule === "string"
+        && (ability.affects?.what === "player" || (ability.rule === "loyalty-at-instant-speed" && ability.affects?.what === "permanent")))
         || (ability?.kind === "static" && ability.rule === undefined && Number.isInteger(ability.layer))))
-        problems.push(`${text}: an emblem's ${ability?.kind ?? "nameless"} ability -- only triggered and replacement abilities, a rule changed for players and a static in a layer work from the command zone yet`);
+        problems.push(`${text}: an emblem's ${ability?.kind ?? "nameless"} ability -- only triggered and replacement abilities, player rules, loyalty timing for permanents and statics in a layer work from the command zone yet`);
       const {definition, problems: inner} = compileScript({schema: SCRIPT_SCHEMA, identity: EMBLEM_IDENTITY, oracleText: "", abilities: list});
       problems.push(...inner.map((problem) => `${text}: ${problem}`));
       if (definition) effect.abilities = definition.abilities;

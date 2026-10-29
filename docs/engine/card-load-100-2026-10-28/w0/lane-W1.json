@@ -13,7 +13,7 @@
     "| Tokens and copies of prepare cards never prepared | `script/effects/attributes.mjs`:23 | W1 |",
     "| Unsure, to be settled by a scenario: Song of the Dryads and Sagas under ability loss; Incubator copies single-faced; Social Snub's copy; Winter's prompt and a draw-two cost under Narset | `rules/layers.mjs`:870; `permanents.mjs`:644; `actions.mjs` | V8 finds, W1/W6/W2/W7 fix |"
   ],
-  "status": "Continuing wave 0: permanent prepare insets, basic land ability semantics and current Saga readers implemented; validation in progress; remaining emblems and battles pending",
+  "status": "Draft PR 929 continues wave 0; permanent preparation and Saga/source-grant fixes pushed; generic loyalty-timing emblems proven; remaining emblem and battle work pending",
   "checkpoint": {
     "cardsAdded": 0,
     "cardsPromoted": 0,
@@ -201,6 +201,41 @@
       "722.3c"
     ],
     "ignoresAdded": [],
-    "sourceCheckpoint": "498e3d05"
+    "sourceCheckpoint": "498e3d05",
+    "pullRequest": "https://github.com/minorrob/mtg-deck-matrix/pull/929"
+  },
+  "emblemContinuation": {
+    "scope": "Generic existing loyalty-at-instant-speed rule emitted by a public ultimate; no undefined final card added or promoted.",
+    "redWitnesses": [
+      "Compiler refused object-rule emblem fixture.",
+      "After admitting existing loyalty timing grammar, actual opposing-turn loaded-stack loyalty activation remained absent."
+    ],
+    "changes": [
+      "Object ruleChanged reads actual command-zone emblems, using each emblem controller and the existing current selector/condition reader.",
+      "Compiler admits existing loyalty timing object rule for permanent selectors while unrelated specialized object-rule emblems remain refused."
+    ],
+    "proof": [
+      "engine-load100-w1-faces: 150 checks passed",
+      "breaks-load100-w0-w1-emblems.py: six mutations caught; missed: []",
+      "Public ultimate spends the last loyalty counter; maker dies; command-zone emblem persists and receives a later timestamp than existing planeswalkers.",
+      "Owners 0 and 1 both pass: JSON reload during opponent UPKEEP with actual Shock on stack, two independent loyalty activations, exact source IDs/cost counters and life48 then46; once-per-turn preserved.",
+      "Other player receives no timing permission; ordinary command-zone card with same text grants none; no anonymous timing effect created.",
+      "engine-granted-loyalty12; engine-ability-loss109; engine-static-conditions12; engine-projection93; engine-designations8; engine-vocabulary49 passed; data-integrity and feature-wiring131 passed."
+    ],
+    "pending": [
+      "engine-planeswalkers old driver stops on explicit combat assignment; root identifies W4 ae9e3daa checkpoint with original final-outcome-preserving answers; merge next.",
+      "Daretti delayed owner-graveyard return and Teferi Who Slows the Sunset native untap/draw remain generic audits.",
+      "Battles: W4 handed off combat after source89bfae71; continuation next.",
+      "No theme, G-3, full pool/fuzz, staging or visual completion claimed."
+    ],
+    "rules": [
+      "114.4",
+      "606.3"
+    ],
+    "sources": [
+      "https://api.scryfall.com/cards/368c6e60-804c-447c-bc2b-ac9dc4cab5e7/rulings",
+      "https://api.scryfall.com/cards/56f642ae-68f3-4eeb-8b3f-a9fe1596231d/rulings"
+    ],
+    "ignoresAdded": []
   }
 }
