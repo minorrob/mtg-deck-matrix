@@ -18,8 +18,11 @@ has 8,514 names: 2,715 final, 5,799 undefined at restart. Least-played remaining
 accuracy and evidence requirements remain. Corrected initial ability audit: 6,079 of 11,636 reached, 5,557
 unproved; root proved fifteen inherited-anchor repairs, leaving 42. No gate, main merge, staging release, or Rob playtest
 sign-off is claimed. The shared foundation `b2ba9343` has focused proof; actual operation consumers remain unfinished.
-New V8 findings: copied divided-damage retargeting loses amounts (W2), and differing `manaInstead` permissions
-collapse to one choice (W3). Both are being fixed before further consumer expansion.
+October 29 continuation: main `d25bac19` is integrated through scanned/pushed `f45d4420`; both work records preserved.
+W2 copy/target fixes and W3 permission/actual destruction consumers are integrated locally through `a414b672`;
+root independently passed W2 137, W3 56, actual zone-operation71 and replacement-step16 checks.
+W2 real pre-entry callers, W3 sacrifice/discard callers and W7 draw-instruction repairs remain active.
+V8 is building completed-combat witnesses and correcting offer-only ability-credit classification. No new final cards.
 RUN.md records exact checkpoints, diagnostics and restart seams; do not mark the integration ready on the legacy checker.
 
 ### Card-load coordination requests

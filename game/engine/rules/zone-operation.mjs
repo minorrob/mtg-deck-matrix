@@ -2,9 +2,16 @@
 import {registerRuleOperation, askRuleOperation, emitRuleEvents} from "./operations.mjs";
 import {ruleReplacementCandidates, applyRuleReplacement} from "./replacement.mjs";
 import {moveOne} from "../script/effects/zones.mjs";
-import {controllerOf} from "./layers.mjs";
+import {controllerOf, lastKnown} from "./layers.mjs";
 import {cantBeSacrificed} from "./statics.mjs";
-import {recordDiscard} from "../state/index.mjs";
+import {recordDiscard, COPY_KEYS} from "../state/index.mjs";
+
+function paymentEligible(state, id, kind, player) {
+  const object = state.objects[id], zone = kind === "sacrifice-one" ? "battlefield" : "hand";
+  return object?.zone === zone && !state.players[player]?.lost && (kind === "sacrifice-one"
+    ? controllerOf(state, id) === player && !cantBeSacrificed(state, id)
+    : state.zones.hand[player]?.includes(id));
+}
 
 /* CR 616.1f: finish each replacement choice before performing the move. The saved proposal and stage survive reload;
    every option is rechecked against live state after a concession changes the board. */
@@ -12,6 +19,8 @@ registerRuleOperation("move-one", (state, frame) => {
   if (frame.stage === "after-redirect") return {status: "done", result: frame.childResult};
   const object = state.objects[frame.id], options = frame.options ?? {};
   if (!object || (object.token === true && object.zone !== "battlefield")) return {status: "done", result: {moved: null, zoneEventIndex: null}};
+  if (frame.payment && !paymentEligible(state, frame.id, frame.payment.kind, frame.payment.player))
+    return {status: "done", result: {moved: null, zoneEventIndex: null}};
   if (!frame.stage) {
     frame.proposal = {event: "zone-change", objectId: frame.id, from: object.zone, to: frame.to, player: object.controller, applied: []};
     if (object.exileIfLeaves === true) frame.proposal.to = "exile";
@@ -57,7 +66,9 @@ registerRuleOperation("move-one", (state, frame) => {
       const down = options.faceDown === true, face = options.transformed === true ? object.mdfc?.back ?? object : object;
       frame.stage = "after-enter";
       return {status: "continue", children: [{kind: "entering", objectId: frame.id, player,
-        types: down ? ["Creature"] : face.types, abilities: down ? [] : face.abilities, faceDown: down}]};
+        types: down ? ["Creature"] : face.types, abilities: down ? [] : face.abilities,
+        entryFace: {set: Object.fromEntries(COPY_KEYS.filter(key => face[key] !== undefined).map(key => [key, face[key]])),
+          remove: COPY_KEYS.filter(key => face[key] === undefined)}, faceDown: down}]};
     }
     frame.stage = "move";
   }
@@ -67,7 +78,7 @@ registerRuleOperation("move-one", (state, frame) => {
     delete frame.childResult; frame.stage = "move";
     if (frame.preparedEntering?.to && frame.preparedEntering.to !== "battlefield") {
       frame.stage = "after-redirect";
-      return {status: "continue", children: [{kind: "move-one", id: frame.id, to: frame.preparedEntering.to, options}]};
+      return {status: "continue", children: [{kind: "move-one", id: frame.id, to: frame.preparedEntering.to, options, payment: frame.payment}]};
     }
   }
   const events = [];
@@ -81,17 +92,15 @@ registerRuleOperation("move-one", (state, frame) => {
 
 /* CR 701.21a, 701.9a: these actions retain their identity when a replacement changes the destination. The child records
    its exact zone-event index so follow-up events cannot accidentally be marked as the sacrifice or discard. */
-for (const [kind, field, zone] of [["sacrifice-one", "sacrificed", "battlefield"], ["discard-one", "discarded", "hand"]]) {
+for (const [kind, field] of [["sacrifice-one", "sacrificed"], ["discard-one", "discarded"]]) {
   registerRuleOperation(kind, (state, frame) => {
     if (!frame.stage) {
       const object = state.objects[frame.id];
       const player = frame.player ?? (kind === "sacrifice-one" && object ? controllerOf(state, frame.id) : object?.owner);
-      const eligible = object?.zone === zone && !state.players[player]?.lost && (kind === "sacrifice-one"
-        ? controllerOf(state, frame.id) === player && !cantBeSacrificed(state, frame.id)
-        : state.zones.hand[player]?.includes(frame.id));
+      const eligible = paymentEligible(state, frame.id, kind, player);
       if (!eligible) return {status: "done", result: {moved: null, [field]: false}};
       frame.player = player; frame.nontoken = object.token !== true; frame.stage = "after-move";
-      return {status: "continue", children: [{kind: "move-one", id: frame.id, to: "graveyard", options: {owner: object.owner}}]};
+      return {status: "continue", children: [{kind: "move-one", id: frame.id, to: "graveyard", options: {owner: object.owner}, payment: {kind, player}}]};
     }
     const child = frame.childResult, moved = child?.moved ?? null;
     if (moved === null) return {status: "done", result: {moved: null, [field]: false}};
@@ -104,3 +113,32 @@ for (const [kind, field, zone] of [["sacrifice-one", "sacrificed", "battlefield"
     return {status: "done", result: {moved, [field]: true}};
   });
 }
+
+/* Keep this bounded to the existing literal-target sacrifice instruction. Other moveZone modifiers retain their
+   established caller until that caller has its own saved stages and behavioral proof. */
+export function zoneEffectFrame(effect, context) {
+  if (effect?.effect !== "moveZone" || effect.sacrifice !== true || !Array.isArray(effect.targets)
+    || Object.keys(effect).some(key => !["effect", "targets", "sacrifice", "remember"].includes(key))) return null;
+  return {kind: "sacrifice-effect", ids: effect.targets, remember: effect.remember === true, context};
+}
+registerRuleOperation("sacrifice-effect", (state, frame) => {
+  if (!frame.stage) {
+    frame.payments = frame.ids.filter(id => state.objects[id]?.zone === "battlefield").map(id => ({id, player: controllerOf(state, id)}));
+    frame.remembered = []; frame.movedWas = []; frame.rememberedControllers = {}; frame.cursor = 0; frame.stage = "next";
+  }
+  if (frame.stage === "after-child") {
+    const moved = frame.childResult?.moved;
+    if (moved !== null && moved !== undefined) {
+      frame.remembered.push(moved); frame.rememberedControllers[moved] = frame.current.player;
+      if (frame.was && state.objects[moved]?.zone === "graveyard") frame.movedWas.push(frame.was);
+    }
+    delete frame.childResult; frame.stage = "next";
+  }
+  if (frame.cursor >= frame.payments.length) return {status: "done", result: {context: frame.remember ? {
+    remembered: frame.remembered, movedWas: frame.movedWas, rememberedControllers: frame.rememberedControllers,
+  } : {}}};
+  frame.current = frame.payments[frame.cursor++];
+  frame.was = frame.remember && state.objects[frame.current.id] ? lastKnown(state, frame.current.id) : null;
+  frame.stage = "after-child";
+  return {status: "continue", children: [{kind: "sacrifice-one", ...frame.current}]};
+});

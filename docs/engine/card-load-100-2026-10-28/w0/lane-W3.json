@@ -51,6 +51,18 @@
     "promotions": 0,
     "gatesClosed": []
   },
+  "entryBridgeExtension": {
+    "localDependencies": ["27395a6c", "8b9dfc7b", "b2007648"],
+    "status": "bounded shared continuation proof; W2 implementation acceptance and remaining callers stay separate",
+    "suite": "tests/engine-zone-action-operations.mjs",
+    "checks": 64,
+    "mutations": 48,
+    "missed": [],
+    "fullW2Checks": 214,
+    "drawInstructionChecks": 33,
+    "actualConsumers": "Literal-target sacrifice instruction including borrowed-control payer concession; transformed move-one through real entering child; completed script-to-entry grouped trigger prefix and cancellation; deferred effect-play land with any-number splice and seeded following roll; normal token-effect dispatch.",
+    "remaining": "Replacement runFollowUps token child still synchronous; search/fetch move choice and post-entry shuffle; costs, state-based destruction and complex moveZone routes. No global gate or card-loading credit."
+  },
   "changes": [
     {
       "scope": "shared foundation only",
