@@ -955,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 677 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 681 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1155,6 +1155,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `pilot-urgency` — `tests/pilot-urgency.mjs` (response urgency: three tiers from a card's role, its controller's links and my life; what an answer nets; the mana an instant answer holds)
 - `pilot-roles` — `tests/pilot-roles.mjs` (which cards double, loop, drain or are salty and how dangerous a commander is: a few kilobytes of the corpus held equal to their sources and handed to every pilot with a card's other public facts)
 - `engine-hard-pilot` — `tests/engine-hard-pilot.mjs` (Hard: a preferred defender for each creature, and the blockers a trampler or a flyer needs held home; the reserve's weighted probability and the absorbing-defender model behind it)
+- `engine-salty-pilot` — `tests/engine-salty-pilot.mjs` (Normal Salty: actual multi-turn four-seat combat, public damage attribution, provocation and a lethal trample swing back)
+- `engine-cancel-decision` — `tests/engine-cancel-decision.mjs` (reversible native target/cost proposals, numeric stages, full state restoration and committed information/mandatory-effect boundaries)
 - `engine-threat` — `tests/engine-threat.mjs` (the threat table every difficulty reads: life, hitters, growth and ramp off the seat's view; Easy's rank, Normal's weighted mean; a person and an AI the same row; L1 attacks where threat × effect is highest; the floor under an attack that dies for nothing)
 - `engine-pilot-picks` — `tests/engine-pilot-picks.mjs` (the AI seats take what an "up to" or a search is for: the lands of the colors they lack, proliferate's good counters, their own side; old matches answered as before)
 - `engine-ingest` — `tests/engine-ingest.mjs`
@@ -1226,6 +1228,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `room-refusals` — `tests/room-refusals.mjs`
 - `room-slices` — `tests/room-slices.mjs`
 - `room-seat-pilots` — `tests/room-seat-pilots.mjs` (an AI seat's Easy or Normal, from New table to the pilot; L1 games replay)
+- `room-pilot-provocation` — `tests/room-pilot-provocation.mjs` (real spell damage remembered across pilot recreation and room reload, accepted retries, refusals, undo and replay)
+- `room-cancel-decision` — `tests/room-cancel-decision.mjs` (native Cancel with auto-pass and Undo configurations, reload/retry, full state/RNG/journal preservation, actor departure and mandatory-effect refusal)
 - `room-agent-seat` — `tests/room-agent-seat.mjs` (the LLM seat in the room: only its close calls offered to it, its answers on the tape)
 - `room-refused-answer` — `tests/room-refused-answer.mjs`
 - `room-optional-count-targets` — `tests/room-optional-count-targets.mjs` (ROB-204: the room takes an "up to one" and an "any number" target answer with one, several or none chosen, refuses past the most, and plays on)

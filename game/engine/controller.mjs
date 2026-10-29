@@ -210,8 +210,8 @@ function validateIndices(choice, request) {
 function translate(choice, request) {
   if (request.kind === "answer") return request;
   if (request.kind === "cancel") {
-    if (choice.maySkip !== true && choice.mode !== "text")
-      throw new Error("Cancel is unavailable on this choice");
+    if (choice.cancellation?.allowed !== true && choice.maySkip !== true && choice.mode !== "text")
+      throw new Error(choice.cancellation?.reason??"Cancel is unavailable on this choice");
     return {...request, kind: "answer", choiceId: choice.id, cancel: true};
   }
   if (request.kind === "ok") {
@@ -292,7 +292,7 @@ export function createController(resume = null) {
       const answer = translate(pending, request);
       if (answer.choiceId !== pending.id) throw new Error("This choice has expired");
 
-      if (answer.cancel !== true || pending.mode !== "text") {
+      if (answer.cancel !== true || (pending.mode !== "text" && pending.cancellation?.allowed !== true)) {
         if (pending.mode === "damage") validateCombatDamage(pending, answer);
         else if (pending.mode === "amount") validateGenericAmount(pending, answer);
         else if (pending.mode === "integer") {
