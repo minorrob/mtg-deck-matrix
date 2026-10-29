@@ -1834,3 +1834,9 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-stage-hand .cm-stage-hand-label{z-index:30}
 #matrix-v2 .cm-board .cm-stage-fan-slot:focus-within{z-index:29}
 #matrix-v2 .cm-board .cm-board-partners>:is(.cm-bcard,.cm-card-slot):focus-within,#matrix-v2 .cm-board .cm-board-partners>.cm-bcard:focus-visible{z-index:5}
+/* A control that has the keyboard's focus is never under a neighbour or clipped by its frame: its card's slot, and the quick tab in it, stand in front, and a pile lets it out. */
+#matrix-v2 .cm-board .cm-card-slot:focus-within{z-index:30}
+#matrix-v2 .cm-board .cm-card-slot:focus-within>.cm-quick-drawer{z-index:31}
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit] .cm-board-pile:focus-within{overflow:visible;z-index:6}
+/* The land stack's count is legible on any mat: on a scrim, as the piles' counts are. */
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-land-count{background:#091b1dd9;border-radius:3px;padding:0 3px}
