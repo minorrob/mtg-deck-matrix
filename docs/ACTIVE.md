@@ -8,6 +8,11 @@ Linear ROB-199 under ROB-85. The record is `docs/engine/card-load-100-2026-10-28
 Claim: `game/engine/cards/**`, generated card files, `data/engine/candidates.json`, the run package,
 and the engine modules its debt fixes require, subject to the ownership requests below.
 The primary checkout has another session's unfinished merge and is untouched.
+**Latest saved-scenario sourcebe1a2b89:** only three explicit Banner Wastes references and an additive public Snoop
+non-Goblin reveal/privacy scenario. Every original assertion preserved. Selected proof improves2/8→4/8 abilities,
+9scenarios/0failed, two runtime-only omission witnesses; four unproved keep checker exit1. Full engine-cards55 passes
+all6,430 definitions/current saved scenarios; no strict/full-directory acceptance. Hashed selected ledgers archived.
+Source368a9aad's clean bounded game remains historical to its own source. All wave0 gates remain unchanged.
 **Latest V8 source368a9aad:** the simulated person checks joint blocker drafts with the existing public read-only
 room check before submission. Native1189/pool91/room34 pass; six-reader original-union baseline and eight mutations
 pass, none missed. Same seed1 on this clean source finishes with zero actual refusals, identical replay and0 leaks/74

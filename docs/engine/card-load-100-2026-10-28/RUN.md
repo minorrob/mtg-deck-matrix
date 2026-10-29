@@ -5,6 +5,16 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Reported-card saved proof, clean `be1a2b89`:** every original Snoop/Banner/Valakut scenario and assertion is
+  preserved. Banner's three taps now identify Wastes0/1/2; one additive Snoop scenario observes its non-Goblin top
+  publicly from both seats while the other library stays hidden. Before, selected clean `ef1d2ba4` has8 scenarios,
+  one physical-source failure and2/8 abilities reached. After, all9 pass and4/8 are reached, including two independent
+  runtime-only omission proofs: removing Snoop reveal fails the actual Library projection, removing Banner's bonus
+  fails actual Elf1/1 versus2/2. Four other abilities remain unproved, and the selected checker correctly exits1.
+  Full `engine-cards`55 passes all6,430 current definitions/saved scenarios; this legacy reader is not strict G-3.
+  No saved definitions or rule modules change. Both source/input-bound diagnostic ledgers are privacy-scanned,
+  compressed/roundtrip-verified and archived with hashes in `w0/evidence/live-report-three-proof.json`. They remain
+  selected diagnostic scopes, never canonical gate acceptance. Scope/final totals and all gates remain unchanged.
 - **Bounded same-seed pool result on clean `368a9aad`:** after the concrete draft-check repair below, seed1 finishes
   clean under the existing table policy (the human is eliminated; remaining AI seats are not a winner claim):35 turns,
   73 decisions, zero actual human/AI refusals, one rejected private draft, identical replay, zero leaks/74 checks.
