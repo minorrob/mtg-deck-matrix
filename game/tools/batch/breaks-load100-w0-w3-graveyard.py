@@ -1,6 +1,12 @@
 # Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE.
 SUITES = ['tests/engine-load100-w3-graveyard.mjs', 'tests/engine-play-from-zones.mjs', 'tests/engine-may-play.mjs', 'tests/engine-play-from.mjs']
 BREAKS = [
+    ('unlimited additional-cost outcome remains distinct', 'game/engine/rules/actions.mjs',
+     '  ability.additionalCost ?? null, ability.anyMana === true, ability.manaInstead ?? null, ability.graveyardToExile === true, ability.sorcery === true]);',
+     '  ability.anyMana === true, ability.manaInstead ?? null, ability.graveyardToExile === true, ability.sorcery === true]);'),
+    ('unlimited any-mana outcome remains distinct', 'game/engine/rules/actions.mjs',
+     '  ability.additionalCost ?? null, ability.anyMana === true, ability.manaInstead ?? null, ability.graveyardToExile === true, ability.sorcery === true]);',
+     '  ability.additionalCost ?? null, ability.manaInstead ?? null, ability.graveyardToExile === true, ability.sorcery === true]);'),
     ('exile permission rider remains distinct', 'game/engine/rules/actions.mjs',
      ', ability.graveyardToExile === true, ability.sorcery === true', ', ability.sorcery === true'),
     ('sorcery timing remains distinct', 'game/engine/rules/actions.mjs',

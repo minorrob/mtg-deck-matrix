@@ -2694,9 +2694,14 @@ function countedProblem(state, player, action) {
  */
 export function applyAction(state, player, action) {
   const events = perform(state, player, action);
+  return afterAction(state, player, events);
+}
+
+/** Finish an action's already-performed instructions; a resumed operation supplies its complete trigger batch. */
+export function afterAction(state, player, events, triggering = events) {
   state.passes = 0;
   /* What the action did triggers now (CR 603.2), whatever is asked next; the triggers wait to go on the stack. */
-  collectTriggers(state, events);
+  collectTriggers(state, triggering);
   /* A land that asks as it enters (a shock land) asks first: it is part of the land's entering. */
   if (askEntering(state)) { state.priorityPlayer = null; return events; }
   const sba = checkStateBasedActions(state);

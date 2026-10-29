@@ -22,6 +22,29 @@ const FIX = {
 };
 const start = (setup, more = {}) => runScenario({name: "W3 accuracy debt", seats: 3, setup, steps: [], ...more}, index.definition, FIX).state;
 
+/* Outcome identity matters even when unlimited permissions spend no distinct source resource. */
+for (const rider of ["additionalCost", "anyMana"]) {
+  const card = rider === "additionalCost" ? "Smoke Relic" : "Smoke Permit";
+  const state = start([at(0, "graveyard", card), at(0, "battlefield", "Forest")]);
+  for (const special of [false, true]) addObject(state, {card: special ? "Special Gate" : "Normal Gate", types: ["Artifact"], owner: 0, controller: 0,
+    abilities: [{id: "gate", kind: "static", rule: "play-from", affects: {what: "player", who: "you"}, zone: "graveyard", spells: true,
+      ...(special ? rider === "additionalCost" ? {additionalCost: [{atom: "sacrifice", selector: {types: ["Land"]}}]} : {anyMana: true} : {})}]}, "battlefield");
+  state.players[0].manaPool.B = 1;
+  const offers = legalActions(state, 0).filter(a => a.kind === "cast" && a.label === card);
+  eq(offers.map(a => a.viaName).sort(), ["Normal Gate", "Special Gate"], `${rider}: unlimited differing outcomes are distinct explicit offers`);
+  for (const name of ["Normal Gate", "Special Gate"]) {
+    const resumed = JSON.parse(JSON.stringify(state)); applyAction(resumed, 0, offers.find(a => a.viaName === name));
+    eq(resumed.zones.battlefield.some(id => resumed.objects[id].card === "Forest"), rider !== "additionalCost" || name === "Normal Gate",
+      `${rider}: selected permission pays exactly its own land sacrifice after reload`);
+  }
+  if (rider === "anyMana") {
+    const resumed = JSON.parse(JSON.stringify(state)); resumed.players[0].manaPool.B = 0; resumed.players[0].manaPool.C = 1;
+    const colored = legalActions(resumed, 0).filter(a => a.kind === "cast" && a.label === card);
+    eq(colored.map(a => a.viaName), ["Special Gate"], "only the selected any-mana outcome can pay a black symbol with colorless mana");
+    applyAction(resumed, 0, colored[0]); eq(resumed.players[0].manaPool.C, 0, "the any-mana cast actually spends that colorless mana");
+  }
+}
+
 /* CR 601.2a: two limited permissions consume different resources, even when both give the same cast. */
 {
   const state = start([at(0, "battlefield", "Smoke Permit"), at(0, "graveyard", "Smoke Relic")]);

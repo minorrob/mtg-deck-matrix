@@ -15,7 +15,36 @@
     "| Destruction replacements in nested effects (shield, then Auras in attach order) | `script/effects/zones.mjs`:864 | W3 |",
     "| Zone-change replacements (Liesa): the question is raised, the move does not wait | `replacement.mjs`:35 | W3 |"
   ],
-  "status": "bounded checkpoint: shared operation foundation and limited MayPlay source-plus-ability choices proven; wave-0 graveyard debt remains open",
+  "status": "bounded actual destruction/zone continuation consumer plus supported play-permission outcome audit; additional callers and wave-0 graveyard debt remain open",
+  "continuation": {
+    "base": "c34022d4e8df01dcb7aca97796b6a6d6f93d7e23",
+    "permissionCheckpoints": ["b66ae95a", "34847ddf"],
+    "sharedStepCheckpoint": "6bf2efe8",
+    "consumer": "W3-zone-continuation.md",
+    "checks": 71,
+    "mutationCommand": "python -u game/tools/batch/breaks.py game/tools/batch/breaks-zone-operations.py",
+    "mutations": 60,
+    "missed": [],
+    "readers": {
+      "engine-resolution": 91,
+      "engine-commander": 56,
+      "engine-exile-commanders": 107,
+      "game-leave": 67,
+      "engine-x11-leave": 40,
+      "engine-x11-leave-questions": 94,
+      "engine-x11-umbra-armor": 39,
+      "engine-replacement": 32,
+      "engine-enters-or-leaves": 14,
+      "engine-actions": 34,
+      "engine-costs": 32,
+      "engine-load100-w3-graveyard": 56,
+      "feature-wiring": 131,
+      "data-integrity": "pass"
+    },
+    "testCorrection": "The resolving destruction reader now expects its exact rule-operation question ID and affected player instead of effect-choice/orderDestruction. Pilot answers, selected second Aura and all outcome assertions remain. Calling public runResolution while its child is pending is now explicitly proved to wait without state or event changes.",
+    "additionalConsumerWork": "Sacrifice/discard wrappers and redirected pre-entry/riot result seams requested by W2 are next. Costs, state-based destruction, ordinary moveZone and other callers remain open. No wave-0 gate or new card credit.",
+    "anchorRepairs": "Two permission-signature anchors retain the same additionalCost/anyMana omission but preserve the new outcome fields; additive unlimited permission witnesses catch each omission. The monarch anchor selects the original SBA check call rather than the new concession call; engine-monarch catches its deletion. All three caught."
+  },
   "checkpoint": {
     "foundation": "b2ba9343e4316c618f5b49f8bfec5df5374d0583",
     "newCards": 0,
@@ -68,8 +97,8 @@
     "RememberObjects and RememberChanged general constructs, and all missing MayPlay forms; catalog credit remains unchanged.",
     "Shared explicit operation consumers/boundaries for W2 entry/copy, W5 mana, W6 token/counter replacements and W7 draw/dice. The foundation alone does not close any of these debts."
   ],
-  "unfinishedConsumer": {
-    "status": "Not committed; all runtime changes reverted from lane worktree at checkpoint",
+  "archivedPrototype": {
+    "status": "Historical October 28 prototype; superseded by the bounded actual consumer described in continuation above. Never use this archive as completion evidence.",
     "archive": "C:/Users/robmi/CrankMagic/workbench/load100-w3-continuation-wip-20261028",
     "files": [
       "continuation.patch",
@@ -78,11 +107,11 @@
       "nested-destruction-test.mjs"
     ],
     "observedOnly": "A bounded nested-destruction prototype passed 9 lane checks, existing resolution91 and commander56, including a JSON reload, but lacks mutations and public concession/complete caller integration. No fix or gate credit.",
-    "nextContract": "move-one frame {kind,id,to,options} should return {moved,zoneEventIndex,proposal}. W2 entering child kind entering loads via entering.mjs and returns {entering,objectPatch}. Its objectPatch MUST apply to the new object after moveObject, before ETB/counters; saved prototype currently applies to the old object and needs correction before use. W7 draw parent can mark the zone event via its operation-local index before reporting. Root must review and authorize any further shared consumer dependency merge."
+    "nextContract": "Historical proposal only. Current move-one returns {moved,zoneEventIndex,proposal}. W2 entering returns {entering,objectPatch:{set,remove}}; removals and sets apply to the NEW object before entry counters/events. Root reviews shared dependency checkpoints before another lane merges them."
   },
   "anchorAudit": {
     "command": "python game/tools/batch/anchors.py",
-    "currentProblems": 53,
+    "currentProblems": 42,
     "recordedBaselineProblems": 57,
     "newProblems": 0,
     "status": "expected exit1; global gate remains red"

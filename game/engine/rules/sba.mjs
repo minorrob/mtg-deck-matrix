@@ -58,7 +58,9 @@ import {enduringStories, citysBlessings} from "../keywords/designations.mjs";
 import {preparedCopyStays} from "../script/effects/attributes.mjs";
 import {endControlChange, nextRecord, endCounterDurations, controlByAuras} from "../script/effects/permanents.mjs";
 import {protectedFrom} from "./protection.mjs";
-import {answerForDeparted, goOnWithout} from "./turn.mjs";
+import {answerForDeparted, answerRuleForDeparted, goOnWithout} from "./turn.mjs";
+import {cancelRuleOperation} from "./operations.mjs";
+import {collectTriggers} from "./trigger.mjs";
 import {rememberDepartingSpell} from "./spell-memory.mjs";
 
 /* The capitalized zone names the projection and the telemetry use. */
@@ -198,7 +200,11 @@ export function monarchLeft(state, events = []) {
 /* A spell or ability that was resolving has left the stack with the player who left (800.4a): nothing is left of it to
    resolve, and a question it was asking anyone is withdrawn. */
 function cutShort(state) {
+  /* A paused rule operation's already-reported prefix happened before its controller left (CR 603.2, 800.4a).
+     Preserve surviving players' triggers before withdrawing that caller, without reporting those events again. */
+  if (state.ruleOperation && state.resolving) collectTriggers(state, state.resolving.events);
   state.resolving = null;
+  cancelRuleOperation(state);
   if (state.awaiting?.kind === "effect-choice") state.awaiting = null;
 }
 
@@ -531,10 +537,21 @@ export function concede(state, playerId, rng = null) {
      it passes on (below), and nothing of the spell or ability is there yet. */
   if (withdrawn?.kind === "choose-cost" || (withdrawn?.kind === "choose-targets" && withdrawn.stackId === undefined)) state.priorityPlayer = playerId;
   const resolving = Boolean(state.resolving);
-  const events = checkStateBasedActions(state);
+  const events = [];
+  if (state.resolving || state.ruleOperation) {
+    /* CR 104.3a, 800.4a: conceding is immediate, but CR 704.4 still forbids checking other state-based actions in the
+       middle of the unresolved instruction. Its explicit continuation will reach the ordinary check afterward. */
+    leaveGame(state, player, "conceded", events);
+    monarchLeft(state, events);
+  } else events.push(...checkStateBasedActions(state));
   /* The game is over: nothing more is asked of them. */
   if (gameOver(state)) {
+    cutShort(state);
     if (state.awaiting?.player === playerId) state.awaiting = null;
+  } else if (state.ruleOperation) {
+    /* A departure can invalidate an unchosen source or change the affected controller even if a different player
+       was being asked. Recheck the saved current stage; never replay its completed prefix. */
+    events.push(...answerRuleForDeparted(state, rng));
   /* Another player's spell or ability was asking them, and goes on without them. */
   } else if (state.resolving && state.awaiting?.kind === "effect-choice" && state.players[state.awaiting.player].lost) {
     events.push(...answerForDeparted(state, rng));

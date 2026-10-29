@@ -24,12 +24,14 @@ import {mergedOrderToAsk} from "../state/index.mjs";
 import {ASKING, commandersGoingHome} from "./effects/asking.mjs";
 import {damageQuestion, addCounters, counterQuestion} from "./effects/resources.mjs";
 import {controllerOf} from "../rules/layers.mjs";
-import {destructionQuestion, drawQuestion, dredgers, singleDraws} from "./effects/zones.mjs";
+import {drawQuestion, dredgers, singleDraws} from "./effects/zones.mjs";
 import {tokenQuestion} from "./effects/permanents.mjs";
 import {bindEffect} from "./bind.mjs";
 import {countEffect, amountOf} from "./amount.mjs";
 import {conditionHolds} from "./condition.mjs";
 import {proliferateTimes} from "../rules/statics.mjs";
+import {beginRuleOperation} from "../rules/operations.mjs";
+import {destructionFrame} from "../rules/destruction-operation.mjs";
 
 /** Whether a resolution is paused, waiting for somebody. */
 export const resolutionPending = (state) => Boolean(state.resolving);
@@ -89,6 +91,7 @@ function unreported(resolving) {
 export function runResolution(state, rng = null) {
   const resolving = state.resolving;
   if (!resolving) return {status: "done", events: []};
+  if (state.ruleOperation) return {status: "waiting", events: unreported(resolving)};
 
   while (resolving.queue.length > 0 || mergedOrderToAsk(state)) {
     if (mergedOrderToAsk(state) && resolving.queue[0]?.effect !== "orderMerged") resolving.queue.unshift({effect: "orderMerged"});
@@ -292,9 +295,6 @@ export function runResolution(state, rng = null) {
        replace the next. */
     else if (effect?.effect === "draw" && singleDraws(state, effect, resolving.context).some((player) => dredgers(state, player).length))
       resolving.queue.splice(0, 1, ...singleDraws(state, effect, resolving.context).map((player) => ({effect: "dredgeDraw", player})));
-    /* CR 616.1: a destruction two or more effects would replace, ending differently (umbra armor; effects/zones.mjs) -- the
-       permanent's controller chooses which, before anything is destroyed (effects/asking.mjs, orderDestruction). */
-    else if (destructionQuestion(state, effect, resolving.context)) resolving.queue[0] = {effect: "orderDestruction", destroy: effect};
     const head = resolving.queue[0];
     const asking = ASKING[head?.effect];
 
@@ -320,6 +320,15 @@ export function runResolution(state, rng = null) {
     }
 
     resolving.queue.shift();
+    /* CR 616.1, 702.89a: destroying an Aura instead may create another destruction choice. Persist every caller stage,
+       not just the top-level question, so neither that child nor the following instruction can run early. */
+    if (effect?.effect === "destroy" || effect?.effect === "destroyAll") {
+      const outcome = beginRuleOperation(state, destructionFrame(effect, resolving.context), {after: {kind: "resolution"}}, rng);
+      resolving.events.push(...outcome.events);
+      if (outcome.status === "waiting") return {status: "waiting", events: unreported(resolving)};
+      Object.assign(resolving.context, outcome.result?.context ?? {});
+      continue;
+    }
     resolving.events.push(...runEffect(state, effect, resolving.context, rng));
     /* ITS CONTROLLER HAS LEFT THE GAME ("you lose the game", CR 104.3e; effects/resources.mjs loseGame): the spell or ability
        left the stack with them (CR 800.4a), and nothing more of it is done. */
@@ -338,6 +347,16 @@ export function runResolution(state, rng = null) {
  * `extra` carries what the generic `indices` cannot: scry's `toBottom`, for instance. The choice
  * record says which fields it expects, and `controller.mjs` validates them.
  */
+/** Resume the saved script caller after one of its explicit rule operations answers or completes. */
+export function continueRuleResolution(state, outcome, rng = null) {
+  const resolving = state.resolving;
+  if (!resolving) throw new Error("No resolution is waiting for the rule operation");
+  resolving.events.push(...outcome.events);
+  if (outcome.status === "waiting") return {status: "waiting", events: unreported(resolving)};
+  Object.assign(resolving.context, outcome.result?.context ?? {});
+  return runResolution(state, rng);
+}
+
 export function answerResolution(state, indices, extra = {}, rng = null) {
   const awaiting = state.awaiting;
   if (!awaiting || awaiting.kind !== "effect-choice")
