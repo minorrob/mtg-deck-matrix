@@ -1840,3 +1840,9 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit] .cm-board-pile:focus-within{overflow:visible;z-index:6}
 /* The land stack's count is legible on any mat: on a scrim, as the piles' counts are. */
 #matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-land-count{background:#091b1dd9;border-radius:3px;padding:0 3px}
+/* On a small board the quick tab hangs under its card rather than over it, so it never covers the card it belongs to. */
+#matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-card-slot>.cm-undo-drawer{bottom:auto;top:100%}
+/* A pile's count is said once, on its caption: the card's own count (a library's back) stands down, so two numbers never lie one over the other. */
+#matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-board-pile .cm-bcard-count{display:none}
+/* A thumbnail has no room for the land stack's words: read, not seen. */
+#matrix-v2 .cm-board .cm-flat-rear .cm-land-count{position:absolute;width:1px;height:1px;min-width:0;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
