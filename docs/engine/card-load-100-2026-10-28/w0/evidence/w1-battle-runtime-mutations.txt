@@ -1,0 +1,34 @@
+baseline: every suite passes unbroken
+caught Battle damage leaves defense unchanged -- tests/engine-battle-damage-sba.mjs
+caught pure Battle receives creature marked damage -- tests/engine-battle-damage-sba.mjs
+caught Battle excess threshold omitted -- tests/engine-battle-damage-sba.mjs
+caught Battle damage prevents other applicable type results -- tests/engine-battle-damage-sba.mjs
+caught zero Siege ignores pending printed triggers -- tests/engine-battle-damage-sba.mjs
+caught zero Siege waits for ordinary activations -- tests/engine-battle-damage-sba.mjs
+caught zero Siege waits for another source identity -- tests/engine-battle-damage-sba.mjs
+caught protector repair chooses first opponent silently -- tests/engine-battle-damage-sba.mjs
+caught live non-Siege protector forced to controller -- tests/engine-battle-damage-sba.mjs
+caught cohort bypasses saved replacement preparation -- tests/engine-battle-damage-sba.mjs
+caught cohort ignores frozen departure characteristics -- tests/engine-battle-damage-sba.mjs
+caught cohort ignores its prepared replacement proposal -- tests/engine-zone-action-operations.mjs
+caught prepared receipts survive successful consumption -- tests/engine-battle-damage-sba.mjs
+caught applied proposals never recheck newly live modifiers -- tests/engine-battle-damage-sba.mjs
+caught concession loses applied follow-up source memory -- tests/engine-battle-damage-sba.mjs
+caught dying replacement source loses frozen power -- tests/engine-battle-damage-sba.mjs
+caught replacement follow-ups execute before all base moves -- tests/engine-battle-damage-sba.mjs
+caught departure cleanup loses linked return entries -- tests/engine-battle-damage-sba.mjs
+caught departed controlled siblings retain obsolete records -- tests/engine-battle-damage-sba.mjs
+caught returned watcher sees earlier base deaths -- tests/engine-battle-damage-sba.mjs
+caught outer collection replays already collected cohort -- tests/engine-battle-damage-sba.mjs
+caught next cohort restamps a collected prefix -- tests/engine-battle-damage-sba.mjs
+caught saved callback clears receipts before final collection -- tests/engine-battle-damage-sba.mjs
+caught card flag alone suppresses actual triggers -- tests/engine-battle-damage-sba.mjs
+caught native umbra moves a modifier before planning siblings -- tests/engine-battle-damage-sba.mjs
+caught nested umbra choices skip recursive preflight -- tests/engine-battle-damage-sba.mjs
+caught native destruction answer uses first semantic key -- tests/engine-battle-damage-sba.mjs
+caught destruction prefix events silently dropped -- tests/engine-battle-damage-sba.mjs
+caught state-based resume grants priority before next check -- tests/engine-battle-damage-sba.mjs
+caught breaks-outside-damage.py: mana LKI must match original ID -- tests/engine-outside-damage.mjs
+caught breaks-outside-damage.py: departure refreshes pending LKI -- tests/engine-outside-damage.mjs
+caught breaks-outside-damage.py: damage source filter reads matching LKI -- tests/engine-outside-damage.mjs
+missed: []

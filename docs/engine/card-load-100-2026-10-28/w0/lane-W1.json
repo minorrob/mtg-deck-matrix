@@ -13,7 +13,7 @@
     "| Tokens and copies of prepare cards never prepared | `script/effects/attributes.mjs`:23 | W1 |",
     "| Unsure, to be settled by a scenario: Song of the Dryads and Sagas under ability loss; Incubator copies single-faced; Social Snub's copy; Winter's prompt and a draw-two cost under Narset | `rules/layers.mjs`:870; `permanents.mjs`:644; `actions.mjs` | V8 finds, W1/W6/W2/W7 fix |"
   ],
-  "status": "Published bounded Battle entry in draftPR944 atb924dbb6 after exactHEAD0 SCANPASS; source79970ba1 with assembled310595d2/exactW5 reader1000a25d. Native readers and integrity/feature checks green. Full Battle, legacy entry, intrinsic planeswalker entry and two emblem families remain unfinished. No cards/promotions or gate completion.",
+  "status": "Battle entry/intrinsic/counter checkpoints published through1553 and merged in assembled0130. Native Battle damage and saved atomic SBA base movement pass128 checks,42 unique original readers and35 semantic probes; bounded draft publication follows exact scan. Linked-return simultaneity, combat, Siege defeat/free cast, legacy entry/counter paths and two emblem families remain open. No new cards/promotions or gate completion.",
   "checkpoint": {
     "cardsAdded": 0,
     "cardsPromoted": 0,
@@ -286,6 +286,25 @@
       "Native impending time counters remain a separate entry path requiring entry/type/keyword/copy/order controls before integration.",
       "Battle combat, defense damage, protector/SBA/defeat and legacy protector work remain; coordinate combat/turn with root. W5 owns Siege effect-paid/free transformed casting.",
       "Daretti/Sunset generic emblem audits and all root whole-directory/review/browser/clean-game gates remain open."
+    ],
+    "ignoresAdded": []
+  },
+  "battleRuntimeContinuation": {
+    "base": "0130f853e7ad7c6ad8ee2a6eb0532415ea50cf1f",
+    "productionCheckpoint": "a24eabd3",
+    "report": "W1-battle-runtime.md",
+    "scope": "Native Battle damage/excess, exact Siege trigger exception, saved protector repair and simultaneous SBA base-move planning with frozen LKI, internal single-use receipts, deferred departures and one-time base trigger collection.",
+    "proof": [
+      "engine-battle-damage-sba128 checks; original full40-reader baseline passes, retaining original entry/intrinsic/counter, W4, zone, engine-cards and generator readers.",
+      "All32 primary semantic mutations caught, including three original W4 source-memory negatives, with missed:[]. Supplementary3 catches native readiness capability bypass and two moved original follow-up/destruction probes, with their full original precons/P3 unions;42 unique baseline readers in total.",
+      "Actual dying Lord/Battle/creature/planeswalker mixed cohort, explicit hand/exile questions with original ID held, JSON/invalid/stale/concession, newly live modifiers, preserved prefixes and independent events, internal wrong/early/reused receipt controls.",
+      "Returned watcher sees zero earlier deaths; existing watcher sees the cohort once across a saved linked-entry question; successive cohorts retain separate batches. Actual nested umbra/regeneration and parent/child departures, duplicate zero-Battle Aura membership, control-return cleanup and borrowed source last-known follow-up power.",
+      "Inherited precons Kalitas/Liesa no-question reader RED reproduced on clean0130; explicit affected-player answers in both orders preserve every final original assertion and prove Zombie1 versus0. Integrity and feature-wiring131 pass. README actual697; static33 inherited UI targets and0 engine targets. No saved card or generated data edits."
+    ],
+    "pending": [
+      "CR610.3d simultaneous linked returns still need a separate native Clone/Bear RED and saved entry-batch implementation; existing per-departure return children receive no simultaneous-return credit.",
+      "Battle combat/filter/projection, intrinsic Siege defeat and W5 effect-paid/free transformed casting remain open; no full Battle claim.",
+      "Legacy entry/counter/SBA callers, Daretti/Sunset generic emblems, and every root whole-directory/review/browser/clean-game acceptance gate remain open."
     ],
     "ignoresAdded": []
   },

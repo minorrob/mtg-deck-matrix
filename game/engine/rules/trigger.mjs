@@ -66,6 +66,7 @@ import {targetChoices, targetName, isHostile, isChoosing, targetCandidates, coun
    from your graveyard to your hand" (Squee, Goblin Nabob; `zone: "graveyard"`) moves its card out of
    the graveyard, so it functions there and only there (CR 113.6b, 113.6m). */
 import {isRingBearer} from "../keywords/ring.mjs";
+import {uncollectedSbaTriggerEvents, clearFinishedSbaTriggerReceipts} from "./sba-move-results.mjs";
 
 const WATCHING_ZONES = ["battlefield"];
 
@@ -731,6 +732,7 @@ function inherentTriggers(state, event) {
 }
 
 export function collectTriggers(state, events) {
+  events = uncollectedSbaTriggerEvents(state, events);
   if (!state.pendingTriggers) state.pendingTriggers = [];
   recordArrivals(state, events);
   recordCounters(state, events);
@@ -1013,6 +1015,7 @@ export function collectTriggers(state, events) {
   /* What was made during this action has now been read past (CR 603.7a), and waits for the next. */
   for (const d of state.delayedTriggers ?? []) if (d.fresh) delete d.fresh;
   for (const {at, times} of again) for (let n = 0; n < times; n += 1) state.pendingTriggers.push(structuredClone(state.pendingTriggers[at]));
+  clearFinishedSbaTriggerReceipts(state);
   return state.pendingTriggers.length;
 }
 

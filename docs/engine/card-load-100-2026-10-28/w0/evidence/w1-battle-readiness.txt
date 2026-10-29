@@ -1,0 +1,5 @@
+baseline: every suite passes unbroken
+caught SBA receipt bypasses native commit readiness -- tests/engine-battle-damage-sba.mjs
+caught breaks-precons-e-zombies.py: follow-ups run by moveOne -- tests/engine-precons-e.mjs
+caught breaks-roblists-p3-counters.py: a shield counter replaces the state-based destruction too -- tests/engine-roblists-p3.mjs
+missed: []

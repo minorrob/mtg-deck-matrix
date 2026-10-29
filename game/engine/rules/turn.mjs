@@ -424,6 +424,14 @@ function resolutionAnswered(state, outcome) {
 export function continueRuleOutcome(state, outcome, rng = null) {
   if (outcome.after?.kind === "resolution") return resolutionAnswered(state, continueRuleResolution(state, outcome, rng));
   if (outcome.status === "waiting") return outcome.events;
+  if (outcome.after?.kind === "state-based") {
+    const events = [...outcome.events];
+    collectTriggers(state, outcome.all);
+    const sba = checkStateBasedActions(state);
+    events.push(...sba); collectTriggers(state, sba);
+    if (!state.awaiting) grantStepPriority(state, events, []);
+    return events;
+  }
   if (outcome.after?.kind === "after-resolving") {
     const all = [...outcome.all], before = all.length;
     afterResolving(state, all);
