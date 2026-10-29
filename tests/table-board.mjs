@@ -185,7 +185,18 @@ async function person(email, viewport, {fullscreen = true} = {}) {
 /* The words as written (A1): Moss & Iron sets headings in capitals, so a read turns text-transform off for its own
    instant and reads innerText, line breaks and all. */
 const text = (page, sel) => page.locator(sel).first().evaluate((el) => { const s = document.createElement("style"); s.textContent = "*{text-transform:none!important}"; document.head.append(s); const t = el.innerText; s.remove(); return t; });
-const waitText = (page, sel, re, timeout = 20000) => page.waitForFunction(([s, src]) => { const el = document.querySelector(s); if (!el) return false; const st = document.createElement("style"); st.textContent = "*{text-transform:none!important}"; document.head.append(st); const t = el.innerText; st.remove(); return new RegExp(src).test(t); }, [sel, re.source], {timeout});
+const waitText = (page, sel, re, timeout = 20000) => page.waitForFunction(([s, src, flags]) => { const el = document.querySelector(s); if (!el) return false; const st = document.createElement("style"); st.textContent = "*{text-transform:none!important}"; document.head.append(st); const t = el.innerText; st.remove(); return new RegExp(src, flags).test(t); }, [sel, re.source, re.flags], {timeout});
+/* The hand is the stage's fan in every view (the legacy .cm-board-hand row is gone from Table and Focus). */
+const HAND = ".cm-stage-fan .cm-bcard";
+/* The lands zone is drawn without its "Lands · n" caption (a stack says ×n instead): n is read from the lands themselves. */
+const waitLands = (page, n, timeout = 20000) => page.waitForFunction((want) => [...document.querySelectorAll(".cm-board-lands")].some((z) => [...z.querySelectorAll(":scope > .cm-board-cards > *, :scope > .cm-board-cards > .cm-land-stack")].reduce((k, el) => k + (Number(/×(\d+)/.exec(el.querySelector?.(".cm-land-count")?.textContent || "")?.[1]) || 1), 0) === want), n, {timeout});
+/* The flat stage lays itself out a moment after a view is chosen (fonts, the hand's fan, a transition): measure it once it has held still two frames running. */
+const stageSettled = (page) => page.waitForFunction(() => {
+  const k = [...document.querySelectorAll(".cm-stage-slot,.cm-stage-rear,.cm-stage-hand,.cm-stage-fan-slot")].map((e) => {const b = e.getBoundingClientRect(); return [b.x, b.y, b.width, b.height].map((n) => Math.round(n * 10)).join();}).join("|") + getComputedStyle(document.querySelector(".cm-seatboard.is-you, .cm-board-mat") || document.body).boxShadow, same = k === globalThis.__stageKey;
+  globalThis.__stageKey = k; return same;
+}, null, {polling: "raf", timeout: 8000});
+/* What the strip says (the element is not drawn while it has nothing to say). */
+const stripSays = async (page) => (await page.locator(".cm-board-waiting").count()) ? (await text(page, ".cm-board-waiting")).trim() : "";
 const views = (email) => frames[email].map((f) => JSON.parse(f)).filter((f) => f.view).map((f) => f.view);
 
 try {
@@ -216,7 +227,7 @@ try {
   await maya.page.locator("#cm-board .cm-stage-top").waitFor({timeout: 30000});
   ok(routes[ROB].length === 1 && routes[MAYA].length === 1, "the lobby hands each page to the board, and each opens one socket to the table");
   eq([heardBy[ROB].length, heardBy[MAYA].length], [0, 0], "and nothing of the sound is fetched before the first press on the board (a browser would refuse to play it)");
-  eq(await rob.page.locator(".cm-board-tile .cm-seat-header .cm-mat-name").allInnerTexts(), ["You · Rob", "Maya"], "the pane holds every seat, yours first here");
+  eq([...await rob.page.locator(".cm-stage-top .cm-seat-header .cm-mat-name").allInnerTexts(), ...await rob.page.locator(".cm-stage-rear .cm-stage-boardname").allInnerTexts()], ["You · Rob", "Maya"], "the page holds every seat, yours first here: yours in the header over the board looked at, the other seat's board (its name above it) behind it");
   /* Found rendering B1's fixture: the library holds only your own cards, so everyone else's were fetched from Scryfall one
      request each, and a full board is refused faster than it is answered. The shipped card records draw them. */
   const pic = await rob.page.evaluate(() => {const C = globalThis.__cm, mine = new Set(C.cards().map((c) => c.name)), other = C.catalog.all().map((c) => C.catalog.exact(c.name)).find((c) => c && c.image && c.image.startsWith("https://cards.scryfall.io/") && !mine.has(c.name)); return other ? {name: other.name, image: other.image, drawn: C.board.pictureOf(other.name)} : null;});
@@ -224,7 +235,7 @@ try {
 
   /* DECIDE: the opening hands. Whoever is asked keeps, until nobody is. */
   await waitText(rob.page, "#cm-board-decision", /Your opening hand/);
-  const robHand = await rob.page.locator(".cm-board-hand .cm-bcard").count();
+  const robHand = await rob.page.locator(HAND).count();
   eq(robHand, 7, "Rob's hand is seven cards, drawn face up for him");
   ok(/Maya.*waiting|Waiting on Rob/i.test(await text(maya.page, ".cm-board-waiting")), `Maya is told who the table waits on: "${await text(maya.page, ".cm-board-waiting")}"`);
   for (let round = 0; round < 6; round += 1) {
@@ -235,7 +246,7 @@ try {
     }
     if (!kept && !(await rob.page.locator("#cm-board-decision", {hasText: "Your opening hand"}).count()) && !(await maya.page.locator("#cm-board-decision", {hasText: "Your opening hand"}).count())) break;
   }
-  await rob.page.waitForFunction(() => /Turn 1/.test(document.querySelector(".cm-board-turn")?.innerText || ""), null, {timeout: 20000});
+  await waitText(rob.page, ".cm-board-turn", /turn 1/i);
   ok(true, "both keep, and turn 1 begins on both boards");
   /* B8: the first press (Keep) armed the sound: the pack's index, and the game's bed. */
   ok(await heard(ROB, "sound-index.json") && await heard(ROB, "bgm/bgm_game_aether_voyage.mp3"), `the first press on the board starts the sound: the pack's index and the game's bed (${heardBy[ROB].join(", ")})`);
@@ -244,76 +255,83 @@ try {
   /* A frame leaks when it names one of the owner's cards that was never made public (`open`: the ones cast in the open). */
   const leaks = (email, owner, open = []) => frames[email].filter((f) => (f.match(new RegExp(`${owner} Secret [0-9]+`, "g")) || []).some((n) => !open.includes(n))).length;
   eq([leaks(MAYA, "Rob"), leaks(ROB, "Maya")], [0, 0], `no frame to either player named a card of the other's hand or library (${frames[MAYA].length + frames[ROB].length} frames read)`);
-  await maya.page.click(".cm-board-tile[data-seat='0'] [data-action=board-focus]");
-  ok((await text(maya.page, ".cm-board-mat .cm-seat-header .cm-mat-name")).trim() === "Rob" && (await text(maya.page, ".cm-board-mat .cm-seat-hand")).trim() === "7 in hand", "Maya can look at Rob's board, and sees his hand as a count");
-  const mats = await maya.page.evaluate(() => {const m = document.querySelector(".cm-board-mat"); return [m.dataset.mat, getComputedStyle(m).backgroundImage.includes("radial-gradient")];});
+  await lookAt(maya.page, 0);
+  /* (The board looked at is the big one, its name plain text above it; another seat's hand, a count, is read from its Boards module tile.) */
+  ok((await text(maya.page, ".cm-stage-big .cm-stage-boardname")).trim() === "Rob" && (await text(maya.page, ".cm-board-tile:not(.is-you) .cm-seat-hand")).trim() === "7 in hand", "Maya can look at Rob's board, and sees his hand as a count");
+  const mats = await maya.page.evaluate(() => {const m = document.querySelector(".cm-stage-big .cm-mat"); return [m.dataset.mat, getComputedStyle(m).backgroundImage.includes("radial-gradient")];});
   ok(mats[0] === "forge" && mats[1], "and it is drawn on Rob's mat, the forge");
-  await maya.page.click(".cm-board-tile[data-seat='1'] [data-action=board-focus]");
-  const own = await maya.page.evaluate(() => {const m = document.querySelector(".cm-board-mat"); return [m.dataset.mat, getComputedStyle(m).backgroundImage];});
-  await maya.page.click(".cm-board-tile[data-seat='0'] [data-action=board-focus]");
-  const robs = await maya.page.evaluate(() => getComputedStyle(document.querySelector(".cm-board-mat")).backgroundImage);
+  await lookAt(maya.page, 1);
+  const own = await maya.page.evaluate(() => {const m = document.querySelector(".cm-stage-big .cm-mat"); return [m.dataset.mat, getComputedStyle(m).backgroundImage];});
+  await lookAt(maya.page, 0);
+  const robs = await maya.page.evaluate(() => getComputedStyle(document.querySelector(".cm-stage-big .cm-mat")).backgroundImage);
   ok(own[0] === "felt" && own[1] !== robs, "her own board is on felt, and looks it");
   await serial(() => call("/table/mat", MAYA, {mat: "night"}));
-  await rob.page.click(".cm-board-tile[data-seat='1'] [data-action=board-focus]");
-  await rob.page.waitForFunction(() => document.querySelector(".cm-board-mat")?.dataset.mat === "night", null, {timeout: 10000});
+  await lookAt(rob.page, 1);
+  await rob.page.waitForFunction(() => document.querySelector(".cm-stage-big .cm-mat")?.dataset.mat === "night", null, {timeout: 10000});
   ok(true, "a mat changed mid-game reaches the other board");
-  await rob.page.click(".cm-board-tile[data-seat='0'] [data-action=board-focus]");
+  await lookAt(rob.page, 0);
   ok(!(await maya.page.content()).includes("Rob Secret"), "and her page holds none of his cards by name");
-  await maya.page.click(".cm-board-tile[data-seat='1'] [data-action=board-focus]");
+  await lookAt(maya.page, 1);
 
   /* DECIDE: the active player plays a land by tapping it in the hand. */
-  const active = /Turn 1 · You/.test(await text(rob.page, ".cm-board-turn")) ? rob : maya, other = active === rob ? maya : rob;
+  const active = /; your \d/.test(await rob.page.locator(".cm-board-turn").getAttribute("title")) ? rob : maya, other = active === rob ? maya : rob;
   const activeSeat = active === rob ? 0 : 1, land = active === rob ? "Forest" : "Island";
   /* B5, item 11: turn 1's upkeep has nothing to do in it, so it passes by itself; the first player of a two-player game
      has no draw step on turn 1 (CR 103.8a); and the table opens in main 1. */
-  await active.page.locator(".cm-board-hand .cm-bcard.is-bright").first().waitFor({timeout: 20000});
+  await active.page.locator(HAND + ".is-bright").first().waitFor({timeout: 20000});
   ok(/Main 1/.test(await phaseText(active.page)), `the empty upkeep passes by itself, and there is no draw step: turn 1 opens in main 1, where there is something to do (${(await phaseText(active.page)).trim()})`);
   await waitText(active.page, ".cm-board-band", /Upkeep: nothing to do/);
   ok((await active.page.locator(".cm-board-band li.is-quiet").first().innerText()).includes("Upkeep: nothing to do"), "and the history says so, in one quieter line: Upkeep: nothing to do");
   /* B5, item 10: on your own turn with the stack empty, the button says what passing will do. */
-  eq((await text(active.page, ".cm-stage-top [data-action=board-pass]")).trim(), "Next step", "on your own turn, with the stack empty, the button reads Next step");
-  eq((await text(active.page, ".cm-board-waiting")).trim(), "", "and the strip does not say Your priority beside it: the button carries it");
+  eq((await text(active.page, ".cm-stage-actions [data-action=board-pass]")).trim(), "Next step", "on your own turn, with the stack empty, the button reads Next step");
+  eq((await stripSays(active.page)), "", "and the strip does not say Your priority beside it: the button carries it");
   /* Rob, 2026-10-11 ("It says we are on turn 3, but I only played one land"): the game's turn counts every player's, and
      on your own the strip says which of yours it is. */
-  ok((await text(active.page, ".cm-board-turn")).trim() === "Turn 1 · You" && /; your 1st turn$/.test(await active.page.locator(".cm-board-turn").getAttribute("title")) && !/your/.test(await text(other.page, ".cm-board-turn")) && !/; your/.test(await other.page.locator(".cm-board-turn").getAttribute("title")),
-    `on your own turn the strip says which of yours it is: "${(await text(active.page, ".cm-board-turn")).trim()}"; on another's, only whose (${(await text(other.page, ".cm-board-turn")).trim()})`);
-  /* B6, item 14: THE HAND TRAY. The count beside the ✋, and the hand by type, castable now over in hand -- the same
-     fact that lights a card. */
+  /* The turn box (the HUD's caption) reads TURN n; whose turn it is is the ringed life row beside it ("You · Rob"), and on your own the title says which of yours. */
+  const turnWho = (page) => page.evaluate(() => document.querySelector(".cm-stage-caption .cm-stage-life.is-turn")?.textContent || "");
+  ok(/^turn 1$/i.test((await text(active.page, ".cm-board-turn")).trim()) && /; your 1st turn$/.test(await active.page.locator(".cm-board-turn").getAttribute("title")) && /^You/.test(await turnWho(active.page)) && !/your/.test(await text(other.page, ".cm-board-turn")) && !/; your/.test(await other.page.locator(".cm-board-turn").getAttribute("title")) && !/^You/.test(await turnWho(other.page)),
+    `on your own turn the box says which of yours it is: "${(await text(active.page, ".cm-board-turn")).trim()}", ringed "${await turnWho(active.page)}"; on another's, only whose (${(await text(other.page, ".cm-board-turn")).trim()}, ringed "${await turnWho(other.page)}")`);
+  /* B6, item 14: THE HAND. The count beside the hand's label, and the hand by type, castable now over in hand -- the same fact that lights a card.
+     The legacy tray's by-type strip (Land / Creature / Instant / Other, each castable over in hand) is gone with the row (the hand is the stage's fan,
+     whose label reads "Your hand · n"): the by-type reading is taken from the lit cards themselves, which are what that strip counted. */
   const trayOf = (page, seat, email) => page.evaluate(([seat, state]) => {
     const kind = (c) => !c ? "Other" : c.types.includes("Land") ? "Land" : c.types.includes("Instant") || (c.keywords || []).some((k) => /^flash$/i.test(k)) ? "Instant" : c.types.includes("Creature") ? "Creature" : "Other";
     const byId = new Map(state.players[seat].zones.Hand.cards.map((c) => [String(c.cardId), c])), want = {Land: [0, 0], Creature: [0, 0], Instant: [0, 0], Other: [0, 0]};
-    for (const el of document.querySelectorAll(".cm-board-hand .cm-board-hand-cards .cm-bcard")) {const k = kind(byId.get(el.dataset.card)); want[k][1] += 1; if (el.classList.contains("is-bright")) want[k][0] += 1;}
-    return {count: (document.querySelector(".cm-board-hand .cm-board-hand-count") || {}).textContent, cards: document.querySelectorAll(".cm-board-hand .cm-board-hand-cards .cm-bcard").length,
-      shown: Object.fromEntries([...document.querySelectorAll(".cm-board-hand-types li")].map((li) => [li.dataset.type, li.querySelector("b").textContent])),
-      want: Object.fromEntries(Object.entries(want).map(([k, [x, y]]) => [k, `${x}/${y}`])), words: document.querySelector(".cm-board-hand").innerText};
+    for (const el of document.querySelectorAll(".cm-stage-fan .cm-bcard")) {const k = kind(byId.get(el.dataset.card)); want[k][1] += 1; if (el.classList.contains("is-bright")) want[k][0] += 1;}
+    return {count: (/·\s*(\d+)/.exec(document.querySelector(".cm-stage-hand-label")?.textContent || "") || [])[1], cards: document.querySelectorAll(".cm-stage-fan .cm-bcard").length,
+      want: Object.fromEntries(Object.entries(want).map(([k, [x, y]]) => [k, `${x}/${y}`])), words: document.querySelector(".cm-stage-hand").innerText};
   }, [seat, views(email).at(-1).state]);
   const tray1 = await trayOf(active.page, activeSeat, active === rob ? ROB : MAYA);
-  ok(tray1.count === String(tray1.cards) && !/Hand ·|Bright = /.test(tray1.words), `the tray gives the hand's count beside the ✋ (${tray1.count}), and neither "Hand · n" nor "Bright = you can use it now"`);
-  eq(Object.keys(tray1.shown), ["Land", "Creature", "Instant", "Other"], "and the hand by type: Land, Creature, Instant, Other");
-  eq(tray1.shown, tray1.want, `each castable now over in hand, the same count the lit cards give (${Object.entries(tray1.shown).map(([k, v]) => `${k} ${v}`).join(" · ")})`);
-  ok(/^([1-9])\/\1$/.test(tray1.shown.Land) && /^0\//.test(tray1.shown.Creature) && /^0\//.test(tray1.shown.Instant), "in main 1 with the land drop unused every land can be played now, and nothing can be cast until there is mana");
-  const brightLand = active.page.locator(".cm-board-hand .cm-bcard.is-bright", {hasText: land}).first();
+  ok(tray1.count === String(tray1.cards) && !/Bright = /.test(tray1.words), `the hand's label gives its count (${tray1.count}) and no "Bright = you can use it now" legend`);
+  eq(Object.keys(tray1.want), ["Land", "Creature", "Instant", "Other"], "and the hand reads by type: Land, Creature, Instant, Other");
+  ok(/^([1-9])\/\1$/.test(tray1.want.Land) && /^0\//.test(tray1.want.Creature) && /^0\//.test(tray1.want.Instant), `in main 1 with the land drop unused every land can be played now (lit), and nothing can be cast until there is mana (${Object.entries(tray1.want).map(([k, v]) => `${k} ${v}`).join(" · ")})`);
+  const brightLand = active.page.locator(HAND + ".is-bright", {hasText: land}).first();
   ok(await brightLand.count() === 1, `with priority in main 1, a ${land} in the hand is bright: it can be played now`);
-  ok(await active.page.locator(".cm-board-hand .cm-bcard.is-dim").count() > 0, "and the cards that cannot be used now are dimmed");
+  ok(await active.page.locator(HAND + ".is-dim").count() > 0, "and the cards that cannot be used now are dimmed");
   ok(await active.page.locator(".cm-board-ask #cm-board-decision").count() === 0, "priority floats nothing over the board: its cards are bright");
-  await active.page.click("[data-action=board-actions-open]");
+  await rail(active.page, true);
   const also = await text(active.page, "#cm-board-decision");
   ok(new RegExp(`Play ${land}`).test(also) && !/Pass priority/.test(also) && (also.match(new RegExp(`Play ${land}`, "g")) || []).length === 1, `Actions says what else can be done, each kind once, Pass left to the strip: "${also.replace(/\s+/g, " ").trim()}"`);
-  await active.page.click("[data-action=board-actions-open]");
-  const ink = await active.page.evaluate(() => {const el = document.querySelector(".cm-board-hand .cm-bcard .cm-bcard-name"); return getComputedStyle(el).color;});
+  await rail(active.page, false);
+  const ink = await active.page.evaluate(() => {const el = document.querySelector(".cm-stage-fan .cm-bcard .cm-bcard-name"); return getComputedStyle(el).color;});
   eq(ink, "rgb(31, 28, 24)", "a card's name is printed in the card's own dark ink, not the mat's light one");
   await shot(active.page, "board-priority-" + (active === rob ? "1400" : "1280"));
   await useCardOffer(active.page, brightLand, "play-land");
-  await waitText(active.page, ".cm-board-lands", /Lands · 1/);
-  ok(/land drop used/i.test(await text(active.page, ".cm-board-mat .cm-seat-resources")), "tapping it plays it: Lands · 1, the land drop used (the SeatHeader resources say so)");
+  await waitLands(active.page, 1);
+  /* The board says what mana is open and whether the land drop is used: the chip at the foot of your own mat in Table (the Focus mat is drawn without its header's resources now,
+     so the view is Table's for this reading and Focus again after). */
+  await chooseView(active.page, "table"); await active.page.locator(".cm-mat.is-you .cm-board-chip").waitFor({timeout: 10000});
+  const dropSaid = await text(active.page, ".cm-mat.is-you .cm-board-chip");
+  await chooseView(active.page, "focus"); await active.page.locator(".cm-stage-big").waitFor({timeout: 10000});
+  ok(/land drop used/i.test(dropSaid), "tapping it plays it: one land on the board, the land drop used (the board says so)");
   ok(await heard(active === rob ? ROB : MAYA, "sfx/sfx_play_land.mp3"), "and it sounds as a land played (the pack's land voice)");
-  await other.page.click(`.cm-board-tile[data-seat='${activeSeat}'] [data-action=board-focus]`);
-  await waitText(other.page, ".cm-board-lands", /Lands · 1/);
+  await lookAt(other.page, activeSeat);
+  await waitLands(other.page, 1);
   ok(await other.page.locator('.cm-board-lands').getByRole('button',{name:new RegExp(`^${land}(?:,|:|$)`)}).count()>0, "the other board shows the same land, now public");
   /* With the land down there is its mana, and a creature it could pay for: Next step passes, and taps nothing. */
-  await active.page.click("[data-action=board-actions-open]");
+  await rail(active.page, true);
   ok(/Tap for mana/.test(await text(active.page, "#cm-board-decision")), "the land played, Actions offers its mana");
-  await active.page.click("[data-action=board-actions-open]");
+  await rail(active.page, false);
   /* UNTAP, ITS MANA UNSPENT (Rob, 2026-10-11: "I clicked it to see what happens. It tapped it ... I should also be able to
      click the card to untap it again"): a click on the land taps it; the room offers it back (game/room/room.mjs,
      `untapMana`), so it stays lit, says Untap, and a second click puts it upright, its mana gone from the pool. */
@@ -333,7 +351,7 @@ try {
      creature to attack with -- landing on main 2, where the creature could still be cast. */
   await waitPhase(active.page, /Main 2/);
   eq(await active.page.locator(".cm-board-lands .cm-bcard.is-tapped").count(), 0, "Next step hands priority on, and taps nothing");
-  ok(/Main 2/.test(await phaseText(active.page)) && (await text(active.page, ".cm-stage-top [data-action=board-pass]")).trim() === "Next step",
+  ok(/Main 2/.test(await phaseText(active.page)) && (await text(active.page, ".cm-stage-actions [data-action=board-pass]")).trim() === "Next step",
     "one click of Next step lands on the next step with something to do: main 2");
   await waitText(active.page, ".cm-board-band", /Beginning of combat, Declare attackers, End of combat: nothing to do/);
   ok(true, "and the combat steps it passed through, empty, say so in one line: Beginning of combat, Declare attackers, End of combat: nothing to do");
@@ -367,7 +385,7 @@ try {
   await utility(active.page,"board-history");
   await active.page.click("#cm-board-history .cm-history-filter");
   ok(await active.page.locator("#cm-board-history").count() === 1, "a press inside History ▾ (its filter) keeps it open");
-  await active.page.click(".cm-board-mat .cm-mat-name");
+  await active.page.locator(".cm-board-mat").click({position: {x: 3, y: 3}});
   await active.page.locator("#cm-board-history").waitFor({state: "detached", timeout: 3000});
   ok(true, "a press outside it, on the mat, closes it");
   await active.page.click(".cm-board-band [data-action=board-history]");
@@ -402,59 +420,61 @@ try {
   await rob.page.getByRole('button',{name:'Resume game',exact:true}).click();
   await rob.page.locator("#cm-board .cm-stage-top").waitFor({timeout: 30000});
   ok(/^#table\?id=/.test(await rob.page.evaluate(() => location.hash)) && routes[ROB].length === robSockets, "Resume from Play returns to the game, on the same socket");
-  ok(awayFrames() === awayBefore && !/Dropped/.test(await text(maya.page, ".cm-board-tile[data-seat='0'] .cm-seat-state")), "and through all of it the room never marked Rob's seat away");
+  ok(awayFrames() === awayBefore && !/Dropped/.test(await text(maya.page, ".cm-board-tile[data-seat='0'] .cm-seat-state")), "and through all of it the room never marked Rob's seat away");   /* (a seat's state is read from its Boards module tile now: no header over the board says it) */
 
-  /* THE THREE VIEWS. Table: both boards at once, side by side -- each a landscape 16:9 on its half of the screen, yours on
-     the right (Rob, 2026-10-09: "In 2-player, the screen should split down the middle vertically") -- the logo between
-     them opening Table vitals. */
+  /* THE THREE VIEWS. Table: every seat's board at once, each the same 16:9, yours at the right of the pair here, the logo between them opening
+     Table vitals. Since 2026-10-28 Table is the 3D view's HUD on a flat stage: the boards are laid out by CrankStage.flatGeometry inside the stage (the
+     window's whole width, the drawers over it), so the old "rows" (the largest boards that fit in two columns, native scrolling past them) are gone:
+     the boards are as large as the stage gives and the window never scrolls them. */
   await chooseView(rob.page,"table");
-  await rob.page.locator(".cm-board-table .cm-seatboard").nth(1).waitFor();
+  await rob.page.locator(".cm-stage-slot .cm-seatboard").nth(1).waitFor();
+  await stageSettled(rob.page);
   const tableGeo = await rob.page.evaluate(() => {
     const box = (q) => document.querySelector(q).getBoundingClientRect();
-    const mine = box(".cm-seatboard.is-you"), theirs = box(".cm-seatboard:not(.is-you)"), center = box(".cm-board-center"), host = box("#cm-board");
-    const ring = getComputedStyle(document.querySelector(".cm-seatboard.is-you")).boxShadow;
-    const tableEl = document.querySelector(".cm-board-table"), table = tableEl.getBoundingClientRect(), tray = box(".cm-board-hand");
-    return {mineRight: mine.left >= theirs.right && Math.abs(mine.top - theirs.top) < 1, ring: /2px/.test(ring), same: Math.abs(mine.width - theirs.width) < 1 && Math.abs(mine.height - theirs.height) < 1,
-      ratio: Math.round(mine.width / mine.height * 100) / 100, fits: mine.right <= table.right + 1 && theirs.left >= table.left - 1 && mine.top >= table.top - 1 && mine.bottom <= table.top + tableEl.scrollHeight + 1,
-      largest: Math.min((tableEl.clientWidth - parseFloat(getComputedStyle(tableEl).columnGap)) / 2, table.height * 16 / 9) - mine.width < 2,
+    const mine = box(".cm-stage-slot .cm-seatboard.is-you"), theirs = box(".cm-stage-slot .cm-seatboard:not(.is-you)"), host = box("#cm-board"), hand = box(".cm-stage-hand"), region = box(".cm-stage-region");
+    const ring = getComputedStyle(document.querySelector(".cm-seatboard.is-you")).boxShadow, hostStyle = getComputedStyle(document.getElementById("cm-board"));
+    const gutL = parseFloat(hostStyle.getPropertyValue("--gut-l")) || 0, gutR = parseFloat(hostStyle.getPropertyValue("--gut-r")) || 0;
+    const across = mine.left >= theirs.right - 1 && Math.abs(mine.top - theirs.top) < 1, down = mine.top >= theirs.bottom - 1 && Math.abs(mine.left - theirs.left) < 1;
+    return {mineRight: across || down, across, ring: ring !== "none" && /\dpx/.test(ring), same: Math.abs(mine.width / theirs.width - 1.12) < 0.02 && Math.abs(mine.height / theirs.height - 1.12) < 0.02,   /* yours is 12% larger, both the same 16:9 */
+      ratio: Math.round(mine.width / mine.height * 100) / 100, fits: mine.right <= region.right - gutR + 1 && theirs.left >= region.left + gutL - 1 && mine.top >= region.top - 1 && mine.bottom <= hand.bottom + 1,
       whole: host.left === 0 && host.top === 0 && host.width === innerWidth && host.height === innerHeight,
-      library: document.querySelectorAll(".cm-seatboard [data-zone=library]").length, trayBelow: tray.top >= Math.min(mine.bottom, table.bottom),
-      logo: (document.querySelector(".cm-board-center img") || {}).src || "",
-      centerBetween: center.left < mine.left && center.right > theirs.right, sideways: document.documentElement.scrollWidth - document.documentElement.clientWidth};
+      library: document.querySelectorAll(".cm-seatboard [data-zone=library]").length, trayBelow: hand.bottom <= innerHeight + 1 && hand.left === region.left && hand.width === region.width && mine.bottom <= hand.bottom + 1,
+      gap: across ? mine.left - theirs.right : mine.top - theirs.bottom, dial: document.querySelectorAll(".cm-board-pie, .cm-board-center").length, sideways: document.documentElement.scrollWidth - document.documentElement.clientWidth};
   });
-  const initialRows = await rob.page.evaluate(tableRowFacts);
+  const initialRows = await rob.page.evaluate(tableFacts);
   ok(tableGeo.whole, "the game fills the window: the board is the whole viewport, the rail under it");
-  ok(tableGeo.mineRight && tableGeo.ring, "Table view: two boards side by side, Rob's on the right in a brass ring, Maya's on the left");
-  ok(tableGeo.same && tableGeo.fits && tableGeo.largest && initialRows.valid && initialRows.widths, `the equal boards retain 16:9 when measured rows fit; otherwise complete rows govern height, with each chosen column filled (${JSON.stringify(initialRows)})`);
-  ok(tableGeo.library === 2 && tableGeo.trayBelow, "each board draws its Library pile, and the hand sits along the foot below the boards");
-  ok(tableGeo.centerBetween && tableGeo.sideways === 0 && /logo-wand/.test(tableGeo.logo), "the wand logo sits in the gap between the boards, and nothing scrolls sideways");
-  await verifyTableRowAccess(rob.page, initialRows);
+  ok(tableGeo.mineRight && tableGeo.ring, `Table view: two boards, one beside the other or one over the other, Rob's last (${tableGeo.across ? "on the right" : "below"}) in a ring, Maya's first`);
+  ok(tableGeo.same && tableGeo.fits && Math.abs(tableGeo.ratio - 16 / 9) < 0.02 && initialRows.valid && initialRows.same, `the boards are each 16:9 (${tableGeo.ratio}), yours 12% larger than the other seat's, whole and between the drawers' gutters, with their cards 5:7 (${JSON.stringify(initialRows.boards.map((b) => [Math.round(b.width), Math.round(b.height)]))})`);
+  ok(tableGeo.library === 2 && tableGeo.trayBelow, "each board draws its Library pile, and the hand sits along the foot of the window, the stage's whole width, no board reaching below it");
+  /* The life counter with the wand logo at the true center is gone (Rob, 2026-10-28: the turn box top left has the life, names and priority; Table vitals open from a vitals pill): the boards meet with only a hair between them, nothing sits there. */
+  ok(tableGeo.dial === 0 && tableGeo.gap >= 0 && tableGeo.gap <= 12 && tableGeo.sideways === 0, `the boards meet with only a hair between them (${Math.round(tableGeo.gap)}px) and no dial lies over it, and nothing scrolls sideways`);
+  await verifyTableAccess(rob.page, initialRows);
   /* R12 (the plan review, X8): AT 1280x720 THE CAPTIONS ARE WORDS, NOT A PILE-UP. With Board cards at its smallest the
      Table view's piles are narrowest, and their captions ran into each other ("CommandExile 0", "Library 9Grave...")
      under AGENTS.md's 10px floor. Every pile caption, zone name and heading is 10px or larger, whole and clear of its
      neighbors; a pile too narrow for its name shows its count, and still names its zone to a screen reader and on hover. */
   {
     await rob.page.locator('[data-action=board-camera]').click();
-    const was = rob.page.viewportSize(), slider = rob.page.locator(".cm-stage-camera [data-board-scale=board]");
-    eq(await rob.page.locator('[data-board-scale=board]').count(), 1, 'two-seat Table also keeps Board cards only in Camera');
+    const was = rob.page.viewportSize(), slider = rob.page.locator(".cm-stage-camera [data-stage-camera=cards]");
+    eq(await rob.page.locator('[data-stage-camera=cards]').count(), 1, 'two-seat Table also keeps Board cards only in Camera');
     await rob.page.setViewportSize({width: 1280, height: 720});
     const before = await slider.inputValue(), lo = await slider.getAttribute("min");
     await slider.fill(lo);
     await rob.page.waitForTimeout(250);
     const m = await rob.page.evaluate(() => {
       const shown = (el) => {const r = el.getBoundingClientRect(), st = getComputedStyle(el); return r.width > 0 && r.height > 0 && st.display !== "none" && st.visibility !== "hidden";};
-      const texts = [...document.querySelectorAll(".cm-board-table .cm-mat .cm-board-pile figcaption > *, .cm-board-table .cm-mat .cm-mat-label, .cm-board-table .cm-mat .cm-board-group h3, .cm-board-table .cm-mat .cm-board-chip, .cm-board-table .cm-mat .cm-board-empty")].filter(shown);
+      const texts = [...document.querySelectorAll(".cm-stage-slot .cm-mat .cm-board-pile figcaption > *, .cm-stage-slot .cm-mat .cm-mat-label, .cm-stage-slot .cm-mat .cm-board-group h3, .cm-stage-slot .cm-mat .cm-board-chip, .cm-stage-slot .cm-mat .cm-board-empty")].filter(shown);
       const small = texts.map((el) => [el.textContent.trim(), parseFloat(getComputedStyle(el).fontSize)]).filter(([, f]) => f < 10);
       const cut = texts.filter((el) => el.scrollWidth > el.clientWidth + 1).map((el) => el.textContent.trim());
       let overlaps = 0;
-      for (const mat of document.querySelectorAll(".cm-board-table .cm-mat")) {
+      for (const mat of document.querySelectorAll(".cm-stage-slot .cm-mat")) {
         const parts = [...mat.querySelectorAll(".cm-board-pile figcaption > *")].filter(shown).map((c) => c.getBoundingClientRect());
         for (let i = 0; i < parts.length; i += 1) for (let j = i + 1; j < parts.length; j += 1) {
           const a = parts[i], b = parts[j];
           if (a.left < b.right - 1 && b.left < a.right - 1 && a.top < b.bottom - 1 && b.top < a.bottom - 1) overlaps += 1;
         }
       }
-      const piles = [...document.querySelectorAll(".cm-board-table .cm-board-pile")];
+      const piles = [...document.querySelectorAll(".cm-stage-slot .cm-board-pile")];
       const named = piles.length > 0 && piles.every((p) => /^(Command|Exile|Library|Graveyard), \d+$/.test(p.getAttribute("aria-label") || "") && p.getAttribute("title") === p.getAttribute("aria-label"));
       return {count: texts.length, small, cut, overlaps, named};
     });
@@ -463,19 +483,19 @@ try {
     ok(m.named, "and each pile still names its zone and count, to a screen reader and on hover");
     await slider.fill(before);
     await rob.page.locator('[data-action=board-camera]').click();
-    const smallerRows = await rob.page.evaluate(tableRowFacts);
-    ok(smallerRows.valid && smallerRows.widths, "at 1280x720 complete rows retain conditional aspect and chosen column widths");
-    await verifyTableRowAccess(rob.page, smallerRows);
+    const smallerRows = await rob.page.evaluate(tableFacts);
+    ok(smallerRows.valid && smallerRows.same, "at 1280x720 the boards keep their 16:9 and their size");
+    await verifyTableAccess(rob.page, smallerRows);
     await rob.page.setViewportSize({width:1280,height:600});
-    await rob.page.waitForFunction(()=>{const t=document.querySelector('.cm-board-table');return t.scrollHeight>t.clientHeight+1;},null,{timeout:5000});
-    const shortRows=await rob.page.evaluate(tableRowFacts);
-    ok(shortRows.valid&&shortRows.widths&&shortRows.scrolls,'at 1280x600 complete real rows force native Table scrolling without changing chosen widths');
-    await verifyTableRowAccess(rob.page,shortRows);
+    await rob.page.waitForTimeout(400);
+    const shortRows=await rob.page.evaluate(tableFacts);
+    ok(shortRows.valid&&shortRows.same,'at 1280x600 the boards keep their 16:9 and their size');
+    await verifyTableAccess(rob.page,shortRows);
     await rob.page.setViewportSize(was);
   }
   ok(await rob.page.locator(`.cm-seatboard[data-seat='${activeSeat}']`).getByRole('button',{name:new RegExp(`^${land}(?:,|:|$)`)}).count()>0, "the land played is on its owner's board in the Table view too");
   await shot(rob.page, "board-table-1400");
-  await rob.page.click(".cm-board-center");
+  await rob.page.locator(".cm-stage-top [data-action=board-vitals]").click();
   await rob.page.locator(".cm-table-vitals").waitFor();
   const vitalsRows = await rob.page.locator(".cm-table-vitals [role=row]").allInnerTexts();
   const flat = vitalsRows.map((r) => r.replace(/\s+/g, " ").trim());
@@ -486,9 +506,14 @@ try {
   ok(flat.includes("From Rob General — 0 / 21") && flat.includes("From Maya General 0 / 21 —"), `and each commander's damage to every other seat, its own seat "—" (${flat.slice(3).join(" | ")})`);
   await shot(rob.page, "table-vitals-1400");
   await rob.page.keyboard.press("Escape");
-  await rob.page.locator(".cm-seatboard:not(.is-you) [data-action=board-vitals]").click();
+  /* A board has no header or vitals pill over it any more (Rob, 2026-10-28: a name in plain text above the mat), so another seat's pill is gone; Table vitals' other door is
+     Settings, General's Table vitals button, which leaves Settings and opens the same sheet. */
+  /* With Actions shut the pending choice floats over the stage; open, it is in the drawer and the stage is free. */
+  await rail(rob.page, true);
+  await utility(rob.page, "board-tools");
+  await rob.page.locator("#cm-dialog [data-action=board-vitals]").click();
   await rob.page.locator(".cm-table-vitals").waitFor();
-  ok(true, "any seat's vitals pill opens Table vitals too");
+  ok(await rob.page.locator(".cm-table-vitals [role=row]").count() >= 3, "Settings' Table vitals button opens Table vitals too, every seat's in it");
   await rob.page.keyboard.press("Escape");
 
   /* THE BARS TOWARD 21 (CR 903.10a; the plan review's C1, 2026-10-03). The tally is kept under the commander's key, the
@@ -500,10 +525,10 @@ try {
   ok(/^1:\d+$/.test(mayaGeneral?.commanderKey ?? ""), `Maya's commander, as Rob sees it, carries its key, her seat first (${mayaGeneral?.commanderKey})`);
   object.room.view = (seatId) => {const v = plainView(seatId); v.state.players[0].health.commanderDamage = {[mayaGeneral.commanderKey]: 11, "1:9999": 4}; return v;};
   object.broadcast();
-  await rob.page.locator(".cm-seatboard.is-you .cm-vitals-bar").nth(1).waitFor();
-  const bars = await rob.page.locator(".cm-seatboard.is-you .cm-vitals-bar").evaluateAll((els) => els.map((el) => el.getAttribute("title")));
+  await rob.page.locator(".cm-stage-top .cm-seat-header[data-seat-header='0'] .cm-vitals-bar").nth(1).waitFor();
+  const bars = await rob.page.locator(".cm-stage-top .cm-seat-header[data-seat-header='0'] .cm-vitals-bar").evaluateAll((els) => els.map((el) => el.getAttribute("title")));
   eq(bars, ["Maya: 11 of 21", "Maya: 4 of 21"], "Rob's vitals draw a bar for each commander that dealt him combat damage, each in its owner's name -- the one out of sight too");
-  await rob.page.click(".cm-board-center");
+  await rob.page.locator(".cm-stage-top [data-action=board-vitals]").click();
   await rob.page.locator(".cm-table-vitals").waitFor();
   const tallied = (await rob.page.locator(".cm-table-vitals [role=row]").allInnerTexts()).map((r) => r.replace(/\s+/g, " ").trim());
   ok(tallied.includes("From Maya General 11 / 21 —") && tallied.includes("From Maya's commander, out of sight 4 / 21 —") && tallied.includes("From Rob General — 0 / 21"),
@@ -511,140 +536,160 @@ try {
   await rob.page.keyboard.press("Escape");
   object.room.view = plainView;
   object.broadcast();
-  await rob.page.waitForFunction(() => !document.querySelector(".cm-seatboard.is-you .cm-vitals-bar"));
+  await rob.page.waitForFunction(() => !document.querySelector(".cm-stage-top .cm-seat-header[data-seat-header='0'] .cm-vitals-bar"));
 
-  /* B4, THE TABLE VIEW'S SHAPE (docs/plan-to-done-2026-09-30.md, items 3-9). Still: the sea is painted once. */
-  const seaAt = () => rob.page.evaluate(() => {const c = document.querySelector(".cm-board-table > .cm-board-sea"), f = document.querySelector(".cm-board-table > .cm-board-fan"); return {t: c ? c.dataset.t : null, fan: f ? getComputedStyle(f).transitionDuration : null};});
+  /* B4, THE TABLE VIEW'S SHAPE (docs/plan-to-done-2026-09-30.md, items 3-9). Still: the tabletop does not move by itself. The painted sea (a canvas
+     drawn once) and the hand's fade belonged to the old tabletop; the flat stage has neither, so stillness is read from what is there: no board or
+     pile of the stage moves of itself over a second and a canvas is not drawn behind it. */
+  const seaAt = () => rob.page.evaluate(() => ({slots: JSON.stringify([...document.querySelectorAll(".cm-stage-slot")].map((e) => {const b = e.getBoundingClientRect(); return [b.x, b.y, b.width, b.height];})), canvas: document.querySelectorAll(".cm-stage-region canvas, .cm-board-sea").length,
+    caption: JSON.stringify(document.querySelector(".cm-stage-caption").getBoundingClientRect().toJSON())}));
   const sea1 = await seaAt();
   await rob.page.waitForTimeout(1200);
   const sea2 = await seaAt();
-  ok(sea1.t === "0.00" && sea2.t === "0.00" && (sea2.fan === null || sea2.fan === "0s"), `the tabletop is still: the sea painted once, at its first moment, and does not move (${sea1.t} → ${sea2.t})${sea2.fan === null ? "" : "; the fan does not fade"}`);
-  /* The life counter at the true center: a slice per seat in its own color, each seat's life on its own side. */
-  const pie = await rob.page.evaluate(() => {
-    const el = document.querySelector(".cm-board-table > .cm-board-pie"), r = el.getBoundingClientRect(), tbl = document.querySelector(".cm-board-table").getBoundingClientRect();
-    const theirs = document.querySelector(".cm-board-table .cm-seatboard:not(.is-you)").getBoundingClientRect(), mine = document.querySelector(".cm-board-table .cm-seatboard.is-you").getBoundingClientRect();
-    const mid = r.top + r.height / 2, bg = getComputedStyle(el).backgroundImage;
-    const life = (seat) => document.querySelector(`.cm-board-table .cm-seatboard[data-seat='${seat}'] .cm-vitals b`).textContent;
-    const center = r.left + r.width / 2;
-    const totals = [...el.querySelectorAll(".cm-board-pie-life")].map((b) => {const q = b.getBoundingClientRect(); return {seat: b.dataset.seat, n: b.querySelector("b").textContent, identity: b.querySelector("small").textContent, left: q.left + q.width / 2 < center, pill: life(b.dataset.seat)};});
-    return {dx: center - (theirs.right + mine.left) / 2, dy: mid - (mine.top + mine.bottom) / 2, conic: /conic-gradient/.test(bg), colors: new Set(bg.match(/(rgba?|color|oklab|oklch|lab)\([^)]*\)/g) || []).size,
-      totals, logo: !!el.querySelector(".cm-board-center img"), round: Math.abs(r.width - r.height) < 1};
+  ok(sea1.slots === sea2.slots && sea1.caption === sea2.caption && sea1.canvas === 0 && sea2.canvas === 0, `the tabletop is still: no board or the turn box moves of itself, and no canvas is drawn (${sea1.canvas} → ${sea2.canvas})`);
+  /* The life counter at the true center (a slice per seat) is the turn box top left now (Rob, 2026-10-28): each seat's life, yours first, whose turn it is
+     ringed, and a dot where the priority is; the same numbers as the seats' vitals pills. */
+  const box = await rob.page.evaluate(() => {
+    const rows = [...document.querySelectorAll(".cm-stage-caption .cm-stage-life")], life = (seat) => document.querySelector(`.cm-seat-header[data-seat-header='${seat}'] .cm-vitals b`).textContent;
+    const turn = document.querySelector(".cm-stage-caption").getBoundingClientRect(), mats = [...document.querySelectorAll(".cm-stage-slot")].map((e) => e.getBoundingClientRect());
+    return {rows: rows.map((r) => ({text: r.textContent.replace(/\s+/g, " ").trim(), n: r.querySelector("b").textContent, turn: r.classList.contains("is-turn"), prio: !!r.querySelector(".cm-stage-life-prio:not(.is-off)")})), pills: [life(0), life(1)],
+      clear: mats.every((m) => turn.right <= m.left + 1 || turn.bottom <= m.top + 1), pie: document.querySelectorAll(".cm-board-pie").length};
   });
-  ok(Math.abs(pie.dx) < 2 && Math.abs(pie.dy) < 2 && pie.round && pie.logo, `the life counter sits at the true center, between the boards and halfway down them, the logo in it (${pie.dx.toFixed(1)}, ${pie.dy.toFixed(1)})`);
-  ok(pie.conic && pie.colors >= 2 && pie.totals.length === 2 && pie.totals.every((t) => t.n === t.pill && t.identity === (t.seat === "0" ? "You" : "Maya")) && pie.totals.find((t) => t.seat === "1").left && !pie.totals.find((t) => t.seat === "0").left,
-    `a slice per seat, each its own color, its life on it: Maya's on the left half beside her board, Rob's on the right (${pie.totals.map((t) => `${t.seat}:${t.n}`).join(", ")}; ${pie.colors} colors)`);
+  ok(box.rows.length === 2 && /^You · Rob/.test(box.rows[0].text) && /^Maya/.test(box.rows[1].text) && box.rows[0].n === box.pills[0] && box.rows[1].n === box.pills[1] && box.rows.filter((r) => r.turn).length === 1 && box.rows.filter((r) => r.prio).length === 1 && box.pie === 0,
+    `the turn box gives each seat's life, yours first, the seat to play ringed and the priority's dot on one (${box.rows.map((r) => `${r.text}${r.turn ? " ◉" : ""}${r.prio ? " •" : ""}`).join(" | ")}), the numbers the vitals pills show (${box.pills.join(", ")})`);
+  ok(box.clear, "and the turn box is not drawn over a board");
   /* The pile cards on top of their frames, over the frame's lines; the reminder below the Lands. */
   const pileOver = (page, q) => page.evaluate((sel) => {
     const f = document.querySelector(sel), c = f.querySelector(".cm-bcard"), fr = f.getBoundingClientRect(), cr = c.getBoundingClientRect();
     const hit = document.elementFromPoint(fr.left + fr.width / 2, fr.top + 0.5);
-    return {crosses: cr.left < fr.left && cr.right > fr.right && cr.top < fr.top, over: !!hit && c.contains(hit), by: [Math.round((fr.left - cr.left) * 10) / 10, Math.round((cr.right - fr.right) * 10) / 10]};
+    /* Rob, 2026-10-28: the piles are the aspect ratio of the card -- the frame is one card (5:7) and its card fills it */
+    return {crosses: cr.left <= fr.left + 1.5 && cr.right >= fr.right - 1.5 && cr.top <= fr.top + 1.5 && Math.abs(fr.width / fr.height - 5 / 7) < .04, over: !!hit && c.contains(hit), by: [Math.round((fr.left - cr.left) * 10) / 10, Math.round((cr.right - fr.right) * 10) / 10]};
   }, q);
   const libT = await pileOver(rob.page, ".cm-board-table .cm-seatboard.is-you [data-zone=library]");
-  ok(libT.crosses && libT.over, `the Library's card sits on top of its frame, over its lines, not inside it (${libT.by.join("px, ")}px past the sides)`);
+  ok(libT.crosses && libT.over, `the Library's frame is the shape of a card (5:7) and its card fills it (${libT.by.join("px, ")}px past the sides)`);
   const chip = await rob.page.evaluate(() => {const m = document.querySelector(".cm-board-table .cm-seatboard.is-you"), l = m.querySelector("[data-zone=lands]"), c = m.querySelector(".cm-board-chip"), lr = l.getBoundingClientRect(), cr = c.getBoundingClientRect();
     return {inside: l.contains(c), below: cr.top - lr.bottom, right: Math.abs(cr.right - lr.right), text: c.textContent};});
   ok(!chip.inside && chip.below >= 0 && chip.below < 8 && chip.right < 2, `the mana and land-drop reminder sits directly outside and below the Lands frame, at its right ("${chip.text}", ${chip.below.toFixed(1)}px below)`);
-  /* The bar between the boards: dragged right, Maya's board grows and Rob's gives way; both stay 16:9. */
+  /* The bar between the boards (the rows' share, dragged or keyed) is gone with the rows. Its closest equivalent on the flat stage is Camera's Zoom: it
+     sizes the boards alike, each still 16:9, still a pair; it is remembered on the device and kept when Table is drawn again, and
+     the arrow keys move it to its end. */
   const geoT = () => rob.page.evaluate(() => {
-    const r = (q) => document.querySelector(q).getBoundingClientRect(), theirs = r(".cm-board-table .cm-seatboard:not(.is-you)"), mine = r(".cm-board-table .cm-seatboard.is-you");
-    const pie = r(".cm-board-table > .cm-board-pie"), bar = r(".cm-board-rowbar");
-    return {tw: theirs.width, th: theirs.height, mw: mine.width, mh: mine.height, trayTop: r(".cm-board-hand").top, hand: parseFloat(getComputedStyle(document.querySelector(".cm-board-hand .cm-board-hand-cards .cm-bcard")).width),
-      centered: Math.abs(pie.left + pie.width / 2 - (theirs.right + mine.left) / 2) < 2 && Math.abs(bar.left + bar.width / 2 - (theirs.right + mine.left) / 2) < 2,
-      scrolls: document.getElementById("cm-board").scrollHeight - document.getElementById("cm-board").clientHeight};
+    const r = (q) => document.querySelector(q).getBoundingClientRect(), theirs = r(".cm-stage-slot .cm-seatboard:not(.is-you)"), mine = r(".cm-stage-slot .cm-seatboard.is-you");
+    const hand = r(".cm-stage-hand"), host = document.getElementById("cm-board");
+    return {tw: theirs.width, th: theirs.height, mw: mine.width, mh: mine.height, trayTop: hand.top, hand: parseFloat(getComputedStyle(document.querySelector(".cm-stage-fan .cm-bcard")).width),
+      side: (theirs.right <= mine.left + 1 && Math.abs(theirs.top - mine.top) < 1) || (theirs.bottom <= mine.top + 1 && Math.abs(theirs.left - mine.left) < 1), scrolls: host.scrollHeight - host.clientHeight};
   });
-  const rowsKept = () => rob.page.evaluate(() => localStorage.getItem("cm-board-rows"));
-  const even = await geoT(), evenRows = await rob.page.evaluate(tableRowFacts);
-  const rowGrip = await rob.page.locator(".cm-board-rowbar [data-drag=rows]").boundingBox();
-  await rob.page.mouse.move(rowGrip.x + rowGrip.width / 2, rowGrip.y + 40);
-  await rob.page.mouse.down();
-  await rob.page.mouse.move(rowGrip.x + rowGrip.width / 2 + 40, rowGrip.y + 40, {steps: 4});
-  await rob.page.mouse.move(rowGrip.x + rowGrip.width / 2 + 80, rowGrip.y + 40, {steps: 4});
-  await rob.page.mouse.up();
-  const dragged = await geoT(), share = Number(await rowsKept()), draggedRows = await rob.page.evaluate(tableRowFacts);
-  ok(dragged.tw > even.tw + 20 && dragged.mw < even.mw - 20 && draggedRows.valid && draggedRows.widths && share > 0.55 && dragged.centered,
-    `the bar between the boards drags: 80px right, Maya's board grows and Rob's gives way, 16:9 where row minima fit and complete rows otherwise, the bar and life counter kept between them (${even.tw.toFixed(0)} → ${dragged.tw.toFixed(0)}px over ${even.mw.toFixed(0)} → ${dragged.mw.toFixed(0)}px; share ${share})`);
+  const zoomKept = () => rob.page.evaluate(() => localStorage.getItem("cm-board-zoom-v2"));
+  const cameraIs = async (open) => {if ((await rob.page.locator(".cm-stage-camera [data-stage-camera=zoom]").count() === 1) !== open) await rob.page.locator("[data-action=board-camera]").click();};
+  const even = await geoT(), evenRows = await rob.page.evaluate(tableFacts);
+  await cameraIs(true);
+  const zoom = rob.page.locator(".cm-stage-camera [data-stage-camera=zoom]");
+  await zoom.fill("130"); await rob.page.waitForTimeout(300);
+  const dragged = await geoT(), share = Number(await zoomKept()), draggedRows = await rob.page.evaluate(tableFacts);
+  ok(dragged.tw > even.tw * 1.25 && dragged.mw > even.mw * 1.25 && Math.abs(dragged.mw / dragged.tw - 1.12) < 0.02 && draggedRows.valid && share === 130 && dragged.side,
+    `Camera's Zoom to 130%: both boards grow alike (yours still 12% larger) and stay 16:9, still a pair, one beside the other or over it (${even.tw.toFixed(0)} → ${dragged.tw.toFixed(0)}px over ${even.mw.toFixed(0)} → ${dragged.mw.toFixed(0)}px; kept ${share})`);
+  await cameraIs(false);
   await chooseView(rob.page,"focus");
   await rob.page.locator(".cm-board-mat").waitFor();
   const libF = await pileOver(rob.page, ".cm-board-mat [data-zone=library]");
   ok(libF.crosses && libF.over, `on the Focus mat too, the Library's card is on top of its frame (${libF.by.join("px, ")}px past the sides)`);
   await chooseView(rob.page,"table");
-  await rob.page.locator(".cm-board-table .cm-seatboard").nth(1).waitFor();
+  await rob.page.locator(".cm-stage-slot .cm-seatboard").nth(1).waitFor();
   const redrawn = await geoT();
-  ok((await rob.page.evaluate(tableRowFacts)).valid, "redrawing Table preserves complete rows and conditional aspect");
-  ok(Math.abs(redrawn.tw - dragged.tw) < 1 && Math.abs(redrawn.mw - dragged.mw) < 1 && Number(await rowsKept()) === share, "and the share is remembered on the device: the Table view drawn again keeps the boards as they were left");
-  await rob.page.focus(".cm-board-rowbar [data-drag=rows]");
+  ok((await rob.page.evaluate(tableFacts)).valid, "redrawing Table preserves its boards at 16:9");
+  ok(Math.abs(redrawn.tw - dragged.tw) < 1 && Math.abs(redrawn.mw - dragged.mw) < 1 && Number(await zoomKept()) === share, "and the zoom is remembered on the device: the Table view drawn again keeps the boards as they were left");
+  await cameraIs(true);
+  await zoom.focus();
   for (let i = 0; i < 20; i += 1) await rob.page.keyboard.press("ArrowLeft");
-  const keyed = await geoT(), low = Number(await rowsKept()), keyedRows = await rob.page.evaluate(tableRowFacts);
-  ok(keyedRows.valid && keyedRows.widths && low === 0.3 && keyed.tw < keyed.mw && (await rob.page.getAttribute(".cm-board-rowbar [data-drag=rows]", "aria-valuenow")) === "30", `the arrow keys move it too, ← and → as it stands, and it stops at 30% of the width (${low})`);
-  for (let i = 0; i < 10; i += 1) await rob.page.keyboard.press("ArrowRight");
+  const keyed = await geoT(), low = Number(await zoomKept());
+  ok(low === 110 && keyed.tw < dragged.tw && keyed.tw > even.tw && (await zoom.getAttribute("aria-valuenow") ?? await zoom.inputValue()) === "110", `the arrow keys move it too, a step a press (${low}%)`);
+  await rob.page.keyboard.press("Home");
+  const floor = Number(await zoomKept());
+  ok(floor === Number(await zoom.getAttribute("min")) && (await geoT()).tw < even.tw, `and it stops at the least the scale allows (${floor}%)`);
+  await zoom.fill("100"); await rob.page.waitForTimeout(300);
   const back = await geoT();
-  await verifyTableRowAccess(rob.page, await rob.page.evaluate(tableRowFacts));
-  ok(Number(await rowsKept()) === 0.5 && Math.abs(back.tw - back.mw) < 1 && Math.abs(back.tw - even.tw) < 1, "and back at half, the boards are identical again");
-  /* The bar atop the hand tray: dragged up, the hand's cards grow, and the boards keep their size (Rob, 2026-10-09: "Card
-     hand size should never decrease the board size. The user would just scroll down on the window to see the full card
-     if it goes below the bottom"): the hand runs on below the window, and the board scrolls down to it. */
-  const trayGrip = await rob.page.locator(".cm-board-traybar [data-drag=hand]").boundingBox();
-  await rob.page.mouse.move(trayGrip.x + 40, trayGrip.y + trayGrip.height / 2);
-  await rob.page.mouse.down();
-  await rob.page.mouse.move(trayGrip.x + 40, trayGrip.y + trayGrip.height / 2 - 20, {steps: 3});
-  await rob.page.mouse.move(trayGrip.x + 40, trayGrip.y + trayGrip.height / 2 - 40, {steps: 3});
-  await rob.page.mouse.up();
-  const grown = await geoT(), handOut = (await text(rob.page, ".cm-board-traybar output")).trim();
-  ok(grown.hand > even.hand * 1.2 && Math.abs(grown.tw - even.tw) < 1 && Math.abs(grown.mw - even.mw) < 1 && Math.abs(grown.trayTop - even.trayTop) < 1 && grown.scrolls > even.scrolls && evenRows.valid && /^1[2-9]\d%$/.test(handOut),
-    `the bar atop the hand tray drags: 40px up, the hand's cards grow (${even.hand.toFixed(0)} → ${grown.hand.toFixed(0)}px, ${handOut}), every board keeps its size (${even.tw.toFixed(0)} → ${grown.tw.toFixed(0)}px) and the tray its place, and the hand runs on ${grown.scrolls}px below the window, to scroll down to`);
-  /* The three card sizes: the board's and the hand's each their own; Tools sets both to its value. */
-  await rob.page.locator('[data-action=board-camera]').click();
+  await cameraIs(false);
+  await verifyTableAccess(rob.page, await rob.page.evaluate(tableFacts));
+  ok(Number(await zoomKept()) === 100 && Math.abs(back.mw / back.tw - 1.12) < 0.02 && Math.abs(back.tw - even.tw) < 1, "and back at 100%, the boards are as they began");
+  /* The bar atop the hand tray (the hand's card size, dragged up) is gone too: Camera's Hand cards (✋) slider is the hand's size. Grown, the hand's
+     cards grow and every board keeps its size and the hand its place (Rob, 2026-10-09: "Card hand size should never decrease the board size"). */
+  await cameraIs(true);
+  const handSlider = rob.page.locator(".cm-stage-camera [data-board-scale=hand]");
+  await handSlider.fill("140"); await rob.page.waitForTimeout(300);
+  const grown = await geoT(), handOut = (await handSlider.evaluate((el) => el.parentElement.querySelector("output").textContent)).trim();
+  ok(grown.hand > even.hand * 1.2 && Math.abs(grown.tw - even.tw) < 1 && Math.abs(grown.mw - even.mw) < 1 && Math.abs(grown.trayTop - even.trayTop) < 1 && evenRows.valid && /^1[2-9]\d%$/.test(handOut),
+    `Camera's Hand cards drags up: the hand's cards grow (${even.hand.toFixed(0)} → ${grown.hand.toFixed(0)}px, ${handOut}), every board keeps its size (${even.tw.toFixed(0)} → ${grown.tw.toFixed(0)}px) and the hand its place`);
+  /* The three card sizes: the board's and the hand's each their own; Tools sets both to its value. A board's cards are bounded by the room on its mat (--bc-cap: they never
+     outgrow it, and Camera's Cards below 100% shrinks them under it), and Table's two boards leave a card at 1400x900 already at that bound from 100%: no slider
+     travel is left above it. The slider's growth is read on Focus, whose one board has the room (cards grow from 70% to about 140% and stop at the bound). */
+  await cameraIs(true); await chooseView(rob.page,"focus"); await rob.page.locator(".cm-stage-big").waitFor(); await cameraIs(true);
   const sizes = () => rob.page.evaluate(() => {
-    const land = document.querySelector(".cm-board-table [data-zone=lands] .cm-bcard"), board = land.closest(".cm-seatboard"), host = getComputedStyle(document.getElementById("cm-board"));
+    const land = document.querySelector(".cm-stage-slot .cm-board-lands .cm-bcard"), board = land.closest(".cm-mat"), slot = board.closest(".cm-stage-slot"), host = getComputedStyle(document.getElementById("cm-board"));
     const badges=[...board.querySelectorAll('.cm-bcard-pt,.cm-bcard-count,.cm-bcard-tax')].filter(b=>b.getClientRects().length&&getComputedStyle(b).visibility!=='hidden');
     const fits=badges.every(b=>{const r=b.getBoundingClientRect(),c=b.closest('.cm-bcard').getBoundingClientRect();return r.left>=c.left-1&&r.right<=c.right+1&&b.scrollWidth<=b.clientWidth+1;});
-    return {badgeFits:badges.length>0&&fits,board: parseFloat(getComputedStyle(land).width) / board.getBoundingClientRect().width, hand: parseFloat(getComputedStyle(document.querySelector(".cm-board-hand .cm-board-hand-cards .cm-bcard")).width),
-      scopes: [host.getPropertyValue("--board-scale").trim(), host.getPropertyValue("--hand-scale").trim()], outs: ["board", "hand"].map(scope => document.querySelector(`#cm-board [data-board-scale="${scope}"]`)?.closest('label').querySelector('output').textContent ?? null)};
+    const out = (sel) => document.querySelector(sel)?.closest('label').querySelector('output').textContent ?? null;
+    return {cardW: land.getBoundingClientRect().width, cap: parseFloat(getComputedStyle(board).getPropertyValue("--bc-cap")), badgeFits:badges.length>0&&fits,board: parseFloat(getComputedStyle(land).width) / board.getBoundingClientRect().width, hand: parseFloat(getComputedStyle(document.querySelector(".cm-stage-fan .cm-bcard")).width),
+      scopes: [slot.style.getPropertyValue("--board-scale").trim(), host.getPropertyValue("--hand-scale").trim()], outs: [out('#cm-board [data-stage-camera="cards"]'), out('#cm-board [data-board-scale="hand"]')]};
   });
-  await rob.page.locator(".cm-board-traybar [data-board-scale=hand]").fill("100");
-  const boardSlider=rob.page.locator('.cm-stage-camera [data-board-scale=board]'),loScale=Number(await boardSlider.getAttribute('min')),upper=Number(await boardSlider.getAttribute('max')),middle=Math.round((loScale+upper)/2);
+  await handSlider.fill("100");
+  const boardSlider=rob.page.locator('.cm-stage-camera [data-stage-camera=cards]'),loScale=Number(await boardSlider.getAttribute('min')),sliderMax=Number(await boardSlider.getAttribute('max')),upper=140,middle=Math.round((loScale+upper)/2);
   await boardSlider.fill(String(loScale));const naturalLow=await sizes();
   await boardSlider.fill(String(middle));const naturalMid=await sizes();
   await boardSlider.fill(String(upper));const naturalUpper=await sizes();
   const firstSlope=(naturalMid.board-naturalLow.board)/(middle-loScale),lastSlope=(naturalUpper.board-naturalMid.board)/(upper-middle);
   ok([naturalLow,naturalMid,naturalUpper].every(v=>v.badgeFits)&&firstSlope>0&&lastSlope>0&&Math.abs(firstSlope-lastSlope)<.00005&&Math.abs(naturalLow.hand-naturalUpper.hand)<.5,
     'the native Card Scale range has useful positive natural growth, with any constant readability offset, and leaves Hand cards unchanged');
+  /* Past that the room is the limit: at the slider's end a card is no larger than the board's room for it (and no smaller than at 140%). */
+  await boardSlider.fill(String(sliderMax));const naturalMax=await sizes();
+  ok(naturalMax.cardW<=naturalMax.cap+.5&&naturalMax.cardW>=naturalUpper.cardW-.5&&Math.abs(naturalMax.hand-naturalLow.hand)<.5,
+    `and at the slider's end a card is no larger than the room its board leaves (${naturalMax.cardW.toFixed(1)}px of ${naturalMax.cap.toFixed(1)}px)`);
   await boardSlider.fill('100');
   const s100 = await sizes();
-  await rob.page.locator(".cm-stage-camera [data-board-scale=board]").fill("80");
+  await rob.page.locator(".cm-stage-camera [data-stage-camera=cards]").fill("80");
   const sBoard = await sizes();
+  /* (The stage maps the slider to a board's scale with the readable-caption offset, 1 + 0.8 x (value - 100)/100: 80% is 0.84, 120% is 1.16; the hand's scale is the slider's value as is.) */
   const boardFactor=sBoard.board/s100.board,boardScaleFits=sBoard.board>=naturalLow.board&&sBoard.board<s100.board;
-  ok(sBoard.badgeFits&&boardScaleFits && Math.abs(sBoard.hand - s100.hand) < 0.5 && sBoard.scopes[0] === "0.8" && sBoard.outs[0] === "80%",
+  ok(sBoard.badgeFits&&boardScaleFits && Math.abs(sBoard.hand - s100.hand) < 0.5 && sBoard.scopes[0] === "0.84" && sBoard.outs[0] === "80%",
     `Board cards, in Camera, sizes the boards' cards alone (to ${(sBoard.board / s100.board * 100).toFixed(0)}%; the hand stays ${sBoard.hand.toFixed(0)}px)`);
-  await rob.page.locator(".cm-board-traybar [data-board-scale=hand]").fill("130");
+  await rob.page.locator(".cm-stage-camera [data-board-scale=hand]").fill("130");
   const sHand = await sizes();
   ok(Math.abs(sHand.hand / s100.hand - 1.3) < 0.02 && Math.abs(sHand.board - sBoard.board) < 0.0005 && sHand.scopes[1] === "1.3" && sHand.outs[1] === "130%",
-    `Hand cards, on the tray's bar, sizes the hand's cards alone (${s100.hand.toFixed(0)} → ${sHand.hand.toFixed(0)}px; the boards' cards keep their size on their boards)`);
+    `Hand cards, in Camera, sizes the hand's cards alone (${s100.hand.toFixed(0)} → ${sHand.hand.toFixed(0)}px; the boards' cards keep their size on their boards)`);
   await utility(rob.page,"board-tools","video");
   await rob.page.locator("#cm-board-tools [data-card-scale]").fill("120");
-  const sTools = await sizes();
-  /* Opening Play settings closes Camera, so Board cards is read after reopening Camera. */
+  const sTools = await sizes(), toolsOut = await rob.page.locator("#cm-board-tools [data-card-scale]").evaluate((el) => el.parentElement.querySelector("output").textContent);
+  /* Opening Play settings closes Camera (Hand cards and Cards live in it), so the two sliders' values are read from the cards and, below, from Camera reopened. */
   const toolsScaleFits=sTools.board>s100.board&&sTools.board<=naturalUpper.board;
-  ok(sTools.badgeFits&&sTools.scopes.join() === "1.2,1.2" && sTools.outs[1] === "120%" && toolsScaleFits && Math.abs(sTools.hand / s100.hand - 1.2) < 0.02,
-    `Tools is the table's card size, and moving it sets Board cards and Hand cards to its value (${sTools.outs.join(", ")})`);
+  ok(sTools.badgeFits&&sTools.scopes.join() === "1.16,1.2" && toolsOut === "120%" && toolsScaleFits && Math.abs(sTools.hand / s100.hand - 1.2) < 0.02,
+    `Tools is the table's card size, and moving it sets Board cards and Hand cards to its value (${toolsOut}; cards ${sTools.scopes.join(", ")})`);
+  await rob.page.click("#cm-dialog [data-action=board-settings-save]");
+  await cameraIs(true);
+  eq((await sizes()).outs, ["120%", "120%"], "and Camera shows Cards and Hand cards at Tools' value");
+  await cameraIs(false);
+  await utility(rob.page,"board-tools","video");
   await rob.page.locator("#cm-board-tools [data-card-scale]").fill("100");
   await rob.page.click("#cm-dialog [data-action=board-settings-save]");
-  await rob.page.locator('[data-action=board-camera]').click();
+  await cameraIs(true);
   eq((await sizes()).outs, ["100%", "100%"], "and back to 100%, all three agree");
+  await boardSlider.fill("100");
   await rob.page.locator('[data-action=board-camera]').click();
-  await rob.page.locator(".cm-seatboard:not(.is-you) [data-action=board-focus]").click();
-  await rob.page.locator(".cm-board-mat").waitFor();
-  ok((await text(rob.page, ".cm-board-mat .cm-seat-header .cm-mat-name")).trim() === "Maya" && /^\d+ in hand$/.test((await text(rob.page, ".cm-board-mat .cm-seat-hand")).trim()) && await rob.page.getAttribute("#cm-board", "data-view") === "focus", "⤢ Focus on Maya's board puts it on the mat, in the Focus view");
-  await rob.page.click(".cm-board-tile[data-seat='0'] [data-action=board-focus]");
+  await chooseView(rob.page,"table"); await cameraIs(false); await rob.page.locator(".cm-stage-slot .cm-seatboard").nth(1).waitFor();
+  await rob.page.locator(".cm-stage-slot:not(.is-you) .cm-seatboard").first().dblclick({position: {x: 4, y: 4}});   /* a double click on a board focuses it (Rob, 2026-10-28; the Focus button is gone) */
+  await rob.page.locator(".cm-stage-big").waitFor();
+  ok((await text(rob.page, ".cm-stage-big .cm-stage-boardname")).trim() === "Maya" && /^\d+ in hand$/.test((await text(rob.page, ".cm-board-tile:not(.is-you) .cm-seat-hand")).trim()) && await rob.page.getAttribute("#cm-board", "data-view") === "focus", "a double click on Maya's board puts it on the mat in the Focus view, her name above it and her hand count in the Boards module");
+  await lookAt(rob.page, 0);
 
   /* B7, item 15: THE PANE'S DIVIDER. Dragged wider, the tiles grow with it, and past 400px each is a miniature of that
      seat's real board; the mat stays the largest 16:9 beside it; the width is remembered. */
+  /* The Boards module of the left drawer is the old seat pane; its divider still drags it wider and past 400px each tile is a miniature. The drawer is the
+     top layer now, so widening it moves nothing: the mat keeps its place and size (it no longer gives way beside the pane). */
+  await rail(rob.page, true);
   const paneGeo = () => rob.page.evaluate(() => {
-    const pane = document.querySelector(".cm-stage-rail").getBoundingClientRect(), mat = document.querySelector(".cm-board-mat").getBoundingClientRect(), main = document.querySelector(".cm-board-main").getBoundingClientRect(), tray = document.querySelector(".cm-board-main > .cm-board-hand").getBoundingClientRect();
+    const pane = document.querySelector(".cm-stage-rail").getBoundingClientRect(), mat = document.querySelector(".cm-stage-big .cm-mat").getBoundingClientRect(), big = document.querySelector(".cm-stage-big").getBoundingClientRect();
     const tile = document.querySelector(".cm-board-tile[data-seat='1']"), mine = document.querySelector(".cm-board-tile[data-seat='0']");
     return {pane: Math.round(pane.width), tile: Math.round(tile.getBoundingClientRect().width), mini: document.querySelectorAll(".cm-board-tile.is-mini .cm-board-mini .cm-mat[data-fit=mini]").length,
       robLands: mine.querySelectorAll(".cm-board-mini [data-zone=lands] .cm-bcard").length, inert: !!tile.querySelector(".cm-board-mini[inert]"),
-      matBox: [mat.x, mat.y, mat.width, mat.height], matW: mat.width, largest: Math.min(main.width - 16, (main.height - 8 - 8 - tray.height) * 16 / 9) - mat.width < 2, ratio: Math.round(mat.width / mat.height * 100) / 100};
+      matBox: [mat.x, mat.y, mat.width, mat.height].map((n) => Math.round(n * 10) / 10), matW: mat.width, bigBox: [big.x, big.y, big.width, big.height].map((n) => Math.round(n * 10) / 10), ratio: Math.round(big.width / big.height * 100) / 100};
   });
   const pane0 = await paneGeo();
   const paneGrip = await rob.page.locator(".cm-board-panegrip [data-drag=pane]").boundingBox();
@@ -653,13 +698,13 @@ try {
   await rob.page.mouse.move(paneGrip.x + paneGrip.width / 2 + 100, paneGrip.y + 200, {steps: 4});
   await rob.page.mouse.move(paneGrip.x + paneGrip.width / 2 + 200, paneGrip.y + 200, {steps: 4});
   await rob.page.mouse.up();
-  const pane1 = await paneGeo(), paneRows=await rob.page.evaluate(tableRowFacts);
-  ok(pane0.pane === 270 && Math.abs(pane1.pane - 470) <= 2 && pane1.tile > pane0.tile + 150 && pane1.matW < pane0.matW && paneRows.valid && paneRows.widths,
-    `the divider between the pane and the mat drags: 200px right, the pane ${pane0.pane} → ${pane1.pane}px, the tiles growing with it, the mat retains conditional aspect, complete rows and largest available width beside the reserved pane`);
+  const pane1 = await paneGeo();
+  ok(pane0.pane === 270 && Math.abs(pane1.pane - 470) <= 2 && pane1.tile > pane0.tile + 150 && pane1.bigBox[0] >= pane1.pane - 1 && pane1.bigBox[2] <= pane0.bigBox[2] && Math.abs(pane1.ratio - 16 / 9) < 0.02,
+    `the divider of the Boards drawer drags: 200px right, the drawer ${pane0.pane} → ${pane1.pane}px, the tiles growing with it, and the board looked at gives way to the wider drawer's gutter, staying 16:9 and clear of it (${JSON.stringify(pane0.bigBox)} → ${JSON.stringify(pane1.bigBox)}); opening or closing the drawer moves nothing, only its width does`);
   ok(pane0.mini === 0 && pane1.mini === 2 && pane1.robLands >= 1 && pane1.inert, `and past 400px each tile is a miniature of that seat's board, cards and all (the Forest on Rob's: ${pane1.robLands}), only to look at`);
   await shot(rob.page, "pane-miniatures-1400");
   await rob.page.locator(".cm-board-tile[data-seat='1'] .cm-board-tile-main").click();
-  await rob.page.waitForFunction(() => document.querySelector(".cm-board-mat .cm-seat-header .cm-mat-name")?.textContent === "Maya", null, {timeout: 5000});
+  await rob.page.waitForFunction(() => document.querySelector(".cm-stage-big .cm-stage-boardname")?.textContent.trim() === "Maya", null, {timeout: 5000});   /* (the board looked at is named in plain text above it) */
   ok(true, "a miniature is still the tile: a click on it puts that seat's board on the mat");
   await rob.page.locator(".cm-board-tile[data-seat='0'] .cm-board-tile-main").click();
   await chooseView(rob.page,"table");
@@ -671,6 +716,8 @@ try {
   for (let i = 0; i < 10; i += 1) await rob.page.keyboard.press("ArrowLeft");
   const pane3 = await paneGeo();
   ok(pane3.pane === pane1.pane - 200 && pane3.mini === 0, `the arrow keys move it too, 20px a press: back to ${pane3.pane}px, and the tiles are plain tiles again`);
+  /* The drawers lie over the hand, so the Boards drawer is put away before the hand is used. */
+  await rail(rob.page, false);
 
   const fullTools = async page => {
     await page.locator('.cm-stage-region[data-renderer="webgl"]').waitFor();
@@ -694,7 +741,10 @@ try {
   await maya.page.getByRole('button',{name:'Camera',exact:false}).click();
   await shot(maya.page,"board-full-3d-1280");
   ok(/played (Forest|Island)/.test(await text(maya.page, ".cm-stage-side .cm-stage-module[data-module=history] .cm-board-band")), "and the history in the side column");
-  const firstHand = maya.page.locator(".cm-stage-fan .cm-bcard").first(), firstName = (await firstHand.getAttribute("aria-label")).split(/[,:]/)[0];
+  /* The drawers lie over the hand (top layer), so the first card a pointer can reach is the first one not under a drawer. */
+  const handReach = await maya.page.evaluate(() => [...document.querySelectorAll(".cm-stage-fan .cm-bcard")].findIndex((c) => {const r = c.getBoundingClientRect(), hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return !!hit && c.contains(hit);}));
+  ok(handReach >= 0, `a hand card is reachable beside the open drawers (the ${handReach + 1}th)`);
+  const firstHand = maya.page.locator(".cm-stage-fan .cm-bcard").nth(handReach), firstName = (await firstHand.getAttribute("aria-label")).split(/[,:]/)[0];
   const firstReadRevision = views(MAYA).at(-1).revision, firstReadSends = sent[MAYA].length;
   await firstHand.click();
   await maya.page.locator('#cm-card-menu [data-action=board-card-menu-view]').click();
@@ -710,12 +760,14 @@ try {
   await chooseView(maya.page,"focus");
   await maya.page.locator(".cm-stage-top").waitFor();
   ok(await maya.page.getAttribute("#cm-board", "data-view") === "focus", "⎋ leaves Full screen for Focus");
-  /* THE HOVER CARD NO TALLER THAN THE MAT (Rob, 2026-10-11): at 1280x800 her mat is shorter than the 400px card is tall,
-     so the card shown under the pointer is held to the mat's height. */
-  await maya.page.hover(".cm-board-hand .cm-bcard[data-card]");
+  /* THE HOVER CARD IS READ AT FULL SIZE, WITHIN THE WINDOW (was: no taller than the mat, Rob, 2026-10-11). The cap to the mat's height (--peek-max, set by
+     the old Focus and Table layouts) is superseded: the flat stage's boards are small by design (here her mat is 16:9 at about 180px tall), and a hover card
+     held to that would be a thumbnail nobody can read, against "every card reference is one press from the card itself, to see it large and read it"
+     (AGENTS.md). Its closest equivalent: the card is its normal 320px wide (448 tall; the pop-up is 20% smaller since 2026-10-28, was 400 by 560) where the window has room, and the window's room (80px to spare) where it has not. */
+  await maya.page.hover(".cm-stage-fan .cm-bcard[data-card]");
   await maya.page.locator("#cm-board-peek .cm-bcard").waitFor({timeout: 5000});
-  const peekCap = await maya.page.evaluate(() => {const p = document.querySelector("#cm-board-peek .cm-bcard").getBoundingClientRect(), m = document.querySelector(".cm-board-mat").getBoundingClientRect(); return {peek: Math.round(p.height), mat: Math.round(m.height), w: Math.round(p.width)};});
-  ok(Math.abs(peekCap.peek-Math.min(560,peekCap.mat))<2&&Math.abs(peekCap.w-Math.min(400,peekCap.mat*5/7))<2, `the hover card respects both the actual mat height and its normal 400px width cap (${peekCap.peek} of ${peekCap.mat}px; ${peekCap.w}px wide)`);
+  const peekCap = await maya.page.evaluate(() => {const p = document.querySelector("#cm-board-peek .cm-bcard").getBoundingClientRect(), m = document.querySelector(".cm-stage-big .cm-mat").getBoundingClientRect(); return {peek: Math.round(p.height), mat: Math.round(m.height), w: Math.round(p.width), win: innerHeight};});
+  ok(Math.abs(peekCap.peek-Math.min(448,(peekCap.win-80)))<2&&Math.abs(peekCap.w-Math.min(320,(peekCap.win-80)*5/7))<2, `the hover card is read at its normal 320px width cap, and within the window (${peekCap.peek}px tall in ${peekCap.win}px; ${peekCap.w}px wide; her mat is ${peekCap.mat}px)`);
   await maya.page.mouse.move(2, 2);
   await maya.page.locator("#cm-board-peek").waitFor({state: "detached", timeout: 5000});
   /* THE CALLOUTS (the Replit brief's overlay): Tools › Try the callouts shows the grammar on demand, at most three at
@@ -819,19 +871,19 @@ try {
   await rob.page.locator(".cm-board-table").waitFor({timeout: 20000});
   ok(await rob.page.getAttribute("#cm-board", "data-view") === "table", "the view chosen is the view Rob comes back to");
   await chooseView(rob.page,"focus");
-  await other.page.click("[data-action=board-actions-open]");
-  await other.page.click(`.cm-board-tile[data-seat='${1 - activeSeat}'] [data-action=board-focus]`);
+  await rail(other.page, true);
+  await lookAt(other.page, 1 - activeSeat);
 
   /* END TURN (Rob, 2026-10-11: "passing the turn to the next player should always require player confirmation, never
      happen automatically"): Next step from main 2 lands on the end step, with nothing to do in it, and asks; the button
      says what passing will do there. */
   await active.page.click("[data-action=board-pass]");
-  await waitText(active.page, ".cm-stage-top [data-action=board-pass]", /^End turn$/);
+  await waitText(active.page, ".cm-stage-actions [data-action=board-pass]", /^End turn$/);
   const ending = views(active === rob ? ROB : MAYA).at(-1);
   ok(ending.state.phase === "END_OF_TURN" && ending.state.turn === 1 && ending.decision.options.find((o) => o.act === "pass").endsTurn === true && /^End/.test((await phaseText(active.page)).trim()),
     `the end step of your own turn asks you, nothing to do in it: the button reads End turn (${(await phaseText(active.page)).trim()})`);
   await active.page.waitForTimeout(800);
-  ok(views(active === rob ? ROB : MAYA).at(-1).state.turn === 1 && (await text(active.page, ".cm-stage-top [data-action=board-pass]")).trim() === "End turn", "and the turn waits there for the click");
+  ok(views(active === rob ? ROB : MAYA).at(-1).state.turn === 1 && (await text(active.page, ".cm-stage-actions [data-action=board-pass]")).trim() === "End turn", "and the turn waits there for the click");
 
   /* REFUSED: an answer to a question already gone is refused, in words, and the board takes the room's view. */
   const {server} = routes[active === rob ? ROB : MAYA].at(-1);
@@ -847,7 +899,7 @@ try {
   let resume; const roomHeld = new Promise((r) => {resume = r;});
   serial(() => roomHeld);
   await active.page.click("[data-action=board-skip]");
-  await waitText(active.page, "[data-action=board-skip]", /Stop skipping/, 10000);
+  await waitText(active.page, "[data-action=board-skip]", /Skipping · stop/, 10000);
   ok(true, "Skip to end says it is skipping");
   resume();
   await waitText(active.page, ".cm-board-waiting", new RegExp(`Waiting on ${active === rob ? "Maya" : "Rob"}`), 10000);
@@ -856,8 +908,8 @@ try {
      ("label the pending draw action Draw card"). Turn 2's draw step waits for the other player: their button reads Draw
      card, their library is lit as the same button, and their hand is unchanged until they say so. The library clicked
      where a pointer reaches it draws one card, and the turn goes on to the first thing there is to do. */
-  await waitText(other.page, ".cm-board-turn", /Turn 2/, 20000);
-  const drawButton = other.page.locator(".cm-stage-top [data-action=board-draw]:not([disabled])");
+  await waitText(other.page, ".cm-board-turn", /turn 2/i, 20000);
+  const drawButton = other.page.locator(".cm-stage-actions [data-action=board-draw]:not([disabled])");
   await drawButton.waitFor({timeout: 20000});
   const otherViews = views(other === rob ? ROB : MAYA), otherSeat = otherViews.at(-1).seat;
   /* Read afresh each time: `views` is a copy of the frames so far. */
@@ -880,11 +932,11 @@ try {
   await other.page.waitForFunction(() => !document.querySelector("[data-action=board-draw]"), null, {timeout: 10000}).catch(() => {});
   ok(handNow() === handBefore + 1 && await other.page.locator("[data-action=board-draw]").count() === 0,
     `one click on the library draws one card (${handBefore} → ${handNow()}), and the board is on to Main 1`);
-  ok((await text(other.page, ".cm-board-turn")).trim() === "Turn 2 · You" && /; your 1st turn$/.test(await other.page.locator(".cm-board-turn").getAttribute("title")), `the game's turn 2 is the other player's first: "${(await text(other.page, ".cm-board-turn")).trim()}"`);
+  ok(/^turn 2$/i.test((await text(other.page, ".cm-board-turn")).trim()) && /^You/.test(await turnWho(other.page)) && /; your 1st turn$/.test(await other.page.locator(".cm-board-turn").getAttribute("title")), `the game's turn 2 is the other player's first: "${(await text(other.page, ".cm-board-turn")).trim()}"`);
   ok(await heard(other === rob ? ROB : MAYA, "sfx/sfx_event_draw.mp3"), "and the draw is heard");
   /* Both boards follow into turn 2, and the room asked only where there was something to do (items 10 and 11). */
-  await waitText(rob.page, ".cm-board-turn", /Turn 2/);
-  await waitText(maya.page, ".cm-board-turn", /Turn 2/);
+  await waitText(rob.page, ".cm-board-turn", /turn 2/i);
+  await waitText(maya.page, ".cm-board-turn", /turn 2/i);
   const askedIn = new Set([...views(ROB), ...views(MAYA)].filter((v) => v.decision && v.state.turn >= 1 && v.state.turn <= 2).map((v) => v.state.phase));
   ok(["DRAW", "MAIN1", "MAIN2", "END_OF_TURN"].every((p) => askedIn.has(p)) && [...askedIn].every((p) => ["DRAW", "MAIN1", "MAIN2", "END_OF_TURN"].includes(p)),
     `Next step walks the steps into turn 2, on both boards, and the room asked someone only where there was something to do, for Draw card, and at the end of their own turn (${[...askedIn].join(", ")}); the rest passed by themselves`);
@@ -900,18 +952,18 @@ try {
   /* ROB-28: cross the real GameTable socket seam, not only the controlled
      acknowledgment fixture. The other person still owns this main-phase choice. */
   const yieldingEmail = active === rob ? ROB : MAYA, peerEmail = other === rob ? ROB : MAYA;
-  await active.page.locator(".cm-stage-top [data-action=board-skip]").click();
-  await waitText(active.page, ".cm-stage-top [data-action=board-skip]", /Stop yielding/, 10000);
+  await active.page.locator(".cm-stage-actions [data-action=board-skip]").click();
+  await waitText(active.page, ".cm-stage-actions [data-action=board-skip]", /Stop yielding/, 10000);
   eq(views(yieldingEmail).at(-1).yielding, true, "the real room acknowledges Yield from the board");
   ok(!views(peerEmail).at(-1).yielding, "the other person's view does not disclose the yield policy");
-  await active.page.locator(".cm-stage-top [data-action=board-skip]").click();
-  await waitText(active.page, ".cm-stage-top [data-action=board-skip]", /Yield this turn/, 10000);
+  await active.page.locator(".cm-stage-actions [data-action=board-skip]").click();
+  await waitText(active.page, ".cm-stage-actions [data-action=board-skip]", /Yield this turn/, 10000);
   eq(sent[yieldingEmail].map(f => JSON.parse(f)).filter(f => f.type === "yield"), [{type:"yield",on:true},{type:"yield",on:false}],
     "Start and Stop reach the real room as explicit policy frames");
   eq(await rob.page.locator(".cm-stage-top .cm-board-ribbon li.is-now").count() + await maya.page.locator(".cm-stage-top .cm-board-ribbon li.is-now").count(), 2, "the step ribbon in each strip lights exactly one step, on every turn");
 
   /* CARD SIZE: the app's slider, in Tools; ⌘/Ctrl − steps it. */
-  const handWidth = (page) => page.evaluate(() => document.querySelector(".cm-board-hand .cm-bcard").getBoundingClientRect().width);
+  const handWidth = (page) => page.evaluate(() => document.querySelector(".cm-stage-fan .cm-bcard").getBoundingClientRect().width);
   const w100 = await handWidth(rob.page);
   await utility(rob.page,"board-tools","video");
   ok(/60% – 160%/.test(await text(rob.page, "#cm-board-tools .cm-board-size")), "Tools carries the card-size slider, 60% to 160%");
@@ -939,12 +991,15 @@ try {
   ok(true, "Escape closes Tools");
 
   /* CARD ZOOM: held under the pointer, a card shows large; a right click opens it with what it can do. */
-  const robCard = rob.page.locator(".cm-board-hand .cm-bcard").first(), robCardName = (await robCard.getAttribute("aria-label")).split(/[,:]/)[0];
+  const robCard = rob.page.locator(".cm-stage-fan .cm-bcard").first(), robCardName = (await robCard.getAttribute("aria-label")).split(/[,:]/)[0];
+  await rail(rob.page, false);
+  /* the refused answer's notice, still up from above, lies over the foot of the hand until it is dismissed */
+  if (await rob.page.locator("#cm-notice button").count()) await rob.page.locator("#cm-notice button").first().click();
   await robCard.hover();
   await rob.page.locator("#cm-board-peek .cm-bcard").waitFor({timeout: 5000});
   const peekWidth = await rob.page.evaluate(() => document.querySelector("#cm-board-peek .cm-bcard").getBoundingClientRect().width);
   const peekBox = await rob.page.evaluate(() => {const r = document.querySelector("#cm-board-peek .cm-bcard").getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2), innerWidth / 2, innerHeight / 2];});
-  ok(Math.round(peekWidth) === 400 && Math.abs(peekBox[0] - peekBox[2]) < 2 && (await rob.page.locator('#cm-board-peek .cm-bcard').getAttribute('aria-label')).includes(robCardName) && Math.abs(peekBox[1] - peekBox[3]) < 2, `a card under the pointer shows large at the center of the screen, 400px (${robCardName})`);
+  ok(Math.round(peekWidth) === 320 && Math.abs(peekBox[0] - peekBox[2]) < 2 && (await rob.page.locator('#cm-board-peek .cm-bcard').getAttribute('aria-label')).includes(robCardName) && Math.abs(peekBox[1] - peekBox[3]) < 2, `a card under the pointer shows large at the center of the screen, 320px (the pop-up is 20% smaller since 2026-10-28) (${robCardName})`);
   /* The accessibility pass: the pop-up is said as well as shown, by the board's one polite status region beside the board
      (tests/a11y-board.mjs), its picture not read twice. */
   const peekSaid = await rob.page.evaluate(() => {const p = document.getElementById("cm-board-peek"), s = document.getElementById("cm-board-said"); return {hidden: p.getAttribute("aria-hidden"), role: s && s.getAttribute("role"), live: s && s.getAttribute("aria-live"), said: s ? s.textContent : "", beside: !!s && !s.closest("#cm-board")};});
@@ -970,13 +1025,13 @@ try {
   /* The card gone from under the still pointer while it waits to be shown large -- the hand taken off the page, as a
      redraw does -- is never shown: nothing of it is under the pointer. */
   await robCard.hover();
-  await rob.page.evaluate(() => document.querySelector("#cm-board .cm-board-hand").remove());
+  await rob.page.evaluate(() => document.querySelector("#cm-board .cm-stage-hand").remove());
   await rob.page.waitForTimeout(700);
   eq(await rob.page.locator("#cm-board-peek").count(), 0, "and a card taken from under the still pointer before it is shown large is never shown: nothing waits to be clicked off");
   await rob.page.click('[data-action=board-camera]');
   await rob.page.focus(".cm-stage-camera [data-action=board-view][data-view=table]");
   await rob.page.keyboard.press("Enter");
-  await rob.page.locator(".cm-board-table").waitFor();
+  await rob.page.locator(".cm-stage-slot .cm-seatboard").nth(1).waitFor();
   await rob.page.mouse.move(5, 5);
   await chooseView(rob.page,"focus");
   await rob.page.locator(".cm-board-mat").waitFor();
@@ -987,7 +1042,7 @@ try {
   await rob.page.keyboard.press("Escape");
   await rob.page.locator("#cm-dialog[open]").waitFor({state: "detached"}).catch(() => {});
   await rob.page.evaluate(() => {
-    const el = document.querySelector(".cm-board-hand .cm-bcard"), r = el.getBoundingClientRect();
+    const el = document.querySelector(".cm-stage-fan .cm-bcard"), r = el.getBoundingClientRect();
     el.dispatchEvent(new PointerEvent("pointerdown", {pointerType: "touch", bubbles: true, clientX: r.left + 10, clientY: r.top + 10}));
   });
   await rob.page.locator("#cm-card-inspector").waitFor({timeout: 3000});
@@ -996,7 +1051,7 @@ try {
 
   /* SHOW HAND: turn 2's player reaches main 1 and plays a land from the fanned hand, by its number and Enter. */
   const second = other, secondLand = second === rob ? "Forest" : "Island", secondSeat = second === rob ? 0 : 1;
-  for (let i = 0; i < 30 && !(await second.page.locator(".cm-board-hand .cm-bcard.is-bright").count()); i += 1) {
+  for (let i = 0; i < 30 && !(await second.page.locator(".cm-stage-fan .cm-bcard.is-bright").count()); i += 1) {
     for (const who of [second, active]) {
       const pass = who.page.locator("[data-action=board-pass]:not([disabled])");
       if (await pass.count()) {await pass.click(); await who.page.waitForTimeout(200);}
@@ -1008,7 +1063,9 @@ try {
   await second.page.keyboard.press(" ");
   await second.page.locator(".cm-hand-show .cm-hand-fan").waitFor();
   const fanned = await second.page.locator(".cm-hand-slot").count();
-  ok(/Your hand · \d+/.test(await text(second.page, ".cm-hand-show h2")) && fanned === await second.page.locator(".cm-board-hand .cm-bcard").count(), `Space fans the hand over the dimmed board (${fanned} cards)`);
+  /* the stage's hand shows a window of the hand (seven cards, with arrows to cycle); Space fans all of it, as many as its label says */
+  const handCount = Number((/·\s*(\d+)/.exec(await text(second.page, ".cm-stage-hand-label")) || [])[1]);
+  ok(/Your hand · \d+/.test(await text(second.page, ".cm-hand-show h2")) && fanned === handCount, `Space fans the hand over the dimmed board (${fanned} cards)`);
   const turns = await second.page.evaluate(() => [...document.querySelectorAll(".cm-hand-slot")].map((el) => {const m = new DOMMatrix(getComputedStyle(el).transform); return Math.round(Math.atan2(m.b, m.a) * 1800 / Math.PI) / 10;}));
   ok(turns.every((t, k) => Math.abs(t - (k - (turns.length - 1) / 2) * 5) < 0.2), `each card in the fan is turned 5° from the next (${turns.join("°, ")}°)`);
   const inside = await second.page.evaluate(() => [...document.querySelectorAll(".cm-hand-slot .cm-bcard")].every((el) => {const r = el.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth;}));
@@ -1027,40 +1084,40 @@ try {
   await second.page.keyboard.press("Enter");
   await second.page.locator(".cm-hand-show").waitFor({state: "detached"});
   await bindSelection(second.page);
-  await second.page.click(`.cm-board-tile[data-seat='${secondSeat}'] [data-action=board-focus]`);
-  await waitText(second.page, ".cm-board-lands", /Lands · 1/);
+  await lookAt(second.page, secondSeat);
+  await waitLands(second.page, 1);
   ok(await second.page.locator('.cm-board-lands').getByRole('button',{name:new RegExp(`^${secondLand}(?:,|:|$)`)}).count()>0, "Enter plays it: the hand is put away and the land is down");
   for (let i = 0; i < 3; i += 1) await second.page.keyboard.press("Control+Minus");
   /* B1, item 17: the Panel reads a tapped card upright, with a small Tapped mark, and no "Card" heading over it. */
-  await second.page.click("[data-action=board-actions-open]");
+  await rail(second.page, true);
   await second.page.locator(".cm-stage-rail [data-action=board-option]", {hasText: "Tap for mana"}).first().click();
   await bindSelection(second.page);
   await second.page.locator(".cm-board-mat .cm-board-lands .cm-bcard.is-tapped").first().waitFor({timeout: 10000});
   /* The accessibility pass: a tapped card says so. */
   const tappedSaid = await second.page.locator(".cm-board-mat .cm-board-lands .cm-bcard.is-tapped").first().getAttribute("aria-label");
   ok(/^(Forest|Island), tapped/.test(tappedSaid), `a tapped land says so: "${tappedSaid}"`);
-  /* B6: the mana in the pool, the creatures in hand are castable now, and the tray says so. */
-  await second.page.locator(".cm-board-hand .cm-bcard.is-bright").first().waitFor({timeout: 10000});
+  /* B6: the mana in the pool, the creatures in hand are castable now, and the lit cards say so. */
+  await second.page.locator(".cm-stage-fan .cm-bcard.is-bright").first().waitFor({timeout: 10000});
   const tray2 = await trayOf(second.page, secondSeat, second === rob ? ROB : MAYA);
-  ok(/^([1-9])\/\1$/.test(tray2.shown.Creature) && /^0\//.test(tray2.shown.Land) && JSON.stringify(tray2.shown) === JSON.stringify(tray2.want),
-    `with mana in the pool the tray reads Creature ${tray2.shown.Creature}, the land drop spent reads Land ${tray2.shown.Land}, and it agrees with the lit cards`);
+  ok(/^([1-9])\/\1$/.test(tray2.want.Creature) && /^0\//.test(tray2.want.Land),
+    `with mana in the pool the lit cards read Creature ${tray2.want.Creature}, and the land drop spent reads Land ${tray2.want.Land}`);
 
   /* A spell on the stack: the room first preserves its bounded Undo window. Explicitly passing it
      ends that window and gives the other board its actual response opportunity and named Resolve. */
-  const toCast = second.page.locator(".cm-board-hand .cm-bcard.is-bright").first(), castName = (await toCast.getAttribute("aria-label")).split(/[,:]/)[0];
+  const toCast = second.page.locator(".cm-stage-fan .cm-bcard.is-bright").first(), castName = (await toCast.getAttribute("aria-label")).split(/[,:]/)[0];
   const secondEmail = second === rob ? ROB : MAYA, casterSeen = views(secondEmail).length;
   await useCardOffer(second.page, toCast, "cast");
   const firstBoard = second === rob ? maya : rob;
   for (let i = 0; i < 100 && !views(secondEmail).at(-1).decision?.options.some(o => o.act === 'undo-play'); i += 1) await second.page.waitForTimeout(50);
   const afterCast = views(secondEmail).at(-1);
   ok(afterCast.state.stack.length === 1 && afterCast.decision?.options.some(o => o.act === 'undo-play'), 'the caster receives the server-authorized Undo window while the spell is on the stack');
-  await second.page.locator('.cm-stage-top [data-action=board-pass]:not([disabled])').click();
-  await waitText(firstBoard.page, ".cm-stage-top [data-action=board-pass]", new RegExp(`Resolve ${castName}`));
+  await second.page.locator('.cm-stage-actions [data-action=board-pass]:not([disabled])').click();
+  await waitText(firstBoard.page, ".cm-stage-actions [data-action=board-pass]", new RegExp(`Resolve ${castName}`));
   const secondName = second === rob ? "Rob" : "Maya", firstName_ = second === rob ? "Maya" : "Rob";
   await waitText(second.page, ".cm-board-waiting", new RegExp(`Waiting on ${firstName_}`), 10000);
   ok(views(secondEmail).slice(casterSeen).some(v=>v.decision?.options.some(o=>o.act==='undo-play'))&&!views(secondEmail).at(-1).decision?.options.some(o=>o.act==='undo-play'),
     `the acknowledged pass closes the caster's Undo window before the opponent resolves ${castName}`);
-  eq((await text(firstBoard.page, ".cm-board-waiting")).trim(), `${secondName}'s first main phase · you may respond`, `on the other board the button reads Resolve ${castName}, and the strip says whose step it is and that they may respond`);
+  eq((await stripSays(firstBoard.page)), `${secondName}'s first main phase · you may respond`, `on the other board the button reads Resolve ${castName}, and the strip says whose step it is and that they may respond`);
   /* All desktop views use the same inspectable stack pile and ordered list. Browsing it never sends a game action. */
   if(!await firstBoard.page.locator('.cm-stage-side.is-open').count()) await firstBoard.page.locator('.cm-stage-right').click();
   const stackCard=firstBoard.page.locator('.cm-module-stack .cm-stack-card[data-stack-depth="0"]');
@@ -1089,12 +1146,17 @@ try {
   ok(await heard(ROB, "sfx/sfx_cast_creature.mp3") && await heard(MAYA, "sfx/sfx_cast_creature.mp3"), "the creature cast is heard at both boards, as a creature summoned");
   /* THE PANEL, a tapped land in it -- here, once its mana is spent on the creature: a land just tapped, its mana unspent,
      untaps on a click (room.mjs, untapMana), and this one is only shown. */
-  const beforeDrawer=await second.page.locator('.cm-board-mat').boundingBox();
   await utility(second.page,'board-tools','general');
   await second.page.locator('[data-action=board-modules-settings]').click();
   await second.page.getByRole('radio',{name:'Resources: Right',exact:true}).check();
   await second.page.getByRole('button',{name:'Save drawer modules',exact:true}).click();
-  if(!await second.page.locator('.cm-stage-side.is-open').count()) await second.page.locator('.cm-stage-right').click();
+  /* (arranging the drawers' modules may change how much room the boards keep clear of them; opening a drawer must not) */
+  await second.page.waitForTimeout(300);
+  if(await second.page.locator('.cm-stage-side.is-open').count()) await second.page.locator('.cm-stage-right').click();
+  await second.page.locator('.cm-stage-side.is-open').waitFor({state:'detached'});
+  const beforeDrawer=await second.page.locator('.cm-board-mat').boundingBox();
+  await second.page.locator('.cm-stage-right').click();
+  await second.page.locator('.cm-stage-side.is-open').waitFor();
   eq(await second.page.locator('.cm-board-mat').boundingBox(),beforeDrawer,'the Stack drawer overlays without changing the mat before standalone inspection opens');
   const inspectedRevision = views(secondEmail).at(-1).revision, inspectedSends = sent[secondEmail].length;
   await second.page.locator('.cm-board-mat .cm-board-lands .cm-bcard.is-tapped').first().click();
@@ -1103,7 +1165,7 @@ try {
   const resources = await second.page.evaluate(() => {
     const lands = [...document.querySelectorAll(".cm-board-mat .cm-board-lands .cm-bcard[data-card]")], up = lands.filter((c) => !c.classList.contains("is-tapped")).length;
     const row = document.querySelector(".cm-stage-module[data-module=resources] .cm-res-list[aria-label='Your lands by name'] li"), types = [...document.querySelectorAll(".cm-stage-module[data-module=resources] .cm-res-list[aria-label='Your hand by type'] li")].map((li) => li.textContent.replace(/\s+/g, " ").trim());
-    const hand = document.querySelectorAll(".cm-board-hand .cm-bcard[data-card]").length, inHand = types.reduce((n, t) => n + Number(t.split("/").pop()), 0);
+    const hand = document.querySelectorAll(".cm-stage-fan .cm-bcard[data-card]").length, inHand = types.reduce((n, t) => n + Number(t.split("/").pop()), 0);
     return {row: row ? `${row.querySelector("span").textContent.trim()} ${row.querySelector("b").textContent.trim()}` : "", up, all: lands.length, types, hand, inHand, label: document.querySelector(".cm-stage-module[data-module=resources]").getAttribute("aria-label")};});
   ok(resources.row === `${secondLand} ${resources.up}/${resources.all}` && resources.inHand === resources.hand && resources.types[0].startsWith("Land"),
     `Turn Resources lists the lands by name as the mat has them (${resources.row}) and the hand by type adding up to the hand (${resources.inHand} of ${resources.hand}: ${resources.types.join(", ")})`);
@@ -1121,21 +1183,21 @@ try {
   await second.page.locator('.cm-stage-side').waitFor({state:'hidden'});
   /* B5, items 10 and 12: ANOTHER PLAYER'S TURN. Rob plays a land on turn 3, which gives him the two mana for an instant;
      on Maya's turn 4 he may respond in her upkeep, his button reads Pass, and his strip says whose step it is. */
-  for (let i = 0; i < 80 && !/Turn 4/.test(await text(rob.page, ".cm-board-turn")); i += 1) {
+  for (let i = 0; i < 80 && !/turn 4/i.test(await text(rob.page, ".cm-board-turn")); i += 1) {
     let acted = false;
     for (const who of [rob, maya]) {
-      const draw = who.page.locator(".cm-stage-top [data-action=board-draw]:not([disabled])");
+      const draw = who.page.locator(".cm-stage-actions [data-action=board-draw]:not([disabled])");
       if (await draw.count()) {await draw.click(); await who.page.waitForTimeout(250); acted = true; continue;}
-      const forest = who.page.locator(".cm-board-hand .cm-bcard.is-bright", {hasText: "Forest"}).first();
+      const forest = who.page.locator(".cm-stage-fan .cm-bcard.is-bright", {hasText: "Forest"}).first();
       if (who === rob && await forest.count()) {await useCardOffer(who.page, forest, "play-land"); await who.page.waitForTimeout(250); acted = true; continue;}
-      const pass = who.page.locator(".cm-stage-top [data-action=board-pass]:not([disabled])");
+      const pass = who.page.locator(".cm-stage-actions [data-action=board-pass]:not([disabled])");
       if (await pass.count()) {await pass.click(); await who.page.waitForTimeout(200); acted = true;}
     }
     if (!acted) await rob.page.waitForTimeout(250);
   }
-  await rob.page.locator(".cm-stage-top [data-action=board-pass]:not([disabled])").waitFor({timeout: 20000});
-  const theirTurn = {turn: await text(rob.page, ".cm-board-turn"), label: (await text(rob.page, ".cm-stage-top [data-action=board-pass]")).trim(), says: (await text(rob.page, ".cm-board-waiting")).trim()};
-  ok(/Turn 4 · Maya/.test(theirTurn.turn) && theirTurn.label === "Pass" && /^Maya's upkeep · you may respond$/.test(theirTurn.says),
+  await rob.page.locator(".cm-stage-actions [data-action=board-pass]:not([disabled])").waitFor({timeout: 20000});
+  const theirTurn = {turn: `${(await text(rob.page, ".cm-board-turn")).trim()} · ${await turnWho(rob.page)}`, label: (await text(rob.page, ".cm-stage-actions [data-action=board-pass]")).trim(), says: (await stripSays(rob.page))};
+  ok(/^turn 4 · Maya/i.test(theirTurn.turn) && theirTurn.label === "Pass" && /^Maya's upkeep · you may respond$/.test(theirTurn.says),
     `on another player's turn, with the stack empty and an instant he can pay for, Rob's button reads Pass, and the strip says "${theirTurn.says}"`);
   await shot(rob.page, "their-turn-1400");
   ok(await heard(ROB, "sfx/sfx_event_your_turn.mp3"), "and Rob's own turn 3 was announced to him as his turn");
@@ -1158,11 +1220,11 @@ try {
   /* HOLD PRIORITY AFTER I CAST (Tools): holding stays the caster's choice (CR 117.3c), kept on this device and sent with
      the cast. Rob passes Maya's upkeep, and she says Draw card in her draw step; in her main phase she turns it on and casts a creature: she is asked again first,
      Resolve and its name, and then Rob, who holds an instant, may respond. */
-  const holdCast = maya.page.locator(".cm-board-hand .cm-bcard.is-bright[aria-label*='Cast']").first();
+  const holdCast = maya.page.locator(".cm-stage-fan .cm-bcard.is-bright[aria-label*='Cast']").first();
   for (let i = 0; i < 40 && !(await holdCast.count()); i += 1) {
-    const robPass = rob.page.locator(".cm-stage-top [data-action=board-pass]:not([disabled])");
+    const robPass = rob.page.locator(".cm-stage-actions [data-action=board-pass]:not([disabled])");
     if (await robPass.count()) await robPass.click();
-    const mayaDraw = maya.page.locator(".cm-stage-top [data-action=board-draw]:not([disabled])");
+    const mayaDraw = maya.page.locator(".cm-stage-actions [data-action=board-draw]:not([disabled])");
     if (await mayaDraw.count()) await mayaDraw.click();
     await rob.page.waitForTimeout(250);
   }
@@ -1176,13 +1238,13 @@ try {
   await maya.page.click("#cm-dialog [data-action=board-settings-save]");
   eq(await maya.page.evaluate(() => localStorage.getItem("cm-board-hold")), "on", "Tools' Hold priority after I cast is kept on the device once saved");
   const sentBefore = sent[MAYA].length;
-  await useCardOffer(maya.page, maya.page.locator(".cm-board-hand .cm-bcard.is-bright[aria-label*='Cast']").first(), "cast");
-  await waitText(maya.page, ".cm-stage-top [data-action=board-pass]", new RegExp(`Resolve ${heldName}`));
+  await useCardOffer(maya.page, maya.page.locator(".cm-stage-fan .cm-bcard.is-bright[aria-label*='Cast']").first(), "cast");
+  await waitText(maya.page, ".cm-stage-actions [data-action=board-pass]", new RegExp(`Resolve ${heldName}`));
   const castFrame = sent[MAYA].slice(sentBefore).map((m) => JSON.parse(m)).find((f) => f.type === "act");
   ok(castFrame && castFrame.hold === true, `with it on, Maya's cast of ${heldName} says hold, and she is asked again before anyone: Resolve ${heldName}`);
-  await maya.page.click(".cm-stage-top [data-action=board-pass]");
-  await waitText(rob.page, ".cm-stage-top [data-action=board-pass]", new RegExp(`Resolve ${heldName}`));
-  await rob.page.click(".cm-stage-top [data-action=board-pass]");
+  await maya.page.click(".cm-stage-actions [data-action=board-pass]");
+  await waitText(rob.page, ".cm-stage-actions [data-action=board-pass]", new RegExp(`Resolve ${heldName}`));
+  await rob.page.click(".cm-stage-actions [data-action=board-pass]");
   await waitText(maya.page, ".cm-board-mat .cm-board-field", new RegExp(heldName));
   ok(true, `then Rob may respond, passes, and ${heldName} resolves onto her battlefield`);
   await maya.page.evaluate(() => localStorage.removeItem("cm-board-hold"));
@@ -1198,7 +1260,7 @@ try {
   eq([prefersSent().slice(prefers0).map((f) => f.stepByStep), views(ROB).at(-1).stepByStep ?? false], [[true, true, false], false], "turned off, the same: told once, and the view says it is off");
 
   /* Crowded lands keep base slots and neighbor positions unchanged when cards tap 30 degrees; corners may overlap. */
-  await rob.page.click(".cm-board-tile[data-seat='0'] [data-action=board-focus]");
+  await lookAt(rob.page, 0);
   const crowded=await rob.page.evaluate(()=>{
     // Settle the responsive mode before adding layout-only copies, then measure in one task.
     dispatchEvent(new Event('resize'));
@@ -1224,60 +1286,55 @@ try {
 
   /* SHAPE, at both widths. */
   for (const [who, width] of [[rob, 1400], [maya, 1280]]) {
+    await stageSettled(who.page);
+    /* The hand is fixed over the foot of the window and the stage scrolls under it when the board (at least 560px wide in Focus) is taller than the room above the
+       hand: so "under the board" is read at the end of the scroll, where the board has come up clear of the hand. */
+    await who.page.evaluate(() => {const h = document.getElementById("cm-board"); h.scrollTop = h.scrollHeight;});
+    await who.page.waitForTimeout(250);
     const g = await who.page.evaluate(() => {
       const strip = document.querySelector(".cm-stage-top").getBoundingClientRect();
-      const ratio = (el) => {const r = el.getBoundingClientRect(); return r.width / r.height;};
-      const mat = [...document.querySelectorAll(".cm-board-mat .cm-bcard:not(.is-tapped)")], hand = [...document.querySelectorAll(".cm-board-hand .cm-bcard")];
-      const board = document.querySelector(".cm-board-mat").getBoundingClientRect(), mainEl=document.querySelector(".cm-board-main"),main=mainEl.getBoundingClientRect();
-      const tray = document.querySelector(".cm-board-hand").getBoundingClientRect(), lands = document.querySelector(".cm-board-mat .cm-board-lands").getBoundingClientRect();
+      /* a card's own shape: its layout box (the hand's cards are fanned, turned, so their drawn outline is not 5:7) */
+      const ratio = (el) => {const c = getComputedStyle(el); return parseFloat(c.width) / parseFloat(c.height);};   /* computed, so not rounded to whole pixels: a 16px card would read 0.727 */
+      const mat = [...document.querySelectorAll(".cm-board-mat .cm-bcard:not(.is-tapped)")], hand = [...document.querySelectorAll(".cm-stage-fan .cm-bcard")];
+      const board = document.querySelector(".cm-board-mat").getBoundingClientRect(), region = document.querySelector(".cm-stage-region").getBoundingClientRect();
+      const tray = document.querySelector(".cm-stage-hand").getBoundingClientRect(), lands = document.querySelector(".cm-board-mat .cm-board-lands").getBoundingClientRect();
       const groups=[...document.querySelector(".cm-stage-top").children].filter(e=>e.offsetWidth&&e.offsetHeight&&getComputedStyle(e).position!=="absolute").map(e=>{const r=e.getBoundingClientRect();return r.y+r.height/2;});
       return {oneRow:Math.max(...groups)-Math.min(...groups)<2,strip: Math.round(strip.height), sideways: document.documentElement.scrollWidth - document.documentElement.clientWidth,
         ratios: [...mat, ...hand].map(ratio).map((x) => Math.round(x * 1000) / 1000),
-        matWidth: mat.length ? mat[0].getBoundingClientRect().width : 0, handWidth: hand.length ? hand[0].getBoundingClientRect().width : 0,
-        boardRatio: Math.round(board.width / board.height * 100) / 100, largest: Math.min(main.width - 16, (main.height - 8 - 8 - tray.height) * 16 / 9) - board.width < 2,
-        docked: tray.top >= board.bottom - 0.5 && tray.top <= board.bottom + 12 && tray.bottom <= main.top+mainEl.scrollHeight-mainEl.scrollTop+1 && Math.abs(tray.width - board.width) < 1, clear: lands.bottom <= tray.top + 1};
+        matWidth: mat.length ? parseFloat(getComputedStyle(mat[0]).width) : 0, handWidth: hand.length ? parseFloat(getComputedStyle(hand[0]).width) : 0,
+        boardRatio: Math.round(board.width / board.height * 100) / 100,
+        /* the hand's tray is the stage's whole width at the window's foot; its cards and label (the tray's own box reaches a little up behind them) lie under the board */
+        docked: Math.min(...hand.map((c) => c.getBoundingClientRect().top), document.querySelector(".cm-stage-hand-label").getBoundingClientRect().top) >= board.bottom - 0.5 && tray.bottom <= innerHeight + 1 && tray.left === region.left && tray.width === region.width, clear: lands.bottom <= tray.top + 1};
     });
-    const focusRows=await who.page.evaluate(tableRowFacts);
+    await who.page.evaluate(() => {document.getElementById("cm-board").scrollTop = 0;});
+    const focusRows=await who.page.evaluate(tableFacts);
     tableGeometryProof.push({...focusRows,proof:'Focus shape'});if(SHOTS)writeFileSync(path.join(SHOTS,'table-row-geometry.json'),JSON.stringify(tableGeometryProof,null,2));
     ok(g.oneRow&&g.strip>=58&&g.sideways===0, `at ${width} the HUD is one aligned measured row (${g.strip}px) and nothing scrolls sideways`);
-    ok(focusRows.valid&&focusRows.widths, `at ${width} Focus retains aspect when its measured rows fit, otherwise full rows and largest width: ${JSON.stringify(focusRows)}`);
-    ok(g.docked && g.clear, `at ${width} the hand's tray is a full row under the mat, as wide as it, inside the native scroll content (B1, item 25), and the Lands stay clear of it`);
+    ok(focusRows.valid&&Math.abs(g.boardRatio - 16 / 9) < 0.02, `at ${width} Focus keeps the board looked at 16:9 (${g.boardRatio}), with its cards 5:7: ${JSON.stringify(focusRows.boards.map((x) => [Math.round(x.width), Math.round(x.height)]))}`);
+    ok(focusRows.largest, `at ${width} the board looked at is the largest on the stage, the other seats behind it smaller (${Math.round(focusRows.boards[0].width)}px against ${JSON.stringify(focusRows.rears)})`);
+    ok(g.docked && g.clear, `at ${width} the hand's tray is the stage's whole width along the window's foot and, the stage scrolled to its end, lies under the board with the Lands clear of it`);
     ok(g.ratios.length && g.ratios.every((r) => Math.abs(r - 5 / 7) < 0.01), `at ${width} every card is 5:7 (${[...new Set(g.ratios)].join(", ")})`);
     ok(g.handWidth > g.matWidth || !g.matWidth, `at ${width} the hand's cards are larger than the mat's (${g.handWidth} > ${g.matWidth})`);
   }
 
-  /* THE HAND NEVER TAKES THE BOARD'S ROOM, in Focus and Full screen too (Rob, 2026-10-09): Hand cards at its largest, the
-     mat keeps its size, and the hand runs on below the window, the board scrolling down to its foot. */
+  /* THE HAND NEVER TAKES THE BOARD'S ROOM, in Focus too (Rob, 2026-10-09): Hand cards at its largest, the mat keeps its size and place and the hand's
+     tray its own. (The hand used to run on below the window with the board scrolling down to it; the flat stage does not scroll, so the check is that
+     the cards grow and nothing else of the stage moves.) */
   for (const v of ["focus"]) {
-    if (v === "full") {await chooseView(rob.page,"full"); await fullTools(rob.page); await rob.page.locator(".cm-stage-fan").waitFor();}
-    const sel = v === "full" ? ".cm-full-mine > .cm-mat" : ".cm-board-mat";
-    const at = () => rob.page.evaluate((q) => {const h = document.querySelector(".cm-board-main"), m = document.querySelector(q).getBoundingClientRect(), c = [...document.querySelectorAll(".cm-board-hand .cm-board-hand-cards .cm-bcard")].map((el) => el.getBoundingClientRect());
-      return {w: Math.round(m.width), h: Math.round(m.height), card: c.length ? Math.round(c[0].width) : 0, foot: Math.max(...c.map((r) => r.bottom)) - h.getBoundingClientRect().top + h.scrollTop, room: h.scrollHeight, over: h.scrollHeight - h.clientHeight};}, sel);
+    const at = () => rob.page.evaluate(() => {const m = document.querySelector(".cm-board-mat").getBoundingClientRect(), t = document.querySelector(".cm-stage-hand").getBoundingClientRect(), c = [...document.querySelectorAll(".cm-stage-fan .cm-bcard")].map((el) => el.getBoundingClientRect());
+      return {w: Math.round(m.width), h: Math.round(m.height), x: Math.round(m.x), y: Math.round(m.y), tray: [t.x, t.y, t.width, t.height].map(Math.round), card: c.length ? Math.round(c[0].width) : 0, left: Math.min(...c.map((r) => r.left)), right: Math.max(...c.map((r) => r.right))};});
+    await rail(rob.page, false);
+    await cameraIs(true);
     const before = await at();
-    const [, hi] = await rob.page.evaluate(() => [0, Number(document.querySelector("#cm-board [data-board-scale=hand]").max)]);
-    await rob.page.locator("#cm-board [data-board-scale=hand]").first().fill(String(hi));
+    const hi = Number(await rob.page.locator(".cm-stage-camera [data-board-scale=hand]").getAttribute("max"));
+    await rob.page.locator(".cm-stage-camera [data-board-scale=hand]").first().fill(String(hi));
     await rob.page.waitForTimeout(300);
     const big = await at();
-    /* scrolled as a person scrolls, with the wheel over the board */
-    const focusGutter=await rob.page.locator('.cm-board-main').evaluate(main=>{
-      const r=main.getBoundingClientRect(),mat=main.querySelector('.cm-board-stage').getBoundingClientRect(),grip=document.querySelector('.cm-board-panegrip')?.getBoundingClientRect();
-      const point={x:(Math.max(r.left,grip?.right||r.left)+mat.left)/2,y:r.top+20},hit=document.elementFromPoint(point.x,point.y);
-      if(!hit||!main.contains(hit)||hit.closest('.cm-mat,[data-zone-scroll]'))throw new Error('Focus wheel gutter does not reach its own scroller');
-      return point;
-    });
-    await rob.page.mouse.move(focusGutter.x,focusGutter.y);
-    await rob.page.mouse.wheel(0,-2000);
-    await rob.page.waitForFunction(()=>document.querySelector('.cm-board-main').scrollTop===0,null,{timeout:5000});
-    await rob.page.mouse.wheel(0,2000);
-    await rob.page.waitForFunction(()=>{const m=document.querySelector('.cm-board-main');return m.scrollTop>0&&m.scrollTop>=m.scrollHeight-m.clientHeight-1;},null,{timeout:5000});
-    const handReach=await rob.page.locator('.cm-board-main>.cm-board-hand [data-action=board-show-hand]').evaluate(button=>{const r=button.getBoundingClientRect(),m=button.closest('.cm-board-main').getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return r.top>=m.top&&r.bottom<=m.bottom+1&&!!hit&&(button===hit||button.contains(hit));});
-    ok(handReach,'native Focus scrolling exposes the real Show hand control below the complete mat');
-    const scrolled = await rob.page.evaluate(() => document.querySelector(".cm-board-main").scrollTop);
-    ok(big.card > before.card * 1.2 && Math.abs(big.w - before.w) < 1 && Math.abs(big.h - before.h) < 1 && big.over > 0 && big.foot <= big.room + 1 && scrolled > 0,
-      `${v === "full" ? "Full screen" : "Focus"}: Hand cards at ${hi}%, the hand's cards grow (${before.card} → ${big.card}px), the board keeps its size (${before.w}×${before.h} → ${big.w}×${big.h}), and the hand runs ${big.over}px on below the window, the wheel scrolling down to it (${Math.round(scrolled)}px)`);
-    await rob.page.evaluate(() => {document.querySelector(".cm-board-main").scrollTop = 0; localStorage.removeItem("cm-board-scale:hand");});
-    await rob.page.locator("#cm-board [data-board-scale=hand]").first().fill(String(await rob.page.evaluate(() => Math.round(globalThis.__cm.cardScale()))));
-    if (v === "full") {await chooseView(rob.page,"focus"); await rob.page.locator(".cm-board-mat").waitFor();}
+    ok(big.card > before.card * 1.2 && big.w === before.w && big.h === before.h && big.x === before.x && big.y === before.y && big.tray[1] + big.tray[3] === before.tray[1] + before.tray[3] && big.tray[3] >= before.tray[3],   /* the hand is 3D's fan: its tray grows upward from the same foot, over the boards, never shrinking them */
+      `Focus: Hand cards at ${hi}%, the hand's cards grow (${before.card} → ${big.card}px), the board keeps its size and place (${before.w}×${before.h} at ${before.x},${before.y} → ${big.w}×${big.h} at ${big.x},${big.y}) and the tray grows upward from its own foot`);
+    await rob.page.evaluate(() => {localStorage.removeItem("cm-board-scale:hand");});
+    await rob.page.locator(".cm-stage-camera [data-board-scale=hand]").first().fill(String(await rob.page.evaluate(() => Math.round(globalThis.__cm.cardScale()))));
+    await cameraIs(false);
   }
 
   /* TURNS THAT WENT BY, put away by themselves (Rob, 2026-10-09: "I shouldn't have to acknowledge every stage"). Two
@@ -1294,7 +1351,7 @@ try {
     const lasted = Date.now() - shownAt;
     ok(lasted > 3000 && lasted < 8000, `turns that went by are said, then put away by themselves after a few seconds, nothing pressed (${(lasted / 1000).toFixed(1)} s)`);
     carrier.send(JSON.stringify(lastFrame));
-    await waitText(rob.page, ".cm-board-turn", new RegExp(`Turn ${lastFrame.view.state.turn} `));
+    await waitText(rob.page, ".cm-board-turn", new RegExp(`turn ${lastFrame.view.state.turn}$`, "i"));
   }
 
   /* THE ACCESSIBILITY PASS (docs/plan-to-done-2026-09-30.md Part 6). WORDS OVER ARTWORK: a mat can be any picture, so
@@ -1359,19 +1416,20 @@ try {
         const el = document.activeElement;
         if (!el || el === document.body) return ["none", ""];
         if (!el.closest("#cm-board")) return ["page", ""];
-        const at = el.closest(".cm-stage-top") ? "strip" : el.closest(".cm-board-hand") ? "hand" : el.closest(".cm-board-pane") ? "seats" : el.closest(".cm-board-mat") ? "board" : el.closest(".cm-board-panel") ? "panel" : "other " + (el.getAttribute("aria-label") || el.className);
+        /* the stage (the boards, the seat labels over them, the turn box and the action pop-up) is "board"; the drawers and their tabs come after the hand */
+        const at = el.closest(".cm-stage-top") ? "strip" : el.closest(".cm-stage-hand") ? "hand" : el.closest(".cm-stage-region") ? "board" : el.closest(".cm-stage-rail,.cm-stage-side,.cm-stage-handle") ? "drawers" : "other " + (el.getAttribute("aria-label") || el.className);
         return [at, el.matches(".cm-bcard") ? el.dataset.card || "" : ""];
       });
       if (cardId && reached[at]) reached[at].add(cardId);
       if (order.at(-1) !== at) order.push(at);
-      if (order.includes("hand") && at !== "hand") break;
+      if (order.includes("hand") && at !== "hand" && at !== "drawers") break;
     }
     const board = order.filter((r) => r !== "page" && r !== "none");
     const runs = (r) => board.filter((x) => x === r).length;
-    const cardsIn = await who.page.evaluate(() => [".cm-board-mat", ".cm-board-hand"].map((q) => document.querySelectorAll(`${q} button.cm-bcard`).length));
+    const cardsIn = await who.page.evaluate(() => [".cm-stage-region", ".cm-stage-hand"].map((q) => document.querySelectorAll(`${q} button.cm-bcard`).length));
     ok(board[0] === "strip" && board.indexOf("strip") < board.indexOf("board") && board.indexOf("board") < board.indexOf("hand") && ["strip", "board", "hand"].every((r) => runs(r) === 1),
-      `at ${width} Tab walks the strip, then the boards, then the hand, each once (${board.join(" → ")})`);
-    ok(cardsIn[1] > 0 && reached.board.size === cardsIn[0] && reached.hand.size === cardsIn[1], `at ${width} and on the way it reaches every card on the mat (${reached.board.size} of ${cardsIn[0]}) and in the hand (${reached.hand.size} of ${cardsIn[1]})`);
+      `at ${width} Tab walks the strip, then the boards (the stage), then the hand, each once, the drawers after them (${board.join(" → ")})`);
+    ok(cardsIn[1] > 0 && reached.board.size === cardsIn[0] && reached.hand.size === cardsIn[1], `at ${width} and on the way it reaches every card on the stage's boards (${reached.board.size} of ${cardsIn[0]}) and in the hand (${reached.hand.size} of ${cardsIn[1]})`);
     eq(await who.page.evaluate(() => [...document.querySelectorAll("#cm-board [tabindex]")].filter((el) => Number(el.getAttribute("tabindex")) > 0).length), 0, `at ${width} nothing on the board takes a tabindex above zero`);
   }
   /* KEYS AND HELP, from the board's menu: the table's help, the keys among it. Escape then steps back out of the menu. */
@@ -1396,7 +1454,7 @@ try {
     const focusHand=page.locator('#cm-board[data-view=focus] .cm-board-main>.cm-board-hand');
     if(await focusHand.count())await focusHand.scrollIntoViewIfNeeded();
     return page.evaluate(() => {
-    const cards = [...document.querySelectorAll(".cm-board-hand .cm-bcard, .cm-stage-fan .cm-bcard")], tray = document.querySelector(".cm-board-hand, .cm-stage-fan").getBoundingClientRect();
+    const cards = [...document.querySelectorAll(".cm-stage-fan .cm-bcard, .cm-stage-fan .cm-bcard")], tray = document.querySelector(".cm-board-hand, .cm-stage-fan").getBoundingClientRect();
     return {n: cards.length, whole: cards.length > 0 && cards.every((c) => {const r = c.getBoundingClientRect(); return r.bottom <= innerHeight + (document.querySelector(".cm-stage-fan") ? 40 : .5) && r.bottom <= tray.bottom + (document.querySelector(".cm-stage-fan") ? 28 : .5) && r.top >= 0;}), last: Math.round(cards.at(-1).getBoundingClientRect().bottom), h: innerHeight, sideways: document.documentElement.scrollWidth - document.documentElement.clientWidth};
   });};
   for (const [who, width] of [[rob, 1400], [maya, 1280]]) {
@@ -1440,10 +1498,11 @@ try {
   await rob.page.evaluate(async()=>{await document.fonts.ready;await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));});
   await rob.page.waitForFunction(()=>{const r=document.querySelector(".cm-board-mat").getBoundingClientRect(),next=[r.x,r.y,r.width,r.height].join(","),same=next===globalThis.__uatStableCoachMat;globalThis.__uatStableCoachMat=next;return same;},null,{polling:"raf",timeout:5000});
   const matWidth = () => rob.page.evaluate(() => Math.round(document.querySelector(".cm-board-mat").getBoundingClientRect().width));
-  const matBefore = await matWidth(), beforeFocusCoach=await rob.page.locator(".cm-board-mat").boundingBox(),focusScrollBefore=await rob.page.locator(".cm-board-main").evaluate(el=>el.scrollTop);
+  const matBefore = await matWidth(), beforeFocusCoach=await rob.page.locator(".cm-board-mat").boundingBox(),focusScrollBefore=await rob.page.evaluate(()=>document.scrollingElement.scrollTop);   /* (Focus has no scroller of its own now; the page is what scrolls) */
+  await rail(rob.page, true);
   await rob.page.click(".cm-board-coach-open");
   await rob.page.locator("#cm-board-coach:not([hidden]) .cm-coach-input").waitFor();
-  const coachBox = await rob.page.evaluate(() => {const r = document.getElementById("cm-board-coach").getBoundingClientRect(), mat = document.querySelector(".cm-board-mat").getBoundingClientRect(), drawer = document.querySelector(".cm-stage-side").getBoundingClientRect(); return {scroll:document.querySelector(".cm-board-main")?.scrollTop,module:document.getElementById("cm-board").dataset.coach === "module",width:r.width,right:r.right,edge:innerWidth,drawerContained:r.left>=drawer.left && r.right<=drawer.right+1,drawer:{x:drawer.x,y:drawer.y,width:drawer.width,height:drawer.height},clear:mat.right<=r.left+1,mat: {x:mat.x,y:mat.y,width:mat.width,height:mat.height},visible:r.bottom<=innerHeight+1};});
+  const coachBox = await rob.page.evaluate(() => {const r = document.getElementById("cm-board-coach").getBoundingClientRect(), mat = document.querySelector(".cm-board-mat").getBoundingClientRect(), drawer = document.querySelector(".cm-stage-side").getBoundingClientRect(); return {scroll:document.scrollingElement.scrollTop,module:document.getElementById("cm-board").dataset.coach === "module",width:r.width,right:r.right,edge:innerWidth,drawerContained:r.left>=drawer.left && r.right<=drawer.right+1,drawer:{x:drawer.x,y:drawer.y,width:drawer.width,height:drawer.height},clear:mat.right<=r.left+1,mat: {x:mat.x,y:mat.y,width:mat.width,height:mat.height},visible:r.bottom<=innerHeight+1};});
   /* Opening the module repaints the seat strip, moving its mat top by 5px even after font/RAF settlement.
      The overlay contract preserves the mat's horizontal placement, size and user scroll; composer access is checked below. */
   ok(coachBox.width>=240 && coachBox.right<=coachBox.edge && (coachBox.module
@@ -1798,6 +1857,19 @@ console.log(`table-board: ${checks} checks passed — a real game between two br
 async function dismissAccount(page) {
   if (await page.locator('#cm-user-menu:popover-open').count()) await page.keyboard.press('Escape');
 }
+/* The seat the page is looking at is the big board in Focus; each of the others is a tile behind it. Double click it to look at it (a seat
+   already looked at has no tile to press, as it has no pane tile in the old pane). */
+async function lookAt(page, seat) {
+  if (await page.locator(`.cm-stage-big[data-seat='${seat}']`).count()) return;
+  await page.locator(`.cm-stage-rear[data-seat='${seat}'] .cm-mat`).dblclick({position: {x: 4, y: 4}});   /* a double click on a board focuses it (Rob, 2026-10-28) */
+  await page.locator(`.cm-stage-big[data-seat='${seat}']`).waitFor({timeout: 10000});
+}
+/* Actions is the left drawer; the old row's "board-actions-open" toggle opened and shut it. */
+async function rail(page, open) {
+  const t = page.locator("[data-action=board-stage-rail]");
+  if ((await t.getAttribute("aria-expanded")) !== String(open)) await t.click();
+  await page.waitForTimeout(150);
+}
 async function chooseView(page, view) {
   await dismissAccount(page);
   if (!await page.locator('.cm-stage-camera [data-action=board-view]').count()) await page.locator('[data-action=board-camera]').click();
@@ -1866,68 +1938,51 @@ async function openCoachQuestions(page) {
 
 /* Geometry oracle from unrotated card layout, independent of the renderer's row-minimum formula.
    Tapping may overlap corners; it never increases a slot or moves neighboring cards. */
-function tableRowFacts() {
-  const focus=document.getElementById('cm-board').dataset.view==='focus';
-  const table = document.querySelector(focus?'.cm-board-main':'.cm-board-table'), style = getComputedStyle(table);
-  const gap = parseFloat(style.columnGap) || 0, room = table.clientWidth-gap;
-  const share = Number(localStorage.getItem('cm-board-rows')) || .5;
-  const outer = el => {if(!el)return 0;const s=getComputedStyle(el);return el.getBoundingClientRect().height+(parseFloat(s.marginTop)||0)+(parseFloat(s.marginBottom)||0);};
-  const mats = [...table.querySelectorAll(focus?'.cm-board-stage>.cm-mat':'.cm-board-slot>.cm-mat')].sort((a,b)=>a.getBoundingClientRect().left-b.getBoundingClientRect().left);
-  const rows = mats.map(mat => {
-    const r=mat.getBoundingClientRect(), field=mat.querySelector('.cm-board-field'), lands=mat.querySelector('.cm-board-lands');
-    const source=mat.querySelector('.cm-bcard'),footprint=source.offsetHeight;
-    const layout=el=>{const parent=el.offsetParent,p=parent?.getBoundingClientRect()||{x:0,y:0};const top=p.y+(parent?.clientTop||0)+el.offsetTop-(parent?.scrollTop||0),left=p.x+(parent?.clientLeft||0)+el.offsetLeft-(parent?.scrollLeft||0);return {top,left,bottom:top+el.offsetHeight,right:left+el.offsetWidth};};
-    const zoneFacts=zone=>{
-      const z=zone.getBoundingClientRect(), css=getComputedStyle(zone), label=zone.querySelector(':scope>.cm-mat-label'), heading=zone.querySelector('.cm-board-group>h3');
-      const floor=footprint+outer(label)+outer(heading)+['paddingTop','paddingBottom','borderTopWidth','borderBottomWidth'].reduce((n,k)=>n+(parseFloat(css[k])||0),0);
-      const card=zone.querySelector('.cm-bcard'), c=card?layout(card):null;
-      return {floor,whole:z.height+2>=floor&&z.top>=r.top-1&&z.bottom<=r.bottom+1&&(!c||(c.top>=Math.max(label?.getBoundingClientRect().bottom||z.top,heading?.getBoundingClientRect().bottom||z.top)-1&&c.bottom<=z.bottom+1))};
-    };
-    const f=zoneFacts(field), l=zoneFacts(lands);
-    const allocation=field.offsetHeight/(field.offsetHeight+lands.offsetHeight);
-    const minimum=Math.max(0,mat.offsetHeight-field.offsetHeight-lands.offsetHeight)+Math.max(f.floor/allocation,l.floor/(1-allocation));
-    const aspectFits=r.width*9/16>=minimum-2;
-    const aspect=aspectFits?Math.abs(r.width/r.height-16/9)<.02:r.height+2>=minimum&&r.height>r.width*9/16;
-    const cards=[...mat.querySelectorAll('.cm-bcard')];
-    return {seat:mat.dataset.seat,width:r.width,height:r.height,minimum:Math.round(minimum),allocation,fieldFloor:Math.round(f.floor),landFloor:Math.round(l.floor),aspectFits,valid:aspect&&f.whole&&l.whole&&cards.length>0&&cards.every(c=>Math.abs(c.offsetWidth/c.offsetHeight-5/7)<.02)};
+function tableFacts() {
+  /* Table: every board; Focus: the board looked at (the others are tiles behind it, measured by their own check). */
+  const focus = document.getElementById('cm-board').dataset.view === 'focus';
+  const slots = [...document.querySelectorAll(focus ? '.cm-stage-big' : '.cm-stage-slot')], mats = slots.map((el) => el.querySelector(':scope > .cm-mat')).filter(Boolean);
+  const boards = mats.map((mat) => {
+    const r = mat.getBoundingClientRect(), cards = [...mat.querySelectorAll('.cm-bcard')], zones = [...mat.querySelectorAll('.cm-board-field,.cm-board-lands')];
+    return {seat: mat.dataset.seat, you: mat.classList.contains('is-you'), width: r.width, height: r.height, ratio: Math.abs(r.width * 9 / 16 - r.height) <= 1.5,
+      cards: cards.length > 0 && cards.every((c) => Math.abs(c.offsetWidth / c.offsetHeight - 5 / 7) < .02),
+      inside: zones.every((z) => {const q = z.getBoundingClientRect(); return q.top >= r.top - 1 && q.bottom <= r.bottom + 1 && q.left >= r.left - 1 && q.right <= r.right + 1;})};
   });
-  const grown=rows.some(r=>!r.aspectFits);
-  if(focus){const tray=table.querySelector(':scope>.cm-board-hand'),strip=table.querySelector(':scope>.cm-other-seats'),available=table.clientWidth-16,expected=grown?available:Math.min(available,(table.clientHeight-outer(strip)-outer(tray)-16)*16/9);return {mode:'focus',rows,valid:rows.length===1&&rows.every(r=>r.valid),widths:rows.every(r=>Math.abs(r.width-expected)<2),scrolls:table.scrollHeight>table.clientHeight+1,horizontal:table.scrollWidth<=table.clientWidth+1};}
-  return {mode:'table',rows,valid:rows.length===2&&rows.every(r=>r.valid),widths:rows.every((r,i)=>Math.abs(r.width-(grown?Math.floor(room*(i===0?share:1-share)):Math.min(room*(i===0?share:1-share),table.clientHeight*16/9)))<2),scrolls:table.scrollHeight>table.clientHeight+1,horizontal:table.scrollWidth<=table.clientWidth+1};
+  const host = document.getElementById('cm-board'), rears = [...document.querySelectorAll('.cm-stage-rear')].map((e) => e.getBoundingClientRect().width);
+  return {mode: focus ? 'focus' : 'table', boards, valid: boards.length === slots.length && boards.length > 0 && boards.every((b) => b.ratio && b.cards && b.inside), /* Table: the other seats' boards are identical and yours is 12% larger in both directions (Rob, 2026-10-28); Focus has the one. */
+    same: (() => {const others = boards.filter((b) => !b.you), mine = boards.filter((b) => b.you); return others.every((b) => Math.abs(b.width - others[0].width) < 1 && Math.abs(b.height - others[0].height) < 1) && mine.every((b) => !others.length || (Math.abs(b.width / others[0].width - 1.12) < 0.02 && Math.abs(b.height / others[0].height - 1.12) < 0.02));})(),
+    largest: boards.length > 0 && rears.every((w) => boards[0].width >= w - 1), rears: rears.map(Math.round),
+    horizontal: document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1, scrolls: host.scrollHeight > host.clientHeight + 1};
 }
-async function verifyTableRowAccess(page, facts) {
-  const proof={...facts,nativeScrollAccess:false}; tableGeometryProof.push(proof);
-  const save=()=>{if(SHOTS)writeFileSync(path.join(SHOTS,'table-row-geometry.json'),JSON.stringify(tableGeometryProof,null,2));};
-  save();
-  ok(facts.horizontal, 'complete Table rows never introduce horizontal overflow');
-  if(!facts.scrolls)return;
-  const wheelPoint=await page.locator('.cm-board-table').evaluate(table=>{
-    const r=table.getBoundingClientRect(),bar=table.querySelector(':scope>.cm-board-rowbar').getBoundingClientRect();
-    const point={x:bar.x+bar.width/2,y:r.y+Math.min(20,r.height/4)},hit=document.elementFromPoint(point.x,point.y);
-    if(!hit||!table.contains(hit)||hit.closest('.cm-mat,.cm-board-slot'))throw new Error('The native Table column-gutter point does not reach its own container');
-    globalThis.__uatTableWheels=[];
-    const handler=event=>{const entry={x:event.clientX,y:event.clientY,dy:event.deltaY,target:event.target.className,zone:event.target.closest?.('[data-zone-scroll]')?.dataset.zoneScroll||null};globalThis.__uatTableWheels.push(entry);setTimeout(()=>entry.prevented=event.defaultPrevented,0);};
-    globalThis.__uatTableWheelHandler=handler;document.addEventListener('wheel',handler,{capture:true});
-    return point;
+/* Table's boards are as large as the stage gives; when a pair is taller than the window the page scrolls (#cm-board is the scroller, the hand, turn box and
+   drawers staying in the window). Every board is then reachable by scrolling: each Lands row lies whole in the window at the scroll that brings it there,
+   and is what a pointer finds at its middle. */
+async function verifyTableAccess(page, facts) {
+  const proof = {...facts}; tableGeometryProof.push(proof);
+  if (SHOTS) writeFileSync(path.join(SHOTS, 'table-row-geometry.json'), JSON.stringify(tableGeometryProof, null, 2));
+  ok(facts.horizontal, 'the Table boards never introduce horizontal overflow');
+  const size = page.viewportSize();
+  /* With Actions shut, a question you hold is raised as the pop-up over the table (the stage's ask(), above the boards by design, z-index over them); with Actions open it sits in
+     that drawer, which lies over no board's gutter. A pointer reaching the Lands row is measured with the question in the drawer, then Actions is put back as it was. */
+  const popped = await page.locator(".cm-stage-region #cm-board-decision").count();
+  if (popped) {await rail(page, true); await page.locator(".cm-stage-region #cm-board-decision").waitFor({state: "detached", timeout: 3000});}
+  const reached = await page.evaluate(() => {
+    const host = document.getElementById('cm-board'), found = [];
+    for (const zone of document.querySelectorAll('.cm-stage-slot .cm-board-lands')) {
+      let good = false;
+      for (const at of [0, host.scrollHeight - host.clientHeight]) {
+        host.scrollTop = at;
+        const r = zone.getBoundingClientRect(), hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+        if (r.top >= -1 && r.bottom <= innerHeight + 1 && r.left >= -1 && r.right <= innerWidth + 1 && !!hit && zone.contains(hit)) {good = true; break;}
+      }
+      found.push(good);
+    }
+    host.scrollTop = 0;
+    return found;
   });
-  try {
-    await page.mouse.move(wheelPoint.x,wheelPoint.y);
-    await page.mouse.wheel(0,2000);
-    await page.waitForFunction(()=>{const t=document.querySelector('.cm-board-table');return t.scrollTop>0&&t.scrollTop>=t.scrollHeight-t.clientHeight-1;},null,{timeout:5000});
-    const reached=await page.evaluate(()=>{
-      const table=document.querySelector('.cm-board-table'),t=table.getBoundingClientRect();
-      return {offset:table.scrollTop,hit:[...table.querySelectorAll('.cm-board-lands')].every(zone=>{const r=zone.getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2,hit=document.elementFromPoint(x,y);return r.top>=t.top-1&&r.bottom<=t.bottom+1&&!!hit&&zone.contains(hit);})};
-    });
-    ok(reached.hit,'native Table scrolling exposes each complete Lands row to the pointer');
-    proof.nativeScrollAccess=true;proof.downOffset=reached.offset;save();
-    await page.mouse.move(wheelPoint.x,wheelPoint.y);
-    await page.mouse.wheel(0,-2000);
-    await page.waitForFunction(()=>document.querySelector('.cm-board-table').scrollTop===0,null,{timeout:5000});
-    proof.returnedToTop=true;
-  } finally {
-    const trace=await page.evaluate(()=>{document.removeEventListener('wheel',globalThis.__uatTableWheelHandler,true);return {events:globalThis.__uatTableWheels,offset:document.querySelector('.cm-board-table').scrollTop};});
-    proof.wheelTrace=trace;save();
-  }
+  ok(reached.length > 0 && reached.every(Boolean), `each complete Lands row is in the window, at the top or after scrolling down, and reaches the pointer (${size.width}x${size.height}: ${JSON.stringify(reached)}; the stage ${facts.scrolls ? "scrolls" : "fits"})`);
+  proof.landsReached = reached;
+  if (popped) await rail(page, false);
 }
 
 async function verifyCoachUsable(page) {

@@ -17,8 +17,9 @@ const read = (f) => readFileSync(path.join(ROOT, f), "utf8");
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1;};
 
+/* The Coach (crankmagic-coach.js, since r4 D2) and the New game pop-up (crankmagic-lounge.js) draw some of the controls the note names, so the page is read with them. */
 const note = read("docs/playtest-harness.md");
-const PAGE = ["crankmagic-board.js", "crankmagic-table.js", "crankmagic-app.js"].map(read).join("\n");
+const PAGE = ["crankmagic-board.js", "crankmagic-table.js", "crankmagic-app.js", "crankmagic-coach.js", "crankmagic-lounge.js"].map(read).join("\n");
 const SELF = path.basename(fileURLToPath(import.meta.url));
 const TESTS = ["tests", "tests/uat"].flatMap((dir) => readdirSync(path.join(ROOT, dir)).filter((f) => f.endsWith(".mjs") && f !== SELF).map((f) => read(`${dir}/${f}`))).join("\n");
 
@@ -34,7 +35,7 @@ const actions = new Set(spans.flatMap((s) => [...s.matchAll(/data-action=([a-z][
 ok(actions.size >= 30, `the note names the lobby's and the board's controls (${actions.size})`);
 /* Drawn, not merely handled: `actions["board-pass"]` is the handler, and a button renamed away from it leaves the
    handler behind. */
-const drawn = (a) => PAGE.includes(`data-action="${a}"`) || PAGE.split(`"${a}"`).length - 1 > PAGE.split(`actions["${a}"]`).length - 1;
+const drawn = (a) => PAGE.includes(`data-action="${a}"`) || PAGE.split(`"${a}"`).length + PAGE.split(`'${a}'`).length - 2 > PAGE.split(`actions["${a}"]`).length - 1;   /* quoted either way: the Coach file writes its names in single quotes */
 for (const a of actions) {
   ok(drawn(a), `the control ${a} is one the page draws`);
   /* Pressed by its action, or by the class the page gives that one control (`.cm-mat-pick` for table-mat-pick). */

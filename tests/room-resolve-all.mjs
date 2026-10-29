@@ -314,12 +314,12 @@ try {
   await page.routeWebSocket(/\/api\/tables\/[a-z0-9]+\/connect$/, carry);
   await page.goto("about:blank");
   await page.goto(`${base}/index.html#table?id=${TABLE}`);
-  const button = page.locator(".cm-stage-top [data-action=board-resolve-all]");
+  const button = page.locator(".cm-stage-actions [data-action=board-resolve-all]");
   await button.waitFor({timeout: 60000});
-  eq((await button.textContent()).trim(), "Resolve all 3", "the strip draws Resolve all 3 beside the pass");
-  const pass = page.locator(".cm-stage-top [data-action=board-pass]");
+  eq((await button.textContent()).trim(), "Resolve all 3", "the action pop-up draws Resolve all 3 beside the pass (the header no longer carries the pass, 2026-10-28)");
+  const pass = page.locator(".cm-stage-actions [data-action=board-pass]");
   eq((await pass.textContent()).trim(), "Resolve Quest Field", "and the pass still says it resolves the one on top");
-  ok(await page.evaluate(() => {const a = document.querySelector(".cm-stage-top [data-action=board-pass]"), b = document.querySelector(".cm-stage-top [data-action=board-resolve-all]"); return !!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);}), "Resolve all comes right after the pass");
+  ok(await page.evaluate(() => {const a = document.querySelector(".cm-stage-actions [data-action=board-pass]"), b = document.querySelector(".cm-stage-actions [data-action=board-resolve-all]"); return !!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);}), "Resolve all comes right after the pass");
   const line = page.locator(".cm-board-stack li").first();
   eq([await page.locator(".cm-board-stack li").count(), (await line.textContent()).includes("Quest Field")], [3, true], "the shared stack lists each trigger in the run, with the first to resolve first");
   /* "You can also" is for what else there is to do; Resolve all is beside the pass, not in it. */
@@ -331,7 +331,7 @@ try {
     await page.click("[data-action=board-also]");
   }
   await button.click();
-  await page.waitForFunction(() => !document.querySelector(".cm-stage-top [data-action=board-resolve-all]"), null, {timeout: 20000});
+  await page.waitForFunction(() => !document.querySelector(".cm-stage-actions [data-action=board-resolve-all]"), null, {timeout: 20000});
   /* The first trigger asks "you may": the board says the answer goes for the run; one Yes, and the room answers the rest. */
   const note = page.locator("#cm-board-decision .cm-board-for-run");
   await note.waitFor({timeout: 20000});
