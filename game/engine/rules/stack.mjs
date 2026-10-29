@@ -38,6 +38,7 @@ import {holdArrival, enteredWith} from "./entering.mjs";
 import "./pre-entry.mjs";
 import {beginRuleOperation, registerRuleOperation, emitRuleEvents} from "./operations.mjs";
 import {patchEnteringObject} from "./pre-entry.mjs";
+import {entryCounterResult} from "./entry-characteristics.mjs";
 import {ascendAsItResolves} from "../keywords/designations.mjs";
 import {conditionHolds, asksFirstResolution} from "../script/condition.mjs";
 import {moveObject, addObject, removeObject, eventCard} from "../state/index.mjs";
@@ -444,6 +445,8 @@ function finishTop(state, entry, events, fizzled, attachTo = null, prepared = nu
       {after: {kind: "after-resolving"}});
     return outcome.events;
   }
+  const entryCounterValues = prepared?.counterResult === undefined ? null
+    : entryCounterResult(state, prepared, entry.objectId, entry.playerId);
   /* This entry, not whatever is on top: a copy it made as it resolved is above it (pushCopy). */
   const at = state.stack.indexOf(entry);
   rememberDepartingSpell(state, entry);
@@ -505,6 +508,7 @@ function finishTop(state, entry, events, fizzled, attachTo = null, prepared = nu
     /* A face-down spell becomes a face-down permanent, the same characteristics (CR 702.168b). */
     const down = object.disguised === true ? {faceDown: true, disguised: true} : {};
     const arrived = moveObject(state, entry.objectId, to, ["graveyard", "library", "hand"].includes(to) ? owner : null, down);
+    if (to === "battlefield" && entryCounterValues !== null) entryCounterResult(state, prepared, entry.objectId, entry.playerId, {consume: true});
     if (to === "battlefield") patchEnteringObject(state.objects[arrived], prepared?.objectPatch);
     placeReplacedCounters(state, arrived, replaced);
     /* WHAT ITS COST EXILED (CR 607.2q; rules/actions.mjs, "behold a Goblin and exile it"): the permanent it becomes has it, for
@@ -619,7 +623,8 @@ function finishTop(state, entry, events, fizzled, attachTo = null, prepared = nu
       for (const ask of entering.asks ?? []) (state.enteringQuestions ??= []).push({objectId: arrived, ...ask});
       /* Counters it enters with are put on it (CR 122.6) -- by its controller (122.6a): "twice that many instead" sees them. */
       for (const [counter, count] of Object.entries(entering.counters)) {
-        state.objects[arrived].counters[counter] = (state.objects[arrived].counters[counter] ?? 0) + enteringCountersPlaced(state, arrived, counter, count, entry.playerId);
+        const placed = entryCounterValues === null ? enteringCountersPlaced(state, arrived, counter, count, entry.playerId) : entryCounterValues[counter] ?? 0;
+        state.objects[arrived].counters[counter] = (state.objects[arrived].counters[counter] ?? 0) + placed;
       }
     }
     /* SNEAK (CR 702.190b): a permanent spell whose sneak cost was paid enters tapped and attacking the player or planeswalker

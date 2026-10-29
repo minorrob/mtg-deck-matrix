@@ -42,6 +42,9 @@ readers pass 68/71 checks; integrity and feature-wiring (131) pass with the actu
 
 ## Required ordering debt
 
+This section records the RED at checkpoint `85a3a89f`. The subsequent native counter-continuation fix and its proof
+are in `W1-entry-counter-order.md`; the synchronous legacy conversion and other listed debts remain open.
+
 The separate `W1-compleated-counter-order-red.mjs.txt` witness uses an actual loaded Doubling Season, a generic
 printed-loyalty-three Compleated planeswalker, a public cast and two life paid for its Phyrexian symbol. Entry
 currently finishes immediately with two loyalty counters and no pending decision. CR 616.1 requires the controller's
