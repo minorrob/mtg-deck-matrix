@@ -1633,6 +1633,13 @@ export const copySpell = {
        an ability (rules/stack.mjs, pushAbilityCopy), a spell's a spell. */
     const originals = [...(params.spells ?? []).map((id) => state.stack.find((e) => e.objectId === id)),
       ...(Array.isArray(params.stack) ? params.stack.map((id) => state.stack.find((e) => e.stackId === id)) : [])].filter(Boolean);
+    /* A nontargeted "that spell" reference survives its departure (CR 608.2h, 707.10). The memory is refreshed as it
+       leaves, so it includes any choices changed after casting; an unrelated or still-live spell never uses it. */
+    const remembered = context.about?.spellLastKnown;
+    if (remembered && (params.spells ?? []).includes(context.about.card)
+      && remembered.entry?.objectId === context.about.card && remembered.entry.stackId === context.about.stackId
+      && !originals.some((entry) => entry.stackId === remembered.entry.stackId))
+      originals.push({...remembered.entry, recordedSource: remembered.values, recordedReference: remembered.reference});
     const count = Math.max(0, params.count ?? 1);
     const events = [], questions = [];
     for (const original of originals) for (let n = 0; n < count; n += 1) {
@@ -1642,8 +1649,9 @@ export const copySpell = {
         if (params.newTargets === true) copy.targets.forEach((t, index) => { if (!Array.isArray(t)) questions.push({stackId: copy.stackId, index}); });
         continue;
       }
-      const copy = pushCopy(state, original, {controller: context.controller, nonLegendary: params.except?.nonLegendary === true});
-      events.push(event("GameEventSpellCopied", state, {card: cardRef(state, copy.objectId), original: cardRef(state, original.objectId),
+      const copy = pushCopy(state, original, {controller: context.controller, nonLegendary: params.except?.nonLegendary === true,
+        recordedSource: original.recordedSource ?? null});
+      events.push(event("GameEventSpellCopied", state, {card: cardRef(state, copy.objectId), original: cardRef(state, original.objectId) ?? original.recordedReference ?? null,
         playerId: context.controller, stackId: copy.stackId}));
       /* NAMED: a counted target ("up to two target creatures") keeps the original's list on the copy; choosing a new list
          for it is not asked yet. */

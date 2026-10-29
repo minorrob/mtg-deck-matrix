@@ -15,5 +15,103 @@
     "| Token replacements outside a resolution | `statics.mjs`:570 | W6 |",
     "| Entering replacements applied in the order found | `replacement.mjs`:579 | W6 |"
   ],
-  "status": "queued; prerequisite PR 834 verification in progress"
+  "status": "Bounded Plumb-LKI and double-faced-token-copy checkpoint; remaining replacement-order debt queued",
+  "checkpoint": {
+    "cardsAdded": 0,
+    "cardsPromoted": 0,
+    "cardsCorrected": [
+      {
+        "name": "Plumb the Forbidden",
+        "scenariosBefore": 2,
+        "scenariosNow": 3
+      }
+    ],
+    "proven": [
+      {
+        "item": "A reflexive copy trigger still copies a countered original",
+        "rules": [
+          "608.2h",
+          "707.10"
+        ],
+        "evidence": "Actual Plumb plus Counterspell scenario failed stack0-versus2 before fix; now two copies resolve, draw2 and lose2 life."
+      },
+      {
+        "item": "Departure-time spell memory preserves latest targets, X, modes and copiable values",
+        "rules": [
+          "608.2h",
+          "707.10"
+        ],
+        "evidence": "Generic redirected-spell regression; normal resolution, counter, effect zone move and owner-departure hooks; no global history cache."
+      },
+      {
+        "item": "Created token copies keep double-faced metadata and orientation",
+        "rules": [
+          "707.8a",
+          "712.3",
+          "712.9",
+          "712.10",
+          "730.2i"
+        ],
+        "evidence": "Incubator copy failed missing-mdfc before fix. Front/back copies now transform with their own counters, never original counters. Modal permanent opposite face works; sorcery opposite face resolves cleanly without transforming. Ordinary physical becomeCopy stays single-faced."
+      },
+      {
+        "item": "Face-down copied spells keep only nameless copiable values",
+        "rules": [
+          "707.2",
+          "708.2a",
+          "702.37",
+          "702.168"
+        ],
+        "evidence": "Actual morph/disguise casts, then source departure/LKI copying/token resolution; plain2/2 versus Ward distinction; three public token projections show neither printed source name nor preparation definition."
+      },
+      {
+        "item": "A copied permanent spell retains its preparation definition",
+        "rules": [
+          "722.2b",
+          "722.3"
+        ],
+        "evidence": "Coordinated W1 scope: cloned definition only, no ephemeral prepared link; copied enters-prepared spell creates a fresh preparation copy for its controller."
+      }
+    ],
+    "commands": [
+      "node --stack-size=4000 tests/engine-load100-tokens.mjs:90 checks passed",
+      "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w6-tokens.py:35 caught; missed:[]",
+      "node --stack-size=4000 game/tools/batch/check-cards.mjs:6430 definitions;11024 scenarios;0 failed",
+      "engine-copy-spell24; engine-copies19; engine-copy-set14; engine-copy-memory15; engine-disguise46; engine-prepare3; engine-train-e-g3 23; engine-libload-l5 90: all passed",
+      "engine-stack51; engine-sba54; engine-projection93; engine-zone-costs12: all passed",
+      "tests/data-integrity.mjs:exit0; Validated50 variants and50 connected buy profiles",
+      "tests/feature-wiring.mjs:131 checks passed",
+      "python game/tools/batch/anchors.py:57 inherited failures;0 new; all W6 anchors found once"
+    ],
+    "mutationNotes": [
+      "Initial33-break sweep missed live-source precedence; a direct pushCopy API regression was added and the full final sweep catches it.",
+      "Two added face-down preparation guards were redundant because state.CARD_KEYS already masks preparation; removed the dead guards and their mutations, preserving all public-view/no-preparation assertions."
+    ],
+    "queued": [
+      "Counter replacement ordering outside effect resolution; resumable operation required instead of preferred/default order.",
+      "Token replacement ordering outside effect resolution; statics.tokensCreated askable:false still uses a preferred maximum-output order.",
+      "Entering replacement ordering; replacement.applyReplacements still chooses candidates[0] for enters proposals."
+    ],
+    "routed": [
+      {
+        "item": "Contagion Clasp calibration",
+        "owner": "W4",
+        "evidence": "Root reports W4 full4165/4165 calibration at its independent checkpoint; no duplicate Clasp fix here."
+      }
+    ],
+    "pending": [
+      "V8 independent review",
+      "Consolidated generation/inventory, wave tests/games/CI and staging"
+    ],
+    "ignoresAdded": [],
+    "sources": [
+      "Local Comprehensive Rules text; rule numbers only",
+      "https://api.scryfall.com/cards/named?exact=Plumb%20the%20Forbidden and its public rulings URI"
+    ],
+    "representationNotes": [
+      "Spell-departure hooks audited at finishTop, effect zone movement, countering and player departure. Trigger-only stack removals have no spell object. No unbounded spell history.",
+      "Source memory and token metadata changes are not a general RememberObjects construct credit.",
+      "Actual three-seat morph/disguise copies retain only nameless copiable characteristics; copied token public projections expose no printed source name or preparation."
+    ]
+  }
 }

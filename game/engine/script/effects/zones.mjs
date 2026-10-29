@@ -31,6 +31,7 @@ import {winGame} from "./resources.mjs";
 import {runFollowUps} from "./index.mjs";
 import {amountOf} from "../amount.mjs";
 import {manaValue, parseManaCost} from "../../rules/mana.mjs";
+import {rememberDepartingSpell} from "../../rules/spell-memory.mjs";
 
 const ZONE_LABEL = {
   library: "Library", hand: "Hand", battlefield: "Battlefield",
@@ -127,7 +128,10 @@ export function moveOne(state, id, to, events, {owner = null, controller = null,
     if (from !== "stack") return null;
     return moveOne(state, id, "graveyard", events, {owner: object.owner});
   }
-  if (leaving >= 0) state.stack.splice(leaving, 1);
+  if (leaving >= 0) {
+    rememberDepartingSpell(state, state.stack[leaving]);
+    state.stack.splice(leaving, 1);
+  }
   /* A face-down instruction applies only to its intended zone (CR 614.1): manifest replaced with exile is face up,
      just as hideaway replaced with another destination is. The public move names a card that was not hidden. */
   const hidden = faceDown === true && to === "exile" && destination === "exile";
@@ -1067,6 +1071,7 @@ export function counterSpell(state, params, context) {
     if (at < 0) continue;
     /* "This spell can't be countered": the counter effect does nothing to it -- it was still a legal target (CR 101.2). */
     if (state.stack[at].objectId !== null && cantBeCountered(state, state.stack[at].objectId)) continue;
+    rememberDepartingSpell(state, state.stack[at]);
     const [entry] = state.stack.splice(at, 1);
     /* A countered copy ceases to exist (CR 707.10a, 704.5e); it is no card to put into a graveyard. */
     if (entry.objectId !== null && state.objects[entry.objectId]?.copy === true) removeObject(state, entry.objectId);
