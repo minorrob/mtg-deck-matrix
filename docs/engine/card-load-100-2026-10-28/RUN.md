@@ -5,6 +5,14 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Current-main tooltip dependency, `fb1cadff`:** merges main `fac091ba` (#953/ROB-202) with `--no-ff`.
+  Owner tooltip behavior and tests are preserved; board differs from main by exactly the two approved Snoop lines.
+  README actual710 and asset pins/manifest are regenerated with the registry helper. Engine/room bytes remain
+  identical to the proved `56965896` assembly. Assets136/service-worker9/wiring131/integrity/frozen-scope and native
+  Snoop pass. Static255files/4,675breaks/33 inherited UI problems, zero engine targets. Current combined browser
+  checks are pending the next quiet window; prior main494 browser98/menu25 remain historical to that source.
+  This is a dependency publication for V8's final sync, not browser/full-gate acceptance. W1 return redirects,
+  W5 mana receipts and V8 policies remain in separate unaccepted role checkpoints. No new cards/promotions.
 - **Current-main Table-menu merge, `1a16a935`:** main advanced to `494d3fa9` (#952/ROB-220) during the required
   pre-push scan of `728193a2`. That scan correctly stops for merge conflicts; no credit is taken. Root merges main
   `--no-ff`, preserves its new menu/CSS/test registrations and the two approved Snoop lines. Only README count and

@@ -8,6 +8,10 @@ Linear ROB-199 under ROB-85. The record is `docs/engine/card-load-100-2026-10-28
 Claim: `game/engine/cards/**`, generated card files, `data/engine/candidates.json`, the run package,
 and the engine modules its debt fixes require, subject to the ownership requests below.
 The primary checkout has another session's unfinished merge and is untouched.
+**Latest dependency fb1cadff includes mainfac091ba/#953:** owner tooltip UI is preserved; board still differs by only
+our two approved Snoop lines. Engine/room unchanged569. Assets136/SW9/wiring131/integrity/scope/nativeSnoop pass,
+READMEactual710, static33 inherited UI/zeroengine. Combined browser pending quiet window, no gate or new-card credit.
+V8 implementation/selected proofs are clean locally; W1 return/entry and W5 factual mana undo proofs continue.
 **Latest source1a16a935 includes main494d3fa9/#952:** required scan728 stops at moved-main conflicts; root preserves
 owner's Table-menu/CSS and our two Snoop lines, regenerates pins/manifest (board168/sw725/app742), READMEactual709.
 Engine/room remains byte-identical to proved569. Actual combined Snoop98/newmenu25 and inspected screenshots pass
