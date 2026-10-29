@@ -1,5 +1,11 @@
 # The orchestrator's procedure: the card load to 100% (2026-10-28)
 
+**Scope update, October 28:** Rob explicitly chose cards covering **95% of deck appearances**. Deal only names in
+`scope-95.json` after wave 0. T1/T2/T3 below remain the priority order within that set; do not require loading the
+remaining least-played appearances. `node tools/card-load-scope.mjs --gate` replaces a zero-undefined full-pool count
+for G-1. All other accuracy and evidence requirements remain; keep the whole-directory ability check. Historical
+full-pool counts remain diagnostics. `README.md` records the 8,514-name cutoff and source dates/hashes.
+
 Rob, 2026-10-28: *"I want 100% accuracy, 0 errors in the game when any given card is played, for that to be play-tested
 to satisfaction, and a 0 error rate on the execution of a card mechanic."* He handed this run to an OpenAI orchestrator
 with eight subagents. `README.md` here is where the load stands and what 100% means; `BRIEF.md` is every subagent's

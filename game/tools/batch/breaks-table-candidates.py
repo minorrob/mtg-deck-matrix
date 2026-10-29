@@ -54,7 +54,7 @@ BREAKS = [
     ("the object's report route missing", 'cloud/game-room.mjs',
      '      if (route === "POST /table/report") return reply(201, {report: await t.reportCard(email, await body(), now)});\n', ''),
     ("the front door's report route missing", 'cloud/tables.mjs',
-     '"end", "concede", "report"]);', '"end", "concede"]);'),
+     '"end", "concede", "report",', '"end", "concede",'),
     ("the backstop's cards left out", 'game/tools/engine-candidates.mjs',
      'export function candidatesModule(file = read(CANDIDATES_FILE), oracle = read(ORACLE_FILE), backstop = backstopScripts()) {',
      'export function candidatesModule(file = read(CANDIDATES_FILE), oracle = read(ORACLE_FILE), backstop = []) {'),

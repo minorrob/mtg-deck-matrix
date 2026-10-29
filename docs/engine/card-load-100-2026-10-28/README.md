@@ -1,5 +1,25 @@
 # The card load to 100%: where it stands, and what 100% means (2026-10-28)
 
+## Rob's revised loading target, October 28
+
+Rob changed the end point to **cards covering 95% of Commander deck appearances**, explicitly choosing appearances
+over 95% of distinct names. The least-played remaining 5% of appearances is outside the loading target. This supersedes
+the full-pool loading requirement below; it does not lower accuracy or verification requirements for included cards.
+
+The frozen list is [scope-95.json](scope-95.json): **8,514 names**, including six basics, accounting for
+**527,373,351 of 555,122,162 appearances (95.0013%)**. It uses the existing EDHREC co-play snapshot, not a claim about
+today's live rankings: graph generated September 11, played data September 19, Oracle data October 4, 2026. Source hashes
+are in the manifest. The last included card is Vraska the Unseen. No wish-card exemption occurs in this list.
+
+`node tools/card-load-scope.mjs --check` verifies the frozen ranking and hashes. `--gate` additionally requires every
+included name to be a playable final definition, exiting nonzero otherwise. Initial measurement on integration
+`5fc78a95`: **2,715 of 8,514 final; 5,799 undefined**. This is loading progress, not proof of any other gate.
+G-1 and G-2 concern this exact list; the full compiler's undefined count remains a diagnostic. G-3 through G-8 retain
+their evidence and accuracy requirements. Existing definitions outside the target remain subject to their existing
+checks. The current whole-directory ability gate is retained. Do not treat a candidate, a refused definition, a family
+estimate, or an out-of-scope card as an included final. Future source refreshes require an explicit recorded cutoff
+update; `--gate` never silently replaces the manifest.
+
 Rob, 2026-10-28: *"Pick back up the engine loading from its current state. Rationalize against the 100% load plan,
 create for me the kick-off copy/paste prompt and attachment instructions for OpenAI. It will run 8 different subagents and
 orchestrate all of their work into a consolidated test, confirm and merge at the end ... I want 100% accuracy, 0 errors in
@@ -68,8 +88,8 @@ wave.
 
 | Gate | Rob's words | Holds when | Today |
 | --- | --- | --- | --- |
-| **G-1** | every card | `card-compiler.mjs` reports **0 undefined** Commander cards (the pool is `deckCard` and not banned, in `data/engine/oracle.json`) | 25,616 undefined |
-| **G-2** | none refused | 0 candidates outstanding, 0 provisional, 0 blocked; no card refused at a table for a missing rule | 116 candidates, 2 blocked |
+| **G-1** | every included card | `node tools/card-load-scope.mjs --gate` passes: all 8,514 names in `scope-95.json` are final | 5,799 included names undefined |
+| **G-2** | none included refused | Within `scope-95.json`: 0 candidates outstanding, 0 provisional, 0 blocked; no card refused at a table for a missing rule | Not yet passed; full-pool diagnostics below are historical |
 | **G-3** | 0 error rate on a mechanic | `check-cards` 0 failed; every oracle sentence maps to an ability (fidelity); **every ability is reached by at least one scenario** (the ability ledger, built in wave 0); a promoted candidate's observed smoke game is not enough | 0 failed; no ability ledger; promoted candidates' scenario depth unaudited |
 | **G-4** | 100% accuracy | Calibration with **0 failures**; every oracle verb is a CR 701 keyword action or a vocabulary primitive (`game/engine/vocabulary.mjs`), never a card-special branch; every card read by the verifier, independent of its writer, against its oracle text, rulings and the CR | 4 failures; no independent review of past loads |
 | **G-5** | 0 errors when played | **5,000** pool-fuzz games with a person seat, every one clean: finished, 0 refusals, 0 exceptions, replayed identically, 0 leaks; plus Rob's library (50 seeds) and staging decks | no pool mode |

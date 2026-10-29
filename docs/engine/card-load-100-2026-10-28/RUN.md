@@ -5,16 +5,28 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
-- **Holder:** Codex hand-back, October 28, 2026, for Rob; Linear ROB-199 (run), ROB-200 (wave 0), under ROB-85.
-  Resume with a fresh orchestrator from this record. This context stops at Rob's requested hand-back boundary.
+- **Holder:** Codex resumed October 28, 2026, for Rob; Linear ROB-199 (run), ROB-200 (wave 0), under ROB-85.
+  Rob requested W2/W3/W7 start, wave-0 completion, then continued loading without weaker gates.
+- **Revised endpoint:** Rob explicitly chose **cards covering 95% of deck appearances**, not 95% of distinct names.
+  Frozen `scope-95.json`: 8,514 names, including six basics; 527,373,351/555,122,162 appearances (95.0013%).
+  Source graph September 11, played data September 19, Oracle October 4, 2026; exact hashes are in the manifest.
+  Initial directory measurement at `5fc78a95`: 2,715 included finals, 5,799 undefined, zero wish exemptions in scope.
+  `node tools/card-load-scope.mjs --check` passes; `--gate` correctly exits 1 with 5,799 missing. Two scope mutations
+  caught, `missed: []`. G-1/G-2 now concern this fixed set; all accuracy/evidence requirements and the existing
+  whole-directory ability gate remain. The least-played remaining appearances need not be loaded.
 - **Main at the start:** `39a45706`.
 - **Wave and step:** wave 0 is unfinished. Baseline, prerequisite reconciliation and five bounded role checkpoints are
-  preserved; no new cards or promotions. W2/W3/W7 have not started. No gate or wave completion is claimed.
+  preserved; no new cards or promotions. W2/W3/W7 are now active in isolated worktrees. No gate or wave completion is claimed.
 - **Integration:** `codex/engine-load100-w0`, worktree `C:\Users\robmi\CrankMagic\worktrees\load100\w0-integrate`.
   Package #911 and prerequisite #834 merged locally; eight debt lane files committed at `c9d31c40`.
   Draft integration PR #912: https://github.com/minorrob/mtg-deck-matrix/pull/912.
   Last root code checkpoint: `e7d00039` (paragraph prerequisite and four proved inherited-anchor repairs); subsequent
   record/readiness-command edits are documentation. No writer or verifier branch has been merged into integration.
+- **Resumed root changes:** froze and checked the 95% appearance scope with an explicit failing final-definition gate;
+  no engine runtime change. Re-anchored three more inherited mutations on the same original behaviors: new-table
+  passStack default, front-door candidate report route, and the seated reconnect event floor. Each unbroken suite
+  baseline passed and each selected break was caught, `missed: []`. Global anchors now have **50 inherited problems**;
+  no gate acceptance is claimed. The new scope suite's two mutations were also caught.
 - **Prerequisite:** original #834 remains open and conflicted on GitHub. Isolated reconciliation branch
   `codex/engine-load100-pr834` at `ba82617b` merges main and preserves paragraph boundaries alongside current
   castable-card spell segmentation. Integrated through `8c0566dc`. Full backstop validation exposed its inherited
@@ -23,7 +35,7 @@ Newest wave first. Each line names its command's result line, never a summary of
   both selected backstop breaks are caught, `missed: []`. The five paragraph breaks were also rerun and caught.
 - **Lanes:** five clean, pushed bounded checkpoints are listed below; their remaining debts are queued, not waived.
   This session has three subagent slots, so the eight roles run in batches. Keep all eight roles separate; start the
-  three unstarted roles next. Do not describe these bounded checkpoints as complete themes.
+  W2/W3/W7 are the current batch. Do not describe the earlier bounded checkpoints as complete themes.
 - **Ownership:** the primary checkout has another session's unresolved merge and remains untouched. The old standing
   engine table predates Rob's direct October 28 assignment. At claim time no other active rule-module PR besides #834
   was listed. Re-check current work before `readDeck` edits. The monarch already has a canonical Engine-to-Play request
@@ -32,8 +44,11 @@ Newest wave first. Each line names its command's result line, never a summary of
   `C:\Program Files\Git\bin\bash.exe`; Windows blocks its named-object initialization inside the sandbox, so the
   authorized scan runs with escalation. Network fetch/gh also requires escalation. W5's first export review was rejected;
   root verified the authorized remote/payload, rescanned, and published successfully. No approval remains pending.
-- **Next:** claim the hand-back, fetch, and start W2/W3/W7. Plan the shared resumable-choice work with W3/W5/W7 before
-  replacing outside-resolution fallback choices. Finish all queued writer/verifier debts. Merge W1 through W7, then V8,
+- **Next:** W2/W3/W7 work from `5fc78a95`; W3 owns shared explicit resumable-choice operations before the other roles
+  replace outside-resolution fallback choices. W2 owns copy/effect-cast target and Gandalf blocks; W3 owns movement,
+  destruction, commander and MayPlay permission blocks; W7 owns draw/APNAP/dredge, dice and compiler blocks. Fresh
+  fetch found main unchanged and no open PR touching `game/room/table.mjs`, clearing W2's narrow wish refusal.
+  Finish all queued writer/verifier debts. Merge W1 through W7, then V8,
   regenerate once, and run the strict consolidated checks. Do not mark ready while the ability/anchor gates remain red.
 - **Rob's decision, October 28:** "Allow the additional harness proof." V8 may supplement journal evidence with an
   in-memory ability-removal scenario proof; the safeguards and limits are in `BRIEF.md`. G-3 remains unmet until the
@@ -42,12 +57,12 @@ Newest wave first. Each line names its command's result line, never a summary of
 | Role | Branch under `codex/engine-load100-` | Pushed head | Draft PR | State |
 | --- | --- | --- | --- | --- |
 | W1 faces | `w0-w1-faces` | `27182d42e9afa664dfccae8fb5dd878d6079d6a8` | #917 | Source `9c4366f7`; Elspeth and supported preparation copies; battles, undefined emblem cards and permanent-type insets queued |
-| W2 stack | `w0-w2-stack` (not created) | — | — | Not started; deal file `w0/lane-W2.json` |
-| W3 graveyard | `w0-w3-graveyard` (not created) | — | — | Not started; deal file `w0/lane-W3.json` |
+| W2 stack | `w0-w2-stack` | Pending | — | Active from `5fc78a95`; copy/effect-cast targets, facedown exile, entry type choices, named wish refusals |
+| W3 graveyard | `w0-w3-graveyard` | Pending | — | Active from `5fc78a95`; permissions, manifest, commander and explicit resumable replacements |
 | W4 combat | `w0-w4-combat` | `9177d29baca191ce1bee7773a6851bfabef68df5` | #914 | Clean bounded checkpoint; five debts queued |
 | W5 mana | `w0-w5-mana` | `79fe06c741a2d25f1c7c75ecf20e2810e4d07977` | #915 | Clean bounded checkpoint; five debts queued |
 | W6 tokens | `w0-w6-tokens` | `5c927528f8c26adc3e4e0300001f320331fb9272` | #916 | Clean bounded checkpoint; three replacement-order debts queued |
-| W7 spells | `w0-w7-spells` (not created) | — | — | Not started; deal file `w0/lane-W7.json` |
+| W7 spells | `w0-w7-spells` | Pending | — | Active from `5fc78a95`; draw order/replacements, dice, compiler played-card and trust gates |
 | V8 verifier | `w0-v8-verify` | `1890c72f5bf4aac013d554fe5a9035f688b1df55` | #913 | Clean bounded harness/review checkpoint; coverage, strict-runner and final integration debts remain |
 
 Worktrees are `C:\Users\robmi\CrankMagic\worktrees\load100\<branch suffix>`. Preserve their node_modules junctions;
