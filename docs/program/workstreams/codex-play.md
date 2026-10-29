@@ -1,5 +1,7 @@
 # Codex · Play: the instruction set
 
+> **Superseded in part, 2026-10-29 (Rob: one loop for all work, in Linear).** Where this file says to read or update `docs/ACTIVE.md`, a readout feed (`docs/readout/`, `tests/readout-feeds.mjs`) or a handoff file, follow instead `AGENTS.md`, "The work is in Linear: one loop", and the Linear document "How work flows: the one loop" on initiative I-1: pick up the next Todo issue in your lane, claim it, build, then update the PR, the issue and its status. The lanes, file ownership and engineering rules in this file still hold.
+
 *Platform: Codex Astra, session 1. Linear label `Codex · Play`. Feed `docs/readout/feeds/codex-play.json`. Branches
 `codex/play-<topic>`. Project: Play, an exceptional Commander game at the table (P-ROB-1), milestones M1 to M6, plus
 ROB-56 (the coach drawer, under AI) and ROB-124 (play preferences, under Tailored). The charter is
