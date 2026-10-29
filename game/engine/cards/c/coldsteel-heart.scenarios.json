@@ -3,7 +3,7 @@
   "card": "Coldsteel Heart",
   "scenarios": [
     {
-      "name": "Cast, Rob is asked for a color and chooses blue; it enters tapped, and next turn taps for {U} only",
+      "name": "Tap replacement chosen first, then blue; enters tapped and next turn produces only {U}",
       "setup": [
         {
           "seat": 0,
@@ -33,6 +33,32 @@
         },
         {
           "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Effect: This artifact enters tapped.",
+                  "Effect: As this artifact enters, choose a color."
+                ]
+              }
+            },
+            {
+              "seat": 0,
+              "zone": "battlefield",
+              "cards": [
+                "Wastes",
+                "Wastes"
+              ]
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Effect: This artifact enters tapped."
+          ]
         },
         {
           "expect": [
@@ -107,7 +133,7 @@
       ]
     },
     {
-      "name": "Red chosen: it taps for {R}",
+      "name": "Color replacement chosen first, then red; enters tapped and next turn produces only {R}",
       "setup": [
         {
           "seat": 0,
@@ -137,6 +163,32 @@
         },
         {
           "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Effect: This artifact enters tapped.",
+                  "Effect: As this artifact enters, choose a color."
+                ]
+              }
+            },
+            {
+              "seat": 0,
+              "zone": "battlefield",
+              "cards": [
+                "Wastes",
+                "Wastes"
+              ]
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Effect: As this artifact enters, choose a color."
+          ]
         },
         {
           "choose": [

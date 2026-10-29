@@ -17,15 +17,41 @@
     "| Convoke with Phyrexian or {2/W} symbols left to the pool | `rules/mana.mjs`:483 | W5 |",
     "| Ways to pay capped: 24 tap choices, 12 payments | `rules/actions.mjs`:1703; `rules/mana.mjs`:254 | W5 |"
   ],
-  "status": "Checkpoint proved and draft PR 915 published: Saga exact cost, convoke alternatives and full-pool dealer; remaining W5 debt queued; consolidated gates pending",
+  "status": "Resume checkpoint: funded casts and uncapped basic payment questions proved; reveal-none land entry repaired; remaining W5 debt active",
   "checkpoint": {
     "cardsAdded": 0,
     "cardsPromoted": 0,
-    "cardsCorrected": [{"name": "Urza's Saga", "scenariosBefore": 1, "scenariosNow": 3}],
+    "cardsCorrected": [
+      {
+        "name": "Urza's Saga",
+        "scenariosBefore": 1,
+        "scenariosNow": 3
+      }
+    ],
     "proven": [
-      {"item": "Saga III searches actual printed {0}/{1}, excluding colored, X and absent costs", "rules": ["202.1", "202.1b", "202.3"], "evidence": "A red selector regression offered four invalid fixtures before the fix; 3 Saga scenarios now pass, including choosing zero and failing to find"},
-      {"item": "Convoke can pay Phyrexian colored and monohybrid colored/generic alternatives", "rules": ["107.4e", "107.4f", "601.2b", "702.51"], "evidence": "Played {W/P}, {2/W} with one white or two colorless helpers, mixed {1}{W/P} with life, and both explicit mana-vs-life answers; existing engine-convoke's 43 checks remain green"},
-      {"item": "library-engine-index --pool", "evidence": "Real CLI proof: 25616 of 25616 compiler-universe names exactly once; 857 lanes at most 30 including reviews; 116 freshly compiled candidates; no personal collection dependency; sentence-reuse estimates labeled as potential, not measured gains"}
+      {
+        "item": "Saga III searches actual printed {0}/{1}, excluding colored, X and absent costs",
+        "rules": [
+          "202.1",
+          "202.1b",
+          "202.3"
+        ],
+        "evidence": "A red selector regression offered four invalid fixtures before the fix; 3 Saga scenarios now pass, including choosing zero and failing to find"
+      },
+      {
+        "item": "Convoke can pay Phyrexian colored and monohybrid colored/generic alternatives",
+        "rules": [
+          "107.4e",
+          "107.4f",
+          "601.2b",
+          "702.51"
+        ],
+        "evidence": "Played {W/P}, {2/W} with one white or two colorless helpers, mixed {1}{W/P} with life, and both explicit mana-vs-life answers; existing engine-convoke's 43 checks remain green"
+      },
+      {
+        "item": "library-engine-index --pool",
+        "evidence": "Real CLI proof: 25616 of 25616 compiler-universe names exactly once; 857 lanes at most 30 including reviews; 116 freshly compiled candidates; no personal collection dependency; sentence-reuse estimates labeled as potential, not measured gains"
+      }
     ],
     "commands": [
       "node --stack-size=4000 tests/engine-load100-mana.mjs: 36 checks passed",
@@ -48,12 +74,56 @@
       "Delve with X",
       "Complete payment and tap choices beyond the 12/24 caps; current assertions and caps deliberately remain unchanged"
     ],
-    "routed": [{"item": "Wayfarer's Bauble calibration", "owner": "W4", "finding": "Held-out translation selects Artifact instead of Land because repeated TYPE slots alias; the hand definition is correct"}],
+    "routed": [
+      {
+        "item": "Wayfarer's Bauble calibration",
+        "owner": "W4",
+        "finding": "Held-out translation selects Artifact instead of Land because repeated TYPE slots alias; the hand definition is correct"
+      }
+    ],
     "review": "V8 independently reviewed the bounded code commit 8e6f5b5e and extra mixed {2/W}{B/P} branches; root reports no new finding. This does not close the queued W5 debt or any program gate",
     "pullRequest": "https://github.com/minorrob/mtg-deck-matrix/pull/915",
     "codeCommit": "8e6f5b5e28150be930c2ed0285b0199bbcf3e56e",
-    "pending": ["Root's single regeneration of definitions/coverage/inventory", "Consolidated wave checks, games, CI and staging"],
+    "pending": [
+      "Root's single regeneration of definitions/coverage/inventory",
+      "Consolidated wave checks, games, CI and staging"
+    ],
     "ignoresAdded": [],
-    "sources": ["Local Comprehensive Rules text, rule numbers only", "https://api.scryfall.com/cards/named?exact=Urza%27s%20Saga and its public rulings URI"]
+    "sources": [
+      "Local Comprehensive Rules text, rule numbers only",
+      "https://api.scryfall.com/cards/named?exact=Urza%27s%20Saga and its public rulings URI"
+    ]
+  },
+  "resumeCheckpoint": {
+    "base": "11e4fe864a9c3b26d3e1eec57fb04cc0c16e7b3a",
+    "cardsAdded": 0,
+    "cardsPromoted": 0,
+    "proven": [
+      "Hand/exile/graveyard/library-top normal and alternative casts offered before floating mana; chosen alternative taps exact Island, spends its mana, emits one cast and one mana event, resolves gain 3. JSON reload; forged alternative unchanged.",
+      "12/24 display caps removed: public pool, tap-to-cast and effect-paid cast questions expose all 56 three-mana combinations; final option is paid and resolves. Invalid answer unchanged.",
+      "All 11 reveal lands including Murmuring Bosk actually played with no revealable card complete entry tapped without a suspended question.",
+      "Coldsteel Heart saved scenarios explicitly assert and choose both legal CR 616.1 replacement orders, preserve absence before entry and exact later chosen-color mana."
+    ],
+    "redProof": [
+      "Before affordability fix the hand alternative was absent, and exile had no cast; old normal hand cast still offered.",
+      "Old cap yielded 12 rather than 56 pool payments and 24 rather than 56 public tap options.",
+      "Before entry guard Choked Estuary remained in hand behind a decline-only reveal question."
+    ],
+    "commands": [
+      "node --stack-size=4000 tests/engine-load100-mana.mjs: 110 checks passed",
+      "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w5-funding.py: 9 caught; missed: []",
+      "engine-mana 56; engine-tap-to-cast 70; engine-convoke 43; engine-entering 15; engine-enter-copy 24; engine-pay-mana-play 5; engine-lands-and-mana 9; engine-replacement-steps 16; engine-zone-operations 71; engine-rule-operations 76: all passed",
+      "engine-costs 32; engine-play-from 20; engine-play-from-zones 76; engine-restricted-mana 15: all passed",
+      "Actual tests/*.mjs count remains 671; no new suite or README registration needed"
+    ],
+    "assertionRationale": "engine-convoke formerly asserted a truncation count through PAY_CHOICES. It now asserts all 16 mathematically distinct payments and all 185 bounded five-color multisets in the larger case, each unique. No legal outcome removed.",
+    "remaining": [
+      "Effect-paid X and additional costs; delve with X",
+      "Complete bundled-source search (4000-step/minimum-budget filtering) and rider choices (16 cap); simple payment/tap display caps are fixed but full completeness is not claimed",
+      "Token shock-land create/copy/reload/pay-life native witnesses; may already be handled by new entry pipeline",
+      "Alternative/X affordability interactions with nonmana tap costs; collision checks before claiming every alternative cost closed",
+      "Root consolidated generated artifacts, broader card/ability checks, actual fuzz, Actions and wave completion"
+    ],
+    "ignoresAdded": []
   }
 }
