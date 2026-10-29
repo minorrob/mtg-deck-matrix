@@ -21,7 +21,7 @@
       {
         "name": "Elspeth, Sun's Champion",
         "scenarios": 3,
-        "change": "Real command-zone emblem carries static power/toughness and Flying effects"
+        "change": "Real command-zone emblem carries static power/toughness and Flying effects, with its single Oracle sentence displayed once"
       },
       {
         "name": "Goblin Glasswright // Craft with Pride",
@@ -31,16 +31,18 @@
       }
     ],
     "proof": [
-      "engine-load100-w1-faces: 70 checks passed",
+      "engine-load100-w1-faces: 79 checks passed, including exact emblem text, genuine repeated abilities, invalid explicit text, and a shared-sentence +3/+3 variant with matching behavior",
       "engine-prepare: 3 checks passed, running all 5 saved Glasswright scenarios",
       "data-integrity: Validated 50 variants and 50 connected buy profiles",
       "feature-wiring: 131 checks passed",
-      "anchors: 57 pre-existing problems; four moved h3/k3 anchors restored; no new problem",
-      "breaks-load100-w0-w1-faces: 17 caught, missed: []; one unbroken suite union includes original h3/k3 suites and engine-cards",
-      "Diagnostic generated definitions used for mutation baseline and restored exactly to HEAD afterward; no backups remain",
+      "anchors: 57 pre-existing problems; five moved h3/k3/walkers anchors restored; no new problem",
+      "Original preparation checkpoint: 17 caught, missed: []; unbroken suite union includes original h3/k3 suites and engine-cards",
+      "Final emblem-text increment: seven targeted mutations caught, missed: []; 23 unique mutations caught across both runs",
+      "Diagnostic generated definitions used only for mutation baselines; exact restoration verified before committing",
       "check-cards: 6430 definitions; 11025 scenarios, 0 failed; exit 0 on code checkpoint 9f4dfcb2",
-      "19 related reader suites passed; no timeout, no engine or rule module changed afterward",
-      "Pre-push SCAN PASS on code checkpoint 9f4dfcb2; final metadata-only commit requires its own scan"
+      "19 related reader suites passed on preparation code checkpoint 9f4dfcb2; final emblem-text increment has separate directly affected verification",
+      "Final text increment: engine-projection 93, engine-planeswalkers 65, sentence-paragraphs 11 passed; unbroken mutation baseline also passes all seven registered suites",
+      "Every pushed head requires its own pre-push SCAN PASS"
     ],
     "queued": [
       "Battles: 0 final Battle definitions in baseline; battle-half ROB-149 not implemented in this checkpoint",
@@ -123,6 +125,12 @@
       "caught COPY_KEYS: loyalty -- tests/engine-wave4a-h3.mjs",
       "caught last known copiable: loyalty -- tests/engine-wave4a-h3.mjs",
       "caught chosen counters: a copy entering -- tests/engine-cards.mjs",
+      "caught explicit emblem text is validated -- tests/engine-load100-w1-faces.mjs",
+      "caught explicit emblem text is nonempty -- tests/engine-load100-w1-faces.mjs",
+      "caught an emblem retains its explicit text -- tests/engine-load100-w1-faces.mjs",
+      "caught explicit emblem text is preferred -- tests/engine-load100-w1-faces.mjs",
+      "caught legacy emblem text is preserved -- tests/engine-load100-w1-faces.mjs",
+      "caught emblem: shown as one -- tests/engine-load100-w1-faces.mjs",
       "missed: []"
     ],
     "limits": [
@@ -130,6 +138,11 @@
       "No clean-game exercises credited by these scenario/suite results",
       "Full calibration will be consolidated after W4 sentence fixes merge; the base branch still contains the known original calibration debt",
       "Generated definitions omitted intentionally for root consolidation; diagnostic generated file was restored"
+    ],
+    "emblemText": "Optional emblem effect text uses the existing nested-text sentence templating, is validated as nonempty, and projects in preference to the retained abilities-text fallback. No global deduplication.",
+    "mutationCommands": [
+      "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w1-faces.py (original 17 before emblem-text increment)",
+      "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w1-faces.py 'explicit emblem text is validated' 'explicit emblem text is nonempty' 'an emblem retains its explicit text' 'explicit emblem text is preferred' 'legacy emblem text is preserved' 'Elspeth makes an actual emblem' 'emblem: shown as one'"
     ]
   }
 }

@@ -6,13 +6,15 @@ import {loadCardIndex} from "../game/tools/engine-cards.mjs";
 import {runScenario} from "../game/engine/cards/scenario.mjs";
 import {projectFor} from "../game/engine/projection.mjs";
 import {canBlockAttacker} from "../game/engine/keywords/combat.mjs";
-import {createToken, makeCopies, copyOnto, endCopies} from "../game/engine/script/effects/permanents.mjs";
+import {createToken, makeCopies, copyOnto, endCopies, emblem as makeEmblem} from "../game/engine/script/effects/permanents.mjs";
 import {prepare, unprepare} from "../game/engine/script/effects/attributes.mjs";
 import {addObject, moveObject, shownFaceDown} from "../game/engine/state/index.mjs";
 import {legalActions, applyAction} from "../game/engine/rules/actions.mjs";
 import {resolveTop} from "../game/engine/rules/stack.mjs";
 import {checkStateBasedActions} from "../game/engine/rules/sba.mjs";
-import {lastKnown} from "../game/engine/rules/layers.mjs";
+import {lastKnown, characteristicsOf} from "../game/engine/rules/layers.mjs";
+import {compileScript} from "../game/engine/cards/index.mjs";
+import {abstractBody, fillBody, templateOf} from "../game/engine/cards/sentences.mjs";
 
 let checks = 0;
 const eq = (actual, expected, why) => {assert.deepEqual(actual, expected, why); checks += 1;};
@@ -29,6 +31,7 @@ eq([emblem.owner, emblem.controller, emblem.types, emblem.manaCost, emblem.color
 eq(state.zones.battlefield.includes(emblemIds[0]), false, "an emblem is not a permanent (CR 114.5)");
 const shown = projectFor(state, 1).players[0].zones.Command.cards.find((card) => card.emblem);
 eq(shown.name, "Elspeth, Sun's Champion emblem", "opponents receive the real emblem object in the existing room view");
+eq(shown.text, "Creatures you control get +2/+2 and have flying.", "the emblem displays its single printed Oracle sentence once");
 const soldier = state.zones.battlefield.find((id) => state.objects[id].card === "Soldier");
 const bear = state.zones.battlefield.find((id) => state.objects[id].card === "Bear");
 eq(canBlockAttacker(state, bear, soldier), false, "the emblem's flying prevents a ground Bear from blocking its Soldier");
@@ -39,6 +42,35 @@ const pair = "Goblin Glasswright // Craft with Pride";
 const preparedDefinition = index.definition(pair);
 const start = (name, setup = []) => runScenario({name, setup, steps: [], expect: [], seats: 3}, index.definition).state;
 const field = (s, object, seat = 0) => addObject(s, {...object, owner: seat, controller: seat}, "battlefield");
+{
+  const s = start("Genuinely repeated emblem abilities remain visible");
+  const bear = field(s, {card: "Repeated Bear", types: ["Creature"], power: 2, toughness: 2});
+  const ability = {id: "a0", kind: "static", text: "Creatures you control get +1/+1.", layer: 7, sublayer: "c",
+    affects: {what: "permanent", types: ["Creature"], controller: "you"}, apply: {power: 1, toughness: 1}};
+  makeEmblem(s, {abilities: [ability, {...ability, id: "a1"}]}, {controller: 0, source: null});
+  const marker = projectFor(s, 1).players[0].zones.Command.cards.find((card) => card.emblem);
+  eq(marker.text, `${ability.text}\n${ability.text}`, "the legacy fallback preserves genuinely repeated ability text");
+  eq(characteristicsOf(s, bear).power, 4, "both genuine repeated abilities still apply");
+}
+{
+  const original = read("e/elspeth-suns-champion.json");
+  for (const invalid of ["", "  ", 42, []]) {
+    const script = structuredClone(original);
+    script.abilities[2].effects[0].text = invalid;
+    eq(compileScript(script).problems.some((problem) => /emblem Oracle text/.test(problem)), true,
+      "explicit emblem Oracle text must be a nonempty string");
+  }
+  const ability = original.abilities[2];
+  const variantText = ability.text.replaceAll("+2/+2", "+3/+3");
+  const filled = fillBody(abstractBody(ability, templateOf(ability.text, original.identity.name).slots, original.identity.name),
+    templateOf(variantText, original.identity.name).slots, original.identity.name);
+  const s = start("A shared emblem sentence fills its own printed text");
+  const bear = field(s, {card: "Variant Bear", types: ["Creature"], power: 2, toughness: 2});
+  makeEmblem(s, filled.effects[0], {controller: 0, source: null});
+  eq(projectFor(s, 1).players[0].zones.Command.cards.find((card) => card.emblem).text,
+    "Creatures you control get +3/+3 and have flying.", "the existing nested-text template fills the emblem's printed values");
+  eq(characteristicsOf(s, bear).power, 5, "the filled emblem's displayed values agree with its actual effect");
+}
 const castInset = (s, permanent) => {
   const inset = s.objects[permanent].preparedCopy;
   const player = s.objects[permanent].controller;

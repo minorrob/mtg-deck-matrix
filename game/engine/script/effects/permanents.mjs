@@ -520,6 +520,8 @@ export function emblem(state, params, context) {
   const named = state.objects[context.source]?.card ?? context.lastKnown?.name ?? null;
   const id = addObject(state, {card: named ? `${named} emblem` : "Emblem", emblem: true, owner: player, controller: player,
     abilities: params.abilities ?? []}, "command", player);
+  /* One printed ability can use multiple layer bodies; its Oracle text is still printed once (CR 114.2-4). */
+  if (params.text !== undefined) state.objects[id].emblemOracleText = params.text;
   return [event("GameEventEmblemCreated", state, {player: {playerId: player, name: state.players[player].name}, card: cardRef(state, id)})];
 }
 

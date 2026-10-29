@@ -23,13 +23,22 @@ ELSPETH_STATICS = [
      'layer': 6, 'affects': {'what': 'permanent', 'types': ['Creature'], 'controller': 'you'},
      'apply': {'addKeywords': ['Flying']}},
 ]
-EMBLEM = effects_block([{'effect': 'emblem', 'abilities': ELSPETH_STATICS}])
+EMBLEM = effects_block([{'effect': 'emblem', 'text': 'Creatures you control get +2/+2 and have flying.', 'abilities': ELSPETH_STATICS}])
 ANONYMOUS = effects_block([{'effect': 'effectUntil', 'until': 'ever', **{k: v for k, v in ability.items() if k not in ('kind', 'text')}}
                            for ability in ELSPETH_STATICS])
 OWN_DESIGNATIONS = '''  /* Copied preparation cards also enter with their designation (CR 614.12, 722.3a). */
   return {tapped: proposal.tapped === true, counters, asks: withChoiceCounters(proposal), designations: proposal.designations ?? []};'''
 
 BREAKS = [
+    ('explicit emblem text is validated', 'game/engine/cards/index.mjs',
+     'if (effect.text !== undefined && (typeof effect.text !== "string" || !effect.text.trim()))', 'if (false)'),
+    ('explicit emblem text is nonempty', 'game/engine/cards/index.mjs',
+     'typeof effect.text !== "string" || !effect.text.trim()', 'typeof effect.text !== "string"'),
+    ('an emblem retains its explicit text', PERMANENTS,
+     '  if (params.text !== undefined) state.objects[id].emblemOracleText = params.text;\n', ''),
+    ('explicit emblem text is preferred', 'game/engine/projection.mjs', 'text: object.emblemOracleText ?? (object.abilities ?? [])', 'text: (object.abilities ?? [])'),
+    ('legacy emblem text is preserved', 'game/engine/projection.mjs',
+     'text: object.emblemOracleText ?? (object.abilities ?? []).map((a) => a.text).filter(Boolean).join("\\n")', 'text: object.emblemOracleText'),
     ('Elspeth makes an actual emblem', 'game/engine/cards/e/elspeth-suns-champion.json', EMBLEM, ANONYMOUS),
     ('copy effects replace preparation characteristics', STATE,
      '"spell", "enchant", "preparation"]);', '"spell", "enchant"]);'),
@@ -60,10 +69,11 @@ BREAKS = [
 ]
 
 # Prove the exact legacy mutations after re-anchoring, with their original suites retained. The suite union runs one
-# unbroken baseline, avoiding repeated full card sweeps just to validate four moved anchors.
+# unbroken baseline, avoiding repeated full card sweeps just to validate five moved anchors.
 for filename, labels in [
     ('breaks-wave4a-h3.py', {'copied planeswalker: loyalty counters', 'COPY_KEYS: loyalty', 'last known copiable: loyalty'}),
     ('breaks-wave4c-k3.py', {'chosen counters: a copy entering'}),
+    ('breaks-libload-l1-walkers.py', {'emblem: shown as one'}),
 ]:
     spec = runpy.run_path(str(Path(__file__).with_name(filename)))
     SUITES.extend(suite for suite in spec['SUITES'] if suite not in SUITES)
