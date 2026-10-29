@@ -1,5 +1,11 @@
 # ROB-227 Snoop renderer proposal, not applied
 
+Historical proposal evidence on the pre-fix source. Rob subsequently approved the narrow ownership override; clean
+PR949 applied the two production lines and registered `tests/board-playtest-snoop.mjs`, with actual production98 and
+two caught controls. Use that registered production test for current validation. The candidate helper/patch here
+retain their original pre-fix anchors and deliberately refuse an already patched or changed renderer. The statements
+below describe the proposal/quiet-window phase, not the current production application status.
+
 Native and room projection already expose Snoop's public top card and offer legal Goblin spells with normal timing
 and payment. The board's `mat()` passes `null` to the library pile, so it always draws a back even when the projected
 library contains a revealed card. No production UI source has been edited in this engine lane.

@@ -130,7 +130,10 @@ The two new suites bring this checkpoint's actual registry count to 690. No brow
 ## Committed native refinement, epoch and raw replay receipts
 
 Runtime `72a785ab` and assembled merge `d22ea1b3` preserve the original REDs/history while consuming clean root
-`bb8c2aab` and W5 API `3b879144` by merge commits. [COMMITTED-MODAL-CONTRACT.md](COMMITTED-MODAL-CONTRACT.md) states the
+`bb8c2aab` and W5 API `3b879144` by merge commits. Later clean root `55f133f5` enters by `1cb2dd22`; the proved runtime
+and all four probe files are byte-identical across that dependency merge. Its new public block-preflight consumer and
+additive report scenarios retain root's separate proof; no full acceptance is inferred from them.
+[COMMITTED-MODAL-CONTRACT.md](COMMITTED-MODAL-CONTRACT.md) states the
 private schema, server tape metadata, native generation and cancellation boundaries. Original priority-cast and
 activation stages remain intact. This is a bounded engine checkpoint; shared UI completion and full acceptance stay open.
 
@@ -189,8 +192,9 @@ journal reset, history drop or masked event is used.
 
 Additional affected readers pass on assembled source: Cancel63/room53, Undo23, yield43, optional-count21, table188,
 Salty71/provocation21, blink113, decision-facts34, native effect-refresh70, ability-target23, trigger-targets28,
-top-card8, native Snoop room, held-draw14, assets136, service-worker9, wiring131 and integrity. The actual registry has
-707 Node suites. No full suite or unchanged browser proof is duplicated. An earlier accidental `room-resolve-all`
+top-card8, native Snoop room, held-draw14, assets136, service-worker9, wiring131 and integrity. After the final dependency
+merge, its public block-preflight consumer1189, wiring131 and integrity also pass. The actual registry has
+708 Node suites. No full suite, byte-identical mutation proof or unchanged browser proof is duplicated. An earlier accidental `room-resolve-all`
 prelaunch skip earned no credit; the independently published Snoop UI949 production98/browser controls and root9195
 production98 are documented separately, with their broader footer/camera limits preserved.
 

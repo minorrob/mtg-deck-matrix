@@ -17,7 +17,7 @@ Activated/route/cost follow-up now proves actual Cankerbloom and effective Snoop
 mutations, while retaining original cast52/room46 and all 19 caught probes. Committed trigger/effect refinement is
 separate bounded engine checkpoint: controller68, actual native60/room201, native generation room45, epoch/old-tape30,
 plus54 caught probes on the full ten-reader union. Original cast19/activation13/cursor1 probes are also re-proved,
-all `missed: []`. Clean W5 API3b879144 and rootbb8c enter by merge commits; live room/table epoch, authoritative
+all `missed: []`. Clean W5 API3b879144 and root55f133f5 enter by merge commits; live room/table epoch, authoritative
 drive/reload refresh and original private raw receipt replay are proved. PLAYTEST-PROGRESS.md records exact commands,
 the actual REDs and corrected fixture expectations. W5 still owns additional-cost continuation work; shared UI,
 old-live migration and full card-load gates remain open. The explicitly approved Snoop two-line UI fix was isolated,
