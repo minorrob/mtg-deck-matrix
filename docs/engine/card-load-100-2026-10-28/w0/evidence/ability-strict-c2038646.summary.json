@@ -1,0 +1,153 @@
+{
+  "source": {
+    "revision": "c2038646f1187eb68a0495a621a2d9e1ee1078a0",
+    "tree": "19b4a3cb3dc58cccc6fb39e902b4e32515961eb3",
+    "dirty": false,
+    "inputs": {
+      "scripts": "17a753fc10b8f105898dccba7b0232ba012966c2aee5b023f3b3c88b998b95ae",
+      "scenarios": "59a338dd89b814c38f41b430e9cd1ef9a4f771a27ad52470dd014e99d9fac7b8"
+    }
+  },
+  "measurement": {
+    "complete": true,
+    "counterfactual": true,
+    "choicePolicy": "explicit",
+    "definitions": 6430,
+    "scenarios": 11039,
+    "problems": 0,
+    "failed": 6580
+  },
+  "abilities": {
+    "final": 6430,
+    "abilities": 11633,
+    "scenarioReached": 2039,
+    "counterfactualReached": 523,
+    "scenarioComplete": false
+  },
+  "unprovedAbilities": 9594,
+  "scenarioFailureCategories": {
+    "ambiguous action/source": 5522,
+    "implicit target": 865,
+    "automatic settle answer": 113,
+    "required attack": 12,
+    "trigger order": 15,
+    "ambiguous label": 12,
+    "defender": 16,
+    "skipped optional move": 15,
+    "physical blocker": 1,
+    "other or truncated diagnostic": 5,
+    "physical attacker": 1,
+    "required block": 3
+  },
+  "topScenarioFailureCards": [
+    [
+      "Moment of Reckoning",
+      10
+    ],
+    [
+      "Saw in Half",
+      10
+    ],
+    [
+      "Misleading Signpost",
+      9
+    ],
+    [
+      "Outpost Siege",
+      9
+    ],
+    [
+      "Tegwyll, Duke of Splendor",
+      9
+    ],
+    [
+      "Ginger, Queen of Sweets",
+      8
+    ],
+    [
+      "Lich's Relic",
+      8
+    ],
+    [
+      "Duplicant",
+      7
+    ],
+    [
+      "Song of the Dryads",
+      7
+    ],
+    [
+      "Steel Hellkite",
+      7
+    ],
+    [
+      "The Misty Mountains Cold",
+      7
+    ],
+    [
+      "Akroma, Angel of Fury",
+      6
+    ],
+    [
+      "Archdruid's Charm",
+      6
+    ],
+    [
+      "Artistic Process",
+      6
+    ],
+    [
+      "Break Under Pressure",
+      6
+    ],
+    [
+      "Chaos Warp",
+      6
+    ],
+    [
+      "Commander's Plate",
+      6
+    ],
+    [
+      "Coruscation Mage",
+      6
+    ],
+    [
+      "Dack Fayden, Helping Hand",
+      6
+    ],
+    [
+      "Fulminous Forte",
+      6
+    ],
+    [
+      "Gandalf, Goblins' Bane // Flameshape",
+      6
+    ],
+    [
+      "Glen Elendra Guardian",
+      6
+    ],
+    [
+      "Hapatra, the Desert Fang",
+      6
+    ],
+    [
+      "Hedron-Field Purists",
+      6
+    ],
+    [
+      "Jeska's Will",
+      6
+    ]
+  ],
+  "limits": "Categories use the actual truncated CLI diagnostics, not new observations. Grouping is routing only; no family receives proof credit.",
+  "denominatorChange": {
+    "previousSource": "11e4fe864a9c3b26d3e1eec57fb04cc0c16e7b3a",
+    "previousAbilities": 11636,
+    "currentAbilities": 11633,
+    "changeCommit": "498e3d05",
+    "reason": "Earlier reviewed Song of the Dryads layer correction removes one incorrect override; Urza's Saga replaces two duplicate conditional activations/zero-effect chapters with actual persistent chapter grants. No final card removed; raw inputs match the canonical directory."
+  },
+  "gate": "G-3 fails; no new card, clean-game, review or whole-wave acceptance"
+}

@@ -54,3 +54,28 @@ inherited anchors, including fuzz's current pod flags, moved and are independent
 mutations also pass on the explicit-choice source (`root-strict-cli-explicit-mutations.log`, `missed: []`).
 The new strict whole-directory failure inventory still needs measurement; this is not a claim that those saved
 scenarios have already been repaired or that G-3 passes.
+
+## Authoring an explicit physical source
+
+The source-reference follow-up passes 183 native checks. Its 11 additional mutations are caught against the original
+four-suite baseline, with `missed: []`. It does not change a saved card/scenario or grant ability credit. The latest
+whole-directory measurement remains the RED `c2038646` archive; no unchanged sweep is repeated for unused syntax.
+
+For example, with two Wastes on the actor's battlefield, these are two authored decisions:
+
+```json
+{"tap":"Wastes","mana":{"C":1},"source":{"zone":"battlefield","index":0}}
+{"tap":"Wastes","mana":{"C":1},"source":{"zone":"battlefield","index":1}}
+```
+
+`index` is mandatory and zero-based within the named cards at that moment in the named zone, before availability
+filtering. Tapping index 0 twice fails even if index 1 remains untapped. Zone changes may change zone order; this is
+not a persistent-object alias. The actual selected object ID is recorded in the harness policy trace and native mana
+provenance. `seat` defaults to the actor; `card` can explicitly name the physical card separately from an action's
+label. The reference never overrides legalActions, controller/ownership checks, targets, mana output, costs or timing.
+Malformed/out-of-range references fail as policy errors. Same-name attack/block/counted-target choices instead use
+explicit indexed answers at the real question. Per-card authors must review the selected objects and preserve the
+original final outcomes; no blanket legacy-answer conversion is performed.
+
+Checker failures retain the full scenario name and actual error. The prior 240-character cutoff concealed five actual
+causes in the c203 snapshot's printed diagnostics; that archive is preserved as measured, without invented details.

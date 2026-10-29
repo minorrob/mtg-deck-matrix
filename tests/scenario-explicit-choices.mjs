@@ -66,6 +66,39 @@ rejects(colors, /matching actions/);
 eq(run({...colors, steps: [{tap: "Two Color Rock", mana: {U: 1}}], expect: [{seat: 0, pool: {G: 0, U: 1}}]}).state.players[0].manaPool.U, 1,
   "the other legal output is executable with a named mana choice");
 
+const repeatedSources = {name: "physical sources are authored before legality filtering", setup: [{seat: 0, zone: "battlefield", cards: ["Wastes", "Wastes"]},
+  {seat: 1, zone: "battlefield", cards: ["Wastes"]}], steps: [{tap: "Wastes", mana: {C: 1}, source: {zone: "battlefield", index: 1}}], expect: [{seat: 0, pool: {C: 1}}]};
+const exactSource = run(repeatedSources);
+const ownWastes = exactSource.state.zones.battlefield.filter(id => exactSource.state.objects[id].controller === 0);
+eq(ownWastes.map(id => exactSource.state.objects[id].tapped), [false, true], "explicit index 1 taps the second physical Wastes, not the first legal source");
+eq(exactSource.policies.map(p => [p.kind, p.id, p.zone, p.seat, p.index]), [["physical-source", ownWastes[1], "battlefield", 0, 1]], "the harness records the author's exact source decision");
+ok(exactSource.events.some(e => e.kind === "GameEventManaPool" && e.data.fields.source.cardId === ownWastes[1]), "actual mana provenance names that same physical source");
+const sourceStep = {tap: "Wastes", mana: {C: 1}, source: {zone: "battlefield", index: 0}};
+const bothSources = run({...repeatedSources, steps: [sourceStep, repeatedSources.steps[0]], expect: [{seat: 0, pool: {C: 2}}]});
+eq(ownWastes.map(id => bothSources.state.objects[id].tapped), [true, true], "each explicit source is activated once");
+let repeatedError; try {run({...repeatedSources, steps: [sourceStep, sourceStep]});} catch (error) {repeatedError = error;}
+assert.match(repeatedError?.message ?? "", /not offered activate-mana Wastes/); checks++;
+eq(scenarioBehaviorFailure(repeatedError, repeatedSources), false, "repeating a tapped physical source cannot silently switch sources or earn behavior proof");
+for (const source of [null, [], {}, {zone: "battlefield", index: -1}, {zone: "battlefield", index: "0"}, {zone: "battlefield", index: 0.5},
+  {zone: "__proto__", index: 0}, {zone: "Battlefield", index: 0}, {zone: "battlefield", index: 0, extra: true}, {zone: "battlefield", index: 0, card: 3},
+  {zone: "battlefield", index: 0, card: ""}]) rejects({...repeatedSources, steps: [{...sourceStep, source}]}, /source needs/);
+for (const seat of [-1, 2, "0"]) rejects({...repeatedSources, steps: [{...sourceStep, source: {...sourceStep.source, seat}}]}, /source seat/);
+rejects({...repeatedSources, steps: [{...sourceStep, optional: true, source: {zone: "battlefield", index: 2}}]}, /no physical index/);
+for (const source of [{zone: "battlefield", seat: 1, index: 0}, {zone: "library", index: 0}]) {
+  assert.throws(() => run({...repeatedSources, steps: [{...sourceStep, source}]}), /not offered/); checks++;
+}
+const wrongCard = {...repeatedSources, setup: [...repeatedSources.setup, {seat: 0, zone: "battlefield", cards: ["Mountain"]}],
+  steps: [{...sourceStep, source: {zone: "battlefield", card: "Mountain", index: 0}}]};
+assert.throws(() => run(wrongCard), /not offered/); checks++;
+const handSource = run({name: "hand instances retain exact physical source", setup: [{seat: 0, zone: "hand", cards: ["Free Bear", "Free Bear"]}],
+  steps: [{cast: "Free Bear", source: {zone: "hand", card: "Free Bear", index: 1}}, {resolve: true}], expect: [{seat: 0, zone: "hand", cards: ["Free Bear"]}, {seat: 0, zone: "battlefield", cards: ["Free Bear"]}]});
+ok(handSource.policies[0].id !== handSource.state.zones.hand[0][0], "the explicitly chosen hand card moved and the first copy remained in hand");
+eq(handSource.policies[0].zone, "hand", "source provenance retains the authored zone");
+const diagnostics = [];
+eq(checkScenarios({files: [{card: "Wastes", scenarios: [{...missing, name: "Long diagnostic ".repeat(30)}]}], scripts: [], cards: tableCards,
+  report: (...parts) => diagnostics.push(parts.join(" "))}), {runs: 1, failed: 1}, "a long scenario still reports its actual strict failure");
+ok(diagnostics[0].includes("optional move is unavailable"), "the diagnostic does not truncate away the actual failure after a long scenario name");
+
 const multiplayer = {name: "attacks name their defender", seats: 3, setup: [{seat: 0, zone: "battlefield", cards: ["Ground Bear"]}],
   steps: [{attack: ["Ground Bear"]}], expect: [{seat: 1, life: 40}]};
 rejects(multiplayer, /explicit defending player/);

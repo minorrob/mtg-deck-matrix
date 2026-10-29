@@ -1025,6 +1025,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `deck-autocreate` — `tests/deck-autocreate.mjs`
 - `deck-stages` — `tests/deck-stages.mjs`
 - `new-deck-flow` — `tests/new-deck-flow.mjs`
+- `newdeck-color-lock` — `tests/newdeck-color-lock.mjs` (ROB-216, Luke's playtest of 2026-10-28: once a commander is chosen, Choose colors shows and locks to its identity; changing them asks first, Keep changes nothing, Change colors disconnects the commander)
 - `deck-writeups` — `tests/deck-writeups.mjs`
 - `deck-writeups-screens` — `tests/deck-writeups-screens.mjs`
 - `docx-writer` — `tests/docx-writer.mjs`
@@ -1576,7 +1577,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `card-check-cli` - `tests/card-check-cli.mjs`: real strict checker defaults, runtime-removal behavior, rejected presence-only credit, unknown flags, partial/stale/forged ledger rejection, independent canonical inventory/source verification and fatal Actions/local-fallback wiring
 - `ability-missing-prompt` - `tests/ability-missing-prompt.mjs`: actual Adaptive Automaton, Metallic Mimic and Roaming Throne entry-choice omissions reach the missing-prompt precheck and remain unproved; classifier/tag removals must catch inflated ability credit from stale verifier sources
 - `scenario-block-policy` - `tests/scenario-block-policy.mjs`: an explicit named block-if-legal policy checks both complete declarations through the rules and records both branches through counterfactual proof; actual loaded Zephyr Sprite and runtime Flying removal finish combat with different final damage, life and graveyard results; malformed, ambiguous and illegal declarations fail
-- `scenario-explicit-choices` - `tests/scenario-explicit-choices.mjs`: native strict evidence rejects skipped optional moves, automatic answers, ambiguous actions and labels, inferred defenders, required declarations, trigger order and legend choices; explicit final outcomes and runtime omission controls use the same policy
+- `scenario-explicit-choices` - `tests/scenario-explicit-choices.mjs`: native strict evidence rejects skipped optional moves, automatic answers, ambiguous actions and labels, inferred defenders, required declarations, trigger order and legend choices; explicit physical sources, indexed answers, final outcomes and runtime omission controls use the same policy
 - `scenario-entry-order` - `tests/scenario-entry-order.mjs`: five saved counter scenarios explicitly answer either entry-replacement order and retain every original final expectation; unanswered questions produce a classified offer diagnostic and earn no ability proof
 - `sentence-paragraphs` - `tests/sentence-paragraphs.mjs`: partial translations keep an ability's paragraph together while preserving independent keyword abilities and the current spell segmentation
 - `engine-mana-upkeep` - `tests/engine-mana-upkeep.mjs`: the table's optional house rule keeps mana made in upkeep and draw until spent or the turn ends; AI pilots keep the book's mana rule

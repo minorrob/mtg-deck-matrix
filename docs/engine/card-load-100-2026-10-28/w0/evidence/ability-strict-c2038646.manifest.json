@@ -1,0 +1,28 @@
+{
+  "schema": "CrankAbilityEvidenceArchive@1",
+  "source": {
+    "revision": "c2038646f1187eb68a0495a621a2d9e1ee1078a0",
+    "tree": "19b4a3cb3dc58cccc6fb39e902b4e32515961eb3",
+    "dirty": false,
+    "inputs": {
+      "scripts": "17a753fc10b8f105898dccba7b0232ba012966c2aee5b023f3b3c88b998b95ae",
+      "scenarios": "59a338dd89b814c38f41b430e9cd1ef9a4f771a27ad52470dd014e99d9fac7b8"
+    }
+  },
+  "measurementComplete": true,
+  "archive": "ability-strict-c2038646.json.gz",
+  "rawBytes": 18879759,
+  "compressedBytes": 1204831,
+  "rawSha256": "1bd5c5a181c2b87f1408be121940fe215ea90833274d2009a550b830af06457f",
+  "archiveSha256": "06ecc3df75f2bea2a29e4d43acff6c5ce4df7757323fd87debd6f14f4b4fd480",
+  "logArchive": "ability-strict-c2038646.log.gz",
+  "logRawSha256": "6904f5c5f9388a65bf75ea985e702a7738c9d16c5f596c1d4b2f7163652668e3",
+  "logArchiveSha256": "ad6461eea89e79d82b4c6ea33a05dfe1142f16a905b11225932811569eec28df",
+  "rawSecretScan": "Raw ledger and log have no matches for the required local-ci credential/private-key/personal-email patterns.",
+  "checkerExit": 1,
+  "independentVerifierExit": 1,
+  "command": "node --stack-size=4000 game/tools/batch/check-cards.mjs --ability-ledger <outside-worktree.json>",
+  "verifierCommand": "node game/tools/batch/verify-card-ledger.mjs <outside-worktree.json>",
+  "verification": "Independent validator rejects scenario failures and unproved abilities; no source/hash/inventory/completion errors before archival.",
+  "interpretation": "Completed clean-source strict canonical snapshot, not acceptance. The later evidence commit does not relabel this exact source revision."
+}

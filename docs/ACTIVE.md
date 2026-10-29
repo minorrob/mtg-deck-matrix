@@ -24,6 +24,16 @@ Root pushed assembled `2bf76b00` to draft #912. The following strict scenario-de
 checks and catches 25 new mutations; missing full-directory witnesses remain gate failures. P0 continues modal room
 staging; W5 handles disjoint mana/additional-cost tappers. W4 publishes bounded damage #940; its slot now resumes W1
 Battle entry/defense only, after synchronizing the next root checkpoint. No cards loaded or promoted.
+Assembled code `50f47e22` now includes W4 #940, W5 #938 and P0 #939. Root independently passes damage140/payment293/
+blink113 and the Cancel/Salty/room/verifier readers; feature-wiring131 and integrity are green. The next clean exact
+checkpoint measures the full strict directory. Static audit remains red only for 32 inherited UI anchors; no gate closed.
+Clean `c2038646` is scanned/pushed. Its full strict check finishes RED: 6,430 definitions, 11,039 scenarios/6,580
+failures, 2,039/11,633 abilities reached (523 omission proofs), 9,594 unproved; both checker and verifier exit1.
+Fidelity/schema/smoke problems0. The -3 denominator change is reconciled to earlier Song/Saga fixes `498e3d05`,
+with no removed card. Full hashed archive/backlog is in the run evidence folder. No automatic choices or family credit.
+Explicit physical-source references now pass183 native checks plus11 new caught probes, with no saved card/scenario
+edits or ability credit. W5 repairs actual-funded face-down/Adventure readers; W1 reconciles obsolete token expectations
+against current rules and exact identities. Original browser unions use a quiet window with other heavy work paused.
 **Latest October 29 checkpoint:** source/generated `2c89a5c3` is scanned/pushed to draft #912. W1 `1fad7ec9`,
 W4 `aae67e76`, W5 code `12a32a40` and root anchors `88b616d5` are integrated. Roles are making clean pushed
 handbacks; continue their exact remaining debts from RUN.md before loading any new cards.
@@ -91,6 +101,7 @@ Rob asked for the playtest's bugs and improvements to be fixed in the order Line
 - **ROB-204 merged** (#932, main 0aee1474, on the touched-suites gate; staging reads b9999b16 until the release owner's next release). Handed to the engine lane's session with ROB-205, 209, 210 and 211.
 - **ROB-213 (the catalog is Commander-legal paper cards only).** `tools/catalog-rule.mjs` is the rule (Scryfall Commander "legal", no "A-" name, a paper printing by Scryfall's own `legal:commander game:paper` search; a bulk row's `digital` flag is the chosen printing's, not the card's, and wrongly names 1,046 paper cards). `tools/commander-universe.mjs` and `tools/build-engine-cards.mjs` apply it. Today it removes exactly one card from 32,116: "Name Sticker" Goblin (MTGO-only). It stays in the committed `oracle.json`, `support.json`, `commander-universe.json` and `graph.json` until the next refresh: `graph-played.json`'s 701,916 edges address `graph.json`'s cards by position, so it cannot be dropped by hand. `tests/catalog-rule.mjs` holds the one exception and fails the day the rebuild removes it.
 - **ROB-214 (Explore says a commander is not in the catalog).** Not an import that failed to register: Explore's data is `data/graph.json` (baked Sep 11, 3,411 commanders) and 86 of the 3,497 commanders in the universe (Sep 28) are not in it at all (Aerid Konstrari, Arni, Avacyn, Angel of Horror, ...); library cards pushed in beside the graph also had no `isCommander`. `crankmagic-discover.js` now brings every catalog commander in as a visitor row, finds a commander by whole name in any case or by the start of it when that names one ("Giada"), says so when a deep link names none (it opened Atraxa), and lists all of them. `tests/explore-commander-door.mjs`. Giada herself *is* flagged in the committed graph, so Luke's exact typed text is unconfirmed; commented on the issue.
+- **ROB-216 (New deck: the colors drift off the commander).** In Start from, once a commander is chosen "Choose colors" shows and locks to its identity; pressing another color asks first (it names the commander and says it will be disconnected), Keep changes nothing, Change colors lets the commander go and applies the change from its colors (`crankmagic-newdeck.js`, two rules in `crankmagic.css`). `tests/newdeck-color-lock.mjs`. `tests/new-deck-flow.mjs` changed with it, on purpose: it changed the colors past a chosen Krenko and expected him kept; it now goes through the warning and chooses him again before Next.
 - **Known and not mine, red on a clean `main`:** `tests/board-target-lands.mjs`, `tests/board-direct-blocking.mjs`, `tests/board-yield.mjs`.
 
 ## Play: Table and Focus are the 3D view's HUD without the canvas; the drawers lie over the stage; Chat a default module, 2026-10-28 (a Claude cloud session, for Rob; `claude/gifted-ride-w6xoa3`, the third PR of the day)

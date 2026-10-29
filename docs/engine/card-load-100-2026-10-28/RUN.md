@@ -5,6 +5,51 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Physical-source authoring checkpoint:** the harness accepts an explicit `source: {zone, index, seat?, card?}`
+  for an action. It indexes named objects before legality filtering; a repeated tap of index 0 cannot silently select
+  index 1. Actual selected IDs are retained in the policy trace and mana provenance. Unknown/missing/invalid references
+  fail, and no reference bypasses native ownership, targets, output, payment or timing. Native **183** checks, **11 new
+  source/diagnostic mutations caught** against the original four-suite baseline, with no changed saved cards/scenarios.
+  The moved first-matching-action probe is caught again; entry-order51, feature-wiring131 and integrity pass.
+  Static audit:235 files/4,398 breaks/32 inherited UI failures, no engine/fuzz targets. Authoring examples are in
+  `w0/V8-STRICT-CLI.md`. Full failure diagnostics now retain their actual ending after long scenario names. The latest
+  measured whole-directory gate remains RED at `c2038646`; unused syntax does not earn new card or ability credit.
+- **Additional reader findings during the producer continuations:** W1 reproduces obsolete transforming-token and
+  face-down funding expectations, root independently confirms both, and also confirms Concerted Care stopping for the
+  new physical-source question. W5 owns `engine-face-down-play` and the two Concerted Care blocks in `engine-adventure`:
+  empty-pool premises and original final privacy/timing/zone/effect assertions stay, with explicit actual funding.
+  W1 owns `engine-transform`: exact new token IDs, current transforming-token rules, and separate ordinary single-face
+  refusal/mana-value controls. No reader is suppressed. The original browser unions run in a coordinated quiet window.
+  W5 also records real raw-payload-label collision and house-pilot additional-cost funding REDs; those remain open.
+
+- **Latest full strict directory measurement, clean `c2038646`, October 29:** 6,430 definitions, 11,039 saved
+  scenarios; schema/fidelity/smoke problems **0**, strict scenario failures **6,580**. **2,039/11,633 abilities reached**,
+  including 523 runtime-only omission proofs; **9,594 unproved**, checker exit 1. The independent verifier also exits 1
+  for those scenario/unproved failures, with no source/hash/inventory/completion disagreement. Both baseline and
+  omission use explicit decisions. Prior `11e4fe86` counts remain historical; do not compare them as equivalent proof.
+  CLI diagnostics route 5,522 ambiguous action/source failures, 865 implicit targets, 113 automatic settle answers,
+  and other required/ambiguous decisions. These counts use the actual truncated CLI diagnostics, not added observations.
+  No failure is exempted and grouping grants no family credit. Next: explicit physical source references in the harness,
+  then per-card repairs with original outcomes and independent behavior witnesses; no automatic legacy-answer conversion.
+  Archive, manifest, summary and per-ability backlog: `w0/evidence/ability-strict-c2038646.*`; full ledger is 18,879,759
+  raw bytes / 1,204,831 compressed. Raw SHA-256 `1bd5c5a181c2b87f1408be121940fe215ea90833274d2009a550b830af06457f`;
+  gzip SHA-256 `06ecc3df75f2bea2a29e4d43acff6c5ce4df7757323fd87debd6f14f4b4fd480`. Raw ledger/log privacy scans and
+  compression roundtrips pass. Source revision/tree/input hashes are in the manifest. This is a completed RED gate,
+  not final integration acceptance or clean-game exercise evidence.
+  **Denominator reconciled:** the three fewer entries versus `11e4fe86` come entirely from previously reviewed
+  `498e3d05`: Song of the Dryads removes an incorrect layer-6 override; Urza's Saga replaces two duplicate conditional
+  activations/zero-effect chapters with actual persistent chapter grants. No final card was removed, and all 6,430 raw
+  definitions are checked. The archived inventory lists the exact current abilities; no denominator waiver.
+
+- **Assembled source for the next strict measurement:** `50f47e22c0a086de529bad09d9d14565df19a901` contains W4
+  `4b8284b8` / runtime `20e13e9e`, W5 output-color `58bd64eb` / runtime `84b71e9c`, P0 native blink/wording
+  `ec4f6da3`, and root explicit-decision verifier `6318785b`. Root independently passes damage 140, payment 293,
+  actual blink 113, Cancel 63/room 53, Salty 71/room 21, room payment 14, ability-proof 44, block-policy 167,
+  explicit decisions 110, CLI 57, integrity and feature-wiring 131. Two final moved controller/funding anchors are
+  repaired and caught against their original suite baselines. Static audit: **235 files, 4,387 breaks, 32 inherited
+  UI anchors unresolved; zero engine/fuzz targets**. No G-7 closure. The following documentation/anchor checkpoint
+  supplies the clean exact source for the full strict directory run; keep its ledger/log outside the worktree.
+
 - **Explicit-decision verifier checkpoint, October 29:** strict directory checks and both baseline/removal runs now
   reject skipped optional moves, `targets: "any"`, automatic settle answers, required attack/block defaults, inferred
   defenders, trigger permutations, legend choices and ambiguous physical references. New explicit question navigation
