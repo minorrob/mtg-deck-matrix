@@ -84,6 +84,7 @@ function printed(state, id) {
     everyCreatureType: everyCreatureType(object.keywords),
     power: object.power,
     toughness: object.toughness,
+    ...(Number.isInteger(object.defense) ? {defense: object.defense} : {}),
     controller: object.controller,
     counters: {...object.counters},
     /* Abilities other effects give it (batch 76), in the order they were given. */
@@ -799,6 +800,11 @@ function derive(state, id, counts = true, through = 7) {
     }
   }
 
+  /* CR 310.4a-c: the copiable number is printed defense; in play the defense characteristic is its counters. */
+  if (current.types.includes("Battle")) {
+    if (Number.isInteger(current.defense)) current.printedDefense = current.defense;
+    if (state.objects[id].zone === "battlefield") current.defense = current.counters.defense ?? 0;
+  } else delete current.defense;
   removals.set(current, removedBy);
   partsOn.set(current, [...begun]);
   return current;
@@ -950,6 +956,8 @@ export function lastKnown(state, id) {
     /* Null, not zero, for a thing that has no power — a dying Sol Ring is not a 0/0. */
     power: current.power ?? null,
     toughness: current.toughness ?? null,
+    ...(Number.isInteger(current.defense) ? {defense: current.defense} : {}),
+    ...(Number.isInteger(current.printedDefense) ? {printedDefense: current.printedDefense} : {}),
     counters: {...current.counters},
     damage: object.damage ?? 0,
     tapped: object.tapped === true,
@@ -966,4 +974,4 @@ export function lastKnown(state, id) {
 }
 /* The copiable values a permanent shows (effects/permanents.mjs, COPY_KEYS: the same list, kept here to keep the layers free
    of the effects). */
-const COPIED_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "loyalty", "spell", "enchant", "preparation"]);
+const COPIED_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "loyalty", "defense", "spell", "enchant", "preparation"]);

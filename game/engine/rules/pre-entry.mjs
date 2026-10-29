@@ -55,9 +55,25 @@ function askData(state, frame) {
 
 function finishEntry(state, frame) {
   const view = prospectiveEnteringState(state, frame), object = view.objects[frame.objectId], current = characteristicsOf(view, frame.objectId);
+  /* CR 310.9a, 310.12a: choose the protector using the prospective final characteristics, after entry-copy choices.
+     The entrant stays in its old zone; its controller never receives an inferred opponent. */
+  if (!frame.to && current.types.includes("Battle")) {
+    const siege = current.subtypes.includes("Siege"), eligible = state.players.filter(player => !player.lost && (!siege || player.id !== frame.player)).map(player => player.id);
+    if (!siege) frame.objectPatch.set.protector = frame.player;
+    else if (eligible.length && !eligible.includes(frame.selectedProtector)) {
+      frame.battleOptions = eligible; frame.battleChoice = true;
+      frame.battleGeneration = (frame.battleGeneration ?? 0) + 1;
+      return askRuleOperation(state, frame, {player: frame.player, choice: {
+        id: `battle-protector:${frame.objectId}:${frame.battleGeneration}`, title: `${object.card}: choose its protector`, mode: "one", min: 1, max: 1,
+        options: eligible.map((playerId, index) => ({index, playerId, label: state.players[playerId].name}))}});
+    } else if (eligible.length) frame.objectPatch.set.protector = frame.selectedProtector;
+    /* CR 101.3: if no eligible opponent remains, no player can be chosen. Battle SBAs are handled separately. */
+  }
   const counters = {...frame.proposal.counters};
   for (const [counter, count] of Object.entries(frame.copyCounters ?? {})) counters[counter] = (counters[counter] ?? 0) + count;
   if (current.types.includes("Planeswalker") && Number.isInteger(object.loyalty)) counters.loyalty = (counters.loyalty ?? 0) + object.loyalty;
+  /* CR 310.4b, 614.12: an ability-removal effect can remove this intrinsic entry ability. */
+  if (current.types.includes("Battle") && !current.lostAbilities && Number.isInteger(object.defense)) counters.defense = (counters.defense ?? 0) + object.defense;
   if (frame.phyrexianLife > 0 && counters.loyalty > 0 && (object.keywords ?? []).includes("Compleated"))
     counters.loyalty = Math.max(0, counters.loyalty - 2 * frame.phyrexianLife);
   for (const {counter, count} of frame.proposal.chosenCounters ?? []) {
@@ -73,6 +89,10 @@ function finishEntry(state, frame) {
 registerRuleOperation("entering", (state, frame) => {
   const object = frame.candidate ?? state.objects[frame.objectId];
   if (!object || state.players[frame.player]?.lost || state.gameOver) return {status: "done", result: null};
+  if (frame.battleChoice && frame.answer) {
+    frame.selectedProtector = frame.battleOptions[frame.answer.indices[0]];
+    delete frame.answer; delete frame.battleChoice;
+  }
   if (!frame.proposal) {
     frame.generation = 0;
     frame.objectPatch = {set: {}, remove: ["chosen"]};

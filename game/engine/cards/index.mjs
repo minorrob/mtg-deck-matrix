@@ -2277,6 +2277,7 @@ export function compileScript(script) {
     toughness: identity.toughness ?? null,
     /* A planeswalker's printed loyalty (CR 306.5a): the loyalty counters it enters with (306.5b; rules/replacement.mjs). */
     ...(Number.isInteger(identity.loyalty) ? {loyalty: identity.loyalty} : {}),
+    ...(Number.isInteger(identity.defense) ? {defense: identity.defense} : {}),
     keywords,
     abilities,
     ...(spell ? {spell} : {}),
@@ -2335,7 +2336,8 @@ export function compileScript(script) {
 /* One face's characteristics, from its compiled definition, under its own name: a double-faced card's front or back
    (CR 712.8), an adventurer card's own or its Adventure's (CR 715.2). */
 const faceOfDefinition = (d, name) => ({card: name, types: [...d.types], subtypes: [...d.subtypes], ...(d.supertypes ? {supertypes: [...d.supertypes]} : {}), manaCost: d.manaCost,
-  colors: [...d.colors], power: d.power, toughness: d.toughness, ...(Number.isInteger(d.loyalty) ? {loyalty: d.loyalty} : {}), keywords: [...d.keywords], abilities: structuredClone(d.abilities),
+  colors: [...d.colors], power: d.power, toughness: d.toughness, ...(Number.isInteger(d.loyalty) ? {loyalty: d.loyalty} : {}),
+  ...(Number.isInteger(d.defense) ? {defense: d.defense} : {}), keywords: [...d.keywords], abilities: structuredClone(d.abilities),
   ...(d.spell ? {spell: structuredClone(d.spell)} : {}), ...(d.enchant ? {enchant: structuredClone(d.enchant)} : {})});
 
 /* Edit distance, bounded: suggestions are for a misspelling, not for every card in the pool. */
