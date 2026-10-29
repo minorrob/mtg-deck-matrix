@@ -18,8 +18,9 @@ reviewed CSV/text/XLSX imports and enriched Excel exports give the user control 
 data. Loading a plan never asserts ownership.
 
 The current [r4 execution record](docs/r4-execution/README.md) links the approved decisions,
-requirements, source packets and evidence. Read [docs/ACTIVE.md](docs/ACTIVE.md) before
-working in a lane; the execution handoff distinguishes integrated work from release proof.
+requirements, source packets and evidence. Read [AGENTS.md](AGENTS.md) before working in a lane;
+what to work on is in Linear (initiative I-1, "How work flows: the one loop"), and
+[docs/ACTIVE.md](docs/ACTIVE.md) is the frozen archive of the work before 2026-10-29.
 
 ## Run
 
@@ -955,7 +956,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 714 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 713 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1017,7 +1018,6 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `design-tokens` — `tests/design-tokens.mjs`
 - `first-draw-check` — `tests/first-draw-check.mjs`
 - `play-audio-pack` — `tests/play-audio-pack.mjs`
-- `readout-feeds` — `tests/readout-feeds.mjs`
 - `reasonableness` — `tests/reasonableness.mjs`
 - `script-encoding` — `tests/script-encoding.mjs`
 - `wireframe-conformance` — `tests/wireframe-conformance.mjs`
