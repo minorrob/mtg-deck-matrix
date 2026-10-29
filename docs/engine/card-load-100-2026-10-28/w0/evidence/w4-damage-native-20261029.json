@@ -104,5 +104,17 @@
     ],
     "survivingHolderDepartedSwamp": "B2: matching Swamp LKI; one base event and one Nirkana Revenant event",
     "holderSacrificedAsCost": "B1: departed Nirkana Revenant is absent at production; base event only"
+  },
+  "mainSync": {
+    "main": "50297778",
+    "merge": "a5bcd7485ef64ecde407dec417a7670027762fd5",
+    "suiteCount": 677,
+    "checks": {
+      "catalog-rule": 21,
+      "feature-wiring": 131,
+      "asset-versions": 136,
+      "data-integrity": "50 variants and 50 connected buy profiles"
+    },
+    "browser": "Explore initially SKIPPED: missing sandbox browser cache; no credit. Installed Chromium located; strict rerun deferred at root request for a coordinated quiet window. Main UI changes retain their owner validation."
   }
 }
