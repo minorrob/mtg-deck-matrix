@@ -252,6 +252,24 @@
     ],
     "ignoresAdded": []
   },
+  "intrinsicEntryContinuation": {
+    "base": "75e3ff77879f3012215737714ef61d76e4e01b9e",
+    "report": "W1-intrinsic-entry.md",
+    "scope": "Shared prospective view and intrinsic-counter calculation for native and legacy entry; preserve old exports/API and independent counter grants.",
+    "red": "Five native/legacy witnesses: three lost-intrinsic-loyalty failures and two removed-Compleated-keyword failures, with ordinary controls passing.",
+    "proof": [
+      "engine-intrinsic-entry34, engine-battles95 and original engine-compleated22 passed.",
+      "Twelve semantic mutations caught against the complete original pre-entry/copy union including engine-cards; missed: [].",
+      "Four moved Battle-defense, six moved pre-entry and one copied-planeswalker probe caught; original suites retained, exact legacy-own reader added after the preserved initial miss. Static audit: 33 inherited UI targets, zero engine targets.",
+      "JSON reload and actual source-owner concession before native resolution, own static ability loss, type loss, independent entry counters and actual Doubling Season with removed keyword/all-abilities controls."
+    ],
+    "pending": [
+      "Separate actual Compleated plus loaded Doubling Season order witness remains RED: native entry defaults to2 instead of waiting for explicit controller order for2 or4. Separate coordinated counter continuation is approved after publication.",
+      "Battle combat, defense damage, SBAs, protector repair, Siege defeat/free transformed casting and legacy protector entry remain unfinished.",
+      "Remaining Daretti and Sunset emblem audits and all root gates remain open."
+    ],
+    "ignoresAdded": []
+  },
   "glasswrightFunding": {
     "dependency": "Exact W5 5a004e44 merged locally with a merge commit; root authorized synchronization, W5 owns its push/report.",
     "change": "Replace obsolete zero-cast-offer assertion with empty-pool premise and an actual prepare-spell cast from the remaining untapped Mountain. All original Treasure/unprepared/exile/graveyard outcomes remain.",

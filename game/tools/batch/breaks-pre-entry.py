@@ -2,6 +2,7 @@
 """Real pre-entry callers: every mutation starts from the combined public green baseline."""
 SUITES = ['tests/engine-load100-w2-stack.mjs', 'tests/engine-entering.mjs', 'tests/engine-enter-copy.mjs', 'tests/engine-riot.mjs', 'tests/engine-wave4c-k3.mjs', 'tests/engine-wave4a-h3.mjs']
 E = 'game/engine/rules/pre-entry.mjs'
+C = 'game/engine/rules/entry-characteristics.mjs'
 S = 'game/engine/rules/stack.mjs'
 A = 'game/engine/rules/actions.mjs'
 P = 'game/engine/script/effects/permanents.mjs'
@@ -37,11 +38,11 @@ BREAKS = [
     ('played land never reports its announcement', A, '    emitRuleEvents(state, [event("GameEventLandPlayed", state, {land: cardRef(state, action.objectId), player: {playerId: player, name: state.players[player].name}})]);', ''),
     ('played land loses played-arrival marker', A, 'if (arrival?.data?.fields?.to?.zoneType === "Battlefield") arrival.data.fields.played = true;', ''),
     ('effect land producer discards saved operation', K, 'operation: playedLandFrame(awaiting.player, action)', 'operation: null'),
-    ('prospective patch never removes absent fields', E, 'for (const key of patch?.remove ?? []) delete object[key];', ''),
-    ('prospective patch never sets chosen copied fields', E, 'Object.assign(object, structuredClone(patch?.set ?? {}));', ''),
-    ('entrant joins the counted battlefield before entry', E, 'return {...state, objects: {...state.objects, [frame.objectId]: object}, effects:', 'return {...state, zones: {...state.zones, battlefield: [...state.zones.battlefield, frame.objectId]}, objects: {...state.objects, [frame.objectId]: object}, effects:'),
-    ('prospective self static is omitted', E, 'const own = (object.abilities ?? []).filter', 'const own = [].filter'),
-    ('prospective self static forgets fresh choice', E, '...chosenFor(ability, object),', '...ability,'),
+    ('prospective patch never removes absent fields', C, 'for (const key of patch?.remove ?? []) delete object[key];', ''),
+    ('prospective patch never sets chosen copied fields', C, 'Object.assign(object, structuredClone(patch?.set ?? {}));', ''),
+    ('entrant joins the counted battlefield before entry', C, 'return {...state, objects: {...state.objects, [frame.objectId]: object}, effects:', 'return {...state, zones: {...state.zones, battlefield: [...state.zones.battlefield, frame.objectId]}, objects: {...state.objects, [frame.objectId]: object}, effects:'),
+    ('prospective self static is omitted', C, 'const own = (object.abilities ?? []).filter', 'const own = [].filter'),
+    ('prospective self static forgets fresh choice', C, '...chosenFor(ability, object),', '...ability,'),
     ('replacement applicability uses old types', E, 'types: current.types,\n    entering:', 'types: [],\n    entering:'),
     ('copied replacement ability identities collide', E, 'id: `entry-${frame.generation}:${ability.id}`', 'id: ability.id'),
     ('entry frame reinitializes after answer', E, 'if (!frame.proposal) {', 'if (true) {'),
@@ -76,7 +77,7 @@ BREAKS = [
     ('paying shock life erases another tapped effect', E, 'frame.proposal.tapped = ask.wasTapped;\n    }\n    if (option.reveal', 'frame.proposal.tapped = false;\n    }\n    if (option.reveal'),
     ('riot counter is discarded', E, 'if (option.riot === "counter") frame.proposal.counters["+1/+1"] = (frame.proposal.counters["+1/+1"] ?? 0) + 1;', ''),
     ('riot haste is discarded', E, 'if (option.riot === "haste") (frame.gainsKeywords ??= []).push("Haste");', ''),
-    ('entry planeswalker lacks starting loyalty', E, 'if (current.types.includes("Planeswalker") && Number.isInteger(object.loyalty))', 'if (false)'),
+    ('entry planeswalker lacks starting loyalty', C, 'if (current.types.includes("Planeswalker") && !current.lostAbilities && Number.isInteger(object.loyalty))', 'if (false)'),
     ('counted token stats lose game state', P, 'function tokenObject(state, spec, controller, context)', 'function tokenObject(spec, controller, context)'),
     ('sized token values are forced to zero', P, 'amountOf(state, value, context) : value ?? null', '0 : value ?? null'),
     ('token frame skips all prospective choices', P, 'if (frame.index < frame.entries.length) {', 'if (false) {'),

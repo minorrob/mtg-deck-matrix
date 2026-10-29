@@ -5,6 +5,7 @@ COMPILER = 'game/engine/cards/index.mjs'
 STATE = 'game/engine/state/index.mjs'
 LAYERS = 'game/engine/rules/layers.mjs'
 ENTRY = 'game/engine/rules/pre-entry.mjs'
+CHARACTERISTICS = 'game/engine/rules/entry-characteristics.mjs'
 VIEW = 'game/engine/projection.mjs'
 BREAKS = [
     ('Oracle compiler identity omits defense', 'game/engine/cards/compile.mjs', '    ...(num(face.defense) !== null ? {defense: num(face.defense)} : {}),\n', ''),
@@ -40,10 +41,10 @@ BREAKS = [
     ('untyped Battle gets an opponent', ENTRY, 'if (!siege) frame.objectPatch.set.protector = frame.player;', 'if (!siege) frame.objectPatch.set.protector = (frame.player + 1) % state.players.length;'),
     ('explicit protector replaced by first opponent', ENTRY, 'else if (eligible.length) frame.objectPatch.set.protector = frame.selectedProtector;', 'else if (eligible.length) frame.objectPatch.set.protector = eligible[0];'),
     ('saved protector answer forgotten', ENTRY, '    frame.selectedProtector = frame.battleOptions[frame.answer.indices[0]];\n', ''),
-    ('non-Battle gets defense counters', ENTRY, 'if (current.types.includes("Battle") && !current.lostAbilities && Number.isInteger(object.defense))', 'if (!current.lostAbilities && Number.isInteger(object.defense))'),
-    ('lost intrinsic ability still gives defense', ENTRY, 'if (current.types.includes("Battle") && !current.lostAbilities && Number.isInteger(object.defense))', 'if (current.types.includes("Battle") && Number.isInteger(object.defense))'),
-    ('printed entry defense omitted', ENTRY, '  if (current.types.includes("Battle") && !current.lostAbilities && Number.isInteger(object.defense)) counters.defense = (counters.defense ?? 0) + object.defense;\n', ''),
-    ('entry defense read from empty prospective counters', ENTRY, 'counters.defense = (counters.defense ?? 0) + object.defense;', 'counters.defense = (counters.defense ?? 0) + current.defense;'),
+    ('non-Battle gets defense counters', CHARACTERISTICS, 'if (current.types.includes("Battle") && !current.lostAbilities && Number.isInteger(object.defense))', 'if (!current.lostAbilities && Number.isInteger(object.defense))'),
+    ('lost intrinsic ability still gives defense', CHARACTERISTICS, 'if (current.types.includes("Battle") && !current.lostAbilities && Number.isInteger(object.defense))', 'if (current.types.includes("Battle") && Number.isInteger(object.defense))'),
+    ('printed entry defense omitted', CHARACTERISTICS, '  if (current.types.includes("Battle") && !current.lostAbilities && Number.isInteger(object.defense)) counters.defense = object.defense;\n', ''),
+    ('entry defense read from empty prospective counters', CHARACTERISTICS, 'counters.defense = object.defense;', 'counters.defense = current.defense;'),
     ('face-down Battle fields exposed', VIEW, '...(named && object.zone === "battlefield" && current.types.includes("Battle") ? {', '...(object.zone === "battlefield" && current.types.includes("Battle") ? {'),
     ('private card gets battlefield Battle fields', VIEW, '...(named && object.zone === "battlefield" && current.types.includes("Battle") ? {', '...(named && current.types.includes("Battle") ? {'),
     ('non-Battle gets Battle projection', VIEW, '...(named && object.zone === "battlefield" && current.types.includes("Battle") ? {', '...(named && object.zone === "battlefield" ? {'),
