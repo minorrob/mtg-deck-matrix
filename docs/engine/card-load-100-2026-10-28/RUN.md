@@ -5,6 +5,22 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Current role proof checkpoint:** W1 frozen `e77c1137` passes the full44-reader baseline; its84 controls remain
+  unaccepted with two actual misses. One legacy linked-return result is now bypassed by canonical pre-cleanup capture:
+  reanchor the same fault before sealing, keeping the old union and direct behavior. The original early-trigger fault
+  is masked by later preflight collection: retain it and add an actual callback-created watcher witness. After exact
+  restore, reproduce two loaded modifiers sharing an ability ID/JSON before proposing any `entryApplied` change.
+  W5's uninterrupted fresh42-reader baseline passes after the documented pause artifact;31 remaining controls run
+  with33 earlier caught controls retained by exact hashes. A potentially redundant fuzz caller epoch field must not
+  become a source-text assertion: preserve the persisted/replay epoch contract at the actual shared native boundary.
+  After restore/sync, reproduce an older epoch1 Hada/Rioter pending question through held refresh before accepting
+  new `effectTerms` payment dispatch; absent-epoch replay alone does not prove migration. No runtime change is approved
+  solely for a mutation test, and no role has full acceptance. Latest published sync target is `60596146`.
+- **Larger source validation, no writes:** on clean `544d8512`, V8 validates all1,233 remaining narrow candidates:
+  3,896 native taps pass;1,072 scenarios/700 files/3,430 proposed fields pass every original strict assertion. The161
+  other scenarios retain choice-policy failures; zero prefix failures/timeouts/execution errors. Full fixed inventory
+  hash a9be9808449d759e85483653621be7b7457c7bd2086076788dc44119bc2fd7b2. Package/samples await root review before any
+  saved batch or omission ledger. Mixed-board/command-zone candidates remain excluded; no card/gate credit.
 - **Eight source repairs integrated locally, `50ce44bd`:** clean/scanned/pushed draft #958 (`544d8512`) is merged
   `--no-ff`. Root repeats all eight full strict scenarios:21 original assertions pass. The role's historical selected
   before/after keeps all17 scenarios:14 to7 failures,0 to4 of14 abilities reached, zero runtime-removal proofs, both
