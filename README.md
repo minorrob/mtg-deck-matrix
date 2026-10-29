@@ -1033,6 +1033,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-mana-upkeep` — `tests/engine-mana-upkeep.mjs` (mana made in the upkeep or the draw step stays in the pool until it is spent or the turn ends: the house rule over CR 500.4, `keepStepMana`)
 - `engine-combat` — `tests/engine-combat.mjs`
 - `engine-load100-w0-combat` — `tests/engine-load100-w0-combat.mjs`
+- `engine-departed-protection` — `tests/engine-departed-protection.mjs` (a departed damage source's last known qualities prevent protected damage without restoring the source)
 - `engine-commander` — `tests/engine-commander.mjs`
 - `engine-controller` — `tests/engine-controller.mjs`
 - `engine-effects` — `tests/engine-effects.mjs`

@@ -171,21 +171,23 @@ export function loseLife(state, params, context) {
  */
 /* What a damage effect deals, and to whom: the source, the amount, and each hit. */
 function damageHits(state, params, context) {
+  const named = Array.isArray(params.from) ? params.from[0] ?? null : context.source ?? context.lastKnown?.cardId ?? null;
+  const source = named !== null && state.objects[named] ? named : null;
+  // CR 608.2h: only this source's last known qualities can determine protection after it leaves.
+  const sourceLastKnown = source === null ? [context.lastKnown, context.about?.lastKnown]
+    .find(was => named !== null && was?.cardId === named) ?? null : null;
   /* "X damage divided as you choose among any number of target creatures" (Monstrous Onslaught; CR 601.2d): `divided`, the
      target it was divided among, each still legal dealt what its caster gave it as it was cast (rules/stack.mjs, `division`)
      -- an illegal one's share dealt to nothing (CR 608.2b). */
   if (params.divided !== undefined) {
     const division = context.division?.[params.divided] ?? {};
     const hits = (params.targets ?? []).map((id) => ({toCard: id, amount: division[id] ?? 0}));
-    const named = Array.isArray(params.from) ? params.from[0] ?? null : context.source ?? null;
-    return {source: named !== null && state.objects[named] ? named : null, amount: Math.max(0, ...hits.map((h) => h.amount)), hits};
+    return {source, sourceLastKnown, amount: Math.max(0, ...hits.map((h) => h.amount)), hits};
   }
   const amount = params.amount ?? 0;
   /* The spell or ability, or a creature the trigger is about: "it deals that much damage to each other opponent". One that
      has left the battlefield since (a Dragon dealt lethal damage) still deals it, as a departed ability source does
      (rules/stack.mjs): with no object left to read for lifelink or deathtouch. */
-  const named = Array.isArray(params.from) ? params.from[0] ?? null : context.source ?? null;
-  const source = named !== null && state.objects[named] ? named : null;
   const hits = [
     ...(params.targets ?? []).map((id) => ({toCard: id})),
     ...(params.toPlayer === undefined ? [] : [{toPlayer: params.toPlayer}]),
@@ -195,7 +197,7 @@ function damageHits(state, params, context) {
       .filter((player) => !(params.exceptThatPlayer === true && player === context.about?.player))
       .map((player) => ({toPlayer: player})),
   ];
-  return {source, amount, hits};
+  return {source, sourceLastKnown, amount, hits};
 }
 
 export function dealDamage(state, params, context) {
@@ -204,7 +206,7 @@ export function dealDamage(state, params, context) {
      remembered for the effects after it -- none, when there was no damage to deal. */
   const dealt = [];
   if (params.remember) context.remembered = dealt;
-  const {source, amount, hits} = damageHits(state, params, context);
+  const {source, sourceLastKnown, amount, hits} = damageHits(state, params, context);
   if (amount <= 0) return events;
   /* "If the creature you control has trample, excess damage is dealt to that creature's controller instead" (Ram Through;
      wave 4d L3, CR 120.4a, 702.19b): `trampleExcess` -- from a source with trample as this resolves, a creature is dealt
@@ -223,6 +225,7 @@ export function dealDamage(state, params, context) {
        the order that leaves the least where nobody was asked (rules/replacement.mjs). */
     const {proposal} = applyReplacements(state, {
       event: "damage", toPlayer: hit.toPlayer, toCard: hit.toCard, amount: hit.amount ?? amount, sourceId: source, combat: false,
+      ...(sourceLastKnown ? {sourceLastKnown} : {}),
     }, {orders: params.damageOrders?.[hitKey(source, hit.toPlayer, hit.toCard)] ?? []});
     /* What follows a prevention -- "each opponent mills that many cards" -- immediately afterward (CR 615.5). */
     if (proposal.prevented === true || proposal.amount <= 0) { events.push(...runFollowUps(state, proposal)); continue; }
@@ -397,7 +400,7 @@ function damageCalls(state, effect, context) {
 export function damageQuestion(state, effect, context, answers = {}) {
   if (!DAMAGING[effect?.effect] || !damageChoicesPossible(state)) return null;
   for (const [params, ctx] of damageCalls(state, effect, context)) {
-    const {source, amount, hits} = damageHits(state, params, ctx);
+    const {source, sourceLastKnown, amount, hits} = damageHits(state, params, ctx);
     if (amount <= 0) continue;
     for (const hit of hits) {
       const key = hitKey(source, hit.toPlayer, hit.toCard);
@@ -405,6 +408,7 @@ export function damageQuestion(state, effect, context, answers = {}) {
          storage.mjs, lostIn) -- damage to a player has no `toCard` at all, never an undefined one (Ajani Steadfast's emblem
          and Hedron-Field Purists, ordered for a Lightning Bolt at their controller). */
       const {question} = applyReplacements(state, {event: "damage", ...(hit.toPlayer !== undefined ? {toPlayer: hit.toPlayer} : {}),
+        ...(sourceLastKnown ? {sourceLastKnown} : {}),
         ...(hit.toCard !== undefined ? {toCard: hit.toCard} : {}), amount, sourceId: source, combat: false},
         {orders: answers[key] ?? [], askable: true, dry: true});
       if (question) return {...question, key};

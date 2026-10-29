@@ -550,7 +550,7 @@ export function applyReplacements(state, proposal, {orders = [], askable = false
   if (lasting.length && !lasting.some(isShield))
     return {proposal: {...current, amount: 0, prevented: true}, applied: current.applied, awaiting: false};
   /* PROTECTION (CR 702.16e, 702.16j; rules/protection.mjs): damage from a source with the quality is prevented, all of it. */
-  if (proposal.event === "damage" && protectedFrom(state, {card: current.toCard ?? null, player: current.toPlayer ?? null}, current.sourceId))
+  if (proposal.event === "damage" && protectedFrom(state, {card: current.toCard ?? null, player: current.toPlayer ?? null}, current.sourceId, current.sourceLastKnown))
     return {proposal: {...current, amount: 0, prevented: true}, applied: current.applied, awaiting: false};
 
   /* "IF IT WOULD LEAVE THE BATTLEFIELD, EXILE IT INSTEAD OF PUTTING IT ANYWHERE ELSE" (unearth, CR 702.84a; Whip of Erebos): an

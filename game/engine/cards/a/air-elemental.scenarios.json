@@ -245,6 +245,71 @@
           }
         }
       ]
+    },
+    {
+      "name": "Air Elemental deals combat damage past a ground blocker that its player blocks with whenever legal (CR 702.9b)",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Air Elemental"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Smoke Giant"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "attack": [
+            "Air Elemental"
+          ],
+          "at": "Maya"
+        },
+        {
+          "blockIfLegal": [
+            "Smoke Giant",
+            "Air Elemental"
+          ],
+          "seat": 1
+        },
+        {
+          "to": {
+            "turn": 1,
+            "phase": "MAIN2"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 1,
+          "life": 36
+        },
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Air Elemental"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Smoke Giant"
+          ]
+        }
+      ]
     }
   ]
 }
