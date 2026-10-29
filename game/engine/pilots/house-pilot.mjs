@@ -121,6 +121,29 @@ export const withinBudget = (choice, indices) => !choice.budget
 /** These options, in order, each kept while those kept still keep to the budget. */
 export const keptWithin = (choice, indices) => indices.reduce((kept, i) => (withinBudget(choice, [...kept, i]) ? [...kept, i] : kept), []);
 
+/** Explicit pilot decisions over the public choice only. Humans receive the same unmodified offered choices. */
+export function combatSourceAnswer(choice) {
+  if (!String(choice.id ?? "").startsWith("assign-sources:")) return null;
+  const selected = choice.options.find(option => option.damageAssigned === false) ?? choice.options.find(option => option.confirmDamage);
+  return {indices: [selected.index]};
+}
+
+/** Allocate lethal to blockers, then the printed loyalty prerequisite, then excess to the final recipient. */
+export function combatDamageAnswer(choice) {
+  const options = choice.options ?? [], amounts = options.map(() => 0);
+  let left = choice.total ?? 0;
+  for (let i = 0; i < options.length; i += 1) {
+    const take = Math.min(left, Math.max(0, options[i].lethal ?? 0));
+    amounts[i] = take; left -= take;
+  }
+  for (const option of options) for (const requirement of option.requires ?? []) {
+    const take = Math.min(left, Math.max(0, requirement.amount - amounts[requirement.index]));
+    amounts[requirement.index] += take; left -= take;
+  }
+  if (left > 0 && amounts.length) amounts[amounts.length - 1] += left;
+  return {indices: [], amounts};
+}
+
 const MAIN = ["MAIN1", "MAIN2"];
 const isLand = (card) => (card?.types ?? []).includes("Land");
 const isCreature = (card) => (card?.types ?? []).includes("Creature");
@@ -349,13 +372,9 @@ export function housePilot({seat, cards = () => null, picks = false} = {}) {
       if (choice.mode === "integer") return {value: min};
       if (choice.mode === "ack") return {indices: []};
       if (choice.mode === "text") return {cancel: true};
-      if (choice.mode === "damage") {
-        const amounts = options.map(() => 0);
-        let left = choice.total ?? 0;
-        for (let i = 0; i < options.length; i += 1) { const take = Math.min(left, Math.max(0, options[i].lethal ?? 0)); amounts[i] = take; left -= take; }
-        if (left > 0 && amounts.length) amounts[amounts.length - 1] += left;
-        return {indices: [], amounts};
-      }
+      if (choice.mode === "damage") return combatDamageAnswer(choice);
+      const combatSource = combatSourceAnswer(choice);
+      if (combatSource) return combatSource;
       if (choice.mode === "amount") {
         const minEach = choice.minEach ?? 0, amounts = options.map(() => minEach);
         let left = (choice.total ?? 0) - minEach * options.length;

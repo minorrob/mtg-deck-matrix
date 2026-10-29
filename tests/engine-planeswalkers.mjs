@@ -203,6 +203,9 @@ const toMain2 = (s, turn) => until(s, (t) => t.turn === turn && t.phase === "MAI
   const t = play("trample", [at(0, "battlefield", EL, "Squire"), at(1, "battlefield", "Trampler")], [], {at: {turn: 2, phase: "MAIN1"}});
   answer(t, "declare-attackers", [`Trampler → ${EL} (Rob)`]);
   answer(t, "declare-blockers", ["Squire blocks Trampler"]);
+  until(t, s => s.awaiting?.kind === "assign-combat-damage", "trampler controller assigns excess damage");
+  eq(awaitingChoice(t).options.map(o => o.cardId ?? o.planeswalkerId), [one(t, "Squire"), one(t, EL)], "ordinary trample offers blocker and walker, with no controller spill");
+  resolveAwaiting(t, [], [1, 3]);
   toMain2(t, 2);
   eq([loyalty(t, EL), t.players[0].life, named(t, "Squire").length], [2, 40, 0], "a 4/4 trampler through a 1/1: 1 to the Squire, 3 to Elspeth, none to Rob");
   /* Infect's damage removes loyalty: no -1/-1 counters, no poison (CR 120.3c). */
