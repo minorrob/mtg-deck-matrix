@@ -69,6 +69,10 @@ assets 136, service-worker 9 and scope pass; inventory regeneration has no diff 
 suite count is 713. All 14 original archive Git blobs match their recorded hashes. Those results are bound separately
 in `evidence/v8-basic-source-integration.json`; the before/after ledgers keep their historical source hashes.
 
+The final publication sync merges owner-resolved `60596146eca73112d6afb951d461d209954ee127`, including main
+`83f0a8f2`. It changes only owner UI/assets/shared metadata, with no engine or scenario input change. README matches
+the actual 714 suites. The prior native results are retained without repeating or relabeling them.
+
 ## Reproduction
 
 Use Node 22 first on PATH. The selected checker command, run on the matching clean source, is:
