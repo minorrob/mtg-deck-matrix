@@ -103,6 +103,9 @@ started=$(date +%s)
 i=1
 while [ "$i" -le "$RUNS" ]; do
   echo "local-ci: run $i of $RUNS on $(git rev-parse --short "$SHA")"
+  ( cd "$WORK" && node --stack-size=4000 game/tools/batch/check-cards.mjs --ability-ledger "$WORK.ability$i.json" --counterfactual &&
+    node game/tools/batch/verify-card-ledger.mjs "$WORK.ability$i.json" ) > "$WORK.ability$i.log" 2>&1 ||
+    { tail -n 12 "$WORK.ability$i.log"; fail "strict ability coverage, run $i (ledger: $WORK.ability$i.json; log: $WORK.ability$i.log)"; }
   ( cd "$WORK" && GEOMETRY_REQUIRED=1 PAGE_BUDGET_REQUIRED=1 bash runtests.sh -q ) > "$WORK.run$i.log" 2>&1
   status=$?
   tail -n 3 "$WORK.run$i.log"

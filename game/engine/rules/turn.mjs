@@ -57,6 +57,7 @@ import {askEntering, enteringChoice, resolveEnteringChoice} from "./entering.mjs
 import {collectTriggers, openTriggers, askTriggerTargets, triggerChoice, resolveTriggerOrder, triggerTargetsChoice, resolveTriggerTargets, triggerCountedChoice, resolveTriggerCounted} from "./trigger.mjs";
 import {chooseTargetsChoice, resolveChooseTargets, castCostChoice, resolveCastCost, afterAction} from "./actions.mjs";
 import {deriving, abilitiesOf, subtypesOf, controllerOf} from "./layers.mjs";
+import {cancellationFor, abandonProposal, retainProposal, proposalChoice} from "./cancel.mjs";
 
 /* The steps of a turn, CR 500.1, in order.
  *
@@ -347,7 +348,10 @@ function endOfTurn(state, events) {
  */
 export function awaitingChoice(state) {
   /* It only reads: every object it derives, derived once (rules/layers.mjs, deriving). */
-  return deriving(state, () => choiceFor(state));
+  return deriving(state, () => {
+    const choice = choiceFor(state);
+    return choice ? {...choice, cancellation: cancellationFor(state, choice)} : choice;
+  });
 }
 function choiceFor(state) {
   const awaiting = state.awaiting;
@@ -480,6 +484,12 @@ export function goOnWithout(state, withdrawn) {
 export function resolveAwaiting(state, indices, amounts = null, rng = null, extra = {}) {
   const awaiting = state.awaiting;
   if (!awaiting) throw new Error("The engine is not waiting on anything");
+  if (extra.cancel === true) {
+    const cancel = cancellationFor(state, proposalChoice(state) ? null : awaitingChoice(state));
+    if (!cancel.allowed) throw new Error(cancel.reason);
+    if (cancel.kind === "abandon-action") return abandonProposal(state);
+    if (cancel.kind === "choose-none") {indices = []; amounts = null; extra = {...extra, cancel: false};}
+  }
   if (awaiting.kind === "rule-operation") return continueRuleOutcome(state, answerRuleOperation(state, indices, amounts, rng, extra), rng);
 
   /* The mulligan is the one decision that consumes randomness, because keeping or not decides
@@ -531,9 +541,9 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
   /* Escape's other cards, or a flashback cost's creatures, picked: the cast taken, its player holding priority after it
      (CR 117.3c). */
   /* A total divided among its targets (CR 601.2d): answered with an amount for each (rules/actions.mjs, costChoice). */
-  if (awaiting.kind === "choose-cost") return resolveCastCost(state, awaiting, indices, amounts);
+  if (awaiting.kind === "choose-cost") return retainProposal(state, awaiting.precommit, resolveCastCost(state, awaiting, indices, amounts));
   if (awaiting.kind === "choose-targets") {
-    if (awaiting.stackId === undefined) return resolveChooseTargets(state, awaiting, indices);
+    if (awaiting.stackId === undefined) return retainProposal(state, awaiting.precommit, resolveChooseTargets(state, awaiting, indices));
     const events = resolveTriggerCounted(state, awaiting, indices);
     collectTriggers(state, events);
     const after = [];

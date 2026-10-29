@@ -1,0 +1,15 @@
+baseline: every suite passes unbroken
+caught prepared copy excluded from mana funding -- tests/room-prepared.mjs
+caught X tapped for, paid -- tests/engine-roblists-food.mjs
+caught X paid -- tests/engine-roblists-food.mjs
+caught x life: one offer for each X -- tests/engine-costs-activations-4b.mjs
+caught x life: its lands tapped for it -- tests/engine-cards.mjs
+caught delve: offered -- tests/engine-load100-mana.mjs
+caught delve: a card to exile -- tests/engine-roblists-food.mjs
+caught delve: generic mana to pay -- tests/engine-load100-mana.mjs
+caught delve: no more than the graveyard -- tests/engine-cards.mjs
+caught delve: announced X counted -- tests/engine-load100-mana.mjs
+caught token enters tapped: by a replacement -- tests/engine-load100-mana.mjs
+caught token entry: untapped costs life -- tests/engine-load100-mana.mjs
+caught the search given no steps -- tests/engine-load100-mana.mjs
+missed: []

@@ -31,6 +31,6 @@ const own = ruleReplacementCandidates(state, entry);
 assert.equal(own.length, 1);
 assert.equal(applyRuleReplacement(state, entry, own[0].key).tapped, true);
 assert.equal(ruleReplacementCandidates(state, applyRuleReplacement(state, entry, own[0].key)).length, 0, "an entering replacement cannot apply twice");
-for (const run of [() => ruleReplacementCandidates(state, {event: "damage"}), () => applyRuleReplacement(state, {event: "damage"}, "x")])
-  assert.throws(run, /zone-change or enters/);
+for (const run of [() => ruleReplacementCandidates(state, {event: "draw"}), () => applyRuleReplacement(state, {event: "draw"}, "x")])
+  assert.throws(run, /zone-change, enters or damage/);
 console.log("engine-replacement-steps: 16 checks passed");

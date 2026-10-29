@@ -50,7 +50,7 @@ import {lastKnown, supertypesOf, subtypesOf, toughnessOf, typesOf, keywordsOf, c
 import {matchesSelector} from "../script/filter.mjs";
 import {commanderToAsk, resolveCommanderChoice, recordCommanderDamage} from "./commander.mjs";
 import {sacrificeOne, moveOne, returnExiledUntil, leavingRef, destructionReplaced, destructionAsks} from "../script/effects/zones.mjs";
-import {changeLife, crown} from "../script/effects/resources.mjs";
+import {changeLife, crown, refreshPendingDamageSources} from "../script/effects/resources.mjs";
 import {runFollowUps} from "../script/effects/index.mjs";
 import {mergedOrderToAsk} from "../state/index.mjs";
 import {checkRingBearers} from "../keywords/ring.mjs";
@@ -114,6 +114,7 @@ function lossReason(state, player) {
    phasing included -- and every effect giving them control ends; then what they control on the stack that
    no card of theirs represents ceases to exist; then whatever they still control is exiled. */
 function removePlayerFromBoard(state, playerId, events) {
+  refreshPendingDamageSources(state);
   for (const id of [...state.zones.battlefield]) {
     if (state.objects[id]?.owner !== playerId) continue;
     /* Face down, revealed as its owner leaves (CR 708.9). */

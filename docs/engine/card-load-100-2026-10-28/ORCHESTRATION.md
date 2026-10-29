@@ -56,16 +56,20 @@ repository alone.
 - `git -C C:\Users\robmi\CrankMagic\repo fetch origin`; make the integration worktree `w<N>-integrate` on a new branch
   `codex/engine-load100-w<N>` from `origin/main`; push it; open a **draft** PR into `main` titled
   `Card load to 100%, wave <N>`.
-- **Deal the cards.** Wave 0 is the debt wave (below). From wave 1, in this order of tiers, each finished before the next:
-  1. **T1** Rob's library and decks: `node --stack-size=4000 tools/library-engine-index.mjs --out <scratch>/w<N> --lane-size 30 --review-by-theme`.
+- **Deal the cards.** Wave 0 is the debt wave (below). Rob's revised target is the frozen 95% of deck appearances,
+  not every distinct Commander card. Every writing/review deal must use
+  `--scope docs/engine/card-load-100-2026-10-28/scope-95.json`; its hash is recorded in the index and each lane.
+  This filters loading only; all existing final definitions retain whole-directory verification.
+  From wave 1, in this order of tiers, each finished before the next:
+  1. **T1** Rob's included library and decks: `node --stack-size=4000 tools/library-engine-index.mjs --scope docs/engine/card-load-100-2026-10-28/scope-95.json --out <scratch>/w<N> --lane-size 30 --review-by-theme`.
      Today 1 library card is unloaded; every one of the 477 live-deck cards is final.
   2. **T2** the most-played Commander cards: the same, with `--top 3239`. Today 1,247 are unloaded and 2 are candidates.
-  3. **T3** every other Commander card, **sentence first**: from wave 0's `tools/library-engine-index.mjs --pool` (built in
-     wave 0 by W5), each lane's list ordered so that the first cards written are the ones whose missing sentence
+  3. **T3** every remaining included card, **sentence first**: use `tools/library-engine-index.mjs --pool` with the same
+     required `--scope` manifest. Each lane's list is ordered so that the first cards written are the ones whose missing sentence
      completes the most other cards (`card-compiler.mjs`'s `nextSentences`; today 12,080 cards are one sentence short).
      After each wave's merge the compiler recompiles, and every card those sentences now complete arrives as a
-     candidate for the next wave's review lists. This is the program's flywheel; it is what makes 25,000 cards
-     reachable.
+     candidate for the next wave's review lists. Score sentence reuse within the frozen target; outside-scope cards
+     must not inflate its priorities or enter its candidate reviews.
 - **Deal for the flywheel, not for the count.** Among a tier's cards, prefer the ones whose gap sentences are shared by the
   most other undefined cards (`card-compiler.mjs --report`'s missing-sentence ranking; `engine-compile.mjs --plan` per
   card), so each hand-written sentence completes many cards as candidates for the next wave's review. Record in `RUN.md`
@@ -119,6 +123,9 @@ Keep each subagent's report short in your own context; the detail is in its bran
    Set the README's suite count to `ls tests/*.mjs | wc -l`. A conflict in an engine module is resolved by reading both
    sides' intent; then both lanes' breaks files are run again.
 2. Merge `origin/main` in (a merge commit; main moves while a wave runs), and regenerate again if it touched cards.
+3. Commit the integrated source and regenerated artifacts before measuring the canonical ability gate. Keep its
+   ledger outside the working tree. Dirty source, stale revisions and changed input hashes cannot certify it;
+   a later evidence-only commit is followed by the required exact-head CI measurement, not another unchanged local sweep.
 
 ### 5. The consolidated test (on the integration head)
 
@@ -128,7 +135,7 @@ recorded with its evidence.
 
 | # | Check | Pass means |
 | --- | --- | --- |
-| 1 | `node --stack-size=4000 game/tools/batch/check-cards.mjs --ability-ledger <wave-ability-ledger.json> --counterfactual` | Whole directory, 0 failed, 0 unreached abilities, completed ledger |
+| 1 | `node --stack-size=4000 game/tools/batch/check-cards.mjs --ability-ledger <scratch>/wave-ability-ledger.json --counterfactual` then `node game/tools/batch/verify-card-ledger.mjs <scratch>/wave-ability-ledger.json` | Current clean source and exact canonical inventory, 0 failed, 0 unreached abilities, completed ledger |
 | 2 | `node game/tools/sentence-library.mjs` | No new calibration failure (today's four are wave 0's debt) |
 | 3 | `node game/tools/engine-definitions.mjs --check`, `node game/tools/engine-candidates.mjs --check`, `node game/tools/engine-catalog.mjs --check`, `node tools/data-inventory.mjs --check` | all current |
 | 4 | `node tests/engine-cards.mjs`, `tests/card-compiler.mjs`, `tests/card-waves.mjs`, `tests/table-candidates.mjs`, `tests/sentence-library.mjs`, `tests/table-basics.mjs`, `tests/data-integrity.mjs`, `tests/feature-wiring.mjs`, `tests/engine-breaks-anchors.mjs`, every suite a lane added | all pass |
@@ -149,7 +156,12 @@ this command. Require its ledger to say `measurement.complete: true`, `scope.dir
 abilities, plus a successful process exit and zero scenario failures. A legacy no-ledger exit of 0, an ignored/unknown
 flag, a selected-card result, a partial checkpoint, an ownership ambiguity, or a timed-out probe cannot pass this gate.
 The strict command already runs the original schema, fidelity, smoke and scenario checks; do not duplicate that run.
-The default CLI and automatic CI wiring remain separate open work until implemented and proven.
+The default CLI now performs strict ability checks even without flags, writing a temporary ledger when no path is
+given. Runtime removal is always enabled; the historical flag remains compatible. Unknown or duplicate flags fail.
+Selections/custom roots are labeled diagnostic and cannot pass the independent canonical verifier. The verifier
+recomputes raw inventory and reachability, checks current source/input hashes and completion/failure counts, and
+rejects legacy source-choice exemptions. Actions and the full local fallback run this canonical gate before the
+remaining suites. Wiring alone does not prove the gate passes; all unproved abilities remain failures.
 
 **Pipeline the waves.** Once checks 1 to 8 pass on wave N's integration head, deal wave N+1 and start its lanes from
 that head (not from `main`) while Actions runs check 9. If the run fails, the fix lands on wave N's branch and wave N+1

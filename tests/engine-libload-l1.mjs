@@ -43,7 +43,7 @@ check(() => {
 });
 check(() => {
   const {problems} = compiled([loyalty([{effect: "emblem", abilities: [{kind: "activated", text: "{T}: Draw a card.", cost: [{atom: "{T}"}], effects: [{effect: "draw", count: 1}]}]}])]);
-  assert.match(problems.join(" | "), /an emblem's activated ability -- only triggered and replacement abilities, a rule changed for players and a static in a layer work from the command zone yet/);
+  assert.match(problems.join(" | "), /an emblem's activated ability -- only triggered and replacement abilities, player rules, loyalty timing for permanents and statics in a layer work from the command zone yet/);
 });
 check(() => {
   const {problems} = compiled([loyalty([{effect: "emblem", abilities: [{kind: "static", text: "Creatures you control get +1/+1.", layer: 7, sublayer: "c",

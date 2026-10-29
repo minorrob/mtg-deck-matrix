@@ -1,0 +1,44 @@
+{
+  "schema": "w5-present-profile@1",
+  "baselineSource": "5a004e444d83e3fd8e63873f6b5ef9f6160430d3",
+  "fixedBase": "ea0099b775e1e1637028e1a6d6705cb58fb8cd07",
+  "fixedPatch": "game/engine/script/condition.mjs",
+  "seed": 2801,
+  "level": "easy",
+  "profile": {
+    "boundedSeconds": 45,
+    "nativeUnsliced": true,
+    "ticks": 2882,
+    "topJavascriptTicks": {"matches": 69, "assertGrammar": 51, "gatherEffects": 46, "independent": 40, "derive": 36, "conditionHolds": 24},
+    "finding": "Layer derivation and condition selectors are hot. The profile does not identify payment search as the cause of the original timeout."
+  },
+  "nativeCapturedRead": {
+    "turn": 44, "phase": "MAIN1", "seat": 1, "battlefield": 44,
+    "sourceId": 571, "sourceCard": "Quest for the Goblin Lord", "questCounters": 0,
+    "onlyBattlefieldConditionalStatic": true,
+    "conditionQueries": 10000, "truthBefore": false, "truthAfter": false,
+    "baselineMs": 125.58, "fixedMs": 17.39,
+    "legalActionReads": 3, "actions": 7,
+    "baselineLegalActionMs": 39.39, "fixedLegalActionMs": 37.89,
+    "legalActionsSha256BeforeAndAfter": "d932f629b51157d2b9814ee258000b13f610cd0b896d597560d8c59ca2c94824",
+    "timingLimit": "Single local samples, not whole-game performance acceptance."
+  },
+  "fixedSeedRun": {
+    "command": "node --stack-size=4000 tools/fuzz-live.mjs --library --level easy --seeds 2801 --strict-refusals --replay --leaks --json <task-scratch>/w5-2801-fixed-result.json",
+    "node": "22.23.3", "timeoutSeconds": 90, "elapsedSeconds": 90.09,
+    "timedOut": true, "finalJson": false, "replayProven": false, "leaksProven": false, "clean": false
+  },
+  "proof": {
+    "nativeTest": "node --stack-size=4000 tests/engine-static-conditions.mjs",
+    "checks": 85,
+    "validationBudget": "49 battlefield permanents: one compile per query versus 49 before; actual Quest, live threshold and owner boost proved.",
+    "equivalence": "Full-selector reference across source representations, controllers, count bounds, zones, OR overrides and selector mutation.",
+    "negativeGrammar": "Unknown keys fail after selector mutation and on empty battlefield.",
+    "mutations": "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w5-present.py",
+    "caught": 4, "missed": [],
+    "readerSuites": ["engine-static-conditions", "engine-conditions", "engine-filter", "engine-effect-conditions", "engine-condition-compare"]
+  },
+  "diagnosticArtifacts": "Task-owned load100/scratch retains CPU profiles, exact native snapshot, benchmark scripts/reports and watchdog receipts. The detached exact-source diagnostic worktree was restored byte-for-byte after temporary read-only instrumentation.",
+  "wave0Complete": false, "G5": false, "paymentOperationalAcceptance": false,
+  "ignoresAdded": []
+}

@@ -101,6 +101,7 @@ import {createController} from "../engine/controller.mjs";
 import {createMatchStore} from "../engine/storage.mjs";
 import {housePilot, meetRequirements, manaColors, combatSourceAnswer, combatDamageAnswer} from "../engine/pilots/house-pilot.mjs";
 import {scoredPilot, SETTINGS} from "../engine/pilots/scored-pilot.mjs";
+import {combatMemoryFor, rememberDamage} from "../engine/pilots/provocation.mjs";
 import {personaOf, dispositionFor} from "../engine/pilots/roster.mjs";
 import {flagsOf, commanderClassOf} from "../engine/pilots/roles.mjs";
 import {agentPilot} from "../engine/pilots/agent-pilot.mjs";
@@ -498,10 +499,11 @@ export function triggerRun(stack) {
  * WHAT ANSWERS FOR AN AI SEAT: L1 at its setting, handed its own deck list (which its player knows) and the match's seed
  * (easy's chance); without a setting, L0. Both see only the seat's projection. `picks`: the match's `pilotPicks`.
  */
-export function seatPilot({seat, cards, deck = [], level = null, persona = null, seed = "", picks = false}) {
+export function seatPilot({seat, cards, deck = [], level = null, persona = null, seed = "", picks = false, provocation = true}) {
   /* A PERSONA'S OVERRIDES (roster.mjs `dispositionFor`): the pilot is made with them, so the seat plays its difficulty as that persona
      would; a seat without one plays the plain difficulty, as every table has. */
-  const disposition = persona && level ? dispositionFor(level, persona) : null;
+  const given = persona && level ? dispositionFor(level, persona) : null;
+  const disposition = given && !provocation ? {...given,grudge:0} : given;
   if (level === LLM) return agentPilot({seat, cards, deck, seed, picks, disposition});
   return level ? scoredPilot({seat, cards, deck, setting: level, seed, picks, disposition}) : housePilot({seat, cards, picks});
 }
@@ -628,7 +630,12 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
   let matchSeed = "";
   /* And whether they take what a choice they may answer with none is for (`pilotPicks`), as the match was launched. */
   let pilotPicks = false;
-  const pilotMade = (seat) => makePilot({seat, cards: facts, deck: seats[seat].cards, level: seats[seat].level ?? null, persona: seats[seat].persona ?? null, seed: matchSeed, picks: pilotPicks});
+  let pilotProvocation = false;
+  /* Match-scoped public damage only, persisted independently of the trimmed display history. A recreated pilot sees
+     its public pressure summary; it never receives another player's cards or an unfiltered journal. */
+  let pilotCombatMemory = null;
+  const pilotView = (seat) => ({...projectFor(state, seat), ...(pilotProvocation?{pilotCombat: combatMemoryFor(pilotCombatMemory, seat, state.turn, seats.length)}:{})});
+  const pilotMade = (seat) => makePilot({seat, cards: facts, deck: seats[seat].cards, level: seats[seat].level ?? null, persona: seats[seat].persona ?? null, seed: matchSeed, picks: pilotPicks, provocation:pilotProvocation});
   const pilotFor = (seat) => pilots[seat] || (pilots[seat] = pilotMade(seat));
   /* Whether the LLM seat asks for this decision (agent-pilot.mjs `consult`): never a seat that has left. */
   const consults = (seat, view, offer) => seats[seat].level === LLM && !leaving.includes(seat) && pilotFor(seat).consult?.(view, offer) === true;
@@ -638,6 +645,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     const names = seats.map((s) => s.name);
     for (const e of events) {
       const id = journal.write(e.kind, e.data);
+      if(pilotProvocation)pilotCombatMemory = rememberDamage(pilotCombatMemory, e, id, seats.length);
       nextSeq = Number(id.slice("event:".length)) + 1;
       addToHistory(history, e, names);
       const said = tableEvent(e, id);
@@ -693,7 +701,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       if (state.awaiting) {
         const seat = state.awaiting.player, choice = awaitingChoice(state);
         if (seats[seat].pilot === "house" || leaving.includes(seat)) {
-          const seen = projectFor(state, seat);
+          const seen = pilotView(seat);
           /* The LLM seat's close call: offered to the seat as to a person, for the table to answer through its model. */
           if (consults(seat, seen, {choice})) {controller.offer(choice); pendingSeat = seat; pendingActions = null; driven = 0; return;}
           const a = pilotFor(seat).answer(seen, choice);
@@ -754,7 +762,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       /* Whose turn and which step go with it, which everyone sees: L1 uses an ability only in its own main phase. */
       if (seats[seat].pilot === "house") {
         if (pilots[seat].passes?.(actions, state.stack.length, {ownTurn: state.activePlayer === seat, phase: state.phase})) {apply(seat, actions.find((a) => a.kind === "pass"), "pilot"); continue;}
-        const seen = projectFor(state, seat);
+        const seen = pilotView(seat);
         if (consults(seat, seen, {actions})) {
           controller.offer(priorityChoice(`priority:${state.turn}:${state.stepIndex}:${controller.revision}`, actions, state, seat));
           pendingSeat = seat; pendingActions = actions; driven = 0; return;
@@ -819,7 +827,9 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         pendingActions = null;
         apply(seat, action, "person", answer.hold === true);
       } else {
+        const cancelledProposal = answer.cancel === true && awaitingChoice(state)?.cancellation?.kind === "abandon-action";
         step.acted = true; write(resolveAwaiting(state, answer.indices, answer.amounts, rng, answer));
+        if (cancelledProposal) {castBy = null; heldBy = null; playBack = null;}
         if (playBack?.pending) {
           const previous = playBack;
           playBack = finishPlay(state, playBack, rng.checkpoint());
@@ -865,11 +875,13 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     landBackSaved = landBack !== null;
     if (landBack) landBack.saved = true;
     tableEvents = record.events || []; eventsMark = record.eventsMark ?? 0; eventsFloor = record.eventsFloor ?? -1;
+    pilotCombatMemory = record.pilotCombatMemory ?? null;
     seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null; outs = record.outs || []; history = record.history || [];
     refusals = record.refusals || {total: 0, since: point.sequence, first: []};
     continuing = record.continuing === true; driven = record.driven || 0; endWhenNoPerson = record.endWhenNoPerson === true;
     seated = record.candidates === true;
     pilotPicks = record.pilotPicks === true;
+    pilotProvocation = record.pilotProvocation === true;
     state = structuredClone(point.state);
     rng = createRng(point.seed, point.rng);
     journal = createJournal({matchId, seed: point.seed}, point);
@@ -985,7 +997,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     const point = journal.checkpoint(state, rng.checkpoint());
     await store.saveCheckpoint(point);
     await store.pruneCheckpoints();
-    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, ...(outs.length ? {outs} : {}), history, refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(undoLastPlay ? {undoLastPlay, playBack: playBack !== null} : {}), ...(resultRecords ? {resultRecords: true} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(blocksNone ? {blocksNone} : {}), ...(landAnyStep ? {landAnyStep} : {}), ...(takeBackLand ? {takeBackLand, landBack: landBack !== null} : {}), ...(askAimed ? {askAimed} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {}), ...(tableEvents.length ? {events: tableEvents, eventsMark, eventsFloor} : {}), ...(seated ? {candidates: true} : {}), ...(pilotPicks ? {pilotPicks: true} : {})}));
+    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, ...(outs.length ? {outs} : {}), history, refusals, ...(pilotProvocation ? {pilotProvocation: true} : {}), ...(pilotCombatMemory?.lastEvent > 0 ? {pilotCombatMemory} : {}), ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(undoLastPlay ? {undoLastPlay, playBack: playBack !== null} : {}), ...(resultRecords ? {resultRecords: true} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(blocksNone ? {blocksNone} : {}), ...(landAnyStep ? {landAnyStep} : {}), ...(takeBackLand ? {takeBackLand, landBack: landBack !== null} : {}), ...(askAimed ? {askAimed} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {}), ...(tableEvents.length ? {events: tableEvents, eventsMark, eventsFloor} : {}), ...(seated ? {candidates: true} : {}), ...(pilotPicks ? {pilotPicks: true} : {})}));
   }
 
   const api = {
@@ -1019,6 +1031,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         ...((pod?.houseRules?.undoLastPlay === true || pod?.undoLastPlay === true) ? {houseRules: {undoLastPlay: true}} : {}),
         /* And whether its AI seats take what a choice they may answer with none is for (`pilotPicks`), kept the same way. */
         ...(pod && pod.pilotPicks === true ? {pilotPicks: true} : {}),
+        ...(pod?.pilotProvocation === true ? {pilotProvocation: true} : {}),
         ...(pod && pod.passStack === true ? {passStack: true} : {}), ...(pod && pod.yieldTurn === true ? {yieldTurn: true} : {}),
         ...(pod && pod.blocksNone === true ? {blocksNone: true} : {}),
         ...(pod && pod.keepStepMana === true ? {keepStepMana: true} : {}),
@@ -1033,8 +1046,9 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       const keepMana = beats.keepStepMana === true ? {keepStepMana: seats.flatMap((s, seat) => (s.pilot !== "house" ? [seat] : []))} : {};
       /* And whether a cast tapped for tops up floating mana and taps a source for all it makes (`pooledTaps`, rules/actions.mjs):
          a match launched before it lacks the key, and so offers what it offered then. */
-      const pooled = {...(pod && pod.pooledTaps === true ? {pooledTaps: true} : {}), ...(pod && pod.xTaps === true ? {xTaps: true} : {}), ...(pod?.preparedTaps === true ? {preparedTaps: true} : {})};
+      const pooled = {...(pod && pod.pooledTaps === true ? {pooledTaps: true} : {}), ...(pod && pod.xTaps === true ? {xTaps: true} : {}), ...(pod?.preparedTaps === true ? {preparedTaps: true} : {}), ...(pod?.sourceChoices === true ? {sourceChoices: true} : {})};
       pilotPicks = beats.pilotPicks === true;
+      pilotProvocation = beats.pilotProvocation === true;
       try {state = createState({matchId, seed, players: seats.map((s) => ({name: s.name})), ...rules, ...(beats.drawBeat ? {drawBeat: true} : {}), ...pooled, ...anyStep, ...keepMana});}
       catch (error) {throw new RoomError(400, error.message);}
       seats.forEach((s, seat) => {
@@ -1281,7 +1295,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       const seat = seatIndex(seatId);
       if (seat < 0 || seats[seat].pilot !== "house") throw new RoomError(403, "That is not an AI seat at this table.");
       if (pendingSeat !== seat || !controller.pending) throw new RoomError(409, "That seat is not being asked anything.");
-      const pilot = pilotFor(seat), seen = projectFor(state, seat);
+      const pilot = pilotFor(seat), seen = pilotView(seat);
       if (pendingActions) {
         const chosen = pilot.choose(seen, pendingActions);
         return {indices: [Math.max(0, pendingActions.indexOf(chosen))]};
@@ -1301,7 +1315,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       if (pendingSeat !== seat || !controller.pending) throw new RoomError(409, "That seat is not being asked anything.");
       const pilot = pilotFor(seat);
       if (typeof pilot.explain !== "function") return null;
-      const seen = projectFor(state, seat);
+      const seen = pilotView(seat);
       const explained = pilot.explain(seen, pendingActions ? {actions: pendingActions} : {choice: awaitingChoice(state)});
       const p = personaOf(seats[seat].persona);
       return {...explained, persona: p ? {name: p.name, blurb: p.blurb, ...p.disposition} : null};

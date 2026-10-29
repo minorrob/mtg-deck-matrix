@@ -1,0 +1,71 @@
+{
+  "source": "11e4fe864a9c3b26d3e1eec57fb04cc0c16e7b3a",
+  "summary": {
+    "cards": 6430,
+    "structure": 77,
+    "unknown": 2188,
+    "translated": 4165,
+    "passed": 4154,
+    "failed": 11,
+    "low": 0.9953
+  },
+  "minimumCount": 1,
+  "failures": [
+    {
+      "card": "Choked Estuary",
+      "status": "failed",
+      "why": "plays: No Island or Swamp in hand: nobody is asked, and it enters tapped: Choked Estuary is not on the battlefield"
+    },
+    {
+      "card": "Coldsteel Heart",
+      "status": "failed",
+      "why": "plays: Cast, Rob is asked for a color and chooses blue; it enters tapped, and next turn taps for {U} only: the question offers [\"Effect: As this artifact enters, choose a color.\",\"Effect: This artifact enters tapped.\"], not [\"White\",\"Blue\",\"Black\",\"Red\",\"Green\"]"
+    },
+    {
+      "card": "Foreboding Ruins",
+      "status": "failed",
+      "why": "plays: No Swamp or Mountain in hand: nobody is asked, and it enters tapped: Foreboding Ruins is not on the battlefield"
+    },
+    {
+      "card": "Fortified Village",
+      "status": "failed",
+      "why": "plays: No Forest or Plains in hand: nobody is asked, and it enters tapped: Fortified Village is not on the battlefield"
+    },
+    {
+      "card": "Frostboil Snarl",
+      "status": "failed",
+      "why": "plays: No Island or Mountain in hand: nobody is asked, and it enters tapped: Frostboil Snarl is not on the battlefield"
+    },
+    {
+      "card": "Furycalm Snarl",
+      "status": "failed",
+      "why": "plays: No Mountain or Plains in hand: nobody is asked, and it enters tapped: Furycalm Snarl is not on the battlefield"
+    },
+    {
+      "card": "Game Trail",
+      "status": "failed",
+      "why": "plays: No Mountain or Forest in hand: nobody is asked, and it enters tapped: Game Trail is not on the battlefield"
+    },
+    {
+      "card": "Necroblossom Snarl",
+      "status": "failed",
+      "why": "plays: No Swamp or Forest in hand: nobody is asked, and it enters tapped: Necroblossom Snarl is not on the battlefield"
+    },
+    {
+      "card": "Port Town",
+      "status": "failed",
+      "why": "plays: No Plains or Island in hand: nobody is asked, and it enters tapped: Port Town is not on the battlefield"
+    },
+    {
+      "card": "Shineshadow Snarl",
+      "status": "failed",
+      "why": "plays: No Plains or Swamp in hand: nobody is asked, and it enters tapped: Shineshadow Snarl is not on the battlefield"
+    },
+    {
+      "card": "Vineglimmer Snarl",
+      "status": "failed",
+      "why": "plays: No Forest or Island in hand: nobody is asked, and it enters tapped: Vineglimmer Snarl is not on the battlefield"
+    }
+  ],
+  "interpretation": "Diagnostic rerun names the failures from the unchanged 11e4 source. Later repairs require fresh measurement; no held-out denominator was excluded."
+}

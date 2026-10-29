@@ -95,9 +95,9 @@ const provenanceAsked = (state, objects = Object.values(state.objects)) => objec
 
 /** Mana `source` made for `player`, in the pool: remembered with what its source was, when an ability in the game asks
     (CR 106.3). */
-export function addProvenance(state, player, mana, source) {
+export function addProvenance(state, player, mana, source, sourceWas = null) {
   /* Its source as it now is, read only when something asks (lastKnown runs the layers). */
-  let was = null;
+  let was = sourceWas?.cardId === source ? sourceWas : null;
   if (!provenanceAsked(state).some((selector) => matchesLastKnown(selector, (was ??= lastKnown(state, source)), {controller: player}))) return;
   const from = {cardId: source, name: was.name, controller: was.controller, types: was.types, subtypes: was.subtypes, supertypes: was.supertypes, token: was.token};
   const list = (state.players[player].manaRiders ??= []);

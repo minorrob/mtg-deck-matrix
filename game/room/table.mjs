@@ -477,6 +477,8 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
          (Rob's playtest, 2026-10-15: a commander should be castable with what is on the board): new matches only, so a
          match launched before keeps its choices and its replay (rules/actions.mjs, `pooledTaps`). */
       pooledTaps: true,
+      sourceChoices: true,
+      pilotProvocation: true,
       preparedTaps: true,
       resultRecords: true,
       /* An {X} spell tapped for too, for each X the pool and the untapped sources pay together, so a person casts it from the

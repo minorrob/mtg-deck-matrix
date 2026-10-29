@@ -1,0 +1,71 @@
+baseline: every suite passes unbroken
+caught supported step types enforced -- tests/engine-replacement-steps.mjs
+caught candidate metadata isolated -- tests/engine-replacement-steps.mjs
+caught chosen live replacement applied -- tests/engine-replacement-steps.mjs
+caught replacement actually changes proposal -- tests/engine-replacement-steps.mjs
+caught complete trigger batch retained -- tests/engine-rule-operations.mjs
+caught pending means frames remain -- tests/engine-rule-operations.mjs
+caught events reach caller -- tests/engine-rule-operations.mjs
+caught reported prefix advances -- tests/engine-rule-operations.mjs
+caught only current frame can ask -- tests/engine-rule-operations.mjs
+caught departed player cannot be asked -- tests/engine-rule-operations.mjs
+caught root cannot replace pending work -- tests/engine-rule-operations.mjs
+caught root frames retain order -- tests/engine-rule-operations.mjs
+caught owner continuation persists -- tests/engine-rule-operations.mjs
+caught waiting polls stay paused -- tests/engine-rule-operations.mjs
+caught unknown operation fails loudly -- tests/engine-rule-operations.mjs
+caught waiting requires question -- tests/engine-rule-operations.mjs
+caught completed operation leaves state -- tests/engine-rule-operations.mjs
+caught child result reaches parent -- tests/engine-rule-operations.mjs
+caught last result reaches caller -- tests/engine-rule-operations.mjs
+caught children retain source order -- tests/engine-rule-operations.mjs
+caught bad continuation rejected -- tests/engine-rule-operations.mjs
+caught answer stays with current frame -- tests/engine-rule-operations.mjs
+caught answer clears old question -- tests/engine-rule-operations.mjs
+caught option bounds validated -- tests/engine-rule-operations.mjs
+caught invalid index rejected -- tests/engine-rule-operations.mjs
+caught cancel keeps unrelated question -- tests/engine-rule-operations.mjs
+caught duplicate handler rejected -- tests/engine-rule-operations.mjs
+caught foreign question cannot be overwritten -- tests/engine-rule-operations.mjs
+caught unsupported question modes refused -- tests/engine-rule-operations.mjs
+caught question bounds valid before asking -- tests/engine-rule-operations.mjs
+caught question id required -- tests/engine-rule-operations.mjs
+caught root cannot overwrite foreign question -- tests/engine-rule-operations.mjs
+caught operation serial matched -- tests/engine-rule-operations.mjs
+caught answer duplicate indices refused -- tests/engine-rule-operations.mjs
+caught answer maximum enforced -- tests/engine-rule-operations.mjs
+caught negative index refused -- tests/engine-rule-operations.mjs
+caught whole index required -- tests/engine-rule-operations.mjs
+caught exert is a mana cost -- tests/engine-lands-and-mana.mjs
+caught exert compiled -- tests/engine-lands-and-mana.mjs
+caught exerting marks it -- tests/engine-cards.mjs
+caught exerted skips the untap step -- tests/engine-cards.mjs
+caught exert used up by one untap step -- tests/engine-cards.mjs
+caught exert is a play -- tests/engine-lands-and-mana.mjs
+caught mana that gives haste is a rider -- tests/engine-lands-and-mana.mjs
+caught rider mana gives haste -- tests/engine-cards.mjs
+caught exile from the hand is a mana cost -- tests/engine-lands-and-mana.mjs
+caught hand mana compiled -- tests/engine-lands-and-mana.mjs
+caught hand mana offered -- tests/engine-lands-and-mana.mjs
+caught not from the battlefield -- tests/engine-cards.mjs
+caught the card is exiled -- tests/engine-cards.mjs
+caught hand mana is a play -- tests/engine-lands-and-mana.mjs
+caught noncombat damage counted -- tests/engine-lands-and-mana.mjs
+caught combat damage counted -- tests/engine-lands-and-mana.mjs
+caught counted for this turn only -- tests/engine-lands-and-mana.mjs
+caught an amount kind -- tests/engine-lands-and-mana.mjs
+caught names a player -- tests/engine-lands-and-mana.mjs
+caught the most one opponent was dealt, not all together -- tests/engine-cards.mjs
+caught a player's own -- tests/engine-lands-and-mana.mjs
+caught the chosen color read as its symbol -- tests/engine-cards.mjs
+caught a rule a static may change -- tests/engine-lands-and-mana.mjs
+caught the Agent found -- tests/engine-lands-and-mana.mjs
+caught opponents only -- tests/engine-lands-and-mana.mjs
+caught the latest controls -- tests/engine-lands-and-mana.mjs
+caught library searches only -- tests/engine-lands-and-mana.mjs
+caught put to the Agent's controller -- tests/engine-lands-and-mana.mjs
+caught the searcher's library shuffled -- tests/engine-cards.mjs
+caught its finds exiled -- tests/engine-cards.mjs
+caught its finds playable -- tests/engine-cards.mjs
+caught with mana of any color -- tests/engine-cards.mjs
+missed: []

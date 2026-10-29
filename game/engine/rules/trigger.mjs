@@ -648,14 +648,16 @@ function causedBy(state, event, cause, context, departed = []) {
 
 /* TAPPED FOR MANA (CR 605.1b): a mana ability whose cost tapped its source -- by whom (`tapper`), what (`filter`, `self`,
    `enchanted`, the permanent this Aura enchants), and what it made (`produced`, "a permanent for {C}"). */
-function tappedForMana(state, fields, condition, sourceId, controller) {
+function tappedForMana(state, fields, condition, sourceId, controller, sourceWas = null) {
   if (fields.tapped !== true) return false;
   if (!whoseIs(condition.tapper ?? "you", fields.player?.playerId, controller)) return false;
   const tapped = fields.source?.cardId;
   if (condition.self && tapped !== sourceId) return false;
   if (condition.enchanted && state.objects[sourceId]?.attachedTo !== tapped) return false;
   if (condition.produced && !((fields.produced ?? {})[condition.produced] > 0)) return false;
-  if (condition.filter && !(state.objects[tapped] && matchesSelector({what: "permanent", ...condition.filter}, state, tapped, {controller, source: sourceId}))) return false;
+  if (condition.filter && !(state.objects[tapped]
+    ? matchesSelector({what:"permanent",...condition.filter},state,tapped,{controller,source:sourceId})
+    : sourceWas?.cardId === tapped && matchesLastKnown({what:"permanent",...condition.filter},sourceWas,{controller,source:sourceId}))) return false;
   return true;
 }
 
@@ -664,7 +666,7 @@ function tappedForMana(state, fields, condition, sourceId, controller) {
  * makes at once, to the player who tapped (its controller, for "its controller adds"). "One mana of any type that land
  * produced": one of what it made.
  */
-export function manaTriggered(state, event) {
+export function manaTriggered(state, event, sourceWas = null) {
   const fields = event?.data?.fields ?? {};
   const made = [];
   /* Its triggered mana abilities as they are after layer 6 (CR 613.1f): Ultima made an Elk by Oko adds no {C}. */
@@ -673,7 +675,7 @@ export function manaTriggered(state, event) {
     const holder = state.objects[id];
     for (const ability of held(id)) {
       const mana = ability.kind === "triggered" ? ability.trigger?.manaAbility : null;
-      if (!mana || !tappedForMana(state, fields, ability.trigger, id, holder.controller)) continue;
+      if (!mana || !tappedForMana(state, fields, ability.trigger, id, holder.controller, sourceWas)) continue;
       const [kind] = Object.keys(fields.produced ?? {}).filter((k) => fields.produced[k] > 0);
       /* "An additional one mana of the chosen color" (Utopia Sprawl): the color its permanent chose as it entered; none
          chosen, none. */
@@ -687,7 +689,7 @@ export function manaTriggered(state, event) {
      activated after whatever made it, so nothing it sees came first (CR 603.7a). */
   for (const d of state.delayedTriggers ?? []) {
     const mana = d.on?.manaAbility;
-    if (!mana || !tappedForMana(state, fields, d.on, d.source, d.controller)) continue;
+    if (!mana || !tappedForMana(state, fields, d.on, d.source, d.controller, sourceWas)) continue;
     /* Its controller's -- or, "that player adds", the player who tapped: "until end of turn, whenever a player taps an Island
        for mana, that player adds an additional {U}" (High Tide; cards/index.mjs, `toTapper`). */
     made.push({player: mana.toTapper === true ? fields.player?.playerId ?? d.controller : d.controller, mana: {...mana.mana}, source: d.source});

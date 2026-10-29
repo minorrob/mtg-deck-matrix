@@ -10,24 +10,55 @@ and the engine modules its debt fixes require, subject to the ownership requests
 The primary checkout has another session's unfinished merge and is untouched.
 The eight roles run in batches because this session supports three active subagents.
 No new cards until wave 0 closes. No provider API calls, production changes, migrations, or spending.
-**Resumed October 29:** root continues from `11e4fe86` to finish wave 0 and then the frozen 95%-appearance load.
-W1 resumes faces/emblems/preparation, W4 resumes combat and W5 resumes mana/cost debt in their isolated worktrees.
-Root owns integration, the remaining inherited-anchor repairs and verifier/harness work while these roles run.
+**October 29 playtest intake:** Rob assigns one slot in the next subagent batch to ROB-204/210/211 and the engine
+halves of ROB-205/209 instead of card writing. The next batch now starts from `fad5f009`: dedicated playtest worker
+in `w0-playtest` / `codex/engine-load100-w0-playtest`, followed by W5 payment and W4 damage continuation workers.
+Root owns integration, PR #932 review/CI and V8 harness/gate work. Playtest first owns Salty pilot behavior and blink
+audit; coordinate before edits to payment/asking/operation regions, which retain the documented W5/W4 seams.
+The dedicated brief is `docs/engine/card-load-100-2026-10-28/w0/PLAYTEST-ENGINE.md`; RUN.md carries the dependency.
+PR #932 was merged externally at `0aee1474`; its exact-head `suites` was canceled at 60 minutes. The owner's
+touched-suite merge does not supply this run's full acceptance gate. Main `50297778` (#935/#936) is integrated.
+Root's strict default/CI ledger checkpoint passes CLI 56/ability-proof 44 and catches all 12 mutations;
+whole-directory proof and remaining gates stay open. UI ownership remains with its holder.
+Root pushed assembled `2bf76b00` to draft #912. The following strict scenario-decision slice passes 110 native/57 CLI
+checks and catches 25 new mutations; missing full-directory witnesses remain gate failures. P0 continues modal room
+staging; W5 handles disjoint mana/additional-cost tappers. W4 publishes bounded damage #940; its slot now resumes W1
+Battle entry/defense only, after synchronizing the next root checkpoint. No cards loaded or promoted.
+**Latest October 29 checkpoint:** source/generated `2c89a5c3` is scanned/pushed to draft #912. W1 `1fad7ec9`,
+W4 `aae67e76`, W5 code `12a32a40` and root anchors `88b616d5` are integrated. Roles are making clean pushed
+handbacks; continue their exact remaining debts from RUN.md before loading any new cards.
+Root owns integration, the remaining inherited-anchor repairs, frozen-scope dealer and verifier/harness work.
 The prior bounded role checkpoints are integrated in draft #912; source/generated checkpoint
 `5e06d705` includes main `b9999b16`. W2 `fddbd9b9`, W3 `e5dfd398`, W4 `c3923102`, W7 `a6d128e2` and V8 `10a1d325`
 are pushed. Real entry/land/script-token continuations and strict offer rejection are proved within their bounded scopes.
 Three existing chosen-type scripts are corrected; no new cards or promotions. Current selected ability evidence is 5/10
-on those three cards and 5/5 on four Flying cards; no whole-directory coverage or clean-game credit. Current 49 inherited
-mutation-anchor problems remain; zero engine targets. Full/default/CI evidence, remaining rule callers/debts, required
+on those three cards and 5/5 on four Flying cards. Fresh strict whole-directory measurement on `11e4fe86` completes
+with 5,168/11,636 abilities reached, 6,468 unproved and 18/11,037 scenario failures; G-3 fails. Calibration holds out
+4,165 cards: the initial snapshot has 11 failures; the regenerated assembled source now passes **4,165/4,165** with
+the same denominator. Full engine-cards passes 55 checks across 6,430 definitions and all 11,039 saved scenarios.
+W1 157/W5 172/planeswalker 66 and integrity/wiring checks pass. Root archives hashes and the full compressed strict
+snapshot; its ability counts predate these repairs and are not current acceptance. Five
+saved counter scenarios retain their original outcomes and now explicitly answer entry order. No clean-game gate credit.
+Root repairs 17 inherited anchors; all 17 post-integration probes are caught with original suite baselines. A missed
+empty-draft legal-pair case is explicitly supplemented and fails its specific behavioral assertion. Two newly shifted
+engine anchors are also caught. Final static audit: 226 files/4,256 breaks/32 unresolved, zero engine targets.
+Actual scoped dealer output covers all 5,799 missing included names once, with zero outside names or duplicates.
+Full/default/CI evidence, remaining rule callers/debts, required
 games and Rob's playtest sign-off stay open. Frozen target: 8,514 names covering 95.0013% of appearances; 2,715 final and
 5,799 undefined at restart, unchanged. Wave 0 is unfinished; no loading/main merge/staging acceptance by this run.
 The primary checkout remains another session's and is untouched. See RUN's newest checkpoint before resuming a role.
+Root also owns the frozen-manifest dealer filter and separate mutation-anchor worktree; W5 owns cost/runtime fixes,
+W4 owns outside-resolution damage with its narrow mana-then seam, and W1 owns battle/emblem continuation. W5's easy
+seed 2801 timed out without a final result; source-identity choices and payment-planner performance remain open.
+Final W1/W4/W5 heads are clean/pushed and quiescent; W5 handback `d21407ef` is included. Linear ROB-199/ROB-200 are
+updated; the initial disclosure review block was resolved using the user's explicit run authorization and public-repository evidence.
 RUN.md records exact checkpoints, diagnostics and restart seams; do not mark the integration ready on the legacy checker.
 
 ### Card-load coordination requests
 
 | To | Request | State |
 | --- | --- | --- |
+| Engine playtest slot / UI owner | One next-batch subagent owns ROB-204 verification, ROB-210 after that blocker, ROB-211 and the engine contracts for shared ROB-205 Cancel and ROB-209 mode/target/payment stages. UI controls remain with their owner; shared Done requires both halves. Coordinate payment, operation and Battle seams with the existing writer owners. | Direct Rob handoff October 29; reserved/queued, not started; details in `w0/PLAYTEST-ENGINE.md` |
 | Claude · Engine | The standing lane table predates Rob's direct October 28 card-load assignment. Current open PRs were checked: no separate active rule-module PR besides prerequisite #834 was listed. The run owns its debt modules and coordinates narrow shared-file scopes between its roles. | Resolved by the later direct assignment; no other session's active files are edited |
 | Play | Show the monarch already present in the room view on the board; keep a one-press card reference where applicable. | Existing canonical Requests row 1 remains open; Play owns the board |
 | Lounge owner | Wave-0 W2 needs only the named wish-card refusal in `game/room/table.mjs` `readDeck`; confirm any current overlap before editing. | Refreshed open PR file list at resume: no overlap; W2 owns the narrow refusal |
@@ -52,6 +83,15 @@ given card is played."* Documents only; nothing in the engine changed.
   refuses them at the table ... these cards in a deck make the deck illegal to play in Play."* The run's W2 builds the refusal by name in `readDeck`;
   the Decks wishboard comes after the load, Linear ROB-198 (under ROB-85).
 - **When the run starts** it claims the card-load files here by Rob's assignment (`ORCHESTRATION.md`, "Before wave 0"). Until then nobody holds them.
+## Luke's Oct 28 playtest: ROB-201 to ROB-221 (a Claude cloud session, for Rob; `claude/crankmagic-oct28-playtest-zgybjx`, one PR per issue, each merged to `main` before the next)
+
+Rob asked for the playtest's bugs and improvements to be fixed in the order Linear gives (ROB-204, ROB-205, then ROB-210, 201, 208, 209, 211, then the Medium and Low items; ROB-212 and ROB-222 to 225 are not in scope). The session crosses lanes at Rob's word, one issue at a time, and says so in each PR. Linear is the record: each issue is In Progress while its PR is open and Done once it is merged, with the PR linked.
+
+- **ROB-204 (Confirm lock on "up to" / "any number" target questions).** The network-tab test settled it: **client-side, no request was sent.** `board-confirm` returned early for every target question not stepped through Next, and a counted target (`choose-targets:`, mode `many`) has no Next. Fixed in `crankmagic-board.js` (a counted target's Confirm is the commit, checked against its own min and max; its Pick/Review labels are not drawn). Proven by `tests/board-optional-count-targets.mjs` (red before, green after) and `tests/room-optional-count-targets.mjs` (the server takes one, several or none; red when `countedChoice`'s min is forced to 1). **The issue's Claim Jumper text does not match the card** (Claim Jumper is the "search for a Plains" creature, no target); Brago is the real "any number" case. Commented on the issue.
+- **ROB-204 merged** (#932, main 0aee1474, on the touched-suites gate; staging reads b9999b16 until the release owner's next release). Handed to the engine lane's session with ROB-205, 209, 210 and 211.
+- **ROB-213 (the catalog is Commander-legal paper cards only).** `tools/catalog-rule.mjs` is the rule (Scryfall Commander "legal", no "A-" name, a paper printing by Scryfall's own `legal:commander game:paper` search; a bulk row's `digital` flag is the chosen printing's, not the card's, and wrongly names 1,046 paper cards). `tools/commander-universe.mjs` and `tools/build-engine-cards.mjs` apply it. Today it removes exactly one card from 32,116: "Name Sticker" Goblin (MTGO-only). It stays in the committed `oracle.json`, `support.json`, `commander-universe.json` and `graph.json` until the next refresh: `graph-played.json`'s 701,916 edges address `graph.json`'s cards by position, so it cannot be dropped by hand. `tests/catalog-rule.mjs` holds the one exception and fails the day the rebuild removes it.
+- **ROB-214 (Explore says a commander is not in the catalog).** Not an import that failed to register: Explore's data is `data/graph.json` (baked Sep 11, 3,411 commanders) and 86 of the 3,497 commanders in the universe (Sep 28) are not in it at all (Aerid Konstrari, Arni, Avacyn, Angel of Horror, ...); library cards pushed in beside the graph also had no `isCommander`. `crankmagic-discover.js` now brings every catalog commander in as a visitor row, finds a commander by whole name in any case or by the start of it when that names one ("Giada"), says so when a deep link names none (it opened Atraxa), and lists all of them. `tests/explore-commander-door.mjs`. Giada herself *is* flagged in the committed graph, so Luke's exact typed text is unconfirmed; commented on the issue.
+- **Known and not mine, red on a clean `main`:** `tests/board-target-lands.mjs`, `tests/board-direct-blocking.mjs`, `tests/board-yield.mjs`.
 
 ## Play: Table and Focus are the 3D view's HUD without the canvas; the drawers lie over the stage; Chat a default module, 2026-10-28 (a Claude cloud session, for Rob; `claude/gifted-ride-w6xoa3`, the third PR of the day)
 

@@ -54,6 +54,7 @@
 
 import {cardsIn, moveObject, usesThisTurn, recordUse, showFace, showAdventure, shownFaceDown, shownFaceUp, turnFaceUp, eventCard, commanderKeyOf, recordDiscard, activationsForbidden, valueCostOf} from "../state/index.mjs";
 import {mayLookAt} from "../projection.mjs";
+import {beforeProposal, retainProposal} from "./cancel.mjs";
 import {pushSpell, pushAbility, becameTarget, crimeCommitted} from "./stack.mjs";
 import {spend, parseManaCost, automaticPayment, canPay, chosenPayment, paymentOptions, paymentKey, paymentWords, PAY_CHOICES, manaValue, poolSize, tapPlans, sourceTapPlans, quickTapPlan, convokeCanPay, convokePayments, lessGeneric} from "./mana.mjs";
 import {commanderTax, recordCommanderCast, commanderIdentity} from "./commander.mjs";
@@ -75,6 +76,7 @@ import {namesChosen, withChosen, chosenFor} from "../script/chosen.mjs";
 import {poolFor, spendFor, addRestricted, addRider, riderChoices, addProvenance, addPoolMana} from "./restricted-mana.mjs";
 import {askEntering} from "./entering.mjs";
 import {registerRuleOperation, beginRuleOperation, emitRuleEvents, ruleOperationPending} from "./operations.mjs";
+import {outsideEffectsFrame} from "./damage-operation.mjs";
 import {collectTriggers, openTriggers, manaTriggered} from "./trigger.mjs";
 
 const MAIN_PHASES = ["MAIN1", "MAIN2"];
@@ -462,8 +464,28 @@ function costChoice(state, awaiting) {
   }
   /* Tapped for it (castTapPlans), with more than one way: which sources. */
   if (action.autoTap === true) {
-    const options = castTapPlans(state, player, action, TAP_CHOICES).map((plan, index) => ({index, label: tapWords(state, plan)}));
-    for (const option of options) {
+    const plans = castTapPlans(state, player, action, TAP_CHOICES);
+    const plan = action.tapPlan !== undefined ? plans.find(p => p.key === action.tapPlan) : plans.length === 1 ? plans[0] : null;
+    if (action.tapPlan !== undefined && !plan) throw new Error(`${name} cannot be tapped for that way now`);
+    if (plan) {
+      const identity = fundingIdentities(state, player, action, plan);
+      if (identity.choice) return {id: `choose-cost:${action.objectId}:source:${identity.choice.sourceGroup}`, title: `${name}: which sources make ${identity.choice.outputLabel}`, ...identity.choice};
+    }
+    const options = plans.map((plan, index) => ({index, label: tapWords(state, plan)}));
+    if (state.sourceChoices === true) {
+      const groups = new Map();
+      for (const option of options) {if (!groups.has(option.label)) groups.set(option.label, []); groups.get(option.label).push(option);}
+      const units = [...groups.values()].some(alike => alike.length > 1) ? new Map(tapUnits(state, player, undefined, pooledTaps(state)).map(unit => [unit.id, unit])) : null;
+      for (const alike of groups.values()) {
+        if (alike.length < 2) continue;
+        for (const option of alike) {
+          const plan = plans[option.index], made = {};
+          for (const tap of plan.taps) for (const [color, count] of Object.entries(units.get(tap.id).outputs?.[tap.color] ?? {[tap.color]: 1})) made[color] = (made[color] ?? 0) + count;
+          option.label = `${option.label}: make ${manaMadeWords(made)}; ${paymentWords(plan.payment)}`;
+        }
+        numbered(alike);
+      }
+    } else for (const option of options) {
       const alike = options.filter((o) => o.label === option.label);
       if (alike.length > 1) alike.forEach((o, k) => { o.label = `${o.label} (${k + 1})`; });
     }
@@ -563,7 +585,7 @@ export function resolveCastCost(state, awaiting, indices, amounts = null) {
      mana in the pool that would pay the creature but not its Adventure (Smaug, the Great Calamity's Spew Flame) is not read
      as paying it, which would leave no way to tap. */
   const way = choice.cost === "mana" ? asCast(state, awaiting.action, () => castTapPlans(state, awaiting.player, awaiting.action, TAP_CHOICES))[picked[0]] : null;
-  const action = {...structuredClone(awaiting.action), ...(choice.cost === "pool" ? {payWith: choice.options[picked[0]].key, ...(choice.options[picked[0]].riders ? {payRiders: choice.options[picked[0]].riders} : {})} : way ? {tapPlan: way.key} : choice.cost === "tap" ? {flashbackTap: ids}
+  const action = {...structuredClone(awaiting.action), ...(choice.cost === "manaSource" ? {tapPlan: choice.planKey, tapSources: {...awaiting.action.tapSources, [choice.sourceGroup]: ids}} : choice.cost === "pool" ? {payWith: choice.options[picked[0]].key, ...(choice.options[picked[0]].riders ? {payRiders: choice.options[picked[0]].riders} : {})} : way ? {tapPlan: way.key} : choice.cost === "tap" ? {flashbackTap: ids}
     : choice.cost === "flashbackSacrifice" ? {flashbackSacrifice: ids} : choice.cost === "delve" ? {delveExile: ids} : choice.cost === "convoke" ? {convokeTap: ids} : choice.cost === "waterbend" ? {waterbendTap: ids} : choice.cost === "tapAny" ? {tapChosen: ids} : choice.cost === "sacrificeAny" ? {sacrificeChosen: ids} : choice.cost === "behold" ? {beheld: ids} : choice.cost === "exileOthers" ? {othersExiled: ids} : choice.cost === "sacrifice" ? {sacrificeSet: ids} : choice.cost === "escalate" ? {escalateTapped: ids}
     : choice.cost === "counters" ? {counterSet: picked.map((i) => ({id: choice.options[i].cardId, counter: choice.options[i].counter}))} : {escapeExile: ids})};
   state.awaiting = null;
@@ -1584,7 +1606,7 @@ function manaOffers(state, player) {
   const actions = [];
   for (const id of state.zones.battlefield) {
     const object = state.objects[id];
-    if (object.controller !== player) continue;
+    if (controllerOf(state, id) !== player) continue;
     /* A mana ability is an activated ability (CR 605.1a): "its activated abilities can't be activated" (Koma) stops it too,
        and so does "your opponents can't activate abilities of artifacts, creatures, or enchantments" (Grand Abolisher). */
     if (activationsForbidden(state, id) || permanentActivationForbidden(state, id)) continue;
@@ -1644,7 +1666,7 @@ export function manaSources(state, player) {
   const out = [];
   for (const id of state.zones.battlefield) {
     const object = state.objects[id];
-    if (object.controller !== player || object.faceDown) continue;
+    if (controllerOf(state, id) !== player || object.faceDown) continue;
     const blocked = activationsForbidden(state, id) || permanentActivationForbidden(state, id) || sickForAbilities(state, id);
     const ways = [];
     for (const ability of abilitiesOf(state, id)) {
@@ -1732,23 +1754,27 @@ const xCounted = (cost, X) => ({...cost, symbols: cost.symbols.filter((s) => s.k
 
 /** CR 601.2g-h: a payment question includes every funding plan; availability probes ask for just one or two. */
 const TAP_CHOICES = Infinity;
+const manaMadeWords = mana => MANA_KEYS.filter(color => mana[color] > 0).map(color => `${mana[color] > 1 ? `${mana[color]} × ` : ""}{${color}}`).join(" + ");
 /** A way to tap, in words: the sources' names, in the order they are tapped ("Forest, Forest, Island"). */
 export const tapWords = (state, plan) => plan.taps.map((t) => state.objects[t.id]?.card ?? "a source").join(", ");
 
-/* The ways to tap for a cost, each with the payment it makes: from an empty pool and one-mana sources the simple solver
-   (tapPlans); with floating mana or a source of more than one mana, the bundled one (sourceTapPlans), where the match
-   allows it (`pooledTaps`). */
+/* Current matches preserve each source-output pattern and its payment, including generic and hybrid colors. Historical
+   matches retain their empty-pool one-mana solver (tapPlans), or their floating/bundled solver when pooledTaps allows it. */
 function fundingPlans(state, player, id, cost, limit, units = tapUnits(state, player, undefined, pooledTaps(state))) {
   const pool = poolFor(state, player, {spell: id});
   const empty = poolSize(pool) === 0;
-  if (!pooledTaps(state) || (empty && units.every((u) => u.colors.every((c) => MANA_KEYS.includes(c)))))
+  if (state.sourceChoices !== true && (!pooledTaps(state) || (empty && units.every((u) => u.colors.every((c) => MANA_KEYS.includes(c))))))
     return !empty ? [] : tapPlans(units, cost, limit).map((plan) => ({...plan, payment: {mana: Object.fromEntries(MANA_KEYS.map((k) => [k, plan.taps.filter((t) => t.color === k).length])), life: 0}}));
   /* The one an unasked cast taps is built (quickTapPlan); asking which way lists what the search finds with that one first,
      so the first way asked is the way the offer was priced at. */
-  const quick = quickTapPlan(units, pool, cost);
-  if (limit === 1) return quick ? [quick] : sourceTapPlans(units, pool, cost, 1);
-  const found = sourceTapPlans(units, pool, cost, limit);
-  return quick ? [quick, ...found.filter((w) => w.key !== quick.key)].slice(0, limit) : found;
+  const complete = units.map(unit => ({...unit, outputs: unit.outputs ?? Object.fromEntries(unit.colors.map(color => [color, {[color]: 1}]))}));
+  const quick = quickTapPlan(complete, pool, cost);
+  if (limit === 1) return quick ? [quick] : sourceTapPlans(complete, pool, cost, 1);
+  const found = sourceTapPlans(complete, pool, cost, limit);
+  const byId = new Map(complete.map(unit => [unit.id, unit]));
+  const pattern = plan => `${plan.taps.map(tap => `${Object.keys(byId.get(tap.id).outputs).sort().join("/")}=${tap.color}`).sort().join(";")}|${paymentKey(plan.payment)}`;
+  const quickPattern = quick && state.sourceChoices === true ? pattern(quick) : null;
+  return quick ? [quick, ...found.filter((w) => state.sourceChoices === true ? pattern(w) !== quickPattern : w.key !== quick.key)].slice(0, limit) : found;
 }
 
 /** The ways to tap for this cast (`action.autoTap`), up to `limit`, as `tapPlans` says them. */
@@ -1763,6 +1789,50 @@ export function castTapPlans(state, player, action, limit = 2) {
   /* Its X, in a match that taps for one (`xTaps`): counted in, as the offer priced it. */
   const xs = xTaps(state) && cost.variable > 0 ? xCounted(cost, action.x ?? 0) : cost;
   return fundingPlans(state, player, action.objectId, {...xs, generic: xs.generic + x}, limit);
+}
+
+/* A kind plan describes the required outputs, not permission to pick the first physical sources. Each output block
+   takes an explicit subset of the still-available equivalent sources. Forced blocks have only one legal subset;
+   ambiguous blocks are saved as ordinary pre-payment cost questions, without enumerating all physical permutations. */
+function fundingIdentities(state, player, action, plan) {
+  if (state.sourceChoices !== true) return {taps: plan.taps};
+  const units = tapUnits(state, player, undefined, pooledTaps(state));
+  const kind = unit => [...unit.colors].sort().join("/");
+  const byId = new Map(units.map(unit => [unit.id, unit]));
+  const groups = [];
+  for (const tap of plan.taps) {
+    const unit = byId.get(tap.id);
+    if (!unit || !unit.colors.includes(tap.color)) throw new Error("Those mana sources are no longer available");
+    const key = kind(unit), group = groups.find(g => g.kind === key && g.color === tap.color);
+    if (group) group.count++;
+    else groups.push({kind: key, color: tap.color, count: 1, outputLabel: manaMadeWords(unit.outputs?.[tap.color] ?? {[tap.color]: 1})});
+  }
+  const selections = action.tapSources ?? {};
+  if (typeof selections !== "object" || selections === null || Array.isArray(selections)
+      || Object.keys(selections).some(k => !/^(0|[1-9][0-9]*)$/.test(k) || Number(k) >= groups.length)) throw new Error("Invalid mana source selection");
+  const used = new Set(), taps = [];
+  for (let index = 0; index < groups.length; index++) {
+    const group = groups[index], eligible = units.filter(unit => kind(unit) === group.kind && !used.has(unit.id));
+    if (eligible.length < group.count) throw new Error("Those mana sources are no longer available");
+    let ids = selections[index];
+    if (ids === undefined && eligible.length > group.count) return {choice: {cost: "manaSource", sourceGroup: index, planKey: plan.key, output: group.color, outputLabel: group.outputLabel,
+      mode: "many", min: group.count, max: group.count,
+      options: numbered(eligible.map((unit, index) => ({index, cardId: unit.id, label: state.objects[unit.id].card})))} };
+    if (ids === undefined) ids = eligible.map(unit => unit.id);
+    if (!Array.isArray(ids) || ids.length !== group.count || new Set(ids).size !== ids.length || ids.some(id => !eligible.some(unit => unit.id === id)))
+      throw new Error("Invalid mana source selection");
+    for (const id of ids) {used.add(id); taps.push({id, color: group.color});}
+  }
+  return {taps};
+}
+
+function fundingChoiceNeeded(state, player, action) {
+  if (state.sourceChoices !== true) return action.tapPlan === undefined && castTapPlans(state, player, action, 2).length > 1;
+  const plans = castTapPlans(state, player, action, action.tapPlan === undefined ? 2 : TAP_CHOICES);
+  if (action.tapPlan === undefined && plans.length > 1) return true;
+  const plan = action.tapPlan === undefined ? plans[0] : plans.find(p => p.key === action.tapPlan);
+  if (!plan) throw new Error(`${state.objects[action.objectId]?.card ?? "That spell"} cannot be tapped for that way now`);
+  return Boolean(fundingIdentities(state, player, action, plan).choice);
 }
 
 /* AN ADVENTURER CARD WEIGHED AS ITS ADVENTURE (CR 715.3a): shown as one for the length of `fn` -- its cost, its timing, its
@@ -2700,9 +2770,10 @@ function countedProblem(state, player, action) {
  * @returns {Array} events for the caller to journal
  */
 export function applyAction(state, player, action) {
+  const proposal = beforeProposal(state, player, action);
   const events = perform(state, player, action);
   if (ruleOperationPending(state)) { state.passes = 0; state.priorityPlayer = null; return events; }
-  return afterAction(state, player, events);
+  return retainProposal(state, proposal, afterAction(state, player, events));
 }
 
 /** Finish an action's already-performed instructions; a resumed operation supplies its complete trigger batch. */
@@ -2749,6 +2820,110 @@ registerRuleOperation("played-land", (state, frame) => {
   if (arrival?.data?.fields?.to?.zoneType === "Battlefield") arrival.data.fields.played = true;
   if (arrived !== null && state.objects[arrived]?.zone === "battlefield") grantPlayed(state, arrived, frame.permission, player);
   return {status: "done", result: {moved: arrived ?? null}};
+});
+
+function payManaActivationStart(state, player, action, ability, payment) {
+  const events = [], object = state.objects[action.objectId];
+    const pool = state.players[player].manaPool;
+    spend(pool, payment.mana);
+    const life = (ability.payLife ?? 0) + payment.life;
+    /* Life paid is life lost (CR 119.4): said, and counted (batch 78). */
+    if (life > 0) changeLife(state, player, -life, events);
+    payCounters(state, action.objectId, ability.counterCost, player);
+    if (ability.limit) recordUse(state, action.objectId, ability.id);
+    /* "Exert this land" (Arena of Glory; CR 701.43a): it won't untap during this player's next untap step (rules/turn.mjs). */
+    if (ability.exertSelf) object.exerted = player;
+    if (ability.tapSelf) {
+      object.tapped = true;
+      events.push(event("GameEventCardTapped", state, {card: cardRef(state, action.objectId), tapped: true}));
+    }
+    /* And the creature its cost taps, the one chosen with the offer (manaTappers): tapped, not "tapped for mana" (CR 106.12). */
+    if (ability.tapCreature && action.costChoice?.tap !== undefined) {
+      state.objects[action.costChoice.tap].tapped = true;
+      events.push(event("GameEventCardTapped", state, {card: cardRef(state, action.costChoice.tap), tapped: true}));
+    }
+  return events;
+}
+
+function produceActivatedMana(state, player, action, ability, produced, sourceRef = null, sourceWas = null) {
+  const events = [];
+    /* "Spend this mana only to cast a creature spell of the chosen type": beside the pool (rules/restricted-mana.mjs). */
+    if (ability.spendOnly) addRestricted(state, player, produced, ability.spendOnly, action.objectId);
+    else {
+      /* "This mana can't be spent to cast spells from your hand" (Heartwood Crafter): in the pool, and remembered beside it. */
+      addPoolMana(state, player, produced, ability.cantSpend, action.objectId);
+      /* Its source as it is now, before a sacrifice of its cost (CR 106.3): "mana from a Treasure". */
+      addProvenance(state, player, produced, action.objectId, sourceWas);
+    }
+    /* "When that mana is spent to cast ..." (Path of Ancestry, Study Hall): in the pool, its rider remembered beside it. */
+    if (ability.whenSpent) addRider(state, player, produced, {...ability.whenSpent, ability: ability.id}, action.objectId);
+    events.push(event("GameEventManaPool", state, {
+      player: {playerId: player, name: state.players[player].name},
+      produced: {...produced}, source: sourceRef ?? cardRef(state, action.objectId),
+      /* "Tapped for mana" (CR 605.1b): what a "whenever ... is tapped for mana" ability watches. */
+      ...(ability.tapSelf ? {tapped: true} : {}),
+    }));
+    /* Triggered mana abilities: at once, as part of this one -- "its controller adds an additional {G}". */
+    for (const extra of manaTriggered(state, events[events.length - 1], sourceWas)) {
+      addPoolMana(state, extra.player, extra.mana);
+      events.push(event("GameEventManaPool", state, {player: {playerId: extra.player, name: state.players[extra.player].name}, produced: {...extra.mana}, source: cardRef(state, extra.source)}));
+    }
+  return events;
+}
+
+/* Mana abilities resolve without the stack, but moving costs can themselves require replacement choices. */
+registerRuleOperation("mana-activation", (state, frame) => {
+  const {player,action,ability,produced,payment}=frame;
+  if (state.players[player]?.lost) return {status:"done"};
+  if (!frame.stage) {
+    frame.sourceWas=lastKnown(state,action.objectId);
+    frame.sourceRef={...cardRef(state,action.objectId),controller:frame.sourceWas.controller};
+    emitRuleEvents(state,payManaActivationStart(state,player,action,ability,payment));
+    frame.costs=[];
+    if (ability.millCost) frame.costs.push({kind:"mill-cost",remaining:ability.millCost});
+    if (ability.exileFromGraveyard) frame.costs.push({kind:"move-one",id:action.costChoice.exile,to:"exile",options:{owner:state.objects[action.costChoice.exile].owner}});
+    if (ability.sacrificeSelf) frame.costs.push({kind:"sacrifice-one",id:action.objectId,player});
+    if (ability.exileSelf) frame.costs.push({kind:"move-one",id:action.objectId,to:"exile",options:{owner:state.objects[action.objectId].owner}});
+    if (ability.sacrifice) frame.costs.push({kind:"sacrifice-one",id:action.costChoice.sacrifice,player});
+    frame.stage="costs";
+  }
+  if (frame.stage === "after-cost") {
+    if (frame.childResult?.moved == null) return {status:"done"};
+    const departed=state.ruleOperation.events[frame.childResult.zoneEventIndex]?.data?.fields;
+    if (departed?.leftBehind?.cardId === action.objectId) {
+      frame.sourceWas=departed.leftBehind;
+      frame.sourceRef={...departed.card,controller:frame.sourceWas.controller};
+    }
+    delete frame.childResult;frame.stage="costs";
+  }
+  if (frame.stage === "costs" && frame.costs.length) {
+    if (state.objects[action.objectId]) {
+      frame.sourceWas=lastKnown(state,action.objectId);
+      frame.sourceRef={...cardRef(state,action.objectId),controller:frame.sourceWas.controller};
+    }
+    let child=frame.costs[0];
+    if (child.kind === "mill-cost") {
+      const id=cardsIn(state,"library",player)[0];
+      if (id === undefined) return {status:"done"};
+      child.remaining--;
+      if (!child.remaining) frame.costs.shift();
+      child={kind:"move-one",id,to:"graveyard",options:{owner:player}};
+    } else frame.costs.shift();
+    frame.stage="after-cost";
+    return {status:"continue",children:[child]};
+  }
+  if (frame.stage === "costs") {
+    if (state.objects[action.objectId]) {
+      frame.sourceWas=lastKnown(state,action.objectId);
+      frame.sourceRef={...cardRef(state,action.objectId),controller:frame.sourceWas.controller};
+    }
+    frame.stage="after-effects";
+    emitRuleEvents(state,produceActivatedMana(state,player,action,ability,produced,frame.sourceRef,frame.sourceWas));
+    return {status:"continue",children:[outsideEffectsFrame(ability.then ?? [],{
+      controller:player,source:action.objectId,lastKnown:frame.sourceWas,produced:{...produced},
+    })]};
+  }
+  return {status:"done"};
 });
 
 function perform(state, player, action, during = null) {
@@ -2874,7 +3049,7 @@ function performOffered(state, player, action, during) {
       return [];
     }
     /* A CAST THAT TAPS FOR ITSELF, more than one way (castTapPlans): which sources, asked before anything is tapped. */
-    if (action.kind === "cast" && action.autoTap === true && action.tapPlan === undefined && castTapPlans(state, player, action, 2).length > 1) {
+    if (action.kind === "cast" && action.autoTap === true && fundingChoiceNeeded(state, player, action)) {
       state.awaiting = {kind: "choose-cost", player, action: structuredClone(action)};
       return [];
     }
@@ -2936,64 +3111,18 @@ function performOffered(state, player, action, during) {
     const payment = manaAbilityPayment(state, player, ability);
     if (!produced || !payment || !withinLimit(state, action.objectId, ability) || !countersPayable(state, action.objectId, ability.counterCost) || !millPayable(state, player, ability))
       throw new Error(`${object.card} cannot add that mana now`);
-    const pool = state.players[player].manaPool;
-    spend(pool, payment.mana);
-    const life = (ability.payLife ?? 0) + payment.life;
-    /* Life paid is life lost (CR 119.4): said, and counted (batch 78). */
-    if (life > 0) changeLife(state, player, -life, events);
-    payCounters(state, action.objectId, ability.counterCost, player);
-    /* "{T}, Mill a card: Add {C}" (Millikin): the top card milled as the cost is paid, before the mana is added -- a mill
-       like any other, which "whenever a card is put into your graveyard" sees (CR 701.17, 605.3a). */
-    if (ability.millCost) events.push(...mill(state, {who: [player], count: ability.millCost}, {controller: player, source: action.objectId}));
-    if (ability.limit) recordUse(state, action.objectId, ability.id);
-    /* "Exert this land" (Arena of Glory; CR 701.43a): it won't untap during this player's next untap step (rules/turn.mjs). */
-    if (ability.exertSelf) object.exerted = player;
-    if (ability.tapSelf) {
-      object.tapped = true;
-      events.push(event("GameEventCardTapped", state, {card: cardRef(state, action.objectId), tapped: true}));
-    }
-    /* And the creature its cost taps, the one chosen with the offer (manaTappers): tapped, not "tapped for mana" (CR 106.12). */
-    if (ability.tapCreature && action.costChoice?.tap !== undefined) {
-      state.objects[action.costChoice.tap].tapped = true;
-      events.push(event("GameEventCardTapped", state, {card: cardRef(state, action.costChoice.tap), tapped: true}));
-    }
-    /* And the card of the graveyard its cost exiles, the one chosen with the offer (graveyardChoices), before the mana is
-       added -- a cost, paid as the ability is activated (CR 605.3a). Its "when you do" is in `then` (immediateTrigger). */
-    if (ability.exileFromGraveyard && action.costChoice?.exile !== undefined) moveOne(state, action.costChoice.exile, "exile", events, {owner: state.objects[action.costChoice.exile].owner});
-    /* "Spend this mana only to cast a creature spell of the chosen type": beside the pool (rules/restricted-mana.mjs). */
-    if (ability.spendOnly) addRestricted(state, player, produced, ability.spendOnly, action.objectId);
-    else {
-      /* "This mana can't be spent to cast spells from your hand" (Heartwood Crafter): in the pool, and remembered beside it. */
-      addPoolMana(state, player, produced, ability.cantSpend, action.objectId);
-      /* Its source as it is now, before a sacrifice of its cost (CR 106.3): "mana from a Treasure". */
-      addProvenance(state, player, produced, action.objectId);
-    }
-    /* "When that mana is spent to cast ..." (Path of Ancestry, Study Hall): in the pool, its rider remembered beside it. */
-    if (ability.whenSpent) addRider(state, player, produced, {...ability.whenSpent, ability: ability.id}, action.objectId);
-    events.push(event("GameEventManaPool", state, {
-      player: {playerId: player, name: state.players[player].name},
-      produced: {...produced}, source: cardRef(state, action.objectId),
-      /* "Tapped for mana" (CR 605.1b): what a "whenever ... is tapped for mana" ability watches. */
-      ...(ability.tapSelf ? {tapped: true} : {}),
-    }));
-    /* Triggered mana abilities: at once, as part of this one -- "its controller adds an additional {G}". */
-    for (const extra of manaTriggered(state, events[events.length - 1])) {
-      addPoolMana(state, extra.player, extra.mana);
-      events.push(event("GameEventManaPool", state, {player: {playerId: extra.player, name: state.players[extra.player].name}, produced: {...extra.mana}, source: cardRef(state, extra.source)}));
-    }
+    if (ability.sacrificeSelf || ability.exileSelf || ability.sacrifice || ability.exileFromGraveyard || ability.millCost)
+      return beginRuleOperation(state,{kind:"mana-activation",player,action,ability:chosenFor(ability,object),produced,payment},
+        {after:{kind:"after-action",player}}).events;
+    events.push(...payManaActivationStart(state, player, action, ability, payment));
+    events.push(...produceActivatedMana(state, player, action, ability, produced));
     /* "This land deals 1 damage to you": part of the same mana ability, so it happens now, off the stack too. */
     if ((ability.then ?? []).length) {
       /* "Put a nest counter on this creature": bound to the source, and counted, as a resolution would (it has none). What it
          added (`produced`) is there too: "this creature becomes that color until end of turn" (Foraging Wickermaw). */
       const context = {controller: player, source: action.objectId, produced: {...produced}};
-      events.push(...runEffects(state, ability.then.map((e) => countEffect(state, bindEffect(e, context), context)), context));
+      return beginRuleOperation(state,outsideEffectsFrame(ability.then,context,events),{after:{kind:"after-action",player}}).events;
     }
-    /* "{T}, Sacrifice this artifact: Add one mana of any color" (a Treasure, Lotus Petal): the sacrifice is part of the
-       cost of a mana ability, paid as it is activated (CR 605.3a, 701.21a). */
-    if (ability.sacrificeSelf && state.objects[action.objectId]) sacrificeOne(state, action.objectId, events);
-    /* "Exile this card from your hand" (Simian Spirit Guide): its cost, the card moved from its owner's hand to exile. */
-    if (ability.exileSelf && state.objects[action.objectId]?.zone === "hand") moveOne(state, action.objectId, "exile", events, {owner: object.owner});
-    if (ability.sacrifice && action.costChoice?.sacrifice !== undefined) sacrificeOne(state, action.costChoice.sacrifice, events);
     /* NOTHING GOES ON THE STACK. CR 605.3a — the whole point of a mana ability. */
     return events;
   }
@@ -3037,7 +3166,9 @@ function performOffered(state, player, action, during) {
       const tapped = action.tapPlan !== undefined ? ways.find((w) => w.key === action.tapPlan) : ways.length === 1 ? ways[0] : null;
       if (!tapped) throw new Error(`${object.card} cannot be tapped for that way now`);
       const units = new Map(tapUnits(state, player, undefined, pooledTaps(state)).map((u) => [u.id, u]));
-      for (const tap of tapped.taps) events.push(...perform(state, player, {kind: "activate-mana", objectId: tap.id, label: state.objects[tap.id].card, ...units.get(tap.id).via[tap.color]}));
+      const identity = fundingIdentities(state, player, action, tapped);
+      if (identity.choice) throw new Error("Choose the actual mana sources first");
+      for (const tap of identity.taps) events.push(...perform(state, player, {kind: "activate-mana", objectId: tap.id, label: state.objects[tap.id].card, ...units.get(tap.id).via[tap.color]}));
       tappedFor = tapped.payment;
     }
     if (action.via !== undefined && !permission) throw new Error(`${object.card} cannot be cast that way now`);

@@ -12,12 +12,12 @@
     "| Urza's Saga III finds \"mana value 1 or less\", not \"mana cost {0} or {1}\" | `cards/u/urzas-saga.json`:165 | W5 |",
     "| Token copies of a shock land never asked \"pay 2 life\" | `script/effects/permanents.mjs`:656 (NAMED) | W5 |",
     "| Delve not offered for an X spell; no die modifiers or \"whenever you roll\" | `actions.mjs`:1965; `script/effects/resources.mjs`:469 | W5, W7 |",
-    "| Casts from exile or with alternative costs offered only with mana already in the pool | `actions.mjs`:1681–1685 | W5 |",
+    "| Casts from exile or with alternative costs offered only with mana already in the pool | `actions.mjs`:1681\u20131685 | W5 |",
     "| {X} or additional-cost cards cast by an effect's \"pay mana\": not offered | `asking.mjs`:2302 (NAMED) | W5 |",
     "| Convoke with Phyrexian or {2/W} symbols left to the pool | `rules/mana.mjs`:483 | W5 |",
     "| Ways to pay capped: 24 tap choices, 12 payments | `rules/actions.mjs`:1703; `rules/mana.mjs`:254 | W5 |"
   ],
-  "status": "Resume checkpoint 2: delve X, token shock native outcomes, and payment/source/rider cap completeness proved; effect-paid X/additional work active",
+  "status": "Current ordinary IDs/output colors native293 proven; disjoint cost tappers, effect-paid costs, live migration and G5 remain open",
   "checkpoint": {
     "cardsAdded": 0,
     "cardsPromoted": 0,
@@ -153,5 +153,100 @@
       "Original suite-union reanchored mutations after merging root operation diagnostic2980e8b8; actual easy/normal fuzz; root consolidated generated artifacts/CI/wave gates"
     ],
     "ignoresAdded": []
+  },
+  "resumeCheckpoint3": {
+    "source": "d807b03a31236fb12c45f7577337bbd3fbd7af6b",
+    "shared": "2c89a5c3de37959b531bf5ebe42e8673b7e9da80",
+    "code": "12a32a40",
+    "pullRequest": "https://github.com/minorrob/mtg-deck-matrix/pull/928",
+    "cardsAdded": 0,
+    "cardsPromoted": 0,
+    "commands": [
+      "node --stack-size=4000 tests/engine-load100-mana.mjs:172 checks passed after W1/shared merges",
+      "breaks-load100-w0-w5-funding.py:9 caught,missed:[]; breaks-load100-w0-w5-delve.py:7 caught,missed:[]; breaks-load100-w0-w5-completeness.py:4 caught,missed:[]",
+      "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w5-reanchored.py: full14-suite original union baseline GREEN;13 original mutations caught;missed:[]",
+      "One standard check-cards inventory at5a:6430 definitions;11037 scenarios,1 failed (Glasswright old no-funding expectation). W1 actual funded repair1fad merged; regenerated shared snapshot2c merged; original full engine-cards then GREEN in14-suite union",
+      "Actual normal library seed2802 at5a:49 turns,0 refusals,replay identical,0 leaks/1 final-view check;all-house only",
+      "Actual easy library seed2801 at5a:UNFINISHED after628.39s;CPU673.08s,memory425.4MB; exact-owned PID48748 stopped and no helper left; NOT CLEAN"
+    ],
+    "originalSuiteUnion": [
+      "engine-load100-mana",
+      "room-prepared",
+      "engine-roblists-food",
+      "engine-costs-activations-4b",
+      "engine-cards",
+      "engine-catalog",
+      "engine-attacks-alone",
+      "engine-wave4c-k2",
+      "engine-dig-reveal",
+      "engine-rearrange-copies-4b",
+      "engine-vocabulary",
+      "engine-tap-to-cast",
+      "room-pooled-taps",
+      "game-table"
+    ],
+    "remaining": [
+      "Profile easy2801 exact5a repro before accepting exhaustive payment planning in actual games. G5 and operational payment completeness remain OPEN; do not restore arbitrary caps.",
+      "Effect-paid X/additional costs remain RED; saved native reproduction W5-effect-paid-costs-red.mjs.txt offers neither legal spell despite two Mountains and discard fodder. No large effect-cast frame started.",
+      "Alternative/X affordability with nonmana tap costs needs disjoint source/cost-tapper validation. Source-funded X beyond ordinary hand/command/alternative restrictions remains to audit.",
+      "Current source solver still groups sources by outputs and chooses the first objects within a group. The56/786 proofs enumerate source-kind multisets, not all source-ID subsets; audit identity-dependent choices before complete-choice acceptance.",
+      "Coordinate W1 queued Siege transformed-cast seam and W4 mana ability.then damage continuation. Root owns generated outputs/ACTIVE/RUN/integration, scope dealing, consolidated gates."
+    ],
+    "evidence": [
+      "evidence/w5-original-union-mutations.txt",
+      "evidence/w5-fuzz-easy-2801-timeout.json",
+      "evidence/w5-fuzz-normal-2802.json",
+      "evidence/w5-card-inventory-5a004e44.json",
+      "W5-next.md"
+    ],
+    "gateClaims": {
+      "wave0Complete": false,
+      "G5": false,
+      "paymentOperationalAcceptance": false
+    },
+    "ignoresAdded": []
+  },
+  "presentProfileCheckpoint": {
+    "fixedBase": "ea0099b775e1e1637028e1a6d6705cb58fb8cd07",
+    "evidence": "evidence/w5-present-profile.json",
+    "nativeChecks": 85,
+    "caughtMutations": 4,
+    "missed": [],
+    "seed2801TimedOutSeconds": 90.09,
+    "clean": false,
+    "sourceIdentityDebt": "open",
+    "effectPaidCosts": "open",
+    "G5": false
+  },
+  "sourceIdentityCheckpoint": {
+    "base": "9443180710f2fb76ceab60a5f3141c82cb5a0260",
+    "evidence": "evidence/w5-source-identities.json",
+    "nativeChecks": 249,
+    "roomChecks": 14,
+    "newMutationsCaught": 9,
+    "missed": [],
+    "currentDefault": true,
+    "wholeIdentityComplete": false,
+    "historicalReplayCompatibility": true,
+    "historicalLiveMigration": "open",
+    "outputColors": "open",
+    "effectPaidCosts": "open",
+    "G5": false,
+    "G7": false
+  },
+  "outputColorCheckpoint": {
+    "base": "c3bb1824494792780cb0f6de4eb8dd758f75b4dc",
+    "evidence": "evidence/w5-output-colors.json",
+    "nativeChecks": 293,
+    "baselineSuites": 16,
+    "caughtMutations": 6,
+    "missed": [],
+    "currentDefault": true,
+    "wholePaymentComplete": false,
+    "disjointCosts": "actual Sephara RED saved",
+    "effectPaidCosts": "open",
+    "historicalLiveMigration": "open",
+    "G5": false,
+    "G7": false
   }
 }
