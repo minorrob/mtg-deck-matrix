@@ -33,5 +33,29 @@ prefix events; they are bounded regressions, not complete pod or Commander-load 
 `--hidden-top-reversion` and `--held-draw-reversion` each revert one actual production hunk in served test bytes only.
 Normal registered acceptance always serves production source.
 
-Actual production-browser verification and those causal probes are pending the next coordinated quiet window.
-ROB-227 is In Progress, not Done. Root owns integration/main/full acceptance and all unchanged card-load gates.
+Actual production-browser verification now passes **98 checks** on this isolated source, with the pinned installed
+Chromium cache, `GEOMETRY_REQUIRED=1` and `UAT_BROWSER=chromium`:
+
+```text
+node tests/board-playtest-snoop.mjs --screenshots C:\Users\robmi\CrankMagic\worktrees\load100\scratch\snoop-production-shots
+node tests/board-playtest-snoop.mjs --hidden-top-reversion
+node tests/board-playtest-snoop.mjs --held-draw-reversion
+```
+
+Both full contexts required actual Babylon WebGL. The hidden-top control fails at the missing native public card
+after both Table mats mount; it is not a startup failure, and its fail-fast run does not claim later modes. The
+held-draw control fails directly with expected `board-draw`, actual `board-card`. All normal assertions/modes remain
+unchanged. Both independently reverted production hunks are caught. These controls alter served test bytes only;
+the disk source/assets remain exact, with the board hash above unchanged after every run.
+
+All 12 whole-screen screenshots were inspected: held draw owner/opponent, active cast menu and source-removed state
+in Table/Focus/3D. The public top appears in its correct pile, native casting controls are reachable, and the library
+returns to a back after the actual source dies. Card art is the existing browser runner's deterministic network stub.
+The whole-screen artifacts also show the footer below the 900-pixel game area and left-field camera clipping in 3D.
+Those layout limits are outside these two changed lines; they are not fixed or counted as full layout acceptance.
+The original broader UI/card-load gates remain open. Logs are the three
+`worktrees/load100/scratch/snoop-production-{browser,hidden-top-mutant,held-draw-mutant}.log` files. Every context,
+browser and static server closed through `finally`; no `node`/`headless_shell` process remained after teardown.
+
+ROB-227 stays In Progress pending integration. Root owns integration/main/full acceptance and all unchanged card-load
+gates. This local fix is not a production deployment or a claim that the entire UI is complete.
