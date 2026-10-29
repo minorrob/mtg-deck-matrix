@@ -253,7 +253,7 @@ export function dealDamage(state, params, context) {
       if (infect) events.push(...givePoison(state, toPlayer, proposal.amount, putter));
       else changeLife(state, toPlayer, -proposal.amount, events);
       events.push(event("GameEventPlayerDamaged", state, {
-        source: source === null ? null : cardRef(state, source),
+        source: source === null ? null : {...cardRef(state, source), controller: controllerOf(state, source)},
         target: {playerId: toPlayer, name: state.players[toPlayer].name},
         amount: proposal.amount, combat: false, infect,
       }));
@@ -266,7 +266,7 @@ export function dealDamage(state, params, context) {
       damagePermanent(state, toCard, proposal.amount, events, {infect, by: putter});
       events.push(event("GameEventCardDamaged", state, {
         card: cardRef(state, toCard),
-        source: source === null ? null : cardRef(state, source),
+        source: source === null ? null : {...cardRef(state, source), controller: controllerOf(state, source)},
         amount: proposal.amount, combat: false,
       }));
       /* CR 702.2b: deathtouch is any damage from the source, not only combat damage. */

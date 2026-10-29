@@ -952,7 +952,7 @@ export const combatDamage = {
       const infect = infects(state, hit.source);
       if (hit.toPlayer !== undefined && hit.toPlayer !== null) {
         events.push(event("GameEventPlayerDamaged", state, {
-          source: cardRef(state, hit.source),
+          source: {...cardRef(state, hit.source), controller: controllerOf(state, hit.source)},
           target: {playerId: hit.toPlayer, name: state.players[hit.toPlayer].name},
           amount: hit.amount, combat: true, infect,
         }));
@@ -1005,7 +1005,7 @@ export const combatDamage = {
         markDeathtouch(state, hit.source, hit.toCard);
         /* Combat damage, as damage to a player says (Grateful Apparition's "to a player or planeswalker", rules/trigger.mjs). */
         events.push(event("GameEventCardDamaged", state, {
-          card: cardRef(state, hit.toCard), source: cardRef(state, hit.source), amount: hit.amount, combat: true,
+          card: cardRef(state, hit.toCard), source: {...cardRef(state, hit.source), controller: controllerOf(state, hit.source)}, amount: hit.amount, combat: true,
         }));
       }
 
