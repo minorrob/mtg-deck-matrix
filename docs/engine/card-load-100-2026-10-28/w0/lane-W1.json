@@ -13,7 +13,7 @@
     "| Tokens and copies of prepare cards never prepared | `script/effects/attributes.mjs`:23 | W1 |",
     "| Unsure, to be settled by a scenario: Song of the Dryads and Sagas under ability loss; Incubator copies single-faced; Social Snub's copy; Winter's prompt and a draw-two cost under Narset | `rules/layers.mjs`:870; `permanents.mjs`:644; `actions.mjs` | V8 finds, W1/W6/W2/W7 fix |"
   ],
-  "status": "Published entry/intrinsic/counter through1553 and Battle/SBA base4033/PR950. Bounded simultaneous linked-return runtime105e39dc passes native435, full original44-reader baseline and85 semantic controls/missed[]. Latest root sync/exact scan/draft publication pending. Battle combat/defeat, generic-token/legacy paths, two emblem families and all whole-run gates remain open; no new cards or promotions.",
+  "status": "Bounded linked-return runtime105e39dc passes native435, full original44-reader baseline and85 semantic controls/missed[], all restored unchanged. Exact published b04 sync783085bb passes full cards55/generators93/wiring131/integrity/assets136; actual715 suites. Final exact scan/push/draft attachment pending. Battle combat/defeat, generic-token/legacy paths, emblems and whole-run gates remain open; no cards added/promoted.",
   "checkpoint": {
     "cardsAdded": 0,
     "cardsPromoted": 0,
@@ -339,13 +339,53 @@
     "history": "Frozen e77 full84 remains82 caught/2 MISSED, with actual duplicate-Mimic native RED before the approved two-read fix. Repaired controls cause direct missing-return/watcher-count assertion failures.",
     "customFixture": "Followup-created watcher is a labeled supported native custom fixture, not saved-card execution credit.",
     "pending": [
-      "Latest published-root sync, metadata checks, exact HEAD0 scan, push and bounded draft attachment.",
+      "Exact final HEAD0 scan, push, bounded draft and task attachment; the root records its URL and final integration.",
       "Battle combat/intrinsic Siege defeat and W5 transformed free-cast integration.",
       "Generic token/legacy entry-counter/SBA paths and Daretti/Sunset emblem families.",
       "All root whole-card/review/browser/clean-game gates; no fullBattle/wave0 claim."
     ],
     "cardsAdded": 0,
     "cardsPromoted": 0,
-    "ignoresAdded": []
+    "ignoresAdded": [],
+    "syncedParent": "b04dd2f423e8ca820af87faf784c73ca48f5b8a8",
+    "postSyncCheckpoint": "783085bbc43d47879690c897ee3baf1bc31f590a",
+    "postSyncProof": [
+      {
+        "reader": "tests/engine-battle-linked-returns.mjs",
+        "exitCode": 0,
+        "sha256": "cc298d5f515667fb42ceb9b32428b269aca73710ad8eb925be5bb121926a23c8",
+        "evidence": "evidence/w1-postsync-engine-battle-linked-returns.log"
+      },
+      {
+        "reader": "tests/engine-cards.mjs",
+        "exitCode": 0,
+        "sha256": "d43e6dbe6a24d1bd881cfceabf987d46c18093ca045874f0249aee1527977f59",
+        "evidence": "evidence/w1-postsync-engine-cards.log"
+      },
+      {
+        "reader": "tests/data-integrity.mjs",
+        "exitCode": 0,
+        "sha256": "78385273d37f68ed6e046d71d0f47ebc7588f069dcc4b6e28189dfb5b45f3cb0",
+        "evidence": "evidence/w1-postsync-data-integrity.log"
+      },
+      {
+        "reader": "tests/feature-wiring.mjs",
+        "exitCode": 0,
+        "sha256": "ac8532270a8766204a50ec5ba637ed61d23b6c2bcbfb899cb2adf6183e65fd67",
+        "evidence": "evidence/w1-postsync-feature-wiring.log"
+      },
+      {
+        "reader": "tests/asset-versions.mjs",
+        "exitCode": 0,
+        "sha256": "03d3bf4a0f314643cb44a9e9af32fed0cb4ac3751bd1e802339e90502cb38aad",
+        "evidence": "evidence/w1-postsync-asset-versions.log"
+      },
+      {
+        "reader": "tests/generators.mjs",
+        "exitCode": 0,
+        "sha256": "9d4e1fb0cf7411b7bd0de1c7cf942a8e5de198711ef58c9b44edc3bca46519ed",
+        "evidence": "evidence/w1-postsync-generators.log"
+      }
+    ]
   }
 }

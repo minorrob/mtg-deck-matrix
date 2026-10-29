@@ -3,7 +3,7 @@
 Runtime source `105e39dc48047f74d752358d60eaa3b5b2aeb221` passes the native435-check reader, the complete original44-reader
 unbroken baseline, and all85 semantic controls (missed[]; zero timeouts). Frozen target/test/probe SHA256 values match
 exactly after restoration. This extends accepted Battle/SBA base movement4033/PR950. No card is added or promoted;
-full Battle support, wave0 and root acceptance gates remain open. Publication still requires latest-root sync and exact scan.
+full Battle support, wave0 and root acceptance gates remain open. Exact published b04dd2f was merged at783085bb after the full proof; all frozen code/test/probe hashes remain identical. Exact pre-push scan and draft attachment follow.
 
 When simultaneous source departures release several exiled permanents, every returning object now remains in its old
 zone until all native entry choices/costs and counter replacements finish. A saved cohort-only linked-return child
@@ -60,3 +60,10 @@ free transformed-cast integration, generic/legacy entry-counter/SBA callers, the
 RED, and Daretti/Sunset emblem families. There was no generic token producer expansion. Root owns RUN/ACTIVE, Linear,
 whole-directory/card ability coverage, browser/review and clean-game acceptance. Existing a11y ROB312 and the root's
 combined face browser gate remain open; this checkpoint makes no whole-layout or full-Battle claim.
+
+
+Post-sync on783085bb: native435, full ordinary engine-cards55/all6430 definitions, generators93/all26 checks,
+feature-wiring131, integrity50 variants/50 connected profiles, and assets136 all pass. The parent changed scenario
+inputs, so the full saved-card reader was rerun; no runtime/test/probe hash differs from frozen105e39dc. This is not
+strict whole-directory ability acceptance or browser credit. README matches actual715 flat Node suites. The exact
+pre-push HEAD0 scan result belongs to the final draft handoff; no whole-run gate is closed here.
