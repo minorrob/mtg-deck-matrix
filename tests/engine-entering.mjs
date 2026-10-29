@@ -3,9 +3,9 @@
 /* M4 PHASE 3, BATCH 5: "AS THIS LAND ENTERS, YOU MAY PAY 2 LIFE. IF YOU DON'T, IT ENTERS TAPPED."
  *
  * The ten shock lands are in the most-played forty Commander cards, and the classic way to play one is to fetch it.
- * rules/entering.mjs: the land enters as it would unpaid -- tapped -- and its controller is asked at the next point a
- * player would receive priority, before any trigger goes on the stack: after the land drop, after the resolution
- * that put it there. Paying untaps it. "Pay" is offered only to a player with the life (CR 119.4).
+ * A played land asks before entry (CR 614.12a); neither permanent nor arrival event exists until the answer.
+ * Legacy search/fetch and general moveZone continuations are still queued separately. "Pay" is offered only to a player with
+ * the life (CR 119.4).
  */
 import assert from "node:assert/strict";
 import {createState, addObject} from "../game/engine/state/index.mjs";
@@ -49,10 +49,12 @@ const playShock = (s) => applyAction(s, 0, legalActions(s, 0).find((a) => a.kind
   main(s);
   playShock(s);
   const choice = awaitingChoice(s);
-  eq([s.awaiting.kind, s.awaiting.player, s.priorityPlayer, shockOn(s).tapped], ["entering-choice", 0, null, true],
-    "the land drop is followed at once by its controller's question, nobody holding priority, the land tapped as it would be unpaid");
+  eq([s.awaiting.kind, s.awaiting.player, s.priorityPlayer, shockOn(s)], ["rule-operation", 0, null, undefined],
+    "the announced land waits outside the battlefield for its controller's question, with nobody holding priority");
   eq(choice.options.map((o) => o.label), ["Pay 2 life: Watery Grave enters untapped", "Don't pay: Watery Grave enters tapped"], "pay, or let it enter tapped");
-  throws(() => resolveAwaiting(s, [5]), /Invalid selection/, "an answer outside the choice is refused");
+  const waiting = JSON.stringify(s);
+  throws(() => resolveAwaiting(s, [5]), /required rule options/, "an answer outside the choice is refused");
+  eq(JSON.stringify(s), waiting, "the invalid rule answer preserves the waiting source and question");
   resolveAwaiting(s, [0]);
   eq([shockOn(s).tapped, s.players[0].life, s.priorityPlayer], [false, 38, 0], "paid: untapped, 2 life gone, and priority back to its player");
 }
@@ -92,7 +94,7 @@ const playShock = (s) => applyAction(s, 0, legalActions(s, 0).find((a) => a.kind
   on(s, SHOCK, 0, "hand");
   main(s);
   playShock(s);
-  eq([s.awaiting?.kind, s.stack.length], ["entering-choice", 0], "the shock asks before the land's arrival trigger goes on the stack");
+  eq([s.awaiting?.kind, s.stack.length, shockOn(s)], ["rule-operation", 0, undefined], "the shock asks before the land's arrival trigger goes on the stack");
   resolveAwaiting(s, [0]);
   eq([s.stack.length, s.stack[0]?.kind], [1, "trigger"], "then the trigger goes on the stack");
 }
@@ -117,7 +119,7 @@ const playShock = (s) => applyAction(s, 0, legalActions(s, 0).find((a) => a.kind
   passPriority(s);
   const last = passPriority(s);
   eq([last.outcome, s.awaiting?.kind, s.priorityPlayer, shockOn(s).tapped], ["resolved", "entering-choice", null, true],
-    "a spell that returns a shock land asks its question as the spell finishes, before priority returns");
+    "the legacy general moveZone caller still queues the shock question before priority (its pre-entry continuation remains open)");
 }
 {
   const s = table();
@@ -127,4 +129,4 @@ const playShock = (s) => applyAction(s, 0, legalActions(s, 0).find((a) => a.kind
   eq([askEntering(s), s.enteringQuestions.length, s.awaiting], [false, 0, null], "a land no longer on the battlefield when its turn to ask comes is not asked about");
 }
 
-console.log(`engine-entering: ${checks} checks passed — a shock land asks as it enters, from hand or from a fetch, before any trigger, and only offers what its player can pay.`);
+console.log(`engine-entering: ${checks} checks passed — played shock lands wait before entry; legacy fetch/move queues remain explicit, and life offers remain payable.`);
