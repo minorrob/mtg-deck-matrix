@@ -33,6 +33,18 @@
   },
   "scenarios": [
     {
+      "name": "The non-Goblin top is public to both players while another library stays hidden",
+      "library": ["Bear"],
+      "setup": [{"seat": 0, "zone": "battlefield", "cards": ["Conspicuous Snoop"]}],
+      "steps": [],
+      "expect": [
+        {"seat": 0, "zone": "library", "cards": ["Bear"]},
+        {"seat": 1, "of": 0, "zone": "library", "cards": ["Bear"]},
+        {"seat": 0, "of": 1, "zone": "library", "cards": []},
+        {"seat": 1, "zone": "library", "cards": []}
+      ]
+    },
+    {
       "name": "A Goblin cast from the top of the library",
       "library": [
         "Goblin Scout"

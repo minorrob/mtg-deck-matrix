@@ -5,6 +5,34 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Reported-card saved proof, clean `be1a2b89`:** every original Snoop/Banner/Valakut scenario and assertion is
+  preserved. Banner's three taps now identify Wastes0/1/2; one additive Snoop scenario observes its non-Goblin top
+  publicly from both seats while the other library stays hidden. Before, selected clean `ef1d2ba4` has8 scenarios,
+  one physical-source failure and2/8 abilities reached. After, all9 pass and4/8 are reached, including two independent
+  runtime-only omission proofs: removing Snoop reveal fails the actual Library projection, removing Banner's bonus
+  fails actual Elf1/1 versus2/2. Four other abilities remain unproved, and the selected checker correctly exits1.
+  Full `engine-cards`55 passes all6,430 current definitions/saved scenarios; this legacy reader is not strict G-3.
+  No saved definitions or rule modules change. Both source/input-bound diagnostic ledgers are privacy-scanned,
+  compressed/roundtrip-verified and archived with hashes in `w0/evidence/live-report-three-proof.json`. They remain
+  selected diagnostic scopes, never canonical gate acceptance. Scope/final totals and all gates remain unchanged.
+- **Bounded same-seed pool result on clean `368a9aad`:** after the concrete draft-check repair below, seed1 finishes
+  clean under the existing table policy (the human is eliminated; remaining AI seats are not a winner claim):35 turns,
+  73 decisions, zero actual human/AI refusals, one rejected private draft, identical replay, zero leaks/74 checks.
+  It observes47/6,430 loaded cards successfully played/resolved and20/11,633 printed abilities. These are diagnostic
+  observations on this exact source; no full200-game/final-runtime gate or newly completed card credit. The original
+  `0130f853` game stays NOT CLEAN with zero exercise. Full hashed10,579,693-byte ledger is archived as607,872-byte
+  gzip with verified roundtrip; raw ledger/report/log credential/address scans pass. Source/tree/command/result/hashes:
+  `w0/evidence/pool-368a-seed1.json`. Fresh static audit252 files/4,616 breaks/33 inherited UI problems, zero game/fuzz
+  targets. No unchanged rerun. Next engine integration must revalidate its own source; full G-3/G-5/G-6/G-7 remain open.
+- **V8 simulated-person blocker draft repair after published `bb8c2aab`:** the strict historical pool seed1 stays
+  NOT CLEAN/zero exercise. The default simulated person now checks its complete declaration with the existing public
+  read-only `room.check` before submitting, retaining actual actor/question identity. Illegal private drafts are counted
+  separately; a stale question or50 exhausted attempts fails explicitly. No actual refusal or strict verdict changes.
+  Native1189/pool91/room-block34 pass; complete six-reader baseline retains both original library/V8 reader unions,
+  all eight new semantic probes caught, none missed. Actual accepted declarations commit/replay; injected malformed
+  input remains a game exception. Source restored, no backup. README actual702. See `w0/V8-PERSON-BLOCKS.md` and
+  `w0/evidence/v8-person-blocks.json`. Commit a clean source before the next bounded seed1 diagnostic; no unchanged
+  retry, full-game acceptance or new card credit. Main wave0 engine continuations and Scryfall exception remain open.
 - **Approved Snoop fix and reported Purphoros regression, October 29:** assembled source `9195f0fc` contains clean
   native refresh #947 (`3b879144`), approved UI #949 (`42e22351`) and bounded Battle/SBA #950 (`4033bcec`), each by
   `--no-ff` merge. Rob explicitly overrides the UI ownership rule only for the verified Snoop renderer fix, required

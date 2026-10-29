@@ -1,0 +1,20 @@
+{
+  "schema": "SimulatedPersonBlockProof@1",
+  "sourceBase": "bb8c2aab1c5748cb5a7fa140643b5b2dc53f1029",
+  "regression": "tests/fuzz-person-blocks.mjs",
+  "nativeChecks": 1189,
+  "nativeSeeds": 96,
+  "poolReaderChecks": 91,
+  "roomBlockCheckChecks": 34,
+  "mutationSpec": "game/tools/batch/breaks-fuzz-person-blocks.py",
+  "baselineSuiteCount": 6,
+  "originalReaderUnionsRetained": ["breaks-fuzz-library.py", "breaks-load100-w0-v8-verify.py"],
+  "caught": ["joint block drafting cannot be skipped", "an illegal native draft cannot be submitted", "a stale blocker question cannot be retried as current", "draft exhaustion fails rather than accepting an illegal fallback", "actual default room producer supplies native preflight", "room preflight preserves the submitted question identity", "room preflight uses the actual waiting actor", "strict verdict still counts actual submitted refusals"],
+  "missed": [],
+  "nativeRuleChanges": 0,
+  "savedCardChanges": 0,
+  "canonicalChoicePolicyChanges": 0,
+  "actualSubmittedRefusalsIgnored": 0,
+  "wholeGameAcceptanceCredit": 0,
+  "status": "Bounded native/mutation proof; clean-source seed1 rerun and all full wave-zero gates remain required"
+}
