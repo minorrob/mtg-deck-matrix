@@ -11,9 +11,15 @@ The primary checkout has another session's unfinished merge and is untouched.
 The eight roles run in batches because this session supports three active subagents.
 No new cards until wave 0 closes. No provider API calls, production changes, migrations, or spending.
 **October 29 playtest intake:** Rob assigns one slot in the next subagent batch to ROB-204/210/211 and the engine
-halves of ROB-205/209 instead of card writing. Queue only at this intake; no implementation agent dispatched yet.
+halves of ROB-205/209 instead of card writing. The next batch now starts from `fad5f009`: dedicated playtest worker
+in `w0-playtest` / `codex/engine-load100-w0-playtest`, followed by W5 payment and W4 damage continuation workers.
+Root owns integration, PR #932 review/CI and V8 harness/gate work. Playtest first owns Salty pilot behavior and blink
+audit; coordinate before edits to payment/asking/operation regions, which retain the documented W5/W4 seams.
 The dedicated brief is `docs/engine/card-load-100-2026-10-28/w0/PLAYTEST-ENGINE.md`; RUN.md carries the dependency.
-PR #932 is ready/open/unmerged, exact-head `suites` in progress when checked. UI ownership remains with its holder.
+PR #932 was merged externally at `0aee1474`; its exact-head `suites` was cancelled at 60 minutes. The owner's
+touched-suite merge does not supply this run's full acceptance gate. Main is now `3a75d03b` after #935.
+Root's strict default/CI ledger checkpoint passes CLI 56/ability-proof 44 and catches all 12 mutations;
+whole-directory proof and remaining gates stay open. UI ownership remains with its holder.
 **Latest October 29 checkpoint:** source/generated `2c89a5c3` is scanned/pushed to draft #912. W1 `1fad7ec9`,
 W4 `aae67e76`, W5 code `12a32a40` and root anchors `88b616d5` are integrated. Roles are making clean pushed
 handbacks; continue their exact remaining debts from RUN.md before loading any new cards.

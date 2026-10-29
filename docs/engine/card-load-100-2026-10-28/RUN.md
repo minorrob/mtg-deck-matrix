@@ -5,7 +5,27 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
-- **Next-batch assignment from Rob's October 29 playtest handoff:** reserve one subagent slot for ROB-204, ROB-210,
+- **Strict default/CI verifier checkpoint, October 29:** `w0/V8-STRICT-CLI.md` records root's strict default ledger,
+  independent canonical/source/input/inventory validator and fatal Actions/local fallback wiring. Actual CLI fixtures
+  pass 56 checks, original ability-proof 44; all 12 mutations caught with `missed: []`. Data integrity,
+  feature-wiring 131 and readout-feeds 1,121 pass. Wiring is not G-3 acceptance: the current whole directory still
+  needs a fresh clean-source measurement and individual behavior witnesses for every unproved ability. No cards loaded.
+- **External main update:** PR #932 was merged by its owner at `0aee1474`, then #935 advanced main to `3a75d03b`.
+  Exact-head #932 `suites` was cancelled at 60 minutes; the owner's comment declares touched-suite validation rather
+  than a full fallback. Record the merged Confirm behavior for ROB-210, without full-gate credit for our run.
+
+- **Active batch from `fad5f009`, October 29:** dedicated `playtest_engine` is dispatched first in
+  `w0-playtest` / `codex/engine-load100-w0-playtest`, followed by `w5_choice` in `w0-w5-mana` and `w4_damage`
+  in `w0-w4-combat`. Root owns integration, PR #932 review/CI and V8 gate/harness work. Playtest begins independent
+  Salty pilot work while the existing Confirm PR's CI runs. Its narrow room journal/pilot-memory save/restore seam
+  is reserved; W5 owns payment identity/performance/planner and effect-paid costs, W4 saved damage proposals and
+  mana-ability `then`. Coordinate all shared actions/asking/turn/operation changes first. UI remains with its owner.
+  No new cards or promotions; original gate failures remain open.
+  **ROB-205 policy clarified directly by Rob:** Cancel reversible actions; keep committed mandatory choices pending
+  with clear guidance. The native life40-to38 then mandatory-discard case must not skip its instruction or undo the
+  committed effect. P0 is implementing this boundary and recording the shared engine/UI contract; no exception/ignore.
+
+- **Historical next-batch intake from Rob's October 29 playtest handoff:** reserve one subagent slot for ROB-204, ROB-210,
   ROB-211 and the engine halves of shared ROB-205/ROB-209, instead of another card-writing assignment. This intake
   has not dispatched an implementation subagent; launch the dedicated slot when starting the next batch. Full brief,
   dependencies, acceptance evidence and ownership seams: `w0/PLAYTEST-ENGINE.md`. Keep UI changes with the UI owner.
