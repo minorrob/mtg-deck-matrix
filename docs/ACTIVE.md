@@ -10,25 +10,34 @@ and the engine modules its debt fixes require, subject to the ownership requests
 The primary checkout has another session's unfinished merge and is untouched.
 The eight roles run in batches because this session supports three active subagents.
 No new cards until wave 0 closes. No provider API calls, production changes, migrations, or spending.
-**Resumed October 29:** root continues from `11e4fe86` to finish wave 0 and then the frozen 95%-appearance load.
-W1 resumes faces/emblems/preparation, W4 resumes combat and W5 resumes mana/cost debt in their isolated worktrees.
-Root owns integration, the remaining inherited-anchor repairs and verifier/harness work while these roles run.
+**Latest October 29 checkpoint:** source/generated `2c89a5c3` is scanned/pushed to draft #912. W1 `1fad7ec9`,
+W4 `aae67e76`, W5 code `12a32a40` and root anchors `88b616d5` are integrated. Roles are making clean pushed
+handbacks; continue their exact remaining debts from RUN.md before loading any new cards.
+Root owns integration, the remaining inherited-anchor repairs, frozen-scope dealer and verifier/harness work.
 The prior bounded role checkpoints are integrated in draft #912; source/generated checkpoint
 `5e06d705` includes main `b9999b16`. W2 `fddbd9b9`, W3 `e5dfd398`, W4 `c3923102`, W7 `a6d128e2` and V8 `10a1d325`
 are pushed. Real entry/land/script-token continuations and strict offer rejection are proved within their bounded scopes.
 Three existing chosen-type scripts are corrected; no new cards or promotions. Current selected ability evidence is 5/10
 on those three cards and 5/5 on four Flying cards. Fresh strict whole-directory measurement on `11e4fe86` completes
 with 5,168/11,636 abilities reached, 6,468 unproved and 18/11,037 scenario failures; G-3 fails. Calibration holds out
-4,165 cards: 4,154 pass, 11 fail. Root archives hashes and the full compressed ledger in the run package. W5's reveal
-land/Coldsteel repair and W1 permanent-inset/Saga checkpoint are now integrated; W4 trample is integrated too. Five
+4,165 cards: the initial snapshot has 11 failures; the regenerated assembled source now passes **4,165/4,165** with
+the same denominator. Full engine-cards passes 55 checks across 6,430 definitions and all 11,039 saved scenarios.
+W1 157/W5 172/planeswalker 66 and integrity/wiring checks pass. Root archives hashes and the full compressed strict
+snapshot; its ability counts predate these repairs and are not current acceptance. Five
 saved counter scenarios retain their original outcomes and now explicitly answer entry order. No clean-game gate credit.
-Current 49 inherited
-mutation-anchor problems remain; zero engine targets. Full/default/CI evidence, remaining rule callers/debts, required
+Root repairs 17 inherited anchors; all 17 post-integration probes are caught with original suite baselines. A missed
+empty-draft legal-pair case is explicitly supplemented and fails its specific behavioral assertion. Two newly shifted
+engine anchors are also caught. Final static audit: 226 files/4,256 breaks/32 unresolved, zero engine targets.
+Actual scoped dealer output covers all 5,799 missing included names once, with zero outside names or duplicates.
+Full/default/CI evidence, remaining rule callers/debts, required
 games and Rob's playtest sign-off stay open. Frozen target: 8,514 names covering 95.0013% of appearances; 2,715 final and
 5,799 undefined at restart, unchanged. Wave 0 is unfinished; no loading/main merge/staging acceptance by this run.
 The primary checkout remains another session's and is untouched. See RUN's newest checkpoint before resuming a role.
 Root also owns the frozen-manifest dealer filter and separate mutation-anchor worktree; W5 owns cost/runtime fixes,
-W4 owns outside-resolution damage with its narrow mana-then seam, and W1 owns battle/emblem continuation.
+W4 owns outside-resolution damage with its narrow mana-then seam, and W1 owns battle/emblem continuation. W5's easy
+seed 2801 timed out without a final result; source-identity choices and payment-planner performance remain open.
+Final W1/W4/W5 heads are clean/pushed and quiescent; W5 handback `d21407ef` is included. Linear ROB-199/ROB-200 are
+updated; the initial disclosure review block was resolved using the user's explicit run authorization and public-repository evidence.
 RUN.md records exact checkpoints, diagnostics and restart seams; do not mark the integration ready on the legacy checker.
 
 ### Card-load coordination requests

@@ -159,8 +159,17 @@ line ranges; three of its evidence lines re-read by hand: Urza's Saga, the payme
 and 3 (Rob's decks and library refused on main) are closed: every live-deck card is final and one library card is left.
 The rest is mostly still open. Paths are under `game/engine/`.
 
-**PR #834** (a paragraph is one ability; the list itself) passed `suites` on its head `2610528a` and is now
-**CONFLICTING** with main. Wave 0 lands it first.
+October 29 continuation: the table below preserves the original inventory, not a waiver. Bounded W1 preparation,
+Song/Saga and timing-emblem fixes, W4 planeswalker trample, and W5 funded alternative/delve-X/native shock-token
+choices are recorded in their lane files and RUN.md. Compiler calibration now passes 4,165/4,165 with the original
+denominator, and all 11,039 saved scenarios pass on regenerated source `2c89a5c3`. Whole-directory strict ability
+evidence remains red at its latest completed snapshot; it is not replaced by these scenario results. Payment caps
+have been lifted in the bounded proofs, but an actual easy fuzz seed did not finish within ten minutes: operational
+payment completeness and G-5 remain open. Battles, outside-resolution replacement continuations, the remaining
+emblems, all unproved abilities, independent review and the other stated gates still require completion.
+
+**PR #834** (a paragraph is one ability; the list itself) passed `suites` on its original head `2610528a` and conflicted
+with main at the initial audit. Its reconciled prerequisite is already included in integration #912; resume from RUN.md.
 
 ### Defined, but plays differently (section 4): 21 open, 1 fixed, 5 unsure, 3 not gaps
 

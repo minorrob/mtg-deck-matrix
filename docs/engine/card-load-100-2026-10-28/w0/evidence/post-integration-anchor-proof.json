@@ -1,0 +1,125 @@
+{
+  "schema": "CrankPostIntegrationMutationEvidence@1",
+  "productionCheckpoint": "2c89a5c3de37959b531bf5ebe42e8673b7e9da80",
+  "additionalTestChanges": "Four empty-draft legal-pair assertions supplement the checkpoint; all original assertions retained",
+  "testSha256": "d87900b619cec70e3f8850fe4835c496e3fb63f9712efac6d96e11402d766200",
+  "caught": 17,
+  "originalSuiteBaselines": "all passing",
+  "initialMisses": [
+    "changed legal pairs retain old draft"
+  ],
+  "supplementedMisses": [
+    "changed legal pairs retain old draft"
+  ],
+  "specificAssertionReceipt": "empty-pairs-assertion.json",
+  "productionUnchanged": true,
+  "browserRequired": true,
+  "browser": "installed Chrome through existing UAT_CHROME hook",
+  "remainingAnchors": 32,
+  "gateStatus": "G-7 remains open",
+  "proofs": [
+    {
+      "label": "the owner incorrectly held to the insider roster",
+      "suite": "tests/ai-door.mjs",
+      "status": "caught",
+      "logFamily": "access"
+    },
+    {
+      "label": "a service token let in as everyone",
+      "suite": "tests/ai-door.mjs",
+      "status": "caught",
+      "logFamily": "access"
+    },
+    {
+      "label": "the advisor's offer loses the owner group",
+      "suite": "tests/ai-door.mjs",
+      "status": "caught",
+      "logFamily": "access"
+    },
+    {
+      "label": "the settings' meter loses the owner group",
+      "suite": "tests/ai-door.mjs",
+      "status": "caught",
+      "logFamily": "access"
+    },
+    {
+      "label": "the AI routes lose the owner group",
+      "suite": "tests/ai-door.mjs",
+      "status": "caught",
+      "logFamily": "access"
+    },
+    {
+      "label": "the table's AI seat loses the owner group",
+      "suite": "tests/agent-seat-table.mjs",
+      "status": "caught",
+      "logFamily": "access"
+    },
+    {
+      "label": "the read is timed when it lands",
+      "suite": "tests/table-board.mjs",
+      "status": "caught",
+      "logFamily": "away"
+    },
+    {
+      "label": "switching views loses Camera focus",
+      "suite": "tests/table-shared-shell.mjs",
+      "status": "caught",
+      "logFamily": "camera"
+    },
+    {
+      "label": "face-down identity is exposed",
+      "suite": "tests/board-combat-display.mjs",
+      "status": "caught",
+      "logFamily": "combat"
+    },
+    {
+      "label": "missing blockers make an attacker unblocked",
+      "suite": "tests/board-combat-display.mjs",
+      "status": "caught",
+      "logFamily": "combat"
+    },
+    {
+      "label": "planeswalker endpoint becomes its controller",
+      "suite": "tests/board-combat-display.mjs",
+      "status": "caught",
+      "logFamily": "combat"
+    },
+    {
+      "label": "private picks appear as confirmed assignments",
+      "suite": "tests/board-combat-display.mjs",
+      "status": "caught",
+      "logFamily": "combat"
+    },
+    {
+      "label": "only first room reason displayed",
+      "suite": "tests/board-direct-blocking.mjs",
+      "status": "caught",
+      "logFamily": "blocking"
+    },
+    {
+      "label": "multiple attackers silently reduced to one",
+      "suite": "tests/board-direct-blocking.mjs",
+      "status": "caught",
+      "logFamily": "blocking"
+    },
+    {
+      "label": "new match leaves old validation valid",
+      "suite": "tests/board-direct-blocking.mjs",
+      "status": "caught",
+      "logFamily": "blocking"
+    },
+    {
+      "label": "changed legal pairs retain old draft",
+      "status": "caught",
+      "logFamily": "blocking",
+      "suite": "tests/board-direct-blocking.mjs",
+      "supplement": "passing original-suite baseline plus empty legal-pair assertions"
+    },
+    {
+      "label": "No blocks sends without confirmation",
+      "suite": "tests/board-direct-blocking.mjs",
+      "status": "caught",
+      "logFamily": "blocking"
+    }
+  ]
+}

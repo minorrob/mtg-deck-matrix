@@ -131,7 +131,7 @@ BREAKS = [
     # The words.
     ('kicker is no keyword', VOCAB, '  "kicker",\n', ''),
     ('improvise is no keyword', VOCAB, '  "improvise",\n', ''),
-    ('cascade is no keyword', VOCAB, '  "cascade",\n  /* Rob', '  /* Rob'),
+    ('cascade is no keyword', VOCAB, '  "cascade",\n', ''),
     ('kicker is not credited', CONSTRUCTS, 'Affinity: "rules/statics.mjs", Kicker: "rules/actions.mjs",', 'Affinity: "rules/statics.mjs",'),
     ('cascade is not credited', CONSTRUCTS, '  Cascade: "digUntil",\n', ''),
 ]

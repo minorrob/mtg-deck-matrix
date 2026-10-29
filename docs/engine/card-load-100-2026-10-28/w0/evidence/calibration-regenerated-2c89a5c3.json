@@ -1,0 +1,15 @@
+{
+  "schema": "CrankCalibrationArtifactEvidence@1",
+  "artifactCommit": "2c89a5c3de37959b531bf5ebe42e8673b7e9da80",
+  "engineSourceAtRun": "9ba2901b82859c60575041b9d1917f7f4a040514",
+  "producer": "node game/tools/card-compiler.mjs --write --report docs/engine --date 2026-10-29",
+  "artifact": "data/engine/candidates.json library.calibrated",
+  "report": "docs/engine/card-compiler-2026-10-29.md",
+  "templates": 8048,
+  "libraryCards": 6353,
+  "minimumCount": 1,
+  "translated": 4165,
+  "passed": 4165,
+  "failed": 0,
+  "interpretation": "Reuse the completed calibration from required compiler regeneration, without another unchanged full run. Same held-out denominator as the failing11e4 snapshot. Subsequent merged anchor repairs change tools and test assertions only. Calibration is green; full independent card review and other gates remain open."
+}
