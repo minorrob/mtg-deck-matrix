@@ -1,7 +1,7 @@
 {
   "schema": "V8BoundNativePolicyProof@1",
   "sourceBase": "420e797795d42782d56e1d76e24a00fa69df6c7b",
-  "status": "Bounded native/mutation proof complete; clean selected snapshot recorded separately",
+  "status": "Bounded native/mutation proof complete; clean selected snapshot1da49b1b is8of8 and canonical verifier correctly refuses selected scope",
   "runnerSha256": "1f768c89f2432685703e3d3e292d653404ed9b63e1dc67c1c3b185b8603a2224",
   "readerSha256": "1f76a53a6a1349609c1ed86db32480655dd12c249044746467df6cb43a936b01",
   "nativeChecks": 319,
@@ -51,5 +51,6 @@
   "ruleModuleChanges": 0,
   "classifierOrLedgerChanges": 0,
   "newPromotions": 0,
-  "canonicalAcceptance": false
+  "canonicalAcceptance": false,
+  "selectedSnapshot": "v8-conditional-selected.json"
 }

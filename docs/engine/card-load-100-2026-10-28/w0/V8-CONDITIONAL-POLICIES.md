@@ -56,11 +56,19 @@ not generic errors/timeouts/fidelity/schema failures. Original runner bytes rest
 
 ## Scope of the result
 
-The preliminary selected checker runs all13 scenarios for Valakut Exploration, Patchwork Banner and Conspicuous
-Snoop and exits0:8/8 abilities reached,6 by actual runtime-only omission behavior proofs. Four newly reached proofs
+The clean selected checker on `1da49b1b422f36dcdb5b1a5fef8976896302f847` runs all13 scenarios for Valakut Exploration,
+Patchwork Banner and Conspicuous Snoop and exits0:8/8 abilities reached,6 by actual runtime-only omission behavior proofs. Four newly reached proofs
 observe the paid/resolved top Goblin, actual copied Krenko tokens, actual Banner red mana and the actual type-choice
-bonus. This is selected diagnostic scope only. A clean source/input-bound snapshot and remaining affected metadata/
-card-reader results are required in the final evidence record; the preliminary dirty run is not relabeled.
+bonus. This is selected diagnostic scope only. `evidence/v8-conditional-selected.json` binds its exact clean source,
+tree and script/scenario input hashes; the full32,426-byte ledger is archived as3,002-byte gzip with a verified
+roundtrip and raw credential/personal-address scan. The independent canonical verifier correctly exits1 on this
+selected inventory. The preliminary dirty run is not relabeled or used as clean acceptance.
+
+The complete six-reader baseline and all38 caught controls are archived in `evidence/v8-conditional-proof.json` and
+the initial/final mutation logs. Full legacy engine-cards55 passes all6,430 definitions/current11,044 saved scenarios;
+this reader does not establish strict G-3. Integrity/feature-wiring131 pass, README is the actual710 suites, inventory
+regeneration has no diff (60 artifacts/80.9MB), and frozen scope remains8,514 names/2,715 final/5,799 undefined.
+Static audit256 files/4,713 breaks retains33 inherited UI failures and zero engine targets; G-7 stays open.
 
 The canonical full-directory ledger, independent canonical verifier, full games, per-card review, staging and every
 other wave0 gate remain required. No new definitions, final-card promotions or production release are included.
