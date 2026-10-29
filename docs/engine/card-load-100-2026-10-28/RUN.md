@@ -5,6 +5,17 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Quiet browser checkpoint, source `d65de1b4`:** actual combined Snoop98 and tooltip21 pass with required
+  Chromium/WebGL after approved local-loopback escalation. Twelve fresh screenshots, four representative whole-screen
+  states inspected. Existing3D clipping/occlusion/footer limits remain, no full-layout acceptance. Root teardown is
+  verified through elevated scoped PID checks; default sandbox process inventory cannot see elevated children.
+  Original accessibility baseline on source `e8f967ff` remains RED: light1280/full/forge-felt `2/2` stat badge1.45:1
+  versus required4.5:1. Original two-reader union stops before mutations; both prepared UI anchors receive zero proof
+  credit and remain outside this assembly. Logged for Play owner as ROB-312; no CSS/browser assertion edits.
+  Initial default-sandbox attempts denied every local script/style (`ERR_NETWORK_ACCESS_DENIED`); separate logs are
+  retained as environmental failures, never behavioral control credit. W1/W5 frozen drivers safely resume after this
+  window; preserve any pause-induced timeout before required fresh proof. Evidence: `mainfac-integration.json` and
+  `ui-anchor-pair-baseline.json`. No unchanged failed-browser rerun, gate closure or staging release.
 - **Staging requested, October 29:** Rob explicitly selects “Finish gates, then release fixes.” Complete the unchanged
   wave0 gates and exact-head Actions/merge requirements, then release the merged fixes through the existing staging
   builder and authenticated read-back. Do not substitute current main or treat this request as a gate waiver.

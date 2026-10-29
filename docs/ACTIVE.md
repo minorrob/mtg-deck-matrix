@@ -8,6 +8,10 @@ Linear ROB-199 under ROB-85. The record is `docs/engine/card-load-100-2026-10-28
 Claim: `game/engine/cards/**`, generated card files, `data/engine/candidates.json`, the run package,
 and the engine modules its debt fixes require, subject to the ownership requests below.
 The primary checkout has another session's unfinished merge and is untouched.
+**Quiet browser proof d65de1b4:** combined Snoop98/tooltip21 pass;12 freshshots/4 inspected, scoped teardown verified.
+Original a11y baseline is RED at light1280/full/forge-felt2/2badge1.45:1 vs4.5; ROB-312 is in Play backlog.
+No CSS/assertion edits, both prepared UI mutations unrun/zero credit. Initial sandbox-network denial remains separate.
+Workers resume native proofs. Full layout/oldclipping/footer and all wave0 gates remain open; no staging yet.
 **Staging request:** Rob selects “Finish gates, then release fixes.” All existing wave0, exact-head CI and merge
 requirements remain; staging follows the merged fixes. No release of current main is substituted.
 **Local V8 integration5196dc61:** clean draft #954 adds bounded native scenario policies and four positive Snoop/
