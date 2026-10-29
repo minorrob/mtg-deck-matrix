@@ -562,10 +562,11 @@ try {
   const pileOver = (page, q) => page.evaluate((sel) => {
     const f = document.querySelector(sel), c = f.querySelector(".cm-bcard"), fr = f.getBoundingClientRect(), cr = c.getBoundingClientRect();
     const hit = document.elementFromPoint(fr.left + fr.width / 2, fr.top + 0.5);
-    return {crosses: cr.left < fr.left && cr.right > fr.right && cr.top < fr.top, over: !!hit && c.contains(hit), by: [Math.round((fr.left - cr.left) * 10) / 10, Math.round((cr.right - fr.right) * 10) / 10]};
+    /* Rob, 2026-10-28: the piles are the aspect ratio of the card -- the frame is one card (5:7) and its card fills it */
+    return {crosses: cr.left <= fr.left + 1.5 && cr.right >= fr.right - 1.5 && cr.top <= fr.top + 1.5 && Math.abs(fr.width / fr.height - 5 / 7) < .04, over: !!hit && c.contains(hit), by: [Math.round((fr.left - cr.left) * 10) / 10, Math.round((cr.right - fr.right) * 10) / 10]};
   }, q);
   const libT = await pileOver(rob.page, ".cm-board-table .cm-seatboard.is-you [data-zone=library]");
-  ok(libT.crosses && libT.over, `the Library's card sits on top of its frame, over its lines, not inside it (${libT.by.join("px, ")}px past the sides)`);
+  ok(libT.crosses && libT.over, `the Library's frame is the shape of a card (5:7) and its card fills it (${libT.by.join("px, ")}px past the sides)`);
   const chip = await rob.page.evaluate(() => {const m = document.querySelector(".cm-board-table .cm-seatboard.is-you"), l = m.querySelector("[data-zone=lands]"), c = m.querySelector(".cm-board-chip"), lr = l.getBoundingClientRect(), cr = c.getBoundingClientRect();
     return {inside: l.contains(c), below: cr.top - lr.bottom, right: Math.abs(cr.right - lr.right), text: c.textContent};});
   ok(!chip.inside && chip.below >= 0 && chip.below < 8 && chip.right < 2, `the mana and land-drop reminder sits directly outside and below the Lands frame, at its right ("${chip.text}", ${chip.below.toFixed(1)}px below)`);

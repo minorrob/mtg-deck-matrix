@@ -37,7 +37,7 @@ async function measure(zoom){
   await page.waitForFunction(()=>[...document.querySelectorAll(".cm-stage-front .cm-bcard img, .cm-stage-rear .cm-bcard img, .cm-stage-fan .cm-bcard img")].some(i=>i.complete&&i.naturalWidth>100),null,{timeout:20000});
   /* The drawers are the top layer over a full-width stage, so the mat's cards lie under the left one: a player shuts it to see them. */
   const rail=page.locator("[data-action=board-stage-rail][aria-expanded=true]");if(await rail.count()){await rail.click();await page.waitForTimeout(500);}
-  /* Zoomed in (the centre of the view is the centre of the window now that the drawers lie over it), the mat's cards are off to the left: a player
+  /* Zoomed in (the center of the view is the center of the window now that the drawers lie over it), the mat's cards are off to the left: a player
      drags the mat across to bring them in, by a bare place on it, so the card stays under the pointer's drag as it would for a person. */
   if(zoom>100){
     const grab=await page.evaluate(()=>{

@@ -221,9 +221,11 @@ try {
     await page.route(`${base}/api/tables**`, (r) => r.fulfill({json: {table, now: Date.now()}}));
     await page.routeWebSocket(new RegExp(`/api/tables/${TABLE}/connect$`), (ws) => ws.send(JSON.stringify({type: "view", view: v})));
     await page.goto(`${base}/index.html#table?id=${TABLE}`);
-    await page.locator(".cm-bcard-tax").first().waitFor({timeout: 20000});
+    await page.locator(".cm-bcard-tax").first().waitFor({state: "attached", timeout: 20000});
     const tax = await page.evaluate(() => {const t = document.querySelector(".cm-bcard-tax").getBoundingClientRect(), c = document.querySelector(".cm-bcard-tax").closest(".cm-bcard").getBoundingClientRect(); return (t.top - c.top) / c.height;});
-    ok(tax >= 0.1, `${view}: the commander tax sits below the card's title bar, clear of its mana cost (${Math.round(tax * 100)}% down the card)`);
+    const taxShown = await page.locator(".cm-bcard-tax").first().isVisible();   /* legible or absent (Rob, 2026-10-29): a board of cards too small for it shows none */
+    if (taxShown) ok(tax >= 0.1, `${view}: the commander tax sits below the card's title bar, clear of its mana cost (${Math.round(tax * 100)}% down the card)`);
+    else ok(await page.locator(".cm-bcard-tax").first().evaluate((el) => !!el.closest("[data-tiny]")), `${view}: the commander tax is absent only on a board of cards too small for it`);
     await context.close();
   }
 } finally {

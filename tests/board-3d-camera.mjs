@@ -359,7 +359,7 @@ try {
   ok(dHold.reached && same(dHold.last, atRest), "held on a card, the camera looks at it, and back");
   eq(await page.locator("#cm-card-menu").count(), 0, "and the card's menu does not open");
   await frames();
-  await page.mouse.click(onProft.x, onProft.y, {button: "right"});   /* at the point the pointer finds on Proft: the drawers are the top layer now, so the card's centre may be under one */
+  await page.mouse.click(onProft.x, onProft.y, {button: "right"});   /* at the point the pointer finds on Proft: the drawers are the top layer now, so the card's center may be under one */
   await page.locator("#cm-card-menu").waitFor({timeout: 2000});
   await page.waitForTimeout(300);
   ok((await frames()).f.every((x) => x.t === null), "a quick right click on a card does not move the camera");

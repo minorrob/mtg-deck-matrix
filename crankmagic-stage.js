@@ -343,6 +343,7 @@
   /* The DOM surfaces and the Babylon camera, from one geometry: at every layout, and at every frame of a camera motion. */
   function place(s) {
     if(s.opts.flat)return placeFlat(s);
+    for(const el of s.host.querySelectorAll('.cm-stage-slot,.cm-stage-rear')){el.removeAttribute('data-tiny');el.removeAttribute('data-tight');}   /* the flat views' marks do not follow a board into 3D */
     root.CrankTables?.hold?.();
     const g=geometry(s.box.width,s.box.height,{...s.opts,look:s.pose,seats:Math.max(0,(s.opts.mats||[]).length-1)});
     s.view=g;

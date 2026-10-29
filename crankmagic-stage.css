@@ -1830,18 +1830,18 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 /* THE HAND SITS ON THE STAGE'S DARK GROUND in every theme, so its focus ring is white with a dark line on each side of it, against the card and against the tray, which is pale in the light theme: 3:1 all the way round in light and dark (a11y-board). */
 #matrix-v2 .cm-board .cm-stage-hand :is(.cm-bcard,.cm-stage-hand-label):focus-visible{outline:3px solid #fff;outline-offset:2px;box-shadow:0 0 0 2px #0b1213,0 0 0 9px #0b1213,0 6px 14px -6px rgb(0 0 0 / .85)}
 #matrix-v2 .cm-board .cm-stage-region{isolation:isolate}   /* the stage's own layers (mat, cards, their badges) never rise past a drawer */
-/* What has the focus stands in front of its neighbours, so its ring is whole: the hand's tab over the fan, the focused card's slot over the cards beside it, a commander partner over the other partner. */
+/* What has the focus stands in front of its neighbors, so its ring is whole: the hand's tab over the fan, the focused card's slot over the cards beside it, a commander partner over the other partner. */
 #matrix-v2 .cm-board .cm-stage-hand .cm-stage-hand-label{z-index:30}
 #matrix-v2 .cm-board .cm-stage-fan-slot:focus-within{z-index:29}
 #matrix-v2 .cm-board .cm-board-partners>:is(.cm-bcard,.cm-card-slot):focus-within,#matrix-v2 .cm-board .cm-board-partners>.cm-bcard:focus-visible{z-index:5}
-/* A control that has the keyboard's focus is never under a neighbour or clipped by its frame: its card's slot, and the quick tab in it, stand in front, and a pile lets it out. */
+/* A control that has the keyboard's focus is never under a neighbor or clipped by its frame: its card's slot, and the quick tab in it, stand in front, and a pile lets it out. */
 #matrix-v2 .cm-board .cm-stage-region .cm-card-slot:focus-within{z-index:30}
 #matrix-v2 .cm-board .cm-card-slot:focus-within>.cm-quick-drawer{z-index:31;transition:none;opacity:1;clip-path:inset(0);pointer-events:auto}   /* whole the moment it has the focus: nothing is under it while it opens */
 #matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-mat[data-fit] .cm-board-pile:focus-within{overflow:visible;z-index:6}
 /* The land stack's count is legible on any mat: on a scrim, as the piles' counts are. */
 #matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-land-count{background:#091b1dd9;border-radius:3px;padding:0 3px}
-/* On a small board the quick tab hangs under its card rather than over it, so it never covers the card it belongs to. */
-#matrix-v2 .cm-board .cm-stage-slot[data-tight] .cm-card-slot>.cm-undo-drawer{bottom:auto;top:100%}
+/* On Table and Focus the quick tab hangs under its card (Rob: "under each of the user's mat cards"), over the table, never over the card it belongs to. */
+#matrix-v2 .cm-board .cm-stage-slot .cm-card-slot>.cm-undo-drawer{bottom:auto;top:100%}
 /* A pile's count is said once, on its caption: the card's own count (a library's back) stands down, so two numbers never lie one over the other. */
 #matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-board-pile .cm-bcard-count{display:none}
 /* A thumbnail has no room for the land stack's words: read, not seen. */
