@@ -15,6 +15,9 @@ const FIX = {
   "Smoke Relic": {types: ["Artifact"], manaCost: "{0}", colors: []},
   "Smoke Archivist": {types: ["Creature"], manaCost: "{1}", colors: [], power: 1, toughness: 1,
     abilities: [{id: "permission", kind: "static", rule: "play-from", affects: {what: "player", who: "you"}, zone: "graveyard", spells: true, limit: 1}]},
+  "Smoke Double Archivist": {types: ["Creature"], manaCost: "{1}", colors: [], power: 1, toughness: 1,
+    abilities: ["permission-a", "permission-b"].map(id => ({id, kind: "static", rule: "play-from", affects: {what: "player", who: "you"},
+      zone: "graveyard", spells: true, lands: true, limit: 1}))},
 };
 const start = (setup, more = {}) => runScenario({name: "W3 accuracy debt", seats: 3, setup, steps: [], ...more}, index.definition, FIX).state;
 
@@ -29,6 +32,27 @@ const start = (setup, more = {}) => runScenario({name: "W3 accuracy debt", seats
   applyAction(state, 0, offers.find(a => a.via === permits[1]));
   eq(state.effects.filter(e => e.rule === "may-play").map(e => e.id), [permits[0]], "choosing the second permission leaves the first available");
   eq(state.stack.length, 1, "one spell was cast, once");
+}
+
+/* One permanent can grant two separate permissions; each ability has its own use counter (CR 113.2c, 601.2a, 305.1). */
+for (const [kind, card] of [["cast", "Smoke Relic"], ["play-land", "Forest"]]) {
+  const state = start([at(0, "graveyard", card), at(0, "battlefield", "Smoke Double Archivist")]);
+  const source = state.zones.battlefield.find(id => state.objects[id].card === "Smoke Double Archivist");
+  const offers = legalActions(state, 0).filter(action => action.kind === kind && action.label === card);
+  eq(offers.length, 2, `${kind}: two limited abilities on one source are separate choices`);
+  eq(new Set(offers.map(action => action.via)).size, 2, `${kind}: saved actions identify the particular permission ability`);
+  eq(offers.map(action => action.viaName), ["Smoke Double Archivist (permission 1)", "Smoke Double Archivist (permission 2)"],
+    `${kind}: a player can tell the same-source choices apart`);
+  for (let selected = 0; selected < 2; selected += 1) {
+    const resumed = JSON.parse(JSON.stringify(state));
+    applyAction(resumed, 0, JSON.parse(JSON.stringify(offers[selected])));
+    eq(["permission-a", "permission-b"].map(id => usesThisTurn(resumed, source, `play-from:${id}`)),
+      selected === 0 ? [1, 0] : [0, 1], `${kind}: selecting ability ${selected + 1} spends only that ability after reload`);
+  }
+  const before = JSON.stringify(state);
+  assert.throws(() => applyAction(state, 0, {...offers[1], via: String(offers[1].via).replace("permission-b", "missing-permission")}),
+    `${kind}: a forged permission ability is refused`); checks += 1;
+  eq(JSON.stringify(state), before, `${kind}: refusal does not spend a counter, move a card or change priority`);
 }
 
 {

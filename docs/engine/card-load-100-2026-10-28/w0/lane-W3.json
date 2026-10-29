@@ -15,7 +15,7 @@
     "| Destruction replacements in nested effects (shield, then Auras in attach order) | `script/effects/zones.mjs`:864 | W3 |",
     "| Zone-change replacements (Liesa): the question is raised, the move does not wait | `replacement.mjs`:35 | W3 |"
   ],
-  "status": "bounded checkpoint: shared operation foundation and distinct-source limited MayPlay choices proven; wave-0 graveyard debt remains open",
+  "status": "bounded checkpoint: shared operation foundation and limited MayPlay source-plus-ability choices proven; wave-0 graveyard debt remains open",
   "checkpoint": {
     "foundation": "b2ba9343e4316c618f5b49f8bfec5df5374d0583",
     "newCards": 0,
@@ -40,20 +40,20 @@
       }
     },
     {
-      "scope": "limited play permission choice",
+      "scope": "limited play permission choice, including multiple abilities on one source",
       "files": [
         "game/engine/rules/actions.mjs",
         "tests/engine-load100-w3-graveyard.mjs",
         "tests/engine-play-from.mjs",
         "tests/engine-play-from-zones.mjs"
       ],
-      "behavior": "Distinct sources that spend a limit, type use or count remain separate legal offers. The player chooses which resource to consume. Identical unlimited permissions retain one equivalent offer.",
+      "behavior": "Limited permissions remain separate by both source and ability ID. The player chooses which resource to consume. Existing unambiguous numeric/string source via addresses retain their shape; a source with multiple play-from abilities uses a serialized source-plus-ability address in the existing via field, with separate permission1/2 labels. Identical unlimited permissions retain one equivalent offer.",
       "redBefore": "Two count:1 MayPlay effects yielded one cast offer with no via instead of both effect IDs. The focused assertion failed before the change.",
       "validation": {
         "suite": "node tests/engine-load100-w3-graveyard.mjs",
-        "checks": 8,
+        "checks": 22,
         "mutationCommand": "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w3-graveyard.py",
-        "caught": 2,
+        "caught": 8,
         "missed": []
       },
       "rulings": "Chainer, Nightmare Adept official 2019-08-23 ruling: separate permissions can each be used. Public Scryfall evidence cached in task diagnostics; CR 601.2a, 305.1.",
@@ -92,18 +92,29 @@
     "node": "v22.23.3",
     "readers": {
       "engine-rule-operations": 75,
-      "engine-load100-w3-graveyard": 8,
+      "engine-load100-w3-graveyard": 22,
       "engine-may-play": 34,
       "engine-actions": 34,
       "engine-play-from": 20,
       "engine-play-from-zones": 76,
       "engine-libload-graveyard": 27,
-      "engine-cards": 55,
       "engine-costs": 32,
       "feature-wiring": 131
     },
     "dataIntegrity": "Validated 50 variants and 50 connected buy profiles.",
-    "permissionMutationResult": "baseline: every suite passes unbroken; permission resource choice retained caught by tests/engine-play-from-zones.mjs; unlimited equivalent permissions stay equivalent caught by tests/engine-load100-w3-graveyard.mjs; missed: []",
-    "foundationScan": "local-ci: SCAN PASS at b2ba9343e4316c618f5b49f8bfec5df5374d0583; main39a45706 ancestor, no secrets or personal addresses; final domain scan required before push"
+    "permissionMutationResult": "baseline: every suite passes unbroken; all8 mutations caught, missed: []. Covers resource identity, same-source ability grouping/address/consumption, source selection, distinct labels, legacy unambiguous addresses and unlimited equivalence.",
+    "foundationScan": "local-ci: SCAN PASS at b2ba9343e4316c618f5b49f8bfec5df5374d0583; main39a45706 ancestor, no secrets or personal addresses; final domain scan required before push",
+    "preReviewFullCardSuite": {
+      "head": "25b3f7d3c656f462d08f2d323a3d00af897c3260",
+      "checks": 55,
+      "definitions": 6430,
+      "result": "passed; later source-plus-ability codec increment ran focused and touched readers, not a duplicate full card suite"
+    }
+  },
+  "coldReview": {
+    "finding": "One permanent with two otherwise identical limited play-from abilities (different IDs) still collapsed to one source-level offer.",
+    "redBefore": "Focused same-source cast assertion returned1 offer instead of2 at25b3f7d3.",
+    "proof": "For both cast and land play, both offers identify separate abilities and show distinct permission1/2 labels. Choosing either from a JSON-reloaded state/action spends only that ability; a forged ability address is refused without mutating state. Existing saved unambiguous source-only actions remain unchanged and pass the old readers.",
+    "scope": "Bounded correction only; no continuation prototype work resumed and no theme/gate completion claimed."
   }
 }
