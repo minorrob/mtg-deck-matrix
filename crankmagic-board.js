@@ -672,9 +672,13 @@ globalThis.CrankBoard = Object.seal({
       <span class="cm-seat-state${view.state.priorityPlayerId === p.playerId ? ' has-priority' : ''}" data-state="${seatStateKey(state)}"><span class="cm-state-word">${e(state)}</span></span></div>`;
   }
   document.addEventListener('error', event => {if (event.target.matches?.('.cm-seat-portrait img')) event.target.remove();}, true);
-  function pictureOf(name) {
+  /* A card's picture, by its name; for a double-faced permanent whose BACK face is up (the view's `face: "back"`, ROB-207), the
+     back of that card: a face's own name draws the front, and the catalog knows a double-faced card only by its front name. */
+  function pictureOf(name, card = null) {
+    const url = (extra = "") => `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}${extra}&format=image&version=normal`;
+    if (card && card.face === "back") return url("&face=back");
     const r = recordOf(name);
-    return (r && r.image) || `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}&format=image&version=normal`;
+    return (r && r.image) || url();
   }
   const optionsFor = (cardId) => (view.decision ? view.decision.options.filter((o) => o.cardId === cardId || o.preparedFrom === cardId) : []);
   /* A card shown to be READ -- the Panel's and Full screen's column (pick), the pop-up (peek), Card zoom (zoom) -- is
@@ -701,7 +705,7 @@ globalThis.CrankBoard = Object.seal({
   function controlGhost(c) {
     const name = controlName(c);
     return `<button type="button" id="cm-control-ref-${c.cardId}" class="cm-bcard cm-control-ghost${c.faceDown ? " is-back" : ""}" data-action="board-control-inspect" data-control-card="${c.cardId}" aria-label="${e(`${name}, ownership reference, ${controlSummary(c)}; inspect control details`)}">
-      ${!c.faceDown && c.name ? `<img src="${e(pictureOf(c.name))}" alt="" draggable="false" loading="lazy" referrerpolicy="no-referrer"><span class="cm-bcard-name">${e(name)}</span>` : ""}
+      ${!c.faceDown && c.name ? `<img src="${e(pictureOf(c.name, c))}" alt="" draggable="false" loading="lazy" referrerpolicy="no-referrer"><span class="cm-bcard-name">${e(name)}</span>` : ""}
       <span class="cm-control-label">With ${e(nameOf(c.controller))}</span></button>`;
   }
   function controlDetails(c) {
@@ -738,7 +742,7 @@ globalThis.CrankBoard = Object.seal({
   function combatThumb(id,role,{draft=false}={}) {
     const c=combatCard(id);if(!c)return `<span class="cm-combat-missing">${role==='Attacked permanent'?'Attacked permanent left the battlefield':'Left the battlefield'}</span>`;
     return `<span class="cm-combat-thumb" data-combat-light="${id}" data-peek-card="${id}" ${draft?`data-draft-blocker="${id}"`:`data-combat-role="${role}"`}>
-      ${c.name && !c.faceDown ? `<img src="${e(pictureOf(c.name))}" alt="${e(combatName(c))}" loading="lazy">` : `<i class="cm-combat-back" aria-label="Face-down creature"></i>`}
+      ${c.name && !c.faceDown ? `<img src="${e(pictureOf(c.name, c))}" alt="${e(combatName(c))}" loading="lazy">` : `<i class="cm-combat-back" aria-label="Face-down creature"></i>`}
       ${twinMark(id)?`<small class="cm-twin-mark">${e(twinMark(id))}</small>`:""}${c.power!=null?`<b class="cm-combat-pt">${e(c.power)}/${e(c.toughness)}</b>`:""}</span>`;
   }
   function inspectCombatThumb(id,role,{draft=false,label=false}={}) {
@@ -832,7 +836,7 @@ globalThis.CrankBoard = Object.seal({
        the card's aria-description. The hover pops the card up large, away from the pointer. */
     const html = `<button type="button" class="${cls}" data-action="${action}" data-card="${c.cardId}" data-card-revision="${view.revision}" data-card-choice="${e(view.decision?.id || '')}" data-card-match="${e(view.matchId)}"${arrange ? ` draggable="true" data-arrange-card="true" aria-description="Drag within this section to reorder; Shift + Alt + Left or Right works with a keyboard"` : ""} aria-label="${e(label)}">
       ${c.name ? `<span class="cm-bcard-name">${e(c.name)}</span>` : ""}${creature ? `<span class="cm-bcard-pt">${c.power}/${c.toughness}</span>` : ""}${tax !== null ? `<span class="cm-bcard-tax" title="Commander tax: {${tax}} more to cast it from the command zone">+${tax}</span>` : ""}
-      ${c.name ? `<img src="${e(pictureOf(c.name))}" alt="" draggable="false" loading="lazy" referrerpolicy="no-referrer">` : ""}${controlled ? `<span class="cm-control-label">Owner: ${e(nameOf(c.owner))}</span>` : ""}${marks ? `<span class="cm-bcard-marks">${marks}</span>` : ""}</button>`;
+      ${c.name ? `<img src="${e(pictureOf(c.name, c))}" alt="" draggable="false" loading="lazy" referrerpolicy="no-referrer">` : ""}${controlled ? `<span class="cm-control-label">Owner: ${e(nameOf(c.owner))}</span>` : ""}${marks ? `<span class="cm-bcard-marks">${marks}</span>` : ""}</button>`;
     return cardUndo(c,html,where);
   }
 
@@ -1895,7 +1899,7 @@ globalThis.CrankBoard = Object.seal({
       <div class="cm-target-quadrants">${shown.map((g,i)=>{
         const key=`${d.id}:${o.index}:${g.index}`,n=targetCycles.get(key)||0,t=g.targets[n%g.targets.length],c=targetCard(t);
         return `<section class="cm-target-quadrant" data-wf="W04"><h3>${e(g.effect || "Target")}</h3><span class="cm-target-effect-arrow" aria-hidden="true">${shown.length===3 ? ["↖","↗","↓"][i] : "→"}</span><button type="button" class="cm-target-stack" data-action="board-target-cycle" data-cycle="${e(key)}" data-count="${g.targets.length}" aria-label="Cycle targets: ${e(targetName(t))}">
-          ${Array.from({length:Math.min(4,g.targets.length)},(_,j)=>`<i class="cm-target-layer" style="--layer:${j}" aria-hidden="true"></i>`).join("")}${c?.name ? `<img src="${e(pictureOf(c.name))}" alt="${e(c.name)}" data-peek-card="${c.cardId}">` : `<span>${e(targetName(t))}</span>`}<b>×${g.targets.length}</b></button><p>${e(controllerName(targetController(t)))} · ${n%g.targets.length+1} of ${g.targets.length}</p></section>`;
+          ${Array.from({length:Math.min(4,g.targets.length)},(_,j)=>`<i class="cm-target-layer" style="--layer:${j}" aria-hidden="true"></i>`).join("")}${c?.name ? `<img src="${e(pictureOf(c.name, c))}" alt="${e(c.name)}" data-peek-card="${c.cardId}">` : `<span>${e(targetName(t))}</span>`}<b>×${g.targets.length}</b></button><p>${e(controllerName(targetController(t)))} · ${n%g.targets.length+1} of ${g.targets.length}</p></section>`;
       }).join("")}</div>${groups.length>3 ? `<nav class="cm-target-pager">${b("Previous","board-target-page",{by:"-1"},false,{disabled:page===0})}<span>${page+1} of ${Math.ceil(groups.length/3)}</span>${b("Next","board-target-page",{by:"1"},false,{disabled:(page+1)*3>=groups.length})}</nav>` : ""}</div>`;
   }
   function decisionPick(d,o) {
@@ -2530,7 +2534,7 @@ globalThis.CrankBoard = Object.seal({
       const ghost = document.createElement("div");
       ghost.className = `cm-bcard cm-board-flight${was.back ? " is-back" : ""}`;
       ghost.setAttribute("aria-hidden", "true");
-      if (!was.back && c && c.name) ghost.innerHTML = `<img src="${e(pictureOf(c.name))}" alt="" referrerpolicy="no-referrer">`;
+      if (!was.back && c && c.name) ghost.innerHTML = `<img src="${e(pictureOf(c.name, c))}" alt="" referrerpolicy="no-referrer">`;
       ghost.style.cssText = `position:fixed;left:${was.rect.left}px;top:${was.rect.top}px;width:${was.rect.width}px;height:${was.rect.height}px;margin:0;z-index:66;pointer-events:none`;
       document.body.append(ghost);
       const a = ghost.animate([{transform: "translate(0,0) rotate(0deg)", opacity: 1}, {transform: `translate(${to.left + to.width / 2 - was.rect.left - was.rect.width / 2}px,${to.top + to.height / 2 - was.rect.top - was.rect.height / 2}px) rotate(${zone === "Graveyard" ? 10 : -6}deg) scale(.6)`, opacity: .2}], {duration: 240, easing: "cubic-bezier(.2,.8,.2,1)", fill: "forwards"});
@@ -4107,7 +4111,7 @@ globalThis.CrankBoard = Object.seal({
     const named = c.name || "A face-down card", n = entries.reduce((n,c)=>n+optionsFor(c.cardId).length,0);
     const rows=entries.map((member,i)=>`${entries.length>1?`<p class="cm-card-menu-copy">Copy ${i+1}${member.tapped?' · tapped':''}</p>`:''}${optionsFor(member.cardId).map(o=>menuRow(o,member)).join('')}`).join('');
     return `<div id="cm-card-menu" class="cm-card-menu" role="menu" aria-label="${e(named)}: ${n ? `${n} ${n === 1 ? "action" : "actions"}` : "no actions now"}" style="left:${cardMenu.x}px;top:${cardMenu.y}px">
-      ${c.name ? `<button type="button" role="menuitem" class="cm-card-menu-card" data-action="board-card-menu-view" data-card="${c.cardId}" aria-label="Read ${e(c.name)}" title="Read ${e(c.name)}"><img class="cm-card-menu-art" src="${e(pictureOf(c.name))}" alt=""><i aria-hidden="true">🔍</i><span>${e(c.name)}</span></button>` : `<span class="cm-card-menu-card" role="none"><i aria-hidden="true">◐</i><span>${e(named)}</span></span>`}
+      ${c.name ? `<button type="button" role="menuitem" class="cm-card-menu-card" data-action="board-card-menu-view" data-card="${c.cardId}" aria-label="Read ${e(c.name)}" title="Read ${e(c.name)}"><img class="cm-card-menu-art" src="${e(pictureOf(c.name, c))}" alt=""><i aria-hidden="true">🔍</i><span>${e(c.name)}</span></button>` : `<span class="cm-card-menu-card" role="none"><i aria-hidden="true">◐</i><span>${e(named)}</span></span>`}
       ${n ? rows : `<p class="cm-card-menu-none" role="none"><i aria-hidden="true">∅</i> ${e(c.why || "No actions now")}</p>`}</div>`;
   }
   /* Kept inside the window, measured once it is drawn. */

@@ -23,6 +23,22 @@
     "engineProblems": 0,
     "fullAuditExit": 1
   },
-  "browser": "Pending quiet window; no current browser acceptance",
-  "acceptance": "Dependency publication only; all wave0/card-load gates remain unchanged"
+  "browser": {
+    "source": "d65de1b46e5909647ee00d743f1c4ce4b3bcea6c",
+    "snoop": 98,
+    "tooltip": 21,
+    "actualSnoopWebGLRequired": true,
+    "screenshotsCaptured": 12,
+    "screenshotsInspected": [
+      "snoop-table-held-owner.png",
+      "snoop-focus-cast-menu.png",
+      "snoop-full-held-owner.png",
+      "snoop-full-source-removed.png"
+    ],
+    "directory": "worktrees/load100/scratch/snoop-root-mainfac-shots",
+    "teardown": "finally completed; elevated process check found no identified root tests or recorded browser descendants; unrelated Node processes untouched",
+    "limits": "Existing 3D other-field clipping/occlusion and footer beyond viewport remain; no full-layout acceptance",
+    "environmentalFirstAttempt": "Sandbox denied all local scripts/styles; unchanged approved local-loopback rerun passes."
+  },
+  "acceptance": "Bounded integration proof only; unchanged full wave0/card-load gates remain, actual original accessibility baseline RED/ROB312"
 }
