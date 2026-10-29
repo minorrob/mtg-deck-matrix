@@ -1026,7 +1026,7 @@ globalThis.CrankBoard = Object.seal({
       if (d.open) {session.afterClose=null;if(settingsExit===session)settingsExit=null;return;}   /* another window took its place */
       d.querySelector(".cm-play-settings")?.remove();
       const a = document.activeElement;
-      if (!a || a === document.body || d.contains(a)) document.querySelector("#cm-board [data-action=board-camera]")?.focus({preventScroll: true});
+      if (!a || a === document.body || d.contains(a)) document.querySelector("#cm-board [data-action=board-table-menu]")?.focus({preventScroll: true});
       const after=session.afterClose;session.afterClose=null;if(settingsExit===session)settingsExit=null;after?.();
     }, {once: true});
     actions["board-settings-save"] = async () => {
@@ -1383,8 +1383,11 @@ globalThis.CrankBoard = Object.seal({
       <header><b>Stack & history</b>${ib('⚙', 'board-modules-edit', 'Arrange modules', {}, {pressed:paneEditing})}${ib('✕', 'board-stage-side', 'Close table panel')}</header>${stageModules('right')}</aside>
       <button type="button" class="cm-stage-handle cm-stage-right cm-drawer-tab" data-action="board-stage-side" aria-expanded="${stageSide}" aria-controls="cm-stack-drawer" aria-label="${stageSide ? 'Collapse' : 'Expand'} Stack${count ? `, ${count} on the stack` : ''}${chatUnread && !stageSide ? `, ${chatUnread} new chat message${chatUnread === 1 ? "" : "s"}` : ''}"><span class="cm-tab-label">Stack</span>${count ? `<i class="cm-tab-count" aria-hidden="true">${count}</i>` : ''}${chatUnread && !stageSide ? `<i class="cm-tab-count cm-tab-chat" aria-hidden="true" title="New chat">${chatUnread}</i>` : ''}</button>${!phone()&&historyOpen?historyMenu():''}`;
   }
+  /* PLAY SETTINGS, BACKGROUND AND TABLE DESIGN live here (Rob, 2026-10-29; Luke's playtest: he could not find backgrounds or the
+     drawer modules, both under Camera). Camera is the view's own: seats, tilt, zoom, sizes. Drawer modules are inside Play settings. */
   function tableMenu() {
-    return `<div class="cm-table-menu"><button type="button" data-action="board-table-menu" aria-expanded="${tableMenuOpen}" aria-controls="cm-table-menu">Table ▾</button>${tableMenuOpen ? `<div id="cm-table-menu" role="group" aria-label="Table">${b('History','board-history')}${table?.youAreHost ? (confirmEnd ? `<p>End the game for everyone? The record is kept.</p>${b('Cancel', 'board-end-cancel')}${b('End game for everyone', 'board-end', {confirm:'1'}, true)}` : b('End game for everyone', 'board-end')) : ''}${b('Table rules', 'board-table-rules')}${b('Help', 'page-help', {help:'table'})}${b('Concede', 'board-concede')}${b('Leave table', 'board-leave-page')}${b('CrankMagic Pages','board-menu').replace('<button ','<button aria-haspopup="true" aria-expanded="'+menuOpen+'" ')}</div>${menuOpen ? `<aside class="cm-table-flyout" aria-label="CrankMagic Pages">${menu()}</aside>` : ''}` : ''}</div>`;
+    return `<div class="cm-table-menu"><button type="button" data-action="board-table-menu" aria-expanded="${tableMenuOpen}" aria-controls="cm-table-menu">Table ▾</button>${tableMenuOpen ? `<div id="cm-table-menu" role="group" aria-label="Table">${b('History','board-history')}${table?.youAreHost ? (confirmEnd ? `<p>End the game for everyone? The record is kept.</p>${b('Cancel', 'board-end-cancel')}${b('End game for everyone', 'board-end', {confirm:'1'}, true)}` : b('End game for everyone', 'board-end')) : ''}${b('Table rules', 'board-table-rules')}${b('Play settings','board-tools').replace('<button ','<button aria-haspopup="dialog" ')}${stageEnabled() ? `<label class="cm-stage-style">Background <select data-stage-style="background" aria-label="Background">${(CrankStage.appearances.backgrounds).map(x=>`<option value="${x.id}"${appearance.background===x.id?" selected":""}>${x.name}</option>`).join("")}</select></label>
+<label class="cm-stage-style">Table <select data-stage-style="table" aria-label="Table design">${(CrankStage.appearances.tables).map(x=>`<option value="${x.id}"${tableDesignId(appearance.table)===x.id?" selected":""}>${x.name}</option>`).join("")}</select></label>` : ""}${b('Help', 'page-help', {help:'table'})}${b('Concede', 'board-concede')}${b('Leave table', 'board-leave-page')}${b('CrankMagic Pages','board-menu').replace('<button ','<button aria-haspopup="true" aria-expanded="'+menuOpen+'" ')}</div>${menuOpen ? `<aside class="cm-table-flyout" aria-label="CrankMagic Pages">${menu()}</aside>` : ''}` : ''}</div>`;
   }
   function cameraMenu() { return `${tableMenu()}<div class="cm-stage-camera"><button type="button" data-action="board-camera" aria-expanded="${cameraOpen}">Camera ▾</button>${cameraOpen ? `<div>${phone() ? "" : switcher()}<span>View seats</span>${ib("◀", "board-rotate", "Previous seat", {by: "-1"})}${ib("▶", "board-rotate", "Next seat", {by: "1"})}<button type="button" class="cm-stage-camera-reset" data-action="board-camera-reset" title="Every Camera setting back to its default">Reset</button>${hudSlider()}
         ${stageEnabled() ? `<label>Tilt <input type="range" min="0" max="${TILT_MAX}" value="${Math.round(camera.tilt)}" data-stage-camera="tilt" aria-label="Table tilt"><output>${Math.round(camera.tilt)}°</output></label>` : ""}
@@ -1392,9 +1395,7 @@ globalThis.CrankBoard = Object.seal({
         <label>Cards <input type="range" min="70" max="${CAMERA_MAX}" value="${camera.cards}" data-stage-camera="cards" aria-label="Tabletop card size"><output>${camera.cards}%</output></label>
         ${stageSliders()}
         <label>Spacing <input type="range" min="-70" max="20" step="1" value="${spacing()}" data-board-spacing aria-label="Card spacing" aria-valuetext="${spacing()}%"><output>${spacing()}%</output></label>
-        ${b('Play settings','board-tools').replace('<button ','<button aria-haspopup="dialog" ')}
-        ${stageEnabled() ? `<label class="cm-stage-style">Background <select data-stage-style="background" aria-label="Background">${(CrankStage.appearances.backgrounds).map(x=>`<option value="${x.id}"${appearance.background===x.id?" selected":""}>${x.name}</option>`).join("")}</select></label>
-        <label class="cm-stage-style">Table <select data-stage-style="table" aria-label="Table design">${(CrankStage.appearances.tables).map(x=>`<option value="${x.id}"${tableDesignId(appearance.table)===x.id?" selected":""}>${x.name}</option>`).join("")}</select></label>` : ""}</div>` : ""}</div>`; }
+</div>` : ""}</div>`; }
   /* 3D's two sizes beside Cards: ✋ the hand's cards (the wheel over the hand moves it too), ↕ the table's length on your
      side (Ctrl/⌘ + drag moves it too; 100% is the length it always had, the most is the screen's foot). */
   function stageSliders() {
@@ -4549,7 +4550,7 @@ globalThis.CrankBoard = Object.seal({
     const request=coachFocusRequest=coach.open?{key:coachKey(),matchId:view?.matchId,armed:false,from:null}:null;
     if(coach.open){if(!moduleSide("coach"))inspection=null;panelOpen=false;openModuleDrawer("coach");if(phone()){stageSide=true;stageRail=false;}}
     draw();drawCoach();
-    if(request){const arm=()=>{if(coachFocusRequest!==request)return;const a=document.activeElement;if(leaving&&a&&a!==document.body&&!a.matches('#cm-board [data-action=board-camera]')){coachFocusRequest=null;return;}request.from=C.focusKey(a);request.armed=true;focusRequestedCoach(document.getElementById('cm-board-coach'));};if(leaving&&!leaving.closed)leaving.afterClose=arm;else arm();}
+    if(request){const arm=()=>{if(coachFocusRequest!==request)return;const a=document.activeElement;if(leaving&&a&&a!==document.body&&!a.matches('#cm-board [data-action=board-camera],#cm-board [data-action=board-table-menu]')){coachFocusRequest=null;return;}request.from=C.focusKey(a);request.armed=true;focusRequestedCoach(document.getElementById('cm-board-coach'));};if(leaving&&!leaving.closed)leaving.afterClose=arm;else arm();}
   };
   document.addEventListener('pointerdown',event=>{if(coachFocusRequest?.armed&&!event.target.closest?.('#cm-board-coach'))coachFocusRequest=null;},true);
   document.addEventListener('keydown',event=>{if(coachFocusRequest?.armed&&!['Shift','Control','Alt','Meta'].includes(event.key))coachFocusRequest=null;},true);

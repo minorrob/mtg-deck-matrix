@@ -126,7 +126,7 @@ try {
   const MODULE_IDS=['history','coach','counter','resources','mana','stack','inspect','table','recommended','chat'];
   const MODULE_TITLES=['History','AI Coach','Counter-Intel','Resources','Mana Pool','On the Stack','Card Preview','Table Vitals','Recommended Actions','Chat','Actions'];
   const openDrawerSettings=async(p=page)=>{
-    if(!await p.locator('#cm-board .cm-stage-camera>div').count())await p.locator('#cm-board [data-action=board-camera]').first().click();
+    if(!await p.locator('#cm-board #cm-table-menu').count())await p.locator('#cm-board [data-action=board-table-menu]').first().click();
     await p.locator('#cm-board [data-action=board-tools]').click();
     await p.getByRole('tab',{name:'General',exact:true}).click();
     await p.getByRole('button',{name:'Set Side Drawer Modules',exact:true}).click();
@@ -291,8 +291,6 @@ try {
           await page.locator('[data-action=board-camera-reset]').scrollIntoViewIfNeeded();
           await reachable('[data-action=board-camera-reset]','Camera Reset');
           await reachable('[data-stage-camera=tilt]','Camera Tilt');
-          await page.locator('[data-action=board-tools]').scrollIntoViewIfNeeded();
-          await reachable('[data-action=board-tools]','Play settings after native popup scrolling');
         } else {
           for(const button of await page.locator('.cm-stage-actions button:enabled').all()) {
             const action=await button.getAttribute('data-action');

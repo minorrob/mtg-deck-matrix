@@ -168,8 +168,8 @@ const view = async (page, v) => {
 async function utilityOpener(page, action) {
   await closeProfile(page);
   if(action==='board-tools') {
-    if(!await page.locator('.cm-stage-camera [data-action=board-tools]').count()) await page.locator('[data-action=board-camera]').click();
-    return page.locator('.cm-stage-camera [data-action=board-tools]');
+    if(!await page.locator('#cm-table-menu [data-action=board-tools]').count()) await page.locator('[data-action=board-table-menu]').click();
+    return page.locator('#cm-table-menu [data-action=board-tools]');
   }
   if(!await page.locator('#cm-table-menu').count()) await page.locator('[data-action=board-table-menu]').click();
   return page.locator(`#cm-table-menu [data-action="${action}"]`);
@@ -775,9 +775,9 @@ try {
     const entered = await page.evaluate(() => !!document.activeElement.closest("#cm-dialog[open]"));
     await page.keyboard.press("Escape");
     await page.locator("#cm-board-tools").waitFor({state: "detached"});
-    const back = await page.evaluate(() => !!document.activeElement.matches("[data-action=board-camera]"));
+    const back = await page.evaluate(() => !!document.activeElement.matches("[data-action=board-table-menu]"));
     ok(popup === "dialog" && dialogAx && dialogAx.role === "dialog" && /^settings$/i.test(dialogAx.name) && entered && back,
-      `board-tools: says it opens a dialog (${popup}), Enter opens Settings as a named dialog (${JSON.stringify(dialogAx)}), Tab stays inside it (${entered}), Escape closes it with the focus on Camera (${back})`);
+      `board-tools: says it opens a dialog (${popup}), Enter opens Settings as a named dialog (${JSON.stringify(dialogAx)}), Tab stays inside it (${entered}), Escape closes it with the focus on Table, where it was opened (${back})`);
   }
   /* What each is, said as it is: Tools a group of controls, ☰ the pages' navigation -- neither an ARIA menu, whose items
      would want the arrow keys they do not take. */
