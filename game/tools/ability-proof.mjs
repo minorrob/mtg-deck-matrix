@@ -29,10 +29,10 @@ export function runtimeAbilityRemoval(script, ability, definition) {
 
 /* runScenario's own assertion/action failures name the scenario. A generic rules exception or validation error is not
    proof that a valid counterfactual changed an observed behavior. */
-export function scenarioBehaviorFailure(error, scenario, {subject = "", kind = null} = {}) {
+export function scenarioBehaviorFailure(error, scenario) {
   const assertion = error?.scenarioAssertion;
-  const offerOnly = assertion?.kind === "ability-offer" && ["activated", "mana"].includes(kind)
-    && foldName(assertion.card) === foldName(subject);
+  /* Availability is not execution, regardless of the subject or kind of ability being removed. */
+  const offerOnly = ["ability-offer", "action-offer", "question-offer", "policy-precheck"].includes(assertion?.kind) || assertion === "blocker-offer";
   return error instanceof Error && !offerOnly && !["keyword-presence", "step-limit"].includes(assertion)
     && error.message.startsWith(`${scenario.name}: `);
 }
@@ -57,6 +57,7 @@ export function proveRuntimeAbility({script, ability, cards, scenarios, fixtures
       try {
         const result = runScenario(scenario, cards, fixtures);
         baselines.set(scenario, {passed: true, checks: result.passed.length, events: result.events.length});
+        if (result.policies) baselines.get(scenario).policies = structuredClone(result.policies);
       }
       catch (error) {baselines.set(scenario, {error: String(error.message ?? error)});}
     }
@@ -74,8 +75,10 @@ export function proveRuntimeAbility({script, ability, cards, scenarios, fixtures
     if (failure) {
       if (changedCards.uses > 0 && scenarioBehaviorFailure(failure, scenario, {subject: name, kind: removal.mutation.kind})) return {
         status: "proved", method: "runtime-ability-removal", scenario: scenario.name, scenarioIndex: i,
-        baseline: {status: "passed", checks: baseline.checks, events: baseline.events},
-        mutation: removal.mutation, result: {status: "failed", message: failure.message}, elapsedMs,
+        baseline: {status: "passed", checks: baseline.checks, events: baseline.events,
+          ...(baseline.policies ? {policies: structuredClone(baseline.policies)} : {})},
+        mutation: removal.mutation, result: {status: "failed", message: failure.message,
+          ...(failure.scenarioPolicies ? {policies: structuredClone(failure.scenarioPolicies)} : {})}, elapsedMs,
       };
       diagnostics.push({scenario: scenario.name, reason: changedCards.uses > 0 ? "generic exception, presence assertion, or step limit is not behavior proof" : "the subject's runtime definition was not used", error: String(failure.message ?? failure)});
     }
