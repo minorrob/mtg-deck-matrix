@@ -1464,24 +1464,42 @@ const freeLife = (object, free) => (free?.payLife === "manaValue" ? (object.mana
 /* The permissions open now that let this card be played from where it is. */
 const openPermissions = (state, player, id, kind) => allPlayPermissions(state, player)
   .filter(({ability, source}) => permissionOpen(state, player, ability, source) && permittedFrom(state, player, ability).includes(id) && permits(state, player, ability, id, kind, source));
-/* Of permissions that give the card the same thing, the one with the fewest drawbacks: no limit, so a limited one is spent
-   only when it must be, and no "exile it instead" (Kess) -- the two doing the same but for what is used up or lost, which is
-   no choice taken from the player. */
+/* An unlimited permission can stand for an identical unlimited permission. Limited permissions spend different
+   resources, so permissionWays keeps each one available for the player to choose (CR 601.2a, 305.1). */
 /* Spent by being used: a `limit`, a type's use (`perType`, Muldrotha), so many cards (`count`, Chainer). */
 const unlimited = (ability) => ability.limit === undefined && ability.perType !== true && ability.count === undefined;
 const preferred = (open) => open.find(({ability}) => unlimited(ability) && ability.graveyardToExile !== true)
   ?? open.find(({ability}) => unlimited(ability)) ?? open[0] ?? null;
-/* The permission a card is played through: the one its player chose (`via`, its source), or the preferred one there is. */
+/* A source can grant more than one play permission (CR 113.2c). Keep the old source-only action address when it names
+   one ability; otherwise name both source and ability in the existing `via` field. Saved unambiguous actions keep the
+   same shape, while two once-per-turn abilities on one permanent spend their separate use counters (CR 601.2a). */
+const PERMISSION_ADDRESS = "play-permission:";
+function permissionAddress(via) {
+  if (typeof via !== "string" || !via.startsWith(PERMISSION_ADDRESS)) return {source: via, ability: null};
+  try {
+    const parts = JSON.parse(via.slice(PERMISSION_ADDRESS.length));
+    return Array.isArray(parts) && parts.length === 2 && (Number.isInteger(parts[0]) || typeof parts[0] === "string") && typeof parts[1] === "string"
+      ? {source: parts[0], ability: parts[1]} : null;
+  } catch { return null; }
+}
+function permissionVia(state, player, permission) {
+  const sameSource = allPlayPermissions(state, player).filter(({source}) => source === permission.source);
+  return sameSource.length > 1 ? PERMISSION_ADDRESS + JSON.stringify([permission.source, permission.ability.id]) : permission.source;
+}
+/* The permission a card is played through: the chosen source and, when needed, ability (`via`), or the only equivalent way. */
 function playPermission(state, player, id, kind, via = null) {
   const open = openPermissions(state, player, id, kind);
-  if (via !== null) return open.find(({source}) => source === via) ?? null;
+  if (via !== null) {
+    const address = permissionAddress(via);
+    return address ? open.find(({source, ability}) => source === address.source && (address.ability === null || ability.id === address.ability)) ?? null : null;
+  }
   return preferred(open);
 }
 /* WHICH PERMISSION, WHEN IT MATTERS (CR 601.2a, 305.1; Rob, 2026-09-23: the players decide). Two permanents may each let a
    player play the same card, and do different things with it: Serra Paragon's land "gains" an ability and Crucible of
    Worlds's does not; Bolas's Citadel's spell is paid for with life, Future Sight's with mana; Thundermane Dragon's creature
-   gains haste. Each permission that gives something different is an offer of its own, `via` its source -- the preferred of
-   those that give alike; ones that all give alike are one offer, as they always were (playPermission). */
+   gains haste. Each permission that gives something different or spends a different limited resource is its own offer,
+   `via` its source. Identical unlimited permissions share one offer (playPermission). */
 /* And what it asks or allows beside: an additional cost to pay (Exploration Broodship), mana of any type spent (Tinybones). */
 const permissionDoes = (ability) => JSON.stringify([ability.grants ?? null, ability.gains ?? null, ability.payLife ?? null, ability.free === true, ability.graveyardToLibraryBottom === true,
   ability.additionalCost ?? null, ability.anyMana === true]);
@@ -1494,11 +1512,11 @@ function typeWays(state, player, id, via) {
 function permissionWays(state, player, id, kind) {
   const groups = new Map();
   for (const permission of openPermissions(state, player, id, kind)) {
-    const does = permissionDoes(permission.ability);
+    const does = JSON.stringify([permissionDoes(permission.ability), unlimited(permission.ability) ? null : [permission.source, permission.ability.id]]);
     if (!groups.has(does)) groups.set(does, []);
     groups.get(does).push(permission);
   }
-  return groups.size > 1 ? [...groups.values()].map((alike) => preferred(alike).source) : [null];
+  return groups.size > 1 ? [...groups.values()].map((alike) => permissionVia(state, player, preferred(alike))) : [null];
 }
 /* What a permission gives what was played through it (`grants`, compiled abilities): a layer-6 effect on the permanent, for
    good -- a permanent that leaves is a new object, and the effect has nothing to apply to (CR 400.7). */
@@ -1514,7 +1532,14 @@ function ridersOffer(state, riders) {
   /* A source gone since -- a Treasure sacrificed for its mana -- named as it was (`from`). */
   return {riders, riderNames: riders.map((id) => { const entry = entries.find((e) => e.id === id); return state.objects[entry?.source]?.card ?? entry?.from?.name ?? "mana"; })};
 }
-const viaOf = (state, via) => (via !== null && via !== undefined ? {via, viaName: state.objects[via]?.card ?? (state.effects ?? []).find(e => e.id === via)?.name ?? null} : {});
+const viaOf = (state, via) => {
+  if (via === null || via === undefined) return {};
+  const address = permissionAddress(via);
+  const name = state.objects[address?.source]?.card ?? (state.effects ?? []).find(e => e.id === address?.source)?.name ?? null;
+  const ordinal = address?.ability === null ? -1 : abilitiesOf(state, address.source)
+    .filter(a => a.kind === "static" && a.rule === "play-from").findIndex(a => a.id === address.ability);
+  return {via, viaName: ordinal >= 0 ? `${name} (permission ${ordinal + 1})` : name};
+};
 
 function playableElsewhere(state, player, kind) {
   const found = [];

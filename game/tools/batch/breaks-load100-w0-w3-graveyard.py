@@ -1,0 +1,23 @@
+# Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE.
+SUITES = ['tests/engine-play-from-zones.mjs', 'tests/engine-load100-w3-graveyard.mjs', 'tests/engine-may-play.mjs', 'tests/engine-play-from.mjs']
+BREAKS = [
+    ('permission resource choice retained', 'game/engine/rules/actions.mjs',
+     'JSON.stringify([permissionDoes(permission.ability), unlimited(permission.ability) ? null : [permission.source, permission.ability.id]])',
+     'permissionDoes(permission.ability)'),
+    ('unlimited equivalent permissions stay equivalent', 'game/engine/rules/actions.mjs',
+     'unlimited(permission.ability) ? null : [permission.source, permission.ability.id]', '[permission.source, permission.ability.id]'),
+    ('same-source limited abilities distinct', 'game/engine/rules/actions.mjs',
+     'unlimited(permission.ability) ? null : [permission.source, permission.ability.id]', 'unlimited(permission.ability) ? null : permission.source'),
+    ('same-source action identifies ability', 'game/engine/rules/actions.mjs',
+     'return sameSource.length > 1 ? PERMISSION_ADDRESS + JSON.stringify([permission.source, permission.ability.id]) : permission.source;',
+     'return permission.source;'),
+    ('legacy source-only action retained', 'game/engine/rules/actions.mjs',
+     'return sameSource.length > 1 ? PERMISSION_ADDRESS + JSON.stringify([permission.source, permission.ability.id]) : permission.source;',
+     'return PERMISSION_ADDRESS + JSON.stringify([permission.source, permission.ability.id]);'),
+    ('chosen ability spent', 'game/engine/rules/actions.mjs',
+     '(address.ability === null || ability.id === address.ability)', 'true'),
+    ('chosen source spent', 'game/engine/rules/actions.mjs',
+     'source === address.source && (address.ability === null || ability.id === address.ability)', '(address.ability === null || ability.id === address.ability)'),
+    ('same-source choices labelled', 'game/engine/rules/actions.mjs',
+     'viaName: ordinal >= 0 ? `${name} (permission ${ordinal + 1})` : name', 'viaName: name'),
+]
