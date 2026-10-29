@@ -46,6 +46,9 @@ if(process.argv.includes("--capture-legacy")){
  eq(hashState(await store.readJournal()),data.journalHash,"the complete historical event journal retains its original IDs and contents");
  ok(!Object.hasOwn(point.state,"effectPlayVersion"),"replay does not add a version field to the historical state hash");
  ok((await replayMatch({storage,cards,matchId:data.matchId})).same,"the saved historical replay reopens and replays identically a second time");
+ for(const version of [0,false,2]){
+  await assert.rejects(()=>replayTape({...data,pod:{...data.pod,effectPlayVersion:version},cards}),/unsupported saved effect-play version/i);checks++;
+ }
  for(const supplied of [undefined,0,false,2,1]){
   const storage=memoryStorage(),matchId=`live-version-${String(supplied)}`,pod={sourceChoices:true,...(supplied!==undefined?{effectPlayVersion:supplied}:{}),seats:data.pod.seats};
   let room=await startRoom({storage,cards,matchId,pod,seed:data.seed}),store=createMatchStore(storage,matchId);

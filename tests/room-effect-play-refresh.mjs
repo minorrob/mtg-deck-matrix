@@ -70,6 +70,19 @@ async function fixture({donated=true,level="human",standing=false}={}){
  eq(next.state.stack.length,0,"the old standing index cannot silently cast or retarget a newly offered variant");
  eq(room.refusals.total,0,"clearing an unbound standing answer does not conceal a refused pilot input");
 }
+{
+ const {storage,store,matchId,state,target,choice}=await fixture(),point=await store.latestCheckpoint();
+ /* A saved native-authoritative departure with the old controller offer still present. Append the real new events;
+    never reset an existing journal or manufacture a replacement native question. Opening must reconcile it. */
+ const journal=createJournal({matchId,seed:point.seed},{sequence:point.sequence});for(const event of concede(state,2))journal.write(event.kind,event.data);
+ await store.appendEvents(journal.events());await store.saveCheckpoint(journal.checkpoint(state,point.rng));
+ const record=JSON.parse(await storage.get(`room/${matchId}`));record.sequence=journal.checkpoint(state,point.rng).sequence;await storage.put(`room/${matchId}`,JSON.stringify(record));
+ const events=await store.readJournal(),room=await openRoom({storage,cards,matchId}),current=await store.latestCheckpoint();
+ ok(room.view("p0").decision.id!==choice.id,"reload reconciles a stale original native offer even when no child is saved");
+ ok(current.state.awaiting.choices.some(a=>a.modes?.[0]===2&&a.targets?.some(t=>t.id===target)),"reload's refreshed original includes the newly legal native target");
+ eq(await store.readJournal(),events,"reload reconciliation neither drops committed departure facts nor invents events");
+ const before=room.fingerprint(),again=await openRoom({storage,cards,matchId});eq(again.fingerprint(),before,"a second reload does not advance a stable native generation again");
+}
 for(const level of ["house","easy","normal"]){
  const {storage,store,matchId,choice}=await fixture({level}),seen=[];
  const pilot=args=>{const base=seatPilot(args);return {...base,answer(view,q){seen.push(structuredClone(q));return base.answer(view,q);}};};

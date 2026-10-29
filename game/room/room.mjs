@@ -1498,5 +1498,8 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
 /* Live starts always use the current native choice contract; a client/pod cannot opt out. */
 export const startRoom = ({storage, matchId, cards = basicCards, candidates, pod, seed, pilot, slice}) => roomOn(storage, matchId, cards, pilot, slice, candidates).start({...pod,effectPlayVersion:1}, seed);
 /* Trusted server-only tape entry point. Absence is historical state shape, not a live-game option or a zero field. */
-export const startRoomFromTape = ({storage, matchId, cards = basicCards, candidates, pod, seed, pilot, slice}) => roomOn(storage, matchId, cards, pilot, slice, candidates).start(pod, seed);
+export const startRoomFromTape = ({storage, matchId, cards = basicCards, candidates, pod, seed, pilot, slice}) => {
+  if(pod?.effectPlayVersion!==undefined&&pod.effectPlayVersion!==1)throw new RoomError(400,"Unsupported saved effect-play version. Use this match's original supported engine version.");
+  return roomOn(storage, matchId, cards, pilot, slice, candidates).start(pod, seed);
+};
 export const openRoom = ({storage, matchId, cards = basicCards, candidates, pilot, slice}) => roomOn(storage, matchId, cards, pilot, slice, candidates).open();

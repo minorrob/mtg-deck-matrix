@@ -1,6 +1,7 @@
 # Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE.
 """Committed modal refinements: preserve native facts/questions, exact handler, replay/privacy and persistent receipts."""
 SUITES = ['tests/engine-refinement-controller.mjs', 'tests/engine-committed-refinement.mjs',
+          'tests/room-effect-play-refresh.mjs', 'tests/room-effect-play-version.mjs',
           'tests/room-committed-refinement.mjs', 'tests/engine-controller.mjs', 'tests/engine-modal-triggers.mjs',
           'tests/engine-copy-spell.mjs', 'tests/room-events.mjs', 'tests/game-replay.mjs']
 C='game/engine/controller.mjs'
@@ -69,6 +70,21 @@ BREAKS=[
   'export function refinementEntry(state,pending,index=0){','export function refinementEntry(state,pending,index=0){if(pending?.options?.some(o=>o.random))return {schema:SCHEMA,kind:"trigger"};'),
  ('final confirmation chooses the first native variant instead',D,
   'nativeAnswer:{indices:[option.nativeIndex],choiceId:pending.id}','nativeAnswer:{indices:[0],choiceId:pending.id}'),
+ ('fresh-generation private confirmation omits its original native ID',D,
+  'nativeAnswer:{indices:[option.nativeIndex],choiceId:pending.id}','nativeAnswer:{indices:[option.nativeIndex]}'),
+ ('live room accepts a supplied historical version opt-out',R,
+  '.start({...pod,effectPlayVersion:1}, seed);','.start(pod, seed);'),
+ ('live room drops its native epoch before state and pod saving',R,
+  '...(pod?.effectPlayVersion===1?{effectPlayVersion:1}:{})',''),
+ ('historical replay silently upgrades old native choice IDs', 'game/room/replay.mjs',
+  'const room = await startRoomFromTape({storage, matchId, pod, seed,',
+  'const room = await startRoomFromTape({storage, matchId, pod:{...pod,effectPlayVersion:1}, seed,'),
+ ('room house answers omit the exact current native generation ID',R,
+  'return resolveAwaiting(state, a.indices, a.amounts, rng, {...a, choiceId: choice.id});',
+  'return resolveAwaiting(state, a.indices, a.amounts, rng, a);'),
+ ('standing cached effect-play index is silently retagged after native generation changes',R,
+  'if(given&&state.awaiting.kind==="effect-choice"&&state.awaiting.effect==="play"&&\n            (given.choiceId!==choice.id||given.questionSignature!==hashState(choice))){delete run.answers[key];given=null;}\n          if (given) {\n            try {write(resolveAwaiting(state, given.indices, given.amounts, rng, given));',
+  'if (given) {\n            try {write(resolveAwaiting(state, given.indices, given.amounts, rng, {...given,choiceId:choice.id}));'),
  ('player click cannot identify its actual private target option',D,
   'target?.kind==="player"?{playerId:target.id}','target?.kind==="player"?{}'),
  ('target departure retains old private selections for a new native question',R,
