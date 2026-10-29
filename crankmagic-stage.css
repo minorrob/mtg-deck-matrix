@@ -1846,7 +1846,3 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-board-pile .cm-bcard-count{display:none}
 /* A thumbnail has no room for the land stack's words: read, not seen. */
 #matrix-v2 .cm-board .cm-flat-rear .cm-land-count{position:absolute;width:1px;height:1px;min-width:0;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
-/* A hand card that has the keyboard's focus is lifted clear of the window's foot, so its whole ring is on the screen. */
-#matrix-v2 .cm-board .cm-stage-fan-slot .cm-bcard:focus-visible{transform:translateY(-16px)}
-/* ...and straight, as a card taken up from a fan is held: its ring follows its own edges all the way round. */
-#matrix-v2 .cm-board .cm-stage-fan-slot:focus-within{transform:translateX(calc(-50% + var(--fan-x) * var(--fan-step)))!important}

@@ -390,12 +390,16 @@ async function ringContrast(page, selector, label = "") {
   await el.scrollIntoViewIfNeeded().catch(() => {});
   const box = await el.boundingBox();
   if (!box) return null;
-  // A 30-degree tapped card has a rotated edge, not its axis-aligned bounding rectangle.
+  // A 30-degree tapped card, or a card in the hand's fan (its slot is the turned one), has a rotated edge, not its axis-aligned bounding rectangle:
+  // the turns of the element and of what holds it, multiplied (a perspective matrix on a mat is not one, and is left out as it always was).
   const quad = await el.evaluate(node => {
-    const box=node.getBoundingClientRect(),style=getComputedStyle(node),m=new DOMMatrixReadOnly(style.transform);
-    if(Math.abs(m.b)<.001 && Math.abs(m.c)<.001) return null;
-    const w=parseFloat(style.width),h=parseFloat(style.height),cx=box.x+box.width/2,cy=box.y+box.height/2;
-    return [[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]].map(([x,y])=>[cx+m.a*x+m.c*y,cy+m.b*x+m.d*y]);
+    const box=node.getBoundingClientRect();
+    let M=new DOMMatrix();
+    const chain=[];for(let n=node;n&&n!==document.documentElement;n=n.parentElement)chain.unshift(n);
+    for(const n of chain){const t=getComputedStyle(n).transform;if(t==='none')continue;const m=new DOMMatrix(t);if(!m.is2D)continue;M=M.multiply(new DOMMatrix([m.a,m.b,m.c,m.d,0,0]));}
+    if(Math.abs(M.b)<.001 && Math.abs(M.c)<.001) return null;
+    const w=node.offsetWidth,h=node.offsetHeight,cx=box.x+box.width/2,cy=box.y+box.height/2;
+    return [[-w/2,-h/2],[w/2,-h/2],[w/2,h/2],[-w/2,h/2]].map(([x,y])=>[cx+M.a*x+M.c*y,cy+M.b*x+M.d*y]);
   });
   const vp = page.viewportSize(), PAD = 10;
   const clip = {x: Math.max(0, Math.floor(box.x - PAD)), y: Math.max(0, Math.floor(box.y - PAD))};
