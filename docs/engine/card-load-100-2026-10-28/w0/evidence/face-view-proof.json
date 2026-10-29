@@ -62,29 +62,29 @@
   "publicLogs": [
     {
       "file": "face-view-baseline-0.log",
-      "sha256": "35eb689ced67f9eb250e372fc92290b193c31cb497416c34bbdb1715267e1d94",
+      "sha256": "c0c5e1d48507480365b8d9fadf539f456abe3619721393b22845f476a7cbb323",
       "capturedRawSha256": "35eb689ced67f9eb250e372fc92290b193c31cb497416c34bbdb1715267e1d94"
     },
     {
       "file": "face-view-baseline-1.log",
-      "sha256": "87727d7b3ae3705bd15be5cf6d8152235b78aa2f08cfde7ba15f8a44b3593fd0",
+      "sha256": "e4adcd80924ee0c9cff724b232825eb975382753f936ea27abaa1757d1dd3301",
       "capturedRawSha256": "27af35ad17c71ffdf1cdee32664a28d49cfb80bc8306fac55983279e9ba7ebe3"
     },
     {
       "file": "face-view-baseline-2.log",
-      "sha256": "6ee95e438ca9755a1f17844d4257a69873577a5f5557adedd52c186ed650962c",
+      "sha256": "c64da4d56510fb60208a4d9ecf8ffc17a03003e9d9356a9c14ae457a65822ed7",
       "capturedRawSha256": "6ee95e438ca9755a1f17844d4257a69873577a5f5557adedd52c186ed650962c"
     },
     {
       "file": "face-view-mutation-0.log",
-      "sha256": "9e3b42892d3d373494dc31027a4a67bb1c8a407e4e0620fbbcede8c8c0bdfa9c",
+      "sha256": "a35f578e867ab7834bfd79142dd402376ac2c265899218e44868ed4d303c4798",
       "capturedRawSha256": "51e954179a8e8b546d0d5b677735eef18ee5d65c7de6c8dd133d40eee861e6f3"
     },
     {
       "file": "face-view-mutation-1.log",
-      "sha256": "b2fa8617c5fa221575bd97650b043e5aff1e9513bbd8cf840590098442bb9383",
+      "sha256": "74eff65c3b55037840f798e355e3b4091739c232ea8b05a9bcb3eca01d4b131b",
       "capturedRawSha256": "cdd051a29bdf30bc06842851ec4e305d5b7579f147b2ba998fd385cebc2bd17b"
     }
   ],
-  "logNormalization": "Captured logs normalized to UTF-8 and local workspace prefix redacted; unmodified captured logs retained outside repository."
+  "logNormalization": "Captured logs normalized to UTF-8/LF and local workspace prefix redacted; public SHA256 hashes bind normalized Git blob bytes. Unmodified captured logs retained outside repository."
 }
