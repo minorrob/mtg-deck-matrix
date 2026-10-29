@@ -1,6 +1,11 @@
 /* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
 /* Wave 0 stack regressions: counted targets, face-down exile, and the explicit wish-card refusal. */
 import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {CREATURE_TYPES} from "../game/engine/keywords/creature-types.mjs";
+import {creatureTypesFrom} from "../game/tools/engine-creature-types.mjs";
+import {setState} from "../game/engine/script/effects/permanents.mjs";
+import {typesOf, subtypesOf} from "../game/engine/rules/layers.mjs";
 import {createState, addObject} from "../game/engine/state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {pushSpell, pushAbility, resolveTop} from "../game/engine/rules/stack.mjs";
@@ -15,7 +20,7 @@ import {projectFor} from "../game/engine/projection.mjs";
 import {hashState} from "../game/engine/journal.mjs";
 import {concede} from "../game/engine/rules/sba.mjs";
 import {passPriority} from "../game/engine/rules/priority.mjs";
-import {matchesSelector} from "../game/engine/script/filter.mjs";
+import {matchesSelector, creatureTypesOf} from "../game/engine/script/filter.mjs";
 import {collectTriggers, openTriggers} from "../game/engine/rules/trigger.mjs";
 
 let checks = 0;
@@ -671,6 +676,91 @@ for (const externalTap of [false, true]) {
   const made = state.zones.battlefield.find(id => state.objects[id].uncopied?.card === "Tapped Copier");
   eq(state.objects[made].tapped, externalTap, "a subsequent copy removes a prior copy's tapped exception while preserving another source's tapped replacement");
 }
+for (const who of [0,1,2]) {
+  let state = fresh(); const id = cast(state, "Metallic Mimic"), before = state.nextObjectId;
+  resolveTop(state); state = JSON.parse(JSON.stringify(state));
+  const events = concede(state, who);
+  if (who === 0) {
+    eq([state.stack.length, state.ruleOperation, state.awaiting, field(state, "Metallic Mimic")], [0, undefined, null, []], "the entering spell's controller can concede without its permanent entering or its operation hanging");
+    eq(events.filter(event => event.kind === "GameEventSpellResolved").length, 0, "a departed controller's cancelled entry does not report a spell resolution");
+  } else {
+    eq([state.objects[id].zone, state.awaiting.player, state.nextObjectId], ["stack", 0, before], "another player's concession preserves the real entering spell and its unmade entry");
+    resolveAwaiting(state, [awaitingChoice(state).options.find(option => option.label === "Elf").index]);
+    eq([field(state, "Metallic Mimic").length, state.nextObjectId], [1, before + 1], "after another player leaves, the retained answer completes entry once without replay");
+  }
+}
+{
+  let state = fresh();
+  const gone = addObject(state, {...index.definition("Metallic Mimic"), card: "Metallic Mimic", owner: 1, controller: 1}, "battlefield");
+  const id = cast(state, "Clone"); resolveTop(state);
+  state = JSON.parse(JSON.stringify(state)); concede(state, 1);
+  eq([state.objects[gone], state.objects[id].zone, state.awaiting.player], [undefined, "stack", 0], "a departed prospective copy source is removed while the surviving copier still awaits its own choice");
+  eq(awaitingChoice(state).options.some(option => option.cardId === gone), false, "the refreshed entry choices cannot copy the departed source");
+  resolveAwaiting(state, [awaitingChoice(state).options.find(option => option.label === "Entry Elf").index]);
+  eq(field(state, "Entry Elf").length, 2, "the surviving player explicitly chooses another existing source and the copy enters once");
+}
+{
+  const state = fresh();
+  const original = addObject(state, {card: "Walker Copier", types: ["Planeswalker"], loyalty: 7, owner: 0, controller: 0, abilities: [{id: "copy", kind: "replacement", watches: {event: "enters", who: "self"}, change: {copyOf: {types: ["Creature"]}}}]}, "hand", 0);
+  pushSpell(state, original, {controller: 0, permanent: true}); resolveTop(state);
+  resolveAwaiting(state, [awaitingChoice(state).options.find(option => option.label === "Entry Elf").index]);
+  const made = state.zones.battlefield.find(id => state.objects[id].uncopied?.card === "Walker Copier");
+  eq([state.objects[made].card, state.objects[made].loyalty, state.objects[made].counters.loyalty], ["Entry Elf", undefined, undefined], "a creature copy loses the original planeswalker's absent copied characteristic instead of retaining loyalty");
+}
+{
+  const state = fresh();
+  addObject(state, {card: "Other Entry Counter", types: ["Enchantment"], owner: 1, controller: 1, abilities: [{id: "counter", kind: "replacement", text: "Artifacts enter with an extra counter.", watches: {event: "enters", types: ["Artifact"]}, change: {entersWithCounters: {counter: "charge", count: 1}}}]}, "battlefield");
+  cast(state, "Banner of Kinship"); resolveTop(state);
+  const ordering = awaitingChoice(state);
+  eq(ordering.options.length, 2, "a grouped printed Banner replacement and one other source remain two actual order choices");
+  resolveAwaiting(state, [ordering.options.find(option => option.label.includes("choose a creature type")).index]);
+  resolveAwaiting(state, [awaitingChoice(state).options.find(option => option.label === "Elf").index]);
+  const [banner] = field(state, "Banner of Kinship");
+  eq([state.objects[banner].counters.fellowship, state.objects[banner].counters.charge, state.awaiting], [1, 1, null], "choosing Banner's printed replacement applies its counter part in that event, without a second order decision for the same part");
+}
+{
+  const state = fresh();
+  const hand = addObject(state, {card: "Two Entry Payments", types: ["Land"], owner: 0, controller: 0, abilities: [2,3].map((life,index) => ({id: `pay${index}`, kind: "replacement", text: `Pay ${life} life as it enters.`, watches: {event: "enters", who: "self"}, change: {entersTapped: true, unlessPay: {life}}}))}, "hand", 0);
+  applyAction(state, 0, legalActions(state, 0).find(action => action.kind === "play-land" && action.objectId === hand));
+  resolveAwaiting(state, [awaitingChoice(state).options.find(option => option.label.includes("Pay 3")).index]);
+  eq(awaitingChoice(state).options[0].label, "Pay 3 life: Two Entry Payments enters untapped", "the player's order answer selects the three-life replacement rather than automatically using the first one");
+  resolveAwaiting(state, [0]); resolveAwaiting(state, [0]);
+  eq([state.players[0].life, field(state, "Two Entry Payments").length], [35, 1], "both independently chosen life payments are paid once before the one land enters");
+}
+for (const [name, cost, relative] of [["Metallic Mimic",2,"m/metallic-mimic"], ["Adaptive Automaton",3,"a/adaptive-automaton"], ["Roaming Throne",4,"r/roaming-throne"]]) {
+  let state = createState({matchId: "legal-types", seed: "legal-types", players: [{name:"Rob"},{name:"Maya"},{name:"Trey"}]});
+  state.turn=1; state.phase="MAIN1"; state.activePlayer=0; state.priorityPlayer=0;
+  for (let number=0; number<cost; number+=1) addObject(state, {...index.definition("Wastes"), card:"Wastes", owner:0, controller:0}, "battlefield");
+  const hand=addObject(state, {...index.definition(name), card:name, owner:0, controller:0}, "hand", 0);
+  for (let number=0; number<cost; number+=1) applyAction(state,0,legalActions(state,0).find(action=>action.kind==="activate-mana"));
+  applyAction(state,0,legalActions(state,0).find(action=>action.kind==="cast" && action.objectId===hand));
+  passPriority(state);passPriority(state);passPriority(state);
+  eq(awaitingChoice(state).options.map(option=>option.label).sort(), [...CREATURE_TYPES].sort(), `${name}: a table with only Wastes still offers every registered legal creature type`);
+  eq(["Elf","Blinkmoth","Llama","Time Lord","Time","Lord","Forest"].map(type=>awaitingChoice(state).options.some(option=>option.label===type)), [true,true,true,true,false,false,false], `${name}: multiword and missing registered types are legal; invalid fragments and land types are absent`);
+  const waiting=hashState(state);
+  assert.throws(()=>resolveAwaiting(state,[awaitingChoice(state).options.length]),/required rule options/);checks+=1;
+  eq(hashState(state),waiting,`${name}: an invalid type answer does not consume the entry decision`);
+  state=JSON.parse(JSON.stringify(state));
+  resolveAwaiting(state,[awaitingChoice(state).options.find(option=>option.label==="Elf").index]);
+  const [made]=field(state,name);
+  eq([typesOf(state,made).sort(),subtypesOf(state,made).includes("Elf"),creatureTypesOf(state,made).types.includes("Elf")], [["Artifact","Creature"],true,true], `${name}: Elf is an actual derived creature subtype rather than a card type`);
+  if(name==="Metallic Mimic") {
+    const elf=addObject(state,{...index.definition("Llanowar Elves"),card:"Llanowar Elves",owner:0,controller:0},"hand",0);
+    pushSpell(state,elf,{controller:0,permanent:true});resolveTop(state);
+    eq(state.objects[field(state,"Llanowar Elves")[0]].counters["+1/+1"],1,"a Mimic that chose an Elf absent from the original table modifies the next real Elf's entry");
+  }
+  const scenarioFile=JSON.parse(readFileSync(new URL(`../game/engine/cards/${relative}.scenarios.json`,import.meta.url),"utf8"));
+  const witness=scenarioFile.scenarios.find(scenario=>scenario.name.includes("actual subtype"));
+  ok(runScenario(witness,index.definition,scenarioFile.fixtures).passed.length>=2,`${name}: the real Shared Animosity combat changes power only when the chosen subtype is shared`);
+}
+{
+  const state=fresh();cast(state,"Metallic Mimic");resolveTop(state);
+  resolveAwaiting(state,[awaitingChoice(state).options.find(option=>option.label==="Time Lord").index]);
+  const [mimic]=field(state,"Metallic Mimic");
+  eq(creatureTypesOf(state,mimic).types.includes("Time Lord"),true,"the actual Mimic can choose the single multiword creature type Time Lord");
+  const parsed=creatureTypesFrom({cards:[{type:"Creature \u2014 Time Lord Doctor",text:""}]});
+  eq(["Time Lord","Doctor","Blinkmoth","Llama","Time","Lord"].map(type=>parsed.includes(type)),[true,true,true,true,false,false],"the type generator preserves Time Lord as one subtype while refusing its invalid fragments");
+}
 }
 
 if (!process.argv[2] || process.argv[2] === "entryTokens") {
@@ -721,6 +811,28 @@ if (!process.argv[2] || process.argv[2] === "entryTokens") {
     const [made] = state.zones.battlefield.filter(id => state.objects[id].token);
     eq([state.objects[made].attachedTo, state.objects[other].attachments, state.nextObjectId], [other, [made], before + 1], "the chosen Aura token is created attached once after reload");
     eq(last.filter(event => event.kind === "GameEventBecomesTarget"), [], "choosing an Aura's entry attachment does not target or trigger ward");
+  }
+  {
+    const state=fresh(), context={controller:0,source:null};
+    beginResolution(state,[{effect:"incubate",count:3}],context);
+    const source=state.zones.battlefield.find(id=>state.objects[id].token);
+    setState(state,{targets:[source],transform:true},context);
+    beginResolution(state,[{effect:"copyPermanent",targets:[source],except:{setPower:2,setToughness:3}}],context);
+    const made=state.zones.battlefield.filter(id=>state.objects[id].token).at(-1);
+    eq([state.objects[made].card,state.objects[made].face,state.objects[made].mdfc?.front.card,state.objects[made].mdfc?.back.card], ["Phyrexian Token","back","Incubator","Phyrexian Token"],"the actual token-entry caller preserves both physical faces and back-face orientation");
+    eq([state.objects[made].power,state.objects[made].toughness,state.objects[made].counters], [2,3,{}],"a token-copy exception changes its copiable stats while original counters are not copied");
+    setState(state,{targets:[made],transform:true},context);
+    eq([state.objects[made].card,state.objects[made].power,state.objects[made].toughness], ["Incubator",2,3],"the created copy can transform with the exception on its other physical face");
+  }
+  for(const variant of ["known","no-flag","live","missing"]) {
+    const state=fresh(), live=state.zones.battlefield[0];
+    const effect={effect:"copyPermanent",targets:variant==="live"?[live]:[],...(variant!=="no-flag"?{lastKnown:true}:{})};
+    const context={controller:0,source:null,...(variant!=="missing"?{lastKnown:{copiable:{card:"Remembered Entry",types:["Creature"],power:3,toughness:4,keywords:["Haste"],abilities:[]}}}:{})};
+    const remembered=structuredClone(context);
+    beginResolution(state,[effect],context);
+    const made=state.zones.battlefield.filter(id=>state.objects[id].token);
+    eq(made.map(id=>[state.objects[id].card,state.objects[id].power]), variant==="known"?[["Remembered Entry",3]]:variant==="live"?[["Token Entry Elf",2]]:[],"the script token-entry path copies a recorded source only when requested, known and no original is present");
+    eq(context,remembered,"using departure-time copiable values does not mutate the caller's saved memory");
   }
 }
 

@@ -7,7 +7,7 @@ import {registerRuleOperation, askRuleOperation, emitRuleEvents} from "./operati
 import {ruleReplacementCandidates, applyRuleReplacement} from "./replacement.mjs";
 import {characteristicsOf, staticAbilities} from "./layers.mjs";
 import {enteringChoice} from "./entering.mjs";
-import {creatureTypesInGame} from "../script/effects/asking.mjs";
+import {CREATURE_TYPES} from "../keywords/creature-types.mjs";
 import {entryCopyPatch} from "../script/effects/permanents.mjs";
 import {chosenFor, withChosen, namesChosen} from "../script/chosen.mjs";
 import {matchesSelector} from "../script/filter.mjs";
@@ -43,7 +43,7 @@ function proposalIn(view, frame) {
 function askData(state, frame) {
   const ask = frame.asks[0], object = frame.candidate ?? state.objects[frame.objectId];
   const data = {objectId: frame.objectId, player: frame.player, ...ask};
-  if (ask.choose !== undefined) data.choose = ask.choose === "creature type" ? creatureTypesInGame(state) : ask.choose;
+  if (ask.choose !== undefined) data.choose = ask.choose === "creature type" ? [...CREATURE_TYPES] : ask.choose;
   if (ask.copyOf) data.copyOf = state.zones.battlefield.filter(id => id !== frame.objectId
     && matchesSelector({...ask.copyOf, what: "permanent"}, state, id, {controller: frame.player, source: frame.objectId}));
   if (ask.discardInstead) data.discardInstead = cardsIn(state, "hand", frame.player).filter(id => matchesSelector(

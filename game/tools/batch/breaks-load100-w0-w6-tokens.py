@@ -36,7 +36,7 @@ BREAKS = [
     ('live copy source has precedence', STACK, 'live?.zone === "stack" ? live : recordedSource', 'recordedSource ?? live'),
     ('preparation definition copied on spell', STACK, '...(object.preparation ? {preparation: structuredClone(object.preparation)} : {})', ''),
     ('live face-down identity hidden', STACK, 'colorIdentity: object.faceDown === true ? [] : object.colorIdentity,', 'colorIdentity: object.colorIdentity,'),
-    ('created copies keep faces', PERMANENTS, '...copiedTokenFaces(original, except),', ''),
+    ('created copies keep faces', PERMANENTS, 'const copy = addObject(state, {...values, ...copiedTokenFaces(original, except), owner:', 'const copy = addObject(state, {...values, owner:'),
     ('ordinary copies not double faced', PERMANENTS, '!original.mdfc || original.merged || original.faceDown === true', 'original.merged || original.faceDown === true'),
     ('merged permanent not double faced', PERMANENTS, '!original.mdfc || original.merged || original.faceDown === true', '!original.mdfc || original.faceDown === true'),
     ('face-down characteristics hide faces', PERMANENTS, '!original.mdfc || original.merged || original.faceDown === true', '!original.mdfc || original.merged'),

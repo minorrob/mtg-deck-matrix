@@ -125,6 +125,26 @@
       "changes": "Old timing assertions now require no permanent and original spell on stack during choices, exact public options and invalid-answer preservation; post-choice results preserved. Raw-copier assertion now requires gained copied replacement decision and explicit choose/decline outcomes (CR707.5/707.9e). Two distinct identical Riot effects still ask player order. Banner compiler parts with same printed paragraph and fresh-choice-dependent counters apply as ONE replacement, never an automatic same-end order.",
       "copyExceptions": "Actual Altered Ego copying raw Clone: choosing another creature removes earlier copy additional counters, declining preserves them (CR707.9e). Generic tapped copier proves same reset preserves unrelated tapped replacement.",
       "limits": "General moveZone/search/fetch and token replacement followups/SBA/cost callers remain queued W3 work, no entry/role/theme/wave0 closure claimed."
+    },
+    "finalFreeze": {
+      "status": "LOCAL INCOMPLETE proof checkpoint; final whole mutation run and independent review pending. No accepted role/wave0/card count.",
+      "baseline": "W2 268, entry-copy24/entering15/riot22, changeling10 and creature-type generator check green; seven selected definitions schema/fidelity/smoke18 scenarios0failed. Generated definitions bundle remains pending root refresh.",
+      "types": "V8 names-only CR205.3m comparison:324 current creature types after Blinkmoth/Llama supplement and preserving Time Lord as one term; invalid Time/Lord removed. Actual land-only Mimic/Automaton/Throne offer full catalogue, reject invalid index, choose Elf across reload and derive Elf only as subtype. Actual Mimic Time Lord choice proven.",
+      "existingCards": "Only existing Metallic Mimic, Adaptive Automaton, Roaming Throne addTypes $chosen fields corrected to addSubtypes; Oracle text/status/all prior assertions retained. Three new saved scenarios use real Shared Animosity to prove type-sharing power change. Banner/Cavern/Patchwork exact type-choice option assertions expand to324; Herald Horn upkeep card reveal remains unchanged.",
+      "discardedRun": {
+        "caught": 63,
+        "missed": 4,
+        "accepted": false,
+        "labels": [
+          "prospective patch never removes absent fields",
+          "grouped printed replacement loses counter part",
+          "entry order answer uses first candidate instead",
+          "devour replays payment after reload"
+        ],
+        "repair": "Behavioral witnesses now cover Walker Copier losing printed loyalty, same printed Banner parts versus an external effect, explicit three-life replacement ordering. Old waiting=true assignment was semantically equivalent under current staged child flow; replacement mutation consumes an absent child result and must be caught by real Mox payment behavior."
+      },
+      "finalMutationCount": 81,
+      "preservation": "New actual script-token tests preserve DFC/backface orientation, copied exceptions/no counters, requested/known/no-live-source memory guards. New global duplicate anchors narrowed to original behavioral routes; proofs still pending."
     }
   }
 }
