@@ -332,11 +332,19 @@ export function createController(resume = null) {
       if(payloads.get(actionId)!==JSON.stringify(request))throw new Error("Action id was reused with different content");
       return receipts.get(actionId)??null;
     },
-    answerRefinement(makeChoice, request, actor = null) {
+    answerRefinement(makeChoice, request, actor = null, replay = null) {
       const actionId=request?.actionId,body=JSON.stringify(request);
+      let receiptBody=body;
+      if(replay){
+        const {rawRequest,canonicalAnswer}=replay;
+        if(!rawRequest||!canonicalAnswer||replay.actor!==actor||rawRequest.actionId!==actionId||canonicalAnswer.actionId!==actionId||
+          rawRequest.choiceId!==request.choiceId||canonicalAnswer.choiceId!==request.choiceId||rawRequest.revision!==canonicalAnswer.revision||
+          JSON.stringify({...rawRequest,revision:request.revision})!==body)throw new Error("The private replay input does not match its accepted actor and envelope");
+        receiptBody=JSON.stringify(rawRequest);
+      }
       if(receipts.has(actionId)) {
         if(refinementOwners.has(actionId)&&refinementOwners.get(actionId)!==actor)throw new Error("This refinement input belongs to another seat");
-        if(payloads.get(actionId)!==body)throw new Error("Action id was reused with different content");
+        if(payloads.get(actionId)!==receiptBody)throw new Error("Action id was reused with different content");
         return {receipt:receipts.get(actionId),answer:null,changed:false};
       }
       if(!pending||answered)throw new Error("The native question has expired");
@@ -350,7 +358,10 @@ export function createController(resume = null) {
       validator.offer({...choice,actionStage:{canBack:reference.canBack===true}});
       validator.answer(request);const answer=validator.take();
       if(answer.cancel===true&&choice.cancellation?.allowed!==true)throw new Error("Cancel is unavailable on this refinement");
-      payloads.set(actionId,body);refinementOwners.set(actionId,actor);revision+=1;
+      /* Only the trusted replay caller supplies this fourth argument. Native validation still runs once on the raw
+         request with its current revision; cache identity is restored only after its real translation matches tape. */
+      if(replay&&hashState({...answer,revision:0})!==hashState({...replay.canonicalAnswer,revision:0}))throw new Error("The private replay answer does not match the recorded canonical answer");
+      payloads.set(actionId,receiptBody);refinementOwners.set(actionId,actor);revision+=1;
       return {receipt:receiptFor(actionId),answer,changed:true};
     },
 

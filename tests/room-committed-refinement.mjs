@@ -55,7 +55,8 @@ for(const kind of ["ao","shadrix","scepter"]){
  if(kind==="ao"){eq(point.state.stack[0].cardId,null,"actual Ao has departed before its native modal question");ok(point.state.stack[0].lastKnown,"actual departed Ao keeps native LKI");}
  const plain=view=>{const value=structuredClone(view);delete value.revision;return value;},after=`event:${point.sequence}`;
  const watcher=plain(room.watch({after})),opponent=plain(room.view("p1",{after}));
- const pick=v.decision.options.find(o=>o.refinementStages),start=request(v,{indices:[pick.index],staged:true});await room.act("p0",start);v=room.view("p0");
+ const pick=v.decision.options.find(o=>o.refinementStages),start=request(v,{indices:[pick.index],staged:true,...(kind==="ao"?{refinementInput:{schema:"CrankPrivateRefinementInput@1",actor:1,request:{kind:"cancel"}}}:{})});await room.act("p0",start);v=room.view("p0");
+ const recorded=(await store.readTape()).at(-1).refinementInput;eq(recorded?.actor,0,`${kind}: private tape actor is server-stamped from the actual seat`);eq(recorded?.request,start,`${kind}: private tape preserves the exact accepted outer request, not client metadata claims`);
  eq(v.decision.stage,"modes",`${kind}: committed child opens modes without answering the native question`);
  const detached=room.fingerprint();v.decision.options[0].modeIndices.push(999);eq(room.fingerprint(),detached,`${kind}: returned private mode arrays cannot mutate the live native choices`);v=room.view("p0");
  eq(JSON.parse(await storage.get(`room/${matchId}`)).controller.pending,nativePending,`${kind}: the saved main controller question stays byte-identical`);
@@ -103,10 +104,17 @@ for(const kind of ["ao","shadrix","scepter"]){
   typedRequest=request(v,{kind:"player",targetId:v.decision.options[index].target.id});await room.act("p0",typedRequest);
  }
  v=room.view("p0");eq(v.decision.stage,"confirm",`${kind}: selected modes/targets confirm through the original native handler`);
- const sidecar=JSON.parse(await storage.get(`room/${matchId}`)).refinement,replayed=memoryStorage();
- const replayedRoom=await replayTape({matchId,pod:meta.pod,seed:meta.seed,tape:await store.readTape(),cards,storage:replayed});eq(JSON.parse(await replayed.get(`room/${matchId}`)).refinement,sidecar,`${kind}: accepted child selections replay exactly as references, without a native snapshot`);
+ const sidecar=JSON.parse(await storage.get(`room/${matchId}`)).refinement,replayed=memoryStorage(),partialTape=await store.readTape();
+ const replayedRoom=await replayTape({matchId,pod:meta.pod,seed:meta.seed,tape:partialTape,cards,storage:replayed});eq(JSON.parse(await replayed.get(`room/${matchId}`)).refinement,sidecar,`${kind}: accepted child selections replay exactly as references, without a native snapshot`);
  const replayedPoint=replayedRoom.fingerprint();await replayedRoom.act("p0",cancel);eq(replayedRoom.fingerprint(),replayedPoint,`${kind}: the original raw Cancel retry stays idempotent after full tape replay`);
  if(typedRequest){await replayedRoom.act("p0",typedRequest);eq(replayedRoom.fingerprint(),replayedPoint,`${kind}: an accepted typed-player payload is still the same receipt after replay`);}
+ if(kind==="ao"){
+  const firstPrivate=partialTape.findIndex(t=>t.refinementInput),fs=memoryStorage(),forged=await replayTape({matchId,pod:meta.pod,seed:meta.seed,tape:partialTape.slice(0,firstPrivate),cards,storage:fs});
+  for(const change of [entry=>{entry.refinementInput.actor=1;},entry=>{entry.answer.indices=[(entry.answer.indices[0]+1)%nativePending.options.length];}]){
+   const entry=structuredClone(partialTape[firstPrivate]);change(entry);const saved=await fs.get(`room/${matchId}`),before=forged.fingerprint(),watch=forged.watch();
+   await assert.rejects(()=>forged.replay(entry),/actor|canonical|replay/i);checks++;eq(await fs.get(`room/${matchId}`),saved,"forged replay metadata changes no saved native question, receipt or state");eq(forged.fingerprint(),before,"forged replay metadata cannot consume an input");eq(forged.watch(),watch,"forged replay metadata cannot advance the public event cursor either");
+  }
+ }
  eq(JSON.parse(await storage.get(`room/${matchId}`)).controller.pending,nativePending,`${kind}: the original native question remains unchanged through every child stage`);
  room=await openRoom({storage,cards,matchId});v=room.view("p0");const confirm=request(v,{indices:[0]});await room.act("p0",confirm);
  const result=await store.latestCheckpoint();eq(result.state.awaiting,null,`${kind}: one final confirmation completes the original native question`);
@@ -120,6 +128,10 @@ for(const kind of ["ao","shadrix","scepter"]){
  const fingerprint=room.fingerprint();await room.act("p0",confirm);eq(room.fingerprint(),fingerprint,`${kind}: final accepted retry cannot invoke the native handler twice`);
  await assert.rejects(()=>room.act("p0",{...confirm,actionId:request(room.view(room.waitingOn),{}).actionId,revision:room.revision}),/expired|changed|not your/i);checks++;
  eq(room.fingerprint(),fingerprint,`${kind}: a new input carrying an expired child ID cannot answer a later original question`);
+ for(const entry of (await store.readTape()).slice(partialTape.length))await replayedRoom.replay(entry);
+ eq(replayedRoom.fingerprint(),fingerprint,`${kind}: the remaining native tape continues from its private replay without an old-question restore`);
+ const reopenedReplay=await openRoom({storage:replayed,cards,matchId}),expiredPoint=reopenedReplay.fingerprint();await reopenedReplay.act("p0",cancel);eq(reopenedReplay.fingerprint(),expiredPoint,`${kind}: original raw Cancel still retries after replay, native expiry and JSON`);
+ await assert.rejects(()=>reopenedReplay.act("p1",cancel),/another seat/i);checks++;await assert.rejects(()=>reopenedReplay.act("p0",{...cancel,indices:[0]}),/different content/i);checks++;eq(reopenedReplay.fingerprint(),expiredPoint,`${kind}: foreign or conflicting expired replay payload cannot change the later native question`);
  ok((await replayMatch({storage,cards,matchId})).same,`${kind}: original question, child close/reload/selection and final native continuation replay exactly`);
  /* Source/actor departure uses the actual leave path, never a sidecar restoration of saved engine state. */
  const departingStorage=memoryStorage(),departing=await replayTape({matchId,pod:meta.pod,seed:meta.seed,tape:baseTape,cards,storage:departingStorage});let dv=departing.view("p0");

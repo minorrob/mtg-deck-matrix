@@ -60,14 +60,19 @@ async function fixture({donated=true,level="human",standing=false}={}){
  eq([done.state.stack.at(-1).name,done.state.stack.at(-1).modes,done.state.stack.at(-1).targets[0].id],["Boros Charm",[2],target],"private confirmation enters the original native cast handler with its new legal target");
  const once=room.fingerprint();await room.act("p0",final);eq(room.fingerprint(),once,"accepted fresh-generation confirmation retry never casts again");
  for(let n=0;n<2;n++){v=room.view(room.waitingOn);const pass=v.decision.options.find(o=>o.act==="pass");ok(pass,"the actual copied spell remains on the stack for normal priority");await room.act(v.seatId,request(v,{indices:[pass.index]}));}
- ok(keywordsOf((await store.latestCheckpoint()).state,target).includes("double strike"),"the actual native Boros effect gives the newly legal surviving creature double strike");
+ const resolved=(await store.latestCheckpoint()).state;
+ ok(keywordsOf(resolved,target).includes("Double Strike"),"the actual native Boros effect gives the newly legal surviving creature double strike");
+ eq(resolved.effects.filter(e=>e.affects?.ids?.includes(target)&&e.apply?.addKeywords?.includes("Double Strike")).length,1,"the actual native continuation creates its one temporary double-strike effect on the selected target");
+ ok(!resolved.objects[target].keywords.includes("Double Strike"),"the native effect does not rewrite the target's printed card keywords");
  eq((await store.readJournal()).filter(e=>e.kind==="GameEventSpellAbilityCast"&&e.data.fields.card.name==="Boros Charm").length,1,"the native event journal records exactly one copied Boros cast");
 }
 {
- const {storage,store,matchId,choice}=await fixture({standing:true}),room=await openRoom({storage,cards,matchId});await room.leave("p2","conceded");
+ const {storage,store,matchId,choice,state}=await fixture({standing:true}),room=await openRoom({storage,cards,matchId});await room.leave("p2","conceded");
  const next=await store.latestCheckpoint();ok(next.state.awaiting?.effect==="play","a standing answer from the old generation leaves the new native question pending");
  ok(room.view("p0").decision.id!==choice.id,"the standing run reprompts for the actual refreshed generation");
- eq(next.state.stack.length,0,"the old standing index cannot silently cast or retarget a newly offered variant");
+ eq(next.state.stack,state.stack,"the old standing index cannot change the original committed Scepter stack frame or silently cast a new variant");
+ eq(next.state.resolving,state.resolving,"clearing an old standing answer preserves the current native resolving frame");
+ eq((await store.readJournal()).filter(e=>e.kind==="GameEventSpellAbilityCast"&&e.data.fields.card.name==="Boros Charm").length,0,"no old standing index produces a new copied Boros cast event");
  eq(room.refusals.total,0,"clearing an unbound standing answer does not conceal a refused pilot input");
 }
 {

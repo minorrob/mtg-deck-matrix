@@ -84,6 +84,7 @@
  */
 import {createState, addObject, shownName, shownFaceUp} from "../engine/state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../engine/rules/turn.mjs";
+import {refreshEffectPlay} from "../engine/script/effects/asking.mjs";
 import {legalActions, applyAction, nothingToDo, whyNot, escapeWays, flashbackCost, tappersInWords, castTapPlans, tapWords, manaSources} from "../engine/rules/actions.mjs";
 import {paymentWords} from "../engine/rules/mana.mjs";
 import {beforeTap, tapTaken, untappable, untapTaken} from "../engine/rules/untap-mana.mjs";
@@ -679,6 +680,13 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     }
   }
 
+  function refreshNativePlay() {
+    if(!refreshEffectPlay(state).changed)return false;
+    /* Authoritative external-fact reconciliation only. Private steps never refresh or write an old native question. */
+    refinement=null;refinementNotice=null;
+    if(controller.pending)withdraw();
+    return true;
+  }
   function drive() {
     continuing = false;
     for (let steps = 0; ; steps += 1) {
@@ -713,6 +721,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         }
       }
       if (state.awaiting) {
+        refreshNativePlay();
         const seat = state.awaiting.player, choice = awaitingChoice(state);
         if (seats[seat].pilot === "house" || leaving.includes(seat)) {
           const seen = pilotView(seat);
@@ -1149,6 +1158,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
 
     async open() {
       await restore();
+      if(refreshNativePlay()){drive();await persist();}
       if (castDraft) {
         let changed = false;
         try {const choice = castDraftChoice(state, castDraft, draftOptions); changed = !controller.pending || controller.pending.id !== choice.id || castDraftSignature(choice) !== castDraft.offeredSignature;}
@@ -1273,12 +1283,15 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       const seat = seatIndex(entry.seat);
       if (seat < 0 || pendingSeat !== seat) throw new RoomError(409, `The tape parts from the game at entry ${entry.n}: it answers for ${entry.seat}, and the game is waiting on ${pendingSeat === null ? "no one" : seats[pendingSeat].seatId}.`);
       const decisionId = controller.pending?.id ?? null;
-      begin();
       if(refines(entry.answer)){
-        const accepted=controller.answerRefinement(()=>refinementRequestChoice(entry.answer),{...entry.answer,revision:controller.revision},seat);
+        const input=entry.refinementInput;
+        if(input!==undefined&&(input?.schema!=="CrankPrivateRefinementInput@1"||input.actor!==seat))throw new RoomError(409,"The private replay input has the wrong server actor or schema.");
+        const raw=input?.request??entry.answer,replay=input?{rawRequest:raw,canonicalAnswer:entry.answer,actor:input.actor}:null;
+        const accepted=controller.answerRefinement(()=>refinementRequestChoice(raw),{...raw,revision:controller.revision},seat,replay);
         if(!accepted.changed)throw new RoomError(409,"The refinement tape repeats an already accepted input.");
-        tape({kind:"answer",seat:entry.seat,answer:entry.answer});refineWith(seat,accepted.answer);await persist();return api;
+        begin();tape({kind:"answer",seat:entry.seat,answer:entry.answer,...(input?{refinementInput:structuredClone(input)}:{})});refineWith(seat,accepted.answer);await persist();return api;
       }
+      begin();
       refinementNotice=null;
       withdrawKeeping();
       tape({kind: "answer", seat: entry.seat, answer: entry.answer});
@@ -1471,7 +1484,8 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         catch(error){throw new RoomError(/Invalid action id/.test(error.message)?400:409,error.message);}
         if(!accepted.changed)return {receipt:accepted.receipt,changed:false};
         receipts=[...receipts,{actionId,seatId,body,receipt:accepted.receipt}].slice(-RECEIPTS);
-        begin();tape({kind:"answer",seat:seatId,answer:accepted.answer});
+        begin();tape({kind:"answer",seat:seatId,answer:accepted.answer,
+          refinementInput:{schema:"CrankPrivateRefinementInput@1",actor:seat,request:structuredClone(request)}});
         try{refineWith(seat,accepted.answer);}catch(error){throw await undone(error);}
         await persist();return {receipt:accepted.receipt,changed:true};
       }

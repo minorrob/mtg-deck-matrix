@@ -48,8 +48,40 @@ outcome=controller.answerRefinement(()=>{throw new Error("expired native must no
 {
  const live=createController();live.offer(original);const choice=child("replayed-close"),raw={...input(choice,{kind:"cancel",indices:[]}),revision:live.revision};
  const accepted=live.answerRefinement(()=>choice,raw,0),replayed=createController({revision:20});replayed.offer(original);
- replayed.answerRefinement(()=>choice,{...accepted.answer,revision:replayed.revision},0);
+ replayed.answerRefinement(()=>choice,{...raw,revision:replayed.revision},0,{rawRequest:raw,canonicalAnswer:accepted.answer,actor:0});
  const before=replayed.checkpoint();ok(replayed.refinementReceipt(raw,0)?.accepted,"an original accepted typed Cancel retry remains accepted after its translated tape answer replays");
  eq(replayed.checkpoint(),before,"a cached raw replay retry changes no original question, revision or cache");
+}
+{
+ const live=createController();live.offer(original);const choice={...child("replayed-player"),options:[{index:0,label:"Rob",playerId:0},{index:1,label:"Maya",playerId:1}]};
+ const raw={kind:"player",actionId:input(choice).actionId,revision:live.revision,choiceId:choice.id,targetId:1},accepted=live.answerRefinement(()=>choice,raw,0);
+ eq(accepted.answer.indices,[1],"the actual typed player request translates through its current private choice");
+ const fresh=()=>{const c=createController({revision:30});c.offer(original);return c;};
+ const replayed=fresh();let generations=0;
+ replayed.answerRefinement(()=>{generations++;return choice;},{...raw,revision:replayed.revision},0,{rawRequest:raw,canonicalAnswer:accepted.answer,actor:0});
+ eq(generations,1,"trusted replay validates its current native-linked private choice exactly once");eq(replayed.pending,original,"raw payload restoration never changes the original native question");
+ let restored=createController(JSON.parse(JSON.stringify(replayed.checkpoint()))),before=restored.checkpoint();
+ ok(restored.refinementReceipt(raw,0)?.accepted,"the original typed player payload remains the same receipt after replay and JSON");
+ assert.throws(()=>restored.refinementReceipt({...raw,targetId:0},0),/different content/i);checks++;
+ assert.throws(()=>restored.refinementReceipt(raw,1),/another seat/i);checks++;eq(restored.checkpoint(),before,"conflicting/foreign replay retries leave all native/controller data unchanged");
+ for(const [label,change]of [
+  ["forged server actor",r=>({...r,actor:1})],
+  ["forged raw action",r=>({...r,rawRequest:{...r.rawRequest,actionId:input(choice).actionId}})],
+  ["forged canonical action",r=>({...r,canonicalAnswer:{...r.canonicalAnswer,actionId:input(choice).actionId}})],
+  ["forged raw choice",r=>({...r,rawRequest:{...r.rawRequest,choiceId:"another-child"}})],
+  ["forged canonical choice",r=>({...r,canonicalAnswer:{...r.canonicalAnswer,choiceId:"another-child"}})],
+  ["forged original revision",r=>({...r,rawRequest:{...r.rawRequest,revision:999}})],
+  ["raw extra data",r=>({...r,rawRequest:{...r.rawRequest,extraClaim:true}})],
+  ["different canonical player",r=>({...r,canonicalAnswer:{...r.canonicalAnswer,targetId:0,indices:[0]}})],
+  ["different canonical kind",r=>({...r,canonicalAnswer:{...r.canonicalAnswer,kind:"cancel"}})]
+ ]){
+  const c=fresh(),point=c.checkpoint(),binding=change({rawRequest:raw,canonicalAnswer:accepted.answer,actor:0});
+  assert.throws(()=>c.answerRefinement(()=>choice,{...raw,revision:c.revision},0,binding),/replay/i,label);checks++;eq(c.checkpoint(),point,`${label} refuses before changing native pending, revision or receipts`);
+ }
+ const c=fresh(),spoofed={...raw,revision:c.revision,refinementInput:{schema:"CrankPrivateRefinementInput@1",actor:1,request:{...raw,kind:"cancel"}}};
+ const normal=c.answerRefinement(()=>choice,spoofed,0);eq(normal.answer.indices,[1],"a client-supplied metadata-shaped field cannot activate the trusted replay path");ok(c.refinementReceipt(spoofed,0)?.accepted,"normal acceptance caches the actual outer client payload and server actor");
+ restored.answer({kind:"answer",actionId:input(original).actionId,revision:restored.revision,choiceId:original.id,indices:[0]});restored.take();before=restored.checkpoint();
+ const retry=restored.answerRefinement(()=>{throw new Error("expired child must not regenerate");},raw,0);eq(retry.changed,false,"original raw typed retry works after replayed native question expiry");eq(restored.checkpoint(),before,"expired replay retry restores no native question or state");
+ const unknown={...raw,actionId:input(choice).actionId};assert.throws(()=>restored.answerRefinement(()=>choice,{...unknown,revision:restored.revision},0,{rawRequest:unknown,canonicalAnswer:{...accepted.answer,actionId:unknown.actionId},actor:0}),/native.*expired/i);checks++;eq(restored.checkpoint(),before,"an unknown replay input cannot bind a receipt after its original question expired");
 }
 console.log(`engine-refinement-controller: ${checks} checks; live native question preserved, atomic child validation and persistent receipt dedupe`);
