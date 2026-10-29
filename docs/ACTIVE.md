@@ -8,6 +8,11 @@ Linear ROB-199 under ROB-85. The record is `docs/engine/card-load-100-2026-10-28
 Claim: `game/engine/cards/**`, generated card files, `data/engine/candidates.json`, the run package,
 and the engine modules its debt fixes require, subject to the ownership requests below.
 The primary checkout has another session's unfinished merge and is untouched.
+**Latest source1a16a935 includes main494d3fa9/#952:** required scan728 stops at moved-main conflicts; root preserves
+owner's Table-menu/CSS and our two Snoop lines, regenerates pins/manifest (board168/sw725/app742), READMEactual709.
+Engine/room remains byte-identical to proved569. Actual combined Snoop98/newmenu25 and inspected screenshots pass
+scoped behavior, oldclipping/footerlimits remain open. Assets136/SW9/wiring131/integrity/scope green, inventoryunchanged.
+Fresh scan/push follows; no gate closure or new cards. Evidence and resume commands in RUN.md.
 **Latest P0 assembly56965896:** #951 is merged with native/private/raw-replay contracts preserved. Role87 caught
 controls and root12 affected readers pass; actual combined browser98/fresh inspected shots pass scoped Snoop behavior,
 with existing3D clipping/footer limits explicit. Four moved room mutation anchors are reanchored with original readers

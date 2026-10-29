@@ -5,6 +5,20 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Current-main Table-menu merge, `1a16a935`:** main advanced to `494d3fa9` (#952/ROB-220) during the required
+  pre-push scan of `728193a2`. That scan correctly stops for merge conflicts; no credit is taken. Root merges main
+  `--no-ff`, preserves its new menu/CSS/test registrations and the two approved Snoop lines. Only README count and
+  generated asset references/manifest conflict; the registry's `bumpText` helper and `asset-versions --update` generate
+  board168/service-worker725/app742, preserving stageCSS175. README actual709. Against current main, board differs
+  by exactly the two approved Snoop lines; stageCSS is identical. Engine/room bytes remain identical to the proved
+  `56965896` assembly. On this actual combined source, Snoop browser98 and new Table-menu25 pass; twelve fresh
+  screenshots are captured under `scratch/snoop-root-main494-shots` and four representative whole-screen states are
+  inspected. Existing clipping/footer limits remain explicit, no full-layout claim. No Node/headless-shell survives.
+  Board SHA `a63f67ae345590eedf0b79b281022ba7b546e5ef56a6239e328a75abcb03fdb6`.
+  Assets136/service-worker9/wiring131/integrity/frozen-scope pass; inventory unchanged60artifacts/80.9MB. Static audit
+  remains255files/4,675breaks/33 inherited UI problems, zero engine targets. Evidence: `w0/evidence/main494-integration.json`.
+  This clean dependency now includes P0 #951 for W5's historical/new-live receipt proofs. Exact fresh HEAD0 scan/push
+  is still required. All wave0/card-load gates remain unchanged; no new cards, final loading, main/staging release.
 - **P0 committed refinement integrated at `56965896`:** clean/scanned/pushed #951 `176b14ed` is merged `--no-ff`.
   Its runtime remains byte-identical across this merge: live native question preserved through private mode/target
   child choices, mandatory parent stays pending on child Cancel, actual native final handler runs once, and raw accepted
