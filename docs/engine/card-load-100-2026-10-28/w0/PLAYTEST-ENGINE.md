@@ -8,7 +8,9 @@ remaining wave-0 work and the frozen 95%-appearance target intact. No new card d
 Current checkpoint: P0 Salty/safe Cancel #934 and native blink audit/US wording #939 are integrated through root
 `50f47e22`. Root independently passes Salty71/room21, Cancel63/room53 and actual blink113. ROB-205 uses Rob's
 confirmed reversible-only boundary; UI consumption remains pending. ROB-209 additive room staging is in progress.
-ROB-210 browser audit awaits a coordinated quiet window; native proofs alone do not mark it Done. PR #932 was merged
+ROB-210 quiet browser audit now passes Confirm50 and native-backed148; bounded fixture evidence does not close G-3/G-5
+or the original full-index board-choices baseline failure. ROB-209 native52/room46 plus 19 caught mutations prove the
+additive saved cast-stage contract; UI and remaining modal routes stay open. PR #932 was merged
 externally at `0aee1474`, but its full CI was canceled at 60 minutes and provides no full acceptance credit here.
 
 Root integrates and confirms the work. The subagent works in an isolated `codex/engine-load100-w0-playtest` branch

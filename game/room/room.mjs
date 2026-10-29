@@ -523,6 +523,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
   const facts = factsFrom(look);
   let seats, state, rng, journal, controller, pilots, pendingSeat = null, pendingActions = null, saved = 0;
   let castDraft = null;
+  const draftOptions = {describeActions: (seat, actions) => offerDetails(state, seat, actions)};
   /* Accepted actions by id, with the seat that sent them: a retry is answered from here, and never reaches
      another seat's question. The newest RECEIPTS are kept, which is ample for a client's retries. */
   let receipts = [];
@@ -702,7 +703,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       if (state.stepIndex !== undefined) track();
       if (castDraft) {
         try {
-          const choice = offerCastDraft(state, castDraft);
+          const choice = offerCastDraft(state, castDraft, draftOptions);
           controller.offer(choice); pendingSeat = castDraft.actor; pendingActions = null; driven = 0; return;
         } catch (error) {
           if (!error.castDraftExpired) throw error;
@@ -833,13 +834,15 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
   function answerWith(seat, answer, decisionId = null) {
     answering = decisionId;
     try {
+      if (answer.back === true && !castDraft) throw new RoomError(422, "Back is available only in a cast's mode and target stages. Use Cancel when the pending action can still be abandoned.", {refused: true});
+      if (pendingActions && answer.cancel === true) throw new RoomError(422, "No cast proposal is pending. Choose an action or pass priority.", {refused: true});
       if (pendingActions) {
         const action = pendingActions[answer.indices[0]];
         pendingActions = null;
-        if (answer.staged === true) castDraft = beginCastDraft(state, seat, action, `${matchId}/cast:${decisionId}/${action.objectId}`);
+        if (answer.staged === true) castDraft = beginCastDraft(state, seat, action, `${matchId}/cast:${tapeN}/${action.objectId}`);
         else apply(seat, action, "person", answer.hold === true);
       } else if (castDraft) {
-        const result = answerCastDraft(state, castDraft, answer);
+        const result = answerCastDraft(state, castDraft, answer, draftOptions);
         castDraft = result.draft;
         if (result.action) apply(seat, result.action, "person", answer.hold === true);
       } else {
@@ -1088,7 +1091,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       await restore();
       if (castDraft) {
         let changed = false;
-        try {const choice = castDraftChoice(state, castDraft); changed = !controller.pending || controller.pending.id !== choice.id || castDraftSignature(choice) !== castDraft.offeredSignature;}
+        try {const choice = castDraftChoice(state, castDraft, draftOptions); changed = !controller.pending || controller.pending.id !== choice.id || castDraftSignature(choice) !== castDraft.offeredSignature;}
         catch (error) {if (!error.castDraftExpired) throw error; castDraft = null; changed = true;}
         if (changed) {withdraw(); drive(); await persist();}
       }
@@ -1323,7 +1326,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         const chosen = pilot.choose(seen, pendingActions);
         return {indices: [Math.max(0, pendingActions.indexOf(chosen))]};
       }
-      const given = pilot.answer(seen, castDraft ? castDraftChoice(state, castDraft) : awaitingChoice(state));
+      const given = pilot.answer(seen, castDraft ? castDraftChoice(state, castDraft, draftOptions) : awaitingChoice(state));
       return {indices: given.indices ?? [], ...(given.amounts ? {amounts: given.amounts} : {}), ...(given.value !== undefined ? {value: given.value} : {}), ...(given.cancel ? {cancel: true} : {})};
     },
 
@@ -1339,7 +1342,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       const pilot = pilotFor(seat);
       if (typeof pilot.explain !== "function") return null;
       const seen = pilotView(seat);
-      const explained = pilot.explain(seen, pendingActions ? {actions: pendingActions} : {choice: castDraft ? castDraftChoice(state, castDraft) : awaitingChoice(state)});
+      const explained = pilot.explain(seen, pendingActions ? {actions: pendingActions} : {choice: castDraft ? castDraftChoice(state, castDraft, draftOptions) : awaitingChoice(state)});
       const p = personaOf(seats[seat].persona);
       return {...explained, persona: p ? {name: p.name, blurb: p.blurb, ...p.disposition} : null};
     },
@@ -1358,7 +1361,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       if (finished() || pendingSeat !== seat || !pending || pending.id !== choiceId)
         return {ok: false, open: false, reasons: ["That question is no longer open. Answer the one your view shows now."]};
       if (castDraft) {
-        try {answerCastDraft(state, structuredClone(castDraft), {indices}); return {ok: true, open: true, reasons: []};}
+        try {answerCastDraft(state, structuredClone(castDraft), {indices}, draftOptions); return {ok: true, open: true, reasons: []};}
         catch (error) {return {ok: false, open: true, reasons: [error.message]};}
       }
       const checked = state.awaiting?.kind === "declare-blockers" ? deriving(state, () => blockers.check(state, state.awaiting, indices)) : null;

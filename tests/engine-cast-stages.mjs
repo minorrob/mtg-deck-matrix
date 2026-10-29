@@ -78,6 +78,48 @@ const pick=(state,draft,test)=>{
   ok(!fresh.options.some(o=>o.target.id===other),"the departed target is absent from the revalidated stage");
 }
 const target={what:"permanent",types:["Creature"]};
+{
+  const {state,action}=fixture();state.players[0].manaPool.C=1;
+  const draft=beginCastDraft(state,0,action,"tx:affordability"),choice=offerCastDraft(state,draft);
+  eq(choice.options.map(o=>o.modeIndices),[[0]],"mode sets are constrained by real current affordability rather than an unpayable printed combination");
+  eq(choice.modeChoices[1].most,0,"the unaffordable printed mode remains described but unavailable");
+}
+{
+  const {state,action,mine}=fixture();let draft=beginCastDraft(state,0,action,"tx:shared-spree");
+  draft=pick(state,draft,o=>o.modeIndices.join(",")==="0,1").draft;
+  for(let n=0;n<2;n++)draft=pick(state,draft,o=>o.target.id===mine).draft;
+  offerCastDraft(state,draft);const paid=answerCastDraft(state,draft,{indices:[0]});applyAction(state,0,paid.action);
+  eq(state.stack[0].targets,[{kind:"object",id:mine},{kind:"object",id:mine}],"both actual spree modes can commit the same independently legal target");
+}
+{
+  const {state,source,mine}=fixture();moveObject(state,source,"graveyard",0);
+  state.players[0].manaPool={R:1,W:1,C:3};
+  const command=addObject(state,{...index.definition("Lorehold Command"),card:"Lorehold Command",owner:0,controller:0},"hand",0);
+  const action=legalActions(state,0).find(a=>a.kind==="cast"&&a.objectId===command&&a.modes.join(",")==="0,1");
+  ok(action,"the actual two-mode non-spree card is offered from a nontargeting mode pair");
+  let draft=beginCastDraft(state,0,action,"tx:command");
+  const expectedMode=offerCastDraft(state,draft).modeChoices[2].id;
+  draft=pick(state,draft,o=>o.modeIndices.join(",")==="0,2").draft;
+  let choice=offerCastDraft(state,draft);eq(choice.modeId,expectedMode,"the selected targeted mode retains its printed index when another selected mode has no targets");
+  draft=answerCastDraft(state,draft,{indices:[choice.options.find(o=>o.target.id===mine).index]}).draft;
+  choice=offerCastDraft(state,draft);eq([choice.stage,choice.modeId],["targets",expectedMode],"a real mode with two target instances asks its second group in the same printed mode");
+  draft=answerCastDraft(state,draft,{indices:[choice.options.find(o=>o.target.kind==="player"&&o.target.id===0).index]}).draft;
+  choice=offerCastDraft(state,draft);eq(choice.stage,"payment","the nontargeted selected mode adds no phantom target prompt");
+  eq(choice.selectedTargets.map(g=>g.targets),[[{kind:"object",id:mine}],[{kind:"player",id:0}]],"Pay exposes both selected target groups for review after reload");
+  const paid=answerCastDraft(state,draft,{indices:[0]});applyAction(state,0,paid.action);
+  eq([state.stack[0].modes,state.stack[0].targets],[[0,2],[{kind:"object",id:mine},{kind:"player",id:0}]],"the actual two-mode modal commits its shifted target mapping through native casting");
+}
+const constrained={types:["Sorcery"],manaCost:"{0}",spell:{id:"s",modal:{choose:1,modes:[{text:"Different controllers",targets:[{...target,count:{min:2,max:2},differentControllers:true}],effects:[{effect:"destroy",targets:{target:0}}]}]}}};
+{
+  const {state,action,other}=fixture(constrained);
+  const also=addObject(state,{card:"Other too",owner:1,controller:1,types:["Creature"],power:2,toughness:2},"battlefield");
+  let draft=beginCastDraft(state,0,action,"tx:constraints");draft=pick(state,draft,()=>true).draft;
+  const choice=offerCastDraft(state,draft),before=structuredClone(draft),hash=hashState(state);
+  ok(choice.targetConstraints.some(c=>c.capped),"per-mode native controller constraints are published with their target IDs");
+  const indices=[other,also].map(id=>choice.options.find(o=>o.target.id===id).index);
+  assert.throws(()=>answerCastDraft(state,draft,{indices}),/Invalid selection|targets.*together/i);checks++;
+  eq([draft,hashState(state)],[before,hash],"a cardinality-valid but controller-invalid target set changes neither saved draft nor native game");
+}
 const repeat={types:["Sorcery"],manaCost:"{0}",spell:{id:"s",modal:{choose:2,sameMode:true,modes:[{text:"Grow a creature",targets:[target],effects:[{effect:"putCounter",targets:{target:0},counter:"+1/+1",count:1}]}]}}};
 {
   const {state,action,mine}=fixture(repeat);let draft=beginCastDraft(state,0,action,"tx:repeat");

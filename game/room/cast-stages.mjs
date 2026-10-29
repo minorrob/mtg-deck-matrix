@@ -14,7 +14,7 @@ export const castEntryFor=action=>({schema:"CrankCastEntry@1",sourceId:action.ob
 const sameRoute=(a,b)=>JSON.stringify(route(a))===JSON.stringify(b);
 const has=(array,value)=>array.some(t=>key(t)===key(value));
 const invalid=()=>Object.assign(new Error("This cast proposal no longer fits the live game. Cancel it and choose the card again."),{castDraftExpired:true});
-const modeId=(d,index)=>`card:${d.sourceId}:mode:${index}`;
+const modeId=(d,index)=>`${castEntryFor(d.route).actionId}/mode:${index}`;
 function modalOf(state,action){return offerScript(state,{...action,modes:undefined})?.modal??null;}
 function live(state,draft){
   if(draft?.schema!==SCHEMA||state.awaiting||state.resolving||state.ruleOperation||state.priorityPlayer!==draft.actor||state.players[draft.actor]?.lost)throw invalid();
@@ -32,6 +32,12 @@ function groups(draft,modal){
       modeIndex:index,modeId:modeId(draft,index),modeInstanceId:instanceId,id:`${instanceId}/target:${local}`});
   }
   return found;
+}
+function instances(draft,modal){
+  const seen=new Map();
+  return draft.modes.map((index,position)=>{const occurrence=seen.get(index)??0;seen.set(index,occurrence+1);
+    return {modeId:modeId(draft,index),modeInstanceId:`${draft.id}/mode:${index}/instance:${occurrence}`,modeIndex:index,position,
+      label:modal.modes[index].text,...(modal.modes[index].cost?{additionalCost:modal.modes[index].cost}:{})};});
 }
 function checked(choice,indices){
   const controller=createController();controller.offer(choice);
@@ -62,9 +68,9 @@ export function beginCastDraft(state,actor,action,id){
 }
 const canceled={schema:"CrankDecisionCancel@1",allowed:true,kind:"abandon-draft",returnsPriority:true};
 function common(draft,stage){return {id:`${draft.id}/question:${draft.version}`,sourceId:draft.sourceId,stage,
-  cancellation:canceled,castStage:{schema:"CrankCastStage@1",transactionId:draft.id,actionId:castEntryFor(draft.route).actionId,
+  cancellation:{...canceled},castStage:{schema:"CrankCastStage@1",transactionId:draft.id,actionId:castEntryFor(draft.route).actionId,
     sourceId:draft.sourceId,stage,canBack:stage!=="modes",version:draft.version}};}
-export function castDraftChoice(state,draft){
+export function castDraftChoice(state,draft,{describeActions}={}){
   const {offers,modal}=live(state,draft);
   if(draft.modes===null){
     const sets=[...new Map(offers.map(a=>[modesKey(a.modes),a.modes])).values()];
@@ -77,10 +83,13 @@ export function castDraftChoice(state,draft){
         modeIds:set.map(i=>modeId(draft,i)),label:set.length?set.map(i=>modal.modes[i].text).join("; "):"Choose no modes"}))};
   }
   const actions=chosen(state,draft,offers),allGroups=groups(draft,modal),group=allGroups[draft.cursor];
-  const selectedModes=draft.modes.map((index,position)=>({modeId:modeId(draft,index),modeIndex:index,position}));
+  const selectedModes=instances(draft,modal);
+  const targetGroups=allGroups.map(({spec,...g})=>({...g,cardinality:spec.count??{min:1,max:1}}));
+  const selectedTargets=draft.targets.slice(0,draft.cursor).map((value,index)=>({targetGroupId:allGroups[index].id,
+    modeInstanceId:allGroups[index].modeInstanceId,targets:structuredClone([].concat(value??[]))}));
   if(group){
     const base={...common(draft,"targets"),title:`${modal.modes[group.modeIndex].text}: choose targets`,
-      modeId:group.modeId,modeInstanceId:group.modeInstanceId,targetGroupId:group.id,targetGroupIndex:group.index,selectedModes};
+      modeId:group.modeId,modeInstanceId:group.modeInstanceId,targetGroupId:group.id,targetGroupIndex:group.index,selectedModes,targetGroups,selectedTargets};
     const specs=offerSpecs(state,draft.actor,actions[0]);
     const counted=Boolean(countOf(specs.specs[group.index],specs.context))||isChoosing(actions[0].targets?.[group.index]);
     if(!counted){
@@ -97,25 +106,26 @@ export function castDraftChoice(state,draft){
     return {...base,mode:"many",min:Math.min(...choices.map(c=>c.min)),max:Math.max(...choices.map(c=>c.max)),options,targetConstraints:constraints};
   }
   const unique=[...new Map(actions.map(a=>[hashState(a),a])).values()];
-  return {...common(draft,"payment"),title:`${state.objects[draft.sourceId].card}: pay and cast`,mode:"one",min:1,max:1,selectedModes,
+  const details=describeActions?.(draft.actor,unique)??[];
+  return {...common(draft,"payment"),title:`${state.objects[draft.sourceId].card}: pay and cast`,mode:"one",min:1,max:1,selectedModes,targetGroups,selectedTargets,
     options:unique.map((action,index)=>({index,id:`${draft.id}/pay:${hashState(action)}`,actionId:`${draft.id}/pay:${hashState(action)}`,
       label:"Pay and cast",costs:{printed:state.objects[draft.sourceId].manaCost??"",additional:action.extraMana??"",
         ...(action.x!==undefined?{x:action.x}:{}),...(action.tax?{commanderTax:action.tax}:{}),
-        ...(action.payment?{payment:action.payment}:{}),...(action.autoTap?{automaticSources:true}:{})}}))};
+        ...(action.payment?{payment:action.payment}:{}),...(action.autoTap?{automaticSources:true}:{})},...(details[index]?{detail:details[index]}:{})}))};
 }
 export function castDraftSignature(choice){
   const {id,castStage,...rest}=choice;
   return hashState(rest);
 }
-export function offerCastDraft(state,draft){
-  let choice=castDraftChoice(state,draft),signature=castDraftSignature(choice);
-  if(draft.offeredSignature&&draft.offeredSignature!==signature){draft.version++;choice=castDraftChoice(state,draft);}
+export function offerCastDraft(state,draft,options){
+  let choice=castDraftChoice(state,draft,options),signature=castDraftSignature(choice);
+  if(draft.offeredSignature&&draft.offeredSignature!==signature){draft.version++;choice=castDraftChoice(state,draft,options);}
   draft.offeredSignature=signature;
   return choice;
 }
-export function answerCastDraft(state,draft,answer){
+export function answerCastDraft(state,draft,answer,options){
   if(answer.cancel===true)return {draft:null};
-  const choice=castDraftChoice(state,draft);
+  const choice=castDraftChoice(state,draft,options);
   if(castDraftSignature(choice)!==draft.offeredSignature)throw new Error("The cast choices changed. Reopen the table and review them.");
   if(answer.back===true){
     if(!choice.castStage.canBack)throw new Error("This is already the first casting stage.");
@@ -135,7 +145,7 @@ export function answerCastDraft(state,draft,answer){
   }else{
     const {offers}=live(state,draft),actions=[...new Map(chosen(state,draft,offers).map(a=>[hashState(a),a])).values()];
     const action=actions[indices[0]];
-    return {draft:null,action:{...action,castStage:{...choice.castStage,canBack:false,selectedModes:choice.selectedModes}}};
+    return {draft:null,action:{...action,castStage:{...choice.castStage,canBack:false,selectedModes:choice.selectedModes,selectedTargets:choice.selectedTargets}}};
   }
   draft.version++;draft.offeredSignature=null;
   return {draft};
