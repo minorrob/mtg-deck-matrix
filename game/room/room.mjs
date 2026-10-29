@@ -960,7 +960,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     state = structuredClone(point.state);
     rng = createRng(point.seed, point.rng);
     journal = createJournal({matchId, seed: point.seed}, point);
-    nextSeq = point.sequence;
+    nextSeq = point.sequence + 1;
     controller = createController(record.controller);
     matchSeed = point.seed;
     pilots = seats.map((s, seat) => (s.pilot === "house" ? pilotMade(seat) : null));
