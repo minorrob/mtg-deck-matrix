@@ -114,10 +114,9 @@ BREAKS = [
 
     # ---- a token entering tapped (CR 111.1, 614.12) ----
     ('token enters tapped: by a replacement', PERM,
-     '    if (entering.tapped && !entering.asks.some((ask) => ask.life !== undefined || ask.reveal !== undefined)) state.objects[id].tapped = true;\n', ''),
-    ('token enters tapped: not "unless you pay"', PERM,
-     'if (entering.tapped && !entering.asks.some((ask) => ask.life !== undefined || ask.reveal !== undefined)) state.objects[id].tapped = true;',
-     'if (entering.tapped) state.objects[id].tapped = true;'),
+     ' || entry.prepared.entering.tapped === true;', ';'),
+    ('token entry: untapped costs life', 'game/engine/rules/pre-entry.mjs',
+     'emitRuleEvents(state, runEffect(state, {effect: "loseLife", amount: data.life}, {controller: frame.player, source: frame.objectId}));', ''),
     ('token enters tapped: read as a permanent', REPLACEMENT,
      '      if (entering.zone === "battlefield" && entering.token === true)\n        return entering.id !== holder.id && compileSelector',
      '      if (false)\n        return entering.id !== holder.id && compileSelector'),
