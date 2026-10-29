@@ -955,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 676 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 679 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -963,6 +963,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `browser-geometry` — `tests/browser-geometry.mjs`
 - `buy-plan` — `tests/buy-plan.mjs`
 - `card-classify` — `tests/card-classify.mjs`
+- `catalog-rule` — `tests/catalog-rule.mjs` (ROB-213, Rob 2026-10-29: the catalog is Commander-legal paper cards only; `tools/catalog-rule.mjs` is the rule, the universe and engine loaders apply it, no A- card is in a committed catalog, and the one known MTGO-only card waits for the graph's rebuild)
 - `card-records` — `tests/card-records.mjs`
 - `card-images` — `tests/card-images.mjs`
 - `card-link` — `tests/card-link.mjs`
@@ -1230,6 +1231,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `room-cancel-decision` — `tests/room-cancel-decision.mjs` (native Cancel with auto-pass and Undo configurations, reload/retry, full state/RNG/journal preservation, actor departure and mandatory-effect refusal)
 - `room-agent-seat` — `tests/room-agent-seat.mjs` (the LLM seat in the room: only its close calls offered to it, its answers on the tape)
 - `room-refused-answer` — `tests/room-refused-answer.mjs`
+- `room-optional-count-targets` — `tests/room-optional-count-targets.mjs` (ROB-204: the room takes an "up to one" and an "any number" target answer with one, several or none chosen, refuses past the most, and plays on)
 - `room-g1-terms` — `tests/room-g1-terms.mjs`
 - `game-table` — `tests/game-table.mjs`
 - `lounge-registry` — `tests/lounge-registry.mjs` (the Pre-lobby's lists: `live` and `mine` from the registry object, private tables kept to their seats, the organizer and the owner; the new create fields; `users/search`; `ai-seat`'s levels; no address anywhere)
@@ -1277,6 +1279,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `board-r2-actions-inspection` — `tests/board-r2-actions-inspection.mjs` (shared Actions/Boards, read-only card inspection, 3D defaults and saved preferences, draft continuity and expired private reveals)
 - `board-fullscreen-notes` — `tests/board-fullscreen-notes.mjs` (a card played by its click in every view, a land just played taken back by its double-click, the actions large over the table in Full screen, the others' plays held up for ten seconds, the two priority choices, the tabletop to 200%, the commander tax below the title bar)
 - `board-choice-stacks` — `tests/board-choice-stacks.mjs` (Rob, 2026-10-25: in a question for one or many, the same card is one stack, ×N, a click taking one and taking it back, with how many beside it where more than one may be chosen, never past the stack or the question's most; a tapped Goblin no twin of an untapped one; and the cards another seat plays held up beside the question, never over its controls, in Focus, Full screen and Table at three window sizes; `breaks-choice-stacks.py`)
+- `board-optional-count-targets` — `tests/board-optional-count-targets.mjs` (ROB-204, Luke's playtest of 2026-10-28: an "up to one" or "any number" target question confirms with one, several or none chosen and sends the answer, the count still holds, and a single required target keeps Pick, Next, Review)
 - `board-r4-combat` — `tests/board-r4-combat.mjs`
 - `board-offer-context` — `tests/board-offer-context.mjs` (actual offer identity, revision, card and duplicate-send guards)
 - `board-r4-input` — `tests/board-r4-input.mjs` (native double click and touch card menus, sibling Undo overlay, stale action refusal)
