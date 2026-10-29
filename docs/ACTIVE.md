@@ -10,6 +10,10 @@ and the engine modules its debt fixes require, subject to the ownership requests
 The primary checkout has another session's unfinished merge and is untouched.
 The eight roles run in batches because this session supports three active subagents.
 No new cards until wave 0 closes. No provider API calls, production changes, migrations, or spending.
+**October 29 playtest intake:** Rob assigns one slot in the next subagent batch to ROB-204/210/211 and the engine
+halves of ROB-205/209 instead of card writing. Queue only at this intake; no implementation agent dispatched yet.
+The dedicated brief is `docs/engine/card-load-100-2026-10-28/w0/PLAYTEST-ENGINE.md`; RUN.md carries the dependency.
+PR #932 is ready/open/unmerged, exact-head `suites` in progress when checked. UI ownership remains with its holder.
 **Latest October 29 checkpoint:** source/generated `2c89a5c3` is scanned/pushed to draft #912. W1 `1fad7ec9`,
 W4 `aae67e76`, W5 code `12a32a40` and root anchors `88b616d5` are integrated. Roles are making clean pushed
 handbacks; continue their exact remaining debts from RUN.md before loading any new cards.
@@ -44,6 +48,7 @@ RUN.md records exact checkpoints, diagnostics and restart seams; do not mark the
 
 | To | Request | State |
 | --- | --- | --- |
+| Engine playtest slot / UI owner | One next-batch subagent owns ROB-204 verification, ROB-210 after that blocker, ROB-211 and the engine contracts for shared ROB-205 Cancel and ROB-209 mode/target/payment stages. UI controls remain with their owner; shared Done requires both halves. Coordinate payment, operation and Battle seams with the existing writer owners. | Direct Rob handoff October 29; reserved/queued, not started; details in `w0/PLAYTEST-ENGINE.md` |
 | Claude · Engine | The standing lane table predates Rob's direct October 28 card-load assignment. Current open PRs were checked: no separate active rule-module PR besides prerequisite #834 was listed. The run owns its debt modules and coordinates narrow shared-file scopes between its roles. | Resolved by the later direct assignment; no other session's active files are edited |
 | Play | Show the monarch already present in the room view on the board; keep a one-press card reference where applicable. | Existing canonical Requests row 1 remains open; Play owns the board |
 | Lounge owner | Wave-0 W2 needs only the named wish-card refusal in `game/room/table.mjs` `readDeck`; confirm any current overlap before editing. | Refreshed open PR file list at resume: no overlap; W2 owns the narrow refusal |

@@ -5,6 +5,16 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Next-batch assignment from Rob's October 29 playtest handoff:** reserve one subagent slot for ROB-204, ROB-210,
+  ROB-211 and the engine halves of shared ROB-205/ROB-209, instead of another card-writing assignment. This intake
+  has not dispatched an implementation subagent; launch the dedicated slot when starting the next batch. Full brief,
+  dependencies, acceptance evidence and ownership seams: `w0/PLAYTEST-ENGINE.md`. Keep UI changes with the UI owner.
+  ROB-204 PR #932 is attached: ready, open and unmerged at `ea670e40`; its `suites` check was in progress at intake.
+  Verify the exact-head result and existing fix first, then ROB-210. The PR identifies a client Confirm bug; do not
+  duplicate it with a speculative engine fix. ROB-211's Salty Normal policy can proceed independently without a
+  provider. The shared Cancel/modal engine contracts require actual rollback and staged-choice proofs; no silent
+  skipping of mandatory effects or weak target-count checks. Preserve all card-load gates and the 95% scope.
+
 - **Latest source/generated checkpoint, October 29:** `2c89a5c3de37959b531bf5ebe42e8673b7e9da80` is scanned and
   pushed on `codex/engine-load100-w0`, draft #912, worktree `C:\Users\robmi\CrankMagic\worktrees\load100\w0-integrate`.
   Main `b9999b16` is an ancestor. The following historical resume measurements are retained for provenance, not current
