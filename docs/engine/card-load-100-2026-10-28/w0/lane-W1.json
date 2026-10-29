@@ -13,7 +13,7 @@
     "| Tokens and copies of prepare cards never prepared | `script/effects/attributes.mjs`:23 | W1 |",
     "| Unsure, to be settled by a scenario: Song of the Dryads and Sagas under ability loss; Incubator copies single-faced; Social Snub's copy; Winter's prompt and a draw-two cost under Narset | `rules/layers.mjs`:870; `permanents.mjs`:644; `actions.mjs` | V8 finds, W1/W6/W2/W7 fix |"
   ],
-  "status": "Bounded emblem/preparation checkpoint pushed as draft PR 917; independent bounded V8 review passed; root integration and full wave gates pending",
+  "status": "Continuing wave 0: permanent prepare insets, basic land ability semantics and current Saga readers implemented; validation in progress; remaining emblems and battles pending",
   "checkpoint": {
     "cardsAdded": 0,
     "cardsPromoted": 0,
@@ -147,5 +147,60 @@
     "sourceCheckpoint": "9c4366f7832eb2bc408a4583563a95bc07aee7b0",
     "pullRequest": "https://github.com/minorrob/mtg-deck-matrix/pull/917",
     "independentReview": "V8 read-only review on 9c4366f7 passed compiler/effect/object/projection/fallback, all 79 checks, and additional +4/+4 shared-template variant with controller 1, persisted reload, opponent 2 view and actual Bear power 6. No bounded finding; no theme/gate completion claimed."
+  },
+  "continuation": {
+    "sharedBaseline": "11e4fe864a9c3b26d3e1eec57fb04cc0c16e7b3a",
+    "dependency": "d9d00a00 W5 entry fixes merged with a merge commit",
+    "cardsAdded": 0,
+    "cardsPromoted": 0,
+    "changes": [
+      "Permanent prepare insets use the ordinary copied-permanent spell pipeline, enter as tokens, retain their actual entering triggers, and cease after leaving the battlefield; lands are refused as prepare spells.",
+      "Generic CR 305.7 basic-land-type setting removes rules-text/copiable abilities while preserving external grants and keyword counters. Song no longer applies stronger removeAllAbilities.",
+      "Saga precombat lore and final-chapter sacrifice read current Saga subtype, controller and chapter abilities.",
+      "Urza's Saga I and II now resolve into permanent grants; removed lore-count-conditioned printed-activation shortcuts and no-op chapter triggers."
+    ],
+    "behavioralWitnesses": [
+      "Compiler refusal of permanent inset observed red; public host/inset casts across two reloads, green payment, unprepared event, token entry and actual draw/zone identities pass.",
+      "Song earlier external grant observed red; actual earlier/later grant activations now pay U/R and gain their respective life; printed mana and lord static are removed.",
+      "No-chapter Saga precombat progression observed red (2 instead of 1); current-type/current-ability/current-controller cases now pass.",
+      "Song on resolved chapter-I Urza's Saga observed red (one mana offer instead of two); both granted C and intrinsic G now remain, with no further Saga progression.",
+      "All Is Dust actual resolution spares the enchanted colorless permanent and sacrifices Song and other colored permanents."
+    ],
+    "proof": [
+      "engine-load100-w1-faces: 114 checks passed",
+      "engine-saga: 23 checks passed",
+      "Selected check-cards Song of the Dryads|Urza's Saga: 2 selected definitions; 10 scenarios, 0 failed",
+      "Selected counterfactual ledger: 6 of 7 reached, 3 by runtime-removal proof; the intrinsic enchant characteristic is not removable by the current harness. Selection only, not G-3.",
+      "engine-layers 35; engine-layer-prune 6; engine-grants 37; engine-granted-loyalty 12; engine-lands-and-mana 9; engine-static-conditions 12; engine-designations 8 passed.",
+      "Original broader tests engine-wave4c-k2 71, engine-wave4c-k3 171 and engine-prepare 3 passed.",
+      "Final breaks-load100-w0-w1-insets.py: baseline every suite passes unbroken; 20 mutations caught; missed: []",
+      "engine-state 41; engine-entering 15; engine-enter-copy 24; engine-sba 54; engine-turn 85; engine-ability-loss 109; engine-projection 93 passed.",
+      "data-integrity: Validated 50 variants and 50 connected buy profiles; feature-wiring: 131 checks passed.",
+      "No remaining anchor problem targets W1 changed source files; global branch still reports inherited anchor debt."
+    ],
+    "pending": [
+      "Original reanchored mutation files retain their full original suite unions; blocked by shared engine-cards Faithless Looting baseline, routed to W5/root. No suite removed.",
+      "Full original engine-cards baseline stops at Faithless Looting old cast-offer assertion after W5 d9 entry fixes; root and W5 notified. No assertion weakened or excluded.",
+      "Object-rule emblem reader authorized next; Daretti and other Teferi generic semantics audit; battles await W4 combat handoff.",
+      "Generated definitions deferred to root consolidation; no full pool/fuzz/staging/visual or theme completion claimed.",
+      "Original engine-rearrange-copies-4b reader fails line 187: direct copied land entries yield no immediate born objects under shared resumable entry pipeline (expected [[false],[true],40], actual [[],[],40]); routed root. No test changed."
+    ],
+    "sources": [
+      "https://api.scryfall.com/cards/161e66e3-0339-495c-bd06-0a799a254906/rulings",
+      "https://api.scryfall.com/cards/c1e0f201-42cb-46a1-901a-65bb4fc18f6c/rulings",
+      "https://api.scryfall.com/cards/4210c54e-89fd-4971-ab6a-ca8f4e7fe97a/rulings"
+    ],
+    "rules": [
+      "305.6-7",
+      "608.3f",
+      "613.1d-f",
+      "613.6",
+      "714.2d",
+      "714.3c",
+      "714.4",
+      "722.3c"
+    ],
+    "ignoresAdded": [],
+    "sourceCheckpoint": "498e3d05"
   }
 }

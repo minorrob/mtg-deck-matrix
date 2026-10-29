@@ -21,7 +21,7 @@
       "library": ["Wastes", "Wastes", "Trinket", "Zero Trinket", "White Trinket", "Variable Trinket", "No Cost Trinket", "Artifact Land"],
       "setup": [{"seat": 0, "zone": "hand", "cards": ["Urza's Saga"]}],
       "steps": [
-        {"play": "Urza's Saga"}, {"resolve": true}, {"to": {"turn": 5, "phase": "MAIN1"}}, {"resolve": true},
+        {"play": "Urza's Saga"}, {"expect": [{"seat": 0, "counters": {"card": "Urza's Saga", "counter": "lore", "count": 1}}]}, {"resolve": true}, {"to": {"turn": 5, "phase": "MAIN1"}}, {"resolve": true},
         {"expect": [{"asks": {"seat": 0, "options": ["Trinket", "Zero Trinket"], "min": 0}}]},
         {"choose": ["Zero Trinket"]}
       ],
