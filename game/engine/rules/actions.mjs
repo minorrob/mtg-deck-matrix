@@ -1781,7 +1781,8 @@ function withFaceDown(state, id, fn) {
    revealed to every player as it is played (CR 400.7). Anything else, as it is -- a face-down permanent too, whose ability's
    question (asCast) is no play of a card. Only the permission's player is asked, and only one who may look at it (permits,
    CR 406.3b), so no other seat is ever offered, or shown, what it is (projection.mjs). Cast face down from there (708.4) is
-   not built: a face-down card offers no disguise. And for an effect that lets it be played as it resolves -- "you may play
+   offered by reading the real card first, then weighing the nameless face-down spell. And for an effect that lets it be
+   played as it resolves -- "you may play
    the exiled card" of a hideaway card (Windbrisk Heights; CR 702.75a) -- what it may be played as is weighed so too
    (effects/asking.mjs, `play`). */
 export function withFaceUp(state, id, fn) {
@@ -2136,10 +2137,15 @@ function offers(state, player) {
      flashback or escape, other alternative costs (CR 118.9a): a card in a graveyard with no permission is not offered. */
   const disguisable = new Set([...castable.map((e) => e.id), ...allPlayPermissions(state, player).flatMap(({ability}) => permittedFrom(state, player, ability))]);
   for (const id of disguisable) {
-    if (!disguiseOf(state.objects[id])) continue;
-    const from = state.objects[id].zone;
-    actions.push(...withFaceDown(state, id, () => (["hand", "command"].includes(from) ? [null] : playPermission(state, player, id, "spell") !== null ? permissionWays(state, player, id, "spell") : [])
-      .flatMap((via) => castOffers(state, player, {id, from, via, disguise: true}, tappable))));
+    /* Gandalf/Flameshape (CR 406.3a, 708.4): read morph/disguise from the hidden card only for a player allowed to look,
+       then apply the permission to the face-down spell's characteristics. Neither inspection changes the saved exile. */
+    if (state.objects[id]?.faceDown && !mayLookAt(state, state.objects[id], player)) continue;
+    actions.push(...withFaceUp(state, id, () => {
+      if (!disguiseOf(state.objects[id])) return [];
+      const from = state.objects[id].zone;
+      return withFaceDown(state, id, () => (["hand", "command"].includes(from) ? [null] : playPermission(state, player, id, "spell") !== null ? permissionWays(state, player, id, "spell") : [])
+        .flatMap((via) => castOffers(state, player, {id, from, via, disguise: true}, tappable)));
+    }));
   }
   /* Suspend, from the hand (CR 702.62a): a special action, where its card could be cast. */
   actions.push(...suspendOffers(state, player), ...plotOffers(state, player));
@@ -2323,10 +2329,8 @@ function choicesNow(state, player, id) {
   if (splitSecondOnStack(state)) return [];
   const base = {kind: "cast", objectId: id, label: object.card, payment: {mana: {}, life: 0}, from: object.zone, tax: 0};
   const context = {controller: player, source: id};
-  /* NAMED: a spell with a counted target ("up to two target creatures") is not cast this way yet -- its targets would be a
-     question in the middle of a resolution, which the cast an effect makes does not stop for. */
-  return (object.spell?.modal ? withModes(state, base, object.spell.modal, context) : withTargets(state, base, object.spell, context))
-    .filter((offer) => !(offer.targets ?? []).some(isChoosing));
+  /* The effect's play question asks counted targets before paying or casting, just as a priority cast does (CR 601.2c). */
+  return object.spell?.modal ? withModes(state, base, object.spell.modal, context) : withTargets(state, base, object.spell, context);
 }
 
 const sorcerySpeed = (object) => (object.types ?? []).some((type) => SORCERY_SPEED.includes(type));
@@ -2569,9 +2573,9 @@ export function offerSpecs(state, player, action) {
 
 /* The next counted target of an offer still to be picked, or -1. One with nothing it could choose is no question: it is
    chosen as nothing (its least is 0, or the offer would not have been made). */
-function nextToChoose(state, player, action) {
+export function nextToChoose(state, player, action) {
   const {specs, context} = offerSpecs(state, player, action);
-  for (let index = action.targets.findIndex(isChoosing); index >= 0; index = action.targets.findIndex(isChoosing)) {
+  for (let index = (action.targets ?? []).findIndex(isChoosing); index >= 0; index = (action.targets ?? []).findIndex(isChoosing)) {
     /* None at most (a total of 0 to divide, offerSpecs): no question either. */
     if (targetCandidates(state, specs[index], context).length && countOf(specs[index], context)?.max !== 0) return index;
     action.targets[index] = [];
@@ -2599,6 +2603,18 @@ export function chooseTargetsChoice(state, awaiting) {
  * cast or activated now, as it would have been had they been chosen with it (CR 601.2c-i, 602.2b).
  */
 export function resolveChooseTargets(state, awaiting, indices) {
+  const {action, next} = pickActionTargets(state, awaiting, indices);
+  if (next >= 0) {
+    state.awaiting = {...awaiting, action, index: next};
+    return [];
+  }
+  state.awaiting = null;
+  state.priorityPlayer = awaiting.player;
+  return applyAction(state, awaiting.player, action);
+}
+
+/* A counted answer shared by priority casts and casts made inside a resolving effect (CR 601.2c). No cast or payment yet. */
+export function pickActionTargets(state, awaiting, indices) {
   const action = structuredClone(awaiting.action);
   /* An Adventure's checked and its next target found with the card shown as one (CR 715.3a); the cast itself shows it so
      again (perform). */
@@ -2610,13 +2626,7 @@ export function resolveChooseTargets(state, awaiting, indices) {
     action.targets[awaiting.index] = picked.map((i) => choice.options[i].targets[0]);
     return nextToChoose(state, awaiting.player, action);
   });
-  if (next >= 0) {
-    state.awaiting = {...awaiting, action, index: next};
-    return [];
-  }
-  state.awaiting = null;
-  state.priorityPlayer = awaiting.player;
-  return applyAction(state, awaiting.player, action);
+  return {action, next};
 }
 
 /* A counted target's list, as its controller picked it: each a legal choice now, none twice (CR 115.3), as many as its

@@ -37,11 +37,11 @@ import {isLandType} from "../../keywords/types.mjs";
 import {pushCopy, pushAbilityCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
 import {loseLife, gainLife, DAMAGING, damageQuestion, addMana} from "./resources.mjs";
 import {damageOrderChoice, graveyardBound, placeReplacedCounters} from "../../rules/replacement.mjs";
-import {targetCandidates, targetName} from "../bind.mjs";
+import {targetCandidates, targetName, recheckTargets, differentControllersProblem, shareProblem} from "../bind.mjs";
 import {commanderTax} from "../../rules/commander.mjs";
 import {cantBeCountered, counterOrderChoice, cantBeSacrificed, tokenOrderChoice, drawForbidden, searchController} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
-import {castNow, castChoicesNow, landChoicesNow, withFaceUp} from "../../rules/actions.mjs";
+import {castNow, castChoicesNow, landChoicesNow, withFaceUp, nextToChoose, chooseTargetsChoice, pickActionTargets} from "../../rules/actions.mjs";
 
 import {mergedOrderToAsk, mergedOrderChoice, finishMergedOrder} from "../../state/index.mjs";
 import {mergePermanent} from "../../keywords/mutate.mjs";
@@ -1609,12 +1609,13 @@ export const handLook = {
    copy is never its own target (CR 115.5). `except.nonLegendary`: "except it isn't legendary" (Double Major). The
    copies are made as the question opens, so what they did is in the resolution's events even when nothing is asked. */
 const ordinal = (n) => ["first", "second", "third", "fourth"][n] ?? `#${n + 1}`;
-function retargetOptions(state, question, {withOthers = false} = {}) {
+function retargetOptions(state, question, {withOthers = true} = {}) {
   const entry = state.stack.find((e) => e.stackId === question.stackId);
   const spec = entry ? specsOf(state, entry)[question.index] : null;
   if (!entry || !spec) return null;
   /* A counted target's list holding its one target (changeTargets): that one. */
   const was = entry.targets[question.index];
+  const counted = Array.isArray(was) ? was : null;
   const current = (Array.isArray(was) ? was[0] : was) ?? null;
   /* An ability's source is the object it came from (entry.cardId), while it is still that object (CR 113.7a). */
   const source = entry.objectId ?? (entry.cardId !== null && state.objects[entry.cardId] ? entry.cardId : null);
@@ -1623,8 +1624,13 @@ function retargetOptions(state, question, {withOthers = false} = {}) {
     ...(withOthers ? {chosenTargets: entry.targets} : {})})
     /* Never itself (CR 115.5): a spell its own object, an ability its own entry. */
     .filter((c) => !(c.kind === "object" && c.id === entry.objectId) && !(c.kind === "ability" && c.id === entry.stackId))
-    .filter((c) => !(current && c.kind === current.kind && c.id === current.id));
-  return {entry, current, others};
+    /* "Another target": a new target also preserves the other instance's restriction (CR 115.7d), in either direction. */
+    .filter((c) => !withOthers || !specsOf(state, entry).some((other, i) => i !== question.index && (other.distinctFrom ?? []).includes(question.index)
+      && [].concat(entry.targets[i] ?? []).some((t) => t.kind === c.kind && t.id === c.id)))
+    .filter((c) => !(current && c.kind === current.kind && c.id === current.id))
+    /* A counted "for each opponent" remembers whose creature this new target was (CR 608.2b; bind.countedChoice). */
+    .map((c) => spec.forEach === "opponent" && c.kind === "object" ? {...c, forPlayer: controllerOf(state, c.id)} : c);
+  return {entry, current, others: counted ? others.filter((c) => !counted.some((t) => t.kind === c.kind && t.id === c.id)) : others, counted, spec};
 }
 export const copySpell = {
   open(state, params, context) {
@@ -1634,23 +1640,27 @@ export const copySpell = {
     const originals = [...(params.spells ?? []).map((id) => state.stack.find((e) => e.objectId === id)),
       ...(Array.isArray(params.stack) ? params.stack.map((id) => state.stack.find((e) => e.stackId === id)) : [])].filter(Boolean);
     const count = Math.max(0, params.count ?? 1);
-    const events = [], questions = [];
+    const events = [], questions = [], copied = [];
     for (const original of originals) for (let n = 0; n < count; n += 1) {
       if (original.kind !== "spell") {
         const copy = pushAbilityCopy(state, original, {controller: context.controller});
+        copied.push(copy);
         events.push(event("GameEventAbilityCopied", state, {name: original.name, playerId: context.controller, stackId: copy.stackId, original: original.stackId}));
-        if (params.newTargets === true) copy.targets.forEach((t, index) => { if (!Array.isArray(t)) questions.push({stackId: copy.stackId, index}); });
+        if (params.newTargets === true) copy.targets.forEach((t, index) => { if (!Array.isArray(t) || t.length) questions.push({stackId: copy.stackId, index}); });
         continue;
       }
       const copy = pushCopy(state, original, {controller: context.controller, nonLegendary: params.except?.nonLegendary === true});
+      copied.push(copy);
       events.push(event("GameEventSpellCopied", state, {card: cardRef(state, copy.objectId), original: cardRef(state, original.objectId),
         playerId: context.controller, stackId: copy.stackId}));
-      /* NAMED: a counted target ("up to two target creatures") keeps the original's list on the copy; choosing a new list
-         for it is not asked yet. */
-      if (params.newTargets === true) copy.targets.forEach((t, index) => { if (!Array.isArray(t)) questions.push({stackId: copy.stackId, index}); });
+      /* A counted instance retains its original number; the chooser may keep any targets, including illegal ones (CR 707.10c). */
+      if (params.newTargets === true) copy.targets.forEach((t, index) => { if (!Array.isArray(t) || t.length) questions.push({stackId: copy.stackId, index}); });
     }
-    state.resolving?.events.push(...events);
     const asked = questions.filter((q) => (retargetOptions(state, q)?.others ?? []).length > 0);
+    /* A copy becomes a targeting spell/ability with its final targets, including kept ones (CR 115.1, 707.10c, 702.21a).
+       A copy whose targets are still being chosen reports this once its last answer arrives. */
+    for (const copy of copied) if (!asked.some((q) => q.stackId === copy.stackId)) events.push(...becameTarget(state, copy));
+    state.resolving?.events.push(...events);
     if (asked.length === 0) return false;
     state.awaiting = {kind: "effect-choice", effect: "copySpell", player: context.controller, questions: asked};
     return true;
@@ -1658,8 +1668,14 @@ export const copySpell = {
   choice(state, awaiting) {
     const question = awaiting.questions[0];
     const found = retargetOptions(state, question);
-    const {entry, current, others} = found ?? {entry: null, current: null, others: []};
+    const {entry, current, others, counted} = found ?? {entry: null, current: null, others: []};
     const many = (entry ? specsOf(state, entry) : []).length > 1;
+    if (counted) return {
+      id: `copySpell:${question.stackId}:${question.index}`,
+      title: `${entry.name}: keep or choose ${counted.length} targets for the copy`, mode: "many", min: counted.length, max: counted.length,
+      options: [...counted, ...others].map((target, index) => ({index, label: targetName(state, target) || "its target, now gone",
+        ...(target.kind === "object" ? {cardId: target.id} : {}), target, targets: [target]})),
+    };
     return {
       id: `copySpell:${question.stackId}:${question.index}`,
       title: `Copy of ${entry?.name ?? "the spell"}: ${many ? `its ${ordinal(question.index)} target` : "a new target"}?`,
@@ -1671,6 +1687,35 @@ export const copySpell = {
     };
   },
   apply(state, awaiting, indices) {
+    const found = retargetOptions(state, awaiting.questions[0]);
+    if (found?.counted) {
+      const {entry, counted} = found, question = awaiting.questions[0], choice = copySpell.choice(state, awaiting);
+      const selected = (indices ?? []).map((i) => choice.options[i]?.target);
+      if (selected.length !== counted.length || new Set(indices).size !== selected.length || selected.some((t) => !t)) throw new Error("Invalid selection");
+      const same = (a, b) => a.kind === b.kind && a.id === b.id;
+      const changed = selected.filter((t) => !counted.some((old) => same(t, old)));
+      const targets = structuredClone(entry.targets); targets[question.index] = selected;
+      const context = {controller: entry.playerId, source: entry.objectId ?? entry.cardId, chosenTargets: targets, ...(entry.x !== undefined ? {x: entry.x} : {}), ...(entry.about ? {about: entry.about} : {})};
+      /* Newly chosen targets must be legal and cannot make a previously legal, unchanged target illegal (CR 115.7d). */
+      const checked = recheckTargets(state, specsOf(state, entry), targets, context).targets;
+      const before = recheckTargets(state, specsOf(state, entry), entry.targets, {...context, chosenTargets: entry.targets}).targets;
+      const legal = (list, t) => [].concat(list ?? []).some((c) => c && same(c, t));
+      if (changed.some((t) => !legal(checked[question.index], t)) || targets.some((list, i) => [].concat(list ?? []).some((t) => t
+        && [].concat(entry.targets[i] ?? []).some((old) => same(t, old)) && legal(before[i], t) && !legal(checked[i], t)))) throw new Error("Those new targets are not legal");
+      if (changed.length && (differentControllersProblem(state, found.spec, selected, entry.name) || shareProblem(state, found.spec, selected, entry.name))) throw new Error("Those new targets do not meet the target restrictions");
+      /* "Each with a different mana value" (Agadeem's Awakening): new choices keep the instance's group restriction
+         (CR 115.7d); targets already gone may still be left unchanged. */
+      if (changed.length && found.spec.differentManaValues === true) {
+        const values = selected.filter((t) => t.kind === "object" && state.objects[t.id]).map((t) => manaValue(parseManaCost(state.objects[t.id].manaCost ?? "")));
+        if (new Set(values).size !== values.length) throw new Error("Choose targets with different mana values");
+      }
+      entry.targets[question.index] = selected;
+      const rest = awaiting.questions.slice(1);
+      const events = retargetEvents(state, awaiting, entry, changed, rest);
+      if (!rest.length) return {events};
+      awaiting.questions = rest;
+      return {events, again: true};
+    }
     const option = copySpell.choice(state, awaiting).options[(indices ?? [])[0]];
     if (!option) throw new Error("Invalid selection");
     const [question, ...rest] = awaiting.questions;
@@ -1679,13 +1724,21 @@ export const copySpell = {
       const entry = state.stack.find((e) => e.stackId === question.stackId);
       if (entry) entry.targets[question.index] = {kind: option.target.kind, id: option.target.id};
       /* The new target becomes the copy's target (ward, CR 702.21a). */
-      if (entry && option.target.kind === "object") events.push(...becameTarget(state, entry, option.target.id));
+      if (entry && awaiting.effect !== "copySpell" && option.target.kind === "object") events.push(...becameTarget(state, entry, option.target.id));
     }
+    if (awaiting.effect === "copySpell") events.push(...retargetEvents(state, awaiting, state.stack.find((e) => e.stackId === question.stackId), [], rest));
     if (rest.length === 0) return {events};
     awaiting.questions = rest;
     return {events, again: true};
   },
 };
+
+/* Kept targets also trigger for a newly created copy; changing an existing spell targets only the newly chosen objects. */
+function retargetEvents(state, awaiting, entry, changed, remaining) {
+  if (!entry) return [];
+  if (awaiting.effect === "copySpell") return remaining.some((q) => q.stackId === entry.stackId) ? [] : becameTarget(state, entry);
+  return changed.filter((t) => t.kind === "object").flatMap((t) => becameTarget(state, entry, t.id));
+}
 
 /* ---- changeTargets: "change the target of target spell with a single target" (Forge's ChangeTargets; CR 115.7) ----
    The spell it names, on the stack with one target (its own targeting asked for that: "with a single target"): this
@@ -2378,6 +2431,7 @@ export const play = {
     return true;
   },
   choice(state, awaiting) {
+    if (awaiting.targeting) return chooseTargetsChoice(state, {player: awaiting.player, ...awaiting.targeting});
     /* What it still costs (a commander's tax, "for its mana value in any mana"): which mana pays, when that is a choice. */
     if (awaiting.paying) return paymentChoice(`play-mana:${awaiting.player}:${state.turn}:${awaiting.cast ?? 0}`, awaiting.paying.owed, paymentUnits(state, awaiting.player));
     /* Its mana cost, colors and all, when there is more than one way to pay it: which. */
@@ -2394,7 +2448,13 @@ export const play = {
   },
   apply(state, awaiting, indices) {
     let chosen, events;
-    if (awaiting.planning) {
+    if (awaiting.targeting) {
+      const picked = pickActionTargets(state, {player: awaiting.player, ...awaiting.targeting}, indices);
+      awaiting.choices[awaiting.targeting.chosen] = {...picked.action};
+      const index = awaiting.targeting.chosen;
+      delete awaiting.targeting;
+      return play.apply(state, awaiting, [index]);
+    } else if (awaiting.planning) {
       chosen = awaiting.choices[awaiting.planning.index];
       const {units, plans} = unlessPlans(state, awaiting.player, awaiting.planning.cost);
       const plan = plans[(indices ?? [])[0]];
@@ -2408,6 +2468,13 @@ export const play = {
       if (index === awaiting.choices.length) return awaiting.otherwise ? {events: [], splice: structuredClone(awaiting.otherwise)} : {events: []};
       chosen = awaiting.choices[index];
       if (!chosen) throw new Error("Invalid selection");
+      /* Counted targets for a free/effect cast are chosen before any payment or movement (CR 601.2c, 608.2g). */
+      const action = structuredClone(chosen), targetIndex = nextToChoose(state, awaiting.player, action);
+      awaiting.choices[index] = action;
+      if (targetIndex >= 0) {
+        state.awaiting = {...awaiting, targeting: {chosen: index, action, index: targetIndex}};
+        return {events: [], again: true};
+      }
       /* Its mana cost, colors and all (`payMana`): the one way there is, paid at once; more, and which is asked. */
       if (chosen.cost !== undefined) {
         const {units, plans} = chosen.cost ? unlessPlans(state, awaiting.player, chosen.cost) : {units: [], plans: []};

@@ -1,0 +1,38 @@
+# Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE.
+# Shared wave-0 foundation only; no card or domain rule is claimed complete by this file.
+SUITES = ['tests/engine-rule-operations.mjs']
+OPS = 'game/engine/rules/operations.mjs'
+BREAKS = [
+    ('pending means frames remain', OPS, 'export const ruleOperationPending = state => Boolean(state.ruleOperation);', 'export const ruleOperationPending = state => false;'),
+    ('events reach caller', OPS, '  state.ruleOperation.events.push(...events);', '  state.ruleOperation.events.push();'),
+    ('reported prefix advances', OPS, '  operation.reported = operation.events.length;', '  operation.reported = 0;'),
+    ('only current frame can ask', OPS, 'if (!operation || operation.frames.at(-1) !== frame)', 'if (!operation)'),
+    ('departed player cannot be asked', OPS, 'if (!state.players[player] || state.players[player].lost)', 'if (!state.players[player])'),
+    ('root cannot replace pending work', OPS, '  if (state.ruleOperation) throw new Error("A rule operation is already running; enqueue a child frame instead");', ''),
+    ('root frames retain order', OPS, 'Array.isArray(frames) ? [...frames].reverse() : [frames]', 'Array.isArray(frames) ? [...frames] : [frames]'),
+    ('owner continuation persists', OPS, 'events: [], reported: 0, after};', 'events: [], reported: 0, after: null};'),
+    ('waiting polls stay paused', OPS, '  if (state.awaiting?.kind === "rule-operation")\n    return {status: "waiting", events: unreported(operation), after: operation.after};', ''),
+    ('unknown operation fails loudly', OPS, 'if (!handler) throw new Error(`Unknown rule operation: ${frame.kind}`);', 'if (!handler) return {status: "done"};'),
+    ('waiting requires question', OPS, 'if (state.awaiting?.kind !== "rule-operation") throw new Error("A waiting rule frame must supply its question");', ''),
+    ('completed operation leaves state', OPS, '      delete state.ruleOperation;', ''),
+    ('child result reaches parent', OPS, 'if (parent) parent.childResult = outcome.result ?? null;', 'if (parent) parent.childResult = null;'),
+    ('last result reaches caller', OPS, 'else operation.result = outcome.result ?? null;', 'else operation.result = null;'),
+    ('children retain source order', OPS, '[...(outcome.children ?? [])].reverse()', '[...(outcome.children ?? [])]'),
+    ('bad continuation rejected', OPS, 'if (outcome?.status !== "continue") throw new Error(`Rule operation ${frame.kind} returned no continuation`);', 'if (outcome?.status !== "continue") return {status: "done"};'),
+    ('answer stays with current frame', OPS, 'operation.frames.at(-1).answer = structuredClone({indices, amounts, extra});', 'operation.frames[0].answer = structuredClone({indices, amounts, extra});'),
+    ('answer clears old question', OPS, '  state.awaiting = null;\n  return continueRuleOperation(state, rng);', '  return continueRuleOperation(state, rng);'),
+    ('option bounds validated', OPS, 'indices.length < (choice.min ?? 0)', 'false'),
+    ('invalid index rejected', OPS, 'i >= (choice.options ?? []).length', 'false'),
+    ('cancel keeps unrelated question', OPS, '  if (state.awaiting?.kind === "rule-operation") state.awaiting = null;', '  state.awaiting = null;'),
+    ('duplicate handler rejected', OPS, 'if (handlers.has(kind)) throw new Error(`Rule operation already registered: ${kind}`);', ''),
+    ('foreign question cannot be overwritten', OPS, 'if (state.awaiting && (state.awaiting.kind !== "rule-operation" || state.awaiting.operation !== operation.serial))', 'if (false)'),
+    ('unsupported question modes refused', OPS, 'if (!INDEX_MODES.has(choice?.mode)) throw new Error("Rule operations currently support option-index choices only");', ''),
+    ('question bounds valid before asking', OPS, 'choice.min < 0', 'false'),
+    ('question id required', OPS, '|| !choice.id ||', '|| false ||'),
+    ('root cannot overwrite foreign question', OPS, '  if (state.awaiting) throw new Error("A rule operation cannot replace another mechanism\'s question");', ''),
+    ('operation serial matched', OPS, ' || awaiting.operation !== operation.serial', ''),
+    ('answer duplicate indices refused', OPS, 'new Set(indices).size !== indices.length', 'false'),
+    ('answer maximum enforced', OPS, 'indices.length > (choice.max ?? 0)', 'false'),
+    ('negative index refused', OPS, 'i < 0', 'false'),
+    ('whole index required', OPS, '!Number.isInteger(i)', 'false'),
+]
