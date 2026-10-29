@@ -46,7 +46,7 @@ BREAKS = [
     # Must be blocked if able (Vinebred Brawler)
     ('requirement in the record', COMBAT, '      ...(capped ? {capped} : {}),\n      ...(requires.length ? {requires} : {}),\n      options,\n      legalBlocks',
      '      ...(capped ? {capped} : {}),\n      options,\n      legalBlocks'),
-    ('requirement checked', COMBAT, '      if (met < need.least) reasons.push(need.why);\n', ''),
+    ('requirement checked', COMBAT, '      if (met < need.least) {\n', '      if (false) {\n'),
     ('requirement: menace by two', COMBAT, 'const per = (id) => (hasNow(state, id, "Menace") ? 2 : 1);', 'const per = () => 1;'),
     ('requirement: one at most never by two', COMBAT, 'if (n === 1 || !ruleChanged(state, "blocked-by-one-at-most", id)) pick(0, []);', 'pick(0, []);'),
     ('requirement: the most at once', COMBAT, '{ most = Math.max(most, blocked); return; }', '{ most = required.length; return; }'),

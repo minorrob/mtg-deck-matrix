@@ -17,7 +17,7 @@ Newest wave first. Each line names its command's result line, never a summary of
   assertion that Gemstone Caverns must never be sampled; fixed to require sampling and successful scenario execution,
   with a mutation restoring the exclusion. The corrected full backstop suite passes in the mutation runner's baseline;
   both selected backstop breaks are caught, `missed: []`. The five paragraph breaks were also rerun and caught.
-- **Lanes:** V8 `codex/engine-load100-w0-v8-verify` at pushed `8acb3213` (draft #913) is adding the approved proof
+- **Lanes:** V8 `codex/engine-load100-w0-v8-verify` at pushed `0a848bb4` (draft #913) has the approved proof
   supplement and measuring initial full-directory coverage. W4 combat at pushed `9177d29b` (draft #914) and W5 mana at
   pushed `79fe06c7` (draft #915) are clean bounded checkpoints with their remaining debts explicitly queued.
   W1 faces and W6 tokens are active in their own worktrees; W2/W3/W7 remain queued. This session has three subagent
@@ -109,12 +109,26 @@ Fresh baseline on main `39a45706`, before engine changes:
 | --- | --- | --- |
 | G-1 Commander cards final | 6,430 defined of about 32,046; 25,616 undefined | Main baseline: 6,424 nonbasic pool finals of 32,040 raw pool cards, plus 6 basic definitions; 25,616 undefined. Wish exemptions not subtracted from raw counts. Unmet. |
 | G-2 Candidates outstanding | 116 (compiler, live); 100 in the committed `candidates.json` | Main baseline reproduced: 116 candidates, 2 blocked. Unmet. |
-| G-3 `check-cards` | 6,430 definitions, 11,023 scenarios, 0 failed | Main baseline reproduced. Rob approved supplemental in-memory ability-removal proof; implementation and coverage remain unproved. Unmet. |
-| G-4 Calibration failures | 4 of 4,165 (Blackblade Reforged, Contagion Clasp, Goblin Piledriver, Wayfarer's Bauble) | Main baseline reproduced. W4's intermediate sentence-only fixes reported 1 failure before new trample questions required scenario inputs; final calibration, integration, and independent review pending. Unmet. |
-| G-5 Pool fuzz, clean of games | the harness has no pool mode yet; library 3 of 3, staging decks 1 of 1 clean | V8 harness in progress; no final integrated pool-game result yet. Unmet. |
-| G-6 Final cards exercised in a clean game | not measured (no ledger yet) | No measured clean-game coverage yet. Unmet. |
-| G-7 Gameplay-gap list open items | section 4: 21 open, 5 unsure; section 5: 10 open; section 7: 10 open; section 8: 10 rows open, 4 partial (`README.md`, "Open accuracy debt") | Debt fixes in progress. Main's 57 pre-existing stale break anchors are named in `w0/preexisting-break-anchors.json`. Unmet. |
+| G-3 `check-cards` | 6,430 definitions, 11,023 scenarios, 0 failed | Main baseline reproduced. Supplemental runtime proof works: selected 3 cards, 5 scenarios, 4/4 abilities reached. Full initial directory measurement on V8 `0a848bb4` running; legacy default does not enforce it. Unmet. |
+| G-4 Calibration failures | 4 of 4,165 (Blackblade Reforged, Contagion Clasp, Goblin Piledriver, Wayfarer's Bauble) | W4 `8e0f3a2f`: 4,165 held out, 4,165 pass, no denominator exclusions. Writer changes independently reviewed; all past loads and final integration remain unreviewed/unmeasured. Full G-4 unmet. |
+| G-5 Pool fuzz, clean of games | the harness has no pool mode yet; library 3 of 3, staging decks 1 of 1 clean | Initial 3/3 app-finished pool runs clean, of which 1 reached a winner; final integration and 5,000 games unmet. |
+| G-6 Final cards exercised in a clean game | not measured (no ledger yet) | Initial 131/6,430 final definitions exercised in 3 app-finished clean runs. Unmet. |
+| G-7 Gameplay-gap list open items | section 4: 21 open, 5 unsure; section 5: 10 open; section 7: 10 open; section 8: 10 rows open, 4 partial (`README.md`, "Open accuracy debt") | Debt fixes in progress. Main baseline's 57 stale break anchors are named in `w0/preexisting-break-anchors.json`; root re-anchored/proved one, leaving 56 on integration. Unmet. |
 | G-8 Rob's playtest sign-off | none | None; only Rob can close this gate. |
+
+## Waves
+
+## Root's inherited-anchor repair
+
+`breaks-libload-l4-combat.py`, "requirement checked", still pointed at a former one-line blocker-requirement guard.
+The same guard now opens a block that also reports each affected attacker. Root re-anchored the mutation to disable
+that exact conditional; it tests the same requirement, with no assertion change or retargeting.
+
+- `python -u game/tools/batch/breaks.py game/tools/batch/breaks-libload-l4-combat.py "requirement checked"`:
+  `baseline: every suite passes unbroken`; `caught requirement checked -- tests/engine-libload-l4-combat.mjs`;
+  `missed: []`. Combat source restored exactly after the probe.
+- `python game/tools/batch/anchors.py`: 56 remaining problems, down from the measured 57; the global gate remains red.
+- Repeat this moved-anchor proof after final writer integration, as the procedure requires.
 
 ## Waves
 
