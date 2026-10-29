@@ -338,6 +338,7 @@ async function playingTable(storage = memoryStorage()) {
     endAsks: p.endAsks, untapMana: p.untapMana, pooledTaps: p.pooledTaps, xTaps: p.xTaps, passStack: p.passStack, yieldTurn: p.yieldTurn});
   const harness = memoryStorage();
   await playGame({decks: ["ha", "hb", "hc"].map((tag) => ({name: tag, ...deck(tag)})), seed: 1, cards, humans: [0], matchId: "harness", storage: harness, turnLimit: 1});
+  eq((await createMatchStore(harness, "harness").loadMatch()).pod.effectPlayVersion, 1, "the current G1 harness records the native resolving-play epoch without a caller opt-out");
   eq(beats((await createMatchStore(harness, "harness").loadMatch()).pod), beats(launched), "and the G1 harness launches its games with the table's beats: the empty step passed, the game ending once every person is out, Resolve all, the cast that passes, the end step asked, Untap, pooled taps, Yield turn -- and no held draw");
   await t.concede(MAYA, now);
   eq((await t.view(ROB)).phase, "playing", "one person concedes: the other is still in, and the game goes on");
