@@ -139,7 +139,19 @@ try {
   await serial(() => call("/table/chat", ROB, {text: "another from Rob"}).then(() => object.announce?.({type: "ping"})));
   await maya.page.waitForFunction(() => /another from Rob/.test(document.querySelector(".cm-chat-list")?.innerText || ""), null, {timeout: 10000});
   eq([await maya.page.locator(".cm-chat-input").first().inputValue(), await maya.page.evaluate(() => document.activeElement?.className)], ["half a thought", "cm-chat-input"], "what is half typed, and the focus, stay through a line arriving");
-  console.log(`lounge-board: ${checks} checks passed — a watcher's board (Watching, no actions, no hand, no hidden card in any frame), the table's chat in the Chat module (sent, pushed to every seat and the watcher, kept for a reconnect, the draft kept).`);
+
+  /* Chat is a default module: a board that was never set up holds it in the right drawer, with the drawer open to read it. */
+  eq(await maya.page.evaluate(() => [...document.querySelectorAll(".cm-stage-side .cm-stage-module")].map((m) => m.dataset.module)).then((m) => m.includes("chat")), true, "the right drawer holds Chat");
+  /* An unread line shows on the Stack tab while the drawer is shut, and opening the drawer clears it. */
+  await maya.page.evaluate(() => globalThis.__cm.actions["board-stage-side"]({dataset: {}}));
+  await maya.page.waitForFunction(() => !document.querySelector(".cm-stage-side.is-open"), null, {timeout: 5000});
+  await serial(() => call("/table/chat", ROB, {text: "are you there?"}).then(() => object.announce?.({type: "ping"})));
+  await maya.page.waitForFunction(() => /^1$/.test(document.querySelector(".cm-stage-right .cm-tab-chat")?.textContent || ""), null, {timeout: 10000});
+  ok(true, "a line that arrives while the drawer is shut counts on the Stack tab");
+  await maya.page.evaluate(() => globalThis.__cm.actions["board-stage-side"]({dataset: {}}));
+  await maya.page.waitForFunction(() => /are you there\?/.test(document.querySelector(".cm-chat-list")?.innerText || "") && !document.querySelector(".cm-tab-chat"), null, {timeout: 10000});
+  ok(true, "opening the drawer shows the line and clears the count");
+  console.log(`lounge-board: ${checks} checks passed — a watcher's board (Watching, no actions, no hand, no hidden card in any frame), the table's chat in the Chat module (sent, pushed to every seat and the watcher, kept for a reconnect, the draft kept, Chat a default module, an unread count on the Stack tab).`);
 } finally {
   await close();
 }

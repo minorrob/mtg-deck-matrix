@@ -4,10 +4,10 @@
    crankmagic-stage.js, crankmagic-stage.css).
 
      1. "When cursor is over cards in players hand and they scroll, the hand card's size should increase or decrease."
-        Over your own hand -- 3D's fan, the tray in Focus and Table, the phone's hand -- the wheel up grows its cards and
+        Over your own hand -- the one fan tray (.cm-stage-fan) of 3D, Focus and Table, and the phone's hand -- the wheel up grows its cards and
         down shrinks them, continuously, through Hand cards (cm-board-scale:hand): its sliders follow at once, the size is
         kept on this device a moment after the wheel stops, and is there after a reload. It is held between the slider's
-        ends, the smallest with no word under 10px, the largest inside the window. It comes before 3D's zoom (the wheel
+        ends, the smallest with no word under 10px and never a card under 84px, the largest inside the window. It comes before 3D's zoom (the wheel
         elsewhere on the table still zooms) and a row's scroll; Shift with the wheel still scrolls a hand too wide (3D's
         fan turns to its next cards; the phone's hand scrolls); ⌘/Ctrl with the wheel leaves the hand alone.
      2. "Player can expand the table (and their mat size automatically in proportion) by ctrl-left-click, hold and pull or
@@ -186,12 +186,16 @@ try {
     ok(!errors.length, `no page error (${errors.join(" | ")})`);
     await context.close();
   }
-  /* A smaller window, where 60% of the fan's old size would be under 84px: it stops at 84px, its names at 10px. */
+  /* A narrower window, where 60% of the fan's size would be under 84px: it stops at 84px, its names at 10px. The drawers are the top layer now
+     (Rob, 2026-10-28: they take no width from the stage and the hand), so the tray is the window's whole width and the fan's rest size is
+     min(190, (base - 24) * 5/7, (width - 110) / 6.1): in 3D, base is 220 at the least, so only a width under 964px (where (width - 110) / 6.1 is
+     under 140, and 60% of it under 84) makes the floor matter. 900px is below that and above the phone's layout; 1100 wide, which needed it
+     while a drawer narrowed the tray, gives 153px and 92px at 60%. */
   {
-    const {page, context, errors} = await board("full", {width: 1100, height: 700, hand: 4});
+    const {page, context, errors} = await board("full", {width: 900, height: 700, hand: 4});
     const FAN = ".cm-stage-fan .cm-stage-fan-slot .cm-bcard";
     const at0 = await handNow(page, FAN);
-    ok(at0.width * .6 < 84, `at 1100×700 the fan is ${at0.width}px at 100%, so 60% of it would be under 84px`);
+    ok(at0.width * .6 < 84, `at 900×700 the fan is ${at0.width}px at 100%, so 60% of it would be under 84px`);
     await wheel(page, FAN, 400, 12);
     const small = await handNow(page, FAN);
     eq([small.width, await page.waitForFunction(() => localStorage.getItem("cm-board-scale:hand") === "60", null, {timeout: 2000}).then(() => 60, () => null)], [84, 60], "at 60% it stops at 84px");
@@ -248,42 +252,82 @@ try {
   }
 
   /* ================= 2. Focus and Table ================= */
+  /* The hand is the same tray in every view now (Rob, 2026-10-28: Table and Focus are the 3D view's HUD on a flat stage): .cm-stage-hand with
+     .cm-stage-fan-slot cards, sized by the wheel through Camera's Hand cards. The old tray bar (.cm-board-traybar) and hand row
+     (.cm-board-hand) are gone, so the slider is read from Camera, which is opened to read it and shut again. */
   for (const mode of ["focus", "table"]) {
-    const {page, context, errors, reload} = await board(mode, {hand: 4});
-    const CARDS = ".cm-board-hand .cm-board-hand-cards .cm-bcard", BAR = '.cm-board-traybar [data-board-scale="hand"]';
-    const at0 = await handNow(page, CARDS), mat0 = await page.evaluate(() => document.querySelector(".cm-board-mat .cm-bcard, .cm-board-table .cm-bcard")?.offsetWidth);
+    const {page, context, errors, reload} = await board(mode, {hand: 4, ready: "#cm-board .cm-stage-fan .cm-bcard"});
+    const CARDS = ".cm-stage-fan .cm-stage-fan-slot .cm-bcard", HAND = '.cm-stage-camera [data-board-scale="hand"]';
+    const camera = () => page.getByRole("button", {name: "Camera", exact: false}).click();
+    const bar = async () => {await camera(); const s = await slider(page, HAND); await camera(); return s;};
+    const MAT = ".cm-stage-slot .cm-bcard", matCard = () => page.evaluate((sel) => document.querySelector(sel)?.offsetWidth, MAT);
+    const at0 = await handNow(page, CARDS), mat0 = await matCard();
+    ok(mat0 > 0, `${mode}: a card of a board to compare with`);
+    eq((await bar())?.value, 100, `${mode}: Camera has Hand cards at 100%`);
     let spot = await onHand(page, CARDS);
     ok(spot, `${mode}: a point on a card of the hand`);
     await wheel(page, CARDS, -100, 2);
-    const up = await handNow(page, CARDS), bar = await slider(page, BAR);
+    const up = await handNow(page, CARDS), cam = await bar();
     ok(up.width > at0.width * 1.12, `${mode}: the wheel up over the hand grows its cards (${at0.width} → ${up.width}px)`);
-    ok(bar.value > 110 && bar.out === `${bar.value}%`, `${mode}: the tray's Hand cards follows (${JSON.stringify(bar)})`);
-    eq(await page.evaluate(() => document.querySelector(".cm-board-mat .cm-bcard, .cm-board-table .cm-bcard")?.offsetWidth), mat0, `${mode}: the boards' cards keep their size`);
-    ok(await page.waitForFunction((v) => localStorage.getItem("cm-board-scale:hand") === String(v), bar.value, {timeout: 2000}).then(() => true, () => false), `${mode}: kept on this device`);
+    ok(cam.value > 110 && cam.out === `${cam.value}%`, `${mode}: Camera's Hand cards follows (${JSON.stringify(cam)})`);
+    eq(await matCard(), mat0, `${mode}: the boards' cards keep their size`);
+    ok(await page.waitForFunction((v) => localStorage.getItem("cm-board-scale:hand") === String(v), cam.value, {timeout: 2000}).then(() => true, () => false), `${mode}: kept on this device`);
     spot = await onHand(page, CARDS);
     await wheel(page, CARDS, 400, 12);
     await page.waitForTimeout(400);
     const small = await handNow(page, CARDS);
-    eq((await slider(page, BAR)).value, 60, `${mode}: down to the slider's least, 60%`);
+    eq((await bar()).value, 60, `${mode}: down to the slider's least, 60%`);
+    ok(small.width >= 84, `${mode}: at its smallest the cards are not under 84px (${small.width}px)`);
     ok(small.fonts.length > 0 && small.fonts.every((f) => f >= 10), `${mode}: at its smallest no word on the hand is under 10px, the names a picture covers included (${small.fonts.join(", ")})`);
     spot = await onHand(page, CARDS);
     await wheel(page, CARDS, -400, 12);
     await page.waitForTimeout(400);
-    const big = await handNow(page, CARDS);
-    eq((await slider(page, BAR)).value, 160, `${mode}: up to the slider's most, 160%`);
+    const big = await handNow(page, CARDS), top = await page.evaluate(() => document.querySelector(".cm-stage-top").getBoundingClientRect().bottom);
+    eq((await bar()).value, 160, `${mode}: up to the slider's most, 160%`);
     ok(big.left >= 0 && big.right <= big.w + 1, `${mode}: at its largest the hand is no wider than the window (${big.left}–${big.right} of ${big.w})`);
+    ok(big.top > top && big.bottom <= big.h + 1, `${mode}: and inside it, below the header (${big.top}–${big.bottom} of ${big.h}, header to ${top})`);
+    ok(big.fonts.every((f) => f >= 10), `${mode}: with every word on it 10px or more (${Math.min(...big.fonts)}px)`);
     spot = await onHand(page, CARDS);
     await wheel(page, CARDS, 100, 3);
     await page.waitForTimeout(400);
-    const kept = (await slider(page, BAR)).value, keptW = (await handNow(page, CARDS)).width;
+    const kept = (await bar()).value, keptW = (await handNow(page, CARDS)).width;
     await reload();
-    eq([(await slider(page, BAR)).value, (await handNow(page, CARDS)).width], [kept, keptW], `${mode}: after a reload the hand and its slider are where the wheel left them (${kept}%)`);
-    /* the wheel elsewhere on the board is not the hand's */
-    const field = await page.evaluate(() => {const r = document.querySelector(".cm-board-mat, .cm-board-table").getBoundingClientRect(); return {x: r.left + r.width * .5, y: r.top + 40};});
+    eq([(await bar()).value, (await handNow(page, CARDS)).width], [kept, keptW], `${mode}: after a reload the hand and its slider are where the wheel left them (${kept}%)`);
+    /* The wheel over the stage, off the hand, is the zoom's, as in 3D (tests/board-flat-views.mjs): it moves the boards and leaves the hand's size alone. */
+    const slot0 = () => page.evaluate(() => document.querySelector(".cm-stage-slot").getBoundingClientRect().width);
+    const w0 = await slot0();
+    /* a point of the stage that is no row of cards (a row that scrolls keeps the wheel), no card, button, the hand, a drawer or the pop-ups */
+    const field = await page.evaluate(() => {const r = document.querySelector(".cm-stage-region").getBoundingClientRect();
+      for (let y = r.top + r.height * .45; y < r.bottom - 8; y += 8) for (let x = r.left + r.width * .5; x < r.right - 8; x += 8) {const el = document.elementFromPoint(x, y);
+        if (el && el.closest(".cm-stage-region") && !el.closest(".cm-bcard, button, a, [role=button], [data-zone-scroll], .cm-stage-hand, .cm-drawer, .cm-stage-actions, .cm-stage-caption, .cm-stage-top")) return {x, y};}
+      return null;});
+    ok(field, `${mode}: a bare point of the stage to turn the wheel over`);
     await wheel(page, field, -100, 2);
-    eq((await slider(page, BAR)).value, kept, `${mode}: the wheel over the board leaves the hand's size alone`);
+    if (SHOTS) await page.screenshot({path: path.join(SHOTS, `hand-wheel-zoom-${mode}.png`)});
+    ok((await slot0()) > w0 * 1.02, `${mode}: the wheel over the stage, not the hand, zooms the boards (${w0} → ${await slot0()}px)`);
+    eq([(await bar()).value, (await handNow(page, CARDS)).width], [kept, keptW], `${mode}: and leaves the hand's size alone`);
     if (SHOTS && mode === "focus") await page.screenshot({path: path.join(SHOTS, "hand-wheel-focus.png")});
     ok(!errors.length, `${mode}: no page error (${errors.join(" | ")})`);
+    await context.close();
+  }
+  /* The flat hand's floor, as 3D's above. Its rest size is min(190, (base - 24) * 5/7, (wide - 110) / 6.1) (fitFan) with base = clamp(170, 25% of the
+     window's height, 250) (3D's is clamp(220, 34%, 330): the boards above the flat hand need the room, so it is the smaller) and wide the tray's
+     width less the drawers' fixed gutters (--gut-l and --gut-r on #cm-board: a drawer's width and the 40px of its tab, open or not). At 1440×900
+     that is 750px wide, so 105px at 100% and 63px at 60%; at 1100×700 only 410px, so the floor of 84px binds already at 100%. Either way the
+     smallest setting stops at 84px, every word on it at 10px. */
+  for (const [mode, width, height] of [["focus", 1440, 900], ["table", 1440, 900], ["focus", 1100, 700], ["table", 1100, 700]]) {
+    const {page, context, errors} = await board(mode, {width, height, hand: 4, ready: "#cm-board .cm-stage-fan .cm-bcard"});
+    const CARDS = ".cm-stage-fan .cm-stage-fan-slot .cm-bcard", at = `${mode} at ${width}×${height}`;
+    const at0 = await handNow(page, CARDS);
+    const gut = await page.evaluate(() => {const cs = getComputedStyle(document.getElementById("cm-board")); return parseFloat(cs.getPropertyValue("--gut-l")) + parseFloat(cs.getPropertyValue("--gut-r"));});
+    const rest = Math.min(190, (Math.max(170, Math.min(250, height * .25)) - 24) * 5 / 7, (width - gut - 110) / 6.1);
+    eq(at0.width, Math.round(Math.max(84, rest)), `${at}: the flat hand is the size fitFan's formula gives (${at0.width}px; gutters ${gut}px)`);
+    ok(rest * .6 < 84, `${at}: the hand's rest size is ${Math.round(rest)}px, so 60% of it would be under 84px`);
+    await wheel(page, CARDS, 400, 12);
+    const small = await handNow(page, CARDS);
+    eq([small.width, await page.waitForFunction(() => localStorage.getItem("cm-board-scale:hand") === "60", null, {timeout: 2000}).then(() => 60, () => null)], [84, 60], `${at}: at 60% it stops at 84px`);
+    ok(small.fonts.length > 0 && small.fonts.every((f) => f >= 10), `${at}: and every word on it is 10px or more (${small.fonts.join(", ")})`);
+    ok(!errors.length, `${at}: no page error (${errors.join(" | ")})`);
     await context.close();
   }
   /* The phone's hand: the wheel sizes it; Shift + wheel scrolls it, as it overflows. */

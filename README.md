@@ -955,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 665 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 666 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1030,9 +1030,9 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `edhrec-client` — `tests/edhrec-client.mjs`
 - `engine-actions` — `tests/engine-actions.mjs`
 - `engine-cast` — `tests/engine-cast.mjs`
+- `engine-mana-upkeep` — `tests/engine-mana-upkeep.mjs` (mana made in the upkeep or the draw step stays in the pool until it is spent or the turn ends: the house rule over CR 500.4, `keepStepMana`)
 - `engine-combat` — `tests/engine-combat.mjs`
 - `engine-load100-w0-combat` — `tests/engine-load100-w0-combat.mjs`
-- `engine-mana-upkeep` — `tests/engine-mana-upkeep.mjs`
 - `engine-commander` — `tests/engine-commander.mjs`
 - `engine-controller` — `tests/engine-controller.mjs`
 - `engine-effects` — `tests/engine-effects.mjs`
@@ -1157,7 +1157,6 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-ingest` — `tests/engine-ingest.mjs`
 - `engine-learned` — `tests/engine-learned.mjs`
 - `engine-mana-abilities` — `tests/engine-mana-abilities.mjs`
-- `engine-mana-upkeep` — `tests/engine-mana-upkeep.mjs`
 - `engine-exile-commanders` — `tests/engine-exile-commanders.mjs` (Quintorius and Maralen linked exile, free casting and owner choices)
 - `engine-faerie-interactions` — `tests/engine-faerie-interactions.mjs` (second-card draws, Spellstutter's live Faerie count and Winnower's unequal power/toughness targets)
 - `engine-chulane-completion` — `tests/engine-chulane-completion.mjs` (Guardian Project, Yavimaya Dryad, Claim Jumper)
@@ -1231,7 +1230,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `lounge-watch` — `tests/lounge-watch.mjs` (`connect?watch=1`: a spectator is sent the public view alone, none of a seat's hand, and its action frames are refused)
 - `lounge-chat` — `tests/lounge-chat.mjs` (chat in the lobby and the game: rate limit, push to every connection, the last 50 in the view)
 - `lounge-ui` — `tests/lounge-ui.mjs` (the Pre-lobby, the New game pop-up and the Lobby with its tour, in Chromium against a stood-in server: each control asks the server what docs/ui-lane/lounge-contract.md says)
-- `lounge-board` — `tests/lounge-board.mjs` (the board for a watcher: Watching, no actions or hand, no hidden card in a frame; the table's chat in the Chat module)
+- `lounge-board` — `tests/lounge-board.mjs` (the board for a watcher: Watching, no actions or hand, no hidden card in a frame; the table's chat in the Chat module, Chat a default module, its unread count)
+- `board-flat-views` — `tests/board-flat-views.mjs` (Table and Focus are the 3D view's HUD without the canvas: one HUD in all three views, the drawers lie over a stage and hand that never move, Table's four boards identical 16:9 between the drawers' gutters, zoom and pan on the flat boards, Chat a default module)
 - `lounge-results` — `tests/lounge-results.mjs` (a row per person's seat when a game ends, the leaderboard, migration 0010, Observe AI game)
 - `game-leave` — `tests/game-leave.mjs`
 - `table-rematch` — `tests/table-rematch.mjs` (Play again once a table's game is over: the next game with the same seats, decks and rules as a new match, a No releasing the seat, silence a No at two minutes on the alarm, and the table's games over when the host goes or too few stay)
