@@ -1,134 +1,62 @@
-# W1 simultaneous linked returns (unfinished)
+# W1 simultaneous linked returns: bounded runtime checkpoint
 
-The accepted base-movement checkpoint is `4033bcecfb959a9b5f6a649825cf9fa2c82021a8`, merged draft PR #950.
-This separate continuation starts after exact assembled `bb8c2aab` was merged at `da2d2e54`. The next published
-root assembly must be synchronized before publication. No new card definition, promotion, full Battle support or
-card-load gate completion is credited.
+Runtime source `105e39dc48047f74d752358d60eaa3b5b2aeb221` passes the native435-check reader, the complete original44-reader
+unbroken baseline, and all85 semantic controls (missed[]; zero timeouts). Frozen target/test/probe SHA256 values match
+exactly after restoration. This extends accepted Battle/SBA base movement4033/PR950. No card is added or promoted;
+full Battle support, wave0 and root acceptance gates remain open. Publication still requires latest-root sync and exact scan.
 
-Actual native RED: two zero-defense Battle sources depart in one cohort. Their linked Bear and compiled saved
-Clever Impersonator must return simultaneously. The old per-source children already put Bear7 on the battlefield
-while the physical Clone4 remained in exile, offering an illegal copyOf7 choice. Source/order reversals and an
-already-existing legal 2/2 distinguish the correct replacement boundary (CR 610.3d, 614.12a, 101.4).
+When simultaneous source departures release several exiled permanents, every returning object now remains in its old
+zone until all native entry choices/costs and counter replacements finish. A saved cohort-only linked-return child
+plans the whole group in APNAP/explicit owner order. Clever Impersonator can copy an already-existing legal permanent;
+it cannot copy the simultaneously returning Bear. Aura attachment uses legal pre-existing hosts, with Shroud allowed
+and actual protection excluded. No legal host means the original exile object remains unmoved.
 
-Root approved a cohort-only saved `sba-linked-returns` child and separate internal return ledger in SBA, its ledger,
-zone-operation and zones. All real entry choices and costs precede every return commitment; source cohort, batch,
-actual old ID, owner and source zone bind each result. Owner choices follow APNAP and explicit ordering. Ordinary
-moves/payment wrappers remain unchanged. Costs, concessions and other interleaved actions remain authoritative;
-only operation proposals/choices are saved, with no game snapshot rollback or event-buffer splicing.
+Internal preparations bind the actual operation, source cohort, return batch, old object/zone/owner and current native
+receipt. All siblings must finish before freeze/commit. Applied entry/counter prefixes and actual costs survive JSON,
+concessions, invalid answers and new live modifiers. Only unanswered candidates are re-evaluated. Partial counter
+progress cannot commit or be read/consumed through the public completed-count API. Historical ordinary count receipts
+retain their old shape and behavior; card/client flags never authorize a skip.
 
-The secured local prototype passes 435 native checks before the remaining redirect/ledger/full-proof work below.
-Progress work was secured at314d11d1, then exact assembled420e797 was merged ataa4c3702. README uses the actual
-710 flat readers (root709 plus this lane's additive native reader). This remains an unfinished local checkpoint.
-Focused original readers also pass: counter87, Battle-SBA128, intrinsic34 and Battle95. It covers:
+Deferred entry/counter progress preserves actual already-applied numerical grants rather than recomputing them from
+a later board. New containing entry replacements yield/resume the unanswered counter event. In the proved fixture,
+a completed double3-to6 followed by a new parent grant gives7, while the other unchosen event gives9 or10 by explicit
+choice. These are fixture-specific orders. Real paid life40-to38 is neither undone nor paid twice. Progress uses the
+canonical holder-plus-ability appliedBy keys: two actual loaded Metallic Mimics choose Elf through native entry,
+share bare IDa2, and have distinct keys2:a2/4:a2. Both explicit final counter outcomes4/5 and4/6 pass; a duplicated
+holder key remains rejected before either return commits.
 
-- The actual compiled Clone/Bear source-order cases, with a legal existing copy and no legal copy.
-- Completed counter-prefix liveness: actual +1 gives4; a later question/concession brings loaded Doubling Season,
-  requiring8 while the still-present +1 is neither offered nor applied again. Internal progress includes original
-  raw/counts and exact applied identities. Operation/source/batch/object/player/raw/count/kind/order corruption is
-  rejected. The historical count-receipt API retains its old serialized shape and behavior.
-- Actual paid Temple Garden life40-to38 before a later Clone question, JSON and independent concession. The paid
-  prefix is reported once, kept committed and collected before the returning life watcher exists. The old watcher
-  sees one loss, the returning watcher sees zero; no caller event cursor is renumbered.
-- Actual Pacifism attachment before any return, both owned choice orders, invalid answers, JSON, explicit second
-  host, Shroud allowed and actual Black Knight protection-from-white excluded. With no existing legal host, Aura
-  remains the old exile object and cannot enchant a simultaneous returning sibling.
+Newly live zone/entry replacements reopen the same validated preparation with its old applied prefixes. The first
+actual entering child can pay2 and accept/decline the loaded discard-instead condition, then complete or redirect
+without recursively resetting authority. Graveyard and CR400.8 re-exile produce their proper new identities with
+no intermediate battlefield/ETB or abandoned counter event. Genuine further zone alternatives stay explicit.
+Ordinary same-exile movement keeps its established new-identity behavior. No old-ID retirement helper was added.
 
-The preserved entering-progress RED now passes: a returning Creature pays2 life, then a later PW counter choice
-waits. An outside owner2 concession returns loaded Authority of the Consuls under live owner1. The Creature enters
-tapped while life remains38. An additive return-bound entering receipt preserves applied identities, copy/entry
-choices and actual costs; it rechecks remaining live candidates without replaying an applied prefix. Completed
-numerical/tapped grants are saved as factual prefix values rather than recomputed from a later board.
+Only committed event prefixes are collected before a concession changes board facts and before a real saved devour
+sacrifice can introduce a new watcher. Canonical receipts preserve append-only events and the reported cursor.
+Old watcher1/new watcher0 and life38 survive overlapping collection/reload; a departing source retains its prior
+trigger for a surviving controller, while a departed controller retains zero. A labeled custom supported native
+replacement/createToken callback actually creates a death watcher before linked-return preflight: existing watcher1,
+new watcher0 and actual linked Elf return1. This custom fixture receives no saved-card execution credit. W5 confirms
+its deferred sole-undo causes are disjoint from these native return frames; no generic collector/payment seam changed.
 
-A second preserved native RED exposed the containing-entry/counter boundary (CR614.5,616.1f-g): the first PW
-already applied loaded Doubling Season3-to6; a second waits at its double/+1 question. Concession returns a new
-parent entering grant of one loyalty. The scoped continuation now yields a noncommittable partial counter result,
-processes the actual new entry grant, and rebuilds the unanswered inner question. First6-to7 retains its chosen
-prefix; second has4 before choosing9 or10. These are fixture-specific outcomes, not a universal order for grants.
-Both legal orders, JSON, fresh question identity, invalid answers and a real new2-life cost on each PW pass.
-The public historical count API rejects partial read/consume even with a caller-supplied allowPartial option;
-ordinary/historical receipt shapes stay unchanged. A new grant delta requires the actual bound updated entry
-receipt and append-only applied identities; it cannot rerun the old multiplier. No generic token opt-in was added.
+Proof command (Node22 PATH required):
 
-Remaining required proof includes further entry-progress forgery/expiry controls, reverse source/choice ordering,
-JSON/forgery/expiry, live protector/attachment refresh after later choices, same-zone redirects/no movement/zero
-counters, exact-once arrival/follow-up triggers and unchanged ordinary callers. Late entry/zone redirects now pass the bounded native cases: a completed prospective six-counter prefix can be
-redirected to graveyard or re-exiled as a new CR400.8 identity with no battlefield entry or phantom counter event.
-Two late live zone modifiers require the affected player's explicit native choice; both answers, JSON, invalid
-answers, batch/key/object/from/counter forgery, early/reused helpers and live modifier-owner departure pass.
-Native replacement followups run exactly once for the actual source controller. Ordinary same-exile movement
-retains its existing new-identity/no-battlefield-entry behavior. No old-ID retirement helper was added.
+`python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w1-linked-returns.py`
 
-First-time late native entry now passes: the saved event was initially redirected to exile, then a new live
-replacement sends that same event back toward battlefield. Its old applied exile key stays excluded, its first
-native entry/cost/counter receipts are bound to the exact reopen parent, and no intermediate exile/ETB is emitted.
-JSON, direct forged parent/key/applied-prefix checks, reuse and actual owner departure before commitment pass.
+The44 readers retain every original entry/intrinsic/counter, damage/LKI, zone, precons/P3, Chulane, full engine-cards
+and generator assertion. Direct witnesses run first; both broad readers remain mandatory and run last. The85 controls
+retain original counter30/base32/readiness3, add new19 and retain the moved Chulane1 fault. The full report, source
+manifest and restoration result are archived as w1-linked-final-* and evidence/w1-linked-final-restoration.json.
+Static audit has33 inherited UI problems and zero engine targets; no UI problem is waived.
 
-Both prior-cost watcher REDs now pass, including actual Devour sacrifice. Return-only canonical progress collection
-runs before concession removes board facts and before the saved real devour child starts. Only already committed
-operation events are marked and collected; no unanswered proposal, journal buffer, reported cursor, ordinary payment
-wrapper or generic collector is changed. Repeated/overlapping receipt requests plus reload preserve oldwatcher1,
-newwatcher0 and life38. A disappeared source retains its prior trigger for its surviving controller; a departed
-controller retains zero. W5 confirms its deferred sole-undo causes cannot be active in these native return frames.
+Historical e77 full84 was82 caught/2 MISSED and remains archived as RED. The linked-return data-loss fault was moved
+from an unused legacy returned list to canonical capture BEFORE receipts are minted, retaining its label, the legacy
+API and original reader union. It now fails the original actual missing-return event assertion. The early collection
+fault stays unchanged; the actual callback-born watcher witness makes its assertion fail1-vs0. The actual duplicate-ID
+RED, both missed reports and detailed development history remain preserved. Nothing is relabeled as later-source proof.
 
-The preserved first-entry redirect RED now passes in its own separately checked source: after the initial exile
-replacement and later back-to-battlefield replacement, the first native entry can explicitly pay2 and then accept
-or decline the loaded discard-instead condition. The same validated reopen frame forwards the actual saved child
-receipt and destination. Both completed battlefield and redirected graveyard outcomes keep costs and applied keys,
-produce only the proper final new identity, and emit no intermediate exile/ETB or phantom counter event. Two further
-remaining zone alternatives stay explicit; operation/cohort/object/parent/receipt forgery, invalid answers, overlap
-and JSON controls pass. No recursive authority reset or ordinary/token/payment route change was introduced.
-
-Focused native progress/redirect proof has a green baseline and all18 semantic controls caught (missed[]).
-The original report with two missed controls is retained: tests were strengthened with a direct first-entry API
-negative and a prefix overlap after actual collection, then those unchanged controls were caught.
-
-The predecessor source passed the full43-reader union including unchanged engine-cards and all generator checks;
-that report is archived explicitly as before-first-redirect evidence. It is not proof of the later fix. The final
-frozen matrix now retains all original44 readers (including the moved Chulane probe's complete original reader),
-original counter30/base32/readiness3 plus new18 and moved Chulane1 =84 controls. Direct return/entry/counter/prefix
-readers run first; the full engine-cards and generators readers remain mandatory and run last. Two moved anchors
-were reanchored to the same faults: Aura eligibility using owner instead of actual entering controller, and the
-public counter-result controller check alongside its new partial-receipt guard. Static audit has33 inherited UI
-problems and zero engine targets. Frozen source e77c1137 completed the full44-reader green baseline, including engine-cards/generators, with82 controls
-caught and2 MISSED. That report remains explicitly RED: (1) the old cleanup returned-list probe is now on a legacy
-return value no longer used by the native handler; root approved moving the same fault to canonical link capture
-before receipts. (2) later preflight collection compensates the old returned-watcher witness; the original early
-collection fault stays unchanged, and an actual followup-created watcher boundary witness will be added.
-
-After full restoration and before any runtime change, two actual loaded Metallic Mimics each entered through the
-native Elf choice, with JSON before and during return decisions. Their legitimate entry histories are applied
-[a2,a2] and appliedBy[2:a2,4:a2]. Native counter recheck rejects that legitimate history. Root approved using the
-canonical appliedBy identity at the two progress snapshot/read sites, preserving string/uniqueness/prefix guards
-and all counter/payment/reopen receipts. This runtime followup and repaired full proof are still pending; no gate
-or publication credit follows from the historical82/2 result.
-This scoped proof does not replace the required original full reader/mutation unions. Full inherited mutation unions must
-remain intact; no incomplete positive count is acceptance.
-
-Separate generic-token debt is preserved without production edits: an actual copied-token batch has the same4-vs8
-completed-counter-prefix RED when Doubling Season returns during the later sibling question. The common counter API
-now has a return-bound progress path, but generic token forwarding remains explicitly held for separate coordination.
-Its saved old count-receipt behavior is not silently opted into a new continuation.
-
-W5 owns actions/payment and its append-only mana-reversal causes. Its new collector filter is coordinated immediately
-after the existing W1 receipt filter; W1 keeps trigger.mjs unchanged and mints its receipts in the cohort ledger.
-Root owns RUN/ACTIVE, integration, Linear and all acceptance gates.
-
-
-Final follow-up before the new full matrix: exact published60596146 was merged at55993bc2 with only the README count
-conflict resolved to actual715. The approved runtime change is exactly two entry-characteristics reads switched to
-canonical proposal.appliedBy; string, uniqueness, prefix, raw, count, order, actual payment and reopen guards remain.
-Two loaded Metallic Mimics genuinely choose Elf through native entry, then JSON before/during linked-return choices.
-Both explicit final counter outcomes4/5 and4/6 pass, with one placement per return. A duplicate holder-plus-ability key
-still rejects before either object moves.
-
-The original lost-links fault is now at canonical departure.returnLinks capture before return receipts are minted.
-Its direct result is the original missing native return events assertion ([false,false] instead of[true,true]), not
-merely a ledger rejection. The original early base-collection fault remains unchanged. A labeled custom supported
-replacement/createToken followup creates its watcher before linked-return preflight: actual new watcher1, existing
-watcher trigger1, new watcher trigger0, and original linked Elf return1. Omitting early collection makes the direct
-new-watcher assertion fail1-vs0. No saved-card execution credit is claimed for this custom fixture.
-
-Current native reader435 passes. All3 direct semantic diagnostics fail as intended and source backups are restored.
-The prior full84 result remains historical82 caught/2 MISSED. The final frozen matrix retains all44 original readers
-and all84 existing controls plus the canonical-ID control (85 total), with direct witnesses first and broad saved-card
-and generator readers last. The required final44/85 run is pending; no publication or gate credit is claimed yet.
+Remaining work includes Battle combat/target/filter/protector semantics, intrinsic last-defense Siege defeat and W5's
+free transformed-cast integration, generic/legacy entry-counter/SBA callers, the preserved generic-token4-vs8 liveness
+RED, and Daretti/Sunset emblem families. There was no generic token producer expansion. Root owns RUN/ACTIVE, Linear,
+whole-directory/card ability coverage, browser/review and clean-game acceptance. Existing a11y ROB312 and the root's
+combined face browser gate remain open; this checkpoint makes no whole-layout or full-Battle claim.

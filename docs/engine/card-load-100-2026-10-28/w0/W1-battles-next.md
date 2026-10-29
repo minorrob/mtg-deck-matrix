@@ -3,9 +3,12 @@
 No Battle final definition was loaded or promoted. This is unfinished wave-0 debt, not a passed gate or an ignore.
 Published Battle entry/defense and intrinsic-entry checkpoint: `85a3a89fec6311d27d827de0960c5e0830bafdce`, draft PR #944.
 The native counter-order follow-up is recorded separately in `W1-entry-counter-order.md`: 87 checks and 32 caught
-mutations, with the complete original reader union green. The next base-movement checkpoint is documented in
-`W1-battle-runtime.md`: native128, original40-reader baseline and32 caught probes. Linked-return simultaneity,
-combat, intrinsic Siege defeat and legacy protector entry remain; no full Battle or gate credit follows.
+mutations, with the complete original reader union green. The base-movement checkpoint4033/PR950 is documented in W1-battle-runtime.md: native128,42 unique baseline readers
+and35 caught controls. A separate bounded linked-return checkpoint105e39dc is documented in W1-linked-returns.md:
+native435, complete original44-reader baseline and85 caught controls/missed[]. No new Battle final was admitted.
+Next work is read-only native RED design for Battle combat (including an owned Siege protected by an opponent) and
+intrinsic last-defense defeat/exile/transformed casting coordinated with W5. No new Battle production edit begins
+before root review. Legacy entry/counter paths and all full-Battle/root gates remain open.
 
 - Preserved behavioral RED witness: `W1-battle-protector-red.mjs.txt`, the exact test originally run as `tests/engine-battles.mjs`.
 - That historical RED is now covered by the active `tests/engine-battles.mjs` reader's 95 checks. Preserve the current
