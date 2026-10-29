@@ -61,7 +61,7 @@ try {
   await page.waitForTimeout(300);
 
   /* ---- 1. the module ---- */
-  await page.locator("#cm-board [data-action=board-camera]").first().click();
+  await page.locator("#cm-board [data-action=board-table-menu]").first().click();
   await page.locator("#cm-board [data-action=board-tools]").first().click();
   await page.locator("#cm-dialog[open] #cm-board-tools").waitFor({timeout: 5000});
   await page.locator("#cm-board-tools [data-action=board-modules-settings]").click();
