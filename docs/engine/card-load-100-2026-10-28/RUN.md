@@ -5,6 +5,13 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **New live reports while the engine lanes continue:** Rob reports Valakut exile play, Snoop revealed/top-card play,
+  and Banner Goblin bonuses. Native explicit triage on `0130f853` confirms Valakut's actual exile cast, Snoop's public
+  successive top Goblins/casts, and Banner's correct effective/projected bonus with no counters. Snoop has a concrete
+  UI renderer finding: `mat()` always passes a null Library top. ROB-226/ROB-227 and `w0/LIVE-CARD-REPORTS.md` record
+  evidence, limits and the UI-owner handoff. No UI production change or false engine fix. The new bounded pool seed1
+  is NOT CLEAN: one simulated-person menace block was refused/retried; replay matches and leaks0/74, but exercise0.
+  Do not count it or rerun unchanged. Current P0/W5 native-refresh epoch work and W1 atomic Battle/SBA work continue.
 - **Validated dependency checkpoint, October 29:** code `449246c2` integrates verifier/funding `74087c6d`, published W1
   counter-order `1553f7b1` and main `7f6e76ae`. The verifier's complete35-reader baseline and all20 mutations pass,
   `missed: []`; Oracle32/face23/artifact-smoke19/CLI60, Squee157 and original funding462 are proved. Whole-card55 and
