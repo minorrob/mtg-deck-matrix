@@ -734,7 +734,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-drawer{transition:none}
 #matrix-v2 .cm-board .cm-board-lands{display:flex;flex-direction:column}
 #matrix-v2 .cm-board .cm-board-lands>.cm-mat-label{position:static;order:-1;align-self:flex-start;flex:none;margin:0 0 6px;padding:2px 5px}
 #matrix-v2 .cm-board .cm-board-lands>[data-card-section]{flex:none;width:100%}
-#matrix-v2 .cm-board[data-phone] .cm-phone-battlefield .cm-board-field,#matrix-v2 .cm-board[data-phone] .cm-phone-battlefield [data-card-section]{height:auto!important;max-height:none!important;overflow:visible!important}
+#matrix-v2 .cm-board[data-phone] .cm-phone-battlefield :is(.cm-board-field,.cm-board-lands),#matrix-v2 .cm-board[data-phone] .cm-phone-battlefield [data-card-section]{height:auto!important;max-height:none!important;overflow:visible!important}   /* the lands too: the board's one frame scrolls them, no zone clips a crowded row of its own */
 #matrix-v2 .cm-board[data-phone] .cm-phone-battlefield .cm-board-field{min-height:130px}
 
 #matrix-v2 .cm-board .cm-stage-top .v-button,#matrix-v2 .cm-board .cm-stage-top .cm-board-ribbon{font-size:calc(var(--text-hud-caption)*var(--hud-scale,1))!important}
@@ -1845,3 +1845,6 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board :is(.cm-stage-slot,.cm-flat-rear) .cm-board-pile .cm-bcard-count{display:none}
 /* A thumbnail has no room for the land stack's words: read, not seen. */
 #matrix-v2 .cm-board .cm-flat-rear .cm-land-count{position:absolute;width:1px;height:1px;min-width:0;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+/* THE PHONE'S ONE FRAME SCROLLS THE WHOLE BOARD: its rows take the room their cards need, and the mat clips nothing of a crowded row. */
+#matrix-v2 .cm-board[data-phone] .cm-phone-battlefield .cm-mat-grid{grid-template-rows:auto auto auto auto!important}
+#matrix-v2 .cm-board[data-phone] .cm-phone-battlefield>.cm-mat{overflow:visible}
