@@ -178,6 +178,17 @@ try {
   assert.equal(await candidate.evaluate(el=>document.activeElement===el),true,'focus survives draft and check redraws');
   await noBlocks(page);await enabled(page);
   assert.equal(frames.filter(f=>f.type==='act').length,1,'Don\'t block remains local');
+  if(width===1280&&mode==='full'){
+    const checksBefore=frames.filter(f=>f.type==='check').length;
+    hold();await publish(v=>{v.matchId+='-empty-draft-rematch';});
+    assert.equal(await page.locator(send).isDisabled(),true,'an empty draft cannot reuse permission from another match');
+    assert.equal(frames.filter(f=>f.type==='check').length,checksBefore+1,'same-ID empty rematch requests its own validation');
+    assert.deepEqual(frames.filter(f=>f.type==='check').at(-1).indices,[],'the fresh match validates its own empty draft');
+    reply(frames.filter(f=>f.type==='check').at(-1));await pause(page);
+    assert.equal(await page.locator(send).isDisabled(),true,'new match still requires each attacker to be explicitly settled');
+    release();await noBlocks(page);await enabled(page);
+    assert.equal(frames.filter(f=>f.type==='act').length,1,'settling the empty rematch remains private until Send');
+  }
   await press(page,send);assert.deepEqual(frames.filter(f=>f.type==='act').at(-1).indices,[],'Send no blocks uses empty answer');
   if(width===1280&&mode==='full'){
     await publish(v=>{v.revision++;v.decision.id+=':crowded';const attackers=Array.from({length:14},(_,i)=>73000+i),blockers=Array.from({length:14},(_,i)=>74000+i);

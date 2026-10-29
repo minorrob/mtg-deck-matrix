@@ -1,0 +1,19 @@
+{
+  "schema": "CrankScopedDealEvidence@1",
+  "dealerCommit": "bc4b021f799207dad5a82297a4afd4d9093c0d12",
+  "engineSourceAtRun": "990bf49881a4eb9c07eea4104699233bb3ccc0fb",
+  "diagnosticOnly": true,
+  "command": "node --stack-size=4000 tools/library-engine-index.mjs --pool --scope docs/engine/card-load-100-2026-10-28/scope-95.json --out <scratch>/scope-dealer-resume --lane-size 30",
+  "scopeSha256": "dc7302d44ac5fc3a2a16bec40bd30435c2d6446a00224e4ece1dfd87473e88e0",
+  "includedScope": 8514,
+  "rows": 5799,
+  "laneFiles": 197,
+  "candidates": 19,
+  "unloaded": 5780,
+  "outsideScope": 0,
+  "duplicates": 0,
+  "missingIncludedUndefined": 0,
+  "laneSizeLimit": 30,
+  "indexSha256": "4060d0c4fa75250b85b84db97678908c871e8167d86a43c6b144b8798186ea6a",
+  "interpretation": "Planning output only; no card writes or promotions. Every included undefined name appears once across writing/review rows. No loading before wave 0. Candidate trust and final acceptance require fresh consolidated calibration and all gates."
+}

@@ -2,6 +2,18 @@
 /* Pure parts of --pool dealing: the compiler's universe, estimated sentence reuse and theme-sized lanes. */
 import {deckCard, nextSentences} from "../game/tools/card-compiler.mjs";
 
+/** A frozen loading target limits writing and promotion lanes, never the verification universe. */
+export function loadScopeFilter(scope, canonicalName = (name) => name) {
+  if (scope === null) return () => true;
+  if (scope?.schema !== "CrankCardLoadScope@1" || scope.share !== 0.95 || !Array.isArray(scope.cards)
+    || scope.count !== scope.cards.length || !scope.cards.length
+    || scope.cards.some((c) => typeof c.name !== "string" || !c.name.trim())
+    || new Set(scope.cards.map((c) => c.name)).size !== scope.cards.length)
+    throw new Error("Use a valid frozen 95%-appearance scope manifest");
+  const names = new Set(scope.cards.filter((c) => !c.exempt).map((c) => c.name));
+  return (name) => names.has(canonicalName(name));
+}
+
 export function commanderPool(oracle, banned, defined) {
   const seen = new Set();
   return oracle.cards.filter((card) => {

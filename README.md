@@ -1352,7 +1352,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-amass` — `tests/engine-amass.mjs`
 - `engine-convoke` — `tests/engine-convoke.mjs`
 - `engine-load100-mana` — `tests/engine-load100-mana.mjs`
-- `library-engine-pool` — `tests/library-engine-pool.mjs`
+- `library-engine-pool` — `tests/library-engine-pool.mjs`: sentence reuse and complete themed deals; frozen 95%-appearance loading scope excludes outside and exempt names from writes, reviews and reuse scores, preserving canonical front aliases
 - `engine-storied` — `tests/engine-storied.mjs`
 - `engine-evoke` — `tests/engine-evoke.mjs`
 - `engine-mana-spent` — `tests/engine-mana-spent.mjs`

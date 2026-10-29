@@ -17,11 +17,18 @@ The prior bounded role checkpoints are integrated in draft #912; source/generate
 `5e06d705` includes main `b9999b16`. W2 `fddbd9b9`, W3 `e5dfd398`, W4 `c3923102`, W7 `a6d128e2` and V8 `10a1d325`
 are pushed. Real entry/land/script-token continuations and strict offer rejection are proved within their bounded scopes.
 Three existing chosen-type scripts are corrected; no new cards or promotions. Current selected ability evidence is 5/10
-on those three cards and 5/5 on four Flying cards; no whole-directory coverage or clean-game credit. Current 49 inherited
+on those three cards and 5/5 on four Flying cards. Fresh strict whole-directory measurement on `11e4fe86` completes
+with 5,168/11,636 abilities reached, 6,468 unproved and 18/11,037 scenario failures; G-3 fails. Calibration holds out
+4,165 cards: 4,154 pass, 11 fail. Root archives hashes and the full compressed ledger in the run package. W5's reveal
+land/Coldsteel repair and W1 permanent-inset/Saga checkpoint are now integrated; W4 trample is integrated too. Five
+saved counter scenarios retain their original outcomes and now explicitly answer entry order. No clean-game gate credit.
+Current 49 inherited
 mutation-anchor problems remain; zero engine targets. Full/default/CI evidence, remaining rule callers/debts, required
 games and Rob's playtest sign-off stay open. Frozen target: 8,514 names covering 95.0013% of appearances; 2,715 final and
 5,799 undefined at restart, unchanged. Wave 0 is unfinished; no loading/main merge/staging acceptance by this run.
 The primary checkout remains another session's and is untouched. See RUN's newest checkpoint before resuming a role.
+Root also owns the frozen-manifest dealer filter and separate mutation-anchor worktree; W5 owns cost/runtime fixes,
+W4 owns outside-resolution damage with its narrow mana-then seam, and W1 owns battle/emblem continuation.
 RUN.md records exact checkpoints, diagnostics and restart seams; do not mark the integration ready on the legacy checker.
 
 ### Card-load coordination requests

@@ -7,7 +7,7 @@ to its oracle text and played in the loader's smoke game. The candidates are in 
 ## What a candidate is, and is not
 
 - **Every sentence comes from a calibrated template.** With each defined card held out, the library's translations passed
-  their own scenarios 4154 of 4165 times (docs/engine/sentence-calibration-2026-10-19.md).
+  their own scenarios 4165 of 4165 times (docs/engine/sentence-calibration-2026-10-19.md).
   A template that failed there vetoes every card that uses it.
 - **It compiled, its abilities are its oracle text, and its smoke game played** without breaking the game.
 - **It has no scenarios of its own yet.** It is a candidate: it plays only at playtest tables, labeled (Rob's decision 2,
