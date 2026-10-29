@@ -5,6 +5,15 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **V8 simulated-person blocker draft repair after published `bb8c2aab`:** the strict historical pool seed1 stays
+  NOT CLEAN/zero exercise. The default simulated person now checks its complete declaration with the existing public
+  read-only `room.check` before submitting, retaining actual actor/question identity. Illegal private drafts are counted
+  separately; a stale question or50 exhausted attempts fails explicitly. No actual refusal or strict verdict changes.
+  Native1189/pool91/room-block34 pass; complete six-reader baseline retains both original library/V8 reader unions,
+  all eight new semantic probes caught, none missed. Actual accepted declarations commit/replay; injected malformed
+  input remains a game exception. Source restored, no backup. README actual702. See `w0/V8-PERSON-BLOCKS.md` and
+  `w0/evidence/v8-person-blocks.json`. Commit a clean source before the next bounded seed1 diagnostic; no unchanged
+  retry, full-game acceptance or new card credit. Main wave0 engine continuations and Scryfall exception remain open.
 - **Approved Snoop fix and reported Purphoros regression, October 29:** assembled source `9195f0fc` contains clean
   native refresh #947 (`3b879144`), approved UI #949 (`42e22351`) and bounded Battle/SBA #950 (`4033bcec`), each by
   `--no-ff` merge. Rob explicitly overrides the UI ownership rule only for the verified Snoop renderer fix, required

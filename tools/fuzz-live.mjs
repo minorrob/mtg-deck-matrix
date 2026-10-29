@@ -189,7 +189,7 @@ const controls = (view) => {const field = view?.state?.players?.[view.seat]?.zon
 export function person(seed) {
   const pilot = randomLegalPilot(createRng(seed));
   let turn = null, taken = new Map();
-  const answer = (decision, now, view = null) => {
+  const answer = (decision, now, view = null, {checkDraft} = {}) => {
     if (now !== turn) {turn = now; taken = new Map();}
     const all = decision.kind === "priority" ? decision.options.find((o) => o.act === "resolve-all") : null;
     if (all) {answer.resolvedAll += 1; return {kind: "answer", choiceId: decision.id, indices: [all.index]};}
@@ -198,7 +198,21 @@ export function person(seed) {
        they were offered. Both come last among the offers, so the rest keep their indices. */
     const second = (o) => o.act === "undo-mana" || o.act === "undo-land";
     const untaps = decision.kind === "priority" ? decision.options.filter(second).length : 0;
-    let a = pilot.answer(untaps ? {...decision, options: decision.options.filter((o) => !second(o))} : decision);
+    const offered = untaps ? {...decision, options: decision.options.filter((o) => !second(o))} : decision;
+    let a = pilot.answer(offered);
+    /* Individually offered block pairs need not be legal together (menace, requirements and taxes). Like a board
+       drafting before Confirm, this simulated person uses the room's public read-only check before submitting.
+       A rejected draft is never sent to act, and no real refused answer or strict evidence is erased. */
+    if (decision.id?.startsWith("declare-blockers:") && typeof checkDraft === "function") {
+      for (let attempt = 1; ; attempt += 1) {
+        const checked = checkDraft({choiceId: decision.id, indices: a.indices ?? []});
+        if (checked?.open !== true) throw new Error("The simulated person's blocker question expired before submission");
+        if (checked.ok === true) break;
+        answer.blockDraftsRejected += 1;
+        if (attempt >= PERSON_TRIES) throw new Error(`The simulated person could not draft legal blockers after ${PERSON_TRIES} attempts: ${(checked.reasons ?? []).join("; ")}`);
+        a = pilot.answer(offered);
+      }
+    }
     const [one] = a.indices ?? [], option = decision.kind === "priority" && a.indices?.length === 1 ? decision.options?.[one] : null;
     if (option?.act === "activate") {
       const key = `${option.cardId}:${option.label}`, pass = decision.options.find((o) => o.act === "pass");
@@ -209,6 +223,7 @@ export function person(seed) {
   };
   answer.stopped = 0;
   answer.resolvedAll = 0;
+  answer.blockDraftsRejected = 0;
   return answer;
 }
 
@@ -420,7 +435,7 @@ export async function playGame({decks, seed, cards, humans = [], levels = [], ma
     if (leaks) {leaked.push(...await checkLeaks(room, storage, matchId, memory, view.state.turn)); leakChecks += 1;}
     const asked = Date.now();
     for (let tries = 1; ; tries += 1) {
-      try {await room.act(who, {actionId: randomUUID(), revision: view.revision, ...people[who](view.decision, view.state.turn, view)}); break;}
+      try {await room.act(who, {actionId: randomUUID(), revision: view.revision, ...people[who](view.decision, view.state.turn, view, {checkDraft: draft => room.check(who, draft)})}); break;}
       catch (error) {
         if (!(error instanceof RoomError) || error.status !== 422 || tries >= PERSON_TRIES) throw error;
         personRefused.push({turn: view.state.turn, seatId: who, question: view.decision.title, reason: error.message});
@@ -435,7 +450,7 @@ export async function playGame({decks, seed, cards, humans = [], levels = [], ma
   const last = room.view(pod.seats[0].seatId);
   const ms = Date.now() - started;
   return {seed, status: room.status, result: last.result, turns: last.state.turn, decisions, reopened, ms, longestWait: longest, refusals: room.refusals,
-    personRefused, strictRefusals, loopsStopped: Object.values(people).reduce((n, p) => n + (p.stopped ?? 0), 0), resolvedAll: Object.values(people).reduce((n, p) => n + (p.resolvedAll ?? 0), 0), room, ...(leaks ? {leaks: leaked, leakChecks} : {}),
+    personRefused, strictRefusals, blockDraftsRejected: Object.values(people).reduce((n, p) => n + (p.blockDraftsRejected ?? 0), 0), loopsStopped: Object.values(people).reduce((n, p) => n + (p.stopped ?? 0), 0), resolvedAll: Object.values(people).reduce((n, p) => n + (p.resolvedAll ?? 0), 0), room, ...(leaks ? {leaks: leaked, leakChecks} : {}),
     ...(replay ? {replay: await replayMatch({storage, matchId, ...(cards ? {cards} : {}), ...(pilot ? {pilot} : {})})} : {})};
 }
 
@@ -546,7 +561,7 @@ async function main(argv) {
       .filter(([, after]) => after.length >= landsAt).map(([seat, after]) => [`s${seat}`, after[landsAt - 1]]));
     if (lands) {counted.push(...Object.values(lands)); console.log(`  lands in play after each seat's turn ${landsAt}: ${Object.entries(lands).map(([s, n]) => `${s} ${n}`).join(", ")}`);}
     rows.push({seed, ...(fixed ? {} : {decks: decks.map((d) => d.name)}), status: game.status, result: game.result, turns: game.turns, decisions: game.decisions, ms: game.ms, longestWait: game.longestWait, refusals: game.refusals,
-      personRefused: game.personRefused.length, loopsStopped: game.loopsStopped, ...(game.replay ? {replaySame: game.replay.same} : {}), ...(game.leaks ? {leaks: game.leaks, leakChecks: game.leakChecks} : {}),
+      personRefused: game.personRefused.length, blockDraftsRejected: game.blockDraftsRejected, loopsStopped: game.loopsStopped, ...(game.replay ? {replaySame: game.replay.same} : {}), ...(game.leaks ? {leaks: game.leaks, leakChecks: game.leakChecks} : {}),
       ...(lands ? {lands} : {}), clean: verdict(game).clean});
   }
   const clean = rows.filter((r) => r.clean).length;
