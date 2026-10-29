@@ -740,7 +740,7 @@ export function emptyDrawWins(state, player) {
  * `{key, count}` -- its holder and ability, so each applies once to a draw and to the draws it became (CR 614.5), and
  * another's still may: two of them make four. `exceptFirstInDrawStep`: not the first card the player would draw in their own
  * draw step -- none drawn there yet this turn (state/index.mjs, recordDrawStepDraw), the step's own draw or, it skipped, an
- * effect's. Only multiplying draws is built, so their order never changes the outcome and nobody is asked (CR 616.1).
+ * effect's. Resolution asks the drawing player to order competing replacements (CR 616.1).
  */
 export function drawsMore(state, player) {
   const steps = state.players[player]?.drawStepDraws;
@@ -763,21 +763,28 @@ export function drawsMore(state, player) {
  * WHO DRAWS INSTEAD (CR 614.1a): "if an opponent would draw two or more cards, instead you and that player each draw a card"
  * (Alms Collector) -- the controllers of the `draws-instead` statics whose `affects` names `player`, each once, in turn order
  * from the player after `player`. Two of one controller's end the same; two of different controllers do not, and which
- * applies is the drawing player's to choose (CR 616.1; effects/asking.mjs, orderDraws). Only for two or more: one card is no
- * draw it replaces, so the draws made instead are not replaced again.
+ * applies is the drawing player's to choose (CR 616.1; effects/asking.mjs, orderDraws). Only for two or more: another
+ * replacement may create a new multi-card instruction. Source-and-ability history prevents reuse of an applied effect.
  */
 export function drawsInstead(state, player, count) {
+  return [...new Set(drawInsteadEffects(state, player, count).map(effect => effect.controller))];
+}
+
+/* Replacement history belongs to an individual ability, including two Collectors controlled by the same player
+   (CR 614.5). Descendant instructions must still consider every unused effect (CR 616.1f-g). */
+export function drawInsteadEffects(state, player, count, replaced = []) {
   if (count < 2) return [];
   const seats = state.players.length, order = (p) => (p - player - 1 + seats) % seats;
-  const found = new Set();
+  const found = [];
   const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
     for (const ability of held(holderId))
       if (ability.kind === "static" && ability.rule === "draws-instead" && compileSelector({what: "player", ...ability.affects})(state, player, {controller: holder.controller, source: holderId}))
-        found.add(holder.controller);
+        if (!replaced.includes(`${holderId}:${ability.id}`))
+          found.push({key: `${holderId}:${ability.id}`, controller: holder.controller, sourceId: holderId});
   }
-  return [...found].sort((a, b) => order(a) - order(b));
+  return found.sort((a, b) => order(a.controller) - order(b.controller));
 }
 
 /**

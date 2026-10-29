@@ -24,12 +24,12 @@ import {mergedOrderToAsk} from "../state/index.mjs";
 import {ASKING, commandersGoingHome} from "./effects/asking.mjs";
 import {damageQuestion, addCounters, counterQuestion} from "./effects/resources.mjs";
 import {controllerOf} from "../rules/layers.mjs";
-import {drawQuestion, dredgers, singleDraws} from "./effects/zones.mjs";
+import {drawQuestion, dredgers, singleDrawSteps} from "./effects/zones.mjs";
 import {tokenQuestion} from "./effects/permanents.mjs";
 import {bindEffect} from "./bind.mjs";
 import {countEffect, amountOf} from "./amount.mjs";
 import {conditionHolds} from "./condition.mjs";
-import {proliferateTimes} from "../rules/statics.mjs";
+import {proliferateTimes, drawsMore} from "../rules/statics.mjs";
 import {beginRuleOperation} from "../rules/operations.mjs";
 import {destructionFrame} from "../rules/destruction-operation.mjs";
 
@@ -100,6 +100,14 @@ export function runResolution(state, rng = null) {
     /* And counted as it reaches the head (CR 608.2h): "draw a card for each creature you control" counts then. */
     const effect = countEffect(state, bindEffect(resolving.queue[0], resolving.context, state), resolving.context);
     resolving.queue[0] = effect;
+    /* Keep draw's existing remembered-card contract when replacement choices split the instruction across a pause.
+       This is bookkeeping for that draw, not general remembered-object construct support (CR 608.2c). */
+    if (effect?.effect === "__drawRemember") {
+      resolving.queue.shift();
+      resolving.context.remembered = resolving.events.slice(effect.fromEvent).map(e => e.data?.fields)
+        .filter(f => f?.drawn === true && state.objects[f.drewAs]).map(f => f.drewAs);
+      continue;
+    }
     /* AN EFFECT'S OWN CONDITION (Forge's Condition): "Metalcraft -- If you control three or more artifacts, exile that
        creature". Asked now, as it reaches the head (CR 608.2c, the instructions in order); false, and it does nothing. */
     if (effect?.condition && !conditionHolds(state, effect.condition, {controller: resolving.context.controller, source: resolving.context.source, about: resolving.context.about,
@@ -290,11 +298,13 @@ export function runResolution(state, rng = null) {
       resolving.queue[0] = {effect: "orderDraws", draw: effect, answers: effect.drawOrders ?? {}, question: asked};
     /* DREDGE (CR 702.52a; Life from the Loam, wave 4c k2): a draw a dredge card in a drawing player's graveyard could replace --
        each card drawn its own draw (CR 121.2) -- rewritten as it reaches the head into its single draws (effects/zones.mjs,
-       singleDraws: Alms Collector's, asked above, among them), each the drawing player's question when a dredge could replace
-       it then and a plain draw when none could (effects/asking.mjs, dredgeDraw): a dredge card the first dredge milled may
-       replace the next. */
-    else if (effect?.effect === "draw" && singleDraws(state, effect, resolving.context).some((player) => dredgers(state, player).length))
-      resolving.queue.splice(0, 1, ...singleDraws(state, effect, resolving.context).map((player) => ({effect: "dredgeDraw", player})));
+       singleDrawSteps: Alms Collector's, asked above, among them). The drawing player chooses competing dredge or mandatory
+       replacements even with no dredger (effects/asking.mjs, dredgeDraw); a dredge card the first dredge milled may replace
+       the next. Every replacement's whole modified instruction is checked before its individual draws proceed. */
+    else if (effect?.effect === "draw" && singleDrawSteps(state, effect, resolving.context).some(({player, replaced}) =>
+      dredgers(state, player).length || drawsMore(state, player).some(m => !replaced.includes(m.key))))
+      resolving.queue.splice(0, 1, ...singleDrawSteps(state, effect, resolving.context).map(({player, replaced}) => ({effect: "dredgeDraw", player, replaced})),
+        ...(effect.remember ? [{effect: "__drawRemember", fromEvent: resolving.events.length}] : []));
     const head = resolving.queue[0];
     const asking = ASKING[head?.effect];
 

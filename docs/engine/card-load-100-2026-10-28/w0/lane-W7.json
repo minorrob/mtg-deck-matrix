@@ -117,5 +117,37 @@
     "caution": "The smoke.resolved count2 includes the countered target event; this is not two successfully resolved spells.",
     "generatedCandidatesEdited": false
   },
-  "diagnostics": "C:\\Users\\robmi\\CrankMagic\\workbench\\load100-w7-686d948f-diagnostics"
+  "diagnostics": "C:\\Users\\robmi\\CrankMagic\\workbench\\load100-w7-686d948f-diagnostics",
+  "drawInstructionFix20261029": {
+    "finding": "V8: a selected draw doubler bypassed Collector and lost applied replacement history",
+    "behavior": "Reconsider whole modified draw instructions; retain source+ability history through descendants and JSON reload. Ask real competing replacements even without a dredger; preserve only this instruction's remembered draws and the empty-library win alternative.",
+    "proof": {
+      "focused": 33,
+      "newMutations": 19,
+      "currentOriginalW7Mutations": 22,
+      "movedLegacyK2": 5,
+      "missed": [],
+      "readers": {
+        "engine-draws-replaced": 19,
+        "engine-spells-draws-4c": 94,
+        "room-draw-card": 14,
+        "first-draw-check": 4,
+        "data-integrity": "pass",
+        "feature-wiring": 131
+      },
+      "movedLegacyK4": 2,
+      "boundedWorker": "15-second test-only subprocess makes a removed replacement-history guard fail promptly; no engine timeout or eligibility change.",
+      "discardedRun": "The earlier interrupted/mixed-test mutation run has no proof credit. All 19 were rerun on the final stable 33-check suite, missed: [].",
+      "anchors": "42 inherited problems, no additional W7 failure before current-main merge; remeasure on integration."
+    },
+    "limits": [
+      "Outside-resolution replacement-order fallback remains open pending real continuation callers.",
+      "No new final cards or promotions; no complete draw-theme or wave gate claim."
+    ],
+    "commands": [
+      "node tests/engine-draw-instructions.mjs",
+      "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w7-draw-instructions.py",
+      "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w7-spells.py"
+    ]
+  }
 }
