@@ -955,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 653 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 654 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1024,6 +1024,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `deck-autocreate` — `tests/deck-autocreate.mjs`
 - `deck-stages` — `tests/deck-stages.mjs`
 - `new-deck-flow` — `tests/new-deck-flow.mjs`
+- `newdeck-color-lock` — `tests/newdeck-color-lock.mjs` (ROB-216, Luke's playtest of 2026-10-28: once a commander is chosen, Choose colors shows and locks to its identity; changing them asks first, Keep changes nothing, Change colors disconnects the commander)
 - `deck-writeups` — `tests/deck-writeups.mjs`
 - `deck-writeups-screens` — `tests/deck-writeups-screens.mjs`
 - `docx-writer` — `tests/docx-writer.mjs`

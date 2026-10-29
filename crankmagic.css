@@ -4132,6 +4132,8 @@ button.cm-vitals{cursor:pointer}
 .cm-flow-results button[aria-selected=true]{border-color:var(--v-accent);background:var(--v-raised)}
 .cm-flow-results small{margin-left:auto}
 .cm-flow-chosen{display:flex;gap:8px;align-items:center;margin:0}
+.cm-flow-colors[data-locked] .v-button[aria-pressed=false]{opacity:.55}
+.cm-flow-warn{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:8px 0;padding:8px 10px;border:1px solid var(--v-accent);border-radius:var(--v-radius);background:var(--v-raised);color:var(--v-ink)}
 .cm-flow-modes{display:flex;flex-wrap:wrap;gap:8px}
 .cm-flow-mode{display:flex;gap:8px;align-items:center;padding:10px 12px;border:1px solid var(--v-line);border-radius:var(--v-radius);color:var(--v-ink);font-size:14px}
 .cm-flow-missing{margin:0;padding-left:18px;color:var(--v-accent)}
