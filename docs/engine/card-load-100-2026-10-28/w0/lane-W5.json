@@ -314,5 +314,30 @@
     "wholePaymentComplete": false,
     "G5": false,
     "G7": false
+  },
+  "playRefreshCheckpoint": {
+    "base": "0130f853e7ad7c6ad8ee2a6eb0532415ea50cf1f",
+    "branch": "codex/engine-load100-w0-w5-play-refresh",
+    "status": "native70, original25-reader baseline and17 caught mutations proven; whole room versioning and wave0 gates remain open",
+    "api": [
+      "deriveEffectPlay(state, awaiting=state.awaiting)",
+      "refreshEffectPlay(state)"
+    ],
+    "nativeChecks": 70,
+    "originalReaderUnion": 25,
+    "heldEffectCostSliceIncluded": false,
+    "currentNewQuestions": "Canonical scenario/fuzz version1 and optional room copy proved; P0 owns forced live room/table starts and trusted historical tape replay",
+    "historicalSavedQuestionWithoutOrigin": "historical native state shape and IDs preserved; old live migration remains debt",
+    "wholePaymentComplete": false,
+    "G3": false,
+    "G5": false,
+    "G7": false,
+    "evidence": "evidence/w5-play-refresh.json",
+    "freeCastReaderChecks": 20,
+    "caughtMutations": 17,
+    "missed": [],
+    "effectPlayVersion": 1,
+    "sourceRestored": true,
+    "roomForcedStartsAndReplayCompanion": "P0 dependency pending"
   }
 }

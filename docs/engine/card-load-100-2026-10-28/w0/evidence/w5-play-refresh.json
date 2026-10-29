@@ -1,0 +1,88 @@
+{
+  "schema": "w5-play-refresh@1",
+  "base": "0130f853e7ad7c6ad8ee2a6eb0532415ea50cf1f",
+  "branch": "codex/engine-load100-w0-w5-play-refresh",
+  "status": "Bounded native refresh proof complete; room forced-start/replay companion and wave0 gates remain open",
+  "api": {
+    "deriveEffectPlay": "Pure current choices/signature/generation/choiceId; no question mutation",
+    "refreshEffectPlay": "Explicit authoritative update only; missing/historical/non-play/selected-target/selected-payment states are no-ops",
+    "effectPlayVersion": 1,
+    "rawHistoricalAbsence": "No version field, new serial, origin or generation is injected",
+    "newCanonicalScenario": "Hardcoded current version; no scenario input opt-out",
+    "newFuzzPod": "Hardcoded current version; optional room copy persists current version while preserving historical absence",
+    "roomNewStartAndReplayCompanion": "P0 owns forced new live starts/table and trusted historical replay; not claimed complete here"
+  },
+  "scope": [
+    "game/engine/script/effects/asking.mjs origin/generation/derive/refresh only",
+    "game/engine/state/index.mjs optional version and unsupported-version refusal",
+    "one delegated fixed canonical scenario constructor field",
+    "one delegated hardcoded current fuzz pod field plus original xTaps anchor rebind",
+    "one P0/root-approved optional room.start pooled copy, identical to companion patch",
+    "previously approved stronger tax-only free-cast reader repair, original floating path retained"
+  ],
+  "proof": {
+    "nativeCommand": "node tests/engine-effect-play-refresh.mjs",
+    "nativeChecks": 70,
+    "freeCastReaderChecks": 20,
+    "originalReaderUnion": 25,
+    "mutationCommand": "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w5-play-refresh.py",
+    "plannedMutations": 17,
+    "epochCreditedMutations": 17,
+    "prototypeOnly": {
+      "sourceChoicesProxy": true,
+      "originalReaderUnion": 24,
+      "nativeChecks": 30,
+      "caught": 10,
+      "missed": [],
+      "notSubstitutedForFinalEpochProof": true
+    },
+    "baselineFailuresBeforeMutations": [
+      "inherited engine-free-cast:80 expected0 with empty pool/two untapped Wastes, actual legal funded offer1; repaired actual tax payment/outcome and unfundable control without removing original floating path",
+      "new actual fuzz saved-pod assertion game-leave:341 undefined!==1: baseline room pooled whitelist dropped epoch; identical optional copy bridge approved and applied"
+    ],
+    "cases": [
+      "actual Scepter/Boros target owner concession removes stale target",
+      "actual donated Shalai owner2/controller1 departure creates newly legal surviving Cankerbloom target and real double strike resolution",
+      "fixed copied card identity, optional decline and original finite mana-value bound",
+      "old, untagged and forged opt-out generation answers refuse atomically before mutation; freshly derived ID cannot answer until authoritative refresh",
+      "JSON reload and pure native choice projection",
+      "explicit historical old native ID and exact absence of epoch/serial fields",
+      "actual selected Eerie Interlude targets and Sol Ring mana payment remain locked",
+      "actual donated Rioter performs two real native exile activations with explicit Ally tappers; linked selector survives source departure before opening through source LKI and after opening through original context",
+      "supplemental finite source-counter bound is fixed once at instruction start and never widens after source changes/departs; surviving actor0 pays real W and Hada resolves after reload while disallowed Oran stays exiled"
+    ],
+    "originalBaseline": "PASS, every one of the original25 readers",
+    "missed": [],
+    "sourceRestored": true,
+    "abortedUnbrokenBaseline": "One early pre-mutation epoch baseline interrupted to place game-leave second; all original readers retained and final full baseline rerun passed",
+    "featureWiringChecks": 131,
+    "dataIntegrity": "PASS:50 variants/50 connected buy profiles",
+    "anchorAudit": {
+      "files": 248,
+      "breaks": 4572,
+      "inheritedUiProblems": 33,
+      "allProblemTargetsUnchangedFromBase": true,
+      "engineProblems": 0,
+      "ownProbeAnchors": 17,
+      "ownAnchorProblems": 0
+    }
+  },
+  "separateRed": {
+    "item": "layer-2-controlled actual Shalai does not protect its derived controllers Cankerbloom",
+    "probe": "../scratch/w5-derived-static-controller-red-20261029.mjs",
+    "observed": {
+      "shalaiController": 1,
+      "cankerController": 1,
+      "cankerKeywords": []
+    },
+    "fixedHere": false
+  },
+  "heldEffectCostReversalIncluded": false,
+  "newCards": 0,
+  "promotions": 0,
+  "G3": false,
+  "G5": false,
+  "G7": false,
+  "wave0Complete": false,
+  "publicationGate": "Exact tools/local-ci.sh HEAD 0 required before push; draft PR and parent RUN record the result"
+}

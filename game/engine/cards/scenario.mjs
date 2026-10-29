@@ -125,6 +125,7 @@ export function runScenario(scenario, cards, fixtures = {}, {explicitChoices = f
   /* `startingLife`: a table's house-rule starting life (game/room/table.mjs) -- "your starting life total" (Happily Ever After). */
   const state = createState({matchId: "scenario", seed: scenario.name, players: names.map((name) => ({name})),
     sourceChoices: true,
+    effectPlayVersion: 1,
     ...(scenario.skipFirstDraw === false ? {skipFirstDraw: false} : {}), ...(scenario.pooledTaps === true ? {pooledTaps: true} : {}),
     ...(scenario.xTaps === true ? {xTaps: true} : {}), ...(Number.isInteger(scenario.startingLife) ? {startingLife: scenario.startingLife} : {})});
   const rng = createRng(scenario.name);

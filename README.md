@@ -955,7 +955,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 702 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 703 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1374,6 +1374,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-amass` — `tests/engine-amass.mjs`
 - `engine-convoke` — `tests/engine-convoke.mjs`
 - `engine-load100-mana` — `tests/engine-load100-mana.mjs`
+- `engine-effect-play-refresh` - `tests/engine-effect-play-refresh.mjs`: live resolving-cast variants, stable generations, explicit refresh, stale refusal, original copy/permission bounds and actual target-owner departure
 - `library-engine-pool` — `tests/library-engine-pool.mjs`: sentence reuse and complete themed deals; frozen 95%-appearance loading scope excludes outside and exempt names from writes, reviews and reuse scores, preserving canonical front aliases
 - `engine-storied` — `tests/engine-storied.mjs`
 - `engine-evoke` — `tests/engine-evoke.mjs`
