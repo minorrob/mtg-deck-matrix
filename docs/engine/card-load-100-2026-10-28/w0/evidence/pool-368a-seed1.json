@@ -1,0 +1,103 @@
+{
+  "schema": "CrankBoundedPoolDiagnostic@1",
+  "source": "368a9aad0fb589f0c5e9896f9c8e27e25e6d9163",
+  "tree": "0126c9c3267d5efd91e99f725cafdd34a267e557",
+  "cleanSourceAtLaunch": true,
+  "command": "node --stack-size=4000 tools/fuzz-live.mjs --pool --humans 0 --level normal --seeds 1 --replay --leaks --exercised <outside-ledger> --json <outside-report>",
+  "elapsedSeconds": 22.78,
+  "exit": 0,
+  "finalDefinitions": 6430,
+  "finalNonbasicCommanderCards": 6424,
+  "row": {
+    "seed": 1,
+    "decks": [
+      "Jhoira, Weatherlight Captain",
+      "Thassa, Deep-Dwelling",
+      "Ghalta, Stampede Tyrant",
+      "Szarel, Genesis Shepherd"
+    ],
+    "status": "finished",
+    "result": {
+      "winner": null,
+      "reason": "every person had left the game, so it ended there",
+      "endedBy": null,
+      "ending": {
+        "kind": "eliminated",
+        "seatId": "s0",
+        "reason": "life",
+        "seats": [
+          {
+            "seatId": "s0",
+            "outcome": "lost",
+            "reason": "life"
+          },
+          {
+            "seatId": "s1",
+            "outcome": "playing",
+            "reason": null
+          },
+          {
+            "seatId": "s2",
+            "outcome": "playing",
+            "reason": null
+          },
+          {
+            "seatId": "s3",
+            "outcome": "playing",
+            "reason": null
+          }
+        ]
+      }
+    },
+    "turns": 35,
+    "decisions": 73,
+    "ms": 11275,
+    "longestWait": {
+      "ms": 1792,
+      "turn": 35
+    },
+    "refusals": {
+      "total": 0,
+      "since": 0,
+      "first": []
+    },
+    "personRefused": 0,
+    "blockDraftsRejected": 1,
+    "loopsStopped": 0,
+    "replaySame": true,
+    "leaks": [],
+    "leakChecks": 74,
+    "clean": true
+  },
+  "exercisedCards": 47,
+  "observedAbilities": 20,
+  "printedAbilities": 11633,
+  "ledgerArchive": "pool-368a-seed1-exercised.json.gz",
+  "rawBytes": 10579693,
+  "rawSha256": "5213811b042455d3660c1cf61cf6c2144ed56dd3981cc5ea98f93bf2ba948437",
+  "gzipBytes": 607872,
+  "gzipSha256": "e260fb9fa62671233a2e974eb7231542a2197f69c32432f37679624c097c3f0b",
+  "roundtripVerified": true,
+  "historicalComparison": {
+    "source": "0130f853",
+    "clean": false,
+    "actualPersonRefusals": 1,
+    "exerciseCredit": 0
+  },
+  "staticAnchorAudit": {
+    "files": 252,
+    "breaks": 4616,
+    "remainingProblems": 33,
+    "engineProblems": 0
+  },
+  "interpretation": "One bounded same-seed clean diagnostic after a concrete harness repair; does not complete the required200-game final pool gate, review, scenario coverage, staging or new card loading",
+  "rawPrivacyScan": {
+    "passed": true,
+    "patterns": "same eight credential/personal-address categories as local-ci.sh",
+    "files": [
+      "pool-368a-seed1-exercised.json",
+      "pool-368a-seed1.json",
+      "pool-368a-seed1.log"
+    ]
+  }
+}

@@ -5,6 +5,15 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Bounded same-seed pool result on clean `368a9aad`:** after the concrete draft-check repair below, seed1 finishes
+  clean under the existing table policy (the human is eliminated; remaining AI seats are not a winner claim):35 turns,
+  73 decisions, zero actual human/AI refusals, one rejected private draft, identical replay, zero leaks/74 checks.
+  It observes47/6,430 loaded cards successfully played/resolved and20/11,633 printed abilities. These are diagnostic
+  observations on this exact source; no full200-game/final-runtime gate or newly completed card credit. The original
+  `0130f853` game stays NOT CLEAN with zero exercise. Full hashed10,579,693-byte ledger is archived as607,872-byte
+  gzip with verified roundtrip; raw ledger/report/log credential/address scans pass. Source/tree/command/result/hashes:
+  `w0/evidence/pool-368a-seed1.json`. Fresh static audit252 files/4,616 breaks/33 inherited UI problems, zero game/fuzz
+  targets. No unchanged rerun. Next engine integration must revalidate its own source; full G-3/G-5/G-6/G-7 remain open.
 - **V8 simulated-person blocker draft repair after published `bb8c2aab`:** the strict historical pool seed1 stays
   NOT CLEAN/zero exercise. The default simulated person now checks its complete declaration with the existing public
   read-only `room.check` before submitting, retaining actual actor/question identity. Illegal private drafts are counted

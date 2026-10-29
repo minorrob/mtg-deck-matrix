@@ -32,7 +32,13 @@ catches all eight probes, `missed: []`. They cover skipped/ignored checks, stale
 missing producer wiring, retagged stale IDs, the wrong actor and actual strict refusal policy. Source backups restore;
 existing mutation specs/unions are unchanged. Direct focused readers also pass pool91 and room-block-check34.
 
-A new clean-source pool seed1 diagnostic is still required after this concrete repair. No whole-game/G-5 credit is
-claimed by unit fixtures, by the historical dirty game or by a different runtime's game. The200 pool/50 library/two25
-staging runs, all-card exercise, full strict ledger and remaining wave0 gates stay open. Full generators remains
-blocked at the separately recorded Scryfall search permission; no check is waived.
+The new clean-source368a9aad pool seed1 finishes in35 turns/73 decisions with zero actual submitted refusals,
+one rejected private draft, identical replay and zero leaks across74 checks. The table's existing end policy ends
+when its human is eliminated; the remaining AI seats are not a winner claim. The source-bound diagnostic observes
+47 played/resolved loaded cards and20 printed abilities, with no newly completed card or final-runtime gate credit.
+The original dirty game remains zero. The full ledger is hashed, privacy-scanned and compressed with verified
+roundtrip; `evidence/pool-368a-seed1.json` binds the source/tree, command, actual result and ledger hashes.
+
+No whole-game/G-5 credit is claimed by unit fixtures, by the historical dirty game or by a different runtime's game.
+The200 pool/50 library/two25 staging runs, all-card exercise, full strict ledger and remaining wave0 gates stay open.
+Full generators remains blocked at the separately recorded Scryfall search permission; no check is waived.

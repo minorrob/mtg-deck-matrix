@@ -8,6 +8,13 @@ Linear ROB-199 under ROB-85. The record is `docs/engine/card-load-100-2026-10-28
 Claim: `game/engine/cards/**`, generated card files, `data/engine/candidates.json`, the run package,
 and the engine modules its debt fixes require, subject to the ownership requests below.
 The primary checkout has another session's unfinished merge and is untouched.
+**Latest V8 source368a9aad:** the simulated person checks joint blocker drafts with the existing public read-only
+room check before submission. Native1189/pool91/room34 pass; six-reader original-union baseline and eight mutations
+pass, none missed. Same seed1 on this clean source finishes with zero actual refusals, identical replay and0 leaks/74
+checks; one private illegal draft is rejected before submission.47 cards/20 abilities observed on this source only.
+The existing human-elimination end policy remains explicit; no final200-game/winner/all-card gate credit. Historical
+dirty seed stays zero. Hashed compressed ledger and source-bound result are archived in w0/evidence. Static252files/
+4,616breaks/33 inherited UI problems, zero game/fuzz targets. No new definitions or promotions; full gates still open.
 **Latest October29 integration:** source `9195f0fc` assembles clean native refresh #947, Rob-approved narrow Snoop UI
 fix #949 and bounded Battle/SBA #950. Actual combined browser98 passes with fresh inspected screenshots; native
 Battle-SBA128/Battle95/intrinsic34/counter87/refresh70/free-cast20/Valakut29/Snoop-room and assets136/wiring131/integrity
