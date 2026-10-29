@@ -1503,9 +1503,11 @@ function playPermission(state, player, id, kind, via = null) {
    Worlds's does not; Bolas's Citadel's spell is paid for with life, Future Sight's with mana; Thundermane Dragon's creature
    gains haste. Each permission that gives something different or spends a different limited resource is its own offer,
    `via` its source. Identical unlimited permissions share one offer (playPermission). */
-/* And what it asks or allows beside: an additional cost to pay (Exploration Broodship), mana of any type spent (Tinybones). */
+/* The full supported outcome signature: granted characteristics, payment choices, timing, and post-stack destination.
+   Zone/card/condition/turn restrictions are filtered by openPermissions; finite resources are keyed separately below.
+   Sorcery timing is checked later in castOffers, so it must remain distinct here too (CR 601.2a, 118.9). */
 const permissionDoes = (ability) => JSON.stringify([ability.grants ?? null, ability.gains ?? null, ability.payLife ?? null, ability.free === true, ability.graveyardToLibraryBottom === true,
-  ability.additionalCost ?? null, ability.anyMana === true, ability.manaInstead ?? null]);
+  ability.additionalCost ?? null, ability.anyMana === true, ability.manaInstead ?? null, ability.graveyardToExile === true, ability.sorcery === true]);
 /* Through a per-type permission (Muldrotha), which of its permanent types it is cast as: each still open its own offer, its
    player's to choose; through any other, as itself (null). */
 function typeWays(state, player, id, via) {
@@ -2692,9 +2694,14 @@ function countedProblem(state, player, action) {
  */
 export function applyAction(state, player, action) {
   const events = perform(state, player, action);
+  return afterAction(state, player, events);
+}
+
+/** Finish an action's already-performed instructions; a resumed operation supplies its complete trigger batch. */
+export function afterAction(state, player, events, triggering = events) {
   state.passes = 0;
   /* What the action did triggers now (CR 603.2), whatever is asked next; the triggers wait to go on the stack. */
-  collectTriggers(state, events);
+  collectTriggers(state, triggering);
   /* A land that asks as it enters (a shock land) asks first: it is part of the land's entering. */
   if (askEntering(state)) { state.priorityPlayer = null; return events; }
   const sba = checkStateBasedActions(state);
