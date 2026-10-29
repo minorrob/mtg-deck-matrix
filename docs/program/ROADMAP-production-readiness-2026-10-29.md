@@ -229,7 +229,7 @@ from Scryfall; Babylon.js is 8.6 MB.
    colo, a ping/pong frame for idle round trip, cold-versus-warm in the constructor, and a Chrome performance trace of one action
    in 3D, Table and Focus at 100/150/200% render scale and on a phone. Add a latency column to `ai_calls`.
 2. **Fix what it names**, most likely in this order: patch the DOM instead of rebuilding the board and drop two of the three
-   repaints; optimistic acknowledgement of the person's own action; a location hint or smart placement for table objects;
+   repaints; optimistic acknowledgment of the person's own action; a location hint or smart placement for table objects;
    WebSocket heartbeats and auto-response pings; checkpoint every N actions with the journal carrying the rest; do the AI's turns
    in smaller slices or send intermediate views so the table feels alive.
 3. **Decide the sign-in path** (decision 1) and write the ROB-68 evaluation against it, with the criteria: cost at 1k/10k users,
