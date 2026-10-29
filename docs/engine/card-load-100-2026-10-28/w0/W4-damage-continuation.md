@@ -25,7 +25,7 @@ The registered native suite passes 140 checks, including both legal outcomes, th
 
 Twenty-seven new meaningful mutations are caught with `missed: []`. The original 69 mutations from replacement steps, rule operations and W4d L4 mana retain the union of all original readers and assertions. Four moved anchors were reanchored; the replacement guard still refuses unsupported proposal types, while real damage proposals now have native coverage. The final 22 affected reader suites are green. The anchors inventory has 32 inherited UI problems and no engine problems; none are ignored or newly waived.
 
-Machine-readable record: `evidence/w4-damage-native-20261029.json`. Mutation transcripts: `evidence/w4-damage-mutations.txt` and `evidence/w4-damage-original-mutations.txt`. The README registers the new suite and counts 673 Node suites on this branch. No whole-suite or clean-game completion is asserted.
+Machine-readable record: `evidence/w4-damage-native-20261029.json`. Mutation transcripts: `evidence/w4-damage-mutations.txt` and `evidence/w4-damage-original-mutations.txt`. The README registers the new suite and counts 677 Node suites after the current-main sync. No whole-suite or clean-game completion is asserted.
 
 ## Remaining work and seams
 
