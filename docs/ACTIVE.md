@@ -1,5 +1,12 @@
 # Who holds the work
 
+## Luke's Oct 28 playtest: ROB-201 to ROB-221 (a Claude cloud session, for Rob; `claude/crankmagic-oct28-playtest-zgybjx`, one PR per issue, each merged to `main` before the next)
+
+Rob asked for the playtest's bugs and improvements to be fixed in the order Linear gives (ROB-204, ROB-205, then ROB-210, 201, 208, 209, 211, then the Medium and Low items; ROB-212 and ROB-222 to 225 are not in scope). The session crosses lanes at Rob's word, one issue at a time, and says so in each PR. Linear is the record: each issue is In Progress while its PR is open and Done once it is merged, with the PR linked.
+
+- **ROB-204 (Confirm lock on "up to" / "any number" target questions).** The network-tab test settled it: **client-side, no request was sent.** `board-confirm` returned early for every target question not stepped through Next, and a counted target (`choose-targets:`, mode `many`) has no Next. Fixed in `crankmagic-board.js` (a counted target's Confirm is the commit, checked against its own min and max; its Pick/Review labels are not drawn). Proven by `tests/board-optional-count-targets.mjs` (red before, green after) and `tests/room-optional-count-targets.mjs` (the server takes one, several or none; red when `countedChoice`'s min is forced to 1). **The issue's Claim Jumper text does not match the card** (Claim Jumper is the "search for a Plains" creature, no target); Brago is the real "any number" case. Commented on the issue.
+- **Known and not mine:** `tests/board-target-lands.mjs` fails on a clean `main` ("every option that is not a land comes first").
+
 ## Play: Table and Focus are the 3D view's HUD without the canvas; the drawers lie over the stage; Chat a default module, 2026-10-28 (a Claude cloud session, for Rob; `claude/gifted-ride-w6xoa3`, the third PR of the day)
 
 Rob, 2026-10-28: *"Include Chat module in default. Ensure chat in-game is fully functional"*, then *"make Table and Focus HUD and all the functionality we have in 3D exactly the same ... except for the canvas ... revisit my original instruction on the Table view, where each mat had a specific aspect ratio ... include the zoom and camera functionalities ... You are not making any changes to 3D"*, then *"when a drawer opens, the table and hand of cards shifts. They shouldn't. The drawers should not affect the canvas. They should sit as the top layer"* (all three views).
