@@ -69,10 +69,10 @@ BREAKS = [
 
     # ---- "draw two cards instead" (CR 614.11a, 614.5; Teferi's Ageless Insight) ----
     ('draws more: the draw replaced', ZONES,
-     '  if (more) { for (let i = 0; i < more.count; i += 1) drawOne(state, player, events, [...replaced, more.key]); return; }\n', ''),
+     '  if (more) {\n    events.push(...draw(state, {who: [player], count: more.count, drawReplaced: [...replaced, more.key]}, {controller: player}));\n    return;\n  }\n', ''),
     ('draws more: each once to a draw (CR 614.5)', ZONES,
      '  const more = drawsMore(state, player).find((m) => !replaced.includes(m.key));', '  const more = drawsMore(state, player).find(() => true);'),
-    ('draws more: that many', ZONES, 'for (let i = 0; i < more.count; i += 1) drawOne', 'for (let i = 0; i < 1; i += 1) drawOne'),
+    ('draws more: that many', ZONES, 'count: more.count, drawReplaced: [...replaced, more.key]', 'count: 1, drawReplaced: [...replaced, more.key]'),
     ('draws more: the draw step\'s first excepted', STATICS,
      '      if (ability.exceptFirstInDrawStep === true && first) continue;\n', ''),
     ('draws more: only in its own draw step', STATICS,
