@@ -74,6 +74,7 @@ import {lastKnown, characteristicsOf, abilitiesOf, deriving, derivingAfresh, onc
 import {namesChosen, withChosen, chosenFor} from "../script/chosen.mjs";
 import {poolFor, spendFor, addRestricted, addRider, riderChoices, addProvenance, addPoolMana} from "./restricted-mana.mjs";
 import {askEntering} from "./entering.mjs";
+import {registerRuleOperation, beginRuleOperation, emitRuleEvents, ruleOperationPending} from "./operations.mjs";
 import {collectTriggers, openTriggers, manaTriggered} from "./trigger.mjs";
 
 const MAIN_PHASES = ["MAIN1", "MAIN2"];
@@ -2694,6 +2695,7 @@ function countedProblem(state, player, action) {
  */
 export function applyAction(state, player, action) {
   const events = perform(state, player, action);
+  if (ruleOperationPending(state)) { state.passes = 0; state.priorityPlayer = null; return events; }
   return afterAction(state, player, events);
 }
 
@@ -2718,6 +2720,29 @@ export function afterAction(state, player, events, triggering = events) {
   }
   return events;
 }
+
+/** A played land's remaining work is saved with its move; its announcement and permission are spent once. */
+export const playedLandFrame = (player, action) => ({kind: "played-land", player, action: structuredClone(action)});
+registerRuleOperation("played-land", (state, frame) => {
+  const {player, action} = frame;
+  if (!frame.stage) {
+    if (!state.objects[action.objectId] || state.players[player]?.lost) return {status: "done"};
+    if (action.face === "back") showFace(state, action.objectId, "back");
+    /* Announced from face-down exile, it remains revealed while its entry is waiting (CR 406.3a). */
+    state.objects[action.objectId] = {...state.objects[action.objectId]};
+    state.players[player].landsPlayed += 1;
+    emitRuleEvents(state, [event("GameEventLandPlayed", state, {land: cardRef(state, action.objectId), player: {playerId: player, name: state.players[player].name}})]);
+    frame.permission = state.objects[action.objectId].zone !== "hand" ? playPermission(state, player, action.objectId, "land", action.via ?? null) : null;
+    spendPermission(state, frame.permission, "land");
+    frame.stage = "arriving";
+    return {status: "continue", children: [{kind: "move-one", id: action.objectId, to: "battlefield", options: {controller: player}}]};
+  }
+  const result = frame.childResult, arrived = result?.moved;
+  const arrival = result?.zoneEventIndex === null ? null : state.ruleOperation.events[result?.zoneEventIndex];
+  if (arrival?.data?.fields?.to?.zoneType === "Battlefield") arrival.data.fields.played = true;
+  if (arrived !== null && state.objects[arrived]?.zone === "battlefield") grantPlayed(state, arrived, frame.permission, player);
+  return {status: "done", result: {moved: arrived ?? null}};
+});
 
 function perform(state, player, action, during = null) {
   /* Cast as an effect resolves (castNow): no priority, and not one of the offers -- the effect has chosen it, and paid. */
@@ -2867,6 +2892,7 @@ function performOffered(state, player, action, during) {
     throw new Error("Pass through passPriority, which is what decides whether a round ends a step or resolves an object");
 
   if (action.kind === "play-land") {
+    if (!during) return beginRuleOperation(state, playedLandFrame(player, action), {after: {kind: "after-action", player}}).events;
     const events = [];
     /* A double-faced card's land face, turned up first (CR 712.12): it is played as that face, so it is announced by that
        face's name, and it enters with that face up -- how it enters is that face's "as this land enters". */
