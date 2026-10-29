@@ -463,7 +463,8 @@ function costChoice(state, awaiting) {
       options: numbered(flashbackTappers(state, player, tap).map((cardId, index) => ({index, label: state.objects[cardId].card, cardId})))};
   }
   /* Tapped for it (castTapPlans), with more than one way: which sources. */
-  if (action.autoTap === true && !(state.sourceChoices === true && !Array.isArray(action.flashbackTap) && castTapCost(state, player, action))) {
+  if (action.autoTap === true && !(state.sourceChoices === true && !Array.isArray(action.flashbackTap) && castTapCost(state, player, action))
+    && (state.sourceChoices !== true || fundingChoiceNeeded(state, player, action))) {
     const plans = castTapPlans(state, player, action, TAP_CHOICES);
     const plan = action.tapPlan !== undefined ? plans.find(p => p.key === action.tapPlan) : plans.length === 1 ? plans[0] : null;
     if (action.tapPlan !== undefined && !plan) throw new Error(`${name} cannot be tapped for that way now`);

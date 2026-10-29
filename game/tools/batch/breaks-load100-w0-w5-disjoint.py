@@ -5,8 +5,8 @@ ACTIONS = 'game/engine/rules/actions.mjs'
 MANA = 'game/engine/rules/mana.mjs'
 BREAKS = [
     ('nonmana tappers precede mana choices', ACTIONS,
-     'if (action.autoTap === true && !(state.sourceChoices === true && !Array.isArray(action.flashbackTap) && castTapCost(state, player, action)))',
-     'if (action.autoTap === true)'),
+     'if (action.autoTap === true && !(state.sourceChoices === true && !Array.isArray(action.flashbackTap) && castTapCost(state, player, action))\n    && (state.sourceChoices !== true || fundingChoiceNeeded(state, player, action)))',
+     'if (action.autoTap === true && (state.sourceChoices !== true || fundingChoiceNeeded(state, player, action)))'),
     ('a rejected quick witness cannot admit an impossible cost', ACTIONS,
      'quick = built && (!acceptTaps || acceptTaps(built.taps)) ? witness(built) : null;',
      'quick = built ? witness(built) : null;'),

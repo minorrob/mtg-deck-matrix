@@ -27,6 +27,7 @@ import {lostIn} from "../game/engine/storage.mjs";
 import {SCRIPT_SCHEMA} from "../game/engine/script/schema.mjs";
 import {definitionsModule, DEFINITIONS_MODULE} from "../game/tools/engine-definitions.mjs";
 import {tableDefinition, DEFINITIONS} from "../game/engine/cards/definitions.mjs";
+import {oracleDefenseProblems} from "../game/tools/oracle-defense.mjs";
 
 let checks = 0;
 const ok = (c, m) => { assert.ok(c, m); checks += 1; };
@@ -49,6 +50,7 @@ const files = loadCardScenarios();
   for (const {script, path} of scripts) {
     const card = ORACLE.get(script.identity.name);
     if (!card) { drift.push(`${path}: no oracle card named ${script.identity.name}`); continue; }
+    drift.push(...oracleDefenseProblems(script, card).map(problem => `${path}: ${problem}`));
     /* A printed power may be below zero (Loot, the Anomaly's -2/4); a star (*) is no number. */
     const num = (v) => (v !== null && v !== undefined && /^-?\d+$/.test(v) ? Number(v) : null);
     /* A double-faced card, modal (CR 712.3) or nonmodal (712.2, the oracle's "transform"): its identity is its front face's,

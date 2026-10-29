@@ -8,6 +8,13 @@ Linear ROB-199 under ROB-85. The record is `docs/engine/card-load-100-2026-10-28
 Claim: `game/engine/cards/**`, generated card files, `data/engine/candidates.json`, the run package,
 and the engine modules its debt fixes require, subject to the ownership requests below.
 The primary checkout has another session's unfinished merge and is untouched.
+**Current October 29 assembly:** `8a386222` includes main `7a8383a0`, W5 `45616142`, W1 `85a3a89f` and P0 `8e363d95`.
+Root verifies Oracle printed defense and all printed faces; native Oracle32/face23/artifact smoke19/CLI60 pass. Its
+narrow transferred Squee funding fix passes157 checks; full35-reader baseline and all20 mutations pass, none missed.
+W1 publishes counter-order87/32 caught at `1553f7b1` (#944), pending root integration;
+bounded Battle work follows. W5 effect-paid costs and P0 committed-question
+refinement are active in their separate worktrees. Mandatory committed questions stay live; Cancel closes only a
+reversible child flow. Optional-targets browser50/blink148 pass; original Table startup remains RED. See newest RUN entry.
 The eight roles run in batches because this session supports three active subagents.
 No new cards until wave 0 closes. No provider API calls, production changes, migrations, or spending.
 **October 29 playtest intake:** Rob assigns one slot in the next subagent batch to ROB-204/210/211 and the engine
@@ -68,7 +75,7 @@ RUN.md records exact checkpoints, diagnostics and restart seams; do not mark the
 
 | To | Request | State |
 | --- | --- | --- |
-| Engine playtest slot / UI owner | One next-batch subagent owns ROB-204 verification, ROB-210 after that blocker, ROB-211 and the engine contracts for shared ROB-205 Cancel and ROB-209 mode/target/payment stages. UI controls remain with their owner; shared Done requires both halves. Coordinate payment, operation and Battle seams with the existing writer owners. | Direct Rob handoff October 29; reserved/queued, not started; details in `w0/PLAYTEST-ENGINE.md` |
+| Engine playtest slot / UI owner | Dedicated P0 owns ROB-204 verification, ROB-210, ROB-211 and engine contracts for shared ROB-205 Cancel/ROB-209 stages. UI controls stay with their owner; shared Done requires both halves. Coordinate payment, operation and Battle seams. | Active: published draft #943 includes bounded Cancel, blink/Salty and priority cast/activation stages; committed-question refinement continues. Original Table browser startup is still RED. Details in `w0/PLAYTEST-ENGINE.md` and RUN |
 | Claude · Engine | The standing lane table predates Rob's direct October 28 card-load assignment. Current open PRs were checked: no separate active rule-module PR besides prerequisite #834 was listed. The run owns its debt modules and coordinates narrow shared-file scopes between its roles. | Resolved by the later direct assignment; no other session's active files are edited |
 | Play | Show the monarch already present in the room view on the board; keep a one-press card reference where applicable. | Existing canonical Requests row 1 remains open; Play owns the board |
 | Lounge owner | Wave-0 W2 needs only the named wish-card refusal in `game/room/table.mjs` `readDeck`; confirm any current overlap before editing. | Refreshed open PR file list at resume: no overlap; W2 owns the narrow refusal |

@@ -1,0 +1,57 @@
+END tests/card-oracle-defense.mjs exit 0 seconds 1.33
+END tests/card-face-fidelity.mjs exit 0 seconds 1.42
+END tests/engine-smoke-artifacts.mjs exit 0 seconds 2.67
+END tests/engine-x11-costs.mjs exit 0 seconds 3.2
+END tests/engine-load100-mana.mjs exit 0 seconds 7.2
+END tests/card-check-cli.mjs exit 0 seconds 9.48
+END tests/card-compiler.mjs exit 0 seconds 64.41
+END tests/engine-adventure.mjs exit 0 seconds 2.88
+END tests/engine-class.mjs exit 0 seconds 2.81
+END tests/engine-learned.mjs exit 0 seconds 3.42
+END tests/engine-battles.mjs exit 0 seconds 2.75
+END tests/engine-enter-copy.mjs exit 0 seconds 2.67
+END tests/engine-event-triggers.mjs exit 0 seconds 3.75
+END tests/engine-ingest.mjs exit 0 seconds 1.89
+END tests/engine-phasing.mjs exit 0 seconds 1.86
+END tests/engine-transform.mjs exit 0 seconds 2.06
+END tests/engine-x11-counts-triggers.mjs exit 0 seconds 3.33
+END tests/load100-w7-compiler.mjs exit 0 seconds 1.81
+END tests/engine-tap-to-cast.mjs exit 0 seconds 1.89
+END tests/room-pooled-taps.mjs exit 0 seconds 5.06
+END tests/engine-mana-riders.mjs exit 0 seconds 1.75
+END tests/engine-mana-provenance.mjs exit 0 seconds 1.78
+END tests/room-prepared.mjs exit 0 seconds 3.34
+END tests/engine-roblists-food.mjs exit 0 seconds 13.0
+END tests/engine-costs-activations-4b.mjs exit 0 seconds 1.89
+END tests/engine-catalog.mjs exit 0 seconds 1.8
+END tests/engine-attacks-alone.mjs exit 0 seconds 1.81
+END tests/engine-wave4c-k2.mjs exit 0 seconds 4.22
+END tests/engine-dig-reveal.mjs exit 0 seconds 1.75
+END tests/engine-rearrange-copies-4b.mjs exit 0 seconds 4.19
+END tests/engine-vocabulary.mjs exit 0 seconds 0.5
+END tests/game-table.mjs exit 0 seconds 2.86
+END tests/engine-control.mjs exit 0 seconds 1.67
+END tests/engine-cards.mjs exit 0 seconds 93.41
+END tests/engine-compile.mjs exit 0 seconds 286.84
+baseline: every suite passes unbroken
+caught completed source funding reopens before the exile cost -- tests/engine-x11-costs.mjs
+caught a longer sentence claims a distinct shorter prefix -- tests/card-face-fidelity.mjs
+caught artifact smoke chooses an ineligible sorcery target -- tests/engine-smoke-artifacts.mjs
+caught the artifact smoke target is not an artifact -- tests/engine-smoke-artifacts.mjs
+caught another positive defense is accepted -- tests/card-oracle-defense.mjs
+caught missing committed Oracle is accepted -- tests/card-oracle-defense.mjs
+caught a whole card outer number replaces its front -- tests/card-oracle-defense.mjs
+caught back printed defense is not compared -- tests/card-oracle-defense.mjs
+caught zero is treated as no printed characteristic -- tests/card-oracle-defense.mjs
+caught negative Oracle defense is accepted -- tests/card-oracle-defense.mjs
+caught checker omits independent printed identity -- tests/card-check-cli.mjs
+caught back face is skipped -- tests/card-face-fidelity.mjs
+caught Adventure face is skipped -- tests/card-face-fidelity.mjs
+caught prepare face is skipped -- tests/card-face-fidelity.mjs
+caught only the front determines whole card success -- tests/card-face-fidelity.mjs
+caught invented back text is hidden -- tests/card-face-fidelity.mjs
+caught all transform reminder names are ignored -- tests/card-face-fidelity.mjs
+caught unparenthesized transform text is ignored -- tests/card-face-fidelity.mjs
+caught modal backs can hide transform text -- tests/card-face-fidelity.mjs
+caught nonmana tappers precede mana choices -- tests/engine-load100-mana.mjs
+missed: []

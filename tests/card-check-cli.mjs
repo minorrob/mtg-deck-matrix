@@ -44,6 +44,12 @@ try {
   eq(proved.status, 0, "default probes prove the actual static effect without either legacy opt-in flag");
   eq([proved.ledger.measurement.complete, proved.ledger.measurement.counterfactual, proved.ledger.summary.scenarioReached], [true, true, 1]);
   ok(proved.stdout.includes("diagnostic scope only") && !proved.ledger.scope.canonical, "custom directory is explicitly not the canonical gate");
+  const wrongDefenseRoot = path.join(root, "wrong-defense"); write(wrongDefenseRoot);
+  writeFileSync(path.join(wrongDefenseRoot, "g/anthem.json"), JSON.stringify({...script, identity: {...script.identity, defense: 7}}));
+  const wrongDefense = run(["--card-root", wrongDefenseRoot]);
+  eq(wrongDefense.status, 1, "an Oracle identity error fails even when the schema and real ability witness pass");
+  eq([wrongDefense.ledger.measurement.problems, wrongDefense.ledger.measurement.failed, wrongDefense.ledger.summary.scenarioReached], [1, 0, 1], "wrong printed data cannot hide behind a passing static behavior proof");
+  ok(wrongDefense.stdout.includes("IDENTITY Glorious Anthem") && wrongDefense.stdout.includes("defense 7 is not Oracle absent"), "the executable identifies the actual identity mismatch");
   const explicit = run(["--card-root", good, "--ability-ledger", path.join(root, "explicit.json")]);
   eq(explicit.status, 0, "choosing an output path does not disable runtime removal");
   const verified = spawnSync(process.execPath, ["game/tools/batch/verify-card-ledger.mjs", path.join(root, "explicit.json")], {cwd: repo, encoding: "utf8", timeout: 60000});

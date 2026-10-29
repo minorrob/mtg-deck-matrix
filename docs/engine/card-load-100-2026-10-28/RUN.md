@@ -5,6 +5,27 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **October 29 active assembly:** root's committed assembly `8a386222` includes main `7a8383a0`, W5 full mana-payload
+  identities `45616142`, W1 prospective intrinsic entry counters `85a3a89f` and P0 activated modal stages/casting-route
+  isolation `8e363d95`. Root independently passes action stages44/room42 and intrinsic-entry34; integrity and wiring131
+  pass. P0's quiet browser window passed optional targets50 and actual-room blink148; original Table `board-choices`
+  startup remains RED. These are bounded proofs, not full game/gate credit. The unpublished verifier follow-up checks
+  printed defense against each committed Oracle face and rejects omitted/invented back-face text and shorter-sentence
+  omissions sharing a longer sentence's prefix. Native Oracle32/face23/artifact-smoke19/CLI60 pass. The inherited
+  Squee admission assertion exposed a real loop after physical funding: mana reopened instead of the four-card exile
+  cost. W5 transferred only the current-mode funding fallthrough guard after restoring its mutator. Squee157 now
+  preserves original manual-funded outcomes and proves every four-of-five exile payment, explicit last-three-of-four
+  Wastes, exact resources/events, JSON/refusal and actual resolution. The combined35-reader baseline passes, including
+  original funding462, engine-cards55/all6,430 definitions and engine-compile84. All20 mutations are caught with
+  `missed: []`, including the re-anchored original nonmana-before-mana probe. No saved cards were rewritten.
+  Evidence: `w0/evidence/v8-identity-squee.json` and its mutation text. `w0/V8-STRICT-CLI.md` preserves the stopped
+  pre-mutation baseline and the uncredited zero-probe witness gap, exact restoration and full corrected rerun.
+  The compiler's inherited unplayed list incorrectly retained Artifact Blast/Halt Order after `686d948f` added eligible
+  artifact smoke targets; both now require actual casts, counter outcomes, exact zones and Halt Order's own draw.
+  W1 published clean `1553f7b1` in draft #944: entry-counter87,32 caught mutations and the original reader/generator
+  unions pass; root integration is pending. W1 starts bounded Battle runtime work. W5 continues effect-paid costs and
+  P0 committed-question staging. Main advanced separately to `7f6e76ae` (#945); root has not merged that update yet.
+  The latest full strict measurement remains the exact RED `c2038646` archive below. No new cards/promotions or gates.
 - **Physical-source authoring checkpoint:** the harness accepts an explicit `source: {zone, index, seat?, card?}`
   for an action. It indexes named objects before legality filtering; a repeated tap of index 0 cannot silently select
   index 1. Actual selected IDs are retained in the policy trace and mana provenance. Unknown/missing/invalid references

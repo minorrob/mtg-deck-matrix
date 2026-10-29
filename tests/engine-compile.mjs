@@ -65,9 +65,9 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
      scenarios cast it on the fourth). Named, so a card that stops being played in its smoke game is found, not
      counted. */
   const unplayed = smoked.filter((r) => !r.played).map((r) => r.name).sort();
-  eq(unplayed, ["Argivian Restoration", "Artifact Blast", "Assassinate", "Blue Elemental Blast", "Bright Reprisal",
+  eq(unplayed, ["Argivian Restoration", "Assassinate", "Blue Elemental Blast", "Bright Reprisal",
     "Cloud's Limit Break", "Condemn", "Death Stroke", "Devout Decree", "Eriette's Lullaby", "Explosive Derailment",
-    "Flashfreeze", "Flourishing Grapple", "Getaway Glamer", "Halt Order", "Immolating Glare", "Keep Safe", "Kill Shot",
+    "Flashfreeze", "Flourishing Grapple", "Getaway Glamer", "Immolating Glare", "Keep Safe", "Kill Shot",
     "Mental Misstep", "Mirrodin Avenged", "Precise Redaction", "Proft, Sinister Mastermind", "Rebuff the Wicked",
     "Rebuke", "Reconstruction", "Refurbish", "Return the Favor", "Ritual of Restoration", "Serra Avenger", "Silverstrike",
     "Spell Snare", "Swift Response", "Take Vengeance", "Turn Aside", "Vengeance", "You Are Already Dead"], `and the other ${scripts.length - unplayed.length} of ${scripts.length} were actually played or cast in it`);
@@ -77,8 +77,8 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
      the stack first, which would keep a creature from being cast at all. */
   /* A counterspell for a particular spell has one to answer: a creature spell, an instant, a blue spell; and "sacrifice a
      green creature" a green one. */
-  eq(["Essence Scatter", "Dispel", "Red Elemental Blast", "Natural Order"].filter((name) => smoked.find((r) => r.name === name)?.played !== true), [],
-    "Essence Scatter, Dispel, Red Elemental Blast and Natural Order are cast in their smoke games");
+  eq(["Essence Scatter", "Dispel", "Red Elemental Blast", "Natural Order", "Artifact Blast", "Halt Order"].filter((name) => smoked.find((r) => r.name === name)?.played !== true), [],
+    "the actual creature, instant, color and artifact targets let their spells be cast in smoke games");
   /* A choice of additional costs (`oneOf`): the fodder for each choice is there, and the spell is cast. */
   eq(["Silence the Echo", "Bogslither's Embrace"].filter((name) => smoked.find((r) => r.name === name)?.played !== true), [],
     "Silence the Echo (sacrifice a creature or planeswalker, or pay {3}) and Bogslither's Embrace (blight 1, or pay {3}) are cast in their smoke games");
