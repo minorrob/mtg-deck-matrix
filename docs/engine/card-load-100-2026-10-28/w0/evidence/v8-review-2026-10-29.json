@@ -238,5 +238,87 @@
       "dataIntegrity": "50 variants/50 profiles",
       "featureWiring": 131
     }
+  },
+  "followupColdReview": {
+    "w4": {
+      "source": "c3923102234732f17e585ba6d6092376d809a6ac",
+      "checks": {
+        "savedScenarios": 9,
+        "selectedCards": 4,
+        "abilitiesProved": 5,
+        "priorScenariosAssertionsFixturesUnchanged": true,
+        "actualPyrohemiaColorDepartureCases": 5
+      },
+      "flyingFailure": "final defender life after both games reach MAIN2; no-block/block branches retained",
+      "protection": "matching final departed-source colors; current live colors take precedence; no saved-state mutation/source restoration",
+      "rules": [
+        "608.2h",
+        "702.9b",
+        "702.16e",
+        "702.20b"
+      ],
+      "commands": [
+        "node probe-four-flying.mjs",
+        "node probe-prior-scenarios.mjs",
+        "node probe-pyrohemia-protection.mjs"
+      ],
+      "diagnostics": "workbench/load100-v8-20261029-diagnostics/w4-c3923102",
+      "files": [
+        {
+          "file": "probe-four-flying.mjs",
+          "sha256": "9D16424793D33AA43136C9E6F797D9F0DAD7230FE8D67B7C018CB4CFD3017DBF"
+        },
+        {
+          "file": "probe-four-flying.json",
+          "sha256": "40E7F335E553B20850545855EA157704529E888700732984B7B73F1551261D58"
+        },
+        {
+          "file": "probe-pyrohemia-protection.mjs",
+          "sha256": "94DE0ED947911F8AFF627FBBC3082B886B30ABD62EF77F7073DF2B6FEA4EF766"
+        },
+        {
+          "file": "probe-pyrohemia-protection.json",
+          "sha256": "53B0E13B6E9B14FD5BCDABBAF27E7BB6F7E2991D197D43D0C4FFF28B55E72842"
+        },
+        {
+          "file": "probe-prior-scenarios.mjs",
+          "sha256": "E8E5D5D564F4D1DBF5F667887866FDC83CA12DE3E4544F8FA82E107697BCF033"
+        },
+        {
+          "file": "probe-prior-scenarios.json",
+          "sha256": "A90DE606964F048D76FA15E95F1F074DB6534351EAC2CE7B4700148332E96A38"
+        }
+      ],
+      "limits": [
+        "Selected five-ability proof only",
+        "No globalcoverage or clean-game credit",
+        "No other departed damage source properties, replacement filters, or event source provenance accepted"
+      ]
+    },
+    "w3": {
+      "source": "13ea6a5d69296bf2e0dfde63388eb1990488164f",
+      "cases": 4,
+      "rule": "903.9b",
+      "commands": [
+        "node probe-commander-loop.mjs"
+      ],
+      "outcomes": "after accepted commander replacement, command→hand/library modification correctly reoffers owner; second accept/decline controls final zone",
+      "caller": "prefix+2 once42 whilewaiting; suffix+5 once47; oneactualzoneevent; no remainingoperation/stack",
+      "diagnostics": "workbench/load100-v8-20261029-diagnostics/consumer13ea6a5d",
+      "files": [
+        {
+          "sha256": "04283829B4B5BA32BF04E439F9279FE9C1338816A623F72B5334E55A3E467FC9",
+          "file": "probe-commander-loop.mjs"
+        },
+        {
+          "sha256": "E3E6A46E205853029983E871089F422D55C5D4684389207BA12B43DBDDB59C1B",
+          "file": "probe-commander-loop.json"
+        }
+      ],
+      "limits": [
+        "Supported runtime grammar only",
+        "No whole-consumer or loaded-card/new-final credit"
+      ]
+    }
   }
 }
