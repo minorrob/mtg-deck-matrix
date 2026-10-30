@@ -5,6 +5,48 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Rob requests a handoff, October29:** stop new work and preserve only honest bounded evidence. Current integration
+  code5780786d contains main d3d23ed1, exact #963 and the two-line Snoop fix; its HEAD0 scan passes. This final
+  technical-record commit still requires its own exact-head scan/push. PR912 is the authoritative handoff; Linear owns
+  the queue. Zero cards added/promoted;2,715/8,514 target names final and5,799 undefined, covering95.0013% of deck
+  appearances. No full gate, main merge or release is claimed. Current hover-changed served UI needs new quiet-browser
+  verification; prior ec200 Snoop98/tooltip21 evidence stays historical. Original contrast RED/ROB-312 stays open.
+  - W1 branch `codex/rob-314-battle-combat`, local committed `ecb771203bcda8d80221371ba8e82d4e53c3a583`, is unpublished
+    and unaccepted. Fresh66/80 baseline readers pass; zero new controls started. The current bounded child finishes,
+    then root's worker stops only the verified idle supervisor at its logged restored boundary. All frozen hashes
+    match, Git is clean, no backup/native child/timer/poller remains. External `scratch/w1-rob314-verified-proof/` contains
+    source/result/card-input/corpus-delta records and driver. Complete the required full80/all120 with exact input/
+    driver checks before acceptance; partial baseline/raw catches are not gate credit. Older67fb is118/120 semantic,
+    actual888 is107/120, and105e85 remains raw/uncertified; exact histories are preserved. `handoff-stop.json` records
+    partial-result SHA699a9ecd2da9993a1f8853cc4d764c2a51bbffb9ff02fbbbb645bd1ba3ff3f17 and driver SHA
+    e95e5e627ec60f0a0177ceaedd1a04db8cb79eef7efcb590a7b04a37e412090d. Detailed worker Linear update was rejected
+    by automatic approval review; it was not retried. Root records the minimal public handoff/status centrally.
+  - W5 local committed `ddcc0d94ac58aba07a1b391586eb1c51759dbc7f` is unpublished/unaccepted and parked clean with all
+    recorded hashes exact/no backups/no owned Python/native child. Raw diagnostic38/74 completed;39..74 unrun, zero
+    final semantic credit. Resume manifest: `scratch/w5-cost-version-handoff-summary-20261029.json`; raw SHA
+    56ff08e39d6fb13fcc052d1b920b1e24aab479f571a5a0b28a689f8c03469331, corrected resume-driver SHA
+    fcfa5aa6c13c7045612a606142b18857274b7cd27435d14afbcfbad959f60e04. Finish discovery, review every missing native
+    witness, freeze once, then fresh full42/all74 semantic proof. Safe old-live policy remains open. Do not combine
+    this prototype into root or use effect-play epoch as the independent cost version.
+  - Dedicated ROB322 is read-only/clean on8234, handed back Todo. Its reviewed future ROB209 ABI adds optional typed
+    `costs.printedWaived` only from trusted native terms with accepted independent costVersion1; deep-clone cost facts,
+    omit allocations under payWays/autoTap, preserve exact native confirm/funding/Cancel/decline handlers. Proposal
+    `scratch/rob-322-readonly/rob-209-typed-waiver-abi-alternative.md` SHA
+    131fdcda8a39e34ce74043724a4f470fb385b334be9055a5fdb5bed8ce2ab01c. No implementation/UI acceptance yet.
+  - W7 ROB323 is read-only/clean onddf327f2, branch `codex/rob-323-w7-unsure`, handed back Todo with no active child.
+    Actual15-input Winter room,81 events/zero refusals, JSON/full initial tape replay match statebb3e1c751f05d184 and
+    journale3cdaf8a67a59d5b. Its generic title is persisted in native pending/standing keys; prefer a reviewed detached
+    room-description fix over changing the native question. Saved Sphinx/Narset optional-draw cases pass, but actual
+    draw-cost and modal-casting gaps are separate, explicitly identified by historical926dd47. External
+    `scratch/rob-323-readonly/review-state.md`/manifest retain all producers/results and uncredited fixture mistakes.
+  - ROB321/325 retain native temporal/multitype/room-event blockers. New work starts from these actual REDs with no
+    automatic answers, ledger exclusions or inherited assertion/control reductions. Whole-directory canonical remains
+    historical c2038646 RED; never subtract selected improvements. Finish all wave0 accuracy/review/exercise/games/
+    current strict coverage/UI/Actions gates before main/staging, then load only frozen95% scope with full support.
+- **Ash Barrens clarification, October29:** Rob says it was already on the battlefield. Basic landcycling is usable
+  only from hand, so no cycling option on that battlefield card is correct. ROB317 now distinguishes the original
+  report from the independently reproduced hand-only pool0/untapped-Wastes offer deficiency. That separate upcoming
+  fix still needs its entire legal payment/discard/basic-search/reveal/shuffle path; no battlefield cycling is requested.
 - **Main advances to d3d23ed1 during the required scan:** root3a6d2d6b's HEAD0 check correctly refuses its conflicting
   merge with #965/ROB-318 hover changes; no push occurs. Root merges current main, preserves the owner's complete
   board hover implementation and new suite/registry row, resolves only the suite count to actual716 and regenerates
