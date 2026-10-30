@@ -327,7 +327,14 @@ export function turnFaceUp(state, id) {
 export function showFace(state, id, face) {
   const object = state.objects[id];
   if (!object?.mdfc) return;
-  Object.assign(object, faceOf(object.mdfc, face));
+  /* A characteristic the face shown has not is absent, not present as nothing (showAdventure, below): a land has no spell,
+     loyalty, defense or enchant. Copied as undefined they survive in memory and not through JSON, so a state saved while the
+     card is still in the hand -- a game waiting on how the land enters, Fell Mire's "pay 3 life?" -- is refused by
+     saveCheckpoint and the table cannot go on (ROB-343). Shown and put back, the card is exactly as it was. */
+  for (const [key, value] of Object.entries(faceOf(object.mdfc, face))) {
+    if (value === undefined || (PRESENT_ONLY.includes(key) && Array.isArray(value) && !value.length)) delete object[key];
+    else object[key] = value;
+  }
   if (face === "back") object.face = "back"; else delete object.face;
 }
 
