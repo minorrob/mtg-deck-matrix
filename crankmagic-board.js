@@ -4061,6 +4061,108 @@ globalThis.CrankBoard = Object.seal({
     reorderCard(section,arranging.id,target?.dataset.card,box ? event.clientX>box.left+box.width/2 : false);arranging=null;
   });
   document.addEventListener('dragend',()=>{arranging=null;clearCardDrop();});
+  /* DRAG A CARD FROM THE HAND OVER THE MAT AND RELEASE IT TO PLAY IT (ROB-328; Rob, 2026-10-30: "I also want to be able to
+     grab a card from my hand and drag it over the mat, release it to play it."). Pointer events, so a mouse, a pen and
+     (held a moment first, so the tray's own swipe keeps working) a finger all lift it. Releasing on YOUR mat does exactly
+     what pressing the card does (`board-card`: the same card menu or choice pop-up, every way to cast, mode, target and
+     payment still asked; the drop chooses nothing and sends nothing). Releasing anywhere else, Escape, a lost pointer or
+     a table that moved on puts the card back and does nothing. A card nothing lets you play still lifts, and says why
+     (the room's own words, `why`) where it would land. The phone's hand is the Show hand overlay, where there is no mat to
+     reach: it keeps pressing the card and choosing there. */
+  const HAND_CARD = "#cm-board .cm-stage-fan:not(.is-backs) .cm-bcard[data-card], #cm-board .cm-board-hand:not(.is-backs) .cm-board-hand-cards .cm-bcard[data-card]";
+  const HAND_LIFT = 6, HAND_HOLD = 320;
+  let handDrag = null, handClickGuard = false;
+  const handCardEl = id => [...document.querySelectorAll(HAND_CARD)].find(el => el.dataset.card === String(id));
+  const cardPlace = c => (c.types || []).includes("Land") ? "lands" : (c.types || []).some(t => t === "Instant" || t === "Sorcery") ? "table" : "battlefield";
+  const PLACE_WORDS = {lands: "⤓ Lands", battlefield: "⤓ Battlefield", table: "✦ Cast"};
+  /* Whether this card can land now, and if not the reason in words. Only what the room offers counts: a play or a cast. */
+  function handLanding(id) {
+    const c = findCard(id);
+    if (!view || !c) return {ok: false, why: "That card is not in your hand now."};
+    if (view.spectator || view.status === "finished") return {ok: false, why: "You are not playing this game."};
+    if (sending) return {ok: false, why: "The table is still taking your last move."};
+    if (!view.decision) return {ok: false, why: c.why || "It is not your turn to act."};
+    if (view.decision.kind !== "priority") return {ok: false, why: "Answer the question on the table first."};
+    if (decisionPopup()) return {ok: false, why: "Finish or cancel the choice in front of you first."};
+    if (optionsFor(id).some(o => ["play-land", "cast"].includes(o.act))) return {ok: true, place: cardPlace(c)};
+    return {ok: false, why: c.why || "Nothing to do with it now."};
+  }
+  const handMatUnder = (x, y) => {
+    const mat = document.elementFromPoint(x, y)?.closest?.("#cm-board .cm-mat[data-seat]");
+    return mat ? {mat, own: Number(mat.dataset.seat) === view?.seat} : null;
+  };
+  const HAND_MARKS = ["is-hand-drop-ok", "is-hand-drop-no", "is-hand-drop-row", "is-hand-lifted"];
+  const clearHandMarks = () => document.querySelectorAll(HAND_MARKS.map(m => `.${m}`).join(",")).forEach(el => el.classList.remove(...HAND_MARKS));
+  function handDragPaint(x, y) {
+    const d = handDrag; if (!d?.ghost) return;
+    d.ghost.style.transform = `translate(${Math.round(x - d.w / 2)}px,${Math.round(y - d.h * .4)}px)`;
+    clearHandMarks(); handCardEl(d.id)?.classList.add("is-hand-lifted");
+    const land = handLanding(d.id), over = handMatUnder(x, y), tag = d.ghost.querySelector(".cm-hand-ghost-tag");
+    d.ghost.classList.toggle("is-refused", !land.ok);
+    if (!land.ok) {tag.textContent = `✗ ${land.why}`; if (over?.own) over.mat.classList.add("is-hand-drop-no");}
+    else if (over?.own) {
+      tag.textContent = PLACE_WORDS[land.place]; over.mat.classList.add("is-hand-drop-ok");
+      const seat = over.mat.dataset.seat, row = land.place === "lands" ? over.mat.querySelector(`[data-card-section="${seat}:lands"]`) : land.place === "battlefield" ? over.mat.querySelector(".cm-board-field") : null;
+      row?.classList.add("is-hand-drop-row");
+    } else tag.textContent = over ? "✗ Not your mat" : "→ Your mat";
+    d.ghost.dataset.landing = !land.ok ? "refused" : over?.own ? land.place : "off";
+  }
+  function handDragLift(x, y) {
+    const d = handDrag, c = d && findCard(d.id); if (!c || d.lifted) return;
+    clearTimeout(d.hold); d.lifted = true; peek(null);
+    const box = d.el.getBoundingClientRect(); d.w = box.width; d.h = box.height;
+    const ghost = document.createElement("div");
+    ghost.className = "cm-hand-ghost"; ghost.setAttribute("aria-hidden", "true"); ghost.dataset.card = String(d.id);
+    ghost.style.width = `${d.w}px`; ghost.style.height = `${d.h}px`;
+    ghost.innerHTML = `<span class="cm-hand-ghost-name">${e(c.name || "")}</span>${c.name ? `<img src="${e(pictureOf(c.name, c))}" alt="" draggable="false" referrerpolicy="no-referrer">` : ""}<span class="cm-hand-ghost-tag"></span>`;
+    document.body.append(ghost); d.ghost = ghost;
+    document.body.classList.add("cm-hand-dragging");
+    handDragPaint(x, y);
+  }
+  function handDragEnd() {
+    const d = handDrag; if (!d) return;
+    clearTimeout(d.hold); d.ghost?.remove(); handDrag = null; clearHandMarks();
+    document.body.classList.remove("cm-hand-dragging");
+    removeEventListener("pointermove", handDragMove, true); removeEventListener("pointerup", handDragUp, true); removeEventListener("pointercancel", handDragCancel, true);
+    if (d.lifted) handClickGuard = true;   /* the click that ends the drag is not a press on the card (until the next press) */
+  }
+  function handDragMove(event) {
+    const d = handDrag; if (!d || event.pointerId !== d.pointerId) return;
+    if (d.lifted) return handDragPaint(event.clientX, event.clientY);
+    const far = Math.hypot(event.clientX - d.x, event.clientY - d.y);
+    if (d.touch) {if (far > 10) handDragEnd(); return;}           /* a finger that moved before the hold is the tray's swipe */
+    if (far >= HAND_LIFT) handDragLift(event.clientX, event.clientY);
+  }
+  function handDragUp(event) {
+    const d = handDrag; if (!d || event.pointerId !== d.pointerId) return;
+    if (!d.lifted) return handDragEnd();                           /* a press with no drag stays the press it always was */
+    const land = handLanding(d.id), over = handMatUnder(event.clientX, event.clientY), id = d.id, revision = d.revision;
+    handDragEnd();
+    if (!over?.own) return;                                        /* off your mat: the card is back, nothing is sent */
+    if (!land.ok) {C.notice(land.why, true); return;}
+    if (view.revision !== revision) {C.notice("The table moved on while you held the card. It is back in your hand; drop it again.", true); return;}
+    const el = handCardEl(id);
+    if (el) actions["board-card"](el, {detail: 1});                /* the very path pressing it takes */
+  }
+  function handDragCancel(event) {if (handDrag && event.pointerId === handDrag.pointerId) handDragEnd();}
+  addEventListener("pointerdown", event => {
+    handClickGuard = false;
+    if (handDrag || event.button !== 0 || !view || event.isPrimary === false) return;
+    const el = event.target.closest?.(HAND_CARD); if (!el) return;
+    handDrag = {el, id: Number(el.dataset.card), pointerId: event.pointerId, x: event.clientX, y: event.clientY, lifted: false, touch: event.pointerType === "touch", revision: view.revision, hold: null, ghost: null};
+    if (handDrag.touch) handDrag.hold = setTimeout(() => {if (handDrag) handDragLift(handDrag.x, handDrag.y);}, HAND_HOLD);
+    addEventListener("pointermove", handDragMove, true); addEventListener("pointerup", handDragUp, true); addEventListener("pointercancel", handDragCancel, true);
+  }, true);
+  addEventListener("click", event => {if (handClickGuard && event.detail !== 0) {handClickGuard = false; event.stopImmediatePropagation(); event.preventDefault();}}, true);
+  /* A finger held on a card of the hand is a lift, not the browser's long-press menu. */
+  addEventListener("contextmenu", event => {if (handDrag?.touch) event.preventDefault();}, true);
+  /* A held finger drags the card, not the page. */
+  document.addEventListener("touchmove", event => {if (handDrag?.lifted && event.cancelable) event.preventDefault();}, {passive: false, capture: true});
+  /* Escape mid-drag puts it back, ahead of every other Escape. */
+  addEventListener("keydown", event => {
+    if (event.key !== "Escape" || !handDrag?.lifted) return;
+    event.preventDefault(); event.stopImmediatePropagation(); handDragEnd();
+  }, true);
   document.addEventListener('keydown',event=>{
     const card=event.target.closest?.('[data-arrange-card]');if(!card || !event.altKey || !event.shiftKey || event.ctrlKey || event.metaKey || !['ArrowLeft','ArrowRight'].includes(event.key))return;   /* Shift + Alt: Alt + Left alone is the browser's Back (Rob, 2026-10-27) */
     event.preventDefault();const section=card.closest('[data-card-section]'),cards=[...section.querySelectorAll('[data-arrange-card]')],i=cards.indexOf(card),right=event.key==='ArrowRight',target=cards[i+(right?1:-1)];

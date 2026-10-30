@@ -288,6 +288,20 @@
 .cm-stage-environment video{position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:cover;object-position:center}
 .cm-stage-region.has-video{background:transparent}
 
+/* ROB-328: a hand card dragged over the mat (crankmagic-board.js, handDrag). The card follows the pointer; your mat outlines where it lands (dashed green), or why it cannot (dashed red). */
+.cm-hand-ghost{position:fixed;left:0;top:0;z-index:10000;pointer-events:none;filter:drop-shadow(0 12px 14px #000a);will-change:transform}
+.cm-hand-ghost{background:#1c2227;border:1px solid #72988a;border-radius:6px;box-sizing:border-box}
+.cm-hand-ghost-name{position:absolute;inset:6px 6px auto;color:#edf6ef;font:700 13px/1.15 var(--font-body,system-ui)}
+.cm-hand-ghost>img{position:relative;display:block;width:100%;height:100%;object-fit:cover;border-radius:5px}
+.cm-hand-ghost-tag{position:absolute;left:50%;bottom:calc(100% + 6px);transform:translateX(-50%);width:max-content;max-width:min(300px,80vw);padding:4px 8px;border:1px solid var(--color-line-strong,#72988a);border-radius:6px;background:var(--color-panel,#102425);color:var(--color-ink,#edf6ef);font:700 15px/1.25 var(--font-body,system-ui);text-align:center}
+.cm-hand-ghost.is-refused>img{filter:grayscale(1) brightness(.8)}
+.cm-hand-ghost.is-refused .cm-hand-ghost-tag{border-color:#e07a72}
+body.cm-hand-dragging,body.cm-hand-dragging *{cursor:grabbing!important;user-select:none;-webkit-user-select:none}
+.cm-bcard.is-hand-lifted{opacity:.35}
+#matrix-v2 .cm-board .cm-mat.is-hand-drop-ok{outline:3px dashed #a8dfbf;outline-offset:-3px}
+#matrix-v2 .cm-board .cm-mat.is-hand-drop-no{outline:3px dashed #e07a72;outline-offset:-3px}
+#matrix-v2 .cm-board .is-hand-drop-row{background:#a8dfbf33;outline:2px solid #a8dfbf;outline-offset:-2px}
+.cm-stage-fan .cm-bcard[data-card],.cm-board-hand-cards .cm-bcard[data-card]{touch-action:manipulation}
 .cm-bcard[data-arrange-card]{cursor:grab}.cm-bcard[data-arrange-card]:active{cursor:grabbing}.cm-bcard.cm-card-drop{outline:3px solid #a8dfbf;outline-offset:2px}
 
 .cm-stack-list{max-height:calc(var(--module-card-w)*1.4 + 24px);overflow-y:auto;scrollbar-width:thin}
