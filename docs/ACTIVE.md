@@ -445,6 +445,32 @@ Rob, 2026-10-26 (through the planning session's kick-off brief; the plan is `doc
   Play lanes' files) on `claude/workshop-feedback-sheet`, and PR 3 (the triage agent: `.github/workflows/feedback-triage.yml`,
   `tools/feedback-triage.mjs`) on `claude/deck-feedback-triage`, each from main once PR 1 is there.
 
+## 2026-10-26: main c567c581 in production (Rob: "Release it to production"; a Claude cloud session)
+
+- **Built and walked:** `tools/release-production.sh cloud-production` from a detached `origin/main` `c567c581`:
+  release-acceptance 23 and production-play-e2e 27 on the build (401 files, 124.3 MB).
+- **Pushed on Rob's go:** `release/pages` `8bfca342..27ba8f30` at 21:33 UTC. Workers Builds succeeded at 21:33:49;
+  `crankmagic` serves version **a43925f2** at 100% since 21:33:42; `https://crankmagic.com/version.json` reads
+  `c567c581`, profile `cloud-production`.
+- **The live walk** at `https://crankmagic.com` with `UAT_LIVE_NETWORK=1`: 23 checks. The backdrops are served
+  (`dwarven-king-1440.webm` 4,455,467 bytes, `island-720.webm` 1,238,568, as built); `volcano.webm` is gone (404).
+- **The rollback target** is **8ab2cca0** (main f2e00ba4, release/pages 8bfca342). No migration, binding or Worker
+  setting changed: the release carries #888 only.
+
+## 2026-10-26: main c567c581 on staging (Rob: "Release it to staging"; a Claude cloud session, after #888)
+
+- **Staging:** `tools/release-staging.sh` from a detached `origin/main` `c567c581` pushed `release/cloud-staging`
+  `94598ee7` (from `a272bf9b`): the build 401 files, 124.3 MB; release-acceptance 23 and play-e2e 44 before the push
+  (Wrangler 4.139.0 installed in the session's scratchpad, Playwright from `/opt/node-tools`).
+- **Deployed:** Workers Builds started 15:47:27 UTC (about 25 minutes after the push, queued) and succeeded at
+  15:48:08 (build `4f4e7397`); `crankmagic-staging` serves version **4fd4def6** at 100% since 15:47:59, read from
+  Cloudflare's deployments API. The rollback target is **b788202c** (main f2e00ba4).
+- **Not read back from the site:** this container's `CF_ACCESS_CLIENT_SECRET` is not in its environment (the network
+  proxy is said to inject it for staging.crankmagic.com, but Access redirected every request to its sign-in), so
+  `tools/staging-check.mjs --expect c567c581` could not run here.
+- **Carries since f2e00ba4:** #888 only (Play 3D's backdrops: Rob's six clips at 720/1080/1440 lines, 2K at most).
+  Production followed the same day (above).
+
 ## 2026-10-25: main 9ca99e5 in production (Rob: "release main 9ca99e5 to production")
 
 Released by the Decks cloud session (`claude/vibrant-turing-50yl3r`), with the Camera and Settings session told before
