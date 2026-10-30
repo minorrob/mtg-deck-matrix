@@ -2954,7 +2954,9 @@ globalThis.CrankBoard = Object.seal({
       if(flowPaused)return {key:`flow:${d.id}:paused`,text:`${d.title}. Resume.`};
       if(choiceFlow){
         const current=CrankChoiceFlow.step(choiceFlow),labels=current.choices.slice(0,6).map(n=>n.label);
-        const text=current.status==='confirm'?'Confirm':labels.join(', ')+(current.choices.length>labels.length?`, and ${current.choices.length-labels.length} more`:'');
+        /* At Confirm the listener hears what is being confirmed (the trail), not the bare word: the screen shows it, so it is said. */
+        const chosen=current.trail.map(n=>n.label).filter(Boolean).slice(-8);
+        const text=current.status==='confirm'?`${chosen.length?`${chosen.join(', ')}. `:''}Confirm`:labels.join(', ')+(current.choices.length>labels.length?`, and ${current.choices.length-labels.length} more`:'');
         return {key:`flow:${d.id}:${flowPaused}:${JSON.stringify(choiceFlow.selections)}`,text:`${d.title}. ${text}.`};
       }
       if (d.kind === "draw") return {key: `ask:${d.id}`, text: `${stepNow()}. Draw card.`};

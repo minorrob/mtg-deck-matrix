@@ -9,8 +9,9 @@
    the stack and a Counterspell offered,
 
      1. the Actions pane lists "Cast Counterspell" and the card in the hand says so;
-     2. pressing it in the pane stages it (Cast Counterspell, Cancel), and the Cast button sends the offer's index (never anything else);
-     3. pressing the card in the hand and then Cast sends the same answer;
+     2. pressing it in the pane stages it in the pop-up (ROB-319: starting an action gives the pop-up the sequence; Counterspell,
+        Confirm, Cancel, nothing sent), and Confirm sends the offer's index (never anything else);
+     3. pressing the card in the hand and then Confirm sends the same answer;
      4. the pane does not offer it when the engine does not (nothing on the stack);
 
    GEOMETRY_REQUIRED=1 refuses a missing browser.
@@ -68,12 +69,15 @@ try {
     /* 1 and 2: from the Actions pane */
     const first = offer();
     await show(first.v);
-    ok(await page.locator("#cm-actions-drawer [data-action=board-option]", {hasText: "Cast Counterspell"}).count() === 1, `${mode}: the Actions pane lists Cast Counterspell`);
+    const listed = "#cm-actions-drawer [data-action=board-option], #cm-actions-drawer [data-action=board-choose]";
+    ok(await page.locator(listed, {hasText: "Cast Counterspell"}).count() === 1, `${mode}: the Actions pane lists Cast Counterspell`);
     ok((await page.$$eval("#cm-board button.cm-bcard", (bs) => bs.map((b) => b.getAttribute("aria-label")))).some((l) => /Counterspell: Cast Counterspell/.test(l)), `${mode}: and the card in the hand says it can be cast`);
-    await page.locator("#cm-actions-drawer [data-action=board-option]", {hasText: "Cast Counterspell"}).click();
-    const confirm = page.locator("#cm-actions-drawer [data-action=board-direct]", {hasText: "Cast Counterspell"}).first();
+    await page.locator(listed, {hasText: "Cast Counterspell"}).click();
+    const confirm = page.locator(".cm-required-popup [data-action=board-flow-confirm]").first();
     await confirm.waitFor({timeout: 5000});
-    ok(acts().length === 0, `${mode}: pressing it only stages it (a Cast Counterspell button, and Cancel, nothing sent)`);
+    const staged = await page.evaluate(() => ({title: document.querySelector(".cm-required-popup h2")?.textContent || "", cancel: !!document.querySelector(".cm-required-popup [data-action=board-flow-cancel]"),
+      pane: document.querySelectorAll(".cm-stage-module[data-module=actions]").length}));
+    ok(acts().length === 0 && staged.title.includes("Counterspell") && staged.cancel && staged.pane === 0, `${mode}: pressing it only stages it in the pop-up (Counterspell, Confirm and Cancel; the pane steps aside; nothing sent) ${JSON.stringify(staged)}`);
     await confirm.click();
     await page.waitForTimeout(400);
     ok(acts().length === 1 && JSON.stringify(acts()[0].indices) === "[1]", `${mode}: its Cast button sends the offer's index (${JSON.stringify(acts().map((a) => a.indices))})`);
@@ -83,7 +87,7 @@ try {
     const second = offer();
     await show(second.v);
     await page.locator(`#cm-board button.cm-bcard[data-card="${second.cardId}"]`).first().click();
-    const confirm2 = page.locator("#cm-actions-drawer [data-action=board-direct]", {hasText: "Cast Counterspell"}).first();
+    const confirm2 = page.locator(".cm-required-popup [data-action=board-flow-confirm]").first();
     await confirm2.waitFor({timeout: 5000});
     await confirm2.click();
     await page.waitForTimeout(400);
@@ -91,7 +95,7 @@ try {
 
     /* 4: not offered when the engine does not offer it */
     await show(offer({withStack: false, withCounter: false}).v);
-    ok(await page.locator("#cm-actions-drawer [data-action=board-option]", {hasText: "Cast Counterspell"}).count() === 0, `${mode}: with nothing on the stack and no offer, the pane does not invent one`);
+    ok(await page.locator(`${listed}, .cm-required-popup [data-action=board-flow-confirm]`, {hasText: /Counterspell|Confirm/}).count() === 0, `${mode}: with nothing on the stack and no offer, the pane does not invent one`);
 
     ok(errors.length === 0, `${mode}: no page error (${errors[0] || "none"})`);
     await context.close();
