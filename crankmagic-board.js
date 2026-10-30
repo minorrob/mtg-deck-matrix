@@ -2249,21 +2249,48 @@ globalThis.CrankBoard = Object.seal({
     const old = document.getElementById("cm-board-peek");
     if (!el) {peekId = null; if (old) old.remove(); return;}
     /* The hover always shows the card (Rob, 2026-10-25: "Even when an action to decide on a selected card, my on-hover for
-       any card should still work to pop-up the card"), but for the very card pinned in the inspector, already shown. */
+       any card should still work to pop-up the card"; and 2026-10-29, ROB-318: "always, in every circumstance"), the one pinned in
+       the inspector too: it had been left out as already shown, and a hover that sometimes does nothing is not one to rely on. */
     const id = el.dataset.card ?? el.dataset.peekCard;
-    if (inspection && !deskInspection() && inspection.kind === "card" && inspection.id === String(id)) return;
     peekId = Number(id);
     peekTimer = setTimeout(() => {
       peekTimer = null;
       if (!el.isConnected && !stillUnder(peekId)) {peekId = null; return;}
       const c = findCard(Number(id)) || shownCard(Number(id));
       if (!c || !c.name || !document.getElementById("cm-board")) return;
-      const div = old || Object.assign(document.createElement("div"), {id: "cm-board-peek", className: "cm-board-peek"});
+      /* Looked up when the delay ends, not before it: a pop-up taken away in between would leave this one built on a detached element. */
+      const now = document.getElementById("cm-board-peek");
+      const div = now || Object.assign(document.createElement("div"), {id: "cm-board-peek", className: "cm-board-peek"});
       /* Said as well as shown, by the board's status region; the picture itself is not read twice. */
       div.setAttribute("aria-hidden", "true");
       div.innerHTML = card(c, {where: "peek", action: "none"});
-      if (!old) document.getElementById("cm-board").append(div);
+      if (!now) document.getElementById("cm-board").append(div);
       say(`Showing ${c.name}`);
+    }, 350);
+  }
+  /* ANY CARD PICTURE POPS UP LARGE (ROB-318; Rob, 2026-10-29: "anywhere a card image is shown the on-hover to show a bigger image of
+     the card is active"). A card on the mat, in an option or in the hand has its own hover (`peek`, by card number); a picture
+     with no card number of its own -- a seat's commander, the card on top of the stack, an opponent's play held up for ten
+     seconds, a card in a card's menu, a picture in a question -- is shown at the same size, from its own source. The pictures
+     that are already the large one (the Panel's card, Card zoom, the inspector) and the pop-ups themselves are left alone. */
+  const PICTURE = ":is(#cm-board, #cm-board-plays, #cm-card-menu) img[src*='scryfall.']";
+  /* The picture under the pointer: the image itself, or, for a pile whose pictures let the pointer through to their button (the
+     stack's), its front card. */
+  const pictureIn = (el) => el?.closest?.(PICTURE) || el?.closest?.(".cm-stack-pile")?.querySelector(".cm-stack-card:not(.is-back) img") || null;
+  /* ...found at the pointer: the top element's, else a picture just under a ring or a label drawn over it (the seat's commander). */
+  const pictureAt = (target, at = pointerAt) => pictureIn(target) || (at ? document.elementsFromPoint(at.x, at.y).slice(0, 4).map(pictureIn).find(Boolean) : null) || null;
+  const PICTURE_SKIP = ".cm-board-peek, #cm-stack-peek, #cm-card-inspector, .cm-full-pick, .cm-panel-card, .cm-zoom";
+  function peekPicture(img) {
+    if (!img) {peek(null); return;}
+    clearTimeout(peekTimer);
+    peekTimer = setTimeout(() => {
+      peekTimer = null;
+      if (!img.isConnected || !document.getElementById("cm-board")) return;
+      const old = document.getElementById("cm-board-peek");
+      const div = old || Object.assign(document.createElement("div"), {id: "cm-board-peek", className: "cm-board-peek"});
+      div.setAttribute("aria-hidden", "true");
+      div.innerHTML = `<span class="cm-bcard"><img src="${e(img.getAttribute("src"))}" alt="" referrerpolicy="no-referrer"></span>`;
+      if (!old) document.getElementById("cm-board").append(div);
     }, 350);
   }
   /* A STACK ENTRY'S CARD, beside the On the stack box at the hover's size: to its left where the window has the room,
@@ -2848,7 +2875,14 @@ globalThis.CrankBoard = Object.seal({
     const coachSelection=coachActive&&typeof coachActive.selectionStart==='number'?[coachActive.selectionStart,coachActive.selectionEnd,coachActive.selectionDirection]:null;
     const caret = active && active.matches && active.matches("[data-board-history-filter]") ? active.selectionStart : null;
     const focusData = active?.closest?.("#cm-board") ? {...active.dataset} : null;
+    /* A pop-up shown over a card survives a redraw (ROB-318): the board is rebuilt under the pointer, which removed it and let it
+       come back a third of a second later. It is kept only while the pointer is still over something that earns it. */
+    const keptPeek = document.getElementById("cm-board-peek");
     render();
+    if (keptPeek && !document.getElementById("cm-board-peek")) {
+      const under = pointerAt && document.elementFromPoint(pointerAt.x, pointerAt.y), host = document.getElementById("cm-board");
+      if (host && under && (under.closest(".cm-board .cm-bcard[data-card], #cm-board [data-peek-card]") || pictureAt(under, null))) host.append(keptPeek);
+    }
     if (focusData && Object.keys(focusData).length) {
       const next = [...document.querySelectorAll("#cm-board button, #cm-board input, #cm-board select, #cm-board textarea")].find((el) =>
         Object.entries(focusData).every(([key, value]) => el.dataset[key] === value));
@@ -4408,7 +4442,12 @@ globalThis.CrankBoard = Object.seal({
     if (event.pointerType !== "mouse" || !document.getElementById("cm-board") || !view) return;
     /* A card, or an option that names one (data-peek-card: "Interplanar Beacon" in a cost's question), pops it up. */
     const el = event.target.closest && event.target.closest(".cm-board .cm-bcard[data-card], #cm-board [data-peek-card]");
-    if (!el || el.closest(".cm-board-peek, .cm-full-pick, .cm-panel-card, #cm-card-inspector")) return;
+    if (!el) {
+      const pic = pictureAt(event.target);
+      if (pic && !pic.closest(PICTURE_SKIP) && !showing) peekPicture(pic);
+      return;
+    }
+    if (el.closest(".cm-board-peek, .cm-full-pick, .cm-panel-card, #cm-card-inspector")) return;
     if (el.dataset.peekCard !== undefined) {if (!showing && peekId !== Number(el.dataset.peekCard)) peek(el); return;}
     const id = Number(el.dataset.card); if (id !== hover) {hover = id; drawPick();}
     if (!showing) peek(el);
@@ -4424,7 +4463,11 @@ globalThis.CrankBoard = Object.seal({
     const named = event.target.closest?.("#cm-board [data-peek-card]");
     if (named && !named.contains(event.relatedTarget)) {peek(null); return;}
     const el = event.target.closest && event.target.closest(".cm-board .cm-bcard[data-card]");
-    if (!el) return;
+    if (!el) {
+      const pic = pictureAt(event.target);
+      if (pic && !(event.target.closest?.(".cm-stack-pile") || pic).contains(event.relatedTarget)) peekPicture(null);
+      return;
+    }
     if (hover !== null) {hover = null; drawPick();}
     peek(null);
   });
