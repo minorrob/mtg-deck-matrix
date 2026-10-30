@@ -19,7 +19,7 @@ administrator: `OWNER_EMAIL`, else `ADMIN_EMAIL`, else the invite admin). They a
 
 ## 2. The stored model setting
 
-Migration `cloud/migrations/0011_ai_settings.sql` (numbering is the engine lane's; 0011 is the next free number on
+Migration `cloud/migrations/0012_ai_settings.sql` (numbering is the engine lane's; 0012 follows ROB-320's 0011 (the next free number was 0011 on
 `origin/main` at 2026-10-31, where 0007 and 0008 are reserved. ROB-320 also adds a migration, so the integrator may renumber;
 nothing in the code names the number except the file name and the suites that read the file):
 
@@ -68,7 +68,7 @@ and is still in `MODELS`).
 | Route | Body | Answer |
 | -- | -- | -- |
 | `GET /api/admin/ai-model` | | `200 {owner: true, model: {id, source: "stored"\|"env"\|"default"}, previous: id\|null, default, updatedAt\|null, models: [{id, name, allowed, current, reason?}], listError?: string, storage: "ready"\|"missing"}` |
-| `PUT /api/admin/ai-model` | `{model}` | `200` the same as GET after the change; `400` no model; `422` not allowed / not listed; `502` list did not load; `503` no database, no key, or migration 0011 not applied |
+| `PUT /api/admin/ai-model` | `{model}` | `200` the same as GET after the change; `400` no model; `422` not allowed / not listed; `502` list did not load; `503` no database, no key, or migration 0012 not applied |
 | `POST /api/admin/ai-model/undo` | `{}` | `200` as above; `409` nothing to undo |
 
 Writes carry `x-crankmagic: sync` and `content-type: application/json`, as `PUT /api/admin/groups` does.
@@ -92,7 +92,7 @@ AI-only game spends nothing); speed is the room's own (no setting).
 
 ## 6. Files
 
-New: `cloud/migrations/0011_ai_settings.sql`, `cloud/ai-model.mjs` (`storedModel`, `listModels`, `modelAdmin`),
+New: `cloud/migrations/0012_ai_settings.sql`, `cloud/ai-model.mjs` (`storedModel`, `listModels`, `modelAdmin`),
 `crankmagic-admin-ai.js` (the panes), this document, `tests/admin-ai-model.mjs`, `tests/admin-ai-table.mjs`,
 `tests/admin-ai-ui.mjs`. Changed, minimally: `cloud/ai.mjs` (`settings(env, stored)`), `cloud/worker.mjs` (the routes, and the
 stored model read at each `settings` call), `cloud/game-room.mjs` (the stored model read at its two `settings` calls),

@@ -70,7 +70,7 @@ const fetchImpl = async (url, init = {}) => {
   return new Response("no", {status: 404});
 };
 
-const MIGRATIONS = ["0001_accounts.sql", "0002_ai.sql", "0011_ai_settings.sql"];
+const MIGRATIONS = ["0001_accounts.sql", "0002_ai.sql", "0012_ai_settings.sql"];
 let DB = d1(MIGRATIONS);
 const base = (extra = {}) => ({DB, ACCESS_TEAM_DOMAIN: TEAM, ACCESS_AUD: AUD, AI_ACCESS_AUD: AI_AUD, ANTHROPIC_API_KEY: KEY, AI_CAP_PERSON_CENTS: "25", AI_CAP_TOTAL_CENTS: "100", OWNER_EMAIL: "Owner@Example.com", ...extra});
 async function call(path, {env = base(), jwt, method = "GET", body, headers = {}} = {}) {

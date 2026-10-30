@@ -27,7 +27,7 @@ const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1;};
 
 function d1() {
   const db = new DatabaseSync(":memory:");
-  for (const f of ["0001_accounts.sql", "0002_ai.sql", "0011_ai_settings.sql"]) db.exec(readFileSync(new URL(`../cloud/migrations/${f}`, import.meta.url), "utf8"));
+  for (const f of ["0001_accounts.sql", "0002_ai.sql", "0012_ai_settings.sql"]) db.exec(readFileSync(new URL(`../cloud/migrations/${f}`, import.meta.url), "utf8"));
   const statement = (sql, args = []) => ({bind: (...values) => statement(sql, values), first: async () => db.prepare(sql).get(...args) ?? null,
     all: async () => ({results: db.prepare(sql).all(...args), success: true, meta: {}}), run: async () => ({success: true, meta: {changes: Number(db.prepare(sql).run(...args).changes)}})});
   return {raw: db, prepare: (sql) => statement(sql), batch: async () => {throw Error("unused");}};

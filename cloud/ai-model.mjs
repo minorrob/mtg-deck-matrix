@@ -1,4 +1,4 @@
-/* THE OWNER'S AI MODEL (ROB-338; docs/program/admin-pane-contract.md; migration 0011_ai_settings.sql).
+/* THE OWNER'S AI MODEL (ROB-338; docs/program/admin-pane-contract.md; migration 0012_ai_settings.sql).
  *
  * Rob, 2026-10-30: "I would like to be able to change the model based on the models available to us from the API in the admin
  * pane." Which Claude model the AI door calls is, in order: the owner's stored choice (a row in ai_settings), else the AI_MODEL
@@ -20,7 +20,7 @@ const PAGES = 5, PAGE_SIZE = 1000, TIMEOUT_MS = 15000;
 const missing = (error) => /no such table/i.test(String(error && error.message));
 const NOTHING = " Nothing was changed.";
 
-/** The owner's stored model, or null: no database, no row, or a database where migration 0011 is not applied yet. */
+/** The owner's stored model, or null: no database, no row, or a database where migration 0012 is not applied yet. */
 export async function storedModel(db) {
   if (!db) return null;
   try {
@@ -65,7 +65,7 @@ const english = (ids) => ids.length === 2 ? ids.join(" and ") : ids.join(", ");
  */
 export function modelAdmin(env, {now = () => new Date().toISOString(), fetchImpl = fetch} = {}) {
   const db = env.DB;
-  /* The row, or null; `table` false where migration 0011 is not applied. */
+  /* The row, or null; `table` false where migration 0012 is not applied. */
   async function row() {
     if (!db) return {table: false, row: null};
     try {
@@ -94,7 +94,7 @@ export function modelAdmin(env, {now = () => new Date().toISOString(), fetchImpl
 
   const writable = async () => {
     const state = await row();
-    if (!state.table) throw new Closed("Storing the model needs migration 0011 (ai_settings) applied to this database." + NOTHING, 503);
+    if (!state.table) throw new Closed("Storing the model needs migration 0012 (ai_settings) applied to this database." + NOTHING, 503);
     return state.row;
   };
   const save = (value, previous, email) => db.prepare(
