@@ -6,7 +6,9 @@ import {createLibrary, Conflict} from './library.mjs';
 import {ADVISE_CARDS,ADVISE_FIELDS} from './advise-cards.mjs';
 import {mailReady,sendMail} from './mail.mjs';
 import {admitAddress,inviteTargets} from './access-invites.mjs';
-import {INVITE_SUBJECT,inviteText,inviteHtml} from './invite-email.mjs';
+import {INVITE_SUBJECT,inviteText,inviteHtml,gameInviteSubject,gameInviteText,gameInviteHtml} from './invite-email.mjs';
+import {inviteAddress,vetInvitees,GROUP_NAMES,NO_AI} from './invitations.mjs';
+import {groupOf} from './access.mjs';
 const M = globalThis.CrankCollection, E = globalThis.CrankExchange;
 // Only immutable, sanitized projections are memoized. Never cache permissions, full backups,
 // bindings, promises, or request objects. Each database has a bounded, best-effort cache.
@@ -36,11 +38,14 @@ export function sharing(db,env,{now=()=>new Date().toISOString(),fetchImpl=fetch
   const library=createLibrary(db,{now}),q=(sql,...args)=>db.prepare(sql).bind(...args);
   const all=async(sql,...args)=>(await q(sql,...args).all()).results;
   const isAdmin=person=>!!person&&!person.service&&typeof person.email==='string'&&person.email.includes('@')&&!person.email.startsWith('service:')&&!!env.INVITE_ADMIN_ID&&String(person.id)===String(env.INVITE_ADMIN_ID);
+  const canInvite=person=>!!person&&!person.service&&typeof person.email==='string'&&person.email.includes('@')&&!person.email.startsWith('service:');
   async function profile(person){
     await q("INSERT INTO profiles(user_id,name,avatar,updated_at) VALUES (?,'','',?) ON CONFLICT(user_id) DO NOTHING",person.id,now()).run();
     const p=await q('SELECT name,avatar,email FROM profiles WHERE user_id=?',person.id).first();
     const admin=isAdmin(person);
-    return {...p,id:person.id,email:p.email||person.email,canInvite:admin,isAdmin:admin,emailReady:mailReady(env)};
+    /* ROB-320: anyone signed in may invite (five people at most, as General; only the owner may grant AI: cloud/invitations.mjs).
+       `isAdmin` is still the administrator alone, and it alone opens Admin's operational pages. */
+    return {...p,id:person.id,email:p.email||person.email,canInvite:canInvite(person),isAdmin:admin,emailReady:mailReady(env)};
   }
   async function snapshot(owner,knownHead){const head=knownHead||await library.head(owner);if(!head)fail('Sync your library to the cloud before sharing it.',409);const version=await library.version(owner,head.id);return {head,data:await decode(version.body)};}
   async function permitted(id,person,write=false,owner=false){
@@ -93,10 +98,14 @@ export function sharing(db,env,{now=()=>new Date().toISOString(),fetchImpl=fetch
     if(!s)return {id:null,revision:0,publicRole:null,grants:[]};
     return {id:s.id,revision:s.revision,publicRole:s.public_role,grants:await all('SELECT g.user_id AS id,g.role,COALESCE(p.email,u.email) AS email,p.name FROM share_grants g JOIN users u ON u.id=g.user_id LEFT JOIN profiles p ON p.user_id=u.id WHERE g.share_id=?',s.id)};
   }
-  async function queue(person,to,subject,text){const id=crypto.randomUUID();await q('INSERT INTO share_mail(id,actor_id,recipient,subject,text,created_at) VALUES (?,?,?,?,?,?)',id,person.id,to,subject,text,now()).run();return id;}
+  /* `id` is given for a message that must exist once however often it is asked for (a game's invitation: one per table and person). */
+  async function queue(person,to,subject,text,id=crypto.randomUUID()){await q('INSERT INTO share_mail(id,actor_id,recipient,subject,text,created_at) VALUES (?,?,?,?,?,?) ON CONFLICT(id) DO NOTHING',id,person.id,to,subject,text,now()).run();return id;}
   /* The invitation goes as HTML too. Nothing but its text is stored, so a retry draws the HTML again from the
      invitation's own row: the same name, and the link its text carries. */
   async function html(row){
+    /* A game's invitation (ROB-320): the host is in the subject, the name and the lobby link are in the text. */
+    const game=/^(.{1,60}) invited you to a CrankMagic game$/.exec(row.subject);
+    if(game){const parts=/^Hi (.*),\n\n[\s\S]*\n\n(\S+)$/.exec(row.text);return parts?gameInviteHtml({name:parts[1],host:game[1],link:parts[2]}):null;}
     if(row.subject!==INVITE_SUBJECT)return null;
     const invited=await q('SELECT name FROM account_invitations WHERE email=?',row.recipient).first(),link=/\n\n(\S+)$/.exec(row.text)?.[1];
     return invited&&link?inviteHtml({name:invited.name,link}):null;
@@ -157,9 +166,17 @@ export function sharing(db,env,{now=()=>new Date().toISOString(),fetchImpl=fetch
     const text=`${c.name}\n\nCommanders: ${c.commanders.map(x=>x.name).join(' + ')}\n\n${[...counts].map(([n,q])=>`${q} ${n}`).join('\n')}\n\nShared deck: ${origin}/api/auth/login?to=${encodeURIComponent(s.id?'#shared?item='+s.id:'#shared')}\nA deck email is a list copy. Signing in and permission are required to open the live shared deck.`;
     return delivery(person,await queue(person,to,`CrankMagic deck: ${c.name}`,text));
   }
-  async function admit(to){
-    return admitAddress(db,env,to,{now,fetchImpl,fail});
+  async function admit(to,group){
+    return admitAddress(db,env,to,{now,fetchImpl,fail,group});
   }
+  /* The person's account exists once they are admitted: a profile under the name they were invited by. */
+  async function register(canonical,name){
+    const invited=await library.user(canonical);await profile(invited);
+    await q("UPDATE profiles SET name=? WHERE user_id=? AND name=''",name,invited.id).run();
+  }
+  const inviter=async person=>({id:person.id,email:person.email,owner:isAdmin(person)||(await groupOf(person.email,env,db))==='owner'});
+  const configured=group=>mailReady(env)&&!!env.ACCESS_INVITE_TOKEN&&inviteTargets(env,group).length>0&&!!env.CLOUDFLARE_ACCOUNT_ID;
+  const notConfigured=()=>fail('Invitations need email delivery and Access invitation permissions configured by the administrator.',503);
   return {profile,list,read,settings,save,edit,queue,delivery,emailDeck,
     async requestEmail(person,input,origin){
       if(!mailReady(env)||env.SHARING_ENABLED!=='on')fail('Verified email changes need the sharing service and email delivery configured. Your current address is unchanged.',503);
@@ -175,25 +192,47 @@ export function sharing(db,env,{now=()=>new Date().toISOString(),fetchImpl=fetch
       const hash=await E.hash(str(input.token,100));
       const pending=await q('SELECT email FROM profile_email_changes WHERE token_hash=? AND user_id=? AND expires_at>?',hash,person.id,now()).first();if(!pending)fail('This verification expired or belongs to another account. Request a new verification.',400);
       if(await q('SELECT id FROM users WHERE email=? UNION SELECT user_id AS id FROM profiles WHERE email=? UNION SELECT user_id AS id FROM account_identities WHERE email=?',pending.email,pending.email,pending.email).first())fail('That address now belongs to an account. Request another address.',409);
-      await admit(pending.email);const previous=(await profile(person)).email,guard=crypto.randomUUID();
+      /* The new address is admitted through the group the person is already in. */
+      await admit(pending.email,['owner','insider'].includes(await groupOf(person.email,env,db))?'insider':'general');const previous=(await profile(person)).email,guard=crypto.randomUUID();
       await db.batch([q('DELETE FROM profile_email_changes WHERE token_hash=? AND user_id=? AND expires_at>?',hash,person.id,now()),q('INSERT INTO share_cas_guard(id,ok) VALUES (?,changes())',guard),q('INSERT INTO account_identities(email,user_id,active) VALUES (?,?,0) ON CONFLICT(email) DO UPDATE SET active=0',previous,person.id),q('INSERT INTO account_identities(email,user_id,active) VALUES (?,?,1)',pending.email,person.id),q('UPDATE profiles SET email=?,updated_at=? WHERE user_id=?',pending.email,now(),person.id),q('DELETE FROM share_cas_guard WHERE id=?',guard)]);
       return {email:pending.email,signOut:true};
     },
     async search(person,query){const term=str(query||'',100);if(term.length<3)return {users:[]};const pattern=term.replace(/[\\%_]/g,'\\$&')+'%';return {users:await all("SELECT u.id,COALESCE(p.email,u.email) AS email,COALESCE(p.name,'') AS name FROM users u LEFT JOIN profiles p ON p.user_id=u.id WHERE u.id<>? AND u.email NOT LIKE 'service:%' AND (COALESCE(p.email,u.email) LIKE ? ESCAPE '\\' OR p.name LIKE ? ESCAPE '\\') ORDER BY p.name,u.email LIMIT 8",person.id,pattern,pattern)};},
     async updateProfile(person,input){const name=str(input.name,80),avatar=str(input.avatar||'',120000);if(avatar&&!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+=*$/.test(avatar))fail('Choose a PNG, JPEG or WebP profile picture.');await profile(person);await q('UPDATE profiles SET name=?,avatar=?,updated_at=? WHERE user_id=?',name,avatar,now(),person.id).run();return profile(person);},
     async invite(person,input,origin){
-      if(!isAdmin(person))fail('Only the CrankMagic administrator can invite new accounts.',403);
+      /* ROB-320 (Rob, 2026-10-30): anyone signed in may invite, five at most, as General; only the owner may grant AI. */
+      if(!canInvite(person))fail('Only a signed-in person can invite someone.',403);
       const to=email(input.email),name=str(input.name,80),canonical=await sharedIdentity(db,to);if(canonical===null)fail('That sign-in address was retired. Invite the person at their current address.',409);if(!name)fail('Enter the invited person’s name.');
-      if(!mailReady(env)||!env.ACCESS_INVITE_TOKEN||!inviteTargets(env).length||!env.CLOUDFLARE_ACCOUNT_ID)fail('Invitations need email delivery and Access invitation permissions configured by the administrator.',503);
-      await q("INSERT INTO account_invitations(email,name,invited_by,created_at,status) VALUES (?,?,?,?,'pending') ON CONFLICT(email) DO UPDATE SET name=excluded.name",to,name,person.id,now()).run();
-      /* Every application, every time: admission is idempotent (an address already on a policy is read, not written),
-         and an application added to the list since an earlier invitation is reached by sending it again. No email
-         goes until every one has confirmed the address. */
-      const access=await admit(to);
-      await q("UPDATE account_invitations SET status='admitted' WHERE email=?",to).run();
-      const invited=await library.user(canonical);await profile(invited);await q("UPDATE profiles SET name=? WHERE user_id=? AND name=''",name,invited.id).run();
+      if(input.group!==undefined&&input.group!==null&&!GROUP_NAMES.includes(input.group))fail('Choose Game Theory Insider or General.');
+      if(input.group==='insider'&&!(await inviter(person)).owner)fail(NO_AI,403);/* before the configuration: who may grant AI does not depend on it */
+      if(!configured(input.group||'general'))notConfigured();
+      /* The group, the cap, the record and every application, every time (cloud/invitations.mjs): admission is idempotent
+         (an address already on a policy is read, not written), and an application added to the list since an earlier
+         invitation is reached by sending it again. No email goes until every one has confirmed the address. */
+      const done=await inviteAddress(db,env,{inviter:await inviter(person),to,name,group:input.group,source:'settings',now,fetchImpl,fail});
+      await register(canonical,name);
       const link=`${env.INVITE_LINK_ORIGIN||origin}/api/auth/login?to=%23welcome`;
-      return {...await delivery(person,await queue(person,to,INVITE_SUBJECT,inviteText({name,link}))),access};
+      return {...await delivery(person,await queue(person,to,INVITE_SUBJECT,inviteText({name,link}))),access:done.access,group:done.group};
+    },
+    /* A GAME'S GUEST (ROB-320; cloud/tables.mjs Create game): the same admission and record, then the game's email with the
+       lobby link and the guest's name. One message per table and person, so sending it again never sends it twice. */
+    /* Create game's plan: every guest checked whole (cap, group, duplicates), nothing written (cloud/invitations.mjs vetInvitees). */
+    async planGuests(person,people){
+      if(!canInvite(person))fail('Only a signed-in person can invite someone.',403);
+      return vetInvitees(db,env,{inviter:await inviter(person),people,fail});
+    },
+    async inviteToGame(person,input,origin){
+      if(!canInvite(person))fail('Only a signed-in person can invite someone.',403);
+      const to=email(input.to),name=str(input.name||'',80)||to.split('@')[0],canonical=await sharedIdentity(db,to);
+      if(canonical===null)fail('That sign-in address was retired. Invite the person at their current address.',409);
+      const tableId=str(input.tableId,40),host=str(input.hostName||'',60)||'A friend';
+      if(!mailReady(env))fail('Invitation email is not configured here, so the invitation was not sent.',503);
+      const done=await inviteAddress(db,env,{inviter:await inviter(person),to,name,group:input.group,source:'game',tableId,now,fetchImpl,fail});
+      await register(canonical,name);
+      const link=`${env.INVITE_LINK_ORIGIN||origin}/api/join/${tableId}`;
+      const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(to)))).slice(0,12).map(b=>b.toString(16).padStart(2,'0')).join('');
+      const id=await queue(person,to,gameInviteSubject(host),gameInviteText({name,host,link}),`game:${tableId}:${digest}`);
+      return {...await delivery(person,id),access:done.access,group:done.group};
     },
     /* Admin › General: what this copy is set up to do, as yes or no. Never a secret, an address or a policy's rules. */
     async admin(person,origin){

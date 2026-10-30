@@ -7,10 +7,12 @@
   async function read(path){const r=await fetch(path,{credentials:'same-origin',redirect:'manual',cache:'no-store'});
     if(r.type==='opaqueredirect'||r.status===401)throw Error('Sign in to open Admin.');
     const value=await r.json().catch(()=>({}));if(!r.ok)throw Error(value.error||'Admin is unavailable. Try again.');return value;}
-  const menuAllowed=()=>person?.admin===true||C.canInvite?.()===true;
-  const menu=()=>menuAllowed()?'<a class="v-button" href="#admin" data-action="open-admin" data-admin-link>Admin</a>':'';
+  /* Admin is the administrator's (read or invite owner); anyone else who may invite gets Invite alone (ROB-320). */
+  const menuAllowed=()=>person?.admin===true||C.inviteAdmin?.()===true;
+  const inviteAllowed=()=>!menuAllowed()&&C.canInvite?.()===true;
+  const menu=()=>menuAllowed()?'<a class="v-button" href="#admin" data-action="open-admin" data-admin-link>Admin</a>':inviteAllowed()?'<button type="button" class="v-button" data-action="invite-crankmagic">Invite</button>':'';
   function drawMenu(){const target=document.getElementById('cm-user-menu');if(!target)return;
-    let slot=target.querySelector('[data-admin-menu]');if(!slot&&!menuAllowed())return;if(!slot){slot=document.createElement('div');slot.dataset.adminMenu='';(target.querySelector('[aria-label="You"]')||target).append(slot);}slot.innerHTML=menu();}
+    let slot=target.querySelector('[data-admin-menu]');if(!slot&&!menuAllowed()&&!inviteAllowed())return;if(!slot){slot=document.createElement('div');slot.dataset.adminMenu='';(target.querySelector('[aria-label="You"]')||target).append(slot);}slot.innerHTML=menu();}
   async function identity(force=false){if(!enabled)return false;if(checking)return checking;if(person&&!force)return person.admin===true;
     checking=read('/api/me').then(value=>{person={admin:value.admin===true,owner:value.group==='owner'};drawMenu();return person.admin;}).catch(error=>{person={admin:false,error:error.message};drawMenu();return false;}).finally(()=>{checking=null;});return checking;}
   C.adminAllowed=()=>person?.admin===true;

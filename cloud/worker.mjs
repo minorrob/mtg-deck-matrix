@@ -6,7 +6,7 @@
  * to the person rather than settled here.
  *
  *   GET  /api/auth/login?to=#…     after Access has signed the person in, back to the app (a same-site path only)
- *   GET  /api/join/:table/:code    an invitation's link: back to the app at #table/<table>/<code>, after Access's sign-in
+ *   GET  /api/join/:table[/:code]  an invitation's link: back to the app at #table/<table>/<code> (or, with no code, the email's lobby link, #table?id=<table>&join=1), after Access's sign-in
  *   GET  /api/me                   who is signed in, and the version their devices converge on
  *   GET  /api/ai-seat              whether this person may seat an AI on Claude at a new table (AI-2): {open, levels}
  *   GET  /api/users/search?q=      people a host may invite by name, never an address: {users: [{name, handle}]} (cloud/lounge.mjs)
@@ -45,6 +45,7 @@ import {createAi, everyone, settings, explain, coach, advise, readQuestion, Clos
 import {storedModel, modelAdmin} from "./ai-model.mjs";
 import {readAsk, openVersion, adviseBrief} from "./advise.mjs";
 import {tables} from "./tables.mjs";
+import {gameInvitations} from "./game-invites.mjs";
 import {searchUsers, leaderboard, SEATABLE_LEVELS} from "./lounge.mjs";
 import {social, ShareError, sharedIdentity} from "./sharing.mjs";
 import {createFeedback, FeedbackInvalid, FeedbackRefused, isOwner, feedbackGroup} from "./feedback.mjs";
@@ -110,7 +111,10 @@ async function adminModel(request, env, who, deps, ms) {
     null when the path is not one (the suites' browsers ask this too, behind their stand-in for Access). */
 export function joinLocation(url) {
   const link = /^\/api\/join\/([a-z0-9]{8,40})\/([A-Za-z0-9_-]{20,100})$/.exec(url.pathname);
-  return link ? `${url.origin}/#table/${link[1]}/${link[2]}` : null;
+  if (link) return `${url.origin}/#table/${link[1]}/${link[2]}`;
+  /* The lobby link an invitation email carries (ROB-320): no code. The person's address is the invitation; the app posts `join` once. */
+  const lobby = /^\/api\/join\/([a-z0-9]{8,40})$/.exec(url.pathname);
+  return lobby ? `${url.origin}/#table?id=${lobby[1]}&join=1` : null;
 }
 
 const HEADERS = {
@@ -263,7 +267,7 @@ export async function handle(request, env, deps = {}) {
     const origin = request.headers.get("origin");
     if (method !== "GET" && !fromTheApp(request, url, "play")) return reply(403, {error: "That request did not come from CrankMagic."});
     if (request.headers.get("upgrade") === "websocket" && origin !== url.origin) return reply(403, {error: "That request did not come from CrankMagic."});
-    return tables(request, env, who);
+    return tables(request, env, who, {invitations: gameInvitations(env, who, {now: () => new Date(ms()).toISOString(), fetchImpl: deps.fetchImpl ?? fetch, origin: url.origin})});
   }
   /* FEEDBACK (the feedback loop, PR 1; cloud/feedback.mjs): any signed-in person, from the app's own sheet. The reporter
      is who Access named, never a name in the report; a screenshot is not kept until R2 is on. */

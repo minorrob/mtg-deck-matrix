@@ -59,7 +59,7 @@
     const st = {
       observe: false, humans: 1, ai: ai ? 1 : 3, privacy: "Private", life: "40", bracket: "Any", house: false, hostName: savedHost(), hostEditing: !savedHost(), busy: false, error: "",
       canVeteran: false, levels: ["easy", "normal"], searchKnown: true,
-      hRows: [0, 1, 2].map(() => ({kind: "cm", query: "", picked: "", open: false, name: "", email: "", results: []})),
+      hRows: [0, 1, 2].map(() => ({kind: "cm", query: "", picked: "", open: false, name: "", email: "", group: "insider", results: []})),
       aRows: PERSONA_ORDER.map((p) => ({persona: p, difficulty: "Normal", name: "", touched: false, menu: null, hover: null})),
     };
     if (ai) st.aRows[0].persona = "sable";
@@ -143,7 +143,8 @@
         rest = `<div class="cm-ng-combo"><label class="cm-ng-cell"><span class="cm-pl-sr">Find a CrankMagic user for seat ${seat}</span><input role="combobox" aria-expanded="${r.open}" aria-autocomplete="list" data-ng-field="query" data-row="${i}" data-focus="q${i}" autocomplete="off" value="${e(r.query)}" placeholder="Search registered players" class="${r.picked ? "is-picked" : ""}"></label><span class="cm-ng-mag">${SEARCH}</span>${list}</div>`;
       } else {
         rest = `<label class="cm-ng-cell"><span class="cm-pl-sr">Seat ${seat} name</span><input data-ng-field="name" data-row="${i}" data-focus="n${i}" value="${e(r.name)}" placeholder="Their name" maxlength="60"></label>
-          <label class="cm-ng-cell"><span class="cm-pl-sr">Seat ${seat} email</span><input type="email" data-ng-field="email" data-row="${i}" data-focus="e${i}" value="${e(r.email)}" placeholder="Their email, for the invitation"></label>`;
+          <label class="cm-ng-cell"><span class="cm-pl-sr">Seat ${seat} email</span><input type="email" data-ng-field="email" data-row="${i}" data-focus="e${i}" value="${e(r.email)}" placeholder="Their email, for the invitation"></label>
+          ${C.inviteAdmin?.() === true ? `<label class="cm-ng-cell cm-ng-group" style="grid-column:2 / -1"><span class="cm-pl-sr">Seat ${seat} group</span><select data-ng-field="group" data-row="${i}"><option value="insider"${r.group === "insider" ? " selected" : ""}>Game Theory Insider · AI</option><option value="general"${r.group === "general" ? " selected" : ""}>General · no AI</option></select></label>` : ""}`;
       }
       return `<div class="cm-ng-row is-human"><span class="cm-ng-seat">Seat ${seat}</span>${kind}${rest}</div>`;
     };
@@ -185,7 +186,7 @@
             <div class="cm-ng-field"><span id="cm-ng-house">House rules</span><div class="cm-ng-housebox"><button type="button" role="switch" class="cm-ng-switch${st.house ? " is-on" : ""}" aria-checked="${st.house}" aria-labelledby="cm-ng-house" data-ng="house"><i aria-hidden="true"></i></button><b>${st.house ? "On" : "Off"}</b></div></div>
             <p class="cm-ng-rulehint">${st.house ? "Your table plays its house rules. Players see them in the lobby before they ready up." : "Off plays official Commander rules."}</p></div></section>
           <hr>
-          <section aria-labelledby="cm-ng-priv" class="cm-ng-sec is-rules"><h3 id="cm-ng-priv">Game privacy</h3><div role="radiogroup" aria-labelledby="cm-ng-priv" class="cm-ng-privacy">${[["Public", "Listed in Live games. Anyone can watch or ask to join."], ["Private", "Invitation only. Hidden from Live games."]].map(([label, sub]) => `<button type="button" role="radio" class="cm-ng-radio${st.privacy === label ? " is-on" : ""}" aria-checked="${st.privacy === label}" data-ng="privacy" data-id="${label}"><i aria-hidden="true"></i><span class="cm-ng-two"><b>${label}</b><span>${sub}</span></span></button>`).join("")}</div></section>
+          <section aria-labelledby="cm-ng-priv" class="cm-ng-sec is-rules"><h3 id="cm-ng-priv">Game privacy</h3><div role="radiogroup" aria-labelledby="cm-ng-priv" class="cm-ng-privacy">${[["Public", "Listed in Live games. Anyone can watch or take an open seat."], ["Private", "Invitation only. Hidden from Live games."]].map(([label, sub]) => `<button type="button" role="radio" class="cm-ng-radio${st.privacy === label ? " is-on" : ""}" aria-checked="${st.privacy === label}" data-ng="privacy" data-id="${label}"><i aria-hidden="true"></i><span class="cm-ng-two"><b>${label}</b><span>${sub}</span></span></button>`).join("")}</div></section>
         </div>
         <footer class="cm-ng-foot"><p class="${valid ? "" : "is-bad"}" role="status">${e(st.error || (valid ? "Submit opens the lobby. Seats are set there." : bad[0]))}</p>
           <button type="button" class="cm-pl-btn is-big" data-ng="cancel" style="padding:0 18px">Cancel</button>
@@ -268,6 +269,7 @@
       const i = Number(el.dataset.row), f = el.dataset.ngField;
       if (f === "kind") {st.hRows[i].kind = el.value; st.hRows[i].open = false; render();}
       else if (f === "bracket") {st.bracket = el.value; render();}
+      else if (f === "group") {st.hRows[i].group = el.value === "general" ? "general" : "insider";}
     };
     /* Typing does not redraw the pop-up (that would lose the field); only the footer's word and the Submit button follow. */
     const refreshFooter = () => {
@@ -299,7 +301,7 @@
       const seats = [];
       for (let i = 0; i < humans - 1; i++) {
         const r = st.hRows[i];
-        seats.push(r.kind === "new" ? {kind: "human", name: r.name.trim(), email: r.email.trim()} : {kind: "human", name: (r.picked || r.query).trim(), user: (r.picked || r.query).trim()});
+        seats.push(r.kind === "new" ? {kind: "human", name: r.name.trim(), email: r.email.trim(), ...(C.inviteAdmin?.() === true ? {group: r.group} : {})} : {kind: "human", name: (r.picked || r.query).trim(), user: (r.picked || r.query).trim()});
       }
       for (let i = 0; i < st.ai; i++) {
         const r = st.aRows[i], p = PERSONAS[r.persona], d = DIFFICULTY.find((x) => x.id === r.difficulty);
@@ -308,11 +310,14 @@
       st.busy = true; st.error = ""; render();
       const form = {hostName: name || "Host", startingLife: st.life, bracketLimit: st.bracket === "Any" ? "" : st.bracket, deck: deckId && !(st.bring && st.bring.drop) ? deckId : "", privacy: st.privacy.toLowerCase(), houseRules: st.house, observe: st.observe};
       try {
-        const {table} = await tools().api("POST", "/api/tables", {hostName: form.hostName, seats, privacy: form.privacy, ...(st.observe ? {observe: true} : {})});
+        const {table, invitations = []} = await tools().api("POST", "/api/tables", {hostName: form.hostName, seats, privacy: form.privacy, ...(st.observe ? {observe: true} : {})});
         try {localStorage.setItem(HOST_KEY, JSON.stringify({owner: C.signedInAs?.() || null, hostName: form.hostName}));} catch {/* not kept */}
         tools().keepSeat(table.tableId);
         close();
         await tools().finishTableSetup(table, form);
+        /* Create game sent each guest their invitation (ROB-320). The ones that did not go are said, once, with the way to send them again. */
+        const failed = invitations.filter((x) => x.status !== "sent");
+        if (failed.length) C.notice(`${failed.map((x) => `${x.name}'s invitation did not go: ${x.error || "try again"}`).join(" ")} Their seats are held; press Resend on a seat in the lobby.`, true, {undo: false});
       } catch (error) {
         st.busy = false; st.error = error?.message || "The table could not be made."; if (layer) render();
       }

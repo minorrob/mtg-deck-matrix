@@ -138,14 +138,25 @@ export function loungeOn(h) {
       if (Object.keys(mats).length) rec.mats = mats;
       rec.privacy = privacyAsked(privacy, fail);
       rec.createdAt = now;
-      const reserved = {};
+      const reserved = {}, groups = {};
       others.forEach((s, i) => {
         const seat = rec.lifecycle.seats[i + 1];
         if (!seat) return;
         if (s && s.kind === "ai") {const persona = personaAsked(s.persona, fail); if (persona) seat.persona = persona;}
-        else if (s && s.email) reserved[i + 1] = String(s.email).trim().toLowerCase();
+        /* A seat held for an address is invited (ROB-320): the lobby says so, and the table waits for the guest. */
+        else if (s && s.email) {reserved[i + 1] = String(s.email).trim().toLowerCase(); seat.invited = true; seat.released = false; if (s.group === "general" || s.group === "insider") groups[i + 1] = s.group;}
       });
       if (Object.keys(reserved).length) rec.reserved = reserved;
+      if (Object.keys(groups).length) rec.reservedGroups = groups;
+    },
+    /** What the Worker needs to send a held seat's invitation again (ROB-320 `reinvite`): the host's alone, and only the Worker asks. The
+        address is returned to the Worker, which keeps it; the page is never told it. */
+    async reservedFor(who, seatId) {
+      await h.load(); over(); needOrganizer(who);
+      const rec = h.rec(), seat = rec.lifecycle.seats[seatId], email = (rec.reserved || {})[seatId];
+      if (seat && seat.occupied && seat.kind === "human" && seatId !== 0) fail(409, `${seat.name} is already at the table, so there is nothing to send again.`);
+      if (!seat || !email) fail(409, "That seat is not holding an invitation. Only a seat made with a name and an email, or a CrankMagic player, can be sent again.");
+      return {email, name: seat.name, group: (rec.reservedGroups || {})[seatId] ?? null, hostName: rec.lifecycle.seats[0].name};
     },
     /** The admin's Observe AI game: AI seats only, no person at seat 1, watched. */
     observe({tableId, host, hostName, seats, settings, playtest, admin, privacy, createTable, now, levelOf}) {
@@ -229,7 +240,37 @@ export function loungeOn(h) {
       return h.api.view(who.email, {admin: who.admin});
     },
 
+    /* ---- joining with no step (ROB-320; docs/program/rob-320-invitations-contract.md §2) ----
+       Rob, 2026-10-29: the email's link and the Live games list both seat a signed-in person at once, "no confirmations required".
+       A seat held for their address (Create game named them) is theirs under the name the host typed; failing that, a public
+       table's first open seat, under their own name. It replaces the host's answer to a request, and the old rule that a table's
+       link never adds anyone (Rob, 2026-09-26). The refusals are the ones the rules need, each with what to do instead. */
+    async joinNow(who, now) {
+      await h.load();
+      const rec = h.rec(), t = rec.lifecycle;
+      if (seated(who) !== null) return h.api.view(who.email, {admin: who.admin});
+      if (rec.quit) fail(409, "This table has ended, so there is no seat to take. Start a new table, or join another game from Live games.");
+      if (!["selecting", "countdown"].includes(t.phase)) fail(409, "This game has already started, so there is no seat to take. Watch it from Live games, or join another game.");
+      const held = Object.entries(rec.reserved || {}).find(([, address]) => address === who.email);
+      let seatId;
+      if (held) seatId = Number(held[0]);
+      else if (publicTable()) {
+        const seat = t.seats.find(open);
+        if (!seat) fail(409, "Every seat at this table is taken. Watch it from Live games, ask the host to free a seat, or join another game.");
+        seatId = seat.seatId;
+      } else fail(403, "This table is private and is not holding a seat for you. Ask the host to add you when they make the table, or join a public game from Live games.");
+      h.step({type: "join", seatId}, now);
+      rec.members[seatId] = who.email;
+      if (rec.reserved) delete rec.reserved[seatId];
+      if (!held) rec.lifecycle.seats[seatId].name = clean(who.name) || "A player";
+      rec.invites = rec.invites.filter((i) => i.seatId !== seatId);
+      note(`${rec.lifecycle.seats[seatId].name} joined`, now);
+      await h.save();
+      return h.api.view(who.email, {admin: who.admin});
+    },
+
     /* ---- asking to join (contract §3) ---- */
+    /* SUPERSEDED by `joinNow` above (ROB-320): the app no longer asks, and the host no longer answers. Kept so an older page gets an answer. */
     async requestJoin(who, now) {
       await h.load(); over();
       const rec = h.rec(), t = rec.lifecycle;
@@ -388,7 +429,9 @@ export function loungeOn(h) {
       };
     },
     seatExtra(s) {
-      return {...(s.persona ? {persona: s.persona} : {}), ...(s.kind === "human" ? {open: open(s)} : {})};
+      /* `held`: a guest's seat the lobby is waiting on (Create game named them; ROB-320). Said, never the address it is held for. */
+      return {...(s.persona ? {persona: s.persona} : {}), ...(s.kind === "human" ? {open: open(s)} : {}),
+        ...(s.kind === "human" && !s.occupied && (h.rec().reserved || {})[s.seatId] ? {held: true} : {})};
     },
     /** The table's `privacy` set from Table rules (contract §2): the host's, in the lobby, and only a word. */
     async setPrivacy(who, privacy) {

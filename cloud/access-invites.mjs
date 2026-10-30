@@ -8,16 +8,25 @@ const uuid = /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/i;
    are comma-separated lists read in pairs: application i is admitted through its reusable policy i. Each pair is
    written and read back in turn, and the address counts as admitted only when every one confirms it. The AI door needs
    no list of its own: it takes the same sign-in (AI_EVERYONE). */
-export function inviteTargets(env) {
+/* THE GROUP'S POLICY (ROB-320, docs/program/rob-320-invitations-contract.md §6). Rob, 2026-10-30: three groups, General (no AI),
+   Game Theory Insider (AI) and Owner; an invitee is admitted through the reusable policy of the group they are invited into.
+   ACCESS_INVITE_POLICY_ID_GENERAL and ACCESS_INVITE_POLICY_ID_INSIDER are lists the same length and order as
+   ACCESS_INVITE_APP_IDS. When a group's list is set it is the only one read for that group: if it is malformed nothing is
+   configured (503 at admission), because falling back to the single policy would put an Insider on the General one without a
+   word. When it is not set, ACCESS_INVITE_POLICY_ID (the one policy of before) serves both groups. Their ids are Rob's to
+   supply from the Cloudflare dashboard; none is written in this repository. */
+export const GROUP_POLICY_VARS = Object.freeze({general: 'ACCESS_INVITE_POLICY_ID_GENERAL', insider: 'ACCESS_INVITE_POLICY_ID_INSIDER'});
+export function inviteTargets(env, group) {
   const list=v=>String(v||'').split(',').map(x=>x.trim()).filter(Boolean);
-  const apps=list(env.ACCESS_INVITE_APP_IDS),policies=list(env.ACCESS_INVITE_POLICY_ID);
+  const apps=list(env.ACCESS_INVITE_APP_IDS),own=GROUP_POLICY_VARS[group]?list(env[GROUP_POLICY_VARS[group]]):[];
+  const policies=own.length?own:list(env.ACCESS_INVITE_POLICY_ID);
   if(!apps.length||apps.length!==policies.length||![...apps,...policies].every(x=>uuid.test(x)))return [];
   return apps.map((app,i)=>({app,policy:policies[i]}));
 }
 /** Admits `to` through every configured Access application and returns what each confirmed:
     [{app, name, domain, added}] -- `added` false where the address was already on that policy. */
-export async function admitAddress(db,env,to,{now,fetchImpl,fail}) {
-  const targets=inviteTargets(env);
+export async function admitAddress(db,env,to,{now,fetchImpl,fail,group}) {
+  const targets=inviteTargets(env,group);
   if(!env.ACCESS_INVITE_TOKEN||!targets.length||!/^[\da-f]{32}$/i.test(env.CLOUDFLARE_ACCOUNT_ID||''))
     fail('Cloudflare Access invitation permissions are not configured. Your sign-in is unchanged.',503);
   const confirmed=[];
