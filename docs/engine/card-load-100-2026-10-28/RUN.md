@@ -5,6 +5,40 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Current-main browser checkpoint, source `ec200e8e`:** owner main advances to `eee58e43` (#961/ROB-201); root merges
+  it without changing owner UI, regenerating shared versions with the registry's bumpText helper. README actual715;
+  the incoming suite registry row is preserved after integrity catches its initial omission. Assets136/SW9/wiring131/
+  integrity pass. ACTIVE is exact current main. Engine/room bytes are unchanged by this merge; the board still differs
+  by exactly the two approved Snoop lines. In a safely coordinated quiet window, required Chromium/WebGL Snoop98 and
+  tooltip21 pass. Twelve fresh screenshots/four inspected; existing3D clipping/occlusion/footer overflow remains and
+  no full visual acceptance is claimed. Both commands exit0; elevated scoped cleanup finds no owned test/server
+  process. Original contrast RED/ROB-312 remains open. Evidence: `w0/evidence/maineee-integration.json`.
+- **Mixed-board witness batch, bounded:** frozen `033cd059` validates all3,263 cases;2,743/1,521files/6,741 fields
+  qualify, with7,255 original assertions. All52 prefix and468 strict failures remain unproved. Root audits all6,430
+  source hashes, all proposed plans/results/77 runtime hashes, all26 compressed roundtrips and11 fixed native samples
+  (27 original assertions). Approved exact batch commits `4995a7ce`; all2,743 actual saved scenarios pass7,255 original
+  assertions. Root independently audits the actual Git trees: only the exact1,521 files/6,741 fields, all other card
+  blobs unchanged. BEFORE selected all1,521 identities/4,337 scenarios/3,057 abilities:1,837 failures,1,130 reached,
+  222 runtime-only proofs/1,927 unproved; both checker/verifier exits1. AFTER remains pending. No card/gate credit.
+- **Role proof honesty:** W5 frozen `f94430f6` genuinely passes all42 baseline readers. First plot control records
+  MISS under its overly narrow AssertionError classifier, with zero credit for an interrupted next control; exact
+  backups/hashes are restored. Root verifies the actual failure is the original scenario's explicit negative offer
+  count assertion (Quick Shock2 versus0, check518), not a native crash. Only that exact labeled structured assertion
+  may now be recognized; no generic Error/timeout credit or runtime/test edit. All74 controls rerun fresh against the
+  unchanged full42 baseline and exact f944 hashes. Historical MISS remains archived. W1 frozen888bd194 is proving
+  its original44/85 plus additive Battle readers/controls (80/120 total); transient type and multi-type interactions,
+  intrinsic defeat, transformed freecast and broader AI/UI Battle support remain blocking and unaccepted.
+- **Upcoming-batch intake, ROB-317, October 29:** Rob reports that Ash Barrens does not present Basic landcycling.
+  Root reproduces on engine source `e2845fc4`: empty pool/untapped Wastes offers only the land play; manually tapping
+  Wastes exposes Basic landcycling {1}. The explicit manual control actually pays one, discards Ash Barrens and finds
+  Forest into hand. The final missing-offer assertion remains RED, with no fix or full interaction/UI claim. Reproduce
+  with `w0/evidence/ash-barrens-offer-red.mjs.txt` as its header directs. Linear owns the queued upcoming-batch task.
+- **Current dependency published:** exact `e2845fc4b7fdb1b01612d3c46fb08280b2ea501c` passes `tools/local-ci.sh HEAD 0`
+  and is pushed to draft #912; current main `51ec9f8f` is an ancestor. ROB-314/315/316 workers are synchronized from it.
+  ROB-315 is proving its complete original42-reader/64-control union plus10 reviewed native version controls; V8 is
+  validating the frozen3,263 mixed-board candidates read-only with unchanged worker/guard and all failures retained.
+  Battle checkpoint A is limited to actual combat identity/rules; intrinsic defeat/freecast remains separate and open.
+  No new card, promotion, full wave0 gate, main merge or staging release is credited.
 - **Hold released; latest main integrated, October 29:** Rob explicitly says the other session has finished and asks
   to pull main and continue with unchanged full-interaction gates. Main `51ec9f8f` is merged at `314ab4cf`; only the
   README count conflicts. Its new Linear one-loop policy is adopted: ACTIVE.md is restored exactly to main's frozen

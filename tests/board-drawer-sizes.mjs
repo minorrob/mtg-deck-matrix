@@ -83,11 +83,12 @@ try{
   await open();
   const rail=await box(".cm-stage-rail"),dec=await box(D),opts=await box(`${D} > .cm-board-options`);
   ok(opts.height>=120,`the combat choices keep at least 120px (${Math.round(opts.height)}px)`);
-  ok(dec.bottom<=rail.bottom+1&&dec.bottom<=768,`the question ends inside the visible drawer (${Math.round(dec.bottom)} of ${Math.round(rail.bottom)})`);
+  /* ROB-201: the drawer is the one scroll region; the question is not capped inside it (tests/board-actions-one-scroll.mjs). */
+  ok(await page.evaluate(sel=>{const q=document.querySelector(sel),o=q.querySelector(':scope > .cm-board-options');return getComputedStyle(q).overflowY==='visible'&&getComputedStyle(o).overflowY==='visible';},D),`the question and its choices are not boxes of their own: the drawer scrolls them (${Math.round(dec.height)}px question in a ${Math.round(rail.height)}px drawer)`);
   const reachChoices=async()=>{
     for(const o of options){
-      const b=page.locator(`${D} [data-action=board-option][data-index="${o.index}"]`).first();await b.scrollIntoViewIfNeeded();
-      const facts=await b.evaluate(el=>{const r=el.getBoundingClientRect(),s=el.closest('.cm-board-options').getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;return {inside:r.top>=s.top-1&&r.bottom<=s.bottom+1&&r.bottom<=innerHeight,hit:el.contains(document.elementFromPoint(x,y)),label:el.textContent.trim()};});
+      const b=page.locator(`${D} [data-action=board-option][data-index="${o.index}"]`).first();await b.evaluate(el=>el.scrollIntoView({block:'nearest'}));
+      const facts=await b.evaluate(el=>{const r=el.getBoundingClientRect(),s=el.closest('.cm-stage-rail').getBoundingClientRect(),x=r.x+r.width/2,y=r.y+r.height/2;return {inside:r.top>=s.top-1&&r.bottom<=s.bottom+1&&r.bottom<=innerHeight,hit:el.contains(document.elementFromPoint(x,y)),label:el.textContent.trim()};});
       ok(facts.inside&&facts.hit,`combat choice ${o.index} is visible and takes its native pointer (${JSON.stringify(facts)})`);
     }
   };
