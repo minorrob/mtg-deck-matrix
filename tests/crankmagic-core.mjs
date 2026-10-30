@@ -175,6 +175,17 @@ const full=await client.named('Test full facts',{exact:true});eq(full.power,'4')
  eq(cat.similar(null,{query:'sol'}).map(r=>r.card.name),['Sol Ring']);
  void [twin,dear,wrongColor,nothing];
 }
+{// THE GRAPH'S AGE is when it was last re-classified (amplifiersAt, which tools/graph-amplifiers.mjs stamps and
+ // graph-payload.js already gives graph-played.json), not the older generatedAt of the corpus bake: a refresh that
+ // re-classifies today must not leave the Menu saying the graph is weeks old. Without amplifiersAt it falls back.
+ const ageOf=async graph=>{
+  const fetchImpl=async url=>new Response(JSON.stringify(String(url).includes('universe')?{generatedAt:'2026',cards:[]}:String(url).includes('facts')?{cards:{}}:String(url).includes('graph')?graph:{cards:[]}),{status:200,headers:{'Content-Type':'application/json'}});
+  const cat=await C.create({client:{},fetchImpl,urls:{universe:'u/universe.json',cards:'u/cards.json',facts:'u/facts.json',ranks:null,graph:'u/graph.json'},savedCards:{}});
+  const before=cat.dates().graph;await cat.loadGraph();return [before,cat.dates().graph];
+ };
+ eq(await ageOf({generatedAt:'2026-09-11T17:28:45.280Z',amplifiersAt:'2026-10-29T18:51:03.859Z',cards:[]}),['','2026-10-29T18:51:03.859Z']);
+ eq(await ageOf({generatedAt:'2026-09-11T17:28:45.280Z',cards:[]}),['','2026-09-11T17:28:45.280Z']);
+}
 {// details() prices a card at its lowest-cost paper printing, not the printing Scryfall
  // happens to answer with -- one prints search, cheapest first -- and says which set that is.
  const fetchImpl=async url=>new Response(JSON.stringify(String(url).includes('universe')?{generatedAt:'2026',cards:[]}:String(url).includes('facts')?{cards:{}}:{cards:[]}),{status:200,headers:{'Content-Type':'application/json'}});
