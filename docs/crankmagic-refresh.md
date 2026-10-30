@@ -115,6 +115,43 @@ bash runtests.sh -q
 
 Or, all of it in order with the proof: `node tools/refresh.mjs`.
 
+### What the runner does not rebuild yet (an open task: add these to its plan)
+
+The plan stops at the data files. Four more files are derived from them, each by its own generator, and the
+proof fails five suites until they are rebuilt (found on the 2026-10-29 refresh, PR 948). **Adding them to the
+plan (`STEPS` in `tools/refresh.mjs`, with `tests/refresh.mjs` holding it to the registry) is open.** Until it is
+done, run them by hand after step 6 (strategies) and before step 8 (the manifest):
+
+| Generator | Writes | Red without it |
+|---|---|---|
+| `node tools/build-advise-cards.mjs --write` | `cloud/advise-cards.mjs` | `advisor` |
+| `node tools/build-commander-index.mjs` | `data/commander-index.json` | `deck-autocreate`, `generators` |
+| `node tools/build-pilot-roles.mjs` | `game/engine/pilots/roles-data.mjs` (the engine lane's tree; say so in the PR) | `pilot-roles` |
+| `node tools/reprice-variants.mjs` | `data/archive/variants.json` | `data-integrity` |
+
+Then restate the manifest and the inventory (step 8) so they see the new files. **One of the four is served and the
+runner's bumper cannot find it:** `data/commander-index.json` is named only inside `crankmagic-newdeck.js`
+(`fetch('data/commander-index.json?v=N')`), not in the asset map or the worker, so `bumpVersions` reports 0 references
+and the cascade moves for nothing. Bump that `?v=` in the file, then `crankmagic-newdeck.js`'s own version in
+`crankmagic-sw.js`, `index.html` and `crankmagic.html`, then the cascade, then `node tests/asset-versions.mjs --update`.
+(Putting the file in the asset map would let the runner do all of this.)
+
+What else the 2026-10-29 refresh taught:
+
+- **A card the catalog rule drops shrinks the universe on purpose.** The guard stops the run. Commit the universe
+  alone, say so in the PR, and re-run the runner from that baseline; the guard stays as it is.
+- **Prices move, and a price-sensitive assertion can flip.** `crankmagic-lobby` pinned that a bracket-fitted deck
+  costs no more than the unfitted one; Rob removed that clause (the bracket keeps decks in one weight class).
+  Re-price the variants, and ask before changing any other assertion.
+- **The Tests job on a ready PR can be canceled at its 60-minute limit** (it was, 23:23 to 00:23 UTC). Then the gate
+  is a full local run (`node tools/run-suites.mjs -q`, about 75 minutes on four cores; start it detached, with its
+  output to a file, so a container restart cannot take it) accounted against a clean `origin/main`. Fifteen board and
+  browser suites fail the same way on main in a cloud container (PR 948 lists them); nothing else may.
+- **The Menu's graph row reads the graph's `amplifiersAt`** (when it was last re-classified), falling back to
+  `generatedAt` (the corpus bake), and says "not loaded yet" until a page loads the graph (Discover, the Lab, New deck,
+  the Play draft). Only the Neo4j ingest moves `generatedAt`, and only it adds a card to the corpus (86 commanders are
+  missing from `graph.json`, ROB-214; "Name Sticker" Goblin is still in the graph and the engine's tables).
+
 ### Bumping versions
 
 `crankmagic-assets.js` holds the data URLs; `crankmagic-sw.js` holds the offline

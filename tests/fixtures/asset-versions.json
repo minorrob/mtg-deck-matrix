@@ -90,8 +90,8 @@
       "sha": "b4cc36093b2df3e8"
     },
     "card-catalog.js": {
-      "version": 25,
-      "sha": "250fcc6e992b6bc3"
+      "version": 26,
+      "sha": "e78fb490ade5a665"
     },
     "card-classify.js": {
       "version": 10,
@@ -150,11 +150,11 @@
       "sha": "5dd742bd996b24a6"
     },
     "crankmagic-app.js": {
-      "version": 751,
-      "sha": "2197694c79a3d284"
+      "version": 752,
+      "sha": "8a525a11e861d556"
     },
     "crankmagic-assets.js": {
-      "version": 37,
+      "version": 38,
       "sha": "2216746a6d7b1e7a"
     },
     "crankmagic-audio.js": {
@@ -358,8 +358,8 @@
       "sha": "07440b83396bb9e2"
     },
     "crankmagic-sw.js": {
-      "version": 734,
-      "sha": "ba00baaf6e8a9dd5"
+      "version": 735,
+      "sha": "54ec7a6f23f7bdbe"
     },
     "crankmagic-table.js": {
       "version": 58,
