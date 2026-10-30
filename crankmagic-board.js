@@ -385,6 +385,18 @@ globalThis.CrankBoard = Object.seal({
   const ownBlockAttacks = () => view ? combatAttacks().filter(a=>a.defender===view.seat) : [];
   const blocksSettled = () => ownBlockAttacks().every(a=>blockSettled.has(a.attacker));
   const canSendBlocks = () => blockValid() && blocksSettled() && !sending;
+  /* "No blocks on any attacker" (ROB-333; Rob, 2026-10-30: he pressed No block or Confirm once per attacker slot): one press
+     settles every slot at "no block" and sends the empty answer. It waits for the table's check of the empty draft (the
+     same one Send waits for) and sends only if that check accepts it; `blockAll` is the decision it was pressed on. */
+  let blockAll = null;
+  const blockLegal = () => blocking() && view.decision.legalBlocks.length > 0 && ownBlockAttacks().length > 0;
+  function sendNoBlocksToAll() {
+    if (!blockAll) return;
+    if (blockAll !== blockContext() || picked.length) {blockAll = null; return;}
+    if (!canSendBlocks()) return;
+    blockAll = null;
+    actions["board-confirm"]();
+  }
   function checkBlocks() {
     if (!blocking() || blockPending || blockResult?.key === blockKey() || socket?.readyState !== 1) return;
     blockPending = {key: blockKey(), choiceId: view.decision.id};
@@ -395,12 +407,14 @@ globalThis.CrankBoard = Object.seal({
     const pending = blockPending; blockPending = null;
     if (pending.key === blockKey()) blockResult = {key: pending.key, ok: frame.ok === true, open: frame.open === true,
       reasons: frame.reasons || [frame.error || "The table could not check these blocks. Try again."], byAttacker:Array.isArray(frame.byAttacker)?frame.byAttacker:[]};
-    checkBlocks(); draw();
+    if (blockAll && blockResult?.key === blockKey() && !blockResult.ok) blockAll = null;
+    sendNoBlocksToAll(); checkBlocks(); draw();
   }
   function draftBlock(index) {
     if (!blocking() || sending) return;
     const o = view.decision.options.find(o => o.index === index);
     if (!o || !view.decision.legalBlocks.some(b => b.blocker === o.cardId && b.attackers.includes(o.attackerId))) return;
+    blockAll=null;
     const old=[...picked],removing=picked.includes(index);
     if(removing)picked=picked.filter(i=>i!==index);
     else {
@@ -1890,6 +1904,7 @@ globalThis.CrankBoard = Object.seal({
     let placed = false;
     return opts.map((o) => (manaOf(o) ? (placed ? "" : ((placed = true), row)) : one(o))).join("");
   }
+  const noneAllButton = () => blockLegal() ? b('⊘ No blocks, all','board-block-none-all',{revision:String(view.revision),choice:view.decision.id,match:view.matchId},false,{disabled:sending}).replace('<button ','<button aria-label="No blockers on any attacker" title="No blockers on any attacker: settles every attacker as not blocked and sends" ') : '';
   function blockDraft() {
     const d=view.decision,attacks=ownBlockAttacks(),a=attacks.find(a=>a.attacker===blockAttacker) || attacks[0];
     if(!a)return '<p>No attacks at your seat.</p>';
@@ -1901,7 +1916,7 @@ globalThis.CrankBoard = Object.seal({
       <div class="cm-block-tiles" data-block-key="${e(`${blockEpoch}:attacker:${a.attacker}`)}" aria-label="Legal blockers">${options.map(o=>{const b=combatCard(o.cardId);return `<button type="button" class="cm-block-tile" data-action="board-block-pair" data-index="${o.index}" data-block-object="${o.cardId}" data-combat-light="${o.cardId}" data-peek-card="${o.cardId}" aria-pressed="${picked.includes(o.index)}"${sending?' disabled':''}>${combatThumb(o.cardId,'Candidate')}<span>${e(combatName(b))}</span><b>${b?.power!=null?`${e(b.power)}/${e(b.toughness)}`:''}</b></button>`;}).join('') || '<p>No legal blockers.</p>'}</div>
       ${restrictions.length?`<p class="cm-block-restrictions">${restrictions.map(e).join(' · ')}</p>`:''}<div class="cm-block-status" role="status">${issues.map(r=>`<p>${e(r)}</p>`).join('')}${globalReasons.length?`<div class="cm-block-global"><strong>Draft check</strong>${globalReasons.map(r=>`<p>${e(r)}</p>`).join('')}</div>`:''}</div>
       ${result && !result.open ? b('Check again','board-block-retry',{},false,{cls:'compact',disabled:sending}) : ''}
-      <div class="cm-decide-actions" data-wf="W10">${b("Don't block","board-block-attacker-none",{attacker:String(a.attacker)},false,{disabled:sending})}${b('Confirm','board-block-attacker-confirm',{attacker:String(a.attacker)},false,{disabled:sending}).replace('<button ','<button title="This attacker only" ')}</div></div>`;
+      <div class="cm-decide-actions" data-wf="W10">${b("Don't block","board-block-attacker-none",{attacker:String(a.attacker)},false,{disabled:sending})}${b('Confirm','board-block-attacker-confirm',{attacker:String(a.attacker)},false,{disabled:sending}).replace('<button ','<button title="This attacker only" ')}${noneAllButton()}</div></div>`;
   }
   /* Review uses only the current seat's offered words. No target, payment or outcome is inferred. The outlined option is
      the selection on screen (Rob, 2026-10-25: "The outline around the selection indicates the selection. We don't need to
@@ -3773,7 +3788,14 @@ globalThis.CrankBoard = Object.seal({
   actions["board-combat-scroll"] = el => {const row=document.querySelector('.cm-r4-combat .cm-combat-groups'),tile=row?.querySelector('.cm-combat-row');if(row&&tile)row.scrollBy({left:Number(el.dataset.by)*(tile.getBoundingClientRect().width+8),behavior:reduced()?'instant':'smooth'});};
   actions["board-block-select"] = el => {if (!blocking() || sending) return; blockSelected = Number(el.dataset.blockObject); draw();};
   actions["board-block-pair"] = el => draftBlock(Number(el.dataset.index));
-  actions["board-block-none"] = () => {if (!blocking() || sending) return; picked = [];blockSettled.clear(); blockResult = null; checkBlocks(); draw();};
+  actions["board-block-none-all"] = el => {
+    if (!blockLegal() || sending || Number(el?.dataset?.revision) !== view.revision || el.dataset.choice !== view.decision.id || el.dataset.match !== view.matchId) return;
+    picked = []; for (const a of ownBlockAttacks()) blockSettled.add(a.attacker);
+    if (blockResult && !blockResult.ok) blockResult = null; // pressed again after a refusal: ask the table again
+    blockAll = blockContext(); if (phone()) stageRail = false;
+    sendNoBlocksToAll(); checkBlocks(); draw();
+  };
+  actions["board-block-none"] = () => {blockAll = null; if (!blocking() || sending) return; picked = [];blockSettled.clear(); blockResult = null; checkBlocks(); draw();};
   actions["board-block-clear"] = () => {
     if (!blocking() || sending) return;
     picked = picked.filter(i => view.decision.options.find(o => o.index === i)?.cardId !== blockSelected);
