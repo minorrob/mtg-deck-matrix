@@ -263,7 +263,7 @@
 .cm-stack-summary{display:flex;flex-direction:column;gap:6px;min-width:0;font-size:12px;line-height:1.4;white-space:normal;overflow-wrap:anywhere}
 .cm-stack-summary .cm-stack-position{color:#b9dec7;font-variant-numeric:tabular-nums}
 .cm-stack-summary>span{color:#b7c9bf}
-.cm-stack-image{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;min-width:0}
+.cm-stack-image{display:flex;justify-content:center;align-items:flex-start;min-width:0}
 /* WHAT A SPELL OR ABILITY IS AIMED AT (ROB-327): source ⤳ target. The glyph first, then each target as a small chip: a player in their
    seat's color, a card by its name (a button that reads the card where it can, and the card on hover and focus), a target that has left
    as "✕ gone" and never by name. In the stack's list, under its pile, and under a held-up play. */
@@ -279,7 +279,9 @@ button.cm-aim.is-card:focus-visible{outline:2px solid #a8dfbf;outline-offset:1px
 .cm-aim.is-gone i{font-style:normal}
 .cm-aim.is-hidden,.cm-aim.is-ability{color:#cfe0d6}
 .cm-stack-summary .cm-stack-aim-row{display:block;font-style:normal;color:inherit}
-.cm-stack-aims{flex:0 0 100%;margin:8px 0 0;display:flex;flex-direction:column;gap:5px;align-items:center;text-align:center}
+/* Under the pile, out of its flow: the pile and its pictures keep exactly the place they had (a wrapped row moved them). */
+.cm-stack-aims{position:absolute;left:0;right:0;top:100%;margin:6px 0 0;display:flex;flex-direction:column;gap:5px;align-items:center;text-align:center}
+.cm-stack-browser:has(.cm-stack-aims){padding-bottom:64px}
 .cm-stack-aims .cm-aim-mode{display:flex;flex-direction:column;gap:2px;align-items:center;font-size:11px}
 .cm-stack-aims .cm-aim-mode em{font-style:normal;color:#b7c9bf}
 .cm-play-aim{margin:6px 2px 0;font-size:12px}
