@@ -10,7 +10,7 @@
    ({type: "history", before}), answered here as the room answers (game/room/room.mjs, historyBefore).
 
      1. The History module lists what the view carried, with a way to older ones; scrolling to the end of its list asks for them,
-        and so does "Load earlier"; asked again and again it reaches the game's FIRST line, "Turn 1 · Rob" (this fails if it is missing),
+        and so does "Load earlier"; asked again and again it reaches the game's FIRST line, the opening hands ("Rob drew 7 cards", before turn 1; this fails if it is missing),
         every one of the 500 lines once, newest first, and the end says it is the start.
      2. The lines already read stay: the next view the room sends does not take back what was asked for, and a draw that grew
         replaces its own line.
@@ -40,11 +40,12 @@ let checks = 0, rev = 970000;
 const ok = (c, m) => {assert.ok(c, m); checks += 1;};
 const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1;};
 
-/* A game of 500 lines as the room writes them: line 0 is the first event of turn 1; every tenth line is a cast with two cards named. */
+/* A game of 500 lines as the room writes them: line 0 is the game's first event (the opening hands, turn 0), line 1 turn 1's own; every tenth line is a cast with two cards named. */
 const TOTAL = 500, VIEW = 60;
 const game = Array.from({length: TOTAL}, (_, seq) => {
-  const turn = 1 + Math.floor(seq / 25), actor = seq % 4;
-  if (seq % 25 === 0) return {turn, seq, text: `Turn ${turn} · ${sample.state.players[actor].name}`, mark: "turn", actor};
+  const turn = seq === 0 ? 0 : 1 + Math.floor((seq - 1) / 25), actor = seq % 4;
+  if (seq === 0) return {turn, seq, text: "Rob drew 7 cards", actor: 0};
+  if ((seq - 1) % 25 === 0) return {turn, seq, text: `Turn ${turn} · ${sample.state.players[(turn - 1) % 4].name}`, mark: "turn", actor: (turn - 1) % 4};
   if (seq % 10 === 3) return {turn, seq, text: `${sample.state.players[actor].name} cast Lightning Bolt targeting Grizzly Bears`, actor,
     source: {name: "Lightning Bolt", ref: 900 + seq}, targets: [{kind: "object", id: 800 + seq, name: "Grizzly Bears"}],
     cards: [{name: "Lightning Bolt", ref: 900 + seq}, {name: "Grizzly Bears", ref: 800 + seq}]};
@@ -125,8 +126,8 @@ try {
     }
     const all = await rows();
     eq(all.length, TOTAL, `${mode}: every one of the ${TOTAL} lines is listed, once`);
-    eq(all.at(-1).text.replace(/\s+/g, " "), "Turn 1 · Rob", `${mode}: the oldest is the game's first event, "Turn 1 · Rob" (the earliest line is there)`);
-    eq(all.at(-1).turn, true, `${mode}: and it is a turn's divider`);
+    eq(all.at(-1).text.replace(/\s+/g, " "), "Rob drew 7 cardsStart", `${mode}: the oldest is the game's first event, the opening draw (the earliest line is there)`);
+    eq([all.at(-2).turn, all.at(-2).text], [true, "Turn 1 · Rob"], `${mode}: and above it turn 1's own line, a divider`);
     ok(/The start of the game/.test(await module.locator(".cm-history-more").innerText()), `${mode}: the end says it is the start of the game`);
     eq(asked.map((f) => f.before), [440, 340, 240, 140, 40], `${mode}: five requests, each before the oldest line held`);
     eq(new Set(all.map((r) => r.text)).size > 400, true, `${mode}: no line is repeated`);

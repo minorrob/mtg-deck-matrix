@@ -57,28 +57,37 @@ its target is gone`) instead of "resolved". Nothing is said for a spell with no 
 
 ## 3. How the whole game reaches the board: the newest lines, and "load earlier"
 
-* `view.history` is the newest `HISTORY_VIEW` lines (was 120). `view.historyFirst` is the `seq` of the oldest line the room
+* `view.history` is the newest `HISTORY_VIEW` lines (40; it was 120 plain lines. A structured line is about 140 bytes against 50, and
+  the view is the same size to within 4% with 40 of them: measured over 462 views of one four-seat game, 15.3 KB before, 15.9 KB after). `view.historyFirst` is the `seq` of the oldest line the room
   holds (0, unless the room was saved before lines were numbered). A client has everything once it holds `historyFirst`.
-* The room now **keeps the whole game's lines** (it kept 300). They are stored in sealed segments of 200 lines, each its own
-  storage key beside the room's (`room/<matchId>/history-NNNNN`), so the room's own record stays small; the newest lines
-  stay in the record. An old record has no segments and wakes as before.
+* The room now **keeps the whole game's lines** (it kept 300). `seq` is also a line's place: line n is the n-th the game said. They are
+  stored in sealed segments of 150 lines, each its own storage key beside the room's (`room/<matchId>/history-NNNNN`, written once);
+  the room's own record keeps a tail of between 150 and 300 lines (what it always held), so it is rewritten at every move at a size
+  that does not grow with the game. An old record has no segments and wakes as before, its lines numbered from 0.
 * **Ask for older lines** over the room's socket (a seat's or a spectator's):
   `{type:"history", before:<seq>, limit?:<1..200, default 100>}`
   and the room answers the asker alone:
-  `{type:"history", before:<seq>, lines:[...], first:<seq>}`
-  `lines` are the up-to-`limit` lines with `seq < before`, **oldest to newest**; `first` is `historyFirst`. Asking with the
+  `{type:"history", before:<seq>, first:<seq>, lines:[...]}`
+  `before` is the bound applied (the request's, or the newest + 1 when none was given). `lines` are the up-to-`limit` lines with `seq < before`, **oldest to newest**; `first` is `historyFirst`. Asking with the
   `seq` of the oldest line held returns the page before it; an empty `lines` means there is nothing older. The room method
-  is `room.historyBefore({before, limit})` (the same for every seat, as the history is public).
+  is `room.historyBefore({before, limit})` (the same for every seat, as the history is public). `before` omitted means the newest lines. A
+  `before` that is not a whole number of 0 or more, or a `limit` that is not a whole number, is refused:
+  `{type:"refused", of:"history", status:400, error}`.
 * **The client merges by `seq`**: a view's lines replace lines of the same `seq` (a draw line grows), and a view whose
   oldest `seq` is more than one past the newest the client holds (a gap: many AI turns in one slice) starts the client's
   store again from that view, and "load earlier" fills what is above it.
 
-## 4. Bandwidth
+## 4. The table's `events` (`events.v1`)
 
-Measured in `tests/game-history.mjs`'s games; the number is reported on the PR. Fields are only present when they have a
-value, `cards` carries names once, and a view carries fewer lines than before (older ones are one request away).
+A `cast` or `ability` event carries `aimed` (and `aimedModes`) when it has targets: the same Aims as a stack entry's. The board's
+held-up play says what a spell was aimed at even when it was cast and resolved between two views.
 
-## 5. Out of scope here (filed as Linear issues)
+## 5. Bandwidth
+
+Fields are only present when they have a value, and a view carries fewer lines than before (older ones are one request away);
+see section 3 for the measure.
+
+## 6. Out of scope here (filed as Linear issues)
 
 * A *triggered* ability's targets in the History (a trigger's targets are chosen after it is on the stack; no event says
   them). The stack shows them (`aimed`); the History does not yet.

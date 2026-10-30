@@ -115,8 +115,16 @@ export const VIEW_SCHEMA = "CrankRoomView@1";
 const SEAT_ID = /^[a-z0-9][a-z0-9-]{0,39}$/;
 const MAX_CARDS = 250;           // a Commander deck is 100; this is only a bound on what a pod may carry
 const DRIVE_LIMIT = 100000;      // engine steps between two human decisions before the room calls it a hang
-const HISTORY_KEEP = 300;         // lines of the table's history kept with the room
-const HISTORY_VIEW = 120;         // the newest of them, in every view
+/* THE TABLE'S WHOLE HISTORY (Linear ROB-332; docs/ui-lane/history-and-targets-contract.md, section 3). The room keeps every line of the game,
+   numbered from 0 (`seq`, which is also the line's place: line n is the n-th the game said). A view carries only the newest
+   HISTORY_VIEW; older ones are asked for (`historyBefore`) and come a page at a time. What the room's own record holds is a tail,
+   between HISTORY_TAIL and HISTORY_TAIL + HISTORY_SEGMENT lines: whenever the tail is longer than that its oldest HISTORY_SEGMENT
+   lines are sealed into a key of their own (`room/<match>/history-NNNNN`), written once and never again, so the record is rewritten
+   at every move at a size that does not grow with the game. A draw or a quiet step grows only the newest line, never a sealed one. */
+export const HISTORY_VIEW = 40;       // the newest lines, in every view
+export const HISTORY_SEGMENT = 150;   // lines sealed into one key at a time
+export const HISTORY_TAIL = 150;      // lines at least kept in the record (at least HISTORY_VIEW)
+export const HISTORY_PAGE = 100, HISTORY_PAGE_MAX = 200;
 /* A history line as a view carries it (docs/ui-lane/history-and-targets-contract.md): the sentence, and the same as data when the
    line has it. The room's own working fields (a draw's count, a quiet step's list) stay in the room. */
 const shownLine = ({turn, seq, text, mark, actor, source, targets, modes, cards}) => ({turn, seq, text,
@@ -536,10 +544,10 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
      the room, so a game played in slices or woken in between says the same; empty in a room saved before it was kept. */
   let outs = [];
   /* THE TABLE'S HISTORY (game/room/history.mjs): public lines only, the same for every seat, kept with the room. */
-  let history = [];
-  /* EVERY REFUSED PILOT ANSWER, COUNTED FOR THE WHOLE MATCH (the independent review of 2026-10-05, F-1). The history keeps
-     its newest HISTORY_KEEP lines, so a refusal said there early in a long game is gone by its end, and a count read off
-     the history is a count of the lines that survived -- a game of four house pilots runs from its first turn to its last
+  let history = [], sealed = 0;   /* the tail of the history, and how many segments of it are sealed in their own keys */
+  const historyKey = (i) => `${ROOM_KEY}/history-${String(i).padStart(5, "0")}`;
+  /* EVERY REFUSED PILOT ANSWER, COUNTED FOR THE WHOLE MATCH (the independent review of 2026-10-05, F-1). The history used to keep
+     only its newest 300 lines (it keeps the whole game now, ROB-332), and a count read off a trimmed history is a count of the lines that survived -- a game of four house pilots runs from its first turn to its last
      inside one call, far past 300 lines. This is the match's own tally, saved with the room and never trimmed: `total`,
      and the first REFUSALS_SAID of them in full. `since` is the journal sequence the tally began at: 0 for a match counted
      from its first event. A room saved before the tally existed counts from where it is reopened and says so, rather
@@ -611,7 +619,6 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     const name = QUIET_STEP[phase] || String(phase).toLowerCase(), last = history[history.length - 1];
     if (last && last.mark === "quiet" && last.turn === state.turn) {last.steps = [...(last.steps || [last.text.replace(/: nothing to do$/, "")]), name]; last.text = `${last.steps.join(", ")}: nothing to do`; return;}
     pushLine(history, {turn: state.turn, text: `${name}: nothing to do`, mark: "quiet", steps: [name]});
-    if (history.length > HISTORY_KEEP) history.splice(0, history.length - HISTORY_KEEP);
   }
   /* THE DECISION TAPE (M8): every input a person gives -- an answer, leaving, ending the game -- in order, numbered
      from the match's first. The journal is what the engine did; the tape is what people told it; with the seed the
@@ -624,7 +631,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
   let tableEvents = [], eventsMark = 0, eventsFloor = -1, nextSeq = 0, answering = null;
   const begin = () => {eventsMark = nextSeq;};
   const tape = (entry) => {unsaved.push({n: tapeN, turn: state ? state.turn : 0, ...entry}); tapeN += 1;};
-  const note = (text) => {pushLine(history, {turn: state ? state.turn : 0, text}); if (history.length > HISTORY_KEEP) history.splice(0, history.length - HISTORY_KEEP);};
+  const note = (text) => {pushLine(history, {turn: state ? state.turn : 0, text});};
   const finished = () => Boolean(ended) || Boolean(gameOver(state));
   /* What a seat's pilot is made with: public card facts, and its seat's own deck list, setting and the match's seed. */
   let matchSeed = "";
@@ -641,7 +648,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     for (const e of events) {
       const id = journal.write(e.kind, e.data);
       nextSeq = Number(id.slice("event:".length)) + 1;
-      addToHistory(history, e, names);
+      addToHistory(history, e, names, {keep: Infinity});
       const said = tableEvent(e, id);
       if (said) tableEvents.push(answering ? {...said, decisionId: answering} : said);
       if (said && said.kind === "lost") outs = [...outs, seats[said.player].seatId];
@@ -867,7 +874,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     landBackSaved = landBack !== null;
     if (landBack) landBack.saved = true;
     tableEvents = record.events || []; eventsMark = record.eventsMark ?? 0; eventsFloor = record.eventsFloor ?? -1;
-    seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null; outs = record.outs || []; history = (record.history || []).map((l, i) => (l.seq === undefined ? {...l, seq: i} : l));
+    seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null; outs = record.outs || []; sealed = record.historySealed || 0; history = (record.history || []).map((l, i) => (l.seq === undefined ? {...l, seq: sealed * HISTORY_SEGMENT + i} : l));
     refusals = record.refusals || {total: 0, since: point.sequence, first: []};
     continuing = record.continuing === true; driven = record.driven || 0; endWhenNoPerson = record.endWhenNoPerson === true;
     seated = record.candidates === true;
@@ -987,7 +994,13 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     const point = journal.checkpoint(state, rng.checkpoint());
     await store.saveCheckpoint(point);
     await store.pruneCheckpoints();
-    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, ...(outs.length ? {outs} : {}), history, refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(undoLastPlay ? {undoLastPlay, playBack: playBack !== null} : {}), ...(resultRecords ? {resultRecords: true} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(blocksNone ? {blocksNone} : {}), ...(landAnyStep ? {landAnyStep} : {}), ...(takeBackLand ? {takeBackLand, landBack: landBack !== null} : {}), ...(askAimed ? {askAimed} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {}), ...(tableEvents.length ? {events: tableEvents, eventsMark, eventsFloor} : {}), ...(seated ? {candidates: true} : {}), ...(pilotPicks ? {pilotPicks: true} : {})}));
+    /* A tail grown past its length seals its oldest lines into a key of their own, once, before the record that names it. */
+    while (history.length >= HISTORY_TAIL + HISTORY_SEGMENT) {
+      await storage.put(historyKey(sealed), JSON.stringify(history.slice(0, HISTORY_SEGMENT)));
+      history.splice(0, HISTORY_SEGMENT);
+      sealed += 1;
+    }
+    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, ...(outs.length ? {outs} : {}), history, ...(sealed ? {historySealed: sealed} : {}), refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(undoLastPlay ? {undoLastPlay, playBack: playBack !== null} : {}), ...(resultRecords ? {resultRecords: true} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(blocksNone ? {blocksNone} : {}), ...(landAnyStep ? {landAnyStep} : {}), ...(takeBackLand ? {takeBackLand, landBack: landBack !== null} : {}), ...(askAimed ? {askAimed} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {}), ...(tableEvents.length ? {events: tableEvents, eventsMark, eventsFloor} : {}), ...(seated ? {candidates: true} : {}), ...(pilotPicks ? {pilotPicks: true} : {})}));
   }
 
   const api = {
@@ -998,6 +1011,26 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     get waitingOn() {return pendingSeat === null ? null : seats[pendingSeat].seatId;},
     /** Every line of the table's history the room keeps (a view shows the newest): public, the same for every seat. */
     get history() {return history.map(({turn, text, mark}) => ({turn, text, ...(mark ? {mark} : {})}));},
+    /**
+     * THE LINES BEFORE ONE (ROB-332, "load earlier"): up to `limit` (default HISTORY_PAGE, at most HISTORY_PAGE_MAX) of the history's
+     * lines whose `seq` is below `before` -- the oldest line a client holds, or no `before` for the newest -- oldest first, and `first`,
+     * the `seq` the game's lines begin at. The same for every seat and a spectator: history is public, nothing in it depends on who asks.
+     * A sealed segment is read from storage as it is wanted; the tail is the room's own.
+     */
+    async historyBefore({before, limit} = {}) {
+      const total = sealed * HISTORY_SEGMENT + history.length;
+      if (before !== undefined && before !== null && !(Number.isInteger(before) && before >= 0)) throw new RoomError(400, "Ask for the lines before a line number: a whole number, 0 or more.");
+      if (limit !== undefined && limit !== null && !Number.isInteger(limit)) throw new RoomError(400, "Ask for a whole number of lines.");
+      const end = Math.min(before ?? total, total), many = limit >= 1 ? Math.min(limit, HISTORY_PAGE_MAX) : HISTORY_PAGE, start = Math.max(0, end - many);
+      /* What is read is fixed before anything is awaited: the tail as it is now, and which segments hold the rest. */
+      const tailFrom = sealed * HISTORY_SEGMENT, tail = history.slice(Math.max(0, start - tailFrom), Math.max(0, end - tailFrom)), sealedNow = sealed;
+      const lines = [];
+      for (let i = Math.floor(start / HISTORY_SEGMENT); i < sealedNow && i * HISTORY_SEGMENT < end; i += 1) {
+        const segment = JSON.parse(await storage.get(historyKey(i)) || "[]");
+        lines.push(...segment.slice(Math.max(0, start - i * HISTORY_SEGMENT), Math.max(0, end - i * HISTORY_SEGMENT)));
+      }
+      return {before: end, first: 0, lines: [...lines, ...tail].map(shownLine)};
+    },
     /** The match's tally of refused pilot answers, whatever the history still holds: `{total, since, first}`. */
     get refusals() {return structuredClone(refusals);},
     /** True when a slice ran out with nobody asked: `resume` plays on. */
@@ -1090,6 +1123,8 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         manaSources: deriving(state, () => manaSources(state, seat)),
         ...(canUndo ? {canUndo: true, undoablePlay: {cardId: playBack.objectId, name: playBack.name, kind: playBack.kind}} : {}),
         history: history.slice(-HISTORY_VIEW).map(shownLine),
+        /* Where the game's lines begin: older ones than the view's are asked for (`historyBefore`; the socket's {type: "history"}). */
+        historyFirst: 0,
         /* What happened, as this seat may know it (events.mjs): the change this view shows -- or, asked with `after` (the last
            event id the seat has), everything since; `eventsReset` when that is older than the room keeps. */
         ...((said) => ({eventsSchema: EVENTS_SCHEMA, events: said.events, ...(said.reset ? {eventsReset: true} : {})}))(
@@ -1129,6 +1164,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         state: projectFor(state, null),
         manaSources: [],
         history: history.slice(-HISTORY_VIEW).map(shownLine),
+        historyFirst: 0,
         ...((said) => ({eventsSchema: EVENTS_SCHEMA, events: said.events, ...(said.reset ? {eventsReset: true} : {})}))(
           eventsFor(tableEvents, null, {...(after !== undefined && after !== null ? {after, floor: eventsFloor} : {from: `event:${eventsMark}`}), knows: () => false})),
         ...(api.continuing ? {continuing: true} : {}),

@@ -101,6 +101,16 @@ eq([eveSock.frames.at(-1).type, eveSock.frames.at(-1).view.spectator, eveSock.fr
 await object.webSocketMessage(eveSock, JSON.stringify({type: "view", after: "event:not-a-number"}));
 eq(eveSock.frames.at(-1).view.eventsReset, true, "with an event it cannot place, told to start from the view");
 ok(!JSON.stringify(eveSock.frames).includes('"secret"'), "no event a seat was told in secret");
+/* "Load earlier" (ROB-332): the history is public, so a spectator may ask for older lines as a seat may, and is answered alone. */
+{
+  const held = eveSock.frames.at(-1).view.history, n = eveSock.frames.length, mayaN = mayaSock.frames.length;
+  await object.webSocketMessage(eveSock, JSON.stringify({type: "history", before: held.at(-1).seq, limit: 2}));
+  const got = eveSock.frames.slice(n);
+  eq([got.length, got[0].type, got[0].first, got[0].lines.map((l) => l.seq)], [1, "history", 0, [held.at(-1).seq - 2, held.at(-1).seq - 1].filter((x) => x >= 0)], "a spectator asking for the lines before one is answered with them");
+  eq(mayaSock.frames.length, mayaN, "and no seat is sent anything");
+  await object.webSocketMessage(eveSock, JSON.stringify({type: "history", before: "x"}));
+  eq([eveSock.frames.at(-1).type, eveSock.frames.at(-1).of, eveSock.frames.at(-1).status], ["refused", "history", 400], "a request that is not a line number is refused, saying which");
+}
 
 /* 4. COUNTED. */
 await w.watch(open.id, SAM);
