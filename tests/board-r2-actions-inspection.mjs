@@ -83,14 +83,17 @@ try{
   ok(await page.locator('#cm-decision-slot #cm-board-decision').isVisible(),"closed drawer keeps the pending choice reachable");
   await page.locator('[data-action="board-actions-open"]').click();
  }
- // A draft remains the same question while inspecting and switching views.
+ // A draft remains the same question while inspecting and switching views. Three creatures for two, so the pick is the
+ // player's: two of two is the one legal answer and arrives selected (ROB-319: a sole choice is auto-selected, then confirmed).
  const choice=structuredClone(sample);choice.revision=++revision;
- choice.decision={id:"r2-targets",kind:"targets",title:"Choose two creatures",mode:"many",min:2,max:2,options:[{index:0,label:"First creature",cardId:id},{index:1,label:"Second creature",cardId:id+1}]};
+ choice.decision={id:"r2-targets",kind:"targets",title:"Choose two creatures",mode:"many",min:2,max:2,options:[{index:0,label:"First creature",cardId:id},{index:1,label:"Second creature",cardId:id+1},{index:2,label:"Third creature",cardId:id+2}]};
  await show(choice);
  await page.locator('#cm-board-decision [data-index="0"]').click();
  await change(page,"focus");
  eq(await page.locator('#cm-board-decision [data-index="0"]').getAttribute('aria-pressed'),'true','selection survives view switch');
- await page.locator(`.cm-stage-fan .cm-bcard[data-card="${id}"]`).click({button:"right"});await page.locator('#cm-card-menu [data-action=board-card-menu-view]').click();
+ // While the pop-up owns a question, a card's menu is only its inspection (ROB-319: nothing else can start mid-sequence).
+ await page.locator(`.cm-stage-fan .cm-bcard[data-card="${id}"]`).click({button:"right"});await page.locator('#cm-dialog[open] .cm-board-zoom').waitFor();
+ eq(await page.locator('#cm-card-menu').count(),0,'a card pressed during the pop-up opens its inspection, not a menu of plays');
  eq(await page.locator('#cm-board-decision [data-index="0"]').getAttribute('aria-pressed'),'true','inspection preserves draft');
  await page.keyboard.press("Escape");
  const newer=structuredClone(choice);newer.revision=++revision;newer.decision.id="r2-new-targets";await show(newer);
@@ -103,8 +106,11 @@ try{
  await page.locator('#cm-card-inspector').waitFor();
  await page.locator(`.cm-stage-fan .cm-bcard[data-card="${id}"]`).dispatchEvent('click',{detail:1});await page.waitForTimeout(100);
  eq(sent.filter(x=>x.type==='act').length,0,'long-press follow-up click cannot play a card');
- eq(await page.locator('.cm-action-review').count(),0,'long-press follow-up click cannot select an action either');
+ eq(await page.locator('.cm-action-review, .cm-required-popup, #cm-card-menu').count(),0,'long-press follow-up click cannot select an action either');
+ /* The hover pop-up over the inspected card is the top layer (ROB-318), and Escape closes the top layer first: the pointer leaves it. */
+ await page.mouse.move(1,1);await page.waitForTimeout(450);
  await page.keyboard.press('Escape');
+ eq(await page.locator('#cm-card-inspector').count(),0,'Escape closes the long-press inspection');
  // Selection is private until an explicit confirmation, in every view.
  const ways=structuredClone(sample);ways.revision=++revision;
  ways.decision={id:'r2-ways',kind:'priority',mode:'one',title:'Your priority',options:[{index:0,act:'cast',label:'Cast first way',cardId:id,detail:'→ Maya · tapping Forest'},{index:1,act:'cast',label:'Cast second way',cardId:id,detail:'→ Rook · tapping Island'}]};
@@ -113,55 +119,57 @@ try{
   const before=sent.filter(x=>x.type==='act').length;
   await page.locator(`.cm-stage-fan .cm-bcard[data-card="${id}"]`).first().click();
   eq(await page.locator('#cm-dialog[open]').count(),0,'card action choices do not cover the board');
-  await page.locator('#cm-board-decision [data-index="1"]').click();
+  /* ROB-319: starting a card's action gives the pop-up the sequence; its ways are the one layer still open, and each is
+     offered in its own words. The r4 desk's guarantees hold there, one for one. */
+  await page.evaluate(()=>{globalThis.__said=[];new MutationObserver(()=>__said.push(document.querySelector('#cm-board-said').textContent)).observe(document.querySelector('#cm-board-said'),{childList:true,subtree:true,characterData:true});});
+  await page.locator('.cm-required-popup [data-action=board-flow-choice]',{hasText:'Rook · tapping Island'}).click();
   eq(sent.filter(x=>x.type==='act').length,before,'selecting a target/payment offer sends nothing');
-  ok((await page.locator('#cm-board-decision [data-index="1"][aria-pressed="true"]').innerText()).includes('Rook · tapping Island'),'the outlined option names the exact target and payment offer');
-  ok((await page.locator('.cm-action-summary').textContent()).includes('Rook · tapping Island'),'a screen reader is told the selection');
-  /* Symbols first (Rob, 2026-10-25): no box restating the selection, no paragraph about what Confirm does; Confirm and
-     Clear side by side. */
-  const desk=await page.evaluate(()=>{const r=document.querySelector('.cm-action-review'),s=r.querySelector('.cm-action-summary').getBoundingClientRect(),[c,x]=[...r.querySelectorAll('.cm-decide-actions>button')];const a=c.getBoundingClientRect(),z=x.getBoundingClientRect();return {p:r.querySelectorAll('p').length,seen:s.width>1||s.height>1,words:[...r.querySelectorAll('.cm-decide-actions>button')].map(b=>b.innerText.trim()),row:Math.abs(a.top-z.top)<2&&z.left>=a.right};});
-  ok(desk.p===0&&!desk.seen,`no visible summary or explanation under the options (${desk.p} paragraphs, summary seen ${desk.seen})`);
-  eq(desk.words,['✦ Cast Spell','Back','Cancel'],'r4 names the binding action and both draft exits');
+  ok((await page.locator('.cm-required-popup #cm-board-decision').innerText()).includes('Rook · tapping Island'),'the pop-up names the exact target and payment offer chosen');
+  ok((await page.evaluate(()=>__said.join(' | '))).includes('Rook · tapping Island'),'a screen reader is told the selection');
+  /* Symbols first (Rob, 2026-10-25): no paragraph about what Confirm does; Confirm and Back side by side. */
+  const desk=await page.evaluate(()=>{const r=document.querySelector('.cm-required-popup #cm-board-decision'),bs=[...r.querySelectorAll('.cm-decide-actions>button')],[c,x]=bs,a=c.getBoundingClientRect(),z=x.getBoundingClientRect();return {p:[...r.querySelectorAll('p')].filter(n=>n.offsetParent&&n.textContent.trim().length>40).length,words:bs.map(b=>b.innerText.trim()),row:Math.abs(a.top-z.top)<2&&z.left>=a.right};});
+  ok(desk.p===0,`no explanation paragraph in the pop-up (${desk.p})`);
+  eq(desk.words,['Confirm','Back','Cancel'],'the pop-up names the binding answer and both draft exits');
   ok(desk.row,'binding action and Back sit side by side');
-  /* The drawer's open/shut is a thin chevron with no fill, and the drawer's scrollbar a faint track, never white. */
-  const quiet=await page.evaluate(()=>{const t=document.querySelector('[data-action="board-actions-toggle"]'),r=t.getBoundingClientRect(),cs=getComputedStyle(t),back=document.querySelector('.cm-board-back'),d=document.querySelector('#cm-board-decision').getBoundingClientRect();return {w:r.width,h:r.height,bg:cs.backgroundColor,glyph:/[▸▾]/.test(t.textContent),module:t.classList.contains('cm-module-toggle'),back:back?Math.round(back.getBoundingClientRect().left-d.left):null,bar:getComputedStyle(document.querySelector('.cm-stage-rail')).scrollbarColor};});
-  /* The 3D HUD's drawers (Table and Focus now share them): the open/shut control is the module's own header row, a thin line of title and
-     chevron glyph (▸ ▾) with no fill, as every other module's. The old standalone 24px svg chevron no longer exists; its guarantee, a quiet
-     unfilled control that is not a button-sized block, is kept as: one line high (at most 24px), unfilled, carrying the chevron glyph. */
-  ok(quiet.h<=24&&quiet.glyph&&quiet.module&&/rgba\(0, 0, 0, 0\)|transparent/.test(quiet.bg),`the Actions toggle is a thin unfilled header row with a chevron (${quiet.w}×${quiet.h}, ${quiet.bg})`);
-  eq(quiet.back,0,'All actions is a small link at the left edge');
-  ok(!/255, 255, 255\)|#fff\b|white/i.test(quiet.bar)&&quiet.bar!=='auto',`the drawer's scrollbar is quiet (${quiet.bar})`);
-  /* Rob, 2026-10-25: "Don't need both. Inspection pane should be within the left drawer." */
-  ok(await page.locator('.cm-stage-rail #cm-board-decision .cm-action-card img').count()===1,'the source card is read in the Actions desk during review');
+  /* Rob, 2026-10-25: "Don't need both." The source card is read in the pop-up; no second inspection pane opens. */
+  ok(await page.locator('.cm-required-popup [data-action=board-combat-inspect] img').count()===1,'the source card is read in the pop-up during review');
   eq(await page.locator('#cm-card-inspector').count(),0,'and no second inspection pane opens on the right');
   /* Rob, 2026-10-25: "Even when an action to decide on a selected card, my on-hover for any card should still work". */
   await page.mouse.move(2,2);await page.locator(`.cm-stage-fan .cm-bcard[data-card="${id}"]`).first().hover();
   await page.locator('#cm-board-peek').waitFor({timeout:3000});
   ok(true,'while an action is being decided, the hover still pops the card up');
   await page.mouse.move(2,2);
-  await page.locator('[data-action="board-reset"]').click();
+  await page.locator('.cm-required-popup [data-action=board-flow-cancel]').click();
   eq(sent.filter(x=>x.type==='act').length,before,'clearing draft sends nothing');
-  await page.locator('#cm-board-decision [data-index="0"]').click();
-  await page.locator('#cm-board-decision [data-action="board-confirm"]').click();
+  eq(await page.locator('.cm-required-popup').count(),0,'Cancel gives the sequence back: the pop-up closes');
+  /* The drawer's open/shut is a thin chevron with no fill, and the drawer's scrollbar a faint track, never white. */
+  const quiet=await page.evaluate(()=>{const t=document.querySelector('[data-action="board-actions-toggle"]'),r=t.getBoundingClientRect(),cs=getComputedStyle(t);return {w:r.width,h:r.height,bg:cs.backgroundColor,glyph:/[▸▾]/.test(t.textContent),module:t.classList.contains('cm-module-toggle'),bar:getComputedStyle(document.querySelector('.cm-stage-rail')).scrollbarColor};});
+  /* The 3D HUD's drawers (Table and Focus now share them): the open/shut control is the module's own header row, a thin line of title and
+     chevron glyph (▸ ▾) with no fill, as every other module's. */
+  ok(quiet.h<=24&&quiet.glyph&&quiet.module&&/rgba\(0, 0, 0, 0\)|transparent/.test(quiet.bg),`the Actions toggle is a thin unfilled header row with a chevron (${quiet.w}×${quiet.h}, ${quiet.bg})`);
+  ok(!/255, 255, 255\)|#fff\b|white/i.test(quiet.bar)&&quiet.bar!=='auto',`the drawer's scrollbar is quiet (${quiet.bar})`);
+  await page.locator(`.cm-stage-fan .cm-bcard[data-card="${id}"]`).first().click();
+  await page.locator('.cm-required-popup [data-action=board-flow-choice]',{hasText:'Maya · tapping Forest'}).click();
+  await page.locator('.cm-required-popup [data-action=board-flow-confirm]').click();
   eq(sent.filter(x=>x.type==='act').at(-1).indices,[0],'confirmation submits only selected authoritative index');
   await show({...structuredClone(ways),revision:++revision,decision:{...ways.decision,id:'r2-reset-'+mode}});
   eq(await page.locator('#cm-card-inspector').count(),0,'automatic action inspection releases space after the game advances');
  }
- const payment=structuredClone(sample);payment.revision=++revision;payment.decision={id:`choose-cost:${id}`,kind:'choice',mode:'one',title:'Choose what to tap',options:[{index:0,label:'Forest and Island'},{index:1,label:'Forest and Sol Ring'}]};
+ const payment=structuredClone(sample);payment.revision=++revision;payment.decision={id:`choose-cost:${id}`,kind:'choice',mode:'one',title:'Choose what to tap',sourceId:id,options:[{index:0,label:'Forest and Island'},{index:1,label:'Forest and Sol Ring'}]};
  await show(payment);
  const beforePay=sent.filter(x=>x.type==='act').length;
- await page.locator('#cm-board-decision [data-index="1"]').click();
+ await page.locator('.cm-required-popup [data-action=board-flow-choice]',{hasText:'Forest and Sol Ring'}).click();
  eq(sent.filter(x=>x.type==='act').length,beforePay,'payment is not sent on selection');
- ok((await page.locator('#cm-board-decision [data-index="1"][aria-pressed="true"]').innerText()).includes('Forest and Sol Ring'),'payment sources shown for review, outlined');
+ ok((await page.locator('.cm-required-popup #cm-board-decision').innerText()).includes('Forest and Sol Ring')&&await page.locator('.cm-required-popup [data-action=board-flow-confirm]').count()===1,'payment sources shown for review, awaiting Confirm');
  /* Play settings moved from the account menu to the Camera menu with the 3D HUD, and on to the Table menu (ROB-220). */
  await page.locator('[data-action=board-table-menu]').click();
  await page.locator('[data-action=board-tools]').click();await page.keyboard.press('Escape');
  await page.locator('#cm-board-tools').waitFor({state:'detached',timeout:3000});
  eq(await page.locator('#cm-board-tools').count(),0,'Escape closes the foremost Settings menu');
- eq(await page.locator('#cm-board-decision .cm-action-card').count(),1,'closing Settings preserves the card being reviewed, in the question (the pop-up since ROB-208, once the Actions desk)');
+ eq([await page.locator('.cm-required-popup [data-action=board-combat-inspect]').count(),await page.locator('.cm-required-popup [data-action=board-flow-confirm]').count()],[1,1],'closing Settings preserves the card being reviewed and its pending answer, in the pop-up (ROB-208, ROB-319; once the Actions desk)');
  await page.keyboard.press('Escape');
  const moved=structuredClone(payment);moved.revision=++revision;await show(moved);
- eq(await page.locator('#cm-board-decision [data-action="board-confirm"]').count(),0,'a revision invalidates the old payment selection even with the same question ID');
+ eq(await page.locator('#cm-board-decision [data-action="board-confirm"], #cm-board-decision [data-action="board-flow-confirm"]').count(),0,'a revision invalidates the old payment selection even with the same question ID');
  eq(sent.filter(x=>x.type==='act').length,beforePay,'new revision cannot commit the old payment');
  // An inspection must stop exposing an expired private reveal.
  const privateView=structuredClone(sample);privateView.revision=++revision;privateView.decision={id:'r2-reveal',kind:'choice',mode:'ack',title:'Look at this card',options:[{index:0,cardId:999999,label:'Forest'}]};

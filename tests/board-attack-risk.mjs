@@ -37,16 +37,17 @@ const names={485:"Thrummingbird",526:"Proft, Consulting Detective",545:"Faerie F
 const attackers=[485,526,545];
 const decision=()=>{const options=[];for(const id of attackers)for(const d of [1,2,3])options.push({index:options.length,label:`${names[id]} → ${seats[d]}`,cardId:id,defenderId:d});return {id:"declare-attackers:risk"+revision,kind:"attackers",title:"Declare attackers",mode:"many",min:0,max:options.length,options};};
 const show=async(edit=()=>{})=>{const v=structuredClone(sample);v.revision=++revision;v.decision=decision();edit(v);sock.send(JSON.stringify({type:"view",view:v}));await page.waitForTimeout(200);};
-const marks=()=>page.$$eval("#cm-board-decision [data-action=board-option]",bs=>Object.fromEntries(bs.map(b=>[b.textContent.replace(/[☠⊘]/g,"").replace(/ (could die to|kills no blocker)[^;]*;/g,"").trim(),(b.classList.contains("is-risk-die")?"red":"")+(b.classList.contains("is-risk-weak")?"yellow":"")]))) ;
+const marks=async()=>{const result={};for(const id of attackers){await page.locator(`[data-action=board-flow-attacker][data-card="${id}"]`).click();Object.assign(result,await page.locator('[data-action=board-flow-choice]').evaluateAll((bs,name)=>Object.fromEntries(bs.map(b=>[`${name} → ${b.querySelector(':scope>span:not(.cm-risk)')?.textContent.trim()}`,(b.classList.contains('is-risk-die')?'red':'')+(b.classList.contains('is-risk-weak')?'yellow':'')])),names[id]));await page.locator('[data-action=board-flow-no-attack]').click();}return result;};
 const card=(v,id)=>v.state.players.flatMap(p=>p.zones.Battlefield.cards).find(c=>c.cardId===id);
 try{
   await show();
-  await page.locator("#cm-board-decision [data-action=board-option]").first().waitFor();
+  await page.locator("[data-action=board-flow-attacker]").first().waitFor();
   let m=await marks();
   eq([m["Proft, Consulting Detective → AI 2"],m["Proft, Consulting Detective → AI 3"],m["Proft, Consulting Detective → Friend"]],["red","redyellow",""],"Proft: red at AI 2 (a 2/2 can kill it), red and yellow at AI 3 (Kor Skyfisher 2/3), nothing at Friend (no creatures)");
   eq([m["Thrummingbird → AI 2"],m["Thrummingbird → AI 3"]],["","redyellow"],"a flyer is marked only by what can block it: nothing at AI 2 (no flyer or reach), red and yellow at AI 3");
   eq([m["Faerie Formation → AI 2"],m["Faerie Formation → AI 3"]],["",""],"Faerie Formation 5/4 risks nothing at AI 3: the 2/3 cannot kill it, and it kills the 2/3");
-  const proft=page.locator("#cm-board-decision [data-action=board-option]",{hasText:"Proft, Consulting Detective → AI 2"});
+  await page.locator('[data-action=board-flow-attacker][data-card="526"]').click();
+  const proft=page.locator('[data-action=board-flow-choice]', {hasText:"AI 2"});
   eq(await proft.locator(".cm-risk.is-die").getAttribute("title"),"Could die: Surly Farrier 2/2","red says which blocker could kill it, on hover");
   ok((await proft.textContent()).includes("could die to Surly Farrier"),"and a screen reader hears it");
   const look=await proft.evaluate(b=>({shadow:getComputedStyle(b).boxShadow,glyph:getComputedStyle(b.querySelector(".cm-risk")).color}));

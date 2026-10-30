@@ -635,6 +635,8 @@
 /* State-backed cards keep an accessible name; ownership references deliberately overlay their title. */
 .cm-bcard[data-card]:has(>img[data-card-loaded="true"])>.cm-bcard-name{visibility:hidden}
 
+/* A commander pile has no card-section wrapper; its badge must not inherit the slot's zero line height. */
+#matrix-v2 .cm-board .cm-bcard-pt{line-height:1.1}
 #matrix-v2 .cm-board [data-card-section] .cm-bcard-pt{font-size:max(10px,calc(var(--bc)*.13));padding:1px 3px;line-height:1.1}
 
 #matrix-v2 .cm-board .cm-mat-grid:has(.cm-board-lands .is-tapped){--land-turn:calc(var(--bc)*.35)}
@@ -1854,6 +1856,27 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 /* THE PHONE'S ONE FRAME SCROLLS THE WHOLE BOARD: its rows take the room their cards need, and the mat clips nothing of a crowded row. */
 #matrix-v2 .cm-board[data-phone] .cm-phone-battlefield .cm-mat-grid{grid-template-rows:auto auto auto auto!important}
 #matrix-v2 .cm-board[data-phone] .cm-phone-battlefield>.cm-mat{overflow:visible}
+/* Required decisions own the existing canvas pop-up for their entire sequence. */
+#matrix-v2 .cm-board .cm-required-popup{position:fixed!important;left:50%!important;top:50%!important;transform:translate(-50%,-50%)!important;z-index:60;width:min(540px,calc(100vw - 32px))!important;max-width:calc(100vw - 32px)!important;max-height:calc(100dvh - 100px)!important;margin:0!important}
+#matrix-v2 .cm-board #cm-decision-slot.cm-required-popup>#cm-board-decision{padding:20px;box-sizing:border-box;max-height:calc(100dvh - 100px)!important;overflow:hidden;box-shadow:0 18px 60px #0009}
+#matrix-v2 .cm-board .cm-choice-flow h2{margin:0 0 12px;font-size:var(--text-hud-heading,20px);line-height:1.25;text-align:center}
+#matrix-v2 .cm-board .cm-choice-flow .cm-flow-card{display:block;width:100px;height:140px;object-fit:contain;align-self:center;margin:0 auto 14px;border-radius:6px}
+#matrix-v2 .cm-board .cm-choice-flow .cm-board-options{display:grid;gap:8px;min-width:0}
+#matrix-v2 .cm-board .cm-choice-flow .cm-flow-option{display:flex;align-items:center;justify-content:flex-start;gap:12px;width:100%;min-height:44px;padding:12px 16px;white-space:normal;text-align:left;line-height:1.4;font-weight:500}
+#matrix-v2 .cm-board .cm-choice-flow .cm-flow-thumb{width:44px;height:62px;object-fit:contain;border-radius:4px;flex:none}
+#matrix-v2 .cm-board .cm-choice-flow .cm-choice-review li{display:flex;align-items:center;gap:10px}
+#matrix-v2 .cm-board .cm-choice-flow .cm-mana{display:inline-flex;vertical-align:middle}
+#matrix-v2 .cm-board .cm-choice-flow .cm-mana img,#matrix-v2 .cm-board .cm-choice-flow .cm-mana-symbol{width:26px;height:26px}
+#matrix-v2 .cm-board .cm-choice-flow .cm-decide-actions{display:flex;flex-wrap:wrap;gap:8px;padding-top:16px;margin-top:12px;border-top:1px solid var(--color-line-strong)}
+#matrix-v2 .cm-board .cm-choice-flow .cm-decide-actions button{min-height:44px}
+#matrix-v2 .cm-board .cm-choice-review{list-style:none;padding:0;margin:0;display:grid;gap:8px;line-height:1.4}
+#matrix-v2 .cm-board .cm-choice-review li{padding:8px 12px;background:var(--color-panel-raised,var(--color-panel));border-left:2px solid var(--color-line-strong)}
+@media(max-width:500px){#matrix-v2 .cm-board #cm-decision-slot.cm-required-popup>#cm-board-decision{padding:14px}#matrix-v2 .cm-board .cm-choice-flow .cm-flow-card{width:72px;height:100px}}
+
+.cm-flow-inspect{display:block;margin:0 auto 16px;padding:0;border:0;background:none;cursor:zoom-in}.cm-flow-inspect .cm-flow-card{margin:0}
+.cm-required-popup .cm-r4-combat{position:static;min-width:0;max-width:100%;margin-bottom:12px}
+
+#matrix-v2 .cm-board #cm-decision-slot.cm-required-popup #cm-board-decision>.cm-board-options{flex:1 1 auto;max-height:45dvh;margin-inline:-3px;overflow:auto;overscroll-behavior:contain;min-height:0}
 
 /* ONE SCROLL REGION PER DECISION IN THE ACTIONS PANE (ROB-201, Luke's playtest of 2026-10-28). The question sat inside three
    scrolling boxes (the drawer, its own section, its list of options), each capped by a rule of its own, so a taller drawer
@@ -1865,6 +1888,11 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-stage-module[data-module=actions].has-height .cm-board-decision{overflow-y:auto;overflow-x:hidden;flex:1 1 auto;min-height:0}
 /* what is scrolled to is kept clear of the sticky answering row (a key press or a scroll-into-view stops above it) */
 #matrix-v2 .cm-board #cm-actions-drawer,#matrix-v2 .cm-board .cm-stage-module[data-module=actions].has-height .cm-board-decision{scroll-padding-bottom:76px}
+
+#matrix-v2 .cm-board #cm-decision-slot.cm-required-popup #cm-board-decision>:not(.cm-board-options){flex:none}
+
+/* End-of-game choices stay above the phone drawer, as action pop-ups do. Hand inspection stays above both. */
+#matrix-v2 .cm-board .cm-board-over{z-index:60}
 
 /* the question steps aside for the held-up plays (crankmagic-board.js stepAside; ROB-208) */
 #matrix-v2 .cm-board .cm-decision-slot{margin-left:var(--slot-shift,0px)}

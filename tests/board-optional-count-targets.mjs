@@ -127,15 +127,14 @@ try {
     await page.evaluate(() => document.querySelector("#cm-board-decision [data-action=board-confirm]")?.click()); await settle(page);
     eq(acts().length, 4, `${mode}: and nothing is sent`);
 
-    /* ---- 4. one required target keeps its steps ---- */
+    /* ---- 4. one required target uses the conditional pop-up ---- */
     await show(single());
-    await pickOption(page, 1);
-    ok(await page.locator("#cm-board-decision [data-action=board-target-next]").count() === 1, `${mode}: a single required target still goes Pick, then Next`);
+    await page.locator('[data-action=board-flow-choice][data-indices~="1"]').click();
+    ok(await page.locator("#cm-board-decision [data-action=board-flow-confirm]").count() === 1, `${mode}: target selection reaches confirmation`);
     await page.evaluate(() => document.querySelector("#cm-board-decision [data-action=board-confirm]")?.click());
     await settle(page);
-    eq(acts().length, 4, `${mode}: Confirm before Next sends nothing on a single required target`);
-    await page.locator("#cm-board-decision [data-action=board-target-next]").click(); await settle(page);
-    await confirm(page).click(); await settle(page);
+    eq(acts().length, 4, `${mode}: selecting the target alone sends nothing`);
+    await page.locator('[data-action=board-flow-confirm]').click(); await settle(page);
     eq(acts().length, 5, `${mode}: after Review, Confirm sends the single target`);
     eq(acts()[4].indices, [1], `${mode}: the one picked`);
 

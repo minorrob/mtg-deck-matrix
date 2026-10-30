@@ -3,16 +3,10 @@
    THE ACTIONS PANE HAS ONE SCROLL REGION PER DECISION (ROB-201, Luke's playtest of 2026-10-28; BUG-03; crankmagic-stage.css).
 
    Luke "couldn't find the scrollable sub-panels inside the Actions pane", and dragging the drawer taller revealed nothing new.
-   Measured on every kind of question (since ROB-208 the pane holds a priority offer and the combat declarations; the rest are the pop-up's): the question sat inside THREE scrolling boxes, the drawer, the decision's own section and
-   its list of options (a target list was 164px tall of 259, scrolling by itself), each capped by a rule of its own. Now the
-   drawer is the one: the question and its options take the height they need and the drawer scrolls them, so a taller drawer
-   shows more, and the row that answers (Confirm, Don't) stays in reach at the foot.
-
-     1. In the pane no box inside the question scrolls, for a target list, a library search, a modal choice, a priority offer,
-        a cost, declare attackers and a scry; now the priority offer and declare attackers.
-     2. Nothing between the question and the drawer scrolls either: exactly one region scrolls, the drawer.
-     3. A taller window shows more: at 1000px a question that was cut at 700px is whole, with nothing hidden.
-     4. The answering row stays in view when the question is longer than the drawer.
+   ROB-319 moves required sequences into the popup, while optional offers remain in the drawer.
+   Both surfaces keep one scrolling owner. The popup's choice list scrolls; its source and confirmation
+   remain fixed. Every sample decision checks exclusive routing, no nested scrollers, and containment.
+   Taller windows expose at least as much content and retain reachable confirmation.
 
    GEOMETRY_REQUIRED=1 refuses a missing browser.
      node tests/board-actions-one-scroll.mjs
@@ -29,9 +23,7 @@ const html = readFileSync(path.join(ROOT, "index.html"), "utf8").replace("</head
 const TABLE = "onescroll1";
 const table = {tableId: TABLE, phase: "playing", matchId: sample.matchId, away: [], blockers: [], youAreHost: true, rules: {},
   seats: sample.state.players.map((p) => ({seatId: p.playerId, name: p.name, kind: p.playerId === sample.seat ? "human" : "ai", you: p.playerId === sample.seat, occupied: true, ready: true, mat: "felt"}))};
-/* What the pane holds since ROB-208: a priority offer and the combat declarations. A question the player must resolve is the pop-up's
-   (tests/board-mandatory-popup.mjs), which has one scroll region of its own. */
-const SHAPES = {priority: 13, attackers: 8};
+const SHAPES = {targets: 23, search: 15, modal: 18, priority: 13, cost: 6, attackers: 8, scry: 31};
 let checks = 0, rev = 810000;
 const ok = (c, m) => {assert.ok(c, m); checks += 1;};
 
@@ -58,55 +50,43 @@ async function open(mode, height) {
   return {page, context, ask};
 }
 
-/* What scrolls, around and inside the question. */
-const regions = (page) => page.evaluate(() => {
-  const root = document.querySelector("#cm-actions-drawer #cm-board-decision");
-  if (!root) return null;
-  const scrolls = (el) => /(auto|scroll)/.test(getComputedStyle(el).overflowY);
-  const label = (el) => el.tagName.toLowerCase() + (el.id ? "#" + el.id : "") + "." + [...el.classList].slice(0, 2).join(".");
-  const inside = [root, ...root.querySelectorAll("*")].filter(scrolls).map(label);
-  const between = [];
-  for (let el = root.parentElement; el && el.id !== "cm-actions-drawer"; el = el.parentElement) if (scrolls(el)) between.push(label(el));
-  const drawer = document.querySelector("#cm-actions-drawer");
-  return {inside, between, drawerScrolls: scrolls(drawer), hidden: drawer.scrollHeight - drawer.clientHeight};
+/* Optional offers scroll in the drawer; required questions scroll their choices in the popup. */
+const regions = page => page.evaluate(() => {
+  const root=document.querySelector('#cm-board-decision'),popup=root?.closest('.cm-required-popup');
+  if(!root)return null;
+  const scrolls=el=>/(auto|scroll)/.test(getComputedStyle(el).overflowY);
+  const owner=popup?root.querySelector(':scope > .cm-board-options'):document.querySelector('#cm-actions-drawer');
+  const inside=[root,...root.querySelectorAll('*')].filter(scrolls);
+  const between=[];for(let el=root.parentElement;el&&el!==owner&&el!==popup;el=el.parentElement)if(scrolls(el))between.push(el);
+  return {popup:!!popup,inside:inside.length,ownerScrolls:!!owner&&scrolls(owner),between:between.length,
+    duplicate:!!popup&&!!document.querySelector('.cm-stage-module[data-module=actions]'),
+    hidden:owner?Math.max(0,owner.scrollHeight-owner.clientHeight):0,height:owner?.clientHeight,
+    over:root.scrollHeight-root.clientHeight};
 });
-
 try {
-  for (const mode of ["focus", "full"]) {
-    const short = await open(mode, 700);
-    for (const [name, idx] of Object.entries(SHAPES)) {
-      await short.ask(idx);
-      const r = await regions(short.page);
-      ok(r, `${mode}: ${name}: the question is in the Actions pane`);
-      ok(r.inside.length === 0, `${mode}: ${name}: nothing inside the question scrolls by itself (${r.inside.join(", ") || "none"})`);
-      ok(r.between.length === 0, `${mode}: ${name}: nothing between the question and the drawer scrolls (${r.between.join(", ") || "none"})`);
-      ok(r.drawerScrolls, `${mode}: ${name}: the drawer is the one that scrolls`);
+  for(const mode of ['focus','full']){
+    const short=await open(mode,700);
+    for(const [name,idx] of Object.entries(SHAPES)){
+      await short.ask(idx);const r=await regions(short.page);
+      ok(r,`${mode}: ${name}: question is present`);
+      ok(r.popup===(name!=='priority'),`${mode}: ${name}: required popup versus optional drawer`);
+      ok(!r.duplicate,`${mode}: ${name}: no simultaneous Actions module`);
+      ok(r.inside===(r.popup?1:0),`${mode}: ${name}: exactly one scrolling owner, no nested scrollers (${JSON.stringify(r)})`);
+      ok(r.between===0&&r.ownerScrolls,`${mode}: ${name}: no additional scrolling parent`);
+      if(r.popup)ok(r.over<=2,`${mode}: ${name}: popup content fits its frame (${r.over}px)`);
     }
-    /* the foot stays in reach when the question is longer than the drawer */
-    await short.ask(SHAPES.attackers);
-    const foot = await short.page.evaluate(() => {
-      const drawer = document.querySelector("#cm-actions-drawer"), btn = drawer.querySelector("#cm-board-decision [data-action=board-confirm], #cm-board-decision .cm-board-decision-foot button");
-      if (!btn) return null;
-      drawer.scrollTop = 0;
-      const d = drawer.getBoundingClientRect(), b = btn.getBoundingClientRect();
-      return {within: b.top >= d.top - 1 && b.bottom <= d.bottom + 1, long: drawer.scrollHeight > drawer.clientHeight};
+    await short.ask(SHAPES.targets);const small=await regions(short.page);
+    const foot=await short.page.evaluate(()=>{
+      const popup=document.querySelector('.cm-required-popup'),btn=popup.querySelector('[data-action=board-confirm],.cm-board-decision-foot button');
+      if(!btn)return null;const d=popup.getBoundingClientRect(),b=btn.getBoundingClientRect();
+      return {within:b.top>=d.top-1&&b.bottom<=d.bottom+1&&b.bottom<=innerHeight};
     });
-    ok(foot && foot.long, `${mode}: the combat declaration is longer than the drawer at 700px`);
-    ok(foot.within, `${mode}: and its answering row is in view without scrolling`);
+    ok(foot?.within,`${mode}: confirmation stays visible without scrolling`);
     await short.context.close();
-
-    const tall = await open(mode, 1100);
-    await tall.ask(SHAPES.attackers);
-    const t = await tall.page.evaluate(() => {
-      const drawer = document.querySelector("#cm-actions-drawer"), q = drawer.querySelector("#cm-board-decision");
-      drawer.scrollTop = 0;
-      const d = drawer.getBoundingClientRect(), r = q.getBoundingClientRect();
-      return {top: Math.round(r.top - d.top), over: Math.round(r.bottom - d.bottom)};
-    });
-    ok(t.over <= 1, `${mode}: a taller window shows the whole combat declaration, foot and all (${t.over}px past the drawer's end)`);
+    const tall=await open(mode,1100);await tall.ask(SHAPES.targets);const large=await regions(tall.page);
+    ok(large.height>=small.height&&large.hidden<=small.hidden,`${mode}: a taller window shows at least as much content`);
+    ok(large.over<=2,`${mode}: taller popup keeps its controls within its frame`);
     await tall.context.close();
   }
-  console.log(`board-actions-one-scroll: ${checks} checks passed -- in the Actions pane the drawer is the one scroll region for every kind of question, a taller window shows more, and the answering row stays in view.`);
-} finally {
-  await close();
-}
+  console.log(`board-actions-one-scroll: ${checks} checks passed -- one scrolling owner, exclusive routing and reachable confirmation in drawer or popup.`);
+}finally{await close();}

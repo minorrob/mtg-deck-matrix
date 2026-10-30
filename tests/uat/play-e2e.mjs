@@ -387,6 +387,9 @@ try {
           if (await keep.count()) {if (await enabled(keep.first())) await keep.first().click({timeout:2000}); return;}
           /* A stack of the same card (×N) is a choice to press as well (Rob, 2026-10-25); where a question needs more of it
              than one, its how-many is set to as many as it allows. */
+          const layered=d.locator('[data-action=board-flow-choice]:enabled'), final=d.locator('[data-action=board-flow-confirm]:enabled');
+          if(await layered.count()){await layered.first().click({timeout:2000});return;}
+          if(await final.count()){await final.click({timeout:2000});return;}
           const confirm = d.locator("[data-action=board-confirm]"), opts = d.locator("[data-action=board-option]:enabled, [data-action=board-option-same]:enabled");
           if (await confirm.count()) {
             for (let i = 0; i < await opts.count() && !(await enabled(confirm)); i++) await opts.nth(i).click({timeout:2000});
@@ -397,7 +400,7 @@ try {
           return;
         }
         for (const action of ["board-draw", "board-pass"]) {
-          const b = p.locator(`[data-action=${action}]`).first();
+          const b = p.locator(`button[data-action=${action}]:not(.cm-bcard)`).first();
           if (await b.count() && await enabled(b)) {await b.click(); return;}
         }
       } catch(error) {

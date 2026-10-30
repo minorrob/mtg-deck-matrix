@@ -1073,8 +1073,7 @@ try {
       hand(ROB, asked);
       await focusSeat(page, 0);
       const pick = page.locator(`.cm-stage-big .cm-bcard[data-card="${mine[0].cardId}"]`);
-      await pick.click();
-      await page.locator(`#cm-card-menu [data-action=board-card-menu-do][data-index="0"][data-card="${mine[0].cardId}"]`).click();
+      await page.locator(`#cm-board-decision [data-action=board-option][data-index="0"]`).click();
       await page.locator(`.cm-stage-big .cm-bcard.is-picked[data-card="${mine[0].cardId}"]`).waitFor({timeout: 5000});
       const [said] = await axOf(rob, `.cm-stage-big .cm-bcard[data-card="${mine[0].cardId}"]`);
       await page.keyboard.press("Shift");
