@@ -58,13 +58,13 @@ Single-answer decisions use the runner. Counted picks, ordering, and number allo
 
 ## Visual contract
 
-Mode buttons retain the card's actual wording. Targets and mana sources use card thumbnails plus their names; target ownership disambiguates players. Mana uses the application's image/SVG symbols, including multi-mana outputs, while life payments remain readable text. Confirmation shows each mana source beside its output once; only additional spending from the pool or life appears separately, following Rob’s screenshot feedback. Back, Cancel, and Confirm are explicit controls with 44-pixel minimum touch targets. The pop-up scrolls internally; the game stays within the viewport.
+Mode buttons retain the card's actual wording. Targets and mana sources use card thumbnails plus their names; target ownership disambiguates players. Mana uses the application's image/SVG symbols, including multi-mana outputs, while life payments remain readable text. Confirmation shows each mana source beside its output once; additional spending from the pool or life appears separately, and surplus output retains the selected spending, following Rob’s screenshot feedback. Back, Cancel, and Confirm are explicit controls with 44-pixel minimum touch targets. The pop-up scrolls internally; the game stays within the viewport.
 
 ## Validation and limits
 
 `node tests/choice-flow.mjs` checks exact leaf equivalence, conditional visibility, Back, sparse indices, duplicate descriptions, single-option selection and stale context, plus 200 reproducible randomly generated trees.
 
-`node tests/choice-cards.mjs` runs the existing engine simulations for 21 representative cards and 32 cards sampled without replacement using seed 20261029. It inspects intermediate engine decisions and walks every final answer. The expanded pass covered 117 simulations, 830 single-answer decision states and 3,204 leaves with 2,679 assertions. This proves equivalence to the engine's offered actions in those states, not correctness of every card in Magic or exhaustive coverage of the catalog.
+`node tests/choice-cards.mjs` runs the existing engine simulations for 21 representative cards and 32 cards sampled without replacement using seed 20261029. It inspects intermediate engine decisions and walks every final answer. The expanded pass covered 117 simulations, 830 single-answer decision states and 3,204 leaves with 2,681 assertions. This proves equivalence to the engine's offered actions in those states, not correctness of every card in Magic or exhaustive coverage of the catalog.
 
 `GEOMETRY_REQUIRED=1 node tests/board-choice-flow.mjs` exercises the actual application with real engine decisions in Table, 3D and phone-sized Focus views. It submits the selected Vigorbloom indices back to the engine, verifies payment acceptance, checks the drawer/pop-up exclusion, and captures screenshots when `UAT_SHOTS` is set. `UAT_ART_DIR` optionally supplies cached real card artwork for visual inspection; ordinary CI remains offline.
 

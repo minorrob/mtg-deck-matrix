@@ -71,6 +71,10 @@ assert.deepEqual(collisions,[],'representative and sampled actions have distinct
 const extra=decisionPath({objects:{1:{card:'Forest'}},players:[]},{cost:'mana'},{taps:[{id:1,color:'G'}],payment:{mana:{G:1,U:1},life:2}},null,null).at(-1);
 assert.equal(extra.reviewLabel,'{U} and 2 life','only additional pool spending and life remain in review');checks++;
 assert.equal(extra.label,'{U}{G} and 2 life','original full payment label remains unchanged');checks++;
+const surplus=decisionPath({objects:{1:{card:'Azorius Signet'}},players:[]},{cost:'mana'},{taps:[{id:1,color:'W:1+U:1'}],payment:{mana:{W:1},life:0}},null,null).at(-1);
+assert.equal(surplus.reviewLabel,'{W}','surplus output keeps the chosen color spent visible');checks++;
+const surplusOther=decisionPath({objects:{1:{card:'Azorius Signet'}},players:[]},{cost:'mana'},{taps:[{id:1,color:'W:1+U:1'}],payment:{mana:{U:1},life:0}},null,null).at(-1);
+assert.equal(surplusOther.reviewLabel,'{U}','different spending from the same output remains distinguishable');checks++;
 const report={seed:20261029,representatives,sampled:sampled.map(x=>x.scenarios.card),scenarios,decisions,leaves,checks,kinds:[...kinds].sort(),collisions};
 if(process.env.CHOICE_REPORT){mkdirSync(path.dirname(process.env.CHOICE_REPORT),{recursive:true});writeFileSync(process.env.CHOICE_REPORT,JSON.stringify({report,vigorbloom:{state:projectFor(state,0),decision:d,payment}},null,2));}
 console.log(JSON.stringify(report,null,2));

@@ -1985,7 +1985,7 @@ globalThis.CrankBoard = Object.seal({
      of identical cards is taken changes nothing, so a stack gives the first it has not given yet. */
   const sameKey = (o) => {
     /* `affected` (and a target's `id`) only repeat which card this is: left in, no two cards were ever the same card. */
-    const {index, cardId, affected, ...words} = o;
+    const {index, cardId, affected, decisionPath, ...words} = o; // Derived path metadata does not distinguish otherwise identical counted cards.
     if (affected !== undefined && affected !== cardId) words.affected = affected;
     if (words.target && words.target.id === cardId) words.target = {...words.target, id: undefined};
     let seen = null;
@@ -2994,6 +2994,8 @@ globalThis.CrankBoard = Object.seal({
     if (showing && !handWas) handFrom = C.focusKey(document.activeElement);
     const before = motionFor !== null ? motionSnapshot(host) : null;
     // Keep the player's place through picks and incoming views, but never carry it into another question or game.
+    const previousLands=host.querySelector(".cm-board-lands-group");
+    if(previousLands && previousLands.dataset.landsFor===view?.decision?.id)landsOpen=previousLands.open?view.decision.id:null;
     const choice = host.querySelector("#cm-board-decision[data-choice-id]");
     const choiceScroll = choice && choice.dataset.choiceId === view?.decision?.id && choice.dataset.matchId === view?.matchId
       ? choice.querySelector(".cm-board-options")?.scrollTop : null;
@@ -4534,7 +4536,7 @@ globalThis.CrankBoard = Object.seal({
   });
   document.addEventListener("focusout", event => {if (event.target.closest?.("#cm-board .cm-bcard[data-card], #cm-board [data-peek-card]")) peek(null);});
   /* The Lands group's open or shut, kept for its question as the board redraws (toggle does not bubble: caught going down). */
-  document.addEventListener("toggle", (event) => {const el = event.target; if (el.matches?.(".cm-board-lands-group")) landsOpen = el.open ? el.dataset.landsFor : null;}, true);
+  document.addEventListener("toggle", (event) => {const el = event.target; if (el.isConnected && el.matches?.(".cm-board-lands-group")) landsOpen = el.open ? el.dataset.landsFor : null;}, true);
   document.addEventListener("pointerout", (event) => {
     const named = event.target.closest?.("#cm-board [data-peek-card]");
     if (named && !named.contains(event.relatedTarget)) {peek(null); return;}

@@ -64,10 +64,11 @@ export function decisionPath(state, choice, option, action, script) {
   if(option.payment){
     const produced={};for(const n of path)for(const [color,count] of Object.entries(n.mana || {}))produced[color]=(produced[color] || 0)+count;
     const pool=Object.fromEntries(Object.entries(option.payment.mana || {}).map(([color,count])=>[color,Math.max(0,count-(produced[color] || 0))]).filter(([,count])=>count));
-    // Sources already show their outputs. Only additional pool spending and life need another review row.
+    // Exact source outputs need no repeated total. Surplus output still needs the chosen spending shown.
     const extra={mana:pool,life:option.payment.life || 0};
     add('mana-payment',option.payment,paymentWords(option.payment),'mana');
-    path.at(-1).reviewLabel=Object.keys(pool).length || extra.life ? paymentWords(extra) : '';
+    const surplus=Object.entries(produced).some(([color,count])=>count>(option.payment.mana?.[color] || 0));
+    path.at(-1).reviewLabel=surplus ? paymentWords(option.payment) : Object.keys(pool).length || extra.life ? paymentWords(extra) : '';
   }
   if(!action && !modes && !targets && !option.taps) {
     add('option',option.index,option.label,choice.cost==='pool'?'mana':'option');
