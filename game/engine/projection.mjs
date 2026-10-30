@@ -27,7 +27,7 @@
  * render. It is pinned in §12.1 and reproduced here, not designed.
  */
 
-import {characteristicsOf, deriving, staticAbilities} from "./rules/layers.mjs";
+import {characteristicsOf, deriving, lookOf, staticAbilities} from "./rules/layers.mjs";
 import {conditionHolds} from "./script/condition.mjs";
 import {commanderKeyOf} from "./state/index.mjs";
 import {commanderTax} from "./rules/commander.mjs";
@@ -101,6 +101,9 @@ function cardFor(state, id, canSeeFace, viewer = null) {
          cannot say which side of one picture to draw (a modal double-faced land played as its back face, Mistgate Pathway).
          The front is the default and says nothing; `face` is only ever "back" here (an adventure's face is not a permanent's). */
       ...(named && object.face === "back" ? {face: "back"} : {}),
+      /* WHAT IT LOOKS LIKE WHEN IT IS NOT ITS CARD (ROB-329, Oko's Elk): the token it has become, said with its name, so the
+         board draws that token's picture. Present only while the effect holds; the next view without it is the revert. */
+      ...(named ? (() => { const look = lookOf(state, id); return look ? {appearance: look} : {}; })() : {}),
       attachments: (object.attachments ?? []).filter(id => state.objects[id]?.zone === "battlefield" && state.objects[id].attachedTo === object.id),
     } : {}),
 

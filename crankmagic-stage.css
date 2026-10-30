@@ -83,6 +83,9 @@
 .cm-card-menu>button[disabled]{opacity:.55;cursor:default}
 .cm-card-menu i{flex:none;width:20px;font-style:normal;font-size:16px;text-align:center}
 .cm-card-menu .cm-card-menu-card{font-weight:700;border-bottom:1px solid #6f9c8866;border-radius:5px 5px 0 0}
+/* A permanent that looks like a token (ROB-329, the view's `appearance`): a mark on the card, and its original one press away in the menu. */
+.cm-bcard-mark.is-look{background:var(--table-ink);font-weight:700}
+.cm-card-menu .cm-card-menu-card.is-original{border-radius:0 0 5px 5px;font-weight:400}
 .cm-card-menu-do b{font-weight:700}.cm-card-menu-do small{font-size:12px;color:#c7dbd0}
 .cm-card-menu .cm-mana{display:inline-flex;gap:1px;vertical-align:middle}.cm-card-menu .cm-mana :is(img,svg){width:16px;height:16px}
 .cm-card-menu-none{color:#c7dbd0}
