@@ -956,7 +956,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 666 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 667 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1303,6 +1303,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `planned-changes` — `tests/planned-changes.mjs` (Rob, 2026-10-25, C1–C8: Planned Changes on the live library — every Substitute paired with the card whose seat it holds, Upgrades with the Finals they name, To Buy Finals planned, labeled by the chain To Buy · Not purchased > To Buy · Ordered > Owned; `pairUp` re-pairs lonely adds with spare take-outs and lets counts differ; every kind of swap applied as one batch, a To Buy Upgrade recorded as the plan)
 - `planned-changes-ui` — `tests/planned-changes-ui.mjs` (Rob, 2026-10-25, C1–C8 on the page: two column groups with thumbnails (large on a hover), colors and roles; a tick only selects; the counter green at 100, red otherwise; a re-pair wears one dot on both halves; Swap asks "Confirm additions and removals?" and makes one change; a mismatched count swaps after the warning; the deck page's button is Planned Changes)
 - `board-hand-table` — `tests/board-hand-table.mjs` (the wheel over your own hand sizes its cards through Hand cards in 3D, Focus, Table and on the phone, its sliders following, kept on the device once the wheel stops and after a reload, held between the slider's ends with no word under 10px and the largest inside the window, while the wheel elsewhere still zooms and Shift + wheel still turns or scrolls a hand too wide; Ctrl/⌘ + drag lengthens your side of the 3D table down to 8px above the screen's foot and back to its old length, your mat with it and the far seats unchanged, the DOM table on the Babylon one every frame, kept after a reload and put back by Ctrl/⌘ + double-click or ↕ at 100%, with plain drags, the head look and the right-click menu as before)
+- `board-hand-drag` — `tests/board-hand-drag.mjs` (ROB-328: a hand card dragged over your mat lifts in 3D, Focus and Table, shows where it lands or why it cannot, and on release opens what pressing it opens, sending nothing; off the mat and Escape put it back; a finger held lifts it)
 - `crankmagic-audio` — `tests/crankmagic-audio.mjs`
 - `advice-contract` — `tests/advice-contract.mjs` (preparation-only AI requests, evidence references and stale-result rejection)
 - `advise-brief` — `tests/advise-brief.mjs`
