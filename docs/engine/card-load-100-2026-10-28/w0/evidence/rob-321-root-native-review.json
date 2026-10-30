@@ -1,0 +1,219 @@
+{
+  "schema": "ROB321RootNativeReview@1",
+  "source": "67fb6d8b77962e436ee9ab260729ab6da8a0ee0e",
+  "producerSha256": "0f40ea2665419455b3e5b5379d079db208f52d3f228d25ab0a7376916d4f5759",
+  "sourceHashes": {
+    "game/engine/state/index.mjs": "0170ad96719a53498a803bc6da0566c767d0c2564f648996e0a164821125f8ee",
+    "game/engine/rules/combat.mjs": "045f6dc6c9cf7327ec445b51bb872457d4fe3bf78b12602303245954a74c8af7",
+    "game/engine/projection.mjs": "40ea90a90107396a1ab0bfeedcd19187804992f6c7b2a35b1b53f040b04f11e5",
+    "game/room/events.mjs": "a04b4fcc572861e01af8a32c2aa2f8f4b9ac13fbaf6cc87c814016a6a1e7dc74"
+  },
+  "ruleReferences": [
+    "310.9b",
+    "310.9c",
+    "310.9d",
+    "506.4e",
+    "508.1b",
+    "508.5"
+  ],
+  "cases": [
+    {
+      "name": "protector cannot attack a Battle that also has Planeswalker type",
+      "attacker": 1,
+      "target": 2,
+      "targetOptions": [
+        {
+          "index": 3,
+          "label": "Native review attacker → Native review Battle (B)",
+          "cardId": 1,
+          "defenderId": 1,
+          "planeswalkerId": 2
+        }
+      ],
+      "pass": false,
+      "error": {
+        "name": "AssertionError",
+        "message": "the protector must have no attack route to this exact Battle identity\n+ actual - expected\n\n+ [\n+   {\n+     cardId: 1,\n+     defenderId: 1,\n+     index: 3,\n+     label: 'Native review attacker → Native review Battle (B)',\n+     planeswalkerId: 2\n+   }\n+ ]\n- []\n",
+        "code": "ERR_ASSERTION"
+      }
+    },
+    {
+      "name": "multitype Battle uses its protector for every native attack route",
+      "attacker": 1,
+      "target": 2,
+      "targetOptions": [
+        {
+          "index": 3,
+          "label": "Native review attacker → Native review Battle (C)",
+          "cardId": 1,
+          "defenderId": 2,
+          "battleId": 2
+        },
+        {
+          "index": 4,
+          "label": "Native review attacker → Native review Battle (B)",
+          "cardId": 1,
+          "defenderId": 1,
+          "planeswalkerId": 2
+        }
+      ],
+      "wrongNativeDeclaration": [
+        {
+          "kind": "GameEventCardTapped",
+          "data": {
+            "turn": 1,
+            "phase": "COMBAT_DECLARE_ATTACKERS",
+            "fields": {
+              "card": {
+                "cardId": 1,
+                "name": "Native review attacker",
+                "owner": 0,
+                "controller": 0,
+                "faceDown": false
+              },
+              "tapped": true
+            }
+          }
+        },
+        {
+          "kind": "GameEventAttackersDeclared",
+          "data": {
+            "turn": 1,
+            "phase": "COMBAT_DECLARE_ATTACKERS",
+            "fields": {
+              "player": {
+                "playerId": 0,
+                "name": "A"
+              },
+              "attackers": [
+                {
+                  "card": {
+                    "cardId": 1,
+                    "name": "Native review attacker",
+                    "owner": 0,
+                    "controller": 0,
+                    "faceDown": false
+                  },
+                  "defender": {
+                    "playerId": 1,
+                    "name": "B",
+                    "planeswalker": {
+                      "cardId": 2,
+                      "name": "Native review Battle",
+                      "owner": 1,
+                      "controller": 1,
+                      "faceDown": false
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "combat": {
+        "attackingPlayerId": 0,
+        "defenders": [
+          1
+        ],
+        "attacks": [
+          {
+            "attacker": 1,
+            "defender": 1,
+            "planeswalker": 2,
+            "blocked": false,
+            "blockers": []
+          }
+        ],
+        "declaredPower": 3
+      },
+      "blockingSeat": 1,
+      "pass": false,
+      "error": {
+        "name": "AssertionError",
+        "message": "every attack on this Battle must identify its protector as defending player\n\ntrue !== false\n",
+        "code": "ERR_ASSERTION"
+      }
+    },
+    {
+      "name": "room event normalization retains the native Battle target",
+      "native": {
+        "kind": "GameEventAttackersDeclared",
+        "data": {
+          "turn": 1,
+          "phase": "COMBAT_DECLARE_ATTACKERS",
+          "fields": {
+            "player": {
+              "playerId": 0,
+              "name": "A"
+            },
+            "attackers": [
+              {
+                "card": {
+                  "cardId": 1,
+                  "name": "Native review attacker",
+                  "owner": 0,
+                  "controller": 0,
+                  "faceDown": false
+                },
+                "defender": {
+                  "playerId": 2,
+                  "name": "C",
+                  "battle": {
+                    "cardId": 2,
+                    "name": "Native review Battle",
+                    "owner": 1,
+                    "controller": 1,
+                    "faceDown": false
+                  }
+                }
+              }
+            ]
+          }
+        }
+      },
+      "projected": {
+        "attackingPlayerId": 0,
+        "defenders": [
+          2
+        ],
+        "attacks": [
+          {
+            "attacker": 1,
+            "defender": 2,
+            "battle": 2,
+            "blocked": false,
+            "blockers": []
+          }
+        ]
+      },
+      "normalized": {
+        "eventId": "event:1",
+        "turn": 1,
+        "phase": "COMBAT_DECLARE_ATTACKERS",
+        "kind": "attack",
+        "player": 0,
+        "attackers": [
+          {
+            "card": {
+              "cardId": 1,
+              "name": "Native review attacker"
+            },
+            "defender": {
+              "player": 2
+            }
+          }
+        ]
+      },
+      "pass": false,
+      "error": {
+        "name": "AssertionError",
+        "message": "events.v1 must preserve the actual native Battle target\n\nundefined !== 2\n",
+        "code": "ERR_ASSERTION"
+      }
+    }
+  ],
+  "admissions": 0,
+  "gateCredit": false,
+  "unchangedSource": true
+}

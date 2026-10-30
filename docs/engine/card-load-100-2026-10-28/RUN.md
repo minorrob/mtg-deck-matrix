@@ -5,6 +5,46 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Independent native Battle review, frozen67fb:** root reuses its clean review worktree on a separate preserved
+  branch, without editing source, and reproduces three direct native assertion REDs. A Battle+Planeswalker controlled
+  by1/protected by0 offers active protector0 a forbidden planeswalker attack route. With controller1/protector2,
+  the extra route actually declares combat and asks blocker seat1 instead of protector2 (ROB-321). A pure Battle's
+  actual native attack event and JSON-restored projectFor retain its exact ID; room `tableEvent` drops that reference
+  (ROB-325). This last finding is the actual normalizer, not browser/animation acceptance. Public exact producer and
+  raw results: `w0/evidence/rob-321-root-native-review.mjs.txt` and `.json`; the producer is run as the same `.mjs` name
+  under load100/scratch with the separate review worktree frozen67fb. Source/producer hashes and CR references only
+  are recorded. Root restores its original clean UI-anchor branch afterward. No Battle runtime fix, new card or gate
+  credit follows. These remain explicit blockers beyond bounded Battle-A.
+- **Published root `ddf327f2`, follow-up bounded audits:** PR912 and Linear199/200/316 match the scanned, pushed
+  integration containing main179e6438 and exact #963. Static `anchors.py` repeats258files/4,815controls/33 inherited
+  UI problems, zero engine; exit1 remains RED. Dedicated ROB-322 actual saved Snoop ownership-transfer and Ash hand
+  activation audits retain their physical source/payment/state assertions. Its external producer initially placed
+  strict options in the third argument; exact old producer/results are preserved, and corrected fourth-argument
+  bounded8234 reruns pass without fallback. This correction does not affect V8's source batch or root samples,
+  which already used the correct fourth argument. The Ash real-room API observations are separate from that policy.
+  On frozen unaccepted W5 prototype d937, actual Scepter/Getaway Glamer pays only the3 additional Spree mana, resolves
+  both selected modes and the delayed blink return. Closing private children preserves the committed activation,
+  pool, tapped sources, RNG/journal/native pending; explicit native decline completes the parent once. Retry/JSON/
+  privacy checks pass. Its final confirmation lacks typed Pay/cost review facts, so ROB-209 remains open. Native
+  ordinary paid-modal comparisons expose existing authoritative cost facts and real payment-source continuations;
+  no replacement payment path, UI edit or prototype acceptance is claimed. External records are hash-bound under
+  scratch/rob-322-readonly. W5 ddcc's all74 first-stopper run is raw discovery only:9 records completed; control10
+  initially ran zero native commands because an external CRLF anchor mismatch stopped the harness. Exact bytes were
+  restored. External-only universal-newline normalization preflights all74 anchors and resumes10..74; zero semantic
+  gate credit until the required fresh full42/all74 final proof. W1 final67fb completes80 baseline readers and120
+  raw catches with exact restoration. Root's full stderr review rejects controls58/116, which stop on undefined/null
+  dereferences before their intended assertions. Maximum118 semantic controls; publication is paused. Reviewed
+  test-only native entrant/question-presence assertions retain every original counter/source/outcome/negative check;
+  fresh ecb77120 full80/all120 proof starts after the current-corpus merge, with no reused catches. Actual888 raw
+  records independently correct its earlier108-semantic claim to107/13 gaps; its58 has a real linked-return counters
+  assertion, while116 has the same bare TypeError. Old raw files/audits remain preserved. The105e raw85 summary stays
+  uncertified. Generic errors and errors-array wrappers alone never count.
+- **Existing W7 uncertainty audited, ROB-323:** unchanged Winter scenario1's first7 original steps, unchanged
+  fixtures and strict fourth-argument policy reach the real trigger question. Its title says "sacrifice a permanent?"
+  while actual options correctly restrict to Bear/Winter/Don't pay. The anyOf Creature/Planeswalker selector is not
+  expressed by the noun helper. No illegal-choice claim or runtime fix is made. The historical Narset draw-two cost
+  case remains unidentified; existing modal-refusal source/tests do not establish closure of an unspecified cost.
+  This is remaining wave0 debt, with no saved card edit or admission.
 - **Reviewed mixed-board batch integrated, `8234eb41`:** exact scanned #963/15e79ed6 is merged with --no-ff.
   Only6,741 source fields in2,743 scenarios/1,521 files; all original fields/assertions retained, all520 new and161
   prior rejects untouched, zero definitions/runtime/helper/classifier/gate edits. Actual edited rerun2,743/2,743 passes
