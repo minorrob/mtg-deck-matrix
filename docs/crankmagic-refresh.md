@@ -49,12 +49,14 @@ EDHREC are public and free; the only cost is politeness (100 ms between requests
 5. build-card-records.mjs --refresh   the record set's prices, legality, text and images
 6. commander-strategies.mjs      what each commander offers, from the refreshed terms
 7. build-precons.mjs             every Commander precon from MTGJSON, its names held to the new universe
-8. data-manifest.mjs, data-inventory.mjs   what the files now are
-9. asset-versions.mjs --update   so browsers actually fetch what changed
-10. runtests.sh                   every suite (the README says how many), several of which read these files directly
+8. the derived files, each rebuilt from what steps 5 and 6 refreshed:
+   build-advise-cards.mjs --write, build-commander-index.mjs, build-pilot-roles.mjs, reprice-variants.mjs
+9. data-manifest.mjs, data-inventory.mjs   what the files now are
+10. asset-versions.mjs --update  so browsers actually fetch what changed
+11. runtests.sh                   every suite (the README says how many), several of which read these files directly
 ```
 
-`node tools/refresh.mjs` is 1–9 in that order with the proof at the end; `--plan` prints
+`node tools/refresh.mjs` is 1–10 in that order with the proof at the end; `--plan` prints
 them, `--check` runs only the proofs.
 
 **1 before 2** because the flavor-name table is checked against the universe: a
@@ -69,7 +71,13 @@ graph rebake is the long one.
 **5 and 6 after 3** because the record set takes the graph's card block and the
 strategies read the graph's terms.
 
-**8 is not optional.** Every data file is fetched with a `?v=` and served from the
+**8 after 5 and 6** because each derived file is built from what they refreshed: the advisor's cards and the
+variants' prices from `data/cards.json`, the commander index and the pilots' roles from the graph and the
+strategies. Without it the proof fails `advisor`, `deck-autocreate`, `generators`, `pilot-roles` and `data-integrity`.
+
+**9 after 8** so the manifest and the inventory see every file.
+
+**10 is not optional.** Every data file is fetched with a `?v=` and served from the
 browser cache. A changed file behind an unchanged version is a browser running last
 month's data indefinitely with nothing on screen to say so. `tests/asset-versions.mjs`
 refuses to record a changed file whose version has not moved, which is the guard
@@ -102,25 +110,30 @@ node tools/commander-strategies.mjs
 # 7. the precons, held to the refreshed universe
 node tools/build-precons.mjs
 
-# 8. what the files now are
+# 8. the derived files, from the refreshed data
+node tools/build-advise-cards.mjs --write
+node tools/build-commander-index.mjs
+node tools/build-pilot-roles.mjs
+node tools/reprice-variants.mjs
+
+# 9. what the files now are
 node tools/data-manifest.mjs && node tools/data-inventory.mjs
 
-# 9. bump every ?v= for the files that changed, in every page that names them,
-#    then record the new hashes (tools/refresh.mjs does the bumps for you)
+# 10. bump every ?v= for the files that changed, in every page that names them,
+#     then record the new hashes (tools/refresh.mjs does the bumps for you)
 node tests/asset-versions.mjs --update
 
-# 10. prove it
+# 11. prove it
 bash runtests.sh -q
 ```
 
 Or, all of it in order with the proof: `node tools/refresh.mjs`.
 
-### What the runner does not rebuild yet (an open task: add these to its plan)
+### The derived files (in the runner's plan since 2026-10-30)
 
-The plan stops at the data files. Four more files are derived from them, each by its own generator, and the
-proof fails five suites until they are rebuilt (found on the 2026-10-29 refresh, PR 948). **Adding them to the
-plan (`STEPS` in `tools/refresh.mjs`, with `tests/refresh.mjs` holding it to the registry) is open.** Until it is
-done, run them by hand after step 6 (strategies) and before step 8 (the manifest):
+Four more files are derived from the data files, each by its own generator. The proof fails five suites until they
+are rebuilt (found on the 2026-10-29 refresh, PR 948), so `tools/refresh.mjs` runs them as step 8, marked `derived`
+in its plan (they are not envelope data files, so not in the registry; each tool vouches for its own file and names it):
 
 | Generator | Writes | Red without it |
 |---|---|---|
@@ -129,12 +142,10 @@ done, run them by hand after step 6 (strategies) and before step 8 (the manifest
 | `node tools/build-pilot-roles.mjs` | `game/engine/pilots/roles-data.mjs` (the engine lane's tree; say so in the PR) | `pilot-roles` |
 | `node tools/reprice-variants.mjs` | `data/archive/variants.json` | `data-integrity` |
 
-Then restate the manifest and the inventory (step 8) so they see the new files. **One of the four is served and the
-runner's bumper cannot find it:** `data/commander-index.json` is named only inside `crankmagic-newdeck.js`
-(`fetch('data/commander-index.json?v=N')`), not in the asset map or the worker, so `bumpVersions` reports 0 references
-and the cascade moves for nothing. Bump that `?v=` in the file, then `crankmagic-newdeck.js`'s own version in
-`crankmagic-sw.js`, `index.html` and `crankmagic.html`, then the cascade, then `node tests/asset-versions.mjs --update`.
-(Putting the file in the asset map would let the runner do all of this.)
+`data/commander-index.json` is served, and its URL lives in the asset map (`commanderIndex` in `crankmagic-assets.js`,
+and the worker's on-demand list), which `crankmagic-newdeck.js` reads, so the runner's bumper finds it and moves its
+`?v=` with the rest. Before 2026-10-30 the URL was hard-coded inside newdeck, the bumper reported 0 references, and
+the cascade moved for nothing.
 
 What else the 2026-10-29 refresh taught:
 
