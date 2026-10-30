@@ -1876,7 +1876,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 .cm-flow-inspect{display:block;margin:0 auto 16px;padding:0;border:0;background:none;cursor:zoom-in}.cm-flow-inspect .cm-flow-card{margin:0}
 .cm-required-popup .cm-r4-combat{position:static;min-width:0;max-width:100%;margin-bottom:12px}
 
-#matrix-v2 .cm-board #cm-decision-slot.cm-required-popup #cm-board-decision>.cm-board-options{flex:1 1 auto;max-height:45dvh;overflow:auto;overscroll-behavior:contain;min-height:0}
+#matrix-v2 .cm-board #cm-decision-slot.cm-required-popup #cm-board-decision>.cm-board-options{flex:1 1 auto;max-height:45dvh;margin-inline:-3px;overflow:auto;overscroll-behavior:contain;min-height:0}
 
 /* ONE SCROLL REGION PER DECISION IN THE ACTIONS PANE (ROB-201, Luke's playtest of 2026-10-28). The question sat inside three
    scrolling boxes (the drawer, its own section, its list of options), each capped by a rule of its own, so a taller drawer
@@ -1890,3 +1890,6 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board #cm-actions-drawer,#matrix-v2 .cm-board .cm-stage-module[data-module=actions].has-height .cm-board-decision{scroll-padding-bottom:76px}
 
 #matrix-v2 .cm-board #cm-decision-slot.cm-required-popup #cm-board-decision>:not(.cm-board-options){flex:none}
+
+/* End-of-game choices stay above the phone drawer, as action pop-ups do. Hand inspection stays above both. */
+#matrix-v2 .cm-board .cm-board-over{z-index:60}

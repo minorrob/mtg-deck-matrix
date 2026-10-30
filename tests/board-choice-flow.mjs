@@ -50,13 +50,15 @@ try{
  for(const [mode,width,height] of [['table',1280,720],['full',1920,1080],['focus',390,844]]){
   const state=game(),{v,actions}=viewed(state),cardId=v.decision.options.find(o=>o.act==='cast').cardId;
   const {page,context,errors,sent,feed}=await open(v,mode,width,height);
+  // Hover previews also use the live region; record announcements rather than sampling after one overwrites it.
+  await page.evaluate(()=>{globalThis.__flowAnnouncements=[];new MutationObserver(()=>__flowAnnouncements.push(document.querySelector('#cm-board-said').textContent)).observe(document.querySelector('#cm-board-said'),{childList:true,subtree:true,characterData:true});});
   await page.locator(`[data-action=board-choose][data-card="${cardId}"]`).first().click();
   await exclusive(page);
   const buttons=page.locator('[data-action=board-flow-choice]');
   eq(await buttons.count(),3,'exactly three modes, not target/payment products');
   ok(!(await buttons.allTextContents()).some(x=>/Forest|Sunpetal/.test(x)),'mana not shown at mode step');
-  const announcement=await page.locator('#cm-board-said').textContent();
-  ok(announcement.includes('fights')&&!/Forest|Sunpetal/.test(announcement),'screen reader hears the current mode layer only');
+  const announcements=await page.evaluate(()=>__flowAnnouncements);
+  ok(announcements.some(text=>text.includes('fights')&&!/Forest|Sunpetal/.test(text)),`screen reader hears the current mode layer only: ${JSON.stringify(announcements)}`);
   await shot(page,`vigorbloom-modes-${mode}-${width}`);
   await buttons.filter({hasText:'fights'}).click();
   eq(await buttons.count(),2,'fight first asks which of your two creatures');

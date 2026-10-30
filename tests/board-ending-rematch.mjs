@@ -16,7 +16,7 @@
  *   node tests/board-ending-rematch.mjs
  */
 import assert from "node:assert/strict";
-import {readFileSync} from "node:fs";
+import {readFileSync, mkdirSync} from "node:fs";
 import path from "node:path";
 import {openBrowser, ROOT} from "./uat/browser-runner.mjs";
 const {browser, base, stub, close} = await openBrowser({name: "board-ending-rematch", flag: "GEOMETRY_REQUIRED"});
@@ -127,6 +127,7 @@ try {
       const {page, context, posts, errors} = await fixture(finished(ENDINGS[0][1]), {width, height, mode, first409: 2});
       for (const sel of ['[data-action="board-rematch"][data-accept="yes"]', '[data-action="board-rematch"][data-accept="no"]', '[data-action="board-leave"]'])
         ok((await reach(page, `.cm-board-over ${sel}`)).ok, `${where}: ${sel} on the banner takes the pointer`);
+      if(width===390 && process.env.UAT_SHOTS){mkdirSync(process.env.UAT_SHOTS,{recursive:true});await page.screenshot({path:path.join(process.env.UAT_SHOTS,'phone-rematch-fixed.png')});}
       const at = await reach(page, '.cm-board-over [data-action="board-rematch"][data-accept="yes"]');
       await page.mouse.click(at.x, at.y);
       await page.locator("#cm-table-seconds").waitFor({timeout: 15000});
