@@ -738,10 +738,11 @@ function derive(state, id, counts = true, through = 7) {
   const losers = losersAmong(state, effects);
   /* The abilities whose effects have begun to apply to this object (CR 613.6, lostEffect), and those that took its own
      abilities away (lostBy) -- undefined for an effect a spell or an ability left, which is no permanent's ability. */
-  const begun = new Set(), removedBy = [];
+  const begun = new Set(), removedBy = [], typesSet = [];
   const applied = (effect) => {
     if (effect.partOf !== undefined) begun.add(effect.partOf);
     if (effect.apply?.removeAllAbilities) removedBy.push(effect.partOf);
+    if (effect.apply?.setCreatureTypes) typesSet.push(effect.apply.setCreatureTypes);
     return applyEffect(current, effect.apply?.manaValueX === true ? withManaValueX(state, id, effect) : effect);
   };
   /* CR 613.6: a later part of an ability whose effect began to apply to this object in an earlier layer (`continued`) goes on
@@ -792,7 +793,21 @@ function derive(state, id, counts = true, through = 7) {
 
   removals.set(current, removedBy);
   partsOn.set(current, [...begun]);
+  if (typesSet.length) typesBy.set(current, typesSet[typesSet.length - 1]);
   return current;
+}
+
+/* WHAT A PERMANENT NOW LOOKS LIKE, WHEN IT IS NOT ITS CARD (ROB-329; docs/ui-lane/view-appearance-contract.md): "loses all
+   abilities and becomes a green Elk creature with base power and toughness 3/3" (Oko, Thief of Crowns' +1; Kenrith's
+   Transformation). An effect that set its creature types AND took all its abilities away makes it a token's twin, not the
+   card -- one that keeps its abilities (an animated Vehicle, Duplicant) is still recognizably its card. The last creature types
+   set (CR 613.7: the newest wins), kept beside the derivation as `removals` is; null when it is its card. */
+const typesBy = new WeakMap();
+export function lookOf(state, id) {
+  const current = derived(state, id);
+  const types = typesBy.get(current);
+  if (!types || !current.lostAbilities) return null;
+  return {token: types.join(" "), colors: [...(current.colors ?? [])], subtypes: [...types], power: current.basePower ?? current.power, toughness: current.baseToughness ?? current.toughness};
 }
 
 /* WHICH ABILITIES' EFFECTS APPLY TO IT NOW (CR 613.6): each by `partOf`, its permanent and its words -- "an artifact Bludgeon

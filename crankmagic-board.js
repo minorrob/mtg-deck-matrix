@@ -732,11 +732,17 @@ globalThis.CrankBoard = Object.seal({
   /* A card's picture, by its name; for a double-faced permanent whose BACK face is up (the view's `face: "back"`, ROB-207), the
      back of that card: a face's own name draws the front, and the catalog knows a double-faced card only by its front name. */
   function pictureOf(name, card = null) {
-    const url = (extra = "") => `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}${extra}&format=image&version=normal`;
+    const url = (extra = "", of = name) => `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(of)}${extra}&format=image&version=normal`;
+    /* WHAT IT LOOKS LIKE WHEN IT IS NOT ITS CARD (ROB-329, Oko's Elk; the view's `appearance`): the token's picture, by the token's name.
+       The card's own name stays on the card; the card's own art is one press away (the card menu's Original). */
+    if (card && card.appearance && card.appearance.token) return url("", card.appearance.token);
     if (card && card.face === "back") return url("&face=back");
     const r = recordOf(name);
     return (r && r.image) || url();
   }
+  /* ...and said in the card's label: "looks like a 3/3 green Elk" (the view's `appearance`). */
+  const COLOR_NAMES = {W: "white", U: "blue", B: "black", R: "red", G: "green"};
+  const lookWords = (a) => `looks like a ${a.power}/${a.toughness} ${(a.colors || []).length ? a.colors.map((x) => COLOR_NAMES[x] || x).join(" and ") : "colorless"} ${a.token}`;
   const optionsFor = (cardId) => (view.decision ? view.decision.options.filter((o) => o.cardId === cardId || o.preparedFrom === cardId) : []);
   /* A card shown to be READ -- the Panel's and Full screen's column (pick), the pop-up (peek), Card zoom (zoom) -- is
      drawn upright, a tapped one with a small Tapped mark (Rob, 2026-09-30, item 17); on the mat it lies sideways. */
@@ -872,13 +878,14 @@ globalThis.CrankBoard = Object.seal({
     const creature = c.name && c.types.includes("Creature") && c.power !== null, upright = UPRIGHT.has(where), fight = combatOf(c);
     const controlled = where === "mat" && foreignControl(c);
     const cls = ["cm-bcard", controlled ? "is-controlled" : "", c.name ? "" : "is-back", Number.isFinite(c.commanderTax) ? "has-tax" : "", c.tapped && !upright ? "is-tapped" : "", bright ? "is-bright" : "", chosen ? "is-picked" : "", coachShown.has(c.cardId) ? "is-coach-shown" : "", (where === "hand" || where === "fan") && mine && !bright ? "is-dim" : "", selected === c.cardId && where !== "pick" ? "is-selected" : "", aimed.length ? "is-targeted" : ""].filter(Boolean).join(" ");
-    const marks = [c.tapped && upright ? `<span class="cm-bcard-mark is-state">Tapped</span>` : "", ...fight.map((f) => `<span class="cm-bcard-mark is-combat">${f.mark}</span>`), c.damage ? `<span class="cm-bcard-mark">${c.damage} damage</span>` : "", ...Object.entries(c.counters || {}).map(([k, n]) => `<span class="cm-bcard-mark">${n} ${e(k)}</span>`)].join("");
+    const look = c.name && c.appearance && c.appearance.token ? c.appearance.token : "";
+    const marks = [look ? `<span class="cm-bcard-mark is-look" data-look="${e(look)}">≈ ${e(look)}</span>` : "", c.tapped && upright ? `<span class="cm-bcard-mark is-state">Tapped</span>` : "", ...fight.map((f) => `<span class="cm-bcard-mark is-combat">${f.mark}</span>`), c.damage ? `<span class="cm-bcard-mark">${c.damage} damage</span>` : "", ...Object.entries(c.counters || {}).map(([k, n]) => `<span class="cm-bcard-mark">${n} ${e(k)}</span>`)].join("");
     /* Its name first, then what is shown on it as a person looking at it would say it: tapped, its power and toughness,
        in combat, damage marked, counters, chosen or picked to read; then what it can do now (the accessibility pass). */
     /* THE COMMANDER TAX (ROB-29; CR 903.8): on a commander in the command zone, the generic it costs more for each time it
        was cast from there (the room's `commanderTax`), at its top-right as Rob asked, and said with its name. */
     const tax = Number.isFinite(c.commanderTax) ? c.commanderTax : null;
-    const state = [tax !== null ? `commander tax ${tax}` : "", c.tapped ? "tapped" : "", creature ? `${c.power}/${c.toughness}` : "", ...fight.map((f) => f.said), c.damage ? `${c.damage} damage` : "", ...Object.entries(c.counters || {}).map(([k, n]) => `${n} ${k} counter${n === 1 ? "" : "s"}`),
+    const state = [look ? lookWords(c.appearance) : "", tax !== null ? `commander tax ${tax}` : "", c.tapped ? "tapped" : "", creature ? `${c.power}/${c.toughness}` : "", ...fight.map((f) => f.said), c.damage ? `${c.damage} damage` : "", ...Object.entries(c.counters || {}).map(([k, n]) => `${n} ${k} counter${n === 1 ? "" : "s"}`),
       chosen ? "chosen" : "", selected === c.cardId && where !== "pick" ? "selected" : "", aimed.length ? `targeted by ${aimed.join(" and ")}` : ""].filter(Boolean);
     /* What it can do, each kind once ("Cast Zap, 4 ways"), not the card's name once per target. */
     const can = [...new Set(opts.map((o) => verbFor(o)))];
@@ -893,7 +900,7 @@ globalThis.CrankBoard = Object.seal({
        the card's aria-description. The hover pops the card up large, away from the pointer. */
     const html = `<button type="button" class="${cls}" data-action="${action}" data-card="${c.cardId}" data-card-revision="${view.revision}" data-card-choice="${e(view.decision?.id || '')}" data-card-match="${e(view.matchId)}"${arrange ? ` draggable="true" data-arrange-card="true" aria-description="Drag within this section to reorder; Shift + Alt + Left or Right works with a keyboard"` : ""} aria-label="${e(label)}">
       ${c.name ? `<span class="cm-bcard-name">${e(c.name)}</span>` : ""}${creature ? `<span class="cm-bcard-pt">${c.power}/${c.toughness}</span>` : ""}${tax !== null ? `<span class="cm-bcard-tax" title="Commander tax: {${tax}} more to cast it from the command zone">+${tax}</span>` : ""}
-      ${c.name ? `<img src="${e(pictureOf(c.name, c))}" alt="" draggable="false" loading="lazy" referrerpolicy="no-referrer">` : ""}${controlled ? `<span class="cm-control-label">Owner: ${e(nameOf(c.owner))}</span>` : ""}${marks ? `<span class="cm-bcard-marks">${marks}</span>` : ""}</button>`;
+      ${c.name ? `<img src="${e(pictureOf(c.name, c))}"${c.appearance ? ` data-look-fallback="${e(pictureOf(c.name))}"` : ""} alt="" draggable="false" loading="lazy" referrerpolicy="no-referrer">` : ""}${controlled ? `<span class="cm-control-label">Owner: ${e(nameOf(c.owner))}</span>` : ""}${marks ? `<span class="cm-bcard-marks">${marks}</span>` : ""}</button>`;
     return cardUndo(c,html,where);
   }
 
@@ -2266,11 +2273,13 @@ globalThis.CrankBoard = Object.seal({
     if (inspection.kind === "stack") c = view.state.stack.find(s => String(s.stackId) === inspection.id);
     else if (inspection.kind === "event") c = (view.events || []).find(x => playKey(view.matchId, x) === inspection.id)?.card;
     else c = findCard(Number(inspection.id)) || shownCard(Number(inspection.id));
+    /* The card as it is printed, one press from a permanent that looks like a token (ROB-329): its look taken off. */
+    if (c && inspection.original) c = {...c, appearance: undefined};
     return c?.name ? {cardId: -1, types: [], counters: {}, power: null, ...c} : null;
   }
-  function inspect(id, kind = "card", automatic = false) {
+  function inspect(id, kind = "card", automatic = false, original = false) {
     if (!view) return;
-    inspection = {id:String(id), kind, matchId:view.matchId, automatic};
+    inspection = {id:String(id), kind, matchId:view.matchId, automatic, original};
     if (!inspectedCard()) {inspection = null; return;}
     if (coach.open && !moduleSide("coach")) {coach.open = false; drawCoach();}
     inspectionFrom = C.focusKey(document.activeElement);
@@ -2293,7 +2302,7 @@ globalThis.CrankBoard = Object.seal({
     if (!inspection || deskInspection()) return "";
     const c = inspectedCard();
     return `<aside id="cm-card-inspector" aria-label="Card inspection"><header><h3>${e(c?.name || "Card unavailable")}</h3>${ib("✕", "board-inspect-close", "Close card inspection")}</header>
-      ${c ? `<p class="cm-inspection-context">${inspection.kind === "event" ? "Recorded event · card reference" : inspection.kind === "stack" ? "On the stack" : "Current visible card"} · inspection only</p>${card(c, {where:"peek", action:"none"})}${c.oracleText ? `<p>${e(c.oracleText)}</p>` : ""}${c.why ? `<p>${e(c.why)}</p>` : ""}` : `<p>This card is no longer visible in your current game view.</p>`}</aside>`;
+      ${c ? `<p class="cm-inspection-context">${inspection.kind === "event" ? "Recorded event · card reference" : inspection.kind === "stack" ? "On the stack" : inspection.original ? "Original card, not how it looks now" : "Current visible card"} · inspection only</p>${card(c, {where:"peek", action:"none"})}${c.oracleText ? `<p>${e(c.oracleText)}</p>` : ""}${c.why ? `<p>${e(c.why)}</p>` : ""}` : `<p>This card is no longer visible in your current game view.</p>`}</aside>`;
   }
   function eventCards() {
     const events = [...(view.events || [])].reverse().filter(x => x.card?.name && !x.card.faceDown).slice(0, 8);
@@ -4301,6 +4310,7 @@ globalThis.CrankBoard = Object.seal({
     const rows=entries.map((member,i)=>`${entries.length>1?`<p class="cm-card-menu-copy">Copy ${i+1}${member.tapped?' · tapped':''}</p>`:''}${optionsFor(member.cardId).map(o=>menuRow(o,member)).join('')}`).join('');
     return `<div id="cm-card-menu" class="cm-card-menu" role="menu" aria-label="${e(named)}: ${n ? `${n} ${n === 1 ? "action" : "actions"}` : "no actions now"}" style="left:${cardMenu.x}px;top:${cardMenu.y}px">
       ${c.name ? `<button type="button" role="menuitem" class="cm-card-menu-card" data-action="board-card-menu-view" data-card="${c.cardId}" aria-label="Read ${e(c.name)}" title="Read ${e(c.name)}"><img class="cm-card-menu-art" src="${e(pictureOf(c.name, c))}" alt=""><i aria-hidden="true">🔍</i><span>${e(c.name)}</span></button>` : `<span class="cm-card-menu-card" role="none"><i aria-hidden="true">◐</i><span>${e(named)}</span></span>`}
+      ${c.name && c.appearance ? `<button type="button" role="menuitem" class="cm-card-menu-card is-original" data-action="board-card-menu-original" data-card="${c.cardId}" aria-label="Read the original ${e(c.name)}, the card it is under this look" title="Original: ${e(c.name)}"><img class="cm-card-menu-art" src="${e(pictureOf(c.name))}" alt=""><i aria-hidden="true">↺</i><span>Original</span></button>` : ""}
       ${n ? rows : `<p class="cm-card-menu-none" role="none"><i aria-hidden="true">∅</i> ${e(c.why || "No actions now")}</p>`}</div>`;
   }
   /* Kept inside the window, measured once it is drawn. */
@@ -4362,6 +4372,7 @@ globalThis.CrankBoard = Object.seal({
     return actions["board-confirm"]();
   }
   actions["board-card-menu-view"] = (el) => {const id = el.dataset.card; closeCardMenu(true); inspect(id);};
+  actions["board-card-menu-original"] = (el) => {const id = el.dataset.card; closeCardMenu(true); inspect(id, "card", false, true);};
   /* A press anywhere outside it puts it away, and still reaches what it was on. */
   document.addEventListener("pointerdown", (event) => {if (cardMenu && !event.target.closest?.("#cm-card-menu")) closeCardMenu(false);}, true);
   document.addEventListener("keydown", (event) => {
@@ -4980,5 +4991,12 @@ globalThis.CrankBoard = Object.seal({
   /* A picture that does not come leaves the card's own frame, which already names it. */
   // A loaded picture replaces the fallback name. Do not leave hidden text painted under a rotated image.
   document.addEventListener("load", event => {const img=event.target;if(img?.matches?.('.cm-bcard[data-card] img') && img.naturalWidth>0)img.dataset.cardLoaded='true';}, true);
-  document.addEventListener("error", (event) => {const t = event.target; if (t && t.matches && t.matches(".cm-bcard img, .cm-combat-card img, .cm-block-tile img")) t.remove();}, true);
+  document.addEventListener("error", (event) => {
+    const t = event.target;
+    if (!(t && t.matches && t.matches(".cm-bcard img, .cm-combat-card img, .cm-block-tile img"))) return;
+    /* A token look with no picture of its own (a made-up creature type) is the card's own art, not nothing (ROB-329). */
+    const fallback = t.dataset ? t.dataset.lookFallback : "";
+    if (fallback) {delete t.dataset.lookFallback; t.src = fallback; return;}
+    t.remove();
+  }, true);
 });
