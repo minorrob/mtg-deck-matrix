@@ -1546,7 +1546,7 @@ globalThis.CrankBoard = Object.seal({
       coach: () => coach.open ? `<div class="cm-module-coach-host"></div>` : `<p class="cm-muted">Ask about your board, hand, or table.</p>${b("Open AI Coach", "board-coach", {}, false, {cls:"compact"})}`,
       recommended: () => `<p class="cm-muted">Recommendations use your AI Coach conversation and its privacy settings.</p>${b("Recommend actions", "board-recommend", {}, false, {cls:"compact"})}`,
       chat: () => chatBody(),
-      actions: () => !stageRail || actionsShut || /^mulligan:/.test(view.decision?.id || "") ? "" : `${decision() || `<p class="cm-muted">${e(waitingText() || "Choose a card or continue your turn.")}</p>`}`,
+      actions: () => !stageRail || actionsShut || /^mulligan:/.test(view.decision?.id || "") ? "" : actionsBody(),
       table: () => `<div class="cm-full-vitals">${players().map(p => `<div class="${view.state.turnPlayerId === p.playerId ? "is-turn" : ""}" data-seat="${p.playerId}" style="--seat:${seatColor(p.playerId)}"><span>${e(seatLabel(p))}${turnMark(p.playerId)}</span>${vitals(p, {big:true})}</div>`).join("")}</div>`,
       inspect: () => `<div id="cm-full-pick">${pickPanel()}</div>`,
       stack: () => stack({module:true}) || `<p class="cm-muted">The stack is empty.</p>`,
@@ -2090,9 +2090,19 @@ globalThis.CrankBoard = Object.seal({
     return `<section class="cm-board-decision cm-board-went" aria-label="${e(span)}"><h3>${e(span)}</h3>
       <ol class="cm-board-went-list">${rows}</ol><div class="cm-board-decision-foot"><span class="cm-muted">${now}</span>${b("OK", "board-went-close", {}, false, {cls: "compact"})}</div></section>`;
   }
+  /* WHAT THE PLAYER MUST RESOLVE POPS UP; WHAT IS OPTIONAL STAYS IN THE PANE (ROB-208; Rob and Luke, 2026-10-28). A question the
+     game is waiting on -- a target, a search, a modal choice, a cost, a scry -- is the pop-up's, with the Actions pane open or shut:
+     "you have to resolve this" is the point. A priority offer is optional, so it stays in the pane; and the combat declarations
+     have their own strip and pane, so they stay too. The mulligan was always the pop-up's. */
+  const mandatory = (d) => !!d && d.kind !== "priority" && d.kind !== "draw" && !/^declare-(attackers|blockers):/.test(String(d.id || ""));
+  const actionsBody = () => {
+    const d = view.decision;
+    if (mandatory(d)) return `<p class="cm-muted cm-board-pending" role="status">◆ Answer the question on the table.</p>`;
+    return decision() || `<p class="cm-muted">${e(waitingText() || "Choose a card or continue your turn.")}</p>`;
+  };
   function ask() {
     const d = view.decision, side = moduleSide('actions');
-    const visible = !/^mulligan:/.test(d?.id || '') && !actionsShut && (phone() ? stageRail : side === 'left' ? stageRail : side === 'right' ? stageSide : false);
+    const visible = !/^mulligan:/.test(d?.id || '') && !mandatory(d) && !actionsShut && (phone() ? stageRail : side === 'left' ? stageRail : side === 'right' ? stageSide : false);
     const inner = `${went()}${moduleSide('stack') ? '' : stack()}${!visible && d && d.kind !== 'draw' ? decision() : ''}`;
     return `<div class="cm-board-ask cm-decision-slot" id="cm-decision-slot" aria-label="Current decision"${inner ? '' : ' hidden'}>${inner}</div>`;
   }
@@ -2734,6 +2744,24 @@ globalThis.CrankBoard = Object.seal({
      is on it, and goes at its ✕; a click on the card shows it larger. The newest PLAYS_SHOWN at once. Never a face-down
      card, never your own, and never an event seen before (a view sent again repeats its events; a new game's ids start
      over, so the match is in the key). A view of a game you had not seen before shows nothing: that is history. */
+  /* THE QUESTION STEPS ASIDE FOR THE PLAYS (ROB-208; Rob, 2026-10-25: the cards others play "stand beside the question, never across
+     it"). The question is the pop-up now, centered, and in a narrow window the held-up plays at the table's side reached it. It moves
+     right by the overlap, and no further than the window allows; back when the plays have gone. */
+  function stepAside() {
+    const slot = document.getElementById("cm-decision-slot"), layer = document.getElementById("cm-board-plays");
+    if (!slot) return;
+    slot.style.removeProperty("--slot-shift");
+    const q = slot.querySelector("#cm-board-decision");
+    if (!q || !layer) return;
+    const qr = q.getBoundingClientRect();
+    let shift = 0;
+    for (const pop of layer.querySelectorAll(".cm-play-pop:not(.is-leaving)")) {
+      const r = pop.getBoundingClientRect();
+      if (r.bottom > qr.top && r.top < qr.bottom && r.right + 12 > qr.left && r.left < qr.right) shift = Math.max(shift, r.right + 12 - qr.left);
+    }
+    shift = Math.min(shift, Math.max(0, innerWidth - 8 - qr.right));
+    if (shift > 0) slot.style.setProperty("--slot-shift", `${Math.round(shift)}px`);
+  }
   const PLAY_MS = 10000, PLAYS_SHOWN = 3, playsSeen = new Set();
   const playKey = (matchId, x) => `${matchId}:${x.eventId}`;
   function playsFor(was, next) {
@@ -2755,7 +2783,7 @@ globalThis.CrankBoard = Object.seal({
       el.innerHTML = `<header><b>${e(who)}</b><button type="button" class="cm-play-close" tabindex="-1" aria-label="Close ${e(name)}">✕</button></header>
         <button type="button" class="cm-play-card" tabindex="-1" aria-label="${e(name)}"><img src="${e(pictureOf(name))}" alt="" draggable="false" referrerpolicy="no-referrer"></button>`;
       let left = PLAY_MS, since = performance.now(), timer = null;
-      const gone = () => {clearTimeout(timer); if (!el.isConnected) return; el.classList.add("is-leaving"); setTimeout(() => el.remove(), reduced() ? 0 : 600);};
+      const gone = () => {clearTimeout(timer); if (!el.isConnected) return; el.classList.add("is-leaving"); stepAside(); setTimeout(() => {el.remove(); stepAside();}, reduced() ? 0 : 600);};
       const run = () => {since = performance.now(); timer = setTimeout(gone, left);};
       el.addEventListener("mouseenter", () => {clearTimeout(timer); left = Math.max(1500, left - (performance.now() - since));});
       el.addEventListener("mouseleave", run);
@@ -2763,6 +2791,7 @@ globalThis.CrankBoard = Object.seal({
       el.querySelector(".cm-play-card").addEventListener("click", () => inspect(playKey(next.matchId, x), "event"));
       layer.prepend(el);
       while (layer.children.length > PLAYS_SHOWN) layer.lastElementChild.remove();
+      stepAside(); setTimeout(stepAside, 800);
       run();
     }
     placePlays();
@@ -2888,6 +2917,7 @@ globalThis.CrankBoard = Object.seal({
         Object.entries(focusData).every(([key, value]) => el.dataset[key] === value));
       next?.focus({preventScroll: true});
     }
+    stepAside();
     if(coach.open && coachGate.key!==coachKey())drawCoach();
     // Reparenting the connected Coach during paint can blur it without replacing its live controls.
     if(coachActive?.isConnected && !coachActive.closest('[inert]') && document.activeElement===document.body){coachActive.focus({preventScroll:true});if(coachSelection)coachActive.setSelectionRange(...coachSelection);}
@@ -4185,7 +4215,7 @@ globalThis.CrankBoard = Object.seal({
   const actionsBodyOf = () => document.querySelector('.cm-stage-module[data-module="actions"]>.cm-module-body:not([hidden])');
   function refreshActions() {
     const body = actionsBodyOf();
-    if (body) body.innerHTML = decision() || `<p class="cm-muted">${e(waitingText() || "Choose a card or continue your turn.")}</p>`;
+    if (body) body.innerHTML = actionsBody();
   }
   function closeCardMenu(back = true) {
     if (!cardMenu) return;

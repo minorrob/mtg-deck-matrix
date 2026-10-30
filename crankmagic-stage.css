@@ -1865,3 +1865,9 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-stage-module[data-module=actions].has-height .cm-board-decision{overflow-y:auto;overflow-x:hidden;flex:1 1 auto;min-height:0}
 /* what is scrolled to is kept clear of the sticky answering row (a key press or a scroll-into-view stops above it) */
 #matrix-v2 .cm-board #cm-actions-drawer,#matrix-v2 .cm-board .cm-stage-module[data-module=actions].has-height .cm-board-decision{scroll-padding-bottom:76px}
+
+/* the question steps aside for the held-up plays (crankmagic-board.js stepAside; ROB-208) */
+#matrix-v2 .cm-board .cm-decision-slot{margin-left:var(--slot-shift,0px)}
+/* the pop-up's answering row stays in view when the question is longer than the pop-up (ROB-208), as in the pane (ROB-201) */
+#matrix-v2 .cm-board .cm-decision-slot .cm-board-decision>.cm-board-decision-foot{position:sticky;bottom:0;z-index:2;padding:8px 0 2px;background:var(--color-panel)}
+#matrix-v2 .cm-board .cm-decision-slot .cm-board-decision{scroll-padding-bottom:76px}

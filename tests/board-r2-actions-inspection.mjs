@@ -50,7 +50,7 @@ try{
   eq(sent.filter(x=>x.type==="act").length,0,"hover inspection does not act");
   await target.click({button:"right"});await page.locator('#cm-card-menu [data-action=board-card-menu-view]').click();await page.locator('#cm-card-inspector').waitFor();
   await target.hover();await page.waitForTimeout(450);
-  eq(await page.locator('#cm-board-peek').count(),0,'pinned inspection suppresses a duplicate preview over the board');
+  eq(await page.locator('#cm-board-peek').count(),1,'a card pinned in the inspector still pops up on hover (ROB-318: always, in every circumstance; it was left out as already shown)');
   eq(sent.filter(x=>x.type==="act").length,0,"pinned inspection does not act");
   /* Rob, 2026-10-28: drawers (and the inspector, which lies at the right edge) are the TOP LAYER. The old guarantee "the game surface stays
      clear of Actions and inspector" is superseded: the stage is the window's whole width and does not move for either; they lie over it
@@ -66,7 +66,7 @@ try{
   ok(bounds.railOver&&bounds.inspectOver,"Actions and the inspector lie over the stage (they are what a pointer finds at their edge)");
   ok(bounds.region.x===0&&bounds.region.w===1440&&bounds.hand.x===0&&bounds.hand.w===1440,`the stage and the hand stay the window's whole width with Actions and the inspector open (${JSON.stringify(bounds.region)})`);
   if(mode!=='full') for(const b of bounds.slots) ok(b.x>=bounds.rail-1&&b.x+b.w<=bounds.inspect+1&&b.w>0,`${mode}: a board stays clear of Actions and the inspector (${b.x}..${b.x+b.w} within ${bounds.rail}..${bounds.inspect})`);
-  const shut=await (async()=>{await page.keyboard.press('Escape');await page.locator('#cm-card-inspector').waitFor({state:'detached'});return page.evaluate(()=>{const R=e=>{const b=e.getBoundingClientRect();return {x:Math.round(b.left),y:Math.round(b.top),w:Math.round(b.width),h:Math.round(b.height)};};return {region:R(document.querySelector('.cm-stage-region')),hand:R(document.querySelector('.cm-stage-hand')),slots:[...document.querySelectorAll('.cm-stage-slot,.cm-stage-rear')].map(R)};});})();
+  const shut=await (async()=>{await page.mouse.move(1,1);await page.waitForTimeout(450);await page.keyboard.press('Escape');await page.locator('#cm-card-inspector').waitFor({state:'detached'});return page.evaluate(()=>{const R=e=>{const b=e.getBoundingClientRect();return {x:Math.round(b.left),y:Math.round(b.top),w:Math.round(b.width),h:Math.round(b.height)};};return {region:R(document.querySelector('.cm-stage-region')),hand:R(document.querySelector('.cm-stage-hand')),slots:[...document.querySelectorAll('.cm-stage-slot,.cm-stage-rear')].map(R)};});})();
   eq(shut.region,bounds.region,"opening the inspector does not move the stage");
   eq(shut.hand,bounds.hand,"opening the inspector does not move the hand");
   if(mode!=='full') eq(shut.slots,bounds.slots,`${mode}: opening the inspector does not move a board`);
@@ -158,7 +158,7 @@ try{
  await page.locator('[data-action=board-tools]').click();await page.keyboard.press('Escape');
  await page.locator('#cm-board-tools').waitFor({state:'detached',timeout:3000});
  eq(await page.locator('#cm-board-tools').count(),0,'Escape closes the foremost Settings menu');
- eq(await page.locator('.cm-stage-rail #cm-board-decision .cm-action-card').count(),1,'closing Settings preserves the card being reviewed, in the Actions desk');
+ eq(await page.locator('#cm-board-decision .cm-action-card').count(),1,'closing Settings preserves the card being reviewed, in the question (the pop-up since ROB-208, once the Actions desk)');
  await page.keyboard.press('Escape');
  const moved=structuredClone(payment);moved.revision=++revision;await show(moved);
  eq(await page.locator('#cm-board-decision [data-action="board-confirm"]').count(),0,'a revision invalidates the old payment selection even with the same question ID');

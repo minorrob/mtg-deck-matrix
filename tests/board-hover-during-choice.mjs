@@ -37,7 +37,7 @@ try{
     await page.route(`${base}/api/tables**`,r=>r.fulfill({json:{table,now:Date.now()}}));
     await page.routeWebSocket(/\/api\/tables\/hoverfixture1\/connect$/,ws=>{ws.send(JSON.stringify({type:"view",view}));});
     await page.goto(`${base}/index.html#table?id=hoverfixture1`);await page.locator("#cm-board .cm-stage-top, #cm-board .cm-board-top").first().waitFor();
-    const desk=page.locator('.cm-stage-rail #cm-board-decision[data-choice-id="choose-cost:461"]');
+    const desk=page.locator('#cm-board-decision[data-choice-id="choose-cost:461"]');   /* the pop-up now (ROB-208), not the pane */
     await desk.waitFor({timeout:10000});
     const peeked=async()=>{await page.locator("#cm-board-peek .cm-bcard-name").waitFor({state:"attached",timeout:3000});return (await page.locator("#cm-board-peek .cm-bcard-name").textContent()).trim();};
     const away=async()=>{await page.mouse.move(2,450);await page.waitForFunction(()=>!document.getElementById("cm-board-peek"),null,{timeout:3000});};
