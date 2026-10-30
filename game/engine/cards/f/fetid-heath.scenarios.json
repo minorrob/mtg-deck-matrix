@@ -16,7 +16,11 @@
       ],
       "steps": [
         {
-          "tap": "Plains"
+          "tap": "Plains",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "tap": "Fetid Heath",
@@ -49,7 +53,11 @@
       ],
       "steps": [
         {
-          "tap": "Swamp"
+          "tap": "Swamp",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "tap": "Fetid Heath",

@@ -383,7 +383,11 @@
       ],
       "steps": [
         {
-          "tap": "Plains"
+          "tap": "Plains",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Kill Spell",
@@ -489,7 +493,11 @@
       ],
       "steps": [
         {
-          "tap": "Mountain"
+          "tap": "Mountain",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Artifact Exile",
@@ -548,7 +556,11 @@
       ],
       "steps": [
         {
-          "tap": "Plains"
+          "tap": "Plains",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Kill Spell",

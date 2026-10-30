@@ -222,7 +222,11 @@
       ],
       "steps": [
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Hydra"
@@ -264,7 +268,11 @@
       ],
       "steps": [
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Wither",
@@ -313,7 +321,11 @@
       ],
       "steps": [
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Grow",
@@ -362,7 +374,11 @@
       ],
       "steps": [
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Grow",

@@ -83,22 +83,46 @@
       ],
       "steps": [
         {
-          "tap": "Plains"
+          "tap": "Plains",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Island"
+          "tap": "Island",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Swamp"
+          "tap": "Swamp",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 2
+          }
         },
         {
           "cast": "Sundering Archaic"
@@ -191,22 +215,46 @@
       ],
       "steps": [
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 2
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 3
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 4
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 5
+          }
         },
         {
           "cast": "Sundering Archaic"
@@ -265,22 +313,46 @@
       ],
       "steps": [
         {
-          "tap": "Plains"
+          "tap": "Plains",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Island"
+          "tap": "Island",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Swamp"
+          "tap": "Swamp",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Mountain"
+          "tap": "Mountain",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Forest"
+          "tap": "Forest",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Sundering Archaic"
@@ -333,10 +405,18 @@
       ],
       "steps": [
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
         },
         {
           "activate": "Sundering Archaic",

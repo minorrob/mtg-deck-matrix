@@ -94,10 +94,18 @@
       ],
       "steps": [
         {
-          "tap": "Forest"
+          "tap": "Forest",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Island"
+          "tap": "Island",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Growth Curve",
@@ -237,10 +245,18 @@
       ],
       "steps": [
         {
-          "tap": "Forest"
+          "tap": "Forest",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Island"
+          "tap": "Island",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "expect": [
@@ -297,10 +313,18 @@
       ],
       "steps": [
         {
-          "tap": "Forest"
+          "tap": "Forest",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Island"
+          "tap": "Island",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Growth Curve",

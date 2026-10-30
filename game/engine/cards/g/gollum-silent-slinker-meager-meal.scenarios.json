@@ -169,7 +169,11 @@
       ],
       "steps": [
         {
-          "tap": "Swamp"
+          "tap": "Swamp",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Meager Meal",

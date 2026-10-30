@@ -49,10 +49,18 @@
       ],
       "steps": [
         {
-          "tap": "Plains"
+          "tap": "Plains",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Swamp"
+          "tap": "Swamp",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "expect": [

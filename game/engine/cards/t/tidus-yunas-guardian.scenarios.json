@@ -117,10 +117,18 @@
       ],
       "steps": [
         {
-          "tap": "Forest"
+          "tap": "Forest",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Grown Bear"
@@ -213,10 +221,18 @@
       ],
       "steps": [
         {
-          "tap": "Forest"
+          "tap": "Forest",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Bird"
@@ -338,10 +354,18 @@
       ],
       "steps": [
         {
-          "tap": "Forest"
+          "tap": "Forest",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Grown Bear"
@@ -410,10 +434,18 @@
       ],
       "steps": [
         {
-          "tap": "Forest"
+          "tap": "Forest",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Grown Bear"
@@ -477,10 +509,18 @@
       ],
       "steps": [
         {
-          "tap": "Forest"
+          "tap": "Forest",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Grown Bear"

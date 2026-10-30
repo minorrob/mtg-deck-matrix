@@ -341,7 +341,11 @@
       ],
       "steps": [
         {
-          "tap": "Forest"
+          "tap": "Forest",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "activate": "Innkeeper's Talent",

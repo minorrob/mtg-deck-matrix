@@ -154,7 +154,11 @@
       ],
       "steps": [
         {
-          "tap": "Plains"
+          "tap": "Plains",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Sephara, Sky's Blade",
@@ -255,7 +259,11 @@
       ],
       "steps": [
         {
-          "tap": "Plains"
+          "tap": "Plains",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Sephara, Sky's Blade",
@@ -322,7 +330,11 @@
       ],
       "steps": [
         {
-          "tap": "Plains"
+          "tap": "Plains",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "expect": [

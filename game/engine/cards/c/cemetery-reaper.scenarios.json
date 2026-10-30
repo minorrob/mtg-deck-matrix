@@ -110,13 +110,25 @@
       ],
       "steps": [
         {
-          "tap": "Swamp"
+          "tap": "Swamp",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
         },
         {
           "activate": "Cemetery Reaper",
@@ -177,13 +189,25 @@
       ],
       "steps": [
         {
-          "tap": "Swamp"
+          "tap": "Swamp",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
         },
         {
           "expect": [

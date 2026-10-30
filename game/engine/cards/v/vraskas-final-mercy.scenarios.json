@@ -147,10 +147,18 @@
       ],
       "steps": [
         {
-          "tap": "Swamp"
+          "tap": "Swamp",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Swamp"
+          "tap": "Swamp",
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
         },
         {
           "cast": "Vraska's Final Mercy",
@@ -216,10 +224,18 @@
       ],
       "steps": [
         {
-          "tap": "Swamp"
+          "tap": "Swamp",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Swamp"
+          "tap": "Swamp",
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
         },
         {
           "cast": "Vraska's Final Mercy",
@@ -286,10 +302,18 @@
       ],
       "steps": [
         {
-          "tap": "Swamp"
+          "tap": "Swamp",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Swamp"
+          "tap": "Swamp",
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
         },
         {
           "cast": "Vraska's Final Mercy",
@@ -435,10 +459,18 @@
       ],
       "steps": [
         {
-          "tap": "Swamp"
+          "tap": "Swamp",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Swamp"
+          "tap": "Swamp",
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
         },
         {
           "cast": "Vraska's Final Mercy",

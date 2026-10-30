@@ -262,10 +262,18 @@
       ],
       "steps": [
         {
-          "tap": "Forest"
+          "tap": "Forest",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Ordeal of Nylea",
@@ -333,10 +341,18 @@
       ],
       "steps": [
         {
-          "tap": "Forest"
+          "tap": "Forest",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Ordeal of Nylea",
@@ -412,10 +428,18 @@
       ],
       "steps": [
         {
-          "tap": "Forest"
+          "tap": "Forest",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Ordeal of Nylea",

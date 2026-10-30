@@ -61,7 +61,11 @@
       ],
       "steps": [
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "activate": "Bark of Doran",
@@ -120,7 +124,11 @@
       ],
       "steps": [
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "activate": "Bark of Doran",
@@ -167,7 +175,11 @@
       ],
       "steps": [
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "activate": "Bark of Doran",

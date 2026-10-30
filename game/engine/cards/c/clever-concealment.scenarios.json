@@ -250,10 +250,18 @@
       ],
       "steps": [
         {
-          "tap": "Plains"
+          "tap": "Plains",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Plains"
+          "tap": "Plains",
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
         },
         {
           "cast": "Clever Concealment",
@@ -333,19 +341,35 @@
       "steps": [
         {
           "tap": "Plains",
-          "seat": 0
+          "seat": 0,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "tap": "Plains",
-          "seat": 0
+          "seat": 0,
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
         },
         {
           "tap": "Wastes",
-          "seat": 0
+          "seat": 0,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "tap": "Wastes",
-          "seat": 0
+          "seat": 0,
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
         },
         {
           "cast": "Clever Concealment",

@@ -56,7 +56,11 @@
       ],
       "steps": [
         {
-          "tap": "Forest"
+          "tap": "Forest",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "expect": [
@@ -103,7 +107,11 @@
       ],
       "steps": [
         {
-          "tap": "Island"
+          "tap": "Island",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         }
       ],
       "expect": [

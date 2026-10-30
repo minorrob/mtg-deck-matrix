@@ -67,7 +67,11 @@
       ],
       "steps": [
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Two Foods"
@@ -131,7 +135,11 @@
       ],
       "steps": [
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Food Maker"

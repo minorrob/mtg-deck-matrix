@@ -247,7 +247,11 @@
       ],
       "steps": [
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "activate": "Goblin Cratermaker",
@@ -315,7 +319,11 @@
       ],
       "steps": [
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "expect": [
@@ -396,7 +404,11 @@
       ],
       "steps": [
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "activate": "Goblin Cratermaker",

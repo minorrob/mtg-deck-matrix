@@ -300,10 +300,18 @@
       ],
       "steps": [
         {
-          "tap": "Mountain"
+          "tap": "Mountain",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Dragon"
@@ -374,10 +382,18 @@
       ],
       "steps": [
         {
-          "tap": "Mountain"
+          "tap": "Mountain",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "expect": [

@@ -1,0 +1,139 @@
+{
+  "schema": "ROB316FinalCandidateEvidence@1",
+  "issue": "ROB-316",
+  "testedCleanSource": "d51bc30b3df2845562fb5884afb675692ffa6081",
+  "dependency": "dacd3803a9d3c590ccaf19b30e728f7349c50f8a",
+  "historicalBefore": "033cd059eb5150493015de042309e11ae83ad7da",
+  "historicalAfter": "4995a7cebf3a3086de71862bc572467c15073bf2",
+  "inputAudit": {
+    "schema": "ROB316FinalInputAudit@1",
+    "source": {
+      "revision": "d51bc30b3df2845562fb5884afb675692ffa6081",
+      "tree": "5513cfb1a5eb473d3faa42834e54bf1433b22f34",
+      "dirty": false
+    },
+    "dependency": "dacd3803a9d3c590ccaf19b30e728f7349c50f8a",
+    "historicalBefore": "033cd059eb5150493015de042309e11ae83ad7da",
+    "historicalAfter": "4995a7cebf3a3086de71862bc572467c15073bf2",
+    "selectedScripts": 1521,
+    "selectedScenarioFiles": 1521,
+    "allOriginalSelectedScenarios": 4337,
+    "selectedInputs": {
+      "scripts": "30b828d4a6cb7ec8d743a980462363c0cdc5657ede7430855bdc91d5cb8490f4",
+      "scenarios": "aac3ce7b40e5cebc08519167077c67ac809fcdda88f01973fb610da5921626f0"
+    },
+    "selectedInputsMatchCleanAfter": true,
+    "all6430ScenarioHashesMatchApprovedState": true,
+    "all77RuntimeHashesUnchanged": true,
+    "helperRulesDefinitionsClassifierUnchanged": true,
+    "ownerActiveMatchesDependency": true,
+    "editedScenarios": 2743,
+    "sourceFields": 6741,
+    "all681RejectedScenariosUntouched": true,
+    "cardAdmissions": 0
+  },
+  "all49ArchiveGitBlobHashesAndRawRoundtripsVerified": true,
+  "legacyEngineCards": {
+    "exit": 0,
+    "checks": 55,
+    "definitions": 6430,
+    "originalScenarios": 11044,
+    "strictG3Acceptance": false
+  },
+  "metadata": {
+    "dataIntegrity": "50 variants / 50 profiles",
+    "featureWiring": 131,
+    "assetVersions": 136,
+    "serviceWorker": 9,
+    "READMEExistingNodeSuites": 715,
+    "inventoryArtifacts": 60,
+    "inventoryDrift": false,
+    "scopeFrozenNames": 8514,
+    "scopeDefinitionStatusFinal": 2715,
+    "scopeDefinitionStatusUndefined": 5799
+  },
+  "nativePolicyMutationsRepeated": false,
+  "reason": "runtime/helper/reader/probe bytes unchanged; data-only literal source additions",
+  "savedCardDefinitionChanges": 0,
+  "newCardAdmissions": 0,
+  "canonicalAcceptance": false,
+  "artifacts": [
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-final-engine-cards.log.gz",
+      "rawSha256": "d43e6dbe6a24d1bd881cfceabf987d46c18093ca045874f0249aee1527977f59",
+      "storedSha256": "cd13f3df95220e1c19ed099f7af73acf13cccc76bc8acd0a4acbf9f2d3b28b70",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-final-data-integrity.log.gz",
+      "rawSha256": "78385273d37f68ed6e046d71d0f47ebc7588f069dcc4b6e28189dfb5b45f3cb0",
+      "storedSha256": "6ae121efc42b84e3f52762a90f6ea03c1303314e1c4409a783e67fe91fb88c93",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-final-feature-wiring.log.gz",
+      "rawSha256": "ac8532270a8766204a50ec5ba637ed61d23b6c2bcbfb899cb2adf6183e65fd67",
+      "storedSha256": "9ae8453ec095f4d48281a5131608e37f0bfc432ced8c6c9b988f5a6b72436708",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-final-asset-versions.log.gz",
+      "rawSha256": "03d3bf4a0f314643cb44a9e9af32fed0cb4ac3751bd1e802339e90502cb38aad",
+      "storedSha256": "2f858c777a30eaad0511cae22aaebaf6283e6dce5b462d26adee51d3940f36fb",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-final-service-worker.log.gz",
+      "rawSha256": "ad54c0f14551e1e12d66fbf0c93ee991723029cc4f4faf453776e440876a13fc",
+      "storedSha256": "2efa18e227ff74168b1eb50f1cb4a93ad48fadf5191ae0aa9f5b9c17edc1198f",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-final-scope.log.gz",
+      "rawSha256": "1db0e30158ed0e094aa51b73a5bb23a8eed782e83d94e65123e04b7720a00e1c",
+      "storedSha256": "a57aaf14ee9b0c5996b5b6ca65c388d4a686f7869dea704224f6a0f21fdbf754",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-final-inventory.log.gz",
+      "rawSha256": "545ebd80a4990766d651539e926ce4d23a6a63664649b90811daccbd25670556",
+      "storedSha256": "db792a4d1f6aebcd3a74c2f15451b56846e461a2d38b8dbf35d85877cad597d2",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-final-input-audit.json.gz",
+      "rawSha256": "67be14865d3358d8e8300755725173e187edf99f7f6ac4c9cc6ee19dac8b1968",
+      "storedSha256": "9631066ce8a3a529dee8c302f874f954bb6c308bb5bc92f681683ec1517ed9a3",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-final-input-audit.log.gz",
+      "rawSha256": "cc21de3830776d7cddd48f0880cb90cc6c789755ea0a988ba90ee47438780eb3",
+      "storedSha256": "1f6c4ef18fef613971d1104f1017376fd7249833c4167024a7317ef1af2d89c7",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-final-input-audit.mjs.gz",
+      "rawSha256": "9fc604942e7eeaba99a9cf325508813bf4dd38bebc4f39164e8a737094abf27d",
+      "storedSha256": "e3df4edba692fa1d7a502e3142ff4bfdc8dabae4e8a07ee4907c5bf1d2a4688f",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-archive-final.py.gz",
+      "rawSha256": "ff121febdc897c996628f102b2a375bad4426dc706debdc051cf5698d3e3af24",
+      "storedSha256": "4de46ca3d22b4206427e74d2cba0cda8bc4eeb18c28cdfac96d4c15dbdf8f023",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    }
+  ]
+}
