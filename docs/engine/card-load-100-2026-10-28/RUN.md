@@ -5,6 +5,29 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Reviewed mixed-board batch integrated, `8234eb41`:** exact scanned #963/15e79ed6 is merged with --no-ff.
+  Only6,741 source fields in2,743 scenarios/1,521 files; all original fields/assertions retained, all520 new and161
+  prior rejects untouched, zero definitions/runtime/helper/classifier/gate edits. Actual edited rerun2,743/2,743 passes
+  7,255 assertions; legacy55/all6,430 definitions pass. Root's actual Git audit confirms the complete approved diff,
+  and post-merge integrity/wiring131/assets136 pass. All60 committed archives (49 batch plus11 final receipts), both
+  manifest hashes, raw/stored hashes, Git blobs, gzip roundtrips and eight privacy categories independently pass;
+  raw79,185,104 bytes. Root receipt: `w0/evidence/rob-316-root-archive-8234.json`.
+  Selected clean BEFORE033cd059/AFTER4995a7ce keeps all1,521 identities/4,337 scenarios/3,057 abilities: failures
+  1,837→519, reached1,130→1,802, runtime-removal222→312, unproved1,927→1,255. Actual newly passing1,318, no passes
+  lost;1,425 edited scenarios already passed before. Both checker/verifier exits1, zero budget diagnostics/problems.
+  These are finite diagnostics, not whole-directory acceptance or new card completions.
+- **Main179e6438 is integrated at `39f4aad2`:** #962 changes only the staging Play walk's selectors/interaction with
+  current UI. Distinct host-shared selection still occurs before restoring the newcomer's matching backup; the later
+  own-deck selection separately proves duplicate suppression. Existing turn3/reload/end/replay assertions remain.
+  Source review adds no browser/staging gate credit. Served UI/runtime bytes are unchanged from ec200's browser proof.
+- **Proof audit and next engine batch:** frozen888bd194 genuinely passes the full80-reader baseline and records120
+  raw catches, but only108 have audited semantic witnesses; twelve generic-error-only first stops receive zero credit.
+  Exact positive native progress/identity assertions and an actual consumed-receipt rejection witness preserve all
+  original assertions/controls. Fresh67fb6d8b full80/120 proof is required; no runtime change is made solely for a probe.
+  Historical105e raw85 summary lacks detailed per-catch stderr and cannot certify85 semantic controls. W5 d937465a
+  passes fresh42 baseline; all74 controls remain in progress with no generic Error/timeout credit. ROB-321 separately
+  blocks temporal/type/protector/multi-type Battle closure. Dedicated engine playtest worker ROB-322 resumes from8234
+  in the existing clean playtest worktree; UI ownership and W1/W5 frozen runtime boundaries remain intact.
 - **Current-main browser checkpoint, source `ec200e8e`:** owner main advances to `eee58e43` (#961/ROB-201); root merges
   it without changing owner UI, regenerating shared versions with the registry's bumpText helper. README actual715;
   the incoming suite registry row is preserved after integrity catches its initial omission. Assets136/SW9/wiring131/
