@@ -8,6 +8,9 @@
      4. Share: Invitee name and Invitee email, each a field under its label, Send and Cancel. Send adds the address to
         Cloudflare Access for staging and production, confirms each, and only then emails the invitation, as HTML.
         A refused Access sends nothing and says so. Cancel closes the window.
+     5. ROB-320 (Rob, 2026-10-30): after a send the window closes and a dialog says "Your email has been successfully sent" with one
+        Confirm button; the owner chooses Game Theory Insider (AI) or General; anyone else signed in is offered Invite alone, as General
+        (the server refuses AI to a non-owner). Invitations are recorded: tests/invitations.mjs, tests/invite-settings.mjs.
 
    Cloudflare's API and the mail provider are stood in for; the Worker's own code (cloud/sharing.mjs) answers the page.
    GEOMETRY_REQUIRED=1 refuses a missing browser.
