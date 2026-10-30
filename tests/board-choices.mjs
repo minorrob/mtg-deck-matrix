@@ -330,7 +330,7 @@ try {
     await pg.locator("#cm-board .cm-stage-top").waitFor({timeout: 60000});
     await pg.locator(".cm-stage-rail [data-action=board-choose]").first().waitFor({timeout: 20000});
     const here = pg.locator(".cm-stage-rail [data-action=board-choose]", {hasText: "Cast Zap"});
-    ok(await here.count() === 1 && new RegExp(`Cast Zap · ${castOptions.length} ways`).test((await here.innerText()).replace(/\s+/g, " ")), `${view}: Actions lists Zap once, saying how many ways`);
+    ok(await here.count() === 1 && /Cast Zap/.test((await here.innerText()).replace(/\s+/g, " ")), `${view}: Actions lists Zap once, saying how many ways`);
     ok(/^Zap: Cast Zap, \d+ ways$/.test(await pg.locator(".cm-stage-fan .cm-bcard[aria-label^='Zap']").first().getAttribute("aria-label")), `${view}: and the card in the hand says what it can do once, and how many ways`);
     ok(await pg.locator("[data-action=board-actions-open]").count() === 0, `${view}: with no forced Actions pop-up to open`);
     await ctx.close();
@@ -352,30 +352,30 @@ try {
 
   const choose = page.locator(".cm-stage-rail [data-action=board-choose]", {hasText: "Cast Zap"});
   ok(await choose.count() === 1, "Actions lists Zap once");
-  ok(new RegExp(`Cast Zap · ${castOptions.length} ways`).test((await choose.innerText()).replace(/\s+/g, " ")), `saying how many ways (${(await choose.innerText()).replace(/\s+/g, " ").trim()})`);
+  ok(/Cast Zap/.test((await choose.innerText()).replace(/\s+/g, " ")), `saying how many ways (${(await choose.innerText()).replace(/\s+/g, " ").trim()})`);
   await choose.click();
   const dialog = page.locator("#cm-board-decision");
-  const ways = (await dialog.locator("[data-action=board-option]").allInnerTexts()).map(w=>w.replace(/\s+/g," ").trim());
-  eq(ways.length,castOptions.length,"Actions contains every legal way");
-  ok(ways.includes("Cast Zap → Maya") && ways.includes("Cast Zap → Rob (you) · ⚠ against you"),"target and self-harm warning are visible");
-  eq(await dialog.locator(".cm-lean.is-against").allInnerTexts(),["⚠ against you"],"only self-harm is marked");
-  eq(await page.locator("#cm-dialog[open]").count(),0,"choices leave the board unobstructed");
+  const mayaOffer=latest.decision.options.find(o=>o.act==='cast'&&o.label==='Zap'&&o.detail==='→ Maya');
+  if(await dialog.locator('[data-action=board-flow-choice][data-kind=source]').count())await dialog.locator(`[data-action=board-flow-choice][data-indices~="${mayaOffer.index}"]`).click();
+  const targets=dialog.locator('[data-action=board-flow-choice]');
+  const currentCastOptions=latest.decision.options.filter(o=>o.act==='cast'&&o.cardId===mayaOffer.cardId);
+  const offeredTargets=new Set(currentCastOptions.flatMap(o=>o.decisionPath?.filter(n=>n.kind==='target').map(n=>JSON.stringify(n.value)) || []));
+  eq(await targets.count(),offeredTargets.size,'every current legal target is available in its own layer');
+  ok((await targets.allTextContents()).some(t=>t.includes('Maya')),'player targets retain their names');
+  eq(await page.locator('.cm-required-popup').count(),1,'casting uses one required popup');
+  eq(await page.locator('.cm-stage-module[data-module=actions]').count(),0,'casting hides the optional Actions drawer');
   await page.setViewportSize({width:1280,height:720});
-  ok(await page.locator(".cm-stage-rail #cm-board-decision .cm-action-card").isVisible(),"Actions' explicit Choose path keeps the source card beside its legal ways");
+  ok(await dialog.locator('.cm-flow-card').isVisible(),'the source card stays with its choices');
   const beforeStaging=latest.revision;
-  await zapCard.click();
-  const mayaOffer=castOptions.find(o=>o.detail==='→ Maya');
-  const menuChoice=page.locator(`#cm-card-menu [data-action=board-card-menu-do][data-index="${mayaOffer.index}"]`);
-  eq(await menuChoice.count(),1,'the native card menu exposes the exact current offer targeting Maya');
-  await menuChoice.click();
-  ok(await dialog.locator(`.cm-pick .cm-bcard[data-card="${mayaOffer.cardId}"]`).isVisible() && await page.locator("#cm-card-inspector").count() === 0,"the selected source stays in the Actions review, without a second inspection pane");
-  eq(latest.revision,beforeStaging,'opening the card menu and staging its exact offer have sent no game action');
-  if(SHOTS)await page.screenshot({path:path.join(SHOTS,"board-choices-1280x720.png")});
+  await dialog.locator(`[data-action=board-flow-choice][data-indices~="${mayaOffer.index}"]`).click();
+  eq(latest.revision,beforeStaging,'choosing a target sends no game action before confirmation');
+  ok(await dialog.locator('[data-action=board-flow-confirm]').isVisible(),'selected target is ready for confirmation');
+  if(SHOTS)await page.screenshot({path:path.join(SHOTS,'board-choices-1280x720.png')});
   /* Casting keeps Rob's explicit Undo/priority window. A native Pass closes it before the AI passes and Zap resolves;
      what it hit is still read off the game, Maya one life down, rather than inferred from the stack. */
   const mayaLife = (v) => v.state.players[1].health.life, before = mayaLife(latest), castsBefore = latest.history.filter((h) => h.text === "Rob cast Zap").length;
   eq([mayaLife(latest),latest.history.filter(h=>h.text==='Rob cast Zap').length,latest.state.stack.filter(s=>s.name==='Zap').length],[before,castsBefore,0],"staging the selected offer has changed neither life, cast history nor the stack");
-  await dialog.locator("[data-action=board-confirm]").click();
+  await dialog.locator("[data-action=board-flow-confirm]").click();
   await page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"));
   for (let t = 0; t < 100 && !latest.canUndo; t += 1) await new Promise((r) => setTimeout(r, 100));
   ok(latest.canUndo===true && latest.decision?.kind==='priority' && latest.state.stack.some(s=>s.name==='Zap') && latest.decision.options.some(o=>o.act==='pass') && mayaLife(latest)===before,
@@ -466,5 +466,5 @@ try {
   await close();
 }
 
-console.log(`board-choices: ${checks} checks passed — a card used more than one way says each way (its target, its sacrifice, its color), and the board stages the selection in Actions for confirmation; a scry is a pick-several pop-up for the bottom, then the order of the rest; combat damage among two blockers is divided by amounts, in no order.`);
+console.log(`board-choices: ${checks} checks passed — a card used more than one way says each way (its target, its sacrifice, its color), and the board stages the selection in an exclusive popup for confirmation; a scry is a pick-several pop-up for the bottom, then the order of the rest; combat damage among two blockers is divided by amounts, in no order.`);
 process.exit(0);

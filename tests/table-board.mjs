@@ -1090,7 +1090,7 @@ try {
   for (let i = 0; i < 3; i += 1) await second.page.keyboard.press("Control+Minus");
   /* B1, item 17: the Panel reads a tapped card upright, with a small Tapped mark, and no "Card" heading over it. */
   await rail(second.page, true);
-  await second.page.locator(".cm-stage-rail [data-action=board-option]", {hasText: "Tap for mana"}).first().click();
+  await second.page.locator(".cm-stage-rail [data-action=board-choose]", {hasText: "Tap for mana"}).first().click();
   await bindSelection(second.page);
   await second.page.locator(".cm-board-mat .cm-board-lands .cm-bcard.is-tapped").first().waitFor({timeout: 10000});
   /* The accessibility pass: a tapped card says so. */
@@ -1917,7 +1917,7 @@ async function fullCoach(page) {
   await page.locator('#cm-board-tools [data-action="board-coach"]').click();
 }
 async function bindSelection(page) {
-  const binding = page.locator('#cm-board-decision [data-action=board-direct]:visible:not([disabled]), #cm-board-decision [data-action=board-confirm]:visible:not([disabled])');
+  const binding = page.locator('#cm-board-decision [data-action=board-direct]:visible:not([disabled]), #cm-board-decision [data-action=board-confirm]:visible:not([disabled]), #cm-board-decision [data-action=board-flow-confirm]:visible:not([disabled])');
   await binding.first().waitFor();
   eq(await binding.count(), 1, 'the reviewed choice has one enabled binding control');
   await binding.click();
@@ -1925,6 +1925,11 @@ async function bindSelection(page) {
 }
 async function useCardOffer(page, card, act) {
   await card.click();
+  if(!['undo-mana','undo-land','undo-play'].includes(act)){
+    const choice=page.locator('[data-action=board-flow-choice]');
+    for(let n=0;await choice.count();n++){ok(n<100,'card flow terminates');await choice.first().click();}
+    await page.locator('[data-action=board-flow-confirm]').click();return;
+  }
   const offered = page.locator('#cm-card-menu [data-action=board-card-menu-do][data-act="'+act+'"]');
   eq(await offered.count(), 1, 'the selected card offers exactly one '+act+' action');
   await offered.click();

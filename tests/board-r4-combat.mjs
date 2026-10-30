@@ -24,7 +24,7 @@ async function open(mode,width,skin='sapphire-obsidian',v=fixture()){
 }
 const tile=id=>`.cm-combat-tile[data-attacker="${id}"]`,pair=i=>`[data-action=board-block-pair][data-index="${i}"]`,confirm='[data-action=board-block-attacker-confirm]',send='[data-action=board-send-blockers]';
 const pause=p=>p.waitForTimeout(80);
-async function attacker(p,id){const active=await p.locator('.cm-block-draft').getAttribute('data-active-attacker');if(Number(active)!==id || !await p.locator(confirm).isVisible()){await p.locator(tile(id)).click();if(p.viewportSize().width<500)eq(await p.locator('[data-action=board-stage-rail]').getAttribute('aria-expanded'),'true','phone attacker opens real Actions drawer');}}
+async function attacker(p,id){const active=await p.locator('.cm-block-draft').getAttribute('data-active-attacker');if(Number(active)!==id || !await p.locator(confirm).isVisible()){await p.locator(tile(id)).click();if(p.viewportSize().width<500)eq(await p.locator('.cm-required-popup .cm-block-draft').count(),1,'phone attacker stays in the exclusive popup');}}
 async function settle(p,id,index){await attacker(p,id);if(index!==null)await p.locator(pair(index)).click();await p.locator(index===null?'[data-action=board-block-attacker-none]':confirm).click();await pause(p);}
 async function hit(p,selector){const e=p.locator(selector);await e.scrollIntoViewIfNeeded();const good=await e.evaluate(el=>{const r=el.getBoundingClientRect();return [[.5,.5],[.2,.2],[.8,.8]].every(([x,y])=>el.contains(document.elementFromPoint(r.x+r.width*x,r.y+r.height*y)));});if(!good){console.log(await e.evaluate(el=>{const r=el.getBoundingClientRect();return {box:r.toJSON(),hit:[[.5,.5],[.2,.2],[.8,.8]].map(([x,y])=>document.elementFromPoint(r.x+r.width*x,r.y+r.height*y)?.outerHTML.slice(0,350)),drawer:document.getElementById('cm-actions-drawer')?.getBoundingClientRect().toJSON()};}));if(process.env.UAT_SHOTS)await p.screenshot({path:path.join(process.env.UAT_SHOTS,'r4-combat-hit-failure.png')});}ok(good,`${selector} receives actual pointer`);}
 try{
@@ -32,7 +32,7 @@ try{
   if(process.env.COMBAT_CASE && process.env.COMBAT_CASE!==`${mode}-${width}`)continue;
   console.log(`combat ${mode}/${width}`);
   const {page,context,frames,errors,emit,publish}=await open(mode,width,skin);await pause(page);
-  if(width>=500)ok(await page.locator('#cm-board').evaluate(host=>{const header=host.querySelector('.cm-stage-top'),combat=header.querySelector('.cm-r4-combat');return Math.abs(header.offsetHeight-combat.offsetHeight-parseFloat(getComputedStyle(host).getPropertyValue('--hud-top')))<8;}),`${mode}: measured HUD height excludes the combat band exactly once`);
+  if(width>=500)ok(await page.locator('#cm-board').evaluate(host=>{const header=host.querySelector('.cm-stage-top');return !header.querySelector('.cm-r4-combat') && !host.hasAttribute('data-combat') && Math.abs(header.offsetHeight-parseFloat(getComputedStyle(host).getPropertyValue('--hud-top')))<8;}),`${mode}: combat lives in popup and does not inflate HUD height`);
   ok(await page.locator(send).isDisabled(),`${mode}: Send disabled until each attacker settled`);ok((await page.locator(send).getAttribute('title')).includes('2 attackers'),`${mode}: disabled reason names unsettled count`);
   eq(await page.locator('.cm-r4-combat [data-combat-role=Attacker] .cm-twin-mark').allTextContents(),['a','b'],`${mode}: twin attacker marks`);
   ok(!/#\d+/.test(await page.locator('.cm-r4-combat,.cm-block-draft').allTextContents().then(a=>a.join(' '))),`${mode}: no visible engine numbers`);

@@ -107,7 +107,7 @@ try {
   await page.addInitScript(()=>{
     globalThis.__tabletopExpectedGeometry=()=>{
       const host=document.querySelector('.cm-stage-region'),r=host.getBoundingClientRect();
-      const tilt=(90-Number(document.querySelector('[data-stage-camera="tilt"]').value))*CrankStage.floorTilt(document.querySelector('[data-stage-style=background]')?.value||CrankStage.appearances.backgrounds[0].id)/90,zoom=Number(document.querySelector('[data-stage-camera="zoom"]').value);
+      const tilt=(90-Number(document.querySelector('[data-stage-camera="tilt"]').value))*CrankStage.floorTilt(localStorage.getItem('cm-stage-background')||CrankStage.appearances.backgrounds[0].id)/90,zoom=Number(document.querySelector('[data-stage-camera="zoom"]').value);
       const options={tilt,zoom,seats:3,pan:{x:0,y:0},reach:Number(localStorage.getItem('cm-stage-reach-v1'))||0};
       const base=CrankStage.geometry(r.width,r.height,options);
       const regions=[document.querySelector('.cm-stage-front'),...document.querySelectorAll('.cm-stage-rear')];
@@ -414,15 +414,17 @@ try {
     assert.equal(await slider.inputValue(),await slider.getAttribute('min'),`${name} reaches minimum with pointer dragging`);
   }
   /* A backdrop other than the default (the list is whatever tools/stage-backdrops.mjs last wrote). */
+  await page.locator('[data-action=board-table-menu]').click();
   const background=page.getByRole('combobox',{name:'Background',exact:true}),other=await background.locator('option').nth(1).getAttribute('value');
   await background.selectOption(other);
   const designs=page.getByRole('combobox',{name:'Table design',exact:true});
-  assert.equal(await designs.locator('option').count(),8,'the Camera offers Study and the seven preserved table designs');
+  assert.equal(await designs.locator('option').count(),8,'the Table menu offers Study and the seven preserved table designs');
   await designs.selectOption('stone-dais');
   assert.equal(await background.inputValue(),other,'background is independent of the table design');
   assert.equal(await page.evaluate(()=>localStorage.getItem('cm-stage-table')),'stone-dais','the table design is remembered on this device');
   assert.equal(await page.evaluate(()=>CrankStage.tableDesign('stone').id),'stone-dais','an older saved choice (stone) maps onto its design');
   assert.equal(await page.evaluate(()=>CrankStage.tableDesign(null).id),'study','no saved choice means the default walnut Study');
+  await page.getByRole('button',{name:'Camera',exact:false}).click();
   for(const width of [1400,1280,1024]) {
     await page.setViewportSize({width,height:768});
     /* Straight down (90 from the floor) zoomed out, and the most slanted (0) zoomed in. */
@@ -440,7 +442,7 @@ try {
       const alignment = await page.evaluate(() => {
         const host=document.querySelector('.cm-stage-region'), r=host.getBoundingClientRect();
         /* The slider is the angle to the floor; the camera's tilt from straight down is what it lacks of 90, over 90, of the floor's own slope in the backdrop. */
-        const tilt=(90-Number(document.querySelector('[data-stage-camera="tilt"]').value))*CrankStage.floorTilt(document.querySelector('[data-stage-style=background]')?.value||CrankStage.appearances.backgrounds[0].id)/90, zoom=Number(document.querySelector('[data-stage-camera="zoom"]').value);
+        const tilt=(90-Number(document.querySelector('[data-stage-camera="tilt"]').value))*CrankStage.floorTilt(localStorage.getItem('cm-stage-background')||CrankStage.appearances.backgrounds[0].id)/90, zoom=Number(document.querySelector('[data-stage-camera="zoom"]').value);
         const {geometry,options:expectedOptions,contentMinima}=globalThis.__tabletopExpectedGeometry();
         const regions=[document.querySelector('.cm-stage-front'),...document.querySelectorAll('.cm-stage-rear')];
         const matrixDetails=[];
@@ -540,9 +542,9 @@ try {
   assert.equal(await page.locator('canvas.cm-stage-canvas').count(),1,"returning to desktop mounts one surface");
   await page.setViewportSize({width:1400,height:900});
   for(const [selector,action] of [['.cm-stage-rail','board-stage-rail'],['.cm-stage-side','board-stage-side']]) if(await page.locator(`${selector}.is-open`).count()) await page.locator(`.cm-stage-handle[data-action=${action}]`).click();
-  if(!await page.getByRole('combobox',{name:'Background',exact:true}).count()) await page.getByRole('button',{name:'Camera',exact:false}).click();
+  if(!await page.getByRole('combobox',{name:'Background',exact:true}).count()) await page.locator('[data-action=board-table-menu]').click();
   await page.getByRole('combobox',{name:'Background',exact:true}).selectOption({index:0});
-  await page.getByRole('button',{name:'Camera',exact:false}).click();
+  await page.locator('[data-action=board-table-menu]').click();
   const row=page.locator('.cm-stage-front [data-card-section$=":others"]');
   const order=()=>row.locator('[data-arrange-card]').evaluateAll(els=>els.map(el=>el.dataset.card));
   const originalOrder=await order();assert.ok(originalOrder.length>=2);
@@ -661,7 +663,7 @@ try {
         p.on("pageerror",e=>errors.push(e.message));
         p.on("websocket",ws=>ws.on("framesent",f=>sent.push(String(f.payload))));
         await p.goto(`${at}/index.html#table?id=tablepreview01`);
-        await p.waitForFunction(n=>document.querySelectorAll('.cm-stage-rail #cm-board-decision .cm-board-options>button').length===n,count);
+        await p.waitForFunction(n=>document.querySelectorAll('#cm-decision-slot #cm-board-decision .cm-board-options>button').length===n,count);
         const title='#cm-board-decision>h2', tally='#cm-board-decision .cm-board-decision-foot>.cm-muted', confirm='#cm-board-decision [data-action="board-confirm"]';
         for(const s of [title,tally,confirm]) assert.ok((await reach(p,s)).reached,`${where}: ${s} is on screen and takes the pointer`);
         const list=await p.evaluate(()=>{const o=document.querySelector('#cm-board-decision .cm-board-options'),r=o.getBoundingClientRect(),first=o.firstElementChild.getBoundingClientRect(),h=document.querySelector('#cm-board-decision>h2').getBoundingClientRect();

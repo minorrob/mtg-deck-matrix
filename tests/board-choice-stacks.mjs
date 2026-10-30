@@ -54,6 +54,7 @@ async function board(mode, {width = 1440, height = 900} = {}) {
 function asked(change = (v) => v) {
   const v = structuredClone(search);
   v.matchId = sample.matchId; v.revision = ++rev; v.decision = {...v.decision, id: `${v.decision.id}:${rev}`};
+  v.decision.options=v.decision.options.map(o=>({...o,decisionPath:[{key:"option",value:o.index,label:o.label,kind:"option"}]}));
   return change(v);
 }
 const chosen = (page) => page.locator("#cm-board-decision .cm-board-decision-foot .cm-muted").textContent();
