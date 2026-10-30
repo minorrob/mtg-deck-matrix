@@ -59,6 +59,7 @@ import {spend, parseManaCost, automaticPayment, canPay, chosenPayment, paymentOp
 import {commanderTax, recordCommanderCast, commanderIdentity} from "./commander.mjs";
 import {COLORS, MANA_KEYS, manaAbilityNow} from "./mana.mjs";
 import {sickForAbilities, hasFlash, splitSecondOnStack} from "../keywords/timing.mjs";
+import {aimsOf} from "../aims.mjs";
 import {targetChoices, targetName, isHostile, modalScript, isChoosing, countOf, targetCandidates, countedChoice, inWords, differentControllersProblem, shareProblem} from "../script/bind.mjs";
 import {moveOne, sacrificeOne, mill} from "../script/effects/zones.mjs";
 import {compileSelector, matchesSelector, selectMatching} from "../script/filter.mjs";
@@ -3201,6 +3202,8 @@ function performOffered(state, player, action, during) {
       sa: {isSpell: true, abilityId: entry.abilityId, stackId: entry.stackId},
       si: {isTrigger: false, actor: {playerId: player, name: state.players[player].name}},
       targetDescription, castFrom,
+      /* What it is aimed at, as every seat may know it (aims.mjs): the History says it on the cast line (ROB-327). */
+      ...aimsOf(state, entry),
     }));
     events.push(event("GameEventCardChangeZone", state, {
       card,
@@ -3256,6 +3259,7 @@ function performOffered(state, player, action, during) {
         ...(ability.loyalty !== undefined ? {loyalty: ability.loyalty === "-X" ? -(action.x ?? 0) : ability.loyalty} : {})},
       si: {isTrigger: false, actor: {playerId: player, name: state.players[player].name}},
       targetDescription,
+      ...aimsOf(state, entry),
     }));
     events.push(...becameTarget(state, entry), ...crimeCommitted(state, entry));
     /* The mana, once: its own atom's, or what an increase added to a cost that printed none (costPayment). */

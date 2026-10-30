@@ -1821,8 +1821,32 @@ globalThis.CrankBoard = Object.seal({
     if (offered.length && stackFor !== d.id) {stackFor = d.id; stackSelected = null;}
     if (!offered.length) stackFor = null;
     return [...offered.map((c) => ({key: `c:${c.cardId}`, cardId:c.cardId, name: c.name, who: c.where, choice: true, inspect: {kind: "card", ref: String(c.cardId)}})),
-      ...[...view.state.stack].reverse().map((x) => ({key: String(x.stackId), cardId:x.cardId, name: x.name, who: nameOf(x.playerId), choice: false, inspect: {kind: "stack", ref: String(x.stackId)}}))];
+      ...[...view.state.stack].reverse().map((x) => ({key: String(x.stackId), cardId:x.cardId, name: x.name, who: nameOf(x.playerId), choice: false, aimed: x.aimed, aimedModes: x.aimedModes, inspect: {kind: "stack", ref: String(x.stackId)}}))];
   }
+  /* WHAT A SPELL OR ABILITY IS AIMED AT (ROB-327; Rob, 2026-10-29: "The target of an instant or spell is not seen during resolution
+     (e.g. I might counter it if it's targeting me, but I can't tell) or in the history. It should be."): source ⤳ target, read from the
+     entry's `aimed` (docs/ui-lane/history-and-targets-contract.md). A player is named in their seat's color; a card by its name, which
+     shows the card on hover and focus (`data-peek-name`) and, where the card is on the table or the stack, is a button that reads it;
+     a target that has left is "✕ gone", never a name; a face-down one says so. */
+  const inspectRef = (a) => {
+    if (a.zone === "stack") {const s = view.state.stack.find((x) => x.cardId === a.id); return s ? {kind: "stack", ref: s.stackId} : null;}
+    return findCard(a.id) ? {kind: "card", ref: a.id} : null;
+  };
+  function aimChip(a, live = false) {
+    if (a.gone) return `<span class="cm-aim is-gone" title="This target has left"><i aria-hidden="true">✕</i> gone<span class="cm-sr-only"> (the target has left)</span></span>`;
+    if (a.kind === "player") return `<span class="cm-aim is-player" style="--seat:${seatColor(a.id)}">${e(nameOf(a.id))}</span>`;
+    if (!a.name) return `<span class="cm-aim is-hidden">face-down</span>`;
+    if (a.kind === "ability") return `<span class="cm-aim is-ability">${e(a.name)}</span>`;
+    const look = live ? inspectRef(a) : null;
+    return look
+      ? `<button type="button" class="cm-aim is-card" data-peek-name="${e(a.name)}" data-action="board-inspect" data-kind="${look.kind}" data-ref="${look.ref}" aria-label="Read ${e(a.name)}">${e(a.name)}</button>`
+      : `<span class="cm-aim is-card" data-peek-name="${e(a.name)}">${e(a.name)}</span>`;
+  }
+  const aimsHtml = (aimed, live = false) => (aimed?.length ? `<span class="cm-aims"><i aria-hidden="true">⤳</i><span class="cm-sr-only"> targeting </span>${aimed.map((a) => aimChip(a, live)).join("")}</span>` : "");
+  /* Under the pile: what the card shown is aimed at; a modal one, each chosen mode's words and its targets. */
+  const aimCaption = (x) => (x.aimedModes?.length
+    ? `<p class="cm-stack-aims">${x.aimedModes.map((m) => `<span class="cm-aim-mode"><em>${e(m.text)}</em> ${aimsHtml(m.aimed, true)}</span>`).join("")}</p>`
+    : x.aimed?.length ? `<p class="cm-stack-aims">${aimsHtml(x.aimed, true)}</p>` : "");
   /* The stack, newest first; a run of the same thing in a row (a thousand Intruder Alarm triggers) is one line, ×N. */
   function stack({module = false} = {}) {
     const items = view.state.stack;
@@ -1833,12 +1857,12 @@ globalThis.CrankBoard = Object.seal({
       const selectedIndex = Math.max(0, ordered.findIndex((x) => x.key === stackSelected));
       const shown = ordered[selectedIndex], shownUndo=!ordered[selectedIndex].choice?undoOffer(ordered[selectedIndex].cardId):null, visible = CrankStage.carousel(ordered.length, selectedIndex, 5);
       const say = (x) => x.name || (x.choice ? "A card you cannot see" : "A face-down spell");
-      return `<section class="cm-board-stack cm-module-stack" aria-label="The stack"><p class="cm-stack-order-note">${offered ? `◇ ${offered} to choose · ` : ""}${ordered.length > offered ? "#1 resolves next · " : ""}click the pile to browse</p>${shown.name ? b("Inspect card", "board-inspect", shown.inspect, false, {cls:"compact"}) : ""}<div class="cm-stack-browser"><ol class="cm-stack-list">${ordered.map((x, i) => `<li><button type="button" class="cm-stack-summary${x.choice ? " is-choice" : ""}" data-action="board-stack-select" data-stack-id="${e(x.key)}" aria-pressed="${i === selectedIndex}"><b class="cm-stack-position"${x.choice ? ' aria-label="To choose"' : ""}>${x.choice ? "◇" : `#${i + 1 - offered}`}</b><strong>${e(say(x))}</strong><span>${e(x.who)}</span></button></li>`).join("")}</ol><div class="cm-stack-image"><button type="button" class="cm-stack-pile" data-action="board-stack-cycle" aria-label="${e(say(shown))}, ${shown.choice ? `card ${selectedIndex + 1} of ${offered} to choose from` : `stack position ${selectedIndex + 1 - offered} of ${ordered.length - offered}`}; show next card" style="--pile-depth:${visible.length - 1}">${visible.map((index, depth) => {const x = ordered[index]; return `<span class="cm-bcard cm-stack-card${x.name ? "" : " is-back"}${x.choice ? " is-choice" : ""}" data-stack-depth="${depth}" style="--depth:${depth};z-index:${visible.length - depth}" aria-hidden="true">${x.name ? `<span class="cm-bcard-name">${e(x.name)}</span><img src="${e(pictureOf(x.name))}" alt="" draggable="false" referrerpolicy="no-referrer">` : ""}</span>`;}).join("")}</button>${shownUndo?undoButton(shownUndo):''}</div></div></section>`;
+      return `<section class="cm-board-stack cm-module-stack" aria-label="The stack"><p class="cm-stack-order-note">${offered ? `◇ ${offered} to choose · ` : ""}${ordered.length > offered ? "#1 resolves next · " : ""}click the pile to browse</p>${shown.name ? b("Inspect card", "board-inspect", shown.inspect, false, {cls:"compact"}) : ""}<div class="cm-stack-browser"><ol class="cm-stack-list">${ordered.map((x, i) => `<li><button type="button" class="cm-stack-summary${x.choice ? " is-choice" : ""}" data-action="board-stack-select" data-stack-id="${e(x.key)}" aria-pressed="${i === selectedIndex}"><b class="cm-stack-position"${x.choice ? ' aria-label="To choose"' : ""}>${x.choice ? "◇" : `#${i + 1 - offered}`}</b><strong>${e(say(x))}</strong>${x.aimed?.length ? `<em class="cm-stack-aim-row">${aimsHtml(x.aimed)}</em>` : ""}<span>${e(x.who)}</span></button></li>`).join("")}</ol><div class="cm-stack-image"><button type="button" class="cm-stack-pile" data-action="board-stack-cycle" aria-label="${e(say(shown))}, ${shown.choice ? `card ${selectedIndex + 1} of ${offered} to choose from` : `stack position ${selectedIndex + 1 - offered} of ${ordered.length - offered}`}; show next card" style="--pile-depth:${visible.length - 1}">${visible.map((index, depth) => {const x = ordered[index]; return `<span class="cm-bcard cm-stack-card${x.name ? "" : " is-back"}${x.choice ? " is-choice" : ""}" data-stack-depth="${depth}" style="--depth:${depth};z-index:${visible.length - depth}" aria-hidden="true">${x.name ? `<span class="cm-bcard-name">${e(x.name)}</span><img src="${e(pictureOf(x.name))}" alt="" draggable="false" referrerpolicy="no-referrer">` : ""}</span>`;}).join("")}</button>${shownUndo?undoButton(shownUndo):''}${aimCaption(shown)}</div></div></section>`;
     }
     const rows = [];
     for (const s of [...items].reverse()) {
       const last = rows[rows.length - 1];
-      if (last && s.name && last.s.name === s.name && last.s.playerId === s.playerId && last.s.kind === s.kind) last.n += 1; else rows.push({s, n: 1});
+      if (last && s.name && last.s.name === s.name && last.s.playerId === s.playerId && last.s.kind === s.kind && JSON.stringify(last.s.aimed ?? []) === JSON.stringify(s.aimed ?? [])) last.n += 1; else rows.push({s, n: 1});
     }
     /* THE SPELL IS SEEN WHILE IT RESOLVES (Rob, 2026-10-11: "I can't even see the card now ... they should appear on the
        battlefield while being resolved"): the top of the stack drawn as its card, above the list; a face-down spell is a
@@ -1848,7 +1872,7 @@ globalThis.CrankBoard = Object.seal({
     const topCard = top.name ? `<div class="cm-stack-top"><span class="cm-bcard cm-stack-card" role="img" aria-label="${e(top.name)}, on the stack"><span class="cm-bcard-name">${e(top.name)}</span><img src="${e(pictureOf(top.name))}" alt="" loading="lazy" referrerpolicy="no-referrer"></span></div>`
       : `<div class="cm-stack-top"><span class="cm-bcard is-back cm-stack-card" role="img" aria-label="A face-down spell, on the stack"></span></div>`;
     const topWithUndo=topCard.replace('<div class="cm-stack-top">','<div class="cm-stack-top"><span class="cm-card-slot">').replace('</div>',`${undoOffer(top.cardId)?undoButton(undoOffer(top.cardId)):''}</span></div>`);
-    return `<section class="cm-board-stack" aria-label="The stack"><h3>On the stack · ${items.length}</h3>${topWithUndo}<ol>${rows.map(({s, n}) => `<li${s.name ? ` class="cm-stack-entry" tabindex="0" data-stack-name="${e(s.name)}" aria-label="${e(s.name)}${n > 1 ? `, ${n} of them` : ""}, ${e(nameOf(s.playerId))}'s: show the card"` : ""}>${e(s.name || "A face-down spell")}${n > 1 ? ` <b>×${n.toLocaleString("en-US")}</b>` : ""} <span class="cm-muted">${e(nameOf(s.playerId))}</span></li>`).join("")}</ol></section>`;
+    return `<section class="cm-board-stack" aria-label="The stack"><h3>On the stack · ${items.length}</h3>${topWithUndo}<ol>${rows.map(({s, n}) => `<li${s.name ? ` class="cm-stack-entry" tabindex="0" data-stack-name="${e(s.name)}" aria-label="${e(s.name)}${n > 1 ? `, ${n} of them` : ""}, ${e(nameOf(s.playerId))}'s: show the card"` : ""}>${e(s.name || "A face-down spell")}${n > 1 ? ` <b>×${n.toLocaleString("en-US")}</b>` : ""} <span class="cm-muted">${e(nameOf(s.playerId))}</span>${aimsHtml(s.aimed)}</li>`).join("")}</ol></section>`;
   }
   /* PANEL ▸: the right panel of the handoff (Card · Tracker · History · Combat), sliding over the surface. */
   const PANEL_TABS = [["resources", "Turn Resources"], ["panel", "Panel"], ["history", "History"]];
@@ -2372,6 +2396,29 @@ globalThis.CrankBoard = Object.seal({
       if (!old) document.getElementById("cm-board").append(div);
     }, 350);
   }
+  /* A CARD NAMED IN TEXT POPS UP LARGE TOO (ROB-327, ROB-332; Rob: "I should also be able to hover over the card names to see the on
+     hover pop-up of the card"): a name in a History line, or what a spell is aimed at, is a span carrying `data-peek-name` (the card's
+     name) -- the card is found by its name, as the stack's entries are, for a name keeps meaning the card after the object it named has
+     left. The pointer on it, or the keyboard's focus (such a span has tabindex 0), shows the card at the pop-up's size; leaving, or
+     the focus going, puts it away. */
+  let namedPeek = null;
+  const NAMED = "#cm-board [data-peek-name], #cm-board-plays [data-peek-name]";
+  function namePeek(el) {
+    if (!el) {if (namedPeek) {namedPeek = null; peek(null);} return;}
+    if (namedPeek === el && document.getElementById("cm-board-peek")) return;
+    namedPeek = el;
+    clearTimeout(peekTimer);
+    peekTimer = setTimeout(() => {
+      peekTimer = null;
+      if (!el.isConnected || !document.getElementById("cm-board") || namedPeek !== el) return;
+      const name = el.dataset.peekName, old = document.getElementById("cm-board-peek");
+      const div = old || Object.assign(document.createElement("div"), {id: "cm-board-peek", className: "cm-board-peek"});
+      div.setAttribute("aria-hidden", "true");
+      div.innerHTML = `<span class="cm-bcard"><img src="${e(pictureOf(name))}" alt="" referrerpolicy="no-referrer"></span>`;
+      if (!old) document.getElementById("cm-board").append(div);
+      say(`Showing ${name}`);
+    }, 350);
+  }
   /* A STACK ENTRY'S CARD, beside the On the stack box at the hover's size: to its left where the window has the room,
      else below it; within the window either way. One at a time, gone on leaving, on a second tap, or on Escape. */
   let stackShown = null;
@@ -2840,6 +2887,8 @@ globalThis.CrankBoard = Object.seal({
     return was && was.matchId === next.matchId && next.status !== "finished" ? fresh : [];
   }
   globalThis.CrankBoard.playsFor = playsFor;
+  /* What a held-up spell or ability was aimed at, as it was cast (the event's `aimed`): ⤳ and the names, under the card. */
+  const playAims = (x) => (x.aimedModes?.length ? `<p class="cm-play-aim">${x.aimedModes.map((m) => aimsHtml(m.aimed)).join("")}</p>` : x.aimed?.length ? `<p class="cm-play-aim">${aimsHtml(x.aimed)}</p>` : "");
   function plays(was, next) {
     const list = playsFor(was, next), layer = document.getElementById("cm-board-plays");
     if (!attached || !layer || !list.length) return;
@@ -2850,7 +2899,7 @@ globalThis.CrankBoard = Object.seal({
       el.style.setProperty("--seat", seatColor(x.player));
       el.setAttribute("aria-label", `${who} ${x.kind === "land" ? "played" : "cast"} ${name}`);
       el.innerHTML = `<header><b>${e(who)}</b><button type="button" class="cm-play-close" tabindex="-1" aria-label="Close ${e(name)}">✕</button></header>
-        <button type="button" class="cm-play-card" tabindex="-1" aria-label="${e(name)}"><img src="${e(pictureOf(name))}" alt="" draggable="false" referrerpolicy="no-referrer"></button>`;
+        <button type="button" class="cm-play-card" tabindex="-1" aria-label="${e(name)}"><img src="${e(pictureOf(name))}" alt="" draggable="false" referrerpolicy="no-referrer"></button>${playAims(x)}`;
       let left = PLAY_MS, since = performance.now(), timer = null;
       const gone = () => {clearTimeout(timer); if (!el.isConnected) return; el.classList.add("is-leaving"); stepAside(); setTimeout(() => {el.remove(); stepAside();}, reduced() ? 0 : 600);};
       const run = () => {since = performance.now(); timer = setTimeout(gone, left);};
@@ -4587,6 +4636,14 @@ globalThis.CrankBoard = Object.seal({
   document.addEventListener("focusin", (event) => {const entry = event.target.closest && event.target.closest(".cm-board-stack .cm-stack-entry"); if (entry) stackPeek(entry);});
   document.addEventListener("focusout", (event) => {if (event.target.closest && event.target.closest(".cm-board-stack .cm-stack-entry")) stackPeek(null);});
   document.addEventListener("pointerover", (event) => {
+    /* A card named in text (a History line, a spell's target) shows that card, and not the entry or line it is in. */
+    const named = event.target.closest?.(NAMED);
+    if (named && event.pointerType === "mouse" && document.getElementById("cm-board") && view) {
+      pointerAt = {x: event.clientX, y: event.clientY};
+      if (stackShown !== null) stackPeek(null);
+      if (!showing) namePeek(named);
+      return;
+    }
     const entry = event.target.closest && event.target.closest(".cm-board-stack .cm-stack-entry");
     if (entry && event.pointerType === "mouse") stackPeek(entry);
     else if (stackShown !== null && event.pointerType === "mouse" && !(event.target.closest && event.target.closest("#cm-stack-peek"))) stackPeek(null);
@@ -4605,13 +4662,20 @@ globalThis.CrankBoard = Object.seal({
     if (!showing) peek(el);
   });
   document.addEventListener("focusin", event => {
+    const spoken = event.target.closest?.(NAMED);
+    if (spoken && !showing) {namePeek(spoken); return;}
     const el = event.target.closest?.("#cm-board .cm-bcard[data-card], #cm-board [data-peek-card]");
     if (el && !showing && !el.closest("#cm-card-inspector, .cm-board-peek")) peek(el);
   });
-  document.addEventListener("focusout", event => {if (event.target.closest?.("#cm-board .cm-bcard[data-card], #cm-board [data-peek-card]")) peek(null);});
+  document.addEventListener("focusout", event => {
+    if (event.target.closest?.(NAMED)) {namePeek(null); return;}
+    if (event.target.closest?.("#cm-board .cm-bcard[data-card], #cm-board [data-peek-card]")) peek(null);
+  });
   /* The Lands group's open or shut, kept for its question as the board redraws (toggle does not bubble: caught going down). */
   document.addEventListener("toggle", (event) => {const el = event.target; if (el.isConnected && el.matches?.(".cm-board-lands-group")) landsOpen = el.open ? el.dataset.landsFor : null;}, true);
   document.addEventListener("pointerout", (event) => {
+    const spoken = event.target.closest?.(NAMED);
+    if (spoken && !spoken.contains(event.relatedTarget)) {namePeek(null); return;}
     const named = event.target.closest?.("#cm-board [data-peek-card]");
     if (named && !named.contains(event.relatedTarget)) {peek(null); return;}
     const el = event.target.closest && event.target.closest(".cm-board .cm-bcard[data-card]");

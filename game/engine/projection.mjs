@@ -31,6 +31,7 @@ import {characteristicsOf, deriving, staticAbilities} from "./rules/layers.mjs";
 import {conditionHolds} from "./script/condition.mjs";
 import {commanderKeyOf} from "./state/index.mjs";
 import {commanderTax} from "./rules/commander.mjs";
+import {aimsOf} from "./aims.mjs";
 
 export const PROJECTION_SCHEMA = "CommanderProbeProjection@1";
 
@@ -285,6 +286,9 @@ function project(state, viewer) {
       kind: entry.kind,
       stage: entry.stage,
       targets: structuredClone(entry.targets ?? []),
+      /* WHAT IT IS AIMED AT, named and public (aims.mjs; Linear ROB-327): the board draws source -> target from this, and a target
+         that has left is said to have (`gone`), never named. `aimedModes` on a modal entry with a targeted mode. */
+      ...aimsOf(state, entry),
     })),
     stackSize: state.stack.length,
     gameOver: state.outcomeReported ? {reason: "game over"} : null,

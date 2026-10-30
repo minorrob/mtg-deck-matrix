@@ -104,7 +104,7 @@ import {scoredPilot, SETTINGS} from "../engine/pilots/scored-pilot.mjs";
 import {personaOf, dispositionFor} from "../engine/pilots/roster.mjs";
 import {flagsOf, commanderClassOf} from "../engine/pilots/roles.mjs";
 import {agentPilot} from "../engine/pilots/agent-pilot.mjs";
-import {addToHistory} from "./history.mjs";
+import {addToHistory, pushLine} from "./history.mjs";
 import {tableEvent, eventsFor, keep, EVENTS_SCHEMA} from "./events.mjs";
 import {endingOf} from "./ending.mjs";
 import {describeDecision} from "./decision.mjs";
@@ -117,6 +117,11 @@ const MAX_CARDS = 250;           // a Commander deck is 100; this is only a boun
 const DRIVE_LIMIT = 100000;      // engine steps between two human decisions before the room calls it a hang
 const HISTORY_KEEP = 300;         // lines of the table's history kept with the room
 const HISTORY_VIEW = 120;         // the newest of them, in every view
+/* A history line as a view carries it (docs/ui-lane/history-and-targets-contract.md): the sentence, and the same as data when the
+   line has it. The room's own working fields (a draw's count, a quiet step's list) stay in the room. */
+const shownLine = ({turn, seq, text, mark, actor, source, targets, modes, cards}) => ({turn, seq, text,
+  ...(mark ? {mark} : {}), ...(actor !== undefined ? {actor} : {}), ...(source ? {source} : {}), ...(targets ? {targets} : {}),
+  ...(modes ? {modes} : {}), ...(cards ? {cards} : {})});
 const REFUSALS_SAID = 20;
 /** How a game that ended because every person was out says so (`endWhenNoPerson`). */
 export const NO_PERSON_REASON = "every person had left the game, so it ended there";         // refused pilot answers kept in full with the match's tally; the count itself is never trimmed
@@ -605,7 +610,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
   function quietly(phase) {
     const name = QUIET_STEP[phase] || String(phase).toLowerCase(), last = history[history.length - 1];
     if (last && last.mark === "quiet" && last.turn === state.turn) {last.steps = [...(last.steps || [last.text.replace(/: nothing to do$/, "")]), name]; last.text = `${last.steps.join(", ")}: nothing to do`; return;}
-    history.push({turn: state.turn, text: `${name}: nothing to do`, mark: "quiet", steps: [name]});
+    pushLine(history, {turn: state.turn, text: `${name}: nothing to do`, mark: "quiet", steps: [name]});
     if (history.length > HISTORY_KEEP) history.splice(0, history.length - HISTORY_KEEP);
   }
   /* THE DECISION TAPE (M8): every input a person gives -- an answer, leaving, ending the game -- in order, numbered
@@ -619,7 +624,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
   let tableEvents = [], eventsMark = 0, eventsFloor = -1, nextSeq = 0, answering = null;
   const begin = () => {eventsMark = nextSeq;};
   const tape = (entry) => {unsaved.push({n: tapeN, turn: state ? state.turn : 0, ...entry}); tapeN += 1;};
-  const note = (text) => {history.push({turn: state ? state.turn : 0, text}); if (history.length > HISTORY_KEEP) history.splice(0, history.length - HISTORY_KEEP);};
+  const note = (text) => {pushLine(history, {turn: state ? state.turn : 0, text}); if (history.length > HISTORY_KEEP) history.splice(0, history.length - HISTORY_KEEP);};
   const finished = () => Boolean(ended) || Boolean(gameOver(state));
   /* What a seat's pilot is made with: public card facts, and its seat's own deck list, setting and the match's seed. */
   let matchSeed = "";
@@ -862,7 +867,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     landBackSaved = landBack !== null;
     if (landBack) landBack.saved = true;
     tableEvents = record.events || []; eventsMark = record.eventsMark ?? 0; eventsFloor = record.eventsFloor ?? -1;
-    seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null; outs = record.outs || []; history = record.history || [];
+    seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null; outs = record.outs || []; history = (record.history || []).map((l, i) => (l.seq === undefined ? {...l, seq: i} : l));
     refusals = record.refusals || {total: 0, since: point.sequence, first: []};
     continuing = record.continuing === true; driven = record.driven || 0; endWhenNoPerson = record.endWhenNoPerson === true;
     seated = record.candidates === true;
@@ -1084,7 +1089,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         /* What this seat's permanents could tap for (actions.mjs, manaSources): the board's Mana Pool. */
         manaSources: deriving(state, () => manaSources(state, seat)),
         ...(canUndo ? {canUndo: true, undoablePlay: {cardId: playBack.objectId, name: playBack.name, kind: playBack.kind}} : {}),
-        history: history.slice(-HISTORY_VIEW).map(({turn, text, mark}) => ({turn, text, ...(mark ? {mark} : {})})),
+        history: history.slice(-HISTORY_VIEW).map(shownLine),
         /* What happened, as this seat may know it (events.mjs): the change this view shows -- or, asked with `after` (the last
            event id the seat has), everything since; `eventsReset` when that is older than the room keeps. */
         ...((said) => ({eventsSchema: EVENTS_SCHEMA, events: said.events, ...(said.reset ? {eventsReset: true} : {})}))(
@@ -1123,7 +1128,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         decision: null,
         state: projectFor(state, null),
         manaSources: [],
-        history: history.slice(-HISTORY_VIEW).map(({turn, text, mark}) => ({turn, text, ...(mark ? {mark} : {})})),
+        history: history.slice(-HISTORY_VIEW).map(shownLine),
         ...((said) => ({eventsSchema: EVENTS_SCHEMA, events: said.events, ...(said.reset ? {eventsReset: true} : {})}))(
           eventsFor(tableEvents, null, {...(after !== undefined && after !== null ? {after, floor: eventsFloor} : {from: `event:${eventsMark}`}), knows: () => false})),
         ...(api.continuing ? {continuing: true} : {}),
