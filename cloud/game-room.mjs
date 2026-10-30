@@ -75,6 +75,17 @@ export const SLICE_STEPS = 100;
 export const AGENT_TURNS = 8;
 export const PILOT_GAME_CENTS = 25;
 
+/* "LOAD EARLIER" (Linear ROB-332; docs/ui-lane/history-and-targets-contract.md, section 3): {type: "history", before?, limit?} is answered to
+   the asker alone with {type: "history", before, first, lines}, the lines before `before` (oldest first), or refused with `of: "history"`.
+   The history is public, so a seat and a spectator are answered alike. */
+async function historyReply(room, frame) {
+  try {return {type: "history", ...(await room.historyBefore({before: frame.before, limit: frame.limit}))};}
+  catch (error) {
+    if (!(error instanceof RoomError)) throw error;
+    return {type: "refused", of: "history", status: error.status, error: error.message};
+  }
+}
+
 export class GameRoom {
   constructor(ctx, env, {cards = tableCards, slice = SLICE_STEPS} = {}) {
     this.ctx = ctx; this.env = env; this.cards = cards; this.slice = slice; this.room = null;
@@ -138,6 +149,7 @@ export class GameRoom {
     /* A reconnect names the last event it handled (`events.v1`, Linear ROB-77; game/room/room.mjs, view): the view
        carries the events since, or says `eventsReset` when they are older than the room keeps. */
     if (frame && frame.type === "view") return send({type: "view", view: room.view(seatId, typeof frame.after === "string" ? {after: frame.after} : {})});
+    if (frame && frame.type === "history") return send(await historyReply(room, frame));
     /* Yield turn (Linear ROB-13; room.mjs, yieldTurn), and Stop yielding. Yielding can pass for the seat at once, so every
        seat's view moves, as after an action. */
     if (frame && frame.type === "yield") {
@@ -407,6 +419,10 @@ export class GameTable extends GameRoom {
     if (frame && frame.type === "view") {
       const room = await this.load();
       return room ? send({type: "view", view: room.watch({after: typeof frame.after === "string" ? frame.after : undefined})}) : send({type: "refused", status: 409, error: "There is no game at this table."});
+    }
+    if (frame && frame.type === "history") {
+      const room = await this.load();
+      return send(room ? await historyReply(room, frame) : {type: "refused", of: "history", status: 409, error: "There is no game at this table."});
     }
     return send({type: "refused", status: 403, error: "A spectator watches; it does not play."});
   }

@@ -438,7 +438,7 @@ globalThis.CrankBoard = Object.seal({
     if (spectating) url.searchParams.set("watch", "1");
     url.protocol = location.protocol === "https:" ? "wss:" : "ws:";
     const s = new WebSocket(url);
-    blockPending = null; blockResult = null;
+    blockPending = null; blockResult = null; hist.asking = false;
     socket = s; closedByUs = false; yieldReady = false; status = view ? "reconnecting" : "connecting"; draw();
     s.addEventListener("open", () => {if (socket !== s) return; retry = 0; status = "open"; draw();});
     s.addEventListener("message", (event) => {if (socket === s) receive(event.data);});
@@ -460,6 +460,7 @@ globalThis.CrankBoard = Object.seal({
     try {frame = JSON.parse(data);} catch {return;}
     if (frame.type === "view") adopt(frame.view);
     else if (frame.type === "chat") heardChat(frame.message);
+    else if (frame.type === "history") heardHistory(frame);
     else if (frame.type === "quit") {C.notice(frame.by ? `${frame.by} ended the game.` : "The game was ended.", false);}
     else if (frame.type === "checked" || (frame.type === "refused" && frame.of === "check")) checkedBlocks(frame);
     else if (frame.type === "receipt") {sending = false; draw();}
@@ -477,6 +478,7 @@ globalThis.CrankBoard = Object.seal({
     /* A spectator's view has no seat: it is read as seat 0's table with nobody being "you" (isYou), and nothing to decide. */
     if (next.spectator === true && (next.seat === null || next.seat === undefined)) next = {...next, seat: 0};
     view = next;
+    mergeHistory(next);
     if (was?.revision !== next.revision || was?.matchId !== next.matchId || was?.seat !== next.seat) {choiceFlow=null;flowPaused=false;attackChoice=null;targetPage=0;targetReviewing=false;targetCycles.clear();cardMenu=null;firstCardClick=null;document.getElementById("cm-card-menu")?.remove();picked = []; amounts = []; draftRevision = null; actionCard = null;}
     if (inspection?.automatic && was?.revision !== next.revision) inspection = null;
     if (inspection && (was?.matchId !== next.matchId || was?.seat !== next.seat)) inspection = null;
@@ -1629,7 +1631,7 @@ globalThis.CrankBoard = Object.seal({
       table: () => `<div class="cm-full-vitals">${players().map(p => `<div class="${view.state.turnPlayerId === p.playerId ? "is-turn" : ""}" data-seat="${p.playerId}" style="--seat:${seatColor(p.playerId)}"><span>${e(seatLabel(p))}${turnMark(p.playerId)}</span>${vitals(p, {big:true})}</div>`).join("")}</div>`,
       inspect: () => `<div id="cm-full-pick">${pickPanel()}</div>`,
       stack: () => stack({module:true}) || `<p class="cm-muted">The stack is empty.</p>`,
-      history: () => historyBand(30) + eventCards(),
+      history: () => historyBand(Infinity, true) + eventCards(),
       resources: () => turnResources(),
       mana: () => manaPool(),
       counter: () => `<p class="cm-muted">Public battlefield counts · cards with two types count in both.</p>${players().map(p => `<details class="cm-module-counts"><summary>${e(seatLabel(p))}</summary><dl>${["Creature", "Artifact", "Enchantment", "Land", "Planeswalker"].map(type => `<div><dt>${type}s</dt><dd>${controlledCards(p.playerId).filter(c => c.types.includes(type)).length}</dd></div>`).join("")}</dl></details>`).join("")}`
@@ -1792,23 +1794,92 @@ globalThis.CrankBoard = Object.seal({
     C.modal("Table vitals", `<div class="cm-table-vitals" role="table" aria-label="Table vitals" style="--cols:${ps.length}">${head}${rows.join("")}</div>
       <p class="cm-muted">A player loses at 0 life, at 10 poison, or at 21 combat damage from one commander.</p><div class="cm-form-footer">${b("Close", "close", {}, true)}</div>`);
   }
+  /* THE WHOLE GAME'S HISTORY (ROB-332; Rob, 2026-10-30: "Full game history needs to be shown in the history pane, not just the most
+     recent during the game. I should be able to scroll back at any time in the game and see everything that's happened"). A view carries
+     the newest lines (`view.history`, each with its `seq`, 0 the game's first); older ones are asked for over the socket
+     ({type: "history", before: seq}) and answered to this seat alone ({type: "history", lines, first}). The lines the board holds are
+     kept by `seq`, so a line a view sends again (a draw that grew) replaces its own, the lines asked for stay when the next view
+     comes, and a view that begins past what is held (many turns in one go) starts the store again from itself: what is above it is
+     one "Load earlier" away. docs/ui-lane/history-and-targets-contract.md, §3. */
+  const hist = {matchId: null, bySeq: new Map(), first: 0, asking: false, old: false};
+  const HISTORY_PAGE = 100;
+  const histMin = () => (hist.bySeq.size ? Math.min(...hist.bySeq.keys()) : 0);
+  const histMax = () => (hist.bySeq.size ? Math.max(...hist.bySeq.keys()) : -1);
+  function mergeHistory(next) {
+    const incoming = Array.isArray(next.history) ? next.history : [];
+    if (hist.matchId !== next.matchId) Object.assign(hist, {matchId: next.matchId, bySeq: new Map(), asking: false});
+    /* A room that does not number its lines (one from before ROB-332): the view is all there is, as it was. */
+    hist.old = incoming.length > 0 && !incoming.every((l) => Number.isInteger(l.seq));
+    if (hist.old) {hist.bySeq = new Map(incoming.map((l, i) => [i, {...l, seq: i}])); hist.first = 0; return;}
+    if (incoming.length && hist.bySeq.size && incoming[0].seq > histMax() + 1) hist.bySeq = new Map();
+    for (const l of incoming) hist.bySeq.set(l.seq, l);
+    hist.first = Number.isInteger(next.historyFirst) ? next.historyFirst : (incoming[0]?.seq ?? 0);
+  }
+  const moreHistory = () => hist.bySeq.size > 0 && histMin() > hist.first;
+  function loadEarlier() {
+    if (hist.asking || !socket || !view || !moreHistory()) return;
+    hist.asking = true;
+    try {socket.send(JSON.stringify({type: "history", before: histMin(), limit: HISTORY_PAGE}));} catch {hist.asking = false; return;}
+    draw();
+  }
+  function heardHistory(frame) {
+    hist.asking = false;
+    if (Array.isArray(frame.lines)) for (const l of frame.lines) if (Number.isInteger(l.seq) && !hist.bySeq.has(l.seq)) hist.bySeq.set(l.seq, l);
+    if (Number.isInteger(frame.first)) hist.first = Math.min(hist.first, frame.first);
+    /* Nothing older came back: this is the start, whatever `first` said. */
+    if (Array.isArray(frame.lines) && !frame.lines.length) hist.first = histMin();
+    draw();
+  }
   /* THE HISTORY, newest first. A turn's line is a divider; the others carry the turn they happened in. */
-  const lines = () => [...(view.history || [])].reverse();
-  const historyRow = (l) => l.mark === "turn" ? `<li class="is-turn">${e(l.text)}</li>` : `<li${l.mark === "end" ? ' class="is-end"' : l.mark === "quiet" ? ' class="is-quiet"' : ""}><span>${e(l.text)}</span><span class="cm-history-turn">${l.turn ? `T${l.turn}` : "Start"}</span></li>`;
+  const lines = () => [...hist.bySeq.values()].sort((a, b) => b.seq - a.seq);
+  /* A line's words, with each card it names (`cards`, in order of appearance) a button: the card shown large on hover and on focus
+     (`data-peek-name`, namePeek), and read on a press (board-inspect, by name: the card it named may no longer be on the table). */
+  const wordAt = (text, name, from) => {
+    for (let i = text.indexOf(name, from); i >= 0; i = text.indexOf(name, i + 1)) {
+      const before = text[i - 1], after = text[i + name.length];
+      if ((!before || !/\w/.test(before) || !/\w/.test(name[0])) && (!after || !/\w/.test(after) || !/\w/.test(name[name.length - 1]))) return i;
+    }
+    return -1;
+  };
+  function lineHtml(l) {
+    const text = String(l.text ?? "");
+    let out = "", at = 0;
+    for (const c of Array.isArray(l.cards) ? l.cards : []) {
+      if (!c || !c.name) continue;
+      const i = wordAt(text, c.name, at);
+      if (i < 0) continue;
+      out += `${e(text.slice(at, i))}<button type="button" class="cm-card-ref" data-peek-name="${e(c.name)}" data-action="board-inspect" data-kind="named" data-ref="${e(c.name)}" aria-label="Read ${e(c.name)}">${e(c.name)}</button>`;
+      at = i + c.name.length;
+    }
+    return out + e(text.slice(at));
+  }
+  /* Who did it, at a glance: the actor's seat color on the line's edge. */
+  const actorStyle = (l) => (Number.isInteger(l.actor) && players()[l.actor] ? ` style="--seat:${seatColor(l.actor)}" data-actor="${l.actor}"` : "");
+  const historyRow = (l) => l.mark === "turn" ? `<li class="is-turn"${actorStyle(l)}>${e(l.text)}</li>` : `<li${l.mark === "end" ? ' class="is-end"' : l.mark === "quiet" ? ' class="is-quiet"' : ""}${actorStyle(l)}><span>${lineHtml(l)}</span><span class="cm-history-turn">${l.turn ? `T${l.turn}` : "Start"}</span></li>`;
   const matches = (l) => !historyFilter || l.text.toLowerCase().includes(historyFilter.toLowerCase());
-  function historyList() {
+  /* The end of the list is the game's oldest line held: the way to older ones, or that this is the start. */
+  const earlierRow = () => (moreHistory()
+    ? `<li class="cm-history-more"><button type="button" class="v-button compact" data-action="board-history-earlier"${hist.asking ? " disabled" : ""}>${hist.asking ? "Loading…" : "Load earlier"}</button></li>`
+    : hist.bySeq.size ? `<li class="cm-history-more cm-muted"${historyFilter ? " hidden" : ""}>The start of the game</li>` : "");
+  function historyList(where = "menu") {
     return `<input type="search" class="cm-history-filter" data-board-history-filter placeholder="Search & filter by card or player…" aria-label="Filter the history" value="${e(historyFilter)}">
-      <ol class="cm-history-list">${lines().map((l) => historyRow(l).replace("<li", `<li${matches(l) ? "" : " hidden"}`)).join("") || `<li class="cm-muted">Nothing has happened yet.</li>`}</ol>`;
+      <ol class="cm-history-list" data-keep-scroll="history-${where}">${lines().map((l) => historyRow(l).replace("<li", `<li${matches(l) ? "" : " hidden"}`)).join("") || `<li class="cm-muted">Nothing has happened yet.</li>`}${earlierRow()}</ol>`;
   }
   function historyMenu() {
-    return `<div class="cm-board-menu cm-board-history" role="dialog" aria-label="History" id="cm-board-history"><h3>History · newest first</h3>${historyList()}</div>`;
+    return `<div class="cm-board-menu cm-board-history" role="dialog" aria-label="History" id="cm-board-history"><h3>History · newest first</h3>${historyList("menu")}</div>`;
   }
   /* The record is there once the game is over; what it holds is the table's call, and the button says which. */
   const recordButton = () => view && view.status === "finished" ? b(table && table.playtest ? "Download the full record" : "Download your record", "board-record", {}, false, {cls: "compact"}) : "";
-  function historyBand(count) {
+  /* `whole`: the History module's own list (ROB-332) -- every line held, turn dividers and all, scrolling back to the game's first
+     and asking for older ones at its end -- and the mat's band, the newest few. */
+  function historyBand(count, whole = false) {
+    if (whole) {
+      return `<section class="cm-mat-zone cm-board-band" data-zone="history" data-whole aria-label="History"><h3>History ${ib(CLOCK, "board-history", "Open the history")}</h3>
+      <ol class="cm-history-whole" data-keep-scroll="history-module">${lines().map(historyRow).join("") || `<li class="cm-muted">Nothing yet.</li>`}${earlierRow()}</ol></section>`;
+    }
     const recent = lines().filter((l) => l.mark !== "turn").slice(0, count);
     return `<section class="cm-mat-zone cm-board-band" data-zone="history" aria-label="History"><h3>History ${ib(CLOCK, "board-history", "Open the history")}</h3>
-      <ol>${recent.map((l, k) => `<li style="--age:${k}"${l.mark === "end" ? ' class="is-end"' : l.mark === "quiet" ? ' class="is-quiet"' : ""}><span>${e(l.text)}</span></li>`).join("") || `<li class="cm-muted">Nothing yet.</li>`}</ol></section>`;
+      <ol>${recent.map((l, k) => `<li style="--age:${k}"${l.mark === "end" ? ' class="is-end"' : l.mark === "quiet" ? ' class="is-quiet"' : ""}${actorStyle(l)}><span>${lineHtml(l)}</span></li>`).join("") || `<li class="cm-muted">Nothing yet.</li>`}</ol></section>`;
   }
   /* THE CARDS A QUESTION OFFERS THAT THE TABLE DOES NOT SHOW (Rob, 2026-10-25: "When I'm presented with a card I can't see
      (e.g. a scry card), it should be on the stack and that should be the way to see it ... graveyard, multiple cards in
@@ -1903,11 +1974,11 @@ globalThis.CrankBoard = Object.seal({
     const tabs = `<div class="cm-panel-tabs" role="tablist" aria-label="Pane">${PANEL_TABS.map(([k, label]) => `<button type="button" role="tab" class="cm-panel-tab${panelTab === k ? " is-on" : ""}" data-action="board-panel-tab" data-view="${k}" aria-selected="${panelTab === k}">${label}</button>`).join("")}</div>`;
     const head = `<span class="cm-board-panelgrip">${grip("panelw", "The pane's width: drag, or use the arrow keys", panelWidth(), PANELW, "vertical")}</span><header>${tabs}${ib("✕", "board-panel", "Close the panel")}</header>`;
     if (panelTab === "resources") return `<aside class="cm-board-panel" aria-label="Turn Resources" data-tab="resources">${head}${turnResources()}</aside>`;
-    if (panelTab === "history") return `<aside class="cm-board-panel" aria-label="History" data-tab="history">${head}<section class="cm-panel-history is-whole"><h3>History · newest first</h3>${historyList()}</section></aside>`;
+    if (panelTab === "history") return `<aside class="cm-board-panel" aria-label="History" data-tab="history">${head}<section class="cm-panel-history is-whole"><h3>History · newest first</h3>${historyList("panel")}</section></aside>`;
     return `<aside class="cm-board-panel" aria-label="Panel" data-tab="panel" style="--split:${Math.round(splitOf("panel") * 100)}%">${head}
       <section class="cm-panel-pick">${pick && pick.name ? `<div class="cm-panel-card">${card(pick, {where: "pick", action: "board-zoom-open"})}<div class="cm-board-options">${withManaRow(optionsFor(pick.cardId), (o) => `<button type="button" class="v-button compact primary" data-action="board-option" data-index="${o.index}"${sending ? " disabled" : ""}>${sayHtml(o)}</button>`)}</div></div>` : `<p class="cm-muted">Click a card on the board or in your hand to keep it here.</p>`}</section>
       ${splitBar("panel")}${stack()}
-      <section class="cm-panel-history"><h3>History · newest first</h3>${historyList()}</section></aside>`;
+      <section class="cm-panel-history"><h3>History · newest first</h3>${historyList("panel")}</section></aside>`;
   }
 
   /* THE DECISION, IN WHATEVER MODE IT COMES, over the surface where the prompt is (the handoff: "decisions sit
@@ -2311,6 +2382,8 @@ globalThis.CrankBoard = Object.seal({
     let c;
     if (inspection.kind === "stack") c = view.state.stack.find(s => String(s.stackId) === inspection.id);
     else if (inspection.kind === "event") c = (view.events || []).find(x => playKey(view.matchId, x) === inspection.id)?.card;
+    /* A card named in the History or as a target (ROB-332): found by its name, for the object it named may have left the table. */
+    else if (inspection.kind === "named") c = {name: inspection.id};
     else c = findCard(Number(inspection.id)) || shownCard(Number(inspection.id));
     /* The card as it is printed, one press from a permanent that looks like a token (ROB-329): its look taken off. */
     if (c && inspection.original) c = {...c, appearance: undefined};
@@ -2341,7 +2414,7 @@ globalThis.CrankBoard = Object.seal({
     if (!inspection || deskInspection()) return "";
     const c = inspectedCard();
     return `<aside id="cm-card-inspector" aria-label="Card inspection"><header><h3>${e(c?.name || "Card unavailable")}</h3>${ib("✕", "board-inspect-close", "Close card inspection")}</header>
-      ${c ? `<p class="cm-inspection-context">${inspection.kind === "event" ? "Recorded event · card reference" : inspection.kind === "stack" ? "On the stack" : inspection.original ? "Original card, not how it looks now" : "Current visible card"} · inspection only</p>${card(c, {where:"peek", action:"none"})}${c.oracleText ? `<p>${e(c.oracleText)}</p>` : ""}${c.why ? `<p>${e(c.why)}</p>` : ""}` : `<p>This card is no longer visible in your current game view.</p>`}</aside>`;
+      ${c ? `<p class="cm-inspection-context">${inspection.kind === "event" ? "Recorded event · card reference" : inspection.kind === "named" ? "Named in the table's history" : inspection.kind === "stack" ? "On the stack" : inspection.original ? "Original card, not how it looks now" : "Current visible card"} · inspection only</p>${card(c, {where:"peek", action:"none"})}${c.oracleText ? `<p>${e(c.oracleText)}</p>` : ""}${c.why ? `<p>${e(c.why)}</p>` : ""}` : `<p>This card is no longer visible in your current game view.</p>`}</aside>`;
   }
   function eventCards() {
     const events = [...(view.events || [])].reverse().filter(x => x.card?.name && !x.card.faceDown).slice(0, 8);
@@ -3146,6 +3219,8 @@ globalThis.CrankBoard = Object.seal({
     const rowKey = `${view?.matchId}:${view?.seat}`;
     const drawerPositions=host.dataset.rowScrollMatch===rowKey?[...host.querySelectorAll(':scope>.cm-stage-rail,:scope>.cm-stage-side')].map(el=>({id:el.id,view:host.dataset.view,top:el.scrollTop})):[];
     const main=host.querySelector('.cm-board-main'),focusPosition=main&&host.dataset.rowScrollMatch===rowKey?{seat:main.querySelector('.cm-board-stage>.cm-mat')?.dataset.seat,y:main.scrollTop}:null;
+    /* The History's lists keep the place read through a redraw (ROB-332): a line read far back does not jump to the newest. */
+    const keptScroll = host.dataset.rowScrollMatch === rowKey ? new Map([...host.querySelectorAll("[data-keep-scroll]")].map((el) => [`${host.dataset.view}:${el.dataset.keepScroll}`, el.scrollTop])) : new Map();
     if (host.dataset.rowScrollMatch !== rowKey) zonePositions.clear();
     else for (const el of host.querySelectorAll('[data-zone-scroll]')) zonePositions.set(`${host.dataset.view}:${el.dataset.zoneScroll}`, [el.scrollLeft,el.scrollTop]);
     if(decisionPopup()){
@@ -3158,6 +3233,7 @@ globalThis.CrankBoard = Object.seal({
     for(const saved of drawerPositions)if(saved.view===host.dataset.view){const drawer=document.getElementById(saved.id);if(drawer&&host.contains(drawer))drawer.scrollTop=saved.top;}
     const nextMain=host.querySelector('.cm-board-main');if(focusPosition&&nextMain?.querySelector('.cm-board-stage>.cm-mat')?.dataset.seat===focusPosition.seat)nextMain.scrollTop=focusPosition.y;
     host.dataset.rowScrollMatch = rowKey;
+    for (const el of host.querySelectorAll("[data-keep-scroll]")) {const top = keptScroll.get(`${host.dataset.view}:${el.dataset.keepScroll}`); if (top) el.scrollTop = top;}
     for (const el of host.querySelectorAll('[data-zone-scroll]')) {const pos=zonePositions.get(`${host.dataset.view}:${el.dataset.zoneScroll}`);if(pos){el.scrollLeft=pos[0];el.scrollTop=pos[1];}}
     for (const el of host.querySelectorAll("[data-block-key]")) el.scrollLeft = blockPositions.get(el.dataset.blockKey) || 0;
     const options = host.querySelector("#cm-board-decision .cm-board-options");
@@ -3799,6 +3875,12 @@ globalThis.CrankBoard = Object.seal({
   };
   actions["board-zoom-open"] = (el) => inspect(el.dataset.card);
   actions["board-inspect"] = el => inspect(el.dataset.ref, el.dataset.kind || "card");
+  actions["board-history-earlier"] = () => loadEarlier();
+  /* Scrolling to the end of a History list asks for the lines before it, as a press on "Load earlier" does. */
+  document.addEventListener("scroll", (event) => {
+    const t = event.target;
+    if (t?.matches?.(".cm-history-list, .cm-history-whole") && t.scrollHeight - t.scrollTop - t.clientHeight < 80) loadEarlier();
+  }, true);
   actions["board-inspect-close"] = () => {inspection = null; draw(); C.focusFind(inspectionFrom)?.focus({preventScroll:true}); inspectionFrom = null;};
   actions['board-opening-hand'] = el => {
     const d = view?.decision, index = Number(el.dataset.index);
@@ -5052,6 +5134,8 @@ globalThis.CrankBoard = Object.seal({
     const rows = event.target.parentElement.querySelectorAll(".cm-history-list li");
     const all = lines();
     rows.forEach((row, i) => {if (all[i]) row.hidden = !matches(all[i]);});
+    /* The note that this is the game's start is no line to match; the way to older lines stays (it filters what is loaded: "Load earlier"). */
+    event.target.parentElement.querySelectorAll(".cm-history-list li.cm-history-more.cm-muted").forEach((row) => {row.hidden = historyFilter !== "";});
   });
   document.addEventListener("input", (event) => {
     const same = event.target && event.target.dataset && event.target.dataset.boardSame;

@@ -399,6 +399,8 @@ Titles vary, and the sample has 19 kinds. Among them:
 - `{type: "act", …}`: an answer.
 - `{type: "prefer", stepByStep: true | false}`.
 - `{type: "yield", on: true | false}`: Yield turn, and Stop yielding.
+- `{type: "history", before, limit?}`: "Load earlier" (ROB-332): the lines before the line numbered `before`, answered to the asker
+  alone as `{type: "history", before, first, lines}`; a spectator's socket takes it too.
 - `{type: "view", after: "event:N"}`: the latest view, its `events` everything since event N (see Events, below). The
   room takes `after` (`room.view(seatId, {after})`); the socket passes it once its one line is added in
   `cloud/game-room.mjs` (asked in ROB-11). Until then a `view` frame's `after` is ignored.
@@ -590,7 +592,9 @@ had left the game". `ending` can:
 
 ## History
 
-`view.history` is newest first, up to 120 lines of `{turn, text, mark?}`. The `mark` is one of:
+`view.history` is the newest 40 lines, oldest first, each `{turn, seq, text, mark?, actor?, source?, targets?, modes?, cards?}`: the
+sentence, and the same as data. Older lines are asked for over the socket (`{type: "history", before}`); the whole shape, with the
+stack's `aimed`, is in `docs/ui-lane/history-and-targets-contract.md` (ROB-327, ROB-332). The `mark` is one of:
 - `turn`: a new turn began;
 - `quiet`: steps that passed with nothing to do, merged into one line;
 - `end`.
@@ -602,7 +606,7 @@ History is public. A draw says "drew a card", never which card, and taps, mana a
 - **Decks and cards:** decks of 100, up to four players, and an engine that knows 2,015 cards.
 - **Boards:** real games in testing ran from about 20 to 260 permanents on the table. A Goblin deck once made more than
   2,000 tokens in one turn.
-- **Games:** 10 to 60 turns or more, with 120 history lines in each view.
+- **Games:** 10 to 60 turns or more, with the newest 40 history lines in each view and the rest asked for as needed.
 - **Card images:**
   - Use `https://api.scryfall.com/cards/named?exact=<name>&format=image`, plus `&version=small|normal|large` as needed.
   - Show card images unaltered: never crop away the artist credit or copyright line.
