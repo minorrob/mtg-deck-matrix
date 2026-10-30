@@ -956,7 +956,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 666 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 668 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1239,6 +1239,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `room-resolve-all` — `tests/room-resolve-all.mjs`
 - `room-untap-mana` — `tests/room-untap-mana.mjs`
 - `room-pooled-taps` — `tests/room-pooled-taps.mjs`
+- `room-phyrexian-payment` — `tests/room-phyrexian-payment.mjs` (the room's view of a Phyrexian cast: Tezzeret's Gambit offered with no blue, the question listing 2 life beside the {U} way, the match replaying, and a match without the key unchanged (ROB-326))
 - `room-why-not` — `tests/room-why-not.mjs` (why a card can't be played now, from the engine's facts; said by the room on a seat's own cards while it holds priority)
 - `room-yield-turn` — `tests/room-yield-turn.mjs`
 - `room-blocks-none` — `tests/room-blocks-none.mjs` (Declare blockers made for a person with no creature that could block, the history saying why; new matches only, `blocksNone`)
@@ -1343,6 +1344,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-mdfc` — `tests/engine-mdfc.mjs`
 - `engine-planeswalkers` — `tests/engine-planeswalkers.mjs`
 - `engine-tap-to-cast` — `tests/engine-tap-to-cast.mjs`
+- `engine-phyrexian-taps` — `tests/engine-phyrexian-taps.mjs` (a spell with Phyrexian mana ({U/P}: {U} or 2 life, CR 107.4f) is offered and tapped for in each way, the caster asked which: Tezzeret's Gambit with three untapped Wastes, with blue, with life too low; Gitaxian Probe, Mental Misstep and Vraska, Betrayal's Sting; the AI takes mana before life (ROB-326))
 - `engine-pay-choice` — `tests/engine-pay-choice.mjs`
 - `staging-check` — `tests/staging-check.mjs`
 - `engine-cards-pb1` — `tests/engine-cards-pb1.mjs`

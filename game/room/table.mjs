@@ -479,6 +479,9 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
       /* An {X} spell tapped for too, for each X the pool and the untapped sources pay together, so a person casts it from the
          hand, choosing X, without tapping each land first (rules/actions.mjs, `xTaps`): new matches only. */
       xTaps: true,
+      /* A spell with Phyrexian mana ({U/P}: {U} or 2 life, CR 107.4f) tapped for too, in each way its symbols can be paid, the
+         caster asked which (ROB-326, Rob's playtest 2026-10-29: Tezzeret's Gambit): new matches only (rules/actions.mjs, `phyrexianTaps`). */
+      phyrexianTaps: true,
       /* A person may yield the rest of an opponent's turn (Linear ROB-13, the Oct 16 handoff): new matches only, so one
          launched before is asked as it was (room.mjs, `yieldTurn`). */
       yieldTurn: true,

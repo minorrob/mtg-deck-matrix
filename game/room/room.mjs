@@ -350,7 +350,9 @@ export function offerDetails(state, seat, actions) {
     /* Tapped for as it is cast (the board's one click): the sources, or that the caster picks them. */
     if (a.autoTap) {
       const ways = castTapPlans(state, seat, a, 2);
-      parts.push(ways.length === 1 ? `tapping ${tapWords(state, ways[0])}` : "tapping what you choose");
+      /* A Phyrexian symbol paid in life says so (CR 107.4f): the one way there is, named; more than one, the caster chooses. */
+      parts.push(ways.length === 1 ? [ways[0].taps.length ? `tapping ${tapWords(state, ways[0])}` : null, ways[0].payment?.life > 0 ? `paying ${ways[0].payment.life} life` : null].filter(Boolean).join(", ")
+        : "tapping what you choose");
     }
     /* Convoke (CR 702.51a): creatures help pay, picked once it is taken. */
     if (a.convoke) parts.push("convoking, tapping creatures you choose");
@@ -1030,7 +1032,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       const keepMana = beats.keepStepMana === true ? {keepStepMana: seats.flatMap((s, seat) => (s.pilot !== "house" ? [seat] : []))} : {};
       /* And whether a cast tapped for tops up floating mana and taps a source for all it makes (`pooledTaps`, rules/actions.mjs):
          a match launched before it lacks the key, and so offers what it offered then. */
-      const pooled = {...(pod && pod.pooledTaps === true ? {pooledTaps: true} : {}), ...(pod && pod.xTaps === true ? {xTaps: true} : {}), ...(pod?.preparedTaps === true ? {preparedTaps: true} : {})};
+      const pooled = {...(pod && pod.pooledTaps === true ? {pooledTaps: true} : {}), ...(pod && pod.xTaps === true ? {xTaps: true} : {}), ...(pod?.preparedTaps === true ? {preparedTaps: true} : {}), ...(pod?.phyrexianTaps === true ? {phyrexianTaps: true} : {})};
       pilotPicks = beats.pilotPicks === true;
       try {state = createState({matchId, seed, players: seats.map((s) => ({name: s.name})), ...rules, ...(beats.drawBeat ? {drawBeat: true} : {}), ...pooled, ...anyStep, ...keepMana});}
       catch (error) {throw new RoomError(400, error.message);}
