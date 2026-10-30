@@ -219,14 +219,13 @@ ok(decks.length >= 4, `the live library has decks to seat (${decks.length})`);
      working and not: run after, it competed for money the upgrades had already spent. On the full
      31,835-card pool a $225 Krenko finished the upgrade pass with $1.22 left and every affordable
      Game Changer priced out, so the deck carried none of its three. Pinned here as the shape the
-     bug had — a fitted deck reaches the allowance AND costs no more than the unfitted one, because
-     it bought three sensible Game Changers instead of one expensive card plus marginal swaps. */
+     bug had — a fitted deck reaches the allowance. It is not pinned to cost no more than the unfitted
+     one (Rob, 2026-10-29): the bracket is what keeps decks in the same weight class, and the price
+     of three Game Changers against one moves with the market. */
   const tight = {bracketCeiling: 3, budget: 225, perCardCap: null};
   const loose = B.build({commanders: [commander], cards: catalog, definition: tight});
   const tightFit = B.build({commanders: [commander], cards: catalog, definition: {...tight, fitBracket: true}});
   eq(tightFit.gameChangers, 3, `a $225 deck still reaches all three (it carried ${loose.gameChangers} before the fit)`);
-  ok(tightFit.estimatedPrice <= loose.estimatedPrice + 1e-6,
-    `and costs no more for it ($${tightFit.estimatedPrice.toFixed(2)} fitted against $${loose.estimatedPrice.toFixed(2)} unfitted) — the allowance is bought before the change is spent on marginal swaps`);
   eq(tightFit.slots.reduce((n, r) => n + r.quantity, 0), 100, "and it is still a hundred");
   {
     const order = readFileSync(path.join(ROOT, "draft-builder.js"), "utf8");

@@ -1893,3 +1893,9 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 
 /* End-of-game choices stay above the phone drawer, as action pop-ups do. Hand inspection stays above both. */
 #matrix-v2 .cm-board .cm-board-over{z-index:60}
+
+/* the question steps aside for the held-up plays (crankmagic-board.js stepAside; ROB-208) */
+#matrix-v2 .cm-board .cm-decision-slot{margin-left:var(--slot-shift,0px)}
+/* the pop-up's answering row stays in view when the question is longer than the pop-up (ROB-208), as in the pane (ROB-201) */
+#matrix-v2 .cm-board .cm-decision-slot .cm-board-decision>.cm-board-decision-foot{position:sticky;bottom:0;z-index:2;padding:8px 0 2px;background:var(--color-panel)}
+#matrix-v2 .cm-board .cm-decision-slot .cm-board-decision{scroll-padding-bottom:76px}

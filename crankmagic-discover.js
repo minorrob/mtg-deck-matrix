@@ -80,7 +80,7 @@
      inspector and coming back. Cleared only by Clear filters. */
   let selection = {};
   let mode = 'all';            // within a facet: 'all' picks must match, or 'any'
-  let depth = 2, breadth = 12; // the graph's reach, remembered like the filters
+  let depth = 1, breadth = 8;  // the graph's reach, remembered like the filters; it opens low so the first view is only the strongest joins (ROB-217)
   let gmode = 'inspect';       // what a tap on the canvas does: inspect (the default), navigate or select
   let picked = new Set();      // card ids ticked on the canvas, or in the List tab
   /* THE PANE HAS TWO TABS. Card Info is the pane as it was; List is every card the focus
