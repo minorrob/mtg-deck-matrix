@@ -12,8 +12,10 @@
   function drawMenu(){const target=document.getElementById('cm-user-menu');if(!target)return;
     let slot=target.querySelector('[data-admin-menu]');if(!slot&&!menuAllowed())return;if(!slot){slot=document.createElement('div');slot.dataset.adminMenu='';(target.querySelector('[aria-label="You"]')||target).append(slot);}slot.innerHTML=menu();}
   async function identity(force=false){if(!enabled)return false;if(checking)return checking;if(person&&!force)return person.admin===true;
-    checking=read('/api/me').then(value=>{person={admin:value.admin===true};drawMenu();return person.admin;}).catch(error=>{person={admin:false,error:error.message};drawMenu();return false;}).finally(()=>{checking=null;});return checking;}
+    checking=read('/api/me').then(value=>{person={admin:value.admin===true,owner:value.group==='owner'};drawMenu();return person.admin;}).catch(error=>{person={admin:false,error:error.message};drawMenu();return false;}).finally(()=>{checking=null;});return checking;}
   C.adminAllowed=()=>person?.admin===true;
+  /* The owner's panes (crankmagic-admin-ai.js, ROB-338): AI model, AI-only game. Drawn only when /api/me names the owner; each route also refuses anyone else. */
+  C.ownerAllowed=()=>person?.admin===true&&person?.owner===true;
   C.adminMenu=menu;C.adminReady=identity();
   Promise.resolve(C.sharingReady).then(drawMenu);
   document.getElementById('cm-user-menu')?.addEventListener('beforetoggle',drawMenu);
@@ -21,21 +23,26 @@
   const dollars=cents=>(Number(cents||0)/100).toLocaleString('en-US',{style:'currency',currency:'USD'});
   const date=value=>{if(/^\d{4}-\d{2}-\d{2}$/.test(String(value||''))){const [year,month,day]=value.split('-').map(Number),d=new Date(year,month-1,day);return d.getFullYear()===year&&d.getMonth()===month-1&&d.getDate()===day?d.toLocaleDateString('en-US'):'Unavailable';}const d=new Date(value);return value&&!Number.isNaN(d.getTime())?d.toLocaleString('en-US'):'Unavailable';};
   const link=(section,label)=>`<a class="v-button" href="#admin?section=${section}">${e(label)}</a>`;
-  const sections=[['home','Overview'],['people','People and invites'],['features','Feature switches'],['spend','AI spend'],['health','Release and health']];
-  const heading=section=>C.pageHead('Admin','<a class="v-button" href="#settings">Settings</a>')+`<nav class="cm-tabs cm-admin-nav" aria-label="Admin">${sections.map(([key,label])=>`<a class="v-button" href="#admin${key==='home'?'':'?section='+key}"${key===section?' aria-current="page"':''}>${e(label)}</a>`).join('')}</nav>`;
-  C.adminSectionLinks=()=>person?.admin===true?'<section class="cm-admin-operational"><h3>Operational information</h3><div class="cm-admin-section-links">'+sections.map(([key,label])=>b(label,'admin-open-section',{section:key})).join('')+'</div></section>':'';
+  const baseSections=[['home','Overview'],['people','People and invites'],['features','Feature switches'],['spend','AI spend'],['health','Release and health']];
+  const ownerPanes=()=>C.ownerAllowed()?C.adminOwnerPanes||[]:[];
+  const allSections=()=>[...baseSections,...ownerPanes().map(p=>[p.key,p.label])];
+  const heading=section=>C.pageHead('Admin','<a class="v-button" href="#settings">Settings</a>')+`<nav class="cm-tabs cm-admin-nav" aria-label="Admin">${allSections().map(([key,label])=>`<a class="v-button" href="#admin${key==='home'?'':'?section='+key}"${key===section?' aria-current="page"':''}>${e(label)}</a>`).join('')}</nav>`;
+  C.adminSectionLinks=()=>person?.admin===true?'<section class="cm-admin-operational"><h3>Operational information</h3><div class="cm-admin-section-links">'+allSections().map(([key,label])=>b(label,'admin-open-section',{section:key})).join('')+'</div></section>':'';
   actions['open-admin']=()=>C.openAdminWindow?C.openAdminWindow():C.go('admin');
-  actions['admin-open-section']=el=>{const section=sections.some(([key])=>key===el.dataset.section)?el.dataset.section:'home';C.actions.close();C.go('admin',section==='home'?{}:{section});};
+  actions['admin-open-section']=el=>{const section=allSections().some(([key])=>key===el.dataset.section)?el.dataset.section:'home';C.actions.close();C.go('admin',section==='home'?{}:{section});};
   actions['admin-retry']=()=>C.render();
   views.admin=async()=>{
-    const render=++generation,params=C.route().params,routeKey=params.toString(),active=()=>render===generation&&C.route().view==='admin'&&C.route().params.toString()===routeKey,section=sections.some(([key])=>key===params.get('section'))?params.get('section'):'home';
+    const render=++generation,params=C.route().params,routeKey=params.toString(),active=()=>render===generation&&C.route().view==='admin'&&C.route().params.toString()===routeKey,pick=()=>allSections().some(([key])=>key===params.get('section'))?params.get('section'):'home';
+    let section=pick();
     C.main.innerHTML=heading(section)+'<p role="status">Checking administrator access…</p>';
     const allowed=await identity(true);if(!active())return;
+    section=pick();
     if(!allowed){C.main.innerHTML=C.pageHead('Admin')+(person?.error?`<section class="v-panel"><p class="cm-error" role="alert">${e(person.error)}</p>${b('Retry','admin-retry',{},true)}</section>`:'<section class="v-panel"><h2>Administrator access required</h2><p>This account cannot open Admin.</p><a class="v-button" href="#settings">Settings</a></section>');return;}
     C.main.innerHTML=heading(section)+'<p role="status">Loading…</p>';
     try{
       let body='';
-      if(section==='home'){const data=await read('/api/admin');body=`<section class="v-panel"><h2>Overview</h2><p>${number((data.features||[]).filter(x=>x.value==='on').length)} features enabled · ${data.invitationsEnabled?'Invitations enabled':'Invitations unavailable'}</p><div class="cm-admin-cards">${sections.slice(1).map(([key,label])=>link(key,label)).join('')}</div></section>`;}
+      if(section==='home'){const data=await read('/api/admin');body=`<section class="v-panel"><h2>Overview</h2><p>${number((data.features||[]).filter(x=>x.value==='on').length)} features enabled · ${data.invitationsEnabled?'Invitations enabled':'Invitations unavailable'}</p><div class="cm-admin-cards">${allSections().slice(1).map(([key,label])=>link(key,label)).join('')}</div></section>`;}
+      const pane=ownerPanes().find(p=>p.key===section);if(pane)body=await pane.render();
       if(section==='features'){const data=await read('/api/admin/features');body=`<section class="v-panel"><h2>Feature switches</h2><p class="cm-muted">Read-only. Changes are made in the Worker configuration.</p><div class="cm-table-wrap"><table class="cm-table"><thead><tr><th>Feature</th><th>Current</th><th>Code default</th><th>Source</th></tr></thead><tbody>${(data.features||[]).map(x=>`<tr><th scope="row">${e(x.key)}</th><td>${e(x.value)}</td><td>${e(x.defaultValue)}</td><td>${e(x.source)}</td></tr>`).join('')}</tbody></table></div></section>`;}
       if(section==='people'){const q=new URLSearchParams();for(const key of ['before','after'])if(params.get(key))q.set(key,params.get(key));const data=await read('/api/admin/invites'+(q.size?'?'+q:''));await C.sharingReady;
         const invite=C.canInvite?.()?b('Invite to CrankMagic','invite-crankmagic'):'';

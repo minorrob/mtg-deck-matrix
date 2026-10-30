@@ -92,11 +92,13 @@ AI-only game spends nothing); speed is the room's own (no setting).
 
 ## 6. Files
 
-New: `cloud/migrations/0011_ai_settings.sql`, `crankmagic-admin-ai.js` (the pane), this document, `tests/admin-ai-model.mjs`,
-`tests/admin-ai-table.mjs`, `tests/admin-ai-ui.mjs`. Changed, minimally: `cloud/ai.mjs` (`settings`, `storedModel`, the
-admin functions), `cloud/worker.mjs` (the routes, and the stored model read at each `settings` call), `cloud/game-room.mjs`
-(the stored model read at its two `settings` calls), `crankmagic-admin.js` (the pane's hook and the owner flag),
-`index.html`, `crankmagic.html`, `crankmagic-sw.js` (the new script).
+New: `cloud/migrations/0011_ai_settings.sql`, `cloud/ai-model.mjs` (`storedModel`, `listModels`, `modelAdmin`),
+`crankmagic-admin-ai.js` (the panes), this document, `tests/admin-ai-model.mjs`, `tests/admin-ai-table.mjs`,
+`tests/admin-ai-ui.mjs`. Changed, minimally: `cloud/ai.mjs` (`settings(env, stored)`), `cloud/worker.mjs` (the routes, and the
+stored model read at each `settings` call), `cloud/game-room.mjs` (the stored model read at its two `settings` calls),
+`crankmagic-admin.js` (the owner flag and the hook the panes plug into: `C.adminOwnerPanes`, `C.ownerAllowed`),
+`index.html`, `crankmagic.html`, `crankmagic-sw.js` (the new script), `tests/agent-seat-table.mjs` (one block: the table's AI
+seat uses the stored model), `README.md`, `tests/fixtures/asset-versions.json` and the `?v=` bumps.
 
 ## Open questions for Rob
 
