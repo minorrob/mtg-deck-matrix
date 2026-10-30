@@ -635,6 +635,8 @@
 /* State-backed cards keep an accessible name; ownership references deliberately overlay their title. */
 .cm-bcard[data-card]:has(>img[data-card-loaded="true"])>.cm-bcard-name{visibility:hidden}
 
+/* A commander pile has no card-section wrapper; its badge must not inherit the slot's zero line height. */
+#matrix-v2 .cm-board .cm-bcard-pt{line-height:1.1}
 #matrix-v2 .cm-board [data-card-section] .cm-bcard-pt{font-size:max(10px,calc(var(--bc)*.13));padding:1px 3px;line-height:1.1}
 
 #matrix-v2 .cm-board .cm-mat-grid:has(.cm-board-lands .is-tapped){--land-turn:calc(var(--bc)*.35)}

@@ -387,8 +387,7 @@ try {
           if (await keep.count()) {if (await enabled(keep.first())) await keep.first().click({timeout:2000}); return;}
           /* A stack of the same card (×N) is a choice to press as well (Rob, 2026-10-25); where a question needs more of it
              than one, its how-many is set to as many as it allows. */
-          const opening=d.locator('[data-action=board-opening-hand]',{hasText:'Keep'}), layered=d.locator('[data-action=board-flow-choice]:enabled'), final=d.locator('[data-action=board-flow-confirm]:enabled');
-          if(await opening.count()){await opening.click({timeout:2000});return;}
+          const layered=d.locator('[data-action=board-flow-choice]:enabled'), final=d.locator('[data-action=board-flow-confirm]:enabled');
           if(await layered.count()){await layered.first().click({timeout:2000});return;}
           if(await final.count()){await final.click({timeout:2000});return;}
           const confirm = d.locator("[data-action=board-confirm]"), opts = d.locator("[data-action=board-option]:enabled, [data-action=board-option-same]:enabled");
