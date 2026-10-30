@@ -70,7 +70,7 @@ import {costReduction, costIncrease, lifeIncrease, lifeForLess, costsReadTargets
 import {countMana, amountOf, countEffect, isCounted, amountProblems, commanderless} from "../script/amount.mjs";
 import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
-import {lastKnown, characteristicsOf, abilitiesOf, deriving, derivingAfresh, onceAQuestion, keywordsOf, colorsOf, controllerOf, staticAbilities} from "./layers.mjs";
+import {lastKnown, characteristicsOf, abilitiesOf, deriving, derivingAfresh, onceAQuestion, keywordsOf, colorsOf, controllerOf, staticAbilities, abilitiesLostTo} from "./layers.mjs";
 import {namesChosen, withChosen, chosenFor} from "../script/chosen.mjs";
 import {poolFor, spendFor, addRestricted, addRider, riderChoices, addProvenance, addPoolMana} from "./restricted-mana.mjs";
 import {askEntering} from "./entering.mjs";
@@ -2500,6 +2500,35 @@ export function whyNot(state, player, id, actions = legalActions(state, player))
     if (missingPhyrexian) return `Its {${missingPhyrexian.color}/P} is paid with {${missingPhyrexian.color}} or ${missingPhyrexian.life} life: you have ${life} life and nothing untapped makes {${missingPhyrexian.color}}. Tap a source of {${missingPhyrexian.color}}, or gain life.`;
     return "There's no way to cast it now: its targets, or another of its costs.";
   });
+}
+
+/**
+ * WHY A PERMANENT OFFERS NOTHING WHEN IT LOST ITS ABILITIES (Linear ROB-330 and ROB-331, Rob's playtest of 2026-10-30: a Food and a
+ * Hall of Echoes that Oko, Thief of Crowns had turned into Elks offered nothing, and the board said nothing about it): for a
+ * permanent a player controls that has an ability to use printed on it, has lost all abilities (CR 613.1f), and that nothing offered
+ * -- what is wrong, who took them, and what to do instead, as the refusals say it. Words only, for a person to read; the rules
+ * are the layers'. Null for any other permanent.
+ */
+export function whyNoAbilities(state, player, id, actions = legalActions(state, player)) {
+  const object = state.objects[id];
+  if (!object || object.zone !== "battlefield" || object.faceDown === true || controllerOf(state, id) !== player) return null;
+  if (!(object.abilities ?? []).some((a) => a.kind === "activated" || a.kind === "mana")) return null;
+  if (actions.some((a) => a.objectId === id)) return null;
+  return deriving(state, () => {
+    const by = abilitiesLostTo(state, id);
+    if (by === null) return null;
+    return `${object.card} lost all abilities${by.length ? ` to ${by.join(" and ")}` : ""}, so it has nothing to activate. Use another permanent; the abilities come back only if that effect ends.`;
+  });
+}
+
+/** The view's battlefield cards of one seat's own, each that lost its abilities to something saying why (`why`, whyNoAbilities). */
+export function explainAbilityless(state, projected, seat, actions = legalActions(state, seat)) {
+  for (const card of projected.players[seat]?.zones?.Battlefield?.cards ?? []) {
+    if (card.controller !== seat) continue;
+    const why = whyNoAbilities(state, seat, card.cardId, actions);
+    if (why) card.why = why;
+  }
+  return projected;
 }
 
 /* Two actions are the same offer when they agree on everything that identifies them. Comparing by

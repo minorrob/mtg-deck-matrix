@@ -10,8 +10,8 @@
  * progress. So the two modules are compared export for export, mechanically — the plan says six and
  * it is seven, which is exactly the sort of thing a person counting by eye gets wrong.
  *
- * IT REFUSES AT PREPARE TIME, BY NAME. Every card in `data/engine/support.json` is `unsupported`
- * today, so no real deck can be played yet. The useful behavior is not to fail when the third turn
+ * IT REFUSES AT PREPARE TIME, BY NAME. A card in `data/engine/support.json` that is `unsupported` (the ledger follows the card
+ * directory since ROB-331; it had stood all `unsupported`) cannot be played. The useful behavior is not to fail when the third turn
  * reaches a card nobody wrote — it is to say, before the game starts, exactly which cards are
  * missing. That is readiness plan §10.5 and principle 6, and it is what makes the flag worth
  * flipping today: Rob can point it at a real deck and get a list.
@@ -72,20 +72,25 @@ const HOST_NEEDS = [
 
 /* ---- it refuses a deck it cannot play, before the game starts, by name ---- */
 {
+  /* Two cards the ledger holds `unsupported`: the ledger follows the card directory (game/tools/engine-definitions.mjs, ROB-331),
+     so which cards those are changes as definitions land, and the test asks the ledger rather than naming them. */
+  const [first, second] = JSON.parse(readFileSync(new URL("../data/engine/support.json", import.meta.url), "utf8")).cards
+    .filter((row) => row.status === "unsupported" && /^[A-Z][A-Za-z ,']+$/.test(row.name)).slice(0, 2).map((row) => row.name);
+  ok(first && second, "the ledger still holds cards the engine cannot play");
   const directory = mkdtempSync(path.join(tmpdir(), "crank-runtime-"));
   const pod = {
     matchId: "refuse-me",
     seats: [
-      {seatId: 0, name: "Rob", deck: {cards: ["Sol Ring", "Forest", "Krenko, Mob Boss"]}},
+      {seatId: 0, name: "Rob", deck: {cards: [first, "Forest", second]}},
       {seatId: 1, name: "Krenko", deck: {cards: ["Forest"]}},
     ],
   };
   let thrown = null;
   try { await crank.launchLocalGame(pod, {directory}); } catch (error) { thrown = error; }
   ok(thrown, "a pod full of cards with no definitions does not start");
-  ok(/Sol Ring/.test(thrown.message),
+  ok(thrown.message.includes(first),
     "and the refusal NAMES the cards it cannot play — the useful failure is before the game, not on the third turn when a card nobody wrote comes up");
-  ok(/Krenko, Mob Boss/.test(thrown.message), "all of them, not just the first");
+  ok(thrown.message.includes(second), "all of them, not just the first");
   eq(crank.liveStatus().status, "idle", "and nothing is left half-started");
   rmSync(directory, {recursive: true, force: true});
 }

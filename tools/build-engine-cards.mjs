@@ -20,7 +20,8 @@
  *   support.json  the ledger. Every card starts `unsupported`, which is the honest state on the
  *                 day the engine plays nothing, and each row gains the constructs it needs as the
  *                 compiler and the hand-authored definitions land (§3.2.6 — unsupported is loud,
- *                 never a no-op).
+ *                 never a no-op). A row's status is the card directory's (ROB-331): written here
+ *                 by `ledgerRows`, kept current by game/tools/engine-definitions.mjs --write.
  *
  * THIS FIXES THE POOL COUNT, which §6 phase 0.3 asks it to: everything downstream — the go-live
  * vocabulary, the verified share Rob accepts at G4 — is a fraction of the number this writes.
@@ -145,7 +146,9 @@ async function main() {
     legend: {unsupported: "no definition, or a definition naming a construct the engine lacks",
       compiled: "definition produced by the compiler, not yet proven against a scenario",
       verified: "definition with a passing scenario test"},
-    cards: cards.map((c) => ({id: c.id, name: c.name, status: "unsupported", needs: []})),
+    /* Each row starts `unsupported` and takes the status of the definition the card directory holds for it (ROB-331: the ledger
+       had stood all `unsupported` while the table played 6,000 of them); game/tools/engine-definitions.mjs keeps it so. */
+    cards: (await import("../game/tools/engine-definitions.mjs")).ledgerRows(cards.map((c) => ({id: c.id, name: c.name, status: "unsupported", needs: []}))),
   });
 
   if (process.argv.indexOf("--keep-cache") < 0) rmSync(CACHE, {force: true});
@@ -155,7 +158,7 @@ async function main() {
     `\nengine card data written to ${OUT}\n`
     + `  oracle.json   ${String(cards.length).padStart(6)} Commander-legal cards   ${mb(oracleBytes)}\n`
     + `  tokens.json   ${String(tokens.length).padStart(6)} tokens and emblems      ${mb(tokenBytes)}\n`
-    + `  support.json  ${String(cards.length).padStart(6)} rows, all unsupported    ${mb(supportBytes)}\n`
+    + `  support.json  ${String(cards.length).padStart(6)} rows, as the card directory has them ${mb(supportBytes)}\n`
     + `  read ${seen} oracle entries; ${notLegal} are not Commander-legal paper cards\n`);
 }
 

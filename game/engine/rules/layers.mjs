@@ -738,10 +738,11 @@ function derive(state, id, counts = true, through = 7) {
   const losers = losersAmong(state, effects);
   /* The abilities whose effects have begun to apply to this object (CR 613.6, lostEffect), and those that took its own
      abilities away (lostBy) -- undefined for an effect a spell or an ability left, which is no permanent's ability. */
-  const begun = new Set(), removedBy = [];
+  const begun = new Set(), removedBy = [], takers = [];
   const applied = (effect) => {
     if (effect.partOf !== undefined) begun.add(effect.partOf);
     if (effect.apply?.removeAllAbilities) removedBy.push(effect.partOf);
+    if (effect.apply?.removeAllAbilities) takers.push(effect.sourceName ?? state.objects[effect.sourceId]?.card ?? null);
     return applyEffect(current, effect.apply?.manaValueX === true ? withManaValueX(state, id, effect) : effect);
   };
   /* CR 613.6: a later part of an ability whose effect began to apply to this object in an earlier layer (`continued`) goes on
@@ -792,7 +793,18 @@ function derive(state, id, counts = true, through = 7) {
 
   removals.set(current, removedBy);
   partsOn.set(current, [...begun]);
+  tookBy.set(current, takers);
   return current;
+}
+
+/* WHO TOOK A PERMANENT'S ABILITIES AWAY, in words (ROB-330/331: an Elked Food or Hall of Echoes offers nothing, and the board
+   says why): the names of the cards whose effects took all its abilities (Oko, Thief of Crowns; an Aura), each once, or null
+   when it has lost none. An empty list is a loss whose source has no name here. Kept beside the derivation, as `removals` is. */
+const tookBy = new WeakMap();
+export function abilitiesLostTo(state, id) {
+  const current = derived(state, id, false);
+  if (!current.lostAbilities) return null;
+  return [...new Set((tookBy.get(current) ?? []).filter((name) => typeof name === "string"))];
 }
 
 /* WHICH ABILITIES' EFFECTS APPLY TO IT NOW (CR 613.6): each by `partOf`, its permanent and its words -- "an artifact Bludgeon
