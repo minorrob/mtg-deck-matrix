@@ -1,6 +1,6 @@
 {
  "schema": "precons-latest@1",
- "generatedAt": "2026-09-30T12:57:14.154Z",
+ "generatedAt": "2026-10-29T18:52:10.446Z",
  "generator": "tools/build-precons.mjs",
  "count": 6,
  "source": "the newest release date in data/precons.json; set names from MTGJSON SetList.json",

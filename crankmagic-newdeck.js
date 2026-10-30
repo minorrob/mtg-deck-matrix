@@ -15,7 +15,7 @@ const V=globalThis.CrankVocabulary,R=globalThis.CrankRecommend,A=globalThis.Cran
 const COLOR_NAME={W:'White',U:'Blue',B:'Black',R:'Red',G:'Green',C:'Colorless'};
 let F=null,index=null,indexLoading=null,targets=null,brackets=null;
 /* THE COMMANDER INDEX (data/commander-index.json): every commander with its colors, rank, play styles and mechanics. */
-async function loadIndex(){if(index)return index;indexLoading??=fetch('data/commander-index.json?v=1').then(r=>{if(!r.ok)throw Error(`The commander list could not be read (${r.status}). Try again when connected.`);return r.json();}).then(d=>{index={...d,rows:d.commanders.map(c=>({name:c.n,ci:c.ci,rank:c.r,styles:c.s.map(i=>d.styles[i].id),mechanics:c.m.map(i=>d.mechanics[i].id),pair:c.p||''}))};return index;}).finally(()=>{indexLoading=null;});return indexLoading;}
+async function loadIndex(){if(index)return index;indexLoading??=fetch('data/commander-index.json?v=2').then(r=>{if(!r.ok)throw Error(`The commander list could not be read (${r.status}). Try again when connected.`);return r.json();}).then(d=>{index={...d,rows:d.commanders.map(c=>({name:c.n,ci:c.ci,rank:c.r,styles:c.s.map(i=>d.styles[i].id),mechanics:c.m.map(i=>d.mechanics[i].id),pair:c.p||''}))};return index;}).finally(()=>{indexLoading=null;});return indexLoading;}
 const loadJSON=async url=>{const r=await fetch(url);if(!r.ok)throw Error(`${url} could not be read (${r.status}).`);return r.json();};
 const ownedNames=()=>{const out=new Set();for(const l of C.state.lots)if(l.source==='owned'){const c=C.state.cards[l.cardId];if(c)out.add(c.name);}return out;};
 const pips=ci=>C.colors(String(ci||'').split('').filter(Boolean));
