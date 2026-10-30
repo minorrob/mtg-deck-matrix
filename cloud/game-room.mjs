@@ -322,6 +322,8 @@ export class GameTable extends GameRoom {
         const llm = b && b.level === "llm";
         return reply(200, {table: await t.lounge.seat(who, b, now, {llmAllowed: llm && (await this.pilotOpen(await t.host())) === null})});
       }
+      /* The Worker's retry of a held seat's invitation (ROB-320, cloud/tables.mjs `reinvite`): the host's, and answered to the Worker alone. */
+      if (route === "POST /table/reserved") return reply(200, {reserved: await t.lounge.reservedFor(who, Number((await body()).seatId))});
       if (route === "POST /table/request-join") return reply(201, {request: await t.lounge.requestJoin(who, now)});
       if (route === "POST /table/request") return reply(200, {table: await t.lounge.request(who, await body(), now)});
       if (route === "POST /table/quit") {
@@ -342,7 +344,7 @@ export class GameTable extends GameRoom {
       if (route === "GET /table/brief") return reply(200, {brief: await t.brief(email, {hand: url.searchParams.get("hand") !== "0"})});
       if (route === "POST /table/invite") return reply(201, {invite: await t.invite(email, Number((await body()).seatId), now)});
       if (route === "POST /table/uninvite") return reply(200, {table: await t.uninvite(email, Number((await body()).seatId), now)});
-      if (route === "POST /table/join") return reply(200, {table: await t.join(email, (await body()).code, now)});
+      if (route === "POST /table/join") return reply(200, {table: await t.join(email, (await body()).code, now, who.name)});
       if (route === "POST /table/deck") {const b = await body(); return reply(200, {table: await t.deck(email, Number(b.seatId), b.deck, now)});}
       if (route === "POST /table/known") return reply(200, {unknown: await t.unknown((await body()).names)});
       if (route === "POST /table/ready") return reply(200, {table: await t.ready(email, (await body()).ready, now)});

@@ -35,7 +35,7 @@
       <h3>Starting a game</h3>
       <p>When every seat is ready the organizer presses <strong>Start</strong>, and a ten-second countdown begins; <strong>Cancel</strong> stops it. Then the board opens with your opening hand: keep it or take a mulligan. A step in which you have nothing to do passes by itself, and the history says so.</p>
       <h3>Joining and watching</h3>
-      <p>Open the link a host sent you, or choose <strong>Join existing game</strong> in Play to ask for a seat at a public lobby or paste the invitation. <strong>Watch</strong>, in the menu beside any game in Live games, lets you follow a game from any seat's side without seeing anyone's hand or library. <strong>Resume game</strong> returns you to a game you left.</p></div>`},
+      <p>Open the link a host sent you, or choose <strong>Join existing game</strong> in Play to take a seat at a public lobby at once, or paste the invitation. <strong>Watch</strong>, in the menu beside any game in Live games, lets you follow a game from any seat's side without seeing anyone's hand or library. <strong>Resume game</strong> returns you to a game you left.</p></div>`},
     {id: "cards", label: "Cards", body: `<div class="cm-help">
       <h3>Playing a card</h3>
       <p>Click a card to review what it can do now; right-click it for the same list in short (🔍 opens it to read). Nothing happens until you confirm: select an option, review its targets and payment in <strong>Actions</strong>, then <strong>Confirm</strong>. <strong>Clear</strong> changes only your own choice. Further target or payment questions stay in Actions, and each confirmation submits that step. On a touch screen, long-press a card to inspect it.</p>
@@ -265,6 +265,7 @@
       /* The table sends a card count for your own seat only; nobody sees another seat's cards. */
       : s.deck ? `${s.deck.name}${s.cards !== undefined ? ` · ${s.cards + (s.deck.commander || []).length} cards` : ""}`
       : open ? (named ? (t.youAreHost ? `Invite ${s.name}, or fill the seat with an AI.` : `The host is inviting ${s.name}.`) : t.youAreHost ? "Open seat. Fill it or leave it empty." : "Open seat. The host fills it.")
+      : s.held && !s.occupied ? `${s.name} is invited · takes the seat on arrival`
       : s.invited && !s.occupied ? "Invitation sent · waiting on them"
       : s.you ? "Choose a deck." : ai ? "Choose an AI deck" : "Choosing a deck";
     const controls = [];
@@ -279,6 +280,9 @@
       } else if (t.youAreHost && open) {
         controls.push(b("Add an AI", "table-seat-add-ai", {seat: String(s.seatId)}, false, {cls: "compact"}));
         controls.push(b("Invite a player", "table-invite", {seat: String(s.seatId)}, false, {cls: "compact"}));
+      } else if (t.youAreHost && s.held && !s.occupied) {
+        /* A guest Create game named (ROB-320): nothing to send or answer, they take the seat when they arrive. Resend only if the email failed. */
+        controls.push(b("Resend", "table-reinvite", {seat: String(s.seatId)}, false, {cls: "compact"}));
       } else if (t.youAreHost && s.kind === "human" && s.invited && !s.occupied) {
         controls.push(b("New link", "table-invite", {seat: String(s.seatId)}, false, {cls: "compact"}));
         controls.push(b("Withdraw", "table-uninvite", {seat: String(s.seatId)}, false, {cls: "compact"}));
@@ -501,6 +505,8 @@
       return;
     }
     const id = params.get("id"), code = params.get("code"), watch = params.get("watch") === "1";
+    /* The email's link (`/api/join/<id>`, ROB-320) comes back as #table?id=<id>&join=1: the person is seated with no code and no answer. */
+    const joinNow = params.get("join") === "1";
     lobbyUi = {edit: null, rules: false, confirmEnd: false, rulesError: ""};
     /* Play, with a game of yours on (item 19): straight back to it, in place of this page in the history. */
     const live = !id && !params.has('new') && C.board && C.board.live && C.board.live();
@@ -521,8 +527,8 @@
     };
     const clock = setInterval(tick, 250);
     (async () => {
-      if (code) {
-        try {await api("POST", `${tableUrl(id)}/join`, {code}); history.replaceState(null, "", `#table?id=${id}`);}
+      if (code || joinNow) {
+        try {await api("POST", `${tableUrl(id)}/join`, code ? {code} : {}); history.replaceState(null, "", `#table?id=${id}`);}
         catch (error) {if (!stop) showError(error, id); return;}
       }
       loop();
@@ -583,7 +589,7 @@
         <td class="is-r cm-pl-run${g.live ? "" : " is-idle"}" ${g.live ? `data-run-start="${g.startedAt}"` : ""}>${runOf(g)}</td>
         <td class="cm-pl-sticky"><button type="button" class="cm-pl-caret" data-pl="menu" data-game="${e(g.id)}" aria-expanded="${menuOpen}" aria-label="${e(label)}">${PL_CARET}</button></td></tr>
       ${menuOpen ? `<tr class="cm-pl-more"><td colspan="7"><div class="cm-pl-menu" role="menu" aria-label="${e(label)}">
-        ${g.canJoin ? `<button type="button" role="menuitem" class="cm-pl-mi" data-pl="join" data-game="${e(g.id)}">Request to join<small>The organizer approves your seat</small></button>` : ""}
+        ${g.canJoin ? `<button type="button" role="menuitem" class="cm-pl-mi" data-pl="join" data-game="${e(g.id)}">Join<small>You take a seat at once</small></button>` : ""}
         <button type="button" role="menuitem" class="cm-pl-mi" data-pl="watch" data-game="${e(g.id)}">Watch<small>Spectate any seat. No hands or libraries.</small></button>
         ${canAdmin ? `<hr><p>${adminLabel}</p><button type="button" role="menuitem" class="cm-pl-mi" data-pl="logs" data-game="${e(g.id)}">Game logs</button><button type="button" role="menuitem" class="cm-pl-mi is-danger" data-pl="quit" data-game="${e(g.id)}">Quit game</button>` : ""}
       </div></td></tr>` : ""}
@@ -672,7 +678,7 @@
       const list = joinable();
       openLayer(`<div class="cm-pl-dialog" role="dialog" aria-modal="true" aria-labelledby="cm-pl-join-title">
         <div style="display:flex;flex-direction:column;gap:4px"><h2 id="cm-pl-join-title">Join an existing game</h2><p style="color:var(--color-muted)">Pick a public lobby with an open seat, or paste the invitation a host sent you.</p></div>
-        ${list.length ? `<div class="cm-pl-joinlist">${list.map((g) => `<div class="cm-pl-joinrow"><span><b>${e(g.organizer)} · ${e(g.commander)}</b><small>${g.human} human · ${g.ai} AI · ${g.open} open seat${g.open === 1 ? "" : "s"}</small></span><button type="button" class="cm-pl-btn" style="height:36px;padding:0 14px;white-space:nowrap" data-pl="join" data-game="${e(g.id)}">Request to join</button></div>`).join("")}</div>` : ""}
+        ${list.length ? `<div class="cm-pl-joinlist">${list.map((g) => `<div class="cm-pl-joinrow"><span><b>${e(g.organizer)} · ${e(g.commander)}</b><small>${g.human} human · ${g.ai} AI · ${g.open} open seat${g.open === 1 ? "" : "s"}</small></span><button type="button" class="cm-pl-btn" style="height:36px;padding:0 14px;white-space:nowrap" data-pl="join" data-game="${e(g.id)}">Join</button></div>`).join("")}</div>` : ""}
         <label class="cm-pl-field">Invitation link<input id="cm-play-invite" name="invitation" type="text" autocomplete="off" spellcheck="false" placeholder="Paste the full link your host sent"></label>
         <p id="cm-play-join-error" role="status" style="color:var(--color-required);min-height:0"></p>
         <div class="cm-pl-actions"><button type="button" class="cm-pl-btn" data-pl="close-layer" style="padding:0 16px">Cancel</button><button type="button" class="cm-pl-btn is-primary" data-pl="invite" style="padding:0 16px">Open invitation</button></div></div>`);
@@ -692,7 +698,7 @@
         case "close-layer": closeLayer(); break;
         case "invite": actions["play-join"](); break;
         case "resume": if (st.resume) C.go("table", {id: st.resume.id}); break;
-        case "join": try {await api("POST", `${tableUrl(g.id)}/request-join`, {}); closeLayer(); say(`Request sent to ${g.organizer}.`);} catch (error) {closeLayer(); failure(error, "Requesting a seat");} break;
+        case "join": try {await api("POST", `${tableUrl(g.id)}/join`, {}); closeLayer(); C.go("table", {id: g.id});} catch (error) {closeLayer(); failure(error, "Joining a table");} break;
         case "watch": try {await api("GET", `${tableUrl(g.id)}?watch=1`); C.go("table", {id: g.id, watch: "1"});} catch (error) {failure(error, "Watching a table");} break;
         case "logs": try {
           const {log, chat} = await api("GET", `${tableUrl(g.id)}/log`);
@@ -785,6 +791,12 @@
     const input = document.getElementById("cm-table-link");
     try {await navigator.clipboard.writeText(input.value); C.notice("Link copied.");}
     catch {input.select(); C.notice("Copying did not work in this browser; the link is selected to copy.", true);}
+  };
+  /* The host's retry of a guest's invitation (ROB-320): the same invitation again, never a second email once it has gone. */
+  actions["table-reinvite"] = async (el) => {
+    const {invitation} = await api("POST", `${tableUrl(current.tableId)}/reinvite`, {seatId: Number(el.dataset.seat)});
+    if (invitation.status === "sent") C.notice(`Invitation sent to ${invitation.name}.`, false, {undo: false});
+    else C.notice(`${invitation.name}'s invitation did not go. ${invitation.error || ""}`, true, {undo: false});
   };
   actions["table-uninvite"] = async (el) => {await api("POST", `${tableUrl(current.tableId)}/uninvite`, {seatId: Number(el.dataset.seat)}); await refresh(current.tableId);};
 

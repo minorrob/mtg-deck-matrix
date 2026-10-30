@@ -386,7 +386,9 @@ eq((await call('PUT','/api/social/profile',{body:{name:'Player',avatar:''},heade
 eq((await call('PUT','/api/social/profile',{body:{name:'Player',avatar:''},headers:{'x-crankmagic':'wrong'}})).status,403,'sharing requires the app header');
 eq((await call('PUT','/api/social/profile',{body:{name:'Player',avatar:''}})).status,200,'profile writes route through authenticated identity');
 eq((await call('GET','/api/social/me')).json.name,'Player','profile persists behind Access');
-eq((await call('POST','/api/social/invite',{body:{name:'Friend',email:'friend@example.com'}})).status,403,'non-admin cannot invoke invitations directly');
+/* ROB-320: anyone signed in may invite now (General, five at most), so a plain account reaches the configuration check (503 on a copy with none); granting AI stays the owner's, and that is refused first. */
+eq((await call('POST','/api/social/invite',{body:{name:'Friend',email:'friend@example.com'}})).status,503,'a non-admin reaches the invitation service, which here has no Access configuration');
+eq((await call('POST','/api/social/invite',{body:{name:'Friend',email:'friend@example.com',group:'insider'}})).status,403,'but a non-owner cannot grant AI, configured or not');
 /* Admin is a server permission, never a visible-menu permission (r4 CH-88). */
 eq((await call('GET','/api/me')).json.admin,false,'an unconfigured account is not an administrator');
 eq((await call('GET','/api/admin')).status,403,'the admin endpoint refuses without an owner configuration');

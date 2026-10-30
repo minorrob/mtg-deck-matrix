@@ -202,6 +202,14 @@ export const LIMITS_PER_MINUTE = Object.freeze({ip: 240, person: 120});
 /* Workers Logs for a cloud release (M3): the Worker's own lines, and never the platform's per-request one. */
 export const OBSERVABILITY = {enabled: true, head_sampling_rate: 1, logs: {enabled: true, invocation_logs: false}};
 
+/* The Access policy of each group an invitation can put someone in (ROB-320, docs/program/rob-320-invitations-contract.md §6):
+   comma lists the same length and order as ACCESS_INVITE_APP_IDS, one reusable policy per application. A profile that names neither
+   keeps today's single ACCESS_INVITE_POLICY_ID for both groups. The ids are Rob's to supply from the Cloudflare dashboard (General: no
+   AI; Game Theory Insider: AI); none is written in this repository, and nothing here has been checked against real Cloudflare. */
+const groupPolicies = (sharing) => ({
+  ...(sharing.accessPolicyIdGeneral ? {ACCESS_INVITE_POLICY_ID_GENERAL: sharing.accessPolicyIdGeneral} : {}),
+  ...(sharing.accessPolicyIdInsider ? {ACCESS_INVITE_POLICY_ID_INSIDER: sharing.accessPolicyIdInsider} : {}),
+});
 export const HOST_FILES = {
   cloudflare: ({date, origin, profile}) => ({
     "wrangler.jsonc": JSON.stringify({
@@ -214,7 +222,7 @@ export const HOST_FILES = {
       preview_urls: false,
       ...(profile.cloud ? {
         d1_databases: [{binding: "DB", database_name: profile.cloud.database.name, database_id: profile.cloud.database.id, migrations_dir: "cloud/migrations"}],
-        vars: {...(profile.sharing ? {SHARING_ENABLED: "on", INVITE_ADMIN_ID: profile.sharing.adminId, CLOUDFLARE_ACCOUNT_ID: profile.sharing.accountId, ACCESS_INVITE_APP_IDS: profile.sharing.accessAppIds, ACCESS_INVITE_POLICY_ID: profile.sharing.accessPolicyId, ...(profile.sharing.linkOrigin ? {INVITE_LINK_ORIGIN: profile.sharing.linkOrigin} : {})} : {}), ACCESS_TEAM_DOMAIN: profile.cloud.access.team, ACCESS_AUD: profile.cloud.access.aud, ...(profile.tables?.playtest ? {PLAYTEST_TABLES: "on"} : {}), ...(profile.serviceSeats ? {SERVICE_SEATS: "on"} : {}), ...(profile.tables?.closed ? {PLAY_TABLES_CLOSED: "on"} : {}), ...aiVars(profile)},
+        vars: {...(profile.sharing ? {SHARING_ENABLED: "on", INVITE_ADMIN_ID: profile.sharing.adminId, CLOUDFLARE_ACCOUNT_ID: profile.sharing.accountId, ACCESS_INVITE_APP_IDS: profile.sharing.accessAppIds, ACCESS_INVITE_POLICY_ID: profile.sharing.accessPolicyId, ...groupPolicies(profile.sharing), ...(profile.sharing.linkOrigin ? {INVITE_LINK_ORIGIN: profile.sharing.linkOrigin} : {})} : {}), ACCESS_TEAM_DOMAIN: profile.cloud.access.team, ACCESS_AUD: profile.cloud.access.aud, ...(profile.tables?.playtest ? {PLAYTEST_TABLES: "on"} : {}), ...(profile.serviceSeats ? {SERVICE_SEATS: "on"} : {}), ...(profile.tables?.closed ? {PLAY_TABLES_CLOSED: "on"} : {}), ...aiVars(profile)},
         ratelimits: [
           {name: "LIMIT_IP", namespace_id: profile.cloud.limits.ip, simple: {limit: LIMITS_PER_MINUTE.ip, period: 60}},
           {name: "LIMIT_PERSON", namespace_id: profile.cloud.limits.person, simple: {limit: LIMITS_PER_MINUTE.person, period: 60}},

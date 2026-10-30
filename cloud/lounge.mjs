@@ -121,6 +121,27 @@ export async function searchUsers(db, email, query) {
   return {users};
 }
 
+/** The address of the one CrankMagic user a dropdown pick names -- by the display name or the `handle` `searchUsers` returned -- or
+    null. Used on the Worker only (Create game, ROB-320): the page never sees an address, so it sends the name back and the server
+    resolves it. Two people with the same name resolve to nothing (`ambiguous`), never to a guess. Never the caller. */
+export async function userByName(db, email, text) {
+  const q = String(text ?? "").trim().toLowerCase().slice(0, 60);
+  if (q.length < 2 || !db) return {email: null};
+  const found = new Set(), like = q.replace(/[\\%_]/g, "\\$&").replace(/[-\s]+/g, "_");
+  let rows = [];
+  try {
+    rows = (await db.prepare(`SELECT u.email AS email, COALESCE(NULLIF(p.name, ''), a.name, '') AS name
+      FROM users u LEFT JOIN profiles p ON p.user_id = u.id LEFT JOIN account_invitations a ON a.email = u.email
+      WHERE u.email NOT LIKE 'service:%' AND u.email <> ?1 AND (lower(COALESCE(NULLIF(p.name, ''), a.name, '')) LIKE ?2 ESCAPE '\\' OR u.email LIKE ?3 ESCAPE '\\') LIMIT 40`)
+      .bind(email, `%${like}%`, `${like}%`).all()).results || [];
+  } catch {rows = [];}
+  for (const row of rows) {
+    const name = String(row.name || "").trim() || titled(String(row.email).split("@")[0]);
+    if (name.toLowerCase() === q || slug(name) === q) found.add(String(row.email));
+  }
+  return found.size === 1 ? {email: [...found][0]} : {email: null, ambiguous: found.size > 1};
+}
+
 /* ---- results and the leaderboard (contract §1, §6; migration 0010_match_results.sql) ---- */
 
 /** A finished game's rows, once: one per person's seat, never an AI seat. Keyed by (match, seat), so a retry writes nothing twice. */

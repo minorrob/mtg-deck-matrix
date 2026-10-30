@@ -65,7 +65,7 @@ const record = (calls) => async (route) => {
 /* ---- 1. THE PRE-LOBBY ---- */
 {
   const rob = await person({routes: async (page, calls) => {
-    await page.route(`${base}/api/tables/g2/request-join`, (r) => r.fulfill({json: {requestId: "r1", name: "Rob"}}));
+    await page.route(`${base}/api/tables/g2/join`, (r) => r.fulfill({json: {table: {tableId: "g2", yourSeat: 1}}}));
     await page.route(`${base}/api/tables/g3/watch`, (r) => r.fulfill({status: 404, json: {error: "no"}}));
     await page.route(`${base}/api/tables/**`, record(calls));   /* last, so it sees every call first and passes it on */
   }});
@@ -81,7 +81,7 @@ const record = (calls) => async (route) => {
   ok(/Not started/.test(await page.locator(".cm-pl-run").nth(1).textContent()), "a lobby has not started");
   /* A row's menu is by who is looking: the admin has Game logs and Quit game on every row. */
   await page.getByRole("button", {name: "Actions for Avery's game"}).click();
-  eq(await page.locator(".cm-pl-menu [role=menuitem]").evaluateAll((els) => els.map((el) => el.firstChild.textContent.trim())), ["Request to join", "Watch", "Game logs", "Quit game"], "the admin's menu on a lobby: join, watch, logs, quit");
+  eq(await page.locator(".cm-pl-menu [role=menuitem]").evaluateAll((els) => els.map((el) => el.firstChild.textContent.trim())), ["Join", "Watch", "Game logs", "Quit game"], "the admin's menu on a lobby: join, watch, logs, quit");
   await page.getByRole("button", {name: "Actions for Jordan's game"}).click();
   eq((await page.locator(".cm-pl-menu [role=menuitem]").allTextContents()).length, 3, "on a live game there is no request to join: watch, logs, quit");
   await page.getByRole("menuitem", {name: /^Watch/}).click();
@@ -108,8 +108,10 @@ const record = (calls) => async (route) => {
   await page.getByRole("button", {name: "Join existing game"}).click();
   eq(await page.locator(".cm-pl-joinrow").count(), 1, "the Join pop-up lists the lobbies with a seat");
   await page.locator(".cm-pl-joinrow .cm-pl-btn").click();
-  await page.waitForFunction(() => /Request sent to Avery/.test(document.querySelector(".cm-pl-toast")?.textContent || ""));
-  ok(rob.calls.some((c) => c.method === "POST" && c.path === "/api/tables/g2/request-join"), "Request to join asks the table's door");
+  await page.waitForFunction(() => location.hash.startsWith("#table") && location.hash.includes("id=g2"));
+  ok(rob.calls.some((c) => c.method === "POST" && c.path === "/api/tables/g2/join" && JSON.stringify(c.body) === "{}") && !rob.calls.some((c) => c.path.endsWith("/request-join")), "Join takes the seat at the table's door (ROB-320): no code, no request for the host to answer, and the lobby opens");
+  await page.goto(`${base}/index.html#game`);
+  await page.locator(".cm-pl-row").first().waitFor({timeout: 30000});
   await page.getByRole("button", {name: "Join existing game"}).click();
   await page.locator("#cm-play-invite").fill("https://evil.example/api/join/x/y");
   await page.getByRole("button", {name: "Open invitation"}).click();
@@ -126,7 +128,7 @@ const record = (calls) => async (route) => {
   await jo.page.goto(`${base}/index.html#game`);
   await jo.page.locator(".cm-pl-row").first().waitFor({timeout: 30000});
   await jo.page.getByRole("button", {name: "Actions for Avery's game"}).click();
-  eq((await jo.page.locator(".cm-pl-menu [role=menuitem]").allTextContents()).length, 2, "a member sees Request to join and Watch on another's lobby");
+  eq((await jo.page.locator(".cm-pl-menu [role=menuitem]").allTextContents()).length, 2, "a member sees Join and Watch on another's lobby");
   await jo.page.getByRole("button", {name: "Actions for Rob's game"}).click();
   eq((await jo.page.locator(".cm-pl-menu [role=menuitem]").allTextContents()).length, 3, "and on a game that is theirs, Game logs and Quit game too");
   await jo.context.close();
