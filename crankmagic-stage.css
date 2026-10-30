@@ -1854,3 +1854,20 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 /* THE PHONE'S ONE FRAME SCROLLS THE WHOLE BOARD: its rows take the room their cards need, and the mat clips nothing of a crowded row. */
 #matrix-v2 .cm-board[data-phone] .cm-phone-battlefield .cm-mat-grid{grid-template-rows:auto auto auto auto!important}
 #matrix-v2 .cm-board[data-phone] .cm-phone-battlefield>.cm-mat{overflow:visible}
+
+/* ONE SCROLL REGION PER DECISION IN THE ACTIONS PANE (ROB-201, Luke's playtest of 2026-10-28). The question sat inside three
+   scrolling boxes (the drawer, its own section, its list of options), each capped by a rule of its own, so a taller drawer
+   showed nothing more. The drawer is the one now; the question and its options take the height they need, and the row that
+   answers stays in reach at the foot. A module the person gave a height of its own (`.has-height`) scrolls the question itself. */
+#matrix-v2 .cm-board .cm-stage-module[data-module=actions] .cm-board-decision{overflow:visible;max-height:none;flex:none}
+#matrix-v2 .cm-board .cm-stage-module[data-module=actions] .cm-board-decision>.cm-board-options{overflow:visible;flex:none;min-height:0;max-height:none;margin:0}
+#matrix-v2 .cm-board .cm-stage-module[data-module=actions] .cm-board-decision>.cm-board-decision-foot{position:sticky;bottom:0;z-index:2;padding:8px 0 2px;background:var(--color-panel)}
+#matrix-v2 .cm-board .cm-stage-module[data-module=actions].has-height .cm-board-decision{overflow-y:auto;overflow-x:hidden;flex:1 1 auto;min-height:0}
+/* what is scrolled to is kept clear of the sticky answering row (a key press or a scroll-into-view stops above it) */
+#matrix-v2 .cm-board #cm-actions-drawer,#matrix-v2 .cm-board .cm-stage-module[data-module=actions].has-height .cm-board-decision{scroll-padding-bottom:76px}
+
+/* the question steps aside for the held-up plays (crankmagic-board.js stepAside; ROB-208) */
+#matrix-v2 .cm-board .cm-decision-slot{margin-left:var(--slot-shift,0px)}
+/* the pop-up's answering row stays in view when the question is longer than the pop-up (ROB-208), as in the pane (ROB-201) */
+#matrix-v2 .cm-board .cm-decision-slot .cm-board-decision>.cm-board-decision-foot{position:sticky;bottom:0;z-index:2;padding:8px 0 2px;background:var(--color-panel)}
+#matrix-v2 .cm-board .cm-decision-slot .cm-board-decision{scroll-padding-bottom:76px}
