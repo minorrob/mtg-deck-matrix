@@ -13,7 +13,8 @@
  *   vetoed     every sentence is known, but one comes from a template whose calibration recorded a failure, or from a
  *              band below the minimum count
  *   blocked    translated, but it needs something the engine has not built (compileScript's problems)
- *   refused    translated and compiled, but it is not its oracle text (checkFidelity) or its smoke game breaks (smokeTest)
+ *   refused    translated and compiled, but it is not its oracle text (checkFidelity), a way the text offers was lost in the
+ *              translation (the interaction census, a second reading of the text), or its smoke game breaks (smokeTest)
  *   candidate  translated, compiled, its text, and its smoke game played: stored, with the templates it used and the
  *              calibrated rate of the weakest one
  *
@@ -34,6 +35,7 @@ import {compileScript} from "../engine/cards/index.mjs";
 import {identityOf, oracleHash, checkFidelity, smokeTest} from "../engine/cards/compile.mjs";
 import {createLibrary, translate, segment, templateWithout, isSimple, partialTranslate} from "../engine/cards/sentences.mjs";
 import {calibrate, BANDS} from "./sentence-library.mjs";
+import {extractionFindings} from "./interaction-census.mjs";
 
 export const CANDIDATES_SCHEMA = "CrankCardCandidates@1";
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
@@ -71,6 +73,11 @@ export function compileCard(record, {library, trust, definition}) {
   if (problems.length) return {...base, status: "blocked", why: problems};
   const fidelity = checkFidelity(tr.script);
   if (!fidelity.ok) return {...base, status: "refused", why: [`fidelity: ${[...fidelity.invented, ...fidelity.unclaimed][0]}`]};
+  /* A second reading of the Oracle text, by rules that share nothing with the sentence library (interaction-census.mjs): a mode,
+     a way to pay, a cost part or a union of targets the text has and the translation lost. checkFidelity reads the translation's
+     own words against the text; this reads the text's ways against the translation's structure. It only refuses, never admits. */
+  const census = extractionFindings(tr.script);
+  if (census.length) return {...base, status: "refused", why: census.map((f) => `census: ${f.code}: ${f.detail}`)};
   const smoke = smokeTest(tr.script, definition);
   if (!smoke.ok) return {...base, status: "refused", why: [`smoke: ${smoke.error ?? smoke.problems[0]}`]};
   const weakest = verdicts.reduce((w, v) => (!w || v.cards < w.cards ? v : w), null);

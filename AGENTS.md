@@ -98,6 +98,24 @@ Break the thing under test, watch the test go red, restore it. Assertions have b
 that passed without proving anything — one was a negative lookahead that matches every string.
 The definition of done for the online subsystem is in `game/docs/readiness-plan-2026-09-18.md` §10.
 
+## A card's ways are checked from the state a player is in
+
+Rob, 2026-10-30: *"I am finding cards that have multi-options, multi-way of paying for, multi-descriptive effects, we are
+running into a bunch of issues with those ... expand our extraction and testing process to better catch these going forward as
+practice."* Four reports of 2026-10-29 (Ash Barrens, Tezzeret's Gambit, Hall of Echoes, the Food token) had one cause that
+87.7% of the card scenarios cannot see: they tap lands by hand before `cast` or `activate`, so they never ask what a player with
+untapped lands and an empty pool is *offered*.
+
+- A card's ways are its modes, its ways to pay (Phyrexian, hybrid, `{2/W}`, alternative and additional costs, cycling), each
+  ability and each part of its cost, and each union of targets. List them from the Oracle text, not from the definition.
+- `node game/tools/interaction-census.mjs --card "<name>"` is the first step of any "option X is not offered" report and of any
+  card load or promotion. Layer A reads the text a second time against the definition (the compiler refuses a candidate that
+  fails it); Layer B compares the same state with the lands untapped and with them tapped by hand.
+- A way is loaded when the census is clean for it (or its finding is the engine cause already in
+  `docs/engine/interaction-census-baseline.json`), a scenario takes the way, and one scenario asserts the offer from untapped
+  sources. The baseline is a ratchet and only shrinks: never add a finding to it to make `tests/engine-interaction-census.mjs`
+  pass. The practice, with its limits, is `docs/engine/extraction-second-check-2026-10-30.md`.
+
 ## A handoff states four things
 
 The branch and commit it describes; what is proven versus assumed; the command that proves each
