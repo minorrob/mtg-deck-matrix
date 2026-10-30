@@ -958,6 +958,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
 `.claude/skills/crankmagic-refresh` is the judgment around it. There are 668 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 `.claude/skills/crankmagic-refresh` is the judgment around it. There are 667 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 669 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1672,6 +1673,9 @@ The `table-tabletop` suite checks the preview geometry and its browser interacti
 - `table-game-record` — `tests/table-game-record.mjs`
 
 - `admin-ui-browser` — `tests/admin-ui-browser.mjs`
+- `admin-ai-model` — `tests/admin-ai-model.mjs` (the owner's stored AI model: owner-only routes, the models API's list with the allow-list, change, read-back, undo and the next AI call's model)
+- `admin-ai-table` — `tests/admin-ai-table.mjs` (an AI-only table made by the owner alone and its observer: the public view, no decision, every action refused)
+- `admin-ai-ui` — `tests/admin-ai-ui.mjs` (the owner's AI model and AI-only game panes in the browser, hidden from everyone else)
 
 - `lock-feedback` — `tests/lock-feedback.mjs`
 

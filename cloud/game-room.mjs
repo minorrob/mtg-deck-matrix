@@ -29,6 +29,7 @@ import {tableDefinition} from "../game/engine/cards/definitions.mjs";
 import {candidateDefinition} from "../game/engine/cards/candidates.mjs";
 import {agentBrief, pickOf} from "../game/room/agent-brief.mjs";
 import {createAi, settings, pilot, pilotWorst, Closed} from "./ai.mjs";
+import {storedModel} from "./ai-model.mjs";
 import {groupOf} from "./access.mjs";
 import {Registry, REGISTRY, recordResults} from "./lounge.mjs";
 import {LEVELS as ROSTER_LEVELS} from "../game/engine/pilots/roster.mjs";
@@ -452,7 +453,7 @@ export class GameTable extends GameRoom {
   /** Null when this host may ask the model for an LLM seat; otherwise why not. */
   async pilotOpen(email) {
     if (this.env?.AI_PILOT !== "on") return "The AI seat on Claude is not switched on here.";
-    try {settings(this.env);} catch (error) {return error.message;}
+    try {settings(this.env, await storedModel(this.env.DB));} catch (error) {return error.message;}
     if (!this.env.DB || !(await createAi(this.env.DB, {owner: this.env.OWNER_EMAIL}).allowed(email))) return "That account is not on CrankMagic's list for AI features.";
     return null;
   }
@@ -462,7 +463,7 @@ export class GameTable extends GameRoom {
     const host = await this.table.host();
     if ((await this.pilotOpen(host)) !== null) return null;
     /* What the seat's pilot worked out (room.analysis): the brief the model reads carries it, in seat words and the decision's own indices. */
-    const config = settings(this.env), brief = agentBrief(view, hint, room.analysis(room.waitingOn));
+    const config = settings(this.env, await storedModel(this.env.DB)), brief = agentBrief(view, hint, room.analysis(room.waitingOn));
     const key = `pilot-spent/${room.matchId}`, spent = Number(await this.ctx.storage.get(key)) || 0;
     const cap = (Number(this.env.AI_CAP_PILOT_GAME_CENTS) > 0 ? Number(this.env.AI_CAP_PILOT_GAME_CENTS) : PILOT_GAME_CENTS) * 10000;
     if (spent + pilotWorst(brief, config.model) > cap) return null;
