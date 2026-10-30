@@ -956,7 +956,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 661 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 662 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1284,6 +1284,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `board-module-fills` — `tests/board-module-fills.mjs` (ROB-206, Luke's playtest of 2026-10-28: a drawer module given more height lets History and Chat use it, step by step, and the drawer's width reaches every module at once)
 - `board-actions-one-scroll` — `tests/board-actions-one-scroll.mjs` (ROB-201, Luke's playtest of 2026-10-28: in the Actions pane the drawer is the one scroll region for every kind of question, a taller window shows more, and the answering row stays in view)
 - `board-mandatory-popup` — `tests/board-mandatory-popup.mjs` (ROB-208, Luke's playtest of 2026-10-28: what the player must resolve (a target, a search, a modal choice, a cost, a scry) pops up front and center with the Actions pane open or shut, a priority offer and the combat declarations stay in the pane, the pop-up steps aside for held-up plays and keeps its answering row in view)
+- `board-counter-from-actions` — `tests/board-counter-from-actions.mjs` (ROB-203, Luke's playtest of 2026-10-28: a Counterspell the engine offers with a spell on the stack is listed in the Actions pane and on the card in the hand, and casting it from either sends the same answer; nothing is offered that the engine did not)
 - `admin-window` — `tests/admin-window.mjs` (Admin in the Menu for the administrator alone, refused to anyone else by the Worker; a window with General and Share down its left; General shows the setup and keeps the 3D camera glance; Share admits an invitee to staging and production Access, confirms each, then emails an HTML invitation, and a refusal sends nothing)
 - `board-babylon` — `tests/board-babylon.mjs` (live Babylon/DOM projection alignment, scene resource disposal, graphics fallback, re-entry, and the Play lounge)
 - `board-3d-camera` — `tests/board-3d-camera.mjs` (the 3D camera by hand: the wheel zooms toward the pointer except over a row that scrolls, a mat dragged moves the view while the bare table still tilts, a held right button looks at the place and back on the motion's own clock with the DOM cards on the Babylon table every frame; a card's right-click menu of the room's offers in shorthand, from the keyboard too, in every view)
