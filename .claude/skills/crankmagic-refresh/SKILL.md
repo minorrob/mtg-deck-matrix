@@ -63,24 +63,16 @@ end and is only for a dry run you will follow with a full one.
 
 Exit 0 means every check passed. Anything else means stop and read.
 
-### 2b. Rebuild what is derived (the runner does not yet; adding these to its plan is open)
+### 2b. The derived files (the runner rebuilds them since 2026-10-30)
 
-**Read `docs/crankmagic-refresh.md`, "What the runner does not rebuild yet", before you run anything.** Four files are
-derived from the refreshed data and five suites go red without them (found on the 2026-10-29 refresh, PR 948). After
-the runner's data steps and before its manifest and proof, run by hand, in this order:
-
-```
-node tools/build-advise-cards.mjs --write     # cloud/advise-cards.mjs
-node tools/build-commander-index.mjs          # data/commander-index.json (served; see below)
-node tools/build-pilot-roles.mjs              # game/engine/pilots/roles-data.mjs (the engine lane's tree: say so in the PR)
-node tools/reprice-variants.mjs               # data/archive/variants.json
-```
-
-`data/commander-index.json` is named only inside `crankmagic-newdeck.js`, so the runner's bumper finds nothing: bump
-the `?v=` in that file, then newdeck's own version and the cascade, then `node tests/asset-versions.mjs --update`. The
-runner's out-of-bounds guard will also name these files, because they are not in its `writes` lists: that is the gap,
-not a stray write. **If you are the session that fixes it, add the four generators to `STEPS` and the index to the
-asset map, and delete this section.**
+Four files are derived from the refreshed data and five suites go red without them (found on the 2026-10-29
+refresh, PR 948): `cloud/advise-cards.mjs`, `data/commander-index.json`, `game/engine/pilots/roles-data.mjs`
+and `data/archive/variants.json`. The runner now rebuilds each as a `derived` step (step 8 of
+`docs/crankmagic-refresh.md`), after the records and strategies they read and before the manifest, and bumps the
+commander index's `?v=` like any served data file (its URL is `commanderIndex` in the asset map). Two things to
+say in the pull request: `roles-data.mjs` is a generated file in the engine lane's tree, and the variants'
+published costs moved with the prices. If the runner's guard ever names one of these four as a stray write, the
+`writes` list in `tools/refresh.mjs` has lost it.
 
 ### 3. When a check fails
 
