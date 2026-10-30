@@ -84,7 +84,7 @@
  */
 import {createState, addObject, shownName, shownFaceUp} from "../engine/state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../engine/rules/turn.mjs";
-import {legalActions, applyAction, nothingToDo, whyNot, escapeWays, flashbackCost, tappersInWords, castTapPlans, tapWords, manaSources} from "../engine/rules/actions.mjs";
+import {legalActions, applyAction, nothingToDo, whyNot, explainAbilityless, escapeWays, flashbackCost, tappersInWords, castTapPlans, tapWords, manaSources} from "../engine/rules/actions.mjs";
 import {paymentWords} from "../engine/rules/mana.mjs";
 import {beforeTap, tapTaken, untappable, untapTaken} from "../engine/rules/untap-mana.mjs";
 import {beforePlay, observePlay, finishPlay, mayUndoPlay, undoPlay} from "../engine/rules/undo-play.mjs";
@@ -887,6 +887,9 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       const why = whyNot(state, seat, card.cardId, actions);
       if (why) card.why = why;
     }
+    /* And a permanent of its own that lost all its abilities (an Elk Oko made of a Food) says so, and whose doing it was: it
+       offers nothing, and the board says why (ROB-330, ROB-331). */
+    explainAbilityless(state, projected, seat, actions);
     return projected;
   }
   /* A person's input that failed part-way, undone (`restore`) and refused: the rules' refusal as they said it, and any other
