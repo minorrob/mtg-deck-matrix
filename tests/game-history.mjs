@@ -120,8 +120,8 @@ for (const seed of Object.keys(TURNS)) {
     for (const [i, s] of room.seats.entries()) {
       const secret = [...secretsFor(state, i, seen[i])];
       for (const line of shown[i]) {
-        const leaked = secret.find((name) => new RegExp(`${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\w-])`).test(line.text));
-        if (leaked) assert.fail(`seat ${s.seatId} was told "${line.text}", naming ${leaked}, which only a hidden zone holds`);
+        const leaked = secret.find((name) => new RegExp(`${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\w-])`).test(JSON.stringify(line)));
+        if (leaked) assert.fail(`seat ${s.seatId} was told ${JSON.stringify(line)}, naming ${leaked}, which only a hidden zone holds`);
         linesRead += 1;
       }
       viewsRead += 1;
@@ -146,7 +146,9 @@ ok(linesRead > 10000, `no seat's history named a card only a hidden zone held: $
   ok(room.view("rob").history.some((l) => l.text === "Maya conceded"), "a concession is a line");
   await room.end("rob");
   eq(room.view("rob").history.at(-1).text, "Rob ended the game for everyone · not finished", "and so is End game, as not finished");
-  eq(room.view("rob").history.map((l) => Object.keys(l).filter((k) => !["turn", "text", "mark"].includes(k))).flat(), [], "a view's lines carry only the turn, the words and a mark");
+  eq(room.view("rob").history.map((l) => Object.keys(l).filter((k) => !["turn", "seq", "text", "mark", "actor", "source", "targets", "modes", "cards"].includes(k))).flat(), [], "a view's lines carry only the turn, its number, the words, a mark and what the line says as data (ROB-327)");
+  const seqs = room.view("rob").history.map((l) => l.seq);
+  eq(seqs, seqs.map((_, i) => seqs[0] + i), "and the lines are numbered one after another");
 }
 {
   const storage = memoryStorage();

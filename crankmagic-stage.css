@@ -267,6 +267,28 @@
 .cm-stack-summary .cm-stack-position{color:#b9dec7;font-variant-numeric:tabular-nums}
 .cm-stack-summary>span{color:#b7c9bf}
 .cm-stack-image{display:flex;justify-content:center;align-items:flex-start;min-width:0}
+/* WHAT A SPELL OR ABILITY IS AIMED AT (ROB-327): source ⤳ target. The glyph first, then each target as a small chip: a player in their
+   seat's color, a card by its name (a button that reads the card where it can, and the card on hover and focus), a target that has left
+   as "✕ gone" and never by name. In the stack's list, under its pile, and under a held-up play. */
+.cm-aims{display:inline-flex;flex-wrap:wrap;align-items:center;gap:3px 5px;min-width:0;font-size:12px;line-height:1.35;font-style:normal;color:#eaf3ee}
+.cm-aims>i{font-style:normal;font-size:15px;line-height:1;color:#e2c98f}
+.cm-aim{display:inline-block;max-width:100%;padding:1px 7px;border-radius:10px;border:1px solid #ffffff2e;background:#ffffff14;color:#eaf3ee;font:inherit;line-height:1.3;text-align:left;overflow-wrap:anywhere}
+.cm-aim.is-player{border-color:var(--seat,#75b895);box-shadow:inset 3px 0 0 var(--seat,#75b895);padding-left:9px}
+.cm-aim.is-card{border-style:dashed}
+button.cm-aim.is-card{cursor:zoom-in}
+button.cm-aim.is-card:hover,button.cm-aim.is-card:focus-visible,.cm-aim.is-card[data-peek-name]:hover{background:#ffffff2e;border-style:solid}
+button.cm-aim.is-card:focus-visible{outline:2px solid #a8dfbf;outline-offset:1px}
+.cm-aim.is-gone{border-color:#c98a8a;color:#e8bcbc;background:#c98a8a1f}
+.cm-aim.is-gone i{font-style:normal}
+.cm-aim.is-hidden,.cm-aim.is-ability{color:#cfe0d6}
+.cm-stack-summary .cm-stack-aim-row{display:block;font-style:normal;color:inherit}
+/* Under the pile, out of its flow: the pile and its pictures keep exactly the place they had (a wrapped row moved them). */
+.cm-stack-aims{position:absolute;left:0;right:0;top:100%;margin:6px 0 0;display:flex;flex-direction:column;gap:5px;align-items:center;text-align:center}
+.cm-stack-browser:has(.cm-stack-aims){padding-bottom:64px}
+.cm-stack-aims .cm-aim-mode{display:flex;flex-direction:column;gap:2px;align-items:center;font-size:11px}
+.cm-stack-aims .cm-aim-mode em{font-style:normal;color:#b7c9bf}
+.cm-play-aim{margin:6px 2px 0;font-size:12px}
+.cm-board-stack ol .cm-aims{margin-left:6px}
 
 .cm-stack-browser{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,3fr);gap:10px;padding:8px 0 22px}
 #matrix-v2 .cm-stack-summary{width:100%;padding:7px 3px;margin:0 0 5px;background:transparent;color:inherit;border:1px solid transparent;border-radius:5px;text-align:left;cursor:pointer}
@@ -445,7 +467,8 @@ body.cm-hand-dragging,body.cm-hand-dragging *{cursor:grabbing!important;user-sel
    ten seconds. */
 .cm-board-plays{position:fixed;left:var(--plays-left,56px);top:var(--plays-top,176px);z-index:57;display:flex;flex-direction:column;gap:10px;pointer-events:none}
 /* three at most, each as large as a third of the window below the caption leaves: a header and a 5:7 card */
-.cm-play-pop{--pw:max(96px,min(13vw,210px,calc(((100vh - var(--plays-top,176px) - 20px) / 3 - 46px) * 5 / 7)));width:var(--pw);padding:6px;border-radius:12px;background:rgb(6 20 22 / .9);border:2px solid var(--seat,#6f9c88);box-shadow:0 18px 40px -16px #000;color:#f3fff7;pointer-events:auto;animation:cm-play-in .3s cubic-bezier(.2,.8,.2,1);transition:opacity .6s,transform .6s}
+.cm-play-pop{--pw:max(96px,min(13vw,210px,calc(((100vh - var(--plays-top,176px) - 20px) / 3 - var(--pad,46px)) * 5 / 7)));width:var(--pw);padding:6px;border-radius:12px;background:rgb(6 20 22 / .9);border:2px solid var(--seat,#6f9c88);box-shadow:0 18px 40px -16px #000;color:#f3fff7;pointer-events:auto;animation:cm-play-in .3s cubic-bezier(.2,.8,.2,1);transition:opacity .6s,transform .6s}
+.cm-play-pop:has(.cm-play-aim){--pad:78px}
 .cm-play-pop.is-leaving{opacity:0;transform:translateX(-24px)}
 .cm-play-pop header{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:0 2px 5px;font-size:13px}
 .cm-play-pop header b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

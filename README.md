@@ -961,6 +961,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 `.claude/skills/crankmagic-refresh` is the judgment around it. There are 683 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 `.claude/skills/crankmagic-refresh` is the judgment around it. There are 683 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 `.claude/skills/crankmagic-refresh` is the judgment around it. There are 667 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 669 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1313,6 +1314,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `board-battlefield-rows` — `tests/board-battlefield-rows.mjs` (Rob, 2026-10-27: the battlefield's two rows are defaults; a creature dragged to the artifacts row and an artifact to the creatures row stay there through the next view and a reload; a land stays in the lands)
 - `board-hover-during-choice` — `tests/board-hover-during-choice.mjs` (Rob, 2026-10-25: with a card's question open -- what to tap for it -- the card asked about is read in Actions, and the hover still pops up any card, on the table or named in an option, by pointer or keyboard, in 3D, Focus and Table)
 - `board-hover-every-picture` — `tests/board-hover-every-picture.mjs` (ROB-318, Rob 2026-10-29 mid-game: any card picture on the board pops up large on hover (a seat's commander art, the stack's pile, an opponent's held-up play, a card's menu), the one pinned in the inspector too, the pop-up survives a redraw, and a walker hovers every picture on seven kinds of screen)
+- `board-stack-targets` — `tests/board-stack-targets.mjs` (ROB-327, Rob 2026-10-29/30 mid-game: what a spell or ability is aimed at is seen on the stack's list, under its pile and on an opponent's held-up play, source ⤳ target, a card named shows the big card on hover and focus, a target that has left says gone with no name; Table, Focus and 3D)
 - `board-card-sharpness` — `tests/board-card-sharpness.mjs` (Rob, 2026-10-25: in 3D, at 100% and at the camera's closest zoom, the cards on the mats keep their picture's fine print as the hand's do: measured against the same picture drawn flat at the same size)
 - `board-target-lands` — `tests/board-target-lands.mjs` (Rob, 2026-10-25: in a question of targets, lands after every other option in a Lands group shut by default, open while one is picked; all-land targets and a cost's question shown as they are)
 - `board-drawer-sizes` — `tests/board-drawer-sizes.mjs` (Rob, 2026-10-26, urgent: declaring attackers in 3D with a card open on the Actions desk, every one of nine choices can be reached (the old board left the options 6px); the card's size dragged by a bar under it; each drawer module's height dragged by a bar under it, kept through a reload, given back by a double click; the right drawer's width dragged at its left edge like the left drawer's)
@@ -1344,6 +1346,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `migrate-dry-run` — `tests/migrate-dry-run.mjs`
 - `sw-update` — `tests/sw-update.mjs`
 - `game-history` — `tests/game-history.mjs`
+- `history-targets` — `tests/history-targets.mjs` (ROB-327, the engine and room half: a stack entry says what it is aimed at (aimed, aimedModes: named, or gone), and the History's cast and activation lines name the targets, structured; one-target, two-target, ability, no-target, modal and a target that has left)
 - `user-state` — `tests/user-state.mjs`
 - `xlsx-writer` — `tests/xlsx-writer.mjs`
 - `engine-rules-conformance` — `tests/engine-rules-conformance.mjs`

@@ -55,7 +55,7 @@ eq([isPrimitive("rollDie"), isTriggerEvent("becomes level"), TRIGGER_KINDS.inclu
   throws(() => runEffect(s, {effect: "rollDie", sides: 6}, {controller: 0, source: null}, null), /random stream/, "never rolled without the game's random stream");
   eq([runEffect(s, {effect: "rollDie"}, {controller: 0, source: null}, rng), runEffect(s, {effect: "rollDie", sides: 1}, {controller: 0, source: null}, rng)], [[], []],
     "a die of no number of sides, or of one, rolls nothing");
-  eq(historyLines({kind: "GameEventDieRolled", data: {turn: 3, fields: {player: {playerId: 0}, sides: 20, result: 13}}}, ["Rob"]), [{turn: 3, text: "Rob rolled a d20: 13"}],
+  eq(historyLines({kind: "GameEventDieRolled", data: {turn: 3, fields: {player: {playerId: 0}, sides: 20, result: 13}}}, ["Rob"]), [{turn: 3, text: "Rob rolled a d20: 13", actor: 0}],
     "the history says the roll and its result");
   eq([errorsAt(spellScript([{effect: "rollDie"}]), ".sides"), errorsAt(spellScript([{effect: "rollDie", sides: 1}]), ".sides"), errorsAt(spellScript([{effect: "rollDie", sides: "20"}]), ".sides"),
     errorsAt(spellScript([{effect: "rollDie", sides: 20}]), ".sides")], [1, 1, 1, 0], "a die's sides: a whole number, 2 or more");
