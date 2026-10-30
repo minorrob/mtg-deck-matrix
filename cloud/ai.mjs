@@ -35,6 +35,8 @@
    allows. No server-side fallback is asked for, since it can re-run a declined request on a dearer model; a refusal is
    said plainly (422). */
 import * as Advise from "./advise-brief.mjs";
+import {groupOf} from "./access.mjs";
+import {VETERAN_SKILL} from "./veteran-skill.mjs";
 
 export const DEFAULT_MODEL = "claude-haiku-5-5";
 export const MODELS = ["claude-haiku-5-5", "claude-sonnet-5-5"];
@@ -110,16 +112,32 @@ export function spendOf(json, model) {
   return {model: (json && json.model) || model, input, output, micros};
 }
 
-/* AI_EVERYONE (Rob, 2026-10-14): everyone signed in may use the AI features, so Access's invite list is the list. */
+/* AI_EVERYONE (Rob, 2026-10-14): the app's own sign-in opens the AI door too, so a person needs no second sign-in. Since
+   2026-10-26 it widens the sign-in only, never who may spend: that is the person's group (cloud/access.mjs `groupOf`; Rob:
+   "General Access will never be able to run or cause token costs"). */
 export const everyone = (env) => env?.AI_EVERYONE === "on";
 
-export function createAi(db, {now = () => new Date().toISOString(), newId = () => crypto.randomUUID(), everyone = false} = {}) {
+export function createAi(db, {now = () => new Date().toISOString(), newId = () => crypto.randomUUID(), owner = ""} = {}) {
   const since = () => new Date(Date.parse(now()) - 24 * 3600 * 1000).toISOString();
   return {
-    /* On the list: a row in ai_allowlist, or anyone Access has named where the door is open to everyone signed in. */
+    /* Who may spend: the owner, or a Game Theory Insider (a row in ai_allowlist, the roster). Never General Access. */
     async allowed(email) {
-      if (everyone) return typeof email === "string" && email.includes("@");
-      return !!(await db.prepare("SELECT 1 AS yes FROM ai_allowlist WHERE email = ?").bind(email).first());
+      return (await groupOf(email, {OWNER_EMAIL: owner}, db)) !== "general";
+    },
+    /* THE INSIDERS ROSTER, kept by the owner (GET and PUT /api/admin/groups in worker.mjs). */
+    async insiders() {
+      const {results} = await db.prepare("SELECT email, added_at AS addedAt, note FROM ai_allowlist ORDER BY added_at, email").all();
+      return results.map((r) => ({email: r.email, addedAt: r.addedAt, note: r.note ?? ""}));
+    },
+    async setGroup(email, group, note = "") {
+      const who = String(email || "").trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(who)) throw new Closed("That is not an email address.", 400);
+      if (group === "insider") {
+        await db.prepare("INSERT INTO ai_allowlist (email, added_at, note) VALUES (?, ?, ?) ON CONFLICT(email) DO UPDATE SET note = excluded.note").bind(who, now(), String(note || "").slice(0, 200)).run();
+      } else if (group === "general") {
+        await db.prepare("DELETE FROM ai_allowlist WHERE email = ?").bind(who).run();
+      } else throw new Closed("A person is an insider or general; the owner is set in the Worker's settings.", 400);
+      return {email: who, group};
     },
     /* What was spent in the last 24 hours: by this person, by everyone, and by everyone on this one feature. */
     async spent(email, feature = null) {
@@ -301,13 +319,10 @@ export async function coach({ai, who, brief, question, config, fetchImpl = fetch
  * logged as `pilot` under the host who seated it. The table holds the game's 25 cents (cloud/game-room.mjs); the door
  * holds the day's caps, as for every feature. What comes back is indices, read by `pickOf`; anything else is not used. */
 export const PILOT_MAX_TOKENS = 300;
-export const PILOT_SYSTEM = [
-  "You play one seat in a game of Magic: The Gathering (Commander). You are asked one decision at a time.",
-  "Choose only among the decision's options, by their index: one index when its mode is \"one\", between its min and max indices when it is \"many\".",
-  "housePilotWouldChoose is a heuristic's choice: take it unless another option is clearly better.",
-  "You see your own hand and the board as every player sees it; nobody's hand but yours, and no library's order. Do not guess at them.",
-  "Play to win. In why, one short sentence.",
-].join(" ");
+/* THE VETERAN'S INSTRUCTION SET (game/engine/pilots/veteran-skill.md, generated into a module for the Worker): what each number in the
+   brief means and how to weigh it, so the model reads Hard's scores as a scouting report. No tools, and nothing about how any other
+   seat is built; sent as the cached system prompt, so each call pays for it once. */
+export const PILOT_SYSTEM = VETERAN_SKILL;
 const PILOT_SCHEMA = {
   type: "object",
   properties: {indices: {type: "array", items: {type: "integer"}}, why: {type: "string"}},
@@ -322,7 +337,7 @@ const PILOT_SCHEMA = {
 const PILOT_THINKING = {"claude-haiku-5-5": {type: "disabled"}, "claude-sonnet-5-5": {type: "between_tools"}};
 export function pilotBody(brief, model) {
   return {
-    model, max_tokens: PILOT_MAX_TOKENS, system: PILOT_SYSTEM,
+    model, max_tokens: PILOT_MAX_TOKENS, system: [{type: "text", text: PILOT_SYSTEM, cache_control: {type: "ephemeral"}}],
     ...(PILOT_THINKING[model] ? {thinking: PILOT_THINKING[model]} : {}),
     output_config: {effort: "low", format: {type: "json_schema", schema: PILOT_SCHEMA}},
     messages: [{role: "user", content: JSON.stringify(brief)}],

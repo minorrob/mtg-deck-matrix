@@ -56,6 +56,7 @@ import {valueCostOf, shownName, xOnStack} from "../state/index.mjs";
 import {parseManaCost, manaValue} from "../rules/mana.mjs";
 import {amountOf, AMOUNT_PARAMS} from "./amount.mjs";
 import {conditionHolds} from "./condition.mjs";
+import {targetFacts, effectForTarget} from "./decision.mjs";
 
 /** More than this many ways to choose a spell's targets, and the card is refused at prepare rather than offered. */
 export const TARGET_CHOICES_MAX = 4096;
@@ -68,6 +69,9 @@ export const TARGET_CHOICES_MAX = 4096;
  *                               main phase, you may exile up to one other target" (Return to Dust, {cast: {mainPhase: true}})
  *   `differentControllers`     a counted target's choices each controlled by a different player ("up to two target
  *                               artifacts and/or enchantments controlled by different players", Protector of the Wastes)
+ *   `differentManaValues`      a counted target's choices each with a different mana value ("any number of target creature cards
+ *                               that each have a different mana value X or less", Agadeem's Awakening): no two of them alike, the
+ *                               option's `manaValue` capped to one apiece (`capped`, as controllers are) and refused with what to do
  *   `share`                    a counted target's choices together: "graveyard", all from a single graveyard ("up to two
  *                               target cards from a single graveyard", Unlicensed Hearse); "creature type", a creature type
  *                               all of them have ("two target creature cards that share a creature type", Unbury)
@@ -82,7 +86,7 @@ export const TARGET_CHOICES_MAX = 4096;
  *                               chosen for target n, as it is chosen and again as the ability resolves (CR 608.2b): that
  *                               permanent gone, or another player's now, and this target is illegal too (relatedLegal)
  * None is part of what a target may be (the selector), so each is set aside beside `count`. */
-export const SPEC_KEYS = Object.freeze(["totalPowerAtMost", "count", "distinctFrom", "onlyIf", "differentControllers", "share", "forEach", "ownedByControllerOf"]);
+export const SPEC_KEYS = Object.freeze(["totalPowerAtMost", "count", "distinctFrom", "onlyIf", "differentControllers", "differentManaValues", "share", "forEach", "ownedByControllerOf"]);
 /** What a counted target's choices may share (`share`). */
 export const SHARES = Object.freeze(["graveyard", "creature type"]);
 const selectorOf = (spec) => Object.fromEntries(Object.entries(spec && typeof spec === "object" ? spec : {}).filter(([key]) => !SPEC_KEYS.includes(key)));
@@ -250,7 +254,7 @@ export function targetChoices(state, specs, context) {
  * as it allows or there are. Each option is one candidate (`targets: [it]`, `hostile` for a pilot's aim), a permanent said
  * with whose it is when it is not the chooser's, and two that would read alike numbered.
  */
-export function countedChoice(state, spec, context, {id, name, hostile = false, placeholder = null}) {
+export function countedChoice(state, spec, context, {id, name, hostile = false, placeholder = null, effects = [], targetIndex = 0}) {
   const count = countOf(spec, context) ?? {min: 1, max: 1};
   /* Within the group it was offered with (`share`): one graveyard's cards, or those with the creature type. */
   const candidates = groupCandidates(state, spec, context, placeholder);
@@ -258,8 +262,8 @@ export function countedChoice(state, spec, context, {id, name, hostile = false, 
     const whose = c.kind === "object" && state.objects[c.id] && controllerOf(state, c.id) !== context.controller ? ` (${state.players[controllerOf(state, c.id)]?.name}'s)` : "";
     /* "For each opponent ... that player controls" (`forEach`): the opponent each is chosen for, kept with it (stillLegal). */
     const target = forEachOpponent(spec) ? {...c, forPlayer: controllerOf(state, c.id)} : c;
-    return {index, ...(Number.isFinite(spec.totalPowerAtMost) ? {power: powerOf(state, c.id)} : {}), label: `${targetName(state, c)}${whose}`, ...(c.kind === "object" ? {cardId: c.id} : {playerId: c.id}), targets: [target], hostile,
-      ...(oneOfEach(spec) && c.kind === "object" && state.objects[c.id] ? {controllerId: controllerOf(state, c.id)} : {})};
+    return {index, ...(Number.isFinite(spec.totalPowerAtMost) ? {power: powerOf(state, c.id)} : {}), ...(spec.differentManaValues === true && c.kind === "object" ? {manaValue: manaValueOfObject(state, c.id)} : {}), label: `${targetName(state, c)}${whose}`, ...(c.kind === "object" ? {cardId: c.id} : {playerId: c.id}), targets: [target], hostile,
+      ...targetFacts(state, c, effectForTarget(effects, targetIndex))};
   });
   for (const option of options) {
     const alike = options.filter((o) => o.label === option.label);
@@ -267,9 +271,10 @@ export function countedChoice(state, spec, context, {id, name, hostile = false, 
   }
   /* "Controlled by different players" (`differentControllers`), "for each opponent" (`forEach`): at most one of each player's,
      refused with what to do instead (controller.mjs reads `capped`; both pilots keep to it). */
-  const capped = oneOfEach(spec) ? differentControllersCap(state, options, name, forEachOpponent(spec)) : null;
+  const capped = oneOfEach(spec) ? differentControllersCap(state, options, name, forEachOpponent(spec))
+    : spec?.differentManaValues === true ? differentManaValuesCap(options, name) : null;
   const words = forEachOpponent(spec) ? "for each opponent, choose up to one target that player controls"
-    : `choose ${countWords(count)}${placeholder?.groupLabel ? ` ${placeholder.groupLabel}` : ""}${capped ? ", each controlled by a different player" : ""}`;
+    : `choose ${countWords(count)}${placeholder?.groupLabel ? ` ${placeholder.groupLabel}` : ""}${capped ? (spec.differentManaValues === true ? ", each with a different mana value" : ", each controlled by a different player") : ""}`;
   return {id, title: `${name}: ${words}`, mode: "many", min: Math.min(count.min, options.length),
     max: count.max === null ? options.length : Math.min(count.max, options.length), options,
     ...(Number.isFinite(spec.totalPowerAtMost) ? {budget: {by: "power", most: spec.totalPowerAtMost,
@@ -285,6 +290,15 @@ function differentControllersCap(state, options, name, each = false) {
     why: Object.fromEntries(players.map((p) => [p, each ? `${name} targets up to one of each opponent's: choose no more than one of ${whose(p)}'s.`
       : `${name}'s targets must be controlled by different players: choose no more than one of ${whose(p)}'s, and the others from other players.`]))};
 }
+
+/* "Each with a different mana value" (`differentManaValues`) as a cap: no more than one option of each mana value, and the words
+   that say so. The same cap the controllers have, keyed by the option's `manaValue` (rules/controller.mjs, the pilots). */
+function differentManaValuesCap(options, name) {
+  const values = [...new Set(options.map((o) => o.manaValue).filter((v) => v !== undefined))];
+  return {by: "manaValue", most: Object.fromEntries(values.map((v) => [v, 1])),
+    why: Object.fromEntries(values.map((v) => [v, `${name}'s targets must each have a different mana value: choose no more than one with mana value ${v}.`]))};
+}
+const manaValueOfObject = (state, id) => { const cost = state.objects[id]?.manaCost; return cost ? manaValue(parseManaCost(cost)) : 0; };
 
 /** Why a counted target's choices break "controlled by different players" (`differentControllers`) or "for each opponent"
     (`forEach`), in words, or null. */

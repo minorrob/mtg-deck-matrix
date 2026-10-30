@@ -749,12 +749,13 @@
           ghostLine: mix(V('v-muted'), 55, 'transparent'),
           clear: mix(V('v-bg'), 0, 'transparent'),
           ink: read(V('v-ink')),
+          background: read(V('v-bg')),
           muted: read(V('v-muted')),
           on: read(V('v-on')),
-          /* the focus and its two rings: the focus carries the accent, the rings step back */
-          focus: mix(V('v-accent'), 42, V('v-panel')),
-          ring1: mix(V('v-accent'), 22, V('v-panel')),
-          ring2: mix(V('v-accent'), 12, V('v-panel')),
+          /* The focus and its two rings use Aether; the rings step back. */
+          focus: mix(V('v-aether'), 42, V('v-panel')),
+          ring1: mix(V('v-aether'), 22, V('v-panel')),
+          ring2: mix(V('v-aether'), 12, V('v-panel')),
           /* structural edges: shared mechanics and roles */
           edge: mix(V('v-line-strong'), 55, 'transparent'),
           edgeFaint: mix(V('v-line-strong'), 22, 'transparent'),
@@ -767,13 +768,13 @@
           playEdgeOwn: mix(V('v-money'), 62, 'transparent'),
           playInk: mix(V('v-money'), 75, V('v-ink')),
           /* a loop is gold and says so in both themes */
-          loop: read(V('v-accent')),
-          loopDim: mix(V('v-accent'), 80, V('v-bg')),
-          loopSoft: mix(V('v-accent'), 68, 'transparent'),
-          loopInk: mix(V('v-accent'), 70, V('v-ink')),
+          loop: read(V('v-money')),
+          loopDim: mix(V('v-money'), 80, V('v-bg')),
+          loopSoft: mix(V('v-money'), 68, 'transparent'),
+          loopInk: mix(V('v-money'), 70, V('v-ink')),
           /* the trace beam, and the aether -- the graph focus is one of the four places blue means something */
-          beam: read(V('st-remove')),
-          beamDim: mix(V('st-remove'), 60, 'transparent'),
+          beam: read(V('v-aether')),
+          beamDim: mix(V('v-aether'), 60, 'transparent'),
           aether: read(V('v-aether')),
           aetherInk: mix(V('v-aether'), 55, V('v-ink')),
         };
@@ -859,7 +860,7 @@
               const text = tag.length > 20 ? tag.slice(0, 19) + '…' : tag;
               const p = n.parent || {x: 0, y: 0};
               const mx = p.x + (n.x - p.x) * .58, my = p.y + (n.y - p.y) * .58;
-              ctx.font = '10px Satoshi, sans-serif'; ctx.textAlign = 'center';
+              ctx.font = '10px Lato, sans-serif'; ctx.textAlign = 'center';
               const w = ctx.measureText(text).width + 10;
               ctx.fillStyle = P.scrim; ctx.beginPath(); ctx.roundRect(mx - w / 2, my - 8, w, 16, 8); ctx.fill();
               ctx.strokeStyle = played ? P.playEdge : P.edge; ctx.lineWidth = 1; ctx.stroke();
@@ -894,7 +895,7 @@
               ctx.drawImage(img, sx, sy, sw, sw, n.x - n.r, n.y - n.r, n.r * 2, n.r * 2);
               ctx.restore();
             } else if (n.depth <= 1) {
-              ctx.fillStyle = P.ink; ctx.font = (focus ? '12' : '9') + 'px Satoshi, sans-serif'; ctx.textAlign = 'center';
+              ctx.fillStyle = P.ink; ctx.font = (focus ? '12' : '9') + 'px Lato, sans-serif'; ctx.textAlign = 'center';
               ctx.fillText((n.card.ci || 'C').split('').join(' '), n.x, n.y + (focus ? 4 : 3));
             }
             /* A CARD YOU OWN WEARS A GOLD BAND, just outside its disc. Outside rather than
@@ -908,13 +909,13 @@
               ctx.beginPath(); ctx.arc(n.x, n.y, n.r + band / 2 + 1, 0, Math.PI * 2); ctx.stroke();
             }
             const isSel = selected.has(n.card.id);
-            ctx.strokeStyle = isSel ? P.loop : n.pinned ? P.loopDim : focus ? P.aetherInk : n.depth === 1 ? P.aether : P.line;
+            ctx.strokeStyle = isSel || n.pinned ? P.ink : focus ? P.aetherInk : n.depth === 1 ? P.aether : P.line;
             ctx.lineWidth = isSel ? 3 : n.pinned ? 2 : focus ? 1.5 : 1;
             ctx.beginPath(); ctx.arc(n.x, n.y, n.r, 0, Math.PI * 2); ctx.stroke();
             if (isSel) {
               // a small check badge, so a selected card reads as selected at any zoom
-              ctx.fillStyle = P.loop; ctx.beginPath(); ctx.arc(n.x + n.r * .7, n.y - n.r * .7, Math.max(6, n.r * .32), 0, Math.PI * 2); ctx.fill();
-              ctx.fillStyle = P.on; ctx.font = 'bold ' + Math.max(8, n.r * .4) + 'px Satoshi, sans-serif'; ctx.textAlign = 'center';
+              ctx.fillStyle = P.ink; ctx.beginPath(); ctx.arc(n.x + n.r * .7, n.y - n.r * .7, Math.max(6, n.r * .32), 0, Math.PI * 2); ctx.fill();
+              ctx.fillStyle = P.background; ctx.font = 'bold ' + Math.max(8, n.r * .4) + 'px Lato, sans-serif'; ctx.textAlign = 'center';
               ctx.fillText('✓', n.x + n.r * .7, n.y - n.r * .7 + Math.max(3, n.r * .14));
             }
             /* Names per ring, gated on zoom: ring 1 always, ring 2 from 0.8, ring 3 from
@@ -926,7 +927,7 @@
               const rp = Math.max(0, (tp - .55) / .45);
               if (rp > 0) { ctx.save(); ctx.shadowColor = BEAM; ctx.shadowBlur = rp < 1 ? 14 : 4; ctx.strokeStyle = rp < 1 ? BEAM : BEAM_DIM; ctx.lineWidth = rp < 1 ? 2.4 : 1.4; ctx.beginPath(); ctx.arc(n.x, n.y, n.r + 3, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * rp); ctx.stroke(); ctx.restore(); }
               if (tp >= 1 && n.loopBacks) {
-                const label = '×' + n.loopBacks; ctx.font = 'bold 9px Satoshi, sans-serif'; ctx.textAlign = 'center';
+                const label = '×' + n.loopBacks; ctx.font = 'bold 9px Lato, sans-serif'; ctx.textAlign = 'center';
                 const w = ctx.measureText(label).width + 8, bx = n.x + n.r * .75, by = n.y - n.r * .75;
                 ctx.fillStyle = GOLD; ctx.beginPath(); ctx.roundRect(bx - w / 2, by - 7, w, 14, 7); ctx.fill();
                 ctx.fillStyle = P.on; ctx.fillText(label, bx, by + 3.2);
@@ -937,7 +938,7 @@
               const name = (n.pinned ? '◀ ' : '') + n.card.name;
               const max = n.depth === 0 ? 28 : n.depth === 1 ? 24 : 18;
               ctx.fillStyle = n.depth <= 1 ? P.ink : P.muted;
-              ctx.font = (focus ? 'bold 13' : n.depth === 1 ? '11' : '10') + 'px Satoshi, sans-serif'; ctx.textAlign = 'center';
+              ctx.font = (focus ? 'bold 13' : n.depth === 1 ? '11' : '10') + 'px Lato, sans-serif'; ctx.textAlign = 'center';
               ctx.fillText(name.length > max ? name.slice(0, max - 2) + '…' : name, n.x, n.y + n.r + (n.depth <= 1 ? 15 : 12));
             }
           }
@@ -946,7 +947,7 @@
              above the disc so the cursor is not sitting on top of the answer. */
           if (named && nodes.includes(named)) {
             const label = named.card.name;
-            ctx.font = 'bold 12px Satoshi, sans-serif'; ctx.textAlign = 'center';
+            ctx.font = 'bold 12px Lato, sans-serif'; ctx.textAlign = 'center';
             const w = ctx.measureText(label).width + 14, h = 20;
             const y = named.y - named.r - 14;
             ctx.fillStyle = P.scrim;

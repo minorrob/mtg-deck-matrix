@@ -530,6 +530,9 @@ function matches(state, event, condition, sourceId, controller) {
     if (condition.who === "another" && moved === sourceId) return false;
     /* "When this land enters untapped": as it entered (the event says so), not as it is now. */
     if (condition.untapped && fields.enteredTapped === true) return false;
+    /* "Enters under an opponent's control without being played" (Deep Gnome Terramancer; CR 305.1): the arrival was a land
+       play (rules/actions.mjs stamps it), or was not. */
+    if (condition.played !== undefined && (fields.played === true) !== condition.played) return false;
     /* What arrived must match (`filter`), read where it now is; "you" is this trigger's controller. What LEFT the
        battlefield ("another creature you control dies") is read as it last existed (CR 603.10a). */
     if (condition.filter) {
@@ -1131,7 +1134,8 @@ function askCounted(state, entry) {
 export function triggerCountedChoice(state, awaiting) {
   const {entry, context} = targeting(state, awaiting.stackId);
   return countedChoice(state, entry.script.targets[awaiting.index], context, {id: `choose-targets:${entry.stackId}:${awaiting.index}`,
-    name: entry.name ?? "A triggered ability", hostile: isHostile(entry.script.effects), placeholder: entry.targets[awaiting.index]});
+    name: entry.name ?? "A triggered ability", hostile: isHostile(entry.script.effects), placeholder: entry.targets[awaiting.index],
+    effects: entry.script.effects, targetIndex: awaiting.index});
 }
 
 /** The counted target picked; then the next, or the next trigger's targets. */

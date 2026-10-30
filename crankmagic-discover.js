@@ -80,7 +80,7 @@
      inspector and coming back. Cleared only by Clear filters. */
   let selection = {};
   let mode = 'all';            // within a facet: 'all' picks must match, or 'any'
-  let depth = 2, breadth = 12; // the graph's reach, remembered like the filters
+  let depth = 1, breadth = 8;  // the graph's reach, remembered like the filters; it opens low so the first view is only the strongest joins (ROB-217)
   let gmode = 'inspect';       // what a tap on the canvas does: inspect (the default), navigate or select
   let picked = new Set();      // card ids ticked on the canvas, or in the List tab
   /* THE PANE HAS TWO TABS. Card Info is the pane as it was; List is every card the focus
@@ -189,7 +189,17 @@
     const data = {...loaded, cards: [...loaded.cards]};
     const names = new Set(data.cards.map((c) => c.name)), ids = new Set(data.cards.map((c) => c.id));
     for (const c of C.cards()) {
-      if (!names.has(c.name) && !(c.oracleId && ids.has(c.oracleId))) data.cards.push({...c, id: c.oracleId || c.id, type: c.typeLine, ci: (c.colorIdentity || []).join(''), image: c.image});
+      if (!names.has(c.name) && !(c.oracleId && ids.has(c.oracleId))) data.cards.push({...c, id: c.oracleId || c.id, type: c.typeLine, ci: (c.colorIdentity || []).join(''), image: c.image, isCommander: !!c.commander});
+    }
+    /* EVERY COMMANDER THE CATALOG KNOWS (ROB-214, Luke's playtest of 2026-10-28). The graph was baked on Sep 11; the commander
+       universe the catalog loads (Sep 28) holds commanders it never took in, 86 at the last count, and a card put in above from
+       the library had no `isCommander` at all. "Explore from a commander" looks for that flag, so a commander newer than the
+       graph was "not a commander in the catalog" while it sat on screen. They come in here as visitors, as library cards do. */
+    {
+      const have = new Set(data.cards.map((c) => c.name));
+      for (const c of C.catalog.search('', {commander: true, limit: 100000})) {
+        if (!have.has(c.name)) data.cards.push({...c, id: c.oracleId || c.id, type: c.typeLine, ci: (c.colorIdentity || []).join(''), image: c.image, isCommander: true});
+      }
     }
     /* A library or catalog card's row on the graph: by oracle id (the row's id), then by name
        for a card saved before it had one. */
@@ -351,15 +361,21 @@
         const commanders = data.cards.filter((c) => c.isCommander).sort((a, b) => String(a.name).localeCompare(String(b.name)));
         C.modal('Explore from a commander', `<form class="cm-form">
           <div class="cm-form-grid"><label>Commander name<input name="commander" list="cm-commander-list" placeholder="Type a commander name" required autocomplete="off"></label>
-          <datalist id="cm-commander-list">${commanders.slice(0, 200).map((c) => `<option value="${e(c.name)}"></option>`).join('')}</datalist>
+          <datalist id="cm-commander-list">${commanders.map((c) => `<option value="${e(c.name)}"></option>`).join('')}</datalist>
           <div class="cm-full"><p class="cm-muted">${commanders.length.toLocaleString('en-US')} commanders in the catalog.</p></div></div>
           <div class="cm-form-footer">${b('Cancel', 'close')}<button class="v-button primary" type="submit">Explore commander</button></div>
         </form>`).querySelector('form').addEventListener('submit', (ev) => {
           ev.preventDefault();
           const fd = new FormData(ev.target);
           const name = (fd.get('commander') || '').trim();
-          const card = data.cards.find((c) => c.name.toLowerCase() === name.toLowerCase() && c.isCommander);
-          if (!card) { C.notice(`"${name}" is not a commander in the catalog.`, true); return; }
+          const wanted = name.toLowerCase();
+          /* The whole name, in any case; or, where it names exactly one commander, the start of it ("Giada" is Giada, Font of Hope). */
+          const starts = commanders.filter((c) => c.name.toLowerCase().startsWith(wanted));
+          const card = commanders.find((c) => c.name.toLowerCase() === wanted) || (starts.length === 1 ? starts[0] : null);
+          if (!card) {
+            C.notice(starts.length > 1 ? `"${name}" could be ${starts.slice(0, 3).map((c) => c.name).join(', ')}${starts.length > 3 ? ' ...' : ''}. Type more of the name.` : `"${name}" is not a commander in the catalog.`, true);
+            return;
+          }
           saveRecentScope({type: 'commander', id: card.name, label: card.name});
           C.$('#cm-dialog').close();
           C.go('discover', {commander: card.name});
@@ -448,8 +464,19 @@
     /* A graph opened from a deck says which deck (wireframe 50: "Explore › D6 Krenko Goblins") and has the
        way back to it in the head, beside Filters · lens. */
     const fromDeck = params.get('deck') ? (C.state.decks || []).find((d) => d.id === params.get('deck') && !d.archived) : null;
+    /* A Measure handoff carries a filed report, never query-supplied score facts. Its score components
+       are model outcomes, not graph roles: retain that context without inventing a role filter. */
+    const fromReport=fromDeck?(C.state.reports||[]).find(r=>r.id===params.get('report')&&r.deckId===fromDeck.id):null;
+    const reportParts=(fromReport?.scoreParts||[]).filter(p=>Number.isFinite(p.points)&&Number.isFinite(p.max)&&p.max>0);
+    const reportAxis=reportParts.find(p=>(p.key||p.label)===params.get('axis'));
+    const reportScore=fromReport?.metrics?.score?.value;
+    const reportContext=fromReport?`<section class="cm-measure-context" aria-label="Measurement to refine" data-measure-report="${e(fromReport.id)}"><strong>Measured ${Number.isFinite(reportScore)?e(String(reportScore)):'—'} of 100</strong>${reportAxis?`<span> · Refine ${e(reportAxis.label)} · ${e(String(reportAxis.points))} of ${e(String(reportAxis.max))}</span>`:''}<a class="v-button compact" href="#decks?${e(new URLSearchParams({deck:fromDeck.id,report:fromReport.id}).toString())}">Back to report</a></section>`:'';
+    const replaceSlot=fromDeck?.slots.find(r=>r.purpose==='main'&&r.cardId===params.get('replace'));
+    const replaceCard=replaceSlot?C.card(replaceSlot.cardId):null;
+    const replaceContext=replaceCard?`<section class="cm-measure-context" aria-label="Card to replace"><strong>Replace ${e(replaceCard.name)}</strong><a class="v-button compact" href="#decks?${e(new URLSearchParams({deck:fromDeck.id,tab:'upgrades'}).toString())}">Review marked cards</a></section>`:'';
     C.main.innerHTML = (fromDeck ? `<div class="cm-crumbs"><a class="cm-crumb" href="#discover">Explore</a><a class="cm-crumb" href="#decks?deck=${encodeURIComponent(fromDeck.id)}">${e(fromDeck.name)}</a></div>` : '')
       + C.pageHead('Explore', advancedToolsButton() + (fromDeck ? `<a class="v-button" href="#decks?deck=${encodeURIComponent(fromDeck.id)}">Back to deck</a>` : '') + toolsButton(), 'discover')
+      + reportContext + replaceContext
       + `<div class="cm-toolbar"><label class="cm-search">Find a card<input id="cm-graph-query" placeholder="Card name" list="cm-graph-names"><datalist id="cm-graph-names"></datalist></label>${C.select('Connections', 'edgeType', [['mechanic', 'Shared mechanics / roles'], ['played', 'EDHREC co-play']], 'mechanic')}${b('Search catalog / link', 'graph-lookup')}${b('Back', 'graph-back')}${b('Reset view', 'graph-reset')}</div>
 
 
@@ -493,6 +520,10 @@
 
     applyStage();
     const pane = $('#cm-card-view');
+    function syncPickerPrimary(){if(!pane.isConnected||document.getElementById('cm-card-view')!==pane)return;const popup=$('#cm-graph-pop'),insidePopup=popup&&!popup.hidden;
+      for(const button of pane.querySelectorAll('.cm-card-view-buy [data-action=add-buy],.cm-list-detail [data-action=graph-card]'))button.classList.toggle('primary',!insidePopup&&!picked.size);
+      for(const button of pane.querySelectorAll('.cm-pick-actions [data-action=results-group]'))button.classList.toggle('primary',!insidePopup&&picked.size>0);
+    }
     const view = $('#cm-pane-body');
     applyTab();
 
@@ -699,6 +730,7 @@
         graph?.setHighlight([hit.a.id, hit.b.id]);
       }
       pop.hidden = false;
+      syncPickerPrimary();
       /* A card's pop-up opens to the RIGHT of its node, top edge level with it, so the node
          stays in view beside its own picture; when the column has no room on the right it
          opens on the left. A line's pop-up still hangs under the point that was tapped. */
@@ -719,7 +751,7 @@
       if (top + pop.offsetHeight > canvas.offsetTop + canvas.clientHeight - 6) top = Math.max(canvas.offsetTop + 6, canvas.offsetTop + canvas.clientHeight - pop.offsetHeight - 6);
       pop.style.left = left + 'px'; pop.style.top = top + 'px';
     }
-    function hidePop() { popId = ''; const pop = $('#cm-graph-pop'); if (pop && !pop.hidden) { pop.hidden = true; pop.innerHTML = ''; } graph?.setHighlight(null); }
+    function hidePop() { popId = ''; const pop = $('#cm-graph-pop'); if (pop && !pop.hidden) { pop.hidden = true; pop.innerHTML = ''; } graph?.setHighlight(null);syncPickerPrimary(); }
     function modeHint(m) { return m === 'inspect' ? 'Tap a card for its terms and its link to the focus; tap a line for why two cards are joined.' : m === 'select' ? 'Tap cards to tick them, then add them to a group from the Card View.' : 'Tap a card to make it the focus; the card you came from stays at the left.'; }
     /* Escape is the way out of presentation mode as well as out of a pop-up, in that order:
        the mode hides the nav rail, so it needs an exit that does not depend on finding the
@@ -778,7 +810,7 @@
     function buyMenu(c, rec, compact = false) {
       return compact
         ? `<button type="button" class="v-button cm-buy-caret" data-action="add-buy" data-card="${e(c.name)}" title="Add and/or buy" aria-label="Add or buy ${e(c.name)}">${C.caret ? C.caret('down') : '▾'}</button>`
-        : `<button type="button" class="v-button primary" data-action="add-buy" data-card="${e(c.name)}">Add and/or buy…</button>`;
+        : `<button type="button" class="v-button${picked.size||popId?'':' primary'}" data-action="add-buy" data-card="${e(c.name)}">Add and/or buy…</button>`;
     }
     actions['add-buy'] = (el) => {
       const name = el.dataset.card, rec = C.catalog.exact(name) || {name}, c = C.catalog.get(CrankCatalog.key(name)) || rec;
@@ -925,6 +957,7 @@
           <section><h4>Could join it <small>${r.candidates.length}</small></h4>${candRows ? `<ul class="cm-lens-list">${candRows}</ul>${r.candidates.length > 40 ? `<p class="cm-muted">${r.candidates.length - 40} more, further down the ranking.</p>` : ''}` : '<p class="cm-muted">Nothing outside the hundred carries this role inside the deck\'s colors — not the bench, the buy list, the linked upgrades or the commander\'s co-play neighbours.</p>'}
             <p class="cm-muted cm-lens-foot">Ranked by how often the commander\'s real decks run the card, then owned before ordered before not owned. <em>Swap for…</em> links the card as an uncommitted upgrade option on a slot you choose; the hundred does not change.</p></section>
         </div></div>`;
+      syncPickerPrimary();
       $('#cm-graph-size').textContent = lastInfo && lastInfo.total ? `${lastInfo.total} on canvas · lens: ${r.lens}` : '';
       sizePane();
     }
@@ -1124,7 +1157,7 @@
       return `<div class="cm-list-pop cm-list-pop-row"><p class="cm-muted cm-pop-type">${e(r.type)}${r.depth ? ` · ring ${r.depth}` : ''}</p>
         ${parent ? `<h4>Joined to ${e(parent.name)} by</h4>${relationHTML(rel, r.card, parent)}` : ''}
         ${ownTermsHTML(r.card)}
-        <div class="cm-actions">${landsOnly() ? '' : b('Focus here', 'graph-card', {id: r.id}, true)}${b('Inspect card', 'card', {card: CrankCatalog.key(r.name)})}<button type="button" class="v-button${picked.has(r.id) ? ' is-on' : ''}" data-action="graph-tick" data-id="${e(r.id)}">${picked.has(r.id) ? 'Ticked ✓' : 'Tick for a group'}</button></div></div>`;
+        <div class="cm-actions">${landsOnly() ? '' : b('Focus here', 'graph-card', {id: r.id}, !picked.size&&!popId)}${b('Inspect card', 'card', {card: CrankCatalog.key(r.name)})}<button type="button" class="v-button${picked.has(r.id) ? ' is-on' : ''}" data-action="graph-tick" data-id="${e(r.id)}">${picked.has(r.id) ? 'Ticked ✓' : 'Tick for a group'}</button></div></div>`;
     }
     actions['list-card'] = (el) => {
       const id = el.dataset.id;
@@ -1148,7 +1181,8 @@
     function optionDialog(deck, card, why, firstSlots = new Set()) {
       const mains = deck.slots.filter((x) => x.purpose === 'main');
       const slots = mains.map((x) => [x.id, `${C.card(x.cardId)?.name || x.cardId}${firstSlots.has(x.id) ? ' — in the role' : ''}`]).sort((a, b) => (firstSlots.has(a[0]) ? 0 : 1) - (firstSlots.has(b[0]) ? 0 : 1) || a[1].localeCompare(b[1]));
-      const firstSlot = slots[0] && slots[0][0];
+      const requested=deck.slots.find(x=>x.purpose==='main'&&x.cardId===params.get('replace'));
+      const firstSlot = requested?.id || (slots[0] && slots[0][0]);
       /* THE TWO CARDS, THE WAY PROMOTE SHOWS THEM (Rob, 16 September). The deck page's Promote
          dialog puts the outgoing and incoming cards side by side before the swap is agreed to;
          a swap decided from a name in a dropdown is decided blind. The difference here is that
@@ -1278,6 +1312,7 @@
         </h3><div class="cm-term-chips">${chips.join('')}</div>` : ''}
         ${loopMode && lastInfo && lastInfo.total === 1 ? `<p class="cm-muted cm-card-view-foot">Loops only is on and no join from ${e(c.name)} continues a loop under these filters. Turn it off to see every connection.</p>` : ''}
         ${lastInfo && lastInfo.total ? `<p class="cm-muted cm-card-view-foot">${lastInfo.total} cards on the canvas · ${lastInfo.byDepth.filter(Boolean).join(' / ')} by ring · ${lastInfo.crossLinks} cross-links${lastInfo.crossLinks > 60 ? ' (too many to draw at once: rest on a card, or inspect it, to see its own)' : ''}</p>` : ''}`;
+      syncPickerPrimary();
       $('#cm-graph-size').textContent = lastInfo && lastInfo.total ? `${lastInfo.total} on canvas${loopMode ? ' · loops only' : ''}` : '';
       sizePane();
     }
@@ -1354,6 +1389,7 @@
     const gapIntent = params.get('gap'); /* gap is recorded but not yet acted on in slice A */
     const commanderName = params.get('commander');
     const commanderCard = commanderName ? data.cards.find((c) => c.name.toLowerCase() === commanderName.toLowerCase() && c.isCommander) : null;
+    if (commanderName && !commanderCard) C.notice(`"${commanderName}" is not a commander in the catalog.`, true);
     const cardName = params.get('card');
     const namedCard = cardName ? data.cards.find((c) => c.name.toLowerCase() === cardName.toLowerCase()) : null;
 

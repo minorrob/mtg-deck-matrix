@@ -93,6 +93,17 @@ function cardFor(state, id, canSeeFace, viewer = null) {
     tapped: object.tapped,
     damage: object.damage,
     counters: {...object.counters},
+    /* Physical battlefield facts are public even when a face is hidden. Keep current reciprocal attachments only:
+       a zone change makes a new object, and an Aura in a hidden zone must never gain an identity through its old host. */
+    ...(object.zone === "battlefield" ? {
+      ...(object.token === true ? {token: true} : {}),
+      /* WHICH FACE IS UP (ROB-207; the UI's request #5): the back face of a double-faced permanent, said with its name. A name
+         cannot say which side of one picture to draw (a modal double-faced land played as its back face, Mistgate Pathway).
+         The front is the default and says nothing; `face` is only ever "back" here (an adventure's face is not a permanent's). */
+      ...(named && object.face === "back" ? {face: "back"} : {}),
+      attachments: (object.attachments ?? []).filter(id => state.objects[id]?.zone === "battlefield" && state.objects[id].attachedTo === object.id),
+    } : {}),
+
     /* CURRENT characteristics for anything on the battlefield, so the board draws the creature a
        player is actually looking at rather than what was printed on the card. Elsewhere there is
        nothing to derive: a card in a graveyard is its printed self. */
@@ -110,6 +121,10 @@ function cardFor(state, id, canSeeFace, viewer = null) {
     /* Monstrous (CR 701.37b) and prepared (CR 722.3a): designations, which anyone can see (script/effects/attributes.mjs). */
     ...(object.monstrous === true ? {monstrous: true} : {}),
     ...(object.prepared === true ? {prepared: true} : {}),
+    /* The inset spell is a distinct copy in public exile, not another activation of the creature (CR 722.3c).
+       Its identity lets the board associate that legal cast with the prepared card without inventing an action. */
+    ...(named && object.prepared === true && state.objects[object.preparedCopy]?.zone === "exile" && !state.objects[object.preparedCopy].faceDown
+      ? {preparedSpell: {cardId: object.preparedCopy, name: state.objects[object.preparedCopy].card, manaCost: state.objects[object.preparedCopy].manaCost ?? null}} : {}),
     /* Solved (CR 719.3b): a Case's designation, which anyone can see. */
     ...(object.solved === true ? {solved: true} : {}),
     commander: object.commander === true,

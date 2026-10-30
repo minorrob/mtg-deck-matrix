@@ -21,7 +21,7 @@ const budgetCard=a=>{const n=v=>e(cents(v));
   const rows=a.decks.map(x=>`<tr${x.over?' class="cm-over"':''}><th scope="row">${e(x.name)}</th><td>${x.budget===null?'—':n(x.budget)}</td><td${x.unpriced?` title="${x.unpriced} cop${x.unpriced===1?'y has':'ies have'} no price"`:''}>${x.unpriced?'≈ ':''}${n(x.cost)}</td><td>${n(x.counted)}</td></tr>`).join('');
   return `<form class="cm-settings-cap" data-settings-budget><label>Account budget ($)<input name="budget" type="number" min="1" step="1" inputmode="numeric" value="${a.budget??''}" placeholder="None"></label>${b('Save budget','save-account-budget',{},true)}</form>`
     +`<p class="cm-settings-budget-sum">${head}</p>`
-    +(a.decks.length?`<table class="cm-settings-budgets"><thead><tr><th scope="col">Deck</th><th scope="col">Budget</th><th scope="col">Cost</th><th scope="col">Counts</th></tr></thead><tbody>${rows}</tbody></table>`:'')
+    +(a.decks.length?`<details class="cm-settings-budget-decks"><summary>Per deck (${a.decks.length})</summary><table class="cm-settings-budgets"><thead><tr><th scope="col">Deck</th><th scope="col">Budget</th><th scope="col">Cost</th><th scope="col">Counts</th></tr></thead><tbody>${rows}</tbody></table></details>`:'')
     +`<p class="cm-muted">Only informs: nothing is refused for money. A deck's budget is its own, in its Deck Definition, and does not inherit this one. A deck counts at its budget, or at its cost when that is more.</p>`;};
 /* A THEME IS PICKED BY ITS LOOK (A1): a swatch card per theme, drawn in that theme's own tokens -- five bands (ground,
    panel, raised, line, ink), the accent as a dot, and the name in the theme's display face. The current one is ringed. */
@@ -38,7 +38,7 @@ views.settings=async()=>{
    +card('appearance','Appearance',
       `<p class="cm-settings-label">Theme</p><div class="cm-theme-cards" role="group" aria-label="Theme">${C.THEMES.map(swatch).join('')}</div>`
       +`<p class="cm-settings-label">Default card size</p><div class="cm-settings-row">${C.cardScaleSlider({label:false,scope:'default'})}</div><p class="cm-muted">The size cards are drawn at everywhere: the hover preview, the card inspector's picture, and any view you have not sized. The Table and the Play board have their own slider, which sets that view's size over this one. Remembered on this device; a phone's scale stops sooner so the largest card still fits.</p>`
-      +`<p class="cm-settings-label">Motion</p><div class="cm-settings-row"><button type="button" class="v-button cm-chip-toggle" data-action="set-motion" aria-pressed="${still}">Reduce motion</button></div>`
+      +`<p class="cm-settings-label">Motion</p><div class="cm-settings-row"><button type="button" role="switch" class="v-button cm-chip-toggle" data-action="set-motion" aria-checked="${still}">Reduce motion: ${still?'On':'Off'}</button></div>`
       +`<p class="cm-muted">Stills the animated backgrounds and transitions. Your device's own setting does the same whatever this says.</p>`
       +(globalThis.CrankStage?`<p class="cm-settings-label">Table design</p><div class="cm-settings-row"><label class="cm-settings-select">Table <select data-settings-table aria-label="Table design">${CrankStage.appearances.tables.map(t=>`<option value="${e(t.id)}"${CrankStage.tableDesign(tableChoice()).id===t.id?' selected':''}>${e(t.name)}</option>`).join('')}</select></label></div><p class="cm-muted">The table the game is played on, for this device. The same choice is in the Camera menu at the table.</p>`:'')
       +`<div class="cm-settings-row">${b('Confirmations…','confirm-skips')}</div>`)
@@ -48,9 +48,9 @@ views.settings=async()=>{
    +card('budget','Budget',budgetCard(acct))
    +card('ai','AI Coach',`<p>What the AI may suggest, how much it says, and what the Coach may see at a table. Nothing here turns an AI feature on: those are invite-only.</p><div class="cm-settings-row">${b('AI Coach settings…','ai-settings')}</div>`)
    +card('data','Data',
-      `<div class="cm-settings-stack">${b('Save a backup file','backup')}${b('Restore from a backup file','restore')}${b('Export as Excel','export-excel')}${b('Email the export…','share-export')}${b('Apply deck write-ups…','apply-writeups')}</div>`
+      `<div class="cm-settings-stack">${b('Save a backup file','backup')}${b('Restore from a backup file','restore')}${b('Export as Excel','export-excel')}${b('Email the export…','share-export')}${b('Apply deck write-ups…','apply-writeups')}${b('Reload with newest files','app-refresh')}</div>`
       +`<p class="cm-settings-label">History</p><div class="cm-settings-stack">${b('See every change…','history')}${b('Undo last change','undo')}</div>`
-      +`<div class="cm-settings-danger"><p class="cm-settings-label">Danger zone</p><div id="cm-settings-delete"></div>${b('Clear all data','clear',{},false,{cls:'cm-danger'})}<p class="cm-muted">Removes the library, decks, history and cached card data from this device. Save a backup first.</p></div>`)
+      +`<div class="cm-settings-danger"><p class="cm-settings-label">Danger zone</p><div id="cm-settings-delete"></div>${b('Reset All…','reset-all',{},false,{cls:'cm-danger'})}${b('Clear all data','clear',{},false,{cls:'cm-danger'})}<p class="cm-muted">Removes the library, decks, history and cached card data from this device. Save a backup first.</p></div>`)
    +card('about','About',`<p id="cm-save-status" class="cm-muted"></p><div id="cm-data-dates" class="cm-data-dates"></div>${version?'':'<p class="cm-muted">A development copy: no release version.</p>'}`
       +`<p class="cm-settings-links"><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="THIRD-PARTY-NOTICES.md">Third-party notices</a><a href="LICENSE">License</a></p>`)
    +`</div>`;

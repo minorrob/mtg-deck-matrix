@@ -534,6 +534,17 @@ export const blockers = {
       ...(requires.length ? {requires} : {}),
       options,
       legalBlocks: [...by].map(([blocker, attackers]) => ({blocker, attackers})),
+      /* Public restrictions per attacker; the draft itself remains private until the player sends it. */
+      blockReasons: mine.map(({attacker}) => ({attackerId: attacker, reasons: [
+        ...(hasNow(state, attacker, "Menace") ? ["Menace: needs two or more blockers"] : []),
+        ...(hasNow(state, attacker, "Flying") ? ["Flying: needs flying or reach"] : []),
+        ...(hasNow(state, attacker, "Shadow") ? ["Shadow: needs shadow"] : []),
+        ...(hasNow(state, attacker, "Fear") ? ["Fear: needs a black or artifact creature"] : []),
+        ...(hasNow(state, attacker, "Skulk") ? ["Skulk: can't be blocked by a creature with greater power"] : []),
+        ...(ruleChanged(state, "cant-be-blocked", attacker) ? ["Can't be blocked"] : []),
+        ...(ruleChanged(state, "blocked-by-one-at-most", attacker) ? ["At most one blocker"] : []),
+        ...(!options.some(o => o.attackerId === attacker) ? ["No legal blocker"] : []),
+      ]})),
     };
   },
 
@@ -580,9 +591,15 @@ export const blockers = {
     if (!Array.isArray(indices) || indices.some((index) => !choice.options[index]) || new Set(indices).size !== indices.length)
       return {picked: [], reasons: ["Invalid selection"]};
     const picked = indices.map((index) => choice.options[index]);
+    const each = new Map(choice.blockReasons.map(a => [a.attackerId, []]));
+    const add = (attackerId, why) => {if (!each.has(attackerId)) each.set(attackerId, []); each.get(attackerId).push(why);};
     /* CR 509.1a: one creature blocks one attacker, unless an effect says otherwise. */
     const twice = new Set(picked.filter((o, i) => picked.findIndex((p) => p.cardId === o.cardId) !== i).map((o) => o.cardId));
-    for (const id of twice) reasons.push(`${shownName(state.objects[id])} can block only one attacker. Choose one attacker for it to block.`);
+    for (const id of twice) {
+      const why = `${shownName(state.objects[id])} can block only one attacker. Choose one attacker for it to block.`;
+      reasons.push(why);
+      for (const option of picked.filter(o => o.cardId === id)) add(option.attackerId, why);
+    }
 
     /* MENACE IS A RULE ABOUT THE SET (CR 702.111b), so it can only be checked once the whole
        declaration is in. Every individual blocker was legal or it would not have been offered. */
@@ -593,17 +610,24 @@ export const blockers = {
     }
     for (const [attackerId, ids] of bySeat) {
       if (blockersAreLegal(state, attackerId, ids)) continue;
-      reasons.push(whyBlockersAreIllegal(state, attackerId, ids));
+      const why = whyBlockersAreIllegal(state, attackerId, ids);
+      reasons.push(why); add(attackerId, why);
     }
     /* "Must be blocked if able" (CR 509.1c): as many of them blocked as can be at once -- each by as many as it needs. */
     for (const need of choice.requires ?? []) {
       const met = need.values.filter((id) => (bySeat.get(id) ?? []).length >= (need.per?.[id] ?? 1)).length;
-      if (met < need.least) reasons.push(need.why);
+      if (met < need.least) {
+        reasons.push(need.why);
+        for (const id of need.values.filter(id => (bySeat.get(id) ?? []).length < (need.per?.[id] ?? 1))) add(id, need.why);
+      }
     }
     /* What these blocks cost (Archangel of Tithes; CR 509.1d): more than the player can pay, and they cannot be declared. */
     const due = choice.budget ? blockTax(state, picked) : 0;
-    if (due > (choice.budget?.most ?? Infinity)) reasons.push(`Those blockers cost {${due}} to block with, more than you can pay. Declare fewer blockers.`);
-    return {picked, reasons};
+    if (due > (choice.budget?.most ?? Infinity)) {
+      const why = `Those blockers cost {${due}} to block with, more than you can pay. Declare fewer blockers.`;
+      reasons.push(why); for (const id of bySeat.keys()) add(id, why);
+    }
+    return {picked, reasons, byAttacker: [...each].filter(([, why]) => why.length).map(([attackerId, why]) => ({attackerId, reasons: [...new Set(why)]}))};
   },
 };
 

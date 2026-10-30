@@ -15,7 +15,7 @@ const V=globalThis.CrankVocabulary,R=globalThis.CrankRecommend,A=globalThis.Cran
 const COLOR_NAME={W:'White',U:'Blue',B:'Black',R:'Red',G:'Green',C:'Colorless'};
 let F=null,index=null,indexLoading=null,targets=null,brackets=null;
 /* THE COMMANDER INDEX (data/commander-index.json): every commander with its colors, rank, play styles and mechanics. */
-async function loadIndex(){if(index)return index;indexLoading??=fetch('data/commander-index.json?v=1').then(r=>{if(!r.ok)throw Error(`The commander list could not be read (${r.status}). Try again when connected.`);return r.json();}).then(d=>{index={...d,rows:d.commanders.map(c=>({name:c.n,ci:c.ci,rank:c.r,styles:c.s.map(i=>d.styles[i].id),mechanics:c.m.map(i=>d.mechanics[i].id),pair:c.p||''}))};return index;}).finally(()=>{indexLoading=null;});return indexLoading;}
+async function loadIndex(){if(index)return index;indexLoading??=fetch('data/commander-index.json?v=2').then(r=>{if(!r.ok)throw Error(`The commander list could not be read (${r.status}). Try again when connected.`);return r.json();}).then(d=>{index={...d,rows:d.commanders.map(c=>({name:c.n,ci:c.ci,rank:c.r,styles:c.s.map(i=>d.styles[i].id),mechanics:c.m.map(i=>d.mechanics[i].id),pair:c.p||''}))};return index;}).finally(()=>{indexLoading=null;});return indexLoading;}
 const loadJSON=async url=>{const r=await fetch(url);if(!r.ok)throw Error(`${url} could not be read (${r.status}).`);return r.json();};
 const ownedNames=()=>{const out=new Set();for(const l of C.state.lots)if(l.source==='owned'){const c=C.state.cards[l.cardId];if(c)out.add(c.name);}return out;};
 const pips=ci=>C.colors(String(ci||'').split('').filter(Boolean));
@@ -23,9 +23,9 @@ const short=name=>String(name||'').split(',')[0].replace(/\s+(the|of)\s.*$/i,'')
 
 /* THE FRAME (DLG). `nav` is [[id,label,mark?]]; the current item is pressed. */
 function frame(title,nav,current,canvas,primary,{back=null,cls='',head=''}={}){
-  const d=modal(title,`<div class="cm-flow ${cls}">${head}<div class="cm-flow-body"><nav class="cm-flow-nav" aria-label="${e(title)}">${nav.map(([id,label,mark])=>`<button type="button" data-action="flow-nav" data-to="${e(id)}" aria-pressed="${id===current}"${mark?` data-mark="${e(mark)}"`:''}>${e(label)}${mark?` <span class="cm-flow-mark" aria-label="${e(mark)}">•</span>`:''}</button>`).join('')}</nav><section class="cm-flow-canvas" id="cm-flow-canvas">${canvas}</section></div><footer class="cm-flow-foot">${back?`<button type="button" class="v-button" data-action="${e(back.action)}">${e(back.label)}</button>`:'<span></span>'}<button type="button" class="v-button primary" data-action="${e(primary.action)}"${primary.disabled?' disabled':''}>${e(primary.label)}</button></footer></div>`);
+  const d=modal(title,`<div class="cm-flow ${cls}">${head}<div class="cm-flow-body"><nav class="cm-flow-nav" aria-label="${e(title)}">${nav.map(([id,label,mark])=>`<button type="button" data-action="flow-nav" data-to="${e(id)}" aria-pressed="${id===current}"${mark?` data-mark="${e(mark)}"`:''}>${e(label)}</button>`).join('')}</nav><section class="cm-flow-canvas" id="cm-flow-canvas">${canvas}</section></div><footer class="cm-flow-foot">${back?`<button type="button" class="v-button" data-action="${e(back.action)}">${e(back.label)}</button>`:'<span></span>'}<button type="button" class="v-button primary" data-action="${e(primary.action)}"${primary.disabled?' disabled':''}>${e(primary.label)}</button></footer></div>`);
   d.classList.add('cm-flow-dialog');return d;}
-actions['flow-nav']=el=>{if(!F)return;if(F.step==='start')F.method=el.dataset.to;else F.section=el.dataset.to;draw();};
+actions['flow-nav']=el=>{if(!F)return;F.colorAsk=null;if(F.step==='start')F.method=el.dataset.to;else F.section=el.dataset.to;draw();};
 
 /* ── START FROM ─────────────────────────────────────────────────────────────────────────────────────────────── */
 const METHODS=[['pick','Pick a commander'],['colors','Choose colors'],['style','Choose play style'],['mechanics','Choose mechanics']];
@@ -56,7 +56,15 @@ function startCanvas(){
   const chip=(action,id,label,on,extra='')=>`<button type="button" class="cm-chip-toggle v-button" data-action="${action}" data-id="${e(id)}" aria-pressed="${on}"${extra}>${label}</button>`;
   let body='';
   if(m==='pick')body=`<label class="cm-flow-field">Commander name<input id="cm-flow-query" autocomplete="off" value="${e(F.query)}"></label><div id="cm-flow-list"></div>`;
-  if(m==='colors')body=`<div class="cm-flow-colors" role="group" aria-label="Colors">${[...V.COLORS,'C'].map(x=>chip('flow-color',x,`<span class="cm-pip-letter">${x}</span>`,x==='C'?p.colorless:p.colors.includes(x),` aria-label="${COLOR_NAME[x]}" title="${COLOR_NAME[x]}"`)).join('')}</div><label class="cm-checkbox"><input type="checkbox" data-flow-include${p.include?' checked':''}${p.colorless?' disabled':''}>Include more colors</label><div id="cm-flow-list">${p.colors.length||p.colorless?results(matching()):''}</div>`;
+  /* COLORS FOLLOW THE COMMANDER (ROB-216, Luke's playtest of 2026-10-28: "after picking a red commander, Color should lock to
+     red, or warn that changing it disconnects the commander"). Once a commander is chosen the chips show its color identity and
+     a press asks first (`F.colorAsk`): changing the colors lets the commander go, and says so before it does. */
+  if(m==='colors'){
+    const lead=F.commander?String(F.commander.ci||'').split('').filter(Boolean):null;
+    const on=x=>lead?(x==='C'?!lead.length:lead.includes(x)):x==='C'?p.colorless:p.colors.includes(x);
+    const ask=F.colorAsk?`<p class="cm-flow-warn" id="cm-flow-color-ask" role="alert"><strong>${e(F.commander.name)}</strong> will be disconnected: it is not ${e(COLOR_NAME[F.colorAsk])}.<span class="cm-actions">${b('Change colors','flow-color-yes',{},true)}${b(`Keep ${short(F.commander.name)}`,'flow-color-no')}</span></p>`:'';
+    body=`<div class="cm-flow-colors"${lead?' data-locked="commander"':''} role="group" aria-label="Colors${lead?`, from ${e(F.commander.name)}`:''}">${[...V.COLORS,'C'].map(x=>chip('flow-color',x,`<span class="cm-pip-letter">${x}</span>`,on(x),` aria-label="${COLOR_NAME[x]}" title="${COLOR_NAME[x]}${lead?' (set by the commander)':''}"`)).join('')}</div>${ask}<label class="cm-checkbox"><input type="checkbox" data-flow-include${p.include?' checked':''}${p.colorless||lead?' disabled':''}>Include more colors</label><div id="cm-flow-list">${!lead&&(p.colors.length||p.colorless)?results(matching()):''}</div>`;
+  }
   if(m==='style')body=`<div class="cm-flow-chips" role="group" aria-label="Play styles">${(index?.styles||[]).map(s=>chip('flow-style',s.id,e(s.label),p.styles.includes(s.id))).join('')}</div><div id="cm-flow-list">${p.styles.length?results(matching()):''}</div>`;
   if(m==='mechanics')body=`<div class="cm-flow-chips" role="group" aria-label="Mechanics">${(index?.mechanics||[]).map(x=>chip('flow-mech',x.id,e(x.label),p.mechanics.includes(x.id))).join('')}</div><div id="cm-flow-list">${p.mechanics.length?results(matching()):''}</div>`;
   /* STF-9, Q14: a second commander when the first allows one, limited to legal pairs; optional. */
@@ -79,11 +87,15 @@ function drawStart(){
   d.querySelector('#cm-flow-second')?.addEventListener('change',ev=>{const v=ev.target.value.trim();F.second=v?secondChoices(index.rows.find(r=>r.name===F.commander.name).pair).find(r=>r.name===v)||null:null;if(v&&!F.second)ev.target.setCustomValidity('Choose a commander from the list.');else ev.target.setCustomValidity('');});
   d.addEventListener('close',()=>{if(F&&F.step==='start'){const n=d.querySelector('#cm-flow-name')?.value.trim();if(n&&n!==M.deck(C.state,F.deckId).name)commit({type:'editDeck',deckId:F.deckId,name:n},{renderView:false}).catch(()=>{});}},{once:true});}
 const toggle=(list,id)=>list.includes(id)?list.filter(x=>x!==id):[...list,id];
-actions['flow-color']=el=>{const x=el.dataset.id,p=F.picks;if(x==='C'){p.colorless=!p.colorless;if(p.colorless)p.colors=[];}else{p.colorless=false;p.colors=toggle(p.colors,x);}draw();};
+/* A chosen commander sets the colors: pressing one asks first (flow-color-yes / flow-color-no), and only a yes lets the commander go. */
+actions['flow-color-yes']=()=>{const x=F?.colorAsk;if(!x)return;const p=F.picks,lead=String(F.commander.ci||'').split('').filter(Boolean);F.colorAsk=null;F.commander=null;F.second=null;
+  p.colors=x==='C'?[]:lead.includes(x)?lead.filter(c=>c!==x):[...lead,x];p.colorless=x==='C'?!!lead.length:false;draw();};
+actions['flow-color-no']=()=>{if(F){F.colorAsk=null;draw();}};
+actions['flow-color']=el=>{const x=el.dataset.id,p=F.picks;if(F.commander){F.colorAsk=x;draw();return;}if(x==='C'){p.colorless=!p.colorless;if(p.colorless)p.colors=[];}else{p.colorless=false;p.colors=toggle(p.colors,x);}draw();};
 actions['flow-style']=el=>{F.picks.styles=toggle(F.picks.styles,el.dataset.id);draw();};
 actions['flow-mech']=el=>{F.picks.mechanics=toggle(F.picks.mechanics,el.dataset.id);draw();};
 /* The selection survives switching methods (STF-3); a different commander drops a second that no longer pairs. */
-actions['flow-commander']=el=>{const name=el.dataset.name,row=index?.rows.find(r=>r.name===name)||{name,ci:(C.catalog.exact?.(name)?.colorIdentity||[]).join('')};if(F.commander?.name!==name)F.second=null;F.commander=row;draw();};
+actions['flow-commander']=el=>{const name=el.dataset.name,row=index?.rows.find(r=>r.name===name)||{name,ci:(C.catalog.exact?.(name)?.colorIdentity||[]).join('')};if(F.commander?.name!==name)F.second=null;F.colorAsk=null;F.commander=row;draw();};
 /* NEXT (STF-3, REC-1, REC-4): the commander, and only the commander, goes on the deck; its mechanics and play styles go
    into the definition marked as from the commander. Then Define the Deck. */
 actions['flow-next']=async()=>{if(!F?.commander)return;
@@ -103,7 +115,17 @@ const SECTIONS=[['general','General'],['gameplay','Gameplay'],['mechanics','Mech
 const PILOT=['Beginner','Intermediate','Advanced'];
 const WEIGHTS=[['Balanced','Balanced'],['Offense','Offense'],['Defense','Defense'],['Response','Response'],['Value','Value'],['Combo','Combo']];
 const SOURCE_LABELS=[['bench','Bench only'],['buy','Bench and cards to buy'],['decks','Bench, cards to buy and cards in other decks']];
-const FLAGS=[['massLandDenial','No mass land denial'],['extraTurns','No chained extra turns'],['lateCombos','Two-card infinites only as late finishers'],['gameChangerCap','The bracket’s Game Changer cap']];
+/* THE RESTRICTIONS ARE THE BRACKET'S (Rob, 2026-10-28: "Max 3 Game Changers in B3 but in B4 that's lifted"): each flag is offered with the words that fit the
+   bracket chosen, and not at all where that bracket lifts it (Brackets 4 and 5 have no restriction; Bracket 1 and 2 allow no Game Changers). */
+const FLAGS=['massLandDenial','extraTurns','lateCombos','gameChangerCap'];
+const RESTRICT={
+  massLandDenial:{upTo:3,label:()=>'No mass land denial'},
+  extraTurns:{upTo:3,label:()=>'No chained extra turns'},
+  lateCombos:{upTo:3,label:b=>b<3?'No two-card infinite combos':'Two-card infinites only as late finishers'},
+  gameChangerCap:{upTo:3,label:b=>b<3?'No Game Changers':'At most 3 Game Changers'}};
+const bracketNow=x=>Number(x.bracket)||M.defaultDefinition().baseBracket;
+const restrictionsFor=b=>FLAGS.filter(k=>b<=RESTRICT[k].upTo);
+const liftedAt=b=>FLAGS.filter(k=>b>RESTRICT[k].upTo);
 function defFrom(d){const x=d.definition;return {mode:null,bracket:'',sources:x.cardSources||'buy',budget:x.budget??'',restrictions:x.restrictions||'',flags:{massLandDenial:true,extraTurns:true,lateCombos:true,gameChangerCap:true,...(x.restrictionFlags||{})},
   saltiness:x.saltiness,speed:x.speed,competitiveness:x.competitiveness,pilot:x.pilot||'',primary:x.composition?.primary||'',tribe:x.composition?.tribe||'',secondary:x.composition?.secondary||'',
   mechanics:[...(x.mechanicIds||[])],fromCommander:x.fromCommander||{styles:[],mechanics:[]},cards:'',weighting:'Balanced',group:'',missing:[]};}
@@ -113,13 +135,16 @@ function defineCanvas(){const x=F.def,s=F.section,on=(a,b2)=>a===b2?' checked':'
   const top=`<div class="cm-flow-modes" role="radiogroup" aria-label="Define the deck"><label class="cm-flow-mode"><input type="radio" name="mode" value="define"${on(x.mode,'define')}>Define the deck</label><label class="cm-flow-mode"><input type="radio" name="mode" value="undefined"${on(x.mode,'undefined')}>Leave undefined</label></div>`;
   if(x.mode!=='define')return top;
   const sel=(name,opts,v)=>`<select name="${name}">${opts.map(([k,l])=>`<option value="${e(k)}"${String(k)===String(v)?' selected':''}>${e(l)}</option>`).join('')}</select>`;
-  const field=(label,inner,cls='')=>`<label class="cm-flow-field ${cls}">${e(label)}${inner}</label>`;
+  const issues=(x.missing||[]).filter(m=>m.section.toLowerCase()===s);
+  const field=(label,inner,cls='')=>{const name=(inner.match(/name="([^" ]+)"/)||[])[1],issue=issues.find(m=>m.field===name||(!m.field&&s==='gameplay'&&name==='primary')),id=`cm-flow-${name}-error`;
+    if(issue)inner=inner.replace(/<(input|select) /,`<$1 aria-invalid="true" aria-describedby="${id}" `);
+    return `<label class="cm-flow-field ${cls}${issue?' is-missing':''}">${e(label)}${inner}${issue?`<span id="${id}" class="cm-error" role="alert">${e(issue.says)}</span>`:''}</label>`;};
   let body='';
   if(s==='general')body=field('Deck name',`<input name="name" maxlength="160" value="${e(F.name)}">`)
     +field('Bracket',sel('bracket',[['',`Default (B${M.defaultDefinition().baseBracket})`],...[1,2,3,4,5].map(n=>[n,`Bracket ${n}`])],x.bracket))
     +`<fieldset class="cm-flow-field"><legend>Card sources</legend>${SOURCE_LABELS.map(([k,l])=>`<label class="cm-checkbox"><input type="radio" name="sources" value="${k}"${on(x.sources,k)}>${e(l)}</label>`).join('')}</fieldset>`
     +field('Budget ($)',`<input name="budget" type="number" min="0" step="1" value="${e(x.budget)}">`)
-    +`<fieldset class="cm-flow-field"><legend>Restrictions</legend>${FLAGS.map(([k,l])=>`<label class="cm-checkbox"><input type="checkbox" name="flag-${k}"${x.flags[k]?' checked':''}>${e(l)}</label>`).join('')}<input name="restrictions" maxlength="300" value="${e(x.restrictions)}" aria-label="Other restrictions"></fieldset>`;
+    +(()=>{const b=bracketNow(x),on2=restrictionsFor(b);return `<fieldset class="cm-flow-field cm-flow-restrict"><legend>Restrictions · Bracket ${b}</legend>${on2.length?`<div class="cm-flow-restrict-grid">${on2.map(k=>`<label class="cm-checkbox"><input type="checkbox" name="flag-${k}"${x.flags[k]?' checked':''}>${e(RESTRICT[k].label(b))}</label>`).join('')}</div>`:''}${liftedAt(b).length?`<p class="cm-muted cm-flow-lifted">Bracket ${b} lifts these: Game Changers, mass land denial, chained extra turns and two-card infinites are all allowed.</p>`:''}</fieldset>`;})();
   if(s==='gameplay'){const fits=poolFits(),styles=(index?.styles||[]).filter(st=>!fits||fits.find(f=>f.id===st.id)?.fits);
     const tribes=x.primary==='tribal'&&F.graph?V.tribes(F.graph.cards,identity()):[];
     const scale=(name,label)=>field(label,sel(name,[1,2,3,4,5].map(n=>[n,String(n)]),x[name]));
@@ -135,7 +160,7 @@ function defineCanvas(){const x=F.def,s=F.section,on=(a,b2)=>a===b2?' checked':'
       +(x.cards==='auto'?`<fieldset class="cm-flow-field"><legend>Weighting</legend><div class="cm-flow-row">${WEIGHTS.map(([k,l])=>`<label class="cm-checkbox"><input type="radio" name="weighting" value="${k}"${on(x.weighting,k)}>${e(l)}</label>`).join('')}</div></fieldset>`
         +(x.missing.length?`<ul class="cm-flow-missing" role="alert">${x.missing.map(m=>`<li><button type="button" class="cm-text-button" data-action="flow-nav" data-to="${e(m.section.toLowerCase())}">${e(m.section)}</button>: ${e(m.says)}</li>`).join('')}</ul>`:''):'')
       +(x.cards==='merge'?field('Collection group',sel('group',[['','Choose a group…'],...groups.map(g=>[g.id,C.groupLabel(g)])],x.group)):'');}
-  return top+body;}
+  return top+body+(s!=='gameplay'?issues.filter(m=>!m.field).map(m=>`<p class="cm-error" role="alert">${e(m.says)}</p>`).join(''):'');}
 function keepDefine(d){const f=d.querySelector('#cm-flow-canvas');if(!f)return;const x=F.def;
   for(const el of f.querySelectorAll('input,select')){const n=el.name;if(!n)continue;
     if(n==='mode'||n==='cards'||n==='weighting'||n==='sources'){if(el.checked)x[n]=el.value;continue;}
@@ -144,20 +169,30 @@ function keepDefine(d){const f=d.querySelector('#cm-flow-canvas');if(!f)return;c
     if(['saltiness','speed','competitiveness'].includes(n)){x[n]=Number(el.value);continue;}
     x[n]=el.value;}}
 function drawDefine(){const x=F.def,marks=new Map(x.missing.map(m=>[m.section.toLowerCase(),'Needs a choice']));
-  const d=frame('Define the Deck',x.mode==='define'?SECTIONS.map(([id,l])=>[id,l,marks.get(id)]):[],F.section,defineCanvas(),{label:'Create deck',action:'flow-create',disabled:!x.mode},{back:{label:'Back',action:'flow-back'}});
-  d.querySelector('#cm-flow-canvas').addEventListener('change',()=>{keepDefine(d);const redraw=d.querySelector('[name=mode]:checked')||d.querySelector('[name=cards]:checked')||d.querySelector('[name=primary]');if(redraw)draw();});}
+  const last=x.mode!=='define'||F.section===SECTIONS.at(-1)[0];
+  const d=frame('Define the Deck',x.mode==='define'?SECTIONS.map(([id,l])=>[id,l,marks.get(id)]):[],F.section,defineCanvas(),last?{label:'Create deck',action:'flow-create',disabled:!x.mode}:{label:'Next',action:'flow-def-next',disabled:!x.mode},{back:{label:'Back',action:'flow-back'}});
+  const missing=x.missing.length;
+  if(missing)d.querySelector('.cm-flow-foot').insertAdjacentHTML('afterbegin',`<span class="cm-error" role="status">${e(x.missing[0].says)} · ${missing} field${missing===1?'':'s'} left</span>`);
+  d.querySelector('[aria-invalid=true]')?.focus();
+  d.querySelector('#cm-flow-canvas').addEventListener('change',()=>{keepDefine(d);x.missing=x.missing.filter(m=>m.field==='name'?!F.name:m.field==='budget'?(!Number.isFinite(Number(x.budget))||Number(x.budget)<0):false);draw();});}
+/* NEXT goes to the next section; the last one, Cards, is where Create deck is (Rob, 2026-10-28). */
+actions['flow-def-next']=()=>{const dlg=document.querySelector('.cm-flow-dialog');if(dlg)keepDefine(dlg);const at=SECTIONS.findIndex(([id])=>id===F.section);F.section=SECTIONS[Math.min(SECTIONS.length-1,at+1)][0];draw();};
 actions['flow-def-mech']=el=>{keepDefine(document.querySelector('.cm-flow-dialog'));F.def.mechanics=toggle(F.def.mechanics,el.dataset.id);draw();};
 /* BACK (DEF-7): Start from with the commander still selected; a different commander then recomputes what came from it. */
 actions['flow-back']=()=>{keepDefine(document.querySelector('.cm-flow-dialog'));F.step='start';F.fitCache=null;draw();};
 const definitionOf=()=>{const d=M.deck(C.state,F.deckId),x=F.def,base=x.bracket?Number(x.bracket):d.definition.baseBracket;
   const styles=[x.primary,x.secondary].filter(v=>v&&v!=='auto');
-  return {...d.definition,baseBracket:base,bracketCeiling:Math.max(base,d.definition.bracketCeiling),budget:x.budget===''||x.budget===null?null:Number(x.budget),restrictions:x.restrictions||'',restrictionFlags:{...x.flags},cardSources:x.sources,
+  return {...d.definition,baseBracket:base,bracketCeiling:Math.max(base,d.definition.bracketCeiling),budget:x.budget===''||x.budget===null?null:Number(x.budget),restrictions:x.restrictions||'',restrictionFlags:{...x.flags,...Object.fromEntries(liftedAt(base).map(k=>[k,false]))},cardSources:x.sources,
     saltiness:x.saltiness,speed:x.speed,competitiveness:x.competitiveness,...(x.pilot?{pilot:x.pilot}:{}),composition:{primary:x.primary||'',tribe:x.tribe||'',secondary:x.secondary||''},
     styles:styles.length?styles:d.definition.styles||[],mechanicIds:x.mechanics,mechanics:x.mechanics.map(id=>(index?.mechanics||[]).find(m=>m.id===id)?.label).filter(Boolean),
     playStyle:(A.WEIGHTINGS.find(([w])=>w===x.weighting)||A.WEIGHTINGS[0])[1]};};
 /* CREATE DECK (DEF-3, DEF-6, CRD). */
 actions['flow-create']=async()=>{const dlg=document.querySelector('.cm-flow-dialog');if(dlg)keepDefine(dlg);const x=F.def,deckId=F.deckId;
   if(x.mode==='undefined'){F=null;actions.close();return go('decks',{deck:deckId});}
+  x.missing=[];
+  if(!F.name)x.missing.push({section:'General',field:'name',says:'Name the deck.'});
+  if(x.budget!==''&&(!Number.isFinite(Number(x.budget))||Number(x.budget)<0))x.missing.push({section:'General',field:'budget',says:'Enter a budget of $0 or more.'});
+  if(x.missing.length){F.section='general';return draw();}
   if(!x.cards){x.missing=[{section:'Cards',says:'Choose Auto-create, Merge in a Group or Define later.'}];F.section='cards';return draw();}
   let def=definitionOf();
   if(x.cards==='auto'){

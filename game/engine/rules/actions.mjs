@@ -66,7 +66,7 @@ import {runEffects} from "../script/effects/index.mjs";
 import {changeLife} from "../script/effects/resources.mjs";
 import {unprepare, preparedCopyStays} from "../script/effects/attributes.mjs";
 import {checkStateBasedActions, gameOver} from "./sba.mjs";
-import {costReduction, costIncrease, lifeIncrease, costsReadTargets, abilityCostIncrease, abilityCostReduction, equipCostReduction, playerStatics, freeCast, flashGranted, castForbidden, placeCounters, activationForbidden, permanentActivationForbidden, cantBeSacrificed, ruleChanged, sorceryTimeOnly, playerRuleChanged, loyaltyCostIncrease} from "./statics.mjs";
+import {costReduction, costIncrease, lifeIncrease, lifeForLess, costsReadTargets, abilityCostIncrease, abilityCostReduction, equipCostReduction, playerStatics, freeCast, flashGranted, castForbidden, placeCounters, activationForbidden, permanentActivationForbidden, cantBeSacrificed, ruleChanged, sorceryTimeOnly, playerRuleChanged, loyaltyCostIncrease} from "./statics.mjs";
 import {countMana, amountOf, countEffect, isCounted, amountProblems, commanderless} from "../script/amount.mjs";
 import {bindEffect} from "../script/bind.mjs";
 import {conditionHolds} from "../script/condition.mjs";
@@ -101,7 +101,14 @@ function castCost(state, player, id, tax, free = false, instead = null, extra = 
   /* Without paying its mana cost (CR 118.9): nothing for the cost itself, and X is 0 (CR 107.3b); the tax still counts.
      `instead`, an alternative cost's mana (flashback, CR 702.34a): paid rather than the mana cost, reduced like it. And
      `extra`, an additional cost's mana ("blight 1 or pay {3}", Bogslither's Embrace): added to it, free or not (CR 601.2f). */
-  const cost = parseManaCost((free ? "" : instead ?? state.objects[id].manaCost ?? "") + (extra ?? ""));
+  /* A colored reduction an additional cost of life bought ("{-W}", Defiler of Faith; CR 601.2f): takes that color's mana off the
+     cost, if it has any -- "this effect reduces only the amount of white mana you pay" -- and adds nothing. */
+  const lessColors = (String(extra ?? "").match(/\{-[WUBRG]\}/g) ?? []).map((token) => token[2]);
+  const cost = parseManaCost((free ? "" : instead ?? state.objects[id].manaCost ?? "") + String(extra ?? "").replace(/\{-[WUBRG]\}/g, ""));
+  for (const color of lessColors) {
+    const at = cost.symbols.findIndex((symbol) => symbol.kind === "colored" && symbol.color === color);
+    if (at >= 0) { cost.symbols.splice(at, 1); cost.colored[color] -= 1; }
+  }
   /* Increases first, then reductions (CR 601.2f): Thalia's {1} more and a Medallion's {1} less cancel out. A cast without
      paying its mana cost still pays an increase (CR 118.9d). */
   cost.generic += costIncrease(state, player, id, targets);
@@ -1113,6 +1120,8 @@ const blightChoices = (state, player) => state.zones.battlefield.filter((id) => 
 /* "Discard two cards" (Solphim, batch 70's next): each set of `count` cards in the hand, never the source itself, one offer
    each -- a single card as itself, as a one-card discard always was; none, and the ability can't be activated. */
 function discardSets(cards, count) {
+  /* None to discard (X of 0, Gix): the one way to pay, nothing taken -- not a card each. */
+  if (count === 0) return [[]];
   if (count <= 1) return cards.map((c) => c);
   const sets = [];
   const walk = (from, chosen) => {
@@ -1334,6 +1343,10 @@ function abilityXValues(state, player, ability, id) {
      601.2b, 602.2b), from none to as many as it could sacrifice -- each its own offer, the X its effects read. */
   const sacrificeX = (ability.cost ?? []).find((a) => a?.atom === "sacrifice" && a.count === "X" && a.selector);
   if (sacrificeX) return Array.from({length: sacrificeChoices(state, player, id, sacrificeX.selector).length + 1}, (_, n) => n);
+  /* "DISCARD X CARDS" (Gix, Yawgmoth Praetor; CR 601.2b, 602.2b): X announced as the ability is activated, from none to as many
+     cards as the hand holds besides the source -- each its own offer, the X its effects read. */
+  const discardX = (ability.cost ?? []).find((a) => a?.atom === "discard" && a.count === "X" && a.self !== true);
+  if (discardX) return Array.from({length: cardsIn(state, "hand", player).filter((c) => c !== id).length + 1}, (_, n) => n);
   const atom = (ability.cost ?? []).find((a) => a?.atom === "mana");
   return atom ? xValues(poolFor(state, player, {ability: id}), parseManaCost(atom.cost)) : [null];
 }
@@ -1586,6 +1599,42 @@ function manaOffers(state, player) {
   return actions;
 }
 
+/**
+ * THE MANA A PLAYER'S PERMANENTS COULD MAKE (the board's Mana Pool; Rob, 2026-10-26: "a total sum of available mana (from
+ * mana dorks, mana rocks, basic lands, lands, legendary lands, and all of their potential options"). Each permanent of
+ * theirs with a mana ability that taps it -- a land, a rock, a dork -- once: its name, whether it is tapped, whether it
+ * could be tapped for mana now (`ready`: not tapped, not summoning sick, nothing stopping its abilities), and its `ways`,
+ * each what one activation adds (`mana`, as manaAlternatives counts it now) and what mana it costs first (`pay`, a
+ * Signet's {1}). Abilities whose condition is not met, whose limit is used up or whose counters are not there are left
+ * out, and so is any ability that taps or sacrifices something else, or exiles from the graveyard, to make its mana: what
+ * it spends is the player's to choose. Facts only, public as the permanents are; the board does the sums.
+ */
+export function manaSources(state, player) {
+  const out = [];
+  for (const id of state.zones.battlefield) {
+    const object = state.objects[id];
+    if (object.controller !== player || object.faceDown) continue;
+    const blocked = activationsForbidden(state, id) || permanentActivationForbidden(state, id) || sickForAbilities(state, id);
+    const ways = [];
+    for (const ability of abilitiesOf(state, id)) {
+      if (ability.kind !== "mana" || !ability.tapSelf || ability.zone === "hand" || ability.sacrifice || ability.tapCreature || ability.exileFromGraveyard) continue;
+      if (!conditionHolds(state, ability.condition, {controller: player, source: id}) || !withinLimit(state, id, ability) || !countersPayable(state, id, ability.counterCost) || !millPayable(state, player, ability)) continue;
+      let pay = 0, payColors = {};
+      try {
+        const cost = parseManaCost(ability.cost || "");
+        pay = manaValue(cost);
+        payColors = Object.fromEntries(Object.entries(cost.colored).filter(([, n]) => n > 0));
+      } catch { continue; }
+      for (const mana of manaAlternatives(state, player, ability, id)) {
+        const made = Object.fromEntries(Object.entries(mana ?? {}).filter(([k, n]) => MANA_KEYS.includes(k) && n > 0));
+        if (Object.keys(made).length) ways.push({mana: made, ...(pay ? {pay} : {}), ...(Object.keys(payColors).length ? {payColors} : {}), ...((ability.payLife || 0) > state.players[player].life ? {ready: false} : {})});
+      }
+    }
+    if (ways.length) out.push({cardId: id, name: object.card, tapped: object.tapped === true, ready: !object.tapped && !blocked && ways.some((w) => w.ready !== false), ways});
+  }
+  return out;
+}
+
 /* A MANA ABILITY THAT TAPS ANOTHER CREATURE: "{T}, Tap an untapped creature you control: Add one mana of any color" (Jaspera
    Sentinel, Saruli Caretaker; CR 605.1a, 602.2b). Which creature is its player's to choose, so each one it may tap is an offer
    of its own, as a mana ability's sacrifice is, and nothing that pays for them (tapUnits, rules/mana.mjs's plainSources)
@@ -1629,7 +1678,9 @@ export function tapUnits(state, player, offered = manaOffers(state, player), bun
 /* A cast that may tap for itself: from the hand or the command zone, its mana cost (and a commander's tax) paid, with
    nothing in the pool -- so the mana tapped is exactly the cost, and paying it is no further choice. */
 /* X paid in life (`payLifeX`, Toxic Deluge) is no X its sources' mana pays: it is tapped for as any other. */
-const tapCastable = (state, player, action) => ["hand", "command"].includes(action.from) && !action.free && !action.flashback
+const tapZone = (state, player, from, id) => ["hand", "command"].includes(from) || (state.preparedTaps === true && from === "exile"
+  && preparedCopyStays(state, id) && controllerOf(state, state.objects[id].prepareOf) === player);
+const tapCastable = (state, player, action) => tapZone(state, player, action.from, action.objectId) && !action.free && !action.flashback
   && action.escape === undefined && action.alternative === undefined && (action.x === undefined || action.payLifeX === true || xTaps(state))
   && (pooledTaps(state) || poolSize(poolFor(state, player, {spell: action.objectId})) === 0);
 
@@ -1811,7 +1862,12 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
   /* The flashback cost's discard (Twinned Vision) is chosen with the cast, as an alternative cost's card exiled from the hand is. */
   /* And what the permission it is cast through asks besides: "by sacrificing a land in addition to paying its other costs"
      (Exploration Broodship; CR 601.2b, 601.2f). */
-  for (const variant of additionalVariants([...(object.spell?.additionalCost ?? []), ...(way?.extra ?? []), ...(back?.extra ?? []), ...(permit?.ability.additionalCost ?? [])])) {
+  /* "You may pay 2 life ... those spells cost {W} less" (Defiler of Faith): each such permission the caster holds is a choice of
+     theirs, the cast without it and the cast with it, its life added and its colored mana taken off (castCost, "{-W}"). */
+  let variants = additionalVariants([...(object.spell?.additionalCost ?? []), ...(way?.extra ?? []), ...(back?.extra ?? []), ...(permit?.ability.additionalCost ?? [])]);
+  for (const grant of lifeForLess(state, player, id))
+    variants = variants.flatMap((v) => [v, {...v, life: (v.life ?? 0) + grant.life, mana: v.mana + grant.less.replace(/\{([WUBRG])\}/g, "{-$1}")}]);
+  for (const variant of variants) {
   /* Creatures tapped as an additional cost (tapAnyAtom): asked once the cast is taken, and paid from the pool -- never tapped
      for, which taps creatures too (a mana creature), the two questions about the same creatures. */
   const tapsAny = tapAnyAtom(variant.atoms);
@@ -1881,7 +1937,7 @@ function castOffers(state, player, {id, from, flashback, escape, via = null, asT
     let autoTap = false;
     /* Not with creatures tapped as an additional cost or for escalate: one tapped for mana as the cast taps its sources could
        not then be tapped for it (their mana is paid from the pool first). */
-    if (!payment && (pooledTaps(state) ? !canPay(pool, cost, {life: lifeLeft, x: x + (xMana ?? 0) * cost.variable}) : poolSize(pool) === 0) && (xMana === null || tapsForX) && !freely && !back && !fled && !way && !tapsAny && !variant.escalateTap && ["hand", "command"].includes(from)) {
+    if (!payment && (pooledTaps(state) ? !canPay(pool, cost, {life: lifeLeft, x: x + (xMana ?? 0) * cost.variable}) : poolSize(pool) === 0) && (xMana === null || tapsForX) && !freely && !back && !fled && !way && !tapsAny && !variant.escalateTap && tapZone(state, player, from, id)) {
       const paying = xMana === null ? cost : xCounted(cost, xMana);
       const [plan] = fundingPlans(state, player, id, {...paying, generic: paying.generic + x}, 1, tappable());
       if (plan) {
@@ -2178,7 +2234,9 @@ function abilityOffers(state, player, id, ability) {
     if (!plain && !bends) continue;
     /* A sacrifice of X (Chatterfang): the X of this offer, as a number of permanents. */
     const printedAtom = sacrificeAtom(ability.cost), atom = printedAtom?.count === "X" ? {...printedAtom, count: sacrificeCount(printedAtom, X)} : printedAtom;
-    const back = returnAtom(ability.cost), toss = discardAtom(ability.cost);
+    const back = returnAtom(ability.cost), tossPrinted = discardAtom(ability.cost);
+    /* "Discard X cards" (Gix): the X of this offer, as a number of cards. */
+    const toss = tossPrinted?.count === "X" ? {...tossPrinted, count: X ?? 0} : tossPrinted;
     /* A permanent you control to sacrifice, or to return to its owner's hand, or a card in your hand to discard: one
        offer each (CR 602.2b). No card to discard, and the ability can't be activated. */
     const crew = crewAtom(ability.cost), tapper = tapAtom(ability.cost), untapper = untapAtom(ability.cost), blighter = blightAtom(ability.cost), grave = graveyardAtom(ability.cost);
@@ -2479,6 +2537,16 @@ function divisionProblem(state, player, action) {
   return null;
 }
 
+/** The script of this exact offered face and mode, for public decision descriptions. It is not an action permission. */
+export function offerScript(state, action) {
+  if (!state.objects[action?.objectId] || action.disguise) return null;
+  return asCast(state, action, () => {
+    const object = state.objects[action.objectId];
+    const ability = action.kind === "cast" ? object.spell : chosenFor(abilitiesOf(state, action.objectId).find(a => a.id === action.abilityId), object);
+    return ability ? structuredClone(ability.modal && Array.isArray(action.modes) ? {...ability, ...modalScript(ability.modal, action.modes)} : ability) : null;
+  });
+}
+
 export function offerSpecs(state, player, action) {
   const object = state.objects[action.objectId];
   if (!object) return {specs: [], context: {controller: player, source: action.objectId}};
@@ -2521,7 +2589,8 @@ export function chooseTargetsChoice(state, awaiting) {
     const object = state.objects[awaiting.action.objectId];
     const ability = awaiting.action.kind === "activate" ? abilitiesOf(state, awaiting.action.objectId).find((a) => a.id === awaiting.action.abilityId) : object?.spell;
     return countedChoice(state, specs[awaiting.index], context, {id: `choose-targets:${awaiting.action.objectId}:${awaiting.index}`,
-      name: object?.card ?? "That spell", hostile: awaiting.action.hostile === true || isHostile(ability?.effects ?? []), placeholder: awaiting.action.targets[awaiting.index]});
+      name: object?.card ?? "That spell", hostile: awaiting.action.hostile === true || isHostile(ability?.effects ?? []), placeholder: awaiting.action.targets[awaiting.index],
+      effects: ability?.effects ?? [], targetIndex: awaiting.index});
   });
 }
 
@@ -2769,7 +2838,11 @@ function performOffered(state, player, action, during) {
        enters, its own "This land enters tapped" first. Moving it straight there let a tapped land arrive untapped. */
     /* Under the control of the player who played it (CR 305.1, 110.2): a land of another player's, played from exile by a
        permission (Tinybones, Bauble Burglar), is theirs to control, not its owner's. */
+    const before = events.length;
     const arrived = moveOne(state, action.objectId, "battlefield", events, {controller: player});
+    /* It entered by being played (CR 305.1): "whenever a land enters under an opponent's control without being played"
+       (Deep Gnome Terramancer; rules/trigger.mjs, `played`) tells a played land's arrival from one put onto the battlefield. */
+    for (const arrival of events.slice(before)) if (arrival.kind === "GameEventCardChangeZone" && arrival.data?.fields?.to?.zoneType === "Battlefield") arrival.data.fields.played = true;
     /* "If you do, it gains '...'" (Serra Paragon): the land played this way has the ability for as long as it is that
        permanent (CR 611.2a, 400.7), in layer 6 (CR 613.1f). */
     if (arrived !== null && state.objects[arrived]?.zone === "battlefield") grantPlayed(state, arrived, permission, player);
