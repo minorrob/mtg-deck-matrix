@@ -1839,7 +1839,7 @@ globalThis.CrankBoard = Object.seal({
   /* The end of the list is the game's oldest line held: the way to older ones, or that this is the start. */
   const earlierRow = () => (moreHistory()
     ? `<li class="cm-history-more"><button type="button" class="v-button compact" data-action="board-history-earlier"${hist.asking ? " disabled" : ""}>${hist.asking ? "Loading…" : "Load earlier"}</button></li>`
-    : hist.bySeq.size ? `<li class="cm-history-more cm-muted">The start of the game</li>` : "");
+    : hist.bySeq.size ? `<li class="cm-history-more cm-muted"${historyFilter ? " hidden" : ""}>The start of the game</li>` : "");
   function historyList(where = "menu") {
     return `<input type="search" class="cm-history-filter" data-board-history-filter placeholder="Search & filter by card or player…" aria-label="Filter the history" value="${e(historyFilter)}">
       <ol class="cm-history-list" data-keep-scroll="history-${where}">${lines().map((l) => historyRow(l).replace("<li", `<li${matches(l) ? "" : " hidden"}`)).join("") || `<li class="cm-muted">Nothing has happened yet.</li>`}${earlierRow()}</ol>`;
@@ -4999,6 +4999,8 @@ globalThis.CrankBoard = Object.seal({
     const rows = event.target.parentElement.querySelectorAll(".cm-history-list li");
     const all = lines();
     rows.forEach((row, i) => {if (all[i]) row.hidden = !matches(all[i]);});
+    /* The note that this is the game's start is no line to match; the way to older lines stays (it filters what is loaded: "Load earlier"). */
+    event.target.parentElement.querySelectorAll(".cm-history-list li.cm-history-more.cm-muted").forEach((row) => {row.hidden = historyFilter !== "";});
   });
   document.addEventListener("input", (event) => {
     const same = event.target && event.target.dataset && event.target.dataset.boardSame;
