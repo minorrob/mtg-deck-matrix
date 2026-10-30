@@ -1,6 +1,7 @@
 // Re-price the archived variants' published cost figures from the current catalog.
 //
-//   node tools/reprice-variants.mjs
+//   node tools/reprice-variants.mjs            rewrite data/archive/variants.json
+//   node tools/reprice-variants.mjs --check    exit 1 if its costs are not what data/cards.json prices (the refresh runner's proof)
 //
 // A COST IS A CLAIM ABOUT TODAY. data/archive/variants.json publishes three dollar figures
 // per variant -- Base, Tuned, Max -- and each is meant to be what that exact hundred costs.
@@ -22,7 +23,8 @@ const RUNGS = new URL("../data/archive/rung-lists.json", import.meta.url);
 const CARDS = new URL("../data/cards.json", import.meta.url);
 const ORDER = ["Base", "Tuned", "Max"];
 
-const variants = JSON.parse(await readFile(VARIANTS, "utf8"));
+const raw = await readFile(VARIANTS, "utf8");
+const variants = JSON.parse(raw);
 const rungLists = JSON.parse(await readFile(RUNGS, "utf8"));
 const catalog = JSON.parse(await readFile(CARDS, "utf8"));
 const priceOf = new Map(catalog.cards.map((c) => [c.name.toLowerCase(), Number(c.price) || 0]));
@@ -54,6 +56,16 @@ for (const variant of variants.variants) {
   variant.costs = next;
 }
 
-await writeFile(VARIANTS, JSON.stringify(variants, null, 2) + "\n");
-console.log(`repriced ${moved} of ${variants.variants.length} variants from data/cards.json (${catalog.generatedAt.slice(0, 10)})`);
-if (skipped.length) console.log(`  left alone: ${skipped.join(", ")}`);
+const out = JSON.stringify(variants, null, 2) + "\n";
+if (process.argv.includes("--check")) {
+  /* The refresh runner's proof: the published costs are what the pinned hundreds price at on data/cards.json, today. */
+  if (out !== raw) {
+    console.error(`reprice-variants: ${moved} of ${variants.variants.length} variants' costs are not what data/cards.json prices (${catalog.generatedAt.slice(0, 10)}); run node tools/reprice-variants.mjs`);
+    process.exit(1);
+  }
+  console.log(`reprice-variants: ${variants.variants.length} variants priced from data/cards.json (${catalog.generatedAt.slice(0, 10)}) -- current`);
+} else {
+  await writeFile(VARIANTS, out);
+  console.log(`repriced ${moved} of ${variants.variants.length} variants from data/cards.json (${catalog.generatedAt.slice(0, 10)})`);
+  if (skipped.length) console.log(`  left alone: ${skipped.join(", ")}`);
+}
