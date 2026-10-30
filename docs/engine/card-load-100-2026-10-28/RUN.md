@@ -5,6 +5,14 @@ Newest wave first. Each line names its command's result line, never a summary of
 
 ## Where the run stands
 
+- **Main advances to d3d23ed1 during the required scan:** root3a6d2d6b's HEAD0 check correctly refuses its conflicting
+  merge with #965/ROB-318 hover changes; no push occurs. Root merges current main, preserves the owner's complete
+  board hover implementation and new suite/registry row, resolves only the suite count to actual716 and regenerates
+  the approved Snoop asset-version cascade/manifest using bumpText and `asset-versions --update`. The board diff
+  against main remains exactly the two approved Snoop lines. Assets136/SW9/wiring131/integrity50 pass; ACTIVE matches
+  main's frozen archive. Engine/room/card data are unchanged by this UI merge. Browser proof at ec200 remains historical;
+  the newly changed served board requires a quiet required-browser check before any current visual claim. Native
+  workers keep their immutable proof inputs and are not synchronized mid-run. No full gate or release is credited.
 - **Independent native Battle review, frozen67fb:** root reuses its clean review worktree on a separate preserved
   branch, without editing source, and reproduces three direct native assertion REDs. A Battle+Planeswalker controlled
   by1/protected by0 offers active protector0 a forbidden planeswalker attack route. With controller1/protector2,
