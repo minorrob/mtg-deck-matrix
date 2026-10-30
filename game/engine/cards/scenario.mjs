@@ -20,16 +20,23 @@
  *     setup: [{seat, zone, cards, sick?}]   (a card put in the command zone is that seat's commander),
  *     steps: [ {play|tap|cast|activate|turnFaceUp|suspend|plot: name, seat?, targets?: [{card, seat?} | {player} | {ability}] | "any", ability?, mana?, x?, optional?, gift?}
  *            | {resolve: true} | {settle: true} | {pass: n} | {to: {turn, phase}} | {answer: [indices], amounts?: [n]} | {expect: [...]}
- *            | {attack: [names], at?} | {block: [[blocker, attacker], ...]} | {choose: [labels]} ],
+ *            | {attack: [names], at?} | {block: [[blocker, attacker], ...]} | {blockIfLegal: [blocker, attacker], seat?} | {choose: [labels]}
+ *            | {actIfLegal: {cast|activate|tap: name, seat, source, targets?: [], mana?, ability?}, resolveSelected?: true}
+ *            | {chooseEnteringIfAsked: {card, seat, question: "entering-choose", choose: [label]}} ],
  *   (`targets: "any"` takes the first legal aim; `optional` skips a move the rules do not offer; `settle` answers every
  *   question with its first legal answer and resolves the stack until it is empty -- the card loader's smoke test.)
+ *   Canonical evidence forbids those automatic choices. `source: {zone, index, seat?, card?}` identifies a physical
+ *   action source among the named cards in its current zone, before legality filtering. Question navigation may use
+ *   `to: {turn, phase, ask: kind}` followed by an explicit answer; `targets: [{ask: true}]` defers a counted question.
+ *   Conditional policies are explicit, bounded native instructions: no arbitrary branches or automatic answers.
  *     expect: [ {seat, of?, zone, cards?, count?, faceDown?} | {seat, life} | {seat, poison} | {stack} | {seat, tapped, is}
  *             | {seat, pool} | {seat, counters: {card, counter, count}} | {offers: {kind, card, seat?}, count, targets?} | {event, where}
  *             | {monarch: seat | null} ] }]}
  */
 
-import {controllerOf} from "../rules/layers.mjs";
-import {createState, addObject} from "../state/index.mjs";
+import {controllerOf, typesOf} from "../rules/layers.mjs";
+import {blockers} from "../rules/combat.mjs";
+import {createState, addObject, cardsIn} from "../state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../rules/turn.mjs";
 import {legalActions, applyAction} from "../rules/actions.mjs";
 import {passPriority} from "../rules/priority.mjs";
@@ -38,6 +45,7 @@ import {projectFor} from "../projection.mjs";
 import {createRng} from "../rng.mjs";
 import {targetName, isChoosing} from "../script/bind.mjs";
 import {meetRequirements} from "../pilots/house-pilot.mjs";
+import {hashState} from "../journal.mjs";
 
 export const SCENARIOS_SCHEMA = "CrankCardScenarios@1";
 
@@ -59,18 +67,78 @@ const firstAmounts = (choice) => {
 
 const ZONES = {hand: "Hand", battlefield: "Battlefield", graveyard: "Graveyard", exile: "Exile", command: "Command", library: "Library"};
 const STEP_LIMIT = 2000;
+const nativeFields = event => event?.data?.fields ?? event?.fields ?? {};
+const policyProblem = message => Object.assign(new Error(message), {scenarioAssertion: {kind: "policy-precheck"}});
+
+/** Internal harness validator. Only actual native events enter here in production; no scenario-supplied receipt. */
+export function selectedScenarioFrame(state, events, selection) {
+  if (!selection || typeof selection !== "object" || Array.isArray(selection) || !Array.isArray(events)
+    || Object.keys(selection).some(key => !["sourceId", "actor", "card", "kind", "abilityId"].includes(key)))
+    throw policyProblem("Malformed selected native action receipt");
+  const {sourceId, actor, card, kind, abilityId} = selection;
+  if (!Number.isInteger(sourceId) || !Number.isInteger(actor) || !state.players[actor] || typeof card !== "string" || !card
+    || !["cast", "activate"].includes(kind) || kind === "activate" && (typeof abilityId !== "string" || !abilityId))
+    throw policyProblem("Malformed selected native action identity");
+  const matching = events.filter(event => event.kind === "GameEventSpellAbilityCast").map(nativeFields).filter(fields =>
+    fields.card?.cardId === sourceId && fields.card.name === card && fields.si?.actor?.playerId === actor
+    && fields.si?.isTrigger === false && fields.sa?.isSpell === (kind === "cast")
+    && (kind === "cast" || fields.sa.abilityId === abilityId));
+  if (matching.length !== 1) throw policyProblem("The selected native action has no unique source/actor event");
+  const frame = state.stack.find(entry => entry.stackId === matching[0].sa.stackId);
+  if (!frame || frame.playerId !== actor || frame.name !== card || frame.kind !== (kind === "cast" ? "spell" : "ability")
+    || kind !== "cast" && (frame.abilityId !== abilityId || frame.cardId !== sourceId))
+    throw policyProblem("The emitted selected action does not match its native stack frame");
+  if (state.stack.length !== 1 || state.stack.at(-1).stackId !== frame.stackId)
+    throw policyProblem("An extra or intervening frame prevents selected resolution");
+  return {stackId: frame.stackId, cardId: frame.cardId, objectId: frame.objectId, playerId: frame.playerId, name: frame.name, kind: frame.kind};
+}
+
+/** Internal pure validation of a private preceding-spell context, never a scenario-supplied context. */
+export function boundScenarioEnteringAnswer(state, context, label) {
+  const frame = context?.frame;
+  if (!frame || frame.kind !== "spell" || context.questionSignature === null || hashState(state.awaiting) !== context.questionSignature)
+    throw policyProblem("The captured entering question changed or expired");
+  const live = state.stack.find(entry => entry.stackId === frame.stackId), native = state.ruleOperation?.frames?.at(-1);
+  if (!live || live.kind !== "spell" || live.cardId !== frame.cardId || live.playerId !== frame.playerId || state.players[frame.playerId]?.lost
+    || state.objects[frame.cardId]?.card !== frame.name || state.objects[frame.cardId]?.zone !== "stack"
+    || state.awaiting?.kind !== "rule-operation" || state.awaiting.player !== frame.playerId)
+    throw policyProblem("A different native source or mandatory question is pending");
+  const choice = awaitingChoice(state);
+  if (choice?.id !== `entering-choose:${frame.cardId}` || choice.mode !== "one" || choice.min !== 1 || choice.max !== 1
+    || choice.options.some(option => option.cardId !== frame.cardId || option.chosen !== option.label)
+    || native?.kind !== "entering" || native.objectId !== frame.cardId || native.asks?.[0]?.choose !== "creature type")
+    throw policyProblem("A different native source or mandatory question is pending");
+  const options = choice.options.filter(option => option.label === label);
+  if (options.length !== 1) throw policyProblem("The fixed entering answer is unavailable or ambiguous");
+  return {choiceId: choice.id, index: options[0].index, label};
+}
 
 /* Questions the rules ask on the way that a scenario has no view on: nobody attacks or blocks unless a step says so -- or
    the rules make it ("attacks each combat if able", CR 508.1d: those alone, each at its first player) -- a player's
    triggers go on in the order offered, and the legend rule keeps the first (CR 704.5j). Anything else stops the scenario,
    by name. */
-function routine(state) {
+function routine(state, explicitChoices = false, failChoice = () => {}) {
   const kind = state.awaiting?.kind;
-  if (kind === "declare-attackers") return resolveAwaiting(state, meetRequirements(awaitingChoice(state), []));
+  if (kind === "declare-attackers") {
+    const indices = meetRequirements(awaitingChoice(state), []);
+    if (explicitChoices && indices.length) failChoice("required attacks need an explicit declaration");
+    return resolveAwaiting(state, indices);
+  }
   /* Nobody blocks, unless the rules make it: "must be blocked if able" (CR 509.1c), met as the house pilot meets it. */
-  if (kind === "declare-blockers") return resolveAwaiting(state, meetRequirements(awaitingChoice(state), []));
-  if (kind === "order-triggers") return resolveAwaiting(state, awaitingChoice(state).options.map((o) => o.index));
-  if (kind === "legend-rule") return resolveAwaiting(state, [0]);
+  if (kind === "declare-blockers") {
+    const indices = meetRequirements(awaitingChoice(state), []);
+    if (explicitChoices && indices.length) failChoice("required blocks need an explicit declaration");
+    return resolveAwaiting(state, indices);
+  }
+  if (kind === "order-triggers") {
+    const indices = awaitingChoice(state).options.map((o) => o.index);
+    if (explicitChoices && indices.length > 1) failChoice("trigger order needs an explicit answer");
+    return resolveAwaiting(state, indices);
+  }
+  if (kind === "legend-rule") {
+    if (explicitChoices && awaitingChoice(state).options.length > 1) failChoice("legend rule needs an explicit answer");
+    return resolveAwaiting(state, [0]);
+  }
   return null;
 }
 
@@ -81,13 +149,23 @@ function routine(state) {
  * @param {(name: string) => ?object} cards  a card's definition (cards/index.mjs `definition`), for any name not a basic
  *   land or one of the file's `fixtures`
  * @param {object} [fixtures]  objects for the file's supporting cast: the vanilla creature a removal spell is aimed at
+ * @param {object} [policy] explicitChoices is mandatory for canonical behavior evidence. The compiler's smoke pilot
+ *   retains its diagnostic automatic answers. Passing/navigation declares no optional attacks or blocks; it never
+ *   chooses a required attack/block, trigger permutation, legend, target or effect answer for evidence.
  * @returns {{passed: string[], state: object, events: Array}} each check's description; throws on the first failure
  */
-export function runScenario(scenario, cards, fixtures = {}) {
+export function runScenario(scenario, cards, fixtures = {}, {explicitChoices = false} = {}) {
   const passed = [];
   const events = [];
-  const fail = (message) => { throw new Error(`${scenario.name}: ${message}`); };
+  const policies = [];
+  const fail = (message, assertion = null) => {
+    const error = new Error(`${scenario.name}: ${message}`);
+    if (assertion) error.scenarioAssertion = assertion;
+    if (policies.length) error.scenarioPolicies = structuredClone(policies);
+    throw error;
+  };
   const seats = scenario.seats ?? 2;
+  const failChoice = message => fail(message, {kind: "choice-policy"});
   const names = ["Rob", "Maya", "Trey", "Sam"].slice(0, seats);
   /* `skipFirstDraw: false`: the table's house rule that the starting player of a two-player game has their first draw step
      after all (CR 103.8a; game/room/table.mjs). */
@@ -95,6 +173,8 @@ export function runScenario(scenario, cards, fixtures = {}) {
      table's new matches do. */
   /* `startingLife`: a table's house-rule starting life (game/room/table.mjs) -- "your starting life total" (Happily Ever After). */
   const state = createState({matchId: "scenario", seed: scenario.name, players: names.map((name) => ({name})),
+    sourceChoices: true,
+    effectPlayVersion: 1,
     ...(scenario.skipFirstDraw === false ? {skipFirstDraw: false} : {}), ...(scenario.pooledTaps === true ? {pooledTaps: true} : {}),
     ...(scenario.xTaps === true ? {xTaps: true} : {}), ...(Number.isInteger(scenario.startingLife) ? {startingLife: scenario.startingLife} : {})});
   const rng = createRng(scenario.name);
@@ -122,7 +202,7 @@ export function runScenario(scenario, cards, fixtures = {}) {
 
   /* The rules loop the room runs, without the people: pass, advance, and the routine questions. */
   const stepOnce = () => {
-    if (state.awaiting) { if (!routine(state)) fail(`the game asks ${state.awaiting.kind}, which the scenario did not answer`); return; }
+    if (state.awaiting) { if (!routine(state, explicitChoices, failChoice)) fail(`the game asks ${state.awaiting.kind}, which the scenario did not answer`, {kind: "question-offer"}); return; }
     if (state.priorityPlayer === null) { record(advance(state)); return; }
     const outcome = passPriority(state, null, rng);
     record(outcome.events);
@@ -131,24 +211,27 @@ export function runScenario(scenario, cards, fixtures = {}) {
   /* Every question with its first legal answer, as settle answers -- for a smoke game moving through turns, where a draw
      trigger's "you may" or an opponent's spell asks something nobody scripted. A scenario never sets it. */
   const settleOne = () => {
+    if (explicitChoices) failChoice(`settle cannot answer ${state.awaiting.kind}; script its explicit answer`);
     const choice = awaitingChoice(state);
     const amounts = firstAmounts(choice);
     record(resolveAwaiting(state, amounts ? [] : choice.options.slice(0, choice.min ?? 0).map((o) => o.index), amounts, rng));
   };
-  const goTo = ({turn, phase, settle = false}) => {
+  const goTo = ({turn, phase, settle = false, ask = null}) => {
+    if (ask !== null && (typeof ask !== "string" || !ask)) failChoice("navigation ask must name a question kind");
     for (let n = 0; n < STEP_LIMIT; n += 1) {
       /* A smoke game the card ended (Tasha's Hideous Laughter exiling a library of Wastes): played to its end. */
       if (scenario.stopWhenOver && gameOver(state)) return;
+      if (ask && state.turn === turn && state.phase === phase && state.awaiting?.kind === ask) return;
       if (settle && state.awaiting && !["declare-attackers", "declare-blockers", "order-triggers"].includes(state.awaiting.kind)) { settleOne(); continue; }
       /* The first moment in that step at which someone holds priority: a trigger of the step may be waiting on the
          stack, which is what a scenario about that trigger wants to see. */
-      if (state.turn === turn && state.phase === phase && state.priorityPlayer !== null && !state.awaiting) return;
+      if (!ask && state.turn === turn && state.phase === phase && state.priorityPlayer !== null && !state.awaiting) return;
       /* Or a question that step asks which no routine answers -- an upkeep trigger's targets -- for the scenario to answer. */
-      if (state.turn === turn && state.phase === phase && state.awaiting && !["declare-attackers", "declare-blockers", "order-triggers"].includes(state.awaiting.kind)) return;
+      if (!ask && state.turn === turn && state.phase === phase && state.awaiting && !["declare-attackers", "declare-blockers", "order-triggers"].includes(state.awaiting.kind)) return;
       if (state.turn > turn) break;
       stepOnce();
     }
-    fail(`never reached turn ${turn}, ${phase}`);
+    fail(`never reached turn ${turn}, ${phase}`, "step-limit");
   };
   goTo(scenario.at ?? {turn: 1, phase: "MAIN1"});
   for (const entry of scenario.setup ?? []) if (entry.sick) for (const name of entry.cards) put(entry.seat, entry.zone, name);
@@ -159,6 +242,8 @@ export function runScenario(scenario, cards, fixtures = {}) {
     if (got.length !== (wanted ?? []).length) return false;
     return got.every((t, i) => {
       const w = wanted[i];
+      /* Explicitly defer a counted target to the next indexed answer; this matches only a real engine question. */
+      if (w?.ask === true) return isChoosing(t);
       /* A counted target ("up to two target creatures", a list in the step): the offer holds its placeholder, and the list
          is picked once the offer is taken (CR 601.2c; script/bind.mjs). */
       /* One whose choices share something ("from a single graveyard", script/bind.mjs `share`) is offered once for each group:
@@ -173,8 +258,121 @@ export function runScenario(scenario, cards, fixtures = {}) {
   const offered = ({kind, card, seat}, targets) => legalActions(state, seat ?? state.priorityPlayer)
     .filter((a) => a.kind === kind && (card === undefined || a.label === card) && (targets === undefined || sameTargets(a, targets)));
 
+  /* An author's physical reference is indexed in the named zone BEFORE legality filtering. Repeating index 0 cannot
+     silently switch to index 1 after the first source is tapped. This is a scripted decision, never a default. */
+  const physicalSource = (spec, actor, card) => {
+    if (!spec || typeof spec !== "object" || Array.isArray(spec) || Object.keys(spec).some(key => !["zone", "seat", "card", "index"].includes(key))
+        || !Object.hasOwn(ZONES, spec.zone) || !Number.isInteger(spec.index) || spec.index < 0
+        || (spec.card !== undefined && (typeof spec.card !== "string" || !spec.card.trim())))
+      failChoice("source needs a named zone and a nonnegative physical index, with optional seat/card");
+    const seat = spec.seat ?? actor;
+    if (!Number.isInteger(seat) || !state.players[seat]) failChoice("source seat must name an existing player");
+    const name = spec.card ?? card;
+    const ids = cardsIn(state, spec.zone, seat).filter(id => state.objects[id]?.card === name
+      && (spec.zone === "battlefield" ? controllerOf(state, id) : state.objects[id].owner) === seat);
+    const id = ids[spec.index];
+    if (id === undefined) failChoice(`source ${name} has no physical index ${spec.index} in ${spec.zone} for seat ${seat}`);
+    return {id, zone: spec.zone, seat, card: name, index: spec.index};
+  };
+
+  const failPolicy = message => fail(message, {kind: "policy-precheck"});
+  const recordObject = value => value !== null && typeof value === "object" && !Array.isArray(value);
+  function conditionalAction(step) {
+    if (Object.keys(step).some(key => !["actIfLegal", "resolveSelected"].includes(key))) failPolicy("actIfLegal has an unknown or competing field");
+    const request = step.actIfLegal;
+    if (!recordObject(request) || Object.keys(request).some(key => !["cast", "activate", "tap", "seat", "source", "targets", "ability", "mana"].includes(key)))
+      failPolicy("actIfLegal needs a bounded native action descriptor");
+    const operations = ["cast", "activate", "tap"].filter(key => Object.hasOwn(request, key));
+    if (operations.length !== 1) failPolicy("actIfLegal needs exactly one cast, activation or mana activation");
+    const operation = operations[0], kind = {cast: "cast", activate: "activate", tap: "activate-mana"}[operation], card = request[operation], actor = request.seat;
+    if (typeof card !== "string" || !card || card.trim() !== card || !Number.isInteger(actor) || !state.players[actor] || state.players[actor].lost)
+      failPolicy("actIfLegal needs an explicit existing actor and named card");
+    if (!["MAIN1", "MAIN2"].includes(state.phase) || state.activePlayer !== actor || state.priorityPlayer !== actor || gameOver(state)
+      || state.awaiting || state.ruleOperation || state.resolving || state.stack.length || state.pendingTriggers?.length)
+      failPolicy("actIfLegal requires own main-phase priority with no pending commitment or stack");
+    if (kind === "activate-mana" ? step.resolveSelected !== undefined && step.resolveSelected !== false : step.resolveSelected !== true)
+      failPolicy("A conditional nonmana action requires one explicit selected resolution; a mana action cannot resolve a stack");
+    if (kind !== "activate-mana" && !Object.hasOwn(request, "targets") || request.targets !== undefined && (!Array.isArray(request.targets) || request.targets.length !== 0))
+      failPolicy("actIfLegal currently supports only explicitly targetless actions");
+    if (request.ability !== undefined && (kind === "cast" || typeof request.ability !== "string" || !request.ability)) failPolicy("Invalid conditional activation ability selector");
+    if (request.mana !== undefined && (kind !== "activate-mana" || !recordObject(request.mana) || !Object.keys(request.mana).length
+      || Object.entries(request.mana).some(([color, amount]) => color.length !== 1 || !"WUBRGC".includes(color) || !Number.isInteger(amount) || amount <= 0)))
+      failPolicy("Invalid conditional mana vector");
+    const spec = request.source;
+    if (!recordObject(spec) || spec.seat !== undefined && spec.seat !== actor || spec.card !== undefined && spec.card !== card
+      || (kind === "cast" ? !["hand", "library", "graveyard", "exile", "command"].includes(spec.zone) : spec.zone !== "battlefield"))
+      failPolicy("actIfLegal needs the named actor's explicit physical source");
+    let source;
+    try {source = physicalSource(spec, actor, card);} catch (error) {
+      if (error.scenarioAssertion?.kind === "choice-policy") failPolicy(error.message.slice(scenario.name.length + 2));
+      throw error;
+    }
+    const before = hashState(state);
+    let actions = legalActions(state, actor).filter(action => action.kind === kind && action.objectId === source.id && action.label === card);
+    if (request.ability !== undefined) actions = actions.filter(action => action.abilityId === request.ability);
+    if (request.mana !== undefined) actions = actions.filter(action => hashState(action.mana) === hashState(request.mana));
+    if (hashState(state) !== before) failPolicy("Conditional legality lookup changed native state");
+    if (actions.length > 1) failPolicy("Conditional action is ambiguous; specify its native ability or mana vector");
+    const trace = {kind: "conditional-native-action", action: kind, actor, sourceId: source.id, sourceZone: source.zone, card};
+    if (!actions.length) {policies.push({...trace, branch: "unavailable"}); return;}
+    const action = actions[0], produced = record(applyAction(state, actor, action));
+    policies.push({...trace, branch: "applied", ...(action.abilityId !== undefined ? {abilityId: action.abilityId} : {})});
+    if (state.awaiting || state.ruleOperation || state.resolving || state.pendingTriggers?.length)
+      failPolicy("The conditional action requires an unsupported native question or continuation");
+    if (kind === "activate-mana") {
+      if (state.stack.length || !produced.some(event => event.kind === "GameEventManaPool" && nativeFields(event).source?.cardId === source.id))
+        failPolicy("The selected mana action has no immediate source-bound native result");
+      policies.at(-1).branch = "mana-produced";
+      return;
+    }
+    let frame;
+    try {frame = selectedScenarioFrame(state, produced, {sourceId: source.id, actor, card, kind, abilityId: action.abilityId});}
+    catch (error) {if (error.scenarioAssertion?.kind === "policy-precheck") failPolicy(error.message); throw error;}
+    const eventStart = events.length;
+    for (let n = 0; n < STEP_LIMIT && state.stack.some(entry => entry.stackId === frame.stackId) && !state.awaiting; n += 1) stepOnce();
+    if (state.awaiting || state.ruleOperation || state.resolving || state.stack.length || state.pendingTriggers?.length
+      || !events.slice(eventStart).some(event => event.kind === "GameEventSpellResolved" && nativeFields(event).stackId === frame.stackId && nativeFields(event).hasFizzled === false))
+      failPolicy("The expressly selected native resolution did not finish without another commitment");
+    Object.assign(policies.at(-1), {branch: "applied-and-resolved", stackId: frame.stackId});
+  }
+
+  function conditionalEnteringAnswer(step, context) {
+    if (Object.keys(step).some(key => key !== "chooseEnteringIfAsked")) failPolicy("chooseEnteringIfAsked has an unknown or competing field");
+    const request = step.chooseEnteringIfAsked;
+    if (!context || !recordObject(request) || Object.keys(request).some(key => !["card", "seat", "question", "choose"].includes(key))
+      || request.card !== context.frame.name || request.seat !== context.frame.playerId || request.question !== "entering-choose"
+      || !Array.isArray(request.choose) || request.choose.length !== 1 || typeof request.choose[0] !== "string" || !request.choose[0] || request.choose[0].trim() !== request.choose[0])
+      failPolicy("Bound entering answer needs the immediately preceding native spell, actor and fixed label");
+    const {frame} = context;
+    const completedEntry = list => {
+      if (state.awaiting || state.ruleOperation || state.resolving || state.stack.some(entry => entry.stackId === frame.stackId)
+        || !list.some(event => event.kind === "GameEventSpellResolved" && nativeFields(event).stackId === frame.stackId && nativeFields(event).hasFizzled === false))
+        failPolicy("The captured native spell has not completed successfully");
+      const movements = list.filter(event => event.kind === "GameEventCardChangeZone").map(nativeFields).filter(fields =>
+        fields.card?.cardId === frame.cardId && fields.to?.zoneType === "Battlefield"
+        && state.objects[fields.enteredAs]?.card === frame.name && controllerOf(state, fields.enteredAs) === frame.playerId);
+      if (movements.length !== 1) failPolicy("The captured source has no exact completed native entry");
+    };
+    const trace = {kind: "conditional-entering-answer", actor: frame.playerId, card: frame.name, sourceId: frame.cardId, stackId: frame.stackId};
+    if (!state.awaiting) {
+      completedEntry(context.events);
+      policies.push({...trace, branch: "completed-without-question"});
+      return;
+    }
+    let bound;
+    try {bound = boundScenarioEnteringAnswer(state, context, request.choose[0]);}
+    catch (error) {if (error.scenarioAssertion?.kind === "policy-precheck") failPolicy(error.message); throw error;}
+    const answered = record(resolveAwaiting(state, [bound.index], null, rng, {choiceId: bound.choiceId}));
+    completedEntry([...context.events, ...answered]);
+    policies.push({...trace, branch: "answered", choiceId: bound.choiceId, label: bound.label});
+  }
+
   function act(step) {
+    if (explicitChoices && step.targets === "any") failChoice("targets: any cannot supply explicit scenario evidence");
     const seat = seatOf(step);
+    if (!Number.isInteger(seat) || !state.players[seat])
+      fail(state.awaiting ? `answer ${state.awaiting.kind} before taking another action` : "no player has priority for this action",
+        {kind: state.awaiting ? "question-offer" : "action-offer"});
     /* `turnFaceUp`: a manifested permanent turned face up (CR 701.40b), named by the card it is -- as its controller,
        who is offered it, sees it (CR 708.5). */
     /* `suspend`: a card suspended from its owner's hand (CR 702.62a), a special action. */
@@ -183,7 +381,9 @@ export function runScenario(scenario, cards, fixtures = {}) {
       : step.cast ? ["cast", step.cast] : step.turnFaceUp ? ["turn-face-up", step.turnFaceUp] : step.suspend ? ["suspend", step.suspend]
       : step.plot ? ["plot", step.plot] : ["activate", step.activate];
     const aim = step.targets === "any" ? undefined : (kind === "cast" || kind === "activate" ? step.targets ?? [] : undefined);
+    const source = Object.hasOwn(step, "source") ? physicalSource(step.source, seat, card) : null;
     let found = offered({kind, card, seat}, aim);
+    if (source) found = found.filter(action => action.objectId === source.id);
     if (kind === "activate" && step.ability !== undefined) found = found.filter((a) => a.abilityId === step.ability);
     /* Which of a mana ability's alternatives: "{T}: Add {W} or {U}" taps for the one named. */
     if (step.mana !== undefined) found = found.filter((a) => JSON.stringify(a.mana) === JSON.stringify(step.mana));
@@ -232,16 +432,23 @@ export function runScenario(scenario, cards, fixtures = {}) {
     if (step.via !== undefined) found = found.filter((a) => (a.viaName ?? null) === step.via);
     /* As which of its permanent types, through a permission kept by type (Muldrotha, the Gravetide): `asType`, "Artifact". */
     if (step.asType !== undefined) found = found.filter((a) => (a.asType ?? null) === step.asType);
-    if (!found.length && step.optional) return;
-    if (!found.length) fail(`${names[seat]} is not offered ${kind} ${card}${step.targets ? ` at ${JSON.stringify(step.targets)}` : ""}`);
+    if (!found.length && step.optional) {
+      if (explicitChoices) failChoice(`optional move is unavailable: ${kind} ${card}`);
+      return;
+    }
+    if (!found.length) fail(`${names[seat]} is not offered ${kind} ${card}${step.targets ? ` at ${JSON.stringify(step.targets)}` : ""}`, {kind: "action-offer", card, action: kind});
+    if (explicitChoices && found.length > 1) failChoice(`${card} has ${found.length} matching actions; select its physical source, ability, targets, cost or mana explicitly`);
     record(applyAction(state, seat, found[0]));
+    if (source) policies.push({kind: "physical-source", action: kind, ...source});
     /* Each counted target the step names as a list, picked as it is asked: by name, or player, and seat. */
     for (let n = 0; n < 8 && state.awaiting?.kind === "choose-targets" && state.awaiting.stackId === undefined && Array.isArray((aim ?? [])[state.awaiting.index]); n += 1) {
       const choice = awaitingChoice(state), used = new Set();
       const indices = aim[state.awaiting.index].map((w) => {
-        const option = choice.options.find((o) => !used.has(o.index) && (w.player !== undefined ? o.targets[0].kind === "player" && o.targets[0].id === w.player
+        const matches = choice.options.filter((o) => !used.has(o.index) && (w.player !== undefined ? o.targets[0].kind === "player" && o.targets[0].id === w.player
           : o.targets[0].kind === "object" && targetName(state, o.targets[0]) === w.card && (w.seat === undefined || controllerOf(state, o.targets[0].id) === w.seat)));
-        if (!option) fail(`${card}: no ${JSON.stringify(w)} among ${choice.options.map((o) => o.label).join(", ")}`);
+        if (explicitChoices && matches.length > 1) failChoice(`${card} has ambiguous physical targets; answer by explicit indices`);
+        const option = matches[0];
+        if (!option) fail(`${card}: no ${JSON.stringify(w)} among ${choice.options.map((o) => o.label).join(", ")}`, {kind: "question-offer"});
         used.add(option.index);
         return option.index;
       });
@@ -305,42 +512,44 @@ export function runScenario(scenario, cards, fixtures = {}) {
         for (const [color, n] of Object.entries(e.pool)) if ((pool[color] ?? 0) !== n) fail(`${names[e.seat]}'s pool has ${pool[color] ?? 0} ${color}, not ${n}`);
         passed.push(`${names[e.seat]}'s pool: ${JSON.stringify(e.pool)}`);
       } else if (e.offers !== undefined) {
+        const assertion = {kind: "ability-offer", card: e.offers.card, action: e.offers.kind};
         const found = offered(e.offers);
-        if (found.length !== e.count) fail(`${e.offers.kind} ${e.offers.card ?? ""} is offered ${found.length} way(s), not ${e.count}`);
+        if (found.length !== e.count) fail(`${e.offers.kind} ${e.offers.card ?? ""} is offered ${found.length} way(s), not ${e.count}`, assertion);
         if (e.targets !== undefined) {
           const got = found.map((a) => (a.targetNames ?? []).join(" + ")).sort();
           const want = e.targets.map((t) => t.join(" + ")).sort();
-          if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${e.offers.card} is offered at ${JSON.stringify(got)}, not ${JSON.stringify(want)}`);
+          if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${e.offers.card} is offered at ${JSON.stringify(got)}, not ${JSON.stringify(want)}`, assertion);
         }
         /* What each offer's cost takes ("Sacrifice a creature": one offer per creature). */
         if (e.costs !== undefined) {
           const got = found.map((a) => (a.costNames ?? []).join(" + ")).sort();
           const want = e.costs.map((c) => c.join(" + ")).sort();
-          if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${e.offers.card} is offered paying ${JSON.stringify(got)}, not ${JSON.stringify(want)}`);
+          if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${e.offers.card} is offered paying ${JSON.stringify(got)}, not ${JSON.stringify(want)}`, assertion);
         }
         if (e.mana !== undefined) {
           const got = found.map((a) => JSON.stringify(a.mana)).sort();
           const want = e.mana.map((m) => JSON.stringify(m)).sort();
-          if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${e.offers.card} offers ${got.join(" ")}, not ${want.join(" ")}`);
+          if (JSON.stringify(got) !== JSON.stringify(want)) fail(`${e.offers.card} offers ${got.join(" ")}, not ${want.join(" ")}`, assertion);
         }
         passed.push(`${e.offers.kind} ${e.offers.card ?? ""} offered ${e.count} way(s)`);
       } else if (e.asks !== undefined) {
         /* The question the game is waiting on: whom it asks, and the options it offers them. */
-        if (!state.awaiting) fail(`nothing is being asked (expected ${JSON.stringify(e.asks)})`);
+        const assertion = {kind: "question-offer"};
+        if (!state.awaiting) fail(`nothing is being asked (expected ${JSON.stringify(e.asks)})`, assertion);
         const choice = awaitingChoice(state);
-        if (e.asks.seat !== undefined && state.awaiting.player !== e.asks.seat) fail(`${names[state.awaiting.player]} is asked, not ${names[e.asks.seat]}`);
+        if (e.asks.seat !== undefined && state.awaiting.player !== e.asks.seat) fail(`${names[state.awaiting.player]} is asked, not ${names[e.asks.seat]}`, assertion);
         if (e.asks.options !== undefined) {
           const got = choice.options.map((o) => o.label).sort();
-          if (JSON.stringify(got) !== JSON.stringify([...e.asks.options].sort())) fail(`the question offers ${JSON.stringify(got)}, not ${JSON.stringify(e.asks.options)}`);
+          if (JSON.stringify(got) !== JSON.stringify([...e.asks.options].sort())) fail(`the question offers ${JSON.stringify(got)}, not ${JSON.stringify(e.asks.options)}`, assertion);
         }
-        if (e.asks.min !== undefined && choice.min !== e.asks.min) fail(`the question takes at least ${choice.min}, not ${e.asks.min}`);
+        if (e.asks.min !== undefined && choice.min !== e.asks.min) fail(`the question takes at least ${choice.min}, not ${e.asks.min}`, assertion);
         passed.push(`asks ${names[state.awaiting.player]}: ${(e.asks.options ?? []).join(", ")}`);
       } else if (e.keywords !== undefined) {
         /* A permanent's current keywords, as its controller's view shows them. */
         const card = onField(e.seat, e.keywords.card);
-        if (!card) fail(`${e.keywords.card} is not on ${names[e.seat]}'s battlefield`);
-        for (const k of e.keywords.has ?? []) if (!card.keywords.includes(k)) fail(`${e.keywords.card} lacks ${k}`);
-        for (const k of e.keywords.lacks ?? []) if (card.keywords.includes(k)) fail(`${e.keywords.card} has ${k}`);
+        if (!card) fail(`${e.keywords.card} is not on ${names[e.seat]}'s battlefield`, "keyword-presence");
+        for (const k of e.keywords.has ?? []) if (!card.keywords.includes(k)) fail(`${e.keywords.card} lacks ${k}`, "keyword-presence");
+        for (const k of e.keywords.lacks ?? []) if (card.keywords.includes(k)) fail(`${e.keywords.card} has ${k}`, "keyword-presence");
         passed.push(`${e.keywords.card}: ${(e.keywords.has ?? []).join(", ")}${(e.keywords.lacks ?? []).length ? `, not ${e.keywords.lacks.join(", ")}` : ""}`);
       } else if (e.counters !== undefined) {
         /* A permanent's counters of one kind, as its seat sees them: {seat, counters: {card, counter, count}}. */
@@ -368,17 +577,29 @@ export function runScenario(scenario, cards, fixtures = {}) {
     }
   }
 
+  const capturesEntering = (scenario.steps ?? []).some(step => Object.hasOwn(step, "chooseEnteringIfAsked"));
+  let previousResolution = null;
   for (const step of scenario.steps ?? []) {
-    if (step.play || step.tap || step.cast || step.activate || step.turnFaceUp || step.suspend || step.plot) act(step);
+    const precedingResolution = previousResolution;
+    previousResolution = null;
+    if (Object.hasOwn(step, "blockIfLegal") && Object.keys(step).some((key) => !["blockIfLegal", "seat"].includes(key))) fail("blockIfLegal requires exactly one named blocker/attacker pair and optional seat", {kind: "policy-precheck"});
+    if (Object.hasOwn(step, "actIfLegal")) conditionalAction(step);
+    else if (Object.hasOwn(step, "chooseEnteringIfAsked")) conditionalEnteringAnswer(step, precedingResolution);
+    else if (step.play || step.tap || step.cast || step.activate || step.turnFaceUp || step.suspend || step.plot) act(step);
     else if (step.resolve) {
-      if (!state.stack.length) fail("there is nothing on the stack to resolve");
+      if (!state.stack.length) fail("there is nothing on the stack to resolve", {kind: "action-offer", action: "resolve"});
       /* Everyone passes in turn until the top object has left the stack, or stopped to ask somebody. What its
          resolution put on the stack -- a permanent's "when this enters" -- waits for its own step. */
       const top = state.stack[state.stack.length - 1].stackId;
+      const entry = capturesEntering && state.stack.at(-1).kind === "spell" ? state.stack.at(-1) : null;
+      const frame = entry ? {stackId: entry.stackId, cardId: entry.cardId, name: entry.name, playerId: entry.playerId, kind: entry.kind} : null;
+      const eventStart = events.length;
       for (let n = 0; n < STEP_LIMIT && state.stack.some((e) => e.stackId === top) && !state.awaiting; n += 1) stepOnce();
+      if (frame) previousResolution = {frame, events: events.slice(eventStart), questionSignature: state.awaiting ? hashState(state.awaiting) : null};
     } else if (step.settle) {
       for (let n = 0; n < STEP_LIMIT && (state.awaiting || state.stack.length); n += 1) {
         if (state.awaiting) {
+          if (explicitChoices) failChoice(`settle cannot answer ${state.awaiting.kind}; script its explicit answer`);
           const choice = awaitingChoice(state);
           const amounts = firstAmounts(choice);
           record(resolveAwaiting(state, amounts ? [] : choice.options.slice(0, choice.min ?? 0).map((o) => o.index), amounts, rng));
@@ -390,40 +611,92 @@ export function runScenario(scenario, cards, fixtures = {}) {
     else if (step.attack) {
       /* On to the declare-attackers step of this turn, the named creatures attacking (each its first defender). */
       for (let n = 0; n < STEP_LIMIT && state.awaiting?.kind !== "declare-attackers"; n += 1) stepOnce();
-      if (state.awaiting?.kind !== "declare-attackers") fail("the game never asked who attacks");
+      if (state.awaiting?.kind !== "declare-attackers") fail("the game never asked who attacks", "step-limit");
       const choice = awaitingChoice(state), picked = [];
       for (const [k, name] of step.attack.entries()) {
         /* At whom (`at`, a player's name, or one for each attacker in turn), or its first defender. */
         const at = Array.isArray(step.at) ? step.at[k] : step.at;
-        const option = choice.options.find((o) => (at ? o.label === `${name} → ${at}` : o.label.startsWith(`${name} → `)) && !picked.some((i) => choice.options[i].cardId === o.cardId));
-        if (!option) fail(`${name} cannot attack: ${choice.options.map((o) => o.label).join(", ") || "nothing can"}`);
+        if (explicitChoices && !at && choice.options.filter(o => o.label.startsWith(`${name} → `)).length > 1)
+          failChoice(`${name} needs an explicit defending player`);
+        const matches = choice.options.filter((o) => (at ? o.label === `${name} → ${at}` : o.label.startsWith(`${name} → `)) && !picked.some((i) => choice.options[i].cardId === o.cardId));
+        if (explicitChoices && matches.length > 1) failChoice(`${name} has ambiguous physical attackers; answer by explicit indices`);
+        const option = matches[0];
+        if (!option) fail(`${name} cannot attack: ${choice.options.map((o) => o.label).join(", ") || "nothing can"}`, {kind: "action-offer", card: name, action: "attack"});
         picked.push(option.index);
       }
       record(resolveAwaiting(state, picked));
+    } else if (Object.hasOwn(step, "blockIfLegal")) {
+      /* An explicit player policy, not an optional action: block with this exact pair if the WHOLE declaration is legal;
+         otherwise declare no blocks, only when that declaration is also legal (CR 509.1b-c). Record either decision.
+         One named pair deliberately does not solve multi-blocker requirements or choose another creature silently. */
+      const pair = step.blockIfLegal;
+      const unavailable = {kind: "policy-precheck"};
+      if (!Array.isArray(pair) || pair.length !== 2 || pair.some((name) => typeof name !== "string" || !name || name.trim() !== name)) fail("blockIfLegal requires exactly one named blocker/attacker pair and optional seat", unavailable);
+      if (!["COMBAT_DECLARE_ATTACKERS", "COMBAT_DECLARE_BLOCKERS"].includes(state.phase)) fail("blockIfLegal requires this combat's blocker declaration phase", unavailable);
+      const named = (name, role) => {
+        const ids = state.zones.battlefield.filter((id) => state.objects[id]?.card === name);
+        if (ids.length !== 1) fail(`blockIfLegal ${role} ${name} is ${ids.length ? "ambiguous" : "missing"}`, unavailable);
+        if (!typesOf(state, ids[0]).includes("Creature")) fail(`blockIfLegal ${role} ${name} is not a creature`, unavailable);
+        return ids[0];
+      };
+      const blocker = named(pair[0], "blocker"), attacker = named(pair[1], "attacker"), turn = state.turn;
+      const attack = state.combat?.attacks.find((a) => a.attacker === attacker);
+      if (!attack) fail(`blockIfLegal ${pair[1]} is not attacking in this combat`, unavailable);
+      if (controllerOf(state, blocker) !== attack.defender) fail(`blockIfLegal ${pair[0]} is not controlled by the defending player`, unavailable);
+      if (step.seat !== undefined && (!Number.isInteger(step.seat) || step.seat !== attack.defender)) fail("blockIfLegal seat is not the defending player", unavailable);
+      for (let n = 0; n < STEP_LIMIT && state.awaiting?.kind !== "declare-blockers"; n += 1) {
+        if (state.turn !== turn || !["COMBAT_DECLARE_ATTACKERS", "COMBAT_DECLARE_BLOCKERS"].includes(state.phase)) fail("blockIfLegal left this combat's blocker declaration phase", unavailable);
+        stepOnce();
+      }
+      if (state.awaiting?.kind !== "declare-blockers") fail("the game never asked who blocks", "step-limit");
+      if (state.awaiting.player !== attack.defender) fail("blockIfLegal is not the defending player being asked", unavailable);
+      const choice = awaitingChoice(state), options = choice.options.filter((o) => o.cardId === blocker && o.attackerId === attacker);
+      if (options.length > 1) fail("blockIfLegal pair is ambiguous in the blocker question", unavailable);
+      const proposed = options.map((o) => o.index);
+      const checked = proposed.length ? blockers.check(state, state.awaiting, proposed) : null;
+      const indices = checked && checked.reasons.length === 0 ? proposed : [];
+      const final = blockers.check(state, state.awaiting, indices);
+      const decision = {kind: "blockIfLegal", turn, player: state.awaiting.player, blocker: {id: blocker, name: pair[0]},
+        attacker: {id: attacker, name: pair[1]}, branch: indices.length ? "block" : "declare-no-blocks", indices,
+        pairReasons: checked?.reasons ?? ["The named pair is not offered"], reasons: final.reasons,
+        status: final.reasons.length ? "refused" : "selected"};
+      policies.push(decision);
+      if (final.reasons.length) fail(`blockIfLegal cannot declare legal blocks: ${final.reasons.join("; ")}`, unavailable);
+      record(resolveAwaiting(state, indices));
+      decision.status = "answered";
+      passed.push(`blockIfLegal: ${decision.branch}`);
     } else if (step.block) {
       /* On to the declare-blockers step, the named creatures blocking: `block` a list of [blocker, attacker] (Train B: "whenever
          this Vehicle blocks"). Nobody blocks unless a step says so; this one says so, for the first defending player asked. */
       for (let n = 0; n < STEP_LIMIT && state.awaiting?.kind !== "declare-blockers"; n += 1) stepOnce();
-      if (state.awaiting?.kind !== "declare-blockers") fail("the game never asked who blocks");
+      if (state.awaiting?.kind !== "declare-blockers") fail("the game never asked who blocks", "step-limit");
       const choice = awaitingChoice(state), picked = [];
       /* `blockers`: the creatures that may block, by name, as the question offers them -- "this creature can't block" is one
          that is not among them (Gravecrawler). */
       if (step.blockers !== undefined) {
         const got = [...new Set(choice.options.map((o) => o.label.split(" blocks ")[0]))].sort();
-        if (JSON.stringify(got) !== JSON.stringify([...step.blockers].sort())) fail(`the creatures that may block are ${JSON.stringify(got)}, not ${JSON.stringify(step.blockers)}`);
+        if (JSON.stringify(got) !== JSON.stringify([...step.blockers].sort())) fail(`the creatures that may block are ${JSON.stringify(got)}, not ${JSON.stringify(step.blockers)}`, "blocker-offer");
         passed.push(`may block: ${step.blockers.join(", ") || "nothing"}`);
       }
       for (const [blocker, attacker] of step.block) {
-        const option = choice.options.find((o) => o.label === `${blocker} blocks ${attacker}` && !picked.includes(o.index));
-        if (!option) fail(`${blocker} cannot block ${attacker}: ${choice.options.map((o) => o.label).join(", ") || "nothing can"}`);
+        const matches = choice.options.filter((o) => o.label === `${blocker} blocks ${attacker}` && !picked.includes(o.index));
+        if (explicitChoices && matches.length > 1) failChoice(`${blocker} has ambiguous physical blockers; answer by explicit indices`);
+        const option = matches[0];
+        if (!option) fail(`${blocker} cannot block ${attacker}: ${choice.options.map((o) => o.label).join(", ") || "nothing can"}`, {kind: "action-offer", card: blocker, action: "block"});
         picked.push(option.index);
       }
       record(resolveAwaiting(state, picked));
     } else if (step.choose) {
       /* An answer by the options' words: ["Maya"] picks the option labeled Maya. */
       const choice = awaitingChoice(state);
-      if (!choice) fail("nothing is being asked");
-      const indices = step.choose.map((label) => { const o = choice.options.find((x) => x.label === label); if (!o) fail(`no option ${label}: ${choice.options.map((x) => x.label).join(", ")}`); return o.index; });
+      if (!choice) fail("nothing is being asked", {kind: "question-offer"});
+      const indices = step.choose.map((label) => {
+        const matches = choice.options.filter(x => x.label === label);
+        if (explicitChoices && matches.length > 1) failChoice(`option ${label} is ambiguous; answer by explicit indices`);
+        const o = matches[0];
+        if (!o) fail(`no option ${label}: ${choice.options.map((x) => x.label).join(", ")}`, {kind: "question-offer"});
+        return o.index;
+      });
       record(resolveAwaiting(state, indices, null, rng, step.extra ?? {}));
     }
     /* An amount for each option (`amounts`): a division (CR 601.2d), answered as the room answers one. */
@@ -432,5 +705,5 @@ export function runScenario(scenario, cards, fixtures = {}) {
     else fail(`a step the runner does not know: ${JSON.stringify(step)}`);
   }
   check(scenario.expect);
-  return {passed, state, events};
+  return {passed, state, events, ...(policies.length ? {policies} : {})};
 }

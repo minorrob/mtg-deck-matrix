@@ -48,8 +48,8 @@ BREAKS = [
     ('510.4: no first strikers kept, the regular rule', COMBAT, SECOND, SECOND.replace(': dealsRegular(state, id);', ': true;')),
     ('510.4: read in the regular step', COMBAT, '  if (step === "first") return dealsFirstStrike(state, id);\n', '  if (step === "first" || true) return dealsFirstStrike(state, id);\n'),
     ('510.4: open asks who deals now', COMBAT,
-     '    const dealsNow = (id) => dealsIn(state, id, step);\n    const attack = state.combat.attacks.find(',
-     '    const dealsNow = (id) => dealsIn(state, id, "first");\n    const attack = state.combat.attacks.find('),
+     'if (!onBattlefield(state, a.attacker) || !dealsIn(state, a.attacker, step) || power(state, a.attacker) <= 0)',
+     'if (!onBattlefield(state, a.attacker) || !dealsIn(state, a.attacker, "first") || power(state, a.attacker) <= 0)'),
 
     # Lose Focus: replicate (CR 702.56a; cards/index.mjs, rules/actions.mjs).
     ('replicate: compiled', CARDS, 'String(ability.keyword).toLowerCase() === "replicate") {', 'String(ability.keyword).toLowerCase() === "replicatex") {'),

@@ -1,0 +1,18 @@
+/* Run from the worktree root: Get-Content <this file> -Raw | node --input-type=module */
+import assert from "node:assert/strict";
+import {runScenario} from "./game/engine/cards/scenario.mjs";
+import {loadCardIndex} from "./game/tools/engine-cards.mjs";
+import {awaitingChoice} from "./game/engine/rules/turn.mjs";
+const fixtures = {
+  Invitation: {types: ["Sorcery"], manaCost: "{0}", spell: {id: "s", text: "You may cast an exiled spell.", targets: [], effects: [{effect: "play", from: "selector", selector: {zone: "exile", owner: "you"}, payMana: true}]}},
+  "Paid X": {types: ["Sorcery"], manaCost: "{X}{R}", spell: {id: "s", text: "You gain X life.", targets: [], effects: [{effect: "gainLife", amount: "X"}]}},
+  "Paid Extra": {types: ["Sorcery"], manaCost: "{R}", spell: {id: "s", text: "Discard a card as an additional cost. You gain 2 life.", additionalCost: [{atom: "discard", count: 1}], targets: [], effects: [{effect: "gainLife", amount: 2}]}}
+};
+const {state} = runScenario({name: "Effect-paid X and additional costs are legal choices", pooledTaps: true, xTaps: true,
+  setup: [{seat: 0, zone: "hand", cards: ["Invitation", "Wastes"]}, {seat: 0, zone: "exile", cards: ["Paid X", "Paid Extra"]},
+    {seat: 0, zone: "battlefield", cards: ["Mountain", "Mountain"]}], steps: [{cast: "Invitation"}, {resolve: true}]}, loadCardIndex().definition, fixtures);
+const choice = awaitingChoice(state);
+console.log(JSON.stringify({options: choice?.options ?? [], exile: state.zones.exile.map(id => state.objects[id].card),
+  pool: state.players[0].manaPool, hand: state.zones.hand[0].map(id => state.objects[id].card)}));
+assert.ok(choice?.options.some(option => option.label.includes("Paid X")), "the effect must offer a payable X spell and let its caster announce X");
+assert.ok(choice?.options.some(option => option.label.includes("Paid Extra")), "the effect must offer the payable additional-discard spell");

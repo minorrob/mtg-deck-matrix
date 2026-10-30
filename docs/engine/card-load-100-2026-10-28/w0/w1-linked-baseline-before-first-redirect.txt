@@ -1,0 +1,130 @@
+COMMAND node --stack-size=4000 tests/engine-battle-damage-sba.mjs
+engine-battle-damage-sba: 128 checks; native Battle damage and mandatory state-based actions
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-sba.mjs
+engine-sba: 54 checks passed â€” two commanders' damage is not pooled, life gain does not erase it, an empty library is not a loss until you draw, and a dead player's board leaves with them.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-lki.mjs
+engine-lki: 20 checks passed â€” the look-back records the characteristics a dying permanent actually had, counters and anthems and stolen control included, and hands them to the trigger as the cause.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-lki-dies.mjs
+engine-lki-dies: 19 checks passed -- a dies trigger reads what died as it last existed: counters had, kinds, defender, toughness; through a wipe, a checkpoint, a theft, two kinds, four seats.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-deaths.mjs
+engine-deaths: 32 checks passed â€” a death read as the thing last existed, a wipe seen whole, "equipped creature dies", a creature sacrificed as a cost chosen and a mana ability's off the stack, and "you may" asked.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-regenerate.mjs
+engine-regenerate: 9 checks passed â€” a shield replaces the next destruction this turn (destroy, lethal damage, deathtouch): tapped, damage removed, out of combat; not toughness 0 or a sacrifice; one shield each; "can't be regenerated"; gone at the turn's end.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-x11-umbra-armor.mjs
+engine-x11-umbra-armor: 39 checks passed -- umbra armor wherever a permanent would be destroyed, and not otherwise; the choice between two ways out, its controller's, in APNAP order, answered by both pilots.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-exile-until.mjs
+engine-exile-until: 21 checks passed -- exiled until its source leaves the battlefield, and back at once under its owner's control as a new object, whichever way it leaves; nothing exiled if it left first; a token or a card gone elsewhere does not come back.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-source-remains.mjs
+engine-source-remains: 21 checks passed -- "for as long as this remains on the battlefield" kept with its source, over as it leaves however it goes, never back with it, never started without it.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-source-memory.mjs
+engine-source-memory: 7 checks passed -- self filters, printed remembered figures, stack LKI capture and use.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-trigger.mjs
+engine-trigger: 34 checks passed â€” a trigger waits for priority, the active player's goes on first and resolves last, a player orders their own, and the look-back is the event envelope doing its job.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-trigger-targets.mjs
+engine-trigger-targets: 28 checks passed â€” a trigger aimed as it goes on the stack or removed when it cannot be, a spell countered by its object, another creature entering, and "non-".
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-triggers-again.mjs
+engine-triggers-again: 16 checks passed â€” one more for each static: by what caused it (entering, attacking, dying, its own death read as it was) or whose it is; never an opponent's; a one-or-more trigger again about all of them.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-priority.mjs
+engine-priority: 40 checks passed â€” APNAP order, consecutive passes only, the active player after a resolution, and the dead are never waited for.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-turn.mjs
+engine-turn: 85 checks passed â€” the steps of CR 500.1 in order, under the names already on disk, and a turn that always reaches the next player.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-zone-costs.mjs
+engine-zone-costs: 12 checks passed -- an ability's costs are offered, chosen and paid wherever it works from: a graveyard's sacrifice and tap, a hand's discard; none to pay with, none offered.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-zone-action-operations.mjs
+engine-zone-action-operations: 64 checks passed
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-entry-counter-order.mjs
+engine-entry-counter-order: 87 checks; actual counter replacements remain separately askable
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-intrinsic-entry.mjs
+engine-intrinsic-entry: 34 checks; native and legacy intrinsic counters respect prospective ability loss
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-battles.mjs
+engine-battles: 95 checks passed
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-counters-replaced.mjs
+engine-counters-replaced: 45 checks passed -- plus one, half rounded down, twice, by whom; one or more only; the order asked of the affected player where it changes how many, the most or fewest where nothing can ask; players; four seats; the pilot; the schema.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-counters-doubled.mjs
+engine-counters-doubled: 14 checks passed -- each kind of counter doubled, on permanents and players; twice that many instead, as it enters too, four times for two; whenever you scry or surveil, yours, once it is done.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-compleated.mjs
+engine-compleated: 22 checks passed -- compleated: two fewer loyalty counters for each Phyrexian symbol its caster paid with life, never fewer than none; Vraska's Treasure for good and her difference to nine.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-load100-w2-stack.mjs
+engine-load100-w2-stack: 268 checks passed
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-entering.mjs
+engine-entering: 15 checks passed â€” played shock lands wait before entry; legacy fetch/move queues remain explicit, and life offers remain payable.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-enter-copy.mjs
+engine-enter-copy: 24 checks passed â€” asked as it enters, each other permanent or none; it arrives as the copy, triggers and all; the copied card's own entering applies; except, until end of turn; fear.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-riot.mjs
+engine-riot: 22 checks passed -- riot: a +1/+1 counter or haste, its controller's choice as it enters however it enters, each instance its own.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-wave4c-k3.mjs
+engine-wave4c-k3: 171 checks passed -- a die rolled and its result, a Class becoming level 2, offspring's offers and refusals, copies of what an effect moved halved, a mana ability tapping an artifact with no {T} of its own, counters annihilating, and the table playing all eighteen of the lane's cards, each scenario of theirs played, and those of the cards whose rules they touched
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-wave4a-h3.mjs
+engine-wave4a-h3: 63 checks passed -- Spark Double's copy and its counters, Hunter's Insight's damage source, Koma's forbidden activations, the replacements a resolution remembers, Ziatora's sacrificed power, shadow, each player's color, Goblin Welder's two targets, and the greatest power
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-tokens-counters-4a.mjs
+engine-tokens-counters-4a: 208 checks passed -- the token event in groups, one of each, the order among what applies as it stands, every token as the effect makes it; counters on yourself, by an effect, not by a permanent's own as it enters; whenever you put; four seats; the schema; the credits; the table.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-tokens-replaced.mjs
+engine-tokens-replaced: 48 checks passed -- twice that many tokens, Dragons instead of artifact tokens, and a Soldier beside creature tokens: whose control, the effect's words on what is made instead, the order asked where it matters, copies, investigate, four seats, the schema.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-counters-put.mjs
+engine-counters-put: 27 checks passed -- counters put on players and counted as theirs, doubled as they are put on; "one or more +1/+1 counters put on a creature you control", about it and that many; the compiler holding both.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-x11-turns-counters.mjs
+engine-x11-turns-counters: 41 checks passed
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-ability-loss.mjs
+engine-ability-loss: 109 checks passed -- "loses all abilities" switches off a permanent's own statics in layers 6 and 7 (CR 613.1f, 613.8a), carries on what began earlier (613.6), and takes every rule and replacement effect of its own with them; reading a board's rules derives only what such an effect can reach; control exchanged, both or nothing (701.12).
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-catalog.mjs
+engine-catalog: 41 checks passed â€” every keyword action and ability of the rules and every construct the cards use, each with where the engine stands and what to build next.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-outside-damage.mjs
+engine-outside-damage: 140 checks passed; actual mana damage choices, reload, holder departure and deferred shields
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-rule-operations.mjs
+engine-rule-operations: 76 checks passed
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-zone-operations.mjs
+engine-zone-operations: 71 checks passed
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-cards.mjs
+engine-cards: 55 checks passed â€” 6430 definitions, each the card it claims to be, each played through the rules by its scenarios, and everything the engine cannot play refused by name.
+EXIT 0
+COMMAND node --stack-size=4000 tests/generators.mjs
+generators: 93 checks passed â€” 357 declared paths across 129 tools all resolve, and 26 generators pass their own check.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-precons-e.mjs
+engine-precons-e: 110 checks passed â€” Kalitas's exile and Zombie for each opponent and beside Liesa, Josu Vess kicked, a sacrifice remembered for everyone, the new keys refused where they do not belong, and Wretched Ranks's 40 cards through their scenarios.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-roblists-p3.mjs
+engine-roblists-p3: 137 checks passed.
+EXIT 0
+COMMAND node --stack-size=4000 tests/engine-battle-linked-returns.mjs
+engine-battle-linked-returns: 326 checks; actual simultaneous return preflight
+EXIT 0
+PASS all 43 original/additive readers

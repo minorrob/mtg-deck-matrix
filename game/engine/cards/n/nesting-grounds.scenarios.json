@@ -125,10 +125,18 @@
       ],
       "steps": [
         {
-          "tap": "Forest"
+          "tap": "Forest",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Grown Bear"
@@ -217,6 +225,24 @@
         },
         {
           "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "asks": {
+                "seat": 0,
+                "options": [
+                  "Effect: This creature enters with a +1/+1 counter on it.",
+                  "Effect: This creature enters with a flying counter on it."
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "choose": [
+            "Effect: This creature enters with a +1/+1 counter on it."
+          ]
         },
         {
           "tap": "Forest"
@@ -315,7 +341,11 @@
       ],
       "steps": [
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         }
       ],
       "expect": [
@@ -367,7 +397,11 @@
       ],
       "steps": [
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "activate": "Nesting Grounds",

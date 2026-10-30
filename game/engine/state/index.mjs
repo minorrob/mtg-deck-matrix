@@ -92,6 +92,7 @@ export function createState(pod) {
   const seats = pod?.players ?? [];
   if (seats.length < 2) throw new Error("A game needs at least two players");
   if (seats.length > 4) throw new Error("A table seats at most four players");
+  if (pod.effectPlayVersion !== undefined && pod.effectPlayVersion !== 1) throw new Error("Unsupported native effect-play version");
   /* CR 903.7 starts a Commander game at 40 life; a table's host may set another as a house rule (Rob, 2026-09-30), and
      the pod carries it. Anything but a whole number from 1 to 999 is refused rather than guessed at. */
   const life = pod?.startingLife ?? STARTING_LIFE;
@@ -128,6 +129,10 @@ export function createState(pod) {
     /* A cast tapped for tops up floating mana, and a source of more than one mana is tapped for all of it (rules/actions.mjs,
        `pooledTaps`; Rob, 2026-10-15). Only a pod that asks carries the key, as above. */
     ...(pod?.pooledTaps === true ? {pooledTaps: true} : {}),
+    /* Physical mana source identities are explicit in new matches. An absent historical pod keeps its saved replay. */
+    ...(pod?.sourceChoices === true ? {sourceChoices: true} : {}),
+    /* New drivers record the native resolving-play question epoch. Its absence preserves historical state hashes/IDs. */
+    ...(pod?.effectPlayVersion === 1 ? {effectPlayVersion: 1} : {}),
     /* New matches may fund the prepared inset's cast from its controller's sources, as a hand cast can be funded. */
     ...(pod?.preparedTaps === true ? {preparedTaps: true} : {}),
     /* And an {X} spell tapped for too, for each X the pool and the untapped sources pay together (rules/actions.mjs, `xTaps`;
@@ -198,7 +203,7 @@ const listFor = (state, zone, player) => (PER_PLAYER.includes(zone) ? state.zone
  */
 /* A double-faced card's face (CR 712.8): its characteristics, from the card's own two. `mdfc` holds both faces of any
    double-faced card -- a modal one, or a nonmodal one (`transforming`, CR 712.2) that transforms. */
-const FACE_KEYS = ["card", "types", "subtypes", "supertypes", "manaCost", "colors", "power", "toughness", "loyalty", "keywords", "abilities", "spell", "enchant"];
+const FACE_KEYS = ["card", "types", "subtypes", "supertypes", "manaCost", "colors", "power", "toughness", "loyalty", "defense", "keywords", "abilities", "spell", "enchant"];
 function faceOf(mdfc, face) {
   const side = face === "back" ? mdfc.back : mdfc.front;
   return Object.fromEntries(FACE_KEYS.map((key) => [key, side[key]]));
@@ -291,11 +296,12 @@ const FACE_DOWN_EXILED = Object.freeze({card: null, types: [], subtypes: [], sup
    projection.mjs), and what it becomes as it is turned face up (708.8) or leaves the battlefield (708.9). */
 /* A permanent's copiable values (CR 707.2): what a copy effect writes onto it (effects/permanents.mjs, becomeCopy), its own
    kept beside them as `uncopied` -- only the values it has, so it is the same object woken from storage as in memory. */
-export const COPY_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "loyalty", "spell", "enchant"]);
+/* A preparation card's alternative spell characteristics are copiable (CR 722.2b); its prepared designation is not. */
+export const COPY_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "loyalty", "defense", "spell", "enchant", "preparation"]);
 /* An adventurer card's two sets of characteristics (`adventurer`, CR 715.2) are the card's too: kept beside it face down, so a
    card exiled face down and played from there may still be cast as its Adventure (715.3), and one manifested leaves the
    battlefield as the card it is (708.9). */
-const CARD_KEYS = ["card", "types", "subtypes", "supertypes", "manaCost", "colors", "power", "toughness", "loyalty", "keywords", "abilities", "spell", "enchant", "mdfc", "preparation", "adventurer"];
+const CARD_KEYS = ["card", "types", "subtypes", "supertypes", "manaCost", "colors", "power", "toughness", "loyalty", "defense", "keywords", "abilities", "spell", "enchant", "mdfc", "preparation", "adventurer"];
 
 /**
  * TO TURN A FACE-DOWN PERMANENT FACE UP (CR 708.8): its copiable values go back to the card's own -- a double-faced card's
@@ -388,8 +394,8 @@ export function addObject(state, object, zone, player = null) {
   const owner = Number.isInteger(object.owner) ? object.owner : player;
   state.objects[id] = {
     id,
-    /* A preparation card is called by its own name alone, in every zone (CR 722.4): "Goblin Glasswright", not the pair. */
-    card: object.preparation?.of ?? object.card ?? null,
+    /* A preparation card uses its front name (CR 722.4), while an explicit copy-name exception still applies (707.9b). */
+    card: (object.preparation ? (object.card ?? object.preparation.of)?.split(" // ")[0] : object.card) ?? null,
     /* The card's PRINTED types (CR 109.3). What an object's types currently are is the layer
        system's answer (CR 613, phase 1.8); this is the base it starts from, and it comes from the
        card definition once the directory exists in phase 2. */
@@ -405,6 +411,8 @@ export function addObject(state, object, zone, player = null) {
     toughness: Number.isInteger(object.toughness) ? object.toughness : null,
     /* A planeswalker's printed loyalty (CR 306.5a); on the battlefield its loyalty is its loyalty counters (306.5c). */
     ...(Number.isInteger(object.loyalty) ? {loyalty: object.loyalty} : {}),
+    /* CR 310.4a, 707.2: printed defense is copiable; a protector is a designation and is not. */
+    ...(Number.isInteger(object.defense) ? {defense: object.defense} : {}),
     keywords: Array.isArray(object.keywords) ? [...object.keywords] : [],
     /* CR 302.6, summoning sickness: the turn this object came under its controller's control. A
        zone change makes a new object, so an entering permanent gets the current turn and a creature
@@ -666,7 +674,7 @@ function moveCard(state, from, zone, player, {faceDown, transformed, disguised})
        permanent, gone with it (CR 400.7). */
     ...(from.preparation ? {preparation: from.preparation} : {}),
     card: from.card, types: from.types, manaCost: from.manaCost, abilities: from.abilities,
-    power: from.power, toughness: from.toughness, loyalty: from.loyalty, keywords: from.keywords,
+    power: from.power, toughness: from.toughness, loyalty: from.loyalty, defense: from.defense, keywords: from.keywords,
     ...kept,
     spell: from.spell, subtypes: from.subtypes, supertypes: from.supertypes, colors: from.colors,
     enchant: from.enchant,

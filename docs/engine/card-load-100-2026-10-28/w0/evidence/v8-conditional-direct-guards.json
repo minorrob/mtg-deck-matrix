@@ -1,0 +1,21 @@
+{
+  "schema": "ReachableConditionalGuardAssertions@1",
+  "baseline": "Both native cases refused with precise policy-precheck",
+  "caught": [
+    {
+      "label": "conditional source cannot substitute another named card",
+      "specificAssertion": "same-zone native source mismatch must be refused before any action",
+      "caught": true,
+      "failureType": "ERR_ASSERTION Missing expected exception"
+    },
+    {
+      "label": "entry policy cannot answer a different kind of entering choice",
+      "specificAssertion": "actual Khans/Dragons entering choice must remain outside the creature-type policy",
+      "caught": true,
+      "failureType": "ERR_ASSERTION Missing expected exception"
+    }
+  ],
+  "missed": [],
+  "sourceRestoredByteExact": true,
+  "sourceSha256": "1f768c89f2432685703e3d3e292d653404ed9b63e1dc67c1c3b185b8603a2224"
+}

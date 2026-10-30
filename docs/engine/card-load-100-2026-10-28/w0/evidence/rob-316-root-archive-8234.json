@@ -1,0 +1,12 @@
+{
+  "schema": "RootROB316ArchiveAudit@1",
+  "source": "8234eb4177233efc23fa7e347489e31917a0d15d",
+  "manifests": 2,
+  "archives": 60,
+  "rawBytes": 79185104,
+  "allStoredAndRawHashesMatched": true,
+  "allGitBlobsExact": true,
+  "allRawEightCategoryPrivacyScansPassed": true,
+  "cardsAdmitted": 0,
+  "scope": "archive verification only; no canonical gate credit"
+}

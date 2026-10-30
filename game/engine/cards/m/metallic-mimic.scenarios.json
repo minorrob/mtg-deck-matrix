@@ -15,6 +15,20 @@
       ],
       "power": 1,
       "toughness": 1
+    },
+    "Entry Type Elf": {
+      "types": [
+        "Creature"
+      ],
+      "subtypes": [
+        "Elf"
+      ],
+      "manaCost": "{G}",
+      "colors": [
+        "G"
+      ],
+      "power": 1,
+      "toughness": 1
     }
   },
   "scenarios": [
@@ -47,10 +61,18 @@
       ],
       "steps": [
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
         },
         {
           "cast": "Metallic Mimic"
@@ -80,6 +102,80 @@
             "card": "Elf",
             "power": 2,
             "toughness": 2
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chosen Elf shares its actual subtype with another attacking Elf under Shared Animosity",
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Wastes",
+            "Wastes",
+            "Entry Type Elf",
+            "Shared Animosity"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Metallic Mimic"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Metallic Mimic"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "choose": [
+            "Elf"
+          ]
+        },
+        {
+          "to": {
+            "turn": 3,
+            "phase": "MAIN1"
+          }
+        },
+        {
+          "attack": [
+            "Metallic Mimic",
+            "Entry Type Elf"
+          ]
+        },
+        {
+          "settle": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Metallic Mimic",
+            "power": 3,
+            "toughness": 1
+          }
+        },
+        {
+          "seat": 0,
+          "stats": {
+            "card": "Entry Type Elf",
+            "power": 2,
+            "toughness": 1
           }
         }
       ]

@@ -1,0 +1,8 @@
+{
+  "cards": 700,
+  "fullIdentityStringsExact": true,
+  "namesSha256": "191ef2957ed3aea5925e4d8a7a21894691f9670ef2ef6f0fa3dd1722ab04c97a",
+  "approvedReviewSha256": "64d2850834cbe2eb2911fbf052280ebaa603a6f7f763856ed0cc3ad8d8fc7544",
+  "renamedOrNormalized": false,
+  "checker": "unchanged check-cards.mjs exported main; supported argv only"
+}

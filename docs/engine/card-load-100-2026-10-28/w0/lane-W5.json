@@ -1,0 +1,343 @@
+{
+  "schema": "library-load-lane@1",
+  "lane": "W5",
+  "wave": 0,
+  "theme": "mana",
+  "branch": "codex/engine-load100-w0-w5-mana",
+  "source": "main 39a45706; README open accuracy debt; ORCHESTRATION wave 0",
+  "cards": [],
+  "review": [],
+  "debt": "Urza's Saga's \"mana cost {0} or {1}\"; token shock lands asked; casts from exile and alternative costs with mana not yet in the pool; {X} and additional costs by an effect; delve with {X}; convoke with Phyrexian and {2/W}; the 24/12 payment caps complete or lifted; **Wayfarer's Bauble**; and **`tools/library-engine-index.mjs --pool`** (every undefined Commander card, dealt by theme, sentence first) with its suite",
+  "evidence": [
+    "| Urza's Saga III finds \"mana value 1 or less\", not \"mana cost {0} or {1}\" | `cards/u/urzas-saga.json`:165 | W5 |",
+    "| Token copies of a shock land never asked \"pay 2 life\" | `script/effects/permanents.mjs`:656 (NAMED) | W5 |",
+    "| Delve not offered for an X spell; no die modifiers or \"whenever you roll\" | `actions.mjs`:1965; `script/effects/resources.mjs`:469 | W5, W7 |",
+    "| Casts from exile or with alternative costs offered only with mana already in the pool | `actions.mjs`:1681\u20131685 | W5 |",
+    "| {X} or additional-cost cards cast by an effect's \"pay mana\": not offered | `asking.mjs`:2302 (NAMED) | W5 |",
+    "| Convoke with Phyrexian or {2/W} symbols left to the pool | `rules/mana.mjs`:483 | W5 |",
+    "| Ways to pay capped: 24 tap choices, 12 payments | `rules/actions.mjs`:1703; `rules/mana.mjs`:254 | W5 |"
+  ],
+  "status": "Full-payload ordinary source identities native462/original17-reader baseline/eight mutations proven; effect-paid costs and other wave0 gates remain open",
+  "checkpoint": {
+    "cardsAdded": 0,
+    "cardsPromoted": 0,
+    "cardsCorrected": [
+      {
+        "name": "Urza's Saga",
+        "scenariosBefore": 1,
+        "scenariosNow": 3
+      }
+    ],
+    "proven": [
+      {
+        "item": "Saga III searches actual printed {0}/{1}, excluding colored, X and absent costs",
+        "rules": [
+          "202.1",
+          "202.1b",
+          "202.3"
+        ],
+        "evidence": "A red selector regression offered four invalid fixtures before the fix; 3 Saga scenarios now pass, including choosing zero and failing to find"
+      },
+      {
+        "item": "Convoke can pay Phyrexian colored and monohybrid colored/generic alternatives",
+        "rules": [
+          "107.4e",
+          "107.4f",
+          "601.2b",
+          "702.51"
+        ],
+        "evidence": "Played {W/P}, {2/W} with one white or two colorless helpers, mixed {1}{W/P} with life, and both explicit mana-vs-life answers; existing engine-convoke's 43 checks remain green"
+      },
+      {
+        "item": "library-engine-index --pool",
+        "evidence": "Real CLI proof: 25616 of 25616 compiler-universe names exactly once; 857 lanes at most 30 including reviews; 116 freshly compiled candidates; no personal collection dependency; sentence-reuse estimates labeled as potential, not measured gains"
+      }
+    ],
+    "commands": [
+      "node --stack-size=4000 tests/engine-load100-mana.mjs: 36 checks passed",
+      "node tests/library-engine-pool.mjs: 16 checks passed",
+      "node --stack-size=4000 tests/engine-convoke.mjs: 43 checks passed",
+      "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w5-mana.py: final full sweep, 20 caught; missed: []",
+      "node --stack-size=4000 game/tools/batch/check-cards.mjs: 6430 definitions; 11025 scenarios, 0 failed; exit 0",
+      "tests/engine-mana, engine-saga, engine-lands-and-mana, engine-mana-abilities, engine-restricted-mana, engine-costs, engine-costs-activations-4b, engine-cost-more, engine-cost-targets, engine-mana-provenance, engine-mana-withheld, engine-pay-mana-play: passed",
+      "node tests/engine-breaks-anchors.mjs: 57 inherited stale anchors; W5's 20 anchors found once. The inherited requirement-checked combat anchor is also missing on original origin/main; no combat edit by W5",
+      "node tests/feature-wiring.mjs: 131 checks passed",
+      "node tests/table-basics.mjs initially caught the stale generated Saga definition; after node game/tools/engine-definitions.mjs --write, 6 checks passed and all 11025 card scenarios passed with the table lookup and room basics. Only definitions.mjs was regenerated, verified clean beforehand, then restored exactly to HEAD; no assertion changed",
+      "node tools/data-inventory.mjs --check: generated inventory drift, queued for root's consolidated regeneration",
+      "node tests/data-integrity.mjs: inherited missing README entries engine-mana-upkeep and sentence-paragraphs; root reports those entries added on integration",
+      "bash tools/local-ci.sh HEAD 0: SCAN PASS on code commit 8e6f5b5e28150be930c2ed0285b0199bbcf3e56e"
+    ],
+    "queued": [
+      "Token shock-land entry life choice (shared permanents/replacement scope)",
+      "Exile and alternative-cost casts before mana is floated",
+      "Effect-paid X and additional costs",
+      "Delve with X",
+      "Complete payment and tap choices beyond the 12/24 caps; current assertions and caps deliberately remain unchanged"
+    ],
+    "routed": [
+      {
+        "item": "Wayfarer's Bauble calibration",
+        "owner": "W4",
+        "finding": "Held-out translation selects Artifact instead of Land because repeated TYPE slots alias; the hand definition is correct"
+      }
+    ],
+    "review": "V8 independently reviewed the bounded code commit 8e6f5b5e and extra mixed {2/W}{B/P} branches; root reports no new finding. This does not close the queued W5 debt or any program gate",
+    "pullRequest": "https://github.com/minorrob/mtg-deck-matrix/pull/915",
+    "codeCommit": "8e6f5b5e28150be930c2ed0285b0199bbcf3e56e",
+    "pending": [
+      "Root's single regeneration of definitions/coverage/inventory",
+      "Consolidated wave checks, games, CI and staging"
+    ],
+    "ignoresAdded": [],
+    "sources": [
+      "Local Comprehensive Rules text, rule numbers only",
+      "https://api.scryfall.com/cards/named?exact=Urza%27s%20Saga and its public rulings URI"
+    ]
+  },
+  "resumeCheckpoint": {
+    "base": "11e4fe864a9c3b26d3e1eec57fb04cc0c16e7b3a",
+    "cardsAdded": 0,
+    "cardsPromoted": 0,
+    "proven": [
+      "Hand/exile/graveyard/library-top normal and alternative casts offered before floating mana; chosen alternative taps exact Island, spends its mana, emits one cast and one mana event, resolves gain 3. JSON reload; forged alternative unchanged.",
+      "12/24 display caps removed: public pool, tap-to-cast and effect-paid cast questions expose all 56 three-mana combinations; final option is paid and resolves. Invalid answer unchanged.",
+      "All 11 reveal lands including Murmuring Bosk actually played with no revealable card complete entry tapped without a suspended question.",
+      "Coldsteel Heart saved scenarios explicitly assert and choose both legal CR 616.1 replacement orders, preserve absence before entry and exact later chosen-color mana."
+    ],
+    "redProof": [
+      "Before affordability fix the hand alternative was absent, and exile had no cast; old normal hand cast still offered.",
+      "Old cap yielded 12 rather than 56 pool payments and 24 rather than 56 public tap options.",
+      "Before entry guard Choked Estuary remained in hand behind a decline-only reveal question."
+    ],
+    "commands": [
+      "node --stack-size=4000 tests/engine-load100-mana.mjs: 110 checks passed",
+      "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w5-funding.py: 9 caught; missed: []",
+      "engine-mana 56; engine-tap-to-cast 70; engine-convoke 43; engine-entering 15; engine-enter-copy 24; engine-pay-mana-play 5; engine-lands-and-mana 9; engine-replacement-steps 16; engine-zone-operations 71; engine-rule-operations 76: all passed",
+      "engine-costs 32; engine-play-from 20; engine-play-from-zones 76; engine-restricted-mana 15: all passed",
+      "Actual tests/*.mjs count remains 671; no new suite or README registration needed"
+    ],
+    "assertionRationale": "engine-convoke formerly asserted a truncation count through PAY_CHOICES. It now asserts all 16 mathematically distinct payments and all 185 bounded five-color multisets in the larger case, each unique. No legal outcome removed.",
+    "remaining": [
+      "Effect-paid X and additional costs; delve with X",
+      "Complete bundled-source search (4000-step/minimum-budget filtering) and rider choices (16 cap); simple payment/tap display caps are fixed but full completeness is not claimed",
+      "Token shock-land create/copy/reload/pay-life native witnesses; may already be handled by new entry pipeline",
+      "Alternative/X affordability interactions with nonmana tap costs; collision checks before claiming every alternative cost closed",
+      "Root consolidated generated artifacts, broader card/ability checks, actual fuzz, Actions and wave completion"
+    ],
+    "ignoresAdded": [],
+    "pullRequest": "https://github.com/minorrob/mtg-deck-matrix/pull/928"
+  },
+  "resumeCheckpoint2": {
+    "proven": [
+      "Delve includes announced X before generic payment and reductions; X3 and X5 with two Helms really exile the exact three selected old IDs, pay black, resolve gain3/gain5. Reload and duplicate answer unchanged.",
+      "Native createToken and copyPermanent of actual Breeding Pool characteristics ask before creation. Pay creates exactly one untapped token at life38; decline creates one tapped token at life40; reload/invalid answer unchanged.",
+      "Bundled-source planner has no4000-step cap and visits larger source budgets. All786 seven-source multisets appear in the public question; a late payment really taps its exact seven objects, spends floating mana, resolves gain8.",
+      "Rider16 cap removed: seventeen actual activations yield17 distinct source payments; final offered rider triggers exact chosen source, retains other16, and spell+rider resolve once."
+    ],
+    "commands": [
+      "node --stack-size=4000 tests/engine-load100-mana.mjs: 172 checks passed",
+      "breaks-load100-w0-w5-delve.py: 7 caught; missed: []",
+      "breaks-load100-w0-w5-completeness.py: 4 caught; missed: []",
+      "engine-rearrange-copies-4b:186; engine-wave4c-k2:74; engine-tap-to-cast:70; engine-mana-riders:29; engine-mana-provenance:23 passed",
+      "check-cards --cards Faithless Looting:1 selected definition;1 scenario,0 failed"
+    ],
+    "assertionRationale": [
+      "Faithless Looting old offer0 expected pre-floated flashback. New scenario requires offer1 at pool0 and actually auto-funds flashback, preserving final zones/draw4/discard4; exact4 mana activations and hand/graveyard cast events checked.",
+      "engine-wave4c-k2 old assertion never delves X was the named bug. New witness offers X0..5, really pays X5 with U+CCC and3 Bears and draws5.",
+      "engine-rearrange-copies-4b expected a free untapped unless-pay token at life40, explicitly NAMED old bug. Native operations now require pay -> untapped/life38 or decline -> tapped/life40, preserve unconditional tapped sibling, no premature entries, reload and invalid unchanged."
+    ],
+    "reanchored": "Prepared-room funding; roblistsP2 X tapped/X paid; wave4b-j4 X-life offer/funding; pooled-taps search budget; native token entry/payment; delve totals. Original suite unions preserved; original-union proof pending shared operation diagnostic merge.",
+    "remaining": [
+      "Effect-paid X and additional costs: existing play route excludes them. Reuse full priced cast offers, saved question/zone-payment operations; do not use castNow already-paid shortcut for new costs.",
+      "Alternative/X affordability involving nonmana tap costs: disjoint mana-source/cost-tapper validation before claiming every alternative cost complete.",
+      "Original suite-union reanchored mutations after merging root operation diagnostic2980e8b8; actual easy/normal fuzz; root consolidated generated artifacts/CI/wave gates"
+    ],
+    "ignoresAdded": []
+  },
+  "resumeCheckpoint3": {
+    "source": "d807b03a31236fb12c45f7577337bbd3fbd7af6b",
+    "shared": "2c89a5c3de37959b531bf5ebe42e8673b7e9da80",
+    "code": "12a32a40",
+    "pullRequest": "https://github.com/minorrob/mtg-deck-matrix/pull/928",
+    "cardsAdded": 0,
+    "cardsPromoted": 0,
+    "commands": [
+      "node --stack-size=4000 tests/engine-load100-mana.mjs:172 checks passed after W1/shared merges",
+      "breaks-load100-w0-w5-funding.py:9 caught,missed:[]; breaks-load100-w0-w5-delve.py:7 caught,missed:[]; breaks-load100-w0-w5-completeness.py:4 caught,missed:[]",
+      "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-w5-reanchored.py: full14-suite original union baseline GREEN;13 original mutations caught;missed:[]",
+      "One standard check-cards inventory at5a:6430 definitions;11037 scenarios,1 failed (Glasswright old no-funding expectation). W1 actual funded repair1fad merged; regenerated shared snapshot2c merged; original full engine-cards then GREEN in14-suite union",
+      "Actual normal library seed2802 at5a:49 turns,0 refusals,replay identical,0 leaks/1 final-view check;all-house only",
+      "Actual easy library seed2801 at5a:UNFINISHED after628.39s;CPU673.08s,memory425.4MB; exact-owned PID48748 stopped and no helper left; NOT CLEAN"
+    ],
+    "originalSuiteUnion": [
+      "engine-load100-mana",
+      "room-prepared",
+      "engine-roblists-food",
+      "engine-costs-activations-4b",
+      "engine-cards",
+      "engine-catalog",
+      "engine-attacks-alone",
+      "engine-wave4c-k2",
+      "engine-dig-reveal",
+      "engine-rearrange-copies-4b",
+      "engine-vocabulary",
+      "engine-tap-to-cast",
+      "room-pooled-taps",
+      "game-table"
+    ],
+    "remaining": [
+      "Profile easy2801 exact5a repro before accepting exhaustive payment planning in actual games. G5 and operational payment completeness remain OPEN; do not restore arbitrary caps.",
+      "Effect-paid X/additional costs remain RED; saved native reproduction W5-effect-paid-costs-red.mjs.txt offers neither legal spell despite two Mountains and discard fodder. No large effect-cast frame started.",
+      "Alternative/X affordability with nonmana tap costs needs disjoint source/cost-tapper validation. Source-funded X beyond ordinary hand/command/alternative restrictions remains to audit.",
+      "Current source solver still groups sources by outputs and chooses the first objects within a group. The56/786 proofs enumerate source-kind multisets, not all source-ID subsets; audit identity-dependent choices before complete-choice acceptance.",
+      "Coordinate W1 queued Siege transformed-cast seam and W4 mana ability.then damage continuation. Root owns generated outputs/ACTIVE/RUN/integration, scope dealing, consolidated gates."
+    ],
+    "evidence": [
+      "evidence/w5-original-union-mutations.txt",
+      "evidence/w5-fuzz-easy-2801-timeout.json",
+      "evidence/w5-fuzz-normal-2802.json",
+      "evidence/w5-card-inventory-5a004e44.json",
+      "W5-next.md"
+    ],
+    "gateClaims": {
+      "wave0Complete": false,
+      "G5": false,
+      "paymentOperationalAcceptance": false
+    },
+    "ignoresAdded": []
+  },
+  "presentProfileCheckpoint": {
+    "fixedBase": "ea0099b775e1e1637028e1a6d6705cb58fb8cd07",
+    "evidence": "evidence/w5-present-profile.json",
+    "nativeChecks": 85,
+    "caughtMutations": 4,
+    "missed": [],
+    "seed2801TimedOutSeconds": 90.09,
+    "clean": false,
+    "sourceIdentityDebt": "open",
+    "effectPaidCosts": "open",
+    "G5": false
+  },
+  "sourceIdentityCheckpoint": {
+    "base": "9443180710f2fb76ceab60a5f3141c82cb5a0260",
+    "evidence": "evidence/w5-source-identities.json",
+    "nativeChecks": 249,
+    "roomChecks": 14,
+    "newMutationsCaught": 9,
+    "missed": [],
+    "currentDefault": true,
+    "wholeIdentityComplete": false,
+    "historicalReplayCompatibility": true,
+    "historicalLiveMigration": "open",
+    "outputColors": "open",
+    "effectPaidCosts": "open",
+    "G5": false,
+    "G7": false
+  },
+  "outputColorCheckpoint": {
+    "base": "c3bb1824494792780cb0f6de4eb8dd758f75b4dc",
+    "evidence": "evidence/w5-output-colors.json",
+    "nativeChecks": 293,
+    "baselineSuites": 16,
+    "caughtMutations": 6,
+    "missed": [],
+    "currentDefault": true,
+    "wholePaymentComplete": false,
+    "disjointCosts": "actual Sephara RED saved",
+    "effectPaidCosts": "open",
+    "historicalLiveMigration": "open",
+    "G5": false,
+    "G7": false
+  },
+  "disjointCheckpoint": {
+    "base": "58bd64ebd618d26094b7331e84ae3947fc78fdf9",
+    "evidence": "evidence/w5-disjoint-costs.json",
+    "nativeChecks": 410,
+    "baselineSuites": 17,
+    "caughtMutations": 10,
+    "missed": [],
+    "costSubsets": 15,
+    "legalCompletePayments": 10,
+    "strictG3Accepted": false,
+    "rawOutputPayloadKinds": "RED saved",
+    "pilotCostSubset": "RED saved; P0 informed",
+    "effectPaidCosts": "open",
+    "historicalLiveMigration": "open",
+    "G5": false,
+    "G7": false
+  },
+  "faceDownReaderPartial": {
+    "base": "7d03fd5f947441aeddd7569c8d292242ce5c5654",
+    "evidence": "evidence/w5-face-down-reader-partial.json",
+    "nativeFaceDown": 68,
+    "nativeAdventure": 71,
+    "originalSixUnionGreen": false,
+    "intendedMutations": 2,
+    "appliedMutations": 0,
+    "creditedMutations": 0,
+    "browserBlocker": "board-choices:330 stage-top visibility timeout60000ms",
+    "browserAndServerTeardown": true,
+    "engineChanges": false,
+    "gateWeakening": false
+  },
+  "pilotTapCheckpoint": {
+    "base": "1000a25daae5fd7759e3bd865aaba565b3087651",
+    "evidence": "evidence/w5-pilot-tap-cost.json",
+    "nativeChecks": 417,
+    "roomChecks": 25,
+    "caughtMutations": 3,
+    "missed": [],
+    "humanDefaultsAdded": false,
+    "refusedAnswerRetryAdded": false,
+    "actualFixtureGameRefusals": 0,
+    "actualFixtureGameWinner": true,
+    "actualFixtureGameReplay": true,
+    "poolOrLibraryG5Credit": false,
+    "rawPayloadKinds": "corrected by the subsequent full-payload checkpoint",
+    "effectPaidCosts": "open",
+    "originalReaderBrowser": "blocked; two mutations uncredited",
+    "G5": false,
+    "G7": false
+  },
+  "payloadKindCheckpoint": {
+    "base": "bc4f16a776e074abda8624d13dcfbf431d1b932e",
+    "evidence": "evidence/w5-payload-kinds.json",
+    "nativeChecks": 462,
+    "originalBaselineSuites": 17,
+    "firstRunCaught": 7,
+    "repairedAmbiguousAnchorCaught": 1,
+    "totalDistinctMutationsCaught": 8,
+    "uncaughtAfterSupplement": [],
+    "normalRawContract": "full payload identity",
+    "historicalExactKeys": "preserved by named compatibility planners",
+    "effectPaidCosts": "open; actual Scepter/Getaway Glamer RED",
+    "wholePaymentComplete": false,
+    "G5": false,
+    "G7": false
+  },
+  "playRefreshCheckpoint": {
+    "base": "0130f853e7ad7c6ad8ee2a6eb0532415ea50cf1f",
+    "branch": "codex/engine-load100-w0-w5-play-refresh",
+    "status": "native70, original25-reader baseline and17 caught mutations proven; whole room versioning and wave0 gates remain open",
+    "api": [
+      "deriveEffectPlay(state, awaiting=state.awaiting)",
+      "refreshEffectPlay(state)"
+    ],
+    "nativeChecks": 70,
+    "originalReaderUnion": 25,
+    "heldEffectCostSliceIncluded": false,
+    "currentNewQuestions": "Canonical scenario/fuzz version1 and optional room copy proved; P0 owns forced live room/table starts and trusted historical tape replay",
+    "historicalSavedQuestionWithoutOrigin": "historical native state shape and IDs preserved; old live migration remains debt",
+    "wholePaymentComplete": false,
+    "G3": false,
+    "G5": false,
+    "G7": false,
+    "evidence": "evidence/w5-play-refresh.json",
+    "freeCastReaderChecks": 20,
+    "caughtMutations": 17,
+    "missed": [],
+    "effectPlayVersion": 1,
+    "sourceRestored": true,
+    "roomForcedStartsAndReplayCompanion": "P0 dependency pending"
+  }
+}

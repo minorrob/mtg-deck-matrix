@@ -1,0 +1,144 @@
+{
+  "schema": "CurrentMainSnoopIntegration@1",
+  "source": "ec200e8e0be4d0cdaef3828d20a17e82086152c8",
+  "main": "eee58e4383364f43968259044634c4d7978d5f8f",
+  "date": "2026-10-29",
+  "engineRuntimeChangedByMainMerge": false,
+  "ownerUIPreserved": true,
+  "boardDifferenceFromMain": "exactly two user-approved Snoop lines",
+  "suiteCount": 715,
+  "checks": {
+    "assetVersions": 136,
+    "serviceWorker": 9,
+    "featureWiring": 131,
+    "dataIntegrity": "passed after preserving incoming suite registry row",
+    "snoopBrowser": 98,
+    "tooltipBrowser": 21
+  },
+  "browser": {
+    "node": "22.23.3",
+    "engine": "pinned Chromium1194",
+    "geometryRequired": true,
+    "webglRequired": true,
+    "localLoopbackEscalation": true,
+    "quietWorkers": true,
+    "nativeRoom": true,
+    "fixtureArt": true,
+    "testsExited": 0,
+    "scopedElevatedProcessCheck": "no matching owned test/server process remains"
+  },
+  "files": [
+    {
+      "file": "crankmagic-board.js",
+      "sha256": "7979f2374e00f6319f937fa33c49110d0fb8f03ecaf82d847e4d683a42d15933"
+    },
+    {
+      "file": "crankmagic-stage.css",
+      "sha256": "1f446511d834319b8b460fad83be1222fbff435ec9d9ee74c9188275ad23b9f6"
+    },
+    {
+      "file": "crankmagic-app.js",
+      "sha256": "fda4bc6e84aee8385e5611bb8c4fbf366a4accd0d26b3f4f114b873a2f94b18e"
+    },
+    {
+      "file": "crankmagic-sw.js",
+      "sha256": "69659083cf93985299731382cc1f03d1e0efb01537b19720a3ede9d24723e57a"
+    },
+    {
+      "file": "index.html",
+      "sha256": "3bc8b78b5716a112e07926efee0e08ab77b7beae8b012c1679e403cd8c68daba"
+    },
+    {
+      "file": "crankmagic.html",
+      "sha256": "28514b5c5d7a7064927a473dcdc34d5a390b9a2f97c484bf496cb9a9ebd55d8b"
+    },
+    {
+      "file": "tests/board-playtest-snoop.mjs",
+      "sha256": "6c15eefa750754e2fca2b3dfd3f29c23a41938a97561bbcc67aefe457c6576b3"
+    },
+    {
+      "file": "tests/board-card-no-native-tooltip.mjs",
+      "sha256": "7017055549ec240e475ad05e9faea25a9c6d26e30df5298f3d52c1bdbe1c533b"
+    },
+    {
+      "file": "tests/helpers/playtest-snoop.mjs",
+      "sha256": "f37b0032ba0fc070c11c3461e95e6071a94841861fe3e122c550b5f3f6bb1af8"
+    },
+    {
+      "file": "tests/fixtures/asset-versions.json",
+      "sha256": "bd0d8849028af26df4a94f02f1c810f5f42bc41a323b62662e9673bba62c832e"
+    }
+  ],
+  "screenshots": [
+    {
+      "file": "snoop-focus-cast-menu.png",
+      "sha256": "581e96648ccdd9253e25cfe9365a492f130bd62909ae9a1a86e869186e8cf8a1",
+      "inspected": true
+    },
+    {
+      "file": "snoop-focus-held-opponent.png",
+      "sha256": "bd7ed4c79c625d45a641c8f5cd345907f1f4fd2f5b220952233107c05ca35b52",
+      "inspected": false
+    },
+    {
+      "file": "snoop-focus-held-owner.png",
+      "sha256": "ba0eedea1d1b187c850de7828f0aa4c6b64a1c075596a15995ef20d40036a3ad",
+      "inspected": false
+    },
+    {
+      "file": "snoop-focus-source-removed.png",
+      "sha256": "1c0c7b00ff953be7f1cc267bb8b8180f8c17e42a9f82307d0e1477930c5287ce",
+      "inspected": false
+    },
+    {
+      "file": "snoop-full-cast-menu.png",
+      "sha256": "31ff9edcdf74a6c8d783e3956cd00403734bc1b21678c1f5776155a916620eb5",
+      "inspected": false
+    },
+    {
+      "file": "snoop-full-held-opponent.png",
+      "sha256": "c7c5bf5f8304a592ef9b533e5f67ad3f55c0c59387f0be5fc449451eaab0251e",
+      "inspected": false
+    },
+    {
+      "file": "snoop-full-held-owner.png",
+      "sha256": "d1f39468a2c9895016e37d7ffbd41d7c8481e12e796e80884945b7cff3f31036",
+      "inspected": true
+    },
+    {
+      "file": "snoop-full-source-removed.png",
+      "sha256": "eaaf34e8031fcc71b0f2887be6b1e3adb6c936fc9e2902e3a7842f7ee1f2c93d",
+      "inspected": true
+    },
+    {
+      "file": "snoop-table-cast-menu.png",
+      "sha256": "db8cd17280bd69e37ee669cf10742032ddf3e72b1d2a3cd797369b05fbc661a0",
+      "inspected": false
+    },
+    {
+      "file": "snoop-table-held-opponent.png",
+      "sha256": "2d08dced85e0262fd8386093f388441229e49a98a1e6f4cc5acbf9822b2855bd",
+      "inspected": false
+    },
+    {
+      "file": "snoop-table-held-owner.png",
+      "sha256": "234cc21762cb1b1dc6077f98ff501d3c33ee8bd088663634cd15cd92e425f21a",
+      "inspected": true
+    },
+    {
+      "file": "snoop-table-source-removed.png",
+      "sha256": "6a181e6f00a219ec0ac0f959d7615990d389d5dfe5a9ee7b750727f428db7289",
+      "inspected": false
+    }
+  ],
+  "functionalAcceptance": "bounded Snoop and tooltip checks only",
+  "visualAcceptance": false,
+  "remaining": [
+    "Existing 3D mat/card clipping and occlusion remain visible.",
+    "Document footer extends below the 900px viewport; no full-layout acceptance.",
+    "Original accessibility contrast RED/ROB-312 and full wave0 gates remain open."
+  ],
+  "cardsAdmitted": 0,
+  "stagingRelease": false,
+  "mergedToMain": false
+}

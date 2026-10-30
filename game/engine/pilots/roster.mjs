@@ -47,7 +47,7 @@ export const DIALS = Object.freeze({
 export const OVERRIDE_LIMITS = Object.freeze({
   saltCap: Object.freeze({min: -2, max: 4}),
   risk: Object.freeze({min: -0.3, max: 0.3}),          // added to the reserve's appetite (PR 2): + risks more
-  grudge: Object.freeze({min: 0, max: 1}),             // threat added to the seat that last hit it
+  grudge: Object.freeze({min: 0, max: 1}),             // recent public damage provokes viable retaliation
   groupHug: Object.freeze({min: 0, max: 1}),           // how far it keeps off a seat the table is already hitting
   temperatureDelta: Object.freeze({min: -1, max: 1}),  // added to its level's temperature
   politics: Object.freeze(["join", "neutral", "avoid"]),

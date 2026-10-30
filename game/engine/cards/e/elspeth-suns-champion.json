@@ -91,38 +91,44 @@
       ],
       "effects": [
         {
-          "effect": "effectUntil",
-          "until": "ever",
-          "layer": 7,
-          "sublayer": "c",
-          "affects": {
-            "what": "permanent",
-            "types": [
-              "Creature"
-            ],
-            "controller": "you"
-          },
-          "apply": {
-            "power": 2,
-            "toughness": 2
-          }
-        },
-        {
-          "effect": "effectUntil",
-          "until": "ever",
-          "layer": 6,
-          "affects": {
-            "what": "permanent",
-            "types": [
-              "Creature"
-            ],
-            "controller": "you"
-          },
-          "apply": {
-            "addKeywords": [
-              "Flying"
-            ]
-          }
+          "effect": "emblem",
+          "text": "Creatures you control get +2/+2 and have flying.",
+          "abilities": [
+            {
+              "kind": "static",
+              "text": "Creatures you control get +2/+2 and have flying.",
+              "layer": 7,
+              "sublayer": "c",
+              "affects": {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ],
+                "controller": "you"
+              },
+              "apply": {
+                "power": 2,
+                "toughness": 2
+              }
+            },
+            {
+              "kind": "static",
+              "text": "Creatures you control get +2/+2 and have flying.",
+              "layer": 6,
+              "affects": {
+                "what": "permanent",
+                "types": [
+                  "Creature"
+                ],
+                "controller": "you"
+              },
+              "apply": {
+                "addKeywords": [
+                  "Flying"
+                ]
+              }
+            }
+          ]
         }
       ]
     }

@@ -8,6 +8,7 @@ engine change they needed -- each guard, each branch -- and the suite that catch
     python3 game/tools/batch/breaks.py game/tools/batch/breaks-wave4a-h3.py
 """
 SUITES = [
+    'tests/engine-intrinsic-entry.mjs',
     'tests/engine-wave4a-h3.mjs',
     'tests/engine-cards.mjs',
 ]
@@ -48,9 +49,10 @@ def NOT_KOMA(anchor):
     return anchor.replace('if (activationsForbidden(state, id) || ', 'if (')
 
 
-OWN_LOYALTY = '''  if ((types ?? []).includes("Planeswalker") && Number.isInteger(loyalty)) counters.loyalty = (counters.loyalty ?? 0) + loyalty;
-  return {tapped: proposal.tapped === true, counters, asks: withChoiceCounters(proposal)};'''
-COPY_KEYS = '"abilities", "power", "toughness", "loyalty", "spell", "enchant"]);'
+OWN_LOYALTY = '''  for (const [counter, count] of Object.entries(intrinsicEnteringCounters(view.objects[objectId], current))) counters[counter] = (counters[counter] ?? 0) + count;
+  /* Copied preparation cards also enter with their designation (CR 614.12, 722.3a). */
+  return {tapped: proposal.tapped === true, counters, asks: withChoiceCounters(proposal), designations: proposal.designations ?? []};'''
+COPY_KEYS = '"abilities", "power", "toughness", "loyalty", "defense", "spell", "enchant", "preparation"]);'
 RELATED = '''  return Boolean(first) && !Array.isArray(first) && first.kind === "object" && state.objects[first.id]?.zone === "battlefield"
     && candidate?.kind === "object" && state.objects[candidate.id]?.owner === controllerOf(state, first.id);'''
 
@@ -63,10 +65,10 @@ BREAKS = [
      '        if (true)\n'),
     ('spark: counters said', ENTERING, '        if (object.counters[counter] > was) events.push(', '        if (false) events.push('),
     # A planeswalker copied: its loyalty a copiable value (CR 707.2), and that many counters as it enters (CR 306.5b).
-    ('copied planeswalker: loyalty counters', REPLACEMENT, OWN_LOYALTY, '  return {tapped: proposal.tapped === true, counters, asks: withChoiceCounters(proposal)};'),
-    ('copiable: loyalty', PERMANENTS, '    ...(Number.isInteger(object.loyalty) ? {loyalty: object.loyalty} : {}),\n    ...(object.spell', '    ...(object.spell'),
-    ('COPY_KEYS: loyalty', STATE, COPY_KEYS, '"abilities", "power", "toughness", "spell", "enchant"]);'),
-    ('last known copiable: loyalty', LAYERS, COPY_KEYS, '"abilities", "power", "toughness", "spell", "enchant"]);'),
+    ('copied planeswalker: loyalty counters', REPLACEMENT, OWN_LOYALTY, '  return {tapped: proposal.tapped === true, counters, asks: withChoiceCounters(proposal), designations: proposal.designations ?? []};'),
+    ('copiable: loyalty', PERMANENTS, '    ...(Number.isInteger(object.loyalty) ? {loyalty: object.loyalty} : {}),\n    ...(Number.isInteger(object.defense) ? {defense: object.defense} : {}),\n    ...(object.spell', '    ...(Number.isInteger(object.defense) ? {defense: object.defense} : {}),\n    ...(object.spell'),
+    ('COPY_KEYS: loyalty', STATE, COPY_KEYS, '"abilities", "power", "toughness", "defense", "spell", "enchant", "preparation"]);'),
+    ('last known copiable: loyalty', LAYERS, COPY_KEYS, '"abilities", "power", "toughness", "defense", "spell", "enchant", "preparation"]);'),
     # Hunter's Insight: a delayed trigger waits on the damage's source (CR 603.7c).
     ('delayed watch: the damage source', TRIGGER,
      '      const watched = d.on.on === "GameEventPlayerDamaged" ? event.data?.fields?.source?.cardId : event.data?.fields?.card?.cardId;',

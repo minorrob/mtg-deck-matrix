@@ -1,0 +1,30 @@
+{
+  "schema": "CurrentMainFaceIntegration@1",
+  "source": "7364caf7055b136c76f80714a9b68453c4ccf040",
+  "main": "af363528",
+  "mainPullRequests": [
+    955,
+    956
+  ],
+  "supersededScan": {
+    "source": "65b2a078",
+    "result": "FAIL: moved main conflicts; zero scan/gate credit"
+  },
+  "merge": "no-ff",
+  "conflicts": "README count and generated asset manifest; owner refs restored then generated through registry helper",
+  "actualNodeSuites": 713,
+  "boardDiffAgainstMain": "Exactly two approved Snoop renderer lines",
+  "boardSha256": "7979f2374e00f6319f937fa33c49110d0fb8f03ecaf82d847e4d683a42d15933",
+  "native": {
+    "roomViewFace": 6,
+    "roomSnoop": "passed"
+  },
+  "metadata": {
+    "assets": 136,
+    "serviceWorker": 9,
+    "featureWiring": 131,
+    "dataIntegrity": "passed"
+  },
+  "browser": "Current combined face/Snoop browser pending quiet window. Historical d65 Snoop98/tooltip21 remains source-bound; original a11y contrast RED/ROB312 not waived.",
+  "gateCredit": "No wave0 gate closure, new definitions/promotions, main merge or staging release"
+}

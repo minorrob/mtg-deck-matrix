@@ -151,7 +151,7 @@ const ctx = {controller: 0, source: null};
   const bear = bearOf(1)(s), [, second] = on(s, UMBRA, 1);
   beginResolution(s, [{effect: "destroy", targets: [bear]}], {controller: 0, source: null});
   runResolution(s, createRng("x11"));
-  eq([s.awaiting?.kind, s.awaiting?.effect, s.awaiting?.player], ["effect-choice", "orderDestruction", 1], "the destruction's question, Maya's");
+  eq([s.awaiting?.kind, s.awaiting?.choice?.id, s.awaiting?.player], ["rule-operation", `destruction-replacement:1:${bear}`, 1], "the destruction's saved operation question, Maya's");
   ok(pilotsAnswer(s).every((after) => after.awaiting === null), "both pilots answer it");
   resolveAwaiting(s, [1], null, createRng("x11"));
   ok(s.zones.battlefield.includes(bear) && !s.zones.battlefield.includes(second) && on(s, UMBRA, 1).length === 1, "her second Umbra destroyed, as she chose");

@@ -110,6 +110,12 @@ function cardFor(state, id, canSeeFace, viewer = null) {
     types: shown ? [...current.types] : [],
     power: shown ? current.power : null,
     toughness: shown ? current.toughness : null,
+    /* CR 310.4, 310.9: a visible battlefield Battle's defense and protector are public. Printed identity stays hidden
+       for face-down cards; a copied Battle reports its copied defense, not its original card's number. */
+    ...(named && object.zone === "battlefield" && current.types.includes("Battle") ? {
+      ...(Number.isInteger(current.printedDefense) ? {printedDefense: current.printedDefense} : {}), defense: current.defense,
+      ...(Number.isInteger(object.protector) ? {protector: object.protector} : {}),
+    } : {}),
     keywords: shown ? [...current.keywords] : [],
     ...(object.zone === "battlefield" && object.merged ? {components: object.merged.map(part => ({
       name: part.faceDown && viewer !== controller ? null : part.physical.card, faceDown: part.faceDown === true,
@@ -129,7 +135,7 @@ function cardFor(state, id, canSeeFace, viewer = null) {
     ...(object.solved === true ? {solved: true} : {}),
     commander: object.commander === true,
     /* An emblem (CR 114), public in the command zone: what it does, its abilities' words, for the board to show. */
-    ...(object.emblem === true ? {emblem: true, text: (object.abilities ?? []).map((a) => a.text).filter(Boolean).join("\n")} : {}),
+    ...(object.emblem === true ? {emblem: true, text: object.emblemOracleText ?? (object.abilities ?? []).map((a) => a.text).filter(Boolean).join("\n")} : {}),
     /* A candidate (card load step 5, Rob's decision 2): written by the card compiler, not yet reviewed, so the board labels
        it and offers "report a wrong card". Said only of a card this seat can name, as its name is. */
     ...(named && object.candidate === true ? {candidate: true} : {}),

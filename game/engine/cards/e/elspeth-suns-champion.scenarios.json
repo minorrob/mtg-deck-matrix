@@ -294,6 +294,13 @@
             "power": 2,
             "toughness": 2
           }
+        },
+        {
+          "seat": 0,
+          "zone": "command",
+          "cards": [
+            "Elspeth, Sun's Champion emblem"
+          ]
         }
       ]
     }

@@ -95,9 +95,9 @@ const provenanceAsked = (state, objects = Object.values(state.objects)) => objec
 
 /** Mana `source` made for `player`, in the pool: remembered with what its source was, when an ability in the game asks
     (CR 106.3). */
-export function addProvenance(state, player, mana, source) {
+export function addProvenance(state, player, mana, source, sourceWas = null) {
   /* Its source as it now is, read only when something asks (lastKnown runs the layers). */
-  let was = null;
+  let was = sourceWas?.cardId === source ? sourceWas : null;
   if (!provenanceAsked(state).some((selector) => matchesLastKnown(selector, (was ??= lastKnown(state, source)), {controller: player}))) return;
   const from = {cardId: source, name: was.name, controller: was.controller, types: was.types, subtypes: was.subtypes, supertypes: was.supertypes, token: was.token};
   const list = (state.players[player].manaRiders ??= []);
@@ -133,7 +133,6 @@ function restrictedTake(state, player, use, mana) {
   return left;
 }
 
-const RIDER_CHOICES = 16;
 /**
  * THE WAYS TO PAY WITH RIDER MANA (CR 106.6, 601.2h): each a list of the rider entries a payment of `mana` spends on `use`,
  * or null when the player has none. For each key the payment needs: as few riders as the plain mana leaves room for, up to
@@ -171,7 +170,8 @@ export function riderChoices(state, player, use, mana) {
       for (let c = 0; c <= groups[g].ids.length; c += 1) walk(g + 1, [...picked, c], total + c);
     };
     walk(0, [], 0);
-    ways = ways.flatMap((way) => here.map((ids) => [...way, ...ids])).slice(0, RIDER_CHOICES);
+    /* CR 106.6, 601.2h: distinguishable source/rider payments remain the payer's choices, without a display cap. */
+    ways = ways.flatMap((way) => here.map((ids) => [...way, ...ids]));
   }
   return ways.map((ids) => [...ids].sort((a, b) => a - b));
 }

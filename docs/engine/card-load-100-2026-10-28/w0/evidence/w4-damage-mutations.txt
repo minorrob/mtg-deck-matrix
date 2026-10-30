@@ -1,0 +1,29 @@
+baseline: every suite passes unbroken
+caught mana suffix uses saved effects -- tests/engine-outside-damage.mjs
+caught moving costs precede production -- tests/engine-outside-damage.mjs
+caught moving mana keeps exact provenance -- tests/engine-outside-damage.mjs
+caught moving mana keeps source attribution -- tests/engine-outside-damage.mjs
+caught moved Swamp still triggers mana -- tests/engine-outside-damage.mjs
+caught mana LKI must match original ID -- tests/engine-outside-damage.mjs
+caught damage event keeps live derived controller -- tests/engine-outside-damage.mjs
+caught live lifelink goes to derived controller -- tests/engine-outside-damage.mjs
+caught departed source infect retained -- tests/engine-outside-damage.mjs
+caught departed source deathtouch retained -- tests/engine-outside-damage.mjs
+caught departure refreshes pending LKI -- tests/engine-outside-damage.mjs
+caught damage source filter reads matching LKI -- tests/engine-outside-damage.mjs
+caught redirected damage no longer hits named player -- tests/engine-outside-damage.mjs
+caught saved replacements remain pure -- tests/engine-outside-damage.mjs
+caught next-use shield consumed at commit -- tests/engine-outside-damage.mjs
+caught finite shield consumption committed -- tests/engine-outside-damage.mjs
+caught shared finite shield asks allocation -- tests/engine-outside-damage.mjs
+caught simultaneous hits can be modified before shared allocation -- tests/engine-outside-damage.mjs
+caught allocation preserves source positions -- tests/engine-outside-damage.mjs
+caught allocation total enforced -- tests/engine-outside-damage.mjs
+caught allocation whole amounts enforced -- tests/engine-outside-damage.mjs
+caught simultaneous shield counter prevents every hit -- tests/engine-outside-damage.mjs
+caught saved prefix emitted once -- tests/engine-outside-damage.mjs
+caught nested branch remains resumable -- tests/engine-outside-damage.mjs
+caught nested repeat remains resumable -- tests/engine-outside-damage.mjs
+caught remaining effects advance once -- tests/engine-outside-damage.mjs
+caught prevention follow-up keeps a real saved caller -- tests/engine-outside-damage.mjs
+missed: []

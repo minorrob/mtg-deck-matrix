@@ -1,0 +1,24 @@
+/* ROB-317 diagnostic, not a passing regression or card-admission proof.
+ * From the worktree root, Node22 first on PATH:
+ * Get-Content docs/engine/card-load-100-2026-10-28/w0/evidence/ash-barrens-offer-red.mjs.txt | node --input-type=module
+ * Expected on e2845fc4: the manual funding control passes, then the final native assertion fails.
+ */
+import assert from "node:assert/strict";
+import {loadCardIndex} from "./game/tools/engine-cards.mjs";
+import {runScenario} from "./game/engine/cards/scenario.mjs";
+import {legalActions} from "./game/engine/rules/actions.mjs";
+
+const index=loadCardIndex();
+const setup=[{seat:0,zone:"battlefield",cards:["Wastes"]},{seat:0,zone:"hand",cards:["Ash Barrens"]}];
+const run=steps=>runScenario({name:"ROB-317 actual Ash Barrens",setup,library:["Forest","Island"],steps},index.definition,{}, {explicitChoices:true}).state;
+const opening=run([]);
+const offered=legalActions(opening,0).filter(a=>a.objectId&&opening.objects[a.objectId]?.card==="Ash Barrens");
+const manuallyFunded=run([{tap:"Wastes",source:{zone:"battlefield",index:0}}]);
+const paidOffer=legalActions(manuallyFunded,0).find(a=>a.kind==="activate"&&a.label==="Ash Barrens");
+assert.equal(paidOffer?.text,"Basic landcycling {1}","manual funding exposes the saved basic-landcycling ability");
+const completed=run([{tap:"Wastes",source:{zone:"battlefield",index:0}},{activate:"Ash Barrens",source:{zone:"hand",index:0}},{resolve:true},{choose:["Forest"]}]);
+assert.equal(completed.zones.hand[0].filter(id=>completed.objects[id].card==="Forest").length,1);
+assert.equal(completed.zones.graveyard[0].filter(id=>completed.objects[id].card==="Ash Barrens").length,1);
+assert.equal(completed.players[0].manaPool.C,0,"the manual control spends the actual one mana");
+console.log(JSON.stringify({schema:"AshBarrensMissingOfferDiagnostic@1",source:"e2845fc4b7fdb1b01612d3c46fb08280b2ea501c",openingPool:opening.players[0].manaPool,openingOffers:offered,manuallyFundedOffer:paidOffer,manualControl:"passed",scope:"bounded native offer reproduction; UI and full interactions unproved"},null,2));
+assert.ok(offered.some(a=>a.kind==="activate"&&a.text==="Basic landcycling {1}"),"Ash Barrens basic landcycling must be offered with empty pool and an untapped payable Wastes");

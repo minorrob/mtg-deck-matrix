@@ -35,6 +35,10 @@
  */
 
 import {holdArrival, enteredWith} from "./entering.mjs";
+import "./pre-entry.mjs";
+import {beginRuleOperation, registerRuleOperation, emitRuleEvents} from "./operations.mjs";
+import {patchEnteringObject} from "./pre-entry.mjs";
+import {entryCounterResult} from "./entry-characteristics.mjs";
 import {ascendAsItResolves} from "../keywords/designations.mjs";
 import {conditionHolds, asksFirstResolution} from "../script/condition.mjs";
 import {moveObject, addObject, removeObject, eventCard} from "../state/index.mjs";
@@ -45,6 +49,7 @@ import {delayedTrigger, enterAttacking} from "../script/effects/permanents.mjs";
 import {prepare} from "../script/effects/attributes.mjs";
 import {recheckTargets, factsOf, modalScript} from "../script/bind.mjs";
 import {characteristicsOf} from "./layers.mjs";
+import {rememberDepartingSpell} from "./spell-memory.mjs";
 
 /* The projection contract (§12.1) names these zones with a capital, and the telemetry matches on
    them by name. The engine's own zone keys are lower case. */
@@ -190,15 +195,19 @@ export function pushAbility(state, {sourceId = null, controller, abilityId, kind
  * to exist (finishTop, CR 704.5e), unless it was a permanent spell that resolved: that becomes a token (CR 608.3f).
  * `nonLegendary`: "except it isn't legendary if the spell is legendary" (Double Major).
  */
-export function pushCopy(state, original, {controller, nonLegendary = false} = {}) {
-  const object = original?.objectId !== null && original?.objectId !== undefined ? state.objects[original.objectId] : null;
+export function pushCopy(state, original, {controller, nonLegendary = false, recordedSource = null} = {}) {
+  const live = original?.objectId !== null && original?.objectId !== undefined ? state.objects[original.objectId] : null;
+  /* CR 608.2h: a nontargeted reference may copy the spell as it last existed; a live original always supplies its current values. */
+  const object = live?.zone === "stack" ? live : recordedSource;
   if (!object) throw new Error("There is no spell there to copy");
   const supertypes = (object.supertypes ?? []).filter((s) => !(nonLegendary && s === "Legendary"));
   const id = addObject(state, {
     card: object.card, types: object.types, manaCost: object.manaCost, abilities: object.abilities,
     power: object.power, toughness: object.toughness, keywords: object.keywords, owner: controller, controller,
-    spell: object.spell, subtypes: object.subtypes, supertypes, colors: object.colors, colorIdentity: object.colorIdentity,
+    spell: object.spell, subtypes: object.subtypes, supertypes, colors: object.colors, colorIdentity: object.faceDown === true ? [] : object.colorIdentity,
     enchant: object.enchant, copy: true,
+    /* A preparation definition is copiable, its current prepared designation is not (CR 722.2b, 722.3). */
+    ...(object.preparation ? {preparation: structuredClone(object.preparation)} : {}),
   }, "stack", null);
   const entry = entryFor(state, {objectId: id, cardId: id, name: object.card, playerId: controller, kind: "spell",
     abilityId: original.abilityId, targets: structuredClone(original.targets ?? [])});
@@ -409,9 +418,38 @@ function paradigmResolves(state, entry) {
 
 /* The entry leaves the stack: a permanent spell to the battlefield, an instant or sorcery (or a spell that did not
    resolve) to its owner's graveyard, and an ability to nowhere. */
-function finishTop(state, entry, events, fizzled, attachTo = null) {
+registerRuleOperation("finish-permanent", (state, frame) => {
+  const entry = state.stack.find(candidate => candidate.stackId === frame.stackId) ?? (frame.stage === "did-not-enter" ? frame.departingEntry : null);
+  if (!entry || (frame.stage !== "did-not-enter" && !state.objects[entry.objectId]) || state.players[entry.playerId]?.lost) return {status: "done"};
+  if (!frame.stage) {
+    emitRuleEvents(state, frame.prefix);
+    delete frame.prefix;
+    frame.stage = "entering";
+    const object = state.objects[entry.objectId];
+    return {status: "continue", children: [{kind: "entering", objectId: entry.objectId, player: entry.playerId,
+      x: entry.x ?? 0, escaped: entry.escaped === true, kicked: entry.kicked ?? 0, phyrexianLife: entry.cast?.phyrexianLife ?? 0}]};
+  }
+  if (frame.stage === "entering" && frame.childResult?.entering?.to) {
+    frame.prepared = frame.childResult; frame.departingEntry = structuredClone(entry);
+    delete frame.childResult; frame.stage = "did-not-enter";
+    return {status: "continue", children: [{kind: "move-one", id: entry.objectId, to: frame.prepared.entering.to}]};
+  }
+  if (frame.childResult) emitRuleEvents(state, finishTop(state, entry, [], false, frame.attachTo,
+    frame.stage === "did-not-enter" ? frame.prepared : frame.childResult));
+  return {status: "done"};
+});
+function finishTop(state, entry, events, fizzled, attachTo = null, prepared = null) {
+  if (entry.permanent && !fizzled && state.objects[entry.objectId] && !prepared) {
+    entry.stage = "resolving";
+    const outcome = beginRuleOperation(state, {kind: "finish-permanent", stackId: entry.stackId, attachTo, prefix: events},
+      {after: {kind: "after-resolving"}});
+    return outcome.events;
+  }
+  const entryCounterValues = prepared?.counterResult === undefined ? null
+    : entryCounterResult(state, prepared, entry.objectId, entry.playerId);
   /* This entry, not whatever is on top: a copy it made as it resolved is above it (pushCopy). */
   const at = state.stack.indexOf(entry);
+  rememberDepartingSpell(state, entry);
   if (at >= 0) state.stack.splice(at, 1);
 
   /* PARADIGM'S TWO SPELL ABILITIES (CR 702.192a), the last of the spell's resolution: one that did not resolve does neither. */
@@ -446,7 +484,7 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     /* Into its owner's graveyard, as the replacement effects have it (CR 608.2n, 614.1a): "if a card would be put into an
        opponent's graveyard from anywhere, instead exile it" (Dauthi Voidwalker). */
     const replaced = planned === "graveyard" ? graveyardBound(state, entry.objectId) : null;
-    const to = replaced ? replaced.to : planned;
+    const to = prepared?.entering?.to ?? (replaced ? replaced.to : planned);
     /* CR 614.12, asked before the move: a permanent coming off the stack enters tapped or with
        counters as ONE event, and the abilities that say so are on the spell, not on anything that
        is on the battlefield yet. */
@@ -463,13 +501,15 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
       events.push(...finishResolving(state));
       return events;
     }
-    const entering = to === "battlefield"
+    const entering = prepared?.entering ?? (to === "battlefield"
       ? enteringModifications(state, {objectId: entry.objectId, player: entry.playerId,
         types: object.types, abilities: object.abilities, x: entry.x ?? 0, escaped: entry.escaped === true, kicked: entry.kicked ?? 0, phyrexianLife: entry.cast?.phyrexianLife ?? 0})
-      : null;
+      : null);
     /* A face-down spell becomes a face-down permanent, the same characteristics (CR 702.168b). */
     const down = object.disguised === true ? {faceDown: true, disguised: true} : {};
     const arrived = moveObject(state, entry.objectId, to, ["graveyard", "library", "hand"].includes(to) ? owner : null, down);
+    if (to === "battlefield" && entryCounterValues !== null) entryCounterResult(state, prepared, entry.objectId, entry.playerId, {consume: true});
+    if (to === "battlefield") patchEnteringObject(state.objects[arrived], prepared?.objectPatch);
     placeReplacedCounters(state, arrived, replaced);
     /* WHAT ITS COST EXILED (CR 607.2q; rules/actions.mjs, "behold a Goblin and exile it"): the permanent it becomes has it, for
        its ability that names the exiled card. Such a spell always becomes one as it resolves: a permanent card's spell ability
@@ -574,11 +614,17 @@ function finishTop(state, entry, events, fizzled, attachTo = null) {
     if (to === "battlefield" && (object.castGrants ?? []).length)
       (state.effects ??= []).push({id: `cast-grants:${arrived}`, layer: 6, affects: {ids: [arrived]}, apply: {addAbilities: structuredClone(object.castGrants)}, until: null, sourceController: entry.playerId});
     if (entering) {
+      if (entering.gainsKeywords?.length) {
+        const timestamp = state.nextTimestamp++;
+        (state.effects ??= []).push({id: `entry-keywords:${arrived}:${timestamp}`, layer: 6, affects: {ids: [arrived]},
+          apply: {addKeywords: entering.gainsKeywords}, until: null, sourceController: entry.playerId, timestamp});
+      }
       if (entering.tapped) state.objects[arrived].tapped = true;
       for (const ask of entering.asks ?? []) (state.enteringQuestions ??= []).push({objectId: arrived, ...ask});
       /* Counters it enters with are put on it (CR 122.6) -- by its controller (122.6a): "twice that many instead" sees them. */
       for (const [counter, count] of Object.entries(entering.counters)) {
-        state.objects[arrived].counters[counter] = (state.objects[arrived].counters[counter] ?? 0) + enteringCountersPlaced(state, arrived, counter, count, entry.playerId);
+        const placed = entryCounterValues === null ? enteringCountersPlaced(state, arrived, counter, count, entry.playerId) : entryCounterValues[counter] ?? 0;
+        state.objects[arrived].counters[counter] = (state.objects[arrived].counters[counter] ?? 0) + placed;
       }
     }
     /* SNEAK (CR 702.190b): a permanent spell whose sneak cost was paid enters tapped and attacking the player or planeswalker

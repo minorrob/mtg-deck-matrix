@@ -84,6 +84,7 @@
  */
 import {createState, addObject, shownName, shownFaceUp} from "../engine/state/index.mjs";
 import {beginGame, advance, awaitingChoice, resolveAwaiting} from "../engine/rules/turn.mjs";
+import {refreshEffectPlay} from "../engine/script/effects/asking.mjs";
 import {legalActions, applyAction, nothingToDo, whyNot, escapeWays, flashbackCost, tappersInWords, castTapPlans, tapWords, manaSources} from "../engine/rules/actions.mjs";
 import {paymentWords} from "../engine/rules/mana.mjs";
 import {beforeTap, tapTaken, untappable, untapTaken} from "../engine/rules/untap-mana.mjs";
@@ -99,8 +100,9 @@ import {createRng} from "../engine/rng.mjs";
 import {createJournal, hashState} from "../engine/journal.mjs";
 import {createController} from "../engine/controller.mjs";
 import {createMatchStore} from "../engine/storage.mjs";
-import {housePilot, meetRequirements, manaColors} from "../engine/pilots/house-pilot.mjs";
+import {housePilot, meetRequirements, manaColors, combatSourceAnswer, combatDamageAnswer} from "../engine/pilots/house-pilot.mjs";
 import {scoredPilot, SETTINGS} from "../engine/pilots/scored-pilot.mjs";
+import {combatMemoryFor, rememberDamage} from "../engine/pilots/provocation.mjs";
 import {personaOf, dispositionFor} from "../engine/pilots/roster.mjs";
 import {flagsOf, commanderClassOf} from "../engine/pilots/roles.mjs";
 import {agentPilot} from "../engine/pilots/agent-pilot.mjs";
@@ -108,6 +110,8 @@ import {addToHistory} from "./history.mjs";
 import {tableEvent, eventsFor, keep, EVENTS_SCHEMA} from "./events.mjs";
 import {endingOf} from "./ending.mjs";
 import {describeDecision} from "./decision.mjs";
+import {castEntryFor,beginCastDraft,beginActionDraft,offerCastDraft,castDraftChoice,castDraftSignature,answerCastDraft} from "./cast-stages.mjs";
+import {refinementEntry,beginRefinement,refinementChoice,answerRefinement} from "./decision-refinement.mjs";
 
 export const ROOM_PROTOCOL = 1;
 export const ROOM_SCHEMA = "CrankRoom@1";
@@ -202,11 +206,14 @@ function readPod(pod, cards) {
     amount or a division filled lethal-first, then the rest on the last; a number at its minimum. */
 export function leastAnswer(choice) {
   const options = choice.options ?? [];
-  if (choice.mode === "damage" || choice.mode === "amount") {
+  const combatSource = combatSourceAnswer(choice);
+  if (combatSource) return combatSource;
+  if (choice.mode === "damage") return combatDamageAnswer(choice);
+  if (choice.mode === "amount") {
     const amounts = options.map(() => choice.minEach ?? 0);
     let left = (choice.total ?? 0) - amounts.reduce((a, b) => a + b, 0);
     for (let i = 0; i < options.length && left > 0; i += 1) {
-      const room = choice.mode === "damage" ? Math.max(0, options[i].lethal ?? 0) : Math.max(0, (options[i].max ?? left) - amounts[i]);
+      const room = Math.max(0, (options[i].max ?? left) - amounts[i]);
       const take = Math.min(left, room);
       amounts[i] += take; left -= take;
     }
@@ -495,10 +502,11 @@ export function triggerRun(stack) {
  * WHAT ANSWERS FOR AN AI SEAT: L1 at its setting, handed its own deck list (which its player knows) and the match's seed
  * (easy's chance); without a setting, L0. Both see only the seat's projection. `picks`: the match's `pilotPicks`.
  */
-export function seatPilot({seat, cards, deck = [], level = null, persona = null, seed = "", picks = false}) {
+export function seatPilot({seat, cards, deck = [], level = null, persona = null, seed = "", picks = false, provocation = true}) {
   /* A PERSONA'S OVERRIDES (roster.mjs `dispositionFor`): the pilot is made with them, so the seat plays its difficulty as that persona
      would; a seat without one plays the plain difficulty, as every table has. */
-  const disposition = persona && level ? dispositionFor(level, persona) : null;
+  const given = persona && level ? dispositionFor(level, persona) : null;
+  const disposition = given && !provocation ? {...given,grudge:0} : given;
   if (level === LLM) return agentPilot({seat, cards, deck, seed, picks, disposition});
   return level ? scoredPilot({seat, cards, deck, setting: level, seed, picks, disposition}) : housePilot({seat, cards, picks});
 }
@@ -516,6 +524,9 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
   const look = (name) => (seated ? withCandidates : cards)(name);
   const facts = factsFrom(look);
   let seats, state, rng, journal, controller, pilots, pendingSeat = null, pendingActions = null, saved = 0;
+  let castDraft = null;
+  let refinement = null, refinementNotice = null;
+  const draftOptions = {describeActions: (seat, actions) => offerDetails(state, seat, actions)};
   /* Accepted actions by id, with the seat that sent them: a retry is answered from here, and never reaches
      another seat's question. The newest RECEIPTS are kept, which is ample for a client's retries. */
   let receipts = [];
@@ -625,7 +636,12 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
   let matchSeed = "";
   /* And whether they take what a choice they may answer with none is for (`pilotPicks`), as the match was launched. */
   let pilotPicks = false;
-  const pilotMade = (seat) => makePilot({seat, cards: facts, deck: seats[seat].cards, level: seats[seat].level ?? null, persona: seats[seat].persona ?? null, seed: matchSeed, picks: pilotPicks});
+  let pilotProvocation = false;
+  /* Match-scoped public damage only, persisted independently of the trimmed display history. A recreated pilot sees
+     its public pressure summary; it never receives another player's cards or an unfiltered journal. */
+  let pilotCombatMemory = null;
+  const pilotView = (seat) => ({...projectFor(state, seat), ...(pilotProvocation?{pilotCombat: combatMemoryFor(pilotCombatMemory, seat, state.turn, seats.length)}:{})});
+  const pilotMade = (seat) => makePilot({seat, cards: facts, deck: seats[seat].cards, level: seats[seat].level ?? null, persona: seats[seat].persona ?? null, seed: matchSeed, picks: pilotPicks, provocation:pilotProvocation});
   const pilotFor = (seat) => pilots[seat] || (pilots[seat] = pilotMade(seat));
   /* Whether the LLM seat asks for this decision (agent-pilot.mjs `consult`): never a seat that has left. */
   const consults = (seat, view, offer) => seats[seat].level === LLM && !leaving.includes(seat) && pilotFor(seat).consult?.(view, offer) === true;
@@ -635,6 +651,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     const names = seats.map((s) => s.name);
     for (const e of events) {
       const id = journal.write(e.kind, e.data);
+      if(pilotProvocation)pilotCombatMemory = rememberDamage(pilotCombatMemory, e, id, seats.length);
       nextSeq = Number(id.slice("event:".length)) + 1;
       addToHistory(history, e, names);
       const said = tableEvent(e, id);
@@ -653,16 +670,23 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
      could not go on, and that is thrown as before. */
   function answerForPilot(seat, choice, a) {
     try {
-      return resolveAwaiting(state, a.indices, a.amounts, rng, a);
+      return resolveAwaiting(state, a.indices, a.amounts, rng, {...a, choiceId: choice.id});
     } catch (error) {
       note(`${seats[seat].name}'s answer to "${choice.title}" was refused: ${error.message}. The least answer was given instead.`);
       refusals.total += 1;
       if (refusals.first.length < REFUSALS_SAID) refusals.first.push({turn: state.turn, seatId: seats[seat].seatId, question: choice.title, reason: error.message});
       const least = leastAnswer(choice);
-      return resolveAwaiting(state, least.indices, least.amounts, rng, least);
+      return resolveAwaiting(state, least.indices, least.amounts, rng, {...least, choiceId: choice.id});
     }
   }
 
+  function refreshNativePlay() {
+    if(!refreshEffectPlay(state).changed)return false;
+    /* Authoritative external-fact reconciliation only. Private steps never refresh or write an old native question. */
+    refinement=null;refinementNotice=null;
+    if(controller.pending)withdraw();
+    return true;
+  }
   function drive() {
     continuing = false;
     for (let steps = 0; ; steps += 1) {
@@ -671,7 +695,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         playBack = finishPlay(state, playBack, rng.checkpoint());
         if (!playBack && previous.autoPass) castBy = previous.player;
       }
-      if (finished()) {pendingSeat = null; pendingActions = null; driven = 0; return;}
+      if (finished()) {castDraft = null; refinement = null; refinementNotice = null; pendingSeat = null; pendingActions = null; driven = 0; return;}
       if (driven >= DRIVE_LIMIT) throw new RoomError(500, "The game stopped moving: the engine took too many steps without a decision. Nothing further was applied.");
       if (steps >= slice) {continuing = true; pendingSeat = null; pendingActions = null; return;}
       driven += 1;
@@ -687,10 +711,20 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         return;
       }
       if (state.stepIndex !== undefined) track();
+      if (castDraft) {
+        try {
+          const choice = offerCastDraft(state, castDraft, draftOptions);
+          controller.offer(choice); pendingSeat = castDraft.actor; pendingActions = null; driven = 0; return;
+        } catch (error) {
+          if (!error.castDraftExpired) throw error;
+          castDraft = null;
+        }
+      }
       if (state.awaiting) {
+        refreshNativePlay();
         const seat = state.awaiting.player, choice = awaitingChoice(state);
         if (seats[seat].pilot === "house" || leaving.includes(seat)) {
-          const seen = projectFor(state, seat);
+          const seen = pilotView(seat);
           /* The LLM seat's close call: offered to the seat as to a person, for the table to answer through its model. */
           if (consults(seat, seen, {choice})) {controller.offer(choice); pendingSeat = seat; pendingActions = null; driven = 0; return;}
           const a = pilotFor(seat).answer(seen, choice);
@@ -712,12 +746,16 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
            first of its kind is asked, saying the answer will go for the rest. Refused this time, it is asked. */
         const run = standing[seat];
         if (run) {
-          const key = questionKey(choice), given = run.answers?.[key];
+          const key = questionKey(choice);let given = run.answers?.[key];
+          if(given&&state.awaiting.kind==="effect-choice"&&state.awaiting.effect==="play"&&
+            (given.choiceId!==choice.id||given.questionSignature!==hashState(choice))){delete run.answers[key];given=null;}
           if (given) {
             try {write(resolveAwaiting(state, given.indices, given.amounts, rng, given)); step.acted = true; driven = 0; continue;}
             catch {delete run.answers[key];}
           }
           run.asking = key;
+          run.askingBinding = state.awaiting.kind==="effect-choice"&&state.awaiting.effect==="play"
+            ? {choiceId:choice.id,questionSignature:hashState(choice)} : null;
           choice.forRun = true;
         }
         controller.offer(choice); pendingSeat = seat; pendingActions = null; driven = 0; return;
@@ -751,7 +789,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       /* Whose turn and which step go with it, which everyone sees: L1 uses an ability only in its own main phase. */
       if (seats[seat].pilot === "house") {
         if (pilots[seat].passes?.(actions, state.stack.length, {ownTurn: state.activePlayer === seat, phase: state.phase})) {apply(seat, actions.find((a) => a.kind === "pass"), "pilot"); continue;}
-        const seen = projectFor(state, seat);
+        const seen = pilotView(seat);
         if (consults(seat, seen, {actions})) {
           controller.offer(priorityChoice(`priority:${state.turn}:${state.stepIndex}:${controller.revision}`, actions, state, seat));
           pendingSeat = seat; pendingActions = actions; driven = 0; return;
@@ -797,9 +835,59 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     controller = createController({...point, pending: null, answered: null, revision: point.revision + 1});
   }
   function withdraw() {
+    refinement = null; refinementNotice = null;
     const point = controller.checkpoint();
     controller = createController({...point, pending: null, answered: null, revision: point.revision + 1});
     pendingSeat = null; pendingActions = null;
+  }
+  const refines = answer => Boolean(refinement) || (answer.staged === true && Boolean(state.awaiting) && !pendingActions && !castDraft);
+  function refinementRequestChoice(answer) {
+    if(refinement)return refinementChoice(state,controller.pending,refinement);
+    const pending=controller.pending;
+    /* Validate availability before accepting a child input. This object is private references only, not a saved question. */
+    beginRefinement(state,pending,answer.indices?.[0],"availability-check");
+    return {...pending,refinement:{schema:"CrankDecisionRefinement@1",originalChoiceId:pending.id,originalSignature:hashState(pending),canBack:false}};
+  }
+  function refineWith(seat,answer) {
+    if(!refinement){
+      refinement=beginRefinement(state,controller.pending,answer.indices?.[0],`${matchId}/refine:${tapeN}/${controller.pending.id}`);
+      refinementNotice=null;return;
+    }
+    const pending=controller.pending,result=answerRefinement(state,pending,refinement,answer);
+    refinement=result.draft;
+    if(result.closed){
+      refinementNotice={originalChoiceId:pending.id,originalSignature:hashState(pending),guidance:"Private selections closed. The original native choice is still pending; complete it to continue. No priority was returned."};
+      return;
+    }
+    if(result.nativeAnswer){
+      const problem=controller.check({choiceId:pending.id,indices:result.nativeAnswer.indices});
+      if(problem)throw new RoomError(422,problem,{refused:true});
+      refinementNotice=null;withdrawKeeping();
+      answerWith(seat,result.nativeAnswer,pending.id);
+    }
+  }
+  function visibleDecision(projected) {
+    if(refinement){
+      try{return refinementChoice(state,controller.pending,refinement);}
+      catch(error){if(!error.refinementExpired&&!error.refinementUnavailable)throw error;}
+    }
+    const pending=controller.pending;
+    const described=describeDecision(state,combatWords(state,structuredClone(pending)),pendingActions,projected);
+    if(!described)return described;
+    const top=state.awaiting?.kind==="trigger-targets"?refinementEntry(state,pending):null;
+    const seen=new Map();
+    const options=described.options.map(option=>{
+      if(top)return {...option,refinementStages:top};
+      const action=state.awaiting?.effect==="play"?state.awaiting.choices?.[option.index]:null;
+      if(!action?.modes)return option;
+      const key=castEntryFor(action).actionId;
+      if(!seen.has(key))seen.set(key,refinementEntry(state,pending,option.index));
+      const entry=seen.get(key);return entry?{...option,refinementStages:entry}:option;
+    });
+    const notice=refinementNotice?.originalChoiceId===pending?.id&&refinementNotice.originalSignature===hashState(pending)?refinementNotice.guidance:null;
+    return {...described,options,...(top?{refinementStages:top}:{}),...(notice?{guidance:notice}:{}),
+      ...(refinement?{guidance:"The private selection expired. Reopen the table to review the live native choice."}:{}),
+      ...(state.awaiting?.effect==="copySpell"?{modeSelection:"locked"}:{})};
   }
   /* A person's answer applied: a priority action by its index, or the awaited decision resolved. Shared by `act`
      and by a replay of the tape, so the two cannot drift apart.
@@ -811,12 +899,23 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
   function answerWith(seat, answer, decisionId = null) {
     answering = decisionId;
     try {
+      if (answer.back === true && !castDraft) throw new RoomError(422, "Back is available only in an action's mode and target stages. Use Cancel when the pending action can still be abandoned.", {refused: true});
+      if (pendingActions && answer.cancel === true) throw new RoomError(422, "No action proposal is pending. Choose an action or pass priority.", {refused: true});
       if (pendingActions) {
         const action = pendingActions[answer.indices[0]];
         pendingActions = null;
-        apply(seat, action, "person", answer.hold === true);
+        if (answer.staged === true) castDraft = action.kind === "cast"
+          ? beginCastDraft(state, seat, action, `${matchId}/cast:${tapeN}/${action.objectId}`)
+          : beginActionDraft(state, seat, action, `${matchId}/activate:${tapeN}/${action.objectId}/${action.abilityId}`);
+        else apply(seat, action, "person", answer.hold === true);
+      } else if (castDraft) {
+        const result = answerCastDraft(state, castDraft, answer, draftOptions);
+        castDraft = result.draft;
+        if (result.action) apply(seat, result.action, "person", answer.hold === true);
       } else {
+        const cancelledProposal = answer.cancel === true && awaitingChoice(state)?.cancellation?.kind === "abandon-action";
         step.acted = true; write(resolveAwaiting(state, answer.indices, answer.amounts, rng, answer));
+        if (cancelledProposal) {castBy = null; heldBy = null; playBack = null;}
         if (playBack?.pending) {
           const previous = playBack;
           playBack = finishPlay(state, playBack, rng.checkpoint());
@@ -825,8 +924,9 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         /* Asked in a run they let resolve: the answer goes for the same question in the rest of it. */
         const run = standing[seat];
         if (run?.asking) {
-          run.answers = {...run.answers, [run.asking]: {indices: answer.indices ?? [], ...(answer.amounts ? {amounts: answer.amounts} : {}), ...(answer.value !== undefined ? {value: answer.value} : {})}};
+          run.answers = {...run.answers, [run.asking]: {indices: answer.indices ?? [], ...(answer.amounts ? {amounts: answer.amounts} : {}), ...(answer.value !== undefined ? {value: answer.value} : {}), ...(run.askingBinding??{})}};
           delete run.asking;
+          delete run.askingBinding;
         }
       }
     } catch (error) {
@@ -862,15 +962,19 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     landBackSaved = landBack !== null;
     if (landBack) landBack.saved = true;
     tableEvents = record.events || []; eventsMark = record.eventsMark ?? 0; eventsFloor = record.eventsFloor ?? -1;
+    pilotCombatMemory = record.pilotCombatMemory ?? null;
     seats = record.seats; pendingSeat = record.pendingSeat; pendingActions = record.pendingActions; receipts = record.receipts || []; leaving = record.leaving || []; departures = record.departures || {}; ended = record.ended || null; outs = record.outs || []; history = record.history || [];
     refusals = record.refusals || {total: 0, since: point.sequence, first: []};
     continuing = record.continuing === true; driven = record.driven || 0; endWhenNoPerson = record.endWhenNoPerson === true;
     seated = record.candidates === true;
     pilotPicks = record.pilotPicks === true;
+    pilotProvocation = record.pilotProvocation === true;
+    castDraft = record.castDraft ?? null;
+    refinement = record.refinement ?? null; refinementNotice = record.refinementNotice ?? null;
     state = structuredClone(point.state);
     rng = createRng(point.seed, point.rng);
     journal = createJournal({matchId, seed: point.seed}, point);
-    nextSeq = point.sequence;
+    nextSeq = point.sequence + 1;
     controller = createController(record.controller);
     matchSeed = point.seed;
     pilots = seats.map((s, seat) => (s.pilot === "house" ? pilotMade(seat) : null));
@@ -982,7 +1086,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     const point = journal.checkpoint(state, rng.checkpoint());
     await store.saveCheckpoint(point);
     await store.pruneCheckpoints();
-    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, ...(outs.length ? {outs} : {}), history, refusals, ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(undoLastPlay ? {undoLastPlay, playBack: playBack !== null} : {}), ...(resultRecords ? {resultRecords: true} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(blocksNone ? {blocksNone} : {}), ...(landAnyStep ? {landAnyStep} : {}), ...(takeBackLand ? {takeBackLand, landBack: landBack !== null} : {}), ...(askAimed ? {askAimed} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {}), ...(tableEvents.length ? {events: tableEvents, eventsMark, eventsFloor} : {}), ...(seated ? {candidates: true} : {}), ...(pilotPicks ? {pilotPicks: true} : {})}));
+    await storage.put(ROOM_KEY, JSON.stringify({schema: ROOM_SCHEMA, protocol: ROOM_PROTOCOL, matchId, seats, pendingSeat, pendingActions, sequence: point.sequence, controller: controller.checkpoint(), receipts, leaving, departures, ended, ...(outs.length ? {outs} : {}), history, refusals, ...(castDraft ? {castDraft} : {}), ...(refinement ? {refinement} : {}), ...(refinementNotice ? {refinementNotice} : {}), ...(pilotProvocation ? {pilotProvocation: true} : {}), ...(pilotCombatMemory?.lastEvent > 0 ? {pilotCombatMemory} : {}), ...(continuing ? {continuing, driven} : {}), ...(endWhenNoPerson ? {endWhenNoPerson} : {}), ...(passEmpty ? {passEmpty, step} : {}), ...(resolveAll ? {resolveAll, standing} : {}), ...(passAfterCast ? {passAfterCast, castBy} : {}), ...(endAsks ? {endAsks} : {}), ...(untapMana ? {untapMana, taken} : {}), ...(undoLastPlay ? {undoLastPlay, playBack: playBack !== null} : {}), ...(resultRecords ? {resultRecords: true} : {}), ...(Object.keys(prefs).length ? {prefs} : {}), ...(turnsOf ? {turnsOf} : {}), ...(passStack ? {passStack, heldBy} : {}), ...(blocksNone ? {blocksNone} : {}), ...(landAnyStep ? {landAnyStep} : {}), ...(takeBackLand ? {takeBackLand, landBack: landBack !== null} : {}), ...(askAimed ? {askAimed} : {}), ...(yieldable ? {yieldTurn: true, yielding} : {}), ...(tableEvents.length ? {events: tableEvents, eventsMark, eventsFloor} : {}), ...(seated ? {candidates: true} : {}), ...(pilotPicks ? {pilotPicks: true} : {})}));
   }
 
   const api = {
@@ -1016,6 +1120,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         ...((pod?.houseRules?.undoLastPlay === true || pod?.undoLastPlay === true) ? {houseRules: {undoLastPlay: true}} : {}),
         /* And whether its AI seats take what a choice they may answer with none is for (`pilotPicks`), kept the same way. */
         ...(pod && pod.pilotPicks === true ? {pilotPicks: true} : {}),
+        ...(pod?.pilotProvocation === true ? {pilotProvocation: true} : {}),
         ...(pod && pod.passStack === true ? {passStack: true} : {}), ...(pod && pod.yieldTurn === true ? {yieldTurn: true} : {}),
         ...(pod && pod.blocksNone === true ? {blocksNone: true} : {}),
         ...(pod && pod.keepStepMana === true ? {keepStepMana: true} : {}),
@@ -1030,8 +1135,9 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       const keepMana = beats.keepStepMana === true ? {keepStepMana: seats.flatMap((s, seat) => (s.pilot !== "house" ? [seat] : []))} : {};
       /* And whether a cast tapped for tops up floating mana and taps a source for all it makes (`pooledTaps`, rules/actions.mjs):
          a match launched before it lacks the key, and so offers what it offered then. */
-      const pooled = {...(pod && pod.pooledTaps === true ? {pooledTaps: true} : {}), ...(pod && pod.xTaps === true ? {xTaps: true} : {}), ...(pod?.preparedTaps === true ? {preparedTaps: true} : {})};
+      const pooled = {...(pod && pod.pooledTaps === true ? {pooledTaps: true} : {}), ...(pod && pod.xTaps === true ? {xTaps: true} : {}), ...(pod?.preparedTaps === true ? {preparedTaps: true} : {}), ...(pod?.sourceChoices === true ? {sourceChoices: true} : {}), ...(pod?.effectPlayVersion===1?{effectPlayVersion:1}:{})};
       pilotPicks = beats.pilotPicks === true;
+      pilotProvocation = beats.pilotProvocation === true;
       try {state = createState({matchId, seed, players: seats.map((s) => ({name: s.name})), ...rules, ...(beats.drawBeat ? {drawBeat: true} : {}), ...pooled, ...anyStep, ...keepMana});}
       catch (error) {throw new RoomError(400, error.message);}
       seats.forEach((s, seat) => {
@@ -1052,6 +1158,21 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
 
     async open() {
       await restore();
+      if(refreshNativePlay()){drive();await persist();}
+      if (castDraft) {
+        let changed = false;
+        try {const choice = castDraftChoice(state, castDraft, draftOptions); changed = !controller.pending || controller.pending.id !== choice.id || castDraftSignature(choice) !== castDraft.offeredSignature;}
+        catch (error) {if (!error.castDraftExpired) throw error; castDraft = null; changed = true;}
+        if (changed) {withdraw(); drive(); await persist();}
+      }
+      if(refinement){
+        try{refinementChoice(state,controller.pending,refinement);}
+        catch(error){
+          if(!error.refinementExpired&&!error.refinementUnavailable)throw error;
+          /* Rebuild only from the CURRENT native awaiting state. No saved question is ever written back. */
+          withdraw();drive();await persist();
+        }
+      }
       return api;
     },
 
@@ -1079,7 +1200,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         departures: structuredClone(departures),
         seats: api.seats,
         waitingOn: pendingSeat === null ? null : seats[pendingSeat].seatId,
-        decision: mine ? describeDecision(state, combatWords(state, structuredClone(controller.pending)), pendingActions, projected) : null,
+        decision: mine ? visibleDecision(projected) : null,
         state: projected,
         /* What this seat's permanents could tap for (actions.mjs, manaSources): the board's Mana Pool. */
         manaSources: deriving(state, () => manaSources(state, seat)),
@@ -1162,7 +1283,16 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       const seat = seatIndex(entry.seat);
       if (seat < 0 || pendingSeat !== seat) throw new RoomError(409, `The tape parts from the game at entry ${entry.n}: it answers for ${entry.seat}, and the game is waiting on ${pendingSeat === null ? "no one" : seats[pendingSeat].seatId}.`);
       const decisionId = controller.pending?.id ?? null;
+      if(refines(entry.answer)){
+        const input=entry.refinementInput;
+        if(input!==undefined&&(input?.schema!=="CrankPrivateRefinementInput@1"||input.actor!==seat))throw new RoomError(409,"The private replay input has the wrong server actor or schema.");
+        const raw=input?.request??entry.answer,replay=input?{rawRequest:raw,canonicalAnswer:entry.answer,actor:input.actor}:null;
+        const accepted=controller.answerRefinement(()=>refinementRequestChoice(raw),{...raw,revision:controller.revision},seat,replay);
+        if(!accepted.changed)throw new RoomError(409,"The refinement tape repeats an already accepted input.");
+        begin();tape({kind:"answer",seat:entry.seat,answer:entry.answer,...(input?{refinementInput:structuredClone(input)}:{})});refineWith(seat,accepted.answer);await persist();return api;
+      }
       begin();
+      refinementNotice=null;
       withdrawKeeping();
       tape({kind: "answer", seat: entry.seat, answer: entry.answer});
       answerWith(seat, entry.answer, decisionId);
@@ -1278,12 +1408,12 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       const seat = seatIndex(seatId);
       if (seat < 0 || seats[seat].pilot !== "house") throw new RoomError(403, "That is not an AI seat at this table.");
       if (pendingSeat !== seat || !controller.pending) throw new RoomError(409, "That seat is not being asked anything.");
-      const pilot = pilotFor(seat), seen = projectFor(state, seat);
+      const pilot = pilotFor(seat), seen = pilotView(seat);
       if (pendingActions) {
         const chosen = pilot.choose(seen, pendingActions);
         return {indices: [Math.max(0, pendingActions.indexOf(chosen))]};
       }
-      const given = pilot.answer(seen, awaitingChoice(state));
+      const given = pilot.answer(seen, refinement ? refinementChoice(state,controller.pending,refinement) : castDraft ? castDraftChoice(state, castDraft, draftOptions) : awaitingChoice(state));
       return {indices: given.indices ?? [], ...(given.amounts ? {amounts: given.amounts} : {}), ...(given.value !== undefined ? {value: given.value} : {}), ...(given.cancel ? {cancel: true} : {})};
     },
 
@@ -1298,8 +1428,8 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       if (pendingSeat !== seat || !controller.pending) throw new RoomError(409, "That seat is not being asked anything.");
       const pilot = pilotFor(seat);
       if (typeof pilot.explain !== "function") return null;
-      const seen = projectFor(state, seat);
-      const explained = pilot.explain(seen, pendingActions ? {actions: pendingActions} : {choice: awaitingChoice(state)});
+      const seen = pilotView(seat);
+      const explained = pilot.explain(seen, pendingActions ? {actions: pendingActions} : {choice: castDraft ? castDraftChoice(state, castDraft, draftOptions) : awaitingChoice(state)});
       const p = personaOf(seats[seat].persona);
       return {...explained, persona: p ? {name: p.name, blurb: p.blurb, ...p.disposition} : null};
     },
@@ -1314,9 +1444,21 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
     check(seatId, {choiceId, indices} = {}) {
       const seat = seatIndex(seatId);
       if (seat < 0) throw new RoomError(403, "That seat is not at this table.");
-      const pending = controller.pending;
+      let pending = controller.pending;
+      if(refinement){
+        try{pending=refinementChoice(state,controller.pending,refinement);}
+        catch(error){if(!error.refinementExpired&&!error.refinementUnavailable)throw error;return {ok:false,open:false,reasons:[error.message]};}
+      }
       if (finished() || pendingSeat !== seat || !pending || pending.id !== choiceId)
         return {ok: false, open: false, reasons: ["That question is no longer open. Answer the one your view shows now."]};
+      if(refinement){
+        try{answerRefinement(state,controller.pending,structuredClone(refinement),{indices});return {ok:true,open:true,reasons:[]};}
+        catch(error){return {ok:false,open:true,reasons:[error.message]};}
+      }
+      if (castDraft) {
+        try {answerCastDraft(state, structuredClone(castDraft), {indices}, draftOptions); return {ok: true, open: true, reasons: []};}
+        catch (error) {return {ok: false, open: true, reasons: [error.message]};}
+      }
       const checked = state.awaiting?.kind === "declare-blockers" ? deriving(state, () => blockers.check(state, state.awaiting, indices)) : null;
       const reasons = checked ? checked.reasons : [controller.check({choiceId, indices})].filter(Boolean);
       return {ok: reasons.length === 0, open: true, reasons, ...(checked?.byAttacker?.length ? {byAttacker: checked.byAttacker} : {})};
@@ -1333,7 +1475,20 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
         if (known.seatId !== seatId || known.body !== body) throw new RoomError(409, "Action id was reused with different content");
         return {receipt: known.receipt, changed: false};
       }
+      try{const cached=controller.refinementReceipt(request,seat);if(cached)return {receipt:cached,changed:false};}
+      catch(error){throw new RoomError(409,error.message);}
       if (pendingSeat !== seat) throw new RoomError(409, "It is not your decision.");
+      if(refines(request)){
+        let accepted;
+        try{accepted=controller.answerRefinement(()=>refinementRequestChoice(request),request,seat);}
+        catch(error){throw new RoomError(/Invalid action id/.test(error.message)?400:409,error.message);}
+        if(!accepted.changed)return {receipt:accepted.receipt,changed:false};
+        receipts=[...receipts,{actionId,seatId,body,receipt:accepted.receipt}].slice(-RECEIPTS);
+        begin();tape({kind:"answer",seat:seatId,answer:accepted.answer,
+          refinementInput:{schema:"CrankPrivateRefinementInput@1",actor:seat,request:structuredClone(request)}});
+        try{refineWith(seat,accepted.answer);}catch(error){throw await undone(error);}
+        await persist();return {receipt:accepted.receipt,changed:true};
+      }
       let receipt;
       const before = controller.revision, decisionId = controller.pending?.id ?? null;
       try {receipt = controller.answer(request);}
@@ -1341,6 +1496,7 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
       if (controller.revision === before) return {receipt, changed: false};  /* a retry older than this room's receipts */
       receipts = [...receipts, {actionId, seatId, body, receipt}].slice(-RECEIPTS);
       const answer = controller.take();
+      refinementNotice=null;
       begin();
       tape({kind: "answer", seat: seatId, answer});
       /* Refused by the rules, or failed in the play after it: undone -- no receipt, no tape entry, the same question still
@@ -1353,5 +1509,11 @@ function roomOn(storage, matchId, cards, makePilot = seatPilot, slice = Infinity
   return api;
 }
 
-export const startRoom = ({storage, matchId, cards = basicCards, candidates, pod, seed, pilot, slice}) => roomOn(storage, matchId, cards, pilot, slice, candidates).start(pod, seed);
+/* Live starts always use the current native choice contract; a client/pod cannot opt out. */
+export const startRoom = ({storage, matchId, cards = basicCards, candidates, pod, seed, pilot, slice}) => roomOn(storage, matchId, cards, pilot, slice, candidates).start({...pod,effectPlayVersion:1}, seed);
+/* Trusted server-only tape entry point. Absence is historical state shape, not a live-game option or a zero field. */
+export const startRoomFromTape = ({storage, matchId, cards = basicCards, candidates, pod, seed, pilot, slice}) => {
+  if(pod?.effectPlayVersion!==undefined&&pod.effectPlayVersion!==1)throw new RoomError(400,"Unsupported saved effect-play version. Use this match's original supported engine version.");
+  return roomOn(storage, matchId, cards, pilot, slice, candidates).start(pod, seed);
+};
 export const openRoom = ({storage, matchId, cards = basicCards, candidates, pilot, slice}) => roomOn(storage, matchId, cards, pilot, slice, candidates).open();

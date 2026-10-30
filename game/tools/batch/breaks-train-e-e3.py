@@ -27,7 +27,7 @@ SCHEMA = 'game/engine/script/schema.mjs'
 VOCAB = 'game/engine/vocabulary.mjs'
 PILOT = 'game/engine/pilots/house-pilot.mjs'
 
-GONE = 'const gone = params.lastKnown === true && !originals.length && context.lastKnown?.copiable ? [{values: context.lastKnown.copiable}] : null;'
+GONE = '\n  const gone = params.lastKnown === true && !originals.length && context.lastKnown?.copiable ? [{values: context.lastKnown.copiable}] : null;'
 APPLYING = '''const applying = (rest, event) => rest.filter(({ability}) => live(event).some((g) => (ability.rule === "more-tokens" ? true
   : ability.rule === "tokens-each" ? Boolean(kindOf(ability, g.token)) : describes(ability.affects, g.token))));'''
 TOKENS_CHANGED = 'const TOKENS_CHANGED = ["tokens-instead", "tokens-plus", "tokens-each"];'
@@ -40,13 +40,13 @@ BREAKS = [
      ' || state.stack.some((entry) => entry.cardId === id) ? {copiable:', ' ? {copiable:'),
     ('lki copiable: only then', LAYERS,
      ' || state.stack.some((entry) => entry.cardId === id) ? {copiable:', ' || true ? {copiable:'),
-    ('lastKnown copy: made', PERM, GONE, 'const gone = null;'),
+    ('lastKnown copy: made', PERM, GONE, '\n  const gone = null;'),
     ('lastKnown copy: only when the script says so', PERM, GONE,
-     'const gone = !originals.length && context.lastKnown?.copiable ? [{values: context.lastKnown.copiable}] : null;'),
+     '\n  const gone = !originals.length && context.lastKnown?.copiable ? [{values: context.lastKnown.copiable}] : null;'),
     ('lastKnown copy: only with no original there', PERM, GONE,
-     'const gone = params.lastKnown === true && context.lastKnown?.copiable ? [{values: context.lastKnown.copiable}] : null;'),
+     '\n  const gone = params.lastKnown === true && context.lastKnown?.copiable ? [{values: context.lastKnown.copiable}] : null;'),
     ('lastKnown copy: only with something known', PERM, GONE,
-     'const gone = params.lastKnown === true && !originals.length ? [{values: context.lastKnown.copiable}] : null;'),
+     '\n  const gone = params.lastKnown === true && !originals.length ? [{values: context.lastKnown.copiable}] : null;'),
     ('lastKnown copy: its values read', PERM,
      'const original = id?.values ?? (params.asItLastWas', 'const original = (params.asItLastWas'),
 

@@ -10,8 +10,7 @@
  * for one instance (CR 115.3); as many as the count allows, at least as many as it needs; none chosen is no target at all,
  * so "up to one" with none chosen still resolves (CR 608.2b), and with some chosen it does not resolve only when every
  * one of them is illegal. The house pilot aims a pick-several as it aims a cast; the scenario runner picks a step's list.
- * Named, not built: a count that is X ("up to X target creatures"); a spell with a counted target cast as an effect
- * resolves (castChoicesNow leaves it out); a copy's new list for a counted target (it keeps the original's).
+ * Counted effect casts and copies are also exercised by engine-load100-w2-stack.mjs.
  */
 import assert from "node:assert/strict";
 import {cardsIn} from "../game/engine/state/index.mjs";
@@ -206,7 +205,8 @@ eq([countWords({min: 0, max: 1}), countWords({min: 0, max: 3}), countWords({min:
 }
 {
   const s = play("cast by an effect", [...ON_BOARD, at(0, "hand", "Split Shot")], []);
-  eq(castChoicesNow(s, 0, named(s, "Split Shot", "hand")[0].id), [], "named: a spell with a counted target is not cast as an effect resolves yet -- castChoicesNow leaves it out");
+  eq(castChoicesNow(s, 0, named(s, "Split Shot", "hand")[0].id).map((a) => a.targets), [[{kind: "choose", min: 0, max: 2, of: 3}]],
+    "a counted effect cast is offered once, its target selection still to be asked");
 }
 eq(missingFor({options: ["TargetMin", "TargetMax"]}), [], "the catalog credits TargetMin and TargetMax");
 for (const name of ["Nightmare Sower", "Abigale, Eloquent First-Year", "Force of Vigor", "Displace"])

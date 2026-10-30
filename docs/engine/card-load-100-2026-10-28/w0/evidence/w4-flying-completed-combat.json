@@ -1,0 +1,492 @@
+{
+  "schema": "CrankCardExercised@1",
+  "games": [],
+  "scenarios": [
+    "Air Elemental: Air Elemental cast, and each ability used once (drafted by game/tools/card-waves.mjs, approved in review)",
+    "Air Elemental: Air Elemental deals combat damage past a ground blocker that its player blocks with whenever legal (CR 702.9b)",
+    "Serra Angel: Serra Angel cast, and each ability used once (drafted by game/tools/card-waves.mjs, approved in review)",
+    "Serra Angel: Flying excludes a ground blocker and vigilance leaves Serra Angel untapped when it attacks (CR 702.9b, 702.20b)",
+    "Serra Angel: Serra Angel deals combat damage past a ground blocker that its player blocks with whenever legal (CR 702.9b)",
+    "Suntail Hawk: Suntail Hawk cast, and each ability used once (drafted by game/tools/card-waves.mjs, approved in review)",
+    "Suntail Hawk: Suntail Hawk deals combat damage past a ground blocker that its player blocks with whenever legal (CR 702.9b)",
+    "Zephyr Sprite: Zephyr Sprite cast, and each ability used once (drafted by game/tools/card-waves.mjs, approved in review)",
+    "Zephyr Sprite: Zephyr Sprite deals combat damage past a ground blocker that its player blocks with whenever legal (CR 702.9b)"
+  ],
+  "unattributed": [
+    {
+      "game": null,
+      "scenario": "Air Elemental: Air Elemental cast, and each ability used once (drafted by game/tools/card-waves.mjs, approved in review)",
+      "kind": "GameEventSpellResolved",
+      "name": "Air Elemental",
+      "abilityId": null,
+      "reason": "no printed ability with that id"
+    },
+    {
+      "game": null,
+      "scenario": "Serra Angel: Serra Angel cast, and each ability used once (drafted by game/tools/card-waves.mjs, approved in review)",
+      "kind": "GameEventSpellResolved",
+      "name": "Serra Angel",
+      "abilityId": null,
+      "reason": "no printed ability with that id"
+    },
+    {
+      "game": null,
+      "scenario": "Suntail Hawk: Suntail Hawk cast, and each ability used once (drafted by game/tools/card-waves.mjs, approved in review)",
+      "kind": "GameEventSpellResolved",
+      "name": "Suntail Hawk",
+      "abilityId": null,
+      "reason": "no printed ability with that id"
+    },
+    {
+      "game": null,
+      "scenario": "Zephyr Sprite: Zephyr Sprite cast, and each ability used once (drafted by game/tools/card-waves.mjs, approved in review)",
+      "kind": "GameEventSpellResolved",
+      "name": "Zephyr Sprite",
+      "abilityId": null,
+      "reason": "no printed ability with that id"
+    }
+  ],
+  "cards": {
+    "Air Elemental": {
+      "singleFace": true,
+      "cast": 0,
+      "played": 0,
+      "resolved": 0,
+      "exercised": 0,
+      "games": [],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Air Elemental",
+          "kind": "keyword",
+          "keyword": "flying",
+          "text": "Flying",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [
+            "Air Elemental: Air Elemental deals combat damage past a ground blocker that its player blocks with whenever legal (CR 702.9b)"
+          ],
+          "games": [],
+          "counterfactual": [
+            {
+              "status": "proved",
+              "method": "runtime-ability-removal",
+              "scenario": "Air Elemental deals combat damage past a ground blocker that its player blocks with whenever legal (CR 702.9b)",
+              "scenarioIndex": 1,
+              "baseline": {
+                "status": "passed",
+                "checks": 5,
+                "events": 13,
+                "policies": [
+                  {
+                    "kind": "blockIfLegal",
+                    "turn": 1,
+                    "player": 1,
+                    "blocker": {
+                      "id": 42,
+                      "name": "Smoke Giant"
+                    },
+                    "attacker": {
+                      "id": 41,
+                      "name": "Air Elemental"
+                    },
+                    "branch": "declare-no-blocks",
+                    "indices": [],
+                    "pairReasons": [
+                      "The named pair is not offered"
+                    ],
+                    "reasons": [],
+                    "status": "answered"
+                  }
+                ]
+              },
+              "mutation": {
+                "path": "keywords[0]",
+                "keyword": "Flying",
+                "kind": "keyword"
+              },
+              "result": {
+                "status": "failed",
+                "message": "Air Elemental deals combat damage past a ground blocker that its player blocks with whenever legal (CR 702.9b): Maya is at 40 life, not 36",
+                "policies": [
+                  {
+                    "kind": "blockIfLegal",
+                    "turn": 1,
+                    "player": 1,
+                    "blocker": {
+                      "id": 42,
+                      "name": "Smoke Giant"
+                    },
+                    "attacker": {
+                      "id": 41,
+                      "name": "Air Elemental"
+                    },
+                    "branch": "block",
+                    "indices": [
+                      0
+                    ],
+                    "pairReasons": [],
+                    "reasons": [],
+                    "status": "answered"
+                  }
+                ]
+              },
+              "elapsedMs": 4.629300000000512
+            }
+          ]
+        }
+      ]
+    },
+    "Serra Angel": {
+      "singleFace": true,
+      "cast": 0,
+      "played": 0,
+      "resolved": 0,
+      "exercised": 0,
+      "games": [],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Serra Angel",
+          "kind": "keyword",
+          "keyword": "flying",
+          "text": "Flying",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [
+            "Serra Angel: Serra Angel deals combat damage past a ground blocker that its player blocks with whenever legal (CR 702.9b)"
+          ],
+          "games": [],
+          "counterfactual": [
+            {
+              "status": "proved",
+              "method": "runtime-ability-removal",
+              "scenario": "Serra Angel deals combat damage past a ground blocker that its player blocks with whenever legal (CR 702.9b)",
+              "scenarioIndex": 2,
+              "baseline": {
+                "status": "passed",
+                "checks": 5,
+                "events": 12,
+                "policies": [
+                  {
+                    "kind": "blockIfLegal",
+                    "turn": 1,
+                    "player": 1,
+                    "blocker": {
+                      "id": 42,
+                      "name": "Smoke Giant"
+                    },
+                    "attacker": {
+                      "id": 41,
+                      "name": "Serra Angel"
+                    },
+                    "branch": "declare-no-blocks",
+                    "indices": [],
+                    "pairReasons": [
+                      "The named pair is not offered"
+                    ],
+                    "reasons": [],
+                    "status": "answered"
+                  }
+                ]
+              },
+              "mutation": {
+                "path": "keywords[0]",
+                "keyword": "Flying",
+                "kind": "keyword"
+              },
+              "result": {
+                "status": "failed",
+                "message": "Serra Angel deals combat damage past a ground blocker that its player blocks with whenever legal (CR 702.9b): Maya is at 40 life, not 36",
+                "policies": [
+                  {
+                    "kind": "blockIfLegal",
+                    "turn": 1,
+                    "player": 1,
+                    "blocker": {
+                      "id": 42,
+                      "name": "Smoke Giant"
+                    },
+                    "attacker": {
+                      "id": 41,
+                      "name": "Serra Angel"
+                    },
+                    "branch": "block",
+                    "indices": [
+                      0
+                    ],
+                    "pairReasons": [],
+                    "reasons": [],
+                    "status": "answered"
+                  }
+                ]
+              },
+              "elapsedMs": 2.9856999999992695
+            }
+          ]
+        },
+        {
+          "path": "abilities[1]",
+          "runtimeId": "a1",
+          "face": "Serra Angel",
+          "kind": "keyword",
+          "keyword": "vigilance",
+          "text": "Vigilance (Attacking doesn't cause this creature to tap.)",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [
+            "Serra Angel: Flying excludes a ground blocker and vigilance leaves Serra Angel untapped when it attacks (CR 702.9b, 702.20b)"
+          ],
+          "games": [],
+          "counterfactual": [
+            {
+              "status": "proved",
+              "method": "runtime-ability-removal",
+              "scenario": "Flying excludes a ground blocker and vigilance leaves Serra Angel untapped when it attacks (CR 702.9b, 702.20b)",
+              "scenarioIndex": 1,
+              "baseline": {
+                "status": "passed",
+                "checks": 4,
+                "events": 12
+              },
+              "mutation": {
+                "path": "keywords[1]",
+                "keyword": "Vigilance",
+                "kind": "keyword"
+              },
+              "result": {
+                "status": "failed",
+                "message": "Flying excludes a ground blocker and vigilance leaves Serra Angel untapped when it attacks (CR 702.9b, 702.20b): Serra Angel is tapped"
+              },
+              "elapsedMs": 1.9336000000002969
+            }
+          ]
+        }
+      ]
+    },
+    "Suntail Hawk": {
+      "singleFace": true,
+      "cast": 0,
+      "played": 0,
+      "resolved": 0,
+      "exercised": 0,
+      "games": [],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Suntail Hawk",
+          "kind": "keyword",
+          "keyword": "flying",
+          "text": "Flying",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [
+            "Suntail Hawk: Suntail Hawk deals combat damage past a ground blocker that its player blocks with whenever legal (CR 702.9b)"
+          ],
+          "games": [],
+          "counterfactual": [
+            {
+              "status": "proved",
+              "method": "runtime-ability-removal",
+              "scenario": "Suntail Hawk deals combat damage past a ground blocker that its player blocks with whenever legal (CR 702.9b)",
+              "scenarioIndex": 1,
+              "baseline": {
+                "status": "passed",
+                "checks": 5,
+                "events": 13,
+                "policies": [
+                  {
+                    "kind": "blockIfLegal",
+                    "turn": 1,
+                    "player": 1,
+                    "blocker": {
+                      "id": 42,
+                      "name": "Smoke Bear"
+                    },
+                    "attacker": {
+                      "id": 41,
+                      "name": "Suntail Hawk"
+                    },
+                    "branch": "declare-no-blocks",
+                    "indices": [],
+                    "pairReasons": [
+                      "The named pair is not offered"
+                    ],
+                    "reasons": [],
+                    "status": "answered"
+                  }
+                ]
+              },
+              "mutation": {
+                "path": "keywords[0]",
+                "keyword": "Flying",
+                "kind": "keyword"
+              },
+              "result": {
+                "status": "failed",
+                "message": "Suntail Hawk deals combat damage past a ground blocker that its player blocks with whenever legal (CR 702.9b): Maya is at 40 life, not 39",
+                "policies": [
+                  {
+                    "kind": "blockIfLegal",
+                    "turn": 1,
+                    "player": 1,
+                    "blocker": {
+                      "id": 42,
+                      "name": "Smoke Bear"
+                    },
+                    "attacker": {
+                      "id": 41,
+                      "name": "Suntail Hawk"
+                    },
+                    "branch": "block",
+                    "indices": [
+                      0
+                    ],
+                    "pairReasons": [],
+                    "reasons": [],
+                    "status": "answered"
+                  }
+                ]
+              },
+              "elapsedMs": 6.250500000000102
+            }
+          ]
+        }
+      ]
+    },
+    "Zephyr Sprite": {
+      "singleFace": true,
+      "cast": 0,
+      "played": 0,
+      "resolved": 0,
+      "exercised": 0,
+      "games": [],
+      "abilities": [
+        {
+          "path": "abilities[0]",
+          "runtimeId": "a0",
+          "face": "Zephyr Sprite",
+          "kind": "keyword",
+          "keyword": "flying",
+          "text": "Flying",
+          "mana": false,
+          "activated": 0,
+          "triggered": 0,
+          "resolved": 0,
+          "scenarios": [
+            "Zephyr Sprite: Zephyr Sprite deals combat damage past a ground blocker that its player blocks with whenever legal (CR 702.9b)"
+          ],
+          "games": [],
+          "counterfactual": [
+            {
+              "status": "proved",
+              "method": "runtime-ability-removal",
+              "scenario": "Zephyr Sprite deals combat damage past a ground blocker that its player blocks with whenever legal (CR 702.9b)",
+              "scenarioIndex": 1,
+              "baseline": {
+                "status": "passed",
+                "checks": 5,
+                "events": 13,
+                "policies": [
+                  {
+                    "kind": "blockIfLegal",
+                    "turn": 1,
+                    "player": 1,
+                    "blocker": {
+                      "id": 42,
+                      "name": "Smoke Bear"
+                    },
+                    "attacker": {
+                      "id": 41,
+                      "name": "Zephyr Sprite"
+                    },
+                    "branch": "declare-no-blocks",
+                    "indices": [],
+                    "pairReasons": [
+                      "The named pair is not offered"
+                    ],
+                    "reasons": [],
+                    "status": "answered"
+                  }
+                ]
+              },
+              "mutation": {
+                "path": "keywords[0]",
+                "keyword": "Flying",
+                "kind": "keyword"
+              },
+              "result": {
+                "status": "failed",
+                "message": "Zephyr Sprite deals combat damage past a ground blocker that its player blocks with whenever legal (CR 702.9b): Maya is at 40 life, not 39",
+                "policies": [
+                  {
+                    "kind": "blockIfLegal",
+                    "turn": 1,
+                    "player": 1,
+                    "blocker": {
+                      "id": 42,
+                      "name": "Smoke Bear"
+                    },
+                    "attacker": {
+                      "id": 41,
+                      "name": "Zephyr Sprite"
+                    },
+                    "branch": "block",
+                    "indices": [
+                      0
+                    ],
+                    "pairReasons": [],
+                    "reasons": [],
+                    "status": "answered"
+                  }
+                ]
+              },
+              "elapsedMs": 2.331000000000131
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "scope": {
+    "selected": [
+      "Zephyr Sprite",
+      "Air Elemental",
+      "Suntail Hawk",
+      "Serra Angel"
+    ],
+    "cardRoot": "C:\\Users\\robmi\\CrankMagic\\worktrees\\load100\\w0-w4-combat\\game\\engine\\cards"
+  },
+  "measurement": {
+    "complete": true
+  },
+  "summary": {
+    "final": 4,
+    "exercised": 0,
+    "neverExercised": [
+      "Air Elemental",
+      "Serra Angel",
+      "Suntail Hawk",
+      "Zephyr Sprite"
+    ],
+    "abilities": 5,
+    "reached": 5,
+    "scenarioReached": 5,
+    "counterfactualReached": 5,
+    "unreached": [],
+    "scenarioUnreached": [],
+    "complete": true,
+    "scenarioComplete": true
+  }
+}

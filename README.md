@@ -956,7 +956,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 660 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 716 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -974,6 +974,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `feedback-store` — `tests/feedback-store.mjs`
 - `feedback-triage` — `tests/feedback-triage.mjs`
 - `card-compiler` — `tests/card-compiler.mjs`
+- `engine-load-scope` — `tests/engine-load-scope.mjs`: freeze the 95% deck-appearance cutoff and require playable finals for included names
 - `card-waves` — `tests/card-waves.mjs`
 - `cloud-sync` — `tests/cloud-sync.mjs`
 - `commander-legality` — `tests/commander-legality.mjs`
@@ -1033,6 +1034,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-cast` — `tests/engine-cast.mjs`
 - `engine-mana-upkeep` — `tests/engine-mana-upkeep.mjs` (mana made in the upkeep or the draw step stays in the pool until it is spent or the turn ends: the house rule over CR 500.4, `keepStepMana`)
 - `engine-combat` — `tests/engine-combat.mjs`
+- `engine-load100-w0-combat` — `tests/engine-load100-w0-combat.mjs`
+- `engine-departed-protection` — `tests/engine-departed-protection.mjs` (a departed damage source's last known qualities prevent protected damage without restoring the source)
 - `engine-commander` — `tests/engine-commander.mjs`
 - `engine-controller` — `tests/engine-controller.mjs`
 - `engine-effects` — `tests/engine-effects.mjs`
@@ -1050,6 +1053,12 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-projection` — `tests/engine-projection.mjs`
 - `engine-replacement` — `tests/engine-replacement.mjs`
 - `engine-resolution` — `tests/engine-resolution.mjs`
+- `engine-rule-operations` — `tests/engine-rule-operations.mjs`
+- `engine-replacement-steps` — `tests/engine-replacement-steps.mjs`: live, explicit replacement steps for serializable zone, entry and damage operations
+- `engine-outside-damage` — `tests/engine-outside-damage.mjs`: saved mana costs and damage choices, shared prevention allocation, exact source provenance and reload
+- `engine-zone-operations` — `tests/engine-zone-operations.mjs`: actual destruction resolution waits through nested replacement and commander choices, saved-state reload and public concessions
+- `engine-zone-action-operations` — `tests/engine-zone-action-operations.mjs`: sacrifice and discard payments preserve identity through waiting zone replacements; pre-entry result grants and refused arrivals use the new object and destination
+- `engine-load100-w3-graveyard` — `tests/engine-load100-w3-graveyard.mjs`
 - `engine-rng` — `tests/engine-rng.mjs`
 - `engine-runtime` — `tests/engine-runtime.mjs`
 - `engine-sba` — `tests/engine-sba.mjs`
@@ -1148,6 +1157,13 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `pilot-urgency` — `tests/pilot-urgency.mjs` (response urgency: three tiers from a card's role, its controller's links and my life; what an answer nets; the mana an instant answer holds)
 - `pilot-roles` — `tests/pilot-roles.mjs` (which cards double, loop, drain or are salty and how dangerous a commander is: a few kilobytes of the corpus held equal to their sources and handed to every pilot with a card's other public facts)
 - `engine-hard-pilot` — `tests/engine-hard-pilot.mjs` (Hard: a preferred defender for each creature, and the blockers a trampler or a flyer needs held home; the reserve's weighted probability and the absorbing-defender model behind it)
+- `engine-salty-pilot` — `tests/engine-salty-pilot.mjs` (Normal Salty: actual multi-turn four-seat combat, public damage attribution, provocation and a lethal trample swing back)
+- `engine-cancel-decision` — `tests/engine-cancel-decision.mjs` (reversible native target/cost proposals, numeric stages, full state restoration and committed information/mandatory-effect boundaries)
+- `engine-playtest-blink` — `tests/engine-playtest-blink.mjs` (actual Brago combat, Thassa zero/one targets, single-target control wording, delayed Flickerwisp reentry and Claim Jumper conditional Plains searches)
+- `engine-cast-stages` — `tests/engine-cast-stages.mjs` (live modal/spree mode sets, per-mode and repeated targets, native target constraints, backtracking and actual costs)
+- `engine-action-stages` — `tests/engine-action-stages.mjs` (actual modal/effective activations, isolated casting permissions, native nonmana cost review and stale targets)
+- `engine-refinement-controller` — `tests/engine-refinement-controller.mjs` (private child validation preserving the live native question and persistent full-payload receipt dedupe)
+- `engine-committed-refinement` — `tests/engine-committed-refinement.mjs` (actual departed Ao, Shadrix and Scepter modal refinements, stale facts and native random commitments)
 - `engine-threat` — `tests/engine-threat.mjs` (the threat table every difficulty reads: life, hitters, growth and ramp off the seat's view; Easy's rank, Normal's weighted mean; a person and an AI the same row; L1 attacks where threat × effect is highest; the floor under an attack that dies for nothing)
 - `engine-pilot-picks` — `tests/engine-pilot-picks.mjs` (the AI seats take what an "up to" or a search is for: the lands of the colors they lack, proliferate's good counters, their own side; old matches answered as before)
 - `engine-ingest` — `tests/engine-ingest.mjs`
@@ -1182,6 +1198,12 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `shop-export` — `tests/shop-export.mjs`
 - `sim-engine` — `tests/sim-engine.mjs`
 - `sentence-library` — `tests/sentence-library.mjs`
+- `sentence-load100-w0` — `tests/sentence-load100-w0.mjs`
+- `sentence-paragraphs` — `tests/sentence-paragraphs.mjs`: complete unfinished abilities and independent keywords (CR 113.2c)
+- `engine-load100-tokens` — `tests/engine-load100-tokens.mjs`: departed-spell copies, double-faced token copies, and copied preparation definitions
+- `load100-w7-compiler` — `tests/load100-w7-compiler.mjs`: compiler smoke must actually play its candidate, and calibrated template counts are enforced
+- `engine-load100-w7-spells` — `tests/engine-load100-w7-spells.mjs`: APNAP draws, Collector before individual replacements, doubler/dredge choices, and die-roll triggers
+- `engine-draw-instructions` — `tests/engine-draw-instructions.mjs`: modified draw instructions reconsider unused replacements and retain each applied source through reload
 - `status-and-groupings` — `tests/status-and-groupings.mjs`
 - `swap-record` — `tests/swap-record.mjs`
 - `slot-model` — `tests/slot-model.mjs`
@@ -1213,6 +1235,15 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `room-refusals` — `tests/room-refusals.mjs`
 - `room-slices` — `tests/room-slices.mjs`
 - `room-seat-pilots` — `tests/room-seat-pilots.mjs` (an AI seat's Easy or Normal, from New table to the pilot; L1 games replay)
+- `room-pilot-provocation` — `tests/room-pilot-provocation.mjs` (real spell damage remembered across pilot recreation and room reload, accepted retries, refusals, undo and replay)
+- `room-playtest-snoop` — `tests/room-playtest-snoop.mjs` (actual held draw, public next top, paid Goblin library cast and source-removal privacy)
+- `room-cancel-decision` — `tests/room-cancel-decision.mjs` (native Cancel with auto-pass and Undo configurations, reload/retry, full state/RNG/journal preservation, actor departure and mandatory-effect refusal)
+- `room-cast-stages` — `tests/room-cast-stages.mjs` (private saved modal proposals, reload/replay, stale input, Cancel/Back boundaries and actual payment exactly once)
+- `room-action-stages` — `tests/room-action-stages.mjs` (actual Cankerbloom stages, observer privacy, reload/replay, native funding Cancel, exact mana/sacrifice and permission-version withdrawal)
+- `room-committed-refinement` — `tests/room-committed-refinement.mjs` (actual committed modal questions preserved through private Cancel, privacy/reload/replay and final native confirmation once)
+- `room-effect-play-refresh` — `tests/room-effect-play-refresh.mjs` (native generation changes, donated Shalai newly legal targets, stale private and standing inputs, current house/Easy/Normal native answers)
+- `room-effect-play-version` — `tests/room-effect-play-version.mjs` (actual pre-generation sourceChoices tape replay and mandatory current-version live starts despite forged opt-out)
+- `room-restore-cursor` — `tests/room-restore-cursor.mjs` (default events after reload and eventless inputs, exact next journal delivery, preserved retained stream and empty journal boundary)
 - `room-agent-seat` — `tests/room-agent-seat.mjs` (the LLM seat in the room: only its close calls offered to it, its answers on the tape)
 - `room-refused-answer` — `tests/room-refused-answer.mjs`
 - `room-view-face` — `tests/room-view-face.mjs` (ROB-207, Luke's playtest of 2026-10-28: the room's view says `face: "back"` of a double-faced permanent whose back face is up, to every seat, and nothing else carries a face)
@@ -1265,6 +1296,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `board-fullscreen-notes` — `tests/board-fullscreen-notes.mjs` (a card played by its click in every view, a land just played taken back by its double-click, the actions large over the table in Full screen, the others' plays held up for ten seconds, the two priority choices, the tabletop to 200%, the commander tax below the title bar)
 - `board-choice-stacks` — `tests/board-choice-stacks.mjs` (Rob, 2026-10-25: in a question for one or many, the same card is one stack, ×N, a click taking one and taking it back, with how many beside it where more than one may be chosen, never past the stack or the question's most; a tapped Goblin no twin of an untapped one; and the cards another seat plays held up beside the question, never over its controls, in Focus, Full screen and Table at three window sizes; `breaks-choice-stacks.py`)
 - `board-optional-count-targets` — `tests/board-optional-count-targets.mjs` (ROB-204, Luke's playtest of 2026-10-28: an "up to one" or "any number" target question confirms with one, several or none chosen and sends the answer, the count still holds, and a single required target keeps Pick, Next, Review)
+- `board-playtest-blink` — `tests/board-playtest-blink.mjs` (Focus/Full Confirm packets through production socket/check dispatch into actual Brago/Thassa and Claim Jumper rooms; bounded fixture evidence, not Commander-load acceptance)
+- `board-playtest-snoop` — `tests/board-playtest-snoop.mjs` (production Table/Focus/WebGL3D public library tops, actual held draw and paid Goblin cast, next-top refresh and both-viewer privacy)
 - `board-r4-combat` — `tests/board-r4-combat.mjs`
 - `board-offer-context` — `tests/board-offer-context.mjs` (actual offer identity, revision, card and duplicate-send guards)
 - `board-r4-input` — `tests/board-r4-input.mjs` (native double click and touch card menus, sibling Undo overlay, stale action refusal)
@@ -1329,6 +1362,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-rules-conformance` — `tests/engine-rules-conformance.mjs`
 - `engine-room-games` — `tests/engine-room-games.mjs`
 - `engine-targets-up-to` — `tests/engine-targets-up-to.mjs`
+- `engine-load100-w2-stack` — `tests/engine-load100-w2-stack.mjs`
 - `engine-afterlife-tokens` — `tests/engine-afterlife-tokens.mjs`
 - `engine-turn-records` — `tests/engine-turn-records.mjs`
 - `engine-escape` — `tests/engine-escape.mjs`
@@ -1348,6 +1382,9 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-cards-pb9` — `tests/engine-cards-pb9.mjs`
 - `engine-amass` — `tests/engine-amass.mjs`
 - `engine-convoke` — `tests/engine-convoke.mjs`
+- `engine-load100-mana` — `tests/engine-load100-mana.mjs`
+- `engine-effect-play-refresh` - `tests/engine-effect-play-refresh.mjs`: live resolving-cast variants, stable generations, explicit refresh, stale refusal, original copy/permission bounds and actual target-owner departure
+- `library-engine-pool` — `tests/library-engine-pool.mjs`: sentence reuse and complete themed deals; frozen 95%-appearance loading scope excludes outside and exempt names from writes, reviews and reuse scores, preserving canonical front aliases
 - `engine-storied` — `tests/engine-storied.mjs`
 - `engine-evoke` — `tests/engine-evoke.mjs`
 - `engine-mana-spent` — `tests/engine-mana-spent.mjs`
@@ -1420,6 +1457,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-next-upkeep` — `tests/engine-next-upkeep.mjs`
 - `engine-dig-total` — `tests/engine-dig-total.mjs`
 - `engine-vow` — `tests/engine-vow.mjs`
+- `engine-valakut-exploration` — `tests/engine-valakut-exploration.mjs`: actual Purphoros exile funding, successive permissions, paid resolution, end-step window and normal timing/land limits
 - `engine-play-permission` — `tests/engine-play-permission.mjs`
 - `engine-sacrifice-many` — `tests/engine-sacrifice-many.mjs`
 - `engine-mana-riders` — `tests/engine-mana-riders.mjs`
@@ -1427,6 +1465,11 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-cards-x11-b2` — `tests/engine-cards-x11-b2.mjs`
 
 - `engine-attack-requirements` - `tests/engine-attack-requirements.mjs`
+- `engine-battles` - `tests/engine-battles.mjs`: native pre-entry protector choices, printed/current defense, entry copies and counters, reload/departure refusals, public projection and hidden-card boundaries; full Battle combat and Siege defeat remain unfinished
+- `engine-intrinsic-entry` - `tests/engine-intrinsic-entry.mjs`: native and legacy intrinsic loyalty/defense counters use prospective types and ability loss; Compleated keyword removal, independent entry counters, actual doubling, reload and departure controls
+- `engine-entry-counter-order` - `tests/engine-entry-counter-order.mjs`: separately askable Compleated/counter replacements, saved prefixes and internal entry receipts, zero prevention, native movement, simultaneous copied tokens, sibling costs, reload/departure and suffix-once controls
+- `engine-battle-damage-sba` - `tests/engine-battle-damage-sba.mjs`: native Battle damage and excess across permanent types, zero-defense trigger exception and saved protector repair; atomic SBA cohort work remains in progress
+- `engine-battle-linked-returns` - `tests/engine-battle-linked-returns.mjs`: simultaneous return choices, counter progress and Aura preflight; live entering-replacement continuation is under active RED proof
 - `engine-defender-permission` - `tests/engine-defender-permission.mjs`
 - `engine-ability-haste` - `tests/engine-ability-haste.mjs`
 - `engine-unless-return` - `tests/engine-unless-return.mjs`
@@ -1435,6 +1478,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-exchange-life` - `tests/engine-exchange-life.mjs`
 - `engine-damage-each` - `tests/engine-damage-each.mjs`
 - `engine-designations` - `tests/engine-designations.mjs`
+- `engine-load100-w1-faces` — `tests/engine-load100-w1-faces.mjs`: actual emblem and copied preparation behavior
 - `engine-prepare` - `tests/engine-prepare.mjs`
 - `engine-connive-memory` - `tests/engine-connive-memory.mjs`
 - `engine-block-designation-triggers` - `tests/engine-block-designation-triggers.mjs`
@@ -1554,7 +1598,21 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-was-attached` - `tests/engine-was-attached.mjs`: "put Zack Fair's counters on that creature and attach an Equipment that was attached to Zack Fair to that creature" (CR 608.2h, 400.7, 701.3a) -- what the sacrificed source had as it last existed, still the same objects on the battlefield, an Equipment and not an Aura, one chosen when several; nothing asked with none; the house pilot's answer
 - `engine-unchosen-modes` - `tests/engine-unchosen-modes.mjs`: "as Gollum enters, choose odd or even" and "choose one that hasn't been chosen" (Gollum, Riddle Master; CR 614.12, 202.3, 603.3c, 700.2, 400.7) -- a spell's mana value of the chosen quality, zero even and X counted; each mode once, remembered on the permanent as it is chosen, a second trigger at once seeing the first's choice, the snapshot as it triggered when it has gone, a new object afresh, the last trigger removed when none is left
 - `engine-face-down-play` - `tests/engine-face-down-play.mjs`: playing a card exiled face down (Gandalf, Goblins' Bane // Flameshape; CR 406.3, 406.3a-b, 601.2, 305.1) -- looked at and exiled face down, offered as the card it is (a land under the land drop's rules, a spell by its own cost and timing, an adventurer card as its Adventure) to the one player who may look at it, while "if you control a Wizard" holds and it remains exiled; turned face up and revealed as it is played, hidden from every other seat and from G1's leak judge until then; the table's words its modes and costs; asking changes nothing
-- `fuzz-library` - `tests/fuzz-library.mjs`: G1 over Rob's whole library (`tools/fuzz-live.mjs --library`) -- each seed's four decks Commander decks of his library (a legendary creature the table plays, 99 cards of its color identity, none twice but basics), the same for the same seed; a game's exception said with its seed and the run going on; seed 229, the waterbend paid with rider mana that stalled a table, played clean through the real room
+- `fuzz-pool` - `tests/fuzz-pool.mjs`: final Commander pool dealing, printed commander permissions, fatal population errors, strict refusal evidence, and journal exercise attribution; copied or fizzled spells, unclean games, and unobserved abilities receive no card-completion credit; includes a real room journal, identical replay, and leak check
+- `fuzz-person-blocks` — `tests/fuzz-person-blocks.mjs`: simulated-person joint blocker drafts use the real read-only room check before submission; native Menace/required-block outcomes, deterministic replay, stale/exhausted failures and unchanged strict refusal evidence
+- `ability-proof` - `tests/ability-proof.mjs`: passing scenarios, followed by removal of one ability from a cloned runtime definition; static boosts, final flying combat damage and vigilance must change, while offer-only failures, keyword presence, red baselines, generic errors and saved card/schema changes receive no behavioral credit; a missing mana-activation offer stays unproved
+- `card-check-cli` - `tests/card-check-cli.mjs`: real strict checker defaults, runtime-removal behavior, rejected presence-only credit, unknown flags, partial/stale/forged ledger rejection, independent canonical inventory/source verification and fatal Actions/local-fallback wiring
+- `card-oracle-defense` - `tests/card-oracle-defense.mjs`: printed defense matches each committed Oracle face independently of schema validity, with malformed, missing, invented and wrong-number controls
+- `card-face-fidelity` - `tests/card-face-fidelity.mjs`: every back, Adventure and prepare face claims its own actual text; omitted or invented sentences fail, and only this front's physical transform reminder is recognized
+- `engine-smoke-artifacts` - `tests/engine-smoke-artifacts.mjs`: actual Artifact Blast and Halt Order smoke casts counter the exact opposing artifact stack entry, finish in the proper graveyards and execute only Halt Order's one draw
+- `ability-missing-prompt` - `tests/ability-missing-prompt.mjs`: actual Adaptive Automaton, Metallic Mimic and Roaming Throne entry-choice omissions reach the missing-prompt precheck and remain unproved; classifier/tag removals must catch inflated ability credit from stale verifier sources
+- `scenario-block-policy` - `tests/scenario-block-policy.mjs`: an explicit named block-if-legal policy checks both complete declarations through the rules and records both branches through counterfactual proof; actual loaded Zephyr Sprite and runtime Flying removal finish combat with different final damage, life and graveyard results; malformed, ambiguous and illegal declarations fail
+- `scenario-explicit-choices` - `tests/scenario-explicit-choices.mjs`: native strict evidence rejects skipped optional moves, automatic answers, ambiguous actions and labels, inferred defenders, required declarations, trigger order and legend choices; explicit physical sources, indexed answers, final outcomes and runtime omission controls use the same policy
+- `scenario-conditional-policy` — `tests/scenario-conditional-policy.mjs`: explicit physical native actions resolve only their exact emitted frame; fixed entering answers bind the preceding spell/source/actor; actual effects and runtime omissions, source/question forgeries, unsupported commitments and ineligible policy failures
+- `scenario-entry-order` - `tests/scenario-entry-order.mjs`: five saved counter scenarios explicitly answer either entry-replacement order and retain every original final expectation; unanswered questions produce a classified offer diagnostic and earn no ability proof
+- `sentence-paragraphs` - `tests/sentence-paragraphs.mjs`: partial translations keep an ability's paragraph together while preserving independent keyword abilities and the current spell segmentation
+- `engine-mana-upkeep` - `tests/engine-mana-upkeep.mjs`: the table's optional house rule keeps mana made in upkeep and draw until spent or the turn ends; AI pilots keep the book's mana rule
+- `fuzz-library` - `tests/fuzz-library.mjs`: G1 over Rob's whole library (`tools/fuzz-live.mjs --library`) -- each seed's four decks Commander decks of his library (a commander the table permits, 99 cards of its color identity, none twice but basics), the same for the same seed; a game's exception said with its seed and the run going on; seed 229, the waterbend paid with rider mana that stalled a table, played clean through the real room
 - `engine-counters-put` - `tests/engine-counters-put.mjs`: counters put on players and on a creature you control (Ezuri, Claw of Progress; Simic Ascendancy; CR 122.1, 122.6, 701.34a) -- "you get an experience counter", each player named, doubled as Innkeeper's Talent doubles them, counted as "the number of experience counters you have" for its controller alone; "whenever one or more +1/+1 counters are put on a creature you control", about the creature and that many, not another player's creature, a noncreature or another kind; the compiler refusing a player's counters of no kind, chosen, +1/+1 or poison
 - `engine-ability-loss` - `tests/engine-ability-loss.mjs`: "loses all abilities" switching off a permanent's own static abilities and replacement effects (Song of the Dryads, Infinite Coursework, Oko, Thief of Crowns, Retro-Mutation; CR 613.1f, 613.6, 613.8a) -- an anthem and a grant gone from layers 6 and 7 whatever the timestamps, an effect begun in layer 4 carried on in 7b, Humility made a creature keeping its own one ability; every rule a static changes and every replacement effect, each reader before and after its permanent loses its abilities; a board's rules read with nothing derived when nothing takes abilities away; a layer-4 change of creature types only (CR 205.1a); control of two permanents exchanged, both or nothing (CR 701.12a-b)
 - `engine-explore` - `tests/engine-explore.mjs`: explore (CR 701.44) and the Map token (CR 111.10s; Restless Anchorage) -- a land to its hand, a nonland's +1/+1 counter and the graveyard asked, an empty library, the exploring permanent's controller's library, one gone told by its last known information (701.44c), the revealed card in every seat's view while it is asked, a player who left

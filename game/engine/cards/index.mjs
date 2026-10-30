@@ -398,6 +398,9 @@ const TRIGGERS = {
   drawn: (t) => (t.nthThisTurn === undefined || (Number.isInteger(t.nthThisTurn) && t.nthThisTurn >= 1)) && [undefined, true].includes(t.exceptFirstInDrawStep)
     ? {on: "GameEventCardChangeZone", from: "Library", to: "Hand", drawn: true, drawer: t.drawer ?? "you",
       ...(t.nthThisTurn !== undefined ? {nthThisTurn: t.nthThisTurn} : {}), ...(t.exceptFirstInDrawStep ? {exceptFirstInDrawStep: true} : {})} : null,
+  /* "Whenever you roll one or more dice" (Wyll, Blade of Frontiers; CR 706.6): ignored rolls never produce this event. */
+  "die rolled": (t) => ["you", "opponent", "any"].includes(t.roller ?? "you")
+    ? {on: "GameEventDieRolled", roller: t.roller ?? "you"} : null,
   /* "Whenever you gain life" (CR 119.9): `gainer` you, opponent or any. */
   "life gained": (t) => ({on: "GameEventPlayerLivesChanged", gainer: t.gainer ?? "you", ...(t.firstThisTurn === true ? {firstThisTurn: true} : {})}),
   /* "Whenever an opponent loses life", "whenever you lose life" (CR 119.3, batch 78): `loser` you, opponent or any; about
@@ -682,11 +685,15 @@ function compileGivenIn(effects, text, problems) {
        changed for players (rules/statics.mjs, playerRuleChanged), and a static ability in a layer (rules/layers.mjs,
        gatherEffects: Liliana of the Dark Realms' "Swamps you control have ..."). */
     if (effect.effect === "emblem") {
+      if (effect.text !== undefined && (typeof effect.text !== "string" || !effect.text.trim()))
+        problems.push(`${text}: explicit emblem Oracle text is a nonempty string`);
       const list = effect.abilities;
       if (!Array.isArray(list) || !list.length) { problems.push(`${text}: an emblem's abilities are a list, with at least one`); continue; }
-      for (const ability of list) if (!(["triggered", "replacement"].includes(ability?.kind) || (ability?.kind === "static" && typeof ability.rule === "string" && ability.affects?.what === "player")
+      /* CR 114.4: the shared object-rule reader supports loyalty timing; other specialized object readers remain refused. */
+      for (const ability of list) if (!(["triggered", "replacement"].includes(ability?.kind) || (ability?.kind === "static" && typeof ability.rule === "string"
+        && (ability.affects?.what === "player" || (ability.rule === "loyalty-at-instant-speed" && ability.affects?.what === "permanent")))
         || (ability?.kind === "static" && ability.rule === undefined && Number.isInteger(ability.layer))))
-        problems.push(`${text}: an emblem's ${ability?.kind ?? "nameless"} ability -- only triggered and replacement abilities, a rule changed for players and a static in a layer work from the command zone yet`);
+        problems.push(`${text}: an emblem's ${ability?.kind ?? "nameless"} ability -- only triggered and replacement abilities, player rules, loyalty timing for permanents and statics in a layer work from the command zone yet`);
       const {definition, problems: inner} = compileScript({schema: SCRIPT_SCHEMA, identity: EMBLEM_IDENTITY, oracleText: "", abilities: list});
       problems.push(...inner.map((problem) => `${text}: ${problem}`));
       if (definition) effect.abilities = definition.abilities;
@@ -2270,6 +2277,7 @@ export function compileScript(script) {
     toughness: identity.toughness ?? null,
     /* A planeswalker's printed loyalty (CR 306.5a): the loyalty counters it enters with (306.5b; rules/replacement.mjs). */
     ...(Number.isInteger(identity.loyalty) ? {loyalty: identity.loyalty} : {}),
+    ...(Number.isInteger(identity.defense) ? {defense: identity.defense} : {}),
     keywords,
     abilities,
     ...(spell ? {spell} : {}),
@@ -2310,14 +2318,14 @@ export function compileScript(script) {
      (722.2) -- compiled as a card of its own, the card's oracle id and color identity both halves' (CR 903.4), and kept with
      the card (`preparation`): never cast as itself (722.3), the card having only its own characteristics in every zone
      (722.4). They are what the copy it makes in exile as it becomes prepared is (722.3c; script/effects/attributes.mjs).
-     Built for a permanent card whose prepare spell is an instant or a sorcery. */
+     A permanent prepare spell resolves as a token through the ordinary copied-spell path (CR 608.3f). */
   if (script.prepare !== undefined) {
     const names = String(identity.name).split(" // ");
     const prepared = compileScript({schema: script.schema, identity: {...script.prepare.identity, oracleId: identity.oracleId, colorIdentity: identity.colorIdentity ?? []},
       oracleText: script.prepare.oracleText, source: script.source, abilities: script.prepare.abilities});
     if (names.length !== 2 || script.prepare.identity?.name !== names[1]) problems.push("a preparation card is named \"Card // Prepare spell\", and its prepare spell is the second name");
     for (const problem of prepared.problems) problems.push(`prepare spell: ${problem}`);
-    if (!(script.prepare.identity?.types ?? []).some((t) => t === "Instant" || t === "Sorcery")) problems.push("a prepare spell that is a permanent spell is not built");
+    if ((script.prepare.identity?.types ?? []).includes("Land")) problems.push("a prepare spell cannot be a land: lands are not spells (CR 305.1)");
     if (types.some((t) => t === "Instant" || t === "Sorcery")) problems.push("a preparation card is a permanent card: only a permanent becomes prepared (CR 722.3a)");
     /* `of`: the card's own name, the only one it has in every zone (CR 722.4) -- what its object is called (state/index.mjs). */
     if (prepared.definition) definition.preparation = {...faceOfDefinition(prepared.definition, names[1]), of: names[0]};
@@ -2328,7 +2336,8 @@ export function compileScript(script) {
 /* One face's characteristics, from its compiled definition, under its own name: a double-faced card's front or back
    (CR 712.8), an adventurer card's own or its Adventure's (CR 715.2). */
 const faceOfDefinition = (d, name) => ({card: name, types: [...d.types], subtypes: [...d.subtypes], ...(d.supertypes ? {supertypes: [...d.supertypes]} : {}), manaCost: d.manaCost,
-  colors: [...d.colors], power: d.power, toughness: d.toughness, ...(Number.isInteger(d.loyalty) ? {loyalty: d.loyalty} : {}), keywords: [...d.keywords], abilities: structuredClone(d.abilities),
+  colors: [...d.colors], power: d.power, toughness: d.toughness, ...(Number.isInteger(d.loyalty) ? {loyalty: d.loyalty} : {}),
+  ...(Number.isInteger(d.defense) ? {defense: d.defense} : {}), keywords: [...d.keywords], abilities: structuredClone(d.abilities),
   ...(d.spell ? {spell: structuredClone(d.spell)} : {}), ...(d.enchant ? {enchant: structuredClone(d.enchant)} : {})});
 
 /* Edit distance, bounded: suggestions are for a misspelling, not for every card in the pool. */

@@ -15,7 +15,8 @@
  *   3. Its words: `becomeMonarch` (vocabulary, schema, the catalog's credit), the condition `monarch`, "while you're the
  *      monarch" (Tamiyo), the view's `monarch` (projection.mjs) and the history's line (game/room/history.mjs).
  */
-import {play, drive, happen, at, idOf, compiled, checks, creature, index} from "./helpers/x11-keywords.mjs";
+import {play, drive, asked, happen, at, idOf, compiled, checks, creature, index} from "./helpers/x11-keywords.mjs";
+import {resolveAwaiting} from "../game/engine/rules/turn.mjs";
 import {runScenario} from "../game/engine/cards/scenario.mjs";
 import {controllerOf} from "../game/engine/rules/layers.mjs";
 import {projectFor} from "../game/engine/projection.mjs";
@@ -235,6 +236,8 @@ const crowned = (s) => (Number.isInteger(s.monarch) ? s.monarch : null);
      as it last was, the Trampler dying in the same combat (CR 608.2h; script/bind.mjs). */
   const s = play([at(0, "battlefield", "Trampler"), at(1, "battlefield", "Killer")], [{attack: ["Trampler"]}, {block: [["Killer", "Trampler"]]}], {}, FIX);
   happen(s, {effect: "becomeMonarch"}, MAYA);
+  drive(s, asked("assign-combat-damage"));
+  resolveAwaiting(s, [], [1, 3]);
   drive(s, (st) => st.stack.length > 0);
   eq([life(s, 1), idOf(s, "Trampler"), s.stack.at(-1).abilityId], [37, undefined, "monarch-combat-damage"], "3 trampled over to Maya; the Trampler died to the Killer");
   drive(s, (st) => st.stack.length === 0);

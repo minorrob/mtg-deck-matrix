@@ -1,0 +1,246 @@
+{
+  "source": "8e512b0c",
+  "completed": [
+    {
+      "suite": "tests\\engine-ability-loss.mjs",
+      "exit": 0,
+      "seconds": 1.56
+    },
+    {
+      "suite": "tests\\engine-adventure.mjs",
+      "exit": 0,
+      "seconds": 2.52
+    },
+    {
+      "suite": "tests\\engine-amounts.mjs",
+      "exit": 0,
+      "seconds": 1.66
+    },
+    {
+      "suite": "tests\\engine-another-died.mjs",
+      "exit": 0,
+      "seconds": 1.56
+    },
+    {
+      "suite": "tests\\engine-attacked-recipient.mjs",
+      "exit": 0,
+      "seconds": 1.52
+    },
+    {
+      "suite": "tests\\engine-attacks-alone.mjs",
+      "exit": 0,
+      "seconds": 1.59
+    },
+    {
+      "suite": "tests\\engine-auras.mjs",
+      "exit": 0,
+      "seconds": 1.51
+    },
+    {
+      "suite": "tests\\engine-block-designation-triggers.mjs",
+      "exit": 0,
+      "seconds": 0.2
+    },
+    {
+      "suite": "tests\\engine-came-from.mjs",
+      "exit": 0,
+      "seconds": 1.69
+    },
+    {
+      "suite": "tests\\engine-cant-be-sacrificed.mjs",
+      "exit": 0,
+      "seconds": 1.62
+    },
+    {
+      "suite": "tests\\engine-cant-cast.mjs",
+      "exit": 0,
+      "seconds": 1.53
+    },
+    {
+      "suite": "tests\\engine-cant-gain-life.mjs",
+      "exit": 0,
+      "seconds": 1.55
+    },
+    {
+      "suite": "tests\\engine-cant-lose.mjs",
+      "exit": 0,
+      "seconds": 1.53
+    },
+    {
+      "suite": "tests\\engine-card-choice-memory.mjs",
+      "exit": 0,
+      "seconds": 0.19
+    },
+    {
+      "suite": "tests\\engine-card-types-among.mjs",
+      "exit": 0,
+      "seconds": 1.59
+    },
+    {
+      "suite": "tests\\engine-cards-pb25.mjs",
+      "exit": 0,
+      "seconds": 1.67
+    },
+    {
+      "suite": "tests\\engine-cast-trigger-choice.mjs",
+      "exit": 0,
+      "seconds": 2.17
+    },
+    {
+      "suite": "tests\\engine-chosen-mode.mjs",
+      "exit": 0,
+      "seconds": 1.75
+    },
+    {
+      "suite": "tests\\engine-chosen.mjs",
+      "exit": 0,
+      "seconds": 1.66
+    },
+    {
+      "suite": "tests\\engine-chulane-completion.mjs",
+      "exit": 0,
+      "seconds": 1.72
+    },
+    {
+      "suite": "tests\\engine-class.mjs",
+      "exit": 0,
+      "seconds": 2.78
+    },
+    {
+      "suite": "tests\\engine-combat-damaged.mjs",
+      "exit": 0,
+      "seconds": 1.56
+    },
+    {
+      "suite": "tests\\engine-compile.mjs",
+      "exit": 0,
+      "seconds": 309.53
+    },
+    {
+      "suite": "tests\\engine-compleated.mjs",
+      "exit": 0,
+      "seconds": 1.47
+    },
+    {
+      "suite": "tests\\engine-condition-compare.mjs",
+      "exit": 0,
+      "seconds": 1.45
+    },
+    {
+      "suite": "tests\\engine-conditions.mjs",
+      "exit": 0,
+      "seconds": 1.44
+    },
+    {
+      "suite": "tests\\engine-control.mjs",
+      "exit": 0,
+      "seconds": 1.41
+    },
+    {
+      "suite": "tests\\engine-copy-memory.mjs",
+      "exit": 0,
+      "seconds": 1.41
+    },
+    {
+      "suite": "tests\\engine-cost-atoms.mjs",
+      "exit": 0,
+      "seconds": 1.41
+    },
+    {
+      "suite": "tests\\engine-costs-activations-4b.mjs",
+      "exit": 0,
+      "seconds": 1.62
+    },
+    {
+      "suite": "tests\\engine-counted-amounts.mjs",
+      "exit": 0,
+      "seconds": 1.66
+    },
+    {
+      "suite": "tests\\engine-counter-exile-cast.mjs",
+      "exit": 0,
+      "seconds": 1.52
+    },
+    {
+      "suite": "tests\\engine-counters-doubled.mjs",
+      "exit": 0,
+      "seconds": 1.44
+    },
+    {
+      "suite": "tests\\engine-counters-put.mjs",
+      "exit": 0,
+      "seconds": 1.48
+    },
+    {
+      "suite": "tests\\engine-counts-among.mjs",
+      "exit": 0,
+      "seconds": 1.52
+    },
+    {
+      "suite": "tests\\engine-cycle-triggers.mjs",
+      "exit": 0,
+      "seconds": 1.55
+    },
+    {
+      "suite": "tests\\engine-damage-amount.mjs",
+      "exit": 0,
+      "seconds": 1.48
+    },
+    {
+      "suite": "tests\\engine-damage-each.mjs",
+      "exit": 0,
+      "seconds": 0.17
+    },
+    {
+      "suite": "tests\\engine-damage-once.mjs",
+      "exit": 0,
+      "seconds": 2.47
+    },
+    {
+      "suite": "tests\\engine-damage-redirect.mjs",
+      "exit": 0,
+      "seconds": 6.22
+    },
+    {
+      "suite": "tests\\engine-delayed-mana.mjs",
+      "exit": 0,
+      "seconds": 1.61
+    },
+    {
+      "suite": "tests\\engine-destroyed-and-walker-damage.mjs",
+      "exit": 0,
+      "seconds": 1.72
+    },
+    {
+      "suite": "tests\\engine-different-opponents.mjs",
+      "exit": 0,
+      "seconds": 1.61
+    },
+    {
+      "suite": "tests\\engine-dig-reveal.mjs",
+      "exit": 0,
+      "seconds": 1.64
+    },
+    {
+      "suite": "tests\\engine-dig-total.mjs",
+      "exit": 0,
+      "seconds": 0.19
+    },
+    {
+      "suite": "tests\\engine-dig-until-count.mjs",
+      "exit": 0,
+      "seconds": 1.61
+    },
+    {
+      "suite": "tests\\engine-discard-triggers.mjs",
+      "exit": 0,
+      "seconds": 1.78
+    },
+    {
+      "suite": "tests\\engine-discard.mjs",
+      "exit": 0,
+      "seconds": 1.64
+    }
+  ],
+  "stopped": "Remaining literal-import sweep stopped after compiler passed, per orchestrator; no claim for unrun readers."
+}

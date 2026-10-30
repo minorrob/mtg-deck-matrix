@@ -2,6 +2,11 @@
   "schema": "CrankCardScenarios@1",
   "card": "Urza's Saga",
   "fixtures": {
+    "Zero Trinket": {"types": ["Artifact"], "manaCost": "{0}", "colors": []},
+    "White Trinket": {"types": ["Artifact"], "manaCost": "{W}", "colors": ["W"]},
+    "Variable Trinket": {"types": ["Artifact"], "manaCost": "{X}", "colors": []},
+    "No Cost Trinket": {"types": ["Artifact"], "manaCost": null, "colors": []},
+    "Artifact Land": {"types": ["Artifact", "Land"], "manaCost": null, "colors": []},
     "Trinket": {
       "types": [
         "Artifact"
@@ -11,6 +16,27 @@
     }
   },
   "scenarios": [
+    {
+      "name": "III searches printed {0} or {1}, excluding colored, variable and absent costs",
+      "library": ["Wastes", "Wastes", "Trinket", "Zero Trinket", "White Trinket", "Variable Trinket", "No Cost Trinket", "Artifact Land"],
+      "setup": [{"seat": 0, "zone": "hand", "cards": ["Urza's Saga"]}],
+      "steps": [
+        {"play": "Urza's Saga"}, {"expect": [{"seat": 0, "counters": {"card": "Urza's Saga", "counter": "lore", "count": 1}}]}, {"resolve": true}, {"to": {"turn": 5, "phase": "MAIN1"}}, {"resolve": true},
+        {"expect": [{"asks": {"seat": 0, "options": ["Trinket", "Zero Trinket"], "min": 0}}]},
+        {"choose": ["Zero Trinket"]}
+      ],
+      "expect": [{"seat": 0, "zone": "battlefield", "cards": ["Zero Trinket"]}, {"seat": 0, "zone": "graveyard", "cards": ["Urza's Saga"]}]
+    },
+    {
+      "name": "III may fail to find a printed-cost artifact even when one is available",
+      "library": ["Wastes", "Wastes", "Trinket"],
+      "setup": [{"seat": 0, "zone": "hand", "cards": ["Urza's Saga"]}],
+      "steps": [
+        {"play": "Urza's Saga"}, {"resolve": true}, {"to": {"turn": 5, "phase": "MAIN1"}}, {"resolve": true},
+        {"expect": [{"asks": {"seat": 0, "options": ["Trinket"], "min": 0}}]}, {"choose": []}
+      ],
+      "expect": [{"seat": 0, "zone": "graveyard", "cards": ["Urza's Saga"]}, {"seat": 0, "zone": "library", "count": 18}, {"seat": 0, "zone": "battlefield", "cards": []}]
+    },
     {
       "name": "I: it taps for {C}; II: a Construct; III: a {1} artifact from his library, then sacrificed",
       "library": [

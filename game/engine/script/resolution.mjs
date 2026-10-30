@@ -24,12 +24,15 @@ import {mergedOrderToAsk} from "../state/index.mjs";
 import {ASKING, commandersGoingHome} from "./effects/asking.mjs";
 import {damageQuestion, addCounters, counterQuestion} from "./effects/resources.mjs";
 import {controllerOf} from "../rules/layers.mjs";
-import {destructionQuestion, drawQuestion, dredgers, singleDraws} from "./effects/zones.mjs";
-import {tokenQuestion} from "./effects/permanents.mjs";
+import {drawQuestion, dredgers, singleDrawSteps} from "./effects/zones.mjs";
+import {tokenQuestion, tokenEntryEffectFrame} from "./effects/permanents.mjs";
 import {bindEffect} from "./bind.mjs";
 import {countEffect, amountOf} from "./amount.mjs";
 import {conditionHolds} from "./condition.mjs";
-import {proliferateTimes} from "../rules/statics.mjs";
+import {proliferateTimes, drawsMore} from "../rules/statics.mjs";
+import {beginRuleOperation} from "../rules/operations.mjs";
+import {destructionFrame} from "../rules/destruction-operation.mjs";
+import {zoneEffectFrame} from "../rules/zone-operation.mjs";
 
 /** Whether a resolution is paused, waiting for somebody. */
 export const resolutionPending = (state) => Boolean(state.resolving);
@@ -89,6 +92,7 @@ function unreported(resolving) {
 export function runResolution(state, rng = null) {
   const resolving = state.resolving;
   if (!resolving) return {status: "done", events: []};
+  if (state.ruleOperation) return {status: "waiting", events: unreported(resolving)};
 
   while (resolving.queue.length > 0 || mergedOrderToAsk(state)) {
     if (mergedOrderToAsk(state) && resolving.queue[0]?.effect !== "orderMerged") resolving.queue.unshift({effect: "orderMerged"});
@@ -97,6 +101,14 @@ export function runResolution(state, rng = null) {
     /* And counted as it reaches the head (CR 608.2h): "draw a card for each creature you control" counts then. */
     const effect = countEffect(state, bindEffect(resolving.queue[0], resolving.context, state), resolving.context);
     resolving.queue[0] = effect;
+    /* Keep draw's existing remembered-card contract when replacement choices split the instruction across a pause.
+       This is bookkeeping for that draw, not general remembered-object construct support (CR 608.2c). */
+    if (effect?.effect === "__drawRemember") {
+      resolving.queue.shift();
+      resolving.context.remembered = resolving.events.slice(effect.fromEvent).map(e => e.data?.fields)
+        .filter(f => f?.drawn === true && state.objects[f.drewAs]).map(f => f.drewAs);
+      continue;
+    }
     /* AN EFFECT'S OWN CONDITION (Forge's Condition): "Metalcraft -- If you control three or more artifacts, exile that
        creature". Asked now, as it reaches the head (CR 608.2c, the instructions in order); false, and it does nothing. */
     if (effect?.condition && !conditionHolds(state, effect.condition, {controller: resolving.context.controller, source: resolving.context.source, about: resolving.context.about,
@@ -287,14 +299,13 @@ export function runResolution(state, rng = null) {
       resolving.queue[0] = {effect: "orderDraws", draw: effect, answers: effect.drawOrders ?? {}, question: asked};
     /* DREDGE (CR 702.52a; Life from the Loam, wave 4c k2): a draw a dredge card in a drawing player's graveyard could replace --
        each card drawn its own draw (CR 121.2) -- rewritten as it reaches the head into its single draws (effects/zones.mjs,
-       singleDraws: Alms Collector's, asked above, among them), each the drawing player's question when a dredge could replace
-       it then and a plain draw when none could (effects/asking.mjs, dredgeDraw): a dredge card the first dredge milled may
-       replace the next. */
-    else if (effect?.effect === "draw" && singleDraws(state, effect, resolving.context).some((player) => dredgers(state, player).length))
-      resolving.queue.splice(0, 1, ...singleDraws(state, effect, resolving.context).map((player) => ({effect: "dredgeDraw", player})));
-    /* CR 616.1: a destruction two or more effects would replace, ending differently (umbra armor; effects/zones.mjs) -- the
-       permanent's controller chooses which, before anything is destroyed (effects/asking.mjs, orderDestruction). */
-    else if (destructionQuestion(state, effect, resolving.context)) resolving.queue[0] = {effect: "orderDestruction", destroy: effect};
+       singleDrawSteps: Alms Collector's, asked above, among them). The drawing player chooses competing dredge or mandatory
+       replacements even with no dredger (effects/asking.mjs, dredgeDraw); a dredge card the first dredge milled may replace
+       the next. Every replacement's whole modified instruction is checked before its individual draws proceed. */
+    else if (effect?.effect === "draw" && singleDrawSteps(state, effect, resolving.context).some(({player, replaced}) =>
+      dredgers(state, player).length || drawsMore(state, player).some(m => !replaced.includes(m.key))))
+      resolving.queue.splice(0, 1, ...singleDrawSteps(state, effect, resolving.context).map(({player, replaced}) => ({effect: "dredgeDraw", player, replaced})),
+        ...(effect.remember ? [{effect: "__drawRemember", fromEvent: resolving.events.length}] : []));
     const head = resolving.queue[0];
     const asking = ASKING[head?.effect];
 
@@ -320,6 +331,17 @@ export function runResolution(state, rng = null) {
     }
 
     resolving.queue.shift();
+    /* CR 616.1, 702.89a: destroying an Aura instead may create another destruction choice. Persist every caller stage,
+       not just the top-level question, so neither that child nor the following instruction can run early. */
+    let operationFrame = zoneEffectFrame(effect, resolving.context) ?? tokenEntryEffectFrame(effect, resolving.context);
+    if (effect?.effect === "destroy" || effect?.effect === "destroyAll") operationFrame = destructionFrame(effect, resolving.context);
+    if (operationFrame) {
+      const outcome = beginRuleOperation(state, operationFrame, {after: {kind: "resolution"}}, rng);
+      resolving.events.push(...outcome.events);
+      if (outcome.status === "waiting") return {status: "waiting", events: unreported(resolving)};
+      Object.assign(resolving.context, outcome.result?.context ?? {});
+      continue;
+    }
     resolving.events.push(...runEffect(state, effect, resolving.context, rng));
     /* ITS CONTROLLER HAS LEFT THE GAME ("you lose the game", CR 104.3e; effects/resources.mjs loseGame): the spell or ability
        left the stack with them (CR 800.4a), and nothing more of it is done. */
@@ -338,6 +360,16 @@ export function runResolution(state, rng = null) {
  * `extra` carries what the generic `indices` cannot: scry's `toBottom`, for instance. The choice
  * record says which fields it expects, and `controller.mjs` validates them.
  */
+/** Resume the saved script caller after one of its explicit rule operations answers or completes. */
+export function continueRuleResolution(state, outcome, rng = null) {
+  const resolving = state.resolving;
+  if (!resolving) throw new Error("No resolution is waiting for the rule operation");
+  resolving.events.push(...outcome.events);
+  if (outcome.status === "waiting") return {status: "waiting", events: unreported(resolving)};
+  Object.assign(resolving.context, outcome.result?.context ?? {});
+  return runResolution(state, rng);
+}
+
 export function answerResolution(state, indices, extra = {}, rng = null) {
   const awaiting = state.awaiting;
   if (!awaiting || awaiting.kind !== "effect-choice")
@@ -421,6 +453,10 @@ function carryOn(state, outcome, rng) {
   if (!Array.isArray(outcome) && Array.isArray(outcome.splice) && outcome.splice.length > 0) {
     state.resolving.queue.unshift(...outcome.splice);
   }
+  /* An answered play choice can start an instruction that itself asks before entry. Withdraw the old question and
+     advance its queue first, then let the explicit child own the wait; its splice remains behind that child. */
+  if (!Array.isArray(outcome) && outcome.operation)
+    return continueRuleResolution(state, beginRuleOperation(state, outcome.operation, {after: {kind: "resolution"}}, rng), rng);
   /* What follows the answer has the same random stream the answer had. */
   return runResolution(state, rng);
 }

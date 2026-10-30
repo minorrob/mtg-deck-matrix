@@ -44,9 +44,10 @@ import {destructionChoice, dredgers, dredgeInstead, dredgeWords} from "../script
 import {commanderChoice} from "./commander.mjs";
 import {damageOrderChoice, graveyardBound, placeReplacedCounters} from "./replacement.mjs";
 import {mulliganChoice, resolveMulligan} from "./mulligan.mjs";
-import {answerResolution, answerDeparted, resolutionChoice} from "../script/resolution.mjs";
+import {answerResolution, answerDeparted, resolutionChoice, continueRuleResolution} from "../script/resolution.mjs";
+import {answerRuleOperation, continueRuleOperation} from "./operations.mjs";
 import {finishResolving} from "./stack.mjs";
-import {priorityOrder} from "./priority.mjs";
+import {priorityOrder, afterResolving} from "./priority.mjs";
 import {playerRuleChanged, untapsDuringOthers, ruleChanged, drawForbidden, emptyDrawWins} from "./statics.mjs";
 import {emptyRestricted, colorlessPool} from "./restricted-mana.mjs";
 import {endCopies, phaseIn, endControlChange, nextRecord} from "../script/effects/permanents.mjs";
@@ -54,8 +55,9 @@ import {untapOne, winGame} from "../script/effects/resources.mjs";
 import {runEffect} from "../script/effects/index.mjs";
 import {askEntering, enteringChoice, resolveEnteringChoice} from "./entering.mjs";
 import {collectTriggers, openTriggers, askTriggerTargets, triggerChoice, resolveTriggerOrder, triggerTargetsChoice, resolveTriggerTargets, triggerCountedChoice, resolveTriggerCounted} from "./trigger.mjs";
-import {chooseTargetsChoice, resolveChooseTargets, castCostChoice, resolveCastCost} from "./actions.mjs";
-import {deriving} from "./layers.mjs";
+import {chooseTargetsChoice, resolveChooseTargets, castCostChoice, resolveCastCost, afterAction} from "./actions.mjs";
+import {deriving, abilitiesOf, subtypesOf, controllerOf} from "./layers.mjs";
+import {cancellationFor, abandonProposal, retainProposal, proposalChoice} from "./cancel.mjs";
 
 /* The steps of a turn, CR 500.1, in order.
  *
@@ -346,11 +348,15 @@ function endOfTurn(state, events) {
  */
 export function awaitingChoice(state) {
   /* It only reads: every object it derives, derived once (rules/layers.mjs, deriving). */
-  return deriving(state, () => choiceFor(state));
+  return deriving(state, () => {
+    const choice = choiceFor(state);
+    return choice ? {...choice, cancellation: cancellationFor(state, choice)} : choice;
+  });
 }
 function choiceFor(state) {
   const awaiting = state.awaiting;
   if (!awaiting) return null;
+  if (awaiting.kind === "rule-operation") return awaiting.choice;
   if (awaiting.kind === "mulligan-decision" || awaiting.kind === "mulligan-bottom" || awaiting.kind === "opening-hand")
     return mulliganChoice(state, awaiting);
   if (awaiting.kind === "effect-choice") return resolutionChoice(state, awaiting);
@@ -401,11 +407,49 @@ function choiceFor(state) {
 function resolutionAnswered(state, outcome) {
   const finished = outcome.status === "done" ? finishResolving(state) : [];
   const events = [...outcome.events, ...finished];
+  if (outcome.status === "done" && state.ruleOperation) {
+    const prefix = outcome.all ?? outcome.events;
+    state.ruleOperation.events.unshift(...prefix);
+    state.ruleOperation.reported += prefix.length;
+    return events;
+  }
   /* Each event is handed back once, as it happened; what triggers reads the whole resolution once it is done, the
      events before its questions too -- they triggered then, and wait for a player to receive priority (CR 603.2,
      603.3): the life Uro gained before asking for a land still triggers "whenever you gain life". */
   grantStepPriority(state, events, outcome.status === "done" ? [...(outcome.all ?? outcome.events), ...finished] : events);
   return events;
+}
+
+/** Each root operation names the existing caller responsible for finishing its state/priority work. */
+export function continueRuleOutcome(state, outcome, rng = null) {
+  if (outcome.after?.kind === "resolution") return resolutionAnswered(state, continueRuleResolution(state, outcome, rng));
+  if (outcome.status === "waiting") return outcome.events;
+  if (outcome.after?.kind === "state-based") {
+    const events = [...outcome.events];
+    collectTriggers(state, outcome.all);
+    const sba = checkStateBasedActions(state);
+    events.push(...sba); collectTriggers(state, sba);
+    if (!state.awaiting) grantStepPriority(state, events, []);
+    return events;
+  }
+  if (outcome.after?.kind === "after-resolving") {
+    const all = [...outcome.all], before = all.length;
+    afterResolving(state, all);
+    return [...outcome.events, ...all.slice(before)];
+  }
+  if (outcome.after?.kind === "after-action") {
+    state.priorityPlayer = outcome.after.player;
+    return afterAction(state, outcome.after.player, outcome.events, outcome.all);
+  }
+  if (outcome.after !== null && outcome.after !== undefined) throw new Error(`Unknown rule continuation: ${outcome.after.kind}`);
+  return outcome.events;
+}
+
+/** A live frame rechecks its objects after the player it asked leaves; no replay or automatic answer is invented. */
+export function answerRuleForDeparted(state, rng = null) {
+  if (!state.ruleOperation) return [];
+  if (state.awaiting?.kind === "rule-operation") state.awaiting = null;
+  return continueRuleOutcome(state, continueRuleOperation(state, rng), rng);
 }
 
 /**
@@ -448,6 +492,13 @@ export function goOnWithout(state, withdrawn) {
 export function resolveAwaiting(state, indices, amounts = null, rng = null, extra = {}) {
   const awaiting = state.awaiting;
   if (!awaiting) throw new Error("The engine is not waiting on anything");
+  if (extra.cancel === true) {
+    const cancel = cancellationFor(state, proposalChoice(state) ? null : awaitingChoice(state));
+    if (!cancel.allowed) throw new Error(cancel.reason);
+    if (cancel.kind === "abandon-action") return abandonProposal(state);
+    if (cancel.kind === "choose-none") {indices = []; amounts = null; extra = {...extra, cancel: false};}
+  }
+  if (awaiting.kind === "rule-operation") return continueRuleOutcome(state, answerRuleOperation(state, indices, amounts, rng, extra), rng);
 
   /* The mulligan is the one decision that consumes randomness, because keeping or not decides
      whether a library is shuffled. A generator is a closure and game state is plain data (§3.2.4),
@@ -498,9 +549,9 @@ export function resolveAwaiting(state, indices, amounts = null, rng = null, extr
   /* Escape's other cards, or a flashback cost's creatures, picked: the cast taken, its player holding priority after it
      (CR 117.3c). */
   /* A total divided among its targets (CR 601.2d): answered with an amount for each (rules/actions.mjs, costChoice). */
-  if (awaiting.kind === "choose-cost") return resolveCastCost(state, awaiting, indices, amounts);
+  if (awaiting.kind === "choose-cost") return retainProposal(state, awaiting.precommit, resolveCastCost(state, awaiting, indices, amounts));
   if (awaiting.kind === "choose-targets") {
-    if (awaiting.stackId === undefined) return resolveChooseTargets(state, awaiting, indices);
+    if (awaiting.stackId === undefined) return retainProposal(state, awaiting.precommit, resolveChooseTargets(state, awaiting, indices));
     const events = resolveTriggerCounted(state, awaiting, indices);
     collectTriggers(state, events);
     const after = [];
@@ -650,9 +701,9 @@ function arrive(state, events) {
     else if (state.drawBeat) state.awaiting = {kind: "draw-card", player: state.activePlayer};
     else draw(state, state.activePlayer, events);
   }
-  /* CR 714.3b: as the precombat main phase begins, the active player puts a lore counter on each Saga they control -- what
-     brings its next chapter. */
-  if (state.phase === "MAIN1") for (const id of state.zones.battlefield.filter((x) => state.objects[x].controller === state.activePlayer && (state.objects[x].subtypes ?? []).includes("Saga")))
+  /* CR 714.3c: a Saga advances only while it has a chapter ability, after type/control and ability changes. */
+  if (state.phase === "MAIN1") for (const id of state.zones.battlefield.filter((x) => controllerOf(state, x) === state.activePlayer
+    && subtypesOf(state, x).includes("Saga") && abilitiesOf(state, x).some((a) => a.kind === "triggered" && Number.isInteger(a.trigger?.chapter))))
     events.push(...runEffect(state, {effect: "putCounter", targets: [id], counter: "lore", count: 1}, {controller: state.activePlayer, source: id}));
   /* The combat steps' turn-based actions (CR 508.1, 509.1, 510.1) each stop the game and ask.
      `open` returns false when there is nothing to decide, and the step just proceeds. */

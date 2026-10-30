@@ -1,0 +1,8 @@
+/* Run from the worktree root: Get-Content <this file> -Raw | node --input-type=module */
+/* Raw exported planner contract counterexample; not claimed as an actual loaded-card reproduction. */
+import assert from "node:assert/strict";
+import {sourceTapPlans, parseManaCost} from "./game/engine/rules/mana.mjs";
+const units = [{id: 1, outputs: {C: {C: 1}}}, {id: 2, outputs: {C: {C: 2}}}];
+const plans = sourceTapPlans(units, {}, parseManaCost("{1}"), Infinity);
+console.log(JSON.stringify(plans));
+assert.deepEqual(plans.map(p => p.taps[0].id).sort(), [1,2], "equal display labels cannot hide distinct full output payloads");

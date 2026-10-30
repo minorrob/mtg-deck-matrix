@@ -1,0 +1,13 @@
+/* Run from the worktree root: Get-Content <this file> -Raw | node --input-type=module */
+import {runScenario} from './game/engine/cards/scenario.mjs';
+import {loadCardIndex} from './game/tools/engine-cards.mjs';
+import {legalActions,applyAction} from './game/engine/rules/actions.mjs';
+import {awaitingChoice,resolveAwaiting} from './game/engine/rules/turn.mjs';
+import {housePilot} from './game/engine/pilots/house-pilot.mjs';
+import {projectFor} from './game/engine/projection.mjs';
+const fixtures={Bird:{types:['Creature'],power:1,toughness:1,keywords:['Flying'],abilities:[{id:'m',kind:'mana',tapSelf:true,produces:{W:1}}]},Drake:{types:['Creature'],power:1,toughness:1,keywords:['Flying']}};
+const {state}=runScenario({name:'legal source/cost subset must be chosen by the pilot',setup:[{seat:0,zone:'hand',cards:["Sephara, Sky's Blade"]},{seat:0,zone:'battlefield',cards:['Bird','Bird','Drake','Drake','Drake','Drake']}],steps:[]},loadCardIndex().definition,fixtures);
+applyAction(state,0,legalActions(state,0).find(a=>a.kind==='cast'&&a.alternative!==undefined));
+const choice=awaitingChoice(state),answer=housePilot({seat:0}).answer(projectFor(state,0),choice);
+console.log(JSON.stringify({choice:choice.options.map(o=>({index:o.index,name:o.label})),answer}));
+resolveAwaiting(state,answer.indices);

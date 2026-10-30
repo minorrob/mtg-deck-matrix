@@ -213,8 +213,9 @@ eq(manaCard([{atom: "{T}"}, {atom: "exileFromGraveyard", selector: {}}]).definit
 const SQUEE = "Squee, Dubious Monarch", SQ_LANDS = ["Mountain", "Wastes", "Wastes", "Wastes"];
 {
   const s = table([at(0, "battlefield", ...SQ_LANDS), at(0, "graveyard", SQUEE, "Plains", "Island", "Bear", "Ogre", "Swamp"), at(1, "graveyard", SQUEE, "Elf", "Bear", "Ogre", "Plains")], 4);
-  /* Not tapped for, as an alternative cost never is: the mana first. Then the one offer, Rob's own. */
-  eq(offersOf(s, "cast", SQUEE).length, 0, "with its mana still in the lands it is not offered: an alternative cost is never tapped for");
+  eq(offersOf(s, "cast", SQUEE).length, 1, "its alternative cost can use the four available mana sources");
+  eq([Object.values(s.players[0].manaPool).reduce((a, b) => a + b, 0), s.zones.battlefield.filter(id => s.objects[id].tapped).length, s.stack.length],
+    [0, 0, 0], "offering the alternative commits no mana, tap or cast");
   tapFor(s, SQ_LANDS);
   const casts = offersOf(s, "cast", SQUEE);
   eq([casts.length, casts[0].from, s.objects[casts[0].objectId].owner, offersOf(s, "cast", SQUEE, 1).length], [1, "graveyard", 0, 0], "one offer, of Rob's own Squee; Maya, without priority, none");
@@ -247,7 +248,47 @@ const SQUEE = "Squee, Dubious Monarch", SQ_LANDS = ["Mountain", "Wastes", "Waste
   /* Two players, so Rob has drawn no land to play: his lands could pay for Squee from his graveyard, and that is something
      to do -- his priority is not passed for him (nothingToDo). */
   const s = table([at(0, "battlefield", ...SQ_LANDS), at(0, "graveyard", SQUEE, "Plains", "Island", "Bear", "Ogre")]);
-  eq([cardsIn(s, "hand", 0).length, offersOf(s, "cast", SQUEE).length, nothingToDo(s, 0)], [0, 0, false], "four other cards and the lands to pay: something to do");
+  eq([cardsIn(s, "hand", 0).length, offersOf(s, "cast", SQUEE).length, nothingToDo(s, 0)], [0, 1, false], "four other cards and the lands to pay: something to do");
+}
+/* Every four-of-five exile payment remains explicit after selecting the last three actual Wastes. */
+for (let left = 0; left < 5; left++) {
+  const s = table([at(0, "battlefield", ...SQ_LANDS, "Wastes"),
+    at(0, "graveyard", SQUEE, "Plains", "Island", "Bear", "Ogre", "Swamp")], 4);
+  const sourceIds = s.zones.battlefield.filter(id => s.objects[id].card === "Wastes" && s.objects[id].controller === 0);
+  const mountain = idOf(s, "Mountain"), cast = offersOf(s, "cast", SQUEE)[0];
+  eq([sourceIds.length, cast?.from, cast?.autoTap], [4, "graveyard", true], "the real alternative cast has four interchangeable colorless sources");
+  const unavailable = structuredClone(s);
+  for (const id of sourceIds) unavailable.objects[id].tapped = true;
+  eq(offersOf(unavailable, "cast", SQUEE), [], "one Mountain cannot pay the actual four-mana alternative");
+  const unchanged = structuredClone(unavailable);
+  throws(() => applyAction(unavailable, 0, cast), /not a legal action/, "forging the unfunded alternative is refused");
+  eq(unavailable, unchanged, "the unfunded refusal moves and pays nothing");
+  applyAction(s, 0, cast);
+  let question = awaitingChoice(s);
+  eq([question.cost, question.min, question.max, question.options.map(option => option.cardId)],
+    ["manaSource", 3, 3, sourceIds], "the actual three-of-four physical source choice is asked before any cost commits");
+  resolveAwaiting(s, [1, 2, 3]);
+  const reloaded = JSON.parse(JSON.stringify(s));
+  question = awaitingChoice(reloaded);
+  eq([question.cost, question.min, question.max], ["exileOthers", 4, 4], "completed funding proceeds to the real exile cost without reopening mana forever");
+  const bad = structuredClone(reloaded);
+  throws(() => resolveAwaiting(reloaded, [0, 0, 1, 2]), /Invalid selection/, "duplicate graveyard cost objects remain invalid after reload");
+  eq(reloaded, bad, "a refused cost answer preserves the saved funding proposal");
+  const indices = [0, 1, 2, 3, 4].filter(index => index !== left);
+  const names = indices.map(index => question.options[index].label).sort();
+  const events = resolveAwaiting(reloaded, indices);
+  eq(events.filter(event => event.kind === "GameEventCardTapped").map(event => event.data.fields.card.cardId).sort((a, b) => a - b),
+    [mountain, ...sourceIds.slice(1)].sort((a, b) => a - b), "only the chosen last three Wastes and required Mountain tap once");
+  eq(events.filter(event => event.kind === "GameEventManaPool").map(event => event.data.fields.source.cardId).sort((a, b) => a - b),
+    [mountain, ...sourceIds.slice(1)].sort((a, b) => a - b), "the same four physical sources actually produce the mana");
+  const entry = reloaded.stack.find(entry => entry.kind === "spell"), spell = reloaded.objects[entry?.objectId];
+  eq([spell?.card, entry?.cast?.from, spell?.spent?.R, spell?.spent?.C, Object.values(reloaded.players[0].manaPool).reduce((a, b) => a + b, 0), reloaded.objects[sourceIds[0]].tapped],
+    [SQUEE, "graveyard", 1, 3, 0, false], "the real alternative spends exactly four mana and keeps the unselected source untapped");
+  eq(cardsIn(reloaded, "exile").map(id => reloaded.objects[id].card).sort(), names, "the exact four chosen graveyard cards pay the other cost");
+  eq(events.filter(event => event.kind === "GameEventSpellAbilityCast" && event.data.fields.card.name === SQUEE).length,
+    1, "the paid spell is announced exactly once");
+  resolveAll(reloaded);
+  eq([reloaded.stack.length, reloaded.awaiting, reloaded.objects[idOf(reloaded, SQUEE)]?.zone], [0, null, "battlefield"], "the actual paid Squee resolves with no remaining cost question");
 }
 {
   /* Three other cards: no way to cast it from there, and nothing to do. */

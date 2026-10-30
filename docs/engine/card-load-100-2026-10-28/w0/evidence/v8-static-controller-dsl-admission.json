@@ -1,0 +1,42 @@
+{
+  "scope": "in-memory DSL admission test only; modified script is not a saved/fidelity-approved card",
+  "validation": {
+    "valid": true,
+    "errors": []
+  },
+  "compileProblems": [],
+  "compiled": true,
+  "resultingEffects": [
+    {
+      "effect": "effectUntil",
+      "layer": 2,
+      "targets": {
+        "target": 0
+      },
+      "apply": {
+        "controller": 1
+      },
+      "until": "end-of-turn"
+    },
+    {
+      "effect": "untap",
+      "targets": {
+        "target": 0
+      }
+    },
+    {
+      "effect": "pump",
+      "targets": {
+        "target": 0
+      },
+      "power": 0,
+      "toughness": 0,
+      "keywords": [
+        "Haste"
+      ]
+    }
+  ],
+  "compilerSource": "fdd17480e1e311dd0206dfdd2ebb24a67feefee1",
+  "savedCardRouteReproduced": false,
+  "productionFixDeferred": true
+}

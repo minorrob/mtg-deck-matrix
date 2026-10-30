@@ -1,0 +1,4 @@
+baseline: every suite passes unbroken
+caught completed counter child restores an expired protector patch -- tests/engine-entry-counter-order.mjs
+caught prefix tracking changes the old public counter result shape -- tests/engine-counters-replaced.mjs
+missed: []

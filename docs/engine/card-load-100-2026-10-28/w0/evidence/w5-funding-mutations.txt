@@ -1,0 +1,11 @@
+baseline: every suite passes unbroken
+caught exiled casts may tap sources -- tests/engine-load100-mana.mjs
+caught alternative casts may tap sources -- tests/engine-load100-mana.mjs
+caught funding prices the chosen alternative cost -- tests/engine-load100-mana.mjs
+caught alternative affordability includes untapped sources -- tests/engine-load100-mana.mjs
+caught public source choices have no twenty-four cap -- tests/engine-load100-mana.mjs
+caught payment enumeration has no twelve cap -- tests/engine-load100-mana.mjs
+caught public pool choices have no twelve cap -- tests/engine-load100-mana.mjs
+caught effect-paid choices have no twelve cap -- tests/engine-load100-mana.mjs
+caught unrevealable lands finish tapped entry -- tests/engine-load100-mana.mjs
+missed: []

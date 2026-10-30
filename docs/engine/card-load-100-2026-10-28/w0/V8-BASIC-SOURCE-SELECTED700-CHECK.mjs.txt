@@ -1,0 +1,21 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import {createHash} from 'node:crypto';
+import {pathToFileURL} from 'node:url';
+const root=pathToFileURL(process.cwd()+'/');
+const {main}=await import(new URL('game/tools/batch/check-cards.mjs',root));
+const names=JSON.parse(fs.readFileSync('../scratch/v8-basic-source-approved700-names.json','utf8'));
+assert.equal(names.length,700);assert.equal(new Set(names).size,700);
+const reviewRaw=fs.readFileSync('../scratch/v8-basic-source-inventory-review-544d8512.json');
+assert.equal(createHash('sha256').update(reviewRaw).digest('hex'),'64d2850834cbe2eb2911fbf052280ebaa603a6f7f763856ed0cc3ad8d8fc7544');
+const review=JSON.parse(reviewRaw.toString('utf8'));
+const expected=[...new Set(review.all1072EligibleCandidates.map(candidate=>candidate.card))].sort();
+assert.deepEqual(names,expected);
+const namesHash=createHash('sha256').update(JSON.stringify(names)).digest('hex');
+assert.equal(namesHash,createHash('sha256').update(JSON.stringify(expected)).digest('hex'));
+fs.writeFileSync('../scratch/v8-basic-source-approved700-transport.json',JSON.stringify({cards:700,fullIdentityStringsExact:true,
+  namesSha256:namesHash,approvedReviewSha256:createHash('sha256').update(reviewRaw).digest('hex'),renamedOrNormalized:false,
+  checker:'unchanged check-cards.mjs exported main; supported argv only'},null,2)+'\n');
+assert.equal(typeof process.argv[2],'string');
+process.exitCode=main(['--cards',names.join('|'),'--ability-ledger',path.resolve(process.argv[2])]);

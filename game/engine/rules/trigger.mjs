@@ -66,6 +66,7 @@ import {targetChoices, targetName, isHostile, isChoosing, targetCandidates, coun
    from your graveyard to your hand" (Squee, Goblin Nabob; `zone: "graveyard"`) moves its card out of
    the graveyard, so it functions there and only there (CR 113.6b, 113.6m). */
 import {isRingBearer} from "../keywords/ring.mjs";
+import {uncollectedSbaTriggerEvents, clearFinishedSbaTriggerReceipts} from "./sba-move-results.mjs";
 
 const WATCHING_ZONES = ["battlefield"];
 
@@ -429,6 +430,11 @@ function subjects(state, event, condition, sourceId, controller) {
   }
   /* "Whenever a player taps a land for mana" (Manabarbs): what was tapped, and who tapped it. */
   if (condition.on === "GameEventManaPool") return tappedForMana(state, fields, condition, sourceId, controller) ? [{card: fields.source?.cardId, player: fields.player?.playerId}] : [];
+  /* CR 706.2, 706.6: a roll watcher sees the final result of a retained die, with each roll instruction its own group. */
+  if (condition.on === "GameEventDieRolled") {
+    const player = fields.player?.playerId;
+    return whoseIs(condition.roller ?? "you", player, controller) ? [{player, rolled: fields.result, rollId: fields.rollId}] : [];
+  }
   /* "Whenever you draw a card", "whenever an opponent draws a card" (CR 121.1): the drawer. */
   if (condition.on === "GameEventCardChangeZone" && condition.drawn) {
     if (fields.drawn !== true) return [];
@@ -643,14 +649,16 @@ function causedBy(state, event, cause, context, departed = []) {
 
 /* TAPPED FOR MANA (CR 605.1b): a mana ability whose cost tapped its source -- by whom (`tapper`), what (`filter`, `self`,
    `enchanted`, the permanent this Aura enchants), and what it made (`produced`, "a permanent for {C}"). */
-function tappedForMana(state, fields, condition, sourceId, controller) {
+function tappedForMana(state, fields, condition, sourceId, controller, sourceWas = null) {
   if (fields.tapped !== true) return false;
   if (!whoseIs(condition.tapper ?? "you", fields.player?.playerId, controller)) return false;
   const tapped = fields.source?.cardId;
   if (condition.self && tapped !== sourceId) return false;
   if (condition.enchanted && state.objects[sourceId]?.attachedTo !== tapped) return false;
   if (condition.produced && !((fields.produced ?? {})[condition.produced] > 0)) return false;
-  if (condition.filter && !(state.objects[tapped] && matchesSelector({what: "permanent", ...condition.filter}, state, tapped, {controller, source: sourceId}))) return false;
+  if (condition.filter && !(state.objects[tapped]
+    ? matchesSelector({what:"permanent",...condition.filter},state,tapped,{controller,source:sourceId})
+    : sourceWas?.cardId === tapped && matchesLastKnown({what:"permanent",...condition.filter},sourceWas,{controller,source:sourceId}))) return false;
   return true;
 }
 
@@ -659,7 +667,7 @@ function tappedForMana(state, fields, condition, sourceId, controller) {
  * makes at once, to the player who tapped (its controller, for "its controller adds"). "One mana of any type that land
  * produced": one of what it made.
  */
-export function manaTriggered(state, event) {
+export function manaTriggered(state, event, sourceWas = null) {
   const fields = event?.data?.fields ?? {};
   const made = [];
   /* Its triggered mana abilities as they are after layer 6 (CR 613.1f): Ultima made an Elk by Oko adds no {C}. */
@@ -668,7 +676,7 @@ export function manaTriggered(state, event) {
     const holder = state.objects[id];
     for (const ability of held(id)) {
       const mana = ability.kind === "triggered" ? ability.trigger?.manaAbility : null;
-      if (!mana || !tappedForMana(state, fields, ability.trigger, id, holder.controller)) continue;
+      if (!mana || !tappedForMana(state, fields, ability.trigger, id, holder.controller, sourceWas)) continue;
       const [kind] = Object.keys(fields.produced ?? {}).filter((k) => fields.produced[k] > 0);
       /* "An additional one mana of the chosen color" (Utopia Sprawl): the color its permanent chose as it entered; none
          chosen, none. */
@@ -682,7 +690,7 @@ export function manaTriggered(state, event) {
      activated after whatever made it, so nothing it sees came first (CR 603.7a). */
   for (const d of state.delayedTriggers ?? []) {
     const mana = d.on?.manaAbility;
-    if (!mana || !tappedForMana(state, fields, d.on, d.source, d.controller)) continue;
+    if (!mana || !tappedForMana(state, fields, d.on, d.source, d.controller, sourceWas)) continue;
     /* Its controller's -- or, "that player adds", the player who tapped: "until end of turn, whenever a player taps an Island
        for mana, that player adds an additional {U}" (High Tide; cards/index.mjs, `toTapper`). */
     made.push({player: mana.toTapper === true ? fields.player?.playerId ?? d.controller : d.controller, mana: {...mana.mana}, source: d.source});
@@ -724,6 +732,7 @@ function inherentTriggers(state, event) {
 }
 
 export function collectTriggers(state, events) {
+  events = uncollectedSbaTriggerEvents(state, events);
   if (!state.pendingTriggers) state.pendingTriggers = [];
   recordArrivals(state, events);
   recordCounters(state, events);
@@ -811,7 +820,8 @@ export function collectTriggers(state, events) {
           /* Damage to players, "one or more" at once: once for each player dealt it; damage to "a Dragon you control", once
              for each creature dealt it. "Whenever a player discards one or more cards" (Tinybones, Pocket Nuisance): once for
              each player who discarded (CR 603.2c). */
-          const once = `${id}:${ability.id}${ability.trigger.on === "GameEventPlayerDamaged" || ability.trigger.loser !== undefined || ability.trigger.discarded ? `:${about.player}`
+          const once = `${id}:${ability.id}${ability.trigger.on === "GameEventDieRolled" ? `:${about.rollId}`
+            : ability.trigger.on === "GameEventPlayerDamaged" || ability.trigger.loser !== undefined || ability.trigger.discarded ? `:${about.player}`
             : ability.trigger.on === "GameEventCardDamaged" && ["creature", "enchanted"].includes(ability.trigger.to) ? `:${about.card}`
             /* Counters of any kind put on a permanent (Generous Patron): once for each permanent they were put on. */
             : ability.trigger.on === "GameEventCardCounters" && ability.trigger.counter === "any" ? `:${about.card}` : ""}`;
@@ -1005,6 +1015,7 @@ export function collectTriggers(state, events) {
   /* What was made during this action has now been read past (CR 603.7a), and waits for the next. */
   for (const d of state.delayedTriggers ?? []) if (d.fresh) delete d.fresh;
   for (const {at, times} of again) for (let n = 0; n < times; n += 1) state.pendingTriggers.push(structuredClone(state.pendingTriggers[at]));
+  clearFinishedSbaTriggerReceipts(state);
   return state.pendingTriggers.length;
 }
 

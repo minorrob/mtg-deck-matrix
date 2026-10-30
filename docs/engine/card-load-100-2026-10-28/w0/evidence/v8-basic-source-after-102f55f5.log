@@ -1,0 +1,11 @@
+ability ledger: C:\Users\robmi\CrankMagic\worktrees\load100\scratch\v8-basic-source-after-102f55f5.json
+5 selected definitions of 6430
+FAIL Aang, Swift Savior // Aang and La, Ocean's Fury | Flashed in on Maya's turn: airbends her 5/5 spell -- she may cast it again for {2}: Forest has 2 matching actions; select its physical source, ability, targets, cost or mana explicitly
+FAIL Aang, Swift Savior // Aang and La, Ocean's Fury | Waterbend {8}, its creatures tapped to help: transformed into Aang and La, a 5/5; attacking, a +1/+1 counter on each tapped creature of Rob's: Wastes has 6 matching actions; select its physical source, ability, targets, cost or mana explicitly
+FAIL Aether Channeler | Enters, second mode: another nonland permanent back to its owner's hand (an opponent's Bear): Wastes has 2 matching actions; select its physical source, ability, targets, cost or mana explicitly
+FAIL Aether Helix | Maya's Bear goes back to her hand, and Rob's Relic comes back from his graveyard to his: Wastes has 3 matching actions; select its physical source, ability, targets, cost or mana explicitly
+FAIL Aether Helix | An instant in the graveyard is no permanent card: with only a Zap there, Helix cannot be cast: Wastes has 3 matching actions; select its physical source, ability, targets, cost or mana explicitly
+FAIL Agadeem's Awakening // Agadeem, the Undercrypt | Any number includes none: Swamp has 3 matching actions; select its physical source, ability, targets, cost or mana explicitly
+FAIL Agadeem's Awakening // Agadeem, the Undercrypt | Cast with X of 1 it reaches only mana value 1 or less: Swamp has 3 matching actions; select its physical source, ability, targets, cost or mana explicitly
+17 scenarios, 7 failed
+ability coverage: 4 of 14 reached by passing scenarios (0 by runtime-removal proof); 10 unreached; diagnostic scope only

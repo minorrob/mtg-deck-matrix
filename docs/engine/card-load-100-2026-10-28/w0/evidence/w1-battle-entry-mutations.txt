@@ -1,0 +1,37 @@
+baseline: every suite passes unbroken
+caught Oracle compiler identity omits defense -- tests/engine-battles.mjs
+caught Python writer identity omits defense -- tests/engine-battles.mjs
+caught malformed printed defense admitted -- tests/engine-battles.mjs
+caught Battle may omit printed defense -- tests/engine-battles.mjs
+caught compiler drops printed defense -- tests/engine-battles.mjs
+caught compiled face drops defense -- tests/engine-battles.mjs
+caught state constructor drops defense -- tests/engine-battles.mjs
+caught face switch drops defense -- tests/engine-battles.mjs
+caught copy application drops defense -- tests/engine-battles.mjs
+caught hidden card identity drops defense -- tests/engine-battles.mjs
+caught zone change drops defense -- tests/engine-battles.mjs
+caught derived printed defense absent -- tests/engine-battles.mjs
+caught current defense stays printed -- tests/engine-battles.mjs
+caught non-Battle retains defense characteristic -- tests/engine-battles.mjs
+caught last-known current defense absent -- tests/engine-battles.mjs
+caught last-known printed defense absent -- tests/engine-battles.mjs
+caught last-known copiable defense absent -- tests/engine-battles.mjs
+caught copy construction drops defense -- tests/engine-battles.mjs
+caught redirected entrant asks protector -- tests/engine-battles.mjs
+caught no protector question -- tests/engine-battles.mjs
+caught departed opponents remain eligible -- tests/engine-battles.mjs
+caught Siege controller eligible -- tests/engine-battles.mjs
+caught untyped Battle gets an opponent -- tests/engine-battles.mjs
+caught explicit protector replaced by first opponent -- tests/engine-battles.mjs
+caught saved protector answer forgotten -- tests/engine-battles.mjs
+caught non-Battle gets defense counters -- tests/engine-battles.mjs
+caught lost intrinsic ability still gives defense -- tests/engine-battles.mjs
+caught printed entry defense omitted -- tests/engine-battles.mjs
+caught entry defense read from empty prospective counters -- tests/engine-battles.mjs
+caught face-down Battle fields exposed -- tests/engine-battles.mjs
+caught private card gets battlefield Battle fields -- tests/engine-battles.mjs
+caught non-Battle gets Battle projection -- tests/engine-battles.mjs
+caught projection omits printed defense -- tests/engine-battles.mjs
+caught projection reports printed as current defense -- tests/engine-battles.mjs
+caught projection omits protector -- tests/engine-battles.mjs
+missed: []

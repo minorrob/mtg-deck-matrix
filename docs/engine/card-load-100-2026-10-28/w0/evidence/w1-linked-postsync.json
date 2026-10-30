@@ -1,0 +1,46 @@
+{
+  "source": "783085bbc43d47879690c897ee3baf1bc31f590a",
+  "publishedParent": "b04dd2f423e8ca820af87faf784c73ca48f5b8a8",
+  "frozenProofSource": "105e39dc48047f74d752358d60eaa3b5b2aeb221",
+  "frozenFilesChanged": [],
+  "flatNodeSuites": 715,
+  "checks": [
+    {
+      "reader": "tests/engine-battle-linked-returns.mjs",
+      "exitCode": 0,
+      "sha256": "cc298d5f515667fb42ceb9b32428b269aca73710ad8eb925be5bb121926a23c8",
+      "evidence": "evidence/w1-postsync-engine-battle-linked-returns.log"
+    },
+    {
+      "reader": "tests/engine-cards.mjs",
+      "exitCode": 0,
+      "sha256": "d43e6dbe6a24d1bd881cfceabf987d46c18093ca045874f0249aee1527977f59",
+      "evidence": "evidence/w1-postsync-engine-cards.log"
+    },
+    {
+      "reader": "tests/data-integrity.mjs",
+      "exitCode": 0,
+      "sha256": "78385273d37f68ed6e046d71d0f47ebc7588f069dcc4b6e28189dfb5b45f3cb0",
+      "evidence": "evidence/w1-postsync-data-integrity.log"
+    },
+    {
+      "reader": "tests/feature-wiring.mjs",
+      "exitCode": 0,
+      "sha256": "ac8532270a8766204a50ec5ba637ed61d23b6c2bcbfb899cb2adf6183e65fd67",
+      "evidence": "evidence/w1-postsync-feature-wiring.log"
+    },
+    {
+      "reader": "tests/asset-versions.mjs",
+      "exitCode": 0,
+      "sha256": "03d3bf4a0f314643cb44a9e9af32fed0cb4ac3751bd1e802339e90502cb38aad",
+      "evidence": "evidence/w1-postsync-asset-versions.log"
+    },
+    {
+      "reader": "tests/generators.mjs",
+      "exitCode": 0,
+      "sha256": "9d4e1fb0cf7411b7bd0de1c7cf942a8e5de198711ef58c9b44edc3bca46519ed",
+      "evidence": "evidence/w1-postsync-generators.log"
+    }
+  ],
+  "rootGatesClosed": []
+}

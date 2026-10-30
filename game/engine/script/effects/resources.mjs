@@ -21,7 +21,7 @@ import {runFollowUps} from "./index.mjs";
 import {selectMatching} from "../filter.mjs";
 import {event, cardRef, playersFor} from "./zones.mjs";
 import {markDeathtouch, lifelinkFrom} from "../../keywords/combat.mjs";
-import {typesOf, powerOf, toughnessOf, keywordsOf, isKeywordCounter, controllerOf} from "../../rules/layers.mjs";
+import {typesOf, powerOf, toughnessOf, keywordsOf, isKeywordCounter, controllerOf, lastKnown} from "../../rules/layers.mjs";
 import {cantGainLife, lifeGained, lifeLost, countersPlaced, playerCountersPlaced, placeCounters, ruleChanged} from "../../rules/statics.mjs";
 import {playerRuled, leaveGame, monarchLeft} from "../../rules/sba.mjs";
 import {amountOf} from "../amount.mjs";
@@ -171,21 +171,23 @@ export function loseLife(state, params, context) {
  */
 /* What a damage effect deals, and to whom: the source, the amount, and each hit. */
 function damageHits(state, params, context) {
+  const named = Array.isArray(params.from) ? params.from[0] ?? null : context.source ?? context.lastKnown?.cardId ?? null;
+  const source = named !== null && state.objects[named] ? named : null;
+  // CR 608.2h: only this source's last known qualities can determine protection after it leaves.
+  const sourceLastKnown = source === null ? [context.lastKnown, context.about?.lastKnown]
+    .find(was => named !== null && was?.cardId === named) ?? null : null;
   /* "X damage divided as you choose among any number of target creatures" (Monstrous Onslaught; CR 601.2d): `divided`, the
      target it was divided among, each still legal dealt what its caster gave it as it was cast (rules/stack.mjs, `division`)
      -- an illegal one's share dealt to nothing (CR 608.2b). */
   if (params.divided !== undefined) {
     const division = context.division?.[params.divided] ?? {};
     const hits = (params.targets ?? []).map((id) => ({toCard: id, amount: division[id] ?? 0}));
-    const named = Array.isArray(params.from) ? params.from[0] ?? null : context.source ?? null;
-    return {source: named !== null && state.objects[named] ? named : null, amount: Math.max(0, ...hits.map((h) => h.amount)), hits};
+    return {source, sourceLastKnown, amount: Math.max(0, ...hits.map((h) => h.amount)), hits};
   }
   const amount = params.amount ?? 0;
   /* The spell or ability, or a creature the trigger is about: "it deals that much damage to each other opponent". One that
      has left the battlefield since (a Dragon dealt lethal damage) still deals it, as a departed ability source does
      (rules/stack.mjs): with no object left to read for lifelink or deathtouch. */
-  const named = Array.isArray(params.from) ? params.from[0] ?? null : context.source ?? null;
-  const source = named !== null && state.objects[named] ? named : null;
   const hits = [
     ...(params.targets ?? []).map((id) => ({toCard: id})),
     ...(params.toPlayer === undefined ? [] : [{toPlayer: params.toPlayer}]),
@@ -195,7 +197,67 @@ function damageHits(state, params, context) {
       .filter((player) => !(params.exceptThatPlayer === true && player === context.about?.player))
       .map((player) => ({toPlayer: player})),
   ];
-  return {source, amount, hits};
+  return {source, sourceLastKnown, amount, hits};
+}
+
+/** Commit a proposal whose replacement choices are finished; no replacement is replayed here. */
+export function commitDamageProposal(state, proposal, context = {}, dealt = [], {followUps = true} = {}) {
+  const events = [];
+  const source = proposal.sourceId !== null && proposal.sourceId !== undefined && state.objects[proposal.sourceId] ? proposal.sourceId : null;
+  const was = source === null && proposal.sourceLastKnown?.cardId === proposal.sourceId ? proposal.sourceLastKnown : null;
+  const sourceRef = source === null ? proposal.sourceRef ?? (was ? {cardId:was.cardId,name:was.name,owner:was.owner,controller:was.controller,faceDown:false}:null)
+    : {...cardRef(state,source),controller:controllerOf(state,source)};
+  /* What follows a prevention -- "each opponent mills that many cards" -- immediately afterward (CR 615.5). */
+  if (proposal.prevented === true || proposal.amount <= 0) return followUps ? runFollowUps(state, proposal) : [];
+  /* Dealt where the replacements left it: a redirection (CR 614.9) moves it from a player to a permanent. */
+  const toPlayer = proposal.toPlayer !== undefined && proposal.toPlayer !== null ? proposal.toPlayer : undefined;
+  const toCard = toPlayer === undefined ? proposal.toCard : undefined;
+  if (toCard !== undefined && state.objects[toCard]) dealt.push(toCard);
+  /* INFECT (CR 702.90b-c, batch 78): from a source with infect, damage to a player is poison counters, not life lost, and
+     damage to a creature is -1/-1 counters, not damage marked -- still damage dealt. */
+  const infect = source !== null ? infects(state, source) : was?.keywords?.includes("Infect") === true;
+  /* Whoever controls the source puts the counters infect makes (CR 702.90b-c): "if you would put counters". */
+  const putter = infect ? (state.objects[source] ? controllerOf(state, source) : was?.controller ?? null) : null;
+  /* The source has dealt damage (CR 120.1), for as long as it is this object (CR 400.7): "as long as Ratonhnhaké꞉ton
+     hasn't dealt damage yet" (script/filter.mjs, hasDealtDamage) -- marked below where it is dealt, to a player or to a
+     permanent; damage prevented in full was never dealt (above). */
+  if (toPlayer !== undefined) {
+    if (source !== null) state.objects[source].hasDealtDamage = true;
+    /* A player dealt noncombat damage this turn, infect's included (CR 702.90b: still damage dealt): "activate only if an
+       opponent has been dealt noncombat damage this turn" (Grim Repriser; script/amount.mjs, playersDealtNoncombatDamage).
+       rules/turn.mjs clears it as a turn begins. */
+    state.players[toPlayer].noncombatDamagedThisTurn = true;
+    /* And how much, combat damage counted beside it (rules/combat.mjs): "if an opponent was dealt 7 or more damage this turn"
+       (Spinerock Knoll; script/amount.mjs, damageTakenThisTurn). */
+    state.players[toPlayer].damagedThisTurn = (state.players[toPlayer].damagedThisTurn ?? 0) + proposal.amount;
+    if (infect) events.push(...givePoison(state, toPlayer, proposal.amount, putter));
+    else changeLife(state, toPlayer, -proposal.amount, events);
+    events.push(event("GameEventPlayerDamaged", state, {
+      source: sourceRef,
+      target: {playerId: toPlayer, name: state.players[toPlayer].name},
+      amount: proposal.amount, combat: false, infect,
+    }));
+  } else if (state.objects[toCard]) {
+    /* EXCESS DAMAGE (CR 120.4a): "if excess damage was dealt to that permanent this way" (Violent Echoes) -- past lethal
+       to a creature (its damage marked counted; from deathtouch, anything past 1, 702.2c), past its loyalty to a
+       planeswalker, the greater for one that is both -- read before it is dealt, and kept for the effects after it. */
+    context.excessDamage = (context.excessDamage ?? 0) + excessOf(state, toCard, proposal.amount, source, was);
+    if (source !== null) state.objects[source].hasDealtDamage = true;
+    damagePermanent(state, toCard, proposal.amount, events, {infect, by: putter});
+    events.push(event("GameEventCardDamaged", state, {
+      card: cardRef(state, toCard),
+      source: sourceRef,
+      amount: proposal.amount, combat: false,
+    }));
+    /* CR 702.2b: deathtouch is any damage from the source, not only combat damage. */
+    markDeathtouch(state, source, toCard);
+    if (was?.keywords?.includes("Deathtouch") && state.objects[toCard]) state.objects[toCard].deathtouched = true;
+  }
+  /* CR 702.15b: so is lifelink -- its controller gains that much life as the damage is dealt. */
+  const linked = source === null ? (was?.keywords?.includes("Lifelink") ? proposal.amount : 0) : lifelinkFrom(state, source, proposal.amount);
+  if (linked > 0 && state.objects[source]) changeLife(state, controllerOf(state,source), linked, events);
+  else if (linked > 0 && was && !state.players[was.controller]?.lost) changeLife(state, was.controller, linked, events);
+  return events;
 }
 
 export function dealDamage(state, params, context) {
@@ -204,7 +266,7 @@ export function dealDamage(state, params, context) {
      remembered for the effects after it -- none, when there was no damage to deal. */
   const dealt = [];
   if (params.remember) context.remembered = dealt;
-  const {source, amount, hits} = damageHits(state, params, context);
+  const {source, sourceLastKnown, amount, hits} = damageHits(state, params, context);
   if (amount <= 0) return events;
   /* "If the creature you control has trample, excess damage is dealt to that creature's controller instead" (Ram Through;
      wave 4d L3, CR 120.4a, 702.19b): `trampleExcess` -- from a source with trample as this resolves, a creature is dealt
@@ -223,69 +285,24 @@ export function dealDamage(state, params, context) {
        the order that leaves the least where nobody was asked (rules/replacement.mjs). */
     const {proposal} = applyReplacements(state, {
       event: "damage", toPlayer: hit.toPlayer, toCard: hit.toCard, amount: hit.amount ?? amount, sourceId: source, combat: false,
+      ...(sourceLastKnown ? {sourceLastKnown} : {}),
     }, {orders: params.damageOrders?.[hitKey(source, hit.toPlayer, hit.toCard)] ?? []});
-    /* What follows a prevention -- "each opponent mills that many cards" -- immediately afterward (CR 615.5). */
-    if (proposal.prevented === true || proposal.amount <= 0) { events.push(...runFollowUps(state, proposal)); continue; }
-    /* Dealt where the replacements left it: a redirection (CR 614.9) moves it from a player to a permanent. */
-    const toPlayer = proposal.toPlayer !== undefined && proposal.toPlayer !== null ? proposal.toPlayer : undefined;
-    const toCard = toPlayer === undefined ? proposal.toCard : undefined;
-    if (toCard !== undefined && state.objects[toCard]) dealt.push(toCard);
-    /* INFECT (CR 702.90b-c, batch 78): from a source with infect, damage to a player is poison counters, not life lost, and
-       damage to a creature is -1/-1 counters, not damage marked -- still damage dealt. */
-    const infect = source !== null && infects(state, source);
-    /* Whoever controls the source puts the counters infect makes (CR 702.90b-c): "if you would put counters". */
-    const putter = infect && state.objects[source] ? controllerOf(state, source) : null;
-    /* The source has dealt damage (CR 120.1), for as long as it is this object (CR 400.7): "as long as Ratonhnhaké꞉ton
-       hasn't dealt damage yet" (script/filter.mjs, hasDealtDamage) -- marked below where it is dealt, to a player or to a
-       permanent; damage prevented in full was never dealt (above). */
-    if (toPlayer !== undefined) {
-      if (source !== null) state.objects[source].hasDealtDamage = true;
-      /* A player dealt noncombat damage this turn, infect's included (CR 702.90b: still damage dealt): "activate only if an
-         opponent has been dealt noncombat damage this turn" (Grim Repriser; script/amount.mjs, playersDealtNoncombatDamage).
-         rules/turn.mjs clears it as a turn begins. */
-      state.players[toPlayer].noncombatDamagedThisTurn = true;
-      /* And how much, combat damage counted beside it (rules/combat.mjs): "if an opponent was dealt 7 or more damage this turn"
-         (Spinerock Knoll; script/amount.mjs, damageTakenThisTurn). */
-      state.players[toPlayer].damagedThisTurn = (state.players[toPlayer].damagedThisTurn ?? 0) + proposal.amount;
-      if (infect) events.push(...givePoison(state, toPlayer, proposal.amount, putter));
-      else changeLife(state, toPlayer, -proposal.amount, events);
-      events.push(event("GameEventPlayerDamaged", state, {
-        source: source === null ? null : cardRef(state, source),
-        target: {playerId: toPlayer, name: state.players[toPlayer].name},
-        amount: proposal.amount, combat: false, infect,
-      }));
-    } else if (state.objects[toCard]) {
-      /* EXCESS DAMAGE (CR 120.4a): "if excess damage was dealt to that permanent this way" (Violent Echoes) -- past lethal
-         to a creature (its damage marked counted; from deathtouch, anything past 1, 702.2c), past its loyalty to a
-         planeswalker, the greater for one that is both -- read before it is dealt, and kept for the effects after it. */
-      context.excessDamage = (context.excessDamage ?? 0) + excessOf(state, toCard, proposal.amount, source);
-      if (source !== null) state.objects[source].hasDealtDamage = true;
-      damagePermanent(state, toCard, proposal.amount, events, {infect, by: putter});
-      events.push(event("GameEventCardDamaged", state, {
-        card: cardRef(state, toCard),
-        source: source === null ? null : cardRef(state, source),
-        amount: proposal.amount, combat: false,
-      }));
-      /* CR 702.2b: deathtouch is any damage from the source, not only combat damage. */
-      markDeathtouch(state, source, toCard);
-    }
-    /* CR 702.15b: so is lifelink -- its controller gains that much life as the damage is dealt. */
-    const linked = source === null ? 0 : lifelinkFrom(state, source, proposal.amount);
-    if (linked > 0 && state.objects[source]) changeLife(state, state.objects[source].controller, linked, events);
+    events.push(...commitDamageProposal(state, proposal, context, dealt));
   }
   return events;
 }
 
 /* How much of `amount` dealt to this permanent now would be excess damage (CR 120.4a). */
-function excessOf(state, id, amount, source) {
+function excessOf(state, id, amount, source, sourceLastKnown = null) {
   const types = typesOf(state, id), object = state.objects[id];
   let excess = 0;
   if (types.includes("Creature")) {
-    const deathtouch = source !== null && state.objects[source] && keywordsOf(state, source).includes("Deathtouch");
+    const deathtouch = source !== null && state.objects[source] ? keywordsOf(state, source).includes("Deathtouch") : sourceLastKnown?.keywords?.includes("Deathtouch");
     const lethal = Math.max(0, toughnessOf(state, id) - (object.damage ?? 0));
     excess = Math.max(excess, amount - (deathtouch ? Math.min(lethal, 1) : lethal));
   }
   if (types.includes("Planeswalker")) excess = Math.max(excess, amount - (object.counters?.loyalty ?? 0));
+  if (types.includes("Battle")) excess = Math.max(excess, amount - (object.counters?.defense ?? 0));
   return Math.max(0, excess);
 }
 
@@ -320,12 +337,18 @@ export function damagePermanent(state, id, amount, events, {infect = false, by =
      or not, marked, loyalty removed or -1/-1 counters from infect, all damage dealt (120.3c-d) -- counted for this turn
      only (state/index.mjs, usesThisTurn), and for this object only: one that leaves and returns is a new one (CR 400.7). */
   recordUse(state, id, "dealt damage");
+  if (types.includes("Battle")) {
+    const before = object.counters.defense ?? 0;
+    object.counters.defense = Math.max(0, before - amount);
+    events.push(event("GameEventCardCounters", state, {card: cardRef(state, id), type: "defense", oldValue: before, newValue: object.counters.defense}));
+  }
   if (types.includes("Planeswalker")) {
     const before = object.counters.loyalty ?? 0;
     object.counters.loyalty = Math.max(0, before - amount);
     events.push(event("GameEventCardCounters", state, {card: cardRef(state, id), type: "loyalty", oldValue: before, newValue: object.counters.loyalty}));
     if (!types.includes("Creature")) return;
   }
+  if (types.includes("Battle") && !types.includes("Creature")) return;
   if (infect) addCounters(state, id, "-1/-1", amount, events, by);
   else object.damage += amount;
 }
@@ -389,6 +412,41 @@ function damageCalls(state, effect, context) {
   return [];
 }
 
+/** Plain damage events planned together before replacement questions or any damage is committed. */
+export function damageEffectProposals(state, effect, context) {
+  return damageCalls(state,effect,context).flatMap(([params,ctx]) => {
+    const {source,sourceLastKnown,amount,hits} = damageHits(state,params,ctx);
+    if (amount <= 0) return [];
+    const snapshot = source !== null ? lastKnown(state,source) : sourceLastKnown;
+    if (params.trampleExcess === true && snapshot?.keywords?.includes("Trample")) for (const hit of [...hits]) {
+      if (hit.toCard === undefined || !state.objects[hit.toCard] || !typesOf(state,hit.toCard).includes("Creature")) continue;
+      const excess=excessOf(state,hit.toCard,amount,source,snapshot);
+      if (excess > 0) {hit.amount=amount-excess;hits.push({toPlayer:controllerOf(state,hit.toCard),amount:excess});}
+    }
+    return hits.map(hit => ({event:"damage",...hit,amount:hit.amount ?? amount,sourceId:source ?? snapshot?.cardId ?? null,
+      combat:false,...(snapshot?{sourceLastKnown:snapshot}:{}),sourceRef:source !== null ? {...cardRef(state,source),controller:snapshot.controller}
+        : snapshot ? {cardId:snapshot.cardId,name:snapshot.name,owner:snapshot.owner,controller:snapshot.controller,faceDown:false}:null,context:structuredClone(ctx)}));
+  });
+}
+
+/** Refresh only still-live original sources before a player's cards and control effects leave together. */
+export function refreshPendingDamageSources(state) {
+  const refreshContext=context=>{
+    if (context?.source != null && state.objects[context.source]) context.lastKnown=lastKnown(state,context.source);
+  };
+  for (const frame of state.ruleOperation?.frames ?? []) {
+    if (["damage-effect","outside-effects","outside-repeat"].includes(frame.kind)) refreshContext(frame.context);
+    for (const p of frame.proposals ?? []) {
+      if (p.event !== "damage") continue;
+      if (p.sourceId != null && state.objects[p.sourceId]) {
+        p.sourceLastKnown=lastKnown(state,p.sourceId);
+        p.sourceRef={...cardRef(state,p.sourceId),controller:p.sourceLastKnown.controller};
+      }
+      for (const followUp of p.followUps ?? []) refreshContext(followUp.context);
+    }
+  }
+}
+
 /**
  * The first hit of this damage effect whose replacement effects' order is the affected player's to choose and not yet
  * chosen (CR 616.1), given `answers` (by hit, `hitKey`): `{player, proposal, options, key}`, or null when there is none.
@@ -397,7 +455,7 @@ function damageCalls(state, effect, context) {
 export function damageQuestion(state, effect, context, answers = {}) {
   if (!DAMAGING[effect?.effect] || !damageChoicesPossible(state)) return null;
   for (const [params, ctx] of damageCalls(state, effect, context)) {
-    const {source, amount, hits} = damageHits(state, params, ctx);
+    const {source, sourceLastKnown, amount, hits} = damageHits(state, params, ctx);
     if (amount <= 0) continue;
     for (const hit of hits) {
       const key = hitKey(source, hit.toPlayer, hit.toCard);
@@ -405,6 +463,7 @@ export function damageQuestion(state, effect, context, answers = {}) {
          storage.mjs, lostIn) -- damage to a player has no `toCard` at all, never an undefined one (Ajani Steadfast's emblem
          and Hedron-Field Purists, ordered for a Lightning Bolt at their controller). */
       const {question} = applyReplacements(state, {event: "damage", ...(hit.toPlayer !== undefined ? {toPlayer: hit.toPlayer} : {}),
+        ...(sourceLastKnown ? {sourceLastKnown} : {}),
         ...(hit.toCard !== undefined ? {toCard: hit.toCard} : {}), amount, sourceId: source, combat: false},
         {orders: answers[key] ?? [], askable: true, dry: true});
       if (question) return {...question, key};
@@ -466,7 +525,7 @@ export function loseGame(state, params, context) {
  * `rollDie` -- "roll a d20" (Ancient Copper Dragon; wave 4c; CR 706.1-706.2): its controller rolls a die of `sides` sides,
  * each result as likely as any other -- from the game's random stream (rng.mjs), as a shuffle is, never chosen. The result
  * is what follows reads, "a number of Treasure tokens equal to the result" (`{dieRolled: true}`, script/amount.mjs), and
- * said to everyone. Nothing yet modifies a roll or watches for one ("whenever you roll a die", CR 706.2's results changed).
+ * said to everyone. Die-roll watchers see the final result (rules/trigger.mjs); modifiers remain separate operation work.
  */
 export function rollDie(state, params, context, rng = null) {
   /* "Roll the planar die" (Fractured Powerstone; `planar: true`, a six-sided die, CR 901.3a): in a game that isn't a
@@ -483,7 +542,8 @@ export function rollDie(state, params, context, rng = null) {
   /* "Choose 1, 2, or 3 at random" (Tibalt's Trickery; card load w4d L1): `atRandom`, a number chosen at random -- no die is
      rolled (CR 706.1), so nothing that watches a roll sees it -- read after it as a die's result is ({dieRolled: true}). */
   if (params.atRandom === true) return [event("GameEventNumberChosen", state, {player: {playerId: context.controller, name: state.players[context.controller]?.name}, of: params.sides, result})];
-  return [event("GameEventDieRolled", state, {player: {playerId: context.controller, name: state.players[context.controller]?.name}, sides: params.sides, result})];
+  return [event("GameEventDieRolled", state, {player: {playerId: context.controller, name: state.players[context.controller]?.name},
+    sides: params.sides, result, rollId: `roll:${state.nextTimestamp++}`})];
 }
 
 /**

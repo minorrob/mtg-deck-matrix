@@ -47,7 +47,7 @@
         {
           "id": "jace-surveil",
           "kind": "activated",
-          "text": "−1: Surveil 1.",
+          "text": "âˆ’1: Surveil 1.",
           "targets": [],
           "loyalty": -1,
           "timing": "sorcery",
@@ -69,7 +69,7 @@
         {
           "id": "jace-draw",
           "kind": "activated",
-          "text": "−3: Draw a card.",
+          "text": "âˆ’3: Draw a card.",
           "targets": [],
           "loyalty": -3,
           "timing": "sorcery",
@@ -198,13 +198,25 @@
       ],
       "steps": [
         {
-          "tap": "Forest"
+          "tap": "Forest",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
-          "tap": "Wastes"
+          "tap": "Wastes",
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
         },
         {
           "cast": "Song of the Dryads",
@@ -600,6 +612,210 @@
               "G": 1
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "Song keeps the mana Urza's Saga gained from its chapter, and stops its Saga progression",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Urza's Saga",
+            "Song of the Dryads"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "play": "Urza's Saga"
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Song of the Dryads",
+          "targets": [
+            {
+              "card": "Urza's Saga"
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "expect": [
+            {
+              "offers": {
+                "kind": "activate-mana",
+                "card": "Urza's Saga"
+              },
+              "count": 2
+            }
+          ]
+        },
+        {
+          "to": {
+            "turn": 4,
+            "phase": "MAIN1"
+          }
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "counters": {
+            "card": "Urza's Saga",
+            "counter": "lore",
+            "count": 1
+          }
+        },
+        {
+          "offers": {
+            "kind": "activate-mana",
+            "card": "Urza's Saga"
+          },
+          "count": 2
+        },
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": []
+        }
+      ]
+    },
+    {
+      "name": "All Is Dust spares the enchanted colorless permanent while sacrificing Song and other colored permanents",
+      "seats": 3,
+      "setup": [
+        {
+          "seat": 0,
+          "zone": "battlefield",
+          "cards": [
+            "Forest",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Wastes",
+            "Bear"
+          ]
+        },
+        {
+          "seat": 0,
+          "zone": "hand",
+          "cards": [
+            "Song of the Dryads",
+            "All Is Dust"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Big Bear"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "tap": "Forest"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "Song of the Dryads",
+          "targets": [
+            {
+              "card": "Big Bear",
+              "seat": 1
+            }
+          ]
+        },
+        {
+          "resolve": true
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "tap": "Wastes"
+        },
+        {
+          "cast": "All Is Dust"
+        },
+        {
+          "resolve": true
+        }
+      ],
+      "expect": [
+        {
+          "seat": 0,
+          "zone": "graveyard",
+          "cards": [
+            "Song of the Dryads",
+            "Bear",
+            "All Is Dust"
+          ]
+        },
+        {
+          "seat": 1,
+          "zone": "battlefield",
+          "cards": [
+            "Big Bear"
+          ]
+        },
+        {
+          "seat": 1,
+          "stats": {
+            "card": "Big Bear",
+            "power": 5,
+            "toughness": 5
+          }
         }
       ]
     }

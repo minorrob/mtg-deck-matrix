@@ -1,0 +1,9 @@
+{
+  "scope": "additive diagnostic clone; no saved original added to pilot",
+  "existingLiteralUnchanged": {
+    "zone": "battlefield",
+    "index": 0
+  },
+  "fullOriginalAssertionsPassed": 5,
+  "strict": true
+}

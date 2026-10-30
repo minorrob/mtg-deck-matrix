@@ -1,0 +1,11 @@
+{
+  "scope": "additive diagnostic clone, not another selected saved original",
+  "originalPilotRetained": true,
+  "existingLiteralPreservedByteExact": true,
+  "existingOriginalUnmodified": true,
+  "newReferences": 3,
+  "inconsistentIndexExcludesEntireCandidate": true,
+  "differingLiteralExcludesEntireCandidate": true,
+  "excludedInputsUnmodified": true,
+  "source": "644d844bab026329b08028988f515074bd2da7aa"
+}

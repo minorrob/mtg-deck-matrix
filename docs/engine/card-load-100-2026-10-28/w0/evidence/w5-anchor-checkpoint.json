@@ -1,0 +1,7 @@
+{
+  "source": "56abcb3c912b51fc1a69928b098323341763c926",
+  "command": "python game/tools/batch/anchors.py",
+  "totalProblems": 51,
+  "focusedProblems": [],
+  "note": "Anchor existence only, not mutation proof. Original-suite-union proof remains pending generated-definition baseline."
+}

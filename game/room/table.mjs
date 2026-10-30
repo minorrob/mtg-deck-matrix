@@ -117,6 +117,9 @@ function readDeck(deck, cards, {playtest = false} = {}) {
   const commander = (Array.isArray(deck.commander) ? deck.commander : []).map((c) => clean(c, 200)).filter(Boolean);
   const list = (Array.isArray(deck.cards) ? deck.cards : []).map((c) => clean(c, 200)).filter(Boolean);
   if (commander.length > 2 || commander.length + list.length === 0 || commander.length + list.length > 250) throw new TableError(400, "That is not a deck a table can hold.");
+  /* Rob's Play ruling, October 28, 2026 (ROB-198): these need a wishboard before Play can offer their outside-game choice. */
+  const wishes = [...new Set([...commander, ...list].filter((n) => ["Cunning Wish", "Extrapolate the Impossible"].some((name) => sameName(n, name))))];
+  if (wishes.length) throw new TableError(422, `${wishes.join(" and ")} ${wishes.length === 1 ? "needs" : "need"} a choice from outside the game, which Play does not support yet. Remove ${wishes.join(" and ")} from this deck to play.`, {unsupported: wishes});
   const missing = [...new Set([...commander, ...list].filter((n) => !cards(n)))].sort();
   if (missing.length) throw new TableError(422, `The table cannot play ${missing.length === 1 ? "this card" : `these ${missing.length} cards`} yet: ${missing.join(", ")}.`, {unsupported: missing});
   /* A Background is a commander only beside the one that chose it (CR 702.124k). */
@@ -474,6 +477,9 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
          (Rob's playtest, 2026-10-15: a commander should be castable with what is on the board): new matches only, so a
          match launched before keeps its choices and its replay (rules/actions.mjs, `pooledTaps`). */
       pooledTaps: true,
+      sourceChoices: true,
+      effectPlayVersion: 1,
+      pilotProvocation: true,
       preparedTaps: true,
       resultRecords: true,
       /* An {X} spell tapped for too, for each X the pool and the untapped sources pay together, so a person casts it from the

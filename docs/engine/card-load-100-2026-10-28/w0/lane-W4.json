@@ -1,0 +1,152 @@
+{
+  "schema": "library-load-lane@1",
+  "lane": "W4",
+  "wave": 0,
+  "theme": "combat",
+  "branch": "codex/engine-load100-w0-w4-combat",
+  "source": "main 39a45706; README open accuracy debt; ORCHESTRATION wave 0",
+  "cards": [],
+  "review": [],
+  "debt": "Trample assignment asked (CR 702.19b); trample over a planeswalker (702.19c); protection from a departed source; damage doublers' order; a token entering attacking asks whom; blocker-side requirements (ROB-149); calibration failures **Blackblade Reforged** and **Goblin Piledriver**",
+  "evidence": [
+    "| Damage from a source that left the battlefield is sourceless, so protection does not stop it | `asking.mjs`:1782 (NAMED) | W4 |",
+    "| Damage doublers where nobody can be asked: the order that deals the least | `rules/replacement.mjs`:34, 576 | W4 |",
+    "| Trample over a planeswalker (CR 702.19c) | `rules/combat.mjs`:118 | W4 |",
+    "| Trample blocked by one creature: exactly lethal assigned, the attacker's controller not asked (CR 702.19b) | `rules/combat.mjs`:781\u2013790 | W4 |",
+    "| Two damage replacements where nobody can be asked | `rules/replacement.mjs`:34 | W4 |",
+    "| A token put onto the battlefield attacking attacks the first player in turn order | `script/effects/permanents.mjs`:270 | W4 |"
+  ],
+  "status": "Bounded saved mana damage/cost checkpoint; broader outside damage, combat replay, attacking tokens and blocker requirements remain open",
+  "codeCheckpoint": "20e13e9e08044bbaf1527328a6b940f13dce92a5",
+  "pullRequest": "https://github.com/minorrob/mtg-deck-matrix/pull/940",
+  "completed": [
+    "Blackblade Reforged: held-out translation counts Land after for each, not the equipped Creature",
+    "Goblin Piledriver: a teacher's implicit times 1 is learned as the printed multiplier slot",
+    "Wayfarer's Bauble (routed from W5): an effect's selector binds after the activated cost",
+    "Contagion Clasp: each target binds its own printed noun, distinct from the entering artifact",
+    "CR 702.19b: excess damage against one blocker is assigned by the attacker controller",
+    "V8 saved-depth finding: Glorious Anthem now has a scenario proving another own creature is boosted and an opponent's is not",
+    "V8 saved-depth finding: Serra Angel now has a scenario proving a ground Bear is not offered as a blocker and attacking leaves Serra Angel untapped",
+    "Departed-source protection: actual Pyrohemia ability after source departure/reload deals no damage to Silver Knight, while Bear and both players take damage; source is not restored.",
+    "CR 702.19c-e: compiled trample-over-planeswalkers keyword, explicit blocker/walker/controller damage allocation and departed-walker spill; shared loyalty allocations can be revised and jointly confirmed before simultaneous damage."
+  ],
+  "queued": [
+    "Damage replacements outside an askable resolution still choose leastFirst",
+    "Tokens entering attacking outside a resolution still choose the first player",
+    "Blocker-side requirements need a joint maximum-requirements solver (ROB-149)"
+  ],
+  "ignores": [],
+  "proof": {
+    "red": "sentence-load100-w0: three original held-out scenario families failed before the fix; engine-load100-w0-combat: single-blocker choice false before fix",
+    "calibration": "Final tests/sentence-library.mjs: 77 checks passed; 8048 templates from 6353 cards; 4165 translated with themselves held out, 4165 passed their own scenarios. Zero calibration failures; the other G-4 conditions are not claimed.",
+    "focused": [
+      "sentence-load100-w0: 14 checks passed, including V8's independent two-target/count counterexample",
+      "engine-load100-w0-combat: 17 checks passed",
+      "30 original scenarios in eight edited card files passed",
+      "all 29 engine suites directly naming rules/combat.mjs passed",
+      "sentence-paragraphs: 11 checks passed",
+      "data-integrity and feature-wiring passed"
+    ],
+    "mutation": "eleven breaks caught, missed: []; anchors remain 57 existing problems, with no new problem on changed files",
+    "fullCheck": "Final check-cards: 6430 definitions; 11023 scenarios, 0 failed; exit 0. Seven initially unanswered scenario inputs were repaired without changing expectations. Final sentence-library suite exit 0.",
+    "additionalDepth": "HISTORICAL, NOT CURRENT G-3 CREDIT: After the full checkpoint, two behavior scenarios were appended to Glorious Anthem and Serra Angel, retaining all old scenarios/assertions. Both cards' four saved scenarios pass and both held-out calibrations pass; all three runtime ability removals are caught. Independent V8 on ae4d6ba6: Thran Dynamo, Glorious Anthem, Serra Angel; 3 definitions, 5 scenarios, 0 failed; 4/4 abilities behaviorally reached, 0 unreached, exit 0. Exact artifact: ability-depth-W4-sample.json. This is scenario depth only: the artifact credits 0 cards exercised in clean games. No whole-suite rerun for these two additions; full counts above belong to 8e0f3a2f. V8 October29 found the Flying and Thran Dynamo offers insufficient under the approved proof rule; this old 4/4 count is superseded and requires remeasurement.",
+    "depthCommand": "From the V8 worktree with Node 22: node --stack-size=4000 game/tools/batch/check-cards.mjs --card-root C:/Users/robmi/CrankMagic/worktrees/load100/w0-w4-combat/game/engine/cards --cards 'Thran Dynamo|Glorious Anthem|Serra Angel' --ability-ledger ../scratch/v8-ability-w4.json --counterfactual",
+    "generated": "engine-definitions --check: current; engine-candidates --check: current; data-inventory --check: matches the repository, 60 artifacts",
+    "scan": "tools/local-ci.sh HEAD 0: SCAN PASS on code checkpoint 8e0f3a2f; record updates are scanned separately before push",
+    "limitations": "No new cards or definitions changed; queued debt is open, not waived; independent V8 review, consolidated gate and staging not done"
+  },
+  "rulings": [
+    "https://api.scryfall.com/cards/240448cd-c308-49ae-9e4b-0c35adc59fba/rulings",
+    "https://api.scryfall.com/cards/4b332e3d-dcf4-4f62-8130-124ec5d23b90/rulings"
+  ],
+  "followup20261029": {
+    "flying": {
+      "cards": [
+        "Air Elemental",
+        "Serra Angel",
+        "Suntail Hawk",
+        "Zephyr Sprite"
+      ],
+      "scenarios": 9,
+      "failed": 0,
+      "abilities": 5,
+      "scenarioReached": 5,
+      "method": "Four appended explicit block-if-legal policies finish combat; removing Flying makes the ground blocker block and final life becomes40. Vigilance removal changes actual tapped state.",
+      "evidence": "evidence/w4-flying-completed-combat.json",
+      "scope": "Selected cards only; zero new final cards and zero clean-game exercise credit."
+    },
+    "departedProtection": {
+      "checks": 26,
+      "mutations": 12,
+      "missed": [],
+      "red": "First witness: departed red source dealt3 instead of0 to Silver Knight. Actual Pyrohemia stack/reload witness separately proved the null-context-source seam.",
+      "behavior": "Carry only the matching last-known source snapshot through actual and dry damage paths. Protection reads final qualities in a local read-only view; live current qualities win and no saved object or ID is restored.",
+      "readers": {
+        "protection-color": 14,
+        "protection": 12,
+        "protection-multicolored": 25,
+        "prevention-shields": 33,
+        "wave4a-h3": 63,
+        "ability-loss": "pass",
+        "load100-w0-combat": 17,
+        "data-integrity": "pass"
+      },
+      "limits": "No closure of other departed-source qualities, source-qualified damage replacement filters or damage-event source provenance is claimed."
+    },
+    "trampleOverPlaneswalkers": {
+      "source": "89bfae71e1023c4d0d5ed82ebaa9260f6b61ed1e; exact W5 dependency d9d00a00 merged with a merge commit",
+      "focused": "engine-load100-w0-combat: 69 checks passed; engine-planeswalkers: 66 checks passed; engine-vocabulary: 49 checks passed",
+      "red": "Actual unblocked 7-power attack assigned everything to the walker instead of asking. The later real pilot witness separately stayed stuck revising its first source before compatibility support.",
+      "behavior": "Actual attacker/blocker declaration, blocker/walker/controller choices, full-to-walker choice, ordinary-trample isolation, other simultaneous loyalty damage, shared allocation revision/confirmation, first-strike separation, marked blocker damage, live keyword/control, phased/departed walker, prevention, concession and JSON reload all end in asserted life/zones and damage-event counts.",
+      "mutations": 32,
+      "missed": [],
+      "mutationCommand": "python -u game/tools/batch/breaks.py game/tools/batch/breaks-trample-walkers.py",
+      "oldMutations": "Four affected original breaks-load100-w0-w4-combat combat mutations caught, missed: []. The original train-e-f4 first-strike mutation is reanchored; its original unchanged suites are blocked by the Faithless Looting baseline below. The same damage-step defect is independently caught by the new focused mutation.",
+      "readers": "57 direct/relevant readers: 56 passed; inherited engine-roblists-food expects Invalid selection but the shared rule operation says Select the required rule options. Routed to integration. House-pilot suite separately passes 19 checks/100 games, including blind-view/replay checks. Data integrity and feature wiring131 pass.",
+      "oldExpectation": "engine-planeswalkers formerly skipped the existing single-blocker assignment question. It now explicitly chooses [1,3] and proves offered blocker/walker recipients; the old exact final loyalty2/life40/dead-Squire expectation is retained.",
+      "pilots": "House, random-legal and room leastAnswer explicitly answer the new source/revise/confirm and loyalty choices. Three real completed combats each assert player38, a dead walker and exactly4 simultaneous loyalty damage. No human choice is supplied by these helpers.",
+      "fuzz": {
+        "command": "node tools/fuzz-live.mjs --pool --level <easy|normal> --seeds 1 --replay --leaks --json <scratch/w4-fuzz-level.json> --exercised <scratch/w4-fuzz-level-ledger.json>",
+        "easy": "1 of 1 games clean; 40 turns, 82 decisions, 0 refused, replay identical, 0 leaks in83 checks; 53/6430 cards and21/11636 abilities exercised in this game",
+        "normal": "1 of 1 games clean; 39 turns, 87 decisions, 0 refused, replay identical, 0 leaks in88 checks; 51/6430 cards and22/11636 abilities exercised in this game",
+        "scope": "Two diagnostic games only. No whole-directory coverage, variant-specific random exercise, independent review or consolidated gate credit."
+      },
+      "scan": "tools/local-ci.sh HEAD 0: SCAN PASS on source89bfae71; record commit scanned separately before push",
+      "baselineBlockers": [
+        "tests/engine-cards.mjs: Faithless Looting's old scenario expects no flashback offer after the funded-cast change; actual offer count1. Original mutation suites retained, routed to W5/integration.",
+        "engine-roblists-food refusal message mismatch, routed to integration.",
+        "Four actions.mjs mutation anchors moved/duplicated by W5 funding; routed to W5/integration."
+      ],
+      "limits": "No new cards/promotions; no main merge, release, full suite or wave closure. ROB-149 blocker-side capacity/joint requirements remain open and must revisit simultaneous shared-blocker damage when implemented. Existing UI choice modes are reused; no real-table visual/playtest sign-off is claimed."
+    },
+    "outsideManaDamage": {
+      "status": "Bounded actual mana/cost consumer GREEN at20e13e9e; broader outside callers remain OPEN",
+      "fixture": "docs/engine/card-load-100-2026-10-28/w0/evidence/w4-mana-order-red.mjs",
+      "design": "docs/engine/card-load-100-2026-10-28/w0/W4-damage-continuation.md",
+      "command": "Node22 first on PATH; node docs/engine/card-load-100-2026-10-28/w0/evidence/w4-mana-order-red.mjs",
+      "actual": "HISTORICAL aae67e76: exit1; Shivan Reef actual red mana action taps/adds R1, automatically deals5, player0 life35, no awaiting choice",
+      "required": "Ask player0 before damage; add-two then triple deals9/life31, triple then add-two deals5/life35. Preserve R1, tapped source, empty stack, one mana event/one damage event across reload.",
+      "testPreservation": "Only W4's uncommitted deliberate RED hunk was moved to this diagnostic fixture. tests/engine-damage-replaced.mjs restored exactly to published source89bfae71; no assertions/skips/ignores changed.",
+      "seams": "W5 reserved actions.mjs mana ability.then region near2981; tapUnits excludes ability.then from automatic casting sources. W1 owns combat.mjs for battles. Safe continuation must serialize damage proposals and defer shield/next-use consumption, preserve applied replacements across concessions, emit committed tap/mana prefix once and resume remaining instructions.",
+      "handback": "Root requested this bounded design/evidence checkpoint before context handback; no multi-module damage implementation started. Remaining damage, token and blocker debts are not waived.",
+      "current": "engine-outside-damage140 and original native diagnostic GREEN; new27/original69 mutations caught; source20e13e9e; no full-gate or clean-game credit"
+    },
+    "anchors": "53 problems after exact W5 merge:49 inherited plus4 funding actions anchors. No W4 changed-file anchor failures. Root is reconciling inherited/funding proofs."
+  },
+  "damageContinuation20261029": {
+    "source": "20e13e9e08044bbaf1527328a6b940f13dce92a5",
+    "attributionSource": "dfe3f377",
+    "nativeChecks": 140,
+    "readers": 22,
+    "newMutationsCaught": 27,
+    "originalMutationsCaught": 69,
+    "missed": [],
+    "evidence": "evidence/w4-damage-native-20261029.json",
+    "continuation": "W4-damage-continuation.md",
+    "gateCredit": false,
+    "cardsPromoted": 0,
+    "cleanGamesCredited": 0,
+    "pullRequest": "https://github.com/minorrob/mtg-deck-matrix/pull/940",
+    "scan": "HEAD0 SCAN PASS on6f85faa3; main50297778 ancestor; record tip is scanned separately before push"
+  }
+}

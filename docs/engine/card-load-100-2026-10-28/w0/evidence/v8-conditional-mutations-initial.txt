@@ -1,0 +1,40 @@
+baseline: every suite passes unbroken
+caught conditional action has no arbitrary competing branch -- tests/scenario-conditional-policy.mjs
+caught conditional descriptor has only bounded native selectors -- tests/scenario-conditional-policy.mjs
+caught conditional action selects exactly one operation -- tests/scenario-conditional-policy.mjs
+caught conditional actor is not hardcoded to the first seat -- tests/scenario-conditional-policy.mjs
+caught conditional native stage cannot skip a commitment -- tests/scenario-conditional-policy.mjs
+caught conditional resolution must be explicitly requested -- tests/scenario-conditional-policy.mjs
+caught conditional targets cannot be silently selected -- tests/scenario-conditional-policy.mjs
+caught conditional mana vector is native and well formed -- tests/scenario-conditional-policy.mjs
+MISSED conditional source cannot substitute another named card -- 
+caught conditional source is resolved before legality -- tests/scenario-conditional-policy.mjs
+caught conditional action uses the declared physical identity -- tests/scenario-conditional-policy.mjs
+caught conditional ambiguity is never answered with the first offer -- tests/scenario-conditional-policy.mjs
+caught conditional native action actually commits -- tests/scenario-conditional-policy.mjs
+caught native action event binds the exact old source -- tests/scenario-conditional-policy.mjs
+caught native action event binds its exact card name -- tests/scenario-conditional-policy.mjs
+caught native action event binds the actual actor -- tests/scenario-conditional-policy.mjs
+caught a native trigger cannot masquerade as the selected action -- tests/scenario-conditional-policy.mjs
+caught a native ability cannot masquerade as the selected spell event -- tests/scenario-conditional-policy.mjs
+caught native action event is uniquely identified -- tests/scenario-conditional-policy.mjs
+caught selected resolution uses its emitted stack ID -- tests/scenario-conditional-policy.mjs
+caught selected frame actor remains bound to the native event -- tests/scenario-conditional-policy.mjs
+caught selected frame kind remains bound to the native action -- tests/scenario-conditional-policy.mjs
+caught an unrelated frame is never resolved by default -- tests/scenario-conditional-policy.mjs
+caught selected native spell actually resolves -- tests/scenario-conditional-policy.mjs
+caught selected native resolution has its real success receipt -- tests/scenario-conditional-policy.mjs
+caught entry context expires on an intervening step -- tests/scenario-conditional-policy.mjs
+caught entry context comes only from an actual native spell -- tests/scenario-conditional-policy.mjs
+caught entry context cannot be supplied by scenario data -- tests/scenario-conditional-policy.mjs
+caught entry answer uses its declared original actor -- tests/scenario-conditional-policy.mjs
+caught entry answer uses its declared original source -- tests/scenario-conditional-policy.mjs
+caught an absent prompt requires completed actual entry -- tests/scenario-conditional-policy.mjs
+caught entry question signature cannot be stale or forged -- tests/scenario-conditional-policy.mjs
+caught entry native frame remains bound to the captured source -- tests/scenario-conditional-policy.mjs
+caught entry native frame remains bound to the captured actor -- tests/scenario-conditional-policy.mjs
+caught entry answer cannot target an already moved source -- tests/scenario-conditional-policy.mjs
+caught entry question remains attached to its actual operation source -- tests/scenario-conditional-policy.mjs
+MISSED entry policy cannot answer a different kind of entering choice -- 
+caught entry fixed label is unique rather than first matching -- tests/scenario-conditional-policy.mjs
+missed: ['conditional source cannot substitute another named card', 'entry policy cannot answer a different kind of entering choice']

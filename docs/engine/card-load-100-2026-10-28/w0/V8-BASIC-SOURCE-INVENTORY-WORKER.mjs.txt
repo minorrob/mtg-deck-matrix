@@ -1,0 +1,58 @@
+import {parentPort,workerData} from 'node:worker_threads';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import path from 'node:path';
+import {pathToFileURL} from 'node:url';
+const root=pathToFileURL(process.cwd()+'/');
+const {loadCardIndex}=await import(new URL('game/tools/engine-cards.mjs',root));
+const {runScenario}=await import(new URL('game/engine/cards/scenario.mjs',root));
+const {abilitiesOf,controllerOf}=await import(new URL('game/engine/rules/layers.mjs',root));
+const {legalActions}=await import(new URL('game/engine/rules/actions.mjs',root));
+const {gameOver}=await import(new URL('game/engine/rules/sba.mjs',root));
+const index=loadCardIndex(),basic={Wastes:'C',Plains:'W',Island:'U',Swamp:'B',Mountain:'R',Forest:'G'};
+const clone=x=>structuredClone(x),same=(a,b)=>assert.deepEqual(a,b),fields=e=>e.data?.fields??e.fields??{};
+const run=(c,steps,full=false)=>runScenario(full?c.changed:{...c.changed,steps:c.changed.steps.slice(0,steps),expect:[]},name=>index.definition(name),c.fixtures,{explicitChoices:true});
+function clear(s){assert.equal(s.turn,1);assert.equal(s.phase,'MAIN1');assert.equal(s.activePlayer,0);assert.equal(s.priorityPlayer,0);assert(!gameOver(s));assert.equal(s.stack.length,0);assert(!s.awaiting&&!s.ruleOperation&&!s.resolving&&!s.pendingTriggers?.length);}
+
+const inventory=JSON.parse(fs.readFileSync(workerData.inventory,'utf8'));
+for(let at=workerData.start;at<inventory.candidates.length;at++) {
+  const c=inventory.candidates[at];
+  parentPort.postMessage({kind:'start',index:at});
+  const unchangedInputs=JSON.stringify({original:c.original,changed:c.changed,fixtures:c.fixtures});
+  const item={file:c.file,card:c.card,scenario:c.original.name,prefix:c.prefix,originalFieldsPreserved:true};
+  item.nativeReceipts=[];
+  try {
+    const initial=run(c,0);clear(initial.state);assert.equal(initial.state.effects?.length??0,0);
+    const ordered=[...(c.original.setup??[]).filter(e=>!e.sick),...(c.original.setup??[]).filter(e=>e.sick)]
+      .filter(e=>e.zone==='battlefield').flatMap(e=>e.cards.map(card=>({card,seat:e.seat})));
+    const ids=[...initial.state.zones.battlefield];assert.equal(ids.length,ordered.length);
+    ids.forEach((id,i)=>{const o=initial.state.objects[id];assert.equal(o.card,ordered[i].card);assert.equal(o.owner,ordered[i].seat);assert.equal(o.controller,ordered[i].seat);assert.equal(controllerOf(initial.state,id),ordered[i].seat);assert(!o.tapped);});
+    for(const p of c.prefix) {
+      const before=run(c,p.step),after=run(c,p.step+1);clear(before.state);clear(after.state);
+      same(before.state.zones.battlefield,ids);same(after.state.zones.battlefield,ids);
+      const authored=ids.filter(id=>initial.state.objects[id].card===p.name&&initial.state.objects[id].controller===0)[p.ordinal];
+      assert.notEqual(authored,undefined);const source=before.state.objects[authored];assert(!source.tapped);assert.equal(controllerOf(before.state,authored),0);
+      const physical=before.state.zones.battlefield.filter(id=>before.state.objects[id].card===p.name&&controllerOf(before.state,id)===0)[p.ordinal];assert.equal(physical,authored);
+      const actions=legalActions(before.state,0).filter(a=>a.kind==='activate-mana'&&a.objectId===authored&&a.label===p.name);assert.equal(actions.length,1);
+      const action=actions[0],mana={[basic[p.name]]:1};same(action.mana,mana);if(c.changed.steps[p.step].mana)same(c.changed.steps[p.step].mana,mana);
+      assert(Object.keys(action).every(k=>['kind','objectId','abilityId','label','mana'].includes(k)));
+      const ability=abilitiesOf(before.state,authored).find(a=>a.id===action.abilityId);assert(ability);assert.equal(ability.kind,'mana');assert.equal(ability.tapSelf,true);same(ability.produces,mana);
+      assert(Object.keys(ability).every(k=>['id','kind','text','tapSelf','produces'].includes(k)));
+      const delta=after.events.slice(before.events.length);same(delta.map(e=>e.kind),['GameEventCardTapped','GameEventManaPool']);
+      assert.equal(fields(delta[0]).card.cardId,authored);assert.equal(fields(delta[0]).tapped,true);assert.equal(fields(delta[1]).source.cardId,authored);assert.equal(fields(delta[1]).player.playerId,0);same(fields(delta[1]).produced,mana);
+      same(after.state.objects[authored],{...source,tapped:true});
+      for(const id of Object.keys(before.state.objects))if(Number(id)!==authored)same(after.state.objects[id],before.state.objects[id]);
+      const pool={...before.state.players[0].manaPool};pool[basic[p.name]]=(pool[basic[p.name]]??0)+1;same(after.state.players[0].manaPool,pool);
+      before.state.players.forEach((player,i)=>{assert.equal(after.state.players[i].life,player.life);if(i)same(after.state.players[i].manaPool,player.manaPool);});
+      item.nativeReceipts.push({step:p.step,name:p.name,index:p.ordinal,sourceId:authored,beforePool:{...before.state.players[0].manaPool},afterPool:{...after.state.players[0].manaPool},events:delta.map(e=>({kind:e.kind,fields:fields(e)}))});
+    }
+    item.nativePrefixVerified=true;
+    try{const full=run(c,null,true);item.fullStrictPass=true;item.assertions=full.passed.length;}catch(error){item.fullStrictPass=false;item.fullFailure={message:error.message,assertion:error.scenarioAssertion??null};}
+  }catch(error){item.nativePrefixVerified=false;item.prefixFailure={message:error.message,assertion:error.scenarioAssertion??null};}
+  item.eligibleForSavedEdit=item.nativePrefixVerified===true&&item.fullStrictPass===true;
+
+  item.inputsUnchanged=JSON.stringify({original:c.original,changed:c.changed,fixtures:c.fixtures})===unchangedInputs;
+  if(!item.inputsUnchanged){item.eligibleForSavedEdit=false;item.inputMutationFailure=true;}
+  parentPort.postMessage({kind:'result',index:at,result:item});
+}
+parentPort.postMessage({kind:'done'});

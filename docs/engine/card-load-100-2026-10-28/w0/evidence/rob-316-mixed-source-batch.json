@@ -1,0 +1,570 @@
+{
+  "schema": "ROB316ApprovedMixedSourceBatch@1",
+  "issue": "ROB-316",
+  "branch": "codex/rob-316-interaction-witnesses",
+  "scope": "exact approved explicit source-field witnesses; no card admission, omission-ledger sweep or canonical acceptance",
+  "beforeSource": {
+    "revision": "033cd059eb5150493015de042309e11ae83ad7da",
+    "tree": "9568594bfcf1a0984e92e4bfd8c363037ffca683",
+    "dirty": false,
+    "inputs": {
+      "scripts": "30b828d4a6cb7ec8d743a980462363c0cdc5657ede7430855bdc91d5cb8490f4",
+      "scenarios": "001eb3ae353aaa2c844882b5aea112d019594e88b6b64b2a5e6795db65d15175"
+    }
+  },
+  "afterSource": {
+    "revision": "4995a7cebf3a3086de71862bc572467c15073bf2",
+    "tree": "bf0174f0d47d9aa3ec26174a25c7e90211b5d538",
+    "dirty": false,
+    "inputs": {
+      "scripts": "30b828d4a6cb7ec8d743a980462363c0cdc5657ede7430855bdc91d5cb8490f4",
+      "scenarios": "aac3ce7b40e5cebc08519167077c67ac809fcdda88f01973fb610da5921626f0"
+    }
+  },
+  "namesSha256": "cf554e211269fe6425c58b226c27ccf30388fc079a7b6a8948e2f0f59937d40d",
+  "same1521FullNamesEveryOriginalScenarioAndAbilityRetained": true,
+  "editedScenarios": 2743,
+  "editedFiles": 1521,
+  "addedSourceFields": 6741,
+  "originalAssertionsPassed": 7255,
+  "unchangedNativeGuardSha256": "2cf07513a5dc6dbc5210c3925eac20df3654119bf427b63a74402fe42a18b514",
+  "unchangedNativeWorkerRawSha256": "f0552622c0b511dca047308458d718ed1a6de8fc8e14bc04849842e01b3cd3ec",
+  "allOriginalFieldsPreserved": true,
+  "all520NewRejectsAnd161PriorRejectsUntouched": true,
+  "historicalTenAndFourRefusalsRetained": true,
+  "comparison": {
+    "definitions": 1521,
+    "allOriginalScenarios": 4337,
+    "abilities": 3057,
+    "scenarioFailuresBefore": 1837,
+    "scenarioFailuresAfter": 519,
+    "abilitiesReachedBefore": 1130,
+    "abilitiesReachedAfter": 1802,
+    "runtimeRemovalProofBefore": 222,
+    "runtimeRemovalProofAfter": 312,
+    "unprovedBefore": 1927,
+    "unprovedAfter": 1255,
+    "newPassingScenarios": 1318,
+    "lostPassingScenarios": 0,
+    "editedScenariosAlreadyPassingBefore": 1425,
+    "budgetDiagnosticsBefore": 0,
+    "budgetDiagnosticsAfter": 0,
+    "definitionFidelitySmokeProblemsBefore": 0,
+    "definitionFidelitySmokeProblemsAfter": 0,
+    "beforeCheckerExit": 1,
+    "afterCheckerExit": 1,
+    "beforeCanonicalVerifierExit": 1,
+    "afterCanonicalVerifierExit": 1
+  },
+  "rootIndependentActualGitAudit": {
+    "schema": "RootROB316ActualGitBatchAudit@1",
+    "before": "033cd059eb5150493015de042309e11ae83ad7da",
+    "after": "4995a7cebf3a3086de71862bc572467c15073bf2",
+    "files": 1521,
+    "scenarios": 2743,
+    "literalSourceFields": 6741,
+    "allOriginalJSONFieldsPreserved": true,
+    "allOtherCardBlobsIdentical": true,
+    "all6430ScenarioFilesAccountedFor": true,
+    "runtimeOrDefinitionEdits": 0,
+    "scope": "exact approved scenario-witness repairs only; no card admission or canonical gate credit"
+  },
+  "rootIndependentElevenSampleAssertions": 27,
+  "savedCardDefinitionsChanged": 0,
+  "runtimeHelperClassifierGateChanges": 0,
+  "cardsAdmitted": 0,
+  "canonicalAcceptance": false,
+  "interactionConfidence": "Finite witnesses do not establish exhaustive interaction support or permit card addition/promotion.",
+  "archives": [
+    {
+      "rawFile": "rob-316-mixed-validation-input-033cd059.json",
+      "rawBytes": 22712330,
+      "rawSha256": "24d77f2afad39206ff9cb4ffaf13286f106d63aec7440e54d2b66ae850059921",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-mixed-validation-input-033cd059.json.gz",
+      "storedBytes": 1576800,
+      "storedSha256": "b8fbb172afffecfc37706b51fae201448b8c82d65716f6c01ef643e5f2ec80f2",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-mixed-results-033cd059.jsonl",
+      "rawBytes": 6093046,
+      "rawSha256": "dbb705847a71a5dd31130e82bd173a68219c8ba75922efe81e6a2abeb41a878e",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-mixed-results-033cd059.jsonl.gz",
+      "storedBytes": 291805,
+      "storedSha256": "32ac7fd1d849f4f70f02f5c1584dd5ea51dff4cf0fea5f2edc3ae37852dd588e",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-mixed-validation-binding-033cd059.json",
+      "rawBytes": 77816,
+      "rawSha256": "d66c43e1fe75cbcc3e987014efff36707955216ebb39832da502443711a950e8",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-mixed-validation-binding-033cd059.json.gz",
+      "storedBytes": 15975,
+      "storedSha256": "9d2ac66f7d218e98d95becca43cb8b97b35012fa954b382a0ad8f6a081ab2abd",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-mixed-summary-033cd059.json",
+      "rawBytes": 14065,
+      "rawSha256": "974ecdf019d351a854037639f044923a9b8de83df7b9e8c184f62a534bf50fae",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-mixed-summary-033cd059.json.gz",
+      "storedBytes": 4885,
+      "storedSha256": "c45640e386a3de310ce5cb04589bf4a5d236be9b380b78c71302d5c978ad2256",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-mixed-checkpoint-033cd059.json",
+      "rawBytes": 14031,
+      "rawSha256": "cd0192957693d32b0664441b77baf3451feb5ea109ca34506df6f7f040dd30da",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-mixed-checkpoint-033cd059.json.gz",
+      "storedBytes": 4884,
+      "storedSha256": "721d6d5adb008bb84b41ac994a401d6b63fefd3ef417322009656ee38c4cbda0",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-mixed-run-033cd059.log",
+      "rawBytes": 32188,
+      "rawSha256": "ae5e6f1d6811908669de141b9bec47b7ba1f95fbc1d1ab6e8e00edc02f39f88b",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-mixed-run-033cd059.log.gz",
+      "storedBytes": 6837,
+      "storedSha256": "140f7d72e0539ed6a5d01061e1af13d1dec0c5eac2c64c09c3801408dfbba9eb",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-mixed-eligible-033cd059.json",
+      "rawBytes": 2027463,
+      "rawSha256": "9c816782648387b5bead33a8cbba9ba636a3234616b9d960c763072f651beb3a",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-mixed-eligible-033cd059.json.gz",
+      "storedBytes": 158112,
+      "storedSha256": "baa9489e3db8ea175e31e58f285dbd1563bc179467de4281bc9f7e2127e2ca89",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-mixed-rejections-033cd059.json",
+      "rawBytes": 2107257,
+      "rawSha256": "46368f18fb6caa38c869eac8220822ae31b26d3abffebb676cc54c4d82a1cf8f",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-mixed-rejections-033cd059.json.gz",
+      "storedBytes": 73926,
+      "storedSha256": "845952e8c2431d5decb048485aa584c0a77c9175d32e8f4b7e19b4c288865328",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-mixed-review-samples-033cd059.json",
+      "rawBytes": 87301,
+      "rawSha256": "e2c878f36407157787d14ece3b5d4451b374fb1e0f37d6e0c9610858f7017745",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-mixed-review-samples-033cd059.json.gz",
+      "storedBytes": 5189,
+      "storedSha256": "de2ee1152b49c9f15f1a82022026387b32c11df3eed6edc5b9b9337fab5406ea",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-mixed-pilot-comparison-033cd059.json",
+      "rawBytes": 59418,
+      "rawSha256": "db09fbbae5370b3d4693391097347bc2d542546280905d95b70c063f65c69a6d",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-mixed-pilot-comparison-033cd059.json.gz",
+      "storedBytes": 3133,
+      "storedSha256": "44fdde3e30d5bd5a443adb7412a602b79a16c972e33b62dc687d4af030b5fdf5",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-freeze-mixed-validation.mjs",
+      "rawBytes": 5242,
+      "rawSha256": "e04409e1e3b2625bee764c881d5764fa3ff9bbbd47a6f67b2b9ca92a1aa2deb1",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-freeze-mixed-validation.mjs.gz",
+      "storedBytes": 2034,
+      "storedSha256": "007e2b7d51448901432ef5391f39dead0f41f4713f63113fd0759124e921afe2",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-run-mixed-validation.mjs",
+      "rawBytes": 7337,
+      "rawSha256": "800b3cfae1f55a40c0e4b5da57970488e5a24dfc7aa24faa2f75d47dcebdd269",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-run-mixed-validation.mjs.gz",
+      "storedBytes": 2537,
+      "storedSha256": "cc8e1469e589dff45343b31a6afcafce2ad08c3c2ccfcaeaec5ae3cbac3493ac",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-package-mixed-validation.py",
+      "rawBytes": 10542,
+      "rawSha256": "84cd3cc734c732a715cc1cd60fe6abfd681f8f3f620d5b10157a66498dbfd9ce",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-package-mixed-validation.py.gz",
+      "storedBytes": 3356,
+      "storedSha256": "61af267398c42b0b2c9fc056359fd2740e20cd24630b03f75281a3bcbdcb9c18",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "v8-basic-source-inventory-worker.mjs",
+      "rawBytes": 5841,
+      "rawSha256": "f0552622c0b511dca047308458d718ed1a6de8fc8e14bc04849842e01b3cd3ec",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/v8-basic-source-inventory-worker.mjs.gz",
+      "storedBytes": 2028,
+      "storedSha256": "f134551addd30983460b017b5a50bc4d7f01280075b79234cada687aa68efb31",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "v8-basic-source-inventory-worker-build.json",
+      "rawBytes": 376,
+      "rawSha256": "5d257014bb0e05bcc6332e474e8d11503616f49e068cdd54a16cd69c7b5db485",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/v8-basic-source-inventory-worker-build.json.gz",
+      "storedBytes": 283,
+      "storedSha256": "734b39a1bd3d0ff6fff1150386bd235d7ff0f9aff5ea538bf495159098d300df",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "v8-mixed-source-cohort-9c4fa115.json",
+      "rawBytes": 28206597,
+      "rawSha256": "54dbd297da55ff9a2ba53f676b9fc4e0aeed70dbc1a8bf8f41eb54d766f027f6",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/v8-mixed-source-cohort-9c4fa115.json.gz",
+      "storedBytes": 2038680,
+      "storedSha256": "7b60ecfaa501260f1dc99e0fe01433f2c74a1ffcafca50314085d42196e271d3",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "v8-mixed-source-cohort-summary-9c4fa115.json",
+      "rawBytes": 2296,
+      "rawSha256": "0edad8f7b8d7dcc7292c087ab4ef7404971b05e3a2fd6cf8b0e17f86a8497a6d",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/v8-mixed-source-cohort-summary-9c4fa115.json.gz",
+      "storedBytes": 841,
+      "storedSha256": "ea910eb64266fc7650998336570edbe9b64b724ec4dbad8ec98a45b0ff5c8478",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "v8-mixed-source-pilot-input-9c4fa115.json",
+      "rawBytes": 60629,
+      "rawSha256": "de182592de3865ab05c99bd8c4d034ed95547474a66ba075db5fe4849978d35a",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/v8-mixed-source-pilot-input-9c4fa115.json.gz",
+      "storedBytes": 5815,
+      "storedSha256": "3d11676c1993ce5a8b36881c2f29afc51203441e65655a49e92bed07e413da23",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "v8-mixed-source-pilot-results-9c4fa115.json",
+      "rawBytes": 27700,
+      "rawSha256": "2de58dbf2c2b8f830746d3a6eeece9e01aa0352522268c1da997efd1fff875fe",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/v8-mixed-source-pilot-results-9c4fa115.json.gz",
+      "storedBytes": 2693,
+      "storedSha256": "6b154b687bb034b54dab689fae583bb22b7dd2a906adff8770ed3abdd7548e10",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "v8-mixed-source-pilot-run-9c4fa115.log",
+      "rawBytes": 29129,
+      "rawSha256": "ffa8532023e7cebdc22230e66fd8080f75bca8fb61ead6d76bacf2a412afb4a7",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/v8-mixed-source-pilot-run-9c4fa115.log.gz",
+      "storedBytes": 2807,
+      "storedSha256": "78aac405e02c4be4c81b785609c5214302b813f4ba9e9417a68dffe7154d7427",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "v8-mixed-source-package-9c4fa115.json",
+      "rawBytes": 4720,
+      "rawSha256": "31b26f3b37625e97b8cd04725b9d2f0356d47e4b8f288b273e73465b00fc8175",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/v8-mixed-source-package-9c4fa115.json.gz",
+      "storedBytes": 1820,
+      "storedSha256": "0322985b8e735b043ec4d9416b1081374fedfd12a96e5eb67ed85750669ff2d6",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "v8-mixed-source-metadata.mjs",
+      "rawBytes": 1453,
+      "rawSha256": "db447bc3bde93905adccb062dfd177973203435c8e33e415c822fa6475f19cb5",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/v8-mixed-source-metadata.mjs.gz",
+      "storedBytes": 713,
+      "storedSha256": "3273a96f3ed51aba32f283af7de60f738d8d71a69f4748087975538bd6a5570e",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "v8-mixed-source-freeze.py",
+      "rawBytes": 9884,
+      "rawSha256": "0ba86f59eaaee68110742a2fef9f33fbfc5ce7f43186b989ecb2a4a702632eaa",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/v8-mixed-source-freeze.py.gz",
+      "storedBytes": 3362,
+      "storedSha256": "b3bebfc1f7b7271b3624bd2b9921db52150c18345a3c2ba2512c05447bc2bbe3",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "v8-mixed-source-pilot-run.mjs",
+      "rawBytes": 4515,
+      "rawSha256": "019d196f54a83f1d2a0b03346aa7398a33dc51dbdfb01796dae6a94106d1f804",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/v8-mixed-source-pilot-run.mjs.gz",
+      "storedBytes": 1729,
+      "storedSha256": "b0dab0d56df9cba21141c422d895134391385ca9b18ddc4194fa40eb3b8bbe99",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "v8-mixed-root-structural-audit.py",
+      "rawBytes": 6095,
+      "rawSha256": "6a3e55887c6568bc1eeed38774438df330df2a48a53d714f6af89ab2c76b5d4b",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/v8-mixed-root-structural-audit.py.gz",
+      "storedBytes": 2305,
+      "storedSha256": "a977e006b39b281776021bc4668adc1e82a56855c416fa5454a17ddfe0dec173",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "v8-mixed-root-structural-audit-e284.json",
+      "rawBytes": 972,
+      "rawSha256": "3fa7a669c0ccc2c3188f691f8eb1460286fcc2a3fdcb2667700c13af9b89c1b3",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/v8-mixed-root-structural-audit-e284.json.gz",
+      "storedBytes": 550,
+      "storedSha256": "33276bb3e9a7c0cc3e4d07ead15042bd58e15d30661c4701984d1ee3b0e61076",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-mixed-package-033cd059.json",
+      "rawBytes": 26966,
+      "rawSha256": "ff15f1cd7e2ed5d142cc5909dbcdc89e0343c5e3b0d711c6e461fdd89fd90582",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-mixed-package-033cd059.json.gz",
+      "storedBytes": 8500,
+      "storedSha256": "74e0d70c8f841a1106edaf32d4ce3499e1440b0550f0945f3df4b8fb82e227d2",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-mixed-before-033cd059.json",
+      "rawBytes": 5799785,
+      "rawSha256": "87f870a3f00422fc858ba3cf7b933f793b03e1afcd061d9d6585a3e72ca3e735",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-mixed-before-033cd059.json.gz",
+      "storedBytes": 458495,
+      "storedSha256": "61691a131ee2df1676b199554366fa319c10f2b83eccfb7f81b8c1642fead231",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-mixed-before-033cd059.log",
+      "rawBytes": 381977,
+      "rawSha256": "d61f69220c9e45a4acb6208828ac8a454e15db477033d977a30f2713b697dfc4",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-mixed-before-033cd059.log.gz",
+      "storedBytes": 67795,
+      "storedSha256": "7093f3c92e75172a67685d74780951a4d3f0d1c37969989a41cc733a56aabdcb",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-mixed-before-033cd059-verifier.log",
+      "rawBytes": 463,
+      "rawSha256": "7e62b1fe1434c95f91015caaf2b9e1ad17dcc9372c5f62094a933b7bbee42958",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-mixed-before-033cd059-verifier.log.gz",
+      "storedBytes": 226,
+      "storedSha256": "576855059b96c361058e7cdccd0670b21e76adcf2d971bfd59fb3967fb8f8544",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-mixed-after-4995a7ce.json",
+      "rawBytes": 6324479,
+      "rawSha256": "4142fadb6fee9fa2a3336bbc17e3bf8790cb73f774f7f05e053adfdd7aede730",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-mixed-after-4995a7ce.json.gz",
+      "storedBytes": 537207,
+      "storedSha256": "1aa658ae969d6903826758de5ca94d5baed56835a1fa986ede8f7bba718828e6",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-mixed-after-4995a7ce.log",
+      "rawBytes": 112047,
+      "rawSha256": "9f79b392923a5d5c438616d44843d7924e5a4e9b1d6f0280f812635a148c0af6",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-mixed-after-4995a7ce.log.gz",
+      "storedBytes": 23257,
+      "storedSha256": "9da1ee38909fed973a9bb377d454c8b25a190467cd19c707572e3cc9dc9386b4",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-mixed-after-4995a7ce-verifier.log",
+      "rawBytes": 463,
+      "rawSha256": "7e62b1fe1434c95f91015caaf2b9e1ad17dcc9372c5f62094a933b7bbee42958",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-mixed-after-4995a7ce-verifier.log.gz",
+      "storedBytes": 226,
+      "storedSha256": "576855059b96c361058e7cdccd0670b21e76adcf2d971bfd59fb3967fb8f8544",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-selected1521-names.json",
+      "rawBytes": 35171,
+      "rawSha256": "db7adc35db5f51d255b9c4bd770ab0fd1917440dd30a7326fdee08a352ae2588",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-selected1521-names.json.gz",
+      "storedBytes": 13919,
+      "storedSha256": "96f630983ba7cd14c177b1db8fb9e5eb2edc537c5bf195883465ac54c8e6a639",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-selected1521-manifest.json",
+      "rawBytes": 390369,
+      "rawSha256": "ab65ae83cf10297749652f534963a0f782eaee0df91ef8a8f8a802faa61e2cd5",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-selected1521-manifest.json.gz",
+      "storedBytes": 111146,
+      "storedSha256": "2b57f9074a4d58078a05f39d31824659c3d375c6d957ce24487421094b22a8e6",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-selected1521-transport.json",
+      "rawBytes": 471,
+      "rawSha256": "17c5789c24e09c7bd523ce4efc3d3268d787ba278950f2ab37d8334e319f60e7",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-selected1521-transport.json.gz",
+      "storedBytes": 344,
+      "storedSha256": "715bca271913cced1cf06d0b173e9fa89828108985e9e934ef2e24f1802a918a",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-exact2743-diff.json",
+      "rawBytes": 2330082,
+      "rawSha256": "4ed9e33f69f0c174e221963ded18f08429d79e3179aefb3d45bb1f5f5c002eb4",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-exact2743-diff.json.gz",
+      "storedBytes": 272258,
+      "storedSha256": "ee7c560e8c2011bb69aa2189e1056d5cabe83ca01374f16d314774122e2cf7cf",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-edited2743-full.json",
+      "rawBytes": 937799,
+      "rawSha256": "d21f565c48c24ae669c9008b10183ef5e616394848154e6a636d95d47eb843e6",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-edited2743-full.json.gz",
+      "storedBytes": 133561,
+      "storedSha256": "f5eb284f08e6c6852376002994d77c6afb24f3fb49bb853d84939f1ba67c1820",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-edited2743-full.log",
+      "rawBytes": 1021,
+      "rawSha256": "c23049a26a7e1184239b6d2bdb705a489445059804fc7a98120929f15e2c8a97",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-edited2743-full.log.gz",
+      "storedBytes": 258,
+      "storedSha256": "496e798b9b561c1fc45caab0990fc76e90b34c51b4240ea64d1c50de65c01713",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-selected1521-check.mjs",
+      "rawBytes": 2008,
+      "rawSha256": "e93e0d770ff436bd38baa430338fc73dda74570cc6e880acb8b7bf3389e463b9",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-selected1521-check.mjs.gz",
+      "storedBytes": 871,
+      "storedSha256": "98496766787798ccfda58b4c65aaa53c1f0ac5c62c70d9c54e5a27b786256e89",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-freeze-selected1521.py",
+      "rawBytes": 2337,
+      "rawSha256": "c82fccec2b44feae1257930b59ab7294944b37401eb2457cc124ec789cdab4b3",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-freeze-selected1521.py.gz",
+      "storedBytes": 1055,
+      "storedSha256": "4d62f06af82a5192c75dec4b098e951aa4a718f4f94d30836f3edc818982babe",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-apply-exact2743.py",
+      "rawBytes": 5535,
+      "rawSha256": "e6e8e18cdf5ea3c95eb4d9f3a25569bae17b71a3e7d91ec04d64410a3239118f",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-apply-exact2743.py.gz",
+      "storedBytes": 1925,
+      "storedSha256": "89e5e368d2b9f1b719b1dc417019958aa32b5c63f0a5de36cdb3b8719b98b8ef",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-edited2743-full.mjs",
+      "rawBytes": 2642,
+      "rawSha256": "de04adf2b238c081342a7d62aa86c5e9fe120b0ae073230599aa7322bcddf968",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-edited2743-full.mjs.gz",
+      "storedBytes": 1060,
+      "storedSha256": "340dfa5c9f971e40a1c6d401783de888329aa9b3cac4a6d0f2a7e53970269ea2",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-root-actual-4995.json",
+      "rawBytes": 490,
+      "rawSha256": "b637cfbc0de7efbbfaf0eb0c562c9fe635136978651f28ae3284e6eceec66d66",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-root-actual-4995.json.gz",
+      "storedBytes": 342,
+      "storedSha256": "1b4a922c51993eff440d0d4cdfdae4c47460b99841f74591c0e4cdf63f2d0dde",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-root-actual-audit.mjs",
+      "rawBytes": 3483,
+      "rawSha256": "b4d12371a4f065cbda01a024487b5a41ab5425226d0e8b019c90031072603cfd",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-root-actual-audit.mjs.gz",
+      "storedBytes": 1606,
+      "storedSha256": "131431527020e6a7a7305ec236479c5a08b58d6c0c836cc2f1c1dd2451488b2a",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-root-samples-eaba.json",
+      "rawBytes": 2778,
+      "rawSha256": "3971f8f01a582a50fea0da6bc9f336eef9a3449cc98da573670ec0e2d4ecca05",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-root-samples-eaba.json.gz",
+      "storedBytes": 938,
+      "storedSha256": "f0ae87cc0c433479868603abe03514bf38466a8baf17437c281a130d8bf2cbb9",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-archive-mixed-batch.py",
+      "rawBytes": 7977,
+      "rawSha256": "895d45930697261d71f7014ce8fd762a995699a567dd62f5ccb1e9ebd4caa83d",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-archive-mixed-batch.py.gz",
+      "storedBytes": 2831,
+      "storedSha256": "23c4261f02df6c344f7c55c3a20821694cd1e09a574fd1f8d11e1904920b3903",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-mixed-before-033cd059-backlog.json",
+      "rawBytes": 801901,
+      "rawSha256": "949205305b794f9ef0ce2a04b8b4a3b610950037529a270a2fc34e53ee00927a",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-mixed-before-033cd059-backlog.json.gz",
+      "storedBytes": 100646,
+      "storedSha256": "857cb08187eb2f4562a3330d68ab120497b3a1d78abc3f984a7d23d15ea0f1ab",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    },
+    {
+      "rawFile": "rob-316-mixed-after-4995a7ce-backlog.json",
+      "rawBytes": 396546,
+      "rawSha256": "dc3840370e9063df034b858a7032735763edac2a9a8734e9898415f1fce4e3a9",
+      "path": "docs/engine/card-load-100-2026-10-28/w0/evidence/rob-316-mixed-after-4995a7ce-backlog.json.gz",
+      "storedBytes": 50987,
+      "storedSha256": "085046e9f0cd3356e1f34ecf433188ecefb8a649b0b201284addda5f8ba8cf98",
+      "rawPrivacyScanPassed": true,
+      "gzipRoundtripVerified": true
+    }
+  ]
+}

@@ -159,24 +159,52 @@ export function abstractBody(ability, slots, name = "", level = 1) {
   slots.forEach((s, i) => { for (const [form, f] of Object.entries(formsOf(s))) { if (!words.has(f)) words.set(f, []); words.get(f).push({i, form}); } });
   const used = new Map();
   const pop = (q, k) => { const list = q.get(k); const n = used.get(list) ?? 0; used.set(list, n + 1); return list[Math.min(n, list.length - 1)]; };
+  /* A noun repeated in different parts of an ability is not interchangeable: the type counted after "for each"
+     belongs to the count, and a selector in an activated effect belongs after the cost's colon. A sacrifice of
+     "this land" must not teach an artifact a search for artifacts (CR 602.1a-b). */
+  const text = String(ability.text ?? ""), colon = text.indexOf(":"), each = /\bfor each\b/i.exec(text);
+  const startAfter = (at) => templateOf(text.slice(0, at), name, level).slots.length;
+  const effectStart = ["activated", "mana"].includes(ability.kind) && colon >= 0 ? startAfter(colon + 1) : 0;
+  const countStart = each ? startAfter(each.index + each[0].length) : 0;
+  /* CR 601.2c: the first and second targets can name different types even when their teacher names the same type.
+     Bind each target selector at its own occurrence, not at a counted noun between the two targets. */
+  const targetStarts = [...text.matchAll(/\btarget\b/gi)].map((match) => startAfter(match.index + match[0].length));
+  const ranges = new Map([[0, words]]);
+  const wordsAfter = (start) => {
+    if (!ranges.has(start)) ranges.set(start, new Map([...words].map(([word, list]) => {
+      const matching = list.filter((slot) => slot.i >= start);
+      return [word, matching.length ? matching : list];
+    })));
+    return ranges.get(start);
+  };
+  const pt = slots.filter((slot) => slot.kind === "pt");
   /* A mana number written as a number ("cost {1} more", `amount: 1`) is its slot only where no mana string took it and
      no number slot has its value: `{1}, {T}, Sacrifice: Draw a card.` keeps its draw at one. */
   const strings = JSON.stringify({...ability, text: undefined});
   const looseMana = new Map([...manas].filter(([k]) => !numbers.has(k) && !strings.includes(`{${k}}`)));
-  const walk = (v, depth, key) => {
+  const walk = (v, depth, key, wordStart = 0) => {
     /* `{target: 0}` points at a target; it is never a number of the sentence's. */
     if (typeof v === "number" && key === "target") return v;
     if (typeof v === "number" && numbers.has(String(v))) return {$slot: pop(numbers, String(v))};
     if (typeof v === "number" && looseMana.has(String(v))) return {$slot: pop(looseMana, String(v))};
     if (typeof v === "string") {
       if (key === "text") return abstractText(v, name, slots, level);
-      if (words.has(v)) { const w = pop(words, v); return {$slot: w.i, form: w.form}; }
+      if (words.has(v)) { const w = pop(wordsAfter(wordStart), v); return {$slot: w.i, form: w.form}; }
       return v.replace(/\{(\d+)\}/g, (m, d) => (manas.has(d) ? `{$${pop(manas, d)}}` : m));
     }
-    if (Array.isArray(v)) return v.map((x) => walk(x, depth + 1, null));
+    if (Array.isArray(v)) return v.map((x, index) => walk(x, depth + 1, null,
+      depth === 1 && key === "targets" ? targetStarts[index] ?? wordStart : wordStart));
     if (v && typeof v === "object") {
+      /* Counted +1/+0 amounts often omit `times: 1` in the engine grammar. It is still the printed +1, so it must be
+         learned as a slot when another card prints +2 for each of the same objects (CR 608.2h). */
+      if (v.count && v.times === undefined && each && ((key === "power" && pt[0]?.v === 1) || (key === "toughness" && pt[1]?.v === 1)))
+        v = {...v, times: 1};
       const o = {};
-      for (const k of Object.keys(v)) { if (depth === 0 && (k === "text" || k === "id")) continue; o[k] = walk(v[k], depth + 1, k); }
+      for (const k of Object.keys(v)) {
+        if (depth === 0 && (k === "text" || k === "id")) continue;
+        const start = depth === 0 && k === "effects" ? effectStart : k === "count" && typeof v[k] === "object" ? Math.max(wordStart, countStart) : wordStart;
+        o[k] = walk(v[k], depth + 1, k, start);
+      }
       return o;
     }
     return v;
@@ -331,7 +359,7 @@ export function atomsOf(text) {
         }
         for (const [x, y] of words) {
           const piece = body.slice(x, y), pl = piece.length - piece.trimStart().length;
-          if (piece.trim()) out.push({start: lineStart + a + lead + x + pl, end: lineStart + a + lead + x + pl + piece.trim().length});
+          if (piece.trim()) out.push({start: lineStart + a + lead + x + pl, end: lineStart + a + lead + x + pl + piece.trim().length, keyword: true});
         }
       } else out.push({start: lineStart + a + lead, end: lineStart + a + lead + body.length});
     }
@@ -399,21 +427,39 @@ export function segment(text, name, library, except = null, {spells = true} = {}
  * every span `keep` accepts, and the sentences left, each with its place in the text. A spell is never half written:
  * when anything is left, its sentences are left too, so the writer writes the whole spell.
  *
+ * NOR IS ANY ABILITY (CR 113.2c: each paragraph of a card's text is one ability, aside from keywords strung on one line).
+ * A paragraph the library knows only in part is left whole, its known sentences with it, and asked of the writer
+ * as one piece -- Gemstone Caverns' "{T}: Add {C}." is a sentence the library knows, and "If Gemstone Caverns has a luck
+ * counter on it, instead add one mana of any color." the rest of that same mana ability: written apart, they would be two
+ * mana abilities, and the luck counter's "instead" no option of the {C} one (library load L4, 2026-10-21). A keyword
+ * line's words stay each its own ability.
+ *
  * @returns {{known: object[], write: {text: string, start: number}[], templates: string[]}}
  */
 export function partialTranslate(card, library, {except = null, keep = () => true} = {}) {
-  const name = card.identity.name;
+  const name = card.identity.name, raw = String(card.oracleText ?? "");
   const {atoms, spans} = segment(card.oracleText, name, library, except, {spells: castable(card)});
   const inside = (a, list) => list.some((s) => a.start >= s.start && a.end <= s.end);
   const trusted = spans.filter((s) => keep(s.id));
   const whole = trusted.length === spans.length && atoms.every((a) => inside(a, spans));
-  const kept = whole ? trusted : trusted.filter((s) => !s.spell);
+  const paragraph = (at) => (raw.slice(0, at).match(/\n/g) ?? []).length;
+  const unspell = whole ? trusted : trusted.filter((s) => !s.spell);
+  /* The paragraphs with a sentence left: none of their spans kept. */
+  const open = new Set(atoms.filter((a) => !a.keyword && !inside(a, unspell)).map((a) => paragraph(a.start)));
+  const kept = unspell.filter((s) => !open.has(paragraph(s.start)));
   const known = kept.flatMap((span) => {
     const t = templateWithout(library, span.id, except);
     const {slots} = templateOf(span.text, name, t.level);
     return JSON.parse(t.body).map((body) => ({...fillBody(body, slots, name), text: span.text}));
   });
-  return {known, write: atoms.filter((a) => !inside(a, kept)).map((a) => ({text: a.text, start: a.start})), templates: kept.map((s) => s.id)};
+  /* What is left, a paragraph's sentences together as the one ability they are; a keyword line's words, each alone. */
+  const write = [];
+  for (const a of atoms.filter((x) => !inside(x, kept))) {
+    const last = write[write.length - 1];
+    if (last && !a.keyword && last.paragraph === paragraph(a.start)) { last.end = a.end; continue; }
+    write.push({start: a.start, end: a.end, paragraph: paragraph(a.start)});
+  }
+  return {known, write: write.map((w) => ({text: raw.slice(w.start, w.end), start: w.start})), templates: kept.map((s) => s.id)};
 }
 
 /**

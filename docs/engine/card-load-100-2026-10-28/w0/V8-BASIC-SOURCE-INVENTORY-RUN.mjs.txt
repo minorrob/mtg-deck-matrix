@@ -1,0 +1,37 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import {Worker} from 'node:worker_threads';
+const outside=path.resolve('../scratch'),inventoryPath=path.join(outside,'v8-basic-source-inventory-544d8512.json');
+const raw=fs.readFileSync(inventoryPath),inventory=JSON.parse(raw),hash=bytes=>createHash('sha256').update(bytes).digest('hex');
+const source='544d8512d226790498ae5da29087471ab6ba9a29';
+const git=args=>execFileSync('git',args,{encoding:'utf8'}).trim();
+if(git(['rev-parse','HEAD'])!==source||git(['status','--porcelain']))throw new Error('Frozen source is not clean');
+if(inventory.source.revision!==source||inventory.source.dirty)throw new Error('Wrong inventory source');
+for(const item of inventory.scenarioFileInputs)if(hash(fs.readFileSync(item.file))!==item.sha256)throw new Error('Scenario file changed: '+item.file);
+const outputs={results:path.join(outside,'v8-basic-source-inventory-results-544d8512.jsonl'),checkpoint:path.join(outside,'v8-basic-source-inventory-checkpoint-544d8512.json'),summary:path.join(outside,'v8-basic-source-inventory-results-544d8512-summary.json')};
+const results=fs.existsSync(outputs.results)?fs.readFileSync(outputs.results,'utf8').trim().split('\n').filter(Boolean).map(line=>JSON.parse(line)):[];
+results.forEach((r,i)=>{if(r.ordinal!==i||r.source!==source||r.inventorySha256!==hash(raw))throw new Error('Checkpoint does not match frozen inventory');});
+const started=Date.now();let worker,timer,active=results.length,phase='initializing',restarting=false,finished=false;
+const summarize=()=>{
+  const eligible=results.filter(r=>r.result.eligibleForSavedEdit),prefixFailed=results.filter(r=>r.result.nativePrefixVerified===false),fullFailed=results.filter(r=>r.result.nativePrefixVerified===true&&r.result.fullStrictPass===false);
+  const failures={};for(const r of results){const error=r.result.prefixFailure??r.result.fullFailure??r.result.executionFailure;if(error){const key=error.assertion?.kind??error.kind??'native-assertion';failures[key]=(failures[key]??0)+1;}}
+  return {schema:'V8RemainingNarrowSourceValidation@1',source:inventory.source,inventorySha256:hash(raw),scope:'read-only native validation; no edits, omissions, family/card credit or canonical acceptance',
+    candidateCount:inventory.candidateCount,completed:results.length,complete:results.length===inventory.candidateCount,
+    eligibleScenarios:eligible.length,eligibleFiles:new Set(eligible.map(r=>r.result.file)).size,eligibleReferenceAdditions:eligible.reduce((sum,r)=>sum+inventory.candidates[r.ordinal].additions.length,0),
+    prefixFailures:prefixFailed.length,fullStrictFailures:fullFailed.length,executionFailures:results.filter(r=>r.result.executionFailure).length,
+    existingLiteralsPreserved:inventory.candidates.every(c=>c.existingLiterals.every(e=>JSON.stringify(c.changed.steps[e.step].source)===JSON.stringify(c.original.steps[e.step].source))),
+    failureKinds:failures,resultsSha256:fs.existsSync(outputs.results)?hash(fs.readFileSync(outputs.results)):null};
+};
+function checkpoint(){const value=summarize();fs.writeFileSync(outputs.checkpoint,JSON.stringify({...value,nextOrdinal:results.length,activeOrdinal:active,phase,elapsedSeconds:Math.round((Date.now()-started)/1000)},null,2)+'\n');return value;}
+function save(ordinal,result){if(ordinal!==results.length)throw new Error('Out-of-order or duplicate result');const record={ordinal,source,inventorySha256:hash(raw),result};fs.appendFileSync(outputs.results,JSON.stringify(record)+'\n');results.push(record);if(results.length%25===0){const v=checkpoint();console.log(JSON.stringify({completed:v.completed,total:v.candidateCount,eligible:v.eligibleScenarios,prefixFailures:v.prefixFailures,fullFailures:v.fullStrictFailures,executionFailures:v.executionFailures,elapsedSeconds:Math.round((Date.now()-started)/1000)}));}}
+function finish(){if(finished)return;finished=true;clearTimeout(timer);for(const item of inventory.scenarioFileInputs)if(hash(fs.readFileSync(item.file))!==item.sha256)throw new Error('Frozen scenario changed');if(git(['rev-parse','HEAD'])!==source||git(['status','--porcelain']))throw new Error('Source changed during validation');const value=checkpoint();fs.writeFileSync(outputs.summary,JSON.stringify({...value,elapsedSeconds:Math.round((Date.now()-started)/1000),savedFilesChanged:false},null,2)+'\n');console.log(JSON.stringify({...value,elapsedSeconds:Math.round((Date.now()-started)/1000)},null,2));}
+function failCurrent(kind,message){const c=inventory.candidates[active];save(active,{file:c.file,card:c.card,scenario:c.original.name,prefix:c.prefix,originalFieldsPreserved:true,eligibleForSavedEdit:false,executionFailure:{kind,message,unproved:true}});}
+function arm(){clearTimeout(timer);timer=setTimeout(async()=>{if(finished||restarting)return;restarting=true;failCurrent('timeout','Case exceeded 60000 ms; unproved, no replacement or retry');await worker.terminate();checkpoint();start();},60000);}
+function start(){if(results.length===inventory.candidateCount){finish();return;}restarting=false;active=results.length;phase='initializing';worker=new Worker(new URL('./v8-basic-source-inventory-worker.mjs',import.meta.url),{workerData:{inventory:inventoryPath,start:active},execArgv:[],resourceLimits:{stackSizeMb:4}});arm();
+  worker.on('message',message=>{if(restarting||finished)return;if(message.kind==='start'){active=message.index;phase='case';arm();}else if(message.kind==='result'){clearTimeout(timer);save(message.index,message.result);active=results.length;phase='between-cases';arm();}else if(message.kind==='done'){clearTimeout(timer);finish();}});
+  worker.on('error',async error=>{if(restarting||finished)return;restarting=true;failCurrent(phase==='initializing'?'worker-initialization-error':'worker-error',error.stack??error.message);await worker.terminate();checkpoint();if(phase==='initializing'){while(results.length<inventory.candidateCount){active=results.length;failCurrent('runner-unavailable','Worker initialization failed; remaining case unproved');}finish();}else start();});
+  worker.on('exit',code=>{if(!finished&&!restarting&&code!==0){restarting=true;failCurrent('worker-exit','Worker exited '+code+'; unproved');checkpoint();start();}});
+}
+console.log(JSON.stringify({source,inventorySha256:hash(raw),fixedCandidates:inventory.candidateCount,resumeAt:results.length,caseTimeoutMs:60000,workers:1}));checkpoint();start();

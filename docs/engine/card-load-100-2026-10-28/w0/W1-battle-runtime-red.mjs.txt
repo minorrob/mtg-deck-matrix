@@ -1,0 +1,51 @@
+import assert from "node:assert/strict";
+import {compileScript} from "../w0-w1-faces/game/engine/cards/index.mjs";
+import {runScenario} from "../w0-w1-faces/game/engine/cards/scenario.mjs";
+import {resolveTop} from "../w0-w1-faces/game/engine/rules/stack.mjs";
+import {awaitingChoice, resolveAwaiting} from "../w0-w1-faces/game/engine/rules/turn.mjs";
+import {attackers} from "../w0-w1-faces/game/engine/rules/combat.mjs";
+import {beginResolution} from "../w0-w1-faces/game/engine/script/resolution.mjs";
+import {afterResolving} from "../w0-w1-faces/game/engine/rules/priority.mjs";
+import {concede} from "../w0-w1-faces/game/engine/rules/sba.mjs";
+const script = {schema: "CrankCardScript@1", source: "hand", layout: "transform", identity: {name: "Smoke Combat Siege // Smoke Combat Prize", oracleId: "smoke-combat-siege", types: ["Battle"], subtypes: ["Siege"], defense: 4, manaCost: "{0}", colors: [], colorIdentity: []},
+  oracleText: "", abilities: [], back: {identity: {name: "Smoke Combat Prize", types: ["Creature"], power: 3, toughness: 3, manaCost: "", colors: []}, oracleText: "", abilities: []}};
+const compiled = compileScript(script); assert.deepEqual(compiled.problems, []);
+const fixture = {types: ["Creature"], power: 2, toughness: 2, keywords: ["Haste"]};
+const make = () => {
+  const {state} = runScenario({name: "Native Battle runtime diagnostic", seats: 3, setup: [{seat: 0, zone: "hand", cards: [script.identity.name]}, {seat: 0, zone: "battlefield", cards: ["Smoke Attacker"]}, {seat: 1, zone: "battlefield", cards: ["Smoke Protector Bear"]}], steps: [{cast: "Smoke Combat Siege"}], expect: []}, card => card === script.identity.name ? compiled.definition : null, {"Smoke Attacker": fixture, "Smoke Protector Bear": fixture});
+  resolveTop(state); resolveAwaiting(state, [awaitingChoice(state).options.findIndex(option => option.playerId === 1)]);
+  return {state, battle: state.zones.battlefield.find(id => state.objects[id].card === "Smoke Combat Siege"), attacker: state.zones.battlefield.find(id => state.objects[id].card === "Smoke Attacker")};
+};
+const failures = [];
+const check = (name, action) => {try {action(); console.log(`UNEXPECTED GREEN: ${name}`);} catch (error) {failures.push(name); console.log(`RED ${name}: ${error.message}`);}};
+check("own controlled Siege offered as an object attack target", () => {
+  const {state, battle} = make(); state.phase = "COMBAT_DECLARE_ATTACKERS"; attackers.open(state);
+  const choice = attackers.choice(state, state.awaiting);
+  assert.ok(choice.options.some(option => option.battleId === battle && option.defenderId === 1), "the controller may attack its own Siege, defended by its protector");
+});
+check("native noncombat damage removes defense", () => {
+  const {state, battle, attacker} = make();
+  const outcome = beginResolution(state, [{effect: "dealDamage", targets: [battle], amount: 2}], {controller: 0, source: attacker});
+  assert.equal(outcome.status, "done");
+  assert.deepEqual([state.objects[battle].counters.defense, state.objects[battle].damage, state.players.map(player => player.life)], [2, 0, [40, 40, 40]], "damage removes defense without marking a noncreature or redirecting to its protector");
+});
+check("non-Siege zero-defense SBA", () => {
+  const name = "Smoke Empty Battle", plain = compileScript({schema: "CrankCardScript@1", source: "hand", identity: {name, oracleId: "smoke-empty-battle", types: ["Battle"], defense: 0, manaCost: "{0}", colors: [], colorIdentity: []}, oracleText: "", abilities: []});
+  assert.deepEqual(plain.problems, []);
+  const {state} = runScenario({name: "Zero-defense Battle native SBA", seats: 3, setup: [{seat: 0, zone: "hand", cards: [name]}], steps: [{cast: name}, {settle: true}], expect: []}, card => card === name ? plain.definition : null);
+  assert.deepEqual(state.zones.graveyard[0].map(id => state.objects[id].card), [name], "a zero-defense non-Siege is put into its owner's graveyard");
+});
+check("unattacked Siege protector departure repair", () => {
+  const {state, battle} = make(); concede(state, 1);
+  assert.equal(state.awaiting?.kind, "rule-operation", "the current controller must select a new eligible protector");
+  assert.deepEqual(awaitingChoice(state).options.map(option => option.playerId), [2]);
+  assert.ok(state.objects[battle]);
+});
+check("last defense removed queues exact intrinsic Siege trigger", () => {
+  const {state, battle, attacker} = make();
+  const outcome = beginResolution(state, [{effect: "removeCounter", targets: [battle], counter: "defense", count: 4}], {controller: 0, source: attacker});
+  assert.equal(state.objects[battle].counters.defense, 0);
+  afterResolving(state, outcome.events);
+  assert.ok(state.stack.some(entry => entry.cardId === battle), "the actual last-counter event must trigger the Siege's intrinsic ability before its SBA exception is evaluated");
+});
+assert.equal(failures.length, 0, `${failures.length} native Battle gaps remain`);

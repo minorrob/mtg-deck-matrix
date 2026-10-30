@@ -1,0 +1,62 @@
+{
+  "schema": "V8ConditionalSelectedSnapshot@1",
+  "source": {
+    "revision": "1da49b1b422f36dcdb5b1a5fef8976896302f847",
+    "tree": "33570de080e2a4269d684a529e9104c9471917a1",
+    "dirty": false,
+    "inputs": {
+      "scripts": "bdc8c032ae5cdbac0bbeee5e6f97ae6d44cdf50e690dfb584df0b8481566f008",
+      "scenarios": "64d49388d94ba9e70672928ab8d21574bf76225da9211cd72a8f5240f360b219"
+    }
+  },
+  "scope": {
+    "directory": false,
+    "canonical": false,
+    "cardDirectory": null,
+    "selected": [
+      "Valakut Exploration",
+      "Patchwork Banner",
+      "Conspicuous Snoop"
+    ],
+    "cardRoot": "C:\\Users\\robmi\\CrankMagic\\worktrees\\load100\\w0-v8-policies\\game\\engine\\cards"
+  },
+  "measurement": {
+    "complete": true,
+    "counterfactual": true,
+    "choicePolicy": "explicit",
+    "definitions": 3,
+    "scenarios": 13,
+    "problems": 0,
+    "failed": 0
+  },
+  "summary": {
+    "final": 3,
+    "exercised": 0,
+    "neverExercised": [
+      "Conspicuous Snoop",
+      "Patchwork Banner",
+      "Valakut Exploration"
+    ],
+    "abilities": 8,
+    "reached": 8,
+    "scenarioReached": 8,
+    "counterfactualReached": 6,
+    "unreached": [],
+    "scenarioUnreached": [],
+    "complete": true,
+    "scenarioComplete": true
+  },
+  "checkerExit": 0,
+  "canonicalVerifierExit": 1,
+  "canonicalVerifierReason": "Selected scope, different definition/scenario/input/card-directory inventory; cannot pass canonical gate",
+  "archive": "v8-conditional-selected-1da49b1b.json.gz",
+  "rawBytes": 32426,
+  "rawSha256": "1517db28256e803a639e23071d7aee84839e7c431987caba9d50f0082fcc8cc0",
+  "gzipBytes": 3002,
+  "gzipSha256": "12c5338b853141850847711ceb0fc3a02e4d81d8b733fb82079e52585add5ed0",
+  "roundtripVerified": true,
+  "rawPrivacyScanPassed": true,
+  "privacyCategories": "same eight credential/personal-address categories as local-ci.sh",
+  "promotions": 0,
+  "canonicalAcceptance": false
+}

@@ -1,0 +1,40 @@
+"""Retain the reviewed native checks verbatim; add only iteration, receipts and worker messages."""
+from pathlib import Path
+import hashlib,json
+outside=Path.cwd().parent/'scratch'
+raw=(outside/'v8-basic-source-pilot.mjs').read_text(encoding='utf-8')
+header=raw[:raw.index('const files=dir=>')]
+helpers=raw[raw.index('const run='):raw.index('const results=[];')]
+loop=raw[raw.index('for(const c of selected) {'):raw.index('const duplicate=')]
+body=loop[len('for(const c of selected) {\n'):]
+assert body.endswith('  results.push(item);\n}\n')
+body=body[:-len('  results.push(item);\n}\n')]
+original_body=body
+needle='  try {\n    const initial='
+assert body.count(needle)==1
+body=body.replace(needle,'  item.nativeReceipts=[];\n'+needle)
+receipt="      item.nativeReceipts.push({step:p.step,name:p.name,index:p.ordinal,sourceId:authored,beforePool:{...before.state.players[0].manaPool},afterPool:{...after.state.players[0].manaPool},events:delta.map(e=>({kind:e.kind,fields:fields(e)}))});\n"
+needle='    }\n    item.nativePrefixVerified=true;'
+assert body.count(needle)==1
+body=body.replace(needle,receipt+needle)
+assert body.replace('  item.nativeReceipts=[];\n','').replace(receipt,'')==original_body
+worker="import {parentPort,workerData} from 'node:worker_threads';\n"+header+helpers+"""
+const inventory=JSON.parse(fs.readFileSync(workerData.inventory,'utf8'));
+for(let at=workerData.start;at<inventory.candidates.length;at++) {
+  const c=inventory.candidates[at];
+  parentPort.postMessage({kind:'start',index:at});
+  const unchangedInputs=JSON.stringify({original:c.original,changed:c.changed,fixtures:c.fixtures});
+"""+body+"""
+  item.inputsUnchanged=JSON.stringify({original:c.original,changed:c.changed,fixtures:c.fixtures})===unchangedInputs;
+  if(!item.inputsUnchanged){item.eligibleForSavedEdit=false;item.inputMutationFailure=true;}
+  parentPort.postMessage({kind:'result',index:at,result:item});
+}
+parentPort.postMessage({kind:'done'});
+"""
+target=outside/'v8-basic-source-inventory-worker.mjs';target.write_text(worker,encoding='utf-8')
+record={'reviewedPilotSha256':hashlib.sha256(raw.encode()).hexdigest(),
+  'unchangedNativeCheckBodySha256':hashlib.sha256(original_body.encode()).hexdigest(),
+  'nativeCheckBodyPreservedVerbatimAfterRemovingOnlyReceiptLogging':True,
+  'generatedWorkerSha256':hashlib.sha256(worker.encode()).hexdigest()}
+(outside/'v8-basic-source-inventory-worker-build.json').write_text(json.dumps(record,indent=2)+'\n')
+print(json.dumps(record,indent=2))

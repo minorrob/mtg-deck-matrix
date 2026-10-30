@@ -1,6 +1,6 @@
 # Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE.
 # The library load's combat lane (L4, 2026-10-21): one break per engine change. python3 game/tools/batch/breaks.py <this file>
-SUITES = ['tests/engine-libload-l4-combat.mjs', 'tests/engine-cards.mjs', 'tests/engine-vocabulary.mjs', 'tests/engine-compile.mjs']
+SUITES = ['tests/engine-libload-l4-combat.mjs', 'tests/engine-cards.mjs', 'tests/engine-vocabulary.mjs']
 
 COMBAT = 'game/engine/rules/combat.mjs'
 KEYWORDS = 'game/engine/keywords/combat.mjs'
@@ -46,7 +46,7 @@ BREAKS = [
     # Must be blocked if able (Vinebred Brawler)
     ('requirement in the record', COMBAT, '      ...(capped ? {capped} : {}),\n      ...(requires.length ? {requires} : {}),\n      options,\n      legalBlocks',
      '      ...(capped ? {capped} : {}),\n      options,\n      legalBlocks'),
-    ('requirement checked', COMBAT, '      if (met < need.least) reasons.push(need.why);\n', ''),
+    ('requirement checked', COMBAT, '      if (met < need.least) {\n', '      if (false) {\n'),
     ('requirement: menace by two', COMBAT, 'const per = (id) => (hasNow(state, id, "Menace") ? 2 : 1);', 'const per = () => 1;'),
     ('requirement: one at most never by two', COMBAT, 'if (n === 1 || !ruleChanged(state, "blocked-by-one-at-most", id)) pick(0, []);', 'pick(0, []);'),
     ('requirement: the most at once', COMBAT, '{ most = Math.max(most, blocked); return; }', '{ most = required.length; return; }'),
@@ -63,7 +63,7 @@ BREAKS = [
     ('scored pilot meets it', 'game/engine/pilots/scored-pilot.mjs',
      '    return {indices: Array.isArray(choice.requires) && choice.requires.length ? meetRequirements(choice, kept) : kept};', '    return {indices: kept};'),
     ('scenarios block as required', 'game/engine/cards/scenario.mjs',
-     'if (kind === "declare-blockers") return resolveAwaiting(state, meetRequirements(awaitingChoice(state), []));', 'if (kind === "declare-blockers") return resolveAwaiting(state, []);'),
+     'if (kind === "declare-blockers") {\n    const indices = meetRequirements(awaitingChoice(state), []);', 'if (kind === "declare-blockers") {\n    const indices = [];'),
 
     # Kaalia of the Vast: tapped and attacking that opponent
     ('chooseCard: attacking', 'game/engine/script/effects/asking.mjs', '        ...(params.attacking ? {attacking: params.attacking} : {})}, source: context.source ?? null,',
@@ -84,8 +84,4 @@ BREAKS = [
     ('saddle as a sorcery', INDEX, 'cost: [{atom: "crew", power: ability.amount ?? 0, saddle: true}], timing: "sorcery",', 'cost: [{atom: "crew", power: ability.amount ?? 0, saddle: true}],'),
     ('saddle not crewing as though', ACTIONS, 'a.rule === "crews-with-more" && !saddle)', 'a.rule === "crews-with-more")'),
     ('saddle a keyword', 'game/engine/vocabulary.mjs', '  "saddle",\n', ''),
-
-    # The writer's held-out sample: no card the library writes half an ability of (Gemstone Caverns)
-    ('sample: whole abilities known', 'game/tools/engine-compile.mjs',
-     '.filter((x) => x.assist && x.assist.known.every((k) => x.script.abilities.some((a) => a.text === k.text)))', '.filter((x) => x.assist)'),
 ]

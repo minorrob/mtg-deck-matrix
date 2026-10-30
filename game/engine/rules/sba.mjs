@@ -45,20 +45,29 @@
  */
 
 import {moveObject, removeObject, PER_PLAYER, PUBLIC_ZONES, eventCard, rememberExileLooker, recordDeath} from "../state/index.mjs";
-import {applyReplacements, placeReplacedCounters} from "./replacement.mjs";
-import {lastKnown, supertypesOf, subtypesOf, toughnessOf, typesOf, keywordsOf, controllerOf, deriving, staticAbilities} from "./layers.mjs";
+import {applyReplacements, placeReplacedCounters, ruleReplacementCandidates} from "./replacement.mjs";
+import {lastKnown, supertypesOf, subtypesOf, toughnessOf, typesOf, keywordsOf, controllerOf, deriving, staticAbilities, abilitiesOf} from "./layers.mjs";
 import {matchesSelector} from "../script/filter.mjs";
 import {commanderToAsk, resolveCommanderChoice, recordCommanderDamage} from "./commander.mjs";
-import {sacrificeOne, moveOne, returnExiledUntil, leavingRef, destructionReplaced, destructionAsks} from "../script/effects/zones.mjs";
-import {changeLife, crown} from "../script/effects/resources.mjs";
+import {sacrificeOne, moveOne, returnExiledUntil, leavingRef, destructionReplaced, destructionAsks, destructionReplacements, destructionChoice, finishSbaDeparture} from "../script/effects/zones.mjs";
+import {changeLife, crown, refreshPendingDamageSources} from "../script/effects/resources.mjs";
 import {runFollowUps} from "../script/effects/index.mjs";
 import {mergedOrderToAsk} from "../state/index.mjs";
 import {checkRingBearers} from "../keywords/ring.mjs";
 import {enduringStories, citysBlessings} from "../keywords/designations.mjs";
 import {preparedCopyStays} from "../script/effects/attributes.mjs";
-import {endControlChange, nextRecord, endCounterDurations, controlByAuras} from "../script/effects/permanents.mjs";
+import {endControlChange, nextRecord, endCounterDurations, controlByAuras, enchantable} from "../script/effects/permanents.mjs";
 import {protectedFrom} from "./protection.mjs";
-import {answerForDeparted, goOnWithout} from "./turn.mjs";
+import {answerForDeparted, answerRuleForDeparted, goOnWithout} from "./turn.mjs";
+import {cancelRuleOperation, beginRuleOperation, registerRuleOperation, askRuleOperation, emitRuleEvents} from "./operations.mjs";
+import {startSbaCohort, freezeSbaCohort, sbaCohort, reopenSbaPreparation, refreshPendingSbaSources, markSbaTriggerBatch,
+  startSbaLinkedReturns, sbaReturnBatch, markSbaReturnEvents, freezeSbaReturnBatch, reopenPreparedSbaReturn, pendingSbaReturnEvents} from "./sba-move-results.mjs";
+import {outsideEffectsFrame} from "./damage-operation.mjs";
+import {entryCounterProgressFrame, prospectiveEnteringState} from "./entry-characteristics.mjs";
+import {deferredEnteringContinuation} from "./pre-entry.mjs";
+import {placeCounters} from "./statics.mjs";
+import {collectTriggers} from "./trigger.mjs";
+import {rememberDepartingSpell} from "./spell-memory.mjs";
 
 /* The capitalized zone names the projection and the telemetry use. */
 const ZONE_LABEL = {
@@ -75,6 +84,374 @@ const event = (kind, state, fields) => ({kind, data: {turn: state.turn, phase: s
 const cardRef = eventCard;
 
 const isCreature = (object) => (object.types ?? []).includes("Creature");
+
+/* CR 704.5v: only an actual triggered ability of this exact Siege can hold its zero-defense SBA. */
+function battleWaitingTrigger(state, id) {
+  return (state.pendingTriggers ?? []).some(trigger => trigger.source?.cardId === id && !state.players[trigger.controller]?.lost)
+    || state.stack.some(entry => entry.kind === "trigger" && entry.cardId === id && !state.players[entry.playerId]?.lost);
+}
+
+function battleProtectorRepair(state, id) {
+  if (state.objects[id]?.zone !== "battlefield" || !typesOf(state, id).includes("Battle")) return null;
+  const player = controllerOf(state, id), siege = subtypesOf(state, id).includes("Siege");
+  const protector = state.objects[id].protector;
+  /* CR 310.9g: an in-game protector can survive copying a non-Siege; entry's forced choice is not an ongoing restriction. */
+  if (state.players[protector] && !state.players[protector].lost && (!siege || protector !== player)) return null;
+  const eligible = state.players.filter(other => !other.lost && (siege ? other.id !== player : other.id === player)).map(other => other.id);
+  /* CR 704.5x-y: a missing protector waits while the Battle is attacked; an in-game but invalid protector does not. */
+  if ((protector === undefined || !state.players[protector] || state.players[protector].lost)
+    && state.combat?.attacks?.some(attack => attack.battle === id)) return null;
+  return {objectId: id, player, siege, eligible};
+}
+
+function setBattleProtector(state, id, player, events) {
+  const old = state.objects[id].protector;
+  state.objects[id].protector = player;
+  events.push(event("GameEventBattleProtectorChanged", state, {card: cardRef(state, id), oldProtector: old ?? null, protector: player}));
+}
+
+registerRuleOperation("battle-protector-sba", (state, frame) => {
+  const repair = battleProtectorRepair(state, frame.objectId);
+  if (!repair || state.players[repair.player]?.lost || state.gameOver) return {status: "done"};
+  if (!repair.eligible.length) return {status: "done"}; // The ordinary zero/unprotectable pass performs this move.
+  const selected = frame.answer ? frame.options[frame.answer.indices[0]] : undefined;
+  delete frame.answer;
+  if (!repair.siege || repair.eligible.includes(selected)) {
+    const events = [];
+    setBattleProtector(state, frame.objectId, repair.siege ? selected : repair.player, events);
+    state.ruleOperation.events.push(...events);
+    return {status: "done"};
+  }
+  frame.options = repair.eligible; frame.generation = (frame.generation ?? 0) + 1;
+  return askRuleOperation(state, frame, {player: repair.player, choice: {
+    id: `battle-protector-sba:${state.ruleOperation.serial}:${frame.objectId}:${frame.generation}`,
+    title: `${state.objects[frame.objectId].card}: choose its protector`, mode: "one", min: 1, max: 1,
+    options: repair.eligible.map((playerId, index) => ({index, playerId, label: state.players[playerId].name}))}});
+});
+
+/* CR 704.3: replacement planning holds the entire native cohort on the battlefield. Departure callbacks run only
+   after every base move, with one shared pre-move LKI snapshot. The ledger authorizes each commit exactly once. */
+registerRuleOperation("sba-cohort", (state, frame) => {
+  if (!frame.stage) {
+    frame.answers = structuredClone(state.destructionAnswers ?? {}); frame.stage = "destruction";
+  }
+  if (frame.stage === "destruction") {
+    const live = frame.lethal.filter(id => {
+      const object = state.objects[id];
+      if (object?.zone !== "battlefield" || !typesOf(state,id).includes("Creature")) return false;
+      const toughness = toughnessOf(state,id);
+      return toughness <= 0 || object.deathtouched === true || object.damage > 0 && object.damage >= toughness;
+    });
+    const destroyed = live.filter(id => !frame.required.includes(id) && toughnessOf(state,id) > 0);
+    if (frame.answer) {
+      const {objectId, options} = frame.destructionAsk;
+      const chosen = options[frame.answer.indices[0]];
+      if (state.objects[objectId]?.zone === "battlefield"
+        && destructionReplacements(state,objectId,{byEffect: !destroyed.includes(objectId)}).some(candidate => candidate.key === chosen)) frame.answers[objectId] = chosen;
+      else delete frame.answers[objectId];
+      delete frame.answer; delete frame.destructionAsk;
+    }
+    const ask = destructionAsks(state,destroyed,frame.answers,{recursive:true})[0];
+    if (ask) {
+      frame.destructionAsk = ask; frame.generation = (frame.generation ?? 0) + 1;
+      const choice = destructionChoice(state,ask);
+      choice.id = `sba-destruction:${state.ruleOperation.serial}:${frame.generation}:${ask.objectId}`;
+      return askRuleOperation(state,frame,{player:ask.player,choice});
+    }
+    const events = [], deferredMoves = [], members = frame.required.filter(id => state.objects[id]?.zone === "battlefield");
+    for (const id of live) {
+      if (members.includes(id)) continue;
+      if (toughnessOf(state,id) > 0 && (keywordsOf(state,id).includes("Indestructible")
+        || destructionReplaced(state,id,events,{chosen:frame.answers[id],deferredMoves,answers:frame.answers}))) continue;
+      members.push(id);
+    }
+    for (const id of Object.keys(frame.answers)) takeDestructionAnswer(state,id);
+    const moving = new Set([...members,...deferredMoves]);
+    frame.members = state.zones.battlefield.filter(id => moving.has(id)).map(id => ({id}));
+    frame.prefix.push(...events);
+    frame.cohortId = startSbaCohort(state, frame, frame.members, frame.prefix);
+    delete frame.prefix; frame.cursor = 0; frame.stage = "plan";
+  }
+  const cohort = sbaCohort(state, frame.cohortId);
+  if (frame.stage === "after-linked-returns") {
+    cohort.phase = "done"; cohort.departures = []; return {status:"done"};
+  }
+  if (frame.stage === "after-plan") {
+    if (!frame.childResult?.preparedMove) cohort.members.find(member => member.id === frame.planningId).skipped = true;
+    delete frame.childResult; frame.stage = "plan";
+  }
+  if (frame.stage === "plan") {
+    while (frame.cursor < cohort.members.length) {
+      const member = cohort.members[frame.cursor++];
+      if (state.objects[member.id]?.zone !== member.from) {member.skipped = true; continue;}
+      frame.planningId = member.id; frame.stage = "after-plan";
+      return {status: "continue", children: [{kind: "move-one", id: member.id, to: "graveyard", prepareOnly: true, cohortId: frame.cohortId}]};
+    }
+    /* A later sibling's question can outlive an outside concession. Applied prefixes stay fixed, but a source returned
+       by that concession can supply a new, still-unapplied replacement for an earlier completed proposal. */
+    const recheck = cohort.members.find(member => !member.skipped && state.objects[member.id]?.zone === member.from
+      && ruleReplacementCandidates(state, state.ruleOperation.sbaPreparedMoves[member.token].proposal).length);
+    if (recheck) {
+      const child = reopenSbaPreparation(state, frame, recheck.id); frame.planningId = recheck.id; frame.stage = "after-plan";
+      return {status: "continue", children: [child]};
+    }
+    frame.stage = "freeze";
+  }
+  if (frame.stage === "freeze") {
+    const snapshots = deriving(state, () => Object.fromEntries(cohort.members.filter(member => state.objects[member.id]?.zone === member.from)
+      .map(member => [member.id, {card: leavingRef(state, member.id), leftBehind: lastKnown(state, member.id)}])));
+    freezeSbaCohort(state, frame, snapshots); frame.stage = "commit";
+  }
+  if (frame.stage === "commit") {
+    const events = [...cohort.prefix]; cohort.prefix = [];
+    for (const member of cohort.members) {
+      if (member.skipped || member.committed) continue;
+      if (state.objects[member.id]?.zone !== member.from) {member.skipped = true; continue;}
+      moveOne(state, member.id, "graveyard", events, {preparedMove: member.token, cohortId: frame.cohortId});
+    }
+    markSbaTriggerBatch(state, frame, events);
+    collectTriggers(state, events);
+    emitRuleEvents(state, events); frame.cursor = 0; frame.stage = "departures";
+  }
+  if (frame.stage === "after-departure") {delete frame.childResult; frame.stage = "departures";}
+  if (frame.stage === "departures") {
+    if (frame.cursor >= cohort.departures.length) {
+      frame.stage = "after-linked-returns";
+      return {status:"continue",children:[{kind:"sba-linked-returns",sourceCohortId:frame.cohortId}]};
+    }
+    const departure = cohort.departures[frame.cursor++], events = [];
+    finishSbaDeparture(state, frame.cohortId, departure.id, events);
+    emitRuleEvents(state, events); frame.stage = "after-departure";
+    return {status: "continue", children: [
+      ...(departure.proposal.followUps ?? []).map(follow => outsideEffectsFrame(follow.effects, {...follow.context,
+        ...(cohort.snapshots[follow.context.source] ? {lastKnown: cohort.snapshots[follow.context.source].leftBehind} : {})})),
+    ]};
+  }
+  return {status: "continue"};
+});
+
+/* CR 610.3d: all links created by the same source-departure event return together. Every entry decision and actual
+   cost precedes every return move, so a copying entrant cannot see a sibling that has not entered yet. */
+function linkedReturnHosts(state,member,prepared) {
+  if(prepared.proposal.to!=="battlefield")return null;
+  const view=prospectiveEnteringState(state,prepared.counterPlan??{objectId:member.id,player:member.owner,objectPatch:prepared.entryPatch});
+  const enchant=view.objects[member.id].enchant;
+  if(!enchant)return null;
+  return {enchant,hosts:enchantable(view,enchant,member.owner).filter(id=>!protectedFrom(view,{card:id},member.id))};
+}
+
+registerRuleOperation("sba-linked-returns",(state,frame)=>{
+  if(!frame.stage){
+    frame.returnBatchId=startSbaLinkedReturns(state,frame);
+    frame.seats=state.players.map((_,index)=>(state.activePlayer+index)%state.players.length);
+    frame.seatIndex=0;frame.order=[];frame.stage="order";
+  }
+  const batch=sbaReturnBatch(state,frame.returnBatchId), operation=state.ruleOperation;
+  if(frame.stage==="order"){
+    while(frame.seatIndex<frame.seats.length){
+      const owner=frame.seats[frame.seatIndex];
+      const ids=batch.members.filter(member=>member.owner===owner&&state.objects[member.id]?.zone===member.from&&!state.players[owner].lost).map(member=>member.id);
+      let selected=frame.answer?.indices.map(index=>frame.options[index]);delete frame.answer;
+      if(selected&&(selected.length!==ids.length||selected.some(id=>!ids.includes(id))))selected=null;
+      if(ids.length>1&&!selected){
+        frame.options=ids;frame.generation=(frame.generation??0)+1;
+        return askRuleOperation(state,frame,{player:owner,choice:{id:`sba-linked-order:${operation.serial}:${frame.generation}:${owner}`,
+          title:"Order your simultaneous entering choices",mode:"order",min:ids.length,max:ids.length,
+          options:ids.map((id,index)=>({index,cardId:id,label:state.objects[id].card}))}});
+      }
+      frame.order.push(...(selected??ids));frame.seatIndex++;
+    }
+    frame.index=0;frame.stage="plan";
+  }
+  if(frame.stage==="after-entry"){
+    const member=batch.members.find(member=>member.id===frame.order[frame.index]);
+    if(!frame.childResult?.preparedReturn)member.skipped=true;
+    delete frame.childResult;frame.index++;frame.stage="plan";
+  }
+  if(frame.stage==="plan"){
+    while(frame.index<frame.order.length){
+      const member=batch.members.find(member=>member.id===frame.order[frame.index]);
+      if(state.objects[member.id]?.zone!==member.from||state.players[member.owner].lost){member.skipped=true;frame.index++;continue;}
+      frame.stage="after-entry";
+      return {status:"continue",children:[{kind:"move-one",id:member.id,to:"battlefield",prepareOnly:true,returnBatchId:frame.returnBatchId}]};
+    }
+    frame.attachmentsChecked=false;frame.countersChecked=false;frame.entryRecheckIndex=0;frame.zonesChecked=false;frame.stage="entry-recheck";
+  }
+  if(frame.stage==="after-entry-recheck"){
+    const member=batch.members.find(member=>member.id===frame.recheckingEntryId),prepared=operation.sbaPreparedReturns[member.prepared];
+    if(!frame.childResult)member.skipped=true;
+    else{
+      const result=frame.childResult;
+      const counters=prepared.counterResult?prepared.entering.counters:result.entering.counters;
+      prepared.entering={...result.entering,counters};prepared.entryPatch=result.objectPatch;prepared.counterPlan=result.counterPlan;
+      prepared.entryProgress=result.entryProgress;
+      if(result.entering.to&&result.entering.to!=="battlefield")member.entryRedirect=true;
+    }
+    delete frame.childResult;frame.attachmentsChecked=false;frame.countersChecked=false;frame.entryRecheckIndex=0;frame.zonesChecked=false;frame.stage="entry-recheck";
+  }
+  if(frame.stage==="after-zone-recheck"){
+    const member=batch.members.find(member=>member.id===frame.recheckingZoneId);
+    if(!frame.childResult?.preparedReturn)member.skipped=true;
+    else{
+      const prepared=operation.sbaPreparedReturns[member.prepared];
+      if(prepared.proposal.to!=="battlefield"){
+        member.counterReady=true;delete member.counterPartial;
+      }else if(!prepared.counterResult){member.counterReady=false;delete member.counterPartial;}
+      delete member.entryRedirect;
+    }
+    delete frame.childResult;frame.attachmentsChecked=false;frame.countersChecked=false;frame.entryRecheckIndex=0;
+    frame.zoneRecheckIndex++;frame.stage="zone-recheck";
+  }
+  if(frame.stage==="entry-recheck"&&!frame.zonesChecked){frame.zoneRecheckIndex=0;frame.stage="zone-recheck";}
+  if(frame.stage==="zone-recheck"){
+    while(frame.zoneRecheckIndex<frame.order.length){
+      const member=batch.members.find(member=>member.id===frame.order[frame.zoneRecheckIndex]),prepared=operation.sbaPreparedReturns?.[member.prepared];
+      if(member.skipped||!prepared||state.objects[member.id]?.zone!==member.from||state.players[member.owner].lost){member.skipped=true;frame.zoneRecheckIndex++;continue;}
+      if(member.entryRedirect||ruleReplacementCandidates(state,prepared.proposal).length){
+        const child=reopenPreparedSbaReturn(state,frame,member.id);
+        frame.recheckingZoneId=member.id;frame.stage="after-zone-recheck";
+        return {status:"continue",children:[child]};
+      }
+      frame.zoneRecheckIndex++;
+    }
+    frame.zonesChecked=true;frame.stage="entry-recheck";
+  }
+  if(frame.stage==="entry-recheck"){
+    while(frame.entryRecheckIndex<frame.order.length){
+      const member=batch.members.find(member=>member.id===frame.order[frame.entryRecheckIndex]),prepared=operation.sbaPreparedReturns?.[member.prepared];
+      if(member.skipped||!prepared||state.objects[member.id]?.zone!==member.from||state.players[member.owner].lost){member.skipped=true;frame.entryRecheckIndex++;continue;}
+      if(prepared.proposal.to!=="battlefield"||!prepared.entryProgress){frame.entryRecheckIndex++;continue;}
+      const continuation=deferredEnteringContinuation(state,prepared,member.id,member.owner,frame.returnBatchId);
+      if(continuation){frame.recheckingEntryId=member.id;frame.stage="after-entry-recheck";return {status:"continue",children:[continuation]};}
+      frame.entryRecheckIndex++;
+    }
+    if(!frame.attachmentsChecked){frame.attachmentIndex=0;frame.stage="attachments";}
+    else if(!frame.countersChecked){batch.phase="counters";frame.index=0;frame.stage="counters";}
+    else frame.stage="ready";
+  }
+  if(frame.stage==="attachments"){
+    while(frame.attachmentIndex<frame.order.length){
+      const member=batch.members.find(member=>member.id===frame.order[frame.attachmentIndex]),prepared=operation.sbaPreparedReturns?.[member.prepared];
+      if(member.skipped||!prepared||state.objects[member.id]?.zone!==member.from||state.players[member.owner].lost){
+        member.skipped=true;if(frame.hostAsk?.id===member.id){delete frame.answer;delete frame.hostAsk;}frame.attachmentIndex++;continue;
+      }
+      const attachment=linkedReturnHosts(state,member,prepared);
+      prepared.enchant=attachment?.enchant??null;
+      if(!attachment){delete member.blocked;frame.attachmentIndex++;continue;}
+      const {hosts}=attachment;
+      if(frame.hostAsk?.id===member.id&&frame.answer){
+        const selected=frame.hostAsk.options[frame.answer.indices[0]];delete frame.answer;delete frame.hostAsk;
+        if(hosts.includes(selected))member.host=selected;
+      }
+      if(member.host!==undefined&&!hosts.includes(member.host))delete member.host;
+      if(!hosts.length){member.blocked="no-host";delete prepared.host;frame.attachmentIndex++;continue;}
+      delete member.blocked;
+      if(member.host===undefined&&hosts.length===1)member.host=hosts[0];
+      if(member.host===undefined){
+        frame.hostAsk={id:member.id,options:hosts};frame.generation=(frame.generation??0)+1;
+        return askRuleOperation(state,frame,{player:member.owner,choice:{id:`sba-return-enchant:${operation.serial}:${member.id}:${frame.generation}`,
+          title:`${state.objects[member.id].card}: choose what it enchants as it enters`,mode:"one",min:1,max:1,
+          options:hosts.map((id,index)=>({index,cardId:id,label:state.objects[id].card}))}});
+      }
+      prepared.host=member.host;prepared.hostZone=state.objects[member.host].zone;frame.attachmentIndex++;
+    }
+    delete frame.attachmentResume;frame.attachmentsChecked=true;frame.countersChecked=false;frame.entryRecheckIndex=0;frame.zonesChecked=false;frame.stage="entry-recheck";
+    return {status:"continue"};
+  }
+  if(frame.stage==="after-counter"){
+    const member=batch.members.find(member=>member.id===frame.order[frame.index]), prepared=operation.sbaPreparedReturns[member.prepared];
+    if(frame.childResult){
+      prepared.counterResult=frame.childResult.counterResult;
+      prepared.entering={...prepared.entering,counters:frame.childResult.entering.counters};member.counterReady=!frame.childResult.partial;
+      member.counterPartial=frame.childResult.partial===true;
+    }else member.skipped=true;
+    delete frame.childResult;
+    if(member.counterPartial){frame.entryRecheckIndex=0;frame.attachmentsChecked=false;frame.countersChecked=false;frame.zonesChecked=false;frame.stage="entry-recheck";}
+    else {frame.index++;frame.stage="counters";}
+  }
+  if(frame.stage==="after-counter-recheck"){
+    const member=batch.members.find(member=>member.id===frame.recheckingId), prepared=operation.sbaPreparedReturns[member.prepared];
+    if(frame.childResult){prepared.counterResult=frame.childResult.counterResult;prepared.entering={...prepared.entering,counters:frame.childResult.entering.counters};
+      member.counterReady=!frame.childResult.partial;member.counterPartial=frame.childResult.partial===true;}
+    else member.skipped=true;
+    delete frame.childResult;frame.recheckIndex=0;
+    if(member.counterPartial){frame.entryRecheckIndex=0;frame.attachmentsChecked=false;frame.countersChecked=false;frame.zonesChecked=false;frame.stage="entry-recheck";}
+    else frame.stage="counter-recheck";
+  }
+  if(frame.stage==="counters"){
+    while(frame.index<frame.order.length){
+      const member=batch.members.find(member=>member.id===frame.order[frame.index]), prepared=operation.sbaPreparedReturns?.[member.prepared];
+      if(member.skipped||!prepared||state.objects[member.id]?.zone!==member.from||state.players[member.owner].lost){member.skipped=true;frame.index++;continue;}
+      if(member.blocked||member.counterReady){frame.index++;continue;}
+      if(prepared.proposal.to!=="battlefield"||!prepared.counterPlan){member.counterReady=true;frame.index++;continue;}
+      batch.counterPlanningId=member.id;
+      const counterFrame=prepared.counterResult?entryCounterProgressFrame(state,prepared,member.id,member.owner,frame.returnBatchId)
+        :{...prepared.counterPlan,returnBatchId:frame.returnBatchId};
+      frame.stage="after-counter";
+      return {status:"continue",children:[counterFrame]};
+    }
+    frame.recheckIndex=0;frame.stage="counter-recheck";
+  }
+  if(frame.stage==="counter-recheck"){
+    while(frame.recheckIndex<frame.order.length){
+      const member=batch.members.find(member=>member.id===frame.order[frame.recheckIndex]), prepared=operation.sbaPreparedReturns?.[member.prepared];
+      if(member.skipped||!prepared||state.objects[member.id]?.zone!==member.from||state.players[member.owner].lost){member.skipped=true;frame.recheckIndex++;continue;}
+      if(member.blocked||prepared.proposal.to!=="battlefield"||!prepared.counterPlan){frame.recheckIndex++;continue;}
+      batch.counterPlanningId=member.id;
+      const counterFrame=entryCounterProgressFrame(state,prepared,member.id,member.owner,frame.returnBatchId);
+      const view=prospectiveEnteringState(state,counterFrame);
+      const needs=counterFrame.entryGrantChanged||counterFrame.kinds.some(counter=>{
+        const next=placeCounters(view,{id:member.id},counter,counterFrame.counts[counter],member.owner,
+          {entering:true,askable:true,applied:counterFrame.applied[counter]??[],reportApplied:true});
+        return next.question||(next.applied??[]).length;
+      });
+      if(needs){frame.recheckingId=member.id;frame.stage="after-counter-recheck";return {status:"continue",children:[counterFrame]};}
+      frame.recheckIndex++;
+    }
+    frame.countersChecked=true;frame.entryRecheckIndex=0;frame.zonesChecked=false;frame.stage="entry-recheck";
+    return {status:"continue"};
+  }
+  if(frame.stage==="ready"){
+    for(const member of batch.members)if(!member.skipped&&(state.objects[member.id]?.zone!==member.from||state.players[member.owner].lost))member.skipped=true;
+    for(let index=0;index<frame.order.length;index++){
+      const member=batch.members.find(member=>member.id===frame.order[index]),prepared=operation.sbaPreparedReturns?.[member.prepared];
+      if(member.skipped||!prepared)continue;
+      const attachment=linkedReturnHosts(state,member,prepared);
+      if(attachment){
+        if(!attachment.hosts.length){member.blocked="no-host";continue;}
+        if(member.blocked||!attachment.hosts.includes(member.host)){
+          delete member.blocked;delete member.host;frame.attachmentIndex=index;frame.attachmentResume=true;frame.attachmentsChecked=false;frame.stage="attachments";
+          return {status:"continue"};
+        }
+        prepared.enchant=attachment.enchant;prepared.hostZone=state.objects[member.host].zone;
+      }
+    }
+    for(const member of batch.members)if(member.blocked){member.skipped=true;member.outcome=member.blocked;delete operation.sbaPreparedReturns[member.prepared];}
+    freezeSbaReturnBatch(state,frame);frame.stage="commit";
+  }
+  if(frame.stage==="commit"){
+    for(const member of batch.members)if(!member.skipped&&(state.objects[member.id]?.zone!==member.from||state.players[member.owner].lost))member.skipped=true;
+    markSbaReturnEvents(state,frame,operation.events,"preflight");
+    collectTriggers(state,operation.events);
+    const events=[];
+    batch.followUps=[];
+    for(const id of frame.order){
+      const member=batch.members.find(member=>member.id===id);
+      if(member.skipped||member.committed)continue;
+      const prepared=operation.sbaPreparedReturns[member.prepared];
+      moveOne(state,id,"battlefield",events,{preparedReturn:member.prepared,returnBatchId:frame.returnBatchId});
+      batch.followUps.push(...(prepared.proposal.followUps??[]));
+    }
+    markSbaReturnEvents(state,frame,events,"arrival");collectTriggers(state,events);
+    emitRuleEvents(state,events);frame.stage="after-followups";
+    return {status:"continue",children:batch.followUps.map(follow=>({...outsideEffectsFrame(follow.effects,follow.context),sbaReturnBatchId:frame.returnBatchId}))};
+  }
+  if(frame.stage==="after-followups"){
+    batch.phase="done";
+    return {status:"done"};
+  }
+  return {status:"continue"};
+});
 
 /**
  * Deal damage to a player from a source, keeping the commander tally.
@@ -111,6 +488,10 @@ function lossReason(state, player) {
    phasing included -- and every effect giving them control ends; then what they control on the stack that
    no card of theirs represents ceases to exist; then whatever they still control is exiled. */
 function removePlayerFromBoard(state, playerId, events) {
+  const returnPrefix=pendingSbaReturnEvents(state);
+  if(returnPrefix)collectTriggers(state,returnPrefix);
+  refreshPendingDamageSources(state);
+  refreshPendingSbaSources(state);
   for (const id of [...state.zones.battlefield]) {
     if (state.objects[id]?.owner !== playerId) continue;
     /* Face down, revealed as its owner leaves (CR 708.9). */
@@ -141,6 +522,7 @@ function removePlayerFromBoard(state, playerId, events) {
   for (const entry of [...state.stack]) {
     const object = entry.objectId === null ? null : state.objects[entry.objectId];
     if (!(object ? object.owner === playerId : entry.playerId === playerId)) continue;
+    rememberDepartingSpell(state, entry);
     state.stack.splice(state.stack.indexOf(entry), 1);
     if (object) removeObject(state, entry.objectId);
     if (entry.stage === "resolving") cutShort(state);
@@ -196,7 +578,11 @@ export function monarchLeft(state, events = []) {
 /* A spell or ability that was resolving has left the stack with the player who left (800.4a): nothing is left of it to
    resolve, and a question it was asking anyone is withdrawn. */
 function cutShort(state) {
+  /* A paused rule operation's already-reported prefix happened before its controller left (CR 603.2, 800.4a).
+     Preserve surviving players' triggers before withdrawing that caller, without reporting those events again. */
+  if (state.ruleOperation) collectTriggers(state, state.resolving?.events ?? state.ruleOperation.events);
   state.resolving = null;
+  cancelRuleOperation(state);
   if (state.awaiting?.kind === "effect-choice") state.awaiting = null;
 }
 
@@ -333,7 +719,7 @@ export function checkStateBasedActions(state) {
        damage is read once for the whole board, every object derived once (rules/layers.mjs, deriving) -- asking it again
        for each creature derived the board once per creature. Each one found is asked again below as it is acted on; one
        that only a death in this pass brings down dies in the next check. */
-    const {lethal, spent, asks} = deriving(state, () => {
+    const {lethal, spent, fallenBattles, asks} = deriving(state, () => {
       const lethal = new Set(state.zones.battlefield.filter((id) => {
         const object = state.objects[id];
         if (!typesOf(state, id).includes("Creature")) return false;
@@ -343,6 +729,9 @@ export function checkStateBasedActions(state) {
       return {lethal,
         /* And the planeswalkers with no loyalty left (CR 704.5i), acted on below. */
         spent: state.zones.battlefield.filter((id) => typesOf(state, id).includes("Planeswalker") && (state.objects[id].counters?.loyalty ?? 0) <= 0),
+        fallenBattles: state.zones.battlefield.filter(id => typesOf(state, id).includes("Battle")
+          && (((state.objects[id].counters?.defense ?? 0) <= 0 && (!subtypesOf(state, id).includes("Siege") || !battleWaitingTrigger(state, id)))
+            || battleProtectorRepair(state, id)?.eligible.length === 0)),
         /* WHICH REPLACES A DESTRUCTION, WHEN SEVERAL WOULD (CR 616.1; two Auras with umbra armor, or one and a regeneration
            shield): asked of the creature's controller before any of these destructions happens -- they happen at once (CR
            704.3) -- and the whole check made again with the answer (finishDestructionChoice). Read in the same question, every
@@ -351,6 +740,12 @@ export function checkStateBasedActions(state) {
     });
     /* While something else is being asked (a player conceding mid-question), the choice is not made for its controller: that
        creature waits for the next check, which asks. */
+    if (fallenBattles.length && !state.awaiting && !state.ruleOperation && !state.resolving) {
+      const outcome = beginRuleOperation(state, {kind: "sba-cohort", required: [...new Set([...spent,...fallenBattles])], lethal: [...lethal], prefix: events.splice(0)}, {after: {kind: "state-based"}});
+      events.push(...outcome.events);
+      if (outcome.status === "waiting") break;
+      continue;
+    }
     if (asks.length && !state.awaiting) { state.awaiting = {kind: "destruction-replacement", ...asks[0]}; break; }
     const undecided = new Set(asks.map((ask) => ask.objectId));
     for (const id of [...state.zones.battlefield]) {
@@ -419,7 +814,7 @@ export function checkStateBasedActions(state) {
     /* CR 704.5i: a planeswalker with loyalty 0 is put into its owner's graveyard -- put, not destroyed, so indestructible
        does not keep it; through the replacements and with its last known information. Read with the lethal creatures
        above, so one that was a creature too and died is gone. */
-    for (const id of spent) {
+    for (const id of new Set([...spent, ...fallenBattles])) {
       const object = state.objects[id];
       if (!object || object.zone !== "battlefield") continue;
       const card = cardRef(state, id);
@@ -458,7 +853,8 @@ export function checkStateBasedActions(state) {
        that has triggered and not yet left the stack, is sacrificed. */
     for (const id of [...state.zones.battlefield]) {
       const object = state.objects[id];
-      const chapters = (object.abilities ?? []).filter((a) => a.kind === "triggered" && Number.isInteger(a.trigger?.chapter));
+      if (!subtypesOf(state, id).includes("Saga")) continue;
+      const chapters = abilitiesOf(state, id).filter((a) => a.kind === "triggered" && Number.isInteger(a.trigger?.chapter));
       if (!chapters.length || (object.counters?.lore ?? 0) < Math.max(...chapters.map((a) => a.trigger.chapter))) continue;
       const ids = new Set(chapters.map((a) => a.id));
       if (state.stack.some((e) => e.cardId === id && ids.has(e.abilityId)) || (state.pendingTriggers ?? []).some((p) => p.source?.cardId === id && ids.has(p.abilityId))) continue;
@@ -485,6 +881,17 @@ export function checkStateBasedActions(state) {
         /* Only read: every object derived once (rules/layers.mjs, deriving). */
         const ask = deriving(state, () => mergedOrderToAsk(state) ?? legendToAsk(state) ?? commanderToAsk(state));
         if (ask) state.awaiting = ask;
+        else {
+          /* Forced non-Siege protection is determined by rule; Siege opponents remain an explicit saved choice. */
+          const repairs = deriving(state, () => state.zones.battlefield.map(id => battleProtectorRepair(state, id)).filter(Boolean));
+          for (const repair of repairs.filter(repair => !repair.siege)) setBattleProtector(state, repair.objectId, repair.player, events);
+          const order = state.players.map((_, n) => (state.activePlayer + n) % state.players.length);
+          const next = repairs.filter(repair => repair.siege).sort((a,b) => order.indexOf(a.player) - order.indexOf(b.player))[0];
+          if (next && !state.ruleOperation && !state.resolving) {
+            const outcome = beginRuleOperation(state, {kind: "battle-protector-sba", objectId: next.objectId}, {after: {kind: "state-based"}});
+            events.push(...outcome.events);
+          }
+        }
       }
       break;
     }
@@ -529,10 +936,21 @@ export function concede(state, playerId, rng = null) {
      it passes on (below), and nothing of the spell or ability is there yet. */
   if (withdrawn?.kind === "choose-cost" || (withdrawn?.kind === "choose-targets" && withdrawn.stackId === undefined)) state.priorityPlayer = playerId;
   const resolving = Boolean(state.resolving);
-  const events = checkStateBasedActions(state);
+  const events = [];
+  if (state.resolving || state.ruleOperation) {
+    /* CR 104.3a, 800.4a: conceding is immediate, but CR 704.4 still forbids checking other state-based actions in the
+       middle of the unresolved instruction. Its explicit continuation will reach the ordinary check afterward. */
+    leaveGame(state, player, "conceded", events);
+    monarchLeft(state, events);
+  } else events.push(...checkStateBasedActions(state));
   /* The game is over: nothing more is asked of them. */
   if (gameOver(state)) {
+    cutShort(state);
     if (state.awaiting?.player === playerId) state.awaiting = null;
+  } else if (state.ruleOperation) {
+    /* A departure can invalidate an unchosen source or change the affected controller even if a different player
+       was being asked. Recheck the saved current stage; never replay its completed prefix. */
+    events.push(...answerRuleForDeparted(state, rng));
   /* Another player's spell or ability was asking them, and goes on without them. */
   } else if (state.resolving && state.awaiting?.kind === "effect-choice" && state.players[state.awaiting.player].lost) {
     events.push(...answerForDeparted(state, rng));

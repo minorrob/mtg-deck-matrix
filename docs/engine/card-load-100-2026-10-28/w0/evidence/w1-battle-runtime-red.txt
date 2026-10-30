@@ -1,0 +1,50 @@
+RED own controlled Siege offered as an object attack target: the controller may attack its own Siege, defended by its protector
+RED native noncombat damage removes defense: damage removes defense without marking a noncreature or redirecting to its protector
++ actual - expected
+
+  [
++   4,
+    2,
+-   0,
+    [
+      40,
+      40,
+      40
+    ]
+
+RED non-Siege zero-defense SBA: a zero-defense non-Siege is put into its owner's graveyard
++ actual - expected
+
++ []
+- [
+-   'Smoke Empty Battle'
+- ]
+
+RED unattacked Siege protector departure repair: the current controller must select a new eligible protector
++ actual - expected
+
++ undefined
+- 'rule-operation'
+
+RED last defense removed queues exact intrinsic Siege trigger: the actual last-counter event must trigger the Siege's intrinsic ability before its SBA exception is evaluated
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: 5 native Battle gaps remain
+
+5 !== 0
+
+    at file:///C:/Users/robmi/CrankMagic/worktrees/load100/scratch/w1-battle-runtime-red.mjs:51:8
+    at ModuleJob.run (node:internal/modules/esm/module_job:343:25)
+    at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:681:26)
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:117:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 5,
+  expected: 0,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.23.3

@@ -4,11 +4,11 @@ turn tests/deck-stages.mjs red."""
 SUITES = ['tests/deck-stages.mjs']
 BREAKS = [
     ('Defined needs 101', 'collection-model.js',
-     "const stage=onList>=size?'defined':'building'", "const stage=onList>size?'defined':'building'"),
+     "const stage=!over&&onList>=size?'defined':'building'", "const stage=!over&&onList>size?'defined':'building'"),
     ('the commander is no seat', 'collection-model.js',
-     "onList=list+d.commanders.filter(id=>!mainIds.has(id)).length;", "onList=list;"),
+     "onList=list+d.commanders.filter(id=>!mainIds.has(id)).length,over=", "onList=list,over="),
     ('Boxed ignores substitutes', 'collection-model.js',
-     "boxed=stage==='defined'&&deckTotal>=size;", "boxed=stage==='defined'&&final>=size;"),
+     "boxed=stage==='defined'&&deckTotal===size;", "boxed=stage==='defined'&&final===size;"),
     ('a waiting stand-in counted in the box', 'collection-model.js',
      "substitute=q(x=>x.st.use==='substitute'&&x.st.inBox),", "substitute=q(x=>x.st.use==='substitute'),"),
     ('a chosen stand-in is free', 'collection-model.js',

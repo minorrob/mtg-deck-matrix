@@ -108,27 +108,51 @@
       "steps": [
         {
           "tap": "Mountain",
-          "seat": 0
+          "seat": 0,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "tap": "Mountain",
-          "seat": 0
+          "seat": 0,
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
         },
         {
           "tap": "Wastes",
-          "seat": 0
+          "seat": 0,
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "tap": "Wastes",
-          "seat": 0
+          "seat": 0,
+          "source": {
+            "zone": "battlefield",
+            "index": 1
+          }
         },
         {
           "tap": "Wastes",
-          "seat": 0
+          "seat": 0,
+          "source": {
+            "zone": "battlefield",
+            "index": 2
+          }
         },
         {
           "tap": "Wastes",
-          "seat": 0
+          "seat": 0,
+          "source": {
+            "zone": "battlefield",
+            "index": 3
+          }
         },
         {
           "cast": "Mob Rule",

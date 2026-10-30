@@ -62,6 +62,8 @@ import {replayMatch} from "../game/room/replay.mjs";
 import {characteristicsOf} from "../game/engine/rules/layers.mjs";
 import {createRng} from "../game/engine/rng.mjs";
 import {randomLegalPilot} from "../game/engine/pilots/random-legal.mjs";
+import {commanderLegal} from "../game/room/table.mjs";
+import {createExerciseLedger, addExerciseEvidence, exerciseSummary} from "../game/tools/ability-evidence.mjs";
 
 const NAMES = ["Rob", "Friend", "AI 2", "AI 3"];
 export const PERSON_TRIES = 50;
@@ -98,25 +100,69 @@ export function decksFromBackup(backup, names) {
  * colorless one, to 99 (903.5a). The same seed makes the same decks.
  */
 export const LIBRARY_BASICS = {W: "Plains", U: "Island", B: "Swamp", R: "Mountain", G: "Forest"};
-export function decksFromLibrary(seed, {library, oracle, cards, count = 4}) {
+export function decksFromLibrary(seed, {library, oracle, cards, count = 4, favor = [], namespace = "library", requireAll = false}) {
   const basics = new Set([...Object.values(LIBRARY_BASICS), "Wastes"]);
-  const playable = library.filter((n) => !basics.has(n) && oracle(n) && (() => {try {return Boolean(cards(n));} catch {return false;}})());
+  /* A broken definition is a finding, not a card silently omitted from the population being tested. */
+  const definitions = new Map();
+  const playable = library.filter((n) => {
+    if (basics.has(n)) return false;
+    if (!oracle(n)) {if (requireAll) throw new Error(`Final definition ${n} has no oracle record.`); return false;}
+    const definition = cards(n);
+    if (!definition && requireAll) throw new Error(`Final definition ${n} is missing from the table's card source.`);
+    if (definition) definitions.set(n, definition);
+    return Boolean(definition);
+  });
   const front = (n) => oracle(n).type.split("//")[0];
   const isLand = (n) => /\bLand\b/.test(front(n));
-  const commanders = playable.filter((n) => /Legendary/.test(oracle(n).type) && /Creature/.test(front(n)) && oracle(n).layout !== "meld");
+  const commanders = playable.filter((n) => commanderLegal(definitions.get(n)));
   const within = (ci, n) => (oracle(n).ci || []).every((c) => ci.includes(c));
-  const rng = createRng(`library-${seed}`);
+  const rng = createRng(`${namespace}-${seed}`);
   const shuffle = (xs) => {const a = [...xs]; for (let i = a.length - 1; i > 0; i -= 1) {const j = rng.int(i + 1); [a[i], a[j]] = [a[j], a[i]];} return a;};
   const pool = [...commanders], chosen = [];
-  while (chosen.length < count && pool.length) chosen.push(pool.splice(rng.int(pool.length), 1)[0]);
+  const favored = [...new Set(favor)];
+  for (const name of favored) {
+    if (!playable.includes(name)) throw new Error(`Favored card ${name} is not a playable card in this pool.`);
+    if (!commanders.some((n) => within(oracle(n).ci || [], name))) throw new Error(`No final commander can include favored card ${name}.`);
+  }
+  const orderedFavor = favored.length ? [...favored.slice(Math.abs(Number(seed) || 0) % favored.length), ...favored.slice(0, Math.abs(Number(seed) || 0) % favored.length)] : [];
+  while (chosen.length < count && pool.length) {
+    const favoredCard = orderedFavor[chosen.length % Math.max(1, orderedFavor.length)];
+    const eligible = favoredCard ? pool.filter((n) => within(oracle(n).ci || [], favoredCard)) : pool;
+    const pick = (eligible.length ? eligible : pool)[rng.int(eligible.length || pool.length)];
+    chosen.push(pool.splice(pool.indexOf(pick), 1)[0]);
+  }
   return chosen.map((commander) => {
     const ci = oracle(commander).ci || [];
     const mine = playable.filter((n) => n !== commander && within(ci, n));
-    const deck = [...shuffle(mine.filter(isLand)).slice(0, 12), ...shuffle(mine.filter((n) => !isLand(n))).slice(0, 62)];
+    const pick = (list, n) => [...orderedFavor.filter((name) => list.includes(name)), ...shuffle(list.filter((name) => !favored.includes(name)))].slice(0, n);
+    const deck = [...pick(mine.filter(isLand), 12), ...pick(mine.filter((n) => !isLand(n)), 62)];
     const colors = ci.length ? ci : [null];
     for (let i = 0; deck.length < 99; i += 1) deck.push(colors[i % colors.length] ? LIBRARY_BASICS[colors[i % colors.length]] : "Wastes");
     return {name: commander, commander: [commander], cards: deck};
   });
+}
+
+/** The same dealer, over all final Commander definitions, with no candidate source and no hidden omission. */
+export function decksFromPool(seed, given) {
+  const decks = decksFromLibrary(seed, {...given, namespace: "pool", requireAll: true});
+  if (decks.length !== (given.count ?? 4)) throw new Error("The final pool cannot supply the requested number of distinct legal commanders.");
+  return decks;
+}
+
+export async function finalPoolFrom(root = new URL("..", import.meta.url)) {
+  const {deckCard} = await import("../game/tools/card-compiler.mjs");
+  const {loadCardScripts} = await import("../game/tools/engine-cards.mjs");
+  const read = (rel) => JSON.parse(readFileSync(new URL(rel, root), "utf8"));
+  const oracle = new Map(read("data/engine/oracle.json").cards.map((c) => [c.name, c]));
+  const banned = new Set(read("data/commander-banned.json").cards);
+  const scripts = loadCardScripts(fileURLToPath(new URL("game/engine/cards", root))).map(({script}) => script);
+  const library = [];
+  for (const script of scripts) {
+    const name = script.identity.name, record = oracle.get(name);
+    if (!record) throw new Error(`Final definition ${name} has no oracle record.`);
+    if (deckCard(record) && !banned.has(name)) library.push(name);
+  }
+  return {library, oracle: (n) => oracle.get(n), scripts};
 }
 /** Rob's library as decksFromLibrary takes it: data/live-load.json's cards, read with the oracle data. */
 export function libraryFrom(root = new URL("..", import.meta.url)) {
@@ -143,7 +189,7 @@ const controls = (view) => {const field = view?.state?.players?.[view.seat]?.zon
 export function person(seed) {
   const pilot = randomLegalPilot(createRng(seed));
   let turn = null, taken = new Map();
-  const answer = (decision, now, view = null) => {
+  const answer = (decision, now, view = null, {checkDraft} = {}) => {
     if (now !== turn) {turn = now; taken = new Map();}
     const all = decision.kind === "priority" ? decision.options.find((o) => o.act === "resolve-all") : null;
     if (all) {answer.resolvedAll += 1; return {kind: "answer", choiceId: decision.id, indices: [all.index]};}
@@ -152,7 +198,21 @@ export function person(seed) {
        they were offered. Both come last among the offers, so the rest keep their indices. */
     const second = (o) => o.act === "undo-mana" || o.act === "undo-land";
     const untaps = decision.kind === "priority" ? decision.options.filter(second).length : 0;
-    let a = pilot.answer(untaps ? {...decision, options: decision.options.filter((o) => !second(o))} : decision);
+    const offered = untaps ? {...decision, options: decision.options.filter((o) => !second(o))} : decision;
+    let a = pilot.answer(offered);
+    /* Individually offered block pairs need not be legal together (menace, requirements and taxes). Like a board
+       drafting before Confirm, this simulated person uses the room's public read-only check before submitting.
+       A rejected draft is never sent to act, and no real refused answer or strict evidence is erased. */
+    if (decision.id?.startsWith("declare-blockers:") && typeof checkDraft === "function") {
+      for (let attempt = 1; ; attempt += 1) {
+        const checked = checkDraft({choiceId: decision.id, indices: a.indices ?? []});
+        if (checked?.open !== true) throw new Error("The simulated person's blocker question expired before submission");
+        if (checked.ok === true) break;
+        answer.blockDraftsRejected += 1;
+        if (attempt >= PERSON_TRIES) throw new Error(`The simulated person could not draft legal blockers after ${PERSON_TRIES} attempts: ${(checked.reasons ?? []).join("; ")}`);
+        a = pilot.answer(offered);
+      }
+    }
     const [one] = a.indices ?? [], option = decision.kind === "priority" && a.indices?.length === 1 ? decision.options?.[one] : null;
     if (option?.act === "activate") {
       const key = `${option.cardId}:${option.label}`, pass = decision.options.find((o) => o.act === "pass");
@@ -163,6 +223,7 @@ export function person(seed) {
   };
   answer.stopped = 0;
   answer.resolvedAll = 0;
+  answer.blockDraftsRejected = 0;
   return answer;
 }
 
@@ -349,7 +410,7 @@ export async function landsByTurn(storage, matchId, cards) {
  * people's longest wait, their answers the rules refused, and the room's tally of refused AI answers.
  */
 export async function playGame({decks, seed, cards, humans = [], levels = [], matchId = `fuzz-${seed}`, pilot, storage = memoryStorage(), turnLimit = 400, reopenEvery = 0, people: answerer = person,
-  replay = false, leaks = false, picks = true}) {
+  replay = false, leaks = false, picks = true, strictRefusals = false}) {
   /* The pod as the table launches it (game/room/table.mjs): a step with nothing to do passes itself, once every person is
      out the game ends there, a run of identical triggers may resolve at once, a person's cast passes for them, and their own
      end step is asked of them, and a land they tap may be untapped; floating mana and the sources left pay a cast
@@ -358,7 +419,7 @@ export async function playGame({decks, seed, cards, humans = [], levels = [], ma
      is one a person at the table has, not the AI seats playing a game out for nobody. */
   /* `levels`: an AI seat's setting (AI-2), "easy" or "normal", for L1; none, L0. And its AI seats take what an "up to" or a
      search is for (`pilotPicks`), unless `picks` is false: a table's games before they did. */
-  const pod = {...(picks ? {pilotPicks: true} : {}), passEmpty: true, endWhenNoPerson: true, resolveAll: true, passAfterCast: true, endAsks: true, untapMana: true, pooledTaps: true, xTaps: true, yieldTurn: true, drawBeat: true, passStack: true, blocksNone: true, landAnyStep: true, takeBackLand: true, askAimed: true, seats: decks.map((d, i) => ({seatId: `s${i}`, name: NAMES[i] || `Seat ${i + 1}`, pilot: humans.includes(i) ? "human" : "house",
+  const pod = {...(picks ? {pilotPicks: true} : {}), passEmpty: true, endWhenNoPerson: true, resolveAll: true, passAfterCast: true, endAsks: true, untapMana: true, pooledTaps: true, sourceChoices: true, pilotProvocation: true, effectPlayVersion: 1, xTaps: true, yieldTurn: true, drawBeat: true, passStack: true, blocksNone: true, landAnyStep: true, takeBackLand: true, askAimed: true, seats: decks.map((d, i) => ({seatId: `s${i}`, name: NAMES[i] || `Seat ${i + 1}`, pilot: humans.includes(i) ? "human" : "house",
     ...(!humans.includes(i) && levels[i] ? {level: levels[i]} : {}), commander: d.commander, cards: d.cards}))};
   const people = Object.fromEntries(humans.map((i) => [`s${i}`, answerer(`person-${seed}-${i}`)]));
   const started = Date.now();
@@ -374,7 +435,7 @@ export async function playGame({decks, seed, cards, humans = [], levels = [], ma
     if (leaks) {leaked.push(...await checkLeaks(room, storage, matchId, memory, view.state.turn)); leakChecks += 1;}
     const asked = Date.now();
     for (let tries = 1; ; tries += 1) {
-      try {await room.act(who, {actionId: randomUUID(), revision: view.revision, ...people[who](view.decision, view.state.turn, view)}); break;}
+      try {await room.act(who, {actionId: randomUUID(), revision: view.revision, ...people[who](view.decision, view.state.turn, view, {checkDraft: draft => room.check(who, draft)})}); break;}
       catch (error) {
         if (!(error instanceof RoomError) || error.status !== 422 || tries >= PERSON_TRIES) throw error;
         personRefused.push({turn: view.state.turn, seatId: who, question: view.decision.title, reason: error.message});
@@ -389,7 +450,7 @@ export async function playGame({decks, seed, cards, humans = [], levels = [], ma
   const last = room.view(pod.seats[0].seatId);
   const ms = Date.now() - started;
   return {seed, status: room.status, result: last.result, turns: last.state.turn, decisions, reopened, ms, longestWait: longest, refusals: room.refusals,
-    personRefused, loopsStopped: Object.values(people).reduce((n, p) => n + (p.stopped ?? 0), 0), resolvedAll: Object.values(people).reduce((n, p) => n + (p.resolvedAll ?? 0), 0), room, ...(leaks ? {leaks: leaked, leakChecks} : {}),
+    personRefused, strictRefusals, blockDraftsRejected: Object.values(people).reduce((n, p) => n + (p.blockDraftsRejected ?? 0), 0), loopsStopped: Object.values(people).reduce((n, p) => n + (p.stopped ?? 0), 0), resolvedAll: Object.values(people).reduce((n, p) => n + (p.resolvedAll ?? 0), 0), room, ...(leaks ? {leaks: leaked, leakChecks} : {}),
     ...(replay ? {replay: await replayMatch({storage, matchId, ...(cards ? {cards} : {}), ...(pilot ? {pilot} : {})})} : {})};
 }
 
@@ -403,6 +464,7 @@ export async function playSafely(options) {
 /** Whether a game counts as clean, and why not when it does not. */
 export function verdict(game) {
   const problems = [];
+  if (game.strictRefusals && game.personRefused?.length) problems.push(`${game.personRefused.length} human pilot answers were refused and retried`);
   if (game.status !== "finished") problems.push(`did not finish (${game.status} at turn ${game.turns})`);
   const r = game.refusals;
   if (!r || typeof r.total !== "number") problems.push("the room kept no refusal tally");
@@ -427,40 +489,79 @@ export function describe(game) {
   return `seed ${game.seed}: ${game.status} (${end}), ${game.turns} turns, ${game.decisions} decisions, ${(game.ms / 1000).toFixed(1)} s, longest wait for a person ${wait}, ${game.refusals?.total ?? "?"} refused over the whole match${people}${judged ? `, ${judged}` : ""}${v.clean ? "" : ` -- NOT CLEAN: ${v.problems.join("; ")}`}`;
 }
 
-const seedsFrom = (spec) => spec.split(",").flatMap((part) => {
-  const [a, b] = part.split("-").map(Number);
-  if (!Number.isInteger(a) || (b !== undefined && !Number.isInteger(b))) throw new Error(`Seeds are numbers or ranges, like 1-50: ${spec}`);
-  return b === undefined ? [a] : Array.from({length: b - a + 1}, (_, i) => a + i);
-});
+export function seedsFrom(spec) {
+  const fail = () => {throw new Error(`Seeds are nonnegative safe integers or ascending ranges, like 1-50: ${spec}`);};
+  if (typeof spec !== "string" || !spec.trim()) fail();
+  const seeds = spec.split(",").flatMap((part) => {
+    const range = /^(\d+)(?:-(\d+))?$/.exec(part.trim());
+    if (!range) fail();
+    const a = Number(range[1]), b = range[2] === undefined ? a : Number(range[2]);
+    if (!Number.isSafeInteger(a) || !Number.isSafeInteger(b) || b < a) fail();
+    return Array.from({length: b - a + 1}, (_, i) => a + i);
+  });
+  return [...new Set(seeds)];
+}
+
+export function favorNames(text) {
+  const plain = text.trim();
+  const parsed = /^[\[{]/.test(plain) ? JSON.parse(plain) : plain.split(/\r?\n/).filter(Boolean);
+  const rows = Array.isArray(parsed) ? parsed : parsed.cards;
+  if (!Array.isArray(rows)) throw new Error("--favor takes a name per line, a JSON array, or a lane file's cards list.");
+  const names = rows.map((row) => typeof row === "string" ? row.trim() : row?.name);
+  if (names.some((name) => typeof name !== "string" || !name.trim())) throw new Error("Every --favor entry needs a card name.");
+  return [...new Set(names)];
+}
+
+/** Pool evidence counts human retries too. Legacy library runs opt in explicitly, so old evidence is never relabeled. */
+export const strictFuzzEvidence = (argv) => argv.includes("--pool") || argv.includes("--strict-refusals");
+
+/** Pure validation, separately tested so a guard mutation can never create a seat at a prohibited level. */
+export function houseFuzzLevel(level) {
+  if (level !== null && !["easy", "normal"].includes(level)) throw new Error("--level accepts easy or normal house pilots only.");
+  return level;
+}
 
 async function main(argv) {
   const arg = (name, fallback) => {const i = argv.indexOf(`--${name}`); return i >= 0 ? argv[i + 1] : fallback;};
-  const backupPath = arg("backup"), deckNames = arg("decks"), fromLibrary = argv.includes("--library");
-  if (!fromLibrary && (!backupPath || !deckNames)) {console.error("usage: node tools/fuzz-live.mjs --backup <file> --decks \"A|B|C|D\" [--humans 0,1] [--seeds 1-50] [--json <out>], or --library [--level normal] in place of --backup and --decks"); return 2;}
+  const backupPath = arg("backup"), deckNames = arg("decks"), fromLibrary = argv.includes("--library"), fromPool = argv.includes("--pool");
+  let level;
+  try {level = houseFuzzLevel(arg("level", null));} catch (error) {console.error(error.message); return 2;}
+  if ((fromPool && (fromLibrary || backupPath || deckNames)) || (!fromLibrary && !fromPool && (!backupPath || !deckNames))) {console.error("usage: node tools/fuzz-live.mjs --backup <file> --decks \"A|B|C|D\", or --library, or --pool [--favor <names file>] [--humans 0] [--seeds 1-50] [--replay --leaks] [--exercised <ledger.json>] [--strict-refusals] [--json <out>]"); return 2;}
+  if (arg("favor", null) && !fromPool) {console.error("--favor requires --pool."); return 2;}
   const {tableCards} = await import("../cloud/game-room.mjs");
-  const library = fromLibrary ? libraryFrom() : null;
-  const fixed = fromLibrary ? null : decksFromBackup(JSON.parse(readFileSync(backupPath, "utf8")), deckNames.split("|"));
-  const humansSpec = arg("humans", "");
+  const library = fromPool ? await finalPoolFrom() : fromLibrary ? libraryFrom() : null;
+  const fixed = fromLibrary || fromPool ? null : decksFromBackup(JSON.parse(readFileSync(backupPath, "utf8")), deckNames.split("|"));
+  const humansSpec = arg("humans", fromPool ? "0" : "");
   const humans = humansSpec ? humansSpec.split(",").map(Number) : [];
-  const level = arg("level", null), levels = level ? [0, 1, 2, 3].map((i) => (humans.includes(i) ? null : level)) : [];
+  if (humans.some((i) => !Number.isInteger(i) || i < 0 || i >= (fixed?.length ?? 4))) {console.error("--humans lists seat indices present at the table (0 through 3)."); return 2;}
+  const levels = level ? [0, 1, 2, 3].map((i) => (humans.includes(i) ? null : level)) : [];
   const seeds = seedsFrom(arg("seeds", "1-50"));
+  const favor = arg("favor", null) ? favorNames(readFileSync(arg("favor"), "utf8")) : [];
+  const exercisedPath = arg("exercised", null), strictRefusals = strictFuzzEvidence(argv);
+  const scripts = exercisedPath ? library?.scripts ?? (await import("../game/tools/engine-cards.mjs")).loadCardScripts().map(({script}) => script) : null;
+  const ledger = scripts ? createExerciseLedger(scripts) : null;
+  if (fromPool) console.log(`pool: ${library.library.length} final nonbasic Commander cards; ${library.scripts.length} final definitions including basics; ${favor.length} favored`);
   const landsAt = arg("lands", null) === null ? null : Number(arg("lands")), picks = !argv.includes("--no-picks"), counted = [];
   if (landsAt !== null && !(Number.isInteger(landsAt) && landsAt > 0)) {console.error("--lands takes a turn number, like 6"); return 2;}
   if (fixed) fixed.forEach((d, i) => console.log(`s${i} ${NAMES[i]} (${humans.includes(i) ? "human" : "house"}): ${d.name}`));
   const rows = [];
   for (const seed of seeds) {
-    const decks = fixed ?? decksFromLibrary(seed, {...library, cards: tableCards});
+    const decks = fixed ?? (fromPool ? decksFromPool : decksFromLibrary)(seed, {...library, cards: tableCards, favor});
     if (!fixed) console.log(`seed ${seed}: ${decks.map((d, i) => `s${i} ${d.name}`).join(" · ")}`);
-    const storage = memoryStorage(), matchId = fixed ? `fuzz-${seed}` : `lib-${seed}`;
-    const {game, exception} = await playSafely({decks, seed, cards: tableCards, humans, levels, replay: argv.includes("--replay"), leaks: argv.includes("--leaks"), picks, storage, matchId});
+    const storage = memoryStorage(), matchId = fromPool ? `pool-${seed}` : fixed ? `fuzz-${seed}` : `lib-${seed}`;
+    const {game, exception} = await playSafely({decks, seed, cards: tableCards, humans, levels, replay: argv.includes("--replay"), leaks: argv.includes("--leaks"), picks, storage, matchId, strictRefusals});
     if (exception) {console.log(`seed ${seed}: threw: ${exception}`); rows.push({seed, ...(fixed ? {} : {decks: decks.map((d) => d.name)}), exception, clean: false}); continue;}
     console.log(describe(game));
+    if (ledger) {
+      addExerciseEvidence(ledger, await createMatchStore(storage, matchId).readJournal(), {game: matchId, clean: verdict(game).clean});
+      writeFileSync(exercisedPath, JSON.stringify({...ledger, summary: exerciseSummary(ledger)}, null, 2) + "\n");
+    }
     /* Each seat's lands at the end of its turn `landsAt`; a seat out of the game by then has none counted. */
     const lands = landsAt === null ? null : Object.fromEntries(Object.entries(await landsByTurn(storage, matchId, tableCards))
       .filter(([, after]) => after.length >= landsAt).map(([seat, after]) => [`s${seat}`, after[landsAt - 1]]));
     if (lands) {counted.push(...Object.values(lands)); console.log(`  lands in play after each seat's turn ${landsAt}: ${Object.entries(lands).map(([s, n]) => `${s} ${n}`).join(", ")}`);}
     rows.push({seed, ...(fixed ? {} : {decks: decks.map((d) => d.name)}), status: game.status, result: game.result, turns: game.turns, decisions: game.decisions, ms: game.ms, longestWait: game.longestWait, refusals: game.refusals,
-      personRefused: game.personRefused.length, loopsStopped: game.loopsStopped, ...(game.replay ? {replaySame: game.replay.same} : {}), ...(game.leaks ? {leaks: game.leaks, leakChecks: game.leakChecks} : {}),
+      personRefused: game.personRefused.length, blockDraftsRejected: game.blockDraftsRejected, loopsStopped: game.loopsStopped, ...(game.replay ? {replaySame: game.replay.same} : {}), ...(game.leaks ? {leaks: game.leaks, leakChecks: game.leakChecks} : {}),
       ...(lands ? {lands} : {}), clean: verdict(game).clean});
   }
   const clean = rows.filter((r) => r.clean).length;
@@ -469,7 +570,12 @@ async function main(argv) {
   const total = counted.reduce((n, x) => n + x, 0);
   if (landsAt !== null) console.log(`lands in play after a seat's turn ${landsAt}${picks ? "" : " (--no-picks)"}: ${total} over ${counted.length} seats, ${(total / Math.max(1, counted.length)).toFixed(2)} each`);
   const out = arg("json");
-  if (out) writeFileSync(out, JSON.stringify({...(fixed ? {decks: fixed.map((d) => d.name)} : {library: true}), humans, level, ...(picks ? {} : {picks}), ...(landsAt !== null ? {landsAt} : {}), node: process.version, rows}, null, 2));
+  if (ledger) {
+    const summary = exerciseSummary(ledger);
+    writeFileSync(exercisedPath, JSON.stringify({...ledger, summary}, null, 2) + "\n");
+    console.log(`exercised: ${summary.exercised} of ${summary.final} final cards cast or played and successfully resolved in ${ledger.games.length} clean games; ${summary.reached} of ${summary.abilities} printed abilities observed; scenario ability coverage ${summary.scenarioComplete ? "observed" : "unmet (unobserved abilities remain)"}`);
+  }
+  if (out) writeFileSync(out, JSON.stringify({...(fixed ? {decks: fixed.map((d) => d.name)} : fromPool ? {pool: true, finalPool: library.library.length, favor} : {library: true}), humans, level, strictRefusals, ...(picks ? {} : {picks}), ...(landsAt !== null ? {landsAt} : {}), node: process.version, rows}, null, 2));
   return clean === rows.length ? 0 : 1;
 }
 

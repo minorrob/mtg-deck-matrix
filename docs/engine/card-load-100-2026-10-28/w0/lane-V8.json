@@ -1,0 +1,131 @@
+{
+  "schema": "library-load-lane@1",
+  "lane": "V8",
+  "wave": 0,
+  "theme": "verify",
+  "branch": "codex/engine-load100-w0-v8-verify",
+  "source": "main 39a45706; README open accuracy debt; ORCHESTRATION wave 0",
+  "cards": [],
+  "review": [
+    "w0/V8-REVIEW-2026-10-29.md",
+    "w0/evidence/v8-review-2026-10-29.json"
+  ],
+  "debt": "The pool fuzz and the exercised ledger; the **ability ledger**: which abilities of each card no scenario ever makes fire or apply, read from the journal and history the engine already writes for every game (what `replay.mjs` and `fuzz-live.mjs` read), **never by instrumenting a rules module**, and reported by `check-cards.mjs` so a card with an unreached ability fails; the scenario runner's `settle` / `optional` / `targets: \"any\"`; `fuzz-live`'s silent throw and legendary-only commanders; `engine-room-games`' skipped seeds and frozen deal; `engine-x11-leave-questions`' replaced answers; coverage's partial constructs; the five unsure section-4 items settled by scenario. Then the first pool fuzz over **all 6,430 final cards**: the baseline of what still errors",
+  "evidence": [
+    "| Unsure, to be settled by a scenario: Song of the Dryads and Sagas under ability loss; Incubator copies single-faced; Social Snub's copy; Winter's prompt and a draw-two cost under Narset | `rules/layers.mjs`:870; `permanents.mjs`:644; `actions.mjs` | V8 finds, W1/W6/W2/W7 fix |",
+    "| The scenario runner: `settle` takes the first legal answer (3,547 scenario files use it), `optional` skips a move not offered silently, `targets: \"any\"` takes the first aim | `cards/scenario.mjs`:24–25, 235 | V8 (the runner); each card that turns red → its theme |",
+    "| `tools/fuzz-live.mjs`: a definition that throws is left out silently; commanders are legendary creatures only | `tools/fuzz-live.mjs`:103, 106 | V8 |",
+    "| `tests/engine-room-games.mjs`: seeds 3 and 5 left out, the deal frozen at `e243ccde`, refusals logged not failed | :16, :31, :115 | V8 |",
+    "| `tests/engine-x11-leave-questions.mjs`: refused pilot answers replaced, not failed (except a concession's) | :481, :518, :529 | V8 |",
+    "| Coverage counts seven partial constructs as built, so `coverage.md`'s shares read high | `game/tools/engine-constructs.mjs`:345–396 | V8 |"
+  ],
+  "status": "Completed RED measurement at clean c2038646: 6430 definitions,11039 scenarios/6580failed;2039/11633 reached,523 omission proofs,9594unproved. Strict default/CI/source validation and explicit decisions are implemented; per-card repairs, individual witnesses, full review and required games remain open.",
+  "strictCliCheckpoint": {
+    "code": "74087c6d",
+    "integration": "449246c2",
+    "baselineSuites": 35,
+    "mutationsCaught": 20,
+    "mutationsMissed": [],
+    "evidence": "evidence/v8-identity-squee.json",
+    "scope": "Independent Oracle printed defense; every printed face and exact whole clauses; actual artifact smoke; explicitly transferred completed-funding guard. No saved-card rewrite or ability credit.",
+    "remaining": "Latest full strict measurement c2038646 is RED; individual scenarios/ability witnesses, review, games, Table browser and inherited UI anchors remain open. No new cards or promotions."
+  },
+  "latestStrictMeasurement": {
+    "source": "c2038646f1187eb68a0495a621a2d9e1ee1078a0",
+    "archive": "evidence/ability-strict-c2038646.json.gz",
+    "manifest": "evidence/ability-strict-c2038646.manifest.json",
+    "scenarioFailures": 6580,
+    "abilities": 11633,
+    "scenarioReached": 2039,
+    "unproved": 9594,
+    "checkerExit": 1,
+    "independentVerifierExit": 1,
+    "denominator": "Earlier reviewed Song of the Dryads and Urza's Saga fixes498e3d05 account for -3 ability entries versus11e4fe86; no final card removed. All current raw inputs inventoried; no waiver.",
+    "next": "Add explicit physical source references, then per-card decision/outcome repairs and individual behavior witnesses. Preserve original assertions. No blanket automatic-answer conversion or family proof credit."
+  },
+  "checkpoint": {
+    "scope": "No saved card or rule module edited. Pool dealing, strict refusal evidence, journal attribution, safe pure level validation, runtime-removal evidence, and opt-in check-cards ability enforcement. Scenario-runner metadata tags preserve all original assertions.",
+    "proof": [
+      "tests/fuzz-pool.mjs: 91 checks passed, including real-room journal/replay/leaks, strict seeds, guarded unique-spell inference, mixed-source provenance, and cached ambiguous ownership",
+      "tests/ability-proof.mjs: 42 checks passed, including actual mana/static/flying/vigilance behavior; presence, offers, bad baselines, generic exceptions, and over-budget probes excluded",
+      "tests/fuzz-library.mjs: 12 checks passed, including real-room seeds 229 and 1193",
+      "breaks-load100-w0-v8-verify.py: 31 caught before follow-ups; 2 provenance and 2 ownership/cache breaks caught, missed: []",
+      "breaks-load100-w0-v8-ability.py: 19 caught, missed: []",
+      "tests/data-integrity.mjs: Validated 50 variants and 50 connected buy profiles",
+      "tests/feature-wiring.mjs: 131 checks passed"
+    ],
+    "population": {
+      "finalDefinitions": 6430,
+      "nonbasicCommanderFinals": 6424,
+      "basicDefinitions": 6
+    },
+    "initialPool": "Initial pre-final-integration seeds 1-3: 3 of 3 clean, normal house pilots and a person in seat 0, zero human/AI refusals, identical replays, 0 leaks in 273 checks. Exercised 131 of 6430 final cards; 47 of 11636 abilities have unambiguous successful-resolution events. This is not the 200-game consolidated gate.",
+    "abilityGate": "G-3 remains open. Root 783fa05f implements strict default ledger/removal proof, source/input/inventory validator and fatal CI/local fallback. The following explicit-choice checkpoint rejects skipped/automatic/ambiguous decisions on both baseline and removal sides. This wiring does not repair missing per-ability witnesses or provide current whole-directory acceptance.",
+    "proofMethod": "w0/V8-PROOF.md; Rob authorized runtime-only one-ability removal on October 28, 2026. Unique simple-spell inference is separately labeled and requires a matched actual cast and successful non-fizzled resolution.",
+    "selectedAbilityEvidence": "Original verifier source: 3 cards, 3 passing scenarios, 1/4 reached, exit 1. W4 saved source ae4d6ba6, read-only card-root: same 3 cards, 5 passing scenarios, 4/4 reached by runtime-removal proof, exit 0. Neither is whole-directory coverage. Historical4/4 included offer-only Flying credit and is not accepted under the strengthened current classifier; remeasure after actual completed-combat saved scenarios.",
+    "initialFullAbilitySweep": "Historical 0a848bb4 sweep complete on original source/rules: 11023 scenarios, 0 failed; 6086/11636 abilities reached, 1840 by runtime removal; 5550 unreached across 3658 cards; 0 over-budget probes. Provisional because of card/face ownership ambiguity. Compressed full ledger and manifest are in w0/evidence. Corrected ownership sweep is recorded separately; no historical count is relabeled.",
+    "correctedFullAbilitySweep": "Authoritative initial measurement complete at 508afa94c70b00611e247d78adf23383d4403802 on unchanged saved main-39a cards/scenarios and original rules: 6430 definitions; 11023 scenarios, 0 failed; 6079/11636 abilities reached, 1840 by runtime removal; 5557 unreached across 3665 cards; 0 over-budget probes; expected exit 1. Compressed full ledger, manifest/hash, readable summary/backlog are in w0/evidence. Initial baseline only, not consolidated integration evidence.",
+    "correctedDebtGroups": "733 families; theme counts combat1954, spells1396, mana912, tokens486, graveyard481, faces238, stack75, walkers15. Kind counts keyword2926, activated1169, static833, triggered290, replacement269, spell70. Priority groups grant no coverage; every per-card ability needs its own caught witness.",
+    "ownershipCorrection": "Twelve face aliases collide across initial definitions. Standalone keys no longer take priority; multiple distinct owners are unknown, while repeated aliases of one owner remain valid. Source journal names are retained. The cached index makes unknown fixtures constant-time after one inventory scan. An audit found no credited ambiguous alias in the archived initial three-pool-game ledger; historical 131 is unaffected by this correction.",
+    "provenanceCorrection": "Root reproduced an aggregate-source mix: a scenario activation plus a game's resolution incorrectly counted as scenario execution. Fixed by requiring a successful-resolution observation that itself names a scenario, or valid runtime-removal proof. The checker uses the same predicate. Mixed-source tests and both mutations pass.",
+    "initialEndingLimit": "Seeds 1 and 3 stopped when the only human was eliminated; seed 2 reached a last-player-standing winner. All were app-finished under the existing room verdict; they were not three completed four-player matches with winners. Historical 47 ability observations are explicit IDs only, before inference/supplement.",
+    "proofSafetyCorrection": "An initial guard-removal mutation allowed an llm-valued CLI regression into standalone room setup. It was interrupted; the standalone room has no provider transport, and no provider or cloud AI endpoint was called. A second guarded CLI approach was also interrupted on the orchestrator's instruction. All invalid-level CLI subprocess tests were removed. Final invalid values are direct pure-validator unit inputs only, never options passed to a game or seat. Owned mutation backups were restored and removed.",
+    "remaining": [
+      "Repair the 5557 initial missing proofs using per-card behavioral witnesses; family grouping is prioritization only",
+      "Measure current strict whole-directory failures and repair every missing individual ability witness",
+      "Repair affected scenarios with explicit decisions and preserve all original final assertions; no automatic-answer evidence",
+      "Skipped room seeds and frozen deal; replaced pilot answers in leave-question sweep",
+      "Partial-construct coverage credits and five unsure gameplay cases",
+      "Independent review of writer PRs and consolidated integration play: 200 pool games, 50 strict library seeds, and 2x25 strict staging-deck seeds"
+    ],
+    "independentWriterReview": "Bounded W1/W4/W5/W6 mechanical reviews found no new issue after routed W4 target-selector correction. W1 final emblem text 9c4366f7832eb2bc408a4583563a95bc07aee7b0 independently inspected and engine-load100-w1-faces79 rerun green; extra read-only +4/+4 template/controller1/opponent2/persisted-reload probe had exact text and Bear power6. Repeated-ability fallback retained. No full-theme/G7 claim; all writer PRs remain unmerged for prescribed integration order.",
+    "resumedIndependentReview": {
+      "report": "w0/V8-REVIEW-2026-10-29.md",
+      "evidence": "w0/evidence/v8-review-2026-10-29.json",
+      "scope": "Cold exact-source bounded review of resumed W2/W3/W7; no saved card/scenario/rule edits and no broad games.",
+      "closed": [
+        "R1 W2 division remapping latest469236c4",
+        "R2 W3 manaInstead b66ae95a",
+        "R4 W2 joint final target set469236c4",
+        "R5 W3 destination/timing34847ddf",
+        "R6 W2 cancellation recovery469236c4",
+        "R3 W7 source identity and actual in-resolution no-dredger choice a6d128e2;16 independent reload cases"
+      ],
+      "open": [],
+      "credit": "No new card, whole-theme, full ability gate or whole-game exercise credit."
+    },
+    "availabilityProofCorrection": "Historical6079/11636 reached and5557 unreached were measured before strict offer-only rejection. Actual saved Serra Flying credit was offered-blocker availability; Thran Dynamo was a missing activation offer. Both are now ineligible. Preserve original archives as historical; full current coverage must be remeasured and cannot be declared green from those counts.",
+    "explicitCombatPolicy": {
+      "scope": "Harness-only blockIfLegal named pair, native full-declaration checks for both branches; compact logs forwarded through direct/cached baseline and failure. No saved cards/scenarios or rule modules edited.",
+      "proof": "166 scenario-block-policy checks;44 ability-proof checks. Actual loaded Zephyr Sprite and runtime Flying omission both finish MAIN2; final defender39/40 and Sprite alive/graveyard differ.",
+      "limits": "Selected in-memory proof only, not whole-directory coverage. Journal provenance, strict diagnostics, optional/settle debt and default enforcement remain open.",
+      "mutations": "35 new policy/availability/metadata mutations caught;19 retained ability-proof mutations caught;both missed:[]",
+      "readers": "engine-combat74,engine-libload-l4-combat57,room-block-check34,data-integrity50variants/50profiles,feature-wiring131"
+    },
+    "followupColdReview": {
+      "report": "V8-REVIEW-2026-10-29.md, exact-source follow-up section",
+      "evidence": "evidence/v8-review-2026-10-29.json, followupColdReview",
+      "w4": "c3923102:9 savedscenarios/4cards/5abilities independently pass; eachFlying fullcombatfinal-life difference, prior scenarios/assertions/fixtures unchanged;5 actualPyrohemia sourcecolor/departure controls pass; protection scope only",
+      "w3": "13ea6a5d:4 realdestruction commander-reapplication/reload cases pass perCR903.9b; prefix/suffix once, oneactualmove, no staleoperation; not wholeconsumer acceptance",
+      "scope": "Cold read-only exact-source probes only. No V8 rule/card/scenario edit or additional global gate credit."
+    },
+    "combinedEntryColdReview": {
+      "report": "V8-REVIEW-2026-10-29.md, Frozen combined W2/W3 entry review",
+      "evidence": "evidence/v8-review-2026-10-29.json, combinedEntryReview",
+      "frozenSource": "97795ea2096e6927201781852775343b0b236c1b",
+      "passed": "Mimic/Clone fresh choices and counter timing;3 Mox entry outcomes/finalization;2 simultaneous normal tokens;effect-land wait/reload/prefix once;2 CR707.9e copy-exception paths",
+      "typeFixSource": "304fbabf79a95fb66daacf725ce8498f47fca962",
+      "findings": "R7 full current legal type catalog and R8 chosen subtype representation closed narrowly; native unseen Elf/Time Lord choices plus subsequent token counters and3 actual Shared Animosity completed combats pass",
+      "limits": "No rerun/relabel of unchanged caller cases after the type-only fix. Writer mutations/generated refresh remain separately gated; no whole-theme/global gate acceptance."
+    },
+    "missingPromptVersionRegression": {
+      "staleSource": "304fbabf79a95fb66daacf725ce8498f47fca962",
+      "currentVerifierBase": "ddd687904f461ed5b5581b35836306672ae83532",
+      "diagnosis": "W2 selected8/10 came from stale untagged runner and old classifier. Current choose precheck already has question-offer provenance and universal rejection; no production runner/classifier change.",
+      "regression": "Actual named original Automaton/Mimic/Throne prompt scenarios:33 checks, baselines pass and all3 missing prompts stay unproved;2 new guard/tag mutations and4 retained mutations caught, missed:[]",
+      "measurement": "Original ledger unchanged/hash-preserved. Three invalid credits mean expected selected5/10; root must remeasure assembled current verifier/new compiled bundle. No edited count or global gate improvement.",
+      "evidence": "evidence/v8-review-2026-10-29.json, missingPromptRegression",
+      "fixtureScope": "Historical Serra negative now selects its exact original name and asserts one match, instead of all future scenarios or index1. Root558 file context passes:3 Serra baselines, historical negative unobserved, full-file Flying final-life proof valid;6 entry baselines pass with named negatives unobserved. Policy167 and ability44 pass."
+    }
+  }
+}

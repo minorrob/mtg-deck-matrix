@@ -37,11 +37,11 @@ import {isLandType} from "../../keywords/types.mjs";
 import {pushCopy, pushAbilityCopy, becameTarget, specsOf} from "../../rules/stack.mjs";
 import {loseLife, gainLife, DAMAGING, damageQuestion, addMana} from "./resources.mjs";
 import {damageOrderChoice, graveyardBound, placeReplacedCounters} from "../../rules/replacement.mjs";
-import {targetCandidates, targetName} from "../bind.mjs";
+import {targetCandidates, targetName, recheckTargets, differentControllersProblem, shareProblem} from "../bind.mjs";
 import {commanderTax} from "../../rules/commander.mjs";
-import {cantBeCountered, counterOrderChoice, cantBeSacrificed, tokenOrderChoice, drawForbidden, searchController} from "../../rules/statics.mjs";
+import {cantBeCountered, counterOrderChoice, cantBeSacrificed, tokenOrderChoice, drawForbidden, drawsMore, emptyDrawWins, searchController} from "../../rules/statics.mjs";
 import {amountOf} from "../amount.mjs";
-import {castNow, castChoicesNow, landChoicesNow, withFaceUp} from "../../rules/actions.mjs";
+import {castNow, playedLandFrame, castChoicesNow, landChoicesNow, withFaceUp, nextToChoose, chooseTargetsChoice, pickActionTargets} from "../../rules/actions.mjs";
 
 import {mergedOrderToAsk, mergedOrderChoice, finishMergedOrder} from "../../state/index.mjs";
 import {mergePermanent} from "../../keywords/mutate.mjs";
@@ -1086,9 +1086,7 @@ export const populate = {
   apply(state, awaiting, indices) {
     const chosen = awaiting.tokens[(indices ?? [])[0]];
     if (chosen === undefined || !state.objects[chosen]) throw new Error("Invalid selection");
-    const events = [];
-    makeCopies(state, [chosen], awaiting.params ?? {}, {controller: awaiting.player, source: awaiting.source}, events);
-    return events;
+    return {events: [], splice: [{effect: "copyPermanent", targets: [chosen], ...(awaiting.params ?? {})}]};
   },
 };
 
@@ -1609,13 +1607,14 @@ export const handLook = {
    copy is never its own target (CR 115.5). `except.nonLegendary`: "except it isn't legendary" (Double Major). The
    copies are made as the question opens, so what they did is in the resolution's events even when nothing is asked. */
 const ordinal = (n) => ["first", "second", "third", "fourth"][n] ?? `#${n + 1}`;
-function retargetOptions(state, question, {withOthers = false} = {}) {
+function retargetOptions(state, question, {withOthers = true} = {}) {
   const entry = state.stack.find((e) => e.stackId === question.stackId);
   const spec = entry ? specsOf(state, entry)[question.index] : null;
   if (!entry || !spec) return null;
   /* A counted target's list holding its one target (changeTargets): that one. */
   const was = entry.targets[question.index];
-  const current = (Array.isArray(was) ? was[0] : was) ?? null;
+  const counted = Array.isArray(was) ? was : null;
+  const current = (Array.isArray(was) ? was[question.position ?? 0] : was) ?? null;
   /* An ability's source is the object it came from (entry.cardId), while it is still that object (CR 113.7a). */
   const source = entry.objectId ?? (entry.cardId !== null && state.objects[entry.cardId] ? entry.cardId : null);
   /* `withOthers`: read against the entry's other targets as they stand -- "another target" (`distinctFrom`) not one of them. */
@@ -1623,8 +1622,66 @@ function retargetOptions(state, question, {withOthers = false} = {}) {
     ...(withOthers ? {chosenTargets: entry.targets} : {})})
     /* Never itself (CR 115.5): a spell its own object, an ability its own entry. */
     .filter((c) => !(c.kind === "object" && c.id === entry.objectId) && !(c.kind === "ability" && c.id === entry.stackId))
-    .filter((c) => !(current && c.kind === current.kind && c.id === current.id));
-  return {entry, current, others};
+    /* "Another target": a new target also preserves the other instance's restriction (CR 115.7d), in either direction. */
+    .filter((c) => !withOthers || !specsOf(state, entry).some((other, i) => i !== question.index && (other.distinctFrom ?? []).includes(question.index)
+      && [].concat(entry.targets[i] ?? []).some((t) => t.kind === c.kind && t.id === c.id)))
+    .filter((c) => !(current && c.kind === current.kind && c.id === current.id))
+    /* A counted "for each opponent" remembers whose creature this new target was (CR 608.2b; bind.countedChoice). */
+    .map((c) => spec.forEach === "opponent" && c.kind === "object" ? {...c, forPlayer: controllerOf(state, c.id)} : c);
+  return {entry, current, others: counted && question.position === undefined ? others.filter((c) => !counted.some((t) => t.kind === c.kind && t.id === c.id)) : others, counted, spec};
+}
+/* A divided spell copies each announced share (CR 707.10, 115.7f). Its target positions are chosen separately so the
+   player knows which share a new target receives; provisional targets are checked together, once final (115.7e). */
+const copyTargetQuestions = copy => copy.targets.flatMap((targets, index) => (!Array.isArray(targets) || targets.length
+  ? [{stackId: copy.stackId, index, ...(Array.isArray(targets) && copy.division?.[index] ? {position: 0, picked: []} : {})}]
+  : []));
+const sameTarget = (a, b) => a?.kind === b?.kind && a?.id === b?.id;
+/* Only the final set is checked (CR 115.7e), after all its target instances have been chosen. An unchanged illegal
+   target may remain (115.7d); a divided share belongs to its original position (115.7f), not any old target ID. */
+function validateRetargetedCopy(state, entry, targets) {
+  const specs = specsOf(state, entry);
+  const context = {controller: entry.playerId, source: entry.objectId ?? entry.cardId, chosenTargets: targets,
+    ...(entry.x !== undefined ? {x: entry.x} : {}), ...(entry.about ? {about: entry.about} : {})};
+  const checked = recheckTargets(state, specs, targets, context).targets;
+  const before = recheckTargets(state, specs, entry.targets, {...context, chosenTargets: entry.targets}).targets;
+  const legal = (list, target) => [].concat(list ?? []).some(candidate => candidate && sameTarget(candidate, target));
+  for (let index = 0; index < targets.length; index += 1) {
+    const selected = [].concat(targets[index] ?? []), original = [].concat(entry.targets[index] ?? []), spec = specs[index];
+    /* Restrictions between target instances are announcement constraints; resolution rechecking alone does not
+       repeat them (bind.mjs). New targets and any previously legal kept targets must satisfy the final choice set. */
+    const candidates = targetCandidates(state, spec, context);
+    const priorCandidates = targetCandidates(state, spec, {...context, chosenTargets: entry.targets});
+    const unchanged = (target, position) => entry.division?.[index] ? sameTarget(target, original[position]) : original.some(old => sameTarget(target, old));
+    const changed = selected.filter((target, position) => !unchanged(target, position));
+    if (changed.some(target => !legal(checked[index], target) || !legal(candidates, target)) || selected.some((target, position) => unchanged(target, position)
+      && legal(before[index], target) && legal(priorCandidates, target) && (!legal(checked[index], target) || !legal(candidates, target)))) throw new Error("Those new targets are not legal");
+    if (Array.isArray(targets[index]) && changed.length && (differentControllersProblem(state, spec, selected, entry.name)
+      || shareProblem(state, spec, selected, entry.name))) throw new Error("Those new targets do not meet the target restrictions");
+    if (Array.isArray(targets[index]) && changed.length && spec.differentManaValues === true) {
+      const values = selected.filter(target => target.kind === "object" && state.objects[target.id]).map(target => manaValue(parseManaCost(state.objects[target.id].manaCost ?? "")));
+      if (new Set(values).size !== values.length) throw new Error("Choose targets with different mana values");
+    }
+  }
+}
+function commitCopyTargetPlan(state, awaiting, entry, index, selected, rest) {
+  const targets = structuredClone(awaiting.proposed?.[entry.stackId] ?? entry.targets);
+  targets[index] = selected;
+  if (rest.some(question => question.stackId === entry.stackId)) {
+    (awaiting.proposed ??= {})[entry.stackId] = targets;
+    awaiting.questions = rest;
+    return {events: [], again: true};
+  }
+  validateRetargetedCopy(state, entry, targets);
+  for (const [instance, announced] of Object.entries(entry.division ?? {})) {
+    const original = [].concat(entry.targets[instance] ?? []);
+    entry.division[instance] = Object.fromEntries([].concat(targets[instance] ?? []).map((target, position) => [target.id, announced[original[position].id]]));
+  }
+  entry.targets = targets;
+  if (awaiting.proposed) delete awaiting.proposed[entry.stackId];
+  const events = retargetEvents(state, awaiting, entry, [], rest);
+  if (!rest.length) return {events};
+  awaiting.questions = rest;
+  return {events, again: true};
 }
 export const copySpell = {
   open(state, params, context) {
@@ -1633,36 +1690,66 @@ export const copySpell = {
        an ability (rules/stack.mjs, pushAbilityCopy), a spell's a spell. */
     const originals = [...(params.spells ?? []).map((id) => state.stack.find((e) => e.objectId === id)),
       ...(Array.isArray(params.stack) ? params.stack.map((id) => state.stack.find((e) => e.stackId === id)) : [])].filter(Boolean);
+    /* A nontargeted "that spell" reference survives its departure (CR 608.2h, 707.10). The memory is refreshed as it
+       leaves, so it includes any choices changed after casting; an unrelated or still-live spell never uses it. */
+    const remembered = context.about?.spellLastKnown;
+    if (remembered && (params.spells ?? []).includes(context.about.card)
+      && remembered.entry?.objectId === context.about.card && remembered.entry.stackId === context.about.stackId
+      && !originals.some((entry) => entry.stackId === remembered.entry.stackId))
+      originals.push({...remembered.entry, recordedSource: remembered.values, recordedReference: remembered.reference});
     const count = Math.max(0, params.count ?? 1);
-    const events = [], questions = [];
+    const events = [], questions = [], copied = [];
     for (const original of originals) for (let n = 0; n < count; n += 1) {
       if (original.kind !== "spell") {
         const copy = pushAbilityCopy(state, original, {controller: context.controller});
+        copied.push(copy);
         events.push(event("GameEventAbilityCopied", state, {name: original.name, playerId: context.controller, stackId: copy.stackId, original: original.stackId}));
-        if (params.newTargets === true) copy.targets.forEach((t, index) => { if (!Array.isArray(t)) questions.push({stackId: copy.stackId, index}); });
+        if (params.newTargets === true) questions.push(...copyTargetQuestions(copy));
         continue;
       }
-      const copy = pushCopy(state, original, {controller: context.controller, nonLegendary: params.except?.nonLegendary === true});
-      events.push(event("GameEventSpellCopied", state, {card: cardRef(state, copy.objectId), original: cardRef(state, original.objectId),
+      const copy = pushCopy(state, original, {controller: context.controller, nonLegendary: params.except?.nonLegendary === true,
+        recordedSource: original.recordedSource ?? null});
+      copied.push(copy);
+      events.push(event("GameEventSpellCopied", state, {card: cardRef(state, copy.objectId), original: cardRef(state, original.objectId) ?? original.recordedReference ?? null,
         playerId: context.controller, stackId: copy.stackId}));
-      /* NAMED: a counted target ("up to two target creatures") keeps the original's list on the copy; choosing a new list
-         for it is not asked yet. */
-      if (params.newTargets === true) copy.targets.forEach((t, index) => { if (!Array.isArray(t)) questions.push({stackId: copy.stackId, index}); });
+      /* A counted instance retains its original number; the chooser may keep any targets, including illegal ones (CR 707.10c). */
+      if (params.newTargets === true) questions.push(...copyTargetQuestions(copy));
     }
+    const asked = questions.filter((q) => (retargetOptions(state, q, {withOthers: false})?.others ?? []).length > 0);
+    /* A copy becomes a targeting spell/ability with its final targets, including kept ones (CR 115.1, 707.10c, 702.21a).
+       A copy whose targets are still being chosen reports this once its last answer arrives. */
+    for (const copy of copied) if (!asked.some((q) => q.stackId === copy.stackId)) events.push(...becameTarget(state, copy));
     state.resolving?.events.push(...events);
-    const asked = questions.filter((q) => (retargetOptions(state, q)?.others ?? []).length > 0);
     if (asked.length === 0) return false;
     state.awaiting = {kind: "effect-choice", effect: "copySpell", player: context.controller, questions: asked};
     return true;
   },
   choice(state, awaiting) {
     const question = awaiting.questions[0];
-    const found = retargetOptions(state, question);
-    const {entry, current, others} = found ?? {entry: null, current: null, others: []};
+    const found = retargetOptions(state, question, {withOthers: awaiting.effect !== "copySpell"});
+    const {entry, current, others, counted} = found ?? {entry: null, current: null, others: []};
     const many = (entry ? specsOf(state, entry) : []).length > 1;
+    const optional = awaiting.effect === "copySpell" ? {maySkip: true} : {};
+    const cancel = awaiting.effect === "copySpell" ? " · Cancel keeps original targets" : "";
+    if (counted && question.position !== undefined) {
+      const share = entry.division?.[question.index]?.[current?.id] ?? 0;
+      return {id: `copySpell:${question.stackId}:${question.index}:${question.position}`, ...optional,
+        title: `${entry.name}: ${ordinal(question.position)} target (${share} assigned)${cancel}`, mode: "one", min: 1, max: 1,
+        options: [{index: 0, label: `Keep ${targetName(state, current) || "its target, now gone"} (${share} assigned)`, keep: true, target: current},
+          ...others.map((target, index) => ({index: index + 1, label: targetName(state, target),
+            ...(target.kind === "object" ? {cardId: target.id} : {}), target}))]};
+    }
+    if (counted) return {
+      id: `copySpell:${question.stackId}:${question.index}`,
+      ...optional,
+      title: `${entry.name}: keep or choose ${counted.length} targets for the copy${cancel}`, mode: "many", min: counted.length, max: counted.length,
+      options: [...counted, ...others].map((target, index) => ({index, label: targetName(state, target) || "its target, now gone",
+        ...(target.kind === "object" ? {cardId: target.id} : {}), target, targets: [target]})),
+    };
     return {
       id: `copySpell:${question.stackId}:${question.index}`,
-      title: `Copy of ${entry?.name ?? "the spell"}: ${many ? `its ${ordinal(question.index)} target` : "a new target"}?`,
+      ...optional,
+      title: `Copy of ${entry?.name ?? "the spell"}: ${many ? `its ${ordinal(question.index)} target` : "a new target"}?${cancel}`,
       mode: "one", min: 1, max: 1,
       /* A target that has since left (Sevinne's Reclamation's card, returned by the original) may be kept, and the copy will
          not resolve (CR 608.2b): it is said so, not left a blank name. */
@@ -1670,22 +1757,72 @@ export const copySpell = {
         ...others.map((c, i) => ({index: i + 1, label: targetName(state, c), ...(c.kind === "object" ? {cardId: c.id} : {}), target: c}))],
     };
   },
-  apply(state, awaiting, indices) {
+  apply(state, awaiting, indices, extra = {}) {
+    if (awaiting.effect === "copySpell" && extra.cancel === true) {
+      const entry = state.stack.find(entry => entry.stackId === awaiting.questions[0].stackId);
+      const rest = awaiting.questions.filter(question => question.stackId !== awaiting.questions[0].stackId);
+      if (awaiting.proposed) delete awaiting.proposed[entry?.stackId];
+      const events = retargetEvents(state, awaiting, entry, [], rest);
+      if (!rest.length) return {events};
+      awaiting.questions = rest;
+      return {events, again: true};
+    }
+    const found = retargetOptions(state, awaiting.questions[0], {withOthers: awaiting.effect !== "copySpell"});
+    if (found?.counted) {
+      const {entry, counted} = found, question = awaiting.questions[0], choice = copySpell.choice(state, awaiting);
+      let selected;
+      if (question.position !== undefined) {
+        const option = choice.options[indices?.[0]];
+        if (!Array.isArray(indices) || indices.length !== 1 || !option) throw new Error("Invalid selection");
+        selected = [...question.picked, option.target];
+        if (selected.length < counted.length) {
+          question.picked = selected; question.position += 1;
+          return {events: [], again: true};
+        }
+      } else selected = (indices ?? []).map((i) => choice.options[i]?.target);
+      if (selected.length !== counted.length || new Set(selected.map(t => `${t?.kind}:${t?.id}`)).size !== selected.length || selected.some((t) => !t)) throw new Error("Invalid selection");
+      const targets = structuredClone(entry.targets); targets[question.index] = selected;
+      const rest = awaiting.questions.slice(1);
+      if (awaiting.effect === "copySpell") return commitCopyTargetPlan(state, awaiting, entry, question.index, selected, rest);
+      validateRetargetedCopy(state, entry, targets);
+      if (question.position !== undefined) {
+        const announced = entry.division[question.index];
+        entry.division[question.index] = Object.fromEntries(selected.map((target, i) => [target.id, announced[counted[i].id]]));
+      }
+      const changed = selected.filter((target, position) => question.position === undefined
+        ? !counted.some(old => sameTarget(target, old)) : !sameTarget(target, counted[position]));
+      entry.targets[question.index] = selected;
+      const events = retargetEvents(state, awaiting, entry, changed, rest);
+      if (!rest.length) return {events};
+      awaiting.questions = rest;
+      return {events, again: true};
+    }
     const option = copySpell.choice(state, awaiting).options[(indices ?? [])[0]];
     if (!option) throw new Error("Invalid selection");
     const [question, ...rest] = awaiting.questions;
     const events = [];
+    const copied = state.stack.find(entry => entry.stackId === question.stackId);
+    if (awaiting.effect === "copySpell" && copied) return commitCopyTargetPlan(state, awaiting, copied, question.index,
+      option.keep ? structuredClone(copied.targets[question.index]) : {kind: option.target.kind, id: option.target.id}, rest);
     if (!option.keep) {
       const entry = state.stack.find((e) => e.stackId === question.stackId);
       if (entry) entry.targets[question.index] = {kind: option.target.kind, id: option.target.id};
       /* The new target becomes the copy's target (ward, CR 702.21a). */
-      if (entry && option.target.kind === "object") events.push(...becameTarget(state, entry, option.target.id));
+      if (entry && awaiting.effect !== "copySpell" && option.target.kind === "object") events.push(...becameTarget(state, entry, option.target.id));
     }
+    if (awaiting.effect === "copySpell") events.push(...retargetEvents(state, awaiting, state.stack.find((e) => e.stackId === question.stackId), [], rest));
     if (rest.length === 0) return {events};
     awaiting.questions = rest;
     return {events, again: true};
   },
 };
+
+/* Kept targets also trigger for a newly created copy; changing an existing spell targets only the newly chosen objects. */
+function retargetEvents(state, awaiting, entry, changed, remaining) {
+  if (!entry) return [];
+  if (awaiting.effect === "copySpell") return remaining.some((q) => q.stackId === entry.stackId) ? [] : becameTarget(state, entry);
+  return changed.filter((t) => t.kind === "object").flatMap((t) => becameTarget(state, entry, t.id));
+}
 
 /* ---- changeTargets: "change the target of target spell with a single target" (Forge's ChangeTargets; CR 115.7) ----
    The spell it names, on the stack with one target (its own targeting asked for that: "with a single target"): this
@@ -1969,21 +2106,40 @@ export const enchantWhat = {
    never written in a card script. ---- */
 export const dredgeDraw = {
   open(state, params, context) {
-    if (!dredgers(state, params.player).length) return {events: drawEffect(state, {who: [params.player], count: 1}, context)};
-    state.awaiting = {kind: "effect-choice", effect: "dredgeDraw", player: params.player, cards: dredgers(state, params.player).map((d) => d.id)};
+    const replaced = params.replaced ?? [], cards = dredgers(state, params.player).map((d) => d.id);
+    if (drawForbidden(state, params.player)) return {events: []};
+    /* CR 616.1, 614.5: the drawer may apply a mandatory doubler before optional dredge. Its resulting draws may each
+       be dredged, but that same doubler cannot replace them again. Its new multi-card instruction must reconsider
+       unused Collectors before splitting into single draws (CR 121.2a, 616.1g). */
+    const more = drawsMore(state, params.player).filter((m) => !replaced.includes(m.key));
+    const wins = cardsIn(state, "library", params.player).length === 0 && emptyDrawWins(state, params.player);
+    if (!cards.length && !more.length) return {events: drawEffect(state, {who: [params.player], count: 1, drawReplaced: replaced}, context)};
+    /* Only one mandatory effect and no optional alternative leaves no order to choose (CR 616.1). Return its entire
+       modified instruction so a newly applicable Collector still asks before any card moves. */
+    if (!cards.length && more.length === 1 && !wins) return {events: [], splice: [{effect: "draw", who: [params.player], count: more[0].count,
+      drawReplaced: [...replaced, more[0].key]}]};
+    const mandatory = [...(wins ? [{kind: "win"}] : []), ...more.map((m) => ({kind: "more", ...m}))];
+    const options = [...(mandatory.length ? mandatory : [{kind: "draw"}]),
+      ...cards.map((id) => ({kind: "dredge", id}))];
+    state.awaiting = {kind: "effect-choice", effect: "dredgeDraw", player: params.player, cards, replaced, options};
     return true;
   },
   choice(state, awaiting) {
     const could = new Map(dredgers(state, awaiting.player).map((d) => [d.id, d.amount]));
-    return {id: `dredge:${state.turn}:${awaiting.cards.join(",")}`, title: "You would draw a card: draw it, or dredge instead", mode: "one", min: 1, max: 1,
-      options: [{index: 0, label: "Draw a card"}, ...awaiting.cards.map((id, i) => ({index: i + 1, cardId: id, label: dredgeWords(state, {id, amount: could.get(id)})}))]};
+    return {id: `dredge:${state.turn}:${awaiting.cards.join(",")}`, title: "You would draw a card: choose a replacement, or draw when none is required", mode: "one", min: 1, max: 1,
+      options: awaiting.options.map((o, index) => ({index, ...(o.kind === "dredge" ? {cardId: o.id} : {}),
+        label: o.kind === "draw" ? "Draw a card" : o.kind === "win" ? "Win the game instead" : o.kind === "more" ? `Draw ${o.count} cards instead`
+          : dredgeWords(state, {id: o.id, amount: could.get(o.id)})}))};
   },
   apply(state, awaiting, indices) {
     const [index] = indices ?? [];
-    if ((indices ?? []).length !== 1 || !(Number.isInteger(index) && index >= 0 && index <= awaiting.cards.length)) throw new Error("Invalid selection");
+    if ((indices ?? []).length !== 1 || !(Number.isInteger(index) && index >= 0 && index < awaiting.options.length)) throw new Error("Invalid selection");
     const events = [];
-    if (index === 0) return drawEffect(state, {who: [awaiting.player], count: 1}, {controller: awaiting.player});
-    if (!dredgeInstead(state, awaiting.player, awaiting.cards[index - 1], events)) throw new Error("That card can no longer dredge: draw the card, or dredge with another");
+    const selected = awaiting.options[index];
+    if (selected.kind === "draw" || selected.kind === "win") return drawEffect(state, {who: [awaiting.player], count: 1, drawReplaced: awaiting.replaced}, {controller: awaiting.player});
+    if (selected.kind === "more") return {events, splice: [{effect: "draw", who: [awaiting.player], count: selected.count,
+      drawReplaced: [...awaiting.replaced, selected.key]}]};
+    if (!dredgeInstead(state, awaiting.player, selected.id, events)) throw new Error("That card can no longer dredge: draw the card, or dredge with another");
     return events;
   },
   /* The drawing player has left the game (CR 800.4a): nothing is drawn. */
@@ -2327,6 +2483,39 @@ const playable = (state, player, pool, {most, free, anyMana, payMana = false, la
         return pay === null || !canPayGeneric(state, player, pay) ? [] : [{...action, owed: pay}];
       })]));
 };
+const playSignature = value => JSON.stringify(value, function (key, item) {
+  return item && typeof item === "object" && !Array.isArray(item)
+    ? Object.fromEntries(Object.keys(item).sort().map(key => [key, item[key]])) : item;
+});
+const playQuestionId = (state, awaiting, generation) => `play:${awaiting.player}:${state.turn}${awaiting.again ? `:${awaiting.cast}` : ""}:${awaiting.playSerial ?? "saved"}:${generation}`;
+/** Derive current legal variants without editing the live question or allocating another copy. The origin retains the
+    exact resolving permission, card pool and mana-value limit; source identity is never recovered from old indices. */
+export function deriveEffectPlay(state, awaiting = state.awaiting) {
+  if (state.effectPlayVersion !== 1 || awaiting?.kind !== "effect-choice" || awaiting.effect !== "play" || !awaiting.playOrigin
+    || awaiting.funding || awaiting.targeting || awaiting.planning || awaiting.paying || awaiting.playLocked) return null;
+  const origin = awaiting.playOrigin;
+  let pool = origin.pool;
+  if (origin?.from === "hand") pool = cardsIn(state, "hand", awaiting.player);
+  else if (origin?.from === "command") pool = cardsIn(state, "command", awaiting.player).filter(id => state.objects[id].commander === true);
+  else if (origin?.from === "selector") pool = selectMatching(state, {what: "card", ...origin.selector}, origin.context)
+    .filter(id => !["battlefield", "stack"].includes(state.objects[id]?.zone));
+  const choices = playable(state, awaiting.player, pool, {...origin.terms, lands: awaiting.lands === true,
+    most: origin?.most ?? Infinity});
+  const signature = playSignature(choices), changed = signature !== (awaiting.playSignature ?? playSignature(awaiting.choices));
+  const generation = (awaiting.playGeneration ?? 0) + (changed ? 1 : 0);
+  return {choices, signature, changed, generation, choiceId: playQuestionId(state, awaiting, generation)};
+}
+/** Called by the authoritative driver after external facts change, never by projection or a child draft's answers. */
+export function refreshEffectPlay(state) {
+  const derived = deriveEffectPlay(state);
+  if (!derived) return {changed: false};
+  if (derived.changed) {
+    state.awaiting.choices = structuredClone(derived.choices);
+    state.awaiting.playSignature = derived.signature;
+    state.awaiting.playGeneration = derived.generation;
+  }
+  return {changed: derived.changed, generation: derived.generation, choiceId: derived.choiceId};
+}
 export const play = {
   open(state, params, context) {
     /* "They may cast that card without paying its mana cost" (Tibalt's Trickery; card load w4d L1): `who`, the player who
@@ -2375,9 +2564,17 @@ export const play = {
       ...(params.anyNumber === true ? {again: {pool, ...terms, most: Number.isFinite(most) ? most : null}, cast: 0} : {}), ...exileInstead,
       ...otherwise, ...(params.rememberCast === true ? {rememberCast: true} : {}),
       ...(terms.lands ? {lands: true} : {})};
+    if (state.effectPlayVersion === 1) {
+      state.effectPlaySerial = (state.effectPlaySerial ?? 0) + 1;
+      Object.assign(state.awaiting, {playSerial: state.effectPlaySerial, playGeneration: 0, playSignature: playSignature(choices),
+        playOrigin: {pool: [...pool], from: copied !== null || copies !== null ? "fixed" : from, terms: {free: terms.free, anyMana: terms.anyMana, payMana: terms.payMana},
+          most: Number.isFinite(most) ? most : null,
+          ...(from === "selector" && copied === null && copies === null ? {selector: structuredClone(params.selector ?? {}), context: structuredClone(context)} : {})}});
+    }
     return true;
   },
   choice(state, awaiting) {
+    if (awaiting.targeting) return chooseTargetsChoice(state, {player: awaiting.player, ...awaiting.targeting});
     /* What it still costs (a commander's tax, "for its mana value in any mana"): which mana pays, when that is a choice. */
     if (awaiting.paying) return paymentChoice(`play-mana:${awaiting.player}:${state.turn}:${awaiting.cast ?? 0}`, awaiting.paying.owed, paymentUnits(state, awaiting.player));
     /* Its mana cost, colors and all, when there is more than one way to pay it: which. */
@@ -2388,13 +2585,23 @@ export const play = {
     }
     /* Played, a land among them (`lands`): the question says "play". */
     const [title, decline] = awaiting.lands ? ["Play the card?", "Don't play"] : [awaiting.cast ? "Cast another spell?" : "Cast a spell?", "Don't cast"];
-    return {id: `play:${awaiting.player}:${state.turn}${awaiting.again ? `:${awaiting.cast}` : ""}`, title, mode: "one", min: 1, max: 1,
-      options: [...awaiting.choices.map((c, index) => ({index, label: c.targetNames?.length ? `${c.label} → ${c.targetNames.join(", ")}` : c.label, cardId: c.objectId})),
-        {index: awaiting.choices.length, label: decline}]};
+    const live = deriveEffectPlay(state, awaiting), choices = live?.choices ?? awaiting.choices;
+    return {id: live?.choiceId ?? `play:${awaiting.player}:${state.turn}${awaiting.again ? `:${awaiting.cast}` : ""}`, title, mode: "one", min: 1, max: 1,
+      options: [...choices.map((c, index) => ({index, label: c.targetNames?.length ? `${c.label} → ${c.targetNames.join(", ")}` : c.label, cardId: c.objectId})),
+        {index: choices.length, label: decline}]};
   },
-  apply(state, awaiting, indices) {
+  apply(state, awaiting, indices, extra = {}) {
+    const live = deriveEffectPlay(state, awaiting);
+    if (live && (live.changed || (live.generation > 0 || extra.choiceId !== undefined) && extra.choiceId !== live.choiceId))
+      throw new Error("This casting choice has expired; refresh its legal variants before answering");
     let chosen, events;
-    if (awaiting.planning) {
+    if (awaiting.targeting) {
+      const picked = pickActionTargets(state, {player: awaiting.player, ...awaiting.targeting}, indices);
+      awaiting.choices[awaiting.targeting.chosen] = {...picked.action};
+      const index = awaiting.targeting.chosen;
+      delete awaiting.targeting;
+      return play.apply(state, awaiting, [index]);
+    } else if (awaiting.planning) {
       chosen = awaiting.choices[awaiting.planning.index];
       const {units, plans} = unlessPlans(state, awaiting.player, awaiting.planning.cost);
       const plan = plans[(indices ?? [])[0]];
@@ -2408,6 +2615,13 @@ export const play = {
       if (index === awaiting.choices.length) return awaiting.otherwise ? {events: [], splice: structuredClone(awaiting.otherwise)} : {events: []};
       chosen = awaiting.choices[index];
       if (!chosen) throw new Error("Invalid selection");
+      /* Counted targets for a free/effect cast are chosen before any payment or movement (CR 601.2c, 608.2g). */
+      const action = structuredClone(chosen), targetIndex = nextToChoose(state, awaiting.player, action);
+      awaiting.choices[index] = action;
+      if (targetIndex >= 0) {
+        state.awaiting = {...awaiting, ...(awaiting.playOrigin ? {playLocked: true} : {}), targeting: {chosen: index, action, index: targetIndex}};
+        return {events: [], again: true};
+      }
       /* Its mana cost, colors and all (`payMana`): the one way there is, paid at once; more, and which is asked. */
       if (chosen.cost !== undefined) {
         const {units, plans} = chosen.cost ? unlessPlans(state, awaiting.player, chosen.cost) : {units: [], plans: []};
@@ -2428,6 +2642,15 @@ export const play = {
     const action = {...chosen};
     delete action.owed;
     delete action.cost;
+    if (action.kind === "play-land") {
+      const again = awaiting.again;
+      const splice = again ? [{effect: "play", from: "targets", targets: again.pool, who: [awaiting.player], anyNumber: true,
+        free: again.free, anyMana: again.anyMana, payMana: again.payMana, lands: again.lands,
+        ...(again.most !== null ? {manaValueAtMost: again.most} : {}),
+        ...(awaiting.exileInstead ? {exileInstead: true} : {}), ...(awaiting.rememberCast ? {rememberCast: true} : {})}] : [];
+      return {events, operation: playedLandFrame(awaiting.player, action), splice,
+        ...(awaiting.rememberCast && !again ? {remembered: []} : {})};
+    }
     const stacked = new Set(state.stack.map((entry) => entry.stackId));
     events.push(...castNow(state, awaiting.player, action, awaiting.exileInstead ? {graveyardToExile: true} : {}));
     /* `rememberCast` (above): the spell now on the stack. */
@@ -2441,6 +2664,7 @@ export const play = {
       const choices = playable(state, awaiting.player, pool, {most: most ?? Infinity, free, anyMana, payMana});
       if (choices.length) {
         const next = {...awaiting, choices, cast: awaiting.cast + 1};
+        if (next.playOrigin) { next.playSignature = playSignature(choices); next.playGeneration = 0; delete next.playLocked; }
         delete next.paying;
         delete next.planning;
         state.awaiting = next;
@@ -2680,17 +2904,21 @@ export const orderDraws = {
     /* Each option by its effect's card -- "Rob's Alms Collector" -- and what it does; one whose controller has since left the
        game, with it, is said to be gone (CR 800.4a). */
     const held = staticAbilities(state);
-    const card = (you) => state.objects[state.zones.battlefield.find((id) => state.objects[id].controller === you
-      && held(id).some((a) => a.kind === "static" && a.rule === "draws-instead"))]?.card;
+    const card = (option) => option?.sourceId !== undefined ? state.objects[option.sourceId]?.card
+      : state.objects[state.zones.battlefield.find((id) => state.objects[id].controller === option
+        && held(id).some((a) => a.kind === "static" && a.rule === "draws-instead"))]?.card;
     return {id: `order-draws:${state.turn}:${awaiting.player}`, title: `${name(awaiting.player)} would draw ${awaiting.count} cards: whose replacement applies?`,
       mode: "one", min: 1, max: 1,
-      options: awaiting.options.map((you, index) => ({index, player: you,
-        label: card(you) ? `${name(you)}'s ${card(you)}: ${name(you)} and ${name(awaiting.player)} each draw a card` : "An effect no longer there"}))};
+      options: awaiting.options.map((option, index) => {
+        const you = option?.controller ?? option;
+        return {index, player: you, ...(option?.sourceId !== undefined ? {cardId: option.sourceId} : {}),
+          label: card(option) ? `${name(you)}'s ${card(option)}: ${name(you)} and ${name(awaiting.player)} each draw a card` : "An effect no longer there"};
+      })};
   },
   apply(state, awaiting, indices) {
     const chosen = Array.isArray(indices) && indices.length === 1 ? awaiting.options[indices[0]] : undefined;
     if (chosen === undefined) throw new Error("Invalid selection");
-    return {events: [], splice: [{...awaiting.draw, drawOrders: {...awaiting.answers, [awaiting.player]: chosen}}]};
+    return {events: [], splice: [{...awaiting.draw, drawOrders: {...awaiting.answers, [awaiting.player]: chosen.key ?? chosen}}]};
   },
   /* The drawing player has left the game: there is no draw of theirs to replace (CR 800.4a), and the rest goes on. */
   left(state, awaiting) {

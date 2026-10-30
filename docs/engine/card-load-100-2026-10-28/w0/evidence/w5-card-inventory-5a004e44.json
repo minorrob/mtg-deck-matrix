@@ -1,0 +1,14 @@
+{
+  "schema": "load100-w5-card-inventory@1",
+  "source": "5a004e44",
+  "command": "node --stack-size=4000 game/tools/batch/check-cards.mjs",
+  "counterfactual": false,
+  "definitions": 6430,
+  "scenarios": 11037,
+  "failed": 1,
+  "failures": [
+    "FAIL Goblin Glasswright // Craft with Pride | It enters prepared: Craft with Pride waits in Rob's exile, cast it for {R}, a Treasure, and the Glasswright is unprepared: cast Craft with Pride is offered 1 way(s), not 0"
+  ],
+  "owner": "W1 preparation",
+  "outcome": "Existing no-offer assertion contradicts permitted automatic funding. Owner will preserve paid cast and Treasure/unprepared outcomes."
+}

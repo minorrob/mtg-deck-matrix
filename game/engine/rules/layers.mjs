@@ -84,6 +84,7 @@ function printed(state, id) {
     everyCreatureType: everyCreatureType(object.keywords),
     power: object.power,
     toughness: object.toughness,
+    ...(Number.isInteger(object.defense) ? {defense: object.defense} : {}),
     controller: object.controller,
     counters: {...object.counters},
     /* Abilities other effects give it (batch 76), in the order they were given. */
@@ -200,6 +201,9 @@ function affects(state, effect, current, sourceController) {
 /** Whether a static ability's `affects` takes in this object as it currently is (rules/statics.mjs reads it). */
 export const staticAffects = (state, effect, id, sourceController) => affects(state, effect, characteristicsOf(state, id), sourceController);
 
+/* CR 305.7 applies to a type-setting effect, never to basic types added in addition. */
+const setsBasicLandType = (apply) => (apply?.setSubtypes ?? []).some((type) => BASIC_LAND_MANA[type]);
+
 function applyEffect(current, effect) {
   const change = effect.apply ?? {};
   if (change.addSupertypes) current.supertypes = [...new Set([...current.supertypes, ...change.addSupertypes])];
@@ -221,6 +225,12 @@ function applyEffect(current, effect) {
   }
   /* "Enchanted permanent is a colorless Forest land" (Song of the Dryads): its subtypes set, every other one lost (CR 205.1b). */
   if (change.setSubtypes) { current.subtypes = [...change.setSubtypes]; current.everyCreatureType = false; }
+  /* CR 305.7: setting a basic land type takes rules-text/copiable abilities, while outside grants and keyword counters
+     remain. Those grants apply in layer 6; the new land type supplies its intrinsic mana after layer 4. */
+  if (current.types.includes("Land") && setsBasicLandType(change)) {
+    current.lostAbilities = true;
+    current.keywords = [...new Set((current.counterKeywords ?? []).map(([word]) => word))];
+  }
   /* "Becomes a green Elk creature" (Oko, Thief of Crowns), "is a Turtle" (Retro-Mutation): its creature types set, and only
      those -- each other subtype kept, an Elked Food still a Food (CR 205.1a: a set subtype replaces those of its own set);
      a changeling's every creature type among those replaced. */
@@ -667,7 +677,7 @@ const partOf = (id, ability) => `${id}|${ability.text ?? ability.id ?? ""}`;
 function losersAmong(state, effects) {
   let ids = null;
   for (const {apply, affects: rule, sourceId} of effects) {
-    if (!apply?.removeAllAbilities) continue;
+    if (!apply?.removeAllAbilities && !setsBasicLandType(apply)) continue;
     ids ??= new Set();
     if (Array.isArray(rule?.ids)) { for (const id of rule.ids) ids.add(id); continue; }
     if (rule?.attachedBy === "self") { const host = state.objects[sourceId]?.attachedTo; if (host !== null && host !== undefined) ids.add(host); continue; }
@@ -713,7 +723,7 @@ function intrinsicMana(state, id, current) {
   const own = state.objects[id].subtypes ?? [];
   for (const type of current.subtypes) {
     const color = BASIC_LAND_MANA[type];
-    if (!color || own.includes(type)) continue;
+    if (!color || (own.includes(type) && !current.lostAbilities)) continue;
     current.granted.push({id: `intrinsic:${type}`, kind: "mana", tapSelf: true, produces: {[color]: 1}, text: `{T}: Add {${color}}.`});
   }
 }
@@ -741,7 +751,7 @@ function derive(state, id, counts = true, through = 7) {
   const begun = new Set(), removedBy = [];
   const applied = (effect) => {
     if (effect.partOf !== undefined) begun.add(effect.partOf);
-    if (effect.apply?.removeAllAbilities) removedBy.push(effect.partOf);
+    if (effect.apply?.removeAllAbilities || (setsBasicLandType(effect.apply) && (effect.apply?.setTypes ?? current.types).includes("Land"))) removedBy.push(effect.partOf);
     return applyEffect(current, effect.apply?.manaValueX === true ? withManaValueX(state, id, effect) : effect);
   };
   /* CR 613.6: a later part of an ability whose effect began to apply to this object in an earlier layer (`continued`) goes on
@@ -790,6 +800,11 @@ function derive(state, id, counts = true, through = 7) {
     }
   }
 
+  /* CR 310.4a-c: the copiable number is printed defense; in play the defense characteristic is its counters. */
+  if (current.types.includes("Battle")) {
+    if (Number.isInteger(current.defense)) current.printedDefense = current.defense;
+    if (state.objects[id].zone === "battlefield") current.defense = current.counters.defense ?? 0;
+  } else delete current.defense;
   removals.set(current, removedBy);
   partsOn.set(current, [...begun]);
   return current;
@@ -941,6 +956,8 @@ export function lastKnown(state, id) {
     /* Null, not zero, for a thing that has no power — a dying Sol Ring is not a 0/0. */
     power: current.power ?? null,
     toughness: current.toughness ?? null,
+    ...(Number.isInteger(current.defense) ? {defense: current.defense} : {}),
+    ...(Number.isInteger(current.printedDefense) ? {printedDefense: current.printedDefense} : {}),
     counters: {...current.counters},
     damage: object.damage ?? 0,
     tapped: object.tapped === true,
@@ -957,4 +974,4 @@ export function lastKnown(state, id) {
 }
 /* The copiable values a permanent shows (effects/permanents.mjs, COPY_KEYS: the same list, kept here to keep the layers free
    of the effects). */
-const COPIED_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "loyalty", "spell", "enchant"]);
+const COPIED_KEYS = Object.freeze(["card", "manaCost", "types", "subtypes", "supertypes", "colors", "keywords", "abilities", "power", "toughness", "loyalty", "defense", "spell", "enchant", "preparation"]);

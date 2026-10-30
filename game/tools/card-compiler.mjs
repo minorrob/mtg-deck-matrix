@@ -73,10 +73,12 @@ export function compileCard(record, {library, trust, definition}) {
   if (!fidelity.ok) return {...base, status: "refused", why: [`fidelity: ${[...fidelity.invented, ...fidelity.unclaimed][0]}`]};
   const smoke = smokeTest(tr.script, definition);
   if (!smoke.ok) return {...base, status: "refused", why: [`smoke: ${smoke.error ?? smoke.problems[0]}`]};
+  /* A smoke fixture may finish without being able to cast its card. That is not played evidence for a candidate. */
+  if (smoke.played !== true) return {...base, status: "refused", why: ["smoke: candidate was not played"]};
   const weakest = verdicts.reduce((w, v) => (!w || v.cards < w.cards ? v : w), null);
   return {...base, status: "candidate", oracleHash: oracleHash(record), templates: tr.templates,
     confidence: {fewestCards: weakest.cards, band: weakest.band.band, bandRate: weakest.band.rate, bandLow: weakest.band.low},
-    smoke: {played: smoke.played !== false, resolved: smoke.resolved ?? 0}, abilities: tr.script.abilities};
+    smoke: {played: smoke.played, resolved: smoke.resolved ?? 0}, abilities: tr.script.abilities};
 }
 
 /* A template is trusted when it is in a band from the minimum count up and no card it translated failed. */

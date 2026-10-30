@@ -1,0 +1,22 @@
+{
+  "source": "544d8512d226790498ae5da29087471ab6ba9a29",
+  "inventorySha256": "a9be9808449d759e85483653621be7b7457c7bd2086076788dc44119bc2fd7b2",
+  "scenariosAccounted": 11044,
+  "candidates": 1233,
+  "candidateFiles": 772,
+  "missingReferences": 3896,
+  "structuralDispositions": {
+    "outside-narrow-scope": 9221,
+    "already-explicit": 8,
+    "not-a-candidate": 582,
+    "frozen-candidate": 1233
+  },
+  "rejectionReasons": {
+    "command-zone-setup-excluded": 3376,
+    "mixed-battlefield-excluded": 9169,
+    "battlefield-fixture-override-excluded": 6711,
+    "no-missing-literal-reference": 8,
+    "nondefault-initial-stage": 784,
+    "no-initial-contiguous-actor0-basic-tap-prefix": 582
+  }
+}

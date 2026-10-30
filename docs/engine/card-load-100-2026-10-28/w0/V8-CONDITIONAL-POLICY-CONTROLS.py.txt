@@ -1,0 +1,23 @@
+from pathlib import Path
+import hashlib,json,subprocess
+base=Path.cwd().parent/'scratch'
+original=base/'v8-policies-guard-demo.mjs';source=original.read_bytes();text=source.decode()
+candidate=base/'v8-policies-guard-mutant.mjs'
+controls=[
+ ('skip actual selected action', 'if(!actions.length){', 'if(true){', 'actual Goblin enters only through the native permission'),
+ ('accept unrelated top frame', 'must(state.stack.length===1&&state.stack.at(-1).stackId===frame.stackId,\'intervening or extra frame\');', '', 'The input did not match the regular expression'),
+ ('ignore native event actor', '&&f.si?.actor?.playerId===actor', '', 'negative control rejects'),
+ ('ignore changed native question', "must(questionSignature!==null&&hashState(state.awaiting)===questionSignature,'stale changed question');", '', 'negative control rejects'),
+ ('ignore explicit choice actor', 'request.seat===frame.playerId', 'true', 'negative control rejects'),
+]
+rows=[]
+for label,anchor,replacement,expected in controls:
+ assert text.count(anchor)==1,(label,text.count(anchor))
+ candidate.write_text(text.replace(anchor,replacement),encoding='utf-8')
+ run=subprocess.run(['node',str(candidate)],capture_output=True,text=True,timeout=60)
+ assert run.returncode!=0 and expected in run.stderr,(label,run.stderr)
+ rows.append({'label':label,'caught':True,'specificAssertion':expected})
+ assert original.read_bytes()==source
+record={'source':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),'productionEdits':0,'baselineSha256':hashlib.sha256(source).hexdigest(),'caught':rows,'missed':[],'baselineByteIdentical':True}
+(base/'v8-policies-guard-controls.json').write_text(json.dumps(record,indent=2)+'\n')
+print(json.dumps(record,indent=2))

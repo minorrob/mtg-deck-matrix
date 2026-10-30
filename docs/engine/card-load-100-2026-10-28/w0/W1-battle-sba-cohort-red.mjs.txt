@@ -1,0 +1,29 @@
+import assert from "node:assert/strict";
+import {createState,addObject} from "../w0-w1-faces/game/engine/state/index.mjs";
+import {lastKnown} from "../w0-w1-faces/game/engine/rules/layers.mjs";
+import {beginResolution} from "../w0-w1-faces/game/engine/script/resolution.mjs";
+import {beginRuleOperation} from "../w0-w1-faces/game/engine/rules/operations.mjs";
+const state = createState({players:[{name:"A"},{name:"B"},{name:"C"}]});
+state.phase="MAIN1";state.turn=1;state.activePlayer=0;state.priorityPlayer=0;
+const put = object => addObject(state,{owner:0,controller:0,...object},"battlefield");
+const source=put({card:"Smoke Damage Source",types:["Creature"],power:1,toughness:1});
+const lord=put({card:"Smoke Battle Lord",types:["Battle","Creature"],power:2,toughness:2,defense:4,protector:0,counters:{defense:4},abilities:[
+  {id:"pump",kind:"static",layer:7,sublayer:"c",affects:{types:["Creature"],another:true},apply:{power:2,toughness:2}},
+  {id:"replacement",kind:"replacement",watches:{event:"zone-change",from:"battlefield",to:"graveyard",filter:{types:["Creature"],another:true}},change:{to:"exile"}}]});
+const battle=put({card:"Smoke Other Battle",types:["Battle","Creature"],power:2,toughness:2,defense:4,protector:0,counters:{defense:4}});
+const bear=put({card:"Smoke Ordinary Bear",types:["Creature"],power:2,toughness:2});
+const walker=put({card:"Smoke Ordinary Walker",types:["Planeswalker"],loyalty:4,counters:{loyalty:4}});
+const damage=beginResolution(state,[{effect:"damageAll",selector:{anyOf:[{types:["Battle"]},{types:["Creature"]},{types:["Planeswalker"]}]},amount:4,exceptSource:true}],{controller:0,source});
+assert.equal(damage.status,"done");
+const before=lastKnown(state,battle);
+assert.equal(before.toughness,4,"the second Battle is a 4/4 in the actual pre-SBA board");
+// Existing native move-one children are the proposed component, not a claim of an atomic SBA implementation.
+const moved=beginRuleOperation(state,[lord,battle,bear,walker].map(id=>({kind:"move-one",id,to:"graveyard"})));
+const zoneEvents=moved.events.filter(event=>event.kind==="GameEventCardChangeZone");
+const second=zoneEvents.find(event=>event.data.fields.card.cardId===battle);
+const destinations=zoneEvents.map(event=>[event.data.fields.card.name,event.data.fields.to.zoneType]);
+console.log(JSON.stringify({beforeToughness:before.toughness,secondLki:second?.data.fields.leftBehind?.toughness,destinations}));
+const failures=[];
+try {assert.equal(second.data.fields.leftBehind.toughness,4,"simultaneous SBA LKI must retain the pre-move lord effect");} catch(error){failures.push(error.message);}
+try {assert.equal(second.data.fields.to.zoneType,"Exile","the pre-move other-creature replacement must apply before its source leaves in the same cohort");} catch(error){failures.push(error.message);}
+assert.deepEqual(failures,[],failures.join("\n"));

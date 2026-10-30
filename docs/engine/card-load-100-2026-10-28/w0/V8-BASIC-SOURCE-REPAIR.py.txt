@@ -1,0 +1,88 @@
+"""Approved eight-scenario repair only; source references are fixed authored literals."""
+from copy import deepcopy
+from pathlib import Path
+import hashlib,json,subprocess,sys
+
+outside=Path.cwd().parent/'scratch'
+pilot=json.loads((outside/'v8-basic-source-pilot.json').read_text(encoding='utf-8-sig'))
+approved=[entry for entry in pilot['results'] if entry['eligibleForSavedEdit']]
+assert len(approved)==8 and sum(sum(p['added'] for p in e['prefix']) for e in approved)==30
+basic={'Wastes','Plains','Island','Swamp','Mountain','Forest'}
+def plan(original,fixtures):
+    if original.get('at',{'turn':1,'phase':'MAIN1'})!={'turn':1,'phase':'MAIN1'}: return None
+    setup=original.get('setup',[])
+    if any(e.get('zone')=='command' or e.get('zone')=='battlefield' and any(n not in basic or n in fixtures for n in e['cards']) for e in setup): return None
+    counts={}
+    for entry in setup:
+        if entry.get('zone')=='battlefield' and entry.get('seat')==0:
+            for name in entry['cards']: counts[name]=counts.get(name,0)+1
+    changed=deepcopy(original);used={};additions=[]
+    for i,step in enumerate(original.get('steps',[])):
+        if step.get('tap') not in basic or step.get('seat',0)!=0 or set(step)-{'tap','seat','source','mana'}: break
+        name=step['tap'];ordinal=used.get(name,0);literal={'zone':'battlefield','index':ordinal}
+        if ordinal>=counts.get(name,0): return None
+        if 'source' in step and step['source']!=literal: return None
+        if 'source' not in step:
+            changed['steps'][i]['source']=literal;additions.append({'step':i,'source':literal})
+        used[name]=ordinal+1
+    restored=deepcopy(changed)
+    for addition in additions: del restored['steps'][addition['step']]['source']
+    assert restored==original
+    return changed,additions
+
+def control():
+    selected=approved[0]
+    data=json.loads(Path(selected['file']).read_text(encoding='utf-8-sig'))
+    original=next(s for s in data['scenarios'] if s['name']==selected['scenario'])
+    existing=deepcopy(original);existing['steps'][0]['source']={'zone':'battlefield','index':0}
+    original_literal=json.dumps(existing['steps'][0]['source']).encode()
+    before=deepcopy(existing);changed,additions=plan(existing,data.get('fixtures',{}))
+    assert existing==before and all(a['step']!=0 for a in additions)
+    assert json.dumps(changed['steps'][0]['source']).encode()==original_literal
+    inconsistent=deepcopy(existing);inconsistent['steps'][0]['source']['index']=1
+    inconsistent_before=deepcopy(inconsistent);assert plan(inconsistent,data.get('fixtures',{})) is None
+    assert inconsistent==inconsistent_before
+    differing=deepcopy(existing);differing['steps'][0]['source']['seat']=0
+    differing_before=deepcopy(differing);assert plan(differing,data.get('fixtures',{})) is None
+    assert differing==differing_before
+    fixture={'card':data['card'],'fixtures':data.get('fixtures',{}),'scenario':changed}
+    (outside/'v8-basic-source-preservation-fixture.json').write_text(json.dumps(fixture,indent=2)+'\n',encoding='utf-8')
+    report={'scope':'additive diagnostic clone, not another selected saved original','originalPilotRetained':True,
+      'existingLiteralPreservedByteExact':True,'existingOriginalUnmodified':True,'newReferences':len(additions),
+      'inconsistentIndexExcludesEntireCandidate':True,'differingLiteralExcludesEntireCandidate':True,
+      'excludedInputsUnmodified':True,'source':'644d844bab026329b08028988f515074bd2da7aa'}
+    (outside/'v8-basic-source-preservation-control.json').write_text(json.dumps(report,indent=2)+'\n')
+    print(json.dumps(report,indent=2))
+
+def apply():
+    assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==pilot['source']
+    assert not subprocess.check_output(['git','status','--porcelain'],text=True).strip()
+    baseline=json.loads((outside/'v8-basic-source-before-644d844b.json').read_text(encoding='utf-8'))
+    assert baseline['source']['revision']==pilot['source'] and baseline['source']['dirty'] is False
+    paths=sorted({entry['file'] for entry in approved});report=[];total=0
+    for file in paths:
+        target=Path(file);raw=target.read_bytes();original=json.loads(raw);changed=deepcopy(original);edits=[]
+        for entry in approved:
+            if entry['file']!=file: continue
+            at=next(i for i,s in enumerate(original['scenarios']) if s['name']==entry['scenario'])
+            planned=plan(original['scenarios'][at],original.get('fixtures',{}));assert planned
+            scenario,additions=planned
+            assert additions==[{'step':p['step'],'source':{'zone':'battlefield','index':p['ordinal']}} for p in entry['prefix'] if p['added']]
+            changed['scenarios'][at]=scenario
+            edits.extend({'scenarioIndex':at,'scenario':entry['scenario'],**addition} for addition in additions)
+        restored=deepcopy(changed)
+        for edit in edits: del restored['scenarios'][edit['scenarioIndex']]['steps'][edit['step']]['source']
+        assert restored==original and len(changed['scenarios'])==len(original['scenarios'])
+        new=(json.dumps(changed,ensure_ascii=False,indent=2)+'\n').encode('utf-8')
+        target.write_bytes(new);assert json.loads(target.read_bytes())==changed
+        total+=len(edits)
+        report.append({'file':file,'originalSha256':hashlib.sha256(raw).hexdigest(),'afterSha256':hashlib.sha256(new).hexdigest(),
+          'allOriginalFieldsPreserved':True,'originalScenarioCount':len(original['scenarios']),'edits':edits})
+    assert total==30 and len(report)==5
+    result={'scope':'only approved eight fully passing pilot scenarios','beforeSource':pilot['source'],
+      'scenarioFiles':5,'editedScenarios':8,'newSourceFields':total,'allOtherOriginalFieldsPreserved':True,'files':report}
+    (outside/'v8-basic-source-repair-diff.json').write_text(json.dumps(result,indent=2)+'\n')
+    print(json.dumps({'scenarioFiles':5,'editedScenarios':8,'newSourceFields':total,'originalFieldsPreserved':True}))
+if sys.argv[1:] == ['control']: control()
+elif sys.argv[1:] == ['apply-approved']: apply()
+else: raise SystemExit('Use control or apply-approved')

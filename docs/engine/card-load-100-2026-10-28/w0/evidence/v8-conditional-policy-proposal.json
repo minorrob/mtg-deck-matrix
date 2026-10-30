@@ -1,0 +1,98 @@
+{
+  "schema": "V8ConditionalPolicyProposal@1",
+  "status": "Proposal only; production4of8 unchanged",
+  "demo": {
+    "source": "681a0e36377da6dafc853d8883e12868f5fa7f70",
+    "productionEdits": 0,
+    "checks": 161,
+    "results": [
+      {
+        "case": "Snoop cast permission",
+        "omitted": false,
+        "branch": "applied-and-resolved",
+        "goblinEntered": true,
+        "R": 0
+      },
+      {
+        "case": "Snoop granted activation",
+        "omitted": false,
+        "branch": "applied-and-resolved",
+        "tokens": 2
+      },
+      {
+        "case": "Banner mana",
+        "omitted": false,
+        "branch": "applied",
+        "R": 1
+      },
+      {
+        "case": "Banner entry replacement",
+        "omitted": false,
+        "branch": "answered",
+        "power": 2
+      },
+      {
+        "case": "Snoop cast permission",
+        "omitted": true,
+        "branch": "unavailable",
+        "goblinEntered": false,
+        "R": 1
+      },
+      {
+        "case": "Snoop granted activation",
+        "omitted": true,
+        "branch": "unavailable",
+        "tokens": 0
+      },
+      {
+        "case": "Banner mana",
+        "omitted": true,
+        "branch": "unavailable",
+        "R": 0
+      },
+      {
+        "case": "Banner entry replacement",
+        "omitted": true,
+        "branch": "completed-without-question",
+        "power": 1
+      }
+    ]
+  },
+  "controls": {
+    "source": "681a0e36377da6dafc853d8883e12868f5fa7f70",
+    "productionEdits": 0,
+    "baselineSha256": "b521df37e2ead1e147a156705b4898dc35e9d0c3b9272932d4dbc734d3321fea",
+    "caught": [
+      {
+        "label": "skip actual selected action",
+        "caught": true,
+        "specificAssertion": "actual Goblin enters only through the native permission"
+      },
+      {
+        "label": "accept unrelated top frame",
+        "caught": true,
+        "specificAssertion": "The input did not match the regular expression"
+      },
+      {
+        "label": "ignore native event actor",
+        "caught": true,
+        "specificAssertion": "negative control rejects"
+      },
+      {
+        "label": "ignore changed native question",
+        "caught": true,
+        "specificAssertion": "negative control rejects"
+      },
+      {
+        "label": "ignore explicit choice actor",
+        "caught": true,
+        "specificAssertion": "negative control rejects"
+      }
+    ],
+    "missed": [],
+    "baselineByteIdentical": true
+  },
+  "sourceBase": "55f133f5d9c14142aae6638ea8cc65b0110df112",
+  "runtimeExecutionRevision": "681a0e36377da6dafc853d8883e12868f5fa7f70",
+  "sourceEquivalence": "Execution revision adds only proposal documentation/artifacts to55f; production imports and saved cards are unchanged. Scratch audit is not canonical acceptance."
+}

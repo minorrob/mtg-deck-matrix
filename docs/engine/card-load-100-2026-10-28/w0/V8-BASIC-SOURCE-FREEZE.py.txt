@@ -1,0 +1,78 @@
+"""Freeze the complete remaining narrow inventory; no saved-file writes."""
+from pathlib import Path
+from copy import deepcopy
+from collections import Counter
+import ast,hashlib,json,subprocess
+outside=Path.cwd().parent/'scratch'
+source='544d8512d226790498ae5da29087471ab6ba9a29'
+assert subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()==source
+assert not subprocess.check_output(['git','status','--porcelain'],text=True).strip()
+planner_raw=(outside/'v8-basic-source-repair.py').read_bytes()
+tree=ast.parse(planner_raw.decode('utf-8'))
+planner=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='plan')
+basic={'Wastes','Plains','Island','Swamp','Mountain','Forest'}
+namespace={'deepcopy':deepcopy,'basic':basic}
+exec(compile(ast.Module(body=[planner],type_ignores=[]),'<reviewed-plan-only>','exec'),namespace)
+plan=namespace['plan']
+sha=lambda raw:hashlib.sha256(raw).hexdigest()
+canonical=lambda value:json.dumps(value,ensure_ascii=False,separators=(',',':')).encode('utf-8')
+inputs=json.loads((outside/'v8-basic-source-inventory-inputs-544d8512.json').read_text())
+assert inputs['source']['revision']==source and inputs['source']['dirty'] is False
+candidates=[];dispositions=[];files=[]
+for file in sorted(Path('game/engine/cards').rglob('*.scenarios.json')):
+    raw=file.read_bytes();data=json.loads(raw);fixtures=data.get('fixtures',{});name=str(file).replace('\\','/')
+    files.append({'file':name,'sha256':sha(raw),'scenarios':len(data.get('scenarios',[]))})
+    for scenario_index,original in enumerate(data.get('scenarios',[])):
+        identity={'file':name,'card':data.get('card'),'scenarioIndex':scenario_index,'scenario':original.get('name')}
+        setup=original.get('setup',[]);reasons=[]
+        if original.get('at',{'turn':1,'phase':'MAIN1'})!={'turn':1,'phase':'MAIN1'}:reasons.append('nondefault-initial-stage')
+        if any(e.get('zone')=='command' for e in setup):reasons.append('command-zone-setup-excluded')
+        if any(e.get('zone')=='battlefield' and any(n not in basic for n in e['cards']) for e in setup):reasons.append('mixed-battlefield-excluded')
+        if any(e.get('zone')=='battlefield' and any(n in fixtures for n in e['cards']) for e in setup):reasons.append('battlefield-fixture-override-excluded')
+        if reasons:
+            dispositions.append({**identity,'disposition':'outside-narrow-scope','reasons':reasons});continue
+        counts=Counter(n for e in setup if e.get('zone')=='battlefield' and e.get('seat')==0 for n in e['cards'])
+        used=Counter();prefix=[];rejection=[];existing=[]
+        for i,step in enumerate(original.get('steps',[])):
+            if step.get('tap') not in basic or step.get('seat',0)!=0 or set(step)-{'tap','seat','source','mana'}:break
+            card=step['tap'];ordinal=used[card];literal={'zone':'battlefield','index':ordinal}
+            if ordinal>=counts[card]:rejection.append('prefix-exceeds-authored-physical-sources');break
+            if 'source' in step:
+                if step['source']!=literal:rejection.append('existing-literal-differs-from-authored-ordinal');break
+                existing.append({'step':i,'literalBytes':json.dumps(step['source']).encode().hex()})
+            prefix.append({'step':i,'name':card,'ordinal':ordinal,'added':'source' not in step});used[card]+=1
+        planned=plan(original,fixtures)
+        if rejection:
+            assert planned is None
+            dispositions.append({**identity,'disposition':'rejected-by-planner','reasons':rejection});continue
+        assert planned is not None
+        changed,additions=planned
+        for literal in existing:assert json.dumps(changed['steps'][literal['step']]['source']).encode().hex()==literal['literalBytes']
+        if not prefix:
+            assert not additions
+            dispositions.append({**identity,'disposition':'not-a-candidate','reasons':['no-initial-contiguous-actor0-basic-tap-prefix']});continue
+        if not additions:
+            dispositions.append({**identity,'disposition':'already-explicit','reasons':['no-missing-literal-reference'],'existingLiterals':existing,'existingLiteralsPreservedByteExact':True});continue
+        assert additions==[{'step':p['step'],'source':{'zone':'battlefield','index':p['ordinal']}} for p in prefix if p['added']]
+        restored=deepcopy(changed)
+        for addition in additions:del restored['steps'][addition['step']]['source']
+        assert restored==original
+        for literal in existing:assert json.dumps(changed['steps'][literal['step']]['source']).encode().hex()==literal['literalBytes']
+        at=len(candidates)
+        candidates.append({**identity,'ordinal':at,'fileSha256':sha(raw),'originalScenarioSha256':sha(canonical(original)),
+          'fixtureSha256':sha(canonical(fixtures)),'plannedScenarioSha256':sha(canonical(changed)),
+          'fixtures':fixtures,'original':original,'changed':changed,'prefix':prefix,'additions':additions,
+          'existingLiterals':existing,'allOriginalFieldsPreserved':True})
+        dispositions.append({**identity,'disposition':'frozen-candidate','candidateOrdinal':at,'missingReferences':len(additions)})
+assert len(dispositions)==inputs['scenarios']
+inventory={'schema':'V8RemainingNarrowSourceInventory@1','scope':'read-only validation only; no saved edits, omission sweep or completion credit',
+  **inputs,'plannerFileSha256':sha(planner_raw),'plannerFunctionSha256':sha(ast.get_source_segment(planner_raw.decode(),planner).encode()),
+  'candidateCount':len(candidates),'candidateFiles':len({c['file'] for c in candidates}),
+  'missingReferences':sum(len(c['additions']) for c in candidates),'candidates':candidates,'allScenarioDispositions':dispositions,'scenarioFileInputs':files}
+target=outside/'v8-basic-source-inventory-544d8512.json';raw=(json.dumps(inventory,ensure_ascii=False,indent=2)+'\n').encode();target.write_bytes(raw)
+summary={'source':source,'inventorySha256':sha(raw),'scenariosAccounted':len(dispositions),'candidates':len(candidates),
+  'candidateFiles':inventory['candidateFiles'],'missingReferences':inventory['missingReferences'],
+  'structuralDispositions':dict(Counter(d['disposition'] for d in dispositions)),
+  'rejectionReasons':dict(Counter(r for d in dispositions for r in d.get('reasons',[])))}
+(outside/'v8-basic-source-inventory-544d8512-summary.json').write_text(json.dumps(summary,indent=2)+'\n')
+print(json.dumps(summary,indent=2))

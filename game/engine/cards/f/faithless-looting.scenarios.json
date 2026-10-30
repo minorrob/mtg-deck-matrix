@@ -27,7 +27,7 @@
   },
   "scenarios": [
     {
-      "name": "Cast from the hand, then flashed back from the graveyard for {2}{R}: four cards drawn, four discarded, and it is exiled",
+      "name": "Hand cast, then flashback announced before floating mana: four Mountains pay both casts; four cards drawn and discarded, then exiled",
       "setup": [
         {
           "seat": 0,
@@ -51,7 +51,11 @@
       ],
       "steps": [
         {
-          "tap": "Mountain"
+          "tap": "Mountain",
+          "source": {
+            "zone": "battlefield",
+            "index": 0
+          }
         },
         {
           "cast": "Faithless Looting"
@@ -77,18 +81,15 @@
                 "kind": "cast",
                 "card": "Faithless Looting"
               },
-              "count": 0
+              "count": 1
+            },
+            {
+              "seat": 0,
+              "pool": {
+                "R": 0
+              }
             }
           ]
-        },
-        {
-          "tap": "Mountain"
-        },
-        {
-          "tap": "Mountain"
-        },
-        {
-          "tap": "Mountain"
         },
         {
           "cast": "Faithless Looting"
@@ -123,6 +124,12 @@
         },
         {
           "stack": 0
+        },
+        {
+          "seat": 0,
+          "pool": {
+            "R": 0
+          }
         }
       ]
     }

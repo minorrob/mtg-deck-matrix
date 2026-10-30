@@ -1,0 +1,68 @@
+{
+  "scope": "seven selected cards only",
+  "records": [
+    {
+      "card": "Adaptive Automaton",
+      "status": "unknown",
+      "gaps": [
+        "Other creatures you control of the chosen type get +1/+1."
+      ]
+    },
+    {
+      "card": "Air Elemental",
+      "status": "passed"
+    },
+    {
+      "card": "Metallic Mimic",
+      "status": "unknown",
+      "gaps": [
+        "Each other creature you control of the chosen type enters with an additional +1/+1 counter on it."
+      ]
+    },
+    {
+      "card": "Roaming Throne",
+      "status": "unknown",
+      "gaps": [
+        "If a triggered ability of another creature you control of the chosen type triggers, it triggers an additional time."
+      ]
+    },
+    {
+      "card": "Serra Angel",
+      "status": "passed"
+    },
+    {
+      "card": "Suntail Hawk",
+      "status": "passed"
+    },
+    {
+      "card": "Zephyr Sprite",
+      "status": "passed"
+    }
+  ],
+  "comparison": {
+    "baseline": "c34022d4 teacher definitions",
+    "records": [
+      {
+        "card": "Adaptive Automaton",
+        "status": "unknown",
+        "gaps": [
+          "Other creatures you control of the chosen type get +1/+1."
+        ]
+      },
+      {
+        "card": "Metallic Mimic",
+        "status": "unknown",
+        "gaps": [
+          "Each other creature you control of the chosen type enters with an additional +1/+1 counter on it."
+        ]
+      },
+      {
+        "card": "Roaming Throne",
+        "status": "unknown",
+        "gaps": [
+          "If a triggered ability of another creature you control of the chosen type triggers, it triggers an additional time."
+        ]
+      }
+    ]
+  }
+}

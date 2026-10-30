@@ -65,9 +65,9 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
      scenarios cast it on the fourth). Named, so a card that stops being played in its smoke game is found, not
      counted. */
   const unplayed = smoked.filter((r) => !r.played).map((r) => r.name).sort();
-  eq(unplayed, ["Argivian Restoration", "Artifact Blast", "Assassinate", "Blue Elemental Blast", "Bright Reprisal",
+  eq(unplayed, ["Argivian Restoration", "Assassinate", "Blue Elemental Blast", "Bright Reprisal",
     "Cloud's Limit Break", "Condemn", "Death Stroke", "Devout Decree", "Eriette's Lullaby", "Explosive Derailment",
-    "Flashfreeze", "Flourishing Grapple", "Getaway Glamer", "Halt Order", "Immolating Glare", "Keep Safe", "Kill Shot",
+    "Flashfreeze", "Flourishing Grapple", "Getaway Glamer", "Immolating Glare", "Keep Safe", "Kill Shot",
     "Mental Misstep", "Mirrodin Avenged", "Precise Redaction", "Proft, Sinister Mastermind", "Rebuff the Wicked",
     "Rebuke", "Reconstruction", "Refurbish", "Return the Favor", "Ritual of Restoration", "Serra Avenger", "Silverstrike",
     "Spell Snare", "Swift Response", "Take Vengeance", "Turn Aside", "Vengeance", "You Are Already Dead"], `and the other ${scripts.length - unplayed.length} of ${scripts.length} were actually played or cast in it`);
@@ -77,8 +77,8 @@ const handOf = (name) => scripts.find((s) => s.identity.name === name);
      the stack first, which would keep a creature from being cast at all. */
   /* A counterspell for a particular spell has one to answer: a creature spell, an instant, a blue spell; and "sacrifice a
      green creature" a green one. */
-  eq(["Essence Scatter", "Dispel", "Red Elemental Blast", "Natural Order"].filter((name) => smoked.find((r) => r.name === name)?.played !== true), [],
-    "Essence Scatter, Dispel, Red Elemental Blast and Natural Order are cast in their smoke games");
+  eq(["Essence Scatter", "Dispel", "Red Elemental Blast", "Natural Order", "Artifact Blast", "Halt Order"].filter((name) => smoked.find((r) => r.name === name)?.played !== true), [],
+    "the actual creature, instant, color and artifact targets let their spells be cast in smoke games");
   /* A choice of additional costs (`oneOf`): the fodder for each choice is there, and the spell is cast. */
   eq(["Silence the Echo", "Bogslither's Embrace"].filter((name) => smoked.find((r) => r.name === name)?.played !== true), [],
     "Silence the Echo (sacrifice a creature or planeswalker, or pay {3}) and Bogslither's Embrace (blight 1, or pay {3}) are cast in their smoke games");
@@ -287,6 +287,23 @@ const trust = trustOf(library, calibrate({scripts, library, scenarios, definitio
   const assist = assistOf(strix, {library, trust: (id) => (/enters/.test(id) ? {ok: false} : trust(id)), except: "Baleful Strix"});
   eq([assist.known.map((a) => a.text), assist.write.map((w) => w.text)], [["Flying", "deathtouch"], ["When this creature enters, draw a card."]],
     "assisted: the library's trusted sentences written, the distrusted one left for the writer");
+  /* A keyword line's words are each an ability (CR 113.2c): deathtouch distrusted leaves Flying written. */
+  const keywords = assistOf(strix, {library, trust: (id) => (/deathtouch/.test(id) ? {ok: false} : trust(id)), except: "Baleful Strix"});
+  eq([keywords.known.map((a) => a.text), keywords.write.map((w) => w.text)], [["Flying", "When this creature enters, draw a card."], ["deathtouch"]],
+    "a keyword line known in part: the known word written, the other asked alone");
+  const neither = assistOf(strix, {library, trust: (id) => (/flying|deathtouch/.test(id) ? {ok: false} : trust(id)), except: "Baleful Strix"});
+  eq(neither.write.map((w) => w.text), ["Flying", "deathtouch"], "a keyword line known in none of it: each word asked alone, never one piece");
+  /* A paragraph is one ability (CR 113.2c): Gemstone Caverns held out, the library knows "{T}: Add {C}." but not the luck
+     counter's "instead" that completes it -- the whole paragraph is asked of the writer, as one piece, nothing of it written. */
+  const caverns = assistOf(ORACLE.get("Gemstone Caverns"), {library, trust, except: "Gemstone Caverns"});
+  eq([caverns.known.map((a) => a.text), caverns.write.map((w) => w.text)], [[], ORACLE.get("Gemstone Caverns").text.split("\n")],
+    "a paragraph known in part is written whole: no {C} ability without its \"instead\"");
+  /* And a spell is never half written: its paragraph known whole, but its flashback not, the writer writes the spell too
+     (Strike It Rich held out, its Flashback distrusted; trusted, the library knows both). */
+  const rich = (t) => assistOf(ORACLE.get("Strike It Rich"), {library, trust: t, except: "Strike It Rich"});
+  const noFlashback = rich((id) => (/flashback/.test(id) ? {ok: false} : trust(id)));
+  eq([rich(trust), noFlashback.known.length, noFlashback.write.map((w) => w.text)], [null, 0, ORACLE.get("Strike It Rich").text.split("\n")],
+    "a spell with a part of the card left: the spell written by the writer too");
   const req = JSON.parse(writerRequest(strix, null, assist));
   eq([req.alreadyWritten.length, req.writeOnly], [2, ["When this creature enters, draw a card."]], "the request carries both, and asks for the one sentence");
   const trigger = own.filter((a) => a.kind === "triggered");
@@ -343,14 +360,17 @@ const trust = trustOf(library, calibrate({scripts, library, scenarios, definitio
   ok(changed.size >= 3 && caught.length >= 1, `one that writes every sentence with a wrong number passes every check but its scenarios: ${changed.size} miscounted, caught in play: ${caught.map((r) => r.name).join(", ")}`);
   const capped = await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: writer, examples: [], n: 3, maxCost: 0});
   ok(capped.tried === 0 && /cap/.test(capped.stopped), "the sample stops at its cap");
-  /* Every card the sample may take, asked of a writer that answers nothing (free, and refused at fidelity): never one the
-     library writes half an ability of -- Gemstone Caverns' "{T}: Add {C}." -- however the evenly spaced pick falls as the
-     directory grows (the library load's L1, 2026-10-22: sixteen more cards moved the pick off it). */
+  /* CR 113.2c: a paragraph the library knows only in part is now handed to the writer whole. Gemstone Caverns must
+     remain in the held-out sample and its correct completion must pass its scenarios; the former exclusion hid it. */
   ok(handOf("Gemstone Caverns") !== undefined, "Gemstone Caverns is defined, a card the library writes half an ability of");
+  const gemstone = await heldOutSample({scripts: [handOf("Gemstone Caverns")], scenarios, definition: index.definition,
+    oracle: ORACLE, library, trust, call: writer, examples: [], n: 1});
+  eq([gemstone.tried, gemstone.passed, gemstone.results.map((r) => r.name)], [1, 1, ["Gemstone Caverns"]],
+    "Gemstone Caverns is sampled and its complete mana ability passes every scenario");
   const asked = [];
   const silent = async (body) => { asked.push(JSON.parse(body.messages[0].content).card.name); return {answer: {abilitiesJson: "[]", notes: "", crFlags: []}, usage: {}}; };
   await heldOutSample({scripts, scenarios, definition: index.definition, oracle: ORACLE, library, trust, call: silent, examples: [], n: scripts.length, maxCost: 1});
-  ok(asked.length > 3 && !asked.includes("Gemstone Caverns"), `the whole pool asked (${asked.length} cards), Gemstone Caverns never among them`);
+  ok(asked.length > 3 && asked.includes("Gemstone Caverns"), `the whole pool asked (${asked.length} cards), including Gemstone Caverns`);
 }
 
 console.log(`engine-compile: ${checks} checks passed — the loader's four checks held against ${scripts.length} hand definitions, every refusal at its stage, a card learned once for its text, and nothing spent without --yes.`);

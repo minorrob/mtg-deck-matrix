@@ -15,6 +15,7 @@ import {legalActions, applyAction} from "../game/engine/rules/actions.mjs";
 import {keywordsOf} from "../game/engine/rules/layers.mjs";
 import {offerDetails} from "../game/room/room.mjs";
 import {loadCardIndex} from "../game/tools/engine-cards.mjs";
+import {resolveTop} from "../game/engine/rules/stack.mjs";
 
 let checks = 0;
 const eq = (a, b, m) => { assert.deepEqual(a, b, m); checks += 1; };
@@ -74,11 +75,26 @@ const named = (s, name, zone = "battlefield") => Object.keys(s.objects).map(Numb
   on(s, WASTES, 0); on(s, WASTES, 0);
   main(s);
   s.players[0].commanderCasts = {[commanderKeyOf(s.objects[whelp])]: 1};   /* cast once before: a tax of {2} */
+  s.sourceChoices = true;
   const before = casts(s, "Whelp");
+  const empty = JSON.parse(JSON.stringify(s)), sources = s.zones.battlefield.filter(id => s.objects[id].card === "Wastes");
+  eq([s.players[0].manaPool.C, before[0]?.autoTap], [0, true], "the empty pool still offers the free Dragon using the two untapped Wastes for its tax");
+  const unfunded = JSON.parse(JSON.stringify(empty)); unfunded.objects[sources[1]].tapped = true;
+  const unfundedBefore = structuredClone(unfunded);
+  eq(casts(unfunded, "Whelp").length, 0, "one remaining untapped Wastes cannot fund the two-mana commander tax");
+  assert.throws(() => applyAction(unfunded, 0, before[0])); checks++;
+  eq(unfunded, unfundedBefore, "forging the unfundable free cast pays and changes nothing");
+  const funded = applyAction(empty, 0, before[0]), spell = empty.stack.at(-1);
+  eq(funded.filter(event => event.kind === "GameEventManaPool").map(event => [event.data.fields.source.cardId, event.data.fields.produced]), sources.map(id => [id, {C: 1}]), "the actual funded free cast activates exactly both physical Wastes");
+  eq([empty.objects[spell.objectId].spent, empty.players[0].manaPool.C, empty.players[0].commanderCasts[commanderKeyOf(empty.objects[spell.objectId])]], [{C: 2}, 0, 2], "only the actual commander tax is spent, with the cast count advanced once");
+  resolveTop(empty);
+  eq(empty.zones.battlefield.filter(id => empty.objects[id].card === "Whelp").length, 1, "the tax-funded free Dragon actually resolves");
   for (const a of legalActions(s, 0).filter((x) => x.kind === "activate-mana")) applyAction(s, 0, a);
   const after = casts(s, "Whelp");
-  eq([before.length, after.length, after[0]?.free, after[0]?.tax], [0, 1, true, 2],
-    "Dracogenesis and a Dragon commander taxed {2}: with nothing floating it can't be cast; with two mana it is, free of its {4}{R} but not of the tax");
+  eq([before.length, after.length, after[0]?.free, after[0]?.tax], [1, 1, true, 2],
+    "Dracogenesis's free Dragon is offered with its two-mana tax funded either by untapped sources or the existing floating pool");
+  applyAction(s, 0, after[0]);
+  eq(s.objects[s.stack.at(-1).objectId].spent, {C: 2}, "the original floating-mana path also pays exactly the tax");
 }
 {
   const s = table();

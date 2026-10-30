@@ -1,0 +1,27 @@
+{
+  "schema": "CrankAbilityEvidenceArchive@1",
+  "harnessCommit": "11e4fe864a9c3b26d3e1eec57fb04cc0c16e7b3a",
+  "savedCardSource": "same integration commit",
+  "measurementComplete": true,
+  "interpretation": "Completed strict whole-directory resume measurement before subsequent W1/W4/W5 and counter-scenario repairs. G-3 fails; this is neither final integration acceptance nor clean-game exercise evidence.",
+  "archive": "ability-resume-11e4fe86.json.gz",
+  "rawBytes": 20409797,
+  "compressedBytes": 1486881,
+  "rawSha256": "ecb7b8bbb28affc1cbfa30ccf9e3dff9d1cda6f6cff20150e0fc515e5f8accfa",
+  "archiveSha256": "6bb505f00972fdb94de8b9497bd1478a85e8f7e0fd1d40c783fed8bf76edeba0",
+  "rawSecretScan": "No matched local-ci credential/private-key/personal-email patterns",
+  "scope": {
+    "directory": true,
+    "cardRoot": "C:\\Users\\robmi\\CrankMagic\\worktrees\\load100\\w0-integrate\\game\\engine\\cards"
+  },
+  "definitions": 6430,
+  "abilities": 11636,
+  "scenarioReached": 5168,
+  "scenarioUnreached": 6468,
+  "counterfactualReached": 929,
+  "scenarios": 11037,
+  "scenarioFailures": 18,
+  "expectedExit": 1,
+  "gateStatus": "G-3 fails; no family credit or offer-only proof",
+  "command": "node --stack-size=4000 game/tools/batch/check-cards.mjs --ability-ledger <out.json> --counterfactual"
+}

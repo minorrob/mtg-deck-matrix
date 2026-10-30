@@ -1,0 +1,24 @@
+{
+  "schema": "CrankAbilityEvidenceArchive@1",
+  "harnessCommit": "0a848bb4ec7dc879680a1c18702464ca6c4967ce",
+  "savedCardSource": "main 39a45706, unchanged by prerequisite",
+  "measurementComplete": true,
+  "interpretation": "Provisional historical initial sweep: card/face ownership alias priority was corrected afterward. Not final gate evidence.",
+  "archive": "ability-initial-0a848bb4.json.gz",
+  "rawBytes": 19631049,
+  "compressedBytes": 1443413,
+  "rawSha256": "703c3eec1f2200b0b4d9b0b99a768978ae31cdca0b6d048bc653cc274b7abe01",
+  "archiveSha256": "eb30c3ae44333687a9f44cb5cd8dfbb211e35bbbd979151d63fe10f819ddb979",
+  "rawSecretScan": "No matched credential/private-key/personal-email patterns",
+  "scope": {
+    "directory": true,
+    "cardRoot": "C:\\Users\\robmi\\CrankMagic\\worktrees\\load100\\w0-v8-verify\\game\\engine\\cards"
+  },
+  "definitions": 6430,
+  "abilities": 11636,
+  "scenarioReached": 6086,
+  "scenarioUnreached": 5550,
+  "counterfactualReached": 1840,
+  "gateStatus": "G-3 remains open; no family-equivalence credit; legacy default does not enforce ability reachability",
+  "command": "node --stack-size=4000 game/tools/batch/check-cards.mjs --ability-ledger <out.json> --counterfactual"
+}

@@ -26,7 +26,7 @@ BREAKS = [
     ('zone-change follow-ups not compared', REPLACEMENT,
      'counted: p.event === "damage" ? (p.followUps ?? []).map((f) => f.context.about?.amount ?? null) : []});',
      'counted: (p.followUps ?? []).map((f) => f.context.about?.amount ?? null)});'),
-    ('follow-ups run by moveOne', ZONES, '  if (destination === proposal.to) events.push(...runFollowUps(state, proposal));\n', ''),
+    ('follow-ups run by moveOne', ZONES, '  if (!prepared && destination === proposal.to) events.push(...runFollowUps(state, proposal));\n', ''),
     ('follow-ups run by lethal damage', SBA, '        events.push(...runFollowUps(state, proposal));\n', ''),
     ('then beside a new destination', SCHEMA,
      '    const besideMove = ability.watches?.event === "zone-change" && typeof ability.change?.to === "string";\n',

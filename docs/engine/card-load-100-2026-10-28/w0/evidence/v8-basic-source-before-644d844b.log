@@ -1,0 +1,18 @@
+ability ledger: C:\Users\robmi\CrankMagic\worktrees\load100\scratch\v8-basic-source-before-644d844b.json
+5 selected definitions of 6430
+FAIL A.I.M. Scientists | It enters and connives: a card drawn, the Bear discarded, a +1/+1 counter: Wastes has 3 matching actions; select its physical source, ability, targets, cost or mana explicitly
+FAIL A.I.M. Scientists | A land discarded: no counter: Wastes has 3 matching actions; select its physical source, ability, targets, cost or mana explicitly
+FAIL A.I.M. Scientists | Basic landcycling {2}: discarded, and a Forest searched for into the hand: Wastes has 2 matching actions; select its physical source, ability, targets, cost or mana explicitly
+FAIL Aang, Swift Savior // Aang and La, Ocean's Fury | Flashed in on Maya's turn: airbends her 5/5 spell -- she may cast it again for {2}: Forest has 2 matching actions; select its physical source, ability, targets, cost or mana explicitly
+FAIL Aang, Swift Savior // Aang and La, Ocean's Fury | Waterbend {8}, its creatures tapped to help: transformed into Aang and La, a 5/5; attacking, a +1/+1 counter on each tapped creature of Rob's: Wastes has 6 matching actions; select its physical source, ability, targets, cost or mana explicitly
+FAIL Aether Channeler | Enters, first mode: a 1/1 white Bird with flying (with no other nonland permanent, the second mode is not offered): Wastes has 2 matching actions; select its physical source, ability, targets, cost or mana explicitly
+FAIL Aether Channeler | Enters, second mode: another nonland permanent back to its owner's hand (an opponent's Bear): Wastes has 2 matching actions; select its physical source, ability, targets, cost or mana explicitly
+FAIL Aether Channeler | Enters, third mode: draw a card: Wastes has 2 matching actions; select its physical source, ability, targets, cost or mana explicitly
+FAIL Aether Helix | Maya's Bear goes back to her hand, and Rob's Relic comes back from his graveyard to his: Wastes has 3 matching actions; select its physical source, ability, targets, cost or mana explicitly
+FAIL Aether Helix | Any permanent, a land too: Maya's Forest returns to her hand: Wastes has 3 matching actions; select its physical source, ability, targets, cost or mana explicitly
+FAIL Aether Helix | An instant in the graveyard is no permanent card: with only a Zap there, Helix cannot be cast: Wastes has 3 matching actions; select its physical source, ability, targets, cost or mana explicitly
+FAIL Agadeem's Awakening // Agadeem, the Undercrypt | X of 3: any number of creature cards with different mana values, 3 or less, return: Swamp has 3 matching actions; select its physical source, ability, targets, cost or mana explicitly
+FAIL Agadeem's Awakening // Agadeem, the Undercrypt | Any number includes none: Swamp has 3 matching actions; select its physical source, ability, targets, cost or mana explicitly
+FAIL Agadeem's Awakening // Agadeem, the Undercrypt | Cast with X of 1 it reaches only mana value 1 or less: Swamp has 3 matching actions; select its physical source, ability, targets, cost or mana explicitly
+17 scenarios, 14 failed
+ability coverage: 0 of 14 reached by passing scenarios (0 by runtime-removal proof); 14 unreached; diagnostic scope only

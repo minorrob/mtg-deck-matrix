@@ -1,11 +1,13 @@
 /* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
 
-/* Additive desk facts in CrankRoomView@1. The original choice is kept private to its answering seat, as before.
-   This describes its existing options and never introduces a Cancel, a target, or a shortcut past a mandatory choice. */
+/* Additive desk facts in CrankRoomView@1. The choice stays private to its answering seat. Cancellation describes
+   a proven reversible proposal or a legal empty choice; mandatory committed effects still require an answer. */
 import {deriving} from "../engine/rules/layers.mjs";
 import {offerScript} from "../engine/rules/actions.mjs";
 import {modalScript} from "../engine/script/bind.mjs";
 import {effectForTarget, targetFacts, targetGroups} from "../engine/script/decision.mjs";
+import {cancellationFor} from "../engine/rules/cancel.mjs";
+import {castEntryFor,actionEntryFor} from "./cast-stages.mjs";
 
 function scriptFor(state, action) {
   return offerScript(state, action);
@@ -33,7 +35,8 @@ function description(state, choice, actions, projected) {
   const sourceId = visibleSource(state, awaiting, trigger, projected);
   const base = awaiting?.action ? scriptFor(state, awaiting.action) : trigger?.script;
   const may = awaiting?.optional === true || (awaiting?.effect === "modal" && awaiting.choose === 1 && awaiting.modes.some(m => !(m.effects ?? []).length));
-  return {...choice, ...(sourceId !== null ? {sourceId} : {}), ...(may ? {optional: true} : {}), options: (choice.options ?? []).map((option, index) => {
+  const paymentField = awaiting?.action?.actionStage ? "actionStage" : "castStage", paymentStage = awaiting?.action?.[paymentField];
+  return {...choice, ...(paymentStage ? {stage: "payment", [paymentField]: {...paymentStage, canBack: false}} : {}), ...(!actions && awaiting ? {cancellation: cancellationFor(state, choice)} : {}), ...(sourceId !== null ? {sourceId} : {}), ...(may ? {optional: true} : {}), options: (choice.options ?? []).map((option, index) => {
     const action = actions?.[index];
     const script = action ? scriptFor(state, action) : trigger?.script?.modal && Array.isArray(option.modes)
       ? {...trigger.script, ...modalScript(trigger.script.modal, option.modes)} : base;
@@ -51,7 +54,8 @@ function description(state, choice, actions, projected) {
     const effect = effectForTarget(effects);
     const preparedFrom = action?.kind === "cast" ? state.objects[action.objectId]?.prepareOf : undefined;
     const decline = may && awaiting?.effect === "modal" && !(awaiting.modes[option.index]?.effects ?? []).length;
-    return {...option, ...targetFacts(state, direct), ...(effect ? {effect} : {}), ...aimed,
+    return {...option, ...(action?.kind === "cast" && script?.modal ? {castStages: castEntryFor(action)} : {}),
+      ...(action?.kind === "activate" && script?.modal ? {actionStages: actionEntryFor(action)} : {}), ...targetFacts(state, direct), ...(effect ? {effect} : {}), ...aimed,
       ...(groups.length ? {targetGroups: groups} : {}), ...(preparedFrom !== undefined ? {preparedFrom} : {}),
       ...(may ? {optional: true} : {}), ...(decline ? {decline: true} : {})};
   })};

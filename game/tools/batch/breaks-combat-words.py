@@ -16,6 +16,6 @@ BREAKS = [
      'if (![...clash.values()].some((n) => n > 1)) return choice;',
      'if (false) return choice;'),
     ("the seat's view keeps the engine's words", R,
-     'decision: mine ? combatWords(state, structuredClone(controller.pending)) : null,',
-     'decision: mine ? structuredClone(controller.pending) : null,'),
+     'const described=describeDecision(state,combatWords(state,structuredClone(pending)),pendingActions,projected);',
+     'const described=describeDecision(state,structuredClone(pending),pendingActions,projected);'),
 ]

@@ -115,7 +115,7 @@ export const TRIGGER_EVENTS = Object.freeze([
   "mutates", "spell cast", "damage dealt", "damage dealt once",
   "discarded", "drawn", "land played", "becomes target", "sacrificed", "tapped for mana", "becomes tapped", "cycled",
   "put into graveyard", "left graveyard",
-  "counter added", "counter added once", "life gained", "life lost", "token created",
+  "counter added", "counter added once", "life gained", "life lost", "token created", "die rolled",
   "becomes monstrous", "chapter",
   /* "Whenever you activate a loyalty ability" (CR 606; the live-game plan of 2026-10-04, P4). */
   "loyalty activated",
@@ -276,6 +276,8 @@ const BEYOND_TIER0 = ["shroud", "ward", "forestwalk",
   /* And cascade (CR 702.85a; Apex Devastator), a cast trigger: cards exiled until a nonland one that costs less, cast free
      (cards/index.mjs). */
   "cascade",
+  /* CR 702.19c-e: combat assignment over a planeswalker and, after its loyalty, to its controller. */
+  "trample over planeswalkers",
   /* Rob's lists P2: devour (CR 702.82; Feasting Hobbit's "Devour Food 3"), permanents sacrificed as it enters for +1/+1
      counters (cards/index.mjs, rules/entering.mjs); skulk (CR 702.118; Gollum, Obsessed Stalker), evasion (keywords/combat.mjs). */
   "devour", "skulk"];

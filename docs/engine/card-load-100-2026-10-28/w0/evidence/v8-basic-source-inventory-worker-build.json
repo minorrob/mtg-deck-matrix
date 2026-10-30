@@ -1,0 +1,6 @@
+{
+  "reviewedPilotSha256": "2799816e4c6dc0f02d06a05d974bb77a1bfea0e3618669673260f84cba487034",
+  "unchangedNativeCheckBodySha256": "2cf07513a5dc6dbc5210c3925eac20df3654119bf427b63a74402fe42a18b514",
+  "nativeCheckBodyPreservedVerbatimAfterRemovingOnlyReceiptLogging": true,
+  "generatedWorkerSha256": "a3b0942acc8006f55f878ce29af9c25915c767d794df9055bc39b7dae0b4170d"
+}

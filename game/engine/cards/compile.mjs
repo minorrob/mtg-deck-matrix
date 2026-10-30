@@ -60,6 +60,8 @@ export function identityOf(card) {
     power: num(face.power), toughness: num(face.toughness),
     /* A planeswalker's printed loyalty (CR 306.5a). */
     ...(num(face.loyalty) !== null ? {loyalty: num(face.loyalty)} : {}),
+    /* CR 310.4a: a Battle's printed defense comes from its Oracle face, including zero. */
+    ...(num(face.defense) !== null ? {defense: num(face.defense)} : {}),
   };
 }
 
@@ -118,19 +120,24 @@ export function oracleClauses(text) {
  * @returns {{ok: boolean, invented: string[], unclaimed: string[]}}
  */
 export function checkFidelity(script) {
-  /* An adventurer card's Adventure (CR 715.2) is held to its own text the same way, beside the card's. */
   const own = faceFidelity(script);
-  /* And a preparation card's prepare spell (CR 722.2), to its own text. */
-  const other = script.adventure ?? script.prepare;
-  if (other === undefined) return own;
-  const adventure = faceFidelity(other);
-  return {ok: own.ok && adventure.ok, invented: [...own.invented, ...adventure.invented], unclaimed: [...own.unclaimed, ...adventure.unclaimed]};
+  /* Every other face has its own text (CR 712.8, 715.2, 722.2). A transform reminder naming the actual
+     front face describes the physical card, not a missing back-face ability (CR 207.2a). */
+  const faces = [script.back, script.adventure, script.prepare].filter(face => face !== undefined).map(face => {
+    const reminder = `(Transforms from ${String(script.identity?.name ?? "").split(" // ")[0]}.)`;
+    const oracleText = face === script.back && script.layout === "transform"
+      ? String(face.oracleText ?? "").split("\n").filter(line => line.trim() !== reminder).join("\n") : face.oracleText;
+    return faceFidelity({...face, oracleText});
+  });
+  return {ok: own.ok && faces.every(face => face.ok), invented: [...own.invented, ...faces.flatMap(face => face.invented)],
+    unclaimed: [...own.unclaimed, ...faces.flatMap(face => face.unclaimed)]};
 }
 function faceFidelity(script) {
   const full = normalize(String(script.oracleText ?? "").replace(/[()]/g, ""));
   /* Both sides with the parentheses dropped: a spell's text is the card's whole text, and a reminder in the middle
      of it (Opt's "Scry 1. (Look at ...)\nDraw a card.") is quoted with its parentheses. */
   const texts = (script.abilities ?? []).map((a) => normalize(a?.text === undefined || a?.text === null ? a?.text : String(a.text).replace(/[()]/g, "")));
+  const claimedClauses = new Set((script.abilities ?? []).flatMap(ability => oracleClauses(ability?.text).map(normalize)));
   const invented = (script.abilities ?? []).filter((a, i) => !texts[i] || !full.includes(texts[i])).map((a) => String(a?.text ?? ""));
   /* A clause is claimed by an ability that quotes it whole, or by the abilities quoted inside it when together they are
      all of it but connectives and punctuation (one sentence written as several abilities). An ability inside a longer
@@ -150,7 +157,7 @@ function faceFidelity(script) {
   };
   const unclaimed = oracleClauses(script.oracleText).filter((clause) => {
     const c = normalize(clause);
-    return !texts.some((t) => t && t.includes(c)) && !covered(c);
+    return !claimedClauses.has(c) && !covered(c);
   });
   return {ok: invented.length === 0 && unclaimed.length === 0, invented, unclaimed};
 }
@@ -217,6 +224,9 @@ const SMOKE_FIXTURES = Object.freeze({
   "Smoke Instant": {types: ["Instant"], manaCost: "{0}", colors: ["U"], spell: {id: "s", text: "Target player draws a card.", targets: [{what: "player"}], effects: [{effect: "draw", count: 1, who: {target: 0}}]}},
   /* A free creature the card's own player casts, so a card aimed at its controller's creature spell has one to answer. */
   "Smoke Whelp": {types: ["Creature"], manaCost: "{0}", power: 1, toughness: 1},
+  /* Free permanent spells for a counterspell whose target must have one of these types (Annul). */
+  "Smoke Artifact Spell": {types: ["Artifact"], manaCost: "{0}"},
+  "Smoke Enchantment Spell": {types: ["Enchantment"], manaCost: "{0}"},
   /* A changeling card, every creature type (CR 702.73a), in the hand of a card that beholds ("behold an Elf", CR 701.4a). */
   "Smoke Changeling": {types: ["Creature"], subtypes: ["Shapeshifter"], manaCost: "{1}", keywords: ["Changeling"], power: 1, toughness: 1},
   /* A Jace planeswalker card, in the hand of a card that beholds a Jace ("behold a Jace or pay {1}", Countersculpt): Jace is a
@@ -250,6 +260,8 @@ export function smokeScenario(script) {
   const spellAims = (script.abilities ?? []).filter((a) => a?.kind === "spell").flatMap(aims).filter((t) => JSON.stringify(t).includes('"what":"spell"'));
   const wants = (test) => spellAims.some((t) => [t, ...(Array.isArray(t.anyOf) ? t.anyOf : [])].some(test));
   const answered = wants((o) => (o.types ?? []).includes("Creature")) ? "Smoke Whelp"
+    : wants((o) => (o.types ?? []).includes("Artifact")) ? "Smoke Artifact Spell"
+    : wants((o) => (o.types ?? []).includes("Enchantment")) ? "Smoke Enchantment Spell"
     : wants((o) => (o.types ?? []).includes("Instant") || (o.colors ?? []).length > 0) ? "Smoke Instant" : "Smoke Sorcery";
   const instantSpeed = !ownSpell && !isLand && Boolean(script.identity.manaCost)
     && ((script.identity.types ?? []).includes("Instant") || (script.abilities ?? []).some((a) => a?.kind === "keyword" && a.keyword === "flash"));
@@ -347,13 +359,12 @@ export function smokeTest(script, cards) {
   try {
     const {state, events} = runScenario({...scenario, stopWhenOver: true}, resolve, fixtures);
     const bad = zoneProblems(state);
-    /* Whether the card was actually played: a counterspell with nothing to counter stays in hand, which is the
-       fixture's limit and not the script's fault -- so it is reported, not refused. */
+    /* Only an actual cast or land-play event proves play. A no-mana-cost permanent seeded on the battlefield may
+       exercise an ability, but was never played; the compiler must not mistake that fixture for cast evidence. */
     /* A double-faced card's events name the face that was cast or played -- and a preparation card's its own name, the
        only one it has in every zone (CR 722.4): "Goblin Glasswright", never the pair. */
     const names = script.back !== undefined || script.adventure !== undefined || script.prepare !== undefined ? String(script.identity.name).split(" // ") : [script.identity.name];
-    const played = (!(script.identity.types ?? []).includes("Land") && !script.identity.manaCost)
-      || events.some((e) => (e.kind === "GameEventLandPlayed" && names.includes(e.data.fields.land?.name))
+    const played = events.some((e) => (e.kind === "GameEventLandPlayed" && names.includes(e.data.fields.land?.name))
         || (e.kind === "GameEventSpellAbilityCast" && e.data.fields.sa?.isSpell && names.includes(e.data.fields.card?.name)));
     const resolved = events.filter((e) => e.kind === "GameEventSpellResolved").length;
     return {ok: bad.length === 0, error: null, problems: bad, played, resolved};

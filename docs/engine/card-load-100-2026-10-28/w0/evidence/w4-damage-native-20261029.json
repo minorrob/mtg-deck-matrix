@@ -1,0 +1,120 @@
+{
+  "schema": "w4-damage-continuation@1",
+  "source": "20e13e9e08044bbaf1527328a6b940f13dce92a5",
+  "derivedSourceCommit": "dfe3f377",
+  "scope": "Actual mana activation and its nested damage/prevention follow-ups; no whole wave-0 or clean-game credit",
+  "nativeRed": {
+    "source": "aae67e76ed28707f3f478c39fce446e13b5e2828",
+    "command": "node docs/engine/card-load-100-2026-10-28/w0/evidence/w4-mana-order-red.mjs",
+    "actual": [
+      null,
+      null,
+      35,
+      1,
+      true
+    ],
+    "expected": [
+      "rule-operation",
+      0,
+      40,
+      1,
+      true
+    ]
+  },
+  "sharedOrderRed": {
+    "actual": false,
+    "expected": true,
+    "assertion": "the affected player can apply a modifier to either simultaneous source before allocating a shared shield",
+    "fixedOutcome": "Triple both 1-damage sources, allocate shield 3 only to second; first deals 3, second deals 0"
+  },
+  "nativeGreen": {
+    "command": "node --stack-size=4000 tests/engine-outside-damage.mjs",
+    "checks": 140,
+    "exit": 0
+  },
+  "readers": {
+    "engine-outside-damage": 140,
+    "engine-rule-operations": 76,
+    "engine-replacement-steps": 16,
+    "engine-damage-replaced": 23,
+    "engine-damage-redirect": 19,
+    "engine-damage-once": 8,
+    "engine-mana-abilities": 40,
+    "engine-mill-cost": 13,
+    "engine-mana-provenance": 23,
+    "engine-mana-riders": 29,
+    "engine-restricted-mana": 15,
+    "engine-restricted-source": 12,
+    "engine-mana-withheld": 48,
+    "engine-sba": 54,
+    "engine-lki": 20,
+    "engine-damage-each": 5,
+    "engine-damage-all": 6,
+    "engine-prevention-shields": 33,
+    "engine-damage-amount": 11,
+    "engine-lands-and-mana": 9,
+    "engine-cards": 55,
+    "engine-pass-stack": 18
+  },
+  "readerExit": 0,
+  "mutations": {
+    "new": 27,
+    "originalUnion": 69,
+    "missed": [],
+    "newCommand": "python game/tools/batch/breaks.py game/tools/batch/breaks-outside-damage.py",
+    "originalSpecs": [
+      "breaks-replacement-steps.py",
+      "breaks-rule-operations.py",
+      "breaks-w4d-l4-mana.py"
+    ],
+    "originalSuites": [
+      "tests/engine-replacement-steps.mjs",
+      "tests/engine-rule-operations.mjs",
+      "tests/engine-lands-and-mana.mjs",
+      "tests/engine-cards.mjs"
+    ],
+    "originalUnionCommand": "runpy each original spec; retain the union of all SUITES and all BREAKS; run breaks.py on that combined spec",
+    "records": [
+      "w4-damage-mutations.txt",
+      "w4-damage-original-mutations.txt"
+    ],
+    "originalExactSource": "20e13e9e08044bbaf1527328a6b940f13dce92a5"
+  },
+  "anchors": {
+    "files": 227,
+    "breaks": 4283,
+    "inheritedProblems": 32,
+    "engineProblems": 0,
+    "ignored": []
+  },
+  "remaining": [
+    "Unmediated synchronous runEffect/runFollowUps outside this actual mana consumer still use leastFirst",
+    "Combat and ordinary resolution damage retain answer-key replay rather than saved applied proposals",
+    "Other outside zone/token/payment caller staging and loop completion remain unproven",
+    "Layer-2 replacement-holder controller applicability requires its own native counterexample/fix; no claim here",
+    "Attacking token recipient choices and blocker joint requirements remain open; Battle runtime not implemented"
+  ],
+  "cardsPromoted": 0,
+  "cleanGamesCredited": 0,
+  "gateCredit": false,
+  "manaTriggerTiming": {
+    "rules": [
+      "106.12a",
+      "603.10"
+    ],
+    "survivingHolderDepartedSwamp": "B2: matching Swamp LKI; one base event and one Nirkana Revenant event",
+    "holderSacrificedAsCost": "B1: departed Nirkana Revenant is absent at production; base event only"
+  },
+  "mainSync": {
+    "main": "50297778",
+    "merge": "a5bcd7485ef64ecde407dec417a7670027762fd5",
+    "suiteCount": 677,
+    "checks": {
+      "catalog-rule": 21,
+      "feature-wiring": 131,
+      "asset-versions": 136,
+      "data-integrity": "50 variants and 50 connected buy profiles"
+    },
+    "browser": "Explore initially SKIPPED: missing sandbox browser cache; no credit. Installed Chromium located; strict rerun deferred at root request for a coordinated quiet window. Main UI changes retain their owner validation."
+  }
+}

@@ -1,0 +1,9 @@
+import fs from 'node:fs';
+import {pathToFileURL} from 'node:url';
+const root=pathToFileURL(process.cwd()+'/');
+const {loadCardScripts,loadCardScenarios}=await import(new URL('game/tools/engine-cards.mjs',root));
+const {cardCheckSource,cardInputHashes}=await import(new URL('game/tools/card-check-policy.mjs',root));
+const scripts=loadCardScripts().map(entry=>entry.script),files=loadCardScenarios().map(entry=>entry.scenarios);
+const source=cardCheckSource(process.cwd());source.inputs=cardInputHashes(scripts,files);
+fs.writeFileSync('../scratch/v8-basic-source-inventory-inputs-544d8512.json',JSON.stringify({source,definitions:scripts.length,scenarioFiles:files.length,scenarios:files.reduce((n,f)=>n+f.scenarios.length,0)},null,2)+'\n');
+console.log(JSON.stringify({source,definitions:scripts.length,scenarioFiles:files.length,scenarios:files.reduce((n,f)=>n+f.scenarios.length,0)}));

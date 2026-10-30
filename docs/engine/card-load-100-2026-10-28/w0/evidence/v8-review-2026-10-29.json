@@ -1,0 +1,730 @@
+{
+  "schema": "load100-independent-review@1",
+  "reviewer": "V8",
+  "date": "2026-10-29",
+  "sourceSnapshots": {
+    "w2": "2fb6f815da5c7c91c9c9fd75128b9cdad2b5577d",
+    "w3": "63f5b4c83f74f30aebde497839d54d4b72439fe1",
+    "w7": "7b832177b4abc7efe731121849c2e1d00b3ce399",
+    "w2-fixed": "a49b03eab9b1b2a7a0f83796d69fc184a61a6fbd",
+    "w3-fixed": "b66ae95a7ea582dd3e52687feddffb6247103961",
+    "w3-outcomes": "34847ddf1ffcf9952e09a71d56df54546098ba23",
+    "w7-fixed": "625f4f24fea5e625ea261371989e5eda1e619ba7",
+    "w2-joint": "469236c40b0b609df4c5397b04bcc23f4f93ba47",
+    "w7-final": "a6d128e2158339bbed7d78d3b831b90d81572758"
+  },
+  "baseline": "c34022d4e8df01dcb7aca97796b6a6d6f93d7e23",
+  "method": "frozen exact Git source; local current CR references and cached public official rulings; no writer-test acceptance substitute",
+  "findings": [
+    {
+      "id": "R1",
+      "lane": "W2",
+      "witness": "Actual legally cast Monstrous Onslaught A:1 B:2; copy keeps A/B or retargets B to C; reload every answer",
+      "before": {
+        "sha": "2fb6f815da5c7c91c9c9fd75128b9cdad2b5577d",
+        "retargetDamage": [
+          1,
+          0,
+          0
+        ],
+        "expected": [
+          1,
+          0,
+          2
+        ]
+      },
+      "after": {
+        "sha": "469236c40b0b609df4c5397b04bcc23f4f93ba47",
+        "keepDamage": [
+          1,
+          2,
+          0
+        ],
+        "retargetDamage": [
+          1,
+          0,
+          2
+        ],
+        "status": "passed"
+      },
+      "command": "node .v8-review-20261029/probe-monstrous-joint.mjs"
+    },
+    {
+      "id": "R2",
+      "lane": "W3",
+      "witness": "Same exiled card with {2} and {3} permissions; unlimited and finite; each selected after reload and actually paid",
+      "before": {
+        "sha": "63f5b4c83f74f30aebde497839d54d4b72439fe1",
+        "offers": 1,
+        "expected": 2
+      },
+      "after": {
+        "sha": "b66ae95a7ea582dd3e52687feddffb6247103961",
+        "cases": 4,
+        "status": "passed"
+      },
+      "command": "node .v8-review-20261029/probe-permission-fixed.mjs"
+    },
+    {
+      "id": "R3",
+      "lane": "W7",
+      "witness": "Insight then Collector pipeline, repeated replacement source identity and affected player chooses distinct opponents",
+      "before": {
+        "sha": "7b832177b4abc7efe731121849c2e1d00b3ce399",
+        "delta": [
+          2,
+          0,
+          0
+        ],
+        "expected": [
+          1,
+          1,
+          0
+        ]
+      },
+      "after": {
+        "sha": "a6d128e2158339bbed7d78d3b831b90d81572758",
+        "sameControllerMatrixCases": 8,
+        "differentControllerCases": 8,
+        "reloadAtEveryQuestion": true,
+        "status": "passed; both no-dredger choices produce selected opponent card, count2 both orders produce1/1/1"
+      },
+      "commands": [
+        "node .v8-review-20261029/probe-collector-final.mjs",
+        "node .v8-review-20261029/probe-collector-different-final.mjs"
+      ],
+      "intermediate": {
+        "sha": "625f4f24fea5e625ea261371989e5eda1e619ba7",
+        "matrixCases": 8,
+        "matrixStatus": "passed",
+        "differentOpponentNoDredger": "open: silently selects first Collector"
+      }
+    },
+    {
+      "id": "R4",
+      "lane": "W2",
+      "witness": "Nonempty destroy-script runtime fixture, counted [A,B] distinct scalar C can change to [A,C],B; first answer remains provisional across reload",
+      "before": {
+        "sha": "a49b03eab9b1b2a7a0f83796d69fc184a61a6fbd",
+        "retargetQuestion": false
+      },
+      "after": {
+        "sha": "469236c40b0b609df4c5397b04bcc23f4f93ba47",
+        "status": "passed"
+      },
+      "fixtureCorrection": "An initial empty-effects fixture had no spell script; corrected nonempty-effect fixture fails old and passes new.",
+      "command": "node .v8-review-20261029/probe-joint-retarget-fixed.mjs"
+    },
+    {
+      "id": "R5",
+      "lane": "W3",
+      "witness": "Unlimited normal/exile-on-finish graveyard spell permissions chosen after reload; actual effect and eventual destination; saved sorcery-restricted vs unrestricted instant",
+      "before": {
+        "sha": "b66ae95a7ea582dd3e52687feddffb6247103961",
+        "offers": 1,
+        "expected": 2
+      },
+      "after": {
+        "sha": "34847ddf1ffcf9952e09a71d56df54546098ba23",
+        "destinations": [
+          "graveyard",
+          "exile"
+        ],
+        "timing": "unrestricted only on opponent turn",
+        "status": "passed"
+      },
+      "commands": [
+        "node .v8-review-20261029/probe-exiling-permission-fixed.mjs",
+        "node .v8-review-20261029/probe-permission-timing.mjs"
+      ]
+    },
+    {
+      "id": "R6",
+      "lane": "W2",
+      "witness": "Actual Onslaught, only A/B and A shrouded, provisional B first share; explicit cancellation after reload and later copy continues",
+      "before": {
+        "sha": "a49b03eab9b1b2a7a0f83796d69fc184a61a6fbd",
+        "recovery": false
+      },
+      "after": {
+        "sha": "469236c40b0b609df4c5397b04bcc23f4f93ba47",
+        "status": "passed",
+        "resolvedDamage": [
+          0,
+          4
+        ]
+      },
+      "command": "node .v8-review-20261029/probe-retarget-recovery-fixed.mjs"
+    }
+  ],
+  "positiveProbes": [
+    {
+      "subject": "Gandalf Flameshape and actual Akroma morph",
+      "source": "c34022d4e8df01dcb7aca97796b6a6d6f93d7e23",
+      "command": "node .v8-review-20261029/probe-gandalf.mjs",
+      "scope": "three-player visibility exile/stack/battlefield; Wizard condition and unauthorized nonviewer control; actual face-down cast/resolution"
+    },
+    {
+      "subject": "Annul",
+      "source": "c34022d4e8df01dcb7aca97796b6a6d6f93d7e23",
+      "command": "node .v8-review-20261029/probe-annul.mjs",
+      "scope": "actual regenerated candidate smoke; target stack1 countered, Annul stack2 resolves successfully; not two successful resolutions"
+    },
+    {
+      "subject": "Brazen Dwarf",
+      "source": "c34022d4e8df01dcb7aca97796b6a6d6f93d7e23",
+      "command": "node .v8-review-20261029/probe-die.mjs",
+      "scope": "Oracle-trigger in-memory compilation; two separate own rolls trigger twice and damage both opponents; opponent/random-number negative; no saved final/new-card credit"
+    },
+    {
+      "subject": "copy Ward",
+      "source": "469236c40b0b609df4c5397b04bcc23f4f93ba47",
+      "command": "node .v8-review-20261029/probe-copy-ward.mjs",
+      "scope": "actual Hulking Raptor Ward triggers for kept/new copy target in frozen legal stack state; no actual-cast credit"
+    }
+  ],
+  "limits": [
+    "No whole-theme acceptance",
+    "No whole-directory ability coverage claim",
+    "No clean whole-game exercise credit",
+    "No broad games run",
+    "All existing G1-G8 gates retained"
+  ],
+  "flyingProposal": {
+    "source": "37a6c8053420cbc16d8a53228079702b41c5d043",
+    "prototypeOnly": false,
+    "subject": "Zephyr Sprite",
+    "baselineLife": [
+      40,
+      39
+    ],
+    "removedFlyingLife": [
+      40,
+      40
+    ],
+    "bothReach": "MAIN2",
+    "removedGraveyard": [
+      "Zephyr Sprite"
+    ],
+    "failure": "final life assertion",
+    "ledgerCredit": "Selected in-memory test proves one actual loaded ability only; no whole-directory or saved-scenario credit",
+    "status": "implemented as strict runner step with metadata and actual counterfactual test; no saved scenario added"
+  },
+  "diagnostics": "workbench/load100-v8-20261029-diagnostics",
+  "historicalCreditCorrection": {
+    "savedSerraFlying": "old blocker-offer failure rejected; final damage unchanged under explicit no blocks",
+    "thranDynamo": "missing mana action offer rejected; no actual produced-mana outcome after omission",
+    "fullSweep": "previous6079 reached/5557 unreached artifacts remain historical; current strict eligibility requires full remeasurement"
+  },
+  "harness": {
+    "policyChecks": 166,
+    "abilityChecks": 44,
+    "sourceDependency": "98eadc5fa2d01eed3644e5cce582174e478ab829",
+    "savedCardsChanged": 0,
+    "savedScenariosChanged": 0,
+    "ruleModulesChanged": 0,
+    "policyMutations": {
+      "caught": 35,
+      "missed": []
+    },
+    "retainedAbilityMutations": {
+      "caught": 19,
+      "missed": []
+    },
+    "readers": {
+      "engineCombat": 74,
+      "engineLibloadL4Combat": 57,
+      "roomBlockCheck": 34,
+      "dataIntegrity": "50 variants/50 profiles",
+      "featureWiring": 131
+    }
+  },
+  "followupColdReview": {
+    "w4": {
+      "source": "c3923102234732f17e585ba6d6092376d809a6ac",
+      "checks": {
+        "savedScenarios": 9,
+        "selectedCards": 4,
+        "abilitiesProved": 5,
+        "priorScenariosAssertionsFixturesUnchanged": true,
+        "actualPyrohemiaColorDepartureCases": 5
+      },
+      "flyingFailure": "final defender life after both games reach MAIN2; no-block/block branches retained",
+      "protection": "matching final departed-source colors; current live colors take precedence; no saved-state mutation/source restoration",
+      "rules": [
+        "608.2h",
+        "702.9b",
+        "702.16e",
+        "702.20b"
+      ],
+      "commands": [
+        "node probe-four-flying.mjs",
+        "node probe-prior-scenarios.mjs",
+        "node probe-pyrohemia-protection.mjs"
+      ],
+      "diagnostics": "workbench/load100-v8-20261029-diagnostics/w4-c3923102",
+      "files": [
+        {
+          "file": "probe-four-flying.mjs",
+          "sha256": "9D16424793D33AA43136C9E6F797D9F0DAD7230FE8D67B7C018CB4CFD3017DBF"
+        },
+        {
+          "file": "probe-four-flying.json",
+          "sha256": "40E7F335E553B20850545855EA157704529E888700732984B7B73F1551261D58"
+        },
+        {
+          "file": "probe-pyrohemia-protection.mjs",
+          "sha256": "94DE0ED947911F8AFF627FBBC3082B886B30ABD62EF77F7073DF2B6FEA4EF766"
+        },
+        {
+          "file": "probe-pyrohemia-protection.json",
+          "sha256": "53B0E13B6E9B14FD5BCDABBAF27E7BB6F7E2991D197D43D0C4FFF28B55E72842"
+        },
+        {
+          "file": "probe-prior-scenarios.mjs",
+          "sha256": "E8E5D5D564F4D1DBF5F667887866FDC83CA12DE3E4544F8FA82E107697BCF033"
+        },
+        {
+          "file": "probe-prior-scenarios.json",
+          "sha256": "A90DE606964F048D76FA15E95F1F074DB6534351EAC2CE7B4700148332E96A38"
+        }
+      ],
+      "limits": [
+        "Selected five-ability proof only",
+        "No globalcoverage or clean-game credit",
+        "No other departed damage source properties, replacement filters, or event source provenance accepted"
+      ]
+    },
+    "w3": {
+      "source": "13ea6a5d69296bf2e0dfde63388eb1990488164f",
+      "cases": 4,
+      "rule": "903.9b",
+      "commands": [
+        "node probe-commander-loop.mjs"
+      ],
+      "outcomes": "after accepted commander replacement, command→hand/library modification correctly reoffers owner; second accept/decline controls final zone",
+      "caller": "prefix+2 once42 whilewaiting; suffix+5 once47; oneactualzoneevent; no remainingoperation/stack",
+      "diagnostics": "workbench/load100-v8-20261029-diagnostics/consumer13ea6a5d",
+      "files": [
+        {
+          "sha256": "04283829B4B5BA32BF04E439F9279FE9C1338816A623F72B5334E55A3E467FC9",
+          "file": "probe-commander-loop.mjs"
+        },
+        {
+          "sha256": "E3E6A46E205853029983E871089F422D55C5D4684389207BA12B43DBDDB59C1B",
+          "file": "probe-commander-loop.json"
+        }
+      ],
+      "limits": [
+        "Supported runtime grammar only",
+        "No whole-consumer or loaded-card/new-final credit"
+      ]
+    }
+  },
+  "combinedEntryReview": {
+    "frozenSource": "97795ea2096e6927201781852775343b0b236c1b",
+    "typeFixSource": "304fbabf79a95fb66daacf725ce8498f47fca962",
+    "lookup": {
+      "commit": "ccb23221d7a0e909af86b7ee54e43c7fd295fa88",
+      "stableCardBlobs": [
+        {
+          "blob": "565f7ae084c52f2419e61e403b1bbe4af82468a2",
+          "path": "game/engine/cards/m/metallic-mimic.json"
+        },
+        {
+          "blob": "2f031317ae7a87888cdc4811d0b742ad9ad3712d",
+          "path": "game/engine/cards/c/clone.json"
+        },
+        {
+          "blob": "e2aea58af1b25bda1c97e7699607212f3555eaa6",
+          "path": "game/engine/cards/m/mox-diamond.json"
+        },
+        {
+          "blob": "668f4e6dd5d3960e71b8b2b9adc90f6d925eca7e",
+          "path": "game/engine/cards/u/unclaimed-territory.json"
+        },
+        {
+          "blob": "6ce3a7d80b0915f38f59aba5c2d065c3237e0a63",
+          "path": "game/engine/cards/h/hardened-scales.json"
+        },
+        {
+          "blob": "6cb6eb0deda879435515b1068502616f08c4e468",
+          "path": "game/engine/cards/a/altered-ego.json"
+        },
+        {
+          "blob": "9ca02651b78bfa4249dfb1fe3658b8dbbbda55fc",
+          "path": "game/engine/cards/g/glorious-anthem.json"
+        },
+        {
+          "blob": "427248acd6ac784fc823ec110ca7434eaf333bcf",
+          "path": "game/engine/cards/s/shared-animosity.json"
+        }
+      ],
+      "correctedCardBlobsReadInMemory": [
+        {
+          "blob": "1592ddf8b2646b7e14ebb81f54131cd73cd0aace",
+          "path": "game/engine/cards/m/metallic-mimic.json"
+        },
+        {
+          "blob": "07adc654e5cda8573dbc3d5ebc6ed9d72288e43e",
+          "path": "game/engine/cards/a/adaptive-automaton.json"
+        },
+        {
+          "blob": "9e844ef6bce2b0c53868fa5a7f0d1a971fce28c9",
+          "path": "game/engine/cards/r/roaming-throne.json"
+        }
+      ]
+    },
+    "callerCases": {
+      "mimicClone": {
+        "count": 2,
+        "freshChoices": [
+          "Elf",
+          "Goblin"
+        ],
+        "countersWithExistingMimicAndScales": [
+          2,
+          0
+        ],
+        "waitsBeforeEntry": true,
+        "reload": true
+      },
+      "mox": {
+        "count": 3,
+        "modes": [
+          "noLand",
+          "decline",
+          "discard"
+        ],
+        "resolutionsEach": 1,
+        "hasFizzled": false,
+        "noStaleStackOrOperation": true
+      },
+      "normalTokens": {
+        "count": 2,
+        "allChoicesBeforeAllocation": true,
+        "noProspectiveObjectOrIdAllocationWhileWaiting": true,
+        "countersEach": 2,
+        "tokenZoneEvents": 2,
+        "lifeBeforeAfter": [
+          42,
+          47
+        ]
+      },
+      "effectLand": {
+        "card": "Unclaimed Territory",
+        "staysInHandWhileWaiting": true,
+        "pollingDoesNotMutate": true,
+        "reload": true,
+        "landsPlayed": 1,
+        "landPlayEvents": 1,
+        "lifeBeforeAfter": [
+          42,
+          47
+        ]
+      },
+      "copyException": {
+        "card": "Altered Ego",
+        "x": 2,
+        "copies": "raw Clone kept alive by Glorious Anthem",
+        "laterCopy": [
+          "Smoke Elf",
+          "No copy"
+        ],
+        "newPermanentCounters": [
+          0,
+          2
+        ],
+        "rule": "707.9e",
+        "newObjectIdentified": true,
+        "reload": true
+      }
+    },
+    "findings": [
+      {
+        "id": "R7",
+        "before": "land-only Mimic offers only Shapeshifter; catalog missing Blinkmoth/Llama/Time Lord, invalid Lord/Time",
+        "after": "324/324 current CR205.3m names after apostrophe normalization; no missing/invalid terms; Elf and Time Lord publicly selectable",
+        "status": "closed narrowly on typeFixSource"
+      },
+      {
+        "id": "R8",
+        "before": "chosen Elf added as card type, so creatureTypesOf omits it",
+        "after": "Mimic/Automaton/Throne corrected addSubtypes; actual native entries and Shared Animosity final combat outcomes pass",
+        "status": "closed narrowly on typeFixSource"
+      }
+    ],
+    "typeFixCases": {
+      "unseenTypes": [
+        "Elf",
+        "Time Lord"
+      ],
+      "publicOptions": 324,
+      "eachSubsequentMatchingTokenCounter": 1,
+      "sharedAnimosityCards": [
+        "Metallic Mimic",
+        "Adaptive Automaton",
+        "Roaming Throne"
+      ],
+      "subjectPowers": [
+        3,
+        3,
+        5
+      ],
+      "defenderLives": [
+        34,
+        33,
+        32
+      ],
+      "damagePairs": [
+        [
+          3,
+          3
+        ],
+        [
+          3,
+          4
+        ],
+        [
+          5,
+          3
+        ]
+      ]
+    },
+    "commands": [
+      "node probe-mimic-copy.mjs",
+      "node probe-mox-and-land.mjs",
+      "node probe-normal-token-entry.mjs",
+      "node probe-copy-exception.mjs",
+      "node probe-creature-type-catalog-fixed.mjs",
+      "node probe-type-fix.mjs"
+    ],
+    "diagnostics": "workbench/load100-v8-20261029-diagnostics/combined-97795ea2-304fbabf",
+    "files": [
+      {
+        "sha256": "36D2DF679303B068DD243D138E0EE7A2F9ED32E8A45F17221FD2E77177629396",
+        "file": "probe-combined-setup.mjs"
+      },
+      {
+        "sha256": "8FA85502DA24AD6BA3617519F403AD3FCC0B3C944392AF5500FD61A0A05C3913",
+        "file": "probe-copy-exception.json"
+      },
+      {
+        "sha256": "7DF9F4F3D01E73857C9DE0A84D0C3FEB4B81267433F16922D11EB55F0E8E7F0D",
+        "file": "probe-copy-exception.mjs"
+      },
+      {
+        "sha256": "5E23095633B44CA6D46C2D7FBBA2B2948451CA73D3859A1DA2B7CD5F6427D1C2",
+        "file": "probe-creature-type-catalog-fixed.json"
+      },
+      {
+        "sha256": "8898B5DCB1F89BA7BBF184CEE7750106B28CFA97FA878DC3CC250DBD45396C46",
+        "file": "probe-creature-type-catalog-fixed.mjs"
+      },
+      {
+        "sha256": "03001ACC35EECCA846F29826F4373DC85843103693E2C9E51600BC1620B97C90",
+        "file": "probe-creature-type-catalog.json"
+      },
+      {
+        "sha256": "419912D51885B6F3D5A79DB65E36A340201606A48BBBE374DBDE5D8A5C75B917",
+        "file": "probe-creature-type-catalog.mjs"
+      },
+      {
+        "sha256": "51FC1E0E2331962FEAE25439538037595254982F57668072B8EF4D82F67D5C73",
+        "file": "probe-entry-debug.mjs"
+      },
+      {
+        "sha256": "F403BC2D93BF8AC4340BD460F11A0911A7DF218A341E7F6F5403FE2AC8BF4B2B",
+        "file": "probe-mimic-copy-debug.mjs"
+      },
+      {
+        "sha256": "8D2C875A6D72E5532CC97E26418444EA83375A69A1939838382A317D307441E0",
+        "file": "probe-mimic-copy.json"
+      },
+      {
+        "sha256": "A6EDC45F67E23EE5D29CEBAA25138B929AC43794D4A0240C280D0D61BFF0A4E0",
+        "file": "probe-mimic-copy.mjs"
+      },
+      {
+        "sha256": "3D11CD53A139B383FEF174A28BCC689EDE04038D7C11D1F73E264A8AD12DACDC",
+        "file": "probe-mimic-type-reader.json"
+      },
+      {
+        "sha256": "9E4643A773F65CE285A466E2455B0D5C3FF750ADC17EFCFEFC50FB6CFCCBFD1F",
+        "file": "probe-mimic-type-reader.mjs"
+      },
+      {
+        "sha256": "C65C2ADA1F5AC86C3996C83AED66D4D01563384BAD56D46725B54420B6F46F2E",
+        "file": "probe-mimic-unseen-type.json"
+      },
+      {
+        "sha256": "E140871016D3D80053AC2373FE8AEF8BCBFF171B1F451209B90761A068D62CB2",
+        "file": "probe-mimic-unseen-type.mjs"
+      },
+      {
+        "sha256": "DF6E843B8B8E2898B8C32C3CFEC9F915763F90468981B4F77F3824B21B7F3F6A",
+        "file": "probe-mox-and-land.json"
+      },
+      {
+        "sha256": "2FC5C8E9A5A0E42A8A73850CEFEA424EE5F7BC2227D8C691A9A7946097520B22",
+        "file": "probe-mox-and-land.mjs"
+      },
+      {
+        "sha256": "14A7C8F2F78B1CE2415AB02155A17B7C5E16FBBE550879CCA7BA0B2D2DBCD5BC",
+        "file": "probe-normal-token-entry-debug.mjs"
+      },
+      {
+        "sha256": "F6E5B7E1F5B2A26CE7E7B43B544665D9313154B8015AA062CB4336F6711C3744",
+        "file": "probe-normal-token-entry.json"
+      },
+      {
+        "sha256": "1D6CE5EFF26F0D6692F8626E754F020D1122C3DF3E956551EAF32ACC1566C7DE",
+        "file": "probe-normal-token-entry.mjs"
+      },
+      {
+        "sha256": "5F27DA1F4E27B4C2B24EB356B0A58FA933DAB1DB73CB845A20854D3E8A8D59D7",
+        "file": "probe-type-fix.json"
+      },
+      {
+        "sha256": "672EF7DBD37144A85D352A7C2C3E8683D7AD86FD6F93CCE7F7E2EAEC7FC31625",
+        "file": "probe-type-fix.mjs"
+      }
+    ],
+    "limits": [
+      "No mutated live worktree read",
+      "Only required JavaScript source frozen; no card JSON/whole-repository snapshot",
+      "Old caller observations remain frozenSource evidence; not rerun/relabelled as typeFixSource",
+      "Writer mutation acceptance and generated bundle refresh pending as reported at typeFixSource",
+      "No whole-theme, global ability, clean-game or wave gate credit",
+      "No V8 rule/card/scenario edits"
+    ]
+  },
+  "missingPromptRegression": {
+    "staleSource": "304fbabf79a95fb66daacf725ce8498f47fca962",
+    "currentVerifierBase": "ddd687904f461ed5b5581b35836306672ae83532",
+    "runnerBlobs": {
+      "stale": "aeaccaf549462ad75d8b241d7c6c3814a42aa646",
+      "current": "d8278468f7a59688a4718fd93e647f6991fb9b4f"
+    },
+    "classifierBlobs": {
+      "stale": "caf61a52935776b4a551f9de97c269e94df36da2",
+      "current": "a792fb87b949374b6551a7b2688bbb567885152d"
+    },
+    "staleHasMissingPromptTag": false,
+    "currentHasMissingPromptTag": true,
+    "staleRejectsQuestionOffers": false,
+    "currentRejectsQuestionOffers": true,
+    "originalLedgerSha256": "5d8709eff9896a40cbb359a12ca9d0f59d8ee9e013d7d1399eb58265419da062",
+    "originalSummary": {
+      "abilities": 10,
+      "scenarioReached": 8,
+      "complete": false
+    },
+    "invalidCredits": [
+      {
+        "card": "Adaptive Automaton",
+        "path": "abilities[0]",
+        "scenario": "Elf: his other Elf 2/2; the Automaton an Elf too, not pumped by itself",
+        "message": "Elf: his other Elf 2/2; the Automaton an Elf too, not pumped by itself: nothing is being asked"
+      },
+      {
+        "card": "Metallic Mimic",
+        "path": "abilities[0]",
+        "scenario": "Elf: the next Elf enters with a +1/+1 counter",
+        "message": "Elf: the next Elf enters with a +1/+1 counter: nothing is being asked"
+      },
+      {
+        "card": "Roaming Throne",
+        "path": "abilities[1]",
+        "scenario": "Elf: chosen as it enters",
+        "message": "Elf: chosen as it enters: nothing is being asked"
+      }
+    ],
+    "freshMeasurement": "Required on assembled current verifier and new compiled bundle. Three stale missing-prompt credits are invalid; expected selected5/10, not a relabeled or improved gate.",
+    "scope": "No production tag/classifier change needed; add actual-card regression and guard/tag-removal proof. Original ledger read only, not modified.",
+    "tests": {
+      "actualCards": 3,
+      "checks": 33,
+      "policyChecks": 167,
+      "abilityChecks": 44,
+      "dataIntegrity": "50 variants/50 profiles",
+      "featureWiring": 131
+    },
+    "mutations": {
+      "new": 2,
+      "retained": 4,
+      "missed": []
+    },
+    "commands": [
+      "node tests/ability-missing-prompt.mjs",
+      "python -u game/tools/batch/breaks.py game/tools/batch/breaks-ability-missing-prompt.py",
+      "python -u game/tools/batch/breaks.py game/tools/batch/breaks-scenario-block-policy.py \"availability classification has no kind escape\" \"question availability is ineligible\" \"missing choice question is tagged\"",
+      "python -u game/tools/batch/breaks.py game/tools/batch/breaks-load100-w0-v8-ability.py \"ability offers are not execution proof\"",
+      "node check-current-root-fixture-context.mjs"
+    ],
+    "diagnostics": "workbench/load100-v8-20261029-diagnostics/missing-prompt-20261029",
+    "files": [
+      {
+        "file": "audit-stale-selection.mjs",
+        "sha256": "ECCF36F17DBA94F4A45DFFA9753E3A3594BD40EABE5F8755532014DBDCDE7DCA"
+      },
+      {
+        "file": "check-current-root-fixture-context.mjs",
+        "sha256": "75E402C40C9DA9D1602543A3C83294FC22A638B90A7B1782B3FD3741A00D65CD"
+      },
+      {
+        "file": "current-root-fixture-context.json",
+        "sha256": "C7E8825E4929653ACD2562ABE9C356A4548254FDEA973CFA8C6F5EFB0D734089"
+      },
+      {
+        "file": "new-mutations.log",
+        "sha256": "C5C8B7A51CFF6BEA52B25CC3FE790D337CD27312DB5F4CA553E501E1E5638D99"
+      },
+      {
+        "file": "retained-ability-mutation.log",
+        "sha256": "5B737268CFD72907DAF98473F173DF7A6ABE6AF7701E9604FCF24CDC10CD7889"
+      },
+      {
+        "file": "retained-policy-mutations.log",
+        "sha256": "BD3C21A564A108DF5469CA6A8B6571820BB6912A557E5A1C54A58587C6AAF65E"
+      },
+      {
+        "file": "stale-selection-audit.json",
+        "sha256": "64DFE72696BE47C27404348CF2E7307B497C5A3F3ED17C3F760637A013D2014E"
+      }
+    ],
+    "fixtureScope": "Exact original saved negative scenario names, each with one match; future completed-gameplay witnesses remain eligible.",
+    "currentRootFixtureContext": {
+      "rootScenarioSource": "558d04301af20f49f7c451dde01cc2074c91ab61",
+      "verifier": "Current V8 runner/classifier with test-only named-fixture scope correction; actual root files read from immutable Git objects in memory",
+      "serra": {
+        "baselineScenarios": 3,
+        "historicalStatus": "unobserved",
+        "fullFileStatus": "proved",
+        "positiveScenario": "Serra Angel deals combat damage past a ground blocker that its player blocks with whenever legal (CR 702.9b)",
+        "positiveFailure": "Serra Angel deals combat damage past a ground blocker that its player blocks with whenever legal (CR 702.9b): Maya is at 40 life, not 36"
+      },
+      "entryChoices": [
+        {
+          "card": "Adaptive Automaton",
+          "allBaselineScenarios": 2,
+          "isolatedScenario": "Elf: his other Elf 2/2; the Automaton an Elf too, not pumped by itself",
+          "status": "unobserved"
+        },
+        {
+          "card": "Metallic Mimic",
+          "allBaselineScenarios": 2,
+          "isolatedScenario": "Elf: the next Elf enters with a +1/+1 counter",
+          "status": "unobserved"
+        },
+        {
+          "card": "Roaming Throne",
+          "allBaselineScenarios": 2,
+          "isolatedScenario": "Elf: chosen as it enters",
+          "status": "unobserved"
+        }
+      ],
+      "scope": "No saved files changed; root current file context only, not a new authoritative selected-ledger or global measurement"
+    }
+  }
+}

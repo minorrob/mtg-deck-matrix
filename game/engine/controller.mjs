@@ -1,4 +1,5 @@
 /* Copyright (c) 2026 Rob Minor. All rights reserved. See LICENSE. */
+import {hashState} from "./journal.mjs";
 
 /* THE DECISION ENVELOPE: §3.2.3 AND §12.1.
  *
@@ -95,7 +96,12 @@ export function damageAssignmentProblem(choice, amounts) {
   if (!Array.isArray(amounts) || amounts.length !== targets.length) return "Assign damage to each listed recipient";
   if (amounts.some((n) => !Number.isFinite(n) || !Number.isInteger(n) || n < 0 || n > choice.total)) return "Use whole, nonnegative damage amounts";
   const short = targets.some((t, i) => t.defender !== true && amounts[i] < (t.lethal ?? 0));
-  if (short && targets.some((t, i) => t.defender === true && amounts[i] > 0)) return "Assign lethal damage to every blocker before assigning any to the player";
+  if (choice.simultaneousReview !== true && short && targets.some((t, i) => t.defender === true && amounts[i] > 0)) return "Assign lethal damage to every blocker before assigning any to the player";
+  for (const target of targets) {
+    if (amounts[target.index] <= 0) continue;
+    if (choice.simultaneousReview !== true && (target.requires ?? []).some(requirement => amounts[requirement.index] < requirement.amount))
+      return "Assign damage equal to the planeswalker's loyalty before assigning any to its controller";
+  }
   if (choice.divide !== true) {
     let priorNeedsLethal = false;
     for (let i = 0; i < targets.length; i += 1) {
@@ -205,8 +211,8 @@ function validateIndices(choice, request) {
 function translate(choice, request) {
   if (request.kind === "answer") return request;
   if (request.kind === "cancel") {
-    if (choice.maySkip !== true && choice.mode !== "text")
-      throw new Error("Cancel is unavailable on this choice");
+    if (choice.cancellation?.allowed !== true && choice.maySkip !== true && choice.mode !== "text")
+      throw new Error(choice.cancellation?.reason??"Cancel is unavailable on this choice");
     return {...request, kind: "answer", choiceId: choice.id, cancel: true};
   }
   if (request.kind === "ok") {
@@ -234,6 +240,7 @@ export function createController(resume = null) {
   let answered = resume?.answered ? structuredClone(resume.answered) : null;
   const receipts = new Map(resume?.receipts ?? []);
   const payloads = new Map(resume?.payloads ?? []);
+  const refinementOwners = new Map(resume?.refinementOwners ?? []);
 
   function receiptFor(actionId) {
     const value = {accepted: true, actionId};
@@ -242,6 +249,7 @@ export function createController(resume = null) {
       const oldest = receipts.keys().next().value;
       receipts.delete(oldest);
       payloads.delete(oldest);
+      refinementOwners.delete(oldest);
     }
     return value;
   }
@@ -287,7 +295,8 @@ export function createController(resume = null) {
       const answer = translate(pending, request);
       if (answer.choiceId !== pending.id) throw new Error("This choice has expired");
 
-      if (answer.cancel !== true || pending.mode !== "text") {
+      const steppingBack = answer.back === true && (pending.castStage??pending.actionStage)?.canBack === true;
+      if (!steppingBack && (answer.cancel !== true || (pending.mode !== "text" && pending.cancellation?.allowed !== true))) {
         if (pending.mode === "damage") validateCombatDamage(pending, answer);
         else if (pending.mode === "amount") validateGenericAmount(pending, answer);
         else if (pending.mode === "integer") {
@@ -312,6 +321,48 @@ export function createController(resume = null) {
          retried action returns from the receipt cache above and moves nothing. */
       revision += 1;
       return receiptFor(actionId);
+    },
+
+    /* Server-only child validation. The native pending/answered records are never replaced, answered or restored here.
+       Generate the current child lazily: an accepted retry must work even after that child/native stage expired. */
+    refinementReceipt(request, actor = null) {
+      const actionId=request?.actionId;
+      if(!refinementOwners.has(actionId))return null;
+      if(refinementOwners.get(actionId)!==actor)throw new Error("This refinement input belongs to another seat");
+      if(payloads.get(actionId)!==JSON.stringify(request))throw new Error("Action id was reused with different content");
+      return receipts.get(actionId)??null;
+    },
+    answerRefinement(makeChoice, request, actor = null, replay = null) {
+      const actionId=request?.actionId,body=JSON.stringify(request);
+      let receiptBody=body;
+      if(replay){
+        const {rawRequest,canonicalAnswer}=replay;
+        if(!rawRequest||!canonicalAnswer||replay.actor!==actor||rawRequest.actionId!==actionId||canonicalAnswer.actionId!==actionId||
+          rawRequest.choiceId!==request.choiceId||canonicalAnswer.choiceId!==request.choiceId||rawRequest.revision!==canonicalAnswer.revision||
+          JSON.stringify({...rawRequest,revision:request.revision})!==body)throw new Error("The private replay input does not match its accepted actor and envelope");
+        receiptBody=JSON.stringify(rawRequest);
+      }
+      if(receipts.has(actionId)) {
+        if(refinementOwners.has(actionId)&&refinementOwners.get(actionId)!==actor)throw new Error("This refinement input belongs to another seat");
+        if(payloads.get(actionId)!==receiptBody)throw new Error("Action id was reused with different content");
+        return {receipt:receipts.get(actionId),answer:null,changed:false};
+      }
+      if(!pending||answered)throw new Error("The native question has expired");
+      const choice=makeChoice(),reference=choice?.refinement;
+      if(reference?.schema!=="CrankDecisionRefinement@1"||reference.originalChoiceId!==pending.id||reference.originalSignature!==hashState(pending))
+        throw new Error("The original native question changed or expired");
+      if(request.back===true&&reference.canBack!==true)throw new Error("Back is unavailable at this refinement boundary");
+      /* Reuse every existing envelope/typed selection check. This temporary controller contains only the generated child,
+         never a checkpoint or copy of the native question. Its Back adapter is server-produced, not a client claim. */
+      const validator=createController({revision:revision-1});
+      validator.offer({...choice,actionStage:{canBack:reference.canBack===true}});
+      validator.answer(request);const answer=validator.take();
+      if(answer.cancel===true&&choice.cancellation?.allowed!==true)throw new Error("Cancel is unavailable on this refinement");
+      /* Only the trusted replay caller supplies this fourth argument. Native validation still runs once on the raw
+         request with its current revision; cache identity is restored only after its real translation matches tape. */
+      if(replay&&hashState({...answer,revision:0})!==hashState({...replay.canonicalAnswer,revision:0}))throw new Error("The private replay answer does not match the recorded canonical answer");
+      payloads.set(actionId,receiptBody);refinementOwners.set(actionId,actor);revision+=1;
+      return {receipt:receiptFor(actionId),answer,changed:true};
     },
 
     /**
@@ -347,6 +398,7 @@ export function createController(resume = null) {
         answered: answered ? structuredClone(answered) : null,
         receipts: [...receipts.entries()],
         payloads: [...payloads.entries()],
+        ...(refinementOwners.size?{refinementOwners:[...refinementOwners.entries()]}:{}),
       };
     },
   };

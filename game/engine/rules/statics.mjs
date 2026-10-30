@@ -740,7 +740,7 @@ export function emptyDrawWins(state, player) {
  * `{key, count}` -- its holder and ability, so each applies once to a draw and to the draws it became (CR 614.5), and
  * another's still may: two of them make four. `exceptFirstInDrawStep`: not the first card the player would draw in their own
  * draw step -- none drawn there yet this turn (state/index.mjs, recordDrawStepDraw), the step's own draw or, it skipped, an
- * effect's. Only multiplying draws is built, so their order never changes the outcome and nobody is asked (CR 616.1).
+ * effect's. Resolution asks the drawing player to order competing replacements (CR 616.1).
  */
 export function drawsMore(state, player) {
   const steps = state.players[player]?.drawStepDraws;
@@ -763,21 +763,28 @@ export function drawsMore(state, player) {
  * WHO DRAWS INSTEAD (CR 614.1a): "if an opponent would draw two or more cards, instead you and that player each draw a card"
  * (Alms Collector) -- the controllers of the `draws-instead` statics whose `affects` names `player`, each once, in turn order
  * from the player after `player`. Two of one controller's end the same; two of different controllers do not, and which
- * applies is the drawing player's to choose (CR 616.1; effects/asking.mjs, orderDraws). Only for two or more: one card is no
- * draw it replaces, so the draws made instead are not replaced again.
+ * applies is the drawing player's to choose (CR 616.1; effects/asking.mjs, orderDraws). Only for two or more: another
+ * replacement may create a new multi-card instruction. Source-and-ability history prevents reuse of an applied effect.
  */
 export function drawsInstead(state, player, count) {
+  return [...new Set(drawInsteadEffects(state, player, count).map(effect => effect.controller))];
+}
+
+/* Replacement history belongs to an individual ability, including two Collectors controlled by the same player
+   (CR 614.5). Descendant instructions must still consider every unused effect (CR 616.1f-g). */
+export function drawInsteadEffects(state, player, count, replaced = []) {
   if (count < 2) return [];
   const seats = state.players.length, order = (p) => (p - player - 1 + seats) % seats;
-  const found = new Set();
+  const found = [];
   const held = staticAbilities(state);
   for (const holderId of state.zones.battlefield) {
     const holder = state.objects[holderId];
     for (const ability of held(holderId))
       if (ability.kind === "static" && ability.rule === "draws-instead" && compileSelector({what: "player", ...ability.affects})(state, player, {controller: holder.controller, source: holderId}))
-        found.add(holder.controller);
+        if (!replaced.includes(`${holderId}:${ability.id}`))
+          found.push({key: `${holderId}:${ability.id}`, controller: holder.controller, sourceId: holderId});
   }
-  return [...found].sort((a, b) => order(a) - order(b));
+  return found.sort((a, b) => order(a.controller) - order(b.controller));
 }
 
 /**
@@ -873,7 +880,10 @@ function counterEnds(candidates, n, out = new Set()) {
 function counterCandidates(state, {id = null, player = null}, kind, by, {cost = false, entering = false} = {}) {
   const found = [];
   const held = staticAbilities(state);
-  for (const holderId of state.zones.battlefield) {
+  /* CR 614.12: the prospective entrant may supply a self-only replacement without joining the counted battlefield. */
+  const holders = entering && id !== null && state.objects[id]?.zone === "battlefield" && !state.zones.battlefield.includes(id)
+    ? [...state.zones.battlefield, id] : state.zones.battlefield;
+  for (const holderId of holders) {
     const holder = state.objects[holderId];
     for (const ability of held(holderId)) {
       if (!changesCounters(state, ability, holder, holderId, kind, by, cost)) continue;
@@ -887,7 +897,7 @@ function counterCandidates(state, {id = null, player = null}, kind, by, {cost = 
   return found;
 }
 /** Which effect an answer names: its holder and ability (CR 614.5 is per effect). */
-export const counterEffectKey = ({holderId, ability}) => `${holderId}:${ability.id}`;
+export const counterEffectKey = ({holderId, ability, key}) => key ?? `${holderId}:${ability.id}`;
 
 /**
  * How many counters of `kind` are put on a permanent (`id`) or a player (`player`) when `count` would be, by `by`.
@@ -897,16 +907,20 @@ export const counterEffectKey = ({holderId, ability}) => `${holderId}:${ability.
  *
  * @returns {{count: number, question?: {player: number, options: string[], count: number}}}
  */
-export function placeCounters(state, {id = null, player = null}, kind, count, by = null, {orders = [], askable = false, cost = false, entering = false} = {}) {
+export function placeCounters(state, {id = null, player = null}, kind, count, by = null, {orders = [], askable = false, cost = false, entering = false, extraCandidates = [], applied = [], reportApplied = false} = {}) {
   if (!(count > 0) || (player !== null ? !state.players[player] : !state.objects[id])) return {count};
   const affected = player !== null ? player : controllerOf(state, id);
-  let rest = counterCandidates(state, {id, player}, kind, by, {cost, entering}), n = count, used = 0;
+  let rest = [...counterCandidates(state, {id, player}, kind, by, {cost, entering}), ...extraCandidates]
+    .filter(candidate => !applied.includes(counterEffectKey(candidate))), n = count, used = 0;
+  const appliedNow = [];
+  /* A source can depart while an entry question is saved. A vanished effect cannot consume a later answer. */
+  const liveOrders = entering ? orders.filter(key => rest.some(candidate => counterEffectKey(candidate) === key)) : orders;
   while (rest.length && n > 0) {
     let next = rest[0];
     if (rest.length > 1 && counterEnds(rest, n).size > 1) {
-      const answered = orders[used] === undefined ? undefined : rest.find((c) => counterEffectKey(c) === orders[used]);
+      const answered = liveOrders[used] === undefined ? undefined : rest.find((c) => counterEffectKey(c) === liveOrders[used]);
       if (answered) { used += 1; next = answered; }
-      else if (askable) return {count: n, question: {player: affected, options: rest.map(counterEffectKey), count: n}};
+      else if (askable) return {count: n, ...(reportApplied ? {applied: appliedNow} : {}), question: {player: affected, options: rest.map(counterEffectKey), count: n}};
       else {
         /* Nobody can be asked here: the most for the player putting them on their own, the fewest put by another. */
         const most = by === affected;
@@ -915,9 +929,10 @@ export function placeCounters(state, {id = null, player = null}, kind, count, by
       }
     }
     n = counterChange(next.ability, n);
+    appliedNow.push(counterEffectKey(next));
     rest = rest.filter((c) => c !== next);
   }
-  return {count: Math.max(0, n)};
+  return {count: Math.max(0, n), ...(reportApplied ? {applied: appliedNow} : {})};
 }
 export const countersPlaced = (state, id, kind, count, by = null, orders = []) => placeCounters(state, {id}, kind, count, by, {orders}).count;
 /** The counters a permanent enters with (CR 122.6), put on as it enters by `by` -- its controller, unless an effect says
@@ -934,12 +949,13 @@ export const playerCountersPlaced = (state, player, kind, count, by = null) => p
  */
 export function counterOrderChoice(state, awaiting) {
   const {id, counter: kind, count, by} = awaiting;
-  const candidates = counterCandidates(state, {id}, kind, by);
+  const candidates = [...counterCandidates(state, {id}, kind, by, {entering: awaiting.entering === true}), ...(awaiting.extraCandidates ?? [])];
   const byKey = new Map(candidates.map((c) => [counterEffectKey(c), c]));
   const range = (list) => { const lo = Math.min(...list), hi = Math.max(...list); return lo === hi ? `${lo}` : `${lo} to ${hi}`; };
   /* Two of one name (Rob's Vorinclex and Maya's) are told apart by whose they are. */
-  const names = awaiting.options.map((key) => state.objects[byKey.get(key)?.holderId]?.card);
+  const names = awaiting.options.map((key) => byKey.get(key)?.label ?? state.objects[byKey.get(key)?.holderId]?.card);
   const nameOf = (candidate) => {
+    if (candidate.label) return candidate.label;
     const card = state.objects[candidate.holderId].card;
     return names.filter((n) => n === card).length > 1 ? `${state.players[state.objects[candidate.holderId].controller].name}'s ${card}` : card;
   };
@@ -1540,7 +1556,10 @@ export function playerRuleChanged(state, rule, player) {
 /** Whether any static ability on the battlefield -- or an effect with a duration ("can't be blocked this turn") -- changes `rule` for this object. */
 export function ruleChanged(state, rule, id) {
   const held = staticAbilities(state);
-  for (const holderId of state.zones.battlefield) {
+  /* CR 114.4: an emblem's object rules function in the command zone, using its controller and current selector.
+     Ordinary cards in that zone do not gain this permission (Teferi's loyalty-timing emblem). */
+  const emblems = (state.zones.command ?? []).flat().filter((holderId) => state.objects[holderId]?.emblem === true);
+  for (const holderId of [...state.zones.battlefield, ...emblems]) {
     const holder = state.objects[holderId];
     for (const ability of held(holderId)) {
       if (ability.kind !== "static" || ability.rule !== rule) continue;

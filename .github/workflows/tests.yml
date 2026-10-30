@@ -77,6 +77,13 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Prove every final card ability
+        if: steps.repeat.outputs.skip != 'true'
+        run: |
+          ledger="$RUNNER_TEMP/crankmagic-ability-ledger.json"
+          node --stack-size=4000 game/tools/batch/check-cards.mjs --ability-ledger "$ledger" --counterfactual
+          node game/tools/batch/verify-card-ledger.mjs "$ledger"
+
       # No package.json on purpose -- the app itself has no dependencies. Playwright is
       # installed here alone, for the one suite that drives a browser.
       - name: Install Playwright and Chromium

@@ -1,0 +1,53 @@
+import assert from 'node:assert/strict';
+import {readFileSync,writeFileSync} from 'node:fs';
+import {createHash} from 'node:crypto';
+import {execFileSync} from 'node:child_process';
+import {createState,addObject} from '../w0-root-anchors/game/engine/state/index.mjs';
+import {attackers,blockers} from '../w0-root-anchors/game/engine/rules/combat.mjs';
+import {projectFor} from '../w0-root-anchors/game/engine/projection.mjs';
+import {tableEvent} from '../w0-root-anchors/game/room/events.mjs';
+
+const root=new URL('../w0-root-anchors/',import.meta.url);
+const digest=b=>createHash('sha256').update(b).digest('hex');
+const source=execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim();
+assert.equal(source,'67fb6d8b77962e436ee9ab260729ab6da8a0ee0e');
+const paths=['game/engine/state/index.mjs','game/engine/rules/combat.mjs','game/engine/projection.mjs','game/room/events.mjs'];
+const hashes=Object.fromEntries(paths.map(p=>[p,digest(readFileSync(new URL(p,root)))]));
+const report={schema:'ROB321RootNativeReview@1',source,producerSha256:digest(readFileSync(new URL(import.meta.url))),sourceHashes:hashes,ruleReferences:['310.9b','310.9c','310.9d','506.4e','508.1b','508.5'],cases:[],admissions:0,gateCredit:false};
+const table=()=>{
+ const s=createState({players:[{name:'A'},{name:'B'},{name:'C'},{name:'D'}]});
+ Object.assign(s,{phase:'COMBAT_DECLARE_ATTACKERS',turn:1,activePlayer:0,priorityPlayer:null});s.players[0].turnBegan=1;
+ const attacker=addObject(s,{card:'Native review attacker',types:['Creature'],power:3,toughness:5,keywords:['Haste'],owner:0,controller:0},'battlefield');
+ return {s,attacker};
+};
+const battle=(s,controller,protector,types=['Battle','Planeswalker'])=>{
+ const id=addObject(s,{card:'Native review Battle',types,subtypes:['Siege'],defense:20,loyalty:20,owner:controller,controller},'battlefield');
+ Object.assign(s.objects[id],{protector});Object.assign(s.objects[id].counters,{defense:20,loyalty:20});return id;
+};
+const run=(name,fn)=>{const observation={name};try{fn(observation);observation.pass=true;}catch(e){observation.pass=false;observation.error={name:e.name,message:e.message,code:e.code??null};}report.cases.push(observation);};
+run('protector cannot attack a Battle that also has Planeswalker type',o=>{
+ const {s,attacker}=table(),target=battle(s,1,0);assert.equal(attackers.open(s),true);
+ o.attacker=attacker;o.target=target;o.targetOptions=attackers.choice(s,s.awaiting).options.filter(x=>x.battleId===target||x.planeswalkerId===target);
+ assert.deepEqual(o.targetOptions,[],'the protector must have no attack route to this exact Battle identity');
+});
+run('multitype Battle uses its protector for every native attack route',o=>{
+ const {s,attacker}=table(),target=battle(s,1,2);assert.equal(attackers.open(s),true);
+ const choice=attackers.choice(s,s.awaiting);o.attacker=attacker;o.target=target;o.targetOptions=choice.options.filter(x=>x.battleId===target||x.planeswalkerId===target);
+ const wrong=o.targetOptions.find(x=>x.defenderId!==2);
+ if(wrong){o.wrongNativeDeclaration=attackers.resolve(s,s.awaiting,[wrong.index]);o.combat=structuredClone(s.combat);assert.equal(blockers.open(s),true);o.blockingSeat=s.awaiting.player;}
+ assert.equal(o.targetOptions.some(x=>x.defenderId!==2),false,'every attack on this Battle must identify its protector as defending player');
+});
+run('room event normalization retains the native Battle target',o=>{
+ const {s,attacker}=table(),target=battle(s,1,2,['Battle']);assert.equal(attackers.open(s),true);
+ const chosen=attackers.choice(s,s.awaiting).options.find(x=>x.cardId===attacker&&x.battleId===target);assert.ok(chosen);
+ const events=attackers.resolve(s,s.awaiting,[chosen.index]),event=events.find(e=>e.kind==='GameEventAttackersDeclared');assert.ok(event);
+ o.native=event;o.projected=projectFor(JSON.parse(JSON.stringify(s)),2).combat;o.normalized=tableEvent(event,'event:1');
+ assert.equal(event.data.fields.attackers[0].defender.battle.cardId,target);
+ assert.equal(o.projected.attacks[0].battle,target);
+ assert.equal(o.normalized.attackers[0].defender.battle?.cardId,target,'events.v1 must preserve the actual native Battle target');
+});
+report.unchangedSource=paths.every(p=>digest(readFileSync(new URL(p,root)))===hashes[p]);
+assert.equal(report.unchangedSource,true);
+writeFileSync(new URL('./rob-321-root-native-review.json',import.meta.url),JSON.stringify(report,null,2)+'\n');
+console.log(JSON.stringify({source,cases:report.cases.map(({name,pass,error})=>({name,pass,error})),unchangedSource:report.unchangedSource},null,2));
+process.exitCode=report.cases.every(c=>c.pass)?0:1;

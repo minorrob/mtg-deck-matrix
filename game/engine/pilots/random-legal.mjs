@@ -22,7 +22,7 @@
 /**
  * @param {object} rng  from `createRng`; the game's own stream, so the choice is reproducible
  */
-import {meetRequirements} from "./house-pilot.mjs";
+import {meetRequirements, combatSourceAnswer, combatDamageAnswer} from "./house-pilot.mjs";
 
 export function randomLegalPilot(rng) {
   if (!rng || typeof rng.int !== "function") throw new Error("A pilot needs the game's rng");
@@ -46,24 +46,15 @@ export function randomLegalPilot(rng) {
       if (choice.mode === "integer") return {value: min + rng.int(max - min + 1)};
       if (choice.mode === "ack") return {indices: []};
       if (choice.mode === "text") return {cancel: true};
+      const combatSource = combatSourceAnswer(choice);
+      if (combatSource) return combatSource;
 
       /* CR 510.1c lets the damage be divided among the blockers any way at all; giving each in turn
          what would kill it is a sensible division, and anything left over goes on the last option --
          a trampler's player (CR 702.19b), which by then every blocker's lethal allows. The controller
          validates it against the same rule, so a pilot that could not produce a legal division would
          stall a game rather than play a bad one. */
-      if (choice.mode === "damage") {
-        const targets = choice.options ?? [];
-        const amounts = targets.map(() => 0);
-        let left = choice.total ?? 0;
-        for (let i = 0; i < targets.length; i += 1) {
-          const take = Math.min(left, Math.max(0, targets[i].lethal ?? 0));
-          amounts[i] = take;
-          left -= take;
-        }
-        if (left > 0 && amounts.length > 0) amounts[amounts.length - 1] += left;
-        return {indices: [], amounts};
-      }
+      if (choice.mode === "damage") return combatDamageAnswer(choice);
 
       /* CR 601.2d: each recipient gets at least the minimum, none gets more than its cap, and the
          total is spent exactly. */
