@@ -46,6 +46,10 @@ concurrency:
 jobs:
   suites:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
     runs-on: ubuntu-24.04
     # Pinned: ubuntu-latest became 26.04 on 2026-10-27, which Playwright 1.56.0 cannot install a browser on (run 40596961219; main run 40535535373 failed the same way).
     # 60, not 45: the suites reached 44.8 minutes on PR #816, and wave 4d's six lanes add more (Rob, 2026-10-23).
@@ -98,7 +102,9 @@ jobs:
 
       - name: Run every suite
         if: steps.repeat.outputs.skip != 'true'
+        env:
+          SUITE_SHARD: "${{ matrix.shard }}/8"
         run: bash runtests.sh -q
       - name: Commander companion tests
-        if: steps.repeat.outputs.skip != 'true'
+        if: steps.repeat.outputs.skip != 'true' && matrix.shard == 0
         run: node --test game/tests/*.test.mjs
