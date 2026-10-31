@@ -306,8 +306,9 @@ try {
       eq(sharedDeck.status,200,'the host publishes a live library deck through the authenticated sharing service');
       eq(sharedDeck.body.settings.publicRole,'reviewer','the shared deck is playable without edit permission');
 
+      /* ROB-320: the guest is named with the address they sign in as (the second Access identity), so the seat is held for them. */
       /* The host's table: a person's seat and an AI's. */
-      await createGame(page, BASE, {host: "Rob", humans: [{name: "Newcomer"}], ai: [{name: "Bot"}]}, "#table");
+      await createGame(page, BASE, {host: "Rob", humans: [{name: "Newcomer", email: NEWCOMER}], ai: [{name: "Bot"}]}, "#table");
       await page.locator(".cm-cloud-table .cm-lobby-seat").nth(2).waitFor({timeout: 30000});
       const tableId = (/id=([^&]+)/.exec(new URL(page.url()).hash) || [])[1], turl = `/api/tables/${tableId}`;
       /* ROB-320: Create game named the newcomer, so the lobby sends nothing and asks nothing; the email's lobby link is /api/join/<table>. */
