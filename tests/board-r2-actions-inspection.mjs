@@ -127,10 +127,14 @@ try{
   ok((await page.locator('.cm-required-popup #cm-board-decision').innerText()).includes('Rook · tapping Island'),'the pop-up names the exact target and payment offer chosen');
   ok((await page.evaluate(()=>__said.join(' | '))).includes('Rook · tapping Island'),'a screen reader is told the selection');
   /* Symbols first (Rob, 2026-10-25): no paragraph about what Confirm does; Confirm and Back side by side. */
-  const desk=await page.evaluate(()=>{const r=document.querySelector('.cm-required-popup #cm-board-decision'),bs=[...r.querySelectorAll('.cm-decide-actions>button')],[c,x]=bs,a=c.getBoundingClientRect(),z=x.getBoundingClientRect();return {p:[...r.querySelectorAll('p')].filter(n=>n.offsetParent&&n.textContent.trim().length>40).length,words:bs.map(b=>b.innerText.trim()),row:Math.abs(a.top-z.top)<2&&z.left>=a.right};});
-  ok(desk.p===0,`no explanation paragraph in the pop-up (${desk.p})`);
+  const desk=await page.evaluate(()=>{const r=document.querySelector('.cm-required-popup #cm-board-decision'),bs=[...r.querySelectorAll('.cm-decide-actions>button')],[c,x]=bs,a=c.getBoundingClientRect(),z=x.getBoundingClientRect();return {p:r.querySelectorAll('p').length,title:r.querySelector('h2')?.innerText.trim(),lines:r.innerText.split('\n').map(l=>l.trim()).filter(Boolean),words:bs.map(b=>b.innerText.trim()),row:Math.abs(a.top-z.top)<2&&z.left>=a.right};});
+  ok(desk.p===0,`no paragraph in the pop-up: nothing restating the selection, nothing explaining Confirm (${desk.p})`);
+  eq(desk.lines,[desk.title,'→ Rook · tapping Island','Confirm','Back','Cancel'],'the pop-up shows only the source, the offer chosen and the three answers');
   eq(desk.words,['Confirm','Back','Cancel'],'the pop-up names the binding answer and both draft exits');
   ok(desk.row,'binding action and Back sit side by side');
+  /* Was "All actions is a small link at the left edge" (the r4 desk's way back to the card's whole list). In the pop-up, Back
+     steps one layer and Cancel goes all the way back; no second exit is drawn beside them. */
+  eq(await page.locator('.cm-required-popup .cm-board-back').count(),0,'the pop-up has one row of exits, no separate All actions link');
   /* Rob, 2026-10-25: "Don't need both." The source card is read in the pop-up; no second inspection pane opens. */
   ok(await page.locator('.cm-required-popup [data-action=board-combat-inspect] img').count()===1,'the source card is read in the pop-up during review');
   eq(await page.locator('#cm-card-inspector').count(),0,'and no second inspection pane opens on the right');
@@ -142,6 +146,9 @@ try{
   await page.locator('.cm-required-popup [data-action=board-flow-cancel]').click();
   eq(sent.filter(x=>x.type==='act').length,before,'clearing draft sends nothing');
   eq(await page.locator('.cm-required-popup').count(),0,'Cancel gives the sequence back: the pop-up closes');
+  const all=await page.evaluate(card=>({list:[...document.querySelectorAll('#cm-actions-drawer #cm-board-decision [data-action=board-choose]')].filter(b=>b.dataset.card===String(card)).map(b=>b.textContent.trim()),focus:document.activeElement?.dataset?.card}),id);
+  ok(all.list.some(t=>t.includes('Cast first way'))&&all.list.some(t=>t.includes('Cast second way')),`Cancel is the way back to all actions: the pane lists both of the card's ways again (${JSON.stringify(all.list)})`);
+  eq(all.focus,String(id),'and the focus returns to the card the action started from');
   /* The drawer's open/shut is a thin chevron with no fill, and the drawer's scrollbar a faint track, never white. */
   const quiet=await page.evaluate(()=>{const t=document.querySelector('[data-action="board-actions-toggle"]'),r=t.getBoundingClientRect(),cs=getComputedStyle(t);return {w:r.width,h:r.height,bg:cs.backgroundColor,glyph:/[▸▾]/.test(t.textContent),module:t.classList.contains('cm-module-toggle'),bar:getComputedStyle(document.querySelector('.cm-stage-rail')).scrollbarColor};});
   /* The 3D HUD's drawers (Table and Focus now share them): the open/shut control is the module's own header row, a thin line of title and
