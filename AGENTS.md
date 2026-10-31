@@ -114,6 +114,34 @@ unpushed edit makes a folder load-bearing and a migration frightening.
 Work that needs Java or Forge is assigned to a local session by definition. A claim that depends
 on Forge is **unproven until a local session proves it**, and the handoff says so in those words.
 
+## Which skill, when
+
+Rob, 2026-10-31: *"the various skills that were identified are part of the standing instructions to be used at the
+appropriate times based on the work, underway or task to be taken up."* So the moment decides the skill, not the
+session's memory. Claude sessions invoke them by name (repository skills in `.claude/skills/`, plugin skills as
+`plugin:skill`); every other harness reads the repository skills as documents and, for a plugin skill, does the same
+practice by hand. A skill never overrides a rule in this file; where one disagrees, this file wins.
+
+| The moment | Skill | Notes |
+| --- | --- | --- |
+| Rob's new ask; "pick up the next item"; a named ROB-key; resuming a handoff | `one-loop` | Files, claims, branches, opens and watches the draft PR, closes the loop. |
+| A bug report, a stack trace, "it broke" (a Jam or not) | `engineering:debug` | Reproduce → isolate → cause → fix; a Jam is read first ("Bug reports arrive as Jams"). |
+| Deciding how to prove a change; a new suite | `engineering:testing-strategy` | Then "A test that cannot fail is a comment". |
+| A choice between designs or technologies; a new contract or migration | `engineering:architecture` | The record goes on the issue, or under `docs/` when it is lasting. |
+| A UI change with no approved reference | Mobbin, then `design:design-critique` | "Design references from Mobbin"; a choice that departs from an approved design goes to Rob. |
+| Wording on screen: a label, a prompt, a refusal, an empty state | `design:ux-copy` | Within "Symbols first, words last" and the refusal rule. |
+| Any visible UI change, before claiming it done | `run`, then `design:accessibility-review` | `run` gives the rendered evidence the visual acceptance rules demand. |
+| Before marking a PR ready (code, not documents only) | `code-review` (low or medium), then `simplify` if it finds clutter | `max` only when Rob asks. Findings are fixed before ready, or answered on the PR. |
+| A change touching `cloud/` access, accounts, sharing, invitations, mail, secrets or anything a stranger can send | `security-review` | Before ready, in addition to the review above. |
+| A merge of a served change, when you are the release owner; "release", "deploy" | `crankmagic-release` | Production only on Rob's go. |
+| A set release, stale prices, "refresh the data" | `crankmagic-refresh` | Claude · Deck intelligence. |
+| A new Master workbook, "update Load Live" | `crankmagic-live-load-sync` | Claude · Deck intelligence. |
+| "Simulate this deck", an optimization question about a deck | `simulate-deck` | Claude · Deck intelligence. |
+| Production is broken for players | `engineering:incident-response` | Rob is told first; the fix still follows the loop. |
+
+A skill that is missing from a session (not installed, or its connector not signed in) is named in the PR as a step
+not taken, with what was done instead; it is never skipped silently.
+
 ## Bug reports arrive as Jams
 
 Jam (jam.dev) records a bug with its video, console, network traffic and clicks; it is connected to Claude

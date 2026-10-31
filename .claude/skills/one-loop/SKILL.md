@@ -63,6 +63,20 @@ A story that needs more than one PR gets sub-issues (`save_issue` with `parentId
 - Link the PR on the issue at once (`save_issue(id, links: [{url, title}])`), so the issue and the PR
   find each other before the work is done.
 
+### The skills along the way
+
+`AGENTS.md`, "Which skill, when", is the table; in this loop it lands at these points:
+
+- **Before code:** a bug → `engineering:debug` (a Jam read first); how to prove it → `engineering:testing-strategy`;
+  a design or contract choice → `engineering:architecture`; a UI change without an approved reference → Mobbin, then
+  `design:design-critique`; wording → `design:ux-copy`.
+- **Before marking ready:** visible UI → `run` and `design:accessibility-review`; code → `code-review` (low or
+  medium) and `simplify` if it finds clutter; access, accounts, sharing, mail or secrets → `security-review`.
+- **The work itself may be a skill:** `crankmagic-refresh`, `crankmagic-live-load-sync`, `simulate-deck`,
+  `crankmagic-release`.
+
+A skill this session lacks is named in the PR body as a step not taken.
+
 ## 4 · Watch the PR (the rule since 2026-10-31)
 
 A PR you open is watched until it is merged or closed (`AGENTS.md`, "A PR you open is watched until it closes").
