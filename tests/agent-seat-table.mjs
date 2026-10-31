@@ -27,7 +27,7 @@ const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1;};
 
 function d1() {
   const db = new DatabaseSync(":memory:");
-  for (const f of ["0001_accounts.sql", "0002_ai.sql"]) db.exec(readFileSync(new URL(`../cloud/migrations/${f}`, import.meta.url), "utf8"));
+  for (const f of ["0001_accounts.sql", "0002_ai.sql", "0012_ai_settings.sql"]) db.exec(readFileSync(new URL(`../cloud/migrations/${f}`, import.meta.url), "utf8"));
   const statement = (sql, args = []) => ({bind: (...values) => statement(sql, values), first: async () => db.prepare(sql).get(...args) ?? null,
     all: async () => ({results: db.prepare(sql).all(...args), success: true, meta: {}}), run: async () => ({success: true, meta: {changes: Number(db.prepare(sql).run(...args).changes)}})});
   return {raw: db, prepare: (sql) => statement(sql), batch: async () => {throw Error("unused");}};
@@ -145,6 +145,16 @@ const pilotCalls = () => DB.raw.prepare("SELECT email, feature, model, outcome, 
   const replay = await replayMatch({storage: objectStorage(game.ctx.storage), matchId: game.matchId, cards: tableCards});
   const before = sent.length;
   ok(replay.same && sent.length === before, "and the game replays from its tape to the same end without asking the model again");
+}
+
+/* ---- 2b. The owner's stored model (ROB-338) is the seat's model, read at each call, and outranks AI_MODEL ---- */
+{
+  DB.raw.prepare("INSERT INTO ai_settings (key, value, previous, updated_at, updated_by) VALUES ('model', 'claude-sonnet-5-5', 'claude-haiku-5-5', '2026-10-10T19:00:00Z', ?)").run(ROB);
+  sent = []; answerWith = (body) => ({indices: [JSON.parse(body.messages[0].content).housePilotWouldChoose[0] ?? 0], why: "The heuristic is right."});
+  const game = await playAt(OPEN, "llmtablea2");
+  ok(sent.length > 0 && sent.every((b) => b.model === "claude-sonnet-5-5"), `with the owner's stored model Sonnet 5.5 and AI_MODEL Haiku 5.5, all ${sent.length} of the seat's calls are made on the stored one`);
+  eq(game.room.status, "finished", "and the game still plays to the end");
+  DB.raw.prepare("DELETE FROM ai_settings").run();
 }
 
 /* ---- 3. The game's cap ---- */

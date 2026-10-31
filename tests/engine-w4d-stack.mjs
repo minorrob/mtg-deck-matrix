@@ -33,9 +33,9 @@ check("a boast ability compiles to its limit and its condition", () => {
 check("the history says an ability was copied, and a number chosen at random", () => {
   const at = {turn: 3, phase: "MAIN1"};
   assert.deepEqual(historyLines({kind: "GameEventAbilityCopied", data: {...at, fields: {name: "Flamecaller", playerId: 0}}}, ["Rob", "Maya"]),
-    [{turn: 3, text: "Rob copied Flamecaller's ability"}]);
+    [{turn: 3, text: "Rob copied Flamecaller's ability", actor: 0}]);
   assert.deepEqual(historyLines({kind: "GameEventNumberChosen", data: {...at, fields: {player: {playerId: 1}, of: 3, result: 2}}}, ["Rob", "Maya"]),
-    [{turn: 3, text: "Maya chose 2 at random"}]);
+    [{turn: 3, text: "Maya chose 2 at random", actor: 1}]);
 });
 
 const index = loadCardIndex();

@@ -8,9 +8,17 @@
  * identities and storage.
  *
  * A PERSON IS THEIR SIGNED-IN ADDRESS. In the cloud there are no seat tokens: Cloudflare Access has already
- * said who is asking, and only people on CrankMagic's invite list get that far (a table's link never adds
- * anyone to it; Rob, 2026-09-26). A seat is bound to an address when its invitation is redeemed, and from
- * then on that address is the seat. The address stays here, in the table; the room is told only "s0".."s3".
+ * said who is asking, and only people on CrankMagic's invite list get that far. A seat is bound to an address when its
+ * person arrives, and from then on that address is the seat. The address stays here, in the table; the room is told only
+ * "s0".."s3".
+ *
+ * A TABLE'S LINK SEATS A SIGNED-IN PERSON (ROB-320; Rob, 2026-10-29: "they click the link, their browser opens and they are in the
+ * seat in the lobby. No confirmations ... They could click it to join [from Live games] ... they are then in the lobby in the seat").
+ * This SUPERSEDES Rob's 2026-09-26 rule that "a table's link never adds anyone to it", and the host's answer to a request to join:
+ * Create game holds a seat for each address it invites (`reserved`, game/room/lounge.mjs), and `join` with no code seats whoever
+ * holds one, or anyone signed in at a public table with an open seat. The refusals are the ones the rules need -- a full table, a
+ * table that has started or ended, a private table holding nothing for the person -- each saying what to do instead
+ * (docs/program/rob-320-invitations-contract.md). A code the host sends (`invite`) still works and still names its seat.
  *
  * THE JOURNEYS, AS RULES:
  *   host     creates the table and sits in seat 1; seats 2-4 are a person to invite, an AI, or left out
@@ -302,7 +310,9 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
     },
 
     /** The invited person lands on their seat. The same person opening the link again is already there. */
-    async join(email, code, now) {
+    async join(email, code, now, name = "") {
+      /* No code (ROB-320): the email's lobby link and Live games' one press. The lounge seats a signed-in person at once. */
+      if (code === undefined || code === null || code === "") return lounge.joinNow({email, name, admin: false}, now);
       await load();
       const already = seatOf(email);
       const h = await sha256(String(code || ""));
@@ -479,6 +489,9 @@ export function tableOn(storage, {cards = basicCards, candidates = () => null, r
       /* An {X} spell tapped for too, for each X the pool and the untapped sources pay together, so a person casts it from the
          hand, choosing X, without tapping each land first (rules/actions.mjs, `xTaps`): new matches only. */
       xTaps: true,
+      /* A spell with Phyrexian mana ({U/P}: {U} or 2 life, CR 107.4f) tapped for too, in each way its symbols can be paid, the
+         caster asked which (ROB-326, Rob's playtest 2026-10-29: Tezzeret's Gambit): new matches only (rules/actions.mjs, `phyrexianTaps`). */
+      phyrexianTaps: true,
       /* A person may yield the rest of an opponent's turn (Linear ROB-13, the Oct 16 handoff): new matches only, so one
          launched before is asked as it was (room.mjs, `yieldTurn`). */
       yieldTurn: true,

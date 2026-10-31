@@ -6,8 +6,9 @@
  *
  *   Host     New table: seat 1 is you, the others a person, an AI or nobody. The lobby is four quadrants and
  *            the table's rules.
- *   Invite   the dialog gives the link, a QR of it and an email; the link opened on another phone joins that
- *            seat, and a spent or made-up one is refused in words.
+ *   Invite   (ROB-320) Create game invites the guest it names: the lobby says so and asks the host for nothing; the lobby
+ *            link the email carries (/api/join/<table>) seats them as themselves, and a spent or made-up code link is
+ *            refused in words. (The host's own link, QR and Withdraw for a seat nobody is named for: tests/game-table.mjs.)
  *   Deck     from your own library; one the engine cannot play is refused naming its cards; nobody sees
  *            another seat's cards.
  *   Start    Ready, Start, the countdown's number, Cancel; then the game is on.
@@ -434,13 +435,17 @@ try {
   await waitText(rob.page, "#cm-notice", /The rules can't change once a seat is ready.*Take back Ready, then edit the rules/);
   eq(await rob.page.locator("#cm-table-rules-form").count(), 0, "with Rob ready, Edit is refused, saying how to change the rules; no dialog opens");
   /* START AND CANCEL (restored: the lobby's rewrite on 2026-10-28 had dropped them): with every seat ready the host's Start, now the full-width button under the launch box, begins the countdown, and Cancel, in the same place, stops it. */
-  await waitText(rob.page, "#cm-table-launch", /Everyone is ready/);
+  /* ROB-320 (Rob, 2026-10-29): Create game named Maya, so her seat is held and the table waits for her. There is nothing for the host to
+     send, confirm or answer: her seat says she is invited and takes it on arrival, and Start waits. (The refusal for a human seat nobody
+     was invited to, U-09, is the table's own and is proved at the contract, tests/game-table.mjs; Create game cannot make such a seat now.) */
+  await waitText(rob.page, "#cm-table-launch", /to Ready Up/);
   const placed = await rob.page.evaluate(() => {const box = document.querySelector("#cm-table-launch").getBoundingClientRect(), go = document.querySelector("[data-action=table-start]").getBoundingClientRect(), panel = document.querySelector(".cm-table-center").getBoundingClientRect(), end = document.querySelector(".cm-pl-head [data-action=table-end-ask]")?.getBoundingClientRect(), leave = document.querySelector(".cm-lb-leave").getBoundingClientRect();
     return {startUnder: go.top >= box.bottom - 1, startWide: go.width >= panel.width * .8, launchWide: box.width >= panel.width * .8, endTop: !!end && end.bottom <= document.querySelector(".cm-lb-sub").getBoundingClientRect().top + 4 && end.right <= leave.left};});
   ok(placed.startUnder && placed.startWide && placed.launchWide && placed.endTop, `Start is the full-width button under the launch box, the box runs the panel's width, and End game is at the top beside Leave lobby (${JSON.stringify(placed)})`);
-  await rob.page.click("[data-action=table-start]");
-  await waitText(rob.page, "#cm-notice", /marked as a human but nobody has been invited to it/);
-  ok(!(await rob.page.locator("#cm-table-seconds").count()), "Start is refused, saying why, while a human seat has nobody invited to it: no countdown begins");
+  eq(await rob.page.getAttribute("[data-action=table-start]", "aria-disabled"), "true", "Start waits while the guest named at Create game has not arrived");
+  const waiting = await rob.page.locator(".cm-lobby-seat[data-seat='1']").innerText();
+  ok(/Maya is invited · takes the seat on arrival/.test(waiting), "her seat says she is invited and takes it on arrival");
+  eq(await rob.page.locator(".cm-lobby-seat[data-seat='1'] [data-action=table-invite], .cm-lobby-seat[data-seat='1'] [data-action=table-uninvite]").count(), 0, "with no Invite, New link or Withdraw for the host to press");
   await rob.page.click(".cm-lobby-seat[data-seat='0'] [data-action=table-ready][data-ready='']");
   await rob.page.locator(".cm-lobby-seat[data-seat='0'] [data-action=table-ready][aria-pressed=false]").waitFor({timeout: 10000});
   /* CHOOSE MAT: a strip of the app's mats, the zones previewed over the one picked; everyone sees the choice. */
@@ -484,44 +489,14 @@ try {
   await rob.page.waitForFunction(() => document.querySelector(".cm-lobby-seat[data-seat='0']")?.dataset.mat === "forge", null, {timeout: 10000});
   ok(true, "Use this mat puts it on his seat");
 
-  /* INVITE: link, QR, email. */
-  await rob.page.click(".cm-lobby-seat[data-seat='1'] [data-action=table-invite]");
-  await rob.page.locator("#cm-table-link").waitFor();
-  let link = await rob.page.inputValue("#cm-table-link");
-  ok(/^https?:\/\/[^/]+\/api\/join\/table\d+\/[A-Za-z0-9_-]{40,}$/.test(link), `the invite dialog gives the seat's link, a path Access's sign-in keeps (a fragment it drops): ${link.replace(/\/[^/]+$/, "/…")}`);
-  ok(await rob.page.locator("#cm-dialog .cm-qr-code svg").count() === 1, "a QR of it, to scan across the room");
-  ok((await rob.page.getAttribute("#cm-table-mail", "href")).includes(encodeURIComponent(link)), "and an email that carries it");
-  await shot(rob.page, "invite-1400");
-  await rob.context.grantPermissions(["clipboard-read", "clipboard-write"], {origin: base});
-  await rob.page.click("#cm-dialog [data-action=table-copy-link]");
-  await waitText(rob.page, "#cm-notice", /Link copied/);
-  eq(await rob.page.evaluate(() => navigator.clipboard.readText()), link, "Copy link puts the seat's link on the clipboard, and says so");
-  await rob.page.keyboard.press("Escape");
-  await waitText(rob.page, ".cm-lobby-seat[data-seat='1'] header", /Invite sent/);
-  ok(true, "the seat now says the invitation is out");
-  /* WITHDRAW: the invitation taken back; its link no longer works, and a new one is sent. */
-  await rob.page.click(".cm-lobby-seat[data-seat='1'] [data-action=table-uninvite]");
-  await rob.page.waitForFunction(() => !/Invite sent/.test(document.querySelector(".cm-lobby-seat[data-seat='1'] header")?.textContent || ""), null, {timeout: 10000});
-  ok(await rob.page.locator(".cm-lobby-seat[data-seat='1'] [data-action=table-invite]").count() === 1, "Withdraw takes the invitation back, and the seat can be invited again");
-  const withdrawn = link;
-  await rob.page.click(".cm-lobby-seat[data-seat='1'] [data-action=table-invite]");
-  await rob.page.locator("#cm-table-link").waitFor();
-  link = await rob.page.inputValue("#cm-table-link");
-  ok(link !== withdrawn && /\/api\/join\/table\d+\/[A-Za-z0-9_-]{40,}$/.test(link), "inviting again gives a new link");
-  await rob.page.keyboard.press("Escape");
-  await waitText(rob.page, ".cm-lobby-seat[data-seat='1'] header", /Invite sent/);
-
-  /* JOIN: Maya opens the link on her phone. The withdrawn link, and a made-up code, first. */
-  const id = /\/api\/join\/(table\d+)\//.exec(link)[1];
-  await maya.page.goto(joinLocation(new URL(withdrawn.replace(/^https?:\/\/[^/]+/, base))));
-  await maya.page.locator("#cm-table-refused").waitFor({timeout: 30000});
-  ok(/no longer works/.test(await pageText(maya.page, "#cm-table-refused")), "the withdrawn link is refused: it no longer works");
+  /* JOIN: Maya opens the lobby link her email carried. A made-up code (an older host's link) is refused first. */
+  const id = (await rob.page.evaluate(() => location.hash)).match(/id=(table\d+)/)[1];
   await maya.page.goto(`${base}/index.html#table/${id}/${"x".repeat(43)}`);
   await maya.page.locator("#cm-table-refused").waitFor({timeout: 30000});
-  ok(/no longer works/.test(await pageText(maya.page, "#cm-table-refused")) && /Ask the host for a new link/.test(await pageText(maya.page, "#cm-table-refused")), "a made-up or spent link is refused, and says to ask the host for a new one");
+  ok(/no longer works/.test(await pageText(maya.page, "#cm-table-refused")) && /Ask the host for a new link/.test(await pageText(maya.page, "#cm-table-refused")), "a made-up or spent code link is refused, and says to ask the host for a new one");
   /* Where the link takes her: the Worker's own answer to it (joinLocation). Playwright does not route the request a
      redirect makes, so the suite goes where the Worker says; play-e2e follows the real redirect under wrangler dev. */
-  await maya.page.goto(joinLocation(new URL(link.replace(/^https?:\/\/[^/]+/, base))));
+  await maya.page.goto(joinLocation(new URL(`${base}/api/join/${id}`)));
   await maya.page.waitForFunction(() => /#table\?id=/.test(location.hash), null, {timeout: 30000});
   await maya.page.locator(".cm-cloud-table .cm-lobby-seat").first().waitFor({timeout: 30000});
   eq((await maya.page.locator(".cm-lobby-seat[data-seat='1'] h3").textContent()).trim(), "Seat 2 · You", "Maya lands on her seat, as herself");
@@ -731,6 +706,32 @@ try {
   await rob.page.waitForFunction(() => document.querySelector(".cm-lobby-seat[data-seat='0']")?.dataset.mat === "forge", null, {timeout: 15000});
   ok(true, "at his next table, Rob's seat is on the mat he chose last, without his asking");
 
+  /* THE OLDER INVITE, FOR A SEAT NOBODY IS NAMED FOR (ROB-320). Create game now names every person and sends their invitation, so a guest's
+     seat has no Invite. A seat can still open afterwards: removing an AI turns its chair into an open human seat, and there the host can
+     still send a link by hand: the dialog gives the seat's link, a QR of it and an email, and Copy link puts it on the clipboard. */
+  await openNewGame(rob.page, "#table");
+  await fillNewGame(rob.page, {host: "Rob", humans: [{name: "Maya"}], ai: [{name: "Shadrix", level: "Easy"}]});
+  await submitNewGame(rob.page);
+  await rob.page.locator(".cm-lobby-seat[data-seat='2']").waitFor({timeout: 15000});
+  await rob.page.click(".cm-lobby-seat[data-seat='2'] [data-action=table-seat-remove]");
+  await rob.page.locator(".cm-lobby-seat[data-seat='2'] [data-action=table-invite]").waitFor({timeout: 10000});
+  eq(await rob.page.locator(".cm-lobby-seat[data-seat='1'] [data-action=table-invite]").count(), 0, "Maya's seat, named at Create game, has no Invite; the seat that opened when the AI was removed does");
+  await rob.page.click(".cm-lobby-seat[data-seat='2'] [data-action=table-invite]");
+  await rob.page.locator("#cm-table-link").waitFor();
+  const openLink = await rob.page.inputValue("#cm-table-link");
+  ok(/^https?:\/\/[^/]+\/api\/join\/table\d+\/[A-Za-z0-9_-]{40,}$/.test(openLink), `the invite dialog gives the open seat's link, a path Access's sign-in keeps (a fragment it drops): ${openLink.replace(/\/[^/]+$/, "/…")}`);
+  ok(await rob.page.locator("#cm-dialog .cm-qr-code svg").count() === 1, "a QR of it, to scan across the room");
+  ok((await rob.page.getAttribute("#cm-table-mail", "href")).includes(encodeURIComponent(openLink)), "and an email that carries it");
+  await rob.context.grantPermissions(["clipboard-read", "clipboard-write"], {origin: base});
+  await rob.page.click("#cm-dialog [data-action=table-copy-link]");
+  await waitText(rob.page, "#cm-notice", /Link copied/);
+  eq(await rob.page.evaluate(() => navigator.clipboard.readText()), openLink, "Copy link puts the seat's link on the clipboard, and says so");
+  await rob.page.keyboard.press("Escape");
+  await waitText(rob.page, ".cm-lobby-seat[data-seat='2'] header", /Invite sent/);
+  await rob.page.click(".cm-lobby-seat[data-seat='2'] [data-action=table-uninvite]");
+  await rob.page.waitForFunction(() => !/Invite sent/.test(document.querySelector(".cm-lobby-seat[data-seat='2'] header")?.textContent || ""), null, {timeout: 10000});
+  ok(await rob.page.locator(".cm-lobby-seat[data-seat='2'] [data-action=table-invite]").count() === 1, "Withdraw takes the invitation back, and the seat can be invited again");
+
   /* START AND CANCEL (restored: the lobby's rewrite on 2026-10-28 had dropped them): a table of the host and one AI, both with decks and ready; Start, the full-width button under the launch box, begins the countdown, and Cancel, in the same place, stops it. */
   await openNewGame(rob.page, "#table");
   await fillNewGame(rob.page, {host: "Rob", ai: [{}]});
@@ -763,4 +764,4 @@ try {
 } finally {
   await close();
 }
-console.log(`table-lobby: ${checks} checks passed — the cloud table's lobby in two browsers: host, invite by link and QR, join on a phone, decks from your own library, the countdown and Cancel, the board taking over, and the game over.`);
+console.log(`table-lobby: ${checks} checks passed — the cloud table's lobby in two browsers: host, a named guest seated by the email link, join on a phone, decks from your own library, the countdown and Cancel, the board taking over, and the game over.`);

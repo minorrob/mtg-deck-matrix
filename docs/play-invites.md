@@ -1,5 +1,11 @@
 # Who can sit at a table (M5)
 
+> **Superseded in part by ROB-320 (Rob, 2026-10-29 and 2026-10-30; `docs/program/rob-320-invitations-contract.md`).** *Create game*
+> now admits each guest to Cloudflare Access itself (General, or Game Theory Insider when the owner invites), records who invited
+> whom, and emails the lobby link; the link, or one press in Live games, seats a signed-in person with no host answer. What still
+> holds below is the first sentence's other half: a link does not add anyone to the Access list *by being opened*; the invitation does,
+> at Create game or in Settings, five people at most per inviter.
+
 Rob, 2026-09-26 (`docs/decisions-2026-09-25.md`, M5): **Play is for the accounts' invite list.** A table's link
 seats someone only if the address they sign in with is on that list, and **the link never adds anyone to it.**
 Someone who is not on it is **refused with instructions**: they are told to ask Rob to add them.

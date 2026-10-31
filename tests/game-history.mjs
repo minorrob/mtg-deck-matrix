@@ -6,7 +6,8 @@
  *             pilots, three games (one of thirty turns), and at every decision no seat's history holds, anywhere in any line, the
  *             name of a card that only another seat's hand or a library holds.
  *   Same      every seat is shown the same history; it survives the room being put away and woken.
- *   Room      conceding and End game are lines too; the history keeps its newest 300 lines.
+ *   Room      conceding and End game are lines too. (addToHistory trims to its newest 300 when asked to; the room asks for none: it keeps
+ *             the whole game, tests/room-history-full.mjs.)
  */
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
@@ -14,7 +15,7 @@ import {randomUUID} from "node:crypto";
 import {memoryStorage} from "../game/engine/storage.mjs";
 import {createRng} from "../game/engine/rng.mjs";
 import {randomLegalPilot} from "../game/engine/pilots/random-legal.mjs";
-import {startRoom, openRoom, basicCards} from "../game/room/room.mjs";
+import {startRoom, openRoom, basicCards, HISTORY_VIEW} from "../game/room/room.mjs";
 import {historyLines, addToHistory, HISTORY_LIMIT} from "../game/room/history.mjs";
 
 let checks = 0;
@@ -101,7 +102,7 @@ function person(seed) {
   return (d) => {const a = pilot.answer(d); return {kind: "answer", choiceId: d.id, ...(a.indices ? {indices: a.indices} : {}), ...(a.amounts ? {amounts: a.amounts} : {})};};
 }
 
-/* Two short games and a long one: the long one's history outgrows what a view carries (the newest 120), which
+/* Two short games and a long one: the long one's history outgrows what a view carries (the newest HISTORY_VIEW, 40 since ROB-332), which
    is where two seats could be shown different ends of it. */
 const TURNS = {"h-1": 12, "h-2": 12, "h-3": 30};
 let linesRead = 0, viewsRead = 0, longest = 0;
@@ -120,8 +121,8 @@ for (const seed of Object.keys(TURNS)) {
     for (const [i, s] of room.seats.entries()) {
       const secret = [...secretsFor(state, i, seen[i])];
       for (const line of shown[i]) {
-        const leaked = secret.find((name) => new RegExp(`${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\w-])`).test(line.text));
-        if (leaked) assert.fail(`seat ${s.seatId} was told "${line.text}", naming ${leaked}, which only a hidden zone holds`);
+        const leaked = secret.find((name) => new RegExp(`${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\w-])`).test(JSON.stringify(line)));
+        if (leaked) assert.fail(`seat ${s.seatId} was told ${JSON.stringify(line)}, naming ${leaked}, which only a hidden zone holds`);
         linesRead += 1;
       }
       viewsRead += 1;
@@ -135,7 +136,7 @@ for (const seed of Object.keys(TURNS)) {
   const woken = await openRoom({storage, matchId, cards});
   eq(woken.view("maya").history, room.view("maya").history, `game ${seed}: the history is the same after the room is put away and woken`);
 }
-eq(longest, 120, "the long game's history outgrew a view, which carried its newest 120 lines, the same for every seat");
+eq(longest, HISTORY_VIEW, `the long game's history outgrew a view, which carried its newest ${HISTORY_VIEW} lines, the same for every seat`);
 ok(linesRead > 10000, `no seat's history named a card only a hidden zone held: ${linesRead} lines read across ${viewsRead} views`);
 
 /* 3. THE ROOM'S OWN LINES: conceding, and End game. */
@@ -146,7 +147,9 @@ ok(linesRead > 10000, `no seat's history named a card only a hidden zone held: $
   ok(room.view("rob").history.some((l) => l.text === "Maya conceded"), "a concession is a line");
   await room.end("rob");
   eq(room.view("rob").history.at(-1).text, "Rob ended the game for everyone · not finished", "and so is End game, as not finished");
-  eq(room.view("rob").history.map((l) => Object.keys(l).filter((k) => !["turn", "text", "mark"].includes(k))).flat(), [], "a view's lines carry only the turn, the words and a mark");
+  eq(room.view("rob").history.map((l) => Object.keys(l).filter((k) => !["turn", "seq", "text", "mark", "actor", "source", "targets", "modes", "cards"].includes(k))).flat(), [], "a view's lines carry only the turn, its number, the words, a mark and what the line says as data (ROB-327)");
+  const seqs = room.view("rob").history.map((l) => l.seq);
+  eq(seqs, seqs.map((_, i) => seqs[0] + i), "and the lines are numbered one after another");
 }
 {
   const storage = memoryStorage();

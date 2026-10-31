@@ -8,6 +8,12 @@
  * never edited: `--write` writes it, `--check` says whether it is the directory as it stands (tests/engine-cards.mjs
  * holds it to that). The scenarios stay out: the table plays cards, it does not test them.
  *
+ * THE SUPPORT LEDGER IS WRITTEN HERE TOO (ROB-331, Rob's playtest of 2026-10-30). `data/engine/support.json` is the per-card
+ * ledger (`unsupported`, `compiled`, `verified`); the card builder wrote every row `unsupported` on the day the engine played
+ * nothing, and nothing ever moved a row, so Hall of Echoes, Oko, Tezzeret's Gambit and 6,000 more cards the table plays stood
+ * `unsupported`. A row's status is now the status of the definition the card directory holds for that oracle id (the same
+ * `status` this module carries), `unsupported` when it holds none. `--write` writes both files, `--check` holds both.
+ *
  *   node game/tools/engine-definitions.mjs --write
  *   node game/tools/engine-definitions.mjs --check
  */
@@ -19,6 +25,7 @@ import {loadCardScripts, CARDS_DIR} from "./engine-cards.mjs";
 import {createCardIndex, foldName} from "../engine/cards/index.mjs";
 
 export const DEFINITIONS_MODULE = path.join(CARDS_DIR, "definitions.mjs");
+export const SUPPORT_LEDGER = path.join(CARDS_DIR, "..", "..", "..", "data", "engine", "support.json");
 
 /* The directory as committed: the hand-authored definitions. The card loader's compiled ones (data/engine/scripts) are a
    working folder on the machine that runs it, not part of the repository, so they join only once they are committed --
@@ -58,15 +65,37 @@ export function tableDefinition(name) {
 `;
 }
 
+/** The ledger's rows with the status the card directory gives each: its definition's, by oracle id (else by name), or `unsupported`. */
+export function ledgerRows(rows, index = committed()) {
+  const byId = new Map(), byName = new Map();
+  for (const name of index.names) {
+    const entry = index.resolve(name);
+    if (entry?.playable !== true) continue;
+    const id = index.definition(name)?.oracleId;
+    if (id) byId.set(id, entry.status);
+    byName.set(foldName(name), entry.status);
+  }
+  return rows.map((row) => ({...row, status: byId.get(row.id) ?? byName.get(foldName(row.name)) ?? "unsupported"}));
+}
+
+/** The ledger file's text as the card directory says it should be: the envelope as it stands, each row's status recomputed. */
+export function supportLedgerText(index = committed()) {
+  const ledger = JSON.parse(readFileSync(SUPPORT_LEDGER, "utf8"));
+  return JSON.stringify({...ledger, cards: ledgerRows(ledger.cards, index)});
+}
+
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const want = definitionsModule();
+  const index = committed(), want = definitionsModule(index), ledger = supportLedgerText(index);
   if (process.argv.includes("--write")) {
     writeFileSync(DEFINITIONS_MODULE, want);
-    console.log(`engine-definitions: wrote ${path.relative(process.cwd(), DEFINITIONS_MODULE)} (${(want.length / 1e6).toFixed(2)} MB)`);
+    writeFileSync(SUPPORT_LEDGER, ledger);
+    console.log(`engine-definitions: wrote ${path.relative(process.cwd(), DEFINITIONS_MODULE)} (${(want.length / 1e6).toFixed(2)} MB) and ${path.relative(process.cwd(), SUPPORT_LEDGER)}`);
   } else {
-    let have = "";
+    let have = "", haveLedger = "";
     try { have = readFileSync(DEFINITIONS_MODULE, "utf8"); } catch { /* missing is stale */ }
+    try { haveLedger = readFileSync(SUPPORT_LEDGER, "utf8"); } catch { /* missing is stale */ }
     if (have !== want) { console.error("engine-definitions: definitions.mjs is not the card directory as it stands -- run with --write"); process.exit(1); }
-    console.log("engine-definitions: definitions.mjs is current");
+    if (haveLedger !== ledger) { console.error("engine-definitions: data/engine/support.json is not the card directory as it stands -- run with --write"); process.exit(1); }
+    console.log("engine-definitions: definitions.mjs and the support ledger are current");
   }
 }

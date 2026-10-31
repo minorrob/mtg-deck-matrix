@@ -53,8 +53,13 @@ const wrongOnce = ({seat, cards}) => {
   eq(room.refusals.total, 1, "the room's tally holds the one refused answer");
   eq([room.refusals.since, room.refusals.first[0].turn, room.refusals.first[0].seatId, room.refusals.first[0].question], [0, 0, `s${WRONG}`, "Keep this hand?"],
     "counted from the match's first event, and said in full: the opening hand, by the seat that answered it");
-  ok(room.history.length === 300 && saidRefused(room).length === 0 && room.history[0].turn > 2,
-    `the history has dropped the line (it keeps 300, the first from turn ${room.history[0].turn}): counting its lines would have said zero`);
+  /* `room.history` is the room's tail now (the whole game is kept, sealed in segments, and read by historyBefore; ROB-332): the line is
+     in a sealed segment and not in the tail, so counting the tail's lines would still have said zero -- and the whole history has it. */
+  ok(room.history.length < 300 && saidRefused(room).length === 0 && room.history[0].turn > 2,
+    `the tail has not the line (${room.history.length} lines, the first from turn ${room.history[0].turn}): counting its lines would have said zero`);
+  const whole = [];
+  for (let before; ;) {const page = await room.historyBefore({before, limit: 200}); if (!page.lines.length) break; whole.unshift(...page.lines); before = page.lines[0].seq;}
+  eq(whole.filter((l) => /was refused/.test(l.text)).length, 1, "and the whole history, read a page at a time, has it once");
   const woken = await openRoom({storage, matchId: "ai-only", pilot: wrongOnce});
   eq(woken.refusals.total, 1, "reopened from its storage, the room still says 1");
   const v = verdict(game);
@@ -69,7 +74,7 @@ const wrongOnce = ({seat, cards}) => {
   eq(room.seats.map((s) => s.pilot), ["human", "house"], "a person in seat 1, the AI in seat 2");
   ok(room.status === "finished" && game.decisions > 30 && game.reopened > 2, `the game ran to its end through ${game.decisions} of the person's answers and ${game.reopened} reopenings`);
   eq(room.refusals.total, 1, "every reopening kept the tally: still 1 at the end");
-  ok(room.history.length === 300 && saidRefused(room).length === 0, "and the history no longer holds the line");
+  ok(room.history.length < 300 && saidRefused(room).length === 0, "and the tail no longer holds the line (it is sealed)");
   eq((await openRoom({storage, matchId: "mixed", pilot: wrongOnce})).refusals.total, 1, "reopened once more after the end, 1");
   ok(!verdict(game).clean, "the harness fails this game too");
   const proof = await replayMatch({storage, matchId: "mixed", pilot: wrongOnce});

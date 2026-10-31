@@ -956,7 +956,14 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 669 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1218,6 +1225,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `room-agent-seat` — `tests/room-agent-seat.mjs` (the LLM seat in the room: only its close calls offered to it, its answers on the tape)
 - `room-refused-answer` — `tests/room-refused-answer.mjs`
 - `room-view-face` — `tests/room-view-face.mjs` (ROB-207, Luke's playtest of 2026-10-28: the room's view says `face: "back"` of a double-faced permanent whose back face is up, to every seat, and nothing else carries a face)
+- `room-view-appearance` — `tests/room-view-appearance.mjs` (ROB-329, Rob's playtest of 2026-10-30: the room's view says `appearance` of a permanent Oko turned into an Elk, to every seat, while the effect holds, and nothing else carries one)
 - `room-optional-count-targets` — `tests/room-optional-count-targets.mjs` (ROB-204: the room takes an "up to one" and an "any number" target answer with one, several or none chosen, refuses past the most, and plays on)
 - `room-mdfc-land-play` — `tests/room-mdfc-land-play.mjs` (ROB-343: a person plays Fell Mire's land face in an actual room, answers pay or decline, reloads at the question, and the tape replays)
 - `room-g1-terms` — `tests/room-g1-terms.mjs`
@@ -1241,6 +1249,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `room-resolve-all` — `tests/room-resolve-all.mjs`
 - `room-untap-mana` — `tests/room-untap-mana.mjs`
 - `room-pooled-taps` — `tests/room-pooled-taps.mjs`
+- `room-phyrexian-payment` — `tests/room-phyrexian-payment.mjs` (the room's view of a Phyrexian cast: Tezzeret's Gambit offered with no blue, the question listing 2 life beside the {U} way, the match replaying, and a match without the key unchanged (ROB-326))
 - `room-why-not` — `tests/room-why-not.mjs` (why a card can't be played now, from the engine's facts; said by the room on a seat's own cards while it holds priority)
 - `room-yield-turn` — `tests/room-yield-turn.mjs`
 - `room-blocks-none` — `tests/room-blocks-none.mjs` (Declare blockers made for a person with no creature that could block, the history saying why; new matches only, `blocksNone`)
@@ -1259,6 +1268,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `board-control` — `tests/board-control.mjs`
 - `board-combat-display` — `tests/board-combat-display.mjs`
 - `board-direct-blocking` — `tests/board-direct-blocking.mjs`
+- `board-block-none-all` — `tests/board-block-none-all.mjs` (ROB-333: one control (No blocks at all) answers every attacker slot with no block and sends the empty set in one activation; absent with no legal blocker, keyboard, phone layout)
 - `board-commander-hand` — `tests/board-commander-hand.mjs`
 - `board-attack-all` — `tests/board-attack-all.mjs` ("All at <player>" and None on Declare attackers: picks only, a swarm sent at one player in one press)
 - `board-callouts-place` — `tests/board-callouts-place.mjs` (callouts never over a question asked of you: below it, above it or out of sight, back in place once it is answered, and seen on the phone)
@@ -1284,11 +1294,19 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `board-table-menu-settings` — `tests/board-table-menu-settings.mjs` (ROB-220, Luke's playtest of 2026-10-28: Play settings, Background and Table design are in the Table menu, Camera holds none of them, and Play settings still reaches the drawer modules)
 - `board-card-no-native-tooltip` — `tests/board-card-no-native-tooltip.mjs` (ROB-202, Luke's playtest of 2026-10-28: no card on the mat carries a native title tooltip (drawn at the pointer, over the card's text); how to reorder and the land stack's counts are an aria-description, and the hover still pops the card up)
 - `board-modal-face` — `tests/board-modal-face.mjs` (ROB-207, Luke's playtest of 2026-10-28: a double-faced land played as its back face is drawn from the back in Table, Focus and 3D; played as its front, or not double-faced, nothing changes)
+- `board-elked-why` — `tests/board-elked-why.mjs` (ROB-330, ROB-331: a permanent that lost its abilities says why it offers nothing, in its label and its menu, in Table, Focus and 3D)
+- `board-oko-elk-art` — `tests/board-oko-elk-art.mjs` (ROB-329: a permanent that looks like an Elk is drawn from the Elk token in Table, Focus and 3D, in its hover and pop-up, with its own name, the original one press away, and an ordinary card never changes)
 - `board-module-fills` — `tests/board-module-fills.mjs` (ROB-206, Luke's playtest of 2026-10-28: a drawer module given more height lets History and Chat use it, step by step, and the drawer's width reaches every module at once)
 - `board-actions-one-scroll` — `tests/board-actions-one-scroll.mjs` (ROB-201, Luke's playtest of 2026-10-28: in the Actions pane the drawer is the one scroll region for every kind of question, a taller window shows more, and the answering row stays in view)
 - `board-mandatory-popup` — `tests/board-mandatory-popup.mjs` (ROB-208, Luke's playtest of 2026-10-28: what the player must resolve (a target, a search, a modal choice, a cost, a scry) pops up front and center with the Actions pane open or shut, a priority offer and the combat declarations stay in the pane, the pop-up steps aside for held-up plays and keeps its answering row in view)
 - `board-counter-from-actions` — `tests/board-counter-from-actions.mjs` (ROB-203, Luke's playtest of 2026-10-28: a Counterspell the engine offers with a spell on the stack is listed in the Actions pane and on the card in the hand, and casting it from either sends the same answer; nothing is offered that the engine did not)
 - `admin-window` — `tests/admin-window.mjs` (Admin in the Menu for the administrator alone, refused to anyone else by the Worker; a window with General and Share down its left; General shows the setup and keeps the 3D camera glance; Share admits an invitee to staging and production Access, confirms each, then emails an HTML invitation, and a refusal sends nothing)
+- `access-invite-groups` — `tests/access-invite-groups.mjs` (an address is admitted through the Access policy of the group it is invited into, General or Game Theory Insider; neither set falls back to the single policy, a malformed group list refuses, on a faked fetch)
+- `invitations` — `tests/invitations.mjs` (the one place an address is admitted: group by inviter, only the owner grants AI, the row before the admission, a failed admission left pending and finished by the same invitation, five invitees per user, whole-plan vetting)
+- `invite-settings` — `tests/invite-settings.mjs` (the sharing service's invitations: anyone signed in may invite as General, only the owner as Insider, the cap, a game's email with the lobby link and the guest's name, once)
+- `table-open-join` — `tests/table-open-join.mjs` (joining with no step: a seat held for the address, a public table's open seat, the refusals the rules need with what to do instead, idempotent)
+- `tables-invites` — `tests/tables-invites.mjs` (Create game sends the invitations: the plan refuses before anything exists, each guest admitted, recorded and emailed the lobby link, seated on arrival with no host answer, the host's retry sends nothing twice)
+- `create-game-invitations` — `tests/create-game-invitations.mjs` (the New game pop-up and the lobby in a browser: a new guest's name, email and group, a picked user by name alone, refusals kept in the pop-up, no Invite or answer for the host, the email's link seats the guest)
 - `board-babylon` — `tests/board-babylon.mjs` (live Babylon/DOM projection alignment, scene resource disposal, graphics fallback, re-entry, and the Play lounge)
 - `board-3d-camera` — `tests/board-3d-camera.mjs` (the 3D camera by hand: the wheel zooms toward the pointer except over a row that scrolls, a mat dragged moves the view while the bare table still tilts, a held right button looks at the place and back on the motion's own clock with the DOM cards on the Babylon table every frame; a card's right-click menu of the room's offers in shorthand, from the keyboard too, in every view)
 - `board-stack-choices` — `tests/board-stack-choices.mjs` (Rob, 2026-10-25: a card a question offers from out of sight -- a scry, a library search, a graveyard target -- in front of On the Stack, ◇, ahead of the ability that asked, its pile carouseling through several; permanents and priority add nothing)
@@ -1299,12 +1317,15 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `board-battlefield-rows` — `tests/board-battlefield-rows.mjs` (Rob, 2026-10-27: the battlefield's two rows are defaults; a creature dragged to the artifacts row and an artifact to the creatures row stay there through the next view and a reload; a land stays in the lands)
 - `board-hover-during-choice` — `tests/board-hover-during-choice.mjs` (Rob, 2026-10-25: with a card's question open -- what to tap for it -- the card asked about is read in Actions, and the hover still pops up any card, on the table or named in an option, by pointer or keyboard, in 3D, Focus and Table)
 - `board-hover-every-picture` — `tests/board-hover-every-picture.mjs` (ROB-318, Rob 2026-10-29 mid-game: any card picture on the board pops up large on hover (a seat's commander art, the stack's pile, an opponent's held-up play, a card's menu), the one pinned in the inspector too, the pop-up survives a redraw, and a walker hovers every picture on seven kinds of screen)
+- `board-stack-targets` — `tests/board-stack-targets.mjs` (ROB-327, Rob 2026-10-29/30 mid-game: what a spell or ability is aimed at is seen on the stack's list, under its pile and on an opponent's held-up play, source ⤳ target, a card named shows the big card on hover and focus, a target that has left says gone with no name; Table, Focus and 3D)
+- `board-history-full` — `tests/board-history-full.mjs` (ROB-332, Rob 2026-10-30 mid-game: the History module lists the whole game and scrolls back to its first line by Load earlier (500 lines, the room's view carrying the newest), each card named in a line shows the big card on hover and focus and reads on a press, the place read is kept through a view; Table, Focus and 3D)
 - `board-card-sharpness` — `tests/board-card-sharpness.mjs` (Rob, 2026-10-25: in 3D, at 100% and at the camera's closest zoom, the cards on the mats keep their picture's fine print as the hand's do: measured against the same picture drawn flat at the same size)
 - `board-target-lands` — `tests/board-target-lands.mjs` (Rob, 2026-10-25: in a question of targets, lands after every other option in a Lands group shut by default, open while one is picked; all-land targets and a cost's question shown as they are)
 - `board-drawer-sizes` — `tests/board-drawer-sizes.mjs` (Rob, 2026-10-26, urgent: declaring attackers in 3D with a card open on the Actions desk, every one of nine choices can be reached (the old board left the options 6px); the card's size dragged by a bar under it; each drawer module's height dragged by a bar under it, kept through a reload, given back by a double click; the right drawer's width dragged at its left edge like the left drawer's)
 - `planned-changes` — `tests/planned-changes.mjs` (Rob, 2026-10-25, C1–C8: Planned Changes on the live library — every Substitute paired with the card whose seat it holds, Upgrades with the Finals they name, To Buy Finals planned, labeled by the chain To Buy · Not purchased > To Buy · Ordered > Owned; `pairUp` re-pairs lonely adds with spare take-outs and lets counts differ; every kind of swap applied as one batch, a To Buy Upgrade recorded as the plan)
 - `planned-changes-ui` — `tests/planned-changes-ui.mjs` (Rob, 2026-10-25, C1–C8 on the page: two column groups with thumbnails (large on a hover), colors and roles; a tick only selects; the counter green at 100, red otherwise; a re-pair wears one dot on both halves; Swap asks "Confirm additions and removals?" and makes one change; a mismatched count swaps after the warning; the deck page's button is Planned Changes)
 - `board-hand-table` — `tests/board-hand-table.mjs` (the wheel over your own hand sizes its cards through Hand cards in 3D, Focus, Table and on the phone, its sliders following, kept on the device once the wheel stops and after a reload, held between the slider's ends with no word under 10px and the largest inside the window, while the wheel elsewhere still zooms and Shift + wheel still turns or scrolls a hand too wide; Ctrl/⌘ + drag lengthens your side of the 3D table down to 8px above the screen's foot and back to its old length, your mat with it and the far seats unchanged, the DOM table on the Babylon one every frame, kept after a reload and put back by Ctrl/⌘ + double-click or ↕ at 100%, with plain drags, the head look and the right-click menu as before)
+- `board-hand-drag` — `tests/board-hand-drag.mjs` (ROB-328: a hand card dragged over your mat lifts in 3D, Focus and Table, shows where it lands or why it cannot, and on release opens what pressing it opens, sending nothing; off the mat and Escape put it back; a finger held lifts it)
 - `crankmagic-audio` — `tests/crankmagic-audio.mjs`
 - `advice-contract` — `tests/advice-contract.mjs` (preparation-only AI requests, evidence references and stale-result rejection)
 - `advise-brief` — `tests/advise-brief.mjs`
@@ -1329,6 +1350,8 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `migrate-dry-run` — `tests/migrate-dry-run.mjs`
 - `sw-update` — `tests/sw-update.mjs`
 - `game-history` — `tests/game-history.mjs`
+- `history-targets` — `tests/history-targets.mjs` (ROB-327, the engine and room half: a stack entry says what it is aimed at (aimed, aimedModes: named, or gone), and the History's cast and activation lines name the targets, structured; one-target, two-target, ability, no-target, modal and a target that has left)
+- `room-history-full` — `tests/room-history-full.mjs` (ROB-332, the engine and room half: a long game's history reaches the board a page at a time from the newest lines back to its first, in order and with no gap, the same for every seat and a spectator, nothing hidden named, the record kept small by sealed segments, over the object's socket too)
 - `user-state` — `tests/user-state.mjs`
 - `xlsx-writer` — `tests/xlsx-writer.mjs`
 - `engine-rules-conformance` — `tests/engine-rules-conformance.mjs`
@@ -1346,6 +1369,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-mdfc-face-state` — `tests/engine-mdfc-face-state.mjs` (ROB-343: a modal double-faced card shown as its land face, and put back, leaves state a room can save; every saved modal double-faced card, and the actual Fell Mire "pay 3 life?" wait reloaded from JSON)
 - `engine-planeswalkers` — `tests/engine-planeswalkers.mjs`
 - `engine-tap-to-cast` — `tests/engine-tap-to-cast.mjs`
+- `engine-phyrexian-taps` — `tests/engine-phyrexian-taps.mjs` (a spell with Phyrexian mana ({U/P}: {U} or 2 life, CR 107.4f) is offered and tapped for in each way, the caster asked which: Tezzeret's Gambit with three untapped Wastes, with blue, with life too low; Gitaxian Probe, Mental Misstep and Vraska, Betrayal's Sting; the AI takes mana before life (ROB-326))
 - `engine-pay-choice` — `tests/engine-pay-choice.mjs`
 - `staging-check` — `tests/staging-check.mjs`
 - `engine-cards-pb1` — `tests/engine-cards-pb1.mjs`
@@ -1398,6 +1422,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-discover` — `tests/engine-discover.mjs`
 - `engine-eminence` — `tests/engine-eminence.mjs`
 - `engine-no-legend-rule` — `tests/engine-no-legend-rule.mjs`
+- `engine-elked-reasons` — `tests/engine-elked-reasons.mjs` (ROB-330, ROB-331: an un-Elked Food and Hall of Echoes are offered and complete their abilities; one Oko turned into an Elk is not, and the room says why; the support ledger agrees with the card directory)
 - `engine-loyalty-x` — `tests/engine-loyalty-x.mjs`
 - `engine-multikicker` — `tests/engine-multikicker.mjs`
 - `engine-set-subtypes` — `tests/engine-set-subtypes.mjs`
@@ -1667,6 +1692,9 @@ The `table-tabletop` suite checks the preview geometry and its browser interacti
 - `table-game-record` — `tests/table-game-record.mjs`
 
 - `admin-ui-browser` — `tests/admin-ui-browser.mjs`
+- `admin-ai-model` — `tests/admin-ai-model.mjs` (the owner's stored AI model: owner-only routes, the models API's list with the allow-list, change, read-back, undo and the next AI call's model)
+- `admin-ai-table` — `tests/admin-ai-table.mjs` (an AI-only table made by the owner alone and its observer: the public view, no decision, every action refused)
+- `admin-ai-ui` — `tests/admin-ai-ui.mjs` (the owner's AI model and AI-only game panes in the browser, hidden from everyone else)
 
 - `lock-feedback` — `tests/lock-feedback.mjs`
 

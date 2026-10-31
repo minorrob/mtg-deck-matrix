@@ -54,7 +54,7 @@ export const socket = () => ({frames: [], closed: false, send(f) {this.frames.pu
  * The world: the Worker's `handle` over a map of Durable Objects, signed in as whoever a call names.
  * @param {{db?: boolean, migrations?: string[], owner?: string, aiPilot?: boolean}} options
  */
-export async function world({db = false, migrations, owner = ROB, start = Date.parse("2026-10-28T20:00:00Z")} = {}) {
+export async function world({db = false, migrations, owner = ROB, start = Date.parse("2026-10-28T20:00:00Z"), envExtra = {}, fetch: other} = {}) {
   const TEAM = "crankmagic-test.cloudflareaccess.com", AUD = "aud-lounge";
   const b64url = (buf) => Buffer.from(buf).toString("base64url");
   const {publicKey, privateKey} = await crypto.subtle.generateKey({name: "RSASSA-PKCS1-v1_5", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256"}, true, ["sign", "verify"]);
@@ -64,10 +64,11 @@ export async function world({db = false, migrations, owner = ROB, start = Date.p
     const p = b64url(JSON.stringify({aud: [AUD], iss: `https://${TEAM}`, email, exp: Date.now() / 1000 + 3600, iat: Date.now() / 1000}));
     return `${h}.${p}.${b64url(await crypto.subtle.sign("RSASSA-PKCS1-v1_5", privateKey, new TextEncoder().encode(`${h}.${p}`)))}`;
   };
-  const fetchImpl = async () => new Response(JSON.stringify({keys: [jwk]}));
+  /* The Access keys, and any other call a suite asks for (Cloudflare Access, Resend) through `fetch`. */
+  const fetchImpl = async (url, init) => (other && !String(url).includes("/cdn-cgi/access/certs") ? other(url, init) : new Response(JSON.stringify({keys: [jwk]})));
   const clock = {t: start}, objects = new Map(), contexts = new Map();
   const database = db ? d1(migrations) : undefined;
-  const env = {ACCESS_TEAM_DOMAIN: TEAM, ACCESS_AUD: AUD, OWNER_EMAIL: owner, ...(database ? {DB: database} : {})};
+  const env = {ACCESS_TEAM_DOMAIN: TEAM, ACCESS_AUD: AUD, OWNER_EMAIL: owner, ...(database ? {DB: database} : {}), ...envExtra};
   env.TABLES = {idFromName: (name) => name, get: (id) => {
     if (!objects.has(id)) {
       const ctx = objectCtx(); contexts.set(id, ctx);

@@ -12,7 +12,7 @@ import {readFileSync, mkdtempSync, rmSync} from "node:fs";
 import {execFileSync} from "node:child_process";
 import os from "node:os";
 import path from "node:path";
-import {build, worktreeSource, verify, releaseBranch, refuseDropTables, commitRelease, transform, referencesOf, workerModules, PROFILES, NEVER, PAGES, FIRST_PUBLIC, RETIRED_PUBLIC, PLAY_WORKER, aiVars} from "../tools/release-pages.mjs";
+import {build, worktreeSource, verify, releaseBranch, refuseDropTables, commitRelease, transform, referencesOf, workerModules, PROFILES, NEVER, PAGES, FIRST_PUBLIC, RETIRED_PUBLIC, PLAY_WORKER, aiVars, HOST_FILES} from "../tools/release-pages.mjs";
 
 let checks = 0;
 const ok = (value, message) => {assert.ok(value, message); checks++;};
@@ -169,6 +169,14 @@ ok(verify(new Map([...sb, ["wrangler.jsonc", Buffer.from(JSON.stringify({...sw2,
   "a release that would hand the Worker its own signing keys is refused");
 /* PLAY IN THE CLOUD, ON STAGING (Rob, 2026-09-29: "execute the play release and merge to staging"). */
 const stagingProfile = PROFILES["cloud-staging"];
+/* ROB-320: the per-group Access policies are passed to the Worker when a profile names them, and only then (the ids are Rob's to supply). */
+{
+  const vars = (sharing) => JSON.parse(HOST_FILES.cloudflare({date: "2026-10-31", origin: "https://staging.example.test", profile: {...stagingProfile, sharing}})["wrangler.jsonc"]).vars;
+  const names = (v) => Object.keys(v).filter((k) => k.startsWith("ACCESS_INVITE_POLICY_ID")).sort();
+  eq(names(vars(stagingProfile.sharing)), ["ACCESS_INVITE_POLICY_ID"], "a profile that names no group policy keeps the single invitation policy alone");
+  eq(names(vars({...stagingProfile.sharing, accessPolicyIdGeneral: "g-1,g-2", accessPolicyIdInsider: "i-1,i-2"})), ["ACCESS_INVITE_POLICY_ID", "ACCESS_INVITE_POLICY_ID_GENERAL", "ACCESS_INVITE_POLICY_ID_INSIDER"], "one that names them passes both through");
+  eq(vars({...stagingProfile.sharing, accessPolicyIdInsider: "i-1,i-2"}).ACCESS_INVITE_POLICY_ID_INSIDER, "i-1,i-2", "with the ids exactly as given");
+}
 ok(["crankmagic-stage.js", "crankmagic-stage.css", "crankmagic-stage-tables.js", "crankmagic-stage-paint.js", "vendor/babylon.js", "vendor/BABYLON-LICENSE.txt"].every(f => sb.has(f)), "staging carries the live Babylon renderer, table geometry, its skins' painter and upstream license");
 ok(![...built.keys()].some(f => f === "vendor/babylon.js" || f === "vendor/BABYLON-LICENSE.txt" || f === "crankmagic-stage-tables.js" || f === "crankmagic-stage-paint.js"), "the non-Play profile does not include the tabletop renderer");
 

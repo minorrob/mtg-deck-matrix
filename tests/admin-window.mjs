@@ -8,6 +8,9 @@
      4. Share: Invitee name and Invitee email, each a field under its label, Send and Cancel. Send adds the address to
         Cloudflare Access for staging and production, confirms each, and only then emails the invitation, as HTML.
         A refused Access sends nothing and says so. Cancel closes the window.
+     5. ROB-320 (Rob, 2026-10-30): after a send the window closes and a dialog says "Your email has been successfully sent" with one
+        Confirm button; the owner chooses Game Theory Insider (AI) or General; anyone else signed in is offered Invite alone, as General
+        (the server refuses AI to a non-owner). Invitations are recorded: tests/invitations.mjs, tests/invite-settings.mjs.
 
    Cloudflare's API and the mail provider are stood in for; the Worker's own code (cloud/sharing.mjs) answers the page.
    GEOMETRY_REQUIRED=1 refuses a missing browser.
@@ -22,7 +25,7 @@ import {social} from "../cloud/sharing.mjs";
 import {createLibrary} from "../cloud/library.mjs";
 
 const db = new DatabaseSync(":memory:"); db.exec("PRAGMA foreign_keys=ON");
-for (const f of ["0001_accounts", "0002_ai", "0003_sharing", "0004_mail_retries", "0005_access_invites"]) db.exec(readFileSync(path.join(ROOT, "cloud/migrations", f + ".sql"), "utf8"));
+for (const f of ["0001_accounts", "0002_ai", "0003_sharing", "0004_mail_retries", "0005_access_invites", "0011_invitations"]) db.exec(readFileSync(path.join(ROOT, "cloud/migrations", f + ".sql"), "utf8"));
 const st = (sql, args = []) => ({bind: (...a) => st(sql, a), first: async () => db.prepare(sql).get(...args) || null, all: async () => ({results: db.prepare(sql).all(...args)}), run: async () => ({meta: {changes: Number(db.prepare(sql).run(...args).changes)}}), sync: () => ({meta: {changes: Number(db.prepare(sql).run(...args).changes)}})});
 const D = {prepare: (s) => st(s), batch: async (a) => {db.exec("BEGIN"); try {const out = a.map((x) => x.sync()); db.exec("COMMIT"); return out;} catch (e) {db.exec("ROLLBACK"); throw e;}}};
 const lib = createLibrary(D), rob = await lib.user("rob@example.com"), friend = await lib.user("friend@example.com");
@@ -91,6 +94,19 @@ try {
     await openMenu(page);
     eq(await page.locator("#cm-user-menu [data-action=open-admin]").count(), 0, "a player who is not the administrator has no Admin in the Menu");
     eq(await page.locator("#cm-user-menu").getByRole("button",{name:"Your Profile",exact:true}).count(), 1, "and keeps the shared menu’s single door to the account (Your Profile)");
+    /* ROB-320: anyone signed in may invite, so they are offered Invite alone: no Admin, no tabs, no choice of group (General, no AI). */
+    eq(await page.locator("#cm-user-menu [data-action=invite-crankmagic]").count(), 1, "but anyone signed in may invite, and the Menu offers Invite");
+    await page.locator("#cm-user-menu [data-action=invite-crankmagic]").click();
+    const invite = page.locator("#cm-dialog[open]");
+    await invite.locator("[data-admin-share]").waitFor();
+    eq([(await invite.locator("#cm-dialog-title").textContent()).trim(), await invite.locator("[role=tab]").count(), await invite.locator("[name=group]").count(), (await invite.locator("[data-invite-group]").textContent()).trim()],
+      ["Invite someone", 0, 0, "General · the full app, no AI"], "a plain window of its own: no tabs, no group to choose, and it says General with no AI");
+    await invite.getByLabel("Invitee name").fill("Kay Friend"); await invite.getByLabel("Invitee email").fill("kay@example.com");
+    await invite.getByRole("button", {name: "Send", exact: true}).click();
+    await page.waitForFunction(() => document.querySelector("#cm-dialog-title")?.textContent.trim() === "Invitation sent", null, {timeout: 10000});
+    eq({...db.prepare("SELECT grp, status FROM invitations WHERE invitee_email = 'kay@example.com'").get()}, {grp: "general", status: "admitted"}, "and what they send is a General invitation, recorded");
+    eq(db.prepare("SELECT count(*) AS n FROM ai_allowlist WHERE email = 'kay@example.com'").get().n, 0, "with no AI");
+    mail.length = 0;
     eq(await page.evaluate(async () => (await fetch("/api/social/admin")).status), 403, "and the Worker refuses Admin to them");
     eq(errors, [], `no page error (${errors.join(" | ")})`);
     await context.close();
@@ -142,16 +158,26 @@ try {
     await shot(page, "share-refused-1400");
     refuse = null;
     await dialog.getByRole("button", {name: "Send", exact: true}).click();
-    await page.waitForFunction(() => document.querySelectorAll("#cm-dialog [data-admin-steps] [data-state=done]").length === 3, null, {timeout: 10000});
-    const steps = await dialog.locator("[data-admin-steps] li").allInnerTexts();
-    eq(steps.map((x) => x.trim()), ["staging.crankmagic.com · already had access · confirmed", "crankmagic.com/api/* · added · confirmed", "Invitation emailed to sam@example.com"],
-      "sent again: each sign-in is confirmed, then the email goes");
+    await page.waitForFunction(() => document.querySelector("#cm-dialog-title")?.textContent.trim() === "Invitation sent", null, {timeout: 10000});
+    /* ROB-320 (Rob, 2026-10-30): after a send the window closes and a dialog confirms it, with one Confirm button; nobody presses Cancel. */
+    const confirmation = page.locator("#cm-dialog[open]");
+    eq(await confirmation.locator("[data-admin-share]").count(), 0, "after a send the Share window is gone");
+    eq((await confirmation.locator("[data-invite-confirmation]").textContent()).trim(), "Your email has been successfully sent", "and the dialog says the email was sent");
+    eq(await confirmation.locator(".cm-form-footer button").evaluateAll((els) => els.map((el) => el.textContent.trim())), ["Confirm"], "with one Confirm button");
     eq(policy.map((p) => p.include.some((r) => r.email?.email === "sam@example.com")), [true, true], "the address is on staging's and production's policies");
     eq(mail.length, 1, "one email");
     await shot(page, "share-sent-1400");
     ok(mail[0].html.includes("Hi Sam Player,") && mail[0].html.includes("https://crankmagic.com/api/auth/login?to=%23welcome") && mail[0].text.includes("Hi Sam Player,"), "an HTML invitation with its text twin and the sign-in link");
-    eq([await name.inputValue(), await email.inputValue()], ["", ""], "the fields are cleared for the next invitation");
-    /* Cancel closes the window */
+    eq({...db.prepare("SELECT grp, status, inviter_email AS by FROM invitations WHERE invitee_email = 'sam@example.com'").get()}, {grp: "insider", status: "admitted", by: "rob@example.com"}, "the invitation is recorded: the owner's, as a Game Theory Insider");
+    await confirmation.getByRole("button", {name: "Confirm", exact: true}).click();
+    await page.waitForFunction(() => !document.getElementById("cm-dialog").open);
+    ok(true, "Confirm closes it");
+    /* Cancel closes the window; the group is the owner's to choose */
+    await openMenu(page);
+    await page.locator("#cm-user-menu [data-action=open-admin]").click();
+    await dialog.waitFor();
+    await dialog.getByRole("tab", {name: "Share"}).click();
+    eq(await dialog.getByLabel("Group").locator("option").allInnerTexts(), ["Game Theory Insider · AI", "General · no AI"], "the owner chooses Game Theory Insider (AI) or General");
     await dialog.getByRole("button", {name: "Cancel", exact: true}).click();
     await page.waitForFunction(() => !document.getElementById("cm-dialog").open);
     ok(true, "Cancel closes Admin");
@@ -160,7 +186,7 @@ try {
   }
 
   /* The two verified roles remain separate; neither role implies the other permission. */
-  for(const role of [{name:'read administrator only',person:friend,readAdmin:true,share:false},{name:'invite owner without read-admin',person:rob,readAdmin:false,share:true}]){
+  for(const role of [{name:'read administrator only',person:friend,readAdmin:true,share:true},{name:'invite owner without read-admin',person:rob,readAdmin:false,share:true}]){
     const {page,context,errors,adminReads}=await signedIn(role.person,{readAdmin:role.readAdmin});
     await openMenu(page);
     eq(await page.locator('#cm-user-menu [data-action=open-admin]').count(),1,role.name+': exactly one shared Admin entry');

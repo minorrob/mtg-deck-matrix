@@ -310,12 +310,9 @@ try {
       await createGame(page, BASE, {host: "Rob", humans: [{name: "Newcomer"}], ai: [{name: "Bot"}]}, "#table");
       await page.locator(".cm-cloud-table .cm-lobby-seat").nth(2).waitFor({timeout: 30000});
       const tableId = (/id=([^&]+)/.exec(new URL(page.url()).hash) || [])[1], turl = `/api/tables/${tableId}`;
-      await page.locator(`.cm-lobby-seat[data-seat="1"]`).getByRole("button", {name: /^Invite a player$/}).click();
-      const input = page.locator("#cm-dialog[open] #cm-table-link");
-      await until("the invitation link", async () => Boolean(await input.inputValue().catch(() => "")), 15000);
-      const link = new URL(await input.inputValue());
-      ok(new RegExp(`^/api/join/${tableId}/[A-Za-z0-9_-]{20,100}$`).test(link.pathname) && !link.hash, "the host invites seat 2 and gets its link, a path through the Worker (Access's sign-in keeps a path, drops a fragment)");
-      await page.locator("#cm-dialog").getByRole("button", {name: "Done"}).click();
+      /* ROB-320: Create game named the newcomer, so the lobby sends nothing and asks nothing; the email's lobby link is /api/join/<table>. */
+      eq(await page.locator(`.cm-lobby-seat[data-seat="1"]`).getByRole("button", {name: /^Invite a player$/}).count(), 0, "the host has no Invite to press for a guest Create game named");
+      const link = new URL(`${BASE}/api/join/${tableId}`);
 
       /* The newcomer joins by the link and chooses a deck the table can play. */
       await newcomer.goto(`${NBASE}${link.pathname}${link.hash}`);

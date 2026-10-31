@@ -373,8 +373,9 @@ try {
   if(SHOTS)await page.screenshot({path:path.join(SHOTS,'board-choices-1280x720.png')});
   /* Casting keeps Rob's explicit Undo/priority window. A native Pass closes it before the AI passes and Zap resolves;
      what it hit is still read off the game, Maya one life down, rather than inferred from the stack. */
-  const mayaLife = (v) => v.state.players[1].health.life, before = mayaLife(latest), castsBefore = latest.history.filter((h) => h.text === "Rob cast Zap").length;
-  eq([mayaLife(latest),latest.history.filter(h=>h.text==='Rob cast Zap').length,latest.state.stack.filter(s=>s.name==='Zap').length],[before,castsBefore,0],"staging the selected offer has changed neither life, cast history nor the stack");
+  /* ROB-327: the cast line names its target, "Rob cast Zap targeting Maya". */
+  const CAST = "Rob cast Zap targeting Maya", mayaLife = (v) => v.state.players[1].health.life, before = mayaLife(latest), castsBefore = latest.history.filter((h) => h.text === CAST).length;
+  eq([mayaLife(latest),latest.history.filter(h=>h.text===CAST).length,latest.state.stack.filter(s=>s.name==='Zap').length],[before,castsBefore,0],"staging the selected offer has changed neither life, cast history nor the stack");
   await dialog.locator("[data-action=board-flow-confirm]").click();
   await page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"));
   for (let t = 0; t < 100 && !latest.canUndo; t += 1) await new Promise((r) => setTimeout(r, 100));
@@ -383,7 +384,7 @@ try {
   /* the pass is Next step in the pop-up over the stage (the header carries no pass any more) */
   await page.locator('#cm-board .cm-stage-actions [data-action=board-pass]:not([disabled])').click();
   for (let t = 0; t < 100 && mayaLife(latest) === before; t += 1) await new Promise((r) => setTimeout(r, 100));
-  ok(mayaLife(latest) === before - 1 && latest.history.filter((h) => h.text === "Rob cast Zap").length === castsBefore + 1 && latest.history.some((h) => h.text === "Zap resolved"),
+  ok(mayaLife(latest) === before - 1 && latest.history.filter((h) => h.text === CAST).length === castsBefore + 1 && latest.history.some((h) => h.text === "Zap resolved"),
     `choosing "→ Maya" casts Zap at Maya: it resolves, and Maya's life goes ${before} → ${mayaLife(latest)}`);
 
   /* ---- 4. the board answers scry: a pick-several pop-up, then the order of what stays ---- */

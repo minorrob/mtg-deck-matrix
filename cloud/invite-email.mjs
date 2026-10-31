@@ -19,6 +19,22 @@ export function inviteText({name, link}) {
   return `Hi ${name},\n\nYou are invited to CrankMagic. Sign in with this email address to use your profile, build decks and play.\n\n${link}`;
 }
 
+/* THE GAME INVITATION (ROB-320; Rob, 2026-10-29: Create game "triggers our email template to populate with the game lobby link and
+   the invitee's name"). The same template as the account invitation, with the words that differ swapped: who saved the seat, a
+   button that opens the lobby, and the lobby link (`/api/join/<table>`, which comes back through the sign-in to the lobby with the
+   invitee already in their seat) in place of the plain sign-in link. Each swap must find its text in INVITE_HTML or the module
+   refuses to load, so a redesign of the template cannot quietly send a game invitation that talks about an account. */
+export const gameInviteSubject = (host) => `${String(host || 'A friend').replace(/[\r\n]+/g, ' ').trim().slice(0, 60)} invited you to a CrankMagic game`;
+
+export function gameInviteText({name, host, link}) {
+  return `Hi ${name},\n\n${host} saved you a seat at a Commander game on CrankMagic. Open the lobby and you are already in your seat. Sign in with this email address and nothing else is needed.\n\n${link}`;
+}
+
+export function gameInviteHtml({name, host, link}) {
+  const values = {name: escape(name), host: escape(host), link: escape(link), assets: INVITE_ASSETS};
+  return GAME_HTML.replace(/\{\{(name|host|link|assets)\}\}/g, (_, key) => values[key]);
+}
+
 export function inviteHtml({name, link}) {
   const values = {name: escape(name), link: escape(link), assets: INVITE_ASSETS};
   return INVITE_HTML.replace(/\{\{(name|link|assets)\}\}/g, (_, key) => values[key]);
@@ -61,3 +77,13 @@ export const INVITE_HTML = `<!doctype html>
 </table>
 </body>
 </html>`;
+
+const swap = (html, from, to) => { if (!html.includes(from)) throw new Error(`The invitation template changed: "${from.slice(0, 40)}..." is gone`); return html.replace(from, () => to); };
+const GAME_HTML = [
+  ['You are invited to CrankMagic: build and tune Commander decks, track your collection and play at the table, with an AI coach beside you.', '{{host}} saved you a seat at a Commander game on CrankMagic. Open the lobby and you are already in your seat.'],
+  ['Sign in with <strong style="color:#e8eefc;">this email address</strong> to get started.', 'Sign in with <strong style="color:#e8eefc;">this email address</strong> and nothing else is needed.'],
+  ['Sign in to CrankMagic</a>', 'Join the game</a>'],
+  ['Your seat at the table is ready. Sign in to build decks and play Commander.', '{{host}} saved you a seat. Open the lobby to take it.'],
+  ['You received this because the CrankMagic administrator invited this address.', 'You received this because {{host}} invited this address to a game.'],
+  ['<title>You are invited to CrankMagic</title>', '<title>{{host}} invited you to a CrankMagic game</title>'],
+].reduce((html, [from, to]) => swap(html, from, to), INVITE_HTML);

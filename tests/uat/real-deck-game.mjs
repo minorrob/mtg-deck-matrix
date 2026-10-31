@@ -151,10 +151,8 @@ async function journey(n, rob, maya, [robDeck, mayaDeck, ninaDeck, theoDeck]) {
   await waitText(rob.page, ".cm-lobby-seat[data-seat='3'] header", /Ready/);
   ok(true, `table ${n}: Rob brings ${robDeck.name} from his library, and chooses the AIs' (${ninaDeck.name}, ${theoDeck.name}); an AI with a deck is ready`);
   /* INVITE: the link, opened in the second browser session. */
-  await rob.page.click(".cm-lobby-seat[data-seat='1'] [data-action=table-invite]");
-  await rob.page.locator("#cm-table-link").waitFor();
-  const link = await rob.page.inputValue("#cm-table-link");
-  await rob.page.keyboard.press("Escape");
+  /* (ROB-320: Create game named Maya, so the lobby sends nothing; she opens the lobby link her email carries.) */
+  const link = `${base}/api/join/${id}`;
   await maya.page.goto(joinLocation(new URL(link.replace(/^https?:\/\/[^/]+/, base))));   /* the Worker's answer to the link */
   await maya.page.waitForFunction(() => /#table\?id=/.test(location.hash), null, {timeout: 30000});
   await maya.page.locator(".cm-cloud-table .cm-lobby-seat").first().waitFor({timeout: 30000});
