@@ -20,8 +20,8 @@
  *                                   the call log; a call is refused when its worst case would cross either
  *
  * and the model is Rob's too, within his rule (2026-10-09): "We will always be using sonnet or other lowest cost
- * models." Then: "change the model use to Haiku explicitly." AI_MODEL may name only a model in MODELS, Claude Haiku 5.5
- * when it is unset; a dearer one keeps the door shut. The privacy page says what goes to the AI before the browser offers the feature at all (docs/ai-door.md).
+ * models." Then: "change the model use to Haiku explicitly." The model may be only one in MODELS: the owner's stored choice
+ * (the Admin pane, ROB-338), else AI_MODEL, else Claude Haiku 5.5; a dearer one keeps the door shut. The privacy page says what goes to the AI before the browser offers the feature at all (docs/ai-door.md).
  *
  * WHAT IS SENT, AND WHAT COMES BACK. Only what the request carries: the deck's name, its commander(s), its card
  * names, the score and its measures, the strongest and weakest cards. No email, no library, no prices paid. The
@@ -155,12 +155,13 @@ export function createAi(db, {now = () => new Date().toISOString(), newId = () =
 
 const cents = (v) => {const n = Number(v); return Number.isFinite(n) && n > 0 ? n : null;};
 
-/* The gates after Access and the allowlist: the key, the caps, the model. Returns what the call may spend. */
-export function settings(env) {
+/* The gates after Access and the allowlist: the key, the caps, the model. Returns what the call may spend. `stored` is the owner's
+   chosen model (cloud/ai-model.mjs `storedModel`, read at the call): it outranks AI_MODEL, which outranks the default. */
+export function settings(env, stored = null) {
   if (!env.ANTHROPIC_API_KEY) throw new Closed("AI features are not switched on here yet.");
   const person = cents(env.AI_CAP_PERSON_CENTS), total = cents(env.AI_CAP_TOTAL_CENTS);
   if (!person || !total) throw new Closed("AI features have no spend cap set, so they stay off.");
-  const model = String(env.AI_MODEL || DEFAULT_MODEL);
+  const model = String(stored || env.AI_MODEL || DEFAULT_MODEL);
   if (!MODELS.includes(model)) throw new Closed("AI features are set to a model CrankMagic does not use, so they stay off.");
   /* A feature's own cap, inside the general one, for everyone together (Rob, 2026-10-10: "$1.50 for the coach per day"). */
   const coach = cents(env.AI_CAP_COACH_CENTS);

@@ -133,6 +133,9 @@ export function createState(pod) {
     /* And an {X} spell tapped for too, for each X the pool and the untapped sources pay together (rules/actions.mjs, `xTaps`;
        Oct 21). Only a pod that asks carries the key, as above. */
     ...(pod?.xTaps === true ? {xTaps: true} : {}),
+    /* And a spell with Phyrexian mana tapped for too, in each way its symbols can be paid, {U} or 2 life (rules/actions.mjs, `phyrexianTaps`;
+       ROB-326). Only a pod that asks carries the key, as above. */
+    ...(pod?.phyrexianTaps === true ? {phyrexianTaps: true} : {}),
     /* And the players who may play their land in any step of their own turn, not only a main phase (rules/actions.mjs,
        `landAnyStep`; Rob, 2026-10-21: "When I am on any step of my turn, I should be able to play a land"): a house rule,
        for the people at a table, never its AI seats. Only a pod that names them carries the key, as above. */

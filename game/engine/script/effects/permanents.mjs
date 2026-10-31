@@ -866,6 +866,9 @@ export function effectUntil(state, params, context) {
        Oblivion): the same, for a characteristic changed in a layer (rules/layers.mjs). */
     ...(typeof params.whileCounter === "string" ? {whileCounter: params.whileCounter} : {}),
     apply: params.apply ?? {},
+    /* WHOSE EFFECT IT IS, in words (ROB-330/331): the board says an ability-less permanent lost its abilities to Oko, Thief of
+       Crowns. A name, never `sourceId`: the layers read that as an ability the effect is part of (layers.mjs, lostEffect). */
+    ...(context.source !== null && context.source !== undefined && state.objects[context.source] ? {sourceName: state.objects[context.source].card} : {}),
     /* "Until end of turn" (the default), "until your next turn", or "ever": an effect with no duration -- "up to one other
        target creature loses all abilities" (Abigale) -- lasting as long as what it affects does (CR 611.2a; a permanent
        that leaves is a new object, CR 400.7). */

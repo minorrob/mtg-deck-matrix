@@ -29,6 +29,7 @@ import {tableDefinition} from "../game/engine/cards/definitions.mjs";
 import {candidateDefinition} from "../game/engine/cards/candidates.mjs";
 import {agentBrief, pickOf} from "../game/room/agent-brief.mjs";
 import {createAi, settings, pilot, pilotWorst, Closed} from "./ai.mjs";
+import {storedModel} from "./ai-model.mjs";
 import {groupOf} from "./access.mjs";
 import {Registry, REGISTRY, recordResults} from "./lounge.mjs";
 import {LEVELS as ROSTER_LEVELS} from "../game/engine/pilots/roster.mjs";
@@ -73,6 +74,17 @@ export const SLICE_STEPS = 100;
    AI_CAP_PILOT_GAME_CENTS is not set (Rob, 2026-10-10: "0.25 per game is good"). */
 export const AGENT_TURNS = 8;
 export const PILOT_GAME_CENTS = 25;
+
+/* "LOAD EARLIER" (Linear ROB-332; docs/ui-lane/history-and-targets-contract.md, section 3): {type: "history", before?, limit?} is answered to
+   the asker alone with {type: "history", before, first, lines}, the lines before `before` (oldest first), or refused with `of: "history"`.
+   The history is public, so a seat and a spectator are answered alike. */
+async function historyReply(room, frame) {
+  try {return {type: "history", ...(await room.historyBefore({before: frame.before, limit: frame.limit}))};}
+  catch (error) {
+    if (!(error instanceof RoomError)) throw error;
+    return {type: "refused", of: "history", status: error.status, error: error.message};
+  }
+}
 
 export class GameRoom {
   constructor(ctx, env, {cards = tableCards, slice = SLICE_STEPS} = {}) {
@@ -137,6 +149,7 @@ export class GameRoom {
     /* A reconnect names the last event it handled (`events.v1`, Linear ROB-77; game/room/room.mjs, view): the view
        carries the events since, or says `eventsReset` when they are older than the room keeps. */
     if (frame && frame.type === "view") return send({type: "view", view: room.view(seatId, typeof frame.after === "string" ? {after: frame.after} : {})});
+    if (frame && frame.type === "history") return send(await historyReply(room, frame));
     /* Yield turn (Linear ROB-13; room.mjs, yieldTurn), and Stop yielding. Yielding can pass for the seat at once, so every
        seat's view moves, as after an action. */
     if (frame && frame.type === "yield") {
@@ -322,6 +335,8 @@ export class GameTable extends GameRoom {
         const llm = b && b.level === "llm";
         return reply(200, {table: await t.lounge.seat(who, b, now, {llmAllowed: llm && (await this.pilotOpen(await t.host())) === null})});
       }
+      /* The Worker's retry of a held seat's invitation (ROB-320, cloud/tables.mjs `reinvite`): the host's, and answered to the Worker alone. */
+      if (route === "POST /table/reserved") return reply(200, {reserved: await t.lounge.reservedFor(who, Number((await body()).seatId))});
       if (route === "POST /table/request-join") return reply(201, {request: await t.lounge.requestJoin(who, now)});
       if (route === "POST /table/request") return reply(200, {table: await t.lounge.request(who, await body(), now)});
       if (route === "POST /table/quit") {
@@ -342,7 +357,7 @@ export class GameTable extends GameRoom {
       if (route === "GET /table/brief") return reply(200, {brief: await t.brief(email, {hand: url.searchParams.get("hand") !== "0"})});
       if (route === "POST /table/invite") return reply(201, {invite: await t.invite(email, Number((await body()).seatId), now)});
       if (route === "POST /table/uninvite") return reply(200, {table: await t.uninvite(email, Number((await body()).seatId), now)});
-      if (route === "POST /table/join") return reply(200, {table: await t.join(email, (await body()).code, now)});
+      if (route === "POST /table/join") return reply(200, {table: await t.join(email, (await body()).code, now, who.name)});
       if (route === "POST /table/deck") {const b = await body(); return reply(200, {table: await t.deck(email, Number(b.seatId), b.deck, now)});}
       if (route === "POST /table/known") return reply(200, {unknown: await t.unknown((await body()).names)});
       if (route === "POST /table/ready") return reply(200, {table: await t.ready(email, (await body()).ready, now)});
@@ -405,6 +420,10 @@ export class GameTable extends GameRoom {
       const room = await this.load();
       return room ? send({type: "view", view: room.watch({after: typeof frame.after === "string" ? frame.after : undefined})}) : send({type: "refused", status: 409, error: "There is no game at this table."});
     }
+    if (frame && frame.type === "history") {
+      const room = await this.load();
+      return send(room ? await historyReply(room, frame) : {type: "refused", of: "history", status: 409, error: "There is no game at this table."});
+    }
     return send({type: "refused", status: 403, error: "A spectator watches; it does not play."});
   }
 
@@ -452,7 +471,7 @@ export class GameTable extends GameRoom {
   /** Null when this host may ask the model for an LLM seat; otherwise why not. */
   async pilotOpen(email) {
     if (this.env?.AI_PILOT !== "on") return "The AI seat on Claude is not switched on here.";
-    try {settings(this.env);} catch (error) {return error.message;}
+    try {settings(this.env, await storedModel(this.env.DB));} catch (error) {return error.message;}
     if (!this.env.DB || !(await createAi(this.env.DB, {owner: this.env.OWNER_EMAIL}).allowed(email))) return "That account is not on CrankMagic's list for AI features.";
     return null;
   }
@@ -462,7 +481,7 @@ export class GameTable extends GameRoom {
     const host = await this.table.host();
     if ((await this.pilotOpen(host)) !== null) return null;
     /* What the seat's pilot worked out (room.analysis): the brief the model reads carries it, in seat words and the decision's own indices. */
-    const config = settings(this.env), brief = agentBrief(view, hint, room.analysis(room.waitingOn));
+    const config = settings(this.env, await storedModel(this.env.DB)), brief = agentBrief(view, hint, room.analysis(room.waitingOn));
     const key = `pilot-spent/${room.matchId}`, spent = Number(await this.ctx.storage.get(key)) || 0;
     const cap = (Number(this.env.AI_CAP_PILOT_GAME_CENTS) > 0 ? Number(this.env.AI_CAP_PILOT_GAME_CENTS) : PILOT_GAME_CENTS) * 10000;
     if (spent + pilotWorst(brief, config.model) > cap) return null;

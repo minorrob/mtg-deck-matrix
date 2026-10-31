@@ -89,10 +89,13 @@
     look.addEventListener('input',()=>{look.nextElementSibling.textContent=look.value+'%';look.setAttribute('aria-valuetext',look.value+'%');});
     look.addEventListener('change',()=>{try{localStorage.setItem(LOOK_KEY,String(Number(look.value)/100));}catch{}C.notice(`3D camera glance kept at ${look.value}% on this device.`);});
   }
-  const shareForm=`<form class="cm-admin-form" data-admin-share novalidate>
+  /* THE GROUP CHOICE (ROB-320; Rob, 2026-10-30): Game Theory Insider (AI-enabled) or General. Only the owner is offered Insider, and
+     the Worker refuses it for anyone else whatever this page draws. */
+  const shareForm=()=>`<form class="cm-admin-form" data-admin-share novalidate>
       <label>Invitee name<input name="name" required maxlength="80" autocomplete="off"></label>
       <label>Invitee email<input name="email" type="email" required maxlength="254" autocomplete="off"></label>
-      <p class="cm-full cm-muted">Send → sign-in on staging + production, each confirmed ✓ → invitation email · AI included</p>
+      ${me?.isAdmin===true?'<label class="cm-full">Group<select name="group"><option value="insider" selected>Game Theory Insider · AI</option><option value="general">General · no AI</option></select></label>':'<p class="cm-full cm-muted" data-invite-group="general">General · the full app, no AI</p>'}
+      <p class="cm-full cm-muted">Send → sign-in confirmed ✓ → invitation email</p>
       <ol class="cm-admin-steps cm-full" data-admin-steps hidden aria-live="polite"></ol>
       <p class="cm-error cm-full" hidden role="alert"></p>
       <div class="cm-form-footer cm-full">${b('Cancel','close')}<button class="v-button primary" type="submit">Send</button></div>
@@ -104,6 +107,7 @@
       ev.preventDefault();error.hidden=true;
       if(!f.reportValidity())return;
       const v={name:f.elements.name.value.trim(),email:f.elements.email.value.trim()};
+      if(f.elements.group)v.group=f.elements.group.value;
       send.disabled=true;steps.hidden=false;
       steps.innerHTML=step('busy','Adding to Cloudflare Access (staging and production)…')+step('wait','Invitation email');
       try{
@@ -111,7 +115,8 @@
         const access=(r.access||[]).map(a=>step('done',`${a.domain||a.name} · ${a.added?'added':'already had access'} · confirmed`)).join('');
         const mail=r.status==='sent'?step('done',`Invitation emailed to ${v.email}`):step('fail',r.error||'The invitation email is pending.');
         steps.innerHTML=access+mail;
-        if(r.status==='sent'){C.notice(`Invitation sent to ${v.name}.`);f.elements.name.value='';f.elements.email.value='';}
+        /* Sent: the window closes and a dialog confirms it (Rob, 2026-10-30), so nobody presses Cancel on a finished window. */
+        if(r.status==='sent')C.modal('Invitation sent',`<p data-invite-confirmation>Your email has been successfully sent</p><div class="cm-form-footer">${b('Confirm','close',{},true)}</div>`);
         else steps.insertAdjacentHTML('beforeend',`<li>${b('Retry email','share-retry',{mail:r.id})}</li>`);
       }catch(err){steps.innerHTML=step('fail',err.message)+step('wait','No email was sent');error.textContent=err.message;error.hidden=false;}
       finally{send.disabled=false;}
@@ -119,11 +124,16 @@
   }
   function openAdmin(section){
     // Viewing operational data and admitting people remain separate server-verified permissions.
-    const invite=me?.canInvite===true,read=C.adminAllowed?.()===true;
-    if(!invite&&!read)throw Error('Admin is for the CrankMagic administrator.');
-    const general=invite?'<div data-admin-general><p class="cm-muted" role="status">Loading…</p></div>':'<p class="cm-muted">Operational information is read-only. Invitation permissions are managed separately.</p>';
+    const invite=me?.canInvite===true,admin=me?.isAdmin===true,read=C.adminAllowed?.()===true;
+    if(!invite&&!read)throw Error('Sign in to invite someone.');
+    /* ROB-320: anyone signed in may invite (five people, General), so a person who is not an administrator gets the invitation
+       form alone, in a window of its own. Admin and its operational pages stay the administrator's. */
+    if(!admin&&!read){
+      const d=C.modal('Invite someone',shareForm());wireShare(d.querySelector('[data-admin-share]'));return d;
+    }
+    const general=admin?'<div data-admin-general><p class="cm-muted" role="status">Loading…</p></div>':'<p class="cm-muted">Operational information is read-only. Invitation permissions are managed separately.</p>';
     const tabs=[{id:'general',icon:'⚙',label:'General',html:general+(C.adminSectionLinks?.()||'')}];
-    if(invite)tabs.push({id:'share',icon:'✉',label:'Share',html:shareForm});
+    if(invite)tabs.push({id:'share',icon:'✉',label:'Share',html:shareForm()});
     const d=C.modal('Admin',`<div class="cm-admin">${C.tabbed({id:'admin',label:'Admin sections',active:section,tabs})}</div>`);
     d.classList.add('cm-tabbed-dialog','cm-admin-dialog');
     const status=d.querySelector('[data-admin-general]'),form=d.querySelector('[data-admin-share]');
@@ -143,5 +153,6 @@
   C.sharingAvailable=()=>!!me;
   C.sharingOwner=()=>me?.email||null;
   C.canInvite=()=>me?.canInvite===true;
+  C.inviteAdmin=()=>me?.isAdmin===true;
   C.sharingReady=document.querySelector('meta[name="crankmagic-accounts"]')?.content==='on'?api('GET','/me').then(v=>{me=v;C.drawProfile();const menu=document.getElementById('cm-user-menu');if(menu){let div=menu.querySelector('[data-profile-menu]');if(!div){div=document.createElement('div');div.dataset.profileMenu='';(menu.querySelector('[aria-label="You"]')||menu).append(div);}div.innerHTML=C.profileMenu();}}).catch(()=>null):Promise.resolve(null);
 });

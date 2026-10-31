@@ -293,6 +293,39 @@ export function chosenPayment(pool, cost, options = {}, key = undefined) {
  */
 
 /**
+ * A COST WITH PHYREXIAN SYMBOLS, READ ONCE PER CHOICE OF HOW EACH IS PAID (CR 107.4f; ROB-326): "{U/P} can be paid with
+ * either {U} or 2 life." Each variant is the cost with some of its Phyrexian symbols paid in life (gone from the cost,
+ * their life added) and the rest as the colored symbols they stand for -- a cost the tap planners (tapPlans,
+ * sourceTapPlans, which leave a Phyrexian symbol alone) can then work out. The mana way (no life) first, then the more
+ * life, the dearest last; only as much life as `life` pays (CR 119.4), and symbols alike are one choice, not two.
+ *
+ * @returns {Array<{cost: object, life: number, paid: string[]}>} `paid`: the colors paid in life, e.g. ["U"]
+ */
+export function phyrexianVariants(cost, life = 0) {
+  const symbols = cost.symbols.map((s, i) => [s, i]).filter(([s]) => s.kind === "phyrexian");
+  if (!symbols.length) return [{cost, life: 0, paid: []}];
+  const seen = new Set(), found = [];
+  for (let mask = 0; mask < 1 << symbols.length; mask += 1) {
+    const inLife = symbols.filter((_, bit) => mask & (1 << bit));
+    const owed = inLife.reduce((sum, [s]) => sum + s.life, 0);
+    if (owed > life) continue;
+    const paid = inLife.map(([s]) => s.color).sort();
+    const key = paid.join("");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const gone = new Set(inLife.map(([, i]) => i));
+    const colored = {...cost.colored};
+    const kept = [];
+    cost.symbols.forEach((s, i) => {
+      if (gone.has(i)) return;
+      if (s.kind === "phyrexian") { colored[s.color] += 1; kept.push({kind: "colored", color: s.color}); } else kept.push(s);
+    });
+    found.push({cost: {...cost, symbols: kept, colored}, life: owed, paid});
+  }
+  return found.sort((a, b) => a.life - b.life || a.paid.join("").localeCompare(b.paid.join("")));
+}
+
+/**
  * The ways to pay `cost` by tapping these units, up to `limit`, each `{taps: [{id, color}], key}`: the units to tap and the
  * color each makes, and the kinds tapped. The least flexible first -- a colorless source before a basic, a basic before a
  * dual, a dual before a source of any color -- so the first way leaves the most choices untapped.

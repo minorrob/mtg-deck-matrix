@@ -8,6 +8,7 @@
  *
  *   POST /api/tables                         a new table; you host it, in seat 1
  *   GET  /api/tables/:id                     the table as you see it
+ *   POST /api/tables/:id/reinvite            the host sends a guest's invitation again, {seatId} (ROB-320; after a failure)
  *   POST /api/tables/:id/invite|uninvite|join|deck|known|ready|mat|rules|start|cancel|end|concede|rematch|report
  *                                            rematch: {accept: true|false}, Play again once the game is over (Requests row
  *                                            12, Linear ROB-167; docs/ui-lane/gameplay-anchor.md, "After the game")
@@ -43,7 +44,7 @@ const TABLE_ID = /^[a-z0-9]{8,40}$/, MATCH_ID = /^[a-z0-9]{8,40}g[1-9][0-9]{0,5}
 const ACTIONS = new Set(["invite", "uninvite", "join", "deck", "known", "ready", "mat", "rules", "start", "cancel", "rematch", "end", "concede", "report",
   "seat", "request-join", "request", "quit", "chat"]);
 /* Where the person's display name matters to the table (a request to join, a chat line): the Worker looks it up, the table trusts only that. */
-const NAMED = new Set(["request-join", "chat", "connect"]);
+const NAMED = new Set(["request-join", "chat", "connect", "join"]);
 const HEADERS = {"content-type": "application/json; charset=utf-8", "cache-control": "no-store"};
 /* The object that answers "which of these cards can a table play" with no table (AI-5). Every table's object answers it
    from the engine's cards alone (game/room/table.mjs `unknown`), reading no table, so one object answers everyone; its
@@ -53,7 +54,7 @@ const reply = (status, value) => new Response(JSON.stringify(value), {status, he
 const newTableId = () => crypto.randomUUID().replace(/-/g, "");
 
 /** @returns {?Promise<Response>} null when the path is not Play's */
-export function tables(request, env, who, {newId = newTableId} = {}) {
+export function tables(request, env, who, {newId = newTableId, invitations = null} = {}) {
   const url = new URL(request.url);
   const match = /^\/api\/tables(?:\/([^/]+)(?:\/([a-z-]+))?)?$/.exec(url.pathname);
   if (!match) return null;
@@ -88,8 +89,18 @@ export function tables(request, env, who, {newId = newTableId} = {}) {
       if (request.method !== "POST") return reply(405, {error: "Create a table with a POST."});
       let body;
       try {body = JSON.parse(await json());} catch {return reply(400, {error: "That request is not JSON, or is larger than a table needs."});}
+      /* CREATE GAME SENDS THE INVITATIONS (ROB-320, cloud/game-invites.mjs): the guests are checked whole before the table exists --
+         a refusal leaves no table, no admission and no email -- and each is admitted, recorded and emailed once it does. */
+      let planned = null;
+      if (invitations && Array.isArray(body.seats)) {
+        try {planned = await invitations.plan(body.seats);} catch (error) {if (error && Number.isInteger(error.status)) return reply(error.status, {error: error.message}); throw error;}
+        if (planned) body = {...body, seats: planned.seats};
+      }
       const tableId = newId();
-      return forward(tableId, "/table/create", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({...body, tableId})});
+      const made = await forward(tableId, "/table/create", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({...body, tableId})});
+      if (!planned || made.status !== 201) return made;
+      const value = await made.json();
+      return reply(201, {...value, invitations: await invitations.send(planned, {tableId, hostName: body.hostName})});
     }
     /* THE LOUNGE'S LISTS: the registry is one more object of the TABLES binding, named so no table's id can be it. The caller's
        address goes with the question, and whether they are the owner; the registry never returns an address. */
@@ -135,6 +146,18 @@ export function tables(request, env, who, {newId = newTableId} = {}) {
       if (request.method !== "GET") return reply(405, {error: "Read a record with a GET."});
       const match = url.searchParams.get("match") || "";
       return forward(given, `/table/record${MATCH_ID.test(match) ? `?match=${match}` : ""}`);
+    }
+    /* THE HOST'S RETRY of a guest's invitation (ROB-320): the same invitation again, finishing what failed and sending nothing twice.
+       The table gives the Worker the address it holds for the seat; the page is never told it. */
+    if (action === "reinvite") {
+      if (request.method !== "POST") return reply(405, {error: "That is a POST."});
+      if (!invitations) return reply(503, {error: "Invitations are not switched on here yet."});
+      let asked;
+      try {asked = JSON.parse(await json() || "{}");} catch {return reply(400, {error: "That request is not JSON, or is larger than a table needs."});}
+      const held = await forward(given, "/table/reserved", {method: "POST", headers: {"content-type": "application/json"}, body: JSON.stringify({seatId: Number(asked && asked.seatId)})});
+      if (held.status !== 200) return held;
+      const {reserved} = await held.json();
+      return reply(200, {invitation: await invitations.one({tableId: given, seatId: Number(asked.seatId), to: reserved.email, name: reserved.name, group: reserved.group, hostName: reserved.hostName})});
     }
     if (!ACTIONS.has(action)) return reply(404, {error: "No such endpoint."});
     if (request.method !== "POST") return reply(405, {error: "That is a POST."});
