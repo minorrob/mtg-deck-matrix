@@ -141,9 +141,9 @@ reproduction behind either. ROB-63 builds the in-game *Report game issue* path o
 ## Design references from Mobbin
 
 Mobbin is the library of real apps' screens and flows the UI lanes consult before a material design choice that has no
-approved reference (the visual acceptance rules, below). It is connected to Claude, but **as read on 2026-10-31 every
-call is refused until the account is on a paid plan** (ROB-58 tracks paid tools; ROB-61 is the reference work it
-unblocks).
+approved reference (the visual acceptance rules, below). It is connected to Claude and answers searches of screens and
+flows (verified 2026-10-31, after the plan was upgraded; ROB-58 tracks paid tools). ROB-61 is the first reference work
+it serves.
 
 - **A reference informs; it never approves.** What Rob approved (the wireframes, `docs/design/**`) outranks any
   reference. A choice a reference suggests that departs from an approved design is put to Rob, not built.
