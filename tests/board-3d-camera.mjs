@@ -376,21 +376,32 @@ try {
   await page.keyboard.press("Escape");
   ok(await menu.count() === 0, "Escape closes it");
   const cardOn = (id, where = ".cm-stage-fan") => page.locator(`${where} .cm-bcard[data-card='${id}']`).first();
+  /* Right-click opens the card's menu, and a row that asks nothing more is played at once (Rob, 2026-10-30: "Right-click = menu",
+     "Two clicks send"; ROB-319 had sent these through the pop-up). A row with a real choice enters the pop-up: tests/board-choice-flow.mjs. */
   await rightClickCard(page, ISLAND);
-  eq(await page.locator('.cm-choice-flow h2').textContent(),'Island','the sole land action opens its source in the popup');
-  eq(await page.locator('[data-action=board-flow-choice]').count(),0,'sole legal land action is auto-selected');
-  eq(acts(),[],'opening the land popup sends nothing');
-  await page.locator('[data-action=board-flow-confirm]').click();
-  for(let i=0;i<100&&!acts().length;i++)await page.waitForTimeout(20);
-  eq(acts(),[[1]],'confirmation plays the original land offer exactly once');
-  await again();await rightClickCard(page,RIME);
-  eq(await page.locator('.cm-choice-flow h2').textContent(),'Rime Chill','spell source stays with its decisions');
-  ok((await page.locator('.cm-choice-review').textContent()).includes('up to two targets'),'legacy offer detail remains available without inventing targets');
-  await page.keyboard.press('Escape');await rightClickCard(page,TOWER,'.cm-stage-front');
-  const mana=page.locator('[data-action=board-flow-choice]');
-  eq(await mana.count(),2,'two mana outputs are separate choices');
-  ok((await mana.evaluateAll(es=>es.map(e=>e.querySelectorAll('.cm-mana img,.cm-mana svg').length))).every(n=>n===1),'each output uses its actual symbol');
-  await page.keyboard.press('Escape');
+  m = await readMenu();
+  eq(m.rows.map((r) => r.index), offered(ISLAND), "the Island's menu lists the one thing the room offers for it");
+  eq([m.card, m.rows[0].text, m.rows[0].said, m.focused], ["🔍 Island", "⤓ Play", "Play Island", "Play Island"], "as ⤓ Play under the card's name, said in full, the focus on it");
+  await page.keyboard.press("ArrowUp");
+  eq((await readMenu()).focused, "Read Island", "the arrows move between the card and its offers");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  ok(await menu.count() === 0, "choosing an offer closes the menu");
+  for (let i = 0; i < 100 && !acts().length; i += 1) await page.waitForTimeout(20);
+  eq(acts(), [[1]], "and plays it at once, once: the card and its row are two presses already (Rob, 2026-10-27)");
+  /* The view a played land leaves is not this test's business: the offers come back as they were. */
+  await again();
+  await rightClickCard(page, RIME);
+  m = await readMenu();
+  eq(m.rows.map((r) => r.index), offered(RIME), "Rime Chill's menu lists only its own offer");
+  eq(m.rows[0].text, "✦ Cast → up to two targets · ↷ Island, Access Tunnel", "✦ Cast, then where it goes and what it taps, in shorthand");
+  eq(m.rows[0].said, "Cast Rime Chill → up to two targets · tapping Island, Access Tunnel", "and in full to a reader");
+  await page.keyboard.press("Escape");
+  await rightClickCard(page, TOWER, ".cm-stage-front");
+  m = await readMenu();
+  eq(m.rows.map((r) => r.index), offered(TOWER), "the Command Tower's menu lists its two ways of making mana");
+  ok(m.rows.every((r) => r.text.startsWith("↷") && r.mana === 1), `each a tap and the mana it makes, as a symbol (${JSON.stringify(m.rows)})`);
+  await page.keyboard.press("Escape");
   await rightClickCard(page, CHALICE, ".cm-stage-front");
   m = await readMenu();
   eq([m.rows.map((r) => r.index), m.rows[0]?.text], [offered(CHALICE), "↶ Untap"], "the Chalice's: ↶ Untap");
