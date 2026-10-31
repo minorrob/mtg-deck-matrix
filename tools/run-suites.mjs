@@ -25,9 +25,15 @@ import path from "node:path";
 const quiet = process.argv.includes("-q");
 const ROOT = process.cwd();
 const listed = (dir, suffix) => readdirSync(path.join(ROOT, dir)).filter((f) => f.endsWith(suffix)).sort().map((f) => `${dir}/${f}`);
-const suites = [...listed("tests", ".mjs"), ...listed("game/tests", ".test.mjs")];
+const everySuite = [...listed("tests", ".mjs"), ...listed("game/tests", ".test.mjs")];
 const BROWSER = /browser-runner|playwright/i;
-const browser = new Set(suites.filter((file) => BROWSER.test(readFileSync(path.join(ROOT, file), "utf8"))));
+/* SUITE_SHARD="i/n" (CI only): this job runs every n-th browser suite and every n-th other suite, so n jobs together run each
+   suite once and no job holds all the slow ones. Unset, every suite runs here, as before. */
+const shard = /^(\d+)\/(\d+)$/.exec(process.env.SUITE_SHARD || "");
+const isBrowser = (file) => BROWSER.test(readFileSync(path.join(ROOT, file), "utf8"));
+const counts = {true: 0, false: 0};
+const suites = shard ? everySuite.filter((file) => (counts[isBrowser(file)]++ % Number(shard[2])) === Number(shard[1])) : everySuite;
+const browser = new Set(suites.filter(isBrowser));
 const jobs = Math.max(1, Number(process.env.SUITE_JOBS) || Math.min(4, availableParallelism() - 1));
 const timeoutMinutes = Number(process.env.SUITE_TIMEOUT_MINUTES) || 20;
 
