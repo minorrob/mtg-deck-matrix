@@ -956,13 +956,14 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 688 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 688 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 688 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 688 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 688 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 688 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 688 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1226,6 +1227,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `room-view-face` — `tests/room-view-face.mjs` (ROB-207, Luke's playtest of 2026-10-28: the room's view says `face: "back"` of a double-faced permanent whose back face is up, to every seat, and nothing else carries a face)
 - `room-view-appearance` — `tests/room-view-appearance.mjs` (ROB-329, Rob's playtest of 2026-10-30: the room's view says `appearance` of a permanent Oko turned into an Elk, to every seat, while the effect holds, and nothing else carries one)
 - `room-optional-count-targets` — `tests/room-optional-count-targets.mjs` (ROB-204: the room takes an "up to one" and an "any number" target answer with one, several or none chosen, refuses past the most, and plays on)
+- `room-mdfc-land-play` — `tests/room-mdfc-land-play.mjs` (ROB-343: a person plays Fell Mire's land face in an actual room, answers pay or decline, reloads at the question, and the tape replays)
 - `room-g1-terms` — `tests/room-g1-terms.mjs`
 - `game-table` — `tests/game-table.mjs`
 - `lounge-registry` — `tests/lounge-registry.mjs` (the Pre-lobby's lists: `live` and `mine` from the registry object, private tables kept to their seats, the organizer and the owner; the new create fields; `users/search`; `ai-seat`'s levels; no address anywhere)
@@ -1364,6 +1366,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-modal-triggers` — `tests/engine-modal-triggers.mjs`
 - `engine-exile-until` — `tests/engine-exile-until.mjs`
 - `engine-mdfc` — `tests/engine-mdfc.mjs`
+- `engine-mdfc-face-state` — `tests/engine-mdfc-face-state.mjs` (ROB-343: a modal double-faced card shown as its land face, and put back, leaves state a room can save; every saved modal double-faced card, and the actual Fell Mire "pay 3 life?" wait reloaded from JSON)
 - `engine-planeswalkers` — `tests/engine-planeswalkers.mjs`
 - `engine-tap-to-cast` — `tests/engine-tap-to-cast.mjs`
 - `engine-phyrexian-taps` — `tests/engine-phyrexian-taps.mjs` (a spell with Phyrexian mana ({U/P}: {U} or 2 life, CR 107.4f) is offered and tapped for in each way, the caster asked which: Tezzeret's Gambit with three untapped Wastes, with blue, with life too low; Gitaxian Probe, Mental Misstep and Vraska, Betrayal's Sting; the AI takes mana before life (ROB-326))
