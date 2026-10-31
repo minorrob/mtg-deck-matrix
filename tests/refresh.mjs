@@ -24,6 +24,8 @@ for (const s of STEPS) {
          the registry. Its tool must be the one that vouches for it and must name the file it writes. */
       ok(s.check[1] === s.run[1], `${s.id}: its own tool vouches for ${f}`);
       ok(readFileSync(path.join(ROOT, s.run[1]), "utf8").includes(f), `${s.id}: ${s.run[1]} names ${f}, the file it writes`);
+      const registered = REGISTRY.find((r) => r.file === f);
+      if (registered) ok(registered.generator === s.run[1], `${s.id}: ${f} is registered, and its registered generator is the step's tool`);
       continue;
     }
     const reg = REGISTRY.find((r) => r.file === f);
@@ -46,6 +48,8 @@ for (const id of ["advise-cards", "commander-index", "pilot-roles", "variants"])
 ok(at("records") < at("advise-cards") && at("records") < at("variants"), "the advisor's cards and the variants' prices follow the records (data/cards.json)");
 ok(at("strategies") < at("commander-index") && at("strategies") < at("pilot-roles"), "the commander index and the pilots' roles follow the graph and the strategies");
 ok(at("variants") < at("manifest"), "the manifest comes last, so it sees every file");
+/* The commander index is served (the asset map and the worker's on-demand list name it), so the manifest must list it, and the manifest is made from the registry. */
+ok(REGISTRY.some((r) => r.file === "data/commander-index.json" && r.generator === "tools/build-commander-index.mjs"), "the commander index is registered, so the manifest lists the file the asset map serves");
 eq(STEPS.find((s) => s.id === "pilot-roles").writes, ["game/engine/pilots/roles-data.mjs"], "the pilots' roles are the one generated file the refresh writes in the engine lane's tree");
 ok(STEPS.find((s) => s.id === "graph").long, "the graph step is marked long");
 for (const id of ["universe", "flavor", "graph", "records"]) ok(STEPS.find((s) => s.id === id).count?.mustNotShrink, `${id} must not shrink`);
