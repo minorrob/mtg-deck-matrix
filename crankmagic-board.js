@@ -188,7 +188,10 @@ globalThis.CrankBoard = Object.seal({
       const output=n.kind==='mana-source' && review[i+1]?.key.startsWith('mana-color:') ? review[++i] : null;
       reviewRows.push(`<li data-kind="${e(n.kind)}"${n.automatic?' data-automatic="true"':''}>${visual(n)}<span>${n.key==='mana-payment'?'Pay':label(n)}</span>${output?label(output):n.key==='mana-payment'?label({...n,label:n.reviewLabel ?? n.label}):''}</li>`);
     }
-    return `<section class="cm-board-decision cm-choice-flow" id="cm-board-decision" data-choice-id="${e(d.id)}" data-match-id="${e(view.matchId)}" data-flow-status="${step.status}" aria-label="${e(d.title)}"><h2>${e(source?.name || (d.kind==='priority' ? d.options.find(o=>o.index===step.index)?.label : d.title) || d.title)}</h2>
+    /* Asked in a run you chose Resolve all for: this answer goes for the same question each time the run asks it (Rob, 2026-10-09:
+       "Yes to all"; game/room/room.mjs). The pop-up says so as the pane did. */
+    const forRun = d.forRun ? `<p class="cm-muted cm-board-for-run">Resolve all: your answer goes for this same question each time the run asks it.</p>` : "";
+    return `<section class="cm-board-decision cm-choice-flow" id="cm-board-decision" data-choice-id="${e(d.id)}" data-match-id="${e(view.matchId)}" data-flow-status="${step.status}" aria-label="${e(d.title)}"><h2>${e(source?.name || (d.kind==='priority' ? d.options.find(o=>o.index===step.index)?.label : d.title) || d.title)}</h2>${forRun}
       ${source?.name?`<button class="cm-flow-inspect" type="button" data-action="board-combat-inspect" data-card="${source.cardId}" aria-label="Inspect ${e(source.name)}"><img class="cm-flow-card" src="${e(pictureOf(source.name,source))}" alt=""></button>`:''}
       <div class="cm-board-options">${ready?`<ul class="cm-choice-review">${reviewRows.join('')}</ul>${attackChoice!==null?riskMark(attackRisk(d.options.find(o=>o.index===step.index))):''}`:choices}</div>
       <div class="cm-decide-actions">${ready?b('Confirm','board-flow-confirm',{revision:String(view.revision),choice:d.id,match:view.matchId,index:String(step.index)},true,{disabled:sending}).replace('>Confirm</button>',`>${CHEV_PATH('M3 8l3 3 7-7')}<span>Confirm</span></button>`):''}${choiceFlow.selections.length?b('Back','board-flow-back',{},false,{disabled:sending}).replace('>Back</button>',`>${CHEV_LEFT}<span>Back</span></button>`):''}${attackChoice!==null?b("Don't attack",'board-flow-no-attack',{},false,{disabled:sending}):''}${b('Cancel','board-flow-cancel',{},false,{disabled:sending})}</div></section>`;
@@ -2284,9 +2287,22 @@ globalThis.CrankBoard = Object.seal({
     if (mandatory(d)) return `<p class="cm-muted cm-board-pending" role="status">◆ Answer the question on the table.</p>`;
     return decision() || `<p class="cm-muted">${e(waitingText() || "Choose a card or continue your turn.")}</p>`;
   };
+  /* COMBAT DOCKS ABOVE THE BOARD (Rob, 2026-10-30: "Dock above the board"). Declaring attackers or blockers is still the pop-up's
+     (ROB-319: it owns the sequence, the Actions module aside), but it lies in combat's band under the top bar, not across the middle
+     of the battlefield being read; the board, its rails and drawers start below it (dockCombat measures it into --combat-dock). The
+     phone keeps the centered pop-up: its board is not in the shared grid, and at 390 wide a docked pop-up left no battlefield to see
+     and folded its own words (tried, 2026-10-30). */
+  const combatDock = () => decisionPopup() && !phone() && (blocking() || /^declare-(attackers|blockers):/.test(String(view.decision?.id || "")));
+  function dockCombat() {
+    const host = document.getElementById("cm-board"), pop = host?.querySelector(".cm-required-popup.is-combat");
+    if (!host) return;
+    if (!pop) {host.removeAttribute("data-combat-dock"); host.style.removeProperty("--combat-dock"); return;}
+    const h = Math.ceil(pop.getBoundingClientRect().height) + 12;
+    host.style.setProperty("--combat-dock", `${h}px`); host.setAttribute("data-combat-dock", "");
+  }
   function ask() {
     const d = view.decision, side = moduleSide('actions');
-    if(decisionPopup())return `<div class="cm-board-ask cm-decision-slot cm-required-popup" id="cm-decision-slot" role="dialog" aria-modal="true" aria-label="${e(d.title)}" tabindex="-1">${decision()}</div>`;
+    if(decisionPopup())return `<div class="cm-board-ask cm-decision-slot cm-required-popup${combatDock() ? " is-combat" : ""}" id="cm-decision-slot" role="dialog" aria-modal="true" aria-label="${e(d.title)}" tabindex="-1">${decision()}</div>`;
     const visible = !/^mulligan:/.test(d?.id || '') && !mandatory(d) && !actionsShut && (phone() ? stageRail : side === 'left' ? stageRail : side === 'right' ? stageSide : false);
     const inner = `${went()}${moduleSide('stack') ? '' : stack()}${!visible && d && d.kind !== 'draw' ? decision() : ''}`;
     return `<div class="cm-board-ask cm-decision-slot" id="cm-decision-slot" aria-label="Current decision"${inner ? '' : ' hidden'}>${inner}</div>`;
@@ -2911,19 +2927,24 @@ globalThis.CrankBoard = Object.seal({
   }
   /* NEVER OVER A QUESTION (the same run's screens: "LIFE -1" and "LIFE -3" over Discard 1 card's options, "YOUR TURN"
      over the turns gone by). The callouts lie over the table, and a question asked of you is read first: with its panel
-     under the layer, the layer moves below it, or above it, whichever has room, and with room for neither it waits out
-     of sight. Placed as each callout comes and as the board is drawn (fit). */
+     under the layer, the layer moves below it, or above it, whichever has room, then beside it (the ROB-319 pop-up is
+     centered, and at 720 tall it leaves room above and below for neither: every callout waited out of sight for as long as
+     a question was open), and with room nowhere it waits out of sight. Placed as each callout comes and as the board is
+     drawn (fit). */
   function placeCallouts() {
     const layer = document.getElementById("cm-board-callouts");
     if (!layer) return;
-    layer.style.top = "";
+    layer.style.top = ""; layer.style.left = "";
     layer.classList.remove("is-hidden");
     const ask = document.querySelector("#cm-board-decision[data-choice-id], .cm-board-went");
     if (!ask || !layer.children.length) return;
     const a = ask.getBoundingClientRect(), l = layer.getBoundingClientRect(), gap = 8;
     if (!a.width || l.bottom <= a.top || l.top >= a.bottom || l.right <= a.left || l.left >= a.right) return;
+    const beside = (x) => {layer.style.left = `${Math.round(x + l.width / 2)}px`; layer.style.top = `${Math.round(Math.max(gap, Math.min(a.top, innerHeight - gap - l.height)))}px`;};
     if (a.bottom + gap + l.height <= innerHeight - gap) layer.style.top = `${a.bottom + gap}px`;
     else if (a.top - gap - l.height >= gap) layer.style.top = `${a.top - gap - l.height}px`;
+    else if (a.right + gap + l.width <= innerWidth - gap) beside(a.right + gap);   /* the layer is centered on its left (translateX(-50%)) */
+    else if (a.left - gap - l.width >= gap) beside(a.left - gap - l.width);
     else layer.classList.add("is-hidden");
   }
   function nextCallout() {
@@ -3140,7 +3161,7 @@ globalThis.CrankBoard = Object.seal({
         Object.entries(focusData).every(([key, value]) => el.dataset[key] === value));
       next?.focus({preventScroll: true});
     }
-    stepAside();
+    stepAside(); dockCombat();
     if(coach.open && coachGate.key!==coachKey())drawCoach();
     // Reparenting the connected Coach during paint can blur it without replacing its live controls.
     if(coachActive?.isConnected && !coachActive.closest('[inert]') && document.activeElement===document.body){coachActive.focus({preventScroll:true});if(coachSelection)coachActive.setSelectionRange(...coachSelection);}
@@ -3318,7 +3339,9 @@ globalThis.CrankBoard = Object.seal({
       const host = document.getElementById("cm-board");
       if (!host || !view) return;
       const header=host.querySelector(':scope>.cm-stage-top');
-      if(header){const combat=header.querySelector('.cm-r4-combat')?.offsetHeight || 0;host.style.setProperty('--hud-top',`${Math.ceil(Math.max(28+30*hudScale()/100,header.offsetHeight-combat))}px`);}
+      /* the bar's own height: less combat's band inside it, and less the room kept under it for the docked combat pop-up (which
+         is measured from this, so counting it in would push the pop-up down by its own height at every draw) */
+      if(header){const combat=header.querySelector('.cm-r4-combat')?.offsetHeight || 0,dock=host.hasAttribute('data-combat-dock')?parseFloat(host.style.getPropertyValue('--combat-dock'))||0:0;host.style.setProperty('--hud-top',`${Math.ceil(Math.max(28+30*hudScale()/100,header.offsetHeight-combat-dock))}px`);}
       host.style.setProperty('--full-action-h',`${host.querySelector('.cm-stage-actions')?.offsetHeight || 0}px`);
       host.style.setProperty('--full-action-w',`${host.querySelector('.cm-stage-actions')?.offsetWidth || 0}px`);
       fitCardCaptions(host);
@@ -4585,7 +4608,10 @@ globalThis.CrankBoard = Object.seal({
      goes back to the card. */
   function openCardMenu(id, at, el = at instanceof Element ? at : null,members=[]) {
     if(decisionPopup()){actions['board-combat-inspect']({dataset:{card:String(id)}});return;}
-    if(view.decision?.kind==='priority' && optionsFor(id).some(o=>!['undo-mana','undo-play','undo-land'].includes(o.act)))return beginChoice(id,null,null,el);
+    /* A card's own click and its right click open its menu, which commits nothing (Rob, 2026-10-30, choosing between ROB-319's
+       pop-up on the first click and the r4 click map of his Oct 21 notes: "Right-click = menu"). The pop-up comes from a row
+       that has a real choice to make, or from a double click; a first click that opened it swallowed the second, so a double
+       click no longer tapped a land. */
     if (!view || !document.getElementById("cm-board")) return;
     const box = at instanceof Element ? at.getBoundingClientRect() : null;
     cardMenu = {id,members, x: Math.round(box ? box.right + 4 : at.x), y: Math.round(box ? box.top : at.y), from: el?.isConnected ? C.focusKey(el) : null,anchor:box?{left:box.left,right:box.right,top:box.top,bottom:box.bottom}:null};
@@ -4614,15 +4640,17 @@ globalThis.CrankBoard = Object.seal({
     const o=currentOffer(el.dataset);if(!o)return;
     closeCardMenu(true);
     if(['undo-mana','undo-land','undo-play'].includes(o.act))return bindOffer(el.dataset);
-    /* ROB-319: priority offers enter the same conditional popup, including a sole answer awaiting confirmation. */
+    /* STANDING RULE (Rob, 2026-10-27): where two clicks already stand between the player and the action -- the card, then its row --
+       there is no third step to confirm. A row that asks nothing more is sent; one with a real choice (a mode, a target, a cost, a
+       payment) enters the ROB-319 pop-up and is confirmed there. Rob, 2026-10-30, choosing between the two rules: "Two clicks send". */
     /* Only an offer of priority: the picks of a many-of question (discard some, sacrifice some) are toggled here, and sent by its own Confirm. */
-    if(view.decision?.kind==="priority")return beginChoice(o.cardId,o.act);
+    if(view.decision?.kind==="priority")return selfOnly(o) ? commitOffer(o) : beginChoice(o.cardId,o.act);
     option(o.index);
   };
   function commitOffer(o) {
     const d = view?.decision;
     if (!d || sending || !d.options.some((x) => x.index === o.index)) return;
-    if(d.kind==='priority' && !['pass','resolve-all','undo-mana','undo-play','undo-land'].includes(o.act))return beginChoice(o.cardId,o.act);
+    if(d.kind==='priority' && !selfOnly(o) && !['pass','resolve-all','undo-mana','undo-play','undo-land'].includes(o.act))return beginChoice(o.cardId,o.act);
     picked = [o.index]; draftRevision = view.revision; actionCard = null; targetReviewing = false;
     return actions["board-confirm"]();
   }
