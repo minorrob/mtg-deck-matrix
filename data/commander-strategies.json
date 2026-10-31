@@ -1,6 +1,6 @@
 {
  "schema": "commander-strategies@1",
- "generatedAt": "2026-10-29T18:52:04.909Z",
+ "generatedAt": "2026-10-31T19:35:55.036Z",
  "generator": "tools/commander-strategies.mjs",
  "count": 2746,
  "source": "data/graph.json (classified terms), data/live-load.json (definition.mechanics), data/deck-guides.json (archetype)",
