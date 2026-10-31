@@ -1,8 +1,8 @@
 {
  "schema": "manifest@1",
- "generatedAt": "2026-10-31T19:36:12.268Z",
+ "generatedAt": "2026-10-31T21:25:48.760Z",
  "generator": "tools/data-manifest.mjs",
- "count": 26,
+ "count": 27,
  "files": [
   {
    "file": "data/engine/oracle.json",
@@ -89,6 +89,17 @@
    "bytes": 628875,
    "sha256": "9e20bb7880cfa56b8e9469ef6e2ccfa20a58fd48ac6003a32a8f06fa1f6668b4",
    "version": 8,
+   "served": true,
+   "cache": "on demand"
+  },
+  {
+   "file": "data/commander-index.json",
+   "schema": "commander-index@1",
+   "stamp": "2026-10-31T19:34:46.844Z",
+   "generator": "tools/build-commander-index.mjs",
+   "bytes": 250870,
+   "sha256": "751a89b2dd3ca4594ea26a407f975f0f05984b26e544825b738204ee80429ca5",
+   "version": 3,
    "served": true,
    "cache": "on demand"
   },
