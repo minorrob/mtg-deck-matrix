@@ -30,8 +30,9 @@ end-to-end pattern."* He chose Linear as the roadmap's home.
   to Todo with `Handed off: <state>; next step; branch; PR`.
 - **The procedures are written down** (2026-10-31, ROB-355): `.claude/skills/one-loop/SKILL.md` runs this loop on an
   issue (pick up, claim, branch, draft PR, watch, close, hand off) and `.claude/skills/crankmagic-release/SKILL.md`
-  runs a release (checklist, staging, read-back, Linear comments, production on Rob's go). Claude loads them as
-  skills; every other harness reads them as documents and follows the same steps.
+  runs a release (checklist, staging, read-back, Linear comments, production on Rob's go). Every other procedure is a
+  skill beside them, indexed in `.claude/skills/README.md` ("Which skill, when", below). Claude loads them as skills;
+  every other harness reads them as documents and follows the same steps.
 - **Retired on 2026-10-29:** `docs/ACTIVE.md` as the lock and the record (kept, frozen, as the archive of what came
   before), the readout and its feeds (`docs/readout/`, `tests/readout-feeds.mjs`), per-session handoff documents (the
   draft PR is the handoff), the root `BACKLOG.md` and the roadmap draft under `docs/program/` (their open items are
@@ -118,29 +119,57 @@ on Forge is **unproven until a local session proves it**, and the handoff says s
 
 Rob, 2026-10-31: *"the various skills that were identified are part of the standing instructions to be used at the
 appropriate times based on the work, underway or task to be taken up."* So the moment decides the skill, not the
-session's memory. Claude sessions invoke them by name (repository skills in `.claude/skills/`, plugin skills as
-`plugin:skill`); every other harness reads the repository skills as documents and, for a plugin skill, does the same
-practice by hand. A skill never overrides a rule in this file; where one disagrees, this file wins.
+session's memory. Every skill is a file in `.claude/skills/` (its index is `.claude/skills/README.md`), so every
+harness can read it: Claude Code loads them by name, and Codex, Cursor and Grok follow them as documents or copy them
+into their own format (Rob, 2026-10-31: *"put the skills files in the [repo] so that they are accessible to all
+harnesses to interpret into their own formats"*). Where Claude has a built-in or plugin skill for the same practice
+(`code-review`, `run`, `engineering:debug`…), the repository skill says when to use it as the engine. A skill never
+overrides a rule in this file; where one disagrees, this file wins.
 
-| The moment | Skill | Notes |
-| --- | --- | --- |
-| Rob's new ask; "pick up the next item"; a named ROB-key; resuming a handoff | `one-loop` | Files, claims, branches, opens and watches the draft PR, closes the loop. |
-| A bug report, a stack trace, "it broke" (a Jam or not) | `engineering:debug` | Reproduce → isolate → cause → fix; a Jam is read first ("Bug reports arrive as Jams"). |
-| Deciding how to prove a change; a new suite | `engineering:testing-strategy` | Then "A test that cannot fail is a comment". |
-| A choice between designs or technologies; a new contract or migration | `engineering:architecture` | The record goes on the issue, or under `docs/` when it is lasting. |
-| A UI change with no approved reference | Mobbin, then `design:design-critique` | "Design references from Mobbin"; a choice that departs from an approved design goes to Rob. |
-| Wording on screen: a label, a prompt, a refusal, an empty state | `design:ux-copy` | Within "Symbols first, words last" and the refusal rule. |
-| Any visible UI change, before claiming it done | `run`, then `design:accessibility-review` | `run` gives the rendered evidence the visual acceptance rules demand. |
-| Before marking a PR ready (code, not documents only) | `code-review` (low or medium), then `simplify` if it finds clutter | `max` only when Rob asks. Findings are fixed before ready, or answered on the PR. |
-| A change touching `cloud/` access, accounts, sharing, invitations, mail, secrets or anything a stranger can send | `security-review` | Before ready, in addition to the review above. |
-| A merge of a served change, when you are the release owner; "release", "deploy" | `crankmagic-release` | Production only on Rob's go. |
-| A set release, stale prices, "refresh the data" | `crankmagic-refresh` | Claude · Deck intelligence. |
-| A new Master workbook, "update Load Live" | `crankmagic-live-load-sync` | Claude · Deck intelligence. |
-| "Simulate this deck", an optimization question about a deck | `simulate-deck` | Claude · Deck intelligence. |
-| Production is broken for players | `engineering:incident-response` | Rob is told first; the fix still follows the loop. |
+| The moment | Skill |
+| --- | --- |
+| Rob's new ask; "pick up the next item"; a named ROB-key; resuming a handoff | `one-loop` |
+| A bug report, a stack trace, "it broke" (a Jam or not) | `debug-a-report` |
+| Deciding how to prove a change; a new suite | `prove-a-change` |
+| A choice that is costly to reverse: a design, a technology, a contract, a migration | `decide-and-record` |
+| A UI change with no approved reference; reviewing a design | `design-reference-and-critique` |
+| Any words a player reads: a label, a prompt, a refusal, an empty state | `write-ui-copy` |
+| Any visible change, before claiming it done | `visual-acceptance` |
+| Any code change, before marking its PR ready | `review-before-ready` |
+| A merge of a served change when you are the release owner; "release", "deploy" | `crankmagic-release` |
+| Broken for players in production or staging | `incident` |
+| A set release, stale prices, "refresh the data" | `crankmagic-refresh` |
+| A new Master workbook, "update Load Live" | `crankmagic-live-load-sync` |
+| "Simulate this deck", an optimization question about a deck | `simulate-deck` |
 
-A skill that is missing from a session (not installed, or its connector not signed in) is named in the PR as a step
-not taken, with what was done instead; it is never skipped silently.
+A step a session cannot take (a skill or a tool it lacks) is named in the PR as a step not taken, with what was done
+instead; it is never skipped silently.
+
+## Tools a session needs, and asking Rob to connect them
+
+Rob, 2026-10-31: *"include the instructions in the requirements to use the paid tools, such as [Jam and Mobbin] and
+others, they can prompt me to ensure they're connected."* Connectors are authorized per harness, by Rob; a session
+cannot sign itself in. So a session checks a tool **at the moment a step needs it** (Linear and GitHub at the start),
+and when one is missing it asks Rob, once per session, in this shape:
+
+> *"<Tool> isn't connected in this session; I need it for <step> on <ROB-key>. Connect it in <where>, or <the
+> fallback>. Meanwhile I'm <what the session does instead>."*
+
+| Tool | Paid | Needed by | Check it is there | Where Rob connects it | Fallback while it is missing |
+| --- | --- | --- | --- | --- | --- |
+| Linear | — | every session (`one-loop`) | read the issue you hold | claude.ai Settings → Connectors; Codex, Cursor: the harness's MCP settings | work from the issue Rob pastes; name the missed updates in the PR |
+| GitHub | — | every PR; watching | read the PR | Claude GitHub connection; `gh` for local harnesses | push and let Rob open the PR |
+| Jam | yes | `debug-a-report`, Jam links | open the Jam's details | the Jam connector in each harness; a recording domain in Jam's dashboard | Rob pastes the description and console errors |
+| Mobbin | yes | `design-reference-and-critique` | list the collections | the Mobbin connector in each harness | a reference Rob approves |
+| Staging service token | — | `crankmagic-release`, `incident` | `tools/staging-check.mjs` (exit 2 = missing) | the environment's secrets (cloud) or the Windows user environment (Personal-HP) | report staging as unread |
+| Wrangler, Forge, the JDK | — | releases, Forge proofs | Personal-HP only | — | the work is a local session's; say "unproven until a local session proves it" |
+
+- **Never ask for a secret in the chat.** Tokens, passwords and keys go into the environment or the connector's own
+  sign-in, by Rob; a session never prints, pastes or commits one.
+- **Ask once, then carry on** with the fallback; do not stop the whole session for a tool one step needs.
+- **A paid tool's plan or seats** (upgrading, adding a seat, recording links that change billing) are Rob's call,
+  filed under ROB-58; a session never changes them.
+- A new tool joins this table in the same PR that first relies on it.
 
 ## Bug reports arrive as Jams
 

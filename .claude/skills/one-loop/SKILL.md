@@ -65,17 +65,16 @@ A story that needs more than one PR gets sub-issues (`save_issue` with `parentId
 
 ### The skills along the way
 
-`AGENTS.md`, "Which skill, when", is the table; in this loop it lands at these points:
+`AGENTS.md`, "Which skill, when", is the table; in this loop it lands at these points (all in `.claude/skills/`):
 
-- **Before code:** a bug → `engineering:debug` (a Jam read first); how to prove it → `engineering:testing-strategy`;
-  a design or contract choice → `engineering:architecture`; a UI change without an approved reference → Mobbin, then
-  `design:design-critique`; wording → `design:ux-copy`.
-- **Before marking ready:** visible UI → `run` and `design:accessibility-review`; code → `code-review` (low or
-  medium) and `simplify` if it finds clutter; access, accounts, sharing, mail or secrets → `security-review`.
+- **Before code:** a bug → `debug-a-report`; how to prove it → `prove-a-change`; a choice costly to reverse →
+  `decide-and-record`; a UI change without an approved reference → `design-reference-and-critique`; words a player
+  reads → `write-ui-copy`.
+- **Before marking ready:** a visible change → `visual-acceptance`; any code → `review-before-ready`.
 - **The work itself may be a skill:** `crankmagic-refresh`, `crankmagic-live-load-sync`, `simulate-deck`,
-  `crankmagic-release`.
-
-A skill this session lacks is named in the PR body as a step not taken.
+  `crankmagic-release`, `incident`.
+- **A tool a step needs is missing** (Jam, Mobbin, Linear…): ask Rob once in the shape `AGENTS.md`, "Tools a session
+  needs", gives, take the fallback, and name the step not taken in the PR.
 
 ## 4 · Watch the PR (the rule since 2026-10-31)
 
