@@ -53,7 +53,7 @@ function d1() {
 
 /* ---- 1. The migration ---- */
 {
-  eq(MIGRATIONS.slice(-2), ["0009_feedback.sql", "0010_match_results.sql"], "1. migration 0009 is the feedback table's, followed only by the lounge's 0010 (0007 and 0008 are reserved in docs/ACTIVE.md)");
+  eq(MIGRATIONS.slice(MIGRATIONS.indexOf("0009_feedback.sql"), MIGRATIONS.indexOf("0009_feedback.sql") + 2), ["0009_feedback.sql", "0010_match_results.sql"], "1. migration 0009 is the feedback table's, followed directly by the lounge's 0010 (0007 and 0008 are reserved in docs/ACTIVE.md; the migrations after 0010 are other features')");
   const DB = d1();
   const columns = (t) => DB.raw.prepare(`PRAGMA table_info(${t})`).all().map((c) => c.name);
   eq(columns("feedback"), ["id", "reporter", "reporter_group", "kind", "state", "route", "build_commit", "build_profile", "report", "screenshot", "issue", "pr", "release_commit", "message_id", "created_at", "updated_at"],
