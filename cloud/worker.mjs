@@ -6,7 +6,7 @@
  * to the person rather than settled here.
  *
  *   GET  /api/auth/login?to=#…     after Access has signed the person in, back to the app (a same-site path only)
- *   GET  /api/join/:table/:code    an invitation's link: back to the app at #table/<table>/<code>, after Access's sign-in
+ *   GET  /api/join/:table[/:code]  an invitation's link: back to the app at #table/<table>/<code> (or, with no code, the email's lobby link, #table?id=<table>&join=1), after Access's sign-in
  *   GET  /api/me                   who is signed in, and the version their devices converge on
  *   GET  /api/ai-seat              whether this person may seat an AI on Claude at a new table (AI-2): {open, levels}
  *   GET  /api/users/search?q=      people a host may invite by name, never an address: {users: [{name, handle}]} (cloud/lounge.mjs)
@@ -32,6 +32,7 @@
  *   GET  /api/ai/login?to=#...     back to the app once signed in to the AI door
  *   POST  /api/feedback            a report from any page or mid-game (CrankFeedback@1, feedback-schema.js), from any
  *                                  signed-in person, 10 an hour each -> 201 {feedback} (cloud/feedback.mjs)
+ *   GET/PUT /api/admin/ai-model, POST /api/admin/ai-model/undo   the owner's AI model, from the models API's list (ROB-338)
  *   GET   /api/admin/feedback      the reports, oldest first (?since=&state=&limit=): the owner, and the triage agent's
  *                                  service token for its own Access application (FEEDBACK_AGENT_AUD)
  *   PATCH /api/admin/feedback/:id  the same two move a report along new -> triaged -> approved -> in-progress ->
@@ -41,8 +42,10 @@ import {verifyAccess, Unauthorized, groupOf} from "./access.mjs";
 import {createLibrary, Conflict, Invalid, LIMITS} from "./library.mjs";
 import {archidekt, ImportError} from "./import.mjs";
 import {createAi, everyone, settings, explain, coach, advise, readQuestion, Closed} from "./ai.mjs";
+import {storedModel, modelAdmin} from "./ai-model.mjs";
 import {readAsk, openVersion, adviseBrief} from "./advise.mjs";
 import {tables} from "./tables.mjs";
+import {gameInvitations} from "./game-invites.mjs";
 import {searchUsers, leaderboard, SEATABLE_LEVELS} from "./lounge.mjs";
 import {social, ShareError, sharedIdentity} from "./sharing.mjs";
 import {createFeedback, FeedbackInvalid, FeedbackRefused, isOwner, feedbackGroup} from "./feedback.mjs";
@@ -54,7 +57,7 @@ import {createFeedback, FeedbackInvalid, FeedbackRefused, isOwner, feedbackGroup
 async function aiMeter(env, email, now) {
   if (!env.DB) return {open: false};
   let config;
-  try {config = settings(env);} catch {return {open: false};}
+  try {config = settings(env, await storedModel(env.DB));} catch {return {open: false};}
   const ai = createAi(env.DB, {now, owner: env.OWNER_EMAIL});
   if (!(await ai.allowed(email))) return {open: false};
   const {mine} = await ai.spent(email);
@@ -62,7 +65,7 @@ async function aiMeter(env, email, now) {
 }
 async function aiSeatOpen(env, email, flag = "AI_PILOT") {
   if (env[flag] !== "on" || !env.DB) return false;
-  try {settings(env);} catch {return false;}
+  try {settings(env, await storedModel(env.DB));} catch {return false;}
   return createAi(env.DB, {owner: env.OWNER_EMAIL}).allowed(email);
 }
 
@@ -80,11 +83,38 @@ async function adminGroups(request, env, who, ms) {
   catch (error) {if (error instanceof Closed) return reply(error.status, {error: error.message}); throw error;}
 }
 
+/* THE OWNER'S AI MODEL (ROB-338; cloud/ai-model.mjs, docs/program/admin-pane-contract.md): which Claude model the AI door calls,
+   chosen from what the models API lists for this key, stored, with the one before it a press away. The owner alone: anyone else
+   is refused here, first, before a body is read or the database or the API is asked anything.
+     GET  /api/admin/ai-model        the model in force, the one before it, and the API's list with what may be chosen
+     PUT  /api/admin/ai-model        {model} -> the same, after the change
+     POST /api/admin/ai-model/undo   back to the model before the last change */
+async function adminModel(request, env, who, deps, ms) {
+  const path = new URL(request.url).pathname, method = request.method;
+  if ((await groupOf(who.email, env, env.DB)) !== "owner") return reply(403, {error: "Only CrankMagic's owner can change the AI model."});
+  const undoing = path === "/api/admin/ai-model/undo";
+  if (undoing ? method !== "POST" : method !== "GET" && method !== "PUT") return reply(405, {error: undoing ? "Undo is a POST." : "The model is read with GET and chosen with PUT."});
+  const admin = modelAdmin(env, {now: () => new Date(ms()).toISOString(), fetchImpl: deps.fetchImpl || fetch});
+  try {
+    if (method === "GET") return reply(200, await admin.read());
+    if (undoing) return reply(200, await admin.undo(who.email));
+    const input = await body(request);
+    return reply(200, await admin.set(input && input.model, who.email));
+  } catch (error) {
+    if (error instanceof Closed) return reply(error.status, {error: error.message});
+    if (error instanceof Invalid) return reply(400, {error: `${error.message}. Nothing was changed.`});
+    throw error;
+  }
+}
+
 /** An invitation's link, `/api/join/<table>/<code>`: where it sends the person -- the app, at the seat's fragment -- or
     null when the path is not one (the suites' browsers ask this too, behind their stand-in for Access). */
 export function joinLocation(url) {
   const link = /^\/api\/join\/([a-z0-9]{8,40})\/([A-Za-z0-9_-]{20,100})$/.exec(url.pathname);
-  return link ? `${url.origin}/#table/${link[1]}/${link[2]}` : null;
+  if (link) return `${url.origin}/#table/${link[1]}/${link[2]}`;
+  /* The lobby link an invitation email carries (ROB-320): no code. The person's address is the invitation; the app posts `join` once. */
+  const lobby = /^\/api\/join\/([a-z0-9]{8,40})$/.exec(url.pathname);
+  return lobby ? `${url.origin}/#table?id=${lobby[1]}&join=1` : null;
 }
 
 const HEADERS = {
@@ -237,7 +267,7 @@ export async function handle(request, env, deps = {}) {
     const origin = request.headers.get("origin");
     if (method !== "GET" && !fromTheApp(request, url, "play")) return reply(403, {error: "That request did not come from CrankMagic."});
     if (request.headers.get("upgrade") === "websocket" && origin !== url.origin) return reply(403, {error: "That request did not come from CrankMagic."});
-    return tables(request, env, who);
+    return tables(request, env, who, {invitations: gameInvitations(env, who, {now: () => new Date(ms()).toISOString(), fetchImpl: deps.fetchImpl ?? fetch, origin: url.origin})});
   }
   /* FEEDBACK (the feedback loop, PR 1; cloud/feedback.mjs): any signed-in person, from the app's own sheet. The reporter
      is who Access named, never a name in the report; a screenshot is not kept until R2 is on. */
@@ -255,6 +285,8 @@ export async function handle(request, env, deps = {}) {
     }
   }
   if (method !== "GET" && !fromTheApp(request, url)) return reply(403, {error: "That request did not come from CrankMagic."});
+  /* The owner's AI model: decided before the person's library row is read or made, and before any body is read. */
+  if (path === "/api/admin/ai-model" || path === "/api/admin/ai-model/undo") return adminModel(request, env, who, deps, ms);
 
   const library = createLibrary(env.DB, {now: () => new Date(ms()).toISOString(), ...(deps.newId ? {newId: deps.newId} : {})});
   const person = await library.user(who.email);
@@ -438,7 +470,7 @@ async function aiDoor(request, env, deps, url, ms) {
   /* The advisor sends a deck's list and the person's own cards and lists: its own switch, as the Coach has. */
   if (feature === "The advisor" && env.AI_ADVISE !== "on") return reply(503, {error: "The deck advisor is not switched on here yet."});
   try {
-    const config = settings(env);
+    const config = settings(env, await storedModel(env.DB));
     const text = await request.text();
     if (text.length > AI_BODY) return reply(413, {error: `That is more than ${({"Explain": "a score explanation", "The advisor": "a question for the advisor"})[feature] ?? "a question for the Coach"} needs. Nothing was sent to the AI.`});
     let input;

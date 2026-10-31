@@ -15,6 +15,8 @@
  * The one thing a seat is told that no other is -- the card they drew -- is kept as the event's `secret` and given to that
  * seat alone (`forSeat`). A card is `{cardId, name}`, its name null where it is face down.
  *
+ * A `cast` or `ability` event carries `aimed` (and `aimedModes`) when it has targets: engine/aims.mjs, the same Aims as a stack entry's.
+ *
  * Kinds: turn, draw, land, cast, ability, resolve, countered, tap, damage, life, token, move, attack, block, reveal,
  * monarch, roll, lost, over. A kind the board does not know it may ignore; a kind is never renamed within v1.
  */
@@ -27,6 +29,7 @@ const ZONE = {Battlefield: "battlefield", Graveyard: "graveyard", Exile: "exile"
 const zone = (z) => ZONE[z?.zoneType] ?? null;
 /* A card as every seat may know it. */
 const card = (c) => (c ? {cardId: c.cardId ?? null, name: c.faceDown ? null : c.name ?? null} : null);
+const aimed = (f) => ({...(Array.isArray(f.aimed) && f.aimed.length ? {aimed: f.aimed} : {}), ...(Array.isArray(f.aimedModes) && f.aimedModes.length ? {aimedModes: f.aimedModes} : {})});
 const seq = (eventId) => Number(String(eventId).slice("event:".length));
 
 /** What one engine event says, as at most one table event, or null. `eventId` is the journal's id for it. */
@@ -43,9 +46,11 @@ export function tableEvent(event, eventId) {
     case "GameEventLandPlayed":
       return at("land", {player: f.player.playerId, card: card(f.land)});
     case "GameEventSpellAbilityCast":
+      /* What it is aimed at (engine/aims.mjs; ROB-327), public: the board's held-up play says "Lightning Bolt ⤳ Rob" even when the spell
+         was cast and resolved between two of its views. */
       return f.sa && f.sa.isSpell
-        ? at("cast", {player: f.si.actor.playerId, card: card(f.card), stackId: f.sa.stackId})
-        : at("ability", {player: f.si?.actor?.playerId ?? null, card: card(f.card), stackId: f.sa?.stackId ?? null, ...(f.si?.isTrigger ? {trigger: true} : {})});
+        ? at("cast", {player: f.si.actor.playerId, card: card(f.card), stackId: f.sa.stackId, ...aimed(f)})
+        : at("ability", {player: f.si?.actor?.playerId ?? null, card: card(f.card), stackId: f.sa?.stackId ?? null, ...(f.si?.isTrigger ? {trigger: true} : {}), ...aimed(f)});
     case "GameEventSpellResolved":
       if (f.countered) return at("countered", {player: f.playerId ?? null, stackId: f.stackId ?? null});
       return f.card ? at("resolve", {card: card(f.card), stackId: f.stackId ?? null}) : null;

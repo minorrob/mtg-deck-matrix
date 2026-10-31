@@ -6,6 +6,7 @@ import {deriving} from "../engine/rules/layers.mjs";
 import {offerScript} from "../engine/rules/actions.mjs";
 import {modalScript} from "../engine/script/bind.mjs";
 import {effectForTarget, targetFacts, targetGroups} from "../engine/script/decision.mjs";
+import {decisionPath} from "./decision-path.mjs";
 
 function scriptFor(state, action) {
   return offerScript(state, action);
@@ -51,7 +52,7 @@ function description(state, choice, actions, projected) {
     const effect = effectForTarget(effects);
     const preparedFrom = action?.kind === "cast" ? state.objects[action.objectId]?.prepareOf : undefined;
     const decline = may && awaiting?.effect === "modal" && !(awaiting.modes[option.index]?.effects ?? []).length;
-    return {...option, ...targetFacts(state, direct), ...(effect ? {effect} : {}), ...aimed,
+    return {...option, decisionPath: decisionPath(state, choice, option, action, script), ...targetFacts(state, direct), ...(effect ? {effect} : {}), ...aimed,
       ...(groups.length ? {targetGroups: groups} : {}), ...(preparedFrom !== undefined ? {preparedFrom} : {}),
       ...(may ? {optional: true} : {}), ...(decline ? {decline: true} : {})};
   })};
