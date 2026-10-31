@@ -117,7 +117,8 @@ try{
  for(const mode of ['table','focus','full']) {
   ways.revision=++revision;ways.decision.id='r2-ways-'+mode;await show(structuredClone(ways));await change(page,mode);
   const before=sent.filter(x=>x.type==='act').length;
-  await page.locator(`.cm-stage-fan .cm-bcard[data-card="${id}"]`).first().click();
+  /* A double-click stages the card's play in the pop-up (Rob's Oct 21 notes); one click opens its menu (Rob, 2026-10-30: "Right-click = menu"). */
+  await page.locator(`.cm-stage-fan .cm-bcard[data-card="${id}"]`).first().dblclick();
   eq(await page.locator('#cm-dialog[open]').count(),0,'card action choices do not cover the board');
   /* ROB-319: starting a card's action gives the pop-up the sequence; its ways are the one layer still open, and each is
      offered in its own words. The r4 desk's guarantees hold there, one for one. */
@@ -155,7 +156,7 @@ try{
      chevron glyph (▸ ▾) with no fill, as every other module's. */
   ok(quiet.h<=24&&quiet.glyph&&quiet.module&&/rgba\(0, 0, 0, 0\)|transparent/.test(quiet.bg),`the Actions toggle is a thin unfilled header row with a chevron (${quiet.w}×${quiet.h}, ${quiet.bg})`);
   ok(!/255, 255, 255\)|#fff\b|white/i.test(quiet.bar)&&quiet.bar!=='auto',`the drawer's scrollbar is quiet (${quiet.bar})`);
-  await page.locator(`.cm-stage-fan .cm-bcard[data-card="${id}"]`).first().click();
+  await page.locator(`.cm-stage-fan .cm-bcard[data-card="${id}"]`).first().dblclick();
   await page.locator('.cm-required-popup [data-action=board-flow-choice]',{hasText:'Maya · tapping Forest'}).click();
   await page.locator('.cm-required-popup [data-action=board-flow-confirm]').click();
   eq(sent.filter(x=>x.type==='act').at(-1).indices,[0],'confirmation submits only selected authoritative index');

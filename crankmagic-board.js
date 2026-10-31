@@ -3339,9 +3339,7 @@ globalThis.CrankBoard = Object.seal({
       const host = document.getElementById("cm-board");
       if (!host || !view) return;
       const header=host.querySelector(':scope>.cm-stage-top');
-      /* the bar's own height: less combat's band inside it, and less the room kept under it for the docked combat pop-up (which
-         is measured from this, so counting it in would push the pop-up down by its own height at every draw) */
-      if(header){const combat=header.querySelector('.cm-r4-combat')?.offsetHeight || 0,dock=host.hasAttribute('data-combat-dock')?parseFloat(host.style.getPropertyValue('--combat-dock'))||0:0;host.style.setProperty('--hud-top',`${Math.ceil(Math.max(28+30*hudScale()/100,header.offsetHeight-combat-dock))}px`);}
+      if(header){const combat=header.querySelector('.cm-r4-combat')?.offsetHeight || 0;host.style.setProperty('--hud-top',`${Math.ceil(Math.max(28+30*hudScale()/100,header.offsetHeight-combat))}px`);}
       host.style.setProperty('--full-action-h',`${host.querySelector('.cm-stage-actions')?.offsetHeight || 0}px`);
       host.style.setProperty('--full-action-w',`${host.querySelector('.cm-stage-actions')?.offsetWidth || 0}px`);
       fitCardCaptions(host);

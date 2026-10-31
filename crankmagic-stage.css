@@ -1958,11 +1958,9 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board #cm-decision-slot.cm-required-popup.is-combat>#cm-board-decision{max-height:52dvh!important;padding:14px 18px}
 #matrix-v2 .cm-board[data-combat-dock]{--rail-top:calc(var(--hud-top,58px) + var(--combat-dock))}
 #matrix-v2 .cm-board[data-shell=shared][data-combat-dock]{grid-template-rows:var(--rail-top) minmax(0,1fr)}
-#matrix-v2 .cm-board[data-combat-dock]>.cm-stage-top{padding-bottom:var(--combat-dock)}
 #matrix-v2 .cm-board[data-combat-dock]>.cm-stage-rail,#matrix-v2 .cm-board[data-combat-dock]>.cm-stage-side,#matrix-v2 .cm-board[data-combat-dock]>#cm-card-inspector{top:var(--rail-top)}
 #matrix-v2 .cm-board[data-combat-dock]>.cm-stage-side{height:calc(100% - var(--rail-top))!important}
 #matrix-v2 .cm-board[data-combat-dock] .cm-stage-camera,#matrix-v2 .cm-board[data-combat-dock] .cm-table-menu{top:calc(var(--rail-top) + 10px)}
-#matrix-v2 .cm-board[data-shell=shared][data-combat-dock]:not([data-phone])>.cm-stage-top{min-height:var(--rail-top)}
 /* In the pop-up's list, what is scrolled to (a key press, a scroll into view) stops above the sticky answering row, as in the pane
    (ROB-201): on the phone the blockers' Don't block / Confirm / No blocks row wraps to two lines and lay over the blocker's tile. */
 #matrix-v2 .cm-board #cm-decision-slot.cm-required-popup #cm-board-decision>.cm-board-options{scroll-padding-bottom:76px}

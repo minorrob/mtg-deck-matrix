@@ -376,8 +376,6 @@ try {
   await page.keyboard.press("Escape");
   ok(await menu.count() === 0, "Escape closes it");
   const cardOn = (id, where = ".cm-stage-fan") => page.locator(`${where} .cm-bcard[data-card='${id}']`).first();
-  /* Right-click opens the card's menu, and a row that asks nothing more is played at once (Rob, 2026-10-30: "Right-click = menu",
-     "Two clicks send"; ROB-319 had sent these through the pop-up). A row with a real choice enters the pop-up: tests/board-choice-flow.mjs. */
   await rightClickCard(page, ISLAND);
   m = await readMenu();
   eq(m.rows.map((r) => r.index), offered(ISLAND), "the Island's menu lists the one thing the room offers for it");
@@ -413,15 +411,18 @@ try {
   /* From the keyboard: the Menu key or Shift+F10 on the card with the focus; Escape goes back to the card. */
   await cardOn(RIME).focus();
   await page.keyboard.press("Shift+F10");
-  await page.locator('.cm-required-popup').waitFor();
-  eq(await page.locator('.cm-choice-flow h2').textContent(),'Rime Chill','Shift+F10 opens the same card flow');
-  await page.keyboard.press('Escape');
-  eq(await page.evaluate(()=>document.activeElement?.dataset.card),String(RIME),'Cancel restores focus to its card');
-  await page.keyboard.press('ContextMenu');await page.locator('.cm-required-popup').waitFor();
-  eq(await page.locator('.cm-choice-flow h2').textContent(),'Rime Chill','Menu key opens the same flow');
-  await page.locator('[data-action=board-flow-cancel]').click();
-  eq(acts(),[[1]],'opening and canceling additional flows plays nothing');
-  if(SHOTS){await rightClickCard(page,TOWER,'.cm-stage-front');await page.screenshot({path:path.join(SHOTS,'card-flow-3d.png')});await page.keyboard.press('Escape');}
+  await menu.waitFor({timeout: 2000});
+  eq((await readMenu()).focused, "Cast Rime Chill → up to two targets · tapping Island, Access Tunnel", "Shift+F10 opens the focused card's menu, on its first offer");
+  await page.keyboard.press("Escape");
+  eq(await page.evaluate(() => document.activeElement?.dataset.card), String(RIME), "Escape puts the focus back on the card");
+  await page.keyboard.press("ContextMenu");
+  await menu.waitFor({timeout: 2000});
+  eq((await readMenu()).rows.map((r) => r.index), offered(RIME), "and so does the Menu key");
+  await page.mouse.click(5, 5);
+  ok(await menu.count() === 0, "a press anywhere else puts it away");
+  eq(acts(), [[1]], "opening and reading menus plays nothing more");
+  if (SHOTS) {await rightClickCard(page, TOWER, ".cm-stage-front"); await page.screenshot({path: path.join(SHOTS, "card-menu-3d.png")}); await page.keyboard.press("Escape");}
+  await page.keyboard.press("Escape");
   const menus = await page.evaluate(() => __menus);
   ok(menus.length > 0 && menus.every((m) => !m.open), `the browser's own menu never opens on the 3D table (${menus.length} asked; ${JSON.stringify(menus)})`);
   eq(acts(), [[1]], "looking plays nothing: the one act sent is the Island confirmed above");
@@ -433,11 +434,13 @@ try {
     const {page, context, errors, acts} = await board(mode);
     const menu = page.locator("#cm-card-menu");
     await rightClickCard(page, ISLAND);
-    await page.locator('.cm-required-popup').waitFor();
-    eq(await page.locator('.cm-choice-flow h2').textContent(),'Island',`${mode}: right click shows the offered land action`);
-    eq(await page.locator('.cm-flow-inspect').getAttribute('aria-label'),'Inspect Island',`${mode}: card can be inspected`);
-    ok(await page.locator('.cm-required-popup').evaluate(m=>{const r=m.getBoundingClientRect();return r.left>=0&&r.top>=0&&r.right<=innerWidth&&r.bottom<=innerHeight;}),`${mode}: popup fits window`);
-    await page.keyboard.press('Escape');eq(await page.locator('.cm-required-popup').count(),0,`${mode}: Cancel closes unsent action`);
+    await menu.waitFor({timeout: 2000});
+    const rows = await menu.locator("[data-action=board-card-menu-do]").evaluateAll((els) => els.map((r) => Number(r.dataset.index)));
+    eq(rows, offered(ISLAND), `${mode}: a right click on the Island shows the room's one offer for it`);
+    eq(await menu.locator("[data-action=board-card-menu-view]").getAttribute("aria-label"), "Read Island", `${mode}: and the card, to read`);
+    ok(await menu.evaluate((m) => {const r = m.getBoundingClientRect(); return r.left >= 0 && r.top >= 0 && r.right <= innerWidth && r.bottom <= innerHeight;}), `${mode}: the menu is inside the window`);
+    await page.keyboard.press("Escape");
+    ok(await menu.count() === 0, `${mode}: Escape closes it`);
     const menus = await page.evaluate(() => __menus);
     ok(menus.length === 1 && !menus[0].open, `${mode}: the browser's own menu stays shut on a card`);
     eq(acts(), [], `${mode}: nothing played`);
