@@ -11,7 +11,7 @@
      1. the Actions pane lists "Cast Counterspell" and the card in the hand says so;
      2. pressing it in the pane stages it in the pop-up (ROB-319: starting an action gives the pop-up the sequence; Counterspell,
         Confirm, Cancel, nothing sent), and Confirm sends the offer's index (never anything else);
-     3. pressing the card in the hand and then Confirm sends the same answer;
+     3. pressing the card in the hand, its Cast row and then Confirm sends the same answer;
      4. the pane does not offer it when the engine does not (nothing on the stack);
 
    GEOMETRY_REQUIRED=1 refuses a missing browser.
@@ -42,7 +42,9 @@ function offer({withStack = true, withCounter = true} = {}) {
   v.revision = ++rev;
   v.decision = {id: `priority:90:${rev}`, title: "Your priority", mode: "one", min: 1, max: 1, kind: "priority", options: [
     {index: 0, label: "Pass priority", act: "pass"},
-    ...(withCounter ? [{index: 1, label: "Counterspell", act: "cast", cardId: card.cardId, detail: "counter target spell"}] : [])]};
+    /* its target, the spell on the stack, as the room sends it (game/room/decision.mjs targetGroups) */
+    ...(withCounter ? [{index: 1, label: "Counterspell", act: "cast", cardId: card.cardId, detail: "counter target spell",
+      targetGroups: [{index: 0, effect: "counter", targets: [{kind: "object", id: 999, controllerId: 1}]}]}] : [])]};
   return {v, cardId: card.cardId};
 }
 
@@ -86,7 +88,10 @@ try {
     /* 3: from the card in the hand */
     const second = offer();
     await show(second.v);
+    /* the card opens its menu (Rob, 2026-10-30: "Right-click = menu"); its Cast row has a target to confirm, so it enters the pop-up */
     await page.locator(`#cm-board button.cm-bcard[data-card="${second.cardId}"]`).first().click();
+    await page.locator("#cm-card-menu [data-action=board-card-menu-do]", {hasText: /Cast/}).first().click();
+    ok(acts().length === 1, `${mode}: the card and its Cast row send nothing yet: Counterspell has a target to confirm`);
     const confirm2 = page.locator(".cm-required-popup [data-action=board-flow-confirm]").first();
     await confirm2.waitFor({timeout: 5000});
     await confirm2.click();
