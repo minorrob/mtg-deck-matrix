@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://minorrob.github.io/mtg-deck-matrix/schema/commander-index.json",
+  "title": "Start from's commander index: every commander with its colors, rank, play styles and mechanics, so 3,000-odd commanders can be matched without loading the graph",
+  "type": "object",
+  "required": ["schema", "generator", "compiledAt", "source", "count", "styles", "mechanics", "commanders"],
+  "properties": {
+    "schema": {"type": "string", "const": "commander-index@1"},
+    "generator": {"type": "string", "const": "tools/build-commander-index.mjs"},
+    "compiledAt": {"type": "string", "format": "date-time"},
+    "source": {"type": "string"},
+    "count": {"type": "integer", "minimum": 1},
+    "styles": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "label"],
+        "properties": {"id": {"type": "string", "minLength": 1}, "label": {"type": "string", "minLength": 1}}
+      }
+    },
+    "mechanics": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "label", "cards"],
+        "properties": {"id": {"type": "string", "minLength": 1}, "label": {"type": "string", "minLength": 1}, "cards": {"type": "integer", "minimum": 0}}
+      }
+    },
+    "commanders": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["n", "ci", "r", "s", "m"],
+        "properties": {
+          "n": {"type": "string", "minLength": 1},
+          "ci": {"type": "string"},
+          "r": {"type": ["integer", "null"]},
+          "s": {"type": "array", "items": {"type": "integer", "minimum": 0}},
+          "m": {"type": "array", "items": {"type": "integer", "minimum": 0}},
+          "p": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

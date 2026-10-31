@@ -24,6 +24,9 @@ export const REGISTRY = [
   {file: "data/commander-universe.json", id: "commander-universe@1", generator: "tools/commander-universe.mjs", checkedBy: "tools/commander-universe.mjs", main: "cards"},
   {file: "data/commander-ranks.json", id: "commander-ranks@1", generator: "tools/commander-ranks.mjs", checkedBy: "tools/commander-ranks.mjs", main: "cards"},
   {file: "data/commander-strategies.json", id: "commander-strategies@1", generator: "tools/commander-strategies.mjs", checkedBy: "tools/commander-strategies.mjs", main: "commanders"},
+  /* Start from's commander index (2026-10-23): every commander with its colors, rank, play styles and mechanics. Served and on demand, so
+     the manifest must list it (tests/data-manifest.mjs); stamped with the date of the data it is compiled from, so --check stays exact. */
+  {file: "data/commander-index.json", id: "commander-index@1", generator: "tools/build-commander-index.mjs", checkedBy: "tools/build-commander-index.mjs", main: "commanders"},
   /* R3.10b: every Commander precon, for Start from a precon. Its --check is offline (the build fetches MTGJSON). */
   {file: "data/precons.json", id: "precons@1", generator: "tools/build-precons.mjs", checkedBy: "tools/build-precons.mjs", main: "decks"},
   {file: "data/precons-latest.json", id: "precons-latest@1", generator: "tools/build-precons.mjs", checkedBy: "tools/build-precons.mjs", main: "decks"},

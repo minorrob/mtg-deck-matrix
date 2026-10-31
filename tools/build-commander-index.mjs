@@ -54,7 +54,9 @@ export function build() {
     if (p) row.p = p;
     commanders.push(row);
   }
-  return {schema: "commander-index@1", generator: "tools/build-commander-index.mjs",
+  /* Stamped with the date of the data it is compiled from (the graph's last re-classification, else its bake), not the clock, so
+     --check still rebuilds the same text; the registry requires every generated file to carry a stamp. */
+  return {schema: "commander-index@1", generator: "tools/build-commander-index.mjs", compiledAt: graph.amplifiersAt || graph.generatedAt,
     source: `data/graph.json (${graph.cards.length} cards) and data/commander-strategies.json, read through deck-vocabulary.js`,
     count: commanders.length, styles, mechanics: mechanics.map(({id, label, cards}) => ({id, label, cards})), commanders};
 }
