@@ -706,6 +706,32 @@ try {
   await rob.page.waitForFunction(() => document.querySelector(".cm-lobby-seat[data-seat='0']")?.dataset.mat === "forge", null, {timeout: 15000});
   ok(true, "at his next table, Rob's seat is on the mat he chose last, without his asking");
 
+  /* THE OLDER INVITE, FOR A SEAT NOBODY IS NAMED FOR (ROB-320). Create game now names every person and sends their invitation, so a guest's
+     seat has no Invite. A seat can still open afterwards: removing an AI turns its chair into an open human seat, and there the host can
+     still send a link by hand: the dialog gives the seat's link, a QR of it and an email, and Copy link puts it on the clipboard. */
+  await openNewGame(rob.page, "#table");
+  await fillNewGame(rob.page, {host: "Rob", humans: [{name: "Maya"}], ai: [{name: "Shadrix", level: "Easy"}]});
+  await submitNewGame(rob.page);
+  await rob.page.locator(".cm-lobby-seat[data-seat='2']").waitFor({timeout: 15000});
+  await rob.page.click(".cm-lobby-seat[data-seat='2'] [data-action=table-seat-remove]");
+  await rob.page.locator(".cm-lobby-seat[data-seat='2'] [data-action=table-invite]").waitFor({timeout: 10000});
+  eq(await rob.page.locator(".cm-lobby-seat[data-seat='1'] [data-action=table-invite]").count(), 0, "Maya's seat, named at Create game, has no Invite; the seat that opened when the AI was removed does");
+  await rob.page.click(".cm-lobby-seat[data-seat='2'] [data-action=table-invite]");
+  await rob.page.locator("#cm-table-link").waitFor();
+  const openLink = await rob.page.inputValue("#cm-table-link");
+  ok(/^https?:\/\/[^/]+\/api\/join\/table\d+\/[A-Za-z0-9_-]{40,}$/.test(openLink), `the invite dialog gives the open seat's link, a path Access's sign-in keeps (a fragment it drops): ${openLink.replace(/\/[^/]+$/, "/…")}`);
+  ok(await rob.page.locator("#cm-dialog .cm-qr-code svg").count() === 1, "a QR of it, to scan across the room");
+  ok((await rob.page.getAttribute("#cm-table-mail", "href")).includes(encodeURIComponent(openLink)), "and an email that carries it");
+  await rob.context.grantPermissions(["clipboard-read", "clipboard-write"], {origin: base});
+  await rob.page.click("#cm-dialog [data-action=table-copy-link]");
+  await waitText(rob.page, "#cm-notice", /Link copied/);
+  eq(await rob.page.evaluate(() => navigator.clipboard.readText()), openLink, "Copy link puts the seat's link on the clipboard, and says so");
+  await rob.page.keyboard.press("Escape");
+  await waitText(rob.page, ".cm-lobby-seat[data-seat='2'] header", /Invite sent/);
+  await rob.page.click(".cm-lobby-seat[data-seat='2'] [data-action=table-uninvite]");
+  await rob.page.waitForFunction(() => !/Invite sent/.test(document.querySelector(".cm-lobby-seat[data-seat='2'] header")?.textContent || ""), null, {timeout: 10000});
+  ok(await rob.page.locator(".cm-lobby-seat[data-seat='2'] [data-action=table-invite]").count() === 1, "Withdraw takes the invitation back, and the seat can be invited again");
+
   /* START AND CANCEL (restored: the lobby's rewrite on 2026-10-28 had dropped them): a table of the host and one AI, both with decks and ready; Start, the full-width button under the launch box, begins the countdown, and Cancel, in the same place, stops it. */
   await openNewGame(rob.page, "#table");
   await fillNewGame(rob.page, {host: "Rob", ai: [{}]});
