@@ -133,7 +133,7 @@ Or, all of it in order with the proof: `node tools/refresh.mjs`.
 
 Four more files are derived from the data files, each by its own generator. The proof fails five suites until they
 are rebuilt (found on the 2026-10-29 refresh, PR 948), so `tools/refresh.mjs` runs them as step 8, marked `derived`
-in its plan (they are not envelope data files, so not in the registry; each tool vouches for its own file and names it):
+in its plan (three are artifacts outside the schema registry, and the commander index is a registered data file; each tool vouches for its own file and names it):
 
 | Generator | Writes | Red without it |
 |---|---|---|
@@ -142,7 +142,7 @@ in its plan (they are not envelope data files, so not in the registry; each tool
 | `node tools/build-pilot-roles.mjs` | `game/engine/pilots/roles-data.mjs` (the engine lane's tree; say so in the PR) | `pilot-roles` |
 | `node tools/reprice-variants.mjs` | `data/archive/variants.json` | `data-integrity` |
 
-`data/commander-index.json` is served, and its URL lives in the asset map (`commanderIndex` in `crankmagic-assets.js`,
+`data/commander-index.json` is served, so it is in the schema registry (`commander-index@1`, stamped `compiledAt` with the date of the data it is compiled from, so `--check` stays exact) and therefore in the manifest, which `tests/data-manifest.mjs` requires of every URL the asset map serves. Its URL lives in the asset map (`commanderIndex` in `crankmagic-assets.js`,
 and the worker's on-demand list), which `crankmagic-newdeck.js` reads, so the runner's bumper finds it and moves its
 `?v=` with the rest. Before 2026-10-30 the URL was hard-coded inside newdeck, the bumper reported 0 references, and
 the cascade moved for nothing.
