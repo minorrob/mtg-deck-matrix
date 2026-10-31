@@ -1,1 +1,3 @@
 Read `AGENTS.md` (how to build: rules of engagement, lanes, merging) before anything else. What to build is in Linear: initiative I-1 is the roadmap and its document "How work flows: the one loop" is the process (Rob, 2026-10-29). `docs/ACTIVE.md` is a frozen archive; do not write to it.
+
+The loop and the release are skills: `one-loop` (a Linear issue to a watched draft PR and back) and `crankmagic-release`. Every PR you open is subscribed with `subscribe_pr_activity` the moment it exists (`AGENTS.md`, "A PR you open is watched until it closes"). Jam links are read through the Jam connector and never pasted into the public repository; Mobbin is consulted for references, cited by link, never copied (`AGENTS.md`).
