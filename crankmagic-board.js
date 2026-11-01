@@ -4584,13 +4584,31 @@ globalThis.CrankBoard = Object.seal({
     const lean = o.lean ? ` <span class="cm-lean${o.lean.startsWith("helps") ? " is-helps" : " is-against"}">⚠ ${e(o.lean)}</span>` : "";
     return `<button type="button" role="menuitem" class="cm-card-menu-do" data-action="board-card-menu-do" ${offerAttrs(o)} aria-label="${e(sayFor(o))}" title="${e(sayFor(o))}"${sending ? " disabled" : ""}><i aria-hidden="true">${glyph}</i><span>${words}${lean}</span></button>`;
   }
+  /* ONE ROW A KIND, NOT EVERY COMBINATION (ROB-319): a kind of play the card offers one way is its own row (sent at its press when
+     it asks nothing more, Rob, 2026-10-27); a land, an undo and each mana ability are always their own rows, each saying what it is
+     (a mana row its symbol). Any other kind offered several ways -- modes, targets, costs, payments -- is one row, "✦ Cast · 10
+     ways", which opens the pop-up to ask them a layer at a time. The menu listed every mode x target x payment of Vigorbloom
+     Charm, the list ROB-319 was made to end; a way with no target is still one of several (the charm's draw mode). */
+  function menuEntries(member) {
+    const out = [], kinds = new Map();
+    for (const o of optionsFor(member.cardId)) {
+      if (["activate-mana","play-land","undo-mana","undo-land","undo-play"].includes(o.act)) {out.push(o); continue;}
+      if (!kinds.has(o.act)) {kinds.set(o.act, []); out.push({kind: o.act});}
+      kinds.get(o.act).push(o);
+    }
+    return out.map((x) => x.kind === undefined ? menuRow(x, member) : kinds.get(x.kind).length === 1 ? menuRow(kinds.get(x.kind)[0], member) : menuKindRow(x.kind, kinds.get(x.kind).length, member));
+  }
+  function menuKindRow(act, ways, c) {
+    const [glyph, verb] = MENU[act] || [menuGlyph(), ""], said = `${verb || act} ${c.name || ""}: ${ways} ways`.replace(/\s+/g, " ");
+    return `<button type="button" role="menuitem" class="cm-card-menu-do is-kind" data-action="board-card-menu-choose" data-card="${c.cardId}" data-act="${e(act)}" aria-label="${e(said)}" title="${e(said)}"${sending ? " disabled" : ""}><i aria-hidden="true">${glyph}</i><span><b>${e(verb)}</b> <small>${ways} ways</small></span></button>`;
+  }
   function cardMenuHtml() {
     if (!cardMenu || !view) return "";
     const c = findCard(cardMenu.id) || shownCard(cardMenu.id), opts = optionsFor(cardMenu.id);
     if (!c || (!c.name && !opts.length)) {cardMenu = null; return "";}
     const members=(cardMenu.members || []).map(id=>findCard(id)).filter(Boolean),entries=members.length>1?members:[c];
-    const named = c.name || "A face-down card", n = entries.reduce((n,c)=>n+optionsFor(c.cardId).length,0);
-    const rows=entries.map((member,i)=>`${entries.length>1?`<p class="cm-card-menu-copy">Copy ${i+1}${member.tapped?' · tapped':''}</p>`:''}${optionsFor(member.cardId).map(o=>menuRow(o,member)).join('')}`).join('');
+    const lists = entries.map(menuEntries), named = c.name || "A face-down card", n = lists.reduce((n,l)=>n+l.length,0);
+    const rows=entries.map((member,i)=>`${entries.length>1?`<p class="cm-card-menu-copy">Copy ${i+1}${member.tapped?' · tapped':''}</p>`:''}${lists[i].join('')}`).join('');
     return `<div id="cm-card-menu" class="cm-card-menu" role="menu" aria-label="${e(named)}: ${n ? `${n} ${n === 1 ? "action" : "actions"}` : "no actions now"}" style="left:${cardMenu.x}px;top:${cardMenu.y}px">
       ${c.name ? `<button type="button" role="menuitem" class="cm-card-menu-card" data-action="board-card-menu-view" data-card="${c.cardId}" aria-label="Read ${e(c.name)}" title="Read ${e(c.name)}"><img class="cm-card-menu-art" src="${e(pictureOf(c.name, c))}" alt=""><i aria-hidden="true">🔍</i><span>${e(c.name)}</span></button>` : `<span class="cm-card-menu-card" role="none"><i aria-hidden="true">◐</i><span>${e(named)}</span></span>`}
       ${c.name && c.appearance ? `<button type="button" role="menuitem" class="cm-card-menu-card is-original" data-action="board-card-menu-original" data-card="${c.cardId}" aria-label="Read the original ${e(c.name)}, the card it is under this look" title="Original: ${e(c.name)}"><img class="cm-card-menu-art" src="${e(pictureOf(c.name))}" alt=""><i aria-hidden="true">↺</i><span>Original</span></button>` : ""}
@@ -4641,6 +4659,7 @@ globalThis.CrankBoard = Object.seal({
     cardMenu = null; document.getElementById("cm-card-menu")?.remove();
     if (back) C.focusFind(from)?.focus({preventScroll: true});
   }
+  actions["board-card-menu-choose"] = el => {closeCardMenu(true); beginChoice(Number(el.dataset.card), el.dataset.act);};
   actions["board-card-menu-do"] = el => {
     const o=currentOffer(el.dataset);if(!o)return;
     closeCardMenu(true);
