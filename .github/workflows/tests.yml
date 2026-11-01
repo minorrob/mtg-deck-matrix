@@ -46,6 +46,17 @@ concurrency:
 jobs:
   suites:
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    # Eight shards (ROB-351, 2026-11-01): 724 suites no longer fit one 60-minute job (run 41144141088 was canceled
+    # at 60:39 in "Run every suite"). SUITE_SHARD="i/8" makes tools/run-suites.mjs run every eighth browser suite
+    # and every eighth other suite, so the eight jobs together run each suite exactly once and no job holds all the
+    # slow ones; each took 9 to 16 minutes on the throwaway branch ci/patch-gate-sharded (runs 41150284404,
+    # 41152661468). fail-fast is off so one red shard does not cancel the others: the gate's answer is every
+    # failure, not the first. Shard 0 also runs the Commander companion tests. tests/suite-shards.mjs proves the
+    # partition.
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
     runs-on: ubuntu-24.04
     # Pinned: ubuntu-latest became 26.04 on 2026-10-27, which Playwright 1.56.0 cannot install a browser on (run 40596961219; main run 40535535373 failed the same way).
     # 60, not 45: the suites reached 44.8 minutes on PR #816, and wave 4d's six lanes add more (Rob, 2026-10-23).
@@ -98,7 +109,9 @@ jobs:
 
       - name: Run every suite
         if: steps.repeat.outputs.skip != 'true'
+        env:
+          SUITE_SHARD: "${{ matrix.shard }}/8"
         run: bash runtests.sh -q
       - name: Commander companion tests
-        if: steps.repeat.outputs.skip != 'true'
+        if: steps.repeat.outputs.skip != 'true' && matrix.shard == 0
         run: node --test game/tests/*.test.mjs
