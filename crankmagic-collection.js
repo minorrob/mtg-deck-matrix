@@ -126,17 +126,6 @@ const KPI_TEST={
   offer:r=>use(r)==='sell'||use(r)==='trade',
   unowned:r=>use(r)==='unowned'};
 const STAT_FIGURES=[['final','Final','physical'],['substitute','Substitute','subs'],['reserved','Reserved','missing'],['upgrade','Upgrade','considering'],['loading','Loading','plan'],['bench','Bench','bench'],['offer','Sell / Trade','have'],['unowned','Unowned','coming']];
-function statsHTML(shown,scoped,deckId=''){
-  const t=Object.fromEntries(STAT_FIGURES.map(([k])=>[k,0])),own={};
-  for(const r of shown){
-    for(const k in KPI_TEST)if(KPI_TEST[k](r))t[k]+=r.quantity;
-    const o=stateOfRow(r).ownership;if(o)own[o]=(own[o]||0)+r.quantity;
-  }
-  const n=v=>v.toLocaleString('en-US'),all=Object.values(t).reduce((a,b2)=>a+b2,0);
-  const ownership=M.OWNERSHIP.filter(o=>own[o.id]).map(o=>`${o.label} ${n(own[o.id])}`).join(' · ');
-  /* The figures as two rows of chips that filter the page: a click keeps the rows that card counts, a second click lets them all back. */
-  return `<div class="cm-kpis" role="group" aria-label="Counts, click to filter">${STAT_FIGURES.map(([k,l,g])=>{const on=filter.kpi===k;return `<button type="button" class="cm-kpi cm-stat-${g}${on?' is-on':''}" data-action="kpi-status" data-kpi="${k}" aria-pressed="${on}" title="${on?'Show every state':`Show only ${l}`}"><strong>${n(t[k])}</strong><span><i class="cm-kpi-dot" aria-hidden="true"></i>${l}</span></button>`;}).join('')}<p class="cm-kpi-caption">${deckId?`Deck total ${n(t.final+t.substitute)} = Final ${n(t.final)} + Substitute ${n(t.substitute)} · Group total ${n(all)}`:`${scoped?'Counting the rows this view shows. ':''}${n(all)} cop${all===1?'y':'ies'}`}${ownership?` · ${ownership}`:''}</p></div>`;
-}
 /* TICKING ROWS. Not a mode with a button to enter and leave -- the checkboxes are simply
    in the table, and the bar saying what you can do to them appears once one is ticked.
    A copy record can be ticked, and so can a draft-list row or a To buy requirement -- those
@@ -155,11 +144,6 @@ function pickedSplit(){const lots=[],byDeck=new Map();for(const id of picked){if
 const LADDER=[['watching','Watch','considering it'],['ordered','To Buy · Ordered','bought or trade arranged, not yet in hand'],['owned','Own','in hand — on the Bench until placed']];
 const rung=(label,why,attrs,current=false)=>`<button type="button" class="cm-rung${current?' is-current':''}" aria-label="${e(label)}" data-label="${e(label)}" ${attrs}><span class="cm-rung-label">${e(label)}</span><small>${e(why)}</small></button>`;
 C.statusLadder=LADDER;
-function batchBar(shop){
-  const n=picked.size;
-  if(!n)return '';
-  return `<div class="cm-batch-bar"><strong>${n} record${n===1?'':'s'} ticked</strong>${b('Set status','batch-status',{},true,{caret:'down'})}${shop?`${b('Ordered…','batch-order')}${b('Bought in store','batch-store')}${b('Arrived','batch-arrived')}`:''}${b('Add / move to group','batch-move')}${b('Release reservation → To buy','batch-release')}${b('Flag ▾','batch-flag')}${b('Offer for Sell / Trade','batch-offer')}<button type="button" class="cm-text-button" data-action="batch-clear">Clear</button></div>`;
-}
 function matches(r,fl=filter){const c=r.card,q=fl.q.toLowerCase();return (!fl.kpi||!!KPI_TEST[fl.kpi]?.(r))&&(!q||[c.name,c.typeLine,c.oracleText,r.notes].join(' ').toLowerCase().includes(q))&&(!fl.type||c.typeLine.split('—')[0].includes(fl.type))&&(!fl.subtype||c.typeLine.toLowerCase().includes(fl.subtype.toLowerCase()))&&(!fl.mechanic||[c.oracleText,...c.mechanics,...c.keywords].join(' ').toLowerCase().includes(fl.mechanic.toLowerCase()))&&(!fl.color||(fl.color==='C'?c.colorIdentity.length===0:c.colorIdentity.includes(fl.color)))&&(!fl.status||(fl.status==='owned'?stateOfRow(r).ownership==='own':fl.status==='to-buy'?stateOfRow(r).ownership==='buy':r.stateLabel===fl.status||(r.status||statusOf(r))===fl.status))&&(!fl.flag||(fl.flag==='option'?!!r.option:!!r.pinned))&&(!fl.mana||(globalThis.CrankFacets?CrankFacets.manaKinds(r.card):[]).includes(fl.mana))&&(!fl.offer||(fl.offer==='bench'?r.kind==='lot'&&r.source==='owned'&&!r.allocation&&r.location?.kind!=='deck':fl.offer==='held'?r.offer==='held':r.offer==='available'))&&(fl.min===''||c.manaValue!==null&&c.manaValue>=Number(fl.min))&&(fl.max===''||c.manaValue!==null&&c.manaValue<=Number(fl.max))&&(fl.priceMin===''||c.price!==null&&c.price>=Number(fl.priceMin))&&(fl.price===''||c.price!==null&&c.price<=Number(fl.price));}
 /* SHOPPING A CONVENTION FLOOR. On a phone the Shop page is not a spreadsheet to study; it
    is a list held in one hand at a booth while the seller waits. So under 640px the page
@@ -297,10 +281,13 @@ function groupMeta(g){const d=C.state.decks.find(x=>x.groupId===g.id&&!x.archive
   if(g.template==='bench')return num(C.state.lots.filter(l=>l.source==='owned'&&read({...l,kind:'lot'}).use==='bench').reduce((n2,l)=>n2+l.quantity,0));
   return num(C.state.lots.filter(l=>(l.groupIds||[]).includes(g.id)).reduce((n2,l)=>n2+l.quantity,0)+(g.entries||[]).reduce((n2,r)=>n2+(r.quantity||1),0));}
 actions['group-menu']=el=>{const params=C.route().params,cur=bandGroup(params),t=bandCounts(bandBase);
+  /* A deck's own arithmetic (Rob, 2026-10-18): the Deck total is Final and Substitute, and the Group total is every record the deck's view lists. */
+  const deckId=params.get('deck'),ds=deckId&&C.state.decks.some(x=>x.id===deckId)?M.deckStatus(C.state,M.deck(C.state,deckId)):null,eq=ds?`<p class="cm-band-eq">Deck total ${num(ds.deckTotal)} = Final ${num(ds.final)} + Substitute ${num(ds.substitute)} · Group total ${num(ds.groupTotal)}</p>`:'';
   const rowsHTML=moveChoices().filter(([id])=>id!=='__new').map(([id,label])=>{const g=C.state.groups.find(x=>x.id===id);return `<button type="button" class="cm-menu-row${cur&&cur.id===id?' is-current':''}" data-action="band-group" data-group="${e(id)}"${cur&&cur.id===id?' aria-current="true"':''}><span>${e(label)}</span><small>${groupMeta(g)}</small></button>`;}).join('');
   const chips=BAND_CHIPS.filter(([k])=>k==='all'||t[k]).map(([k,l])=>`<button type="button" class="cm-chip-toggle cm-show-chip" data-action="band-show" data-show="${k}" aria-pressed="${k==='all'?!filter.kpi:filter.kpi===k}">${k==='all'?'':`<i class="cm-dot cm-dot-${k}" aria-hidden="true"></i>`}${l} <b>${num(t[k])}</b></button>`).join('');
-  popAt(el,`<button type="button" class="cm-menu-row${cur?'':' is-current'}" data-action="band-group" data-group=""><span>All groups</span></button><hr>${rowsHTML}<hr>${b('New group…','new-group')}<hr><p>Show, in ${e(cur?cur.name:'every group')}</p><div class="cm-show-chips">${chips}</div>`,{align:'left'});};
-actions['band-group']=el=>{const id=el.dataset.group,r=C.route(),extra=Object.fromEntries(r.params),tab=extra.tab||'library';delete extra.tab;delete extra.deck;delete extra.group;filter.group='';
+  popAt(el,`<button type="button" class="cm-menu-row${cur?'':' is-current'}" data-action="band-group" data-group=""><span>All groups</span></button><hr>${rowsHTML}<hr>${b('New group…','new-group')}<hr><p>Show, in ${e(cur?cur.name:'every group')}</p><div class="cm-show-chips">${chips}${params.get('deck')?`<button type="button" class="cm-chip-toggle cm-show-chip" data-action="band-bench" aria-pressed="${benchToo}" title="Owned copies on the Bench, for no deck, listed beside this deck's cards">+ Bench cards that could go in</button>`:''}</div>${eq}`,{align:'left'});};
+actions['band-bench']=()=>{benchToo=!benchToo;page=0;C.render();};
+actions['band-group']=el=>{const id=el.dataset.group,r=C.route(),extra=Object.fromEntries(r.params),tab=extra.tab||'library';delete extra.tab;delete extra.deck;delete extra.group;filter.group='';filter.kpi='';
   if(id){const g=C.state.groups.find(x=>x.id===id),d=g&&C.state.decks.find(x=>x.groupId===g.id&&!x.archived);if(d)extra.deck=d.id;extra.group=id;filter.group=id;}
   page=0;goCards(tab,extra);};
 actions['band-show']=el=>{const k=el.dataset.show;filter.kpi=k==='all'||filter.kpi===k?'':k;page=0;C.render();};
@@ -1117,8 +1104,6 @@ const cellBody=(r,k)=>{
   return `<button type="button" class="cm-cell-edit" data-action="cell-edit" data-record="${e(r.recordId)}" data-field="${e(k)}" title="Click to set ${e(EDITS[k])}">${body}</button>`;
 };
 const draw=()=>{const everything=rows(params,shop),matched=everything.filter(r=>matches(r));lastRows=everything;
-/* The cards count everything the other filters leave, so all seven keep their figures while one is picked and a reader can move between them. */
-const ribbon=$('#cm-roster-stats');if(ribbon)ribbon.innerHTML=statsHTML(filter.kpi?everything.filter(r=>matches(r,{...filter,kpi:''})):matched,!!(params.get('card')||params.get('deck')||params.get('group')||Object.entries(filter).some(([k,v])=>k!=='kpi'&&v!=='')),params.get('deck')||'');
 const strip=$('#cm-shop-strip');if(strip)strip.innerHTML=stripHTML(matched);
 const chips=$('#cm-filter-chips');if(chips)chips.innerHTML=chipsHTML();
 /* A tick outlives a redraw only while its row still exists: a copy that was sold, a draft slot that was removed, a requirement that was filled all drop out. */
@@ -1228,7 +1213,7 @@ actions['status-ordered']=()=>actions['batch-order']();
 /* TO BUY: interested, not yet decided on a deck. A watched card moves to the To Buy list; a card you own or have ordered, or one
    a deck already waits on, is left as it is, and the receipt says how many and why. */
 actions['status-buy']=()=>{if(!picked.size)throw Error('Tick at least one row first.');
-  const plan=M.wantCommands(C.state,pickedIds());
+  const plan=M.wantCommands(C.state,pickedIds(),pickedSplit().plans.reduce((n,[,rs])=>n+rs.length,0));
   if(!plan.command)throw Error(`Nothing to move to To buy. ${plan.stays.own?`${plan.stays.own} ticked ${plan.stays.own===1?'is':'are'} owned or ordered, and To buy is for cards you do not have yet. `:''}${plan.stays.buy?`${plan.stays.buy} already ${plan.stays.buy===1?'sits':'sit'} on the To Buy list or wait${plan.stays.buy===1?'s':''} on a deck. `:''}Tick Watch cards to move them.`);
   C.review(`Move ${plan.moved} to To buy`,note(`${plan.moved} watched card${plan.moved===1?'':'s'} move${plan.moved===1?'s':''} to the To Buy list.`)+(plan.stays.own||plan.stays.buy?note(`${plan.stays.own+plan.stays.buy} ticked stay as they are: ${[plan.stays.own?`${plan.stays.own} owned or ordered`:'',plan.stays.buy?`${plan.stays.buy} already to buy`:''].filter(Boolean).join(', ')}.`,true):''),plan.command);};
 /* BENCH: the cards come to the Bench by the way they would have. An ordered copy has arrived; a copy in a deck's box comes out; a card
@@ -1243,18 +1228,17 @@ actions['status-bench']=()=>{const split=pickedSplit();if(!split.lots.length&&!s
   if(!buy.length&&!split.plans.length){finish(base,0);return;}
   orderForm('Bought in store','Review purchase',v=>{const order={id:'order:'+C.uid(),vendor:v.vendor,ref:v.ref||'in store',expectedBy:v.expectedBy};const {commands,copies}=orderCommands({lots:buy,plans:split.plans},order,Number(v.shipping)||0,true);finish([...base,...commands],copies);},{store:true});};
 /* BOX: each ticked copy into the box of the deck it is assigned to (M.boxCommands). A box that would not hold the hundred is a warning
-   with a button that says so, never a refusal; the deck then reads Not legal. */
+   with a button that says so, never a refusal; the deck then does not read Boxed. */
 actions['status-box']=()=>{if(!picked.size)throw Error('Tick at least one row first.');
   const plan=M.boxCommands(C.state,pickedIds()),{stays}=plan,left=stays.noDeck+stays.notInHand+stays.already+stays.offered;
   const stayText=[stays.noDeck?`${stays.noDeck} on the Bench in no deck`:'',stays.notInHand?`${stays.notInHand} not in hand yet`:'',stays.already?`${stays.already} already boxed`:'',stays.offered?`${stays.offered} offered for Sell / Trade`:''].filter(Boolean).join(' · ');
   if(!plan.command)throw Error(`Nothing to box. ${stayText?`${stayText}. `:''}${stays.noDeck?'A card in no deck stays on the Bench; assign it to a deck first (Set status → Assign to a deck…). ':''}${stays.notInHand?'A card you do not have yet cannot be boxed. ':''}`.trim());
   const lines=plan.decks.map(d=>`<li class="${d.legalAfter?'':'cm-warn-line'}"><b>${e(d.name)}</b> · ${d.count?`${d.count} go in the box`:'the box loses a card'} · box ${d.before} → ${d.after} of ${d.size}${d.legalAfter?'':' ⚠'}</li>`).join('');
-  const warn=plan.warnings.map(d=>note(`${d.name}'s box would hold ${d.after} of ${d.size}. It reads Not legal until the box holds ${d.size}.`,true)).join('');
+  const warn=plan.warnings.map(d=>note(`${d.name}'s box would hold ${d.after} of ${d.size}. It will not read Boxed, or be playable, until the box holds ${d.size}.`,true)).join('');
   C.review(`Box ${plan.total} card${plan.total===1?'':'s'}`,`<ul class="cm-box-lines">${lines}</ul>${warn}${left?note(`${stayText} stay${left===1?'s':''} as ${left===1?'it is':'they are'}.`):''}`,plan.command,{confirm:plan.warnings.length?'Box anyway':'Box',after:()=>picked.clear()});};
 /* ASSIGN TO A DECK: pick the deck, then name the card each one replaces where the list does not already want it (the recommendation is
    filled in: the seats flagged Option first, then those still waiting on a buy), and one receipt. */
 actions['status-assign']=el=>{if(!picked.size)throw Error('Tick at least one row first.');
-  const read=M.stateReader(C.state);
   popAt(bandAnchor(el),`<p>Assign ${num(picked.size)} to</p>${C.state.decks.filter(d=>!d.archived&&!M.isLobbyDeck(d)).map(d=>{const t=M.deckStatus(C.state,d);return `<button type="button" class="cm-menu-row" data-action="assign-deck" data-deck="${e(d.id)}"><span>${e(d.name)}</span><small>${num(t.deckTotal)} of ${num(t.size)} boxed</small></button>`;}).join('')}`,{align:'left'});};
 actions['assign-deck']=el=>{const d=M.deck(C.state,el.dataset.deck),items=[];let other=0;
   for(const id of picked){const r=findRow(id);if(r&&r.kind==='lot')items.push({recordId:r.recordId,kind:'lot',lotId:r.recordId,cardId:r.cardId,quantity:r.quantity});else other++;}
@@ -1262,7 +1246,7 @@ actions['assign-deck']=el=>{const d=M.deck(C.state,el.dataset.deck),items=[];let
   const first=M.assignCommands(C.state,items,d.id,{}),seats=M.assignSeats(C.state,d.id),fill=Object.fromEntries(first.needs.map((id,i)=>[id,(seats[i]||seats[0]||{}).slotId]));
   const review=(seatFor)=>{const plan=M.assignCommands(C.state,items,d.id,seatFor);
     if(!plan.command)throw Error(`Nothing to assign. ${plan.skipped.length?plan.skipped.map(x=>`${x.name}: ${x.why}`).join('; ')+'.':''}`);
-    C.review(`Assign ${plan.lines.length} to ${d.name}`,`<ul class="cm-box-lines">${plan.lines.map(x=>`<li><b>${e(x.name)}</b> · ${x.how==='to buy'?'Reserved · To buy':'Reserved, on the Bench until boxed'}${x.replaces?` · replaces <b>${e(x.replaces)}</b>, which stays in the box as the Substitute`:''}</li>`).join('')}</ul>`+(plan.skipped.length?note(`${plan.skipped.length} left as they are: ${plan.skipped.map(x=>`${x.name} (${x.why})`).join('; ')}.`,true):'')+(other?note(`${other} ticked ${other===1?'is':'are'} already a seat on a deck's list and stay${other===1?'s':''} as ${other===1?'it is':'they are'}.`):''),plan.command,{after:()=>picked.clear()});};
+    C.review(`Assign ${plan.lines.length} to ${d.name}`,`<ul class="cm-box-lines">${plan.lines.map(x=>`<li><b>${e(x.name)}</b> · ${x.how==='to buy'?'Reserved · To buy':x.how==='listed'?'Added to the list; reserved when the list is locked':'Reserved, on the Bench until boxed'}${x.replaces?` · replaces <b>${e(x.replaces)}</b>, which stays in the box as the Substitute`:''}</li>`).join('')}</ul>`+(plan.skipped.length?note(`${plan.skipped.length} left as they are: ${plan.skipped.map(x=>`${x.name} (${x.why})`).join('; ')}.`,true):'')+(other?note(`${other} ticked ${other===1?'is':'are'} already a seat on a deck's list and stay${other===1?'s':''} as ${other===1?'it is':'they are'}.`):''),plan.command,{after:()=>picked.clear()});};
   if(!first.needs.length){review({});return;}
   const t=M.deckStatus(C.state,d),name=id=>(C.card(items.find(x=>x.recordId===id).cardId)||{}).name||'Card';
   form(`Assign ${first.needs.length} to ${d.name}`,`<div class="cm-full">${note(`${d.name} holds ${t.onList}. Each card below names the card it replaces; that card stays in the box as the Substitute holding the seat until the new one is boxed.`)}</div>`
@@ -1423,7 +1407,7 @@ actions['roster-columns']=()=>{const shop=buyTab(),current=withStatus(shop?shopS
    them, and the Filters button says how many are on. */
 const FILTER_NAMES={q:'Search',type:'Type',subtype:'Subtype',mechanic:'Mechanic',color:'Color',status:'Status',offer:'Bench / Sell / Trade',min:'Min mana value',max:'Max mana value',priceMin:'Min price',price:'Max price',kpi:'Count',mana:'Mana',flag:'Slot flag',group:'Group'};
 const activeFilters=()=>Object.entries(filter).filter(([k,v])=>v!==''&&k!=='group');
-function chipsHTML(){const on=activeFilters();if(!on.length)return '';const label=(k,v)=>k==='color'?({W:'White',U:'Blue',B:'Black',R:'Red',G:'Green',C:'Colorless'}[v]||v):k==='status'?(v==='owned'?'Own (any)':v==='to-buy'?'To buy (any)':v):k==='kpi'?(STAT_FIGURES.find(([id])=>id===v)||[,v])[1]:k==='price'||k==='priceMin'?C.money(Number(v)):k==='flag'?(v==='option'?'Option':'Pinned'):k==='offer'?({bench:'Unassigned bench',available:'Sell / Trade',held:'Pending deals'}[v]||v):v;
+function chipsHTML(){const on=activeFilters();if(!on.length)return '';const label=(k,v)=>k==='color'?({W:'White',U:'Blue',B:'Black',R:'Red',G:'Green',C:'Colorless'}[v]||v):k==='status'?(v==='owned'?'Own (any)':v==='to-buy'?'To buy (any)':v):k==='kpi'?(STAT_FIGURES.find(([id])=>id===v)||BAND_CHIPS.find(([id])=>id===v)||[,v])[1]:k==='price'||k==='priceMin'?C.money(Number(v)):k==='flag'?(v==='option'?'Option':'Pinned'):k==='offer'?({bench:'Unassigned bench',available:'Sell / Trade',held:'Pending deals'}[v]||v):v;
   return `<div class="cm-fchips">${on.map(([k,v])=>`<button type="button" class="cm-fchip" data-action="clear-filter" data-key="${e(k)}" aria-label="Remove filter ${e(FILTER_NAMES[k]||k)}">${e(FILTER_NAMES[k]||k)}: <strong>${e(label(k,v))}</strong> <span aria-hidden="true">✕</span></button>`).join('')}<button type="button" class="cm-text-button" data-action="clear-filters">Clear all</button></div>`;}
 actions['clear-filter']=el=>{filter[el.dataset.key]='';page=0;C.render();};
 /* The folded row's caption: how many copies, for which decks. */

@@ -203,15 +203,16 @@ try {
   await page.keyboard.press("Escape");
   await page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"));
 
-  /* 8. Geometry: the toolbar's two selects never overlap; the row menu's entries are lines, not bands. */
+  /* 8. Geometry: the band's controls never overlap and stay inside the window; the row menu's entries are lines, not bands. */
   for (const width of [1400, 390]) {
     await page.setViewportSize({width, height: 900});
     await page.goto(`${base}/index.html#cards`);
     await settle(page);
-    const box = await page.evaluate(() => { const a = document.querySelector("select[name=groupPick]")?.getBoundingClientRect(), b = document.querySelector("select[name=groupBy]")?.getBoundingClientRect(); return a && b ? {a: [a.left, a.right, a.top, a.bottom], b: [b.left, b.right, b.top, b.bottom]} : null; });
-    ok(box, `both selects are on the page at ${width}`);
-    const overlap = box.a[0] < box.b[1] && box.b[0] < box.a[1] && box.a[2] < box.b[3] && box.b[2] < box.a[3];
-    ok(!overlap, `at ${width} wide the Collection group select and Group rows by do not overlap (${JSON.stringify(box)})`);
+    const boxes = await page.evaluate(() => [...document.querySelectorAll(".cm-band button, .cm-band input")].filter((c) => c.getClientRects().length).map((c) => { const r = c.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.right), Math.round(r.top), Math.round(r.bottom)]; }));
+    ok(boxes.length === 10, `the band has ten controls at ${width} (${boxes.length})`);
+    const overlaps = boxes.flatMap((a, i) => boxes.slice(i + 1).filter((b2) => a[0] < b2[1] - 1 && b2[0] < a[1] - 1 && a[2] < b2[3] - 1 && b2[2] < a[3] - 1).map((b2) => [a, b2]));
+    ok(overlaps.length === 0, `at ${width} wide no two band controls overlap (${JSON.stringify(overlaps.slice(0, 2))})`);
+    ok(boxes.every((c) => c[0] >= 0 && c[1] <= width), `and each is inside the window at ${width}`);
   }
   await page.setViewportSize({width: 1400, height: 900});
   await page.goto(`${base}/index.html#cards`);

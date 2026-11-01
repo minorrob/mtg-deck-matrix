@@ -44,7 +44,7 @@ try {
   await loadLiveState(page, base);
   /* At 1400 first: the Library's actions are in its head, not at the foot. */
   await settle(page, "#cards", "#cm-roster-table");
-  eq(await page.$eval(".cm-page-head .cm-actions:has(>[data-action=roster-more])", (x) => getComputedStyle(x).position), "static", "at 1400 the Library's actions stay in its head");
+  eq(await page.$$eval(".cm-band button, .cm-band input", (cs) => cs.filter((c) => c.getClientRects().length).length), 10, "at 1400 the Library's band is ten controls");
 
   await page.setViewportSize({width: W, height: H});
   const deckId = await page.evaluate(async () => { const r = await CrankRepository.open(); try { return (await r.getState()).decks.find((d) => !d.archived).id; } finally { r.close(); } });
@@ -63,21 +63,15 @@ try {
   /* Library. */
   await settle(page, "#cards", "#cm-roster-table");
   eq((await shell(page)).sideways, 0, "the Library does not scroll sideways; its table scrolls in its own box");
-  const lib = await footRow(page, ".cm-page-head .cm-actions:has(>[data-action=roster-more])");
-  ok(lib.position === "fixed" && Math.abs(lib.bottom - H) < 1 && lib.width === W, `its actions are a row pinned to the foot, the width of the phone (${JSON.stringify(lib)})`);
-  eq([lib.lines, lib.overflowX], [1, "auto"], "one row, which scrolls sideways when it must");
-  eq([lib.first, lib.primary], ["add-card", true], "Add cards first, the primary");
-  eq(lib.cut, [], "every label whole");
-  const pad = await page.$eval("#cm-main", (m) => parseFloat(getComputedStyle(m).paddingBottom));
-  ok(pad >= lib.height, `the page makes room for it, so its foot is not under the row (${pad}px for a ${Math.round(lib.height)}px row)`);
-  /* At 320, the narrowest phone the geometry suite walks, the four no longer fit: still one row, scrolled sideways. */
+  /* The band (ROB-358): at the top of the page, ten controls, every one inside the window, at 390 and at 320. */
+  const bandBox = () => page.evaluate(() => { const b = document.querySelector(".cm-band"), r = b.getBoundingClientRect(), cs = [...b.querySelectorAll("button, input")].filter((c) => c.getClientRects().length); return {pos: getComputedStyle(b).position, bottom: Math.round(r.bottom), n: cs.length, out: cs.filter((c) => { const q = c.getBoundingClientRect(); return q.left < -0.5 || q.right > innerWidth + 0.5; }).length, sideways: document.documentElement.scrollWidth - innerWidth}; });
+  const lib = await bandBox();
+  ok(lib.n === 10 && lib.out === 0 && lib.sideways <= 0, `on a phone the Library's band is ten controls, every one inside the window (${JSON.stringify(lib)})`);
+  ok(lib.pos !== "fixed" && lib.bottom < 320, "and it sits at the top of the page, not pinned to the foot");
   await page.setViewportSize({width: 320, height: H}); await page.waitForTimeout(300);
-  const narrow = await footRow(page, ".cm-page-head .cm-actions:has(>[data-action=roster-more])");
-  eq([narrow.lines, narrow.scrolls, narrow.cut], [1, true, []], "at 320, where the four do not fit, it stays one row and scrolls sideways, every label whole");
+  const narrow = await bandBox();
+  ok(narrow.n === 10 && narrow.out === 0 && narrow.sideways <= 0, `at 320 it still holds: ten controls inside the window (${JSON.stringify(narrow)})`);
   await page.setViewportSize({width: W, height: H}); await page.waitForTimeout(300);
-  await page.locator(".cm-page-head [data-action=roster-more]").scrollIntoViewIfNeeded();
-  const more = await page.$eval(".cm-page-head [data-action=roster-more]", (x) => x.getBoundingClientRect().toJSON());
-  ok(more.left >= 0 && more.right <= W, "and its last button, More, can be brought into view");
 
   /* Explore. */
   await settle(page, "#discover", ".cm-explore-door");

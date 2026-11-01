@@ -88,8 +88,12 @@ const PAGES = [
   /* Card states (docs/card-states.md, Rob, 2026-09-26): the seven count tiles became eight -- the four stages,
      then Owned split four ways -- so controls rise by that one tile, 27 -> 28. The caption states the sum's rule
      rather than repeating the figures above it, so the word budget does not move. */
-  ["cards", "Cards · Library", "#cm-roster-table table", [84, 29, 16], [84, 29, 16]],
-  ["cards?tab=buy", "Cards · To buy", "#cm-roster-table table, .cm-shop-strip", [51, 19, 8], [51, 10, 4]],
+  /* ROB-358 (Rob, 2026-11-01: "no more than a total of 10 clickable items above the red line"): the Library's title, buttons,
+     tabs, eight count cards, toolbar and ticked-rows bar are one band of two rows. Library 84 words, 29 controls, 16 explainer
+     words -> 33, 10, 5 at 1400 and 23, 10, 2 on a phone; To buy at 1400 51, 19, 8 -> 23, 10, 3. Lowered to what it reads, so the
+     next control has to argue for itself. */
+  ["cards", "Cards · Library", "#cm-roster-table table", [33, 10, 5], [23, 10, 2]],
+  ["cards?tab=buy", "Cards · To buy", "#cm-roster-table table, .cm-shop-strip", [23, 10, 3], [51, 10, 4]],
   ["cards?view=sheet", "Cards · Sheet", "#cm-sheet-table table", [60, 17, 20], [60, 17, 20]],
   ["lab", "Build", "#cm-lab-results", [90, 16, 40], [90, 16, 40]],
   /* Explore is two pages now, and this budget used to name only the second of them.

@@ -3,7 +3,7 @@
  *   1. Box: each ticked copy goes into the box of the deck it is assigned to. A copy in no deck stays on the Bench, a copy
  *      not in hand stays as it is, and a copy already boxed is left. ("You can't be boxed if you're not in a deck.")
  *   2. The warning, not a stop: a box that would hold more or fewer than the hundred still boxes every card, says so per
- *      deck, and the deck then reads Building, never Boxed ("the deck status changes to not legal").
+ *      deck, and the deck then does not read Boxed ("the deck status changes to not legal": Building and Over past the hundred, Defined short of it).
  *   3. A copy that fills a seat takes the Substitute holding that seat out to the Bench, so the box keeps its count.
  *   4. Assign: a card the list already wants is reserved for that seat; any other card replaces a seat the reader names,
  *      the replaced copy stays in the box as the Substitute holding it, and a copy in hand reads Reserved until it is boxed.
@@ -113,6 +113,14 @@ const full = () => {let s = make(M.empty(), 'D', names('A', 100));s = own(s, nam
   eq([p.needs, p.lines.map((x) => [x.name, x.how, x.replaces])], [[], [['A100', 'reserved', '']]], 'the list wants A100: it is reserved with no seat to name');
   const after = apply(s, p);
   eq([read(after, 'A100').use, read(after, 'A100').play], ['final', 'loading'], 'and reads assigned, on the Bench');
+}
+/* A draft deck's list changes, but nothing is reserved until the list is locked: the receipt says so. */
+{let s = make(M.empty(), 'D', names('A', 100));s = own(s, ['Z']);
+  const item = {recordId: lotOf(s, 'Z').id, kind: 'lot', lotId: lotOf(s, 'Z').id, cardId: 'card:Z', quantity: 1};
+  const p = M.assignCommands(s, [item], 'D', {[item.recordId]: slotOf(s, 'D', 'A8').id});
+  eq(p.lines.map((x) => [x.name, x.how]), [['Z', 'listed']], 'on a draft deck an owned card is added to the list, not reserved');
+  const after = apply(s, p);
+  eq([!!lotOf(after, 'Z').allocation, !!slotOf(after, 'D', 'Z')], [false, true], 'and nothing is reserved yet');
 }
 /* Two cards cannot replace one seat. */
 {let s = full();s = own(s, ['Z1', 'Z2']);const seat = slotOf(s, 'D', 'A3').id;

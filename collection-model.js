@@ -1010,7 +1010,7 @@
              can't be boxed if you're not in a deck"); a copy not in hand cannot be boxed and stays as it is. A copy that fills a
              seat takes the Substitute holding that seat out to the Bench, so the box keeps its count. When a deck's box would not
              hold exactly its hundred the plan says so and still boxes every card once confirmed: "a warning ... not stop it", and the
-             deck then reads Not legal, never Boxed (the 2026-10-26 rule: a box past or short of the format's size is Building).
+             deck then does not read Boxed (past the hundred it is Building and Over, the 2026-10-26 rule; short of it, Defined).
        Assign puts a card on a deck's list as a seat. A card the deck's list already wants becomes that copy's reservation; any other
              card replaces a seat the reader names (the replaced copy stays in the box as the Substitute holding it, Rob's 2026-10-18
              rule), and a copy in hand is reserved for the seat at once, so it reads Reserved until it is boxed. */
@@ -1071,7 +1071,7 @@
       commands.push({type:'swap',deckId:d.id,slotId:seat,cardId:it.cardId,substitute:true,...(inHand?{lotId:l.id}:{})});
       if(l&&!inHand)commands.push({type:'removePending',lotId:l.id,quantity:l.quantity});
       if(it.kind==='entry'&&it.groupId===WANT_LIST)commands.push({type:'removeGroupEntries',groupId:it.groupId,entryIds:[it.entryId]});
-      lines.push({recordId:it.recordId,name,how:inHand?'reserved':'to buy',replaces:card(s,r.cardId).name});
+      lines.push({recordId:it.recordId,name,how:inHand?(d.status==='final'?'reserved':'listed'):'to buy',replaces:card(s,r.cardId).name});
     }
     return {commands,lines,needs,skipped,command:commands.length?{type:'batch',summary:`Assigned ${lines.length} card${lines.length===1?'':'s'} to ${d.name}`,commands}:null};
   }
