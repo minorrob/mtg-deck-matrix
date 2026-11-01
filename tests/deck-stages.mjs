@@ -60,7 +60,7 @@ const example=()=>{let s=M.empty();
   /* Substitute · Loading: the copy's status, and what it is not. */
   const read=M.stateReader(s),sub=read({...lotOf(s,'S1'),kind:'lot'});
   eq([sub.use,sub.play,sub.inBox,sub.deckId,sub.holds],['substitute','loading',false,'D1','card:B1'],'a chosen stand-in is a Substitute · Loading');
-  eq(M.stateNote(sub,x=>x.replace('card:','')),'Loading · stands in for B1');eq(M.placeLabel(sub),'Loading');
+  eq(M.stateNote(sub,x=>x.replace('card:','')),'Reserved · stands in for B1');eq(M.placeLabel(sub),'Reserved');
   ok(!M.seats(s).free.has('card:S1'),'a chosen stand-in is not a free copy');
   refuses(()=>run(s,{type:'standIn',lotId:lotOf(s,'S1').id,deckId:'D1',slotId:slotOf(s,'D1','B2').id}),/Choose an owned copy on the Bench/);
   let t=own(s,['Extra']);refuses(()=>run(t,{type:'standIn',lotId:lotOf(t,'Extra').id,deckId:'D1',slotId:slotOf(t,'D1','B1').id}),/B1's seat is already filled or held/);
@@ -121,5 +121,5 @@ const example=()=>{let s=M.empty();
 }
 /* The vocabulary About Deck Building reads. */
 eq(M.STAGES.map(x=>x.label),['Building','Defined','Boxed','Playable']);
-eq(M.LADDER.map(x=>x.label),['Watch','To buy','To Buy · Ordered','Own','Upgrade','Reserved','Loading','Substitute','Final']);
+eq(M.LADDER.map(x=>x.label),['Watch','To buy','To Buy · Ordered','Own','Upgrade','Reserved','Substitute','Final']);
 console.log(`deck-stages: ${checks} checks passed; Building at 99, Defined at 100, Boxed at a full box, and Rob's example boxing 55, 65 and 70.`);

@@ -4371,6 +4371,21 @@ button.cm-vitals{cursor:pointer}
 .cm-menu .cm-show-chip{display:inline-flex;align-items:center;width:auto;padding:5px 10px;border:1px solid var(--v-line);border-radius:var(--radius-pill);font-size:12px}
 .cm-menu .cm-show-chip b{margin-left:2px;font-variant-numeric:tabular-nums}
 .cm-menu .cm-show-chip[aria-pressed=true]{background:color-mix(in oklab,var(--v-accent) 18%,var(--v-panel));border-color:var(--v-accent)}
-@media(max-width:760px){.cm-band-top{flex-wrap:wrap;gap:6px}.cm-band-search{order:3;flex:1 1 100%}.cm-band-bottom{flex-wrap:wrap}.cm-band-gap{display:none}}
+.cm-band-ico{display:none}
+/* A PHONE (390 wide): the same ten clickables in three rows -- the way back, the tabs and Add cards; the search; then the group,
+   Filters, View and More -- the rows dissolved into one wrapping line so each control takes its row by `order`. */
+@media(max-width:640px){
+  .cm-band{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+  .cm-band-row{display:contents}
+  .cm-band-play{order:1;min-width:36px}.cm-band-lbl,.cm-band-gap{display:none}.cm-band-ico{display:inline}
+  .cm-band-tabs{order:2;flex:1 1 0;min-width:0;margin:0}.cm-band-tabs small{display:none}
+  .cm-band-tabs [role=tab]{padding:8px 8px}.cm-band-tabs [role=tab][aria-selected=true]{font-size:15px}
+  .cm-band [data-action=add-card]{order:3}
+  .cm-band-search{order:4;flex:1 1 100%}
+  .cm-band-group{order:5;flex:1 1 0}.cm-band [data-action=roster-filters]{order:6}.cm-band [data-action=view-menu]{order:7}.cm-band .cm-band-more{order:8}
+  .cm-band-clear{order:5;flex:1 1 0}.cm-band [data-action=batch-status]{order:6}.cm-band [data-action=batch-move]{order:7}
+  .cm-band-bar{flex-basis:40px;width:40px}.cm-band-nums{display:none}
+  .cm-band.has-ticks .cm-band-top .cm-band-more{display:none}
+}
 /* With cards ticked the band stays at the top of the window: sixty rows are taller than a screen, and the action row is what a tick is for. */
-.cm-band.has-ticks{position:sticky;top:0;z-index:8;background:var(--color-bg);padding-bottom:6px;box-shadow:0 1px 0 var(--v-line)}
+.cm-band.has-ticks{position:sticky;top:var(--band-top,0);z-index:8;background:var(--color-bg);padding-bottom:6px;box-shadow:0 1px 0 var(--v-line)}

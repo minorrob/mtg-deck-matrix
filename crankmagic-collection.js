@@ -108,7 +108,7 @@ const STATE_KINDS=['lot','need','draft','option','entry'];
 const stateOfRow=r=>r.state||(STATE_KINDS.includes(r.kind)?M.cardState(r):{use:'',ownership:'',play:'',deckId:'',inBox:false});
 /* The Table view's piles are places (the model's placeLabel), in the order a deck is finished: in a deck's box, on
    its way in, then the Bench, then what is not held yet. */
-const TABLE_PILES=[['final','Final'],['loading','Loading'],['substitute','Substitute'],['bench','Bench'],['ordered','To Buy · Ordered'],['buy','To buy'],['watch','Watch']].map(([id,label],order)=>({id,label,tone:M.stateTone(label),order}));
+const TABLE_PILES=[['final','Final'],['reserved','Reserved'],['substitute','Substitute'],['bench','Bench'],['ordered','To Buy · Ordered'],['buy','To buy'],['watch','Watch']].map(([id,label],order)=>({id,label,tone:M.stateTone(label),order}));
 const tablePile=r=>STATE_KINDS.includes(r.kind)?M.placeLabel(stateOfRow(r)):r.status;
 /* EIGHT CARDS, EVERY RECORD IN ONE (Rob, 2026-10-18). The top row is the four uses a card has for a deck -- Final and
    Substitute in its box, Reserved and Upgrade on their way or under consideration -- and the row under it is the rest:
@@ -260,11 +260,11 @@ const num=v=>Number(v).toLocaleString('en-US');
 function bandCounts(list){const t=Object.fromEntries(BAND_CHIPS.map(([k])=>[k,0]));for(const r of list){t.all+=r.quantity;for(const [k] of BAND_CHIPS)if(k!=='all'&&KPI_TEST[k](r))t[k]+=r.quantity;}return t;}
 /* The group the page is looking at: the address's group, or the group of the deck it is scoped to. */
 function bandGroup(params){const d=params.get('deck')&&C.state.decks.find(x=>x.id===params.get('deck')),id=params.get('group')||(d&&d.groupId)||filter.group||'';return id?C.state.groups.find(g=>g.id===id)||null:null;}
-function bandRow1(params,tab){
+function bandRow1(params,tab,{search=true}={}){
   const n=tabCounts();
-  return `<div class="cm-band-row cm-band-top"><h1 class="cm-sr-only">Library</h1><div class="cm-tabs cm-band-tabs" role="tablist" aria-label="Library">${TABS.map(([id,label])=>`<button type="button" role="tab" aria-selected="${id===tab}" data-action="cards-tab" data-tab="${id}">${label} <small>${num(n[id])}</small></button>`).join('')}</div>`
-   +`<label class="cm-search cm-band-search"><span class="cm-sr-only">Search cards</span><input id="cm-roster-query" type="search" value="${e(filter.q)}" placeholder="Search cards" autocomplete="off"></label>`
-   +`${b('Add cards','add-menu',{},true,{caret:'down',cls:'compact'})}<button type="button" class="v-button compact cm-band-more" data-action="band-more" data-tab="${tab}" data-group="${e(params.get('group')||'')}" aria-haspopup="menu" aria-label="More" title="More">⋯</button></div>`;
+  return `<div class="cm-band-row cm-band-top"><h1 class="cm-sr-only">Library</h1><div class="cm-tabs cm-cards-tabs cm-band-tabs" role="tablist" aria-label="Library">${TABS.map(([id,label])=>`<button type="button" role="tab" aria-selected="${id===tab}" data-action="cards-tab" data-tab="${id}">${label} <small>${num(n[id])}</small></button>`).join('')}</div>`
+   +(search?`<label class="cm-search cm-band-search"><span class="cm-sr-only">Search cards</span><input id="cm-roster-query" type="search" value="${e(filter.q)}" placeholder="Search cards" autocomplete="off"></label>`:'<span class="cm-band-gap"></span>')
+   +`${b('Add cards','add-card',{},true,{cls:'compact'})}<button type="button" class="v-button compact cm-band-more" data-action="band-more" data-tab="${tab}" data-group="${e(params.get('group')||'')}" aria-haspopup="menu" aria-label="More" title="More">⋯</button></div>`;
 }
 /* The second row at rest: where you are (with its counts, drawn), the filters, the view, and the way back. */
 function bandRest(params,tab,base){
@@ -276,7 +276,7 @@ function bandRest(params,tab,base){
     +`<span class="cm-band-nums">${parts.map(([k,v])=>`<i class="cm-dot cm-dot-${k}" aria-hidden="true"></i>${num(v)}`).join(' ')||num(t.all)}</span>${C.caret('down')}<span class="cm-sr-only"> ${e(tip)}</span></button>`
     +b(fl?`Filters ${fl}`:'Filters','roster-filters',{},false,{cls:'compact'})
     +b('List','view-menu',{tab,view:'table'},false,{caret:'down',cls:'compact'})
-    +`<span class="cm-band-gap"></span>`+b('Back to Play Space','open-tabletop',{},false,{cls:'compact'});
+    +`<span class="cm-band-gap"></span><button type="button" class="v-button compact cm-band-play" data-action="open-tabletop" aria-label="Back to Play Space"><span class="cm-band-lbl">Back to Play Space</span><span class="cm-band-ico" aria-hidden="true">←</span></button>`;
 }
 /* The second row with cards ticked: what you can do to them. Ordered, Bought in store and Arrived are Set status now. */
 function bandTicked(shop){const n=picked.size;
@@ -284,9 +284,9 @@ function bandTicked(shop){const n=picked.size;
     +b('Set status','batch-status',{},true,{caret:'down',cls:'compact'})+b('Move to group','batch-move',{},false,{cls:'compact'})
     +`<button type="button" class="v-button compact cm-band-more" data-action="batch-more" data-shop="${shop?1:0}" aria-haspopup="menu" aria-label="More for the ticked records" title="More">⋯</button>`;
 }
-actions['add-menu']=el=>popAt(el,`${b('Add cards','add-card')}${b('Import a list or library','import-list')}${b('New group…','new-group')}`);
+
 actions['band-more']=el=>{const {tab,group}=el.dataset;
-  popAt(el,`${moreItems({tab,view:'table',group})}<hr>${b('Send this library to email…','share-export')}${b('Load an emailed backup…','restore')}${tab==='buy'?b('Print buy list','print-buy-list'):''}<hr>${b('Clear filters','clear-filters')}${b('How the Library works','page-help',{help:'cards'})}${b('Send feedback','send-feedback')}`);};
+  popAt(el,`${b('Import a list or library','import-list')}${b('New group…','new-group')}<hr>${moreItems({tab,view:'table',group})}<hr>${b('Send this library to email…','share-export')}${b('Load an emailed backup…','restore')}${tab==='buy'?b('Print buy list','print-buy-list'):''}<hr>${b('Clear filters','clear-filters')}${b('How the Library works','page-help',{help:'cards'})}${b('Send feedback','send-feedback')}`);};
 actions['batch-more']=el=>{if(!picked.size)throw Error('Tick at least one row first.');const shop=el.dataset.shop==='1';
   popAt(el,`${b('Release reservation → To buy','batch-release')}${b('Offer for Sell / Trade','batch-offer')}<hr><p>Flags</p>${b('Flag as option (first to swap out)','batch-flag-set',{flag:'option'})}${b('Clear option flag','batch-flag-set',{flag:'clear'})}${b('Pin (keep)','batch-flag-set',{flag:'pin'})}${b('Unpin','batch-flag-set',{flag:'unpin'})}${shop?`<hr><p>Bought</p>${b('Ordered…','batch-order')}${b('Bought in store','batch-store')}${b('Arrived','batch-arrived')}`:''}`);};
 /* THE GROUP MENU (Rob, 2026-11-01: "wouldn't that give a dropdown to select one of those three"): the groups, then the
@@ -305,8 +305,8 @@ actions['band-group']=el=>{const id=el.dataset.group,r=C.route(),extra=Object.fr
   page=0;goCards(tab,extra);};
 actions['band-show']=el=>{const k=el.dataset.show;filter.kpi=k==='all'||filter.kpi===k?'':k;page=0;C.render();};
 /* THE VIEW MENU: what used to be the view switch, Columns, Group rows by and Sort by recommendation. */
-actions['view-menu']=el=>{const {tab}=el.dataset,params=C.route().params,by=tab==='buy'?shopGroupBy:groupBy,deck=params.get('deck')||'';
-  popAt(el,`<p>View</p>${viewSwitch('table',tab)}<hr><p>Arrange rows by</p>${GROUP_CHOICES.map(([v,l])=>`<button type="button" class="cm-menu-row${by===v?' is-current':''}" data-action="band-arrange" data-by="${e(v)}" data-tab="${tab}"><span>${e(l)}</span></button>`).join('')}${lastBands.length?`<hr>${b(lastBands.every(l=>collapsed.has(l))?'Expand all groups':'Collapse all groups','groups-fold')}`:''}<hr>${b('Columns…','roster-columns')}${deck&&globalThis.CrankRecommend?b('Sort by recommendation','roster-recommend',{deck}):''}`);};
+actions['view-menu']=el=>{const {tab}=el.dataset,view=el.dataset.view||'table',params=C.route().params,by=tab==='buy'?shopGroupBy:groupBy,deck=params.get('deck')||'';
+  popAt(el,`<p>View</p>${viewSwitch(view,tab)}${view!=='table'?'':`<hr><p>Arrange rows by</p>${GROUP_CHOICES.map(([v,l])=>`<button type="button" class="cm-menu-row${by===v?' is-current':''}" data-action="band-arrange" data-by="${e(v)}" data-tab="${tab}"><span>${e(l)}</span></button>`).join('')}${lastBands.length?`<hr>${b(lastBands.every(l=>collapsed.has(l))?'Expand all groups':'Collapse all groups','groups-fold')}`:''}<hr>${b('Columns…','roster-columns')}${deck&&globalThis.CrankRecommend?b('Sort by recommendation','roster-recommend',{deck}):''}`}`);};
 actions['band-arrange']=el=>{if(el.dataset.tab==='buy')shopGroupBy=el.dataset.by;else groupBy=el.dataset.by;page=0;C.render();};
 actions['groups-fold']=()=>{if(lastBands.every(l=>collapsed.has(l)))collapsed.clear();else for(const l of lastBands)collapsed.add(l);C.render();};
 /* The roster page, as the band lays it out. A card scope (from a card's "see it in the Library") is the one chip left under the band. */
@@ -1125,7 +1125,7 @@ const chips=$('#cm-filter-chips');if(chips)chips.innerHTML=chipsHTML();
 const live=new Set(everything.map(r=>r.recordId));for(const id of picked)if(!live.has(id))picked.delete(id);
 /* The band's second row: the group and its counts at rest, the actions on what is ticked. The counts follow every filter but the chip itself, as the count cards did. */
 bandBase=filter.kpi?everything.filter(r=>matches(r,{...filter,kpi:''})):matched;
-const row2=$('#cm-band-row2');if(row2){row2.innerHTML=picked.size?bandTicked(shop):bandRest(params,tab,bandBase);row2.closest('.cm-band').classList.toggle('has-ticks',picked.size>0);}
+const row2=$('#cm-band-row2');if(row2){row2.innerHTML=picked.size?bandTicked(shop):bandRest(params,tab,bandBase);const band=row2.closest('.cm-band');band.classList.toggle('has-ticks',picked.size>0);const bar=document.querySelector('.cm-sidebar'),rb=bar&&bar.getBoundingClientRect();band.style.setProperty('--band-top',(rb&&getComputedStyle(bar).position==='sticky'&&rb.width>innerWidth/2&&rb.height<innerHeight/3?Math.round(rb.height):0)+'px');}
 const groupBy=gbGet();
 visibleRows=(foldPrints?foldByCard(matched,groupBy):matched).sort((a,b)=>{if(groupBy){const g=groupOrder(a,groupBy).localeCompare(groupOrder(b,groupBy));if(g)return g;}const rank=sort.key==='status'?x=>statusRank(value(x,'status')):x=>value(x,sort.key),av=rank(a),bv=rank(b);return (typeof av==='number'&&typeof bv==='number'?av-bv:String(av??'').localeCompare(String(bv??''),undefined,{numeric:true}))*sort.dir||a.recordId.localeCompare(b.recordId);});
 /* In the reader's order (the Columns dialog saves it), Card first. */
@@ -1360,7 +1360,7 @@ const FILTER_TYPES=['Creature','Instant','Sorcery','Artifact','Enchantment','Lan
 const FILTER_COLORS=[['W','W','White'],['U','U','Blue'],['B','B','Black'],['R','R','Red'],['G','G','Green'],['C','Colorless','Colorless']];
 /* The card states (docs/card-states.md): the stages, then where an owned card is, then the two roles a card for a
    deck has while it is not in the box -- an upgrade replaces a card in the box, a reserved card takes an empty seat. */
-const FILTER_STATUSES=['Final','Substitute','Reserved','Upgrade','Loading','Bench','Sell','Trade','Watch','To buy','To Buy · Ordered',['owned','Own (any)'],['to-buy','To buy (any)']];
+const FILTER_STATUSES=['Final','Substitute','Reserved','Upgrade','Bench','Sell','Trade','Watch','To buy','To Buy · Ordered',['owned','Own (any)'],['to-buy','To buy (any)']];
 const MORE_FILTERS=['subtype','mechanic','mana','flag','offer'];
 actions['roster-filters']=()=>{const r=C.route(),params=new URLSearchParams(r.params),shop=buyTab(),tab=shop?'buy':'library',tight=compactShop(shop);
   const draft={...filter},deckNow=params.get('deck')||'';let deck=deckNow,grouping=shop?shopGroupBy:groupBy;

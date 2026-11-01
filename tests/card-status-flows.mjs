@@ -7,7 +7,7 @@
  *      nothing in the box changes.
  *   3. Reserving that Upgrade makes the card it replaces the Substitute holding its seat, and the Upgrade a Reserved
  *      card to buy.
- *   4. It arrives: Bought makes it Loading, and putting it in brings the Substitute out to the Bench in the same change.
+ *   4. It arrives: Bought makes it Reserved (it was Loading), and putting it in brings the Substitute out to the Bench in the same change.
  *   5. Reserve for another deck takes a copy from one box for another: it stays where it is, Reserved for the other
  *      deck, and its old deck's seat goes to To buy -- held by that same copy until it moves.
  *   6. A Bench copy offered for sale reads Sell; Edit changes its quantity.
@@ -118,7 +118,7 @@ try {
     st = await stateOf(page);
     const bought = st.lots.find((l) => l.cardId === entry.cardId && l.allocation?.deckId === D4);
     ok(bought && bought.source === "owned", "Bought: the copy is owned and claimed by D4's seat");
-    eq(M.stateLabel(M.stateReader(st)({...bought, kind: "lot"})), "Loading", "and it is Loading");
+    eq(M.stateLabel(M.stateReader(st)({...bought, kind: "lot"})), "Reserved", "and it is Reserved, on the Bench until it is boxed (Rob, 2026-11-01)");
     await page.goto(`${base}/index.html#cards?deck=${encodeURIComponent(D4)}`);
     await settle(page);
     await page.locator("#cm-roster-query").fill(st.cards[entry.cardId].name);

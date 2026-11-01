@@ -58,7 +58,7 @@
   /* THE WORDS ABOUT DECK BUILDING READS (ABT-4): the deck stages and the card status ladder, kept here with the rest of the
      vocabulary so a label changed here changes the page. */
   const STAGES=[{id:'building',label:'Building',text:'Not the hundred yet: fewer than 100 seats on the list, or more than 100 cards on the list or in the box. Ownership doesn’t matter.'},{id:'defined',label:'Defined',text:'Exactly 100 seats on the list. To buy and Ordered cards count.'},{id:'boxed',label:'Boxed',text:'The box holds exactly the hundred: Final + Substitute = 100, all owned.'},{id:'playable',label:'Playable',text:'Defined, and Play knows every one of the 100.'}];
-  const LADDER=[{label:'Watch',text:'Looked at, not decided. No copy yet.'},{label:'To buy',text:'Decided: on your To Buy list, or a deck’s Reserved card.'},{label:'To Buy · Ordered',text:'Bought, not yet in hand.'},{label:'Own',text:'In hand: on the Bench, Loading into a deck, or in its box.'},{label:'Upgrade',text:'Being considered to improve a deck. It names the card it would replace and changes nothing until you reserve it.'},{label:'Reserved',text:'Committed to take a seat: to buy, ordered, or in another deck’s box.'},{label:'Loading',text:'Owned and the deck’s own card, or a stand-in chosen for one of its seats, not in the box yet.'},{label:'Substitute',text:'In the box, holding a Reserved card’s seat. It counts toward the hundred.'},{label:'Final',text:'The list’s own card, in the deck’s box. Final and Substitute are the hundred you play.'}];
+  const LADDER=[{label:'Watch',text:'Looked at, not decided. No copy yet.'},{label:'To buy',text:'Decided: on your To Buy list, or a deck’s Reserved card.'},{label:'To Buy · Ordered',text:'Bought, not yet in hand.'},{label:'Own',text:'In hand: on the Bench, Reserved for a deck, or in its box.'},{label:'Upgrade',text:'Being considered to improve a deck. It names the card it would replace and changes nothing until you reserve it.'},{label:'Reserved',text:'Assigned to a seat and not in the box yet: to buy, ordered, in another deck’s box, or owned and waiting on the Bench to be boxed.'},{label:'Substitute',text:'In the box, holding a Reserved card’s seat. It counts toward the hundred.'},{label:'Final',text:'The list’s own card, in the deck’s box. Final and Substitute are the hundred you play.'}];
   const SET_MAX=40;
   /* FORMATS (the Decks requirements' FMT-1, FMT-2): each format's rules in one entry -- its size, singleton or not,
      whether a commander is required, the color identity rule, the legality list. A deck without one reads as Commander.
@@ -124,24 +124,24 @@
   const playLabel=id=>PLAY.find(x=>x.id===id)?.label||'';
   /* The one word a pill carries: the use; Loading for the deck's own card not put in yet; and, for a card that
      is for no deck and not owned, its ownership (Watch, To buy, Ordered), which says more than "Unowned". */
-  const stateLabel=st=>st.use==='unowned'?ownershipLabel(st.ownership):st.use==='final'&&st.play==='loading'?'Loading':useLabel(st.use);
+  const stateLabel=st=>st.use==='unowned'?ownershipLabel(st.ownership):st.use==='final'&&st.play==='loading'?'Reserved':useLabel(st.use);
   /* The few words beside the pill, spelled here so every screen says them the same way. `name` turns a card id
      into its name and `deckName` a deck id into the deck's short name. */
   function stateNote(st,name=x=>x,deckName=x=>x){
     if(st.use==='reserved')return [st.from?`in ${deckName(st.from)}`:ownershipLabel(st.ownership),st.replaces?`replaces ${name(st.replaces)}`:'empty seat'].join(' · ');
     if(st.use==='upgrade')return [ownershipLabel(st.ownership),st.replaces?`would replace ${name(st.replaces)}`:'choose what it replaces'].join(' · ');
-    if(st.use==='substitute'&&!st.inBox)return ['Loading',st.holds?`stands in for ${name(st.holds)}`:''].filter(Boolean).join(' · ');
+    if(st.use==='substitute'&&!st.inBox)return ['Reserved',st.holds?`stands in for ${name(st.holds)}`:''].filter(Boolean).join(' · ');
     if(st.use==='substitute')return [st.holds?`holds the seat for ${name(st.holds)}`:'',st.claimedBy?`reserved for ${deckName(st.claimedBy)}`:''].filter(Boolean).join(' · ');
     if(st.use==='final'&&st.play==='loading')return st.replaces?`put in for ${name(st.replaces)}`:'put it in the box';
     return '';
   }
   /* Where a card is, in one word, for the Table view's piles: in a box (Final, Substitute), owned and on its way
      into the deck's box (Loading), on the Bench, or not held yet (Watch, To buy, Ordered). */
-  const placeLabel=st=>st.use==='final'?(st.inBox?'Final':'Loading'):st.use==='substitute'?(st.inBox?'Substitute':'Loading'):st.from?'Loading':st.ownership==='watch'||st.ownership==='buy'||st.ownership==='ordered'?ownershipLabel(st.ownership):'Bench';
+  const placeLabel=st=>st.use==='final'?(st.inBox?'Final':'Reserved'):st.use==='substitute'?(st.inBox?'Substitute':'Reserved'):st.from?'Reserved':st.ownership==='watch'||st.ownership==='buy'||st.ownership==='ordered'?ownershipLabel(st.ownership):'Bench';
   /* The pill words in the order the work happens, and the tone each is painted. Sorting and grouping by
      status read this order. */
-  const STATE_LABELS=['Watch','To buy','To Buy · Ordered','Upgrade','Reserved','Loading','Bench','Final','Substitute','Sell','Trade'];
-  const STATE_TONES={Watch:'watch','To buy':'buy','To Buy · Ordered':'ordered',Upgrade:'reserved',Reserved:'buy',Loading:'pull',Bench:'draft',Final:'inbox',Substitute:'standin',Sell:'remove',Trade:'remove'};
+  const STATE_LABELS=['Watch','To buy','To Buy · Ordered','Upgrade','Reserved','Bench','Final','Substitute','Sell','Trade'];
+  const STATE_TONES={Watch:'watch','To buy':'buy','To Buy · Ordered':'ordered',Upgrade:'reserved',Reserved:'buy',Bench:'draft',Final:'inbox',Substitute:'standin',Sell:'remove',Trade:'remove'};
   const stateOrder=label=>{const i=STATE_LABELS.indexOf(label);return i<0?STATE_LABELS.length:i;};
   const stateTone=label=>STATE_TONES[label]||'draft';
   const statusOrder=label=>{const s=statusByLabel.get(label);return s?s.order:STATUS.length;};

@@ -57,7 +57,7 @@ const names = {A: "Alpha", B: "Bravo", X: "Xray", C: "Charlie", D: "Delta", F: "
 const table = [
   ["the list's card in its box", L.final, {use: "final", ownership: "own", play: "playable", deckId: "d1", slotId: "a", inBox: true}, "Final", ""],
   ["a substitute holding B's seat", L.sub, {use: "substitute", ownership: "own", play: "playable", deckId: "d1", holds: "B", inBox: true}, "Substitute", "holds the seat for Bravo"],
-  ["the deck's own card, owned, not put in yet", L.loading, {use: "final", ownership: "own", play: "loading", deckId: "d1", slotId: "c"}, "Loading", "put it in the box"],
+  ["the deck's own card, owned, not put in yet", L.loading, {use: "final", ownership: "own", play: "loading", deckId: "d1", slotId: "c"}, "Reserved", "put it in the box"],
   ["a copy in D2's box claimed by D1, read from anywhere", L.claimed, {use: "substitute", ownership: "own", play: "playable", deckId: "d2", claimedBy: "d1", inBox: true}, "Substitute", "reserved for D1"],
   ["an ordered copy for a seat", L.ordered, {use: "reserved", ownership: "ordered", play: "toload", deckId: "d1", slotId: "f"}, "Reserved", "To Buy · Ordered · empty seat"],
   ["a seat to buy, a substitute in it", {kind: "need", deckId: "d1", slotId: "b", purpose: "main"}, {use: "reserved", ownership: "buy", play: "toload", deckId: "d1", slotId: "b", replaces: "X"}, "Reserved", "To buy · replaces Xray"],
@@ -108,7 +108,7 @@ for (const r of records) {
 eq(bad.slice(0, 5), [], `every one of Rob's ${records.length} records keeps the rules`);
 const copies = (f) => records.filter((r) => f(read(r), r)).reduce((n, r) => n + (r.quantity || 1), 0);
 eq(copies((s) => s.use === "final" && s.inBox), 577, "577 Final, in their deck's box");
-eq(copies((s) => s.use === "final" && s.play === "loading"), 9, "9 Loading: owned, the deck's own card, waiting on the Bench (what Ready to add lists)");
+eq(copies((s) => s.use === "final" && s.play === "loading"), 9, "9 owned, assigned and waiting on the Bench: Reserved (what Ready to add lists)");
 eq(copies((s) => s.use === "substitute"), 123, "123 Substitutes");
 eq(copies((s) => s.use === "bench"), 888, "888 on the Bench");
 eq(copies((s) => s.use === "reserved"), 107, "107 Reserved, every one to buy");
@@ -162,19 +162,19 @@ ok(claimed.every((r) => { const st = M.stateReader(live, r.allocation.deckId)(r)
   const E = require("../collection-exchange.js"), book = E.workbook(live), sheet = book.sheets.find((x) => x.name === "Library");
   ok(sheet.columns.some((c) => c.key === "state" && c.label === "State"), "the Library sheet has a State column");
   const q = (f) => sheet.rows.filter(f).reduce((n, r) => n + r.quantity, 0);
-  eq([q((r) => r.state === "Final"), q((r) => r.state === "Loading"), q((r) => r.state === "Substitute"), q((r) => r.state === "Bench"), q((r) => r.state === "Upgrade · Own")], [577, 9, 123, 888, 1], "it counts 577 Final, 9 Loading, 123 Substitute, 888 Bench and 1 Upgrade, as the Library does");
+  eq([q((r) => r.state === "Final"), q((r) => r.state === "Reserved"), q((r) => r.state === "Substitute"), q((r) => r.state === "Bench"), q((r) => r.state === "Upgrade · Own")], [577, 9, 123, 888, 1], "it counts 577 Final, 9 Reserved (owned, assigned, not boxed), 123 Substitute, 888 Bench and 1 Upgrade, as the Library does");
   ok(["Allocations", "Acquisition queue"].every((n) => book.sheets.find((x) => x.name === n).columns.some((c) => c.key === "state")), "Allocations and the Acquisition queue carry it too");
   const T = require("../crankmagic-tabletop.js"), pile = (label) => ({kind: "status", label});
   const benchCopy = {kind: "lot", source: "owned", location: {kind: "bench"}, allocation: null, quantity: 1};
   const reserved = {kind: "lot", source: "owned", location: {kind: "bench"}, allocation: {deckId: "d1", slotId: "s"}, quantity: 1};
   const watched = {kind: "lot", source: "watching", location: null, allocation: null, quantity: 1};
   eq(T.accepts(pile("Final"), [benchCopy]).action, "place", "a Bench copy dropped on Final goes into a deck's box");
-  eq(T.accepts(pile("Loading"), [benchCopy]).action, "reserve", "dropped on Loading it is claimed for a deck's seat, to be put in");
+  eq(T.accepts(pile("Reserved"), [benchCopy]).action, "reserve", "dropped on Reserved it is claimed for a deck's seat, to be put in");
   eq(T.accepts(pile("Watch"), [benchCopy]).action, "source:watching", "dropped on Watch it becomes a watched card");
   eq(T.accepts(pile("To buy"), [reserved]).action, "release", "a claimed copy dropped on To buy is released, so its deck's seat is to buy again");
   eq(T.accepts(pile("To buy"), [watched]).action, "wanted:plan", "a watched copy dropped on To buy joins the To Buy list");
   eq(T.accepts(pile("Upgrade"), [benchCopy]).ok, false, "Upgrade is a use, not a place: nothing is dropped on it");
-  const places = new Set(["Final", "Loading", "Substitute", "Bench", "To Buy · Ordered", "To buy", "Watch"]);
+  const places = new Set(["Final", "Reserved", "Substitute", "Bench", "To Buy · Ordered", "To buy", "Watch"]);
   ok(records.every((r) => places.has(M.placeLabel(read(r)))), "every record sits on one of the Table view's seven piles");
 }
 /* 8. Rob's rules for the two ways a card replaces another (2026-10-18), through the model's own commands: a Reserved
