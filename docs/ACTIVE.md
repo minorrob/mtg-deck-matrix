@@ -49,6 +49,26 @@ Rob, 2026-10-28: *"Include Chat module in default. Ensure chat in-game is fully 
 - **Phone follow-up PR (Rob, 2026-10-29: phone work left PR 910).** On `claude/gifted-ride-w6xoa3` after the merge: the phone's one frame scrolls a crowded lands row (the lands zone and the grid's rows take the room their cards need; this also clears `board-r3-zone-navigation` at phone/390, which failed on main), and `board-commander-hand`'s 390x844 case is back in its loop (the phone's board scrolls inside its window, so the test scrolls to the card as a person does). Still failing on main and not touched: `board-target-lands`, `board-ending-rematch`, `board-mana-symbols`, `board-control`, `browser-geometry`, `precons`, `page-budget`, `coach`, `crankmagic-coach`, `engine-breaks-anchors`, `table-record`. After the phone PR: the additional work planned before. **Released:** PR 925 merged to main as `b9999b16`; staging `release/cloud-staging` `a8abf916`, read back by `tools/staging-check.mjs --expect b9999b1`; `release-acceptance` 22 passes. Not released to production. PRs merged to main after it (#932, #935, #936, #942, #945) are not on staging.
 - **Known and Rob's:** at 1280x720 with both drawers open the stage is about 590px wide, so Table's boards are small; press Max, shut a drawer, or zoom. Staging D1 now has migrations 0009 and 0010 (applied 2026-10-29 through the Cloudflare D1 API and recorded in `d1_migrations`, as `wrangler d1 migrations apply` would); production's D1 was not read or changed (its record, from the 10-25 release, is 0001 and 0002 only).
 
+## Card load to 100%: the package for an OpenAI orchestrator, 2026-10-28 (Claude Code on Personal-HP, for Rob; `claude/engine-loading-orchestration-dd4c7f`)
+
+Rob, 2026-10-28: *"Pick back up the engine loading from its current state. Rationalize against the 100% load plan, create for me the kick-off
+copy/paste prompt and attachment instructions for OpenAI. It will run 8 different subagents ... I want 100% accuracy, 0 errors in the game when any
+given card is played."* Documents only; nothing in the engine changed.
+
+- **The package:** `docs/engine/card-load-100-2026-10-28/`: `README.md` (the state against `plan-to-100.md` M7, `docs/engine/PLAN.md` G4 to G7 and
+  the card load program, measured; eight gates G-1 to G-8 that define 100%; the open accuracy debt), `KICKOFF.md` (Rob's five attachments and the
+  prompt), `ORCHESTRATION.md` (waves of eight subagents, one integration branch, the consolidated test, merge, staging), `BRIEF.md` (the
+  subagents' brief: paths, the loader's commands with measured times, the roles W1 to W7 and the verifier V8), `RUN.md` (the run's record).
+- **Measured on main `39a45706`:** `check-cards` 6,430 definitions, 11,023 scenarios, 0 failed; `card-compiler` 25,616 undefined (116 candidates,
+  12,080 one sentence short, 1,069 other layouts); Rob's 477 live-deck cards final, 1 library card unloaded, 1,247 of the 3,239 most-played
+  unloaded; calibration 4,161 of 4,165 (Blackblade Reforged, Contagion Clasp, Goblin Piledriver, Wayfarer's Bauble fail); `fuzz-live` library 3 of 3
+  and staging decks 1 of 1 clean. The committed `data/engine/candidates.json` is stale (100 over 25,641).
+- **Not on main yet:** PR #834 (a paragraph is one ability; the gameplay-gap list). Wave 0 of the run lands it.
+- **Rob's ruling, 2026-10-28, on cards from outside the game** (Cunning Wish, Extrapolate the Impossible; CR 400.11, 903.11): *"For now, it
+  refuses them at the table ... these cards in a deck make the deck illegal to play in Play."* The run's W2 builds the refusal by name in `readDeck`;
+  the Decks wishboard comes after the load, Linear ROB-198 (under ROB-85).
+- **When the run starts** it claims the card-load files here by Rob's assignment (`ORCHESTRATION.md`, "Before wave 0"). Until then nobody holds them.
+
 ## Play and the app's menus: Rob's follow-ups of 2026-10-28 (a Claude cloud session, for Rob; `claude/gifted-ride-w6xoa3`, the second PR of the day)
 
 Rob asked for these after the lounge push (the section below), as a separate PR, and to ship them to staging without him.
