@@ -2467,6 +2467,7 @@ globalThis.CrankBoard = Object.seal({
       div.setAttribute("aria-hidden", "true");
       div.innerHTML = card(c, {where: "peek", action: "none"});
       if (!now) document.getElementById("cm-board").append(div);
+      placePeek(div);
       say(`Showing ${c.name}`);
     }, 350);
   }
@@ -2493,6 +2494,7 @@ globalThis.CrankBoard = Object.seal({
       div.setAttribute("aria-hidden", "true");
       div.innerHTML = `<span class="cm-bcard"><img src="${e(img.getAttribute("src"))}" alt="" referrerpolicy="no-referrer"></span>`;
       if (!old) document.getElementById("cm-board").append(div);
+      placePeek(div);
     }, 350);
   }
   /* A CARD NAMED IN TEXT POPS UP LARGE TOO (ROB-327, ROB-332; Rob: "I should also be able to hover over the card names to see the on
@@ -2515,6 +2517,7 @@ globalThis.CrankBoard = Object.seal({
       div.setAttribute("aria-hidden", "true");
       div.innerHTML = `<span class="cm-bcard"><img src="${e(pictureOf(name))}" alt="" referrerpolicy="no-referrer"></span>`;
       if (!old) document.getElementById("cm-board").append(div);
+      placePeek(div);
       say(`Showing ${name}`);
     }, 350);
   }
@@ -2536,6 +2539,39 @@ globalThis.CrankBoard = Object.seal({
     div.style.left = `${Math.round(left)}px`; div.style.top = `${Math.round(top)}px`;
     div.dataset.side = box.left - w - gap >= 8 ? "left" : "below";
     say(`Showing ${name}`);
+  }
+  /* BESIDE THE QUESTION, NEVER OVER IT (ROB-385; Rob, 2026-11-01: the hover "should be on the same plane as the pop-up, so it
+     should get pushed to whichever side of the pop-up ... has the available width between browser edge and pop-up edge; favoring
+     the left, then right, then bottom; we won't use the top. If all 3 of those sides are not wide enough, use the largest ... and
+     resize the image to fit with minimal padding, but retain the card's aspect ratio"). With a required pop-up on the screen, the
+     big card goes to the first side of it with room for the card at its size; with none, to the side where it can be largest,
+     made that large and no larger, its shape kept (the card is a width and an aspect ratio, so only the width is set). With no
+     pop-up it stays in the middle. Placed as it is shown and as the board is drawn or fitted. */
+  const PEEK_GAP = 12, PEEK_EDGE = 8;
+  function placePeek(div = document.getElementById("cm-board-peek")) {
+    if (!div || div.classList.contains("cm-stack-peek")) return;
+    const shown = div.querySelector(".cm-bcard");
+    div.classList.remove("is-beside"); div.style.left = ""; div.style.top = ""; delete div.dataset.side;
+    shown?.style.removeProperty("--bc");
+    const popup = document.querySelector(".cm-required-popup"), p = popup?.getBoundingClientRect();
+    if (!shown || !p?.width) return;
+    let {width: w, height: h} = shown.getBoundingClientRect();
+    const room = {left: [p.left - PEEK_GAP - PEEK_EDGE, innerHeight - 2 * PEEK_EDGE], right: [innerWidth - p.right - PEEK_GAP - PEEK_EDGE, innerHeight - 2 * PEEK_EDGE],
+      below: [innerWidth - 2 * PEEK_EDGE, innerHeight - p.bottom - PEEK_GAP - PEEK_EDGE]};
+    const scale = (side) => Math.max(0, Math.min(room[side][0] / w, room[side][1] / h));
+    let side = ["left", "right", "below"].find((x) => scale(x) >= 1);
+    if (!side) {
+      side = ["left", "right", "below"].reduce((a, b) => scale(b) > scale(a) ? b : a);
+      /* The width set is the card's inside its border, so what the border adds is taken off the room. */
+      const border = w - parseFloat(getComputedStyle(shown).width);
+      shown.style.setProperty("--bc", `${Math.max(0, Math.floor(w * scale(side) - (border > 0 ? border : 0)))}px`);
+      ({width: w, height: h} = shown.getBoundingClientRect());
+    }
+    const clamp = (v, lo, hi) => Math.max(lo, Math.min(v, hi));
+    const x = side === "left" ? p.left - PEEK_GAP - w : side === "right" ? p.right + PEEK_GAP : clamp(p.left + p.width / 2 - w / 2, PEEK_EDGE, innerWidth - PEEK_EDGE - w);
+    const y = side === "below" ? p.bottom + PEEK_GAP : clamp(p.top + p.height / 2 - h / 2, PEEK_EDGE, innerHeight - PEEK_EDGE - h);
+    div.classList.add("is-beside"); div.dataset.side = side;
+    div.style.left = `${Math.round(x)}px`; div.style.top = `${Math.round(y)}px`;
   }
   function stillUnder(id) {
     const under = pointerAt && document.elementFromPoint(pointerAt.x, pointerAt.y);
@@ -2916,12 +2952,26 @@ globalThis.CrankBoard = Object.seal({
      under the layer, the layer moves below it, or above it, whichever has room, then beside it (the ROB-319 pop-up is
      centered, and at 720 tall it leaves room above and below for neither: every callout waited out of sight for as long as
      a question was open), and with room nowhere it waits out of sight. Placed as each callout comes and as the board is
-     drawn (fit). */
+     drawn (fit).
+     BEHIND THE POP-UP (ROB-386; Rob, 2026-11-01: "the callouts can go behind the pop-up, but I don't expect those to fire typically
+     when the pop-up is up"): a required pop-up is not moved around; the layer stays where it is and is cut where the pop-up lies,
+     so a callout passes behind it. The layer sits outside the board, above it, and the pop-up inside it, so no z-index could put
+     the one between: the cut is a clip path with the pop-up's box as a hole. */
   function placeCallouts() {
     const layer = document.getElementById("cm-board-callouts");
     if (!layer) return;
-    layer.style.top = ""; layer.style.left = "";
+    layer.style.top = ""; layer.style.left = ""; layer.style.clipPath = "";
     layer.classList.remove("is-hidden");
+    const popup = document.querySelector(".cm-required-popup");
+    if (popup) {
+      const a = popup.getBoundingClientRect(), l = layer.getBoundingClientRect();
+      if (!a.width || !layer.children.length || l.bottom <= a.top || l.top >= a.bottom || l.right <= a.left || l.left >= a.right) return;
+      /* The layer's own box from (0,0), less the pop-up's box in the layer's terms (the even-odd rule makes the second a hole);
+         the outer box reaches well past the layer, so a callout's glow is never clipped where the pop-up is not. */
+      const x = a.left - l.left, y = a.top - l.top, far = 4000;
+      layer.style.clipPath = `path(evenodd, "M ${-far} ${-far} H ${far} V ${far} H ${-far} Z M ${x} ${y} H ${x + a.width} V ${y + a.height} H ${x} Z")`;
+      return;
+    }
     const ask = document.querySelector("#cm-board-decision[data-choice-id], .cm-board-went");
     if (!ask || !layer.children.length) return;
     const a = ask.getBoundingClientRect(), l = layer.getBoundingClientRect(), gap = 8;
@@ -3142,6 +3192,7 @@ globalThis.CrankBoard = Object.seal({
       const under = pointerAt && document.elementFromPoint(pointerAt.x, pointerAt.y), host = document.getElementById("cm-board");
       if (host && under && (under.closest(".cm-board .cm-bcard[data-card], #cm-board [data-peek-card]") || pictureAt(under, null))) host.append(keptPeek);
     }
+    placePeek();
     if (focusData && Object.keys(focusData).length) {
       const next = [...document.querySelectorAll("#cm-board button, #cm-board input, #cm-board select, #cm-board textarea")].find((el) =>
         Object.entries(focusData).every(([key, value]) => el.dataset[key] === value));
@@ -3453,6 +3504,7 @@ globalThis.CrankBoard = Object.seal({
       const ask = host.querySelector(".cm-board-main>.cm-board-ask, .cm-board-tabletop>.cm-board-ask");
       if (ask) ask.style.maxHeight = `${Math.max(160, Math.floor(innerHeight - ask.getBoundingClientRect().top - 12))}px`;
       placeCallouts();
+      placePeek();
       placePlays();
     } finally {fitting = false;}
   }

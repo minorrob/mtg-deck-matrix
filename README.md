@@ -956,14 +956,14 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 691 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 691 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 691 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 691 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 691 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 691 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 691 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 691 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1317,6 +1317,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `board-battlefield-rows` — `tests/board-battlefield-rows.mjs` (Rob, 2026-10-27: the battlefield's two rows are defaults; a creature dragged to the artifacts row and an artifact to the creatures row stay there through the next view and a reload; a land stays in the lands)
 - `board-hover-during-choice` — `tests/board-hover-during-choice.mjs` (Rob, 2026-10-25: with a card's question open -- what to tap for it -- the card asked about is read in Actions, and the hover still pops up any card, on the table or named in an option, by pointer or keyboard, in 3D, Focus and Table)
 - `board-hover-every-picture` — `tests/board-hover-every-picture.mjs` (ROB-318, Rob 2026-10-29 mid-game: any card picture on the board pops up large on hover (a seat's commander art, the stack's pile, an opponent's held-up play, a card's menu), the one pinned in the inspector too, the pop-up survives a redraw, and a walker hovers every picture on seven kinds of screen)
+- `board-peek-beside-popup` — `tests/board-peek-beside-popup.mjs` (ROB-385, Rob 2026-11-01: with a required decision pop-up up, the hover's big card goes beside it -- left, then right, then below, never above -- at its own size where a side holds it, else made smaller to fit the side with the most room, its shape kept; at 1400x900, 900x1700, 1000x700 and 900x1400)
 - `board-stack-targets` — `tests/board-stack-targets.mjs` (ROB-327, Rob 2026-10-29/30 mid-game: what a spell or ability is aimed at is seen on the stack's list, under its pile and on an opponent's held-up play, source ⤳ target, a card named shows the big card on hover and focus, a target that has left says gone with no name; Table, Focus and 3D)
 - `board-history-full` — `tests/board-history-full.mjs` (ROB-332, Rob 2026-10-30 mid-game: the History module lists the whole game and scrolls back to its first line by Load earlier (500 lines, the room's view carrying the newest), each card named in a line shows the big card on hover and focus and reads on a press, the place read is kept through a view; Table, Focus and 3D)
 - `board-card-sharpness` — `tests/board-card-sharpness.mjs` (Rob, 2026-10-25: in 3D, at 100% and at the camera's closest zoom, the cards on the mats keep their picture's fine print as the hand's do: measured against the same picture drawn flat at the same size)
