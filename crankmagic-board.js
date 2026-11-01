@@ -168,6 +168,9 @@ globalThis.CrankBoard = Object.seal({
     choiceFlow=CrankChoiceFlow.create(pathOptions(options),flowContext());
     showing=null;held=null;peek(null);draw();
   }
+  /* Asked in a run you chose Resolve all for: this answer goes for the same question each time the run asks it (Rob, 2026-10-09:
+     "Yes to all"; game/room/room.mjs). Said by the pane and the pop-up alike. */
+  const forRunNote = d => d.forRun ? `<p class="cm-muted cm-board-for-run">Resolve all: your answer goes for this same question each time the run asks it.</p>` : "";
   function flowDecision(d) {
     if(flowPaused)return `<section class="cm-board-decision cm-choice-flow" id="cm-board-decision" aria-label="${e(d.title)}"><h2>${e(d.kind==='priority' ? findCard(actionCard)?.name || d.title : d.title)}</h2>${b('Resume','board-flow-resume')}</section>`;
     if(!choiceFlow)choiceFlow=CrankChoiceFlow.create(pathOptions(d.options),flowContext());
@@ -188,9 +191,7 @@ globalThis.CrankBoard = Object.seal({
       const output=n.kind==='mana-source' && review[i+1]?.key.startsWith('mana-color:') ? review[++i] : null;
       reviewRows.push(`<li data-kind="${e(n.kind)}"${n.automatic?' data-automatic="true"':''}>${visual(n)}<span>${n.key==='mana-payment'?'Pay':label(n)}</span>${output?label(output):n.key==='mana-payment'?label({...n,label:n.reviewLabel ?? n.label}):''}</li>`);
     }
-    /* Asked in a run you chose Resolve all for: this answer goes for the same question each time the run asks it (Rob, 2026-10-09:
-       "Yes to all"; game/room/room.mjs). The pop-up says so as the pane did. */
-    const forRun = d.forRun ? `<p class="cm-muted cm-board-for-run">Resolve all: your answer goes for this same question each time the run asks it.</p>` : "";
+    const forRun = forRunNote(d);
     return `<section class="cm-board-decision cm-choice-flow" id="cm-board-decision" data-choice-id="${e(d.id)}" data-match-id="${e(view.matchId)}" data-flow-status="${step.status}" aria-label="${e(d.title)}"><h2>${e(source?.name || (d.kind==='priority' ? d.options.find(o=>o.index===step.index)?.label : d.title) || d.title)}</h2>${forRun}
       ${source?.name?`<button class="cm-flow-inspect" type="button" data-action="board-combat-inspect" data-card="${source.cardId}" aria-label="Inspect ${e(source.name)}"><img class="cm-flow-card" src="${e(pictureOf(source.name,source))}" alt=""></button>`:''}
       <div class="cm-board-options">${ready?`<ul class="cm-choice-review">${reviewRows.join('')}</ul>${attackChoice!==null?riskMark(attackRisk(d.options.find(o=>o.index===step.index))):''}`:choices}</div>
@@ -2250,9 +2251,7 @@ globalThis.CrankBoard = Object.seal({
     /* A question in the card's own words ("When this creature enters, you may search ...") is a sentence to read, not a
        heading: it is set as one (Rob, 2026-10-01: a choice is a pop-up where the player selects). */
     const sentence = String(d.title || "").length > 48;
-    /* Asked in a run you chose Resolve all for: this answer goes for the same question each time the run asks it (Rob,
-       2026-10-09: "Yes to all"; game/room/room.mjs). */
-    const forRun = d.forRun ? `<p class="cm-muted cm-board-for-run">Resolve all: your answer goes for this same question each time the run asks it.</p>` : "";
+    const forRun = forRunNote(d);
     return `<section class="cm-board-decision${blocking() ? " is-blocking" : ""}" id="cm-board-decision" data-choice-id="${e(d.id)}" data-match-id="${e(view.matchId)}" aria-label="${e(d.title)}">${decisionPick(d,d.options.find(o=>o.index===picked[0]))}${reviewReady(d) && targeting && choiceTargets(d.options.find(o=>o.index===picked[0])).length ? targetHeading(d,d.options.find(o=>o.index===picked[0])) : blocking() ? "" : `<h2>${e(d.title)}</h2>`}${forRun}${targeting && d.mode !== "many" ? `<ol class="cm-steps"><li class="${reviewReady(d) ? '' : 'is-now'}">Pick</li><li class="${reviewReady(d) ? 'is-now' : ''}">Review</li></ol>` : ""}${reviewReady(d) && targeting ? "" : deskCard()}
       <div class="cm-board-options">${body}</div>${foot ? `<div class="cm-board-decision-foot">${foot}</div>` : ""}</section>`;
   }

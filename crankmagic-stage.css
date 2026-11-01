@@ -1960,7 +1960,6 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board[data-shell=shared][data-combat-dock]{grid-template-rows:var(--rail-top) minmax(0,1fr)}
 #matrix-v2 .cm-board[data-combat-dock]>.cm-stage-rail,#matrix-v2 .cm-board[data-combat-dock]>.cm-stage-side,#matrix-v2 .cm-board[data-combat-dock]>#cm-card-inspector{top:var(--rail-top)}
 #matrix-v2 .cm-board[data-combat-dock]>.cm-stage-side{height:calc(100% - var(--rail-top))!important}
-#matrix-v2 .cm-board[data-combat-dock] .cm-stage-camera,#matrix-v2 .cm-board[data-combat-dock] .cm-table-menu{top:calc(var(--rail-top) + 10px)}
 /* In the pop-up's list, what is scrolled to (a key press, a scroll into view) stops above the sticky answering row, as in the pane
    (ROB-201): on the phone the blockers' Don't block / Confirm / No blocks row wraps to two lines and lay over the blocker's tile. */
 #matrix-v2 .cm-board #cm-decision-slot.cm-required-popup #cm-board-decision>.cm-board-options{scroll-padding-bottom:76px}
@@ -1971,4 +1970,4 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 /* A menu the player opens from the top bar (Camera, Table) lies over the docked combat pop-up, never under it: the pop-up now
    reaches across under the bar, where the centered one never did. */
 #matrix-v2 .cm-board[data-combat-dock]>.cm-stage-top{position:relative;z-index:61}
-#matrix-v2 .cm-board[data-combat-dock] .cm-stage-camera,#matrix-v2 .cm-board[data-combat-dock] .cm-table-menu{z-index:61}
+#matrix-v2 .cm-board[data-combat-dock] .cm-stage-camera,#matrix-v2 .cm-board[data-combat-dock] .cm-table-menu{top:calc(var(--rail-top) + 10px);z-index:61}
