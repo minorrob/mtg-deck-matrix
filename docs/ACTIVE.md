@@ -445,6 +445,44 @@ Rob, 2026-10-26 (through the planning session's kick-off brief; the plan is `doc
   Play lanes' files) on `claude/workshop-feedback-sheet`, and PR 3 (the triage agent: `.github/workflows/feedback-triage.yml`,
   `tools/feedback-triage.mjs`) on `claude/deck-feedback-triage`, each from main once PR 1 is there.
 
+## 2026-10-26: main f2e00ba4 on staging and in production (Rob: "Once it's on staging, push it to prod too")
+
+Released by the cloud session on `claude/vigilant-dijkstra-bzs1wf`, after PR #886 merged as `f2e00ba4` on Actions `suites`
+green on head f823b96f (run 40292053702).
+- **Staging** (`tools/release-staging.sh`): local `release-acceptance` 23 and `play-e2e` 44; `release/cloud-staging`
+  **a272bf9b**; Workers version **b788202c**; `staging-check --expect f2e00ba4` passed.
+- **Production** (`cloud-production`, `tools/release-production.sh`):
+  - `release/pages` **8bfca342**, on a587e32a, pushed at 09:32 UTC;
+  - local walks: `release-acceptance` 23 and `production-play-e2e` 27;
+  - Workers Builds deployed version **8ab2cca0**, at 100% since 09:32 UTC;
+  - `version.json` reads f2e00ba4, profile `cloud-production`; `/api/me` answers 302;
+  - the live walk at `https://crankmagic.com`: **23 checks**, with `UAT_LIVE_NETWORK=1`;
+  - **the rollback target** is **a587e32a** (version 2566738c, main 1cd2c669).
+- **It carries, beyond 1cd2c669:** Play's Actions drawer with fewer words, offered cards on the stack, attack risk,
+  mana as symbols, the hover never locked (#884); graphics resolution, the volcano whole, painted 32-bit table skins,
+  sharp mat cards, target lands folded (#885); Planned Changes C1–C8, every attack choice in reach with drawer
+  modules, the desk card and the right drawer sized by hand, and Ordered as *To Buy · Ordered* (#886).
+- **Production's D1, bindings and secrets are unchanged:** no migration or Worker setting since 1cd2c669.
+
+## 2026-10-25: main 1cd2c669 in production (Rob: "Push to prod")
+
+Released by the card-load session on Personal-HP, announced in ROB-11 before the push and recorded there after it. Staging
+already served the same main (`release/cloud-staging` 4c5e12f8, version 41c6f983, read back with `staging-check --expect
+1cd2c669`).
+- **Production** (`cloud-production`, by `tools/release-production.sh`):
+  - `release/pages` **a587e32a**, on ccf09c02, pushed at 22:32 UTC;
+  - local walks: `release-acceptance` 23 and `production-play-e2e` 27;
+  - Workers Builds deployed version **2566738c**, at 100% since 22:33 UTC;
+  - `version.json` reads 1cd2c669, profile `cloud-production`; `/api/me` answers 302;
+  - the live walk at `https://crankmagic.com`: **23 checks**, with `UAT_LIVE_NETWORK=1`;
+  - **the rollback target** is **ccf09c02** (version e61dde22, main 9ca99e5).
+- **It carries, beyond 9ca99e5:** the six precons' 150 cards (#871); precons public, Rob's decks no longer bundled for
+  everyone (#875); Play 3D's camera, hand and table (#877, #879); the board's question kept clear and the same card
+  stacked ×N (#878); the compiler read-back on Haiku 5.5 and deck guides on Opus 5.5 (#864); records and test players
+  (#880, #881, #882).
+- **Production's D1, bindings and secrets are unchanged:** no migration or Worker setting since 9ca99e5. Sharing stays
+  off in `cloud-production`.
+
 ## 2026-10-25: main 9ca99e5 in production (Rob: "release main 9ca99e5 to production")
 
 Released by the Decks cloud session (`claude/vibrant-turing-50yl3r`), with the Camera and Settings session told before
