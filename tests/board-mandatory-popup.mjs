@@ -14,7 +14,8 @@
      1. A target, a search, a modal choice, a cost, a scry and declare attackers: in the pop-up (#cm-decision-slot), never in the
         Actions pane; the Actions module is gone and its tab can't be pressed while the pop-up owns the sequence.
      2. A priority offer is optional: it stays in the pane, open, and is not in the pop-up.
-     3. The pop-up is where a person looks: inside the window, centered across it, not under a drawer.
+     3. The pop-up is where a person looks: inside the window, centered across it, and nothing drawn over it (a drawer, the hand,
+        the table).
      4. It can be answered there: a pick is taken, and Confirm sends the answer.
      5. In a short window its option list scrolls inside it and Confirm stays in view.
      6. With the pane shut before the question comes, the question is in the pop-up as before.
@@ -85,13 +86,15 @@ try {
     /* where it is, and that it can be answered */
     await ask(MUST.search);
     const box = await page.evaluate(() => {
-      const r = document.querySelector("#cm-decision-slot #cm-board-decision").getBoundingClientRect();
-      const left = document.querySelector("#cm-actions-drawer").getBoundingClientRect().right;
-      return {left: r.left, right: r.right, top: r.top, bottom: r.bottom, cx: (r.left + r.right) / 2, drawerRight: left, w: innerWidth, h: innerHeight};
+      const q = document.querySelector("#cm-decision-slot #cm-board-decision"), r = q.getBoundingClientRect(), slot = document.getElementById("cm-decision-slot");
+      /* what is drawn on top at its center and four inset corners: the pop-up itself, or whatever covers it */
+      const at = [[0.5, 0.5], [0, 0], [1, 0], [0, 1], [1, 1]].map(([fx, fy]) => [r.left + 8 + fx * (r.width - 16), r.top + 8 + fy * (r.height - 16)]);
+      const over = at.map(([x, y]) => document.elementFromPoint(x, y)).filter((el) => !el || !slot.contains(el)).map((el) => el ? `${el.tagName.toLowerCase()}${el.id ? "#" + el.id : ""}.${[...el.classList].slice(0, 2).join(".")}` : "nothing");
+      return {left: r.left, right: r.right, top: r.top, bottom: r.bottom, cx: (r.left + r.right) / 2, over, w: innerWidth, h: innerHeight};
     });
     ok(box.left >= 0 && box.right <= box.w && box.top >= 0 && box.bottom <= box.h, `${mode}: the pop-up is inside the window`);
     ok(Math.abs(box.cx - box.w / 2) <= 120, `${mode}: and centered across it (${Math.round(box.cx)} of ${box.w / 2})`);
-    ok(box.left >= box.drawerRight - 1, `${mode}: and not under the open Actions drawer`);
+    ok(box.over.length === 0, `${mode}: and nothing is drawn over it, a drawer, the hand or the table (${box.over.join(", ") || "none"})`);
     await page.locator("#cm-decision-slot [data-action=board-option], #cm-decision-slot [data-action=board-option-same]").first().click();
     const before = sent.filter((x) => x.type === "act").length;
     await page.locator("#cm-decision-slot [data-action=board-confirm]").first().click();

@@ -23,8 +23,10 @@ const card=id=>`.cm-mat[data-seat="0"] .cm-bcard[data-action="board-card"][data-
 try{
  for(const mode of ['table','focus','full']){
   const f=await open(mode),{page,context,sent,errors}=f;const island=page.locator(card(9001)).first();await island.evaluate(el=>globalThis.__originalCard=el);await island.click();
-  ok(await page.locator('.cm-required-popup').isVisible(),`${mode}: card click begins its exclusive action popup`);eq(sent.filter(s=>s.type==='act').length,0,`${mode}: card click sends nothing`);
-  await page.locator('[data-action=board-flow-confirm]').click();eq(sent.filter(s=>s.type==='act').map(s=>s.indices),[[1]],`${mode}: confirmation taps exactly once`);eq(await page.locator('#cm-board').getAttribute('data-view'),mode,`${mode}: action does not change board view`);
+  /* Rob, 2026-10-30, "Right-click = menu" and "Two clicks send": a card's click opens its menu again, and a native double click taps the
+     land (ROB-319 had opened its pop-up on the first click, which swallowed the second). */
+  ok(await page.locator('#cm-card-menu').isVisible(),`${mode}: single click opens readable card menu`);eq(sent.filter(s=>s.type==='act').length,0,`${mode}: single click sends nothing`);ok(await page.evaluate(()=>__originalCard.isConnected),`${mode}: opening menu preserves the actual first-click card node`);
+  await page.keyboard.press('Escape');await island.dblclick();eq(sent.filter(s=>s.type==='act').map(s=>s.indices),[[1]],`${mode}: native two-click sequence taps once`);eq(await page.locator('#cm-board').getAttribute('data-view'),mode,`${mode}: double clicking a card never focuses another view`);
   await f.feed(v=>{v.state.players[0].zones.Battlefield.cards[0].tapped=true;v.state.players[0].mana=[{color:'U',amount:1}];v.decision.options[1]={index:1,act:'undo-mana',label:'Untap Island',cardId:9001};});
   await island.click();const oldMenu=await page.locator('#cm-card-menu [data-action=board-card-menu-do]').evaluate(el=>({...el.dataset}));await page.keyboard.press('Escape');await island.dblclick();eq(sent.filter(s=>s.type==='act').length,2,`${mode}: native double click untaps unspent mana exactly once`);
   await f.feed(v=>{v.state.players[0].zones.Battlefield.cards[0].tapped=true;v.state.players[0].mana=[];v.decision.options=[v.decision.options[0]];});

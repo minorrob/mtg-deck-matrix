@@ -51,6 +51,18 @@ try{
   const state=game(),{v,actions}=viewed(state),cardId=v.decision.options.find(o=>o.act==='cast').cardId;
   const {page,context,errors,sent,feed}=await open(v,mode,width,height);
   // Hover previews also use the live region; record announcements rather than sampling after one overwrites it.
+  /* The card's own menu (Rob, 2026-10-30: one click opens it) lists the charm's casts as one row, not every mode x target x payment;
+     its row opens this same pop-up, a layer at a time. */
+  if(mode!=='focus'){
+    await page.locator(`#cm-board .cm-bcard[data-card="${cardId}"]`).first().click();await page.locator('#cm-card-menu').waitFor();
+    const casts=await page.$$eval('#cm-card-menu [data-action=board-card-menu-do], #cm-card-menu [data-action=board-card-menu-choose]',rs=>rs.map(r=>r.getAttribute('aria-label')));
+    eq(casts.length,1,`the card menu lists the charm's casts as one row (${casts.length}: ${casts.slice(0,3).join(' | ')})`);
+    ok(/ways/.test(casts[0]),`and says how many ways (${casts[0]})`);
+    await page.locator('#cm-card-menu [data-action=board-card-menu-choose]').click();
+    eq(await page.locator('.cm-required-popup [data-action=board-flow-choice]').count(),3,'its row opens the pop-up at the three modes');
+    eq(sent.filter(s=>s.type==='act').length,0,'and sends nothing');
+    await page.locator('[data-action=board-flow-cancel]').click();
+  }
   await page.evaluate(()=>{globalThis.__flowAnnouncements=[];new MutationObserver(()=>__flowAnnouncements.push(document.querySelector('#cm-board-said').textContent)).observe(document.querySelector('#cm-board-said'),{childList:true,subtree:true,characterData:true});});
   await page.locator(`[data-action=board-choose][data-card="${cardId}"]`).first().click();
   await exclusive(page);

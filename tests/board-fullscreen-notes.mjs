@@ -34,7 +34,8 @@ const ISLAND = 524, PLAYED = 600;
 let checks = 0;
 const ok = (c, m) => {assert.ok(c, m); checks += 1;};
 const eq = (a, b, m) => {assert.deepEqual(a, b, m); checks += 1;};
-const binding = page => page.locator('#cm-board-decision [data-action=board-confirm]:visible:not([disabled]),#cm-board-decision [data-action=board-direct]:visible:not([disabled])');
+/* The staged action's Confirm: the pop-up's since ROB-319 (a double-click stages the play there), the Actions desk's before it. */
+const binding = page => page.locator('#cm-board-decision [data-action=board-flow-confirm]:visible:not([disabled]),#cm-board-decision [data-action=board-confirm]:visible:not([disabled]),#cm-board-decision [data-action=board-direct]:visible:not([disabled])');
 
 async function board(mode, {width = 1440, height = 900} = {}) {
   const context = await browser.newContext({viewport: {width, height}, reducedMotion: "reduce", serviceWorkers: "block"});
