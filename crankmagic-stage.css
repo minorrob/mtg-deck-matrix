@@ -1516,11 +1516,13 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-stage-turnrow>.cm-board-turn{color:#e4efe6}
 
 /* THE NEW GAME POP-UP (Rob, 2026-10-28; the Claude Design screen "New game pop-up"): the page that was New table, as a window over the Pre-lobby. */
-#matrix-v2 .cm-ng-scrim{padding:72px 16px 48px;align-items:flex-start;overflow:auto;background:rgba(17,22,31,.55)}
-#matrix-v2 .cm-ng-dialog{width:100%;max-width:820px;margin:0 auto;background:var(--color-panel);color:var(--color-ink);border-radius:12px;box-shadow:var(--pl-pop);display:flex;flex-direction:column;font:400 14px/1.5 Lato,system-ui,sans-serif}
+/* Fitted to the window that is showing (ROB-384; Rob, 2026-11-01: "reactive to the visible browser dimensions with appropriate padding"):
+   never taller than it less a margin that shrinks with it, the title and Submit always in view, and only the seats and rules between them scroll. */
+#matrix-v2 .cm-ng-scrim{--ng-pad:clamp(12px,5vh,48px);padding:var(--ng-pad) 16px;align-items:center;overflow:auto;background:rgba(17,22,31,.55)}
+#matrix-v2 .cm-ng-dialog{width:100%;max-width:820px;max-height:calc(100vh - 2 * var(--ng-pad));max-height:calc(100dvh - 2 * var(--ng-pad));margin:auto;background:var(--color-panel);color:var(--color-ink);border-radius:12px;box-shadow:var(--pl-pop);display:flex;flex-direction:column;font:400 14px/1.5 Lato,system-ui,sans-serif}
 #matrix-v2 .cm-ng-dialog *{box-sizing:border-box}
 #matrix-v2 .cm-ng-dialog p{margin:0}
-#matrix-v2 .cm-ng-head{padding:24px 28px 16px;border-bottom:1px solid var(--color-line-strong);display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+#matrix-v2 .cm-ng-head{flex:none;padding:24px 28px 16px;border-bottom:1px solid var(--color-line-strong);display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
 #matrix-v2 .cm-ng-head>div:first-child{display:flex;flex-direction:column;gap:4px}
 #matrix-v2 .cm-ng-eyebrow{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--color-muted)}
 #matrix-v2 .cm-ng-head h2{margin:0;font:700 24px/1.5 Lato,system-ui,sans-serif;letter-spacing:0;text-transform:none;color:var(--color-ink)}
@@ -1532,7 +1534,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-ng-switch i{position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--color-field-line);transition:left 160ms cubic-bezier(.2,.8,.2,1)}
 #matrix-v2 .cm-ng-switch.is-on{background:var(--color-ink);border-color:var(--color-ink)}
 #matrix-v2 .cm-ng-switch.is-on i{left:24px;background:var(--color-bg)}
-#matrix-v2 .cm-ng-body{padding:20px 28px;display:flex;flex-direction:column;gap:22px}
+#matrix-v2 .cm-ng-body{flex:1 1 auto;min-height:0;overflow:auto;overscroll-behavior:contain;padding:20px 28px;display:flex;flex-direction:column;gap:22px}
 #matrix-v2 .cm-ng-body hr{margin:0;border:0;height:1px;background:var(--color-line-strong)}
 #matrix-v2 .cm-ng-sec{display:flex;flex-direction:column;gap:12px}
 #matrix-v2 .cm-ng-line{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
@@ -1612,11 +1614,11 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-ng-radio .cm-ng-two{line-height:1.35}
 #matrix-v2 .cm-ng-radio .cm-ng-two b{font-size:14px;color:var(--color-ink)}
 #matrix-v2 .cm-ng-radio .cm-ng-two span{font-size:13px}
-#matrix-v2 .cm-ng-foot{padding:16px 28px 22px;border-top:1px solid var(--color-line-strong);display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+#matrix-v2 .cm-ng-foot{flex:none;padding:16px 28px 22px;border-top:1px solid var(--color-line-strong);display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-wrap:wrap}
 #matrix-v2 .cm-ng-foot p{margin:0 auto 0 0;font-size:13px;color:var(--color-muted)}
 #matrix-v2 .cm-ng-foot p.is-bad{color:var(--color-required)}
 @media(max-width:760px){
-  #matrix-v2 .cm-ng-scrim{padding:16px 8px 24px}
+  #matrix-v2 .cm-ng-scrim{--ng-pad:clamp(8px,2vh,16px);padding:var(--ng-pad) 8px}
   #matrix-v2 .cm-ng-head,#matrix-v2 .cm-ng-body,#matrix-v2 .cm-ng-foot{padding-left:16px;padding-right:16px}
   #matrix-v2 .cm-ng-head{flex-wrap:wrap}
   #matrix-v2 .cm-ng-sec h3{width:100%}

@@ -3817,6 +3817,7 @@ button.cm-vitals{cursor:pointer}
 .cm-hand-rest{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
 .cm-hand-rest .cm-bcard{--bc:calc(72px * var(--card-scale,1));cursor:pointer}
 .cm-board-peek{position:fixed;left:50%;top:50%;z-index:65;transform:translate(-50%,-50%);pointer-events:none;filter:drop-shadow(0 30px 60px rgb(0 0 0 / .7))}
+.cm-board-peek.is-beside{transform:none}   /* beside a required pop-up, placed by the board (ROB-385) */
 .cm-board-peek .cm-bcard{--bc:min(calc(320px * var(--card-scale,1)),calc((100vh - 80px) * 5 / 7 * .8),calc((100vw - 48px) * .8),calc(var(--peek-max,100vh) * 5 / 7 * .8))}   /* 20% smaller (Rob, 2026-10-28) */   /* and never taller than the mat (Rob, 2026-10-11) */
 .cm-board-zoom .cm-bcard{--bc:min(calc(400px * var(--card-scale,1)),calc(100vw - 80px))}
 .cm-board-zoom{display:grid;justify-items:center;padding:6px 0 12px}

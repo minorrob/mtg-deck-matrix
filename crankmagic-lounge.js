@@ -197,9 +197,13 @@
       if (!layer) return;
       const active = document.activeElement, key = active && layer.contains(active) ? active.dataset.focus || active.dataset.ng || "" : "";
       const caret = active && "selectionStart" in active ? [active.selectionStart, active.selectionEnd] : null;
-      const scroll = layer.scrollTop;
+      /* The window's body is what scrolls now (ROB-384), the layer only on a window too short for even the title and Submit. */
+      const body = () => layer.querySelector(".cm-ng-body"), scroll = [layer.scrollTop, body()?.scrollTop || 0];
       layer.innerHTML = html();
-      layer.scrollTop = scroll;
+      layer.scrollTop = scroll[0];
+      if (body()) body().scrollTop = scroll[1];
+      /* A menu opened on a lower row is scrolled into the body's view, not left below its edge. */
+      layer.querySelector(".cm-ng-drop.is-open .cm-ng-pop, .cm-ng-list")?.scrollIntoView({block: "nearest"});
       if (key) {
         const again = layer.querySelector(`[data-focus="${key}"]`) || layer.querySelector(`[data-ng="${key}"]${active?.dataset.row ? `[data-row="${active.dataset.row}"]` : ""}${active?.dataset.n ? `[data-n="${active.dataset.n}"]` : ""}`);
         if (again) {again.focus({preventScroll: true}); if (caret && again.setSelectionRange && /^(text|search|email)$/.test(again.type || "")) try {again.setSelectionRange(...caret);} catch {/* a type without a caret */}}

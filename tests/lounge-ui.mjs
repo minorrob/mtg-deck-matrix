@@ -228,6 +228,35 @@ const record = (calls) => async (route) => {
   await page.locator(".cm-ng-dialog").waitFor();
   eq(await page.locator("[data-ng=observe]").count(), 0, "Observe AI game is the admin's alone");
   await page.locator("[data-ng=humans][data-n='2']").click();
+  /* FITTED TO THE WINDOW (ROB-384; Rob, 2026-11-01: "reactive to the visible browser dimensions with appropriate padding"): at
+     1400x900 its foot ran 27px off the screen. At each size the title and Submit are in the window with a margin, Submit is the
+     thing at its own middle (hit-tested by hand: a Playwright click scrolls to what it presses, so it would pass a hidden one),
+     and on a short window only the body scrolls; a menu opened on the last row is scrolled into the body's view. */
+  const was = page.viewportSize();
+  for (const [width, height] of [[1400, 900], [1280, 720], [1024, 640], [390, 844], [1280, 560]]) {
+    await page.setViewportSize({width, height});
+    await page.waitForTimeout(150);
+    const fit = await page.evaluate(() => {
+      const d = document.querySelector(".cm-ng-dialog").getBoundingClientRect(), body = document.querySelector(".cm-ng-body");
+      const submit = document.querySelector("[data-ng=submit]"), s = submit.getBoundingClientRect();
+      return {top: d.top, bottom: d.bottom, left: d.left, right: d.right, h: innerHeight, w: innerWidth, layerScrolls: document.querySelector(".cm-ng-scrim").scrollHeight > innerHeight + 1,
+        bodyScrolls: body.scrollHeight > body.clientHeight + 1, submitHit: document.elementFromPoint(s.left + s.width / 2, s.top + s.height / 2)?.closest("[data-ng=submit]") === submit};
+    });
+    const at = `New game at ${width}x${height}`;
+    if (process.env.SHOTS) await page.screenshot({path: path.join(process.env.SHOTS, `new-game-${width}x${height}.png`)});
+    ok(fit.top >= 8 && fit.bottom <= fit.h - 8 && fit.left >= 8 && fit.right <= fit.w - 8, `${at}: the whole window is on the screen, with a margin (${JSON.stringify(fit)})`);
+    ok(fit.submitHit, `${at}: Submit is there to press`);
+    ok(!fit.layerScrolls, `${at}: nothing behind it has to be scrolled to reach it`);
+    if (height <= 640) ok(fit.bodyScrolls, `${at}: the seats and rules scroll inside it`);
+  }
+  await page.setViewportSize({width: 1024, height: 640});
+  await page.locator(".cm-ng-body").evaluate((el) => {el.scrollTop = 0;});
+  await page.locator("[data-ng=toggle-pers]").last().click();
+  const menu = await page.evaluate(() => {const m = document.querySelector(".cm-ng-pop").getBoundingClientRect(), b = document.querySelector(".cm-ng-body").getBoundingClientRect(); return {menuTop: m.top, menuBottom: m.bottom, top: b.top, bottom: b.bottom};});
+  const whole = menu.menuBottom - menu.menuTop <= menu.bottom - menu.top;
+  ok(menu.menuTop >= menu.top - 1 && (whole ? menu.menuBottom <= menu.bottom + 1 : menu.menuTop <= menu.top + 1), `a menu opened on the last row is scrolled into the body's view (${JSON.stringify(menu)})`);
+  await page.keyboard.press("Escape");
+  await page.setViewportSize(was);
   await page.locator("[data-ng-field=query][data-row='0']").fill("Sam");
   await page.waitForFunction(() => !document.querySelector("[data-ng=submit]").disabled);
   ok(true, "with no user directory on the server, the name typed is the seat's person");
