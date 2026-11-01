@@ -915,6 +915,11 @@ moved, the workflow's toolchain checked, both of its steps run twice, and what t
 scanned for secrets and personal addresses. AGENTS.md, "Merging to `main`", says when it stands
 in for CI.
 
+`tools/gate-compare.mjs` turns "no new failure against `main`" into a computation: given a run of
+`tools/run-suites.mjs` (or a list of failing suites) it reads `tools/gate/known-red-main.json`, the suites
+known to fail on a clean `main`, and prints which failures are new (the merge is blocked), expired, old or
+fixed. `tests/gate-baseline.mjs` holds the file's rules (ROB-377).
+
 While Actions can run, `tools/quick-check.sh <suite.mjs>...` is the check before a push:
 `tools/local-ci.sh HEAD 0` (the scan and the merge with `main`), then only the suites the
 change touches. `tools/release-staging.sh` builds `origin/main` for staging, walks it, and only
@@ -956,14 +961,7 @@ stale, EDHREC moved — is `node tools/refresh.mjs`: the generators the registry
 order `docs/crankmagic-refresh.md` requires, then the `?v=` cascade for the files that
 changed, then the proof (every producer's `--check`, the asset manifest, the suite count,
 `runtests.sh`); `--plan` prints the steps, `--check` runs only the proofs, and the Claude skill
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
-`.claude/skills/crankmagic-refresh` is the judgment around it. There are 690 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
+`.claude/skills/crankmagic-refresh` is the judgment around it. There are 691 Node suites here, plus 36 CrankMagic Online suites in `game/tests/`; `runtests.sh` runs all of them:
 
 - `architecture-page` — `tests/architecture-page.mjs`
 - `asset-versions` — `tests/asset-versions.mjs`
@@ -1169,6 +1167,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `engine-targets` — `tests/engine-targets.mjs`
 - `engine-trigger-targets` — `tests/engine-trigger-targets.mjs`
 - `game-record` — `tests/game-record.mjs`
+- `gate-baseline` — `tests/gate-baseline.mjs`
 - `generators` — `tests/generators.mjs`
 - `graph-payload` — `tests/graph-payload.mjs`
 - `guide-agent` — `tests/guide-agent.mjs`
