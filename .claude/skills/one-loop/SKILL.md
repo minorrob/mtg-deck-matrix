@@ -37,6 +37,12 @@ list_comments(issueId) — look for "Handed off:"
 Read the issue, its parent, milestone, project, comments and linked PRs. Nothing in your lane in Todo:
 say so and ask Rob. Never pull a Backlog item onto the roadmap yourself.
 
+**A model or harness requirement on the issue.** Rob, 2026-11-01: *"If another model or harness other than the one
+specified picks up that work, it should first read that and prompt me on the requirement."* Before claiming, read the
+issue's comments for one headed **Model recommendation (Rob's requirement)**. If you are not the model and harness it
+names, tell Rob in one line which model and harness you are and ask whether to proceed, and do not set In Progress
+until he answers. The comment is where the requirement lives; the feature's instruction file names it too where one exists.
+
 **An issue in In Progress is held by someone else.** Do not take it, even if it looks stale; ask Rob.
 
 ## 2 · Claim it (the lock)

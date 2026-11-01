@@ -2,6 +2,8 @@
 
 **Date:** 2026-10-14. **Author of the brief:** Rob. **Compiled by:** Claude (Fable 5.1), from Rob's dictated notes (2026-10-13/14), the Replit brief v2 (2026-10-12), the Replit prototype source (exported 2026-10-14), the Play design-intent doc (Draft 1, 2026-10-11), the live-game discovery doc (2026-10-12), two reference videos, a wireframe, and a read of the repo as it stood on 2026-10-14 (`RECONCILIATION.md` beside this file holds that read in full, with file:line references; `REPLIT-SALVAGE.md` holds the prototype read).
 
+> **Combat, 2026-11-01 (ROB-357).** Combat leaves the header strip, the attack pop-up and the blocker desk for the **combat canvas**. The harness-agnostic build instructions, one file per feature, with lanes, waves, risks and the decision guide, are in [`combat-canvas/README.md`](combat-canvas/README.md). Where this file or `R4-B-COMBAT.md`, `ROB-26-COMBAT-DISPLAY.md`, `ROB-26-DIRECT-BLOCKING.md` or `LAYERED-CHOICES.md` describe combat in the strip, the pop-up or the desk, ROB-357 supersedes them for combat; those files keep their history and get their own dated note in the PR that retires each behavior.
+
 **Who this is for:** the model that executes the work (Claude Code or equivalent) in repo `minorrob/mtg-deck-matrix`. Read this file top to bottom once, then `RECONCILIATION.md` sections A, C and D, then `REPLIT-SALVAGE.md` Section 9, then `AGENTS.md` and `docs/ACTIVE.md` as the repo requires. Everything you need to decide is decided here; everything you need to look up is pointed at by file and function.
 
 ---
