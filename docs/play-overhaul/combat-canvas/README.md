@@ -28,6 +28,9 @@ walls, tallies) come from the engine and never decide anything. In 3D the camera
 1. Read `AGENTS.md` whole, then this README, then your feature's file, then the files it names in the code.
 2. Follow `.claude/skills/one-loop/SKILL.md` for the Linear and GitHub steps (claim, branch, draft PR, watch, close).
    A harness without the Claude connectors does the same steps by hand and says so in its PR.
+   **Before claiming, read the issue's "Model recommendation (Rob's requirement)" comment.** If you are not the model
+   and harness it names, tell Rob in one line which you are and wait for his answer; do not set In Progress until then
+   (Rob, 2026-11-01).
 3. Build only inside your feature's **lane** (the files it owns; the table below). A change you need in another lane's
    file is a **seam PR**: small, named for what it exposes, merged first; then build against `main`.
 4. Prove it the way your feature file says, with a test that fails first (`AGENTS.md`, "A test that cannot fail is a
