@@ -7,7 +7,7 @@
  *      nothing in the box changes.
  *   3. Reserving that Upgrade makes the card it replaces the Substitute holding its seat, and the Upgrade a Reserved
  *      card to buy.
- *   4. It arrives: Bought makes it Loading, and putting it in brings the Substitute out to the Bench in the same change.
+ *   4. It arrives: Bought makes it Reserved (it was Loading), and putting it in brings the Substitute out to the Bench in the same change.
  *   5. Reserve for another deck takes a copy from one box for another: it stays where it is, Reserved for the other
  *      deck, and its old deck's seat goes to To buy -- held by that same copy until it moves.
  *   6. A Bench copy offered for sale reads Sell; Edit changes its quantity.
@@ -118,7 +118,7 @@ try {
     st = await stateOf(page);
     const bought = st.lots.find((l) => l.cardId === entry.cardId && l.allocation?.deckId === D4);
     ok(bought && bought.source === "owned", "Bought: the copy is owned and claimed by D4's seat");
-    eq(M.stateLabel(M.stateReader(st)({...bought, kind: "lot"})), "Loading", "and it is Loading");
+    eq(M.stateLabel(M.stateReader(st)({...bought, kind: "lot"})), "Reserved", "and it is Reserved, on the Bench until it is boxed (Rob, 2026-11-01)");
     await page.goto(`${base}/index.html#cards?deck=${encodeURIComponent(D4)}`);
     await settle(page);
     await page.locator("#cm-roster-query").fill(st.cards[entry.cardId].name);
@@ -203,15 +203,16 @@ try {
   await page.keyboard.press("Escape");
   await page.waitForFunction(() => !document.querySelector("#cm-dialog[open]"));
 
-  /* 8. Geometry: the toolbar's two selects never overlap; the row menu's entries are lines, not bands. */
+  /* 8. Geometry: the band's controls never overlap and stay inside the window; the row menu's entries are lines, not bands. */
   for (const width of [1400, 390]) {
     await page.setViewportSize({width, height: 900});
     await page.goto(`${base}/index.html#cards`);
     await settle(page);
-    const box = await page.evaluate(() => { const a = document.querySelector("select[name=groupPick]")?.getBoundingClientRect(), b = document.querySelector("select[name=groupBy]")?.getBoundingClientRect(); return a && b ? {a: [a.left, a.right, a.top, a.bottom], b: [b.left, b.right, b.top, b.bottom]} : null; });
-    ok(box, `both selects are on the page at ${width}`);
-    const overlap = box.a[0] < box.b[1] && box.b[0] < box.a[1] && box.a[2] < box.b[3] && box.b[2] < box.a[3];
-    ok(!overlap, `at ${width} wide the Collection group select and Group rows by do not overlap (${JSON.stringify(box)})`);
+    const boxes = await page.evaluate(() => [...document.querySelectorAll(".cm-band button, .cm-band input")].filter((c) => c.getClientRects().length).map((c) => { const r = c.getBoundingClientRect(); return [Math.round(r.left), Math.round(r.right), Math.round(r.top), Math.round(r.bottom)]; }));
+    ok(boxes.length === 10, `the band has ten controls at ${width} (${boxes.length})`);
+    const overlaps = boxes.flatMap((a, i) => boxes.slice(i + 1).filter((b2) => a[0] < b2[1] - 1 && b2[0] < a[1] - 1 && a[2] < b2[3] - 1 && b2[2] < a[3] - 1).map((b2) => [a, b2]));
+    ok(overlaps.length === 0, `at ${width} wide no two band controls overlap (${JSON.stringify(overlaps.slice(0, 2))})`);
+    ok(boxes.every((c) => c[0] >= 0 && c[1] <= width), `and each is inside the window at ${width}`);
   }
   await page.setViewportSize({width: 1400, height: 900});
   await page.goto(`${base}/index.html#cards`);

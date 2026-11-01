@@ -1,12 +1,13 @@
 {
  "schema": "crankmagic.known-red@1",
  "asOf": "2026-11-01",
- "basis": "Inference, from the gate analysis of 2026-11-01 (ROB-377): the 19 suites red in both sharded Actions runs of 2026-10-30 and 31 (runs 41152661468 on clean main dbec8899 and 41155983942 on the patch head), minus the six that ROB-319 put on main and PR #988 fixed (board-r4-layout, board-flat-views, board-combat-display, room-resolve-all, board-callouts-place, board-fullscreen-notes) and data-manifest (fixed by #989), plus two flakes and three suites red in the cloud container (PR #988). Not yet confirmed: no Actions run of main has happened since #988 and #989, so one sharded run of main (acd70d70) must confirm or correct this list.",
+ "basis": "Inference, from the gate analysis of 2026-11-01 (ROB-377): the 19 suites red in both sharded Actions runs of 2026-10-30 and 31 (runs 41152661468 on clean main dbec8899 and 41155983942 on the patch head), minus the six that ROB-319 put on main and PR #988 fixed (board-r4-layout, board-flat-views, board-combat-display, room-resolve-all, board-callouts-place, board-fullscreen-notes) and data-manifest (fixed by #989), plus two flakes and three suites red in the cloud container (PR #988). Not yet confirmed: no Actions run of main has happened since #988 and #989, so one sharded run of main (acd70d70) must confirm or correct this list. Confirmed 2026-11-01 by the sharded run 41323421887 on 08fca8c2 (the tree merged to main as 6f4b584f, PR #994): the twelve non-flake entries red, the three flakes green, the container-only two not judged; one flake found and added (board-3d-camera, ROB-395).",
  "measuredOn": {
-  "main": "acd70d70",
+  "main": "6f4b584f",
   "runs": [
    41152661468,
-   41155983942
+   41155983942,
+   41323421887
   ],
   "environment": {
    "actions": "Actions, Playwright 1.56 pinned",
@@ -14,6 +15,14 @@
   }
  },
  "entries": [
+  {
+   "suite": "tests/board-3d-camera.mjs",
+   "category": "flake",
+   "cause": "'ending with that place about halfway to the center of the view' read 24 px of 33 px once on Actions (run 41323421887, shard 0) and passed on the same code in run 41321910584 and on Personal-HP: a read taken before the right-hold look settled under load.",
+   "issue": "ROB-395",
+   "firstSeen": "2026-11-01",
+   "expires": "2026-12-01"
+  },
   {
    "suite": "tests/board-babylon.mjs",
    "category": "test-drift",

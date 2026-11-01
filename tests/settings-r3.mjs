@@ -80,7 +80,7 @@ try {
   ok(/Signing in is not offered on this copy/.test(await page.locator("#cm-settings-account").innerText()), "without accounts, Account says so rather than offering a sign-in that cannot work");
   eq(await page.locator(".cm-settings").getByRole("button", {name: "Delete account…"}).count(), 0, "and there is no Delete account to offer");
   await page.goto(`${base}/index.html#cards`);
-  await page.locator("[data-action=roster-more]").first().click();
+  await page.locator("[data-action=band-more]").click();
   ok(await page.getByRole("button", {name: "Publish your To Trade list"}).isVisible(), "Publish your To Trade list is in the Library's More menu");
   await page.keyboard.press("Escape");
 
@@ -247,8 +247,10 @@ try {
   ok(await g.evaluate(() => (1400).toLocaleString() === "1.400"), "the browser really is German: its own locale writes 1,400 as 1.400");
   await g.goto(`${base}/index.html#cards`);
   await g.locator("#cm-roster-table").waitFor({timeout: 60000});
-  const summary = await g.locator("#cm-main .cm-page-head").innerText();
-  ok(/1,598 copies/.test(summary) && !/1\.598/.test(summary), `the Library still says 1,598, the US way: ${summary.replace(/\s+/g, " ").slice(0, 80)}`);
+  await g.locator("[data-action=group-menu]").click();
+  const summary = (await g.locator(".cm-band").innerText()) + " " + (await g.locator(".cm-row-menu").innerText());
+  ok(/1,158/.test(summary) && /All 1,718/.test(summary.replace(/\s+/g, " ")) && !/1\.158|1\.718/.test(summary), `the Library still says 1,158 records and 1,718 copies, the US way: ${summary.replace(/\s+/g, " ").slice(0, 80)}`);
+  await g.keyboard.press("Escape");
   await g.goto(`${base}/index.html#settings`);
   await g.locator(".cm-settings").getByRole("button", {name: "See every change…"}).click();
   await g.locator("#cm-history-rows article").first().waitFor();

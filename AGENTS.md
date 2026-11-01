@@ -275,6 +275,13 @@ it runs: on 2026-10-03 a gate whose machine was also running suites lost its sec
 browser suite that waited on a page for good, and on 2026-10-04 a browser suite run beside two
 engine suites waited thirty seconds for a button to hold still.
 
+**On GitHub the run is eight jobs** (ROB-351, 2026-11-01): by 2026-10-31 the 724 suites no longer fit one
+job's 60-minute cap, so `.github/workflows/tests.yml` runs a matrix of eight shards and `SUITE_SHARD="i/8"` gives
+`tools/run-suites.mjs` every eighth browser suite and every eighth other suite; the eight together run each suite
+exactly once (`tests/suite-shards.mjs` proves it), each took 9 to 16 minutes, and shard 0 also runs the Commander
+companion tests. One shard runs on a machine as `SUITE_SHARD=2/8 bash runtests.sh -q`; `node tools/run-suites.mjs
+--list` names the suites a shard holds. A red shard does not cancel the others: the gate's answer is every failure.
+
 **No run twice what another run already proved.** Rob, 2026-10-01: "decrease the # of scans
 avoiding those that are redundant, especially between local vs. Github actions. Prefer to leave
 with github, and minimize to minimum required before pushes." So while Actions can run, the

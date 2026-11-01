@@ -503,9 +503,9 @@ function glance(d,cards,curve,max,types){
 }
 /* THE CARDS TAB IS THE DECK'S VIEW (Rob, 2026-10-18): the same records the Library lists when it is scoped to this
    deck, read by the same function (the model's deckStatus), with the same pill and the same words beside it -- so a
-   card cannot read one way here and another there. Four parts: In the deck, the box (Final and Substitute, by card
-   type, the only cards that count toward the hundred); Loading, the deck's own cards owned and not put in yet;
-   Reserved, the cards committed to take a seat; and Upgrades, the cards being considered, each naming what it would
+   card cannot read one way here and another there. Three parts: In the deck, the box (Final and Substitute, by card
+   type, the only cards that count toward the hundred); Reserved, the cards assigned to a seat -- owned and not put
+   in yet (Rob, 2026-11-01: "Call it Reserved"), or still to get; and Upgrades, the cards being considered, each naming what it would
    replace. Actions on a card (status, price, options) stay on the Library; this is the list you read. The
    composition -- curve and type counts -- sits at its head, because it is about these cards. */
 /* A STAND-IN, CHOSEN BEFORE IT IS BOXED (Q1, 2026-10-23). An empty Reserved seat -- to buy or ordered, nothing holding it
@@ -543,11 +543,11 @@ function cardsTab(d,cards,curve,max,types){
     :!ds.locked?'the list is not locked yet'
     :ds.play==='loading'?`${n(ds.loading)} owned card${ds.loading===1?'':'s'} to put in the box`
     :`${n(Math.max(0,ds.list-ds.deckTotal-ds.loading))} seat${ds.list-ds.deckTotal-ds.loading===1?'':'s'} wait${ds.list-ds.deckTotal-ds.loading===1?'s':''} on a card you don't have`;
-  const extra=[ds.reserved.total?`${n(ds.reserved.total)} Reserved`:'',ds.upgrade?`${n(ds.upgrade)} Upgrade${ds.upgrade===1?'':'s'}`:'',ds.complete?'complete':''].filter(Boolean).join(' · ');
+  const extra=[ds.reserved.total+ds.loading+ds.substituteLoading?`${n(ds.reserved.total+ds.loading+ds.substituteLoading)} Reserved`:'',ds.upgrade?`${n(ds.upgrade)} Upgrade${ds.upgrade===1?'':'s'}`:'',ds.complete?'complete':''].filter(Boolean).join(' · ');
   const playLine=`<p class="cm-deck-playable ${ds.play==='playable'?'is-playable':'is-short'}" data-play="${ds.play}"><b>${word(ds.play)}</b>: ${e(why)}${extra?` · ${e(extra)}`:''}</p>`;
   return `<section class="v-panel cm-deck-cards" id="cm-sec-cards"><div class="cm-deck-cards-head"><h2>The hundred <span class="cm-pull-n" title="Deck total: Final and Substitute in the box">${ds.deckTotal}</span></h2><div class="cm-actions">${b('View deck cards','deck-cards',{deck:d.id},true)}${b('Export deck list','deck-export',{deck:d.id})}${precon?buyPrecon(precon):''}</div></div>${playLine}${cards.length?'':'<p class="cm-muted">No cards yet. Edit the card list, or build one in the Deck Lab.</p>'}${composition}`
     +`${ds.deckTotal?`<h3 class="cm-deck-part">In the deck <small>${n(ds.deckTotal)}</small></h3>`:''}${[...groups].filter(([,l])=>l.length).map(([k,l])=>`<h4>${e(k)} <small>${l.reduce((m,x)=>m+(x.r.quantity||1),0)}</small></h4><ul class="cm-deck-list">${l.sort(byMana).map(line).join('')}</ul>`).join('')}`
-    +part('Loading',loading,'owned, not in the box yet: the deck’s own cards and the stand-ins chosen for its seats')+part('Reserved',reserved,'committed to take a seat')+part('Upgrades',upgrades,'being considered')+`</section>`;
+    +part('Reserved',[...loading,...reserved],'assigned to a seat: in hand and waiting to be boxed, or still to get')+part('Upgrades',upgrades,'being considered')+`</section>`;
 }
 actions['deck-tab']=el=>go('decks',{deck:el.dataset.deck,tab:el.dataset.tab==='overview'?'':el.dataset.tab});
 /* THE UPGRADE PATH HAS A HOME. The ceiling cards used to interleave the Collection as
