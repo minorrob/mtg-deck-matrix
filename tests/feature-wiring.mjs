@@ -212,12 +212,9 @@ const features = readdirSync(ROOT).filter((f) => /^crankmagic-.*\.js$/.test(f) &
   const css = read("crankmagic.css"), col = read("crankmagic-collection.js");
   /* By content, not by the first .cm-kpis in the file: the narrow breakpoints override the
      column count, and matching the first rule found the four-column phone one. */
-  /* The card status (docs/card-states.md, 2026-10-18): eight tiles in two rows of four, the deck uses over the rest, so every record counts in one. */
-  const tiles = (css.match(/\.cm-kpis\{display:grid;[^}]*grid-template-columns:repeat\(4,minmax\(0,1fr\)\)[^}]*\}/) || [""])[0];
-  ok(tiles, "the counts are two rows of four equal tiles");
-  ok(/STAT_FIGURES=\[\['final','Final'[^\n]*\['substitute','Substitute'[^\n]*\['reserved','Reserved'[^\n]*\['upgrade','Upgrade'[^\n]*\['loading','Loading'[^\n]*\['bench','Bench'/.test(col), "Final, Substitute, Reserved, Upgrade, then Loading, Bench and the rest");
-  ok(/gap:8px/.test(tiles), `at the guide's gap (found ${tiles || "no rule"})`);
-  ok(/cm-kpi-caption">\$\{deckId\?`Deck total \$\{n\(t\.final\+t\.substitute\)\} = Final \$\{n\(t\.final\)\} \+ Substitute \$\{n\(t\.substitute\)\} · Group total /.test(col), "and one caption line states the equation scoped to a deck: Deck total = Final + Substitute, then the Group total");
+  /* The Library's band (ROB-358; Rob, 2026-11-01): the counts are the Group menu's chips, which select, and a deck's own arithmetic is a line in that menu. */
+  ok(/BAND_CHIPS=\[\['all','All'\],\['boxed','Boxed'\],\['reservedAll','Reserved'\],\['upgrade','Upgrade'\],\['bench','Bench'\]/.test(col), "the Group menu's chips are All, then Boxed, Reserved, Upgrade, Bench and the rest");
+  ok(/cm-band-eq">Deck total \$\{num\(ds\.deckTotal\)\} = Final \$\{num\(ds\.final\)\} \+ Substitute \$\{num\(ds\.substitute\)\} · Group total /.test(col), "and one line in the menu states the equation scoped to a deck: Deck total = Final + Substitute, then the Group total");
   ok(/font-family:var\(--v-display\)/.test((css.match(/\.cm-kpi strong\{[^}]*\}/) || [""])[0]), "the figure is in the display face");
   /* The head's summary sentence, through the same pageHead the deck pages use. */
   ok(/cm-cards-summary/.test(col), "the Library head carries its summary sentence");

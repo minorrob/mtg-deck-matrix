@@ -67,9 +67,18 @@ if (browser) try {
   /* ---- 1. The glyph ---- */
   for (const [route, screen] of [["#decks", "Decks"], ["#cards", "Library"], ["#discover", "Explore"]]) {
     await page.goto(`${base}/index.html${route}`);
-    await page.locator(".cm-page-head .cm-feedback-btn").first().waitFor({timeout: 30000});
-    const glyph = page.locator(".cm-page-head [data-action=send-feedback]").first();
-    eq([await glyph.getAttribute("aria-label"), (await glyph.innerText()).trim().length <= 2], ["Send feedback", true], `1. ${screen}'s head has the feedback glyph: a symbol, named for a reader`);
+    if (route === "#cards") {
+      /* The Library's band holds ten controls (ROB-358; Rob, 2026-11-01), so its way to feedback is a named item in More, not a glyph in a head. */
+      await page.locator("[data-action=band-more]").waitFor({timeout: 30000});
+      await page.locator("[data-action=band-more]").click();
+      const item = page.locator(".cm-row-menu [data-action=send-feedback]");
+      eq([await item.count(), (await item.innerText()).trim()], [1, "Send feedback"], `1. ${screen}'s More menu offers Send feedback`);
+      await page.keyboard.press("Escape");
+    } else {
+      await page.locator(".cm-page-head .cm-feedback-btn").first().waitFor({timeout: 30000});
+      const glyph = page.locator(".cm-page-head [data-action=send-feedback]").first();
+      eq([await glyph.getAttribute("aria-label"), (await glyph.innerText()).trim().length <= 2], ["Send feedback", true], `1. ${screen}'s head has the feedback glyph: a symbol, named for a reader`);
+    }
     eq((await page.evaluate(() => globalThis.__cm.feedback.draft().page)), {route, screen}, `and the report from there says ${route}, ${screen}`);
   }
   await page.goto(`${base}/index.html#decks`);
@@ -148,9 +157,10 @@ if (browser) try {
   me = {status: 401, json: {error: "Sign in to use your cloud library."}};
   await page.goto("about:blank");
   await page.goto(`${base}/index.html#cards`);
-  await page.locator(".cm-page-head .cm-feedback-btn").first().waitFor({timeout: 30000});
+  await page.locator("[data-action=band-more]").waitFor({timeout: 30000});
   await page.waitForFunction(() => globalThis.__cm.signedIn && !globalThis.__cm.signedIn(), null, {timeout: 20000});
-  await page.locator(".cm-page-head [data-action=send-feedback]").first().click();
+  await page.locator("[data-action=band-more]").click();
+  await page.locator(".cm-row-menu [data-action=send-feedback]").click();
   await page.locator("#cm-dialog .cm-feedback-signed-out").waitFor({timeout: 10000});
   ok(/signed out/i.test(await page.locator("#cm-dialog").innerText()), "4. signed out, the sheet says so");
   eq([await page.locator("#cm-dialog [data-action=account-sign-in]").count(), await page.locator("#cm-dialog [data-action=feedback-mail]").count(), await page.locator("#cm-dialog form.cm-feedback").count()], [1, 1, 0], "with the way out (Sign in, or Email instead) and no form to fill");

@@ -4343,3 +4343,49 @@ button.cm-vitals{cursor:pointer}
 #matrix-v2 .cm-deck-tile:not(.cm-deck-shared) .cm-tile-pick{position:absolute;left:14px;top:52px;z-index:3}
 #matrix-v2 .cm-deck-tile:not(.cm-deck-shared) .cm-tile-menu-btn{position:absolute;right:14px;top:48px;z-index:3}
 #matrix-v2 .cm-deck-tile:not(.cm-deck-shared):has(>.cm-tile-play) .cm-tile-menu-btn{top:88px}
+
+/* THE BAND (ROB-358; Rob, 2026-11-01: "no more than a total of 10 clickable items above the red line"). The Library's
+   title, buttons, tabs, count cards, toolbar and ticked-rows bar are two rows. The tabs are the title; the second row is
+   the group and its counts at rest and the actions on what is ticked. The colors are the state tokens the count cards wore. */
+.cm-band{display:grid;gap:6px;margin:0 0 12px}
+.cm-band-row{display:flex;align-items:center;gap:8px;min-height:44px;min-width:0}
+.cm-band-top{gap:12px;border-bottom:1px solid var(--v-line)}
+.cm-band-top .cm-tabs{margin:0;border-bottom:0;overflow:visible;flex:0 0 auto}
+.cm-band-tabs [role=tab][aria-selected=true]{font-family:var(--v-display);font-weight:var(--display-weight);font-size:19px;letter-spacing:.04em;text-transform:uppercase;color:var(--color-ink)}
+.cm-band-search{flex:1 1 240px;min-width:120px;margin:0;display:block}
+.cm-band-search input{width:100%;min-height:36px}
+.cm-band-bottom{padding-bottom:2px}
+.cm-band-group{flex:0 1 auto;display:inline-flex;align-items:center;gap:10px;min-width:0;max-width:min(100%,640px)}
+.cm-band-group-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.cm-band-bar{display:inline-flex;flex:0 0 64px;width:64px;height:6px;border-radius:3px;overflow:hidden;background:var(--v-line)}
+.cm-band-bar i{display:block;height:100%;background:var(--st,var(--v-line))}
+.cm-band-nums{display:inline-flex;align-items:center;gap:8px;color:var(--v-muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.cm-band-gap{flex:1 1 0;min-width:0}
+.cm-band-clear b{font-variant-numeric:tabular-nums}
+.cm-dot{display:inline-block;flex:0 0 7px;width:7px;height:7px;border-radius:50%;margin-right:4px;background:var(--st,var(--v-line))}
+.cm-dot-boxed{--st:var(--st-physical)}.cm-dot-reservedAll{--st:var(--st-buy)}.cm-dot-upgrade{--st:var(--st-watch,var(--v-line))}.cm-dot-bench{--st:var(--st-pull)}.cm-dot-offer{--st:var(--st-inbox)}.cm-dot-watch{--st:var(--st-watch,var(--v-line))}.cm-dot-buy{--st:var(--st-buy)}.cm-dot-ordered{--st:var(--st-ordered)}
+.cm-menu .cm-menu-row{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.cm-menu .cm-menu-row small{color:var(--v-muted);white-space:nowrap;font-variant-numeric:tabular-nums}
+.cm-menu .cm-menu-row.is-current{background:var(--v-panel);font-weight:700}
+.cm-show-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 4px 4px}
+.cm-menu .cm-show-chip{display:inline-flex;align-items:center;width:auto;padding:5px 10px;border:1px solid var(--v-line);border-radius:var(--radius-pill);font-size:12px}
+.cm-menu .cm-show-chip b{margin-left:2px;font-variant-numeric:tabular-nums}
+.cm-menu .cm-show-chip[aria-pressed=true]{background:color-mix(in oklab,var(--v-accent) 18%,var(--v-panel));border-color:var(--v-accent)}
+.cm-band-ico{display:none}
+/* A PHONE (390 wide): the same ten clickables in three rows -- the way back, the tabs and Add cards; the search; then the group,
+   Filters, View and More -- the rows dissolved into one wrapping line so each control takes its row by `order`. */
+@media(max-width:640px){
+  .cm-band{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+  .cm-band-row{display:contents}
+  .cm-band-play{order:1;min-width:36px}.cm-band-lbl,.cm-band-gap{display:none}.cm-band-ico{display:inline}
+  .cm-band-tabs{order:2;flex:1 1 0;min-width:0;margin:0}.cm-band-tabs small{display:none}
+  .cm-band-tabs [role=tab]{padding:8px 8px}.cm-band-tabs [role=tab][aria-selected=true]{font-size:15px}
+  .cm-band [data-action=add-card]{order:3}
+  .cm-band-search{order:4;flex:1 1 100%}
+  .cm-band-group{order:5;flex:1 1 0}.cm-band [data-action=roster-filters]{order:6}.cm-band [data-action=view-menu]{order:7}.cm-band .cm-band-more{order:8}
+  .cm-band-clear{order:5;flex:1 1 0}.cm-band [data-action=batch-status]{order:6}.cm-band [data-action=batch-move]{order:7}
+  .cm-band-bar{flex-basis:40px;width:40px}.cm-band-nums{display:none}
+  .cm-band.has-ticks .cm-band-top .cm-band-more{display:none}
+}
+/* With cards ticked the band stays at the top of the window: sixty rows are taller than a screen, and the action row is what a tick is for. */
+.cm-band.has-ticks{position:sticky;top:var(--band-top,0);z-index:8;background:var(--color-bg);padding-bottom:6px;box-shadow:0 1px 0 var(--v-line)}

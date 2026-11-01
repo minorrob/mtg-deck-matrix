@@ -62,8 +62,8 @@ try {
 
   /* MENUS: the Library's bar and a row's menu */
   await tick();
-  const bar = await page.locator(".cm-batch-bar button").allInnerTexts();
-  ok(bar.some((x) => /Add \/ move to group/.test(x)) && !bar.some((x) => /^(Ordered…|Bought in store|Arrived|Put in a physical deck|Move physically to Bench|Add to a group)$/.test(x.trim())), `the Library's bar has one Add / move to group, and no Ordered… / Bought in store / Arrived (${bar.join(" | ")})`);
+  const bar = await page.locator("#cm-band-row2 button").allInnerTexts();
+  ok(bar.some((x) => /Move to group/.test(x)) && bar.some((x) => /Set status/.test(x)) && !bar.some((x) => /^(Ordered…|Bought in store|Arrived|Put in a physical deck|Move physically to Bench|Add to a group)$/.test(x.trim())), `the Library's bar has Set status and one Move to group, and no Ordered… / Bought in store / Arrived beside them (${bar.join(" | ")})`);
 
   /* CHOICES */
   await page.locator("[data-action=batch-move]").first().click();
@@ -132,11 +132,13 @@ try {
 
   /* TO BUY keeps its order buttons */
   await page.goto(`${base}/index.html#cards?tab=buy`);
-  await page.locator("[data-action=clear-filters]").first().click();
+  await page.locator("[data-action=band-more]").click();
+  await page.locator(".cm-row-menu [data-action=clear-filters]").click();
   await page.locator(".cm-table tbody tr input[type=checkbox]").first().waitFor({timeout: 60000});
   await page.locator(".cm-table tbody tr input[type=checkbox]").first().check();
-  const buyBar = await page.locator(".cm-batch-bar button").allInnerTexts();
-  ok(["Ordered…", "Bought in store", "Arrived"].every((x) => buyBar.some((y) => y.trim() === x)), `the To buy tab keeps Ordered…, Bought in store and Arrived (${buyBar.join(" | ")})`);
+  await page.locator("[data-action=batch-more]").click();
+  const buyBar = await page.locator(".cm-row-menu button").allInnerTexts();
+  ok(["Ordered…", "Bought in store", "Arrived"].every((x) => buyBar.some((y) => y.trim() === x)), `the To buy tab keeps Ordered…, Bought in store and Arrived in its More menu (${buyBar.join(" | ")})`);
   await context.close();
 } finally {
   await close();

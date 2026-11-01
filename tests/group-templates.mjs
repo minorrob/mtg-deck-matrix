@@ -41,13 +41,16 @@ try {
 
   /* LABELS: the Library's group picker */
   await page.goto(`${base}/index.html#cards`);
-  await page.locator("[name=groupPick]").waitFor({timeout: 60000});
-  const picks = await page.locator("[name=groupPick] option").allInnerTexts();
+  await page.locator("[data-action=group-menu]").waitFor({timeout: 60000});
+  await page.locator("[data-action=group-menu]").click();
+  const picks = await page.locator(".cm-row-menu .cm-menu-row span:first-child").allInnerTexts();
+  await page.keyboard.press("Escape");
   ok(picks.includes("Bench") && picks.includes("To Trade · To sell / trade") && picks.includes("To Buy"), `the picker names the places' templates and leaves the Bench and General lists plain (${picks.slice(0, 5).join(" | ")})`);
   ok(picks.filter((x) => / · Commander deck$/.test(x)).length === 7, "each deck's group reads as a Commander deck");
 
   /* NEW GROUP: a template, General by default, no second Bench */
-  await page.locator("[data-action=new-group]").first().click();
+  await page.locator("[data-action=band-more]").click();
+  await page.locator(".cm-row-menu [data-action=new-group]").click();
   await page.locator("#cm-dialog[open] h2", {hasText: "New Collection group"}).waitFor();
   const choice = page.locator("#cm-dialog [name=template]");
   eq(await choice.inputValue(), "general", "a new group is General unless you choose otherwise");
@@ -59,11 +62,13 @@ try {
   await page.click("#cm-dialog button[type=submit]");
   await page.waitForFunction(() => globalThis.__cm.state.groups.some((g) => g.name === "Binder 3"));
   eq((await templates(page))["Binder 3"], "trade", "Binder 3 is made a To sell / trade group");
-  await page.locator("[name=groupPick] option", {hasText: "Binder 3 · To sell / trade"}).waitFor({state: "attached", timeout: 30000});
+  await page.locator("[data-action=group-menu]").click();
+  await page.locator(".cm-row-menu .cm-menu-row", {hasText: "Binder 3 · To sell / trade"}).waitFor({timeout: 30000});
+  await page.keyboard.press("Escape");
   checks += 1;
 
   /* MANAGE: change the template; the Bench stays */
-  await page.locator("[data-action=roster-more]").first().click();
+  await page.locator("[data-action=band-more]").click();
   await page.locator("[data-action=manage-group]").click();
   await page.locator("#cm-dialog[open] h2", {hasText: "Manage Binder 3"}).waitFor();
   eq(await page.locator("#cm-dialog [name=template]").inputValue(), "trade", "Manage shows the group's template");
@@ -73,7 +78,7 @@ try {
   checks += 1;
   const bench = await page.evaluate(() => globalThis.__cm.state.groups.find((g) => g.template === "bench").id);
   await page.goto(`${base}/index.html#cards?group=${encodeURIComponent(bench)}`);
-  await page.locator("[data-action=roster-more]").first().click();
+  await page.locator("[data-action=band-more]").click();
   await page.locator("[data-action=manage-group]").click();
   await page.locator("#cm-dialog[open] h2", {hasText: "Manage Bench"}).waitFor();
   ok(await page.locator("#cm-dialog [name=template]").count() === 0 && /one Bench, and it stays/.test(await page.locator("#cm-dialog").innerText()), "Manage Bench offers no template, and says the Bench stays");
@@ -82,7 +87,8 @@ try {
   await page.locator("#cm-dialog [data-action=close]").first().click();
 
   /* NEW GROUP › Commander deck opens New deck */
-  await page.locator("[data-action=new-group]").first().click();
+  await page.locator("[data-action=band-more]").click();
+  await page.locator(".cm-row-menu [data-action=new-group]").click();
   await page.fill("#cm-dialog [name=name]", "Someone");
   await page.locator("#cm-dialog [name=template]").selectOption("commander");
   await page.click("#cm-dialog button[type=submit]");

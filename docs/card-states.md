@@ -41,7 +41,7 @@ There is no Canceled. A card you no longer want is deleted.
 | **Final** | The list's own card, in the deck's box. | Yes |
 | **Substitute** | In the box, holding the seat of a Reserved card until that card is in. | Yes |
 | **Substitute · Loading** | An owned stand-in chosen for a Reserved card's seat, not in the box yet. Box deck (choice 2) or Ready to add puts it in, and it is a Substitute from then on (Rob, 2026-10-23, the Decks requirements' Q1). | Not yet |
-| **Reserved** | Committed to take a seat. It is to buy, ordered, or sitting in another deck's box. It replaces the substitute holding its seat, or an empty seat. | No |
+| **Reserved** | Assigned to a seat and not in the box yet: to buy, ordered, sitting in another deck's box, or owned and waiting on the Bench to be boxed (Rob, 2026-11-01: *"Call it Reserved"*; it was Loading). It replaces the substitute holding its seat, or an empty seat. | No |
 | **Upgrade** | Being considered to improve the deck. It names the card it would replace and changes nothing until it is reserved. | No |
 | **Bench** | Owned, for no deck. | — |
 | **Sell**, **Trade** | Offered. The same fact as the ownership To sell or Trade, shown on both questions. | — |
@@ -56,7 +56,9 @@ Rob's two rules for a card that replaces another (2026-10-18):
 2. Only **Reserved** changes it. Reserving a card in place of a Final card makes that card the Substitute
    holding the seat. An Upgrade changes nothing until you reserve it.
 
-A **Bench** copy is never Reserved. It goes straight into a deck as Final or as a Substitute.
+A **Bench** copy is Bench until you assign it to a seat; assigned and not boxed it reads **Reserved**, and Box puts it in
+as Final (or as a Substitute where the list did not call for it). Boxing a card that replaces a Substitute takes the
+Substitute out to the Bench, so the box keeps its count.
 
 ### Which ownership goes with which use
 
@@ -79,6 +81,7 @@ rung, locked, and offers only Watch, Ordered and Own to choose.
 - **For a card:**
   - **Playable**: in the box.
   - **Loading**: owned, the deck's own card (or a stand-in chosen for one of its seats), and not in the box yet.
+    The card's pill reads **Reserved** (2026-11-01); Loading is the model's `play` word and the deck's reading.
     This was "To add", and it is what Ready to add lists.
   - **To load**: still to get.
 - **For a deck:**
@@ -121,9 +124,9 @@ view keeps them, because its ledge is where you pull a card from.
 ## The words on screen
 
 - **The pill** (`stateLabel`): the use, with two exceptions.
-  - It says **Loading** for the deck's own card that is not in the box yet.
+  - It says **Reserved** for the deck's own card that is not in the box yet (Loading until 2026-11-01).
   - For an Unowned card it says the ownership (Watch, To buy or Ordered).
-  - The order the pills sort in is `STATE_LABELS`: Watch, To buy, Ordered, Upgrade, Reserved, Loading,
+  - The order the pills sort in is `STATE_LABELS`: Watch, To buy, Ordered, Upgrade, Reserved,
     Bench, Final, Substitute, Sell, Trade.
 - **The note beside the pill** (`stateNote`): a few words.
   - "To buy · replaces Swampsnare Trap"
@@ -131,7 +134,7 @@ view keeps them, because its ledge is where you pull a card from.
   - "holds the seat for Spellstutter Sprite"
   - "Loading · stands in for Blood Artist" (a Substitute · Loading)
   - "Watch · would replace Quill"
-- **The place** (`placeLabel`): where a card is, for the Table view's piles. The piles are Final, Loading,
+- **The place** (`placeLabel`): where a card is, for the Table view's piles. The piles are Final, Reserved,
   Substitute, Bench, Ordered, To buy and Watch.
 - **Lock list** is the deck action that was called Finalize. A deck's list is Draft or Locked. The stored
   status is still `final`, so no data changes.
@@ -155,7 +158,7 @@ until it is moved.
 | Use | Copies |
 | --- | --- |
 | Final, in the box | 577 |
-| Loading | 9 |
+| Reserved, owned and not boxed (was Loading) | 9 |
 | Substitute | 123 |
 | Bench | 888 |
 | Reserved | 107, all to buy. 106 of them replace the substitute holding their seat. D7's Peppersmoke has none. |
@@ -175,3 +178,23 @@ Reserved) is replaced by this one. Its decisions that still hold:
 
 The Library's deck scope no longer includes the Bench, which reverses Rob's 14 September call. The checkbox
 brings it back.
+
+## Set status in the Library (ROB-358; Rob, 2026-11-01)
+
+A ticked set in the Library takes four statuses and two things to do with a deck. There is no Assigned status:
+assigning a card to a deck is something you do, not something a card is.
+
+| Choice | What it does |
+| --- | --- |
+| **Watch** | Keeping an eye on it. The card leaves any box and reservation (a review says so). |
+| **To buy** | Interested in buying it: a watched card moves to the To Buy list. A card owned, ordered, or already a seat to buy stays, and the receipt says how many. |
+| **Ordered** | Bought, on its way: the order form (vendor, reference, shipping, date). |
+| **Bench** | Owned, in no deck: an ordered copy arrives, a copy in a box comes out, a watched or wanted card is bought in store. |
+| **Assign to a deck…** | Pick the deck. A card the list already wants is reserved for that seat; any other card replaces a seat you name (the replaced copy stays in the box as the Substitute holding it), and a copy in hand reads Reserved until it is boxed. A card not in hand becomes a seat to buy. |
+| **Box** | Each ticked copy goes into the box of the deck it is assigned to. A copy in no deck stays on the Bench; a copy not in hand cannot be boxed. |
+
+**Box warns, it never stops.** When a deck's box would hold more or fewer than its hundred, the receipt carries the
+warning and its button reads Box anyway; one confirm boxes every card, and the deck does not read Boxed, and cannot be
+played, until the box holds the hundred (Rob: "the deck status changes to not legal"). Past the hundred it reads Building
+and Over, the 2026-10-26 rule; short of it, it reads Defined. The app has no separate "Not legal" word for a box.
+The plans are `boxCommands`, `assignCommands` and `wantCommands` in `collection-model.js`; `tests/library-set-status.mjs` pins them.
