@@ -1024,6 +1024,7 @@ changed, then the proof (every producer's `--check`, the asset manifest, the sui
 - `play-audio-pack` — `tests/play-audio-pack.mjs`
 - `reasonableness` — `tests/reasonableness.mjs`
 - `script-encoding` — `tests/script-encoding.mjs`
+- `suite-shards` — `tests/suite-shards.mjs` (the eight CI shards run every suite exactly once)
 - `wireframe-conformance` — `tests/wireframe-conformance.mjs`
 - `deck-sources` — `tests/deck-sources.mjs`
 - `deck-autocreate` — `tests/deck-autocreate.mjs`
