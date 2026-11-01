@@ -7,6 +7,14 @@ ready; build first against its written contract with a fixture) · **Runs beside
 
 Rob, 2026-11-01: *"build the foundation first."* This is the foundation: without it the canvas would animate guesses.
 
+> **Note, 2026-11-01 (the integrator, after ROB-351):** "the no-leak harness" below is `node tests/room-g1-terms.mjs`
+> (with `node tests/engine-gate.mjs` for the engine's own decks); name it that way in the PR. Run the breaks runner as
+> `python3 -u game/tools/batch/breaks.py …` and paste its `missed: []`. The handoff goes to the integrator exactly as
+> `INTEGRATION.md` in this folder says; workers never merge. Of the suites step 5 names, `board-callouts-place`, `board-flat-views` and `board-combat-display`
+> were red on `main` on 2026-10-30 and fixed by #988; the suites red on `main` today are listed on PR #994, each with its
+> issue, so a red you did not touch is named, not fixed. In Claude Code desktop there is no `subscribe_pr_activity` tool:
+> the app's PR bar binds the PR; read its checks at the start of each turn (`INTEGRATION.md`, section f).
+
 ## Goal
 
 The board stops animating by diffing two views alone. When a view arrives whose new events carry more than one visible

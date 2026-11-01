@@ -5,6 +5,13 @@ description in `game/room/decision.mjs`, its own `###` section of `docs/ui-lane/
 `tests/room-attack-hints.mjs` · **Waits on:** nothing · **Runs beside:** F0a, F0c, F1 (and ROB-360 in the engine's
 `statics.mjs` lane).
 
+> **Note, 2026-11-01 (the integrator, after ROB-351):** "the no-leak harness" below is `node tests/room-g1-terms.mjs`
+> (with `node tests/engine-gate.mjs` for the engine's own decks); name it that way in the PR. Run the breaks runner as
+> `python3 -u game/tools/batch/breaks.py …` and paste its `missed: []`. The handoff goes to the integrator exactly as
+> `INTEGRATION.md` in this folder says; workers never merge. There is no `blockers` function in `rules/combat.mjs`: blocker legality is `canBlock(state, id,
+> player)` there and `canBlockAttacker`, `blockersAreLegal` and `lethalNeededFrom` in `game/engine/keywords/combat.mjs`;
+> `combatDamageOf` and `attackTax` are in `game/engine/rules/statics.mjs`. Call those, so the hint and the ruling agree.
+
 ## Goal
 
 The canvas's helping hand (green, amber, red outlines on attackers per front; wall creatures that dim because they

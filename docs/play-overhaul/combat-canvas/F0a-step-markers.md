@@ -3,6 +3,11 @@
 **Linear:** ROB-361 · **Wave 1** · **Lane:** `game/room/events.mjs`, its own `###` section of
 `docs/ui-lane/gameplay-anchor.md`, `tests/room-events.mjs` · **Waits on:** nothing · **Runs beside:** F0b, F0c, F1.
 
+> **Note, 2026-11-01 (the integrator, after ROB-351):** "the no-leak harness" below is `node tests/room-g1-terms.mjs`
+> (with `node tests/engine-gate.mjs` for the engine's own decks); name it that way in the PR. Run the breaks runner as
+> `python3 -u game/tools/batch/breaks.py …` and paste its `missed: []`. The handoff goes to the integrator exactly as
+> `INTEGRATION.md` in this folder says; workers never merge.
+
 ## Goal
 
 The board's timeline player (F1) must know where one combat step ends and the next begins, so a first-strike wave

@@ -4,6 +4,11 @@
 tape), its own `###` section of `docs/ui-lane/gameplay-anchor.md`, a new `tests/room-pass-combat.mjs` · **Waits on:**
 nothing · **Runs beside:** F0a, F0b, F1.
 
+> **Note, 2026-11-01 (the integrator, after ROB-351):** "the no-leak harness" below is `node tests/room-g1-terms.mjs`
+> (with `node tests/engine-gate.mjs` for the engine's own decks); name it that way in the PR. Run the breaks runner as
+> `python3 -u game/tools/batch/breaks.py …` and paste its `missed: []`. The handoff goes to the integrator exactly as
+> `INTEGRATION.md` in this folder says; workers never merge.
+
 ## Goal
 
 Rob, 2026-11-01: *"'No' and 'take it' do not mean that the board auto-answers. That's the user's or the AI's response
