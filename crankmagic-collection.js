@@ -1213,7 +1213,61 @@ function batch(title,body,command){
 actions['batch-clear']=()=>{picked.clear();C.render();};
 /* THE SAME LADDER FOR A TICKED SET. Copy records change source; draft-list rows and To buy
    requirements become copies at that rung, filed with their deck -- one revision, one undo. */
-actions['batch-status']=el=>{if(!picked.size)throw Error('Tick at least one row first.');popAt(el,`<p>Set ${picked.size} ticked record${picked.size===1?'':'s'} to</p>${LADDER.map(([id,label,why])=>rung(label,why,`data-action="batch-source" data-source="${id}"`)).join('')}`);};
+/* SET STATUS (ROB-358; Rob, 2026-11-01): four things a card is, and two things to do with a deck. "I should be able to select
+   set status as boxed." There is no Assigned status: a card is watched, wanted, ordered or on the Bench, and assigning it to
+   a deck, or boxing it, is something you do with the deck. */
+actions['batch-status']=el=>{if(!picked.size)throw Error('Tick at least one row first.');
+  popAt(el,`<p>Set ${num(picked.size)} ticked record${picked.size===1?'':'s'} to</p>`
+    +rung('Watch','keeping an eye on it','data-action="status-watch"')+rung('To buy','interested in buying it','data-action="status-buy"')
+    +rung('Ordered','bought, on its way','data-action="status-ordered"')+rung('Bench','owned, in no deck','data-action="status-bench"')
+    +`<hr><p>With a deck</p>`+rung('Assign to a deck…','pick the deck','data-action="status-assign"')+rung('Box','into the box of its deck','data-action="status-box"'));};
+const bandAnchor=el=>document.querySelector('#cm-band-row2 [data-action=batch-status]')||el;
+const lotsPicked=()=>pickedIds().map(id=>C.state.lots.find(l=>l.id===id)).filter(Boolean);
+actions['status-watch']=()=>actions['batch-source']({dataset:{source:'watching'}});
+actions['status-ordered']=()=>actions['batch-order']();
+/* TO BUY: interested, not yet decided on a deck. A watched card moves to the To Buy list; a card you own or have ordered, or one
+   a deck already waits on, is left as it is, and the receipt says how many and why. */
+actions['status-buy']=()=>{if(!picked.size)throw Error('Tick at least one row first.');
+  const plan=M.wantCommands(C.state,pickedIds());
+  if(!plan.command)throw Error(`Nothing to move to To buy. ${plan.stays.own?`${plan.stays.own} ticked ${plan.stays.own===1?'is':'are'} owned or ordered, and To buy is for cards you do not have yet. `:''}${plan.stays.buy?`${plan.stays.buy} already ${plan.stays.buy===1?'sits':'sit'} on the To Buy list or wait${plan.stays.buy===1?'s':''} on a deck. `:''}Tick Watch cards to move them.`);
+  C.review(`Move ${plan.moved} to To buy`,note(`${plan.moved} watched card${plan.moved===1?'':'s'} move${plan.moved===1?'s':''} to the To Buy list.`)+(plan.stays.own||plan.stays.buy?note(`${plan.stays.own+plan.stays.buy} ticked stay as they are: ${[plan.stays.own?`${plan.stays.own} owned or ordered`:'',plan.stays.buy?`${plan.stays.buy} already to buy`:''].filter(Boolean).join(', ')}.`,true):''),plan.command);};
+/* BENCH: the cards come to the Bench by the way they would have. An ordered copy has arrived; a copy in a deck's box comes out; a card
+   you watch or want is bought in store (the one form that asks the vendor). One receipt for all of it. */
+actions['status-bench']=()=>{const split=pickedSplit();if(!split.lots.length&&!split.plans.length)throw Error('Tick at least one row first.');
+  const L=lotsPicked(),arrived=L.filter(l=>l.source==='ordered'),inBox=L.filter(l=>l.source==='owned'&&l.location?.kind==='deck'),buy=L.filter(l=>l.source==='watching').map(l=>l.id);
+  const stay=L.filter(l=>l.source==='owned'&&l.location?.kind!=='deck').length;
+  const base=[];if(arrived.length){const paidByLot=Object.fromEntries(arrived.map(l=>{const r=findRow(l.id);return [l.id,r?priceOf(r):null];}).filter(([,p])=>p!==null));base.push({type:'bulk',op:'source',source:'owned',lotIds:arrived.map(l=>l.id),paidByLot,paidSource:'catalog',confirmed:true});}
+  if(inBox.length)base.push({type:'bulk',op:'bench',lotIds:inBox.map(l=>l.id),confirmed:true});
+  const said=(buyN)=>[arrived.length?`${arrived.length} ordered ${arrived.length===1?'has':'have'} arrived`:'',inBox.length?`${inBox.length} come${inBox.length===1?'s':''} out of ${inBox.length===1?'a deck’s box':'their decks’ boxes'}`:'',buyN?`${buyN} bought in store`:'',stay?`${stay} already on the Bench`:''].filter(Boolean).join(' · ');
+  const finish=(commands,buyN)=>{if(!commands.length)throw Error('Nothing to bring to the Bench: every ticked card is already on it.');C.review('Bring the ticked cards to the Bench',note(`${said(buyN)}.`),commands.length===1?commands[0]:{type:'batch',commands,summary:`Brought ticked cards to the Bench`});};
+  if(!buy.length&&!split.plans.length){finish(base,0);return;}
+  orderForm('Bought in store','Review purchase',v=>{const order={id:'order:'+C.uid(),vendor:v.vendor,ref:v.ref||'in store',expectedBy:v.expectedBy};const {commands,copies}=orderCommands({lots:buy,plans:split.plans},order,Number(v.shipping)||0,true);finish([...base,...commands],copies);},{store:true});};
+/* BOX: each ticked copy into the box of the deck it is assigned to (M.boxCommands). A box that would not hold the hundred is a warning
+   with a button that says so, never a refusal; the deck then reads Not legal. */
+actions['status-box']=()=>{if(!picked.size)throw Error('Tick at least one row first.');
+  const plan=M.boxCommands(C.state,pickedIds()),{stays}=plan,left=stays.noDeck+stays.notInHand+stays.already+stays.offered;
+  const stayText=[stays.noDeck?`${stays.noDeck} on the Bench in no deck`:'',stays.notInHand?`${stays.notInHand} not in hand yet`:'',stays.already?`${stays.already} already boxed`:'',stays.offered?`${stays.offered} offered for Sell / Trade`:''].filter(Boolean).join(' · ');
+  if(!plan.command)throw Error(`Nothing to box. ${stayText?`${stayText}. `:''}${stays.noDeck?'A card in no deck stays on the Bench; assign it to a deck first (Set status → Assign to a deck…). ':''}${stays.notInHand?'A card you do not have yet cannot be boxed. ':''}`.trim());
+  const lines=plan.decks.map(d=>`<li class="${d.legalAfter?'':'cm-warn-line'}"><b>${e(d.name)}</b> · ${d.count?`${d.count} go in the box`:'the box loses a card'} · box ${d.before} → ${d.after} of ${d.size}${d.legalAfter?'':' ⚠'}</li>`).join('');
+  const warn=plan.warnings.map(d=>note(`${d.name}'s box would hold ${d.after} of ${d.size}. It reads Not legal until the box holds ${d.size}.`,true)).join('');
+  C.review(`Box ${plan.total} card${plan.total===1?'':'s'}`,`<ul class="cm-box-lines">${lines}</ul>${warn}${left?note(`${stayText} stay${left===1?'s':''} as ${left===1?'it is':'they are'}.`):''}`,plan.command,{confirm:plan.warnings.length?'Box anyway':'Box',after:()=>picked.clear()});};
+/* ASSIGN TO A DECK: pick the deck, then name the card each one replaces where the list does not already want it (the recommendation is
+   filled in: the seats flagged Option first, then those still waiting on a buy), and one receipt. */
+actions['status-assign']=el=>{if(!picked.size)throw Error('Tick at least one row first.');
+  const read=M.stateReader(C.state);
+  popAt(bandAnchor(el),`<p>Assign ${num(picked.size)} to</p>${C.state.decks.filter(d=>!d.archived&&!M.isLobbyDeck(d)).map(d=>{const t=M.deckStatus(C.state,d);return `<button type="button" class="cm-menu-row" data-action="assign-deck" data-deck="${e(d.id)}"><span>${e(d.name)}</span><small>${num(t.deckTotal)} of ${num(t.size)} boxed</small></button>`;}).join('')}`,{align:'left'});};
+actions['assign-deck']=el=>{const d=M.deck(C.state,el.dataset.deck),items=[];let other=0;
+  for(const id of picked){const r=findRow(id);if(r&&r.kind==='lot')items.push({recordId:r.recordId,kind:'lot',lotId:r.recordId,cardId:r.cardId,quantity:r.quantity});else other++;}
+  if(!items.length)throw Error(`Nothing to assign: ${other} ticked ${other===1?'is':'are'} already a seat on a deck's list. Tick copies or watched cards to assign them.`);
+  const first=M.assignCommands(C.state,items,d.id,{}),seats=M.assignSeats(C.state,d.id),fill=Object.fromEntries(first.needs.map((id,i)=>[id,(seats[i]||seats[0]||{}).slotId]));
+  const review=(seatFor)=>{const plan=M.assignCommands(C.state,items,d.id,seatFor);
+    if(!plan.command)throw Error(`Nothing to assign. ${plan.skipped.length?plan.skipped.map(x=>`${x.name}: ${x.why}`).join('; ')+'.':''}`);
+    C.review(`Assign ${plan.lines.length} to ${d.name}`,`<ul class="cm-box-lines">${plan.lines.map(x=>`<li><b>${e(x.name)}</b> · ${x.how==='to buy'?'Reserved · To buy':'Reserved, on the Bench until boxed'}${x.replaces?` · replaces <b>${e(x.replaces)}</b>, which stays in the box as the Substitute`:''}</li>`).join('')}</ul>`+(plan.skipped.length?note(`${plan.skipped.length} left as they are: ${plan.skipped.map(x=>`${x.name} (${x.why})`).join('; ')}.`,true):'')+(other?note(`${other} ticked ${other===1?'is':'are'} already a seat on a deck's list and stay${other===1?'s':''} as ${other===1?'it is':'they are'}.`):''),plan.command,{after:()=>picked.clear()});};
+  if(!first.needs.length){review({});return;}
+  const t=M.deckStatus(C.state,d),name=id=>(C.card(items.find(x=>x.recordId===id).cardId)||{}).name||'Card';
+  form(`Assign ${first.needs.length} to ${d.name}`,`<div class="cm-full">${note(`${d.name} holds ${t.onList}. Each card below names the card it replaces; that card stays in the box as the Substitute holding the seat until the new one is boxed.`)}</div>`
+    +first.needs.map(id=>s(`${name(id)} replaces`,'seat:'+id,seats.map(x=>[x.slotId,x.name+(x.rank===0?' · Option':x.rank===1?' · to buy':'')]),fill[id])).join(''),
+    v=>review(Object.fromEntries(first.needs.map(id=>[id,v['seat:'+id]]))),'Review');};
 actions['batch-source']=el=>{const source=el.dataset.source,label=C.source(source),{lots,plans}=pickedSplit();if(!lots.length&&!plans.length)throw Error('Tick at least one row first.');
   const commands=[];if(lots.length)commands.push({type:'bulk',op:'source',source,lotIds:lots,confirmed:true});
   for(const [deckId,rowsFor] of plans)commands.push({type:'acquireSlots',deckId,source,slotIds:rowsFor.map(r=>r.slotId),quantities:Object.fromEntries(rowsFor.map(r=>[r.slotId,r.quantity])),confirmed:true});
