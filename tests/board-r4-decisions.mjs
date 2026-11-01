@@ -78,9 +78,10 @@ try{
  {
   const v=fixture();Object.assign(v.state.players[0].zones.Battlefield.cards.find(c=>c.cardId===9001),{name:'Studious First-Year',preparedSpell:{cardId:9011,name:'Rampant Growth',manaCost:'{1}{G}'}});v.state.players[0].zones.Exile.cards.push(art(9011,'Rampant Growth',0,['Sorcery']));
   v.decision={id:'priority:prepared',title:'Your priority',kind:'priority',mode:'one',min:1,max:1,options:[{index:0,act:'pass',label:'Pass priority'},{index:1,act:'cast',label:'Rampant Growth',cardId:9011,preparedFrom:9001}]};
-  const {page,context,sent}=await open('focus',1440,'sapphire-obsidian',v);await page.locator('.cm-bcard[data-card="9001"]').first().focus();await page.keyboard.press('Shift+F10');
-  eq(await page.locator('.cm-choice-flow h2').textContent(),'Rampant Growth','prepared creature opens its separate spell in the popup');
-  eq(sent.filter(s=>s.type==='act').length,0,'prepared casting uses the same confirmation framework');await page.locator(confirm).click();eq(sent.filter(s=>s.type==='act').map(s=>s.indices),[[1]],'prepared cast preserves the legal index');await context.close();
+  /* Rob, 2026-10-30, "Right-click = menu" / "Two clicks send": the keyboard's menu key opens the card's menu, and the prepared spell's row,
+     asking nothing more, is sent at once (ROB-319 had opened its pop-up). */
+  const {page,context,sent}=await open('focus',1440,'sapphire-obsidian',v);const creature=page.locator('.cm-bcard[data-card="9001"]').first();await creature.focus();await page.keyboard.press('Shift+F10');
+  eq(await page.locator('#cm-card-menu [data-index="1"]').count(),1,'prepared creature menu includes separate inset cast offer');await page.locator('#cm-card-menu [data-index="1"]').click();for(let i=0;i<125&&!sent.some(s=>s.type==='act');i++)await page.waitForTimeout(20);eq(sent.filter(s=>s.type==='act').map(s=>s.indices),[[1]],'prepared inset sends its actual cast option index with the one press of its menu row (Rob, 2026-10-27: no third step after two clicks)');await context.close();
  }
  {
   const v=fixture();v.decision={id:'trigger-targets:combinations',sourceId:9001,title:'Choose two targets',mode:'one',min:1,max:1,options:[

@@ -336,8 +336,9 @@ try {
   const note = page.locator("#cm-board-decision .cm-board-for-run");
   await note.waitFor({timeout: 20000});
   ok(/your answer goes for this same question each time the run asks it/.test(await note.textContent()), "the first of the run's questions says the answer goes for the rest of the run");
-  await page.locator("#cm-board-decision [data-action=board-option]", {hasText: /^Yes/}).first().click();
-  await page.locator("#cm-board-decision [data-action=board-confirm]").click();
+  /* answered in the pop-up since ROB-319 (Yes, then Confirm); in the pane before it */
+  await page.locator("#cm-board-decision [data-action=board-option], #cm-board-decision [data-action=board-flow-choice]", {hasText: /^Yes/}).first().click();
+  await page.locator("#cm-board-decision [data-action=board-confirm], #cm-board-decision [data-action=board-flow-confirm]").first().click();
   for (let i = 0; i < 200 && latest.state.stack.length; i += 1) {clock += 1000; await serial(() => table.alarm()); await page.waitForTimeout(20);}
   eq([latest.state.stack.length, latest.state.players[0].life - lifeBefore, latest.decision?.title ?? ""].map((x, i) => (i === 2 ? /you may/.test(x) : x)), [0, 3, false], "Resolve all, select Yes, and confirm once; the three resolve, Rob gains 3 life, and he is asked no more");
   await context.close();

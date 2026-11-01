@@ -1924,12 +1924,8 @@ async function bindSelection(page) {
   if (await page.locator('[data-action=board-inspect-close]').count()) await page.locator('[data-action=board-inspect-close]').click();
 }
 async function useCardOffer(page, card, act) {
+  /* The card's menu, then its row (Rob, 2026-10-30: "Right-click = menu", "Two clicks send"; ROB-319 had gone through its pop-up). */
   await card.click();
-  if(!['undo-mana','undo-land','undo-play'].includes(act)){
-    const choice=page.locator('[data-action=board-flow-choice]');
-    for(let n=0;await choice.count();n++){ok(n<100,'card flow terminates');await choice.first().click();}
-    await page.locator('[data-action=board-flow-confirm]').click();return;
-  }
   const offered = page.locator('#cm-card-menu [data-action=board-card-menu-do][data-act="'+act+'"]');
   eq(await offered.count(), 1, 'the selected card offers exactly one '+act+' action');
   await offered.click();

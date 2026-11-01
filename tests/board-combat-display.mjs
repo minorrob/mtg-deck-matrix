@@ -68,6 +68,8 @@ async function shot(page,name){
 }
 async function inspectPoint(page,id) {
   const selector=`.cm-r4-combat .cm-combat-thumb-inspect[data-card="${id}"]`;
+  /* the picture heads the pop-up's own list (ROB-319), which a person scrolls back up to; that list only, never hidden overflow */
+  await page.evaluate(()=>{const list=document.querySelector('.cm-required-popup #cm-board-decision>.cm-board-options');if(list)list.scrollTop=0;});
   for(let n=0;n<12;n++) {
     const box=await page.locator(selector).first().boundingBox(),row=await page.locator('.cm-combat-groups').boundingBox();
     if(box && box.x>=row.x && box.x+box.width<=row.x+row.width)break;
@@ -75,6 +77,8 @@ async function inspectPoint(page,id) {
   }
   return point(page,selector);
 }
+/* The card's inspection (C.modal, #cm-dialog): since ROB-319 the combat question is a dialog too, the pop-up. */
+const inspection=page=>page.locator("#cm-dialog[open]");
 try{
   for(const [width,height,mode] of [[1024,768,"full"],[1280,720,"full"],[1400,900,"full"],[1280,720,"table"],[1280,720,"focus"],[390,844,"focus"]]){
     const {page,context,frames,publish}=await fixture(width,height,mode);
@@ -86,19 +90,24 @@ try{
     assert.equal(await strip.locator('[data-combat-attacker="70004"]').getAttribute("data-combat-target"),"70021",`${where}: planeswalker target uses its object ID`);
     assert.equal(await strip.locator('[data-combat-attacker="70004"] [data-combat-role="Blocker"]').count(),2,`${where}: both confirmed blockers shown`);
     assert.doesNotMatch(await strip.innerText(),/SECRET FACE|damage will/,`${where}: no hidden identity or promised damage`);
-    if(width<600) {await page.locator('[data-action=board-stage-rail]').click();await page.locator('.cm-phone-center .cm-mat [data-card="70013"]').scrollIntoViewIfNeeded();await point(page,'.cm-phone-center .cm-mat [data-card="70013"]');}
-    /* The picture has its own room above the board (the shell's 188px combat row): the board starts below it, never under
-       it -- every control in the strip can be reached and still cover the top of the mat. */
+    /* On the phone the question is the centered pop-up (ROB-319; the desktop docks it above the board), and the blocker is reached
+       as its tile there, not through the Actions drawer, which steps aside while the pop-up owns the sequence. */
+    if(width<600) {const tile='.cm-required-popup [data-action=board-block-pair][data-block-object="70013"]';await page.locator(tile).first().scrollIntoViewIfNeeded();await point(page,tile);}
+    /* Declaring blockers is the pop-up's (ROB-319), and the combat picture is in it, over the table: nothing is drawn over the
+       picture, so every control in it can be reached. (It had its own room above the board, the shell's 188px combat row; docking
+       the pop-up there, Rob's call of 2026-10-30, left the hand over the mat in Table and Focus, and waits for a wireframe:
+       2026-10-31.) */
     if(width>=1024){
-      const board=await page.locator(mode==="full"?".cm-stage-region":mode==="table"?".cm-board-table":".cm-board-mat").first().boundingBox(),pic=await strip.boundingBox();
-      assert.ok(board.y>=pic.y+pic.height-1,`${where}: the board starts below the combat picture (${Math.round(board.y)} vs ${Math.round(pic.y+pic.height)})`);
+      const over=await strip.evaluate(el=>{const r=el.getBoundingClientRect();return [[.5,.5],[.1,.2],[.9,.2]].map(([fx,fy])=>document.elementFromPoint(r.x+r.width*fx,r.y+r.height*fy)).filter(h=>!h||!h.closest('.cm-required-popup')).map(h=>h?h.className:'nothing');});
+      assert.ok(await strip.evaluate(el=>!!el.closest('.cm-required-popup')),`${where}: the combat picture is in the question's pop-up`);
+      assert.deepEqual(over,[],`${where}: and nothing is drawn over it`);
     }
     if(width>=1024){
       for(const id of [70004,70021,70011,70012]) await inspectPoint(page,id);
       const face=await inspectPoint(page,70012);
       await page.mouse.click(face.x,face.y);
-      assert.doesNotMatch(await page.getByRole("dialog").innerText(),/SECRET FACE/,`${where}: inspecting a face-down object keeps its identity private`);
-      assert.equal(await page.getByRole("dialog").locator("img").count(),0,`${where}: the hidden face is never requested`);
+      assert.doesNotMatch(await inspection(page).innerText(),/SECRET FACE/,`${where}: inspecting a face-down object keeps its identity private`);
+      assert.equal(await inspection(page).locator("img").count(),0,`${where}: the hidden face is never requested`);
       await page.getByRole("button",{name:"Close",exact:true}).last().click();
     }
     const publicBefore=await strip.locator('[data-combat-role="Blocker"]').count();
@@ -110,8 +119,8 @@ try{
     }
     const p=await inspectPoint(page,70001);
     await page.mouse.click(p.x,p.y);
-    await page.getByRole("dialog").waitFor();
-    assert.match(await page.getByRole("dialog").innerText(),/Object #70001/,`${where}: inspect identifies the exact same-name object`);
+    await inspection(page).waitFor();
+    assert.match(await inspection(page).innerText(),/Object #70001/,`${where}: inspect identifies the exact same-name object`);
     assert.equal(frames.filter(f=>f.type==="act").length,0,`${where}: inspection never plays a card or assigns a block`);
     await page.getByRole("button",{name:"Close",exact:true}).last().click();
     const list=page.locator(".cm-combat-groups");
