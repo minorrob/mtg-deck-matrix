@@ -37,8 +37,15 @@ await page.goto(`${base}/index.html#table?id=manafixture01`);await page.locator(
 const row=(scope)=>page.$$eval(`${scope} .cm-mana-row .cm-mana-tap`,bs=>bs.map(b=>{const r=b.getBoundingClientRect();return {label:b.getAttribute("aria-label"),words:b.innerText.trim(),symbols:b.querySelectorAll(".cm-mana :is(img,svg)").length,top:Math.round(r.top),w:r.width};}));
 try{
   const onTable=page.locator(`.cm-board-mat .cm-bcard[data-card="${land.cardId}"]`).first();
-  /* Mana abilities remain symbols in the popup, with one decision layer at a time. */
-  await onTable.click();
+  /* One click opens the land's menu, which commits nothing: its mana abilities each a row of one real symbol (Rob, 2026-10-30:
+     "Right-click = menu", the r4 click map); such a row is sent at once, the card and its row being two presses (Oct 27). */
+  await onTable.click();await page.locator('#cm-card-menu').waitFor();
+  const menuRows=await page.$$eval('#cm-card-menu [data-action=board-card-menu-do]',rs=>rs.map(r=>({mana:r.querySelectorAll('.cm-mana :is(img,svg)').length,said:r.getAttribute('aria-label')})));
+  eq(menuRows.filter(r=>r.mana===1).length,4,`one click opens the land's menu: its four mana abilities, each its real symbol (${JSON.stringify(menuRows)})`);
+  eq(sent.filter(x=>x.type==='act').length,0,'reading the menu sends nothing');
+  await page.keyboard.press('Escape');
+  /* A double-click stages the land's action in the pop-up (Rob's Oct 21 notes): mana abilities remain symbols there, one decision layer at a time. */
+  await onTable.dblclick();
   await page.locator('[data-action=board-flow-choice]',{hasText:'Tap for mana'}).click();
   const colors=page.locator('[data-action=board-flow-choice]');
   eq(await colors.count(),4,'four distinct mana outputs, separate from the other ability');
@@ -51,11 +58,11 @@ try{
   eq(sent.filter(x=>x.type==='act').at(-1)?.indices,[2],'Confirm sends the original black-mana ability');
   /* The source is inspectable, and a life cost is never reduced to its mana symbol alone. */
   const v2=structuredClone(sample);v2.revision=++revision;v2.decision=decision();v2.decision.id+=':next';sock.send(JSON.stringify({type:'view',view:v2}));await page.waitForTimeout(200);
-  await onTable.click();await page.locator('.cm-flow-inspect').click();await page.locator('#cm-dialog[open]').waitFor();
+  await onTable.dblclick();await page.locator('.cm-flow-inspect').click();await page.locator('#cm-dialog[open]').waitFor();
   ok((await page.locator('#cm-dialog').textContent()).includes(land.name),'source card can be read while keeping its action sequence');
   await page.locator('#cm-dialog [data-action=close]').last().click();await page.locator('[data-action=board-flow-cancel]').click();
   const v3=structuredClone(sample);v3.revision=++revision;v3.decision=decision(['{W}','{U}','{B}','Pay 1 life: {G}']);v3.decision.id+=':life';sock.send(JSON.stringify({type:'view',view:v3}));await page.waitForTimeout(200);
-  await onTable.click();await page.locator('[data-action=board-flow-choice]',{hasText:'Tap for mana'}).click();
+  await onTable.dblclick();await page.locator('[data-action=board-flow-choice]',{hasText:'Tap for mana'}).click();
   const life=page.locator('[data-action=board-flow-choice]',{hasText:'Pay 1 life'});
   eq(await life.count(),1,'life cost remains explicit alongside the mana choice');
   eq(await life.locator('.cm-mana :is(img,svg)').count(),1,'life-cost option still renders the real mana symbol');

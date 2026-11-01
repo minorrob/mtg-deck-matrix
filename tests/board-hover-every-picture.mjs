@@ -159,10 +159,13 @@ try {
             const reaches = img.contains(top) || img.closest("button,a,[data-peek-card],.cm-bcard")?.contains(top);
             if (!reaches) return;
             img.dataset.walk = String(n);
-            out.push({n, x, y, where: [...(img.closest(".cm-bcard, button, li, section, div")?.classList ?? [])].slice(0, 3).join("."), src: img.getAttribute("src")});
+            out.push({n, x, y, held: !!img.closest("#cm-board-plays"), where: [...(img.closest(".cm-bcard, button, li, section, div")?.classList ?? [])].slice(0, 3).join("."), src: img.getAttribute("src")});
           });
           return out;
         });
+        /* An opponent's held-up play stands ten seconds (crankmagic-board.js PLAY_MS): walked first, while it is still up, not after
+           a dozen other pictures have taken longer than its ten seconds. */
+        pics.sort((a, b) => Number(b.held) - Number(a.held));
         for (const p of pics.slice(0, 14)) {
           await page.mouse.move(2, 2); await page.waitForTimeout(120);
           await page.mouse.move(p.x - 2, p.y); await page.mouse.move(p.x, p.y); await page.waitForTimeout(700);

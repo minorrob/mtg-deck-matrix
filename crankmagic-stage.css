@@ -1950,3 +1950,11 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 /* the pop-up's answering row stays in view when the question is longer than the pop-up (ROB-208), as in the pane (ROB-201) */
 #matrix-v2 .cm-board .cm-decision-slot .cm-board-decision>.cm-board-decision-foot{position:sticky;bottom:0;z-index:2;padding:8px 0 2px;background:var(--color-panel)}
 #matrix-v2 .cm-board .cm-decision-slot .cm-board-decision{scroll-padding-bottom:76px}
+
+/* In the pop-up's list, what is scrolled to (a key press, a scroll into view) stops above the sticky answering row, as in the pane
+   (ROB-201): on the phone the blockers' Don't block / Confirm / No blocks row wraps to two lines and lay over the blocker's tile. */
+#matrix-v2 .cm-board #cm-decision-slot.cm-required-popup #cm-board-decision>.cm-board-options{scroll-padding-bottom:76px}
+#matrix-v2 .cm-board[data-phone] #cm-decision-slot.cm-required-popup #cm-board-decision>.cm-board-options{scroll-padding-bottom:120px}
+/* The blockers' answering row stays at the foot of the pop-up's list, and what scrolls under it is hidden by it, not seen through it
+   (a heading's words showed between Don't block and Confirm). */
+#matrix-v2 .cm-board #cm-decision-slot.cm-required-popup .cm-block-draft .cm-decide-actions{z-index:2;padding:8px 0 4px;background:var(--color-panel);box-shadow:0 -10px 12px -10px #000a}
