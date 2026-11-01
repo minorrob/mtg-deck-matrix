@@ -1,0 +1,157 @@
+{
+ "schema": "crankmagic.known-red@1",
+ "asOf": "2026-11-01",
+ "basis": "Inference, from the gate analysis of 2026-11-01 (ROB-377): the 19 suites red in both sharded Actions runs of 2026-10-30 and 31 (runs 41152661468 on clean main dbec8899 and 41155983942 on the patch head), minus the six that ROB-319 put on main and PR #988 fixed (board-r4-layout, board-flat-views, board-combat-display, room-resolve-all, board-callouts-place, board-fullscreen-notes) and data-manifest (fixed by #989), plus two flakes and three suites red in the cloud container (PR #988). Not yet confirmed: no Actions run of main has happened since #988 and #989, so one sharded run of main (acd70d70) must confirm or correct this list.",
+ "measuredOn": {
+  "main": "acd70d70",
+  "runs": [
+   41152661468,
+   41155983942
+  ],
+  "environment": {
+   "actions": "Actions, Playwright 1.56 pinned",
+   "container": "cloud container, Playwright 1.63"
+  }
+ },
+ "entries": [
+  {
+   "suite": "tests/board-babylon.mjs",
+   "category": "test-drift",
+   "cause": "It selects the Table design dropdown directly and times out after 30 s. Inference: ROB-220 (#952) moved that dropdown into the Table menu.",
+   "issue": "ROB-378",
+   "firstSeen": "2026-10-29",
+   "expires": "2026-12-01"
+  },
+  {
+   "suite": "tests/board-card-sharpness.mjs",
+   "category": "unknown",
+   "cause": "On Actions the mat card keeps 60% of its picture's fine detail, under the 0.60 minimum, every time; it is not red in the cloud container. Inference: a renderer-dependent threshold.",
+   "issue": "ROB-379",
+   "firstSeen": "2026-10-28",
+   "expires": "2026-11-08",
+   "onlyIn": "actions"
+  },
+  {
+   "suite": "tests/board-commander-hand.mjs",
+   "category": "unknown",
+   "cause": "A wait for a Table state at 1280x720 times out after 5 s, on Actions (Playwright 1.56) as well as in the container; not root-caused.",
+   "issue": "ROB-345",
+   "firstSeen": "2026-10-27",
+   "expires": "2026-11-08"
+  },
+  {
+   "suite": "tests/board-control.mjs",
+   "category": "unknown",
+   "cause": "A card on the player's mat has native points covered by another element, so the hit-test fails; not root-caused.",
+   "issue": "ROB-242",
+   "firstSeen": "2026-10-27",
+   "expires": "2026-11-08"
+  },
+  {
+   "suite": "tests/board-r4-views.mjs",
+   "category": "flake",
+   "cause": "'focus: one Coach header at 36px' reads 0: a layout read taken before the header was drawn.",
+   "issue": "ROB-381",
+   "firstSeen": "2026-10-27",
+   "expires": "2026-12-01"
+  },
+  {
+   "suite": "tests/board-r5-visual.mjs",
+   "category": "unknown",
+   "cause": "The Actions pane shows a vertical scrollbar while its content fits. Inference: a pane or scroll-region change on 2026-10-29 or 30 (for example ROB-201).",
+   "issue": "ROB-380",
+   "firstSeen": "2026-10-30",
+   "expires": "2026-11-08"
+  },
+  {
+   "suite": "tests/browser-geometry.mjs",
+   "category": "real-regression",
+   "cause": "Buttons in one row differ in height at 320, 375, 390 and 430 px (Decks 44/40/40, Cards 32/32/32/44).",
+   "issue": "ROB-245",
+   "firstSeen": "2026-10-28",
+   "expires": "2026-12-01"
+  },
+  {
+   "suite": "tests/coach.mjs",
+   "category": "test-drift",
+   "cause": "The browser half times out clicking the Coach question chip. Inference: since the compact Coach of 2026-10-26 the chips sit inside a collapsed details element.",
+   "issue": "ROB-248",
+   "firstSeen": "2026-10-28",
+   "expires": "2026-12-01"
+  },
+  {
+   "suite": "tests/crankmagic-coach.mjs",
+   "category": "test-drift",
+   "cause": "The test runs a slice of crankmagic-app.js in a bare vm with no DOM, and commit 701f51803 put a document.addEventListener inside that slice, so it throws ReferenceError.",
+   "issue": "ROB-249",
+   "firstSeen": "2026-10-29",
+   "expires": "2026-12-01"
+  },
+  {
+   "suite": "tests/engine-breaks-anchors.mjs",
+   "category": "stale-anchor",
+   "cause": "The mutation 'break' scripts name code that has moved or now matches more than once: 45 stale anchors on 2026-10-28, 67 on clean main on 2026-10-30, 74 on the patch head. The count grew while the suite was red.",
+   "issue": "ROB-250",
+   "firstSeen": "2026-10-28",
+   "expires": "2026-12-01"
+  },
+  {
+   "suite": "tests/explore-commander-door.mjs",
+   "category": "flake",
+   "cause": "A click times out after 30 s because the button is detached and re-rendered while Playwright retries (a timing race under load).",
+   "issue": "ROB-381",
+   "firstSeen": "2026-10-29",
+   "expires": "2026-12-01"
+  },
+  {
+   "suite": "tests/page-budget.mjs",
+   "category": "real-regression",
+   "cause": "The Decks page has 5 explainer words before its deck grid at 1400 px and 390 px; the budget is 4.",
+   "issue": "ROB-247",
+   "firstSeen": "2026-10-27",
+   "expires": "2026-12-01"
+  },
+  {
+   "suite": "tests/precons.mjs",
+   "category": "unknown",
+   "cause": "'Confirm Changes saves the deck' fails: the app answers 'refused: Created planned deck' where the test expects the state 'final'; not root-caused (test and product both possible).",
+   "issue": "ROB-246",
+   "firstSeen": "2026-10-28",
+   "expires": "2026-11-08"
+  },
+  {
+   "suite": "tests/table-camera-layout.mjs",
+   "category": "container-toolchain",
+   "cause": "Fails only in the cloud container (Playwright 1.63 Chromium); passes on Actions in both sharded runs read. Cause not documented.",
+   "issue": "ROB-382",
+   "firstSeen": "2026-10-30",
+   "expires": "2026-12-01",
+   "onlyIn": "container"
+  },
+  {
+   "suite": "tests/table-record.mjs",
+   "category": "unknown",
+   "cause": "'the seed is nowhere in it' fails: a finished game's record does not contain the game's seed; not root-caused.",
+   "issue": "ROB-251",
+   "firstSeen": "2026-10-28",
+   "expires": "2026-11-08"
+  },
+  {
+   "suite": "tests/table-shared-shell.mjs",
+   "category": "container-toolchain",
+   "cause": "Fails only in the cloud container (Playwright 1.63 Chromium); passes on Actions in both sharded runs read. Cause not documented.",
+   "issue": "ROB-382",
+   "firstSeen": "2026-10-30",
+   "expires": "2026-12-01",
+   "onlyIn": "container"
+  },
+  {
+   "suite": "tests/table-tabletop.mjs",
+   "category": "flake",
+   "cause": "Intermittent 30 s timeouts on Actions (2026-10-26, again 2026-10-29); green in both 2026-10-30 and 31 sharded runs; red in the cloud container.",
+   "issue": "ROB-381",
+   "firstSeen": "2026-10-26",
+   "expires": "2026-12-01"
+  }
+ ]
+}
