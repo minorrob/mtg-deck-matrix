@@ -3,7 +3,7 @@
 
 /* "NO NEW FAILURE AGAINST MAIN", COMPUTED (ROB-377).
  *
- * A merge here has been made on "no new failure against main", because the Actions suites job is cancelled at its 60-minute cap
+ * A merge here has been made on "no new failure against main", because the Actions suites job is canceled at its 60-minute cap
  * (ROB-234) and a clean main is not green. Which failures are old was remembered by each merging session. This reads a run of
  * tools/run-suites.mjs and the committed list of failures known on a clean main (tools/gate/known-red-main.json) and says which
  * failures are NEW, which are OLD and which are FIXED:

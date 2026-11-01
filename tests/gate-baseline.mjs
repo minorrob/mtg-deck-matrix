@@ -3,7 +3,7 @@
 /* THE KNOWN-RED BASELINE AND ITS COMPARATOR (tools/gate-compare.mjs, tools/gate/known-red-main.json), ROB-377.
  *
  * The merge records here say "the bar was no new failure against main, not green" (ROB-334: 19 failing, every one also failing on
- * main). That is a claim a session made by hand: the Actions suites job is cancelled at its 60-minute cap (ROB-234), 14 to 21
+ * main). That is a claim a session made by hand: the Actions suites job is canceled at its 60-minute cap (ROB-234), 14 to 21
  * suites are red on a clean main, and the sources disagree on the count. This suite holds the thing that makes the claim a
  * computation, and holds it to what AGENTS.md asks of every test -- it goes red when what it tests is broken:
  *
