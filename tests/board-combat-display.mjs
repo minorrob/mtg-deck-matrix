@@ -93,11 +93,14 @@ try{
     /* On the phone the question is the centered pop-up (ROB-319; the desktop docks it above the board), and the blocker is reached
        as its tile there, not through the Actions drawer, which steps aside while the pop-up owns the sequence. */
     if(width<600) {const tile='.cm-required-popup [data-action=board-block-pair][data-block-object="70013"]';await page.locator(tile).first().scrollIntoViewIfNeeded();await point(page,tile);}
-    /* The picture has its own room above the board (the shell's 188px combat row): the board starts below it, never under
-       it -- every control in the strip can be reached and still cover the top of the mat. */
+    /* Declaring blockers is the pop-up's (ROB-319), and the combat picture is in it, over the table: nothing is drawn over the
+       picture, so every control in it can be reached. (It had its own room above the board, the shell's 188px combat row; docking
+       the pop-up there, Rob's call of 2026-10-30, left the hand over the mat in Table and Focus, and waits for a wireframe:
+       2026-10-31.) */
     if(width>=1024){
-      const board=await page.locator(mode==="full"?".cm-stage-region":mode==="table"?".cm-board-table":".cm-board-mat").first().boundingBox(),pic=await strip.boundingBox();
-      assert.ok(board.y>=pic.y+pic.height-1,`${where}: the board starts below the combat picture (${Math.round(board.y)} vs ${Math.round(pic.y+pic.height)})`);
+      const over=await strip.evaluate(el=>{const r=el.getBoundingClientRect();return [[.5,.5],[.1,.2],[.9,.2]].map(([fx,fy])=>document.elementFromPoint(r.x+r.width*fx,r.y+r.height*fy)).filter(h=>!h||!h.closest('.cm-required-popup')).map(h=>h?h.className:'nothing');});
+      assert.ok(await strip.evaluate(el=>!!el.closest('.cm-required-popup')),`${where}: the combat picture is in the question's pop-up`);
+      assert.deepEqual(over,[],`${where}: and nothing is drawn over it`);
     }
     if(width>=1024){
       for(const id of [70004,70021,70011,70012]) await inspectPoint(page,id);

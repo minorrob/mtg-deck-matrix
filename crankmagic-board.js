@@ -2286,25 +2286,9 @@ globalThis.CrankBoard = Object.seal({
     if (mandatory(d)) return `<p class="cm-muted cm-board-pending" role="status">◆ Answer the question on the table.</p>`;
     return decision() || `<p class="cm-muted">${e(waitingText() || "Choose a card or continue your turn.")}</p>`;
   };
-  /* COMBAT DOCKS ABOVE THE BOARD (Rob, 2026-10-30: "Dock above the board"). Declaring attackers or blockers is still the pop-up's
-     (ROB-319: it owns the sequence, the Actions module aside), but it lies in combat's band under the top bar, not across the middle
-     of the battlefield being read; the board, its rails and drawers start below it (dockCombat measures it into --combat-dock). The
-     phone keeps the centered pop-up: its board is not in the shared grid, and at 390 wide a docked pop-up left no battlefield to see
-     and folded its own words (tried, 2026-10-30). */
-  const combatDock = () => decisionPopup() && !phone() && (blocking() || /^declare-(attackers|blockers):/.test(String(view.decision?.id || "")));
-  /* The board's mats are sized to the room it has (fit); when the docked room comes, changes or goes, they are sized again at once,
-     or the next redraw would move every card under the pointer a moment after the question appeared. */
-  function dockCombat() {
-    const host = document.getElementById("cm-board"), pop = host?.querySelector(".cm-required-popup.is-combat");
-    if (!host) return;
-    const was = host.style.getPropertyValue("--combat-dock");
-    if (!pop) {host.removeAttribute("data-combat-dock"); host.style.removeProperty("--combat-dock");}
-    else {host.style.setProperty("--combat-dock", `${Math.ceil(pop.getBoundingClientRect().height) + 12}px`); host.setAttribute("data-combat-dock", "");}
-    if (host.style.getPropertyValue("--combat-dock") !== was) fit();
-  }
   function ask() {
     const d = view.decision, side = moduleSide('actions');
-    if(decisionPopup())return `<div class="cm-board-ask cm-decision-slot cm-required-popup${combatDock() ? " is-combat" : ""}" id="cm-decision-slot" role="dialog" aria-modal="true" aria-label="${e(d.title)}" tabindex="-1">${decision()}</div>`;
+    if(decisionPopup())return `<div class="cm-board-ask cm-decision-slot cm-required-popup" id="cm-decision-slot" role="dialog" aria-modal="true" aria-label="${e(d.title)}" tabindex="-1">${decision()}</div>`;
     const visible = !/^mulligan:/.test(d?.id || '') && !mandatory(d) && !actionsShut && (phone() ? stageRail : side === 'left' ? stageRail : side === 'right' ? stageSide : false);
     const inner = `${went()}${moduleSide('stack') ? '' : stack()}${!visible && d && d.kind !== 'draw' ? decision() : ''}`;
     return `<div class="cm-board-ask cm-decision-slot" id="cm-decision-slot" aria-label="Current decision"${inner ? '' : ' hidden'}>${inner}</div>`;
@@ -3059,10 +3043,6 @@ globalThis.CrankBoard = Object.seal({
        below its last row, however many rows it has, and are sized to still fit three above the window's foot. */
     const cap = host.querySelector(".cm-stage-caption")?.getBoundingClientRect(), at = layer.getBoundingClientRect().left;
     if (!phone() && cap?.width && at < cap.right && at + pop.offsetWidth > cap.left && cap.bottom + 8 > 176) layer.style.setProperty("--plays-top", `${Math.round(cap.bottom + 8)}px`);
-    /* Below combat's docked pop-up: at their own top they lay under it, and were put away at once as over the question
-       (clearQuestion), so a card an opponent played during combat was never seen. */
-    const dock = host.querySelector(".cm-required-popup.is-combat")?.getBoundingClientRect();
-    if (dock?.height && dock.bottom + 8 > layer.getBoundingClientRect().top) layer.style.setProperty("--plays-top", `${Math.round(dock.bottom + 8)}px`);
     clearQuestion(layer);
   }
   /* NEVER OVER THE QUESTION (Rob, 2026-10-25, his option A): a card held up over a control of what the table is asking you --
@@ -3167,7 +3147,7 @@ globalThis.CrankBoard = Object.seal({
         Object.entries(focusData).every(([key, value]) => el.dataset[key] === value));
       next?.focus({preventScroll: true});
     }
-    stepAside(); dockCombat();
+    stepAside();
     if(coach.open && coachGate.key!==coachKey())drawCoach();
     // Reparenting the connected Coach during paint can blur it without replacing its live controls.
     if(coachActive?.isConnected && !coachActive.closest('[inert]') && document.activeElement===document.body){coachActive.focus({preventScroll:true});if(coachSelection)coachActive.setSelectionRange(...coachSelection);}
@@ -4836,7 +4816,7 @@ globalThis.CrankBoard = Object.seal({
   addEventListener("resize", () => {
     if (!document.getElementById("cm-board") || !view) return;
     const now = phone() ? (innerHeight > innerWidth ? "portrait" : "landscape") : "no";
-    if (now !== lastPhone) {lastPhone = now; draw(); if (coach.open) drawCoach();} else {fit(); dockCombat();}
+    if (now !== lastPhone) {lastPhone = now; draw(); if (coach.open) drawCoach();} else fit();
   });
   actions["board-vitals"] = () => {if (view) tableVitals();};
   actions["board-view"] = (el) => {setMode(el.dataset.view); document.querySelector("#cm-board [data-action=board-camera]")?.focus({preventScroll: true});};

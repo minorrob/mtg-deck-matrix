@@ -1951,15 +1951,6 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 #matrix-v2 .cm-board .cm-decision-slot .cm-board-decision>.cm-board-decision-foot{position:sticky;bottom:0;z-index:2;padding:8px 0 2px;background:var(--color-panel)}
 #matrix-v2 .cm-board .cm-decision-slot .cm-board-decision{scroll-padding-bottom:76px}
 
-/* Combat docks above the board (crankmagic-board.js combatDock; Rob, 2026-10-30): the declaring pop-up lies under the top bar, and
-   the board, its rails and drawers start below it, as they do below combat's band. The band is the pop-up's measured height
-   (--combat-dock), never --combat-h: the combat picture inside the pop-up is sized by --combat-h, and it would grow with it. */
-#matrix-v2 .cm-board .cm-required-popup.is-combat{top:calc(var(--hud-top,58px) + 6px)!important;transform:translateX(-50%)!important;width:min(1040px,calc(100vw - 32px))!important;max-height:52dvh!important}
-#matrix-v2 .cm-board #cm-decision-slot.cm-required-popup.is-combat>#cm-board-decision{max-height:52dvh!important;padding:14px 18px}
-#matrix-v2 .cm-board[data-combat-dock]{--rail-top:calc(var(--hud-top,58px) + var(--combat-dock))}
-#matrix-v2 .cm-board[data-shell=shared][data-combat-dock]{grid-template-rows:var(--rail-top) minmax(0,1fr)}
-#matrix-v2 .cm-board[data-combat-dock]>.cm-stage-rail,#matrix-v2 .cm-board[data-combat-dock]>.cm-stage-side,#matrix-v2 .cm-board[data-combat-dock]>#cm-card-inspector{top:var(--rail-top)}
-#matrix-v2 .cm-board[data-combat-dock]>.cm-stage-side{height:calc(100% - var(--rail-top))!important}
 /* In the pop-up's list, what is scrolled to (a key press, a scroll into view) stops above the sticky answering row, as in the pane
    (ROB-201): on the phone the blockers' Don't block / Confirm / No blocks row wraps to two lines and lay over the blocker's tile. */
 #matrix-v2 .cm-board #cm-decision-slot.cm-required-popup #cm-board-decision>.cm-board-options{scroll-padding-bottom:76px}
@@ -1967,7 +1958,3 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 /* The blockers' answering row stays at the foot of the pop-up's list, and what scrolls under it is hidden by it, not seen through it
    (a heading's words showed between Don't block and Confirm). */
 #matrix-v2 .cm-board #cm-decision-slot.cm-required-popup .cm-block-draft .cm-decide-actions{z-index:2;padding:8px 0 4px;background:var(--color-panel);box-shadow:0 -10px 12px -10px #000a}
-/* A menu the player opens from the top bar (Camera, Table) lies over the docked combat pop-up, never under it: the pop-up now
-   reaches across under the bar, where the centered one never did. */
-#matrix-v2 .cm-board[data-combat-dock]>.cm-stage-top{position:relative;z-index:61}
-#matrix-v2 .cm-board[data-combat-dock] .cm-stage-camera,#matrix-v2 .cm-board[data-combat-dock] .cm-table-menu{top:calc(var(--rail-top) + 10px);z-index:61}
