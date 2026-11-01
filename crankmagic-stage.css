@@ -1968,3 +1968,7 @@ html[data-motion=reduce] #matrix-v2 .cm-board .cm-undo-drawer{transition:none}
 /* The blockers' answering row stays at the foot of the pop-up's list, and what scrolls under it is hidden by it, not seen through it
    (a heading's words showed between Don't block and Confirm). */
 #matrix-v2 .cm-board #cm-decision-slot.cm-required-popup .cm-block-draft .cm-decide-actions{z-index:2;padding:8px 0 4px;background:var(--color-panel);box-shadow:0 -10px 12px -10px #000a}
+/* A menu the player opens from the top bar (Camera, Table) lies over the docked combat pop-up, never under it: the pop-up now
+   reaches across under the bar, where the centered one never did. */
+#matrix-v2 .cm-board[data-combat-dock]>.cm-stage-top{position:relative;z-index:61}
+#matrix-v2 .cm-board[data-combat-dock] .cm-stage-camera,#matrix-v2 .cm-board[data-combat-dock] .cm-table-menu{z-index:61}
