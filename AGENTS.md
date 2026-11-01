@@ -222,19 +222,25 @@ The definition of done for the online subsystem is in `game/docs/readiness-plan-
 
 Rob, 2026-10-30: *"I am finding cards that have multi-options, multi-way of paying for, multi-descriptive effects, we are
 running into a bunch of issues with those ... expand our extraction and testing process to better catch these going forward as
-practice."* Four reports of 2026-10-29 (Ash Barrens, Tezzeret's Gambit, Hall of Echoes, the Food token) had one cause that
-87.7% of the card scenarios cannot see: they tap lands by hand before `cast` or `activate`, so they never ask what a player with
-untapped lands and an empty pool is *offered*.
+practice."* The reports behind it were three different things: Tezzeret's Gambit's Phyrexian cast was not tapped for itself
+(fixed under `phyrexianTaps`, ROB-326); a Food and a Hall of Echoes had been turned into Elks by Oko, so the game was right and
+only silent (fixed by saying why, ROB-330/331); an Ash Barrens was on the battlefield, where no cycling is correct (ROB-317). What
+they share is that 87.7% of the card scenarios tap lands by hand before `cast` or `activate`, so none asks what a player with
+untapped lands and an empty pool is *offered*, and a report of "option X is not offered" is hard to tell from a correct refusal.
 
+- **Read the report's whole thread first, and again before you comment.** Rob often answers it in the thread (on ROB-330 and ROB-331 he said Oko had Elked the permanents), and a comment written without reading his answer is wrong.
 - A card's ways are its modes, its ways to pay (Phyrexian, hybrid, `{2/W}`, alternative and additional costs, cycling), each
   ability and each part of its cost, and each union of targets. List them from the Oracle text, not from the definition.
 - `node game/tools/interaction-census.mjs --card "<name>"` is the first step of any "option X is not offered" report and of any
   card load or promotion. Layer A reads the text a second time against the definition (the compiler refuses a candidate that
-  fails it); Layer B compares the same state with the lands untapped and with them tapped by hand.
-- A way is loaded when the census is clean for it (or its finding is the engine cause already in
-  `docs/engine/interaction-census-baseline.json`), a scenario takes the way, and one scenario asserts the offer from untapped
+  fails it). Layer B compares the same state with the lands untapped and with them tapped by hand, built with the flags the table
+  sets for a new match (`game/room/table.mjs`; the suite fails if the table sets a `*Taps` flag the census does not know), never
+  the scenario runner's defaults, which measure an engine nobody plays on.
+- A way is loaded when Layer A is clean for it, Layer B's hard class is clean or its finding is already in
+  `docs/engine/interaction-census-baseline.json`, a scenario takes the way, and one scenario asserts the offer from untapped
   sources. The baseline is a ratchet and only shrinks: never add a finding to it to make `tests/engine-interaction-census.mjs`
-  pass. The practice, with its limits, is `docs/engine/extraction-second-check-2026-10-30.md`.
+  pass. A class that would block loading cards for a behavior no player has met is *advisory* (counted, never baselined); Rob
+  promotes it. The practice, with its limits, is `docs/engine/extraction-second-check-2026-10-30.md`.
 
 ## A handoff states four things
 

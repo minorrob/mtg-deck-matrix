@@ -2,12 +2,14 @@
 
 /* THE INTERACTION CENSUS: a second check on what the extraction captured, and on what a player is then offered.
  *
- * Four bugs of 2026-10-29 (Linear ROB-317, 326, 330, 331) and three more behind them (ROB-323 Winter's "a permanent" prompt,
- * ROB-329 the Elk's picture, ROB-300 the held-back templates) share one shape: a card has more than one WAY -- a mode, a way
- * to pay, a second ability, a union of targets -- and one layer between the Oracle text and the table lost a way, while the
- * card's own scenario passed because it was driven by hand into the state where the way survives. The compiler's checks read
- * the compiler's own output, so they cannot see what it dropped. This reads the Oracle text a second time with its own,
- * deliberately separate rules (it imports nothing from the sentence library), and asks the engine the question a player asks.
+ * Reports of 2026-10-29 (Linear ROB-326 Tezzeret's Gambit, ROB-323 Winter's "a permanent" prompt, ROB-329 the Elk's picture,
+ * ROB-300 the held-back templates; ROB-317, 330 and 331 turned out to be a battlefield Ash Barrens and two permanents Oko had
+ * Elked, where the game was right) have one thing in common: a card has more than one WAY -- a mode, a way to pay, a second
+ * ability, a union of targets -- and a layer between the Oracle text and the table lost one, while the card's own scenario passed
+ * because it was driven by hand into the state where the way survives (87.7% of the scenarios that cast or activate tap their
+ * lands first). The compiler's checks read the compiler's own output, so they cannot see what it dropped. This reads the Oracle
+ * text a second time with its own, deliberately separate rules (it imports nothing from the sentence library), and asks the
+ * engine the question a player asks. docs/engine/extraction-second-check-2026-10-30.md has the patterns, the numbers and the limits.
  *
  * LAYER A, EXTRACTION (static, text against definition). From the Oracle text alone: the modes, the mode-like keywords
  * (flashback, kicker, spree, cycling...), each "cost: effect" line and the parts of its cost, and the unions of targets
@@ -18,8 +20,10 @@
  * states that differ in one way only: the lands the cost needs are UNTAPPED with an empty pool, or the same lands are tapped by
  * hand into the pool. The rule: every cast or activation the second state offers, the first must offer -- a player does not
  * float mana to discover what they can do. Nothing here knows the right answer for a card, so it holds for every card, new
- * ones included, and it is what ROB-317/326/330/331 broke. It also checks WAY PARITY: a cost that can be paid two ways
- * (Phyrexian {U/P}, hybrid, {2/W}) offers a cast for each way it has the resources for, not for one.
+ * ones included. The states are built with the flags the TABLE sets for a new match (TABLE_FLAGS), not the scenario runner's
+ * defaults. A cast offered only once floated is a HARD class (ROB-326 was one); an activation offered only once floated is
+ * ADVISORY (CLASS_POLICY): it is the engine's behavior, and no player report has shown it matters. It also checks WAY PARITY: a
+ * cost that can be paid two ways (Phyrexian {U/P}, hybrid, {2/W}) offers a cast for each way it has the resources for, not for one.
  *
  *   node game/tools/interaction-census.mjs                     both layers, summary
  *   node game/tools/interaction-census.mjs --card "Hall of Echoes"   one card, every finding in full
@@ -27,8 +31,9 @@
  *   node game/tools/interaction-census.mjs --write-baseline   rewrite docs/engine/interaction-census-baseline.json
  *   node game/tools/interaction-census.mjs --check            exit 1 on a finding the baseline does not list (or one it still lists that is fixed)
  *
- * The baseline is a ratchet, as the UK-spelling count is: it lists the findings known on the day it was written, each class
- * with the Linear issue that owns it, and it only shrinks. A new card, or a card that regresses, fails `--check`.
+ * The baseline is a ratchet over the hard classes, as the UK-spelling count is: it lists the findings known on the day it was
+ * written, each class with the Linear issue that owns it, and it only shrinks. A new card, or a card that regresses, fails
+ * `--check`. An advisory class is counted and printed, and never baselined.
  */
 
 import {readFileSync, writeFileSync, existsSync} from "node:fs";
@@ -266,6 +271,22 @@ const FIXTURES = {
 };
 const MAX_WAYS = 6, MAX_LANDS = 14;
 
+/* THE ENGINE CONFIGURATION A PLAYER HAS. A new match starts with the "taps" flags on (game/room/table.mjs: a cast that taps for itself,
+   {X} spells, Phyrexian costs); the scenario runner starts with them off, so a census built on its defaults measures an engine nobody
+   plays on -- ROB-339's first run reported 59 spells not offered from untapped lands where the table's configuration leaves 4. Every
+   state here is built with these. `preparedTaps` is the table's one other taps flag; the scenario runner does not take it. The suite
+   fails if table.mjs sets a `*Taps` flag that is in neither list. */
+export const TABLE_FLAGS = Object.freeze({pooledTaps: true, xTaps: true, phyrexianTaps: true});
+export const UNPROBED_TABLE_FLAGS = Object.freeze(["preparedTaps"]);
+
+/* What a finding class means for the suite. A "hard" class fails on any finding the baseline does not list. An "advisory" class is
+   counted and printed and never fails: the engine behaves that way, but no player has been shown to meet it. Promote one to "hard"
+   when a report confirms it or Rob decides the engine should offer it, then baseline what is left. */
+export const CLASS_POLICY = Object.freeze({
+  ACTIVATION_ONLY_WHEN_FLOATED: "advisory",
+});
+export const isAdvisory = (finding) => CLASS_POLICY[finding.code] === "advisory";
+
 /**
  * The ways a mana cost can be paid, each as the lands that pay it and nothing more, and what kind of way it is.
  * {X} is paid at 0. A Phyrexian symbol has a mana way (its basic land) and a life way (no land); {W/U} one way per color; {2/W} two Wastes or a Plains.
@@ -307,14 +328,16 @@ const offeredBy = (state, subject) => legalActions(state, 0).some((a) => a.kind 
 
 /** Whether the engine offers `subject` in the state with `way`'s lands untapped (floated: false) or tapped into the pool by hand (true). */
 export const engineProbe = (def, subject, way, floated, index) => offeredBy(stateFor(def, subject, way, floated, index), subject);
+/** The same question in the scenario runner's defaults: for the suite's proof that the flags matter, never for a census. */
+export const legacyProbe = (def, subject, way, floated, index) => offeredBy(stateFor(def, subject, way, floated, index, {}), subject);
 
-function stateFor(def, subject, way, floated, index) {
+function stateFor(def, subject, way, floated, index, flags = TABLE_FLAGS) {
   const lands = way.lands;
   const board = [{seat: 0, zone: "battlefield", cards: [...lands, "Census Bear", "Census Relic"]}, {seat: 1, zone: "battlefield", cards: ["Census Bear", "Census Relic"]}];
   const name = def.identity.name;
   const placed = {seat: 0, zone: subject.zone, cards: [name]};
   const steps = floated ? lands.map((land) => ({tap: land})) : [];
-  return runScenario({name: `census ${name}`, setup: [...board, placed], steps, expect: []}, index.definition, FIXTURES).state;
+  return runScenario({name: `census ${name}`, setup: [...board, placed], steps, expect: [], ...flags}, index.definition, FIXTURES).state;
 }
 
 /** Layer B: the findings for one definition. Each is `{code, detail}`; `unexercised` counts the subjects no state offered at all. */
@@ -416,13 +439,14 @@ export function readBaseline(file = BASELINE_FILE) {
 
 /** The findings against the baseline: `added` (new, fail), `fixed` (listed, no longer found: ratchet down). */
 export function againstBaseline(findings, baseline = readBaseline()) {
-  const now = new Set(findings.map(keyOf));
-  return {added: findings.filter((f) => !baseline.keys.has(keyOf(f))), fixed: [...baseline.keys].filter((k) => !now.has(k))};
+  const hard = findings.filter((f) => !isAdvisory(f));
+  const now = new Set(hard.map(keyOf));
+  return {added: hard.filter((f) => !baseline.keys.has(keyOf(f))), fixed: [...baseline.keys].filter((k) => !now.has(k))};
 }
 
 export const CLASS_OWNERS = {
-  CAST_ONLY_WHEN_FLOATED: "ROB-326 (Phyrexian/hybrid casts) and ROB-317",
-  ACTIVATION_ONLY_WHEN_FLOATED: "ROB-330, ROB-331, ROB-317 (abilityOffers prices against the pool only; castOffers has an autoTap branch)",
+  CAST_ONLY_WHEN_FLOATED: "ROB-354 (what the table's flags leave; {X} and Phyrexian casts are fixed by xTaps and phyrexianTaps, ROB-326)",
+  ACTIVATION_ONLY_WHEN_FLOATED: "advisory: abilityOffers prices against the pool only and castOffers has an autoTap branch; no player report confirms it (ROB-339, ROB-354)",
   PAYMENT_WAY_MISSING: "ROB-326",
   TARGET_UNION_NARROWED: "ROB-323 (Winter) and ROB-300",
   MODES_DROPPED: "ROB-300", MODES_COUNT: "ROB-300", SPREE_DROPPED: "ROB-300", WAY_KEYWORD_DROPPED: "ROB-300", CYCLING_DROPPED: "ROB-317",
@@ -432,7 +456,7 @@ export const CLASS_OWNERS = {
 function summarize(findings) {
   const by = new Map();
   for (const f of findings) { if (!by.has(f.code)) by.set(f.code, new Set()); by.get(f.code).add(f.card); }
-  return [...by].sort((a, b) => b[1].size - a[1].size).map(([code, cards]) => ({code, cards: cards.size, owner: CLASS_OWNERS[code] ?? "unowned"}));
+  return [...by].sort((a, b) => b[1].size - a[1].size).map(([code, cards]) => ({code, cards: cards.size, owner: CLASS_OWNERS[code] ?? "unowned", policy: CLASS_POLICY[code] ?? "hard"}));
 }
 
 async function main(argv) {
@@ -443,9 +467,10 @@ async function main(argv) {
   if (argv.includes("--candidates")) {
     const {findings, tally, candidates, statuses} = await candidateCensus();
     console.log(`Compiler candidates: ${candidates} of ${JSON.stringify(statuses)} (${((Date.now() - started) / 1000).toFixed(1)}s). Layer B exercised ${tally.exercised} of ${tally.subjects}.`);
-    for (const row of summarize(findings)) console.log(`  ${String(row.cards).padStart(5)} candidates  ${row.code.padEnd(30)} ${row.owner}`);
-    for (const f of findings.slice(0, 40)) console.log(`HOLD ${f.card}: ${f.code}: ${f.detail}`);
-    return findings.length ? 1 : 0;
+    for (const row of summarize(findings)) console.log(`  ${String(row.cards).padStart(5)} candidates  ${row.code.padEnd(30)} ${row.policy === "advisory" ? "[advisory] " : ""}${row.owner}`);
+    const hard = findings.filter((f) => !isAdvisory(f));
+    for (const f of hard.slice(0, 40)) console.log(`HOLD ${f.card}: ${f.code}: ${f.detail}`);
+    return hard.length ? 1 : 0;
   }
   const whole = !only && layer === "ab" && (argv.includes("--check") || argv.includes("--write-baseline"));
   const {findings, tally} = whole ? await wholeCensus().then((w) => ({findings: w.findings, tally: w.directory})) : census({layers: layer, only: typeof only === "string" ? only : null});
@@ -456,19 +481,19 @@ async function main(argv) {
   }
   console.log(`Interaction census: ${tally.cards} definitions (${tally.multiFaced} multi-faced, skipped by the activated-cost check), layer ${layer}, ${((Date.now() - started) / 1000).toFixed(1)}s.`);
   if (layer.includes("b")) console.log(`Layer B exercised ${tally.exercised} of ${tally.subjects} spells and costed abilities (the rest were offered in no state: a target, a sacrifice or a summoning-sick tap the probe does not supply).`);
-  for (const row of summarize(findings)) console.log(`  ${String(row.cards).padStart(5)} cards  ${row.code.padEnd(30)} ${row.owner}`);
+  for (const row of summarize(findings)) console.log(`  ${String(row.cards).padStart(5)} cards  ${row.code.padEnd(30)} ${row.policy === "advisory" ? "[advisory] " : ""}${row.owner}`);
   if (argv.includes("--write-baseline")) {
     const classes = {};
-    for (const f of findings) (classes[f.code] ??= {owner: CLASS_OWNERS[f.code] ?? "unowned", keys: []}).keys.push(keyOf(f));
+    for (const f of findings.filter((x) => !isAdvisory(x))) (classes[f.code] ??= {owner: CLASS_OWNERS[f.code] ?? "unowned", keys: []}).keys.push(keyOf(f));
     for (const c of Object.values(classes)) c.keys = [...new Set(c.keys)].sort();
     writeFileSync(BASELINE_FILE, JSON.stringify({schema: "interaction-census-baseline@1", note: "A ratchet: findings known when it was written. It only shrinks. See game/tools/interaction-census.mjs.", classes}, null, 1) + "\n");
-    console.log(`Baseline written: ${findings.length} findings in ${Object.keys(classes).length} classes.`);
+    console.log(`Baseline written: ${findings.filter((x) => !isAdvisory(x)).length} findings in ${Object.keys(classes).length} classes (advisory classes are not baselined).`);
   }
   if (argv.includes("--check")) {
     const {added, fixed} = againstBaseline(findings);
     for (const f of added.slice(0, 30)) console.log(`NEW  ${f.card}: ${f.code}: ${f.detail}`);
     for (const k of fixed.slice(0, 30)) console.log(`FIXED (remove from the baseline with --write-baseline): ${k}`);
-    console.log(`${added.length} new, ${fixed.length} fixed since the baseline.`);
+    console.log(`${added.length} new, ${fixed.length} fixed since the baseline; ${findings.filter(isAdvisory).length} advisory findings not counted.`);
     return added.length || fixed.length ? 1 : 0;
   }
   return 0;
